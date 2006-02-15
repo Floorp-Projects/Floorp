@@ -729,11 +729,10 @@ function FocusRingUpdate_Mail()
   // we really only care about nsFocusController::Focus() happens, 
   // which calls nsFocusController::SetFocusedElement(element)
   var currentFocusedElement = WhichPaneHasFocus();
-  if (!currentFocusedElement)
-    return;
       
-	if (currentFocusedElement != gLastFocusedElement) {
-    currentFocusedElement.setAttribute("focusring", "true");
+  if (currentFocusedElement != gLastFocusedElement) {
+    if (currentFocusedElement)
+      currentFocusedElement.setAttribute("focusring", "true");
     
     if (gLastFocusedElement)
       gLastFocusedElement.removeAttribute("focusring");
@@ -751,7 +750,6 @@ function FocusRingUpdate_Mail()
 function WhichPaneHasFocus()
 {
   var threadTree = GetThreadTree();
-  var searchInput = GetSearchInput();
   var folderTree = GetFolderTree();
   var messagePane = GetMessagePane();
     
@@ -761,7 +759,6 @@ function WhichPaneHasFocus()
 	var currentNode = top.document.commandDispatcher.focusedElement;	
 	while (currentNode) {
     if (currentNode === threadTree ||
-        currentNode === searchInput || 
         currentNode === folderTree ||
         currentNode === messagePane)
       return currentNode;
@@ -1057,17 +1054,22 @@ function SearchBarToggled()
 
 function SwitchPaneFocus(event)
 {
-  var focusedElement = WhichPaneHasFocus();
   var folderTree = GetFolderTree();
   var threadTree = GetThreadTree();
-  var searchInput = GetSearchInput();
   var messagePane = GetMessagePane();
+
+  // Although internally this is actually a four-pane window, it is presented as
+  // a three-pane -- the search pane is more of a toolbar.  So, shift among the
+  // three main panes.
+
+  var focusedElement = WhichPaneHasFocus();
+  if (focusedElement == null)       // focus not on one of the main three panes?
+    focusedElement = threadTree;    // treat as if on thread tree
 
   if (event && event.shiftKey)
   {
-    if (focusedElement == threadTree && searchInput.parentNode.getAttribute('hidden') != 'true')
-      searchInput.focus();
-    else if ((focusedElement == threadTree || focusedElement == searchInput) && !IsFolderPaneCollapsed())
+    // Reverse traversal: Message -> Thread -> Folder -> Message
+    if (focusedElement == threadTree && !IsFolderPaneCollapsed())
       folderTree.focus();
     else if (focusedElement != messagePane && !IsMessagePaneCollapsed())
       SetFocusMessagePane();
@@ -1076,14 +1078,11 @@ function SwitchPaneFocus(event)
   }
   else
   {
-    if (focusedElement == searchInput)
-      threadTree.focus();
-    else if (focusedElement == threadTree && !IsMessagePaneCollapsed())
+    // Forward traversal: Folder -> Thread -> Message -> Folder
+    if (focusedElement == threadTree && !IsMessagePaneCollapsed())
       SetFocusMessagePane();
     else if (focusedElement != folderTree && !IsFolderPaneCollapsed())
       folderTree.focus();
-    else if (searchInput.parentNode.getAttribute('hidden') != 'true')
-      searchInput.focus();
     else
       threadTree.focus();
   }
@@ -1103,8 +1102,10 @@ function SetFocusThreadPane()
 
 function SetFocusMessagePane()
 {
-    var messagePaneFrame = GetMessagePaneFrame();
-    messagePaneFrame.focus();
+  // XXX hack: to clear the focus on the previous element first focus
+  // on the message pane element then focus on the main content window
+  GetMessagePane().focus();
+  GetMessagePaneFrame().focus();
 }
 
 function is_collapsed(element) 

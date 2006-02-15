@@ -543,6 +543,7 @@ function onSearchKeyPress(event)
 
 function onSearchInputFocus(event)
 {
+  GetSearchInput();
   // search bar has focus, ...clear the showing search criteria flag
   if (gSearchInput.showingSearchCriteria)
   {
@@ -565,6 +566,9 @@ function onSearchInputMousedown(event)
     gIgnoreFocus = true;
     gIgnoreClick = false;
     gSearchInput.setSelectionRange(0, 0);
+
+    // save the last focused element so that focus can be restored (if the Close button was clicked)
+    gQuickSearchFocusEl = gLastFocusedElement;
   }
 }
 
@@ -577,13 +581,10 @@ function onSearchInputClick(event)
 
 function onSearchInputBlur(event)
 { 
-  if (gQuickSearchFocusEl && gQuickSearchFocusEl.id == 'searchInput') // ignore the blur if we are in the middle of processing the clear button
+  if (gQuickSearchFocusEl) // ignore the blur if we are in the middle of processing the clear button
     return;
 
   if (!gSearchInput.value)
-    gSearchInput.showingSearchCriteria = true;
-    
-  if (gSearchInput.showingSearchCriteria)
     gSearchInput.setSearchCriteriaText();
 }
 
@@ -599,7 +600,6 @@ function onSearchInput(returnKeyHit)
 
   // only select the text when the return key was hit
   if (returnKeyHit) {
-    GetSearchInput();
     gSearchInput.select();
     onEnterInSearchBar();
   }
@@ -616,36 +616,29 @@ function onClearSearch()
 {
   if (!gSearchInput.showingSearchCriteria) // ignore the text box value if it's just showing the search criteria string
   {
-    gQuickSearchFocusEl = gLastFocusedElement;  //save of the last focused element so that focus can be restored
-  Search("");
+    Search("");
     // this needs to be on a timer otherwise we end up messing up the focus while the Search("") is still happening
-    setTimeout("restoreSearchFocusAfterClear();", 0); 
+    if (gQuickSearchFocusEl)
+      setTimeout("restoreSearchFocusAfterClear();", 0); 
   }
 }
 
 function restoreSearchFocusAfterClear()
 {
-  gQuickSearchFocusEl.focus();
-  gSearchInput.clearButtonHidden = 'true';
-  gQuickSearchFocusEl = null;
+  if (gQuickSearchFocusEl)
+  {
+    gQuickSearchFocusEl.focus();
+    gQuickSearchFocusEl = null;
+  }
 }
 
+// called from commandglue.js in cases where the view is being changed and QS
+// needs to be cleared.
 function ClearQSIfNecessary()
 {
-  GetSearchInput();
-
-  if (!gSearchInput || gSearchInput.value == "")
+  if (!gSearchInput || gSearchInput.showingSearchCriteria)
     return;
-
-  Search("");
-}
-
-// called after the user switches folders while inside
-// of a quick search view...
-function clearQuickSearchAfterFolderChange()
-{
-  if (gSearchInput)
-    gSearchInput.setSearchCriteriaText();
+  gSearchInput.setSearchCriteriaText();
 }
 
 function Search(str)
@@ -653,8 +646,6 @@ function Search(str)
   viewDebug("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
   if (gSearchInput.showingSearchCriteria && str != "")
     return;
-
-  GetSearchInput();
 
   if (str != gSearchInput.value)
   {
