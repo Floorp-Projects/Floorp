@@ -1,3 +1,5 @@
+#filter substitution
+
 [General]
 ; Run Mode values:
 ;   Normal - Shows all dialogs.  Requires user input.
