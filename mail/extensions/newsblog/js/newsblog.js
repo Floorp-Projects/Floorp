@@ -470,6 +470,8 @@ var progressNotifier = {
       // if we just finished subscribing to a feed URL that the operating system gave us.
       this.mMsgWindow.SelectFolder(feed.folder.URI);
     } 
+    else if (feed.folder)
+      feed.folder.setMsgDatabase(null);
 
     if (this.mStatusFeedback)
     {
