@@ -121,20 +121,7 @@ caption {
   font-size: small ! important;
   font-family: sans-serif ! important;
 }
-
 */
-
-#contentAreaContextMenu {
-
-}
-
-#item-copy {
-	display:none;
-}
-
-#item-paste {
-	display:none;
-}
 
 .menu-button
   {
