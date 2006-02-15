@@ -80,3 +80,7 @@ cairo-win32-expose-dc-and-dib.patch
   - Expose cairo_win32_surface_get_dc() to return the HDC for a win32 surface
   - Expose cairo_win32_surface_create_dib() for creating a DIB-backed surface
     (NOT SUBMITTED UPSTREAM YET)
+
+cairo-win32-creation-format.patch
+  - Have cairo_win32_surface_create inspect the DC and set up the appropriate
+    cairo_format_t
