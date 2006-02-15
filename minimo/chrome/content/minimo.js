@@ -806,28 +806,29 @@ function MenuNavPopupShowing () {
 function BrowserContentAreaPopupShowing () {
 
   var selectedRange=gBrowser.selectedBrowser.contentDocument.getSelection();
-  
+
   /* Enable Copy */
   
-  if(selectedRange.toString()) {
-    
-    document.getElementById("item-copy").disabled=false;
+  if( selectedRange && selectedRange.toString() ) {
+    document.getElementById("item-copy").style.display="block"
   } else {
-    document.getElementById("item-copy").disabled=true;
+    document.getElementById("item-copy").style.display="none"
   }
   
   /* Enable Paste - Can paste only if the focused element has a value attribute. :) 
      THis may affect XHTML nodes. Users may be able to paste things within XML nodes. 
   */
-  if (document.commandDispatcher.focusedElement) {
-    if(document.commandDispatcher.focusedElement.nodeName=="INPUT"||document.commandDispatcher.focusedElement.nodeName=="TEXTAREA") {
+
+  var targetPopupNode = document.popupNode; 
+
+  if( targetPopupNode instanceof HTMLInputElement || targetPopupNode instanceof HTMLTextAreaElement ) {
       if(DoClipCheckPaste()) {
-        document.getElementById("item-paste").disabled=false;	
+        document.getElementById("item-paste").style.display="block";
       } else {
-        document.getElementById("item-paste").disabled=true;	
+        document.getElementById("item-paste").style.display="none";
       }
-    }
   }
+
 }
 
 
@@ -1051,6 +1052,7 @@ function DoClipCopy()
   trans.addDataFlavor("text/unicode");
   trans.setTransferData("text/unicode",str,copytext.length * 2);
   var clipid = nsIClipboard;
+
   var clip = Components.classes["@mozilla.org/widget/clipboard;1"].getService(clipid);
   if (!clip) return false;
   clip.setData(trans,null,clipid.kGlobalClipboard);
