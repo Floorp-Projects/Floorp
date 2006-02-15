@@ -37,6 +37,10 @@
 
 /* 	background-position:0px 100%; */
 
+#urlbar * {
+      background-color:white;
+}
+
 #urlbar input {
 	background-repeat:no-repeat;
 	background-image:url(chrome://minimo/skin/transfer.jpg);
