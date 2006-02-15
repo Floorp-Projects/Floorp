@@ -6492,7 +6492,15 @@ ExtensionsDataSource.prototype = {
    */
   loadExtensions: function() {
     var extensionsFile  = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
-    this._inner = gRDF.GetDataSourceBlocking(getURLSpecFromFile(extensionsFile));
+    try {
+      this._inner = gRDF.GetDataSourceBlocking(getURLSpecFromFile(extensionsFile));
+    }
+    catch (e) {
+      LOG("Datasource::loadExtensions: removing corrupted extensions datasource " +
+          " file = " + extensionsFile.path + ", exception = " + e + "\n");
+      extensionsFile.remove(false);
+      return;
+    }
 
     var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
                        .getService(Components.interfaces.nsIRDFContainerUtils);
