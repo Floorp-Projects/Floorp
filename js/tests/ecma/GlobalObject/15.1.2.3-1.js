@@ -77,7 +77,7 @@
 var SECTION = "15.1.2.3-1";
 var VERSION = "ECMA_1";
 var TITLE   = "parseFloat(string)";
-var BUGNUMBER= "77391";
+var BUGNUMBER="none";
 
 startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
