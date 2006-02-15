@@ -92,6 +92,6 @@ function storeBookmarks() {
 }
 
 function BookmarksDeleteAllAndSync() {
-    var bookmarkEmpty="<bm><homebase><li iconsrc='chrome://minimo/skin/extensions/icon-star.png'>chrome://minimo/content/rssview/rssload.xhtml?url=http://del.icio.us/rss/tag/mobile-sites</li><li iconsrc='chrome://minimo/skin/extensions/icon-google.png'>http://www.google.com/xhtml</li><li iconsrc='http://www.mozillazine.org/favicon.ico'>chrome://minimo/content/rssview/rssload.xhtml?url=http://www.mozillazine.org/atom.xml</li></homebase></bm>";
+    var bookmarkEmpty="<bm></bm>";
     gPref.setCharPref("browser.bookmark.store",bookmarkEmpty);
 }
