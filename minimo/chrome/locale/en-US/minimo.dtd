@@ -49,6 +49,11 @@
 <!ENTITY decksearch.label              "Google Search" >
 <!ENTITY deckdefault.label             "Browse Sites" >
 
+<!-- context menu --> 
+<!ENTITY contextCopy.label             "Copy" >
+<!ENTITY contextPaste.label            "Paste" >
+
+
 <!-- toolbar view options --> 
 
 <!ENTITY zoom.label                    "Zoom" >
@@ -74,4 +79,3 @@
 <!-- toolbar download -->
 <!ENTITY downloadText.label          "Download Viewer " >
 <!ENTITY downloadCancelText.label    "Cancel" >
-
