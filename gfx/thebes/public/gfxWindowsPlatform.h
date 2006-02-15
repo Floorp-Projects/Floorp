@@ -38,12 +38,15 @@
 #ifndef GFX_WINDOWS_PLATFORM_H
 #define GFX_WINDOWS_PLATFORM_H
 
+#include "gfxWindowsSurface.h"
 #include "gfxPlatform.h"
+
+#include "nsVoidArray.h"
 
 class NS_EXPORT gfxWindowsPlatform : public gfxPlatform {
 public:
     gfxWindowsPlatform();
-
+    //virtual ~gfxWindowsPlatform();
     static gfxWindowsPlatform *GetPlatform() {
         return (gfxWindowsPlatform*) gfxPlatform::GetPlatform();
     }
@@ -56,6 +59,16 @@ public:
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
 
+private:
+#if 0
+    void Init();
+
+    static int CALLBACK FontEnumProc(const LOGFONT *logFont,
+                                     const TEXTMETRIC *metrics,
+                                     DWORD fontType, LPARAM data);
+
+    static nsStringArray *mFontList;
+#endif
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */
