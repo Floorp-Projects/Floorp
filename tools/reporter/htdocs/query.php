@@ -43,10 +43,6 @@ require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.ph
 require_once($config['base_path'].'/includes/security.inc.php');
 require_once($config['base_path'].'/includes/query.inc.php');
 
-// start the session
-session_name('reportSessID');
-session_start();
-header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 if(!isset($_GET['method'])){

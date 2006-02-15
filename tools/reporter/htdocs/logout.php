@@ -39,10 +39,6 @@
 require_once('../config.inc.php');
 require_once($config['base_path'].'/includes/iolib.inc.php');
 
-// start the session
-session_name('reportSessID');
-session_start();
-header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 $_SESSION = array();

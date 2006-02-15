@@ -1,16 +1,16 @@
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
-RewriteRule ^app/query(/)?(.*)$ query.php$1 [QSA,L]
-RewriteRule ^app/report/screenshot(/)?(.*)$ screenshot.php$1 [QSA,L]
-RewriteRule ^app/report(/)?(.*)$ report.php$1 [QSA,L]
-RewriteRule ^app/stats(/)?(.*)$ stats.php$1 [QSA,L]
-RewriteRule ^app/login(/)?(.*)$ login.php$1 [QSA,L]
-RewriteRule ^app/logout(/)?(.*)$ logout.php$1 [QSA,L]
-RewriteRule ^privacy(/)? privacy.php$1 [QSA,L]
-RewriteRule ^service(/)? service.php$1 [QSA,L]
+RewriteRule ^app/query(/)?(.*)$ query.php$2 [QSA,L]
+RewriteRule ^app/report/screenshot(/)?(.*)$ screenshot.php$2 [QSA,L]
+RewriteRule ^app/report(/)?(.*)$ report.php$2 [QSA,L]
+RewriteRule ^app/stats(/)?(.*)$ stats.php$2 [QSA,L]
+RewriteRule ^app/login(/)?(.*)$ login.php$2 [QSA,L]
+RewriteRule ^app/logout(/)?(.*)$ logout.php$2 [QSA,L]
+RewriteRule ^privacy(/)? privacy.php$2 [QSA,L]
+RewriteRule ^service(/)? service.php$2 [QSA,L]
 RewriteRule ^app index.php [QSA,L]
 
 #Static Content
-RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
+#RewriteRule ^(scripts|styles)$/(.*)$ $1/$2 [QSA,L]
 </IfModule>

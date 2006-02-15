@@ -46,10 +46,6 @@ require_once($config['base_path'].'/includes/security.inc.php');
 error_reporting(0);
 
 // Headers
-// Start Session
-session_name('reportSessID');
-session_start();
-header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 if($securitylib->isLoggedIn() === true){

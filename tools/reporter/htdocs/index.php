@@ -42,10 +42,6 @@ require_once($config['base_path'].'/includes/iolib.inc.php');
 require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
 
-// Start Session
-session_name('reportSessID');
-session_start();
-header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 $content = initializeTemplate();

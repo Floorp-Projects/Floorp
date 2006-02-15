@@ -43,17 +43,12 @@ require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.ph
 require_once($config['base_path'].'/includes/security.inc.php');
 require_once($config['base_path'].'/includes/query.inc.php');
 
-
-// Start Session
-session_name('reportSessID');
-session_start();
-header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
 // Open DB
 $db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
-          
+
 $reportQuery =& $db->Execute("SELECT *
                               FROM report, host
                               WHERE report.report_id = ".$db->quote($_GET['report_id'])."

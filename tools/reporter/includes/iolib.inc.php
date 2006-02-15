@@ -142,19 +142,22 @@ function resolveBehindLogin($q){
 }
 
 function printheaders(){
-
-	$now = date("D M j G:i:s Y T");
-	header('Expires: ' . $now);
-	header('Last-Modified: ' . gmdate("D, d M Y H:i:s") . ' GMT');
-	header('Cache-Control: post-check=0, pre-check=0', false);
-	header('Pragma: no-cache');
-	header('X-Powered-By: A Barrel of Monkey\'s ');
+    $now = date("D M j G:i:s Y T");
+    header('Expires: ' . $now);
+    header('Last-Modified: ' . gmdate("D, d M Y H:i:s") . ' GMT');
+    header('Cache-Control: post-check=0, pre-check=0', false);
+    header('Pragma: no-cache');
+    header('X-Powered-By: A Barrel of Monkey\'s ');
+    session_name('reportSessID');
+    session_start();
+    header("Cache-control: private"); //IE 6 Fix
 }
 
 function strip_all_tags($input){
-	while($input != strip_tags($input)) {
-		$input = strip_tags($input);
-	}
-	return $input; 
+    while($input != strip_tags($input)) {
+        $input = strip_tags($input);
+    }
+    return $input;
 }
+
 ?>
