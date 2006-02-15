@@ -212,24 +212,28 @@
   <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserContentAreaPopupShowing()">
       
-	  <menuitem id="full_screen" 
-                label="&toggleFullScreen.label;" 
-                oncommand="DoFullScreen()"/>       
+  
       <!--
           
-		  <menuitem id="link_as_new_tab"    label="&linknewtab.label;" command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
-          
+          <menuitem id="link_as_new_tab"    label="&linknewtab.label;" command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
           <menuitem id="item-bookmark-page" label="&bookmarkthispage.label;" insertbefore="context-sep-view"  command="cmd_BrowserBookmarkThis" hidden="false"/>
           <menuitem id="item-bookmark"      label="&bookmarks.label;" command="cmd_BrowserBookmark" hidden="true"/>
           
           -->        
 	  <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
 
-      <menuseparator/>
-      
-	  <menuitem id="item-copy"   label="&contextCopy.label;" oncommand="DoClipCopy()" />
-	  <menuitem id="item-paste"  label="&contextPaste.label;" oncommand="DoClipPaste()"/>
-      
+
+
+        <menuitem id="link_as_new_tab"  label="&linknewtab.label;"   command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
+	  <menuitem id="item-copy"        label="&contextCopy.label;"  oncommand="DoClipCopy()"              hidden="true"/>
+	  <menuitem id="item-paste"       label="&contextPaste.label;" oncommand="DoClipPaste()"             hidden="true"/>
+
+        <menuseparator/>
+
+	  <menuitem id="full_screen" 
+                  label="&toggleFullScreen.label;" 
+                  oncommand="DoFullScreen()"/>     
+
 	</popup>
     
 
