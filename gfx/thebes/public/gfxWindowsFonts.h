@@ -44,8 +44,14 @@
 
 #include <cairo-win32.h>
 
-class gfxWindowsFont : public gfxFont {
 
+/**********************************************************************
+ *
+ * class gfxWindowsFont
+ *
+ **********************************************************************/
+
+class gfxWindowsFont : public gfxFont {
 public:
     gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
     virtual ~gfxWindowsFont();
@@ -62,24 +68,28 @@ protected:
     void FillLogFont();
 
 private:
-    void ComputeMetrics();
+    void ComputeMetrics(HDC dc);
 
     LOGFONTW mLogFont;
+
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;
-    HDC mDC;
 
     gfxFont::Metrics mMetrics;
 };
 
 
+/**********************************************************************
+ *
+ * class gfxWindowsFontGroup
+ *
+ **********************************************************************/
 
 class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
 
 public:
     gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HDC hwnd);
     virtual ~gfxWindowsFontGroup();
-
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
@@ -92,6 +102,12 @@ private:
     friend class gfxWindowsTextRun;
 };
 
+
+/**********************************************************************
+ *
+ * class gfxWindowsTextRun
+ *
+ **********************************************************************/
 
 class NS_EXPORT gfxWindowsTextRun : public gfxTextRun {
     THEBES_DECL_ISUPPORTS_INHERITED

@@ -88,7 +88,7 @@ public:
 
 protected:
     gfxPlatform() { }
-    ~gfxPlatform() { }
+    virtual ~gfxPlatform() { }
 };
 
 #endif /* GFX_PLATFORM_H */
