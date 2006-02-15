@@ -468,19 +468,19 @@ protected:
 nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI);
 
-NS_NAMED_LITERAL_CSTRING(placesURIPrefix, "place:");
+#define PLACES_URI_PREFIX "place:"
 
 /* Returns true if the given URI represents a history query. */
 inline PRBool IsQueryURI(const nsCString &uri)
 {
-  return StringBeginsWith(uri, placesURIPrefix);
+  return StringBeginsWith(uri, NS_LITERAL_CSTRING(PLACES_URI_PREFIX));
 }
 
 /* Extracts the query string from a query URI. */
 inline const nsDependentCSubstring QueryURIToQuery(const nsCString &uri)
 {
   NS_ASSERTION(IsQueryURI(uri), "should only be called for query URIs");
-  return Substring(uri, placesURIPrefix.Length());
+  return Substring(uri, NS_LITERAL_CSTRING(PLACES_URI_PREFIX).Length());
 }
 
 #endif // nsNavHistory_h_
