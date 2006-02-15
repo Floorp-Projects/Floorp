@@ -70,8 +70,8 @@
 
 #include "prlog.h"
 #ifdef PR_LOGGING 
-PRLogModuleInfo * kGfxPrintingLogMod = PR_NewLogModule("printing-widget");
-#define PR_PL(_p1)  PR_LOG(kGfxPrintingLogMod, PR_LOG_DEBUG, _p1)
+PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
+#define PR_PL(_p1)  PR_LOG(kWidgetPrintingLogMod, PR_LOG_DEBUG, _p1)
 #else
 #define PR_PL(_p1)
 #endif
