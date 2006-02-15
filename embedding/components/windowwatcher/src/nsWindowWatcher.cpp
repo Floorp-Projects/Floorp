@@ -551,6 +551,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   nsresult                        rv = NS_OK;
   PRBool                          nameSpecified,
                                   featuresSpecified,
+                                  isNewToplevelWindow = PR_FALSE,
                                   windowIsNew = PR_FALSE,
                                   windowNeedsName = PR_FALSE,
                                   windowIsModal = PR_FALSE,
@@ -650,7 +651,6 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
         NS_ASSERTION(aParent, "We've _got_ to have a parent here!");
 
         nsCOMPtr<nsIDOMWindow> newWindow;
-        PRBool windowIsNew; // Not used for anything.... yet.
         rv = provider->ProvideWindow(aParent, chromeFlags,
                                      sizeSpec.PositionSpecified(),
                                      sizeSpec.SizeSpecified(),
@@ -665,6 +665,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
+    isNewToplevelWindow = PR_TRUE;
 
     nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
 
@@ -751,7 +752,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
   NS_ENSURE_TRUE(newDocShell, NS_ERROR_UNEXPECTED);
   
-  rv = ReadyOpenedDocShellItem(newDocShellItem, aParent, _retval);
+  rv = ReadyOpenedDocShellItem(newDocShellItem, aParent, windowIsNew, _retval);
   if (NS_FAILED(rv))
     return rv;
 
@@ -761,7 +762,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
      in the open call as disabling persistence of those attributes.
      Popup windows (which should not persist size or position) generally set
      the size. */
-  if (windowIsNew) {
+  if (isNewToplevelWindow) {
     /* at the moment, the strings "height=" or "width=" never happen
        outside a size specification, so we can do this the Q&D way. */
 
@@ -839,7 +840,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     }
   }
 
-  if (windowIsNew) {
+  if (isNewToplevelWindow) {
     // Notify observers that the window is open and ready.
     // The window has not yet started to load a document.
     nsCOMPtr<nsIObserverService> obsSvc =
@@ -910,7 +911,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
                          nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
   }
 
-  if (windowIsNew)
+  if (isNewToplevelWindow)
     SizeOpenedDocShellItem(newDocShellItem, aParent, sizeSpec);
 
   if (windowIsModal) {
@@ -1664,6 +1665,7 @@ nsWindowWatcher::SafeGetWindowByName(const nsAString& aName,
 nsresult
 nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
                                          nsIDOMWindow        *aParent,
+                                         PRBool              aWindowIsNew,
                                          nsIDOMWindow        **aOpenedWindow)
 {
   nsresult rv = NS_ERROR_FAILURE;
@@ -1673,7 +1675,7 @@ nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
   if (piOpenedWindow) {
     if (aParent) {
       nsCOMPtr<nsIDOMWindowInternal> internalParent(do_QueryInterface(aParent));
-      piOpenedWindow->SetOpenerWindow(internalParent); // damnit
+      piOpenedWindow->SetOpenerWindow(internalParent, aWindowIsNew); // damnit
     }
     rv = CallQueryInterface(piOpenedWindow, aOpenedWindow);
   }

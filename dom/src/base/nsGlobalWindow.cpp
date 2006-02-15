@@ -301,7 +301,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsClosed(PR_FALSE), 
     mInClose(PR_FALSE), 
     mHavePendingClose(PR_FALSE),
-    mOpenerWasCleared(PR_FALSE),
+    mHadOriginalOpener(PR_FALSE),
     mIsPopupSpam(PR_FALSE),
     mArguments(nsnull),
     mGlobalObjectOwner(nsnull),
@@ -310,6 +310,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
     mJSObject(nsnull)
+#ifdef DEBUG
+    , mSetOpenerWindowCalled(PR_FALSE)
+#endif
 {
   // Initialize the PRCList (this).
   PR_INIT_CLIST(this);
@@ -1457,11 +1460,26 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 }
 
 void
-nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
+nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
+                                PRBool aOriginalOpener)
 {
-  FORWARD_TO_OUTER_VOID(SetOpenerWindow, (aOpener));
+  FORWARD_TO_OUTER_VOID(SetOpenerWindow, (aOpener, aOriginalOpener));
+
+  NS_ASSERTION(!aOriginalOpener || !mSetOpenerWindowCalled,
+               "aOriginalOpener is true, but not first call to "
+               "SetOpenerWindow!");
+  NS_ASSERTION(!aOriginalOpener || !mDocument,
+               "aOriginalOpener is true, but we already have a document "
+               "loaded");
 
   mOpener = aOpener;
+  if (aOriginalOpener) {
+    mHadOriginalOpener = PR_TRUE;
+  }
+
+#ifdef DEBUG
+  mSetOpenerWindowCalled = PR_TRUE;
+#endif
 }
 
 void
@@ -2287,17 +2305,13 @@ nsGlobalWindow::GetOpener(nsIDOMWindowInternal** aOpener)
 NS_IMETHODIMP
 nsGlobalWindow::SetOpener(nsIDOMWindowInternal* aOpener)
 {
-  FORWARD_TO_OUTER(SetOpener, (aOpener), NS_ERROR_NOT_INITIALIZED);
-
   // check if we were called from a privileged chrome script.
   // If not, opener is settable only to null.
   if (aOpener && !IsCallerChrome()) {
     return NS_OK;
   }
-  if (mOpener && !aOpener)
-    mOpenerWasCleared = PR_TRUE;
 
-  mOpener = aOpener;
+  SetOpenerWindow(aOpener, PR_FALSE);
 
   return NS_OK;
 }
@@ -4377,7 +4391,7 @@ nsGlobalWindow::Close()
   // Don't allow scripts from content to close windows
   // that were not opened by script
   nsresult rv = NS_OK;
-  if (!mOpener && !mOpenerWasCleared) {
+  if (!mHadOriginalOpener) {
     PRBool allowClose = PR_FALSE;
 
     // UniversalBrowserWrite will be enabled if it's been explicitly

@@ -70,14 +70,13 @@ enum OpenAllowValue {
 };
 
 class nsIDocShell;
-class nsIDocShellTreeItem;
 class nsIFocusController;
 class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xabb217ba, 0x2528, 0x467e, \
- { 0xaa, 0x29, 0xdd, 0x84, 0x2d, 0x97, 0x3c, 0x78 } }
+{ 0xebaabeb5, 0xb5e4, 0x4cd3, \
+ { 0x9e, 0xd2, 0xb9, 0xd0, 0x15, 0xd1, 0x27, 0x63 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -341,9 +340,14 @@ public:
                                   PRBool aClearScope) = 0;
 
   /**
-   * Set the opener window.
+   * Set the opener window.  aOriginalOpener is true if and only if this is the
+   * original opener for the window.  That is, it can only be true at most once
+   * during the life cycle of a window, and then only the first time
+   * SetOpenerWindow is called.  It might never be true, of course, if the
+   * window does not have an opener when it's created.
    */
-  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener) = 0;
+  virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener,
+                               PRBool aOriginalOpener) = 0;
 
 
 protected:
