@@ -15,9 +15,9 @@ xmlns:rss="http://purl.org/rss/1.0/"
 <xsl:template match="/">
 
 <vbox>
-		<xsl:for-each select="/bm/homebase/li">
-  			<toolbarbutton >
-				<xsl:attribute name="image" >
+		<xsl:for-each select="/bm/li">
+  			<toolbarbutton>
+				<xsl:attribute name="image"  >
 	                         <xsl:value-of select="@iconsrc"/>
 				</xsl:attribute> 	
 				<xsl:attribute name="oncommand">BrowserOpenURLasTab('<xsl:value-of select="."/>')
