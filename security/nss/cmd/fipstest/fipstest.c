@@ -42,6 +42,7 @@
 #include "blapi.h"
 #include "nss.h"
 #include "secerr.h"
+#include "secdert.h"
 #include "secoidt.h"
 #include "keythi.h"
 #include "ec.h"
@@ -57,6 +58,9 @@
 #ifdef NSS_ENABLE_ECC
 extern SECStatus
 EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams);
+extern SECStatus
+EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
+              const ECParams *srcParams);
 #endif
 
 #define ENCRYPT 1
@@ -2103,7 +2107,7 @@ ecdsa_keypair_test(char *reqfn)
 		fputc('\n', ecdsaresp);
 		PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
 	    }
-	    PORT_FreeArena(ecparams->arena, PR_TRUE);
+	    PORT_FreeArena(ecparams->arena, PR_FALSE);
 	    continue;
 	}
     }
@@ -2159,7 +2163,7 @@ ecdsa_pkv_test(char *reqfn)
 	    *dst++ = *src++;
 	    *dst = '\0';
 	    if (ecparams != NULL) {
-		PORT_FreeArena(ecparams->arena, PR_TRUE);
+		PORT_FreeArena(ecparams->arena, PR_FALSE);
 		ecparams = NULL;
 	    }
 	    encodedparams = getECParams(curve);
@@ -2221,7 +2225,7 @@ ecdsa_pkv_test(char *reqfn)
     }
 loser:
     if (ecparams != NULL) {
-	PORT_FreeArena(ecparams->arena, PR_TRUE);
+	PORT_FreeArena(ecparams->arena, PR_FALSE);
     }
     if (pubkey.data != NULL) {
 	PORT_Free(pubkey.data);
@@ -2280,7 +2284,7 @@ ecdsa_siggen_test(char *reqfn)
 	    *dst++ = *src++;
 	    *dst = '\0';
 	    if (ecparams != NULL) {
-		PORT_FreeArena(ecparams->arena, PR_TRUE);
+		PORT_FreeArena(ecparams->arena, PR_FALSE);
 		ecparams = NULL;
 	    }
 	    encodedparams = getECParams(curve);
@@ -2364,7 +2368,7 @@ ecdsa_siggen_test(char *reqfn)
     }
 loser:
     if (ecparams != NULL) {
-	PORT_FreeArena(ecparams->arena, PR_TRUE);
+	PORT_FreeArena(ecparams->arena, PR_FALSE);
     }
     fclose(ecdsareq);
 }
@@ -2386,7 +2390,6 @@ ecdsa_sigver_test(char *reqfn)
     FILE *ecdsareq;     /* input stream from the REQUEST file */
     FILE *ecdsaresp;    /* output stream to the RESPONSE file */
     char curve[16];     /* "nistxddd" */
-    ECParams *ecparams = NULL;
     ECPublicKey ecpub;
     unsigned int i, j;
     unsigned int flen;  /* length in bytes of the field size */
@@ -2401,9 +2404,7 @@ ecdsa_sigver_test(char *reqfn)
 
     ecdsareq = fopen(reqfn, "r");
     ecdsaresp = stdout;
-    ecpub.publicValue.type = siBuffer;
-    ecpub.publicValue.data = NULL;
-    ecpub.publicValue.len = 0;
+    ecpub.ecParams.arena = NULL;
     strcpy(curve, "nist");
     while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
 	/* a comment or blank line */
@@ -2416,6 +2417,7 @@ ecdsa_sigver_test(char *reqfn)
 	    const char *src;
 	    char *dst;
 	    SECKEYECParams *encodedparams;
+	    ECParams *ecparams;
 
 	    src = &buf[1];
 	    dst = &curve[4];
@@ -2425,10 +2427,6 @@ ecdsa_sigver_test(char *reqfn)
 	    *dst++ = *src++;
 	    *dst++ = *src++;
 	    *dst = '\0';
-	    if (ecparams != NULL) {
-		PORT_FreeArena(ecparams->arena, PR_TRUE);
-		ecparams = NULL;
-	    }
 	    encodedparams = getECParams(curve);
 	    if (encodedparams == NULL) {
 		goto loser;
@@ -2437,16 +2435,28 @@ ecdsa_sigver_test(char *reqfn)
 		goto loser;
 	    }
 	    SECITEM_FreeItem(encodedparams, PR_TRUE);
-	    ecpub.ecParams = *ecparams;
-	    flen = (ecparams->fieldID.size + 7) >> 3;
-	    olen = ecparams->order.len;
+	    if (ecpub.ecParams.arena != NULL) {
+		PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
+	    }
+	    ecpub.ecParams.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+	    if (ecpub.ecParams.arena == NULL) {
+		goto loser;
+	    }
+	    if (EC_CopyParams(ecpub.ecParams.arena, &ecpub.ecParams, ecparams)
+		!= SECSuccess) {
+		goto loser;
+	    }
+	    PORT_FreeArena(ecparams->arena, PR_FALSE);
+	    flen = (ecpub.ecParams.fieldID.size + 7) >> 3;
+	    olen = ecpub.ecParams.order.len;
 	    if (2*olen > sizeof sig) {
 		goto loser;
 	    }
-	    if (ecpub.publicValue.data != NULL) {
-		SECITEM_FreeItem(&ecpub.publicValue, PR_FALSE);
-	    }
-	    SECITEM_AllocItem(NULL, &ecpub.publicValue, 2*flen+1);
+	    ecpub.publicValue.type = siBuffer;
+	    ecpub.publicValue.data = NULL;
+	    ecpub.publicValue.len = 0;
+	    SECITEM_AllocItem(ecpub.ecParams.arena,
+			      &ecpub.publicValue, 2*flen+1);
 	    if (ecpub.publicValue.data == NULL) {
 		goto loser;
 	    }
@@ -2501,7 +2511,7 @@ ecdsa_sigver_test(char *reqfn)
 	    if (!keyvalid) {
 		continue;
 	    }
-	    if (EC_ValidatePublicKey(ecparams, &ecpub.publicValue)
+	    if (EC_ValidatePublicKey(&ecpub.ecParams, &ecpub.publicValue)
 		!= SECSuccess) {
 		if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
 		    keyvalid = PR_FALSE;
@@ -2547,11 +2557,8 @@ ecdsa_sigver_test(char *reqfn)
 	}
     }
 loser:
-    if (ecparams != NULL) {
-	PORT_FreeArena(ecparams->arena, PR_TRUE);
-    }
-    if (ecpub.publicValue.data != NULL) {
-	SECITEM_FreeItem(&ecpub.publicValue, PR_FALSE);
+    if (ecpub.ecParams.arena != NULL) {
+	PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
     }
     fclose(ecdsareq);
 }
