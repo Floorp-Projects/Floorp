@@ -75,3 +75,8 @@ cairo-win32-composite-coord.patch
   - Fix up coordinates before calling BitBlt/AlphaBlend, so that windows
     doesn't get mad at us if we ask it to blit regions outside of the source
     DC (NOT SUBMITTED UPSTREAM YET)
+
+cairo-win32-expose-dc-and-dib.patch
+  - Expose cairo_win32_surface_get_dc() to return the HDC for a win32 surface
+  - Expose cairo_win32_surface_create_dib() for creating a DIB-backed surface
+    (NOT SUBMITTED UPSTREAM YET)
