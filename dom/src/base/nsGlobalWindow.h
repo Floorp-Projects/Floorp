@@ -227,7 +227,8 @@ public:
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
                                   nsISupports *aState,
                                   PRBool aClearScopeHint);
-  virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener);
+  virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener,
+                                           PRBool aOriginalOpener);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -468,7 +469,7 @@ protected:
   // close us when the JS stops executing or that we have a close
   // event posted.  If this is set, just ignore window.close() calls.
   PRPackedBool                  mHavePendingClose : 1;
-  PRPackedBool                  mOpenerWasCleared : 1;
+  PRPackedBool                  mHadOriginalOpener : 1;
   PRPackedBool                  mIsPopupSpam : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
@@ -507,6 +508,10 @@ protected:
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   nsCOMPtr<nsIDocument> mDoc;  // For fast access to principals
   JSObject* mJSObject;
+
+#ifdef DEBUG
+  PRBool mSetOpenerWindowCalled;
+#endif
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
