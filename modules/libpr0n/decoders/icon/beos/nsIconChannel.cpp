@@ -353,7 +353,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   // Alpha data - bitmask, with rows aligned on 32-bit boundaries
   for(PRUint32 iconRow = 0; iconRow < iconSize; iconRow++)
   {
-    destByte = buffer + 2 + iconSize * iconSize * 3 + iconRow * alphaBytesPerRow;
+    destByte = buffer + 3 + iconSize * iconSize * 3 + iconRow * alphaBytesPerRow;
     sourceByte = (uint8*)nativeIcon.Bits() + nativeIcon.BytesPerRow() * iconRow;
     int bitNo = 0;
     for(PRUint32 iconCol = 0; iconCol < iconSize; iconCol++)
