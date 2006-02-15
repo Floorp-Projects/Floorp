@@ -52,6 +52,7 @@ var SECTION = "15.1.2.1-2";
 var VERSION = "ECMA_1";
 startTest();
 var TITLE   = "eval(x)";
+var BUGNUMBER = "none";
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 
