@@ -51,7 +51,8 @@
 var SECTION = "15.1.2.2-2";
 var VERSION = "ECMA_1";
 var TITLE   = "parseInt(string, radix)";
-var BUGNUMBER="123874";
+var BUGNUMBER = "none";
+
 startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
