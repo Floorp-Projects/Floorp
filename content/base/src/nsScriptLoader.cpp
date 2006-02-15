@@ -988,7 +988,6 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     // -- Merge the principal of the script file with that of the document; if
     // the script has a non-cert principal, the document's principal should be
     // downgraded.
-    // XXXbz except usually the channel owner will be null!  Then what?
     if (channel) {
       nsCOMPtr<nsISupports> owner;
       channel->GetOwner(getter_AddRefs(owner));
