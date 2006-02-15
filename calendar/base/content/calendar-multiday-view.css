@@ -97,6 +97,7 @@ textbox.editable-label {
 }
 
 calendar-event-box[selected="true"] .calendar-event-box-container { 
+  color: #000000 !important;
   background: #ffdb67 !important;
 }
 

@@ -60,6 +60,7 @@ calendar-month-day-box-item {
 }
 
 calendar-month-day-box-item[selected="true"] { 
+  color: #000000 !important;
   background: #ffdb67 !important;
 }
 
