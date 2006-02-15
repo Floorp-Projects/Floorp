@@ -24,5 +24,32 @@
 		<div class="title">Reports (7d):</div>
 		<div class="data">{$last7days}</div>
 	</div>
+	<div>
+		<div class="title">By Platform:</div>
+		<div class="data">
+		<table>
+    		{section name=sys loop=$platform}
+			<tr>
+                        	<td>{$platform[sys].report_platform}</td>
+				<td>{$platform[sys].total}</td>
+			</tr>
+    		{/section}
+    		</table>
+                </div>
+	</div>
+	<div>
+		<div class="title">By Product:</div>
+		<div class="data">
+		<table>
+    		{section name=prod loop=$product}
+			<tr>
+                        	<td>{$product[prod].report_product}</td>
+				<td>{$product[prod].total}</td>
+			</tr>
+    		{/section}
+    		</table>
+                </div>
+	</div>
+
 </div>
 <br />
