@@ -72,7 +72,7 @@ XPI_PKGNAME            = xforms
 USE_EXTENSION_MANIFEST = 1
 NO_JAR_AUTO_REG        = 1
 INSTALL_EXTENSION_ID   = {cf2812dc-6a7c-4402-b639-4d277dac4c36}
-PACKAGE_VERSION        = 0.2
+PACKAGE_VERSION        = 0.4
 
 # We want to strip the XPI
 STRIP_XPI = 1
