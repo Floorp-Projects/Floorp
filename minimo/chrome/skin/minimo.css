@@ -256,6 +256,10 @@ caption {
    padding:.3em ! important;
 }
  
+#MenuTabsContainer {
+   padding:.3em ! important;
+}
+
 #browserleftbar {
     padding:2px ! important;
     display:none;
