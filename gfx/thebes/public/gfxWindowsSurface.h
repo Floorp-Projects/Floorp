@@ -48,7 +48,9 @@ class NS_EXPORT gfxWindowsSurface : public gfxASurface {
 public:
     gfxWindowsSurface(HWND wnd);
     gfxWindowsSurface(HDC dc, PRBool deleteDC = PR_FALSE);
-    gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height);
+    gfxWindowsSurface(HDC dc,
+                      unsigned long width, unsigned long height,
+                      gfxImageFormat imageFormat = ImageFormatRGB24);
     virtual ~gfxWindowsSurface();
 
     HDC GetDC() { return mDC; }

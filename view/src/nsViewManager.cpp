@@ -610,46 +610,19 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   float t2p = mContext->AppUnitsToDevUnits();
 
 #ifdef MOZ_CAIRO_GFX
-  nsRefPtr<gfxContext> ctx = (gfxContext*) localcx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-  PRBool usingDoubleBuffer = (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
+  nsRefPtr<gfxContext> ctx =
+    (gfxContext*) localcx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
   ctx->Save();
 
-  ctx->Translate(gfxPoint(NSToIntRound(viewRect.x * t2p), NSToIntRound(viewRect.y * t2p)));
-  ctx->NewPath();
-
-  if (aRegion) {
-    nsRegionRectSet *rs = nsnull;
-    aRegion->GetRects(&rs);
-    for (int i = 0; i < rs->mNumRects; i++) {
-      ctx->Rectangle(gfxRect(rs->mRects[i].x,
-                             rs->mRects[i].y,
-                             rs->mRects[i].width,
-                             rs->mRects[i].height));
-    }
-    aRegion->FreeRects(rs);
-  }
-
-  ctx->Rectangle(gfxRect(NSToIntRound(damageRect.x * t2p),
-                         NSToIntRound(damageRect.y * t2p),
-                         NSToIntRound(damageRect.width * t2p),
-                         NSToIntRound(damageRect.height * t2p)));
-  ctx->Clip();
-
-  if (usingDoubleBuffer)
-    ctx->PushGroup(gfxContext::CONTENT_COLOR);
+  ctx->Translate(gfxPoint(NSToIntRound(viewRect.x * t2p),
+                          NSToIntRound(viewRect.y * t2p)));
 
   nsRegion opaqueRegion;
   AddCoveringWidgetsToOpaqueRegion(opaqueRegion, mContext, aView);
   damageRegion.Sub(damageRegion, opaqueRegion);
 
   RenderViews(aView, *localcx, damageRegion, ds);
-
-  if (usingDoubleBuffer) {
-    ctx->PopGroupToSource();
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->Paint();
-  }
 
   ctx->Restore();
 #else
@@ -857,6 +830,7 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
                                 const nsRegion& aRegion, nsIDrawingSurface* aRCSurface)
 {
+#ifndef MOZ_CAIRO_GFX
   nsIWidget* widget = aView->GetWidget();
   PRBool translucentWindow = PR_FALSE;
   if (widget) {
@@ -873,6 +847,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
   NS_ASSERTION(buffers, "Failed to create rendering buffers");
   if (!buffers)
     return;
+#endif
 
   if (mObserver) {
     nsView* displayRoot = GetDisplayRootFor(aView);
@@ -886,6 +861,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
     aRC.PopState();
   }
 
+#ifndef MOZ_CAIRO_GFX
   if (translucentWindow) {
     // Get the alpha channel into an array so we can send it to the widget
     nsRect r = aRegion.GetBounds();
@@ -902,6 +878,7 @@ void nsViewManager::RenderViews(nsView *aView, nsIRenderingContext& aRC,
   }
 
   delete buffers;
+#endif
 }
 
 static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsIDrawingSurface* surface,

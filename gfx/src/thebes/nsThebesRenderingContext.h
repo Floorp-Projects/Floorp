@@ -71,6 +71,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
+    NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface *aSurface);

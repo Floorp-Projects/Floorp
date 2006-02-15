@@ -53,51 +53,19 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
     Init(cairo_win32_surface_create(mDC));
 }
 
-gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height) :
-    mOwnsDC(PR_TRUE), mWnd(nsnull)
+gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height, gfxImageFormat imageFormat) :
+    mOwnsDC(PR_FALSE), mWnd(nsnull)
 {
-    mDC = ::CreateCompatibleDC(dc);
-
-    // set the clip region on it so that cairo knows the surface
-    // dimensions
-    HRGN clipRegion = ::CreateRectRgn(0, 0, width, height);
-    if (::SelectClipRgn(mDC, clipRegion) == ERROR) {
-        NS_ERROR("gfxWindowsSurface: SelectClipRgn failed\n");
-    }
-    ::DeleteObject(clipRegion);
-
     HBITMAP bmp = nsnull;
-    if (dc) {
-        // Create a DDB if we can -- this is faster.
 
-        // Creating with width or height of 0 will create a
-        // 1x1 monotone bitmap, which isn't what we want
-         bmp = ::CreateCompatibleBitmap(dc, PR_MAX(2, width), PR_MAX(2, height));
-    } else {
-        // Otherwise, create a DIB -- this is slower.
-        BITMAPINFO bmpInfo;
-        unsigned char *bits = NULL;
+    // At some point we might want to revisit creating a DDB
+    // with CreateCompatibleDC, but from stuff that I've read
+    // that's only useful for terminal services clients.
 
-        /* initialize the bitmapinfoheader */
-        memset(&bmpInfo.bmiHeader, 0, sizeof(BITMAPINFOHEADER));
-        bmpInfo.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-        bmpInfo.bmiHeader.biWidth = width;
-        bmpInfo.bmiHeader.biHeight = -(long)height;
-        bmpInfo.bmiHeader.biPlanes = 1;
-        bmpInfo.bmiHeader.biBitCount = 24;
-        bmpInfo.bmiHeader.biCompression = BI_RGB;
+    Init(cairo_win32_surface_create_dib((cairo_format_t)imageFormat,
+                                        width, height));
 
-        /* create a DIBSection */
-        bmp = CreateDIBSection(dc, &bmpInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
-
-        /* Flush GDI to make sure the DIBSection is actually created */
-        GdiFlush();
-    }
-
-    /* Select the bitmap in to the DC */
-    mOrigBitmap = (HBITMAP)::SelectObject(mDC, bmp);
-
-    Init(cairo_win32_surface_create(mDC));
+    mDC = cairo_win32_surface_get_dc(CairoSurface());
 }
 
 gfxWindowsSurface::~gfxWindowsSurface()

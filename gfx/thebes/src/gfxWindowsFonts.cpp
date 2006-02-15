@@ -303,7 +303,13 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
                                           const PRUnichar *aString, PRUint32 aLength,
                                           PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing)
 {
-    HDC aDC = static_cast<gfxWindowsSurface*>(aContext->CurrentSurface())->GetDC();
+    nsRefPtr<gfxASurface> surf = aContext->CurrentGroupSurface();
+    if (!surf)
+        surf = aContext->CurrentSurface();
+
+    HDC aDC = cairo_win32_surface_get_dc(surf->CairoSurface());
+
+    int knownGoodDCState = SaveDC(aDC);
 
     int loops = 0;
 
@@ -507,7 +513,17 @@ TRY_AGAIN_SAME_SCRIPT:
                 RestoreDC(aDC, -1);
 #else
                 /* Draw using cairo */
+
+                /* XXX cairo sets a world transform in order to get subpixel accuracy in some cases;
+                 * this breaks it there's a surface fallback that happens with clipping, because
+                 * the clip gets applied with the world transform and the world breaks.  Doing this
+                 * RestoreDC fixes things until we can fix the win32 font stuff.
+                 */
+                RestoreDC(aDC, knownGoodDCState);
+
                 cairo_show_glyphs(cr, cglyphs, numGlyphs);
+
+                knownGoodDCState = SaveDC(aDC);
 #endif
                 free(cglyphs);
 

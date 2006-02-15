@@ -67,6 +67,7 @@ struct nsBoundingMetrics;
 
 #ifdef MOZ_CAIRO_GFX
 class gfxASurface;
+class gfxContext;
 #endif
 
 /* gfx2 */
@@ -137,6 +138,14 @@ public:
    * @result The result of the initialization, NS_Ok if no errors
    */
   NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface) = 0;
+
+  /**
+   * Initialize the RenderingContext
+   * @param aContext the device context to use for the drawing.
+   * @param aThebesContext an existing thebes context to use for the drawing
+   * @result The result of the initialization, NS_Ok if no errors
+   */
+  NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext) = 0;
 #endif
 
   /**

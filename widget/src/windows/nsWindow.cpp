@@ -87,8 +87,10 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
-#ifdef MOZ_THEBES
+#ifdef MOZ_CAIRO_GFX
 #include "nsIThebesRenderingContext.h"
+#include "gfxContext.h"
+#include "gfxWindowsSurface.h"
 #else
 #include "nsIRenderingContextWin.h"
 #endif
@@ -5637,21 +5639,54 @@ PRBool nsWindow::OnPaint(HDC aDC)
 #endif // NS_DEBUG
 
 #ifdef MOZ_CAIRO_GFX
-      nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+      nsRefPtr<gfxASurface> targetSurface = new gfxWindowsSurface(hDC);
+      nsRefPtr<gfxContext> thebesContext = new gfxContext(targetSurface);
+
+#ifdef MOZ_XUL
+      if (mIsTranslucent && IsAlphaTranslucencySupported()) {
+        // If we're rendering with translucency, we're going to be
+        // rendering the whole window; make sure we clear it first
+        thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+        thebesContext->Paint();
+        thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+      } else {
+        // If we're not doing translucency, then double buffer
+        thebesContext->PushGroup(gfxContext::CONTENT_COLOR);
+      }
+#endif
+
+      nsCOMPtr<nsIRenderingContext> rc;
+      nsresult rv = mContext->CreateRenderingContextInstance (*getter_AddRefs(rc));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateRenderingContextInstance failed");
+        return PR_FALSE;
+      }
+
+      rv = rc->Init(mContext, thebesContext);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("RC::Init failed");
+        return PR_FALSE;
+      }
+
       event.renderingContext = rc;
       result = DispatchWindowEvent(&event, eventStatus);
       event.renderingContext = nsnull;
 
-      if (mIsTranslucent && IsAlphaTranslucencySupported())
-      {
+#ifdef MOZ_XUL
+      if (mIsTranslucent && IsAlphaTranslucencySupported()) {
         // Data from offscreen drawing surface was copied to memory bitmap of transparent
         // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
         // that displayed on the screen.
         UpdateTranslucentWindow();
+      } else {
+        thebesContext->PopGroupToSource();
+        thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+        thebesContext->Paint();
       }
-      rc = nsnull;
-#else
+#endif
 
+#else
+      /* Non-cairo GFX */
       if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
       {
         nsIRenderingContextWin *winrc;
@@ -8002,8 +8037,6 @@ nsWindow* nsWindow::GetTopLevelWindow()
 }
 
 #ifdef MOZ_CAIRO_GFX
-#include "gfxWindowsSurface.h"
-
 gfxASurface *nsWindow::GetThebesSurface()
 {
   if (mPaintDC)
@@ -8013,11 +8046,12 @@ gfxASurface *nsWindow::GetThebesSurface()
 }
 #endif
 
-void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
+void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force)
 {
-  if (aNewWidth == mBounds.width && aNewHeight == mBounds.height)
+  if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
+#ifndef MOZ_CAIRO_GFX
   // resize the alpha mask
   PRUint8* pBits;
 
@@ -8025,7 +8059,7 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
   {
     pBits = new PRUint8 [aNewWidth * aNewHeight];
 
-    if (pBits)
+    if (pBits && mAlphaMask)
     {
       PRInt32 copyWidth, copyHeight;
       PRInt32 growWidth, growHeight;
@@ -8072,15 +8106,23 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
   delete [] mAlphaMask;
   mAlphaMask = pBits;
-
+#endif
 
   if (IsAlphaTranslucencySupported())
   {
-    // Always use at least 24-bit bitmaps regardless of the device context.
+    if (!w2k.mMemoryDC)
+      w2k.mMemoryDC = ::CreateCompatibleDC(NULL);
+
+    // Always use at least 24-bit (32 with cairo) bitmaps regardless of the device context.
     int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
+#ifdef MOZ_CAIRO_GFX
+    if (depth < 32)
+      depth = 32;
+#else
     if (depth < 24)
       depth = 24;
-    
+#endif
+
     // resize the memory bitmap
     BITMAPINFO bi = { 0 };
     bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
@@ -8192,52 +8234,26 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
 
 nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (aTranslucent)
-  {
-    w2k.mMemoryDC = ::CreateCompatibleDC(NULL);
-
+  if (aTranslucent) {
+    ResizeTranslucentWindow(mBounds.width, mBounds.height, PR_TRUE);
+  } else {
     if (w2k.mMemoryDC)
-    {
-      // Always use at least 24-bit bitmaps regardless of the device context.
-      int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
-      if (depth < 24)
-        depth = 24;
-
-      BITMAPINFO bi = { 0 };
-      bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-      bi.bmiHeader.biWidth = mBounds.width;
-      bi.bmiHeader.biHeight = -mBounds.height;
-      bi.bmiHeader.biPlanes = 1;
-      bi.bmiHeader.biBitCount = depth;
-      bi.bmiHeader.biCompression = BI_RGB;
-
-      w2k.mMemoryBitmap = ::CreateDIBSection(w2k.mMemoryDC, &bi, DIB_RGB_COLORS, (void**)&w2k.mMemoryBits, NULL, 0);
-
-      if (w2k.mMemoryBitmap)
-      {
-        ::SelectObject(w2k.mMemoryDC, w2k.mMemoryBitmap);
-
-        rv = NS_OK;
-      }
-    }
-  } else
-  {
-    ::DeleteDC(w2k.mMemoryDC);
-    ::DeleteObject(w2k.mMemoryBitmap);
+      ::DeleteDC(w2k.mMemoryDC);
+    if (w2k.mMemoryBitmap)
+      ::DeleteObject(w2k.mMemoryBitmap);
 
     w2k.mMemoryDC = NULL;
     w2k.mMemoryBitmap = NULL;
-
-    rv = NS_OK;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas)
 {
+#ifdef MOZ_CAIRO_GFX
+  NS_ERROR("nsWindow::UpdateTranslucentWindowAlphaInner called, when it sholdn't be!");
+#else
   NS_ASSERTION(mIsTranslucent, "Window is not transparent");
   NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0 &&
                aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
@@ -8292,6 +8308,7 @@ void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* a
     if (transparencyMaskChanged)
       SetWindowRegionToAlphaMask();
   }
+#endif
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()
@@ -8303,13 +8320,24 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
   ::GdiFlush();
 
+  HDC hMemoryDC;
+  HBITMAP hAlphaBitmap;
+  PRBool needConversion;
+
+#ifdef MOZ_CAIRO_GFX
+
+  hMemoryDC = w2k.mMemoryDC;
+  needConversion = PR_FALSE;
+
+  rv = NS_OK;
+
+#else
+
   int depth = ::GetDeviceCaps(w2k.mMemoryDC, BITSPIXEL);
   if (depth < 24)
     depth = 24;
 
-  HDC hMemoryDC;
-  HBITMAP hAlphaBitmap;
-  PRBool needConversion = (depth == 24);
+  needConversion = (depth == 24);
 
   if (needConversion)
   {
@@ -8372,7 +8400,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
       rv = NS_OK;
     }
   }
-
+#endif /* MOZ_CAIRO_GFX */
 
   if (rv == NS_OK)
   {

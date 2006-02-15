@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -855,10 +855,6 @@ class nsIWidget : public nsISupports {
     virtual nsIRenderingContext* GetRenderingContext() = 0;
     virtual nsIDeviceContext* GetDeviceContext() = 0;
     virtual nsIAppShell *GetAppShell() = 0;
-
-#ifdef MOZ_CAIRO_GFX
-    virtual gfxASurface *GetThebesSurface() = 0;
-#endif
     //@}
 
     /**
@@ -1043,6 +1039,12 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetLastInputEventTime(PRUint32& aTime) = 0;
 
+#ifdef MOZ_CAIRO_GFX
+    /**
+     * Get the Thebes surface associated with this widget.
+     */
+    virtual gfxASurface *GetThebesSurface() = 0;
+#endif
 
 protected:
     // keep the list of children.  We also keep track of our siblings.
