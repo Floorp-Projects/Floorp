@@ -68,7 +68,7 @@ toolbar *, #appcontent *, * {
 }
 
 .tabs-closebutton-box{
-    list-style-image: url("chrome://minimo/skin/close-11px.png");
+    list-style-image: url("chrome://minimo/skin/close-12px.png");
 }
 
 #lock-icon.security-na {
@@ -86,7 +86,7 @@ toolbar *, #appcontent *, * {
 
 
 .button-close {
-  list-style-image: url("chrome://minimo/skin/close-11px.png");
+  list-style-image: url("chrome://minimo/skin/close-12px.png");
   margin-right:4px ! important;
   margin-top:0px ! important;
 
@@ -270,6 +270,9 @@ caption {
     display:none;
 }
 
+#browser {
+    border-left:1px solid white;
+}
 
 /*
  *  This should not exist...
