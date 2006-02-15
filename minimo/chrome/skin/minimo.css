@@ -243,20 +243,19 @@ caption {
 /* 
  * popup for urlmore 
  */
+
 #urlbarModeSelector {
    padding:.3em ! important;
 }
-
-
 
 #menu_MainPopup {
    padding:.3em ! important;
 }
  
-
-
-window { width: 240px ; height: 320px; }
-
+#menu_NavPopup {
+   padding:.3em ! important;
+}
+ 
 #browserleftbar {
     padding:2px ! important;
     display:none;
@@ -266,3 +265,10 @@ window { width: 240px ; height: 320px; }
     padding:2px ! important;
     display:none;
 }
+
+
+/*
+ *  This should not exist...
+ */ 
+window { width: 240px ; height: 320px; }
+
