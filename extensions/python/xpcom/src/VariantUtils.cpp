@@ -158,7 +158,7 @@ PyObject_AsNSString( PyObject *val, nsAString &aStr)
 {
 	if (val == Py_None) {
 		aStr.Truncate();
-		return NS_OK;
+		return PR_TRUE;
 	}
 	PyObject *val_use = NULL;
 	PRBool ok = PR_TRUE;
