@@ -2906,7 +2906,7 @@ SECStatus sha_mct_test(unsigned int MDLen, unsigned char *seed, FILE *resp)
  */
 void sha_test(char *reqfn) 
 {
-    int i, j;
+    unsigned int i, j;
     unsigned int MDlen;   /* the length of the Message Digest in Bytes  */
     unsigned int msgLen;  /* the length of the input Message in Bytes */
     unsigned char *msg = NULL; /* holds the message to digest.*/
@@ -3075,7 +3075,7 @@ hmac_calc(unsigned char *hmac_computed,
  */
 void hmac_test(char *reqfn) 
 {
-    int i, j;
+    unsigned int i, j;
     size_t bufSize =      288;    /* MAX buffer size */
     char *buf = NULL;  /* holds one line from the input REQUEST file.*/
     unsigned int keyLen;          /* Key Length */  
