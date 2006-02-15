@@ -802,7 +802,6 @@ function MenuNavPopupShowing () {
 
 }
 
-
 function BrowserContentAreaPopupShowing () {
 
   var selectedRange=gBrowser.selectedBrowser.contentDocument.getSelection();
@@ -824,6 +823,7 @@ function BrowserContentAreaPopupShowing () {
   if( targetPopupNode instanceof HTMLInputElement || targetPopupNode instanceof HTMLTextAreaElement ) {
       if(DoClipCheckPaste()) {
         document.getElementById("item-paste").hidden=false;
+        gPopupNodeContextMenu = targetPopupNode; 
       }
   } else {
     document.getElementById("item-paste").hidden=true;
@@ -838,9 +838,7 @@ function BrowserContentAreaPopupShowing () {
   } else {
     document.getElementById("link_as_new_tab").hidden=true;
   }
-
 }
-
 
 /* Bookmarks */ 
 
@@ -1093,12 +1091,14 @@ function DoClipCheckPaste()
 function DoClipPaste()
 {
   
-  /* 008 note - value is there in the clipboard, however somehow paste action does not happen. 
-     If you evaluate the canpaste you get false. */ 
-  
+  gPopupNodeContextMenu.focus();   // Hack. When the context menu goes open, then we store the Pastable element in gPopupNodeContextMenu
+                                   // If the user clicks the element in the Context menu, the focused element changes, then is not pastable
+                                   // anymore. 
+
   var disp = document.commandDispatcher;
   var cont = disp.getControllerForCommand("cmd_paste");
   cont.doCommand("cmd_paste");
+
 }
 
 function URLBarEntered()
