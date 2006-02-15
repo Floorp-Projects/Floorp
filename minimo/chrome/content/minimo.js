@@ -1332,8 +1332,6 @@ function DownloadSet( aCurTotalProgress, aMaxTotalProgress ) {
   var percentage = parseInt((aCurTotalProgress/aMaxTotalProgress)*parseInt(gInputBoxObject.width));
   if(percentage<0) percentage=2;
   document.getElementById("toolbar-download-tag").inputField.style.backgroundPosition=percentage+"px 100%";
-//  document.getElementById("toolbar-download-tag").value=document.getElementById("minimo_properties").getString("downloadProgress")+":"+parseInt((aCurTotalProgress/aMaxTotalProgress)*100)+"%";
- 	 document.getElementById("toolbar-download-tag").setAttribute("currentid",refId);
 }
 
 function DownloadCancel(refId) {
@@ -1445,4 +1443,5 @@ function BrowserHomeBar()  {
 
     if(document.getElementById("homebarcontainer").style.display=="none") document.getElementById("homebarcontainer").style.display="block"; 
     else document.getElementById("homebarcontainer").style.display="none";
+
 }
