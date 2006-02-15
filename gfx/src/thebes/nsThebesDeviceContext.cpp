@@ -54,7 +54,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#include "nsFontMetricsUtils.h"
 #include "nsFont.h"
 
 #include <pango/pango.h>
