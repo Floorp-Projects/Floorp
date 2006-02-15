@@ -59,5 +59,6 @@ minimo.jar:
 	skin/classic/minimo/extensions/icon-delicious.png (skin/extensions/icon-delicious.png)
 	skin/classic/minimo/extensions/icon-google.png    (skin/extensions/icon-google.png)
 	skin/classic/minimo/extensions/icon-urlbar.png    (skin/extensions/icon-urlbar.png)
+	skin/classic/minimo/extensions/icon-star.png    (skin/extensions/icon-star.png)
     branding/locale/brand.dtd        (locale/en-US/brand.dtd)
     branding/locale/brand.properties (locale/en-US/brand.properties)
