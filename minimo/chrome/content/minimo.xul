@@ -227,8 +227,8 @@
 
       <menuseparator/>
       
-	  <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
-	  <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
+	  <menuitem id="item-copy"   label="&contextCopy.label;" oncommand="DoClipCopy()" />
+	  <menuitem id="item-paste"  label="&contextPaste.label;" oncommand="DoClipPaste()"/>
       
 	</popup>
     
