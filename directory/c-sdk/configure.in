@@ -341,7 +341,7 @@ if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
 fi
 
 dnl next, look for in-tree nspr if user did not specify explicit system nspr
-if test "$no_nspr" == "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
+if test "$no_nspr" = "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
    if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
 dnl see if we are being built in the same build tree as nspr
       AM_PATH_INTREE_NSPR(../../dist)

@@ -2395,7 +2395,7 @@ fi;
 
 fi
 
-if test "$no_nspr" == "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
+if test "$no_nspr" = "no" -a -z "$NSPR_CFLAGS" -a -z "$NSPR_LIBS" ; then
    if test -z "$_SYSTEM_NSPR" -o "$_SYSTEM_NSPR" = "no" ; then
 
     echo "$as_me:$LINENO: checking checking for in-tree NSPR from ../../dist" >&5
