@@ -67,9 +67,26 @@ toolbar *, #appcontent *, * {
 	padding:1px;
 }
 
+/* Tab browser stuff */
+
 .tabs-closebutton-box{
     list-style-image: url("chrome://minimo/skin/close-12px.png");
 }
+
+#content tabpanels {
+    border-left:1px solid white;
+}
+
+#content .tabbrowser-strip {
+    margin-top:1px ! important;
+    margin-left:2px ! important;
+}
+
+#content .tabs-closebutton-box {
+   margin-right:3px ! important;
+}
+
+/* Lock... */
 
 #lock-icon.security-na {
 }
@@ -270,9 +287,7 @@ caption {
     display:none;
 }
 
-#browser {
-    border-left:1px solid white;
-}
+
 
 /*
  *  This should not exist...
