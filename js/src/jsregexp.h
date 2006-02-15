@@ -117,6 +117,9 @@ extern JSRegExp *
 js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
                 JSString *str, JSString *opt, JSBool flat);
 
+#define HOLD_REGEXP(cx, re) JS_ATOMIC_INCREMENT(&(re)->nrefs)
+#define DROP_REGEXP(cx, re) js_DestroyRegExp(cx, re)
+
 extern void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re);
 

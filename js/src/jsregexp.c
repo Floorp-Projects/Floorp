@@ -2034,10 +2034,6 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
     return js_NewRegExp(cx, ts, str, flags, flat);
 }
 
-
-#define HOLD_REGEXP(cx, re) JS_ATOMIC_INCREMENT(&(re)->nrefs)
-#define DROP_REGEXP(cx, re) js_DestroyRegExp(cx, re)
-
 /*
  * Save the current state of the match - the position in the input
  * text as well as the position in the bytecode. The state of any
