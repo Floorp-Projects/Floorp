@@ -358,7 +358,7 @@
 #ifndef MOZ_PLACES
                 <menuitem observes="viewHistorySidebar" key="key_gotoHistory"/>
 #else
-                <menuitem label="&historyMenu.label;" accesskey="&historyMenu.accesskey;"
+                <menuitem label="&historyButton.label;"
                           command="Browser:ShowPlaces" key="key_gotoHistory"/>
 #endif
               </menupopup>
