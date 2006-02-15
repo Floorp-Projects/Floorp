@@ -1266,7 +1266,7 @@
       <children includes="label"/>
       <html:input anonid="upload_text_control"
                   class="xf-value"
-                  readonly="true"/>
+                  readonly="readonly"/>
       <html:button anonid="upload_browse_button"
                    type="button"
                    onclick="this.parentNode.uploadElem.pickFile();"
@@ -1281,6 +1281,18 @@
     </content>
 
     <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
+      <method name="refresh">
+        if (this.accessors.isReadonly()) {
+          this._browseButton.setAttribute("disabled", "disabled");
+          this._clearButton.setAttribute("disabled", "disabled");
+        } else {
+          this._browseButton.removeAttribute("disabled");
+          this._clearButton.removeAttribute("disabled");
+        }
+
+        return true;
+      </method>
+
       <destructor>
         this._uploadElem = null;
         this._textControl = null;
@@ -1356,17 +1368,16 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <children includes="label"/>
-      <html:input readonly="true"
+      <html:input readonly="readonly"
                   class="xf-value"
                   xbl:inherits="accesskey"/>
       <html:button type="button"
-                   disabled="true"
+                   disabled="disabled"
                    xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
       <html:button type="button"
-                   disabled="true"
+                   disabled="disabled"
                    xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
       <children/>
     </content>
   </binding>
-
 </bindings>
