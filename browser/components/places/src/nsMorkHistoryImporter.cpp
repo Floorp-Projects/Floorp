@@ -242,7 +242,14 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
   mozIStorageConnection *conn = history->GetStorageConnection();
   NS_ENSURE_TRUE(conn, NS_ERROR_NOT_INITIALIZED);
   mozStorageTransaction transaction(conn, PR_FALSE);
+#ifdef IN_MEMORY_LINKS
+  mozIStorageConnection *memoryConn = history->GetMemoryStorageConnection();
+  mozStorageTransaction memTransaction(memoryConn, PR_FALSE);
+#endif
 
   reader.EnumerateRows(AddToHistoryCB, &data);
+#ifdef IN_MEMORY_LINKS
+  memTransaction.Commit();
+#endif
   return transaction.Commit();
 }

@@ -80,6 +80,8 @@
 #define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
 // Size of visit count boost to give to urls which are sites or paths
 #define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
+// set to use more optimized (in-memory database) link coloring
+#define IN_MEMORY_LINKS
 
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
@@ -150,6 +152,13 @@ public:
   {
     return mDBConn;
   }
+
+#ifdef IN_MEMORY_LINKS
+  mozIStorageConnection* GetMemoryStorageConnection()
+  {
+    return mMemDBConn;
+  }
+#endif
 
   /**
    * These functions return non-owning references to the locale-specific
@@ -311,12 +320,14 @@ protected:
 
   nsresult InitDB(PRBool *aDoImport);
 
+#ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
   nsCOMPtr<mozIStorageConnection> mMemDBConn;
   nsCOMPtr<mozIStorageStatement> mMemDBAddPage;
   nsCOMPtr<mozIStorageStatement> mMemDBGetPage;
 
   nsresult InitMemDB();
+#endif
 
   nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
@@ -446,6 +457,10 @@ protected:
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                            nsCOMArray<nsNavHistoryQuery>* aQueries,
                            nsNavHistoryQueryOptions* aOptions);
+
+  // creates supplemental indexes that we'd like to not bother with
+  // updating during import.
+  nsresult CreateLookupIndexes();
 };
 
 /**
