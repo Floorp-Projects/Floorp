@@ -46,7 +46,7 @@
 #include "nsCRT.h"
 
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
-    : mFamilies(aFamilies), mStyle(*aStyle), mIsRTL(PR_FALSE)
+    : mFamilies(aFamilies), mStyle(*aStyle)
 {
     nsresult rv;
 

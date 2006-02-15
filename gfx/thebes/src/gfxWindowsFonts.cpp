@@ -50,28 +50,30 @@
 #define NSToCoordRound(x) (floor((x) + 0.5))
 
 
+/**********************************************************************
+ *
+ * class gfxWindowsFont
+ *
+ **********************************************************************/
+
 gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aDC)
 {
     mName = aName;
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
 
-    mDC = aDC;
-
-    if (!mDC)
-        mDC = GetDC(nsnull);
-
     mFontFace = MakeCairoFontFace();
     NS_ASSERTION(mFontFace, "Failed to make font face");
+
     mScaledFont = MakeCairoScaledFont(nsnull);
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 
-    ComputeMetrics();
+    HDC dc = aDC ? aDC : GetDC((HWND)nsnull);
 
-    if (mDC != aDC) {
-        ReleaseDC(nsnull, mDC);
-        mDC = aDC;
-    }
+    ComputeMetrics(dc);
+
+    if (dc != aDC)
+        ReleaseDC((HWND)nsnull, dc);
 }
 
 gfxWindowsFont::~gfxWindowsFont()
@@ -126,11 +128,11 @@ gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 }
 
 void
-gfxWindowsFont::ComputeMetrics()
+gfxWindowsFont::ComputeMetrics(HDC aDC)
 {
-    SaveDC(mDC);
+    SaveDC(aDC);
 
-    cairo_win32_scaled_font_select_font(mScaledFont, mDC);
+    cairo_win32_scaled_font_select_font(mScaledFont, aDC);
 
     double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
     double multiplier = cairofontfactor * mStyle->size;
@@ -141,7 +143,7 @@ gfxWindowsFont::ComputeMetrics()
     TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
     gfxFloat descentPos = 0;
 
-    if (0 < ::GetOutlineTextMetrics(mDC, sizeof(oMetrics), &oMetrics)) {
+    if (0 < ::GetOutlineTextMetrics(aDC, sizeof(oMetrics), &oMetrics)) {
         //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * mDev2App);  XXX not really supported on windows
         mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * multiplier * 0.56f); // 50% of ascent, best guess for true type
         mMetrics.superscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * multiplier);
@@ -156,7 +158,7 @@ gfxWindowsFont::ComputeMetrics()
         // Begin -- section of code to get the real x-height with GetGlyphOutline()
         GLYPHMETRICS gm;
         MAT2 mMat = { 1, 0, 0, 1 };    // glyph transform matrix (always identity in our context)
-        DWORD len = GetGlyphOutlineW(mDC, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
+        DWORD len = GetGlyphOutlineW(aDC, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
 
         if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0) {
             mMetrics.xHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * multiplier);
@@ -166,7 +168,7 @@ gfxWindowsFont::ComputeMetrics()
     else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
-        ::GetTextMetrics(mDC, &metrics);
+        ::GetTextMetrics(aDC, &metrics);
         mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * 0.56f); // 56% of ascent, best guess for non-true type
         mMetrics.superscriptOffset = mMetrics.xHeight;     // XXX temporary code!
         mMetrics.subscriptOffset = mMetrics.xHeight;     // XXX temporary code!
@@ -191,20 +193,20 @@ gfxWindowsFont::ComputeMetrics()
     
     // Cache the width of a single space.
     SIZE  size;
-    ::GetTextExtentPoint32(mDC, " ", 1, &size);
+    ::GetTextExtentPoint32(aDC, " ", 1, &size);
     //size.cx -= font->mOverhangCorrection;
     mMetrics.spaceWidth = NSToCoordRound(size.cx * multiplier);
 
     cairo_win32_scaled_font_done_font(mScaledFont);
 
-    RestoreDC(mDC, -1);
+    RestoreDC(aDC, -1);
 }
 
-
-#define CLIP_TURNOFF_FONTASSOCIATION 0x40
 void
 gfxWindowsFont::FillLogFont()
 {
+#define CLIP_TURNOFF_FONTASSOCIATION 0x40
+
     mLogFont.lfHeight = -NSToCoordRound(mStyle->size);
 
     if (mLogFont.lfHeight == 0)
@@ -226,7 +228,7 @@ gfxWindowsFont::FillLogFont()
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     mLogFont.lfWeight = mStyle->weight;
-    mLogFont.lfItalic = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;   // XXX need better oblique support
+    mLogFont.lfItalic = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
 
     int len = PR_MIN(mName.Length(), LF_FACESIZE);
     memcpy(mLogFont.lfFaceName, mName.get(), len * 2);
@@ -234,21 +236,11 @@ gfxWindowsFont::FillLogFont()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**********************************************************************
+ *
+ * class gfxWindowsFontGroup
+ *
+ **********************************************************************/
 
 PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure)
@@ -276,8 +268,11 @@ gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
     return new gfxWindowsTextRun(aString, this);
 }
 
-
-
+/**********************************************************************
+ *
+ * class gfxWindowsTextRun
+ *
+ **********************************************************************/
 
 THEBES_IMPL_REFCOUNTING(gfxWindowsTextRun)
 
@@ -323,12 +318,13 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
     SCRIPT_CACHE sc = NULL;
     SCRIPT_CONTROL *control = nsnull;
     SCRIPT_STATE *state = nsnull;
-    PRBool rtl = ((::GetTextAlign(aDC) & TA_RTLREADING) == TA_RTLREADING);
+
+    PRBool rtl = IsRightToLeft();
     if (rtl) {
         control = (SCRIPT_CONTROL *)malloc(sizeof(SCRIPT_CONTROL));
         state = (SCRIPT_STATE *)malloc(sizeof(SCRIPT_STATE));
-        memset(control, 0, sizeof(control));
-        memset(state, 0, sizeof(state));
+        memset(control, 0, sizeof(SCRIPT_CONTROL));
+        memset(state, 0, sizeof(SCRIPT_STATE));
         control->fNeutralOverride = 1;
         state->uBidiLevel = 1;
     }
@@ -348,7 +344,8 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
         WORD *glyphs = (WORD *)malloc(maxGlyphs*sizeof(WORD));
         WORD *clusters = (WORD *)malloc(itemLength*sizeof(WORD));
         SCRIPT_VISATTR *attr = (SCRIPT_VISATTR *)malloc(maxGlyphs*sizeof(SCRIPT_VISATTR));
-        items[i].a.fLogicalOrder = 1;
+        // don't set this, we want things in visual order (default)
+        // items[i].a.fLogicalOrder = 1;
 
         cairo_font_face_t *fontFace = nsnull;
         cairo_scaled_font_t *scaledFont = nsnull;
@@ -541,6 +538,10 @@ TRY_AGAIN_SAME_SCRIPT:
     }
   
     free(items);
+    if (control)
+        free(control);
+    if (state)
+        free(state);
 
     //    printf("loops: %d\n", loops - numItems);
     return length;

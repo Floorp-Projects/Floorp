@@ -74,6 +74,7 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mLangGroup = aLangGroup;
     mDeviceContext = (nsThebesDeviceContext*)aContext;
     mDev2App = aContext->DevUnitsToAppUnits();
+    mIsRTL = PR_FALSE;
 
     // work around layout giving us 0 sized fonts...
     double size = aFont.size * mDeviceContext->AppUnitsToDevUnits();
@@ -284,6 +285,8 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 {
     nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
 
+    textrun->SetRightToLeft(mIsRTL);
+
     aWidth = ROUND_TO_TWIPS(textrun->MeasureString(aContext->Thebes()));
 
     return NS_OK;
@@ -350,6 +353,8 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
 
+    textrun->SetRightToLeft(mIsRTL);
+
     textrun->DrawString(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
@@ -384,8 +389,7 @@ nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString,
 nsresult
 nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
 {
-    // this doesn't seem to ever get called
-    NS_WARNING("nsThebesFontMetrics::SetRightToLeftText called!");
+    mIsRTL = aIsRTL;
     return NS_OK;
 }
 

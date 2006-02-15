@@ -157,6 +157,7 @@ private:
     nsThebesDeviceContext *mDeviceContext;
     nsCOMPtr<nsIAtom> mLangGroup;
     float mDev2App;
+    PRBool mIsRTL;
 };
 
 #endif /* NSTHEBESFONTMETRICS__H__ */

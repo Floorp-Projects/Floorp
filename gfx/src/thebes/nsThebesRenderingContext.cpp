@@ -1108,6 +1108,11 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
 //
 // text junk
 //
+NS_IMETHODIMP
+nsThebesRenderingContext::SetRightToLeftText(PRBool aIsRTL)
+{
+    return mFontMetrics->SetRightToLeftText(aIsRTL);
+}
 
 NS_IMETHODIMP
 nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)

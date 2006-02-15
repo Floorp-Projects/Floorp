@@ -181,10 +181,6 @@ protected:
     nsString mFamilies;
     gfxFontStyle mStyle;
     gfxFontVector mFonts;
-
-    PRBool mIsRTL;
-
-    void *mData; // XXXA
 };
 
 
@@ -198,6 +194,11 @@ public:
 
     // returns length in pixels
     virtual gfxFloat MeasureString(gfxContext *aContext) = 0;
+
+    virtual void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
+    virtual PRBool IsRightToLeft() { return mIsRTL; }
+
+private:
+    PRBool mIsRTL;
 };
 #endif
-
