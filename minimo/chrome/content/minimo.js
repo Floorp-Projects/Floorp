@@ -79,7 +79,7 @@ var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
 var gShowingMenuCurrent=null;
-var gFocusedElementHREFContextMenu=null;
+var gPopupNodeContextMenu=null;
 var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, DeckMode impl.
 var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
 var gURLBarBoxObject = null; // stores the urlbar boxObject so the background loader can update itself based on actual urlbar size width;
@@ -645,9 +645,9 @@ function BrowserOpenTab()
 function BrowserOpenLinkAsTab() 
 {
   
-  if(gFocusedElementHREFContextMenu) {
+  if(gPopupNodeContextMenu) {
     try { 
-      gBrowser.selectedTab = gBrowser.addTab(gFocusedElementHREFContextMenu);
+      gBrowser.selectedTab = gBrowser.addTab(gPopupNodeContextMenu);
       browserInit(gBrowser.selectedTab);
     } catch (e) {
       alert(e);
@@ -810,9 +810,9 @@ function BrowserContentAreaPopupShowing () {
   /* Enable Copy */
   
   if( selectedRange && selectedRange.toString() ) {
-    document.getElementById("item-copy").style.display="block"
+    document.getElementById("item-copy").hidden=false;
   } else {
-    document.getElementById("item-copy").style.display="none"
+    document.getElementById("item-copy").hidden=true;
   }
   
   /* Enable Paste - Can paste only if the focused element has a value attribute. :) 
@@ -823,10 +823,20 @@ function BrowserContentAreaPopupShowing () {
 
   if( targetPopupNode instanceof HTMLInputElement || targetPopupNode instanceof HTMLTextAreaElement ) {
       if(DoClipCheckPaste()) {
-        document.getElementById("item-paste").style.display="block";
-      } else {
-        document.getElementById("item-paste").style.display="none";
+        document.getElementById("item-paste").hidden=false;
       }
+  } else {
+    document.getElementById("item-paste").hidden=true;
+  } 
+
+  /*
+   * Open Link as New Tab  
+   */ 
+  if( targetPopupNode.href ) { 
+    gPopupNodeContextMenu = targetPopupNode.href;
+    document.getElementById("link_as_new_tab").hidden=false;
+  } else {
+    document.getElementById("link_as_new_tab").hidden=true;
   }
 
 }
