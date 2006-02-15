@@ -1,6 +1,6 @@
 function bmInit(targetDoc, targetElement) {
 
-	var testLoad=new bmProcessor();
+	var testLoad=new bmProcessor("browser.bookmark.store");
 	testLoad.xslSet("bookmark_template.xml");
 	testLoad.setTargetDocument(targetDoc);
 	testLoad.setTargetElement(targetElement);
@@ -13,7 +13,7 @@ function bmInit(targetDoc, targetElement) {
  */
 function bmInitXUL(targetDoc, targetElement) {
 
-    var testLoad=new bmProcessor();
+    var testLoad=new bmProcessor("browser.bookmark.homebar");
     testLoad.xslSet("bookmarks/bookmark_template_xul.xml");
     testLoad.setTargetDocument(targetDoc);
     testLoad.setTargetElement(targetElement);
@@ -21,7 +21,13 @@ function bmInitXUL(targetDoc, targetElement) {
     
 }
 
-function bmProcessor() {
+function bmProcessor(prefStore) {
+
+
+
+      /* init stuff */ 
+  
+
 	this.xmlRef=document.implementation.createDocument("","",null);
 	this.xslRef=document.implementation.createDocument("http://www.w3.org/1999/XSL/Transform","stylesheet",null);
 
@@ -29,7 +35,7 @@ function bmProcessor() {
 
 	try {
 	      gPref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-	      bookmarkStore = gPref.getCharPref("browser.bookmark.store");
+	      bookmarkStore = gPref.getCharPref(prefStore);
      
       } catch (ignore) {}
 
@@ -43,7 +49,7 @@ function bmProcessor() {
 		
 	} else {
 		var bookmarkEmpty="<bm></bm>";
-		gPref.setCharPref("browser.bookmark.store",bookmarkEmpty);
+		gPref.setCharPref(prefStore,bookmarkEmpty);
 		this.xmlRef = aDOMParser.parseFromString(bookmarkEmpty,"text/xml");
 	}
 
@@ -62,6 +68,7 @@ function bmProcessor() {
 
 bmProcessor.prototype.xmlLoaded = function () {
 	this.xmlLoadedState=true;	
+alert('loaded');
 	this.apply();
 }
 
@@ -86,12 +93,11 @@ bmProcessor.prototype.setTargetElement = function (targetEle) {
 	this.targetElement=targetEle;
 }
 
-
 bmProcessor.prototype.apply = function () {
-
     if( this.xmlRef.getElementsByTagName("li").length < 1) {
       if( this.targetDocument && this.targetDocument ) {
         if(this.targetDocument.getElementById("message-empty")) {
+
             this.targetDocument.getElementById("message-empty").style.display="block";
         }
         // ... other checks? other formatting...
