@@ -1468,9 +1468,6 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
   NS_ASSERTION(!aOriginalOpener || !mSetOpenerWindowCalled,
                "aOriginalOpener is true, but not first call to "
                "SetOpenerWindow!");
-  NS_ASSERTION(!aOriginalOpener || !mDocument,
-               "aOriginalOpener is true, but we already have a document "
-               "loaded");
 
   mOpener = aOpener;
   if (aOriginalOpener) {
