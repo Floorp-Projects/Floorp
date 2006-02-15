@@ -1170,7 +1170,9 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return JS_FALSE;
         reobj = NULL;
     }
+    /* From here on, all control flow must reach the matching DROP. */
     data->regexp = re;
+    HOLD_REGEXP(cx, re);
 
     if (re->flags & JSREG_GLOB)
         data->flags |= GLOBAL_REGEXP;
@@ -1186,23 +1188,23 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (reobj) {
             /* Set the lastIndex property's reserved slot to 0. */
             ok = js_SetLastIndex(cx, reobj, 0);
-            if (!ok)
-                return JS_FALSE;
         } else {
             ok = JS_TRUE;
         }
-        length = JSSTRING_LENGTH(str);
-        for (count = 0; index <= length; count++) {
-            ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
-            if (!ok || *rval != JSVAL_TRUE)
-                break;
-            ok = glob(cx, count, data);
-            if (!ok)
-                break;
-            if (cx->regExpStatics.lastMatch.length == 0) {
-                if (index == length)
+        if (ok) {
+            length = JSSTRING_LENGTH(str);
+            for (count = 0; index <= length; count++) {
+                ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
+                if (!ok || *rval != JSVAL_TRUE)
                     break;
-                index++;
+                ok = glob(cx, count, data);
+                if (!ok)
+                    break;
+                if (cx->regExpStatics.lastMatch.length == 0) {
+                    if (index == length)
+                        break;
+                    index++;
+                }
             }
         }
     } else {
@@ -1243,6 +1245,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         ok = js_ExecuteRegExp(cx, re, str, &index, test, rval);
     }
 
+    DROP_REGEXP(cx, re);
     if (reobj) {
         /* Tell our caller that it doesn't need to destroy data->regexp. */
         data->flags &= ~KEEP_REGEXP;
@@ -1251,6 +1254,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         data->regexp = NULL;
         js_DestroyRegExp(cx, re);
     }
+
     return ok;
 }
 
