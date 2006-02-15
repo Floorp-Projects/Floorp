@@ -3440,6 +3440,10 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
 // This creates some indexes on the history tables which are expensive to
 // update when we're doing many insertions, as with history import.  Instead,
 // we defer creation of the index until import is finished.
+//
+//    FIXME: We should check if the index exists (bug 327317) and then not
+//    try to create it. That way we can check for errors. Currently we ignore
+//    errors since the indeices may already exist.
 
 nsresult
 nsNavHistory::CreateLookupIndexes()
@@ -3449,18 +3453,18 @@ nsNavHistory::CreateLookupIndexes()
   // History table indexes
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_history_hostindex ON moz_history (rev_host)"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  //NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_history_visitcount ON moz_history (visit_count)"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  //NS_ENSURE_SUCCESS(rv, rv);
 
   // Visit table indexes
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_fromindex ON moz_historyvisit (from_visit)"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  //NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_dateindex ON moz_historyvisit (visit_date)"));
-  NS_ENSURE_SUCCESS(rv, rv);
+  //NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef IN_MEMORY_LINKS
   // In-memory links indexes
