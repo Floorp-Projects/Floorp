@@ -20,7 +20,7 @@ if cairo is enabled.  Please upgrade to VC7.1/8.
 
 ==== Patches ====
 
-Last update: 10 Feb 2006
+Last update: 15 Feb 2006
 
 mozilla-misc.patch
   - Misc compilation fixes for pixman (submitted upstream)
@@ -70,3 +70,8 @@ push-pop-group.patch (Updated 9 Feb 06)
   - Implementation of push/pop group API; depends on device-offset-scale.
     (submitted upstream)
   - Add push_group_with_content() to select COLOR/COLOR_ALPHA/ALPHA
+
+cairo-win32-composite-coord.patch
+  - Fix up coordinates before calling BitBlt/AlphaBlend, so that windows
+    doesn't get mad at us if we ask it to blit regions outside of the source
+    DC (NOT SUBMITTED UPSTREAM YET)
