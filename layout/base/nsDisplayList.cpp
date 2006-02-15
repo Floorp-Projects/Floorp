@@ -45,6 +45,10 @@
 #include "nsIBlender.h"
 #include "nsTransform2D.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     PRBool aIsForEvents, nsIFrame* aMovingFrame)
     : mReferenceFrame(aReferenceFrame),
@@ -619,13 +623,38 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   nsRect bounds;
   bounds.IntersectRect(GetBounds(aBuilder), aDirtyRect);
 
-  nsresult rv = aCtx->PushFilter(GetBounds(aBuilder), mNeedAlpha, opacity);
-  if (NS_SUCCEEDED(rv)) {
-    // Thebes path
-    nsDisplayWrapList::Paint(aBuilder, aCtx, bounds);
-    aCtx->PopFilter();
-    return;
-  }
+#ifdef MOZ_CAIRO_GFX
+
+  nsCOMPtr<nsIDeviceContext> devCtx;
+  aCtx->GetDeviceContext(*getter_AddRefs(devCtx));
+  float t2p = devCtx->AppUnitsToDevUnits();
+
+  nsRefPtr<gfxContext> ctx = (gfxContext*)aCtx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  ctx->Save();
+
+  ctx->NewPath();
+  ctx->Rectangle(gfxRect(bounds.x * t2p,
+                         bounds.y * t2p,
+                         bounds.width * t2p,
+                         bounds.height * t2p),
+                 PR_TRUE);
+  ctx->Clip();
+
+  if (mNeedAlpha)
+    ctx->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
+  else
+    ctx->PushGroup(gfxContext::CONTENT_COLOR);
+
+  nsDisplayWrapList::Paint(aBuilder, aCtx, bounds);
+
+  ctx->PopGroupToSource();
+  ctx->SetOperator(gfxContext::OPERATOR_OVER);
+  ctx->Paint(opacity);
+
+  ctx->Restore();
+
+#else
 
   nsIViewManager::BlendingBuffers* buffers =
       vm->CreateBlendingBuffers(aCtx, PR_FALSE, nsnull, mNeedAlpha, bounds);
@@ -642,7 +671,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   nsTransform2D* transform;
-  rv = aCtx->GetCurrentTransform(transform);
+  nsresult rv = aCtx->GetCurrentTransform(transform);
   if (NS_FAILED(rv))
     return;
 
@@ -657,6 +686,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
                  opacity, buffers->mWhiteCX,
                  NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
   delete buffers;
+#endif /* MOZ_CAIRO_GFX */
 }
 
 PRBool nsDisplayOpacity::OptimizeVisibility(nsDisplayListBuilder* aBuilder,

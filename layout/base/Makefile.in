@@ -76,6 +76,10 @@ REQUIRES	= xpcom \
 		  shistory \
 		  $(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes cairo
+endif
+
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
 		nsISelectionImageService.idl	\
