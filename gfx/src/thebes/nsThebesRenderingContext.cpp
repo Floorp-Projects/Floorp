@@ -113,6 +113,22 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesS
 }
 
 NS_IMETHODIMP
+nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxContext *aThebesContext)
+{
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesContext %p\n", this, aContext, aThebesContext));
+
+    mDeviceContext = aContext;
+    mWidget = nsnull;
+
+    mLocalDrawingSurface = nsnull;
+    mDrawingSurface = nsnull;
+
+    mThebes = aThebesContext;
+
+    return (CommonInit());
+}
+
+NS_IMETHODIMP
 nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p widget %p\n", this, aContext, aWidget));
@@ -160,11 +176,8 @@ nsThebesRenderingContext::CommonInit(void)
 NS_IMETHODIMP
 nsThebesRenderingContext::Reset(void)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Reset\n", this));
-
-    mThebes = new gfxContext(mDrawingSurface->GetThebesSurface());
-
-    return (CommonInit());
+    NS_ERROR("nsThebesRenderingContext::Reset called!\n");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -178,22 +191,15 @@ nsThebesRenderingContext::GetDeviceContext(nsIDeviceContext *& aDeviceContext)
 NS_IMETHODIMP
 nsThebesRenderingContext::SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface)
 {
-    if (aSurface)
-        mDrawingSurface = NS_STATIC_CAST(nsThebesDrawingSurface*, aSurface);
-    else
-        mDrawingSurface = mLocalDrawingSurface;
-
-    mThebes->SetTarget(mDrawingSurface->GetThebesSurface());
-
-    return NS_OK;
+    NS_ERROR("nsThebesRenderingContext::SelectOffScreenDrawingSurface called!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsThebesRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
 {
-    *aSurface = mDrawingSurface;
-    // don't addref! this isn't an xpcom call even though it sure looks like one
-    return NS_OK;
+    NS_ERROR("nsThebesRenderingContext::GetDrawingSurface called!");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
@@ -773,7 +779,7 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
     if (aType == NATIVE_WINDOWS_DC) {
         nsRefPtr<gfxASurface> surf = mThebes->CurrentGroupSurface();
         if (!surf)
-            mThebes->CurrentSurface();
+            surf = mThebes->CurrentSurface();
 
         return cairo_win32_surface_get_dc(surf->CairoSurface());
     }
@@ -1083,10 +1089,6 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
     nsCOMPtr<nsIImage> img(do_GetInterface(imgFrame));
     if (!img) return NS_ERROR_FAILURE;
 
-    nsIDrawingSurface *surface = nsnull;
-    GetDrawingSurface(&surface);
-    if (!surface) return NS_ERROR_FAILURE;
-
     /* bug 113561 - frame can be smaller than container */
     nsIntRect pxImgFrameRect;
     imgFrame->GetRect(pxImgFrameRect);
@@ -1098,7 +1100,7 @@ nsThebesRenderingContext::DrawTile(imgIContainer *aImage,
                    NSToIntRound(FROM_TWIPS(twDr.width)),
                    NSToIntRound(FROM_TWIPS(twDr.height)));
 
-    return img->DrawTile(*this, surface,
+    return img->DrawTile(*this, NULL,
                          pxXOffset - pxImgFrameRect.x, pxYOffset - pxImgFrameRect.y,
                          pxPadX, pxPadY,
                          pxDr);

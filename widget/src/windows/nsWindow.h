@@ -212,7 +212,7 @@ private:
   nsresult                SetWindowTranslucencyInner(PRBool aTransparent);
   PRBool                  GetWindowTranslucencyInner() { return mIsTranslucent; }
   void                    UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas);
-  void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight);
+  void                    ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force = PR_FALSE);
   nsresult                UpdateTranslucentWindow();
   nsresult                SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent);
   void                    SetWindowRegionToAlphaMask();

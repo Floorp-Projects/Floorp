@@ -49,7 +49,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
                                            PRUint32 height,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
-    return new gfxWindowsSurface(nsnull, width, height);
+    return new gfxWindowsSurface(nsnull, width, height, imageFormat);
 }
 
 nsresult
