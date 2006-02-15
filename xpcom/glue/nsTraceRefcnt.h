@@ -40,20 +40,18 @@
 
 #include "nsXPCOM.h"
 
-class nsISupports;
-
-// By default refcnt logging is not part of the build.
+/* By default refcnt logging is not part of the build. */
 #undef NS_BUILD_REFCNT_LOGGING
 
 #if (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
-// Make refcnt logging part of the build. This doesn't mean that
-// actual logging will occur (that requires a separate enable; see
-// nsTraceRefcnt.h for more information).
+/* Make refcnt logging part of the build. This doesn't mean that
+ * actual logging will occur (that requires a separate enable; see
+ * nsTraceRefcnt.h for more information).  */
 #define NS_BUILD_REFCNT_LOGGING 1
 #endif
 
-// If NO_BUILD_REFCNT_LOGGING is defined then disable refcnt logging
-// in the build. This overrides FORCE_BUILD_REFCNT_LOGGING.
+/* If NO_BUILD_REFCNT_LOGGING is defined then disable refcnt logging
+ * in the build. This overrides FORCE_BUILD_REFCNT_LOGGING. */
 #if defined(NO_BUILD_REFCNT_LOGGING)
 #undef NS_BUILD_REFCNT_LOGGING
 #endif
@@ -78,9 +76,9 @@ PR_BEGIN_MACRO                                                \
   NS_LogDtor((void*)this, #_type, sizeof(*this));             \
 PR_END_MACRO
 
-// nsCOMPtr.h allows these macros to be defined by clients
-// These logging functions require dynamic_cast<void *>, so we don't
-// define these macros if we don't have dynamic_cast.
+/* nsCOMPtr.h allows these macros to be defined by clients
+ * These logging functions require dynamic_cast<void*>, so they don't
+ * do anything useful if we don't have dynamic_cast<void*>. */
 #define NSCAP_LOG_ASSIGNMENT(_c, _p)                                \
   if (_p)                                                           \
     NS_LogCOMPtrAddRef((_c),NS_STATIC_CAST(nsISupports*,_p))
@@ -98,6 +96,8 @@ PR_END_MACRO
 #define MOZ_COUNT_DTOR(_type)
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
+
+#ifdef __cplusplus
 
 class nsTraceRefcnt {
 public:
@@ -129,5 +129,7 @@ public:
     NS_LogCOMPtrRelease(aCOMPtr, aObject);
   }
 };
+
+#endif /* defined(__cplusplus) */
 
 #endif /* nsTraceRefcnt_h___ */
