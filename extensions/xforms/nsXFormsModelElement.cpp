@@ -1536,7 +1536,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   if (expr.IsEmpty()) {
     expr = NS_LITERAL_STRING(".");
   }
-  rv = aEvaluator->Evaluate(expr, aContextNode, aContextSize, aContextPosition,
+  rv = aEvaluator->Evaluate(expr, aContextNode, aContextPosition, aContextSize,
                             aBindElement,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
