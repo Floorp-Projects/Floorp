@@ -101,7 +101,6 @@ COMPONENT_LIBS += \
 	txmgr \
 	composer \
 	chrome \
-	mork \
 	mozfind \
 	appcomps \
 	commandlines \
@@ -113,10 +112,19 @@ COMPONENT_LIBS += \
 	autoconfig \
 	$(NULL)
 
+ifdef MOZ_PLACES
+COMPONENT_LIBS += storagecomps
+STATIC_LIBS += morkreader_s
+else
+COMPONENT_LIBS += \
+	mork \
+	tkhstory \
+	$(NULL)
+endif
+
 ifdef MOZ_XUL
 COMPONENT_LIBS += \
 	tkautocomplete \
-	tkhstory \
 	satchel \
 	pippki \
 	$(NULL)

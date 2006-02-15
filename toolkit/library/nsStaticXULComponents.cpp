@@ -151,10 +151,18 @@
 #define SYSTEMPREF_MODULES
 #endif
 
+#ifdef MOZ_PLACES
+#define PLACES_MODULES \
+    MODULE(mozStorageModule)
+#else
+#define PLACES_MODULES \
+    MODULE(nsMorkModule)                     \
+    MODULE(nsToolkitHistory)
+#endif    
+
 #ifdef MOZ_XUL
 #define XULENABLED_MODULES                   \
     MODULE(tkAutoCompleteModule)             \
-    MODULE(nsToolkitHistory)                 \
     MODULE(satchel)                          \
     MODULE(PKI)
 #else
@@ -196,11 +204,11 @@
     MODULE(nsTransactionManagerModule)       \
     MODULE(nsComposerModule)                 \
     MODULE(nsChromeModule)                   \
-    MODULE(nsMorkModule)                     \
     MODULE(nsFindComponent)                  \
     MODULE(application)                      \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
+    PLACES_MODULES                           \
     XULENABLED_MODULES                       \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
