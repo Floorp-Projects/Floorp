@@ -398,6 +398,8 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::EnumeratePrinters(PRUint32* aCount, PRUnic
     *aResult = nsnull;
   else 
     return NS_ERROR_NULL_POINTER;
+
+  nsDeviceContextSpecOS2::PrnDlg.RefreshPrintQueue();
   
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
@@ -672,6 +674,61 @@ PRINTDLG::~PRINTDLG ()
 {
   for (int cnt = 0 ; cnt < mQueueCount ; cnt++)
     delete mPQBuf [cnt];
+}
+
+PRINTDLG::RefreshPrintQueue ()
+{
+  ULONG newQueueCount = 0;
+  ULONG TotalQueues = 0;
+  ULONG MemNeeded = 0;
+  mDefaultQueue = 0;
+  SPLERR rc;
+  
+  rc = ::SplEnumQueue (NULL, 3, NULL, 0, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+  PRQINFO3* pPQI3Buf = (PRQINFO3*) malloc (MemNeeded);
+  rc = ::SplEnumQueue (NULL, 3, pPQI3Buf, MemNeeded, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+
+  if (newQueueCount > MAX_PRINT_QUEUES)
+    newQueueCount = MAX_PRINT_QUEUES;
+
+  PRTQUEUE* tmpBuf[MAX_PRINT_QUEUES];
+
+  for (ULONG cnt = 0 ; cnt < newQueueCount ; cnt++)
+  {
+    if (pPQI3Buf [cnt].fsType & PRQ3_TYPE_APPDEFAULT)
+      mDefaultQueue = cnt;
+
+    BOOL found = FALSE;
+    for (ULONG j = 0 ; j < mQueueCount && !found; j++)
+    {
+       //Compare printer from requeried list with what's already in Mozilla's printer list(mPQBuf)
+       //If printer is already there, use current properties; otherwise create a new printer in list
+       if (mPQBuf[j] != 0) {
+         if ((strcmp(pPQI3Buf[cnt].pszPrinters, mPQBuf[j]->PrinterName()) == 0) && 
+             (strcmp(pPQI3Buf[cnt].pszDriverName, mPQBuf[j]->PQI3().pszDriverName) == 0)) {
+           found = TRUE;
+           tmpBuf[cnt] = mPQBuf[j];
+           mPQBuf[j] = 0;
+         }
+       }
+    }
+    if (!found) 
+       tmpBuf[cnt] = new PRTQUEUE (&pPQI3Buf[cnt]); 
+  }
+
+  for (int i=0; i < newQueueCount; i++) {
+    if (mPQBuf[i] != 0)
+      delete(mPQBuf[i]);
+    mPQBuf[i] = tmpBuf[i];
+  }
+
+  if (mQueueCount > newQueueCount)
+    for (int i = newQueueCount; i < mQueueCount; i++)
+       if (mPQBuf[i] != 0)
+         delete(mPQBuf[i]);
+
+  mQueueCount = newQueueCount;
+  free (pPQI3Buf);
 }
 
 int PRINTDLG::GetIndex (int numPrinter)
