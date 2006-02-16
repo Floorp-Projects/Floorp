@@ -93,6 +93,8 @@
 
   </keyset>
   
+  
+
   <hbox flex="1">
     <hbox id="appcontent" flex="100%">
       <vbox id="browserleftbar" onclick="BrowserHomeBar()">
@@ -113,11 +115,11 @@
       </vbox>
     </hbox>
   </hbox>
-  
-  <statusbar id="statusbar" hidden="false">
+
+    <statusbar id="statusbar" hidden="false">
     <statusbarpanel id="statusbar-text" label="Minimo" flex="1"/>
   </statusbar>
-  
+
   <toolbox id="mini-toolbars">
     
 
@@ -151,7 +153,8 @@
     <command id="cmd_BrowserBookmark"         oncommand="BrowserBookmark()" />
     <command id="cmd_BrowserBookmarkThis"     oncommand="BrowserBookmarkThis()" />
     <command id="cmd_BrowserHomeBar"          oncommand="BrowserHomeBar()" />
-    
+    <command id="cmd_Pan"                     oncommand="BrowserPan()" />
+
     <!-- Keyboard Focus Handler Controls --> 
     <!-- This entire focusnavigation set is not XBLized yet, 
          Minimo JS code will look into it anyways.  --> 
@@ -201,6 +204,8 @@
         </hbox>
       </textbox>
       
+      <toolbarbutton hidden="true" id="button-icon-pan" image="chrome://minimo/skin/extensions/icon-pan.png" command="cmd_Pan" />
+
       <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="menu-button"  id="nav-menu-button" command="cmd_BrowserNavMenu" />  
       
     </toolbar>
@@ -227,6 +232,7 @@
         <menuitem id="link_as_new_tab"  label="&linknewtab.label;"   command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
 	  <menuitem id="item-copy"        label="&contextCopy.label;"  oncommand="DoClipCopy()"              hidden="true"/>
 	  <menuitem id="item-paste"       label="&contextPaste.label;" oncommand="DoClipPaste()"             hidden="true"/>
+	  <menuitem id="item-find"        label="&findToolbar.label;"  command="cmd_ViewFind" />
 
         <menuseparator/>
 
