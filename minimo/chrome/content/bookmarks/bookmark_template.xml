@@ -13,27 +13,27 @@ xmlns:rss="http://purl.org/rss/1.0/"
 
 <xsl:template match="/">
 
-<div>
-
+<table width="100%">
 		<xsl:for-each select="/bm/li">
-
-
-		<div class='item'>
-  			<img align="middle" style="margin:2px">
+			<tr><td class="item" width="1%" valign="middle" align="center">
+  			<img>
 				<xsl:attribute name="src" >
 	                         <xsl:value-of select="@iconsrc"/>
 				</xsl:attribute> 	
 			</img>
-			<a>
+			</td><td class="item">
+			<a >
 				<xsl:attribute name="href">
 	                         <xsl:value-of select="."/>
 				</xsl:attribute> 	
 	                  <xsl:value-of select="@title"/>
 			</a>
-			</div>
+			</td>
+		</tr>
 		</xsl:for-each>
 
-</div>
+</table>
+
 </xsl:template>
 
 
