@@ -36,7 +36,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.33 2005/08/17 02:04:12 julien.pierre.bugs%sun.com Exp $
+ * $Id: certt.h,v 1.34 2006/02/16 00:06:23 julien.pierre.bugs%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -301,7 +301,13 @@ struct CERTCertificateStr {
      * XXX - these should be moved into some sort of application specific
      *       data structure.  They are only used by the browser right now.
      */
-    struct SECSocketNode *authsocketlist;
+    union {
+        void* apointer; /* was struct SECSocketNode* authsocketlist */
+        struct {
+            unsigned int hasUnsupportedCriticalExt :1;
+            /* add any new option bits needed here */
+        } bits;
+    } options;
     int series; /* was int authsocketcount; record the series of the pkcs11ID */
 
     /* This is PKCS #11 stuff. */

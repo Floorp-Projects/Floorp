@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.70 2006/02/03 18:13:14 kaie%kuix.de Exp $ */
+/* $Id: nssinit.c,v 1.71 2006/02/16 00:06:24 julien.pierre.bugs%sun.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -412,10 +412,14 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *lcertPrefix = NULL;
     char *lkeyPrefix = NULL;
     char *lsecmodName = NULL;
+    CERTCertificate dummyCert;
 
     if (nss_IsInitted) {
 	return SECSuccess;
     }
+
+    /* New option bits must not change the size of CERTCertificate. */
+    PORT_Assert(sizeof(dummyCert.options) == sizeof(void *));
 
     if (SECSuccess != InitCRLCache()) {
         return SECFailure;

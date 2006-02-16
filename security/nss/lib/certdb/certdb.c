@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.76 2005/08/17 02:04:12 julien.pierre.bugs%sun.com Exp $
+ * $Id: certdb.c,v 1.77 2006/02/16 00:06:23 julien.pierre.bugs%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -864,8 +864,7 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     }
 
     if (cert_HasUnknownCriticalExten (cert->extensions) == PR_TRUE) {
-	PORT_SetError(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
-	goto loser;
+        cert->options.bits.hasUnsupportedCriticalExt = PR_TRUE;
     }
 
     /* generate and save the database key for the cert */
