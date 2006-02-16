@@ -59,6 +59,8 @@ minimo.jar:
 	skin/classic/minimo/preferences/options.png (skin/preferences/options.png)
 	skin/classic/minimo/extensions/icon-delicious.png (skin/extensions/icon-delicious.png)
 	skin/classic/minimo/extensions/icon-google.png    (skin/extensions/icon-google.png)
+	skin/classic/minimo/extensions/icon-pan.png    (skin/extensions/icon-pan.png)
+	skin/classic/minimo/extensions/icon-pan-toggle.png    (skin/extensions/icon-pan-toggle.png)
 	skin/classic/minimo/extensions/icon-urlbar.png    (skin/extensions/icon-urlbar.png)
 	skin/classic/minimo/extensions/icon-star.png    (skin/extensions/icon-star.png)
     branding/locale/brand.dtd        (locale/en-US/brand.dtd)
