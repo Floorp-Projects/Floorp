@@ -79,15 +79,15 @@ public:
    PRINTDLG ();
   ~PRINTDLG ();
    void RefreshPrintQueue();
-   int GetNumPrinters ();
-   int GetDefaultPrinter ();
-   void GetPrinter (int numPrinter, char** printerName);
-   PRTQUEUE* SetPrinterQueue (int numPrinter);
-   HDC GetDCHandle (int numPrinter);
-   LONG GetPrintDriverSize (int printer);
-   PDRIVDATA GetPrintDriver (int printer);
-   char* GetDriverType (int printer);
-   BOOL ShowProperties(int index);
+   ULONG GetNumPrinters ();
+   ULONG GetDefaultPrinter ();
+   void GetPrinter (ULONG numPrinter, char** printerName);
+   PRTQUEUE* SetPrinterQueue (ULONG numPrinter);
+   HDC GetDCHandle (ULONG numPrinter);
+   LONG GetPrintDriverSize (ULONG printer);
+   PDRIVDATA GetPrintDriver (ULONG printer);
+   char* GetDriverType (ULONG printer);
+   BOOL ShowProperties(ULONG index);
    PRTQUEUE* SelectPrinter (HWND hwndOwner, BOOL bQuiet);
 
 private:
@@ -95,7 +95,7 @@ private:
   ULONG     mDefaultQueue;
   PRTQUEUE* mPQBuf [MAX_PRINT_QUEUES];
 
-  int GetIndex( int numPrinter);
+  ULONG GetIndex( ULONG numPrinter);
 
 };
 
@@ -160,7 +160,7 @@ public:
   virtual ~nsDeviceContextSpecOS2();
 
   static PRINTDLG PrnDlg;
-  static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, int printer);
+  static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, ULONG printer);
 
 protected:
 
