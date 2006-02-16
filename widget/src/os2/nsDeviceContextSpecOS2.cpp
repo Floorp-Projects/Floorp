@@ -148,9 +148,9 @@ void SetupDevModeFromSettings(int printer, nsIPrintSettings* aPrintSettings)
     pDJP->ulProperty = 0;
     pDJP->ulValue = 0;
 
-    long rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, bufferSize, pDJP_Buffer, 
-                         nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
-                         PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+    LONG driverSize = nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer);
+    LONG rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, bufferSize, pDJP_Buffer, 
+                         &driverSize, PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
 
     delete [] pDJP_Buffer;
     DevCloseDC(hdc);
@@ -191,9 +191,9 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   pDJP->ulProperty = 0;
   pDJP->ulValue = 0;
 
-  long rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, bufferSize, pDJP_Buffer, 
-                      nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
-                      PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+  LONG driverSize = nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer);
+  LONG rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, bufferSize, pDJP_Buffer, 
+                      &driverSize, PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
 
   pDJP = (PDJP_ITEM) pDJP_Buffer;
   if ((rc == DEV_OK) || (rc == DEV_WARNING)) { 
@@ -801,12 +801,9 @@ PRTQUEUE* PRINTDLG::SetPrinterQueue (int numPrinter)
    return new PRTQUEUE (*pPQ);
 }
 
-PLONG PRINTDLG::GetPrintDriverSize (int printer)
+LONG PRINTDLG::GetPrintDriverSize (int printer)
 {
-   LONG size = mPQBuf[GetIndex(printer)]->PQI3().pDriverData->cb;
-
-   PLONG driverSize = (PLONG)&size;
-   return driverSize;
+   return mPQBuf[GetIndex(printer)]->PQI3().pDriverData->cb;
 }
 
 PDRIVDATA PRINTDLG::GetPrintDriver (int printer)
