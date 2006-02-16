@@ -66,6 +66,7 @@
 #$StartupPerformanceTest   = 0;  # Ts
 
 #$TestsPhoneHome           = 0;  # Should test report back to server?
+#$GraphNameOverride        = ''; # Override name built from ::hostname() and $BuildTag
 
 # $results_server
 #----------------------------------------------------------------------------

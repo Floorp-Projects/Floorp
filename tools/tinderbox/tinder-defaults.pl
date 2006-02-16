@@ -76,6 +76,7 @@ $CompareLocalesAviary     = 0;  # Should the compare-locales commands use the
                                 # aviary directory structure?
 
 $TestsPhoneHome           = 0;  # Should test report back to server?
+$GraphNameOverride        = ''; # Override name built from ::hostname() and $BuildTag
 
 # $results_server
 #----------------------------------------------------------------------------

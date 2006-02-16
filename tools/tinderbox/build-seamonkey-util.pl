@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.307 $ ';
+$::UtilsVersion = '$Revision: 1.308 $ ';
 
 package TinderUtils;
 
@@ -964,7 +964,7 @@ sub BuildIt {
                     if ("$_cvs_pid" eq "" ) {
                       print_log "Cannot find cvs process to kill.\n";
                     } else {
-                      print "cvs pid $_cvs_pid\n";
+                      print_log "cvs pid $_cvs_pid\n";
                       kill_process($_cvs_pid);
                     }
                   } else {
@@ -1531,6 +1531,56 @@ sub print_test_errors {
     }
 }
 
+sub get_graph_tbox_name {
+  if ($Settings::GraphNameOverride ne '') {
+    return $Settings::GraphNameOverride;
+  }
+
+  my $name = ::hostname();
+  if ($Settings::BuildTag ne '') {
+    $name .= '_' . $Settings::BuildTag;
+  }
+  return $name;
+}
+
+sub print_log_test_result_ms {
+  my ($test_name, $test_title, $result, $print_name) = @_;
+
+  print_log "\nTinderboxPrint:";
+  if ($Settings::TestsPhoneHome) {
+    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+    print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$result\">";
+  } else {
+    print_log "<abbr title=\"$test_title\">";
+  }
+  print_log $print_name . ':' . $result . 'ms';
+  if ($Settings::TestsPhoneHome) {
+    print_log "</a>";
+  } else {
+    print_log "</abbr>";
+  }
+  print_log "\n";
+}
+
+sub print_log_test_result_bytes {
+  my ($test_name, $test_title, $result, $print_name, $sig_figs) = @_;
+
+  print_log "\nTinderboxPrint:";
+  if ($Settings::TestsPhoneHome) {
+    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+    print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&units=bytes&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$result\">";
+  } else {
+    print_log "<abbr title=\"$test_title\">";
+  }
+  print_log $print_name . ':' . PrintSize($result, $sig_figs) . 'B';
+  if ($Settings::TestsPhoneHome) {
+    print_log "</a>";
+  } else {
+    print_log "</abbr>";
+  }
+  print_log "\n";
+}
+
 
 # Report test results back to a server.
 # Netscape-internal now, will push to mozilla.org, ask
@@ -1546,11 +1596,12 @@ sub print_test_errors {
 # perl-libwww-perl-5.53-3.noarch.rpm
 #
 sub send_results_to_server {
-    my ($value, $raw_data, $testname, $tbox) = @_;
+    my ($value, $raw_data, $testname) = @_;
 
     # Prepend raw data with cvs checkout date, performance
     # Use MOZ_CO_DATE, but with same graph/collect.cgi format. (server)
     my $data_plus_co_time = "MOZ_CO_DATE=$co_time_str\t$raw_data";
+    my $tbox = get_graph_tbox_name();
 
     my $tmpurl = "http://$Settings::results_server/graph/collect.cgi";
     $tmpurl .= "?value=$value&data=$data_plus_co_time&testname=$testname&tbox=$tbox";
@@ -1577,8 +1628,8 @@ sub send_results_to_server {
             warn "Failed to submit startup results: $@";
             print_log "send_results_to_server() failed.\n";
         } else {
-            print "Results submitted to server: \n",
-            $res->status_line, "\n", $res->content, "\n";
+            print_log "Results submitted to server: \n" .
+              $res->status_line . "\n" . $res->content . "\n";
             print_log "send_results_to_server() succeeded.\n";
         }
     }
@@ -1983,22 +2034,16 @@ sub run_all_tests {
         if($open_time) {
             $test_result = 'success';
             
-            my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-
-            print_log 'TinderboxPrint:';
-            print_log "<a title=\"Best nav open time of 9 runs\" href=\"http://$Settings::results_server/graph/query.cgi?testname=xulwinopen&tbox=" .
-                    ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$open_time\">" if ($Settings::TestsPhoneHome);
-            print_log 'Txul:' . $open_time . 'ms';
-            print_log '</a>' if ($Settings::TestsPhoneHome);
-            print_log "\n";
+            print_log_test_result_ms('xulwinopen',
+                                     'Best nav open time of 9 runs',
+                                     $open_time, 'Txul');
 
             # Pull out samples data from log.
             my $raw_data = extract_token_from_file($binary_log, "openingTimes", "=");
             chomp($raw_data);
 
             if($Settings::TestsPhoneHome) {
-                send_results_to_server($open_time, $raw_data,
-                                       "xulwinopen", ::hostname());
+                send_results_to_server($open_time, $raw_data, "xulwinopen");
             }
         } else {
             $test_result = 'testfailed';
@@ -2263,25 +2308,21 @@ sub LayoutPerformanceTest {
     }
     
     if($layout_test_result eq 'success') {
-      my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-
       my $tp_prefix = "";
       if($Settings::BinaryName eq "TestGtkEmbed") {
         $tp_prefix = "m";
       }
       
-      print_log "TinderboxPrint:";
-      print_log "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .  ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">" if ($Settings::TestsPhoneHome); 
-      print_log $tp_prefix . "Tp:$layout_time" . "ms";
-      print_log "</a>" if ($Settings::TestsPhoneHome);
-      print_log "\n";
+      print_log_test_result_ms('pageload',
+                               'Avg of the median per url pageload time',
+                               $layout_time, 'Tp');
       
       # Pull out detail data from log.
       my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
       chomp($raw_data);
       
       if($Settings::TestsPhoneHome) {
-        send_results_to_server($layout_time, $raw_data, "pageload", ::hostname());
+        send_results_to_server($layout_time, $raw_data, "pageload");
       }
     }
 
@@ -2314,16 +2355,10 @@ sub DHTMLPerformanceTest {
     }
     
     if($dhtml_test_result eq 'success') {
-      my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-
+      print_log_test_result_ms('dhtml', 'DHTML time',
+                               $dhtml_time, 'Tdhtml');
       if ($Settings::TestsPhoneHome) {
-        print_log "TinderboxPrint:" .
-          "<a title=\"DHTML time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=dhtml&tbox=" .
-          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$dhtml_time\">Tdhtml:" . $dhtml_time . "ms</a>\n";
-        send_results_to_server($dhtml_time, "--", "dhtml", ::hostname());
-      } else {
-        print_log "TinderboxPrint:" .
-          "<abbr title=\"DHTML time\">Tdhtml:" . $dhtml_time . "ms</abbr>\n";
+        send_results_to_server($dhtml_time, "--", "dhtml");
       }      
     }
 
@@ -2343,7 +2378,6 @@ sub RenderPerformanceTest {
   my $render_details;
   my $binary_log = "$build_dir/$test_name.log";
   my $url;
-  my $testbox = ::hostname();
 
   # Find Trender.xml
   if (-f "/cygdrive/c/builds/tinderbox/Trender/Trender.xml") {
@@ -2354,10 +2388,6 @@ sub RenderPerformanceTest {
     print_log "TinderboxPrint:Trender:[NOTFOUND]\n";
     return 'testfailed';
   }
-
-  # fix up hostname/testbox; clear everything after the first ., if any
-  $testbox =~ s/\..*$//;
-  $testbox .= $Settings::BuildNameExtra;
 
   # Settle OS.
   run_system_cmd("sync; sleep 5", 35);
@@ -2403,27 +2433,19 @@ sub RenderPerformanceTest {
     return 'testfailed';
   }
 
-  my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+  print_log_test_result_ms('render', 'Avg page render time in ms',
+                           $render_time, 'Tr');
 
-  print_log "TinderboxPrint:";
-  print_log "<a title=\"Avg page render time in ms\" href=\"http://$Settings::results_server/graph/query.cgi?testname=render&tbox=" . $testbox . "&autoscale=1&days=7&avg=1&showpoint=$time,$render_time\">" if ($Settings::TestsPhoneHome);
-  print_log "Tr:$render_time" . "ms";
-  print_log "</a>" if ($Settings::TestsPhoneHome);
-  print_log "\n";
-
-  print_log "TinderboxPrint:";
-  print_log "<a title=\"Avg gfx render time in ms\" href=\"http://$Settings::results_server/graph/query.cgi?testname=rendergfx&tbox=" . $testbox . "&autoscale=1&days=7&avg=1&showpoint=$time,$render_gfx_time\">" if ($Settings::TestsPhoneHome);
-  print_log "Tgfx:$render_gfx_time" . "ms";
-  print_log "</a>" if ($Settings::TestsPhoneHome);
-  print_log "\n";
+  print_log_test_result_ms('rendergfx', 'Avg gfx render time in ms',
+                           $render_gfx_time, 'Tgfx');
 
   if($Settings::TestsPhoneHome) {
     # Pull out detail data from log; this includes results for all sets
     my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_trender_details", ",");
     chomp($raw_data);
 
-    send_results_to_server($render_time, $raw_data, "render", $testbox);
-    send_results_to_server($render_gfx_time, $raw_data, "rendergfx", $testbox);
+    send_results_to_server($render_time, $raw_data, "render");
+    send_results_to_server($render_gfx_time, $raw_data, "rendergfx");
   }
 
   return 'success';
@@ -2524,14 +2546,12 @@ sub CodesizeTest {
     #
     my $z_data = extract_token_from_file("$build_dir/$test_log", "__codesize", ":");
     chomp($z_data);
-    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-    my $z_data_string = PrintSize($z_data,4);
-    print_log "TinderboxPrint:" .
-      "<a title=\"$testNameString: Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=$graphName&tbox=" .
-        ::hostname() . "&autoscale=1&units=bytes&days=7&avg=0&showpoint=$time,$z_data\">$zee:$z_data_string" . "B</a>\n";
-    
+    print_log_test_result_bytes($graphName,
+                                "$testNameString: Code + data size of all shared libs & executables",
+                                $z_data, $zee, 4);
+
     if($Settings::TestsPhoneHome) {
-      send_results_to_server($z_data, "--", $graphName, ::hostname());
+      send_results_to_server($z_data, "--", $graphName);
     }
     
     my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
@@ -2701,19 +2721,13 @@ sub StartupPerformanceTest {
       $ts_prefix = "m";
     }
 
-    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-    print_log "\n\nTinderboxPrint:";
-    print_log "<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
-      . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">" if ($Settings::TestsPhoneHome);
-    print_log $ts_prefix . 'Ts:' . $min_startuptime . 'ms';
-    print_log '</a>' if ($Settings::TestsPhoneHome);
-    print_log "\n\n";
+    print_log_test_result_ms('startup', 'Best startup time out of 10 startups',
+                             $min_startuptime, $ts_prefix . 'Ts');
     
     # Report data back to server
     if($Settings::TestsPhoneHome) {
       print_log "phonehome = 1\n";
-      send_results_to_server($min_startuptime, $times_string,
-                             "startup", ::hostname());
+      send_results_to_server($min_startuptime, $times_string, "startup");
     } 
   }
 
@@ -2844,15 +2858,13 @@ sub BloatTest {
       $embed_prefix = "m";
     }
 
-    if($Settings::TestsPhoneHome) {
-        # Generate and print tbox output strings for leak, bloat.
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "RLk:" . PrintSize($leaks,3) . "B</a>\n\n";
-        print_log $leaks_string;
+    print_log_test_result_bytes($leaks_testname, $leaks_testname_label, 
+                                $leaks,
+                                $label_prefix . $embed_prefix . 'RLk', 3);
 
+    if($Settings::TestsPhoneHome) {
         # Report numbers to server.
-        send_results_to_server($leaks, "--", $leaks_testname, ::hostname() );
-    } else {
-        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "RLk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
+        send_results_to_server($leaks, "--", $leaks_testname);
     }
 
     return 'success';
@@ -3065,21 +3077,25 @@ sub BloatTest2 {
 
     if($Settings::TestsPhoneHome) {
         my $leaks_testname       = "trace_malloc_leaks";
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "Lk:" . PrintSize($newstats->{'leaks'},3) . "B</a>\n\n";
-        print_log $leaks_string;
+        print_log_test_result_bytes($leaks_testname, $leaks_testname_label,
+                                    $newstats->{'leaks'},
+                                    $embed_prefix . 'Lk', 3);
 
         my $maxheap_testname       = "trace_malloc_maxheap";
-        my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "MH:" . PrintSize($newstats->{'mhs'},3) . "B</a>\n\n";
-        print_log $maxheap_string;
+        print_log_test_result_bytes($maxheap_testname,
+                                    $maxheap_testname_label,
+                                    $newstats->{'mhs'},
+                                    $embed_prefix . 'MH', 3);
 
         my $allocs_testname       = "trace_malloc_allocs";
-        my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "A:" . PrintSize($newstats->{'allocs'},3) . "</a>\n\n";
-        print_log $allocs_string;
+        print_log_test_result_bytes($allocs_testname, $allocs_testname_label,
+                                    $newstats->{'allocs'},
+                                    $embed_prefix . 'A', 3);
 
         # Send results to server.
-        send_results_to_server($newstats->{'leaks'},  "--", $leaks_testname,   ::hostname() );
-        send_results_to_server($newstats->{'mhs'},    "--", $maxheap_testname, ::hostname() );
-        send_results_to_server($newstats->{'allocs'}, "--", $allocs_testname,  ::hostname() );
+        send_results_to_server($newstats->{'leaks'},  "--", $leaks_testname);
+        send_results_to_server($newstats->{'mhs'},    "--", $maxheap_testname);
+        send_results_to_server($newstats->{'allocs'}, "--", $allocs_testname);
 
     } else {
         print_log "TinderboxPrint:<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'},3) . "B\n";
