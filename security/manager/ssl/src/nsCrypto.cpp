@@ -69,6 +69,7 @@
 #include "nsIDOMCryptoDialogs.h"
 #include "nsIFormSigningDialog.h"
 #include "nsIProxyObjectManager.h"
+#include "nsIJSContextStack.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include <ctype.h>
@@ -244,7 +245,7 @@ nsCrypto::~nsCrypto()
 NS_IMETHODIMP
 nsCrypto::SetEnableSmartCardEvents(PRBool aEnable)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   // this has the side effect of starting the nssComponent (and initializing
   // NSS) even if it isn't already going. Starting the nssComponent is a 
@@ -1774,15 +1775,23 @@ nsCryptoRunnable::Run()
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
+  // make sure the right context is on the stack. must not return w/out popping
+  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+  if (!stack || NS_FAILED(stack->Push(cx))) {
+    return NS_ERROR_FAILURE;
+  }
+
   jsval retval;
   if (JS_EvaluateScriptForPrincipals(cx, m_args->m_scope, principals,
                                      m_args->m_jsCallback, 
                                      strlen(m_args->m_jsCallback),
                                      nsnull, 0,
                                      &retval) != JS_TRUE) {
-    return NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
   }
-  return NS_OK;
+
+  stack->Pop(nsnull);
+  return rv;
 }
 
 //Quick helper function to check if a newly issued cert
