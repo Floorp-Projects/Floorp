@@ -208,6 +208,8 @@
   "Star (Off)">
 <!ENTITY location.status.bookmarked
   "Star (On)">
+<!ENTITY location.status.bookmark.tooltip
+  "Add a Bookmark to this page">
 <!ENTITY bookmark.property.panel.title
   "Bookmark Properties">
 <!ENTITY bookmark.property.title
