@@ -1480,11 +1480,14 @@ function BrowserPan() {
 	if(!gBrowser.contentWindow.gInPan) {  
 		gBrowser.contentWindow.addEventListener("mousedown",BrowserPanMouseHandler,true);
 		gBrowser.contentWindow.addEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		gBrowser.contentWindow.addEventListener("click",BrowserPanMouseHandlerPanNull,true);
 		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
 		gBrowser.contentWindow.gInPan=true;
 	} else {
 		gBrowser.contentWindow.removeEventListener("mousedown",BrowserPanMouseHandler,true);
 		gBrowser.contentWindow.removeEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		gBrowser.contentWindow.removeEventListener("click",BrowserPanMouseHandlerPanNull,true);
+
 		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
 		gBrowser.contentWindow.gInPan=false;
 	}
@@ -1524,7 +1527,6 @@ function BrowserPanMouseHandlerPan(e) {
 }
 
 function BrowserPanMouseHandlerPanNull(e) {
-alert(1);
     e.preventDefault();
 }
 
