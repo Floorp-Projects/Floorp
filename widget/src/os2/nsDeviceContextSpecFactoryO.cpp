@@ -39,7 +39,7 @@ nsDeviceContextSpecFactoryOS2::nsDeviceContextSpecFactoryOS2()
    NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsDeviceContextSpecFactoryOS2, NS_GET_IID(nsIDeviceContextSpecFactory))
+NS_IMPL_ISUPPORTS(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory::GetIID())
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryOS2::Init()
 {
@@ -59,6 +59,8 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2::CreateDeviceContextSpec(
    if( pq)
    {
       nsDeviceContextSpecOS2 *spec = new nsDeviceContextSpecOS2;
+      if (!spec)
+	return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(spec);
       spec->Init( pq);
       aNewSpec = spec;
