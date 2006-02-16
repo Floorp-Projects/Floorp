@@ -48,7 +48,6 @@ var PlacesBrowserShim = {
   init: function PBS_init() {
     var addBookmarkCmd = document.getElementById("Browser:AddBookmarkAs");
     addBookmarkCmd.setAttribute("oncommand", "PlacesBrowserShim.addBookmark()");
-
     this._bms =
     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
     getService(Ci.nsINavBookmarksService);
@@ -119,11 +118,22 @@ var PlacesBrowserShim = {
   },
 
   showHistory: function PBS_showHistory() {
-    loadURI("chrome://browser/content/places/places.xul?history", null, null);
+    this._showPlacesView("chrome://browser/content/places/places.xul?history");
   },
 
   showBookmarks: function PBS_showBookmarks() {
-    loadURI("chrome://browser/content/places/places.xul?bookmarks", null, null);
+    this._showPlacesView("chrome://browser/content/places/places.xul?bookmarks");
+  },
+
+  /**
+   * This method shows the given URI string in whatever form we've decided
+   * is appropriate for the "Places" UI.  (It is intended to be used only for
+   * displaying the Places chrome.)
+   */
+
+  _showPlacesView: function PBS__showPlacesView(uriString) {
+    var tab = getBrowser().addTab(uriString);
+    getBrowser().selectedTab = tab;
   },
 
   addLivemark: function PBS_addLivemark(url, feedURL, title, description) {
@@ -141,6 +151,7 @@ var PlacesBrowserShim = {
    */
 
   _makeURI: function PBS__makeURI(urlString) {
+    ASSERT(urlString, "_makeURI called with an empty or undefined string parameter");
     return this._ios.newURI(urlString, null, null);
   },
 
@@ -196,6 +207,38 @@ var PlacesBrowserShim = {
   },
 
   /**
+   * Prepares the bookmark properties dialog for display; should be called
+   * from the dialog's onload handler with a reference to the dialog's
+   * DOM window object.
+   */
+
+  prepareBookmarkDialog: function PBS_prepareBookmarkDialog(dialogWindow) {
+    this.populateProperties(dialogWindow.document);
+    this.sizeAndPositionBookmarkDialog(dialogWindow);
+  },
+
+  sizeAndPositionBookmarkDialog: function PBS_sizeAndPositionBookmarkDialog(childWindow) {
+    var urlbar = document.getElementById("urlbar");
+    var editUrlbar = childWindow.document.getElementById("edit-urlbar");
+
+    var newx = Math.max(0, urlbar.boxObject.x + window.screenX - editUrlbar.boxObject.x);
+    var newy = urlbar.boxObject.y + window.screenY - editUrlbar.boxObject.y;
+    childWindow.moveTo(newx, newy);
+
+    var childDoc = childWindow.document;
+
+    var tagbox = childDoc.getElementById("tagbox");
+    tagbox.style.overflow="auto";
+
+    var pio = childDoc.getElementById("places-info-options");
+    var pig = childDoc.getElementById("places-info-grid");
+    childDoc.documentElement.getButton("accept").hidden=true;
+
+    var newHeight = pio.boxObject.y + pio.boxObject.height + 5;
+    childWindow.resizeTo(childWindow.innerWidth, newHeight);
+  },
+
+  /**
    * This method should be called when the location currently being
    * rendered by a browser changes (loading new page or forward/back).
    */
@@ -222,8 +265,7 @@ var PlacesBrowserShim = {
    */
 
   onBookmarkButtonClick: function PBS_onBookmarkButtonClick() {
-    var urlbar = document.getElementById("urlbar");
-    this._currentURI = this._makeURI(urlbar.value);
+    this._currentURI = this._getCurrentLocation();
     if (this._bms.isBookmarked(this._currentURI)) {
       this.showBookmarkProperties();
     } else {
@@ -232,25 +274,17 @@ var PlacesBrowserShim = {
     }
   },
 
-  showBookmarkProperties: function PBS_showBookmarkProperties() {
-    var popup = document.getElementById("places-info-popup");
-    var win = document.getElementById("main-window");
-    var urlbar = document.getElementById("urlbar");
+  populateProperties: function PBS_populateProperties(document, location, title) {
+    if (!location) {
+      location = this._currentURI;
+      title = this._currentTitle;
+    }
 
     var nurl = document.getElementById("edit-urlbar");
-    var nurlbox = document.getElementById("edit-urlbox");
 
     var titlebox = document.getElementById("edit-titlebox");
 
-    nurl.value = urlbar.value;
-    nurl.label = urlbar.value;
-    nurl.size = urlbar.size;
-    nurlbox.style.left = urlbar.boxObject.x + "px";
-    nurlbox.style.top = urlbar.boxObject.y + "px";
-    nurl.height = urlbar.boxObject.height;
-    nurl.style.width = urlbar.boxObject.width + "px";
-
-    var title = this._bms.getItemTitle(this._makeURI(urlbar.value));
+    nurl.value = location.spec;
     titlebox.value = title;
 
     var tagArea = document.getElementById("tagbox");
@@ -266,9 +300,9 @@ var PlacesBrowserShim = {
     this._populateTags(root, 0, tagArea, elementDict);
     root.containerOpen = false;
 
-    var categories = this._bms.getBookmarkFolders(this._makeURI(urlbar.value), {});
+    var categories = this._bms.getBookmarkFolders(location, {});
 
-    this._updateFolderTextbox(this._makeURI(urlbar.value));
+    this._updateFolderTextbox(document, location);
 
     var length = 0;
     for (key in elementDict) {
@@ -279,18 +313,25 @@ var PlacesBrowserShim = {
       var elm = elementDict[categories[i]];
       elm.setAttribute("selected", "true");
     }
+  },
 
-    popup.hidden = false;
-    popup.style.left = "" + (nurlbox.boxObject.x - 5) + "px";
-    popup.style.top = "" + (nurlbox.boxObject.y - 5) + "px";
-    popup.style.width = "" + (nurlbox.boxObject.width + (5 * 2)) + "px";
-    var pio = document.getElementById("places-info-options");
-    pio.style.top = nurlbox.boxObject.y + nurlbox.boxObject.height + 5 + "px";
-    pio.style.width = nurlbox.boxObject.width + "px";
-    pio.style.left = nurlbox.boxObject.x + "px";
-    var pig = document.getElementById("places-info-grid");
-    pig.style.width = nurlbox.boxObject.width + "px";
-    popup.style.height = (pio.boxObject.y + pio.boxObject.height - popup.boxObject.y + 5) + "px";
+  /**
+   * This method shows the bookmark properties dialog.  If bookmarkURI
+   * is undefined, the dialog with display properties for the URI of the
+   * most recently displayed page; if it is set to an nsIURI object, it
+   * will display properties for the bookmark identified by that URI.
+   * The URI used should already have been bookmarked using _bookmarkURI().
+   */
+
+  showBookmarkProperties: function PBS_showBookmarkProperties(bookmarkURI) {
+    if (bookmarkURI) {
+      this._currentURI = bookmarkURI;
+    }
+
+    ASSERT(this._bms.isBookmarked(this._currentURI), "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + this._currentURI.spec);
+
+    this._currentTitle = this._bms.getItemTitle(this._currentURI);
+    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul", "bookmarkproperties", "width=600,height=400,chrome,dependent,modal,resizable");
   },
 
   /**
@@ -298,18 +339,22 @@ var PlacesBrowserShim = {
    *
    * @param aSaveChanges boolean, should be true if changes performed while
    *                     the panel was active should be saved
+   * @param document the document containing the fields needing to be saved
    */
 
   hideBookmarkProperties:
-  function PBS_hideBookmarkProperties(saveChanges) {
+  function PBS_hideBookmarkProperties(saveChanges, document) {
     if (saveChanges) {
       var titlebox = document.getElementById("edit-titlebox");
       this._bms.setItemTitle(this._currentURI, titlebox.value);
+
+      var urlbox = document.getElementById("edit-urlbar");
+      if (urlbox.value != this._currentURI.spec) {
+        // TODO delete existing bookmark, create new one with same folder/locations
+      }
     }
 
-    var popup = document.getElementById("places-info-popup");
     this._updateControlStates();
-    popup.hidden = true;
   },
 
 
@@ -336,13 +381,46 @@ var PlacesBrowserShim = {
   },
 
   /**
+   * This method implements the "Show all bookmarks" action
+   * in the Bookmark Properties dialog.
+   */
+
+  dialogShowBookmarks: function PBS_dialogShowBookmarks(dialogWindow) {
+    this.hideBookmarkProperties(true, dialogWindow.document);
+    dialogWindow.close();
+    this.showBookmarks();
+  },
+
+ /**
+   * This method implements the "Delete Bookmark" action
+   * in the Bookmark Properties dialog.
+   */
+
+  dialogDeleteBookmark: function PBS_dialogDeleteBookmark(dialogWindow) {
+    this.deleteBookmark();
+    this.hideBookmarkProperties(false, dialogWindow.document);
+    dialogWindow.close();
+  },
+
+ /**
+   * This method implements the "Done" action
+   * in the Bookmark Properties dialog.
+   */
+
+  dialogDone: function PBS_dialogDone(dialogWindow) {
+    this.hideBookmarkProperties(true, dialogWindow.document);
+    dialogWindow.close();
+  },
+
+  /**
    * This method sets the contents of the "Folders" textbox in the
    * Bookmark Properties panel.
    *
-   * @param aURI an nsIURI object representing the current bookmark's URI
+   * @param document the document containing the textbox element
+   * @param uri an nsIURI object representing the current bookmark's URI
    */
 
-  _updateFolderTextbox: function PBS__updateFolderTextbox(uri) {
+  _updateFolderTextbox: function PBS__updateFolderTextbox(document, uri) {
     var folderTextbox = document.getElementById("places-folder-list");
     folderTextbox.value = this._getFolderNameListForURI(uri);
   },
@@ -381,9 +459,7 @@ var PlacesBrowserShim = {
 
   _populateTags:
   function PBS__populateTags (container, depth, parentElement, elementDict) {
-    if (!container.containerOpen) {
-      throw new Error("The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
-    }
+    ASSERT(container.containerOpen, "The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
 
     var row = null;
     for (var i = 0; i < container.childCount; i++) {
@@ -397,7 +473,11 @@ var PlacesBrowserShim = {
       childFolder.containerOpen = true;
 
       // If we can't alter it, no use showing it as an option.
-      if (childFolder.childrenReadOnly) {
+
+      // childFolder.childrenReadOnly currently returns wrong answer for
+      // livemarks (joe@retrovirus.com 2006-02-14)
+        //      if (childFolder.childrenReadOnly) {
+      if (this._bms.getFolderReadonly(childFolder.folderId)) {
         childFolder.containerOpen = false;
         continue;
       }
@@ -470,6 +550,7 @@ var PlacesBrowserShim = {
 
   tagClicked: function PBS_tagClicked(event) {
     var tagElement = event.target;
+
     var folderId = parseInt(tagElement.getAttribute("folderid"));
 
     if (tagElement.getAttribute("selected") == "true") {
@@ -480,7 +561,7 @@ var PlacesBrowserShim = {
       tagElement.setAttribute("selected", "true");
     }
 
-    this._updateFolderTextbox(this._currentURI);
+    this._updateFolderTextbox(tagElement.ownerDocument, this._currentURI);
   },
 
 };

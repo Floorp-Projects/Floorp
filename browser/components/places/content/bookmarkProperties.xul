@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
+
+<!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
+
+<dialog id="bookmarkproperties" title="&bookmark.property.panel.title;"
+	buttons="accept"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="window.PlacesBrowserShim = window.opener.PlacesBrowserShim; window.PlacesBrowserShim.prepareBookmarkDialog(window);">
+      <hbox id="edit-urlbox">
+	<textbox id="edit-urlbar" flex="1" size="10" tooltiptext="&bookmark.property.location;"/>
+      </hbox>
+
+      <vbox id="places-info-options">
+	<grid id="places-info-grid" flex="1">
+	  <columns>
+	    <column flex="1" align="end" />
+	    <column flex="100" align="start" />
+	  </columns>
+	  <rows>
+	    <row>
+	      <vbox align="end">
+		<hbox align="center" flex="1">
+		  <label value="&bookmark.property.title;" align="middle"/>
+		</hbox>
+	      </vbox>
+	      <textbox id="edit-titlebox" value=""/>
+	    </row>
+	    <row>
+	      <vbox align="end">
+		<hbox align="center" flex="1">
+		  <label value="&bookmark.property.folders;"/>
+		</hbox>
+	      </vbox>
+	      <textbox id="places-folder-list" value="Chronic-what" disabled="true"/>
+	    </row>
+	    <row>
+	      <vbox align="end">
+		<hbox align="start" flex="1">
+		  <label value="&bookmark.property.folder_list;"/>
+		</hbox>
+	      </vbox>
+	      <vbox id="tagbox">
+	      </vbox>
+	    </row>
+	    <row>
+	      <vbox></vbox>
+	      <vbox><hbox align="end">
+		<button id="places-link" label="&cmd.show_bookmarks.label;" oncommand="PlacesBrowserShim.dialogShowBookmarks(window);"/>		
+		<button label="&cmd.delete_bookmark.label;" oncommand="PlacesBrowserShim.dialogDeleteBookmark(window);" align="end"/>
+		<spacer flex="1"/>
+		<button label="&cmd.hide_bookmark_properties.label;" oncommand="PlacesBrowserShim.dialogDone(window);"/>
+	      </hbox>
+	      </vbox>
+	    </row>
+	  </rows>
+	</grid>
+      </vbox>
+</dialog>
+
+

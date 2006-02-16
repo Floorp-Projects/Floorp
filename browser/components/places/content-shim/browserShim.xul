@@ -46,58 +46,5 @@
     <button id="places-bookmark" label="&location.status.not_bookmarked;" oncommand="PlacesBrowserShim.onBookmarkButtonClick();" align="start"/>
     <button id="places-subscribe" label="&feed.subscribe.label;" tooltiptext="&feed.subscribe.tooltip;"/>
   </toolbaritem>
-  <window id="main-window">
-    <stack id="places-info-popup" hidden="true">
-      <hbox id="edit-urlbox" flex="1">
-	<textbox id="edit-urlbar" flex="1" size="10" tooltiptext="&bookmark.property.location;"/>
-      </hbox>
-      <vbox id="places-info-options">
-	<grid id="places-info-grid" flex="1">
-	  <columns>
-	    <column flex="1" align="end" />
-	    <column flex="100" align="start" />
-	  </columns>
-	  
-	  <rows>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.title;" align="middle"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="edit-titlebox" value=""/>
-	    </row>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.folders;"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="places-folder-list" value="" disabled="true"/>
-	    </row>
-	    <row>
-	      <vbox align="end">
-		<hbox align="start" flex="1">
-		  <label value="&bookmark.property.folder_list;"/>
-		</hbox>
-	      </vbox>
-	      <vbox id="tagbox">
-	      </vbox>
-	    </row>
-	    <row>
-	      <vbox></vbox>
-	      <vbox><hbox align="end">
-		<label id="places-link" value="&cmd.show_bookmarks.label;" onclick="PlacesBrowserShim.hideBookmarkProperties(true); PlacesBrowserShim.showBookmarks();"/>
-		<spacer flex="1"/>
-		<button label="&cmd.delete_bookmark.label;" oncommand="PlacesBrowserShim.deleteBookmark(); PlacesBrowserShim.hideBookmarkProperties(false);" align="end"/>
-		<button label="&cmd.hide_bookmark_properties.label;" oncommand="PlacesBrowserShim.hideBookmarkProperties(true)"/>
-	      </hbox>
-	      </vbox>
-	    </row>
-	  </rows>
-	</grid>
-      </vbox>
-    </stack>
-  </window>
 </overlay>
 
