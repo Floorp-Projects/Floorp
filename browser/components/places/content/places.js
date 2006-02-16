@@ -132,6 +132,7 @@ var PlacesUIHook = {
   showPlacesUI: function PP_showPlacesUI() {
     ASSERT(PlacesController, "PlacesController does not exist anymore?!");
 
+/*
     this._tabbrowser.setAttribute("places", "true");
     var statusbar = this._topElement("status-bar");
     statusbar.hidden = true;
@@ -151,11 +152,13 @@ var PlacesUIHook = {
     // Disable the find bar so that we can capture key presses. 
     this._topWindow.gFindEnabled = false;
     this._topWindow.addEventListener("find-activated", this.onFindActivated, false);
+*/    
   },
 
   hidePlacesUI: function PP_hidePlacesUI() {
     ASSERT(PlacesController, "PlacesController does not exist anymore?!");
 
+/*
     this._tabbrowser.removeAttribute("places");
     
     // Approaches that cache the value of the status bar before the Places page
@@ -184,6 +187,7 @@ var PlacesUIHook = {
     // Enable the find bar again
     this._topWindow.gFindEnabled = true;
     this._topWindow.removeEventListener("find-activated", this.onFindActivated, false);
+    */
   },
 };
 

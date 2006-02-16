@@ -7,6 +7,22 @@ menupopup[type="places"] {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }
 
+/** XXXben this needs to move into skin **/
+
+#places-bookmark {
+  list-style-image: url("chrome://browser/skin/bookmarks/Bookmarks-toolbar.png");
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+#places-subscribe {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  opacity: 1.0;
+}
+
+#places-subscribe[disabled="true"] {
+  opacity: 0.3;
+}
+
 #places-info-popup {
   position: fixed;
   left: 50px;
