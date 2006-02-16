@@ -113,6 +113,7 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_FEEDURL_LOWER "feedurl"
 #define KEY_LASTCHARSET_LOWER "last_charset"
 #define KEY_ICON_LOWER "icon"
+#define KEY_SHORTCUTURL_LOWER "shortcuturl"
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarks_menu.png"
 #define BOOKMARKS_TOOLBAR_ICON_URI "chrome://browser/skin/places/bookmarks_toolbar.png"
@@ -565,6 +566,7 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString feedUrl;
   nsAutoString icon;
   nsAutoString lastCharset;
+  nsAutoString keyword;
   PRInt32 attrCount = node.GetAttributeCount();
   for (PRInt32 i = 0; i < attrCount; i ++) {
     const nsAString& key = node.GetKeyAt(i);
@@ -576,12 +578,15 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       icon = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_LASTCHARSET_LOWER)) {
       lastCharset = node.GetValueAt(i);
+    } else if (key.LowerCaseEqualsLiteral(KEY_SHORTCUTURL_LOWER)) {
+      keyword = node.GetValueAt(i);
     }
   }
   href.Trim(kWhitespace);
   feedUrl.Trim(kWhitespace);
   icon.Trim(kWhitespace);
   lastCharset.Trim(kWhitespace);
+  keyword.Trim(kWhitespace);
 
   // ignore <a> tags that have no href: we don't know what to do with them
   if (href.IsEmpty()) {
@@ -612,6 +617,10 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   // save the favicon, ignore errors
   if (! icon.IsEmpty())
     SetFaviconForURI(frame.mPreviousLink, NS_ConvertUTF16toUTF8(icon));
+
+  // save the keyword, ignore errors
+  if (! keyword.IsEmpty())
+    mBookmarksService->SetKeywordForURI(frame.mPreviousLink, keyword);
 
   // FIXME: save the last charset
 }
