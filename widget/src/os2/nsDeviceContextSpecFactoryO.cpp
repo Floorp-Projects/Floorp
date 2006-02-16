@@ -50,7 +50,7 @@ nsDeviceContextSpecFactoryOS2 :: ~nsDeviceContextSpecFactoryOS2()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory);
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory)
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: Init(void)
 {
