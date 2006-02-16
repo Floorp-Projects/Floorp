@@ -686,14 +686,14 @@ int PRINTDLG::GetDefaultPrinter ()
 
 char* PRINTDLG::GetPrinter (int numPrinter)
 {
-   const char* pq = NULL;
-  
    if (numPrinter > mQueueCount)
       return NULL;
 
-   pq = mPQBuf [numPrinter]->QueueName();
+   nsCAutoString pName(mPQBuf [numPrinter]->QueueName());
 
-   return (char *)pq;
+   pName.ReplaceChar('\r', ' ');
+   pName.StripChars("\n");
+   return ToNewCString(pName);
 }
 
 PRTQUEUE* PRINTDLG::SetPrinterQueue (int numPrinter)
