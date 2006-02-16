@@ -72,10 +72,6 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
-
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

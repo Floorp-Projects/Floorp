@@ -54,6 +54,7 @@
 #include "nsITheme.h"
 #include "imgIRequest.h"
 #include "nsDisplayList.h"
+#include "nsFormControlHelper.h"
 
 //------------------------------------------------------------
 nsIFrame*

@@ -39,22 +39,10 @@
 #define nsFormControlFrame_h___
 
 #include "nsIFormControlFrame.h"
-#include "nsFormControlHelper.h"
-#include "nsISupports.h"
-#include "nsIWidget.h"
 #include "nsLeafFrame.h"
-#include "nsCoord.h"
-#include "nsPresContext.h"
-#include "nsCOMPtr.h"
-
-class nsIView;
-class nsPresContext;
-class nsStyleCoord;
 
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
-
-#define NS_FORMSIZE_NOTSET -1
 
 #ifdef DEBUG_rods
 
@@ -125,32 +113,7 @@ public:
 
   // new behavior
 
-  /**
-    * Respond to a enter key being pressed
-    */
-  virtual void EnterPressed(nsPresContext* aPresContext) {} 
-
-  /**
-    * Respond to a control change (e.g. combo box close-up)
-    */
-  virtual void ControlChanged(nsPresContext* aPresContext) {}
-
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
-
-  /**
-    * Perform opertations before the widget associated with this frame has been
-    * created.
-    */
-  virtual nsWidgetInitData* GetWidgetInitData(nsPresContext* aPresContext);  
-
-  void GetWidgetSize(nsSize& aSize) const { aSize.width  = mWidgetSize.width; 
-                                            aSize.height = mWidgetSize.height; }
-
-  // XXX similar functionality needs to be added to widget library and these
-  //     need to change to use it.
-  static  nscoord GetScrollbarWidth(float aPixToTwip);
-
-  virtual void SetClickPoint(nscoord aX, nscoord aY);
 
    /**
     * Get the width and height of this control based on CSS 
@@ -213,10 +176,6 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  virtual void GetDesiredSize(nsPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredLayoutSize,
-                              nsSize& aDesiredWidgetSize);
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons
@@ -230,14 +189,7 @@ protected:
 
   void GetCurrentCheckState(PRBool* aState);
 
-  nsSize       mWidgetSize;
   PRBool       mDidInit;
-  nsPoint      mLastClickPoint;
-
-  // Reflow Optimization
-  nsSize       mCacheSize;
-  nscoord      mCachedAscent;
-  nscoord      mCachedMaxElementWidth;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
