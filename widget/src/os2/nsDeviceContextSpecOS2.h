@@ -16,7 +16,6 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
  */
 
 #ifndef _nsDeviceContextSpecOS2_h
