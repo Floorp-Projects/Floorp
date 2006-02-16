@@ -79,7 +79,7 @@ public:
   ~PRINTDLG ();
    int GetNumPrinters ();
    int GetDefaultPrinter ();
-   char* GetPrinter (int numPrinter);
+   GetPrinter (int numPrinter, char** printerName);
    PRTQUEUE* SetPrinterQueue (int numPrinter);
    HDC GetDCHandle (int numPrinter);
    PLONG GetPrintDriverSize (int printer);
@@ -139,7 +139,7 @@ public:
   
   NS_IMETHOD ClosePrintManager();
 
-  NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
+  NS_IMETHOD GetDestination ( int &aDestination ); 
 
   NS_IMETHOD GetPrinterName ( char **aPrinter );
 
