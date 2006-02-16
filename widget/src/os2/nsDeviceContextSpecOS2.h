@@ -55,57 +55,11 @@
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
 #endif /* USE_XPRINT */
-#include "nsGFXDefs.h"
 #include "nsPrintdOS2.h"
 #include <os2.h>
 #include <pmddim.h>
 
-//---------------------------------------------------------------------------
-// OS/2 Printing   - was in libprint
-//---------------------------------------------------------------------------
-// Library init and term; job properties per queue are cached during run.
-BOOL PrnInitialize(HMODULE hmodResources);
-BOOL PrnTerminate(void);
-
-// opaque type to describe a print queue (printer)
-class PRTQUEUE;
-
-#define MAX_PRINT_QUEUES  (128)
-
-class PRINTDLG
-{
-public:
-   PRINTDLG();
-  ~PRINTDLG();
-   void      RefreshPrintQueue();
-   ULONG     GetNumPrinters();
-   void      GetPrinter(ULONG printerNdx, char** printerName);
-   PRTQUEUE* SetPrinterQueue(ULONG printerNdx);
-   LONG      GetPrintDriverSize(ULONG printerNdx);
-   PDRIVDATA GetPrintDriver(ULONG printerNdx);
-   HDC       GetDCHandle(ULONG printerNdx);
-   char*     GetDriverType(ULONG printerNdx);
-   BOOL      ShowProperties(ULONG printerNdx);
-
-private:
-  ULONG      mQueueCount;
-  PRTQUEUE*  mPQBuf[MAX_PRINT_QUEUES];
-};
-
-
-// Release app. resources associated with a printer
-BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue);
-
-// Get a DC for the selected printer.  Must supply the application name.
-HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int destination, char *file);
-
-// Get the hardcopy caps for the selected form
-BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
-
-// Abort the current job started with PrnStartJob().
-BOOL PrnAbortJob( HDC hdc);
-
-
+#include "nsPrintOS2.h"
 //---------------------------------------------------------------------
 // nsDeviceContextSpecOS2
 //---------------------------------------------------------------------

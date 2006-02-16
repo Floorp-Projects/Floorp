@@ -39,7 +39,8 @@
 
 #include "nsDeviceContextSpecFactoryO.h"
 #include "nsDeviceContextSpecOS2.h"
-#include "nsGfxCIID.h"
+#include "nsComponentManagerUtils.h"
+#include "nsWidgetsCID.h"
 
 nsDeviceContextSpecFactoryOS2 :: nsDeviceContextSpecFactoryOS2()
 {
