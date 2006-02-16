@@ -1,5 +1,5 @@
 
-div.item {
+td.item {
     font-family:verdana;
     font-size:74%;
     -moz-border-radius:4px;
@@ -7,7 +7,7 @@ div.item {
     margin:4px;
 } 
  	 
-div.item a {
+td.item a {
     text-decoration:none;
     color:black;
 }
