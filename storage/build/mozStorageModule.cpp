@@ -46,7 +46,7 @@
 
 #include "mozStorageCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageService)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozStorageService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageConnection)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozStorageStatementWrapper)
 

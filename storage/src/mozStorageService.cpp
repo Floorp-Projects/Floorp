@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Brett Wilson <brettw@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,14 +40,18 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
+#include "nsCRT.h"
 #include "plstr.h"
 
 #include "sqlite3.h"
+#include "sqlite3file.h"
 
-NS_IMPL_ISUPPORTS1(mozStorageService, mozIStorageService)
+NS_IMPL_THREADSAFE_ISUPPORTS2(mozStorageService, mozIStorageService, nsIObserver)
 
 // XXX this sucks that we have to pull in nsIFile and all that
 // just to use NS_GetSpecialDirectory
+
+static const char* gQuitApplicationMessage = "quit-application";
 
 mozStorageService::mozStorageService()
 {
@@ -54,7 +60,25 @@ mozStorageService::mozStorageService()
 
 mozStorageService::~mozStorageService()
 {
-  /* destructor code */
+    FreeLocks();
+}
+
+nsresult
+mozStorageService::Init()
+{
+    sqlite3_enable_shared_cache(1);
+
+    nsresult rv;
+    mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = InitStorageAsyncIO();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mObserverService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
 
 #ifndef NS_APP_STORAGE_50_FILE
@@ -88,6 +112,7 @@ mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConne
     }
 
     mozStorageConnection *msc = new mozStorageConnection();
+    // FIXME: check for out of memory
     nsCOMPtr<mozIStorageConnection> conn = msc;
     rv = msc->Initialize (storageFile);
     if (NS_FAILED(rv)) return rv;
@@ -110,5 +135,17 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
 
     *_retval = conn;
     NS_ADDREF(*_retval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+mozStorageService::Observe(nsISupports *aSubject, const char *aTopic,
+                           const PRUnichar *aData)
+{
+    nsresult rv;
+    if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+        rv = FinishAsyncIO();
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
     return NS_OK;
 }
