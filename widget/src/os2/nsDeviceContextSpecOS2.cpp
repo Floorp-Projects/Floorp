@@ -698,10 +698,10 @@ int PRINTDLG::GetDefaultPrinter ()
    return mDefaultQueue;
 }
 
-PRINTDLG::GetPrinter (int numPrinter, char** printerName)
+void PRINTDLG::GetPrinter (int numPrinter, char** printerName)
 {
    if (numPrinter > mQueueCount)
-      return NULL;
+      return;
  
    nsCAutoString pName(mPQBuf [numPrinter]->QueueName());
  
@@ -790,7 +790,7 @@ BOOL PRINTDLG::ShowProperties (int index)
     if (buflen != mPQBuf[Ind]->PQI3().pDriverData->cb)
     {
         if (DosAllocMem((PPVOID)&pNewDrivData,buflen,fALLOC))
-            return(DPDM_ERROR);
+            return(FALSE); // DPDM_ERROR
     
 /* copy over old data so driver can use old job */
 /* properties as base for job properties dialog */
