@@ -74,7 +74,7 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
  */
 nsDeviceContextSpecOS2 :: nsDeviceContextSpecOS2()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mQueue = nsnull;
 }
 
@@ -379,7 +379,7 @@ nsresult nsDeviceContextSpecOS2::GetPRTQUEUE( PRTQUEUE *&p)
 //  Printer Enumerator
 nsPrinterEnumeratorOS2::nsPrinterEnumeratorOS2()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorOS2, nsIPrinterEnumerator)
