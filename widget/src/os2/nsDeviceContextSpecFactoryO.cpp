@@ -61,6 +61,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: Init(void)
 //XXX this method needs to do what the API says...
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget *aWidget,
+                                                                       nsIPrintSettings* aPrintSettings,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
@@ -69,7 +70,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget
      nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
 
 	if (NS_SUCCEEDED(rv)) {
-	  rv = ((nsDeviceContextSpecOS2 *)devSpec.get())->Init(aQuiet);
+	  rv = ((nsDeviceContextSpecOS2 *)devSpec.get())->Init(aPrintSettings, aQuiet);
        if (NS_SUCCEEDED(rv)) {
 	    aNewSpec = devSpec;
          NS_ADDREF(aNewSpec);
