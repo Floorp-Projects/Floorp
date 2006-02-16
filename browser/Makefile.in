@@ -55,7 +55,7 @@ DEFINES += -DOFFICIAL_BRANDING=1
 endif
 
 # Generate uninstall.ini (en-US only for now)
-UNINSTALLER_INC = $(topsrcdir)/browser/locales/en-US/installer/uninstaller.inc
+UNINSTALLER_INC = $(topsrcdir)/browser/installer/windows/uninstaller.inc
 $(FINAL_TARGET)/uninstall/uninstall.ini: $(topsrcdir)/browser/installer/windows/uninstall.it $(UNINSTALLER_INC)
 	$(NSINSTALL) -D $(@D)
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(UNINSTALLER_INC) $< > $@
