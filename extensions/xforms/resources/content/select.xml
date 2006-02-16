@@ -105,7 +105,7 @@
         <getter>
           if (!this._uiElement) {
             this._uiElement =
-              document.getAnonymousElementByAttribute(this, "anonid", "select");;
+              document.getAnonymousElementByAttribute(this, "anonid", "select");
           }
 
           return this._uiElement;
@@ -213,13 +213,13 @@
             // "".
             var value = "";
             var accessValue = this.accessors.getValue();
-  
+
             if (accessValue)
               value = accessValue.replace(/\n|\t|\r/g, " ");
-  
+
             // get an array of values selected in the bound node
             var selectedArray = value.split(" ");
-  
+
             // create a hash from the default values so we can store how often
             // we encountered them.  This allows us to figure out later if any
             // were not hit, which requires us to send an event.
@@ -248,10 +248,10 @@
                   // replace new line (\n), tabs (\t) and carriage returns (\r)
                   // with " ".
                   var value = string.replace(/\n|\t|\r/g, " ");
-                 
+
                   // get an array of values selected in the bound node
                   var selectedArray = value.split(" ");
-      
+
                   // create a hash from the default values so we can store how
                   // often we encountered them.  This allows us to figure out
                   // later if any were not hit, which requires us to send an
@@ -349,8 +349,6 @@
             }
           }
 
-
-
           return true;
          ]]>
         </body>
@@ -375,10 +373,27 @@
           if (aUseLabelValue) {
             option.textContent = aLabel;
           } else {
-            // label can contain other elements such as html, so we clone it
             var label = aControl.getElementsByTagName("label")[0];
-            var newLabel = label.cloneNode(true);
-            option.appendChild(newLabel);
+
+            // We either have a bound node and get it's content, or we
+            // clone the contents of the label element
+            if (label.accessors.hasBoundNode()) {
+              option.textContent = label.accessors.getValue();
+            } else {
+              var childLength = label.childNodes.length;
+
+              // text content only?
+              if (childLength == 1 && label.firstChild.nodeType == Node.TEXT_NODE) {
+                option.textContent = label.textContent;
+              } else {
+                // clone all children.  We don't simply clone the xforms:label
+                // because xhtml:select will get confused by it and break
+                // find-as-you-type.
+                for (var i = 0; i < childLength; i++) {
+                  option.appendChild(label.childNodes[i].cloneNode(true));
+                }
+              }
+            }
           }
 
           return option;
@@ -546,12 +561,12 @@
             } else {
               // if some copyItems were selected by the user prior to the call
               // to _getSelectedValues, then we would not have set up
-              // _delegateValueCache.  Since the node we are bound to can't
+              // _accessorValueCache.  Since the node we are bound to can't
               // be set by copyItems (its not an ELEMENT_NODE), any copyItems
               // in this select would have been deselected during
               // _getSelectedValues.  Thus, anything in the contentEnvelope at
               // this point should just be strings and so we can set
-              // delegate.value directly and use _delegateValueCache after all.
+              // delegate.value directly and use _accessorValueCache after all.
 
               this.accessors.setValue(contentEnvelope.nodeValue);
               this._accessorValueCache = contentEnvelope.nodeValue;
@@ -868,10 +883,27 @@
           if (aUseLabelValue) {
             labelSpan.textContent = aLabel;
           } else {
-            // label can contain other elements such as html, so we clone it
             var label = aControl.getElementsByTagName("label")[0];
-            var newLabel = label.cloneNode(true);
-            labelSpan.appendChild(newLabel);
+
+            // We either have a bound node and get it's content, or we
+            // clone the contents of the label element
+            if (label.accessors.hasBoundNode()) {
+              labelSpan.textContent = label.accessors.getValue();
+            } else {
+              var childLength = label.childNodes.length;
+
+              // text content only?
+              if (childLength == 1 && label.firstChild.nodeType == Node.TEXT_NODE) {
+                labelSpan.textContent = label.textContent;
+              } else {
+                // clone all children.  We don't simply clone the xforms:label
+                // because xhtml:select will get confused by it and break
+                // find-as-you-type.
+                for (var i = 0; i < childLength; i++) {
+                  labelSpan.appendChild(label.childNodes[i].cloneNode(true));
+                }
+              }
+            }
           }
 
           var input = document.createElementNS("http://www.w3.org/1999/xhtml",
