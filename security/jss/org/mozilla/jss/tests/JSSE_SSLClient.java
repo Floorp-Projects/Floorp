@@ -43,10 +43,14 @@ import java.security.cert.*;
 import javax.security.cert.X509Certificate;
 import java.security.KeyStore;
 
-/*
+/**
  * This program connects to any SSL Server to exercise
- * all ciphers supported by JSSE.  The result is listing
- * of common ciphers between the server and JSSE.
+ * all ciphers supported by JSSE for a given JDK/JRE 
+ * version.  The result is listing of common ciphers 
+ * between the server and this JSSE client.
+ *
+ * @author      Sandeep Konchady
+ * @version     1.0
  */
 public class JSSE_SSLClient {
     
@@ -273,14 +277,15 @@ public class JSSE_SSLClient {
          * before the SSLContext, the server/proxy might timeout
          * waiting for the client to actually send something.
          */
-            SSLSocketFactory    factory = null;
-            SSLSocket           socket  = null;
+            SSLSocketFactory    factory  = null;
+            SSLSocket           socket   = null;
             
-            SSLContext          ctx     = null;
-            KeyManagerFactory   kmf     = null;
-            TrustManagerFactory tmf     = null;
-            KeyStore            ks      = null;
-            KeyStore            ksTrust = null;
+            SSLContext          ctx      = null;
+            KeyManagerFactory   kmf      = null;
+            TrustManagerFactory tmf      = null;
+            KeyStore            ks       = null;
+            KeyStore            ksTrust  = null;
+            String              provider = "SunJCE";
             
         /*
          * Set up a key manager for client authentication
@@ -289,21 +294,50 @@ public class JSSE_SSLClient {
          */
             char[] passphrase      = "netscape".toCharArray();
             char[] trustpassphrase = "changeit".toCharArray();
+            String javaVendor      = System.getProperty("java.vendor");
+            if (Constants.debug_level > 3)
+                System.out.println("DBEUG: JSSE_SSLClient.java java.vendor=" +
+                                   javaVendor);
             
             // Initialize the system
-            System.setProperty("java.protocol.handler.pkgs",
+            if (javaVendor.equals("IBM Corporation")) {
+                System.setProperty("java.protocol.handler.pkgs",
+                    "com.ibm.net.ssl.www.protocol.Handler");
+                java.security.Security.addProvider ((java.security.Provider) 
+                    Class.forName("com.ibm.jsse2.IBMJSSEProvider2").newInstance());
+                provider = "IBMJCE";
+            } else {
+                System.setProperty("java.protocol.handler.pkgs",
                     "com.sun.net.ssl.internal.www.protocol");
-            java.security.Security.addProvider(
-                    new com.sun.net.ssl.internal.ssl.Provider());
+                java.security.Security.addProvider ((java.security.Provider) 
+                    Class.forName("com.sun.crypto.provider.SunJCE").newInstance());
+            }
             
             // Load the keystore that contains the certificate
-            kmf     = KeyManagerFactory.getInstance("SunX509");
-            ks      = KeyStore.getInstance("PKCS12");
+            String certificate = new String("SunX509");
+            ks  = KeyStore.getInstance("PKCS12");
+            if (javaVendor.equals("IBM Corporation")) {
+                certificate = new String("IbmX509");
+                ks  = KeyStore.getInstance("PKCS12", provider);
+            }
+
             try {
+                kmf = KeyManagerFactory.getInstance(certificate);
                 ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
             } catch (Exception keyEx) {
-                System.out.println(keyEx.getMessage());
-                System.exit(1);
+                if (Constants.debug_level > 3) {
+                    if(System.getProperty("java.vendor").equals("IBM Corporation")) {
+                        System.out.println("Using IBM JDK: Cannot load keystore due "+
+                        "to strong security encryption settings\nwith limited " +
+                        "Jurisdiction policy files :\n" +
+                        "http://www-1.ibm.com/support/docview.wss?uid=swg21169931");
+                        return "success";
+                    } else {
+                        System.out.println(keyEx.getMessage());
+                        keyEx.printStackTrace();
+                    }
+                }
+                return "failure";
             }
             kmf.init(ks, passphrase);
             
@@ -358,9 +392,9 @@ public class JSSE_SSLClient {
                 socket = (SSLSocket)factory.createSocket(host, port);
             }
             
-        /*
-         * register a callback for handshaking completion event
-         */
+            /*
+             * register a callback for handshaking completion event
+             */
             try {
                 socket.addHandshakeCompletedListener(
                         new HandshakeCompletedListener() {
@@ -377,15 +411,15 @@ public class JSSE_SSLClient {
                 }
                 );
             } catch (Exception handshakeEx) {
-                return null;
+                return handshakeEx.getMessage();
             }
             
-        /*
-         * send http request
-         *
-         * See SSLSocketClient.java for more information about why
-         * there is a forced handshake here when using PrintWriters.
-         */
+            /*
+             * send http request
+             *
+             * See SSLSocketClient.java for more information about why
+             * there is a forced handshake here when using PrintWriters.
+             */
             String [] Ciphers = {cipherName};
             socket.setEnabledCipherSuites(Ciphers);
             // Set socket timeout to 10 sec
@@ -403,9 +437,9 @@ public class JSSE_SSLClient {
             out.println(EOF);
             out.flush();
             
-        /*
-         * Make sure there were no surprises
-         */
+            /*
+             * Make sure there were no surprises
+             */
             if (out.checkError())
                 System.out.println("SSLSocketClient: " +
                         "java.io.PrintWriter error");
@@ -420,15 +454,14 @@ public class JSSE_SSLClient {
             
             String inputLine;
             
-            while ((inputLine  = in.readLine()) != null)
-                System.out.println(inputLine);
+            while ((inputLine  = in.readLine()) != null);
             
-            //System.out.println("Shutdown the input stream ...");
-            //socket.shutdownInput();
             in.close();
             out.close();
             socket.close();
         } catch (Exception e) {
+            if ( Constants.debug_level > 3 )
+                e.printStackTrace();
             setHandshakeCompleted();
             return e.getMessage();
         }
@@ -553,11 +586,13 @@ public class JSSE_SSLClient {
                 // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk150.length;i++){
-                        sslSock.setCipherSuite(
+                        if (i<7 | i==33) {
+                            sslSock.setCipherSuite(
                                 Constants.sslciphersarray_jdk150[i]);
-                        sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
-                        String errStr = sslSock.validateConnection();
-                        Thread.currentThread().sleep(1000);
+                            sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
+                            String errStr = sslSock.validateConnection();
+                            Thread.currentThread().sleep(1000);
+                        }
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -601,11 +636,13 @@ public class JSSE_SSLClient {
                 // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk142.length;i++){
-                        lastCipher = Constants.sslciphersarray_jdk142[i];
-                        sslSock.setCipherSuite(lastCipher);
-                        sslSock.setEOF(Constants.sslciphersarray_jdk142[i]);
-                        String errStr = sslSock.validateConnection();
-                        Thread.currentThread().sleep(1000);
+                        if (i<7 | i==22) {
+                            lastCipher = Constants.sslciphersarray_jdk142[i];
+                            sslSock.setCipherSuite(lastCipher);
+                            sslSock.setEOF(Constants.sslciphersarray_jdk142[i]);
+                            String errStr = sslSock.validateConnection();
+                            Thread.currentThread().sleep(1000);
+                        }
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -629,11 +666,13 @@ public class JSSE_SSLClient {
                 // This try is for catching non supported cipher exception
                 try {
                     for(int i=0;i<Constants.sslciphersarray_jdk150.length;i++){
-                        lastCipher = Constants.sslciphersarray_jdk150[i];
-                        sslSock.setCipherSuite(
+                        if (i<7 | i==34) {
+                            lastCipher = Constants.sslciphersarray_jdk150[i];
+                            sslSock.setCipherSuite(
                                 Constants.sslciphersarray_jdk150[i]);
-                        sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
-                        String errStr = sslSock.validateConnection();
+                            sslSock.setEOF(Constants.sslciphersarray_jdk150[i]);
+                            String errStr = sslSock.validateConnection();
+                        }
                     }
                 } catch (Exception ex) {
                     System.out.println("JSSE_SSLCLient: Did not find " +
@@ -688,14 +727,24 @@ public class JSSE_SSLClient {
         // Call TLS client cipher test
         try {
             Thread.currentThread().sleep(1000);
-        } catch (Exception e) { }
-        sslSock.testTlsClient(testCipher, testHost, testPort, keystoreLocation);
+            sslSock.testTlsClient(testCipher,testHost,testPort,keystoreLocation);
+        } catch (Exception e) { 
+            System.out.println("Exception caught testing TLS ciphers\n" +
+                               e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
         
         // Call SSLv3 client cipher test
         try {
             Thread.currentThread().sleep(1000);
-        } catch (Exception e) { }
-        sslSock.testSslClient(testCipher, testHost, testPort, keystoreLocation);
+            sslSock.testSslClient(testCipher,testHost,testPort,keystoreLocation);
+        } catch (Exception e) {
+            System.out.println("Exception caught testing SSLv3 ciphers\n" +
+                               e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
         System.exit(0);
     }
 }

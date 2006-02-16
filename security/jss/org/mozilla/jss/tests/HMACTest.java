@@ -61,17 +61,25 @@ public class HMACTest {
         macJSS.update(clearText.getBytes());
         byte[] resultJSS = macJSS.doFinal(clearText.getBytes());
 
-        //Get the SunJCE HMAC
-        Mac macSunJCE = Mac.getInstance(alg, "SunJCE");
-        macSunJCE.init(sk);
-        macSunJCE.update(clearText.getBytes());
-        byte[] resultSunJCE = macSunJCE.doFinal(clearText.getBytes());
+        //Get the SunJCE or IBMJCE HMAC
+        Mac macJCE = null;
+        String javaVendorName = System.getProperty("java.vendor");
+        if ( javaVendorName.equals("IBM Corporation") ) {
+            macJCE = Mac.getInstance(alg, "IBMJCE");
+        } else if ( javaVendorName.equals("Sun Microsystems Inc.") ) {
+            macJCE = Mac.getInstance(alg, "SunJCE");
+        }
+        macJCE.init(sk);
+        macJCE.update(clearText.getBytes());
+        byte[] resultSunJCE = macJCE.doFinal(clearText.getBytes());
         
         //Check to see if HMACs are equal
         if ( java.util.Arrays.equals(resultJSS, resultSunJCE) ) {
-            System.out.println("Sun and Mozilla give same " + alg);
+            System.out.println(javaVendorName.substring(0,3) + 
+                               " and Mozilla give same " + alg);
         } else {
-            throw new Exception("ERROR: Sun and Mozilla give different "+ alg );
+            throw new Exception("ERROR: " + javaVendorName.substring(0,3) + 
+                                " and Mozilla give different "+ alg );
         }        
     }
 

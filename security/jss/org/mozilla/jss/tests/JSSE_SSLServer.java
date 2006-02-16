@@ -43,6 +43,13 @@ import javax.net.*;
 import javax.net.ssl.*;
 import javax.security.cert.X509Certificate;
 
+/**
+ * JSSE SSLServer class that implements ClassServer.
+ *
+ * @author  Sandeep.Konchady@Sun.COM
+ * @version 1.0
+ */
+
 public class JSSE_SSLServer extends ClassServer {
     
     private static int DefaultServerPort = 29753;
@@ -124,20 +131,31 @@ public class JSSE_SSLServer extends ClassServer {
         try {
             SSLServerSocketFactory ssf =
                     JSSE_SSLServer.getServerSocketFactory(type);
-            SSLServerSocket ss = (SSLServerSocket)ssf.createServerSocket(port);
-            // Set server socket timeout to 90 sec
-            ss.setSoTimeout(90 * 1000);
+            if ( ssf != null ) {
+                SSLServerSocket ss = 
+                    (SSLServerSocket)ssf.createServerSocket(port);
+                // Set server socket timeout to 90 sec
+                ss.setSoTimeout(90 * 1000);
             
-            // Based on J2SE version, enable appropriate ciphers
-            if ( (System.getProperty("java.version")).indexOf("1.4") != -1 ) {
-                System.out.println("*** Using J2SE 1.4.x ***");
-                ss.setEnabledCipherSuites(Constants.sslciphersarray_jdk142);
+                // Based on J2SE version, enable appropriate ciphers
+                if ( (System.getProperty("java.version")).indexOf("1.4") != -1 ) {
+                    System.out.println("*** Using J2SE 1.4.x ***");
+                    ss.setEnabledCipherSuites(Constants.sslciphersarray_jdk142);
+                } else {
+                    System.out.println("*** Using J2SE 1.5.x ***");
+                    ss.setEnabledCipherSuites(Constants.sslciphersarray_jdk150);
+                }
+                   ((SSLServerSocket)ss).setNeedClientAuth(bClientAuth);
+                new JSSE_SSLServer(ss);
             } else {
-                System.out.println("*** Using J2SE 1.5.x ***");
-                ss.setEnabledCipherSuites(Constants.sslciphersarray_jdk150);
+                if (System.getProperty("java.vendor").equals("IBM Corporation")) {
+                    System.out.println("Using IBM JDK: Cannot load keystore due "+
+                        "to strong security encryption settings\nwith limited " +
+                        "Jurisdiction policy files :\n " +
+                        "http://www-1.ibm.com/support/docview.wss?uid=swg21169931");
+                    System.exit(0);
+                }
             }
-               ((SSLServerSocket)ss).setNeedClientAuth(bClientAuth);
-            new JSSE_SSLServer(ss);
         } catch (IOException e) {
             System.out.println("Unable to start ClassServer: " +
                     e.getMessage());
@@ -148,7 +166,7 @@ public class JSSE_SSLServer extends ClassServer {
         // Put the main thread to sleep.  In case we do not get any
         // response within 5 sec, then we shutdown the server.
         try {
-            Thread.currentThread().sleep(5000);
+            Thread.currentThread().sleep(90 * 1000);
         } catch (InterruptedException e) {
             System.out.println("Thread Interrupted, exiting normally ...\n");
             System.exit(0);
@@ -191,11 +209,16 @@ public class JSSE_SSLServer extends ClassServer {
                         String authType) {}
             }
         };
+
+        String certificate = new String("SunX509");
+        String javaVendor  = System.getProperty("java.vendor");
+        if (javaVendor.equals("IBM Corporation"))
+            certificate = new String("IbmX509");
         
         if (type.equals("TLS")) {
             try {
                 ctx = SSLContext.getInstance("TLS");
-                kmf = KeyManagerFactory.getInstance("SunX509");
+                kmf = KeyManagerFactory.getInstance(certificate);
                 ks = KeyStore.getInstance("PKCS12");
                 
                 ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
@@ -205,26 +228,26 @@ public class JSSE_SSLServer extends ClassServer {
                 ssf = ctx.getServerSocketFactory();
                 return ssf;
             } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
+                if (Constants.debug_level > 3)
+                    e.printStackTrace();
             }
         } else if (type.equals("SSLv3")) {
             try {
                 ctx = SSLContext.getInstance("SSLv3");
-                kmf = KeyManagerFactory.getInstance("SunX509");
+                kmf = KeyManagerFactory.getInstance(certificate);
                 ks = KeyStore.getInstance("PKCS12");
                 
-                ks.load(new FileInputStream("./" + getKeystoreLoc()), passphrase);
+                ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
                 kmf.init(ks, passphrase);
                 ctx.init(kmf.getKeyManagers(), trustAllCerts, null);
                 
                 ssf = ctx.getServerSocketFactory();
                 return ssf;
             } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(1);
+                if (Constants.debug_level > 3)
+                    e.printStackTrace();
             }
         }
-        return null;
+        return ssf;
     }
 }

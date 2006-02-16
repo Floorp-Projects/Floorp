@@ -67,12 +67,22 @@ class RSATestValues extends TestValues {
         super("RSA", "SHA1withRSA", RSAPrivateCrtKeySpec.class,
             RSAPublicKeySpec.class, "SunRsaSign");
     }
+
+    public RSATestValues(String provider) {
+        super("RSA", "SHA1withRSA", RSAPrivateCrtKeySpec.class,
+            RSAPublicKeySpec.class, provider);
+    }
 }
 
 class DSATestValues extends TestValues {
     public DSATestValues() {
         super("DSA", "SHA1withDSA", DSAPrivateKeySpec.class,
             DSAPublicKeySpec.class, "SUN");
+    }
+
+    public DSATestValues(String provider) {
+        super("DSA", "SHA1withDSA", DSAPrivateKeySpec.class,
+            DSAPublicKeySpec.class, provider);
     }
 }
 
@@ -111,22 +121,77 @@ public class KeyFactoryTest {
     }
 
     public void doTest() throws Throwable {
-        RSATestValues rsa = new RSATestValues();
-        DSATestValues dsa = new DSATestValues();
+        String javaVendor = System.getProperty("java.vendor");
+        RSATestValues rsa = null;
+        DSATestValues dsa = null;
+        boolean exception = false;
+
+        if ( javaVendor.equals("IBM Corporation") ) {
+            rsa = new RSATestValues("IBMJCE");
+            dsa = new DSATestValues("IBMJCE");
+        } else {
+            rsa = new RSATestValues();
+            dsa = new DSATestValues();
+        }
 
         // Generate RSA private key from spec
-        genPrivKeyFromSpec(rsa);
+        try {
+            genPrivKeyFromSpec(rsa);
+        } catch (java.security.spec.InvalidKeySpecException ex) {
+            if (Constants.debug_level > 3)
+               System.out.println("InvalidKeySpecException caught " +
+                   "genPrivKeyFromSpec(rsa): " + ex.getMessage());
+            if ( javaVendor.equals("IBM Corporation") ) {
+                System.out.println("Could not generated a RSA private key from " +
+                    "a\njava.security.spec.RSAPrivateKeySpec. Not supported " +
+                    "IBMJCE");
+            } else {
+                exception = true;
+            }
+        } catch (Exception ex) {
+            if (Constants.debug_level > 3)
+            System.out.println("Exception caught genPrivKeyFromSpec(rsa): " + 
+                ex.getMessage());
+        }
 
         // Generate DSA private key from spec
-        genPrivKeyFromSpec(dsa);
+        try {
+            genPrivKeyFromSpec(dsa);
+        } catch (java.security.spec.InvalidKeySpecException ex) {
+            if (Constants.debug_level > 3)
+                System.out.println("InvalidKeySpecException caught " + 
+                    "genPrivKeyFromSpec(dsa): " + ex.getMessage());
+            exception = true;
+        } catch (Exception ex) {
+            if (Constants.debug_level > 3)
+                System.out.println("Exception caught genPrivKeyFromSpec(dsa): " + 
+                ex.getMessage());
+        }
 
         // translate RSA key
-        genPubKeyFromSpec(rsa);
+        try {
+            genPubKeyFromSpec(rsa);
+        } catch (Exception ex) {
+            if (Constants.debug_level > 3)
+            System.out.println("Exception caught genPubKeyFromSpec(rsa): " + 
+                ex.getMessage());
+            exception = true;
+        }
 
         // translate key
-	genPubKeyFromSpec(dsa);
+        try {
+	    genPubKeyFromSpec(dsa);
+        } catch (Exception ex) {
+            if (Constants.debug_level > 3)
+            System.out.println("Exception caught genPubKeyFromSpec(dsa): " + 
+                ex.getMessage());
+            exception = true;
+        }
 
-	System.exit(0);
+        if (exception)
+	    System.exit(1);
+        else
+	    System.exit(0);
     }
 
     public void genPrivKeyFromSpec(TestValues vals) throws Throwable {
