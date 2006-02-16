@@ -198,7 +198,8 @@ var PlacesBrowserShim = {
     function onPageShow(e){
       self.onPageShow(e);
     }
-    getBrowser().addEventListener("pageshow", onPageShow, true);
+    // XXXben comment out until we figure out what's up with tboxes. 
+    //getBrowser().addEventListener("pageshow", onPageShow, true);
 
     function onTabSwitch(e) {
       self.onTabSwitch(e);
