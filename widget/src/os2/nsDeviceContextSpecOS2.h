@@ -64,8 +64,8 @@
 // OS/2 Printing   - was in libprint
 //---------------------------------------------------------------------------
 // Library init and term; job properties per queue are cached during run.
-BOOL PrnInitialize (HMODULE hmodResources);
-BOOL PrnTerminate (void);
+BOOL PrnInitialize(HMODULE hmodResources);
+BOOL PrnTerminate(void);
 
 // opaque type to describe a print queue (printer)
 class PRTQUEUE;
@@ -74,29 +74,22 @@ class PRTQUEUE;
 
 class PRINTDLG
 {
-
 public:
-   PRINTDLG ();
-  ~PRINTDLG ();
-   void RefreshPrintQueue();
-   ULONG GetNumPrinters ();
-   ULONG GetDefaultPrinter ();
-   void GetPrinter (ULONG numPrinter, char** printerName);
-   PRTQUEUE* SetPrinterQueue (ULONG numPrinter);
-   HDC GetDCHandle (ULONG numPrinter);
-   LONG GetPrintDriverSize (ULONG printer);
-   PDRIVDATA GetPrintDriver (ULONG printer);
-   char* GetDriverType (ULONG printer);
-   BOOL ShowProperties(ULONG index);
-   PRTQUEUE* SelectPrinter (HWND hwndOwner, BOOL bQuiet);
+   PRINTDLG();
+  ~PRINTDLG();
+   void      RefreshPrintQueue();
+   ULONG     GetNumPrinters();
+   void      GetPrinter(ULONG printerNdx, char** printerName);
+   PRTQUEUE* SetPrinterQueue(ULONG printerNdx);
+   LONG      GetPrintDriverSize(ULONG printerNdx);
+   PDRIVDATA GetPrintDriver(ULONG printerNdx);
+   HDC       GetDCHandle(ULONG printerNdx);
+   char*     GetDriverType(ULONG printerNdx);
+   BOOL      ShowProperties(ULONG printerNdx);
 
 private:
-  ULONG     mQueueCount;
-  ULONG     mDefaultQueue;
-  PRTQUEUE* mPQBuf [MAX_PRINT_QUEUES];
-
-  ULONG GetIndex( ULONG numPrinter);
-
+  ULONG      mQueueCount;
+  PRTQUEUE*  mPQBuf[MAX_PRINT_QUEUES];
 };
 
 
