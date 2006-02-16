@@ -153,7 +153,6 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   PDJP_ITEM pDJP = (PDJP_ITEM) pDJP_Buffer;
 
   HDC hdc = nsDeviceContextSpecOS2::PrnDlg.GetDCHandle(printer);
-  char* driver = nsDeviceContextSpecOS2::PrnDlg.GetDriverType(printer);
 
   //Get Number of Copies from Job Properties
   pDJP->lType = DJP_CURRENT;
