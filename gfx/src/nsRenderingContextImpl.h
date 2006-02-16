@@ -130,6 +130,11 @@ public:
 
   NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile);
 
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface) { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext) { return NS_ERROR_NOT_IMPLEMENTED; }
+#endif
+
 protected:
   virtual ~nsRenderingContextImpl();
 
