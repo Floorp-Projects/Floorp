@@ -47,6 +47,7 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 #include "nsVoidArray.h"
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
@@ -131,13 +132,13 @@ public:
  *        printer).
  * @return error status
  */
-  NS_IMETHOD Init(PRBool	aQuiet);
+  NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool	aQuiet);
   
   NS_IMETHOD ClosePrintManager();
 
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
 
-  NS_IMETHOD GetPrinter ( char **aPrinter );
+  NS_IMETHOD GetPrinterName ( char **aPrinter );
 
   NS_IMETHOD GetCopies ( int &aCopies );
 
@@ -147,6 +148,12 @@ public:
 
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
+/**
+ * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * @update  dc 2/16/98
+ */
+  virtual ~nsDeviceContextSpecOS2();
+
   static nsStringArray *globalPrinterList;
   static int globalNumPrinters;
   static PRINTDLG PrnDlg;
@@ -154,16 +161,10 @@ public:
   void FreeGlobalPrinters();
 
 protected:
-/**
- * Destuct a nsDeviceContextSpecMac, this will release the printrecord
- * @update  dc 2/16/98
- */
-  virtual ~nsDeviceContextSpecOS2();
-
-protected:
 
   OS2PrData mPrData;
   PRTQUEUE *mQueue;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 //-------------------------------------------------------------------------
