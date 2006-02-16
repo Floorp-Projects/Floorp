@@ -208,6 +208,8 @@
   "Star (Off)">
 <!ENTITY location.status.bookmarked
   "Star (On)">
+<!ENTITY bookmark.property.panel.title
+  "Bookmark Properties">
 <!ENTITY bookmark.property.title
   "Title">
 <!ENTITY bookmark.property.folders
@@ -217,7 +219,7 @@
 <!ENTITY bookmark.property.location
   "Bookmark Location">
 <!ENTITY cmd.show_bookmarks.label
-  "See all bookmarks">
+  "See all bookmarks...">
 <!ENTITY cmd.delete_bookmark.label
   "Delete Bookmark">
 <!ENTITY cmd.hide_bookmark_properties.label

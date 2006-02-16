@@ -4,6 +4,7 @@ browser.jar:
     content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.xml                    (content/places.xml)
     content/browser/places/places.css                    (content/places.css)
+    content/browser/places/bookmarkProperties.xul        (content/bookmarkProperties.xul)
     content/browser/places/toolbar.xml                   (content/toolbar.xml)
     content/browser/places/menu.xml                      (content/menu.xml)
     content/browser/places/tree.xml                      (content/tree.xml)
@@ -20,6 +21,7 @@ classic.jar:
     skin/classic/browser/places/bookmarks_toolbar.png    (skin-win/bookmarks_toolbar.png)
     skin/classic/browser/places/livemark_item.png        (skin-win/livemark_item.png)
     skin/classic/browser/places/places-icon.png          (skin-win/places-icon.png)
+    skin/classic/browser/places/bookmarkProperties.css   (skin-win/bookmarkProperties.css)
 
 en-US.jar:
     locale/browser/places/places.dtd                     (locale/places.dtd)
