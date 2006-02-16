@@ -4130,7 +4130,7 @@ rsa_siggen_test(char *reqfn)
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-            for (j=0; isxdigit(buf[i]) && j >= sizeof(msg); i+=2,j++) {
+            for (j=0; isxdigit(buf[i]) && j < sizeof(msg); i+=2,j++) {
                 hex_from_2char(&buf[i], &msg[j]);
             }
 
@@ -4335,7 +4335,7 @@ rsa_sigver_test(char *reqfn)
             }
         
             /* get the exponent */
-            for (j=0; isxdigit(buf[i]) && j <= sizeof RSA_MAX_TEST_EXPONENT_BYTES; i+=2,j++) {
+            for (j=0; isxdigit(buf[i]) && j < sizeof data; i+=2,j++) {
                 hex_from_2char(&buf[i], &data[j]);
             }
 
@@ -4366,7 +4366,7 @@ rsa_sigver_test(char *reqfn)
                 i++;
             }
 
-            for (j=0; isxdigit(buf[i]) && j <= sizeof msg; i+=2,j++) {
+            for (j=0; isxdigit(buf[i]) && j < sizeof msg; i+=2,j++) {
                 hex_from_2char(&buf[i], &msg[j]);
             }
 
@@ -4421,7 +4421,7 @@ rsa_sigver_test(char *reqfn)
                 i++;
             }
 
-            for (j=0; isxdigit(buf[i]) && j <= sizeof signature; i+=2,j++) {
+            for (j=0; isxdigit(buf[i]) && j < sizeof signature; i+=2,j++) {
                 hex_from_2char(&buf[i], &signature[j]);
             }
 
