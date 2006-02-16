@@ -310,10 +310,10 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aIsPrin
 
     if (printfile != nsnull) {
       // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-      strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+      strcpy(mPrData.path,    NS_ConvertUTF16toUTF8(printfile).get());
     }
     if (printer != nsnull) 
-      strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());  
+      strcpy(mPrData.printer, NS_ConvertUTF16toUTF8(printer).get());  
 
     if (aIsPrintPreview) 
       mPrData.destination = printPreview; 
@@ -327,7 +327,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aIsPrin
     if (NS_FAILED(rv))
       return rv;
 
-    const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUCS2(mPrData.printer);
+    const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUTF16(mPrData.printer);
     ULONG numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
     if (numPrinters) {
        for(ULONG i = 0; (i < numPrinters) && !mQueue; i++) {
