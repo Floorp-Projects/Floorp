@@ -121,7 +121,7 @@
                     <hbox flex="1">
 
                       <box onchange="syncPref(this)"  
-                                 id="downloadDir"
+                                 id="downloadDir" onreadpref="downloadSetTextbox();" 
                                  preference="browser.download.dir"
                                  />          
 
