@@ -54,7 +54,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: Init(void)
 
 //XXX this method needs to do what the API says...
 
-NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
