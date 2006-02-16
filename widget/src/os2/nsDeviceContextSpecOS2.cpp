@@ -20,6 +20,7 @@
  *
  */
 
+#include <stdlib.h>
 #include "nsDeviceContextSpecOS2.h"
 
 #include "nsReadableUtils.h"
