@@ -44,7 +44,6 @@
 
 nsDeviceContextSpecFactoryOS2 :: nsDeviceContextSpecFactoryOS2()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecFactoryOS2 :: ~nsDeviceContextSpecFactoryOS2()
