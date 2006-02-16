@@ -9,19 +9,6 @@
   <binding id="places-bar">
     <implementation>
       <constructor><![CDATA[ 
-        this._places = 
-          Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService);
-        this._bms = 
-          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-          getService(Ci.nsINavBookmarksService);
-          
-        this._bms.addObserver(this._observer, false);
-        this.init();
-        var t = this;
-        window.addEventListener("resize",
-                                function f(e) { t.updateChevron(e); },
-                                false);
       ]]></constructor>
       
       <destructor><![CDATA[ 
@@ -30,13 +17,26 @@
       
       <method name="init">
         <body><![CDATA[
+        this._places = 
+          Cc["@mozilla.org/browser/nav-history-service;1"].
+          getService(Ci.nsINavHistoryService);
+        this._bms = 
+          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+          getService(Ci.nsINavBookmarksService);
+          
+        this._bms.addObserver(this._observer, false);
+        var t = this;
+        window.addEventListener("resize",
+                                function f(e) { t.updateChevron(e); },
+                                false);
+
         var query = this._places.getNewQuery();
         query.setFolders([this._bms.toolbarRoot], 1);
         var options = this._places.getNewQueryOptions();
         options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
         options.expandQueries = true;
         this._result = this._places.executeQuery(query, options);
-	this._result.root.containerOpen = true;
+        this._result.root.containerOpen = true;
         this._rebuild();
         ]]></body>
       </method>

@@ -860,6 +860,9 @@ function delayedStartup()
     document.getElementById("bookmarks-chevron").ref = btf;
     bt.database.AddObserver(BookmarksToolbarRDFObserver);
   }
+#else
+  var bookmarksBar = document.getElementById("bookmarksBarContent");
+  bookmarksBar.init();
 #endif
   window.addEventListener("resize", BookmarksToolbar.resizeFunc, false);
 #ifndef MOZ_PLACES

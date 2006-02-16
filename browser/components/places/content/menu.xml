@@ -15,8 +15,30 @@
       <destructor><![CDATA[
       ]]></destructor>
             
+      <method name="init">
+        <body><![CDATA[ 
+          var hist =           
+              Cc["@mozilla.org/browser/nav-history-service;1"].
+              getService(Ci.nsINavHistoryService);
+          
+          var bms = 
+              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+
+          var query = hist.getNewQuery();
+          query.setFolders([bms.bookmarksRoot], 1);
+          var options = hist.getNewQueryOptions();
+          options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+          options.expandQueries = true;
+          this._result = hist.executeQuery(query, options);
+          this._resultNode = this._result.root;
+        ]]></body>
+      </method>
+            
       <method name="onPopupShowing">
         <body><![CDATA[
+        if (!this._resultNode)
+          this.init();
         if (PlacesController.nodeIsContainer(this._resultNode)) {
           this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           this._resultNode.containerOpen = true;
