@@ -328,9 +328,11 @@
                 command="cmd_ViewFind" 
                 label="&findToolbar.label;"  /> 
 
+<!--
       <menuitem id="command_ViewDownload"
                 command="cmd_ViewDownload" 
                 label="&downloadText.label;"  /> 
+-->
             
       <menuseparator/>
       
