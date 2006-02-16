@@ -1424,6 +1424,7 @@ TransferItem.prototype = {
           document.getElementById("download-button-stop").label=document.getElementById("minimo_properties").getString("downloadButtonReveal");
           document.getElementById("download-button-stop").setAttribute("oncommand","DownloadReveal()");
           document.getElementById("toolbar-download-tag").inputField.style.backgroundColor="lightgreen";
+          document.getElementById("download-close").hidden=false;
 
        }
     
