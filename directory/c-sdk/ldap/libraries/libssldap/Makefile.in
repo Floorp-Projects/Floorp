@@ -176,6 +176,10 @@ EXTRA_LIBS += $(OS_LIBS)
 CUSTOM_LIBS=1
 endif
 
+ifeq ($(OS_ARCH), HP-UX)
+CUSTOM_LIBS=1
+endif
+
 ifndef CUSTOM_LIBS
 EXTRA_LIBS = -L$(dist_libdir) -l$(LDAP_LIBNAME) -l$(PRLDAP_LIBNAME)
 EXTRA_LIBS += $(NSSLINK) 

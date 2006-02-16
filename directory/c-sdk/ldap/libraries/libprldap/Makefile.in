@@ -147,6 +147,11 @@ EXTRA_LIBS += -ldl -brtl -lpthreads -lc_r -lm
 CUSTOM_LIBS=1
 endif
 
+# no extra libs on HP-UX
+ifeq ($(OS_ARCH), HP-UX)
+CUSTOM_LIBS=1
+endif
+
 # if you need to do something extra for extra_libs or extra_dll_libs for a
 # specific platform, do them above according the other ones for WINNT, OS2, etc.
 # then define CUSTOM_LIBS=1 - if you just want the standard ones as defined
