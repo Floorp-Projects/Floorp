@@ -67,7 +67,7 @@ var PlacesBrowserShim = {
     this._strings = document.getElementById("placeBundle");
 
     // Override the old addLivemark function
-    BookmarksUtils.addLivemark = function(a,b,c,d) {PlacesBrowserShim.addLivemark(a,b,c,d);};
+    //BookmarksUtils.addLivemark = function(a,b,c,d) {PlacesBrowserShim.addLivemark(a,b,c,d);};
 
     var newMenuPopup = document.getElementById("bookmarksMenuPopup");
     var query = this._hist.getNewQuery();
