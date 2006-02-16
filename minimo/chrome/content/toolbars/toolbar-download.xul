@@ -49,7 +49,7 @@
   <toolbox id="mini-toolbars">
     <toolbar id="toolbar-download" flex="1" collapsed="true" >
 	  <hbox flex="1" style="margin-top:4px ! important">
-          <toolbarbutton id="download-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewDownloadHidden"/>  
+          <toolbarbutton id="download-close" hidden="true" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewDownloadHidden"/>  
           <textbox readonly="true" id="toolbar-download-tag" flex="1" ></textbox> 
           <toolbarbutton id="download-button-stop" disabled="true" align="top" flex="0" label='&downloadCancelText.label;' oncommand="DownloadCancel()"/>  
 	  </hbox>
