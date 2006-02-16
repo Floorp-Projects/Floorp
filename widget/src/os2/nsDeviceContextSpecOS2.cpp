@@ -835,7 +835,7 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destinat
       else
          dcType = OD_QUEUED;
    } else {
-      if (file && strlen(file) != 0) 
+      if (file && *file)
          pszLogAddress = (PSZ) file;
       else    
          pszLogAddress = "FILE";
