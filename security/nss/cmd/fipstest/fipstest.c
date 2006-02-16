@@ -69,7 +69,8 @@ EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
 #define DEFAULT_RSA_PUBLIC_EXPONENT   0x10001
 #define RSA_MAX_TEST_MODULUS_BITS     4096
 #define RSA_MAX_TEST_MODULUS_BYTES    RSA_MAX_TEST_MODULUS_BITS/8
-#define RSA_MAX_TEST_EXPONENT_BYTES    8         /* rsa.c */
+#define RSA_MAX_TEST_EXPONENT_BYTES   8
+#define DSA_TEST_SEED_BYTES           20
 
 SECStatus
 hex_from_2char(const char *c2, unsigned char *byteval)
@@ -3259,7 +3260,7 @@ dsa_keypair_test(char *reqfn)
             fputc('\n', dsaresp);
 
             /*****************************************************************
-             * PQG_ParamGen doesn't take a key size, it takes an index
+             * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
              * that points to a valid key size.
              */
             keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
@@ -3271,7 +3272,8 @@ dsa_keypair_test(char *reqfn)
             }
 
             /* Generate the parameters P, Q, and G */
-            if (PQG_ParamGen(keySizeIndex, &pqg, &vfy) != SECSuccess) {
+            if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+                &pqg, &vfy) != SECSuccess) {
                 fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
                 goto loser;
             }
@@ -3335,7 +3337,6 @@ dsa_pqgver_test(char *reqfn)
     unsigned int i, j;
     PQGParams pqg;
     PQGVerify vfy;
-    unsigned int keySizeIndex;   /* index for valid key sizes */
     unsigned int pghSize;        /* size for p, g, and h */
 
     dsareq = fopen(reqfn, "r");
@@ -3374,18 +3375,6 @@ dsa_pqgver_test(char *reqfn)
             }
 
             fputs(buf, dsaresp);
-
-            /************************************************************
-             * PQG_ParamGen doesn't take a key size, it takes an index
-             * that points to a valid key size.
-             */
-            keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
-            if(keySizeIndex == -1 || modulus<512 || modulus>1024) {
-               fprintf(dsaresp,
-                    "DSA key size must be a multiple of 64 between 512 "
-                    "and 1024, inclusive");
-                goto loser;
-            }
 
             /*calculate the size of p, g, and h then allocate items  */
             pghSize = modulus/8;
@@ -3481,9 +3470,12 @@ dsa_pqgver_test(char *reqfn)
             }
             fputs(buf, dsaresp);
 
-            rv = PQG_VerifyParams(&pqg, &vfy, &result);
             /* Verify the Parameters */
-            if ((rv == SECSuccess) && (result == SECSuccess)) {
+            rv = PQG_VerifyParams(&pqg, &vfy, &result);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            if (result == SECSuccess) {
                 fprintf(dsaresp, "Result = P\n");
             } else {
                 fprintf(dsaresp, "Result = F\n");
@@ -3530,6 +3522,7 @@ dsa_pqggen_test(char *reqfn)
     int N;            /* number of times to generate parameters */
     int modulus; 
     int i;
+    unsigned int j;
     PQGParams *pqg = NULL;
     PQGVerify *vfy = NULL;
     unsigned int keySizeIndex;
@@ -3554,7 +3547,7 @@ dsa_pqggen_test(char *reqfn)
             fputc('\n', dsaresp);
 
             /****************************************************************
-             * PQG_ParamGen doesn't take a key size, it takes an index
+             * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
              * that points to a valid key size.
              */
             keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
@@ -3574,7 +3567,8 @@ dsa_pqggen_test(char *reqfn)
                 goto loser;
             }
             for (i = 0; i < N; i++) {
-                if (PQG_ParamGen(keySizeIndex, &pqg, &vfy) != SECSuccess) {
+                if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+                    &pqg, &vfy) != SECSuccess) {
                     fprintf(dsaresp,
                             "ERROR: Unable to generate PQG parameters");
                     goto loser;
@@ -3589,7 +3583,11 @@ dsa_pqggen_test(char *reqfn)
                 fprintf(dsaresp, "Seed = %s\n", buf);
                 fprintf(dsaresp, "c = %d\n", vfy->counter);
                 to_hex_str(buf, vfy->h.data, vfy->h.len);
-                fprintf(dsaresp, "H = %s\n", buf);
+                fputs("H = ", dsaresp);
+                for (j=vfy->h.len; j<pqg->prime.len; j++) {
+                    fprintf(dsaresp, "00");
+                }
+                fprintf(dsaresp, "%s\n", buf);
                 fputc('\n', dsaresp);
                 if(pqg!=NULL) {
                     PQG_DestroyParams(pqg);
@@ -3673,7 +3671,7 @@ dsa_siggen_test(char *reqfn)
             fputc('\n', dsaresp);
 
             /****************************************************************
-            * PQG_ParamGen doesn't take a key size, it takes an index
+            * PQG_ParamGenSeedLen doesn't take a key size, it takes an index
             * that points to a valid key size.
             */
             keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
@@ -3685,7 +3683,8 @@ dsa_siggen_test(char *reqfn)
             }
 
             /* Generate PQG and output PQG */
-            if (PQG_ParamGen(keySizeIndex, &pqg, &vfy) != SECSuccess) {
+            if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+                &pqg, &vfy) != SECSuccess) {
                 fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
                 goto loser;
             }
@@ -3791,7 +3790,6 @@ dsa_sigver_test(char *reqfn)
     unsigned int i, j;
     SECItem digest, signature;
     DSAPublicKey pubkey;
-    unsigned int keySizeIndex;   /* index for valid key sizes */
     unsigned int pgySize;        /* size for p, g, and y */
     unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
     unsigned char sig[DSA_SIGNATURE_LEN];
@@ -3828,17 +3826,6 @@ dsa_sigver_test(char *reqfn)
             }
             fputs(buf, dsaresp);
 
-            /****************************************************************
-             * PQG_ParamGen doesn't take a key size, it takes an index
-             * that points to a valid key size.
-             */
-            keySizeIndex = PQG_PBITS_TO_INDEX(modulus);
-            if (keySizeIndex == -1 || modulus<512 || modulus>1024) {
-                fprintf(dsaresp,
-                        "DSA key size must be a multiple of 64 between 512 "
-                        "and 1024, inclusive");
-                goto loser;
-            }
             /* calculate the size of p, g, and y then allocate items */
             pgySize = modulus/8;
             SECITEM_AllocItem(NULL, &pubkey.params.prime, pgySize);
