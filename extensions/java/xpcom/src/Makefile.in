@@ -86,7 +86,7 @@ endif
 # necessary until we do 'cvs move' to put files in correct directories
 LOCAL_INCLUDES += -I$(srcdir)
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC)
+GARBAGE += $(JARFILE) $(JARFILE_SRC) java.files
 GARBAGE_DIRS += _javagen org
 
 include $(topsrcdir)/config/rules.mk
@@ -109,13 +109,14 @@ _javagen/org/mozilla/xpcom/internal/.iface_done: $(JAVA_SRCS)
 			_javagen/org/mozilla/xpcom/internal
 	@touch $@
 
-# Use find and xargs for passing list of Java files to JAVAC.  This avoids the
-# "argument list too long" error on Windows when using *.java
+# Using the temporary "java.files" avoids an "argument list too long"
+# error on Windows when using *.java
 org/mozilla/xpcom/internal/.class_done: _javagen/org/mozilla/xpcom/internal/.iface_done
 	@echo Compiling Java implementation classes
-	find _javagen -name "*.java" | xargs $(JAVAC) $(JAVAC_FLAGS) \
-			-classpath ".$(SEP)../interfaces/MozillaInterfaces.jar" \
-      -d . -sourcepath _javagen
+	find _javagen -name "*.java" > java.files
+	$(JAVAC) $(JAVAC_FLAGS) \
+	  -classpath ".$(SEP)../interfaces/MozillaInterfaces.jar" \
+	  -d . -sourcepath _javagen @java.files
 	@touch $@
 
 $(JARFILE): org/mozilla/xpcom/internal/.class_done Makefile

@@ -63,7 +63,7 @@ GEN_JAVA_SRCS = \
 # install jars into SDK
 SDK_LIBRARY = $(JARFILE) $(JARFILE_SRC)
 
-GARBAGE += $(JARFILE) $(JARFILE_SRC) $(GEN_JAVA_SRCS)
+GARBAGE += $(JARFILE) $(JARFILE_SRC) $(GEN_JAVA_SRCS) java.files
 GARBAGE_DIRS += _javagen org
 
 include $(topsrcdir)/config/rules.mk
@@ -89,12 +89,12 @@ _javagen/org/mozilla/xpcom/.iface_done: $(JAVA_SRCS) $(DIST)/bin/GenerateJavaInt
 	$(RUN) $(DIST)/bin/GenerateJavaInterfaces$(BIN_SUFFIX) -d $(OUTPUT_DIR)
 	@touch $@
 
-# Use find and xargs for passing list of Java files to JAVAC.  This avoids the
-# "argument list too long" error on Windows when using *.java
+# Using the temporary "java.files" avoids an "argument list too long"
+# error on Windows when using *.java
 org/mozilla/xpcom/.class_done: _javagen/org/mozilla/xpcom/.iface_done
 	@echo Compiling Java interface classes
-	find _javagen -name "*.java" | xargs $(JAVAC) $(JAVAC_FLAGS) -classpath . \
-      -d . -sourcepath _javagen
+	find _javagen -name "*.java" > java.files
+	$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . -sourcepath _javagen @java.files
 	@touch $@
 
 $(JARFILE): org/mozilla/xpcom/.class_done Makefile
