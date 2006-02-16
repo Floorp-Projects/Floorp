@@ -558,6 +558,9 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
 {
   BookmarkImportFrame& frame = CurFrame();
 
+  // We need to make sure that the feed URIs from previous frames are emptied. 
+  frame.mPreviousFeed = nsnull;
+
   // mPreviousText will hold our link text, clear it so that can be appended to
   frame.mPreviousText.Truncate();
 
