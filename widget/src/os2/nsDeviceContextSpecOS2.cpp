@@ -519,6 +519,9 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
 {
   aDefaultPrinterName = nsnull;
 
+  if (GetNumPrinters() == 0)
+     return;
+
   int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
   nsXPIDLCString printer;
   nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter, getter_Copies(printer));
