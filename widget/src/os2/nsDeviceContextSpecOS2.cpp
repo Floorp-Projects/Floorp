@@ -28,7 +28,12 @@
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
+#include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
+#include "nsIDialogParamBlock.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsUnicharUtils.h"
 
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
@@ -254,17 +259,17 @@ NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
  * toolkits including:
  * - GTK+-toolkit:
  *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aPrintPreview)
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
  * - Xlib-toolkit: 
  *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aPrintPreview)
+ *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
  * - Qt-toolkit:
  *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aPrintPreview)
+ *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aPrintPreview)
+NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -281,46 +286,65 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aPrintP
     }
   }
 
-  char      *path;
-  PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-  PRInt32    fromPage       = 1;
-  PRInt32    toPage         = 1;
-  PRInt32    copies         = 1;
-  PRUnichar *printer        = nsnull;
-  PRUnichar *printfile      = nsnull;
+  PRBool canPrint = PR_FALSE;
 
   rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
   }
  
-  if (mPrintSettings) {
-    mPrintSettings->GetPrinterName(&printer);
-    mPrintSettings->GetPrintRange(&printRange);
-    mPrintSettings->GetToFileName(&printfile);
-    mPrintSettings->GetPrintToFile(&tofile);
-    mPrintSettings->GetStartPageRange(&fromPage);
-    mPrintSettings->GetEndPageRange(&toPage);
-    mPrintSettings->GetNumCopies(&copies);
+  if ( !aQuiet ) {
+    rv = NS_ERROR_FAILURE;
+    // create a nsISupportsArray of the parameters 
+    // being passed to the window
+    nsCOMPtr<nsISupportsArray> array;
+    NS_NewISupportsArray(getter_AddRefs(array));
+    if (!array) return NS_ERROR_FAILURE;
 
-    if ((copies == 0)  ||  (copies > 999)) {
-       GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-       return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintSettings> ps = aPS;
+    nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
+    NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+    array->AppendElement(psSupports);
+
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+    if (ioParamBlock) {
+      ioParamBlock->SetInt(0, 0);
+      nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+      NS_ASSERTION(blkSupps, "IOBlk must be a supports");
+
+      array->AppendElement(blkSupps);
+      nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+      NS_ASSERTION(array, "array must be a supports");
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> active;
+        wwatch->GetActiveWindow(getter_AddRefs(active));    
+        nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
+              "_blank", "chrome,modal,centerscreen", array,
+              getter_AddRefs(newWindow));
+      }
     }
 
-    if (printfile != nsnull) {
-      // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-      strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
-    }
-    if (printer != nsnull) 
-      strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());  
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 buttonPressed = 0;
+      ioParamBlock->GetInt(0, &buttonPressed);
+      if (buttonPressed == 1) 
+        canPrint = PR_TRUE;
+      else 
+      {
+         GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+         return NS_ERROR_ABORT;
+      }
+    } else 
+       return NS_ERROR_ABORT;
+  } else {
+    canPrint = PR_TRUE;
   }
 
-<<<<<<< nsDeviceContextSpecOS2.cpp
-  mPrData.toPrinter = !tofile;
-  mPrData.copies = copies;
-=======
   if (canPrint) {
     if (aPS) {
       PRBool     tofile         = PR_FALSE;
@@ -353,13 +377,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aPrintP
     
       mPrData.toPrinter = !tofile;
       mPrData.copies = copies;
->>>>>>> 1.12
 
-<<<<<<< nsDeviceContextSpecOS2.cpp
-  rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
-  if (NS_FAILED(rv))
-    return rv;
-=======
       rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
       if (NS_FAILED(rv))
         return rv;
@@ -374,25 +392,7 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aPrintP
             }
          }
       }
->>>>>>> 1.12
 
-<<<<<<< nsDeviceContextSpecOS2.cpp
-  const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUCS2(mPrData.printer);
-  int numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
-  if (numPrinters) {
-     for(int i = 0; (i < numPrinters) && !mQueue; i++) {
-        if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(printerUCS2, nsCaseInsensitiveStringComparator())))
-           mQueue = PrnDlg.SetPrinterQueue(i);
-     }
-  }
-
-  if (printfile != nsnull) 
-    nsMemory::Free(printfile);
-  
-  if (printer != nsnull) 
-    nsMemory::Free(printer);
-    
-=======
       if (printfile != nsnull) 
         nsMemory::Free(printfile);
     
@@ -400,7 +400,6 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aPrintP
         nsMemory::Free(printer);
     }
   }
->>>>>>> 1.12
 
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
   return rv;
