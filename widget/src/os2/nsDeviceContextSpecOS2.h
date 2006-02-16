@@ -48,6 +48,7 @@
 #define INCL_DEVDJP
 #define INCL_GRE_DEVICE
 
+#include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettings.h"
