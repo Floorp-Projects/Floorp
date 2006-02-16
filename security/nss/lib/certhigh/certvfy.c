@@ -727,6 +727,13 @@ cert_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    namesCount += subjectNameListLen;
 	    namesList = cert_CombineNamesLists(namesList, subjectNameList);
 	}
+
+        /* check if the cert has an unsupported critical extension */
+	if ( subjectCert->options.bits.hasUnsupportedCriticalExt ) {
+	    PORT_SetError(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+	    LOG_ERROR_OR_EXIT(log,subjectCert,count,0);
+	}
+
 	/* find the certificate of the issuer */
 	issuerCert = CERT_FindCertIssuer(subjectCert, t, certUsage);
 	if ( ! issuerCert ) {
