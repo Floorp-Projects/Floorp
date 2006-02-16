@@ -51,7 +51,7 @@ typedef struct OS2prdata {
         printDest destination;     /* print to file, printer or print preview */
         int copies;                /* number of copies to print   0 < n < 999 */
         char printer[ PATH_MAX ];  /* Printer selected - name*/
-        char path[ PATH_MAX ];     /* If toPrinter = PR_FALSE, dest file */
+        char path[ PATH_MAX ];     /* If destination = printToFile, dest file */
         PRBool cancel;		     /* If PR_TRUE, user cancelled */
 } OS2PrData;
 
