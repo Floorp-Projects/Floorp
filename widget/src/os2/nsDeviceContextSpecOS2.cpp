@@ -527,7 +527,6 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   BOOL prefFailed = NS_FAILED(rv); // don't return on failure, optional feature
 
-  ULONG defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
   for (ULONG i = 0; i < mGlobalNumPrinters; i++) {
     nsXPIDLCString printer;
     nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i, getter_Copies(printer));
@@ -536,11 +535,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     PRInt32 printerNameLength;
     rv = MultiByteToWideChar(0, printer, strlen(printer),
                              printerName, printerNameLength);
-    if (defaultPrinter == i) {
-       mGlobalPrinterList->InsertStringAt(nsDependentString(printerName.get()), 0);
-    } else {
-       mGlobalPrinterList->AppendString(nsDependentString(printerName.get()));
-    }
+    mGlobalPrinterList->AppendString(nsDependentString(printerName.get()));
+
     // store printer description in prefs for the print dialog
     if (!prefFailed) {
        nsCAutoString printerDescription;
@@ -568,9 +564,9 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
   if (GetNumPrinters() == 0)
      return;
 
-  ULONG defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
+  // the default printer is always index 0
   nsXPIDLCString printer;
-  nsDeviceContextSpecOS2::PrnDlg.GetPrinter(defaultPrinter, getter_Copies(printer));
+  nsDeviceContextSpecOS2::PrnDlg.GetPrinter(0, getter_Copies(printer));
 
   nsAutoChar16Buffer printerName;
   PRInt32 printerNameLength;
@@ -643,7 +639,7 @@ PRTQUEUE::PRTQUEUE (const PRTQUEUE& PQInfo)
    strcpy (mPrinterName, PQInfo.mPrinterName);
 }
 
-void PRTQUEUE::InitWithPQI3 (const PRQINFO3* pInfo)
+void PRTQUEUE::InitWithPQI3(const PRQINFO3* pInfo)
 {
    // Make local copy of PPRQINFO3 object
    ULONG SizeNeeded;
@@ -684,37 +680,42 @@ void PRTQUEUE::InitWithPQI3 (const PRQINFO3* pInfo)
 
 //===========================================================================
 
-PRINTDLG::PRINTDLG ()
+PRINTDLG::PRINTDLG()
 {
   mQueueCount = 0;
-  mDefaultQueue = 0;
 
   ULONG TotalQueues = 0;
   ULONG MemNeeded = 0;
   SPLERR rc;
   
-  rc = ::SplEnumQueue (NULL, 3, NULL, 0, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(NULL, 3, NULL, 0, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
   PRQINFO3* pPQI3Buf = (PRQINFO3*) malloc (MemNeeded);
-  rc = ::SplEnumQueue (NULL, 3, pPQI3Buf, MemNeeded, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(NULL, 3, pPQI3Buf, MemNeeded, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
 
   if (mQueueCount > MAX_PRINT_QUEUES)
     mQueueCount = MAX_PRINT_QUEUES;
 
-  for (ULONG cnt = 0 ; cnt < mQueueCount ; cnt++)
-  {
-    if (pPQI3Buf [cnt].fsType & PRQ3_TYPE_APPDEFAULT)
-      mDefaultQueue = cnt;
-    
-    mPQBuf [cnt] = new PRTQUEUE (&pPQI3Buf [cnt]);
+  ULONG defaultQueue = 0;
+  for (ULONG cnt = 0; cnt < mQueueCount; cnt++) {
+    if (pPQI3Buf[cnt].fsType & PRQ3_TYPE_APPDEFAULT)
+      defaultQueue = cnt;
+    mPQBuf[cnt] = new PRTQUEUE(&pPQI3Buf[cnt]);
   }
 
-  free (pPQI3Buf);
+  // move the entry for the default printer to index 0 (if necessary)
+  if (defaultQueue > 0) {
+    PRTQUEUE* temp = mPQBuf[0];
+    mPQBuf[0] = mPQBuf[defaultQueue];
+    mPQBuf[defaultQueue] = temp;
+  }
+
+  free(pPQI3Buf);
 }
 
-PRINTDLG::~PRINTDLG ()
+PRINTDLG::~PRINTDLG()
 {
-  for (ULONG cnt = 0 ; cnt < mQueueCount ; cnt++)
-    delete mPQBuf [cnt];
+  for (ULONG index = 0; index < mQueueCount; index++)
+    delete mPQBuf[index];
 }
 
 void PRINTDLG::RefreshPrintQueue()
@@ -722,126 +723,112 @@ void PRINTDLG::RefreshPrintQueue()
   ULONG newQueueCount = 0;
   ULONG TotalQueues = 0;
   ULONG MemNeeded = 0;
-  mDefaultQueue = 0;
   SPLERR rc;
   
-  rc = ::SplEnumQueue (NULL, 3, NULL, 0, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
-  PRQINFO3* pPQI3Buf = (PRQINFO3*) malloc (MemNeeded);
-  rc = ::SplEnumQueue (NULL, 3, pPQI3Buf, MemNeeded, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(NULL, 3, NULL, 0, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+  PRQINFO3* pPQI3Buf = (PRQINFO3*)malloc(MemNeeded);
+  rc = ::SplEnumQueue(NULL, 3, pPQI3Buf, MemNeeded, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
 
   if (newQueueCount > MAX_PRINT_QUEUES)
     newQueueCount = MAX_PRINT_QUEUES;
 
   PRTQUEUE* tmpBuf[MAX_PRINT_QUEUES];
 
-  for (ULONG cnt = 0 ; cnt < newQueueCount ; cnt++)
-  {
-    if (pPQI3Buf [cnt].fsType & PRQ3_TYPE_APPDEFAULT)
-      mDefaultQueue = cnt;
+  ULONG defaultQueue = 0;
+  for (ULONG cnt = 0; cnt < newQueueCount; cnt++) {
+    if (pPQI3Buf[cnt].fsType & PRQ3_TYPE_APPDEFAULT)
+      defaultQueue = cnt;
 
     BOOL found = FALSE;
-    for (ULONG j = 0 ; j < mQueueCount && !found; j++)
-    {
+    for (ULONG index = 0; index < mQueueCount && !found; index++) {
        //Compare printer from requeried list with what's already in Mozilla's printer list(mPQBuf)
        //If printer is already there, use current properties; otherwise create a new printer in list
-       if (mPQBuf[j] != 0) {
-         if ((strcmp(pPQI3Buf[cnt].pszPrinters, mPQBuf[j]->PrinterName()) == 0) && 
-             (strcmp(pPQI3Buf[cnt].pszDriverName, mPQBuf[j]->PQI3().pszDriverName) == 0)) {
+       if (mPQBuf[index] != 0) {
+         if ((strcmp(pPQI3Buf[cnt].pszPrinters, mPQBuf[index]->PrinterName()) == 0) && 
+             (strcmp(pPQI3Buf[cnt].pszDriverName, mPQBuf[index]->PQI3().pszDriverName) == 0)) {
            found = TRUE;
-           tmpBuf[cnt] = mPQBuf[j];
-           mPQBuf[j] = 0;
+           tmpBuf[cnt] = mPQBuf[index];
+           mPQBuf[index] = 0;
          }
        }
     }
     if (!found) 
-       tmpBuf[cnt] = new PRTQUEUE (&pPQI3Buf[cnt]); 
+       tmpBuf[cnt] = new PRTQUEUE(&pPQI3Buf[cnt]); 
   }
 
-  for (ULONG i=0; i < newQueueCount; i++) {
-    if (mPQBuf[i] != 0)
-      delete(mPQBuf[i]);
-    mPQBuf[i] = tmpBuf[i];
+  for (ULONG index = 0; index < newQueueCount; index++) {
+    if (mPQBuf[index] != 0)
+      delete(mPQBuf[index]);
+    mPQBuf[index] = tmpBuf[index];
   }
 
   if (mQueueCount > newQueueCount)
-    for (ULONG i = newQueueCount; i < mQueueCount; i++)
-       if (mPQBuf[i] != 0)
-         delete(mPQBuf[i]);
+    for (ULONG index = newQueueCount; index < mQueueCount; index++)
+       if (mPQBuf[index] != 0)
+         delete(mPQBuf[index]);
 
   mQueueCount = newQueueCount;
-  free (pPQI3Buf);
+
+  // move the entry for the default printer to index 0 (if necessary)
+  if (defaultQueue > 0) {
+    PRTQUEUE* temp = mPQBuf[0];
+    mPQBuf[0] = mPQBuf[defaultQueue];
+    mPQBuf[defaultQueue] = temp;
+  }
+
+  free(pPQI3Buf);
 }
 
-ULONG PRINTDLG::GetIndex (ULONG numPrinter)
-{
-   ULONG index;
-   
-   if (numPrinter == 0)
-      index = mDefaultQueue;
-   else if (numPrinter > mDefaultQueue)
-      index = numPrinter;
-   else
-      index = numPrinter - 1;
-
-   return index;
-}
-
-ULONG PRINTDLG::GetNumPrinters ()
+ULONG PRINTDLG::GetNumPrinters()
 {
    return mQueueCount;
 }
 
-ULONG PRINTDLG::GetDefaultPrinter ()
+void PRINTDLG::GetPrinter(ULONG printerNdx, char** printerName)
 {
-   return mDefaultQueue;
-}
-
-void PRINTDLG::GetPrinter (ULONG numPrinter, char** printerName)
-{
-   if (numPrinter > mQueueCount)
+   if (printerNdx >= mQueueCount)
       return;
  
-   nsCAutoString pName(mPQBuf [numPrinter]->QueueName());
+   nsCAutoString pName(mPQBuf[printerNdx]->QueueName());
  
    pName.ReplaceChar('\r', ' ');
    pName.StripChars("\n");
    *printerName = ToNewCString(pName);
 }
 
-PRTQUEUE* PRINTDLG::SetPrinterQueue (ULONG numPrinter)
+PRTQUEUE* PRINTDLG::SetPrinterQueue(ULONG printerNdx)
 {
    PRTQUEUE *pPQ = NULL;
 
-   if (numPrinter > mQueueCount)
+   if (printerNdx >= mQueueCount)
       return NULL;
 
-   pPQ = mPQBuf [GetIndex(numPrinter)];
+   pPQ = mPQBuf[printerNdx];
 
-   return new PRTQUEUE (*pPQ);
+   return new PRTQUEUE(*pPQ);
 }
 
-LONG PRINTDLG::GetPrintDriverSize (ULONG printer)
+LONG PRINTDLG::GetPrintDriverSize(ULONG printerNdx)
 {
-   return mPQBuf[GetIndex(printer)]->PQI3().pDriverData->cb;
+   return mPQBuf[printerNdx]->PQI3().pDriverData->cb;
 }
 
-PDRIVDATA PRINTDLG::GetPrintDriver (ULONG printer)
+PDRIVDATA PRINTDLG::GetPrintDriver(ULONG printerNdx)
 {
-   if (printer > mQueueCount)
+   if (printerNdx >= mQueueCount)
       return NULL;
 
-   return mPQBuf[GetIndex(printer)]->PQI3().pDriverData;
+   return mPQBuf[printerNdx]->PQI3().pDriverData;
 }
 
-HDC PRINTDLG::GetDCHandle (ULONG numPrinter)
+HDC PRINTDLG::GetDCHandle(ULONG printerNdx)
 {
     HDC hdc = 0;
-    ULONG index = GetIndex(numPrinter);
     DEVOPENSTRUC dop;
 
     dop.pszLogAddress      = 0; 
-    dop.pszDriverName      = (char *) mPQBuf[index]->DriverName();
-    dop.pdriv              = mPQBuf[index]->PQI3 ().pDriverData;
+    dop.pszDriverName      = (char *)mPQBuf[printerNdx]->DriverName();
+    dop.pdriv              = mPQBuf[printerNdx]->PQI3().pDriverData;
     dop.pszDataType        = 0; 
     dop.pszComment         = 0;
     dop.pszQueueProcName   = 0;     
@@ -849,30 +836,29 @@ HDC PRINTDLG::GetDCHandle (ULONG numPrinter)
     dop.pszSpoolerParams   = 0;     
     dop.pszNetworkParams   = 0;     
 
-    hdc = ::DevOpenDC( 0, OD_INFO, "*", 9, (PDEVOPENDATA) &dop, NULLHANDLE);
+    hdc = ::DevOpenDC(0, OD_INFO, "*", 9, (PDEVOPENDATA) &dop, NULLHANDLE);
     return hdc;
 }
 
-char* PRINTDLG::GetDriverType (ULONG printer)
+char* PRINTDLG::GetDriverType(ULONG printerNdx)
 {
-  return (char *)mPQBuf[GetIndex(printer)]->DriverName ();
+  return (char *)mPQBuf[printerNdx]->DriverName ();
 }
 
-BOOL PRINTDLG::ShowProperties (ULONG index)
+BOOL PRINTDLG::ShowProperties(ULONG printerNdx)
 {
     BOOL          rc = FALSE;
     LONG          devrc = FALSE;
     PDRIVDATA     pOldDrivData;
     PDRIVDATA     pNewDrivData = NULL;
     LONG          buflen;
-    ULONG         Ind = GetIndex(index);
 
 /* check size of buffer required for job properties */
     buflen = DevPostDeviceModes( 0 /*hab*/,
                                  NULL,
-                                 mPQBuf[Ind]->DriverName (),
-                                 mPQBuf[Ind]->DeviceName (),
-                                 mPQBuf[Ind]->PrinterName (),
+                                 mPQBuf[printerNdx]->DriverName (),
+                                 mPQBuf[printerNdx]->DeviceName (),
+                                 mPQBuf[printerNdx]->PrinterName (),
                                  DPDM_POSTJOBPROP);
 
 /* return error to caller */
@@ -882,15 +868,15 @@ BOOL PRINTDLG::ShowProperties (ULONG index)
 /* allocate some memory for larger job properties and */
 /* return error to caller */
 
-    if (buflen != mPQBuf[Ind]->PQI3().pDriverData->cb)
+    if (buflen != mPQBuf[printerNdx]->PQI3().pDriverData->cb)
     {
         if (DosAllocMem((PPVOID)&pNewDrivData,buflen,fALLOC))
             return(FALSE); // DPDM_ERROR
     
 /* copy over old data so driver can use old job */
 /* properties as base for job properties dialog */
-        pOldDrivData = mPQBuf[Ind]->PQI3().pDriverData;
-        mPQBuf[Ind]->PQI3().pDriverData = pNewDrivData;
+        pOldDrivData = mPQBuf[printerNdx]->PQI3().pDriverData;
+        mPQBuf[printerNdx]->PQI3().pDriverData = pNewDrivData;
         memcpy( (PSZ)pNewDrivData, (PSZ)pOldDrivData, pOldDrivData->cb );
     }
 
@@ -898,10 +884,10 @@ BOOL PRINTDLG::ShowProperties (ULONG index)
 /* job properties from driver */
 
     devrc = DevPostDeviceModes( 0 /*hab*/,
-                                mPQBuf[Ind]->PQI3().pDriverData,
-                                mPQBuf[Ind]->DriverName (),
-                                mPQBuf[Ind]->DeviceName (),
-                                mPQBuf[Ind]->PrinterName (),
+                                mPQBuf[printerNdx]->PQI3().pDriverData,
+                                mPQBuf[printerNdx]->DriverName (),
+                                mPQBuf[printerNdx]->DeviceName (),
+                                mPQBuf[printerNdx]->PrinterName (),
                                 DPDM_POSTJOBPROP);
     rc = (devrc != DPDM_ERROR);
     return rc;
