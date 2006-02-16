@@ -130,9 +130,9 @@ var PlacesUIHook = {
   _findWasHidden: false,
   
   showPlacesUI: function PP_showPlacesUI() {
+/*
     ASSERT(PlacesController, "PlacesController does not exist anymore?!");
 
-/*
     this._tabbrowser.setAttribute("places", "true");
     var statusbar = this._topElement("status-bar");
     statusbar.hidden = true;
@@ -156,9 +156,9 @@ var PlacesUIHook = {
   },
 
   hidePlacesUI: function PP_hidePlacesUI() {
+/*
     ASSERT(PlacesController, "PlacesController does not exist anymore?!");
 
-/*
     this._tabbrowser.removeAttribute("places");
     
     // Approaches that cache the value of the status bar before the Places page
