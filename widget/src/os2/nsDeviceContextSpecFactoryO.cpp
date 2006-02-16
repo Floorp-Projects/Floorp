@@ -40,9 +40,6 @@
 
 #include "nsDeviceContextSpecFactoryO.h"
 #include "nsDeviceContextSpecOS2.h"
-#define INCL_DEV
-#include <os2.h>
-#include "libprint.h"
 #include "nsGfxCIID.h"
 
 nsDeviceContextSpecFactoryOS2 :: nsDeviceContextSpecFactoryOS2()
@@ -54,10 +51,7 @@ nsDeviceContextSpecFactoryOS2 :: ~nsDeviceContextSpecFactoryOS2()
 {
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
-
-NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory);
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: Init(void)
 {
@@ -70,30 +64,16 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
-  nsresult  rv = NS_ERROR_FAILURE;
-  PRINTDLG PrnDlg;
+     nsresult	rv;
+     static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+     nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
 
-  PRTQUEUE* pq = PrnDlg.SelectPrinter (HWND_DESKTOP, aQuiet ? TRUE : FALSE);
-
-  if( pq)
-  {
-    nsIDeviceContextSpec  *devspec = nsnull;
-
-    nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
-
-    if (nsnull != devspec)
-    {
-      //XXX need to QI rather than cast... MMP
-      if (NS_OK == ((nsDeviceContextSpecOS2 *)devspec)->Init(pq))
-      {
-        aNewSpec = devspec;
-        rv = NS_OK;
-      }
-    }
-  } else {
-    // Cancel was pressed
-    rv = NS_ERROR_ABORT;
-  }
-
-  return rv;
+	if (NS_SUCCEEDED(rv)) {
+	  rv = ((nsDeviceContextSpecOS2 *)devSpec.get())->Init(aQuiet);
+       if (NS_SUCCEEDED(rv)) {
+	    aNewSpec = devSpec;
+         NS_ADDREF(aNewSpec);
+	  }
+	}
+	return rv;
 }
