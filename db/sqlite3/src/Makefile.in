@@ -48,7 +48,7 @@ LIBRARY_NAME     = sqlite3_s
 MODULE_NAME      = sqlite3
 FORCE_STATIC_LIB = 1
 
-EXPORTS = sqlite3.h
+EXPORTS = sqlite3.h sqlite3file.h
 
 CSRCS = \
 	alter.c \
@@ -94,6 +94,8 @@ CSRCS = \
 	vdbemem.c \
 	where.c \
 	$(NULL)
+
+DEFINES = -DSQLITE_ENABLE_REDEF_IO
 
 ifdef ENABLE_TESTS
 ##LIBS = $(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX)
