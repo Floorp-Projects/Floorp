@@ -818,11 +818,6 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destinat
    if (!pInfo || !pszApplicationName)
       return hdc;
 
-   char pszQueueProcParams[CCHMAXPATH] = "COP=";
-   char numCopies[12];
-   itoa (copies, numCopies, 10);
-   strcat (pszQueueProcParams, numCopies);
-
    if ( destination ) {
       pszLogAddress = pInfo->PQI3 ().pszName;
       pszDataType = "PM_Q_STD";
@@ -845,7 +840,7 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destinat
     dop.pszDataType        = pszDataType; 
     dop.pszComment         = pszApplicationName;
     dop.pszQueueProcName   = pInfo->PQI3 ().pszPrProc;     
-    dop.pszQueueProcParams = pszQueueProcParams;   
+    dop.pszQueueProcParams = 0;
     dop.pszSpoolerParams   = 0;     
     dop.pszNetworkParams   = 0;     
 
