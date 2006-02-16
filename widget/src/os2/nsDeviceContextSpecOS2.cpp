@@ -34,6 +34,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsUnicharUtils.h"
 
 PRINTDLG nsDeviceContextSpecOS2::PrnDlg;
 
@@ -270,10 +271,11 @@ NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     if (NS_FAILED(rv))
       return rv;
 
+    const nsAFlatString& printerUCS2 = NS_ConvertUTF8toUCS2(mPrData.printer);
     int numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
     if (numPrinters) {
        for(int i = 0; (i < numPrinters) && !mQueue; i++) {
-          if (!(GlobalPrinters::GetInstance()->GetStringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+          if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(printerUCS2, nsCaseInsensitiveStringComparator())))
              mQueue = PrnDlg.SetPrinterQueue(i);
        }
     }
@@ -421,7 +423,7 @@ NS_IMETHODIMP nsPrinterEnumeratorOS2::DisplayPropertiesDlg(const PRUnichar *aPri
   PRInt32 numPrinters = GlobalPrinters::GetInstance()->GetNumPrinters();
 
   for(int i = 0; i < numPrinters; i++) {
-    if (!(GlobalPrinters::GetInstance()->GetStringAt(i)->CompareWithConversion(aPrinter, TRUE, -1))) {
+    if ((GlobalPrinters::GetInstance()->GetStringAt(i)->Equals(aPrinter, nsCaseInsensitiveStringComparator()))) {
        if ( nsDeviceContextSpecOS2::PrnDlg.ShowProperties(i) ) 
           return NS_OK;
        else
@@ -449,9 +451,9 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   for (int i = 0; i < mGlobalNumPrinters; i++) {
     char *printer = nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i);
     if ( defaultPrinter == i ) 
-       mGlobalPrinterList->InsertStringAt(nsString(NS_ConvertASCIItoUCS2(printer)), 0);
+       mGlobalPrinterList->InsertStringAt(NS_ConvertASCIItoUCS2(printer), 0);
     else 
-       mGlobalPrinterList->AppendString(nsString(NS_ConvertASCIItoUCS2(printer)));
+       mGlobalPrinterList->AppendString(NS_ConvertASCIItoUCS2(printer));
   } 
   return NS_OK;
 }
