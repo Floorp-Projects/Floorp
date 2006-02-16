@@ -61,14 +61,10 @@
 #include "nsIFragmentContentSink.h"
 #include "nsIContentSink.h"
 #include "nsIEnumerator.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
 #include "nsIHTMLDocument.h"
 #include "nsCRT.h"
 #include "nsAttrName.h"
 
-#include "nsIJSContextStack.h"
 // XXX Temporary inclusion to deal with fragment parsing
 #include "nsHTMLParts.h"
 
@@ -2329,6 +2325,10 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
     document = do_QueryInterface(domDocument, &result);
   }
 
+  // If we don't have a document here, we can't get the right security context
+  // for compiling event handlers... so just bail out.
+  NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
+
   nsVoidArray tagStack;
   nsCOMPtr<nsIDOMNode> parent = mStartParent;
   while (parent && 
@@ -2403,15 +2403,10 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
   if (NS_SUCCEEDED(result)) {
     nsCAutoString contentType;
     PRBool bCaseSensitive = PR_TRUE;
-    if (document) {
-      nsAutoString buf;
-      document->GetContentType(buf);
-      LossyCopyUTF16toASCII(buf, contentType);
-      bCaseSensitive = document->IsCaseSensitive();
-    }
-    else {
-      contentType.AssignLiteral("text/xml");
-    }
+    nsAutoString buf;
+    document->GetContentType(buf);
+    LossyCopyUTF16toASCII(buf, contentType);
+    bCaseSensitive = document->IsCaseSensitive();
 
     nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
     PRBool bHTML = htmlDoc && !bCaseSensitive;
@@ -2426,48 +2421,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       nsCOMPtr<nsIContentSink> contentsink( do_QueryInterface(sink) );
       parser->SetContentSink(contentsink);
 
-      // If there's no JS or system JS running,
-      // push the current document's context on the JS context stack
-      // so that event handlers in the fragment do not get 
-      // compiled with the system principal.
-      nsCOMPtr<nsIJSContextStack> ContextStack;
-      if (document) {
-        nsCOMPtr<nsIPrincipal> sysPrin;
-        nsCOMPtr<nsIPrincipal> subjectPrin;
-
-        nsIScriptSecurityManager *secMan =
-          nsContentUtils::GetSecurityManager();
-
-        // Just to compare, not to use!
-        result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
-        if (NS_SUCCEEDED(result))
-            result = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-        // If there's no subject principal, there's no JS running, so we're in system code.
-        // (just in case...null subject principal will probably never happen)
-        if (NS_SUCCEEDED(result) &&
-           (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-          nsIScriptGlobalObject *globalObj = document->GetScriptGlobalObject();
-          JSContext* cx = nsnull;
-
-          if (globalObj) {
-            nsIScriptContext *scriptContext = globalObj->GetContext();
-
-            if (scriptContext) {
-              cx = (JSContext*)scriptContext->GetNativeContext();
-            }
-          }
-
-          if (cx) {
-            ContextStack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-            if (ContextStack) {
-              result = ContextStack->Push(cx);
-            }
-          }
-        }
-      }
-
       nsDTDMode mode = eDTDMode_autodetect;
-      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
       if (bHTML) {
         switch (htmlDoc->GetCompatibilityMode()) {
           case eCompatibility_NavQuirks:
@@ -2489,11 +2443,6 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       result = parser->ParseFragment(aFragment, (void*)0,
                                      tagStack,
                                      !bHTML, contentType, mode);
-
-      if (ContextStack) {
-        JSContext *notused;
-        ContextStack->Pop(&notused);
-      }
 
       if (NS_SUCCEEDED(result)) {
         result = sink->GetFragment(aReturn);
