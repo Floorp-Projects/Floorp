@@ -1413,7 +1413,7 @@ TransferItem.prototype = {
     document.getElementById("toolbar-download-tag").setAttribute("reveal",aTarget.spec);
     document.getElementById("toolbar-download-tag").setAttribute("sourcelocation",aSource.spec);
     document.getElementById("toolbar-download-tag").inputField.style.backgroundColor="lightgreen";
-
+    document.getElementById("download-close").hidden=true;
 
   },
   
