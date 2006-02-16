@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 sts=4
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Brett Wilson <brettw@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,13 +43,19 @@
 
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 
 #include "mozIStorageService.h"
 
-class mozStorageService : public mozIStorageService
+class mozStorageService : public mozIStorageService,
+                          public nsIObserver
 {
 public:
     mozStorageService();
+
+    // two-phase init, must call before using service
+    nsresult Init();
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -55,10 +63,17 @@ public:
     // mozIStorageService
     NS_DECL_MOZISTORAGESERVICE
 
+    NS_DECL_NSIOBSERVER
+
 private:
     ~mozStorageService();
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
+    nsCOMPtr<nsIObserverService> mObserverService;
+
+    nsresult InitStorageAsyncIO();
+    nsresult FinishAsyncIO();
+    void FreeLocks();
 };
 
 #endif /* _MOZSTORAGESERVICE_H_ */
