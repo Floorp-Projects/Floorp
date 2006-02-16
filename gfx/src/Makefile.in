@@ -68,7 +68,10 @@ DIRS        += freetype
 endif
 
 ifdef MOZ_ENABLE_POSTSCRIPT
-DIRS        += psshared ps
+DIRS        += psshared
+ifndef MOZ_ENABLE_CAIRO_GFX
+DIRS        +=  ps
+endif
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
