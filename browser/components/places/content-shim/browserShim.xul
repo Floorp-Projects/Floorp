@@ -42,9 +42,14 @@
              customizable="true"/>
   </toolbox>
 
-  <toolbaritem id="urlbar-container">
-    <button id="places-bookmark" label="&location.status.not_bookmarked;" oncommand="PlacesBrowserShim.onBookmarkButtonClick();" align="start"/>
-    <button id="places-subscribe" label="&feed.subscribe.label;" tooltiptext="&feed.subscribe.tooltip;"/>
-  </toolbaritem>
+  <toolbarpalette id="BrowserToolbarPalette">
+    <toolbarbutton id="places-bookmark" 
+                   label="&location.status.not_bookmarked;" 
+                   tooltiptext="&location.status.bookmark.tooltip;" 
+                   oncommand="PlacesBrowserShim.onBookmarkButtonClick();"/>
+    <toolbarbutton id="places-subscribe" 
+                   label="&feed.subscribe.label;" 
+                   tooltiptext="&feed.subscribe.tooltip;"/>
+  </toolbarpalette>
 </overlay>
 
