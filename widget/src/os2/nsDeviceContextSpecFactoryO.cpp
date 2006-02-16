@@ -1,71 +1,83 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Fairhurst <john_fairhurst@iname.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *
+ *   IBM Corp.
  */
-
-// This class is part of the strange printing `architecture'.
-// The `CreateDeviceContextSpec' method basically selects a print queue,
-//   known here as an `nsIDeviceContextSpec'.  This is given to a method
-//   in nsIDeviceContext which creates a fresh device context for that
-//   printer.
-
-#include "nsGfxDefs.h"
-#include "libprint.h"
 
 #include "nsDeviceContextSpecFactoryO.h"
 #include "nsDeviceContextSpecOS2.h"
-#include "nsRegionOS2.h"
+#define INCL_DEV
+#include <os2.h>
+#include "libprint.h"
 #include "nsGfxCIID.h"
 
-nsDeviceContextSpecFactoryOS2::nsDeviceContextSpecFactoryOS2()
+nsDeviceContextSpecFactoryOS2 :: nsDeviceContextSpecFactoryOS2()
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
-NS_IMPL_ISUPPORTS(nsDeviceContextSpecFactoryOS2, nsIDeviceContextSpecFactory::GetIID())
-
-NS_IMETHODIMP nsDeviceContextSpecFactoryOS2::Init()
+nsDeviceContextSpecFactoryOS2 :: ~nsDeviceContextSpecFactoryOS2()
 {
-   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecFactoryOS2::CreateDeviceContextSpec(
-                                            nsIDeviceContextSpec *aOldSpec,
-                                            nsIDeviceContextSpec *&aNewSpec,
-                                            PRBool aQuiet)
+static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
+static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryOS2, kDeviceContextSpecFactoryIID)
+NS_IMPL_ADDREF(nsDeviceContextSpecFactoryOS2)
+NS_IMPL_RELEASE(nsDeviceContextSpecFactoryOS2)
+
+NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: Init(void)
 {
-   nsresult rc = NS_ERROR_FAILURE;
+  return NS_OK;
+}
 
-   // This currently ignores aOldSpec.  This may be of no consequence...
-   PRTQUEUE *pq = PrnSelectPrinter( HWND_DESKTOP, aQuiet ? TRUE : FALSE);
+//XXX this method needs to do what the API says...
 
-   if( pq)
-   {
-      nsDeviceContextSpecOS2 *spec = new nsDeviceContextSpecOS2;
-      if (!spec)
-	return NS_ERROR_OUT_OF_MEMORY;
-      NS_ADDREF(spec);
-      spec->Init( pq);
-      aNewSpec = spec;
-      rc = NS_OK;
-   }
+NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+                                                                       nsIDeviceContextSpec *&aNewSpec,
+                                                                       PRBool aQuiet)
+{
+  nsresult  rv = NS_ERROR_FAILURE;
 
-   return rc;
+  PRTQUEUE *pq = PrnSelectPrinter( HWND_DESKTOP, aQuiet ? TRUE : FALSE);
+
+  if( pq)
+  {
+    nsIDeviceContextSpec  *devspec = nsnull;
+
+    nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
+
+    if (nsnull != devspec)
+    {
+      //XXX need to QI rather than cast... MMP
+      if (NS_OK == ((nsDeviceContextSpecOS2 *)devspec)->Init(pq))
+      {
+        aNewSpec = devspec;
+        rv = NS_OK;
+      }
+    }
+  }
+
+  return rv;
 }
