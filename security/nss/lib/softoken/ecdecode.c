@@ -136,7 +136,8 @@ EC_FillParams(PRArenaPool *arena, const SECItem *encodedParams,
     SECOidTag tag;
     SECItem oid = { siBuffer, NULL, 0};
     const ECCurveParams *curveParams;
-    char genenc[2 + 2 * 2 * MAX_ECKEY_LEN];
+    /* 2 ['0'+'4'] + MAX_ECKEY_LEN * 2 [x,y] * 2 [hex string] + 1 ['\0'] */
+    char genenc[3 + 2 * 2 * MAX_ECKEY_LEN];
 
 #if EC_DEBUG
     int i;
