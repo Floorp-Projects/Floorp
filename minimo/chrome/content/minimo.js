@@ -65,6 +65,7 @@ const nsITransfer              = Components.interfaces.nsITransfer;
 
 const NS_BINDING_ABORTED = 0x804b0002;
 
+var gPanMode = null;
 var appCore = null;
 var gBrowser = null;
 var gBookmarksDoc=null; 
@@ -244,6 +245,9 @@ nsBrowserStatusHandler.prototype =
     BrowserUpdateBackForwardState();
     
     BrowserUpdateFeeds();
+
+    if(gPanMode) BrowserPanRefresh();
+
   },
   
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -1121,6 +1125,12 @@ function URLBarEntered()
     
     /* Trap to RSS 'protocol' */ 
     
+    if(gURLBar.value.substring(0,4)=="pan:") {
+      gPanMode=true;
+      document.getElementById("button-icon-pan").hidden=false;
+      return;
+    }
+
     if(gURLBar.value.substring(0,4)=="rss:") {
       DoBrowserRSS(gURLBar.value.split("rss:")[1]);
       return;
@@ -1460,3 +1470,72 @@ function BrowserHomeBar()  {
     else document.getElementById("homebarcontainer").style.display="none";
 
 }
+
+
+/* Prototype PAN */ 
+
+  
+function BrowserPan() {
+
+	if(!gBrowser.contentWindow.gInPan) {  
+		gBrowser.contentWindow.addEventListener("mousedown",BrowserPanMouseHandler,true);
+		gBrowser.contentWindow.addEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
+		gBrowser.contentWindow.gInPan=true;
+	} else {
+		gBrowser.contentWindow.removeEventListener("mousedown",BrowserPanMouseHandler,true);
+		gBrowser.contentWindow.removeEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+		gBrowser.contentWindow.gInPan=false;
+	}
+}
+
+function BrowserPanRefresh() {
+  if(gBrowser.contentWindow.gInPan) {
+    document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
+
+  } else {
+    document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+  }
+}
+var gInPan=false;
+var gPanY=-1;
+var gPanX=-1;
+
+function BrowserPanMouseHandler(e) {
+
+  gBrowser.contentWindow.addEventListener("mousemove",BrowserPanMouseHandlerPan,true); 
+  gPanY=e.clientY;
+  gPanX=e.clientX;
+  e.preventDefault();
+  e.stopPropagation();
+
+}
+
+function BrowserPanMouseHandlerPan(e) {
+    panDeltaY=gPanY-e.clientY;
+    panDeltaX=gPanX-e.clientX;
+    gBrowser.contentWindow.scrollBy(panDeltaX,panDeltaY);
+
+
+  gPanY=e.clientY;
+  gPanX=e.clientX;
+
+}
+
+function BrowserPanMouseHandlerPanNull(e) {
+alert(1);
+    e.preventDefault();
+}
+
+function BrowserPanMouseHandlerDestroy(e) {
+	//gBrowser.contentWindow.removeEventListener("mousedown",BrowserPanMouseHandler,true);
+	gBrowser.contentWindow.removeEventListener("mousemove",BrowserPanMouseHandlerPan,true);
+
+	//document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+  e.preventDefault();
+  e.stopPropagation();
+
+}
+
+
