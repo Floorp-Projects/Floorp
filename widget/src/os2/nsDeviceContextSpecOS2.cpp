@@ -26,7 +26,6 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 
-#include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsIServiceManager.h"
