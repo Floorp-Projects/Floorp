@@ -87,9 +87,9 @@ function UIdependencyCheck() {
   }
 
   if(!document.getElementById("dontAskForLaunch").checked) {
-	document.getElementById("downloadDir").disabled=true;
+	document.getElementById("downloadDirDisplay").disabled=true;
   } else {
-	document.getElementById("downloadDir").disabled=false;
+	document.getElementById("downloadDirDisplay").disabled=false;
   }
 
 }
@@ -100,8 +100,12 @@ function UIdependencyCheck() {
  */
 
 function downloadSetTextbox() {
-	var dirLocation=document.getElementById("downloadDir").value;
-	document.getElementById("downloadDirDisplay").value=dirLocation.path;
+      if(document.getElementById("downloadDir")&&document.getElementById("downloadDir").value) {
+        var dirLocation=document.getElementById("downloadDir").value;
+        document.getElementById("downloadDirDisplay").value=dirLocation.path;
+      } else {
+        document.getElementById("downloadDirDisplay").value="";
+      }
 }
 
 
