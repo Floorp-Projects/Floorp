@@ -59,8 +59,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryOS2 :: CreateDeviceContextSpec(nsIWidget
                                                                        PRBool aQuiet)
 {
   nsresult  rv = NS_ERROR_FAILURE;
+  PRINTDLG PrnDlg;
 
-  PRTQUEUE* pq (PrnSelectPrinter( HWND_DESKTOP, aQuiet ? TRUE : FALSE));
+  PRTQUEUE* pq = PrnDlg.SelectPrinter (HWND_DESKTOP, aQuiet ? TRUE : FALSE);
 
   if( pq)
   {
