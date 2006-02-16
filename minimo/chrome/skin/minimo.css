@@ -59,6 +59,10 @@
   display:none;
 }
 
+.statusbarpanel-text {
+  padding:.3em ! important;
+}
+
 /* This should be placed in with Toolbars section */ 
 
 #toolbar-download-tag input {
