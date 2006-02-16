@@ -81,7 +81,7 @@ public:
   ~PRINTDLG ();
    int GetNumPrinters ();
    int GetDefaultPrinter ();
-   GetPrinter (int numPrinter, char** printerName);
+   void GetPrinter (int numPrinter, char** printerName);
    PRTQUEUE* SetPrinterQueue (int numPrinter);
    HDC GetDCHandle (int numPrinter);
    PLONG GetPrintDriverSize (int printer);
