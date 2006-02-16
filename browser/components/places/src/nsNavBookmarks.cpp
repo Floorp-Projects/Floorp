@@ -44,6 +44,7 @@
 #include "nsNetUtil.h"
 #include "nsIAnnotationService.h"
 #include "nsIRemoteContainer.h"
+#include "nsUnicharUtils.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ItemChild = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_FolderChild = 1;
@@ -102,6 +103,17 @@ nsNavBookmarks::Init()
         "parent INTEGER, "
         "position INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // this index will make it faster to determine if a given item is
+    // bookmarked (used by history queries and vacuuming, for example)
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_itemindex ON moz_bookmarks (item_child)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // the most common operation is to find the children given a parent
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_bookmarks_parentindex ON moz_bookmarks (parent)"));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // moz_bookmarks_folders
@@ -120,6 +132,24 @@ nsNavBookmarks::Init()
     rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_bookmarks_roots ("
         "root_name VARCHAR(16) UNIQUE, "
         "folder_id INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // moz_keywords
+  dbConn->TableExists(NS_LITERAL_CSTRING("moz_keywords"), &exists);
+  if (! exists) {
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE TABLE moz_keywords ("
+        "keyword VARCHAR(32) UNIQUE,"
+        "page_id INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // it should be fast to go url->ID and ID->url
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_keywords_keywordindex ON moz_keywords (keyword)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE INDEX moz_keywords_pageindex ON moz_keywords (page_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -223,6 +253,20 @@ nsNavBookmarks::Init()
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT item_child, folder_child FROM moz_bookmarks WHERE parent = ?1 AND position = ?2"),
                                getter_AddRefs(mDBGetChildAt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // keywords
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT k.keyword FROM moz_history h "
+      "JOIN moz_keywords k ON h.id = k.page_id "
+      "WHERE h.url = ?1"),
+    getter_AddRefs(mDBGetKeywordForURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT url FROM moz_keywords k "
+      "JOIN moz_history h ON k.page_id = h.id "
+      "WHERE k.keyword = ?1"),
+    getter_AddRefs(mDBGetURIForKeyword));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = InitRoots();
@@ -1493,6 +1537,124 @@ nsNavBookmarks::IndexOfFolder(PRInt64 aParent,
 
   *aIndex = mDBIndexOfFolder->AsInt32(0);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
+{
+  nsresult rv;
+  mozStorageTransaction transaction(DBConn(), PR_FALSE);
+
+  nsNavHistory *history = History();
+  NS_ENSURE_TRUE(history, NS_ERROR_UNEXPECTED);
+  PRInt64 pageId;
+  nsCOMPtr<mozIStorageStatement> statement;
+
+  // Shortcuts are always lowercased internally.
+  nsAutoString kwd(aKeyword);
+  ToLowerCase(kwd);
+
+  if (kwd.IsEmpty()) {
+    // delete any existing keyword for the given URI
+    rv = history->GetUrlIdFor(aURI, &pageId, PR_FALSE);
+    if (! pageId)
+      return NS_OK; // URL not found: no keyword
+
+    rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_keywords WHERE page_id = ?1"),
+      getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt64Parameter(0, pageId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return transaction.Commit();
+  } else if (! aURI) {
+    // delete any existing URIs associated with the given keyword
+    rv = history->GetUrlIdFor(aURI, &pageId, PR_FALSE);
+    if (! pageId)
+      return NS_OK; // URL not found: no keyword
+
+    rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM moz_keywords WHERE keyword = ?1"),
+      getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindStringParameter(0, kwd);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return transaction.Commit();
+  }
+
+  // otherwise, we have a URI/keyword pair and want to create it...
+
+  rv = history->GetUrlIdFor(aURI, &pageId, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // this statement will overwrite any old keyword with that value since the
+  // keyword column is unique and we use "OR REPLACE" conflict resolution
+  rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT OR REPLACE INTO moz_keywords (keyword, page_id) VALUES (?1, ?2)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindStringParameter(0, kwd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = statement->BindInt64Parameter(1, pageId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetKeywordForURI(nsIURI* aURI, nsAString& aKeyword)
+{
+  aKeyword.Truncate(0);
+
+  mozStorageStatementScoper scoper(mDBGetKeywordForURI);
+  nsresult rv = BindStatementURI(mDBGetKeywordForURI, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  rv = mDBGetKeywordForURI->ExecuteStep(&hasMore);
+  if (NS_FAILED(rv) || ! hasMore)
+    return NS_OK; // not found: leave keyword field empty
+
+  // found, get the keyword
+  return mDBGetKeywordForURI->GetString(0, aKeyword);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetURIForKeyword(const nsAString& aKeyword, nsIURI** aURI)
+{
+  *aURI = nsnull;
+  if (aKeyword.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  // Shortcuts are always lowercased internally.
+  nsAutoString kwd(aKeyword);
+  ToLowerCase(kwd);
+
+  mozStorageStatementScoper scoper(mDBGetURIForKeyword);
+  nsresult rv = mDBGetURIForKeyword->BindStringParameter(0, kwd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  rv = mDBGetURIForKeyword->ExecuteStep(&hasMore);
+  if (NS_FAILED(rv) || ! hasMore)
+    return NS_OK; // not found: leave URI null
+
+  // found, get the URI
+  nsCAutoString spec;
+  rv = mDBGetURIForKeyword->GetUTF8String(0, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_NewURI(aURI, spec);
 }
 
 NS_IMETHODIMP

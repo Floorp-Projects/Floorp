@@ -1828,7 +1828,16 @@ function getShortcutOrURI(aURL, aPostDataRef)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
-    var shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
+    var shortcutURL = null;
+#ifdef MOZ_PLACES
+    var bookmarkService = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
+                             .getService(nsCI.nsINavBookmarksService);
+    var shortcutURI = bookmarkService.getURIForKeyword(aURL);
+    if (shortcutURI)
+      shortcutURL = shortcutURI.spec;
+#else
+    shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
+#endif
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
@@ -1836,7 +1845,13 @@ function getShortcutOrURI(aURL, aPostDataRef)
       if (aOffset > 0) {
         var cmd = aURL.substr(0, aOffset);
         var text = aURL.substr(aOffset+1);
+#ifdef MOZ_PLACES
+        shortcutURI = bookmarkService.getURIForKeyword(cmd);
+        if (shortcutURI)
+          shortcutURL = shortcutURI.spec;
+#else
         shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
+#endif
         if (shortcutURL && text) {
           var encodedText = null; 
           var charset = "";
@@ -1846,6 +1861,8 @@ function getShortcutOrURI(aURL, aPostDataRef)
              shortcutURL = matches[1];
              charset = matches[2];
           }
+#ifndef MOZ_PLACES
+          // FIXME: Bug 327328, we don't have last charset in places yet.
           else if (/%s/.test(shortcutURL) || 
                    (aPostDataRef && /%s/.test(aPostDataRef.value))) {
             try {
@@ -1853,6 +1870,7 @@ function getShortcutOrURI(aURL, aPostDataRef)
             } catch (ex) {
             }
           }
+#endif
 
           if (charset)
             encodedText = escape(convertFromUnicode(charset, text)); 

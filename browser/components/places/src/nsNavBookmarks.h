@@ -138,6 +138,10 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
   nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
 
+  // keywords
+  nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
+  nsCOMPtr<mozIStorageStatement> mDBGetURIForKeyword;
+
   nsCOMPtr<nsIStringBundle> mBundle;
 
   // in nsBookmarksHTML
