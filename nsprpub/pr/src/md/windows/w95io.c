@@ -80,10 +80,6 @@ static const PRTime _pr_filetime_offset = 116444736000000000LL;
 static const PRTime _pr_filetime_offset = 116444736000000000i64;
 #endif
 
-#ifdef MOZ_UNICODE
-static void InitUnicodeSupport(void);
-#endif
-
 void
 _PR_MD_INIT_IO()
 {
@@ -120,10 +116,6 @@ _PR_MD_INIT_IO()
 #endif /* DEBUG */
 
     _PR_NT_InitSids();
-
-#ifdef MOZ_UNICODE
-    InitUnicodeSupport();
-#endif
 }
 
 PRStatus
@@ -1105,39 +1097,6 @@ _PR_MD_PIPEAVAILABLE(PRFileDesc *fd)
 
 #ifdef MOZ_UNICODE
 
-typedef HANDLE (WINAPI *CreateFileWFn) (LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
-static CreateFileWFn createFileW = NULL; 
-typedef HANDLE (WINAPI *FindFirstFileWFn) (LPCWSTR, LPWIN32_FIND_DATAW);
-static FindFirstFileWFn findFirstFileW = NULL; 
-typedef BOOL (WINAPI *FindNextFileWFn) (HANDLE, LPWIN32_FIND_DATAW);
-static FindNextFileWFn findNextFileW = NULL; 
-typedef DWORD (WINAPI *GetFullPathNameWFn) (LPCWSTR, DWORD, LPWSTR, LPWSTR *);
-static GetFullPathNameWFn getFullPathNameW = NULL; 
-typedef UINT (WINAPI *GetDriveTypeWFn) (LPCWSTR);
-static GetDriveTypeWFn getDriveTypeW = NULL; 
-
-static void InitUnicodeSupport(void)
-{
-    HMODULE module;
-
-    /*
-     * The W functions do not exist on Win9x.  NSPR won't run on Win9x
-     * if we call the W functions directly.  Use GetProcAddress() to
-     * look up their addresses at run time.
-     */
-
-    module = GetModuleHandle("Kernel32.dll");
-    if (!module) {
-        return;
-    }
-
-    createFileW = (CreateFileWFn)GetProcAddress(module, "CreateFileW"); 
-    findFirstFileW = (FindFirstFileWFn)GetProcAddress(module, "FindFirstFileW"); 
-    findNextFileW = (FindNextFileWFn)GetProcAddress(module, "FindNextFileW"); 
-    getDriveTypeW = (GetDriveTypeWFn)GetProcAddress(module, "GetDriveTypeW"); 
-    getFullPathNameW = (GetFullPathNameWFn)GetProcAddress(module, "GetFullPathNameW"); 
-}
-
 /* ================ UTF16 Interfaces ================================ */
 void FlipSlashesW(PRUnichar *cp, size_t len)
 {
@@ -1160,11 +1119,6 @@ _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
     LPSECURITY_ATTRIBUTES lpSA = NULL;
     PSECURITY_DESCRIPTOR pSD = NULL;
     PACL pACL = NULL;
-
-    if (!createFileW) {
-        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-        return -1;
-    }
  
     if (osflags & PR_CREATE_FILE) {
         if (_PR_NT_MakeSecurityDescriptorACL(mode, fileAccessTable,
@@ -1197,7 +1151,7 @@ _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
             flags = OPEN_EXISTING;
     }
 
-    file = createFileW(name,
+    file = CreateFileW(name,
                        access,
                        FILE_SHARE_READ|FILE_SHARE_WRITE,
                        lpSA,
@@ -1221,11 +1175,6 @@ _PR_MD_OPEN_DIR_UTF16(_MDDirUTF16 *d, const PRUnichar *name)
     PRUnichar filename[ MAX_PATH ];
     int len;
 
-    if (!findFirstFileW) {
-        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-        return PR_FAILURE;
-    }
-
     len = wcslen(name);
     /* Need 5 bytes for \*.* and the trailing null byte. */
     if (len + 5 > MAX_PATH) {
@@ -1244,7 +1193,7 @@ _PR_MD_OPEN_DIR_UTF16(_MDDirUTF16 *d, const PRUnichar *name)
     wcscpy(&filename[len], L"\\*.*");
     FlipSlashesW( filename, wcslen(filename) );
 
-    d->d_hdl = findFirstFileW( filename, &(d->d_entry) );
+    d->d_hdl = FindFirstFileW( filename, &(d->d_entry) );
     if ( d->d_hdl == INVALID_HANDLE_VALUE ) {
         _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
         return PR_FAILURE;
@@ -1261,18 +1210,13 @@ _PR_MD_READ_DIR_UTF16(_MDDirUTF16 *d, PRIntn flags)
     BOOL rv;
     PRUnichar *fileName;
 
-    if (!findNextFileW) {
-        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-        return NULL;
-    }
-
     if ( d ) {
         while (1) {
             if (d->firstEntry) {
                 d->firstEntry = PR_FALSE;
                 rv = 1;
             } else {
-                rv = findNextFileW(d->d_hdl, &(d->d_entry));
+                rv = FindNextFileW(d->d_hdl, &(d->d_entry));
             }
             if (rv == 0) {
                 break;
@@ -1347,7 +1291,7 @@ IsRootDirectoryW(PRUnichar *fn, size_t buflen)
 
     if (iswalpha(fn[0]) && fn[1] == L':' && _PR_IS_W_SLASH(fn[2])
             && fn[3] == L'\0') {
-        rv = getDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
+        rv = GetDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
         return rv;
     }
 
@@ -1395,7 +1339,7 @@ IsRootDirectoryW(PRUnichar *fn, size_t buflen)
                 return PR_FALSE; /* name too long */
             }
         }
-        rv = getDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
+        rv = GetDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
         /* restore the 'fn' buffer */
         if (slashAdded) {
             *--p = L'\0';
@@ -1410,11 +1354,6 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
     HANDLE hFindFile;
     WIN32_FIND_DATAW findFileData;
     PRUnichar pathbuf[MAX_PATH + 1];
-
-    if (!findFirstFileW || !getFullPathNameW || !getDriveTypeW) {
-        PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-        return -1;
-    }
     
     if (NULL == fn || L'\0' == *fn) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -1430,7 +1369,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
         return -1;
     }
 
-    hFindFile = findFirstFileW(fn, &findFileData);
+    hFindFile = FindFirstFileW(fn, &findFileData);
     if (INVALID_HANDLE_VALUE == hFindFile) {
         DWORD len;
         PRUnichar *filePart;
@@ -1451,7 +1390,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
             return -1;
         } 
-        len = getFullPathNameW(fn, sizeof(pathbuf)/sizeof(pathbuf[0]), pathbuf,
+        len = GetFullPathNameW(fn, sizeof(pathbuf)/sizeof(pathbuf[0]), pathbuf,
                 &filePart);
         if (0 == len) {
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
@@ -1476,7 +1415,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
             return -1;
         } else {
             pathbuf[len - 1] = L'\0';
-            hFindFile = findFirstFileW(pathbuf, &findFileData);
+            hFindFile = FindFirstFileW(pathbuf, &findFileData);
             if (INVALID_HANDLE_VALUE == hFindFile) {
                 _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
                 return -1;
