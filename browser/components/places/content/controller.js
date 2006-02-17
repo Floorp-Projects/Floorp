@@ -744,25 +744,6 @@ var PlacesController = {
   },
 
   /**
-   * Given a Mouse event, determine which function should be used to load
-   * the selected link. Modifiers may override the default settings and cause
-   * a link to be opened in a new tab or window. 
-   * @param   event
-   *          The DOM Mouse Event triggering a URL load
-   * @returns A function which should be used to load the selected URL.
-   */
-  _getLoadFunctionForEvent: function PP__getLoadFunctionForEvent(event) {
-    if (event.button != 0)
-      return null;
-    
-    if (event.ctrlKey)
-      return this.openLinkInNewTab;
-    else if (event.shiftKey)
-      return this.openLinkInNewWindow;
-    return this.openLinkInCurrentWindow;
-  },
-
-  /**
    * Loads a URL in the appropriate tab or window, given the user's preference
    * specified by modifier keys tracked by a DOM event
    * @param   event
@@ -770,9 +751,9 @@ var PlacesController = {
    *          preferred destination window or tab.
    */
   mouseLoadURI: function PC_mouseLoadURI(event) {
-    var fn = this._getLoadFunctionForEvent(event);
-    if (fn)
-      this._getLoadFunctionForEvent(event)();
+    var node = this._activeView.selectedURINode;
+    if (node)
+      this._activeView.browserWindow.openUILink(node.uri, event, false, false);
   },
 
   /**

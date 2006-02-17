@@ -628,9 +628,14 @@
         PlacesController.activeView = this;
         document.commandDispatcher.updateCommands("mousedown");
       ]]></handler>
-      <handler event="click">
+      <handler event="click"><![CDATA[
+        // Filter out events from non-toolbarbuttons
+        // Only left or middle clicks should load the URI
+        if (event.target.localName != "toolbarbutton" ||
+            event.button > 1)
+          return;
         PlacesController.mouseLoadURI(event);
-      </handler>
+      ]]></handler>
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "toolbarbutton" && 
             !event.target.hasAttribute("type"))
