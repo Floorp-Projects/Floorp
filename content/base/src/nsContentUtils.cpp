@@ -643,18 +643,16 @@ nsContentUtils::Shutdown()
 
     // See comment above.
 
-    // Copy the ops out of the hash table
-    PLDHashTableOps hash_table_ops = *sEventListenerManagersHash.ops;
+    // However, we have to handle this table differently.  If it still
+    // has entries, we want to leak it too, so that we can keep it alive
+    // in case any elements are destroyed.  Because if they are, we need
+    // their event listener managers to be destroyed too, or otherwise
+    // it could leave dangling references in DOMClassInfo's preserved
+    // wrapper table.
 
-    // Set the clearEntry hook to be a nop
-    hash_table_ops.clearEntry = NopClearEntry;
-
-    // Set the ops in the hash table to be the new ops
-    sEventListenerManagersHash.ops = &hash_table_ops;
-
-    PL_DHashTableFinish(&sEventListenerManagersHash);
-
-    sEventListenerManagersHash.ops = nsnull;
+    if (sEventListenerManagersHash.entryCount == 0) {
+      PL_DHashTableFinish(&sEventListenerManagersHash);
+    }
   }
 }
 
