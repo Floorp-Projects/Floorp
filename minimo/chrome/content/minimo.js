@@ -528,6 +528,25 @@ function BrowserUpdateFeeds() {
  * For now, this updates via DOM the top menu. Context menu should be here as well. 
  */
 function BrowserUpdateBackForwardState() {
+
+       if(gBrowser.webNavigation.canGoBack) {
+            document.getElementById("command_back").setAttribute("disabled","false");
+            document.getElementById("item-back").setAttribute("hidden","false");
+        } else {
+            document.getElementById("command_back").setAttribute("disabled","true");
+            document.getElementById("item-back").setAttribute("hidden","true");
+
+
+        }
+        
+        if(gBrowser.webNavigation.canGoForward) {
+            document.getElementById("command_forward").setAttribute("disabled","false");
+            document.getElementById("item-forward").setAttribute("hidden","false");
+        } else {
+            document.getElementById("command_forward").setAttribute("disabled","true");
+            document.getElementById("item-forward").setAttribute("hidden","true");
+        }
+
 }
 
 
