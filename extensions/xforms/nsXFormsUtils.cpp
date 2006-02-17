@@ -1260,89 +1260,26 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
 }
 
 /* static */ nsresult
-nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
-                                 nsAString &aType, nsAString &aNSUri)
+nsXFormsUtils::ParseTypeFromNode(nsIDOMNode             *aInstanceData,
+                                 nsAString              &aType,
+                                 nsAString              &aNSUri)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
-  // aInstanceData could be an instance data node or it could be an attribute
-  // on an instance data node (basically the node that a control is bound to).
+  // Find the model for the instance data node
+  nsCOMPtr<nsIDOMNode> instanceNode;
+  rv = nsXFormsUtils::GetInstanceNodeForData(aInstanceData,
+                                             getter_AddRefs(instanceNode));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString *typeVal = nsnull;
+  nsCOMPtr<nsIDOMNode> modelNode;
+  rv = instanceNode->GetParentNode(getter_AddRefs(modelNode));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get type stored directly on instance node
-  nsAutoString typeAttribute;
-  nsCOMPtr<nsIDOMElement> nodeElem(do_QueryInterface(aInstanceData));
-  if (nodeElem) {
-    nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                             NS_LITERAL_STRING("type"), typeAttribute);
-    if (!typeAttribute.IsEmpty()) {
-      typeVal = &typeAttribute;
-    }
-  }
+  nsCOMPtr<nsIModelElementPrivate> model(do_QueryInterface(modelNode));
+  NS_ENSURE_STATE(model);
 
-  if (!typeVal) {
-    // Get MIP type bound to node
-    nsCOMPtr<nsIContent> nodeContent(do_QueryInterface(aInstanceData));
-    if (nodeContent) {
-      typeVal =
-        NS_STATIC_CAST(nsAutoString*,
-                       nodeContent->GetProperty(nsXFormsAtoms::type, &rv));
-    } else {
-      nsCOMPtr<nsIAttribute> nodeAttribute(do_QueryInterface(aInstanceData));
-      if (!nodeAttribute)
-        // node is neither content or attribute!
-        return NS_ERROR_FAILURE;
-
-      typeVal =
-        NS_STATIC_CAST(nsAutoString*,
-                       nodeAttribute->GetProperty(nsXFormsAtoms::type, &rv));
-    }
-  }
-
-  if (NS_FAILED(rv) || !typeVal) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // split type (ns:type) into namespace and type.
-  nsAutoString prefix;
-  PRInt32 separator = typeVal->FindChar(':');
-  if ((PRUint32) separator == (typeVal->Length() - 1)) {
-    const PRUnichar *strings[] = { typeVal->get() };
-    // XXX: get an element from the document this came from
-    ReportError(NS_LITERAL_STRING("missingTypeName"), strings, 1, nsnull, nsnull);
-    return NS_ERROR_UNEXPECTED;
-  } else if (separator == kNotFound) {
-    // no namespace prefix, which is valid;
-    prefix.AssignLiteral("");
-    aType.Assign(*typeVal);
-  } else {
-    prefix.Assign(Substring(*typeVal, 0, separator));
-    aType.Assign(Substring(*typeVal, ++separator, typeVal->Length()));
-  }
-
-  if (prefix.IsEmpty()) {
-    aNSUri.AssignLiteral("");
-  } else {
-    // get the namespace url from the prefix using instance data node
-    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aInstanceData, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
-
-    if (DOMStringIsNull(aNSUri)) {
-      // if not found using instance data node, use <xf:instance> node
-      nsCOMPtr<nsIDOMNode> instanceNode;
-      rv = nsXFormsUtils::GetInstanceNodeForData(aInstanceData,
-                                                 getter_AddRefs(instanceNode));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      domNode3 = do_QueryInterface(instanceNode, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
-    }
-  }
-
-  return rv;
+  return model->GetTypeFromNode(aInstanceData, aType, aNSUri);
 }
 
 /* static */ void

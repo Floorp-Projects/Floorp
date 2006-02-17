@@ -288,6 +288,21 @@ private:
 
   // Indicates whether the model's instance was built by lazy authoring
   PRBool mLazyModel;
+
+  /**
+   * Type information for nodes, with their type set through \<xforms:bind\>.
+   *
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-type
+   */
+  nsClassHashtable<nsISupportsHashKey, nsString> mNodeToType;
+
+  /**
+   * P3P type information for nodes, with their type set through
+   * \<xforms:bind\>.
+
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-p3ptype
+   */
+  nsClassHashtable<nsISupportsHashKey, nsString> mNodeToP3PType;
 };
 
 /**

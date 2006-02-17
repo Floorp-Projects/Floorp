@@ -604,6 +604,10 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mInstanceDocuments = new nsXFormsModelInstanceDocuments();
   NS_ASSERTION(mInstanceDocuments, "could not create mInstanceDocuments?!");
 
+  // Initialize hash tables
+  NS_ENSURE_TRUE(mNodeToType.Init(), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mNodeToP3PType.Init(), NS_ERROR_OUT_OF_MEMORY);
+
   return NS_OK;
 }
 
@@ -639,6 +643,12 @@ nsXFormsModelElement::Rebuild()
   nsresult rv;
   rv = mMDG.Clear();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear any type information
+  NS_ENSURE_TRUE(mNodeToType.IsInitialized() && mNodeToP3PType.IsInitialized(),
+                 NS_ERROR_FAILURE);
+  mNodeToType.Clear();
+  mNodeToP3PType.Clear();
 
   // 2. Re-attach all elements
   if (mDocumentLoaded) { // if it's not during initializing phase
@@ -1004,9 +1014,9 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
 nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData,
                                            nsAString &aType, nsAString &aNSUri)
 {
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType, aNSUri);
+  nsresult rv = GetTypeFromNode(aInstanceData, aType, aNSUri);
 
-  if(rv == NS_ERROR_NOT_AVAILABLE) {
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
     // if there is no type assigned, then assume that the type is 'string'
     aNSUri.Assign(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA));
     aType.Assign(NS_LITERAL_STRING("string"));
@@ -1183,6 +1193,79 @@ nsXFormsModelElement::GetIsReady(PRBool *aIsReady)
 {
   *aIsReady = mReadyHandled;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsModelElement::GetTypeFromNode(nsIDOMNode *aInstanceData,
+                                      nsAString  &aType,
+                                      nsAString  &aNSUri)
+{
+  // aInstanceData could be an instance data node or it could be an attribute
+  // on an instance data node (basically the node that a control is bound to).
+
+  nsString *typeVal = nsnull;
+
+  // Get type stored directly on instance node
+  nsAutoString typeAttribute;
+  nsCOMPtr<nsIDOMElement> nodeElem(do_QueryInterface(aInstanceData));
+  if (nodeElem) {
+    nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                             NS_LITERAL_STRING("type"), typeAttribute);
+    if (!typeAttribute.IsEmpty()) {
+      typeVal = &typeAttribute;
+    }
+  }
+
+  // If there was no type information on the node itself, check for a type
+  // bound to the node via \<xforms:bind\>
+  if (!typeVal && !mNodeToType.Get(aInstanceData, &typeVal)) {
+    // No type information found
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // split type (ns:type) into namespace and type.
+  nsAutoString prefix;
+  PRInt32 separator = typeVal->FindChar(':');
+  if ((PRUint32) separator == (typeVal->Length() - 1)) {
+    const PRUnichar *strings[] = { typeVal->get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("missingTypeName"), strings, 1,
+                               mElement, nsnull);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (separator == kNotFound) {
+    // no namespace prefix, which is valid;
+    prefix = EmptyString();
+    aType.Assign(*typeVal);
+  } else {
+    prefix.Assign(Substring(*typeVal, 0, separator));
+    aType.Assign(Substring(*typeVal, ++separator, typeVal->Length()));
+  }
+
+  if (prefix.IsEmpty()) {
+    aNSUri = EmptyString();
+    return NS_OK;
+  }
+
+  // get the namespace url from the prefix using instance data node
+  nsresult rv;
+  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aInstanceData, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
+
+  if (DOMStringIsNull(aNSUri)) {
+    // if not found using instance data node, use <xf:instance> node
+    nsCOMPtr<nsIDOMNode> instanceNode;
+    rv = nsXFormsUtils::GetInstanceNodeForData(aInstanceData,
+                                               getter_AddRefs(instanceNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    domNode3 = do_QueryInterface(instanceNode, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
+  }
+
+  return rv;
 }
 
 // nsIXFormsContextControl
@@ -1487,15 +1570,6 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   }
 }
 
-static void
-DeleteAutoString(void    *aObject,
-                 nsIAtom *aPropertyName,
-                 void    *aPropertyValue,
-                 void    *aData)
-{
-  delete NS_STATIC_CAST(nsAutoString*, aPropertyValue);
-}
-
 nsresult
 nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                                   nsIDOMNode              *aContextNode,
@@ -1582,32 +1656,23 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 
       // type and p3ptype are stored as properties on the instance node
       if (j == eModel_type || j == eModel_p3ptype) {
-        nsAutoPtr<nsAutoString> prop (new nsAutoString(propStrings[j]));
-        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-        if (content) {
-          rv = content->SetProperty(sModelPropsList[j],
-                                    prop,
-                                    DeleteAutoString);
-        } else {
-          nsCOMPtr<nsIAttribute> attribute = do_QueryInterface(node);
-          if (attribute) {
-            rv = attribute->SetProperty(sModelPropsList[j],
-                                        prop,
-                                        DeleteAutoString);
-          } else {
-            NS_WARNING("node is neither nsIContent or nsIAttribute");
-            continue;
-          }
-        }
-        if (NS_SUCCEEDED(rv)) {
-          prop.forget();
-        } else {
-          return rv;
-        }
-        if (rv == NS_PROPTABLE_PROP_OVERWRITTEN) {
+        nsClassHashtable<nsISupportsHashKey, nsString> *table;
+        table = j == eModel_type ? &mNodeToType : &mNodeToP3PType;
+        NS_ENSURE_TRUE(table->IsInitialized(), NS_ERROR_FAILURE);
+
+        // Check for existing value
+        if (table->Get(node, nsnull)) {
           multiMIP = PR_TRUE;
           break;
         }
+
+        // Insert value
+        nsAutoPtr<nsString> newString(new nsString(propStrings[j]));
+        NS_ENSURE_TRUE(newString, NS_ERROR_OUT_OF_MEMORY);
+        NS_ENSURE_TRUE(table->Put(node, newString), NS_ERROR_OUT_OF_MEMORY);
+
+        // string is succesfully stored in the table, we should not dealloc it
+        newString.forget();
 
         if (j == eModel_type) {
           // Inform MDG that it needs to check type. The only arguments

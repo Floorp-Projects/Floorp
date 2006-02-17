@@ -148,4 +148,14 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * This attribute is set when the model handled xforms-ready event
    */
   readonly attribute boolean isReady;
+
+  /**
+   * Retrieves the type for an instance data node
+   *
+   * @param aInstanceData     The instance data node
+   * @param aType             The type of the node
+   * @param aNSURI            The namespace of the type
+   */
+  void GetTypeFromNode(in nsIDOMNode aInstanceData, out AString aType,
+                       out AString aNSUri);
 };

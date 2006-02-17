@@ -146,10 +146,12 @@ nsBoundType
 nsXFormsUploadElement::GetBoundType()
 {
   nsBoundType result = TYPE_DEFAULT;
+  if (!mModel)
+    return result;
 
   // get type bound to node
   nsAutoString type, nsuri;
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(mBoundNode, type, nsuri);
+  nsresult rv = mModel->GetTypeFromNode(mBoundNode, type, nsuri);
   if (NS_SUCCEEDED(rv) && nsuri.EqualsLiteral(NS_NAMESPACE_XML_SCHEMA)) {
     if (type.EqualsLiteral("anyURI")) {
       result = TYPE_ANYURI;
