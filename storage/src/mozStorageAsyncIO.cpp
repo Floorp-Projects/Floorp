@@ -251,7 +251,7 @@ struct AsyncOsFile : public OsFile
   // the file in the background. We store this offset for each operation such
   // as reading and writing so that when it occurs later we know where it
   // actually was.
-  PRInt64 mOffset;
+  sqlite_int64 mOffset;
 
   // Set to true normally, false when the file is closed. This way we know not
   // to accept any more operations for a closed file (even if the close is
@@ -314,7 +314,7 @@ struct AsyncMessage
 
   // One of ASYNC_xxx etc.
   PRUint32 mOp;            // (was op)
-  PRInt64 mOffset;        // See above (was iOffset)
+  sqlite_int64 mOffset;    // See above (was iOffset)
   PRInt32 mBytes;          // See above (was nByte)
 
   // Data to write to file (or NULL if op != ASYNC_WRITE)
@@ -347,13 +347,13 @@ static int AsyncSyncDirectory(const char* aName);
 static int AsyncFileExists(const char *aName);
 static int AsyncClose(OsFile** aFile);
 static int AsyncWrite(OsFile* aFile, const void* aBuf, int aCount);
-static int AsyncTruncate(OsFile* aFile, PRInt64 aNumBytes);
+static int AsyncTruncate(OsFile* aFile, sqlite_int64 aNumBytes);
 static int AsyncOpenDirectory(OsFile* aFile, const char* aName);
 static int AsyncSync(OsFile* aFile, int aFullsync);
 static void AsyncSetFullSync(OsFile* aFile, int aValue);
 static int AsyncRead(OsFile* aFile, void *aBuffer, int aCount);
-static int AsyncSeek(OsFile* aFile, PRInt64 aOffset);
-static int AsyncFileSize(OsFile* aFile, PRInt64* aSize);
+static int AsyncSeek(OsFile* aFile, sqlite_int64 aOffset);
+static int AsyncFileSize(OsFile* aFile, sqlite_int64* aSize);
 static int AsyncFileHandle(OsFile* aFile);
 static int AsyncLock(OsFile* aFile, int aLockType);
 static int AsyncUnlock(OsFile* aFile, int aLockType);
@@ -378,7 +378,7 @@ static void ProcessAsyncMessages();
 static int ProcessOneMessage(AsyncMessage* aMessage);
 static void AppendAsyncMessage(AsyncMessage* aMessage);
 static int AppendNewAsyncMessage(AsyncOsFile* aFile, PRUint32 aOp,
-                                 PRInt64 aOffset, PRInt32 aDataSize,
+                                 sqlite_int64 aOffset, PRInt32 aDataSize,
                                  const char *aData);
 static int AsyncWriteError = SQLITE_OK; // set on write error
 
@@ -403,10 +403,10 @@ static int (*sqliteOrigSyncDirectory)(const char*) = nsnull;
 static int (*sqliteOrigClose)(OsFile**) = nsnull;
 static int (*sqliteOrigRead)(OsFile*, void*, int amt) = nsnull;
 static int (*sqliteOrigWrite)(OsFile*, const void*, int amt) = nsnull;
-static int (*sqliteOrigFileSize)(OsFile*, PRInt64 *pSize) = nsnull;
-static int (*sqliteOrigSeek)(OsFile*, PRInt64 offset) = nsnull;
+static int (*sqliteOrigFileSize)(OsFile*, sqlite_int64 *pSize) = nsnull;
+static int (*sqliteOrigSeek)(OsFile*, sqlite_int64 offset) = nsnull;
 static int (*sqliteOrigSync)(OsFile*, int) = nsnull;
-static int (*sqliteOrigTruncate)(OsFile*, PRInt64 size) = nsnull;
+static int (*sqliteOrigTruncate)(OsFile*, sqlite_int64 size) = nsnull;
 static int (*sqliteOrigOpenDirectory)(OsFile*, const char*);
 static void (*sqliteOrigSetFullSync)(OsFile*, int setting);
 
@@ -696,7 +696,7 @@ AppendAsyncMessage(AsyncMessage* aMessage)
 
 int // static
 AppendNewAsyncMessage(AsyncOsFile* aFile, PRUint32 aOp,
-                                         PRInt64 aOffset, PRInt32 aDataSize,
+                                         sqlite_int64 aOffset, PRInt32 aDataSize,
                                          const char *aData)
 {
   // allocate one buffer, we will put the buffer immediately after our struct
@@ -756,7 +756,7 @@ AsyncOpenExclusive(const char* aName, OsFile** aFile,
   if (rc != SQLITE_OK)
     return rc;
 
-  rc = AppendNewAsyncMessage(osfile, ASYNC_OPENEXCLUSIVE, PRInt64(aDelFlag),
+  rc = AppendNewAsyncMessage(osfile, ASYNC_OPENEXCLUSIVE, aDelFlag,
                              PL_strlen(aName) + 1, aName);
   if (rc != SQLITE_OK) {
     nsMemory::Free(osfile);
@@ -913,7 +913,7 @@ AsyncWrite(OsFile* aFile, const void* aBuf, int aCount)
   }
   int rc = AppendNewAsyncMessage(asyncfile, ASYNC_WRITE, asyncfile->mOffset,
                                  aCount, NS_REINTERPRET_CAST(const char*, aBuf));
-  asyncfile->mOffset += PRInt64(aCount);
+  asyncfile->mOffset += aCount;
   return rc;
 }
 
@@ -924,7 +924,7 @@ AsyncWrite(OsFile* aFile, const void* aBuf, int aCount)
 //    the write-op list, no IO actually takes place.
 
 int // static
-AsyncTruncate(OsFile* aFile, PRInt64 aNumBytes)
+AsyncTruncate(OsFile* aFile, sqlite_int64 aNumBytes)
 {
   if (AsyncWriteError != SQLITE_OK)
     return AsyncWriteError;
@@ -1029,7 +1029,7 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
     // entirely from the write queue. Since OpenExclusive can not work for
     // prevously existing files, we know anything in the file is in our write
     // queue.
-    PRInt64 filesize;
+    sqlite_int64 filesize;
     NS_ASSERTION(sqliteOrigFileSize, "Original file size pointer uninitialized!");
     rc = sqliteOrigFileSize(asyncfile->mBaseRead, &filesize);
     if (rc != SQLITE_OK)
@@ -1052,7 +1052,7 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
   }
 
   if (rc == SQLITE_OK) {
-    PRInt64 blockOffset = asyncfile->mOffset; // Current seek offset
+    sqlite_int64 blockOffset = asyncfile->mOffset; // Current seek offset
 
     // Now we need to bring our data up-do-date with any pending writes.
     for (AsyncMessage* p = AsyncQueueFirst; p != nsnull; p = p->mNext) {
@@ -1089,7 +1089,7 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
     }
 
     // successful read, update virtual current seek offset
-    asyncfile->mOffset += PRInt64(aCount);
+    asyncfile->mOffset += aCount;
   }
 
 asyncread_out:
@@ -1104,7 +1104,7 @@ asyncread_out:
 //    next read() or write() operation.
 
 int // static
-AsyncSeek(OsFile* aFile, PRInt64 aOffset)
+AsyncSeek(OsFile* aFile, sqlite_int64 aOffset)
 {
   if (AsyncWriteError != SQLITE_OK)
     return AsyncWriteError;
@@ -1128,7 +1128,7 @@ AsyncSeek(OsFile* aFile, PRInt64 aOffset)
 //    grub through the whole queue.
 
 int // static
-AsyncFileSize(OsFile* aFile, PRInt64* aSize)
+AsyncFileSize(OsFile* aFile, sqlite_int64* aSize)
 {
   if (AsyncWriteError != SQLITE_OK)
     return AsyncWriteError;
@@ -1139,7 +1139,7 @@ AsyncFileSize(OsFile* aFile, PRInt64* aSize)
     return SQLITE_INTERNAL;
   }
   int rc = SQLITE_OK;
-  PRInt64 size = 0;
+  sqlite_int64 size = 0;
 
   nsAutoLock lock(AsyncQueueLock);
 
@@ -1158,7 +1158,7 @@ AsyncFileSize(OsFile* aFile, PRInt64* aSize)
       if (p->mFile == asyncfile) {
         switch (p->mOp) {
           case ASYNC_WRITE:
-            size = PR_MAX(p->mOffset + PRInt64(p->mBytes), size);
+            size = PR_MAX(p->mOffset + p->mBytes, size);
             break;
           case ASYNC_TRUNCATE:
             size = PR_MIN(size, p->mBytes);
