@@ -274,33 +274,35 @@ int nsRASAutodial::QueryAutodialBehavior()
 #ifdef WINCE
 static nsresult DoPPCConnection()
 {
-    HANDLE    gConnectionHandle = NULL;
-
-    GUID gNetworkID;
-    (void) ConnMgrMapURL("http://www.mozilla.org", &gNetworkID, 0);
+    static HANDLE    gConnectionHandle = NULL;
 
     DWORD status;
+    
+    if (gConnectionHandle)
+    {
+      ConnMgrConnectionStatus(gConnectionHandle, &status);
+      if (status == CONNMGR_STATUS_CONNECTED)
+        return NS_OK;
+
+      // Release it immediately since we currently only do
+      // sync connections.  the assumption here is that
+      // ConnMgrEstablishConnectionSync has to either return
+      // a failure or a connected connection.
+      ConnMgrReleaseConnection(gConnectionHandle, 0);
+    }
+
     CONNMGR_CONNECTIONINFO conn_info;
     memset(&conn_info, 0, sizeof(CONNMGR_CONNECTIONINFO));
 
-    conn_info.cbSize     = sizeof(CONNMGR_CONNECTIONINFO);
-    conn_info.dwParams   = CONNMGR_PARAM_GUIDDESTNET;
-    conn_info.dwPriority = CONNMGR_PRIORITY_USERINTERACTIVE;
-    conn_info.bExclusive = FALSE;
-    conn_info.bDisabled  = FALSE;
+    conn_info.cbSize      = sizeof(CONNMGR_CONNECTIONINFO);
+    conn_info.dwParams    = CONNMGR_PARAM_GUIDDESTNET;
+    conn_info.dwPriority  = CONNMGR_PRIORITY_USERINTERACTIVE;
+    conn_info.guidDestNet = IID_DestNetInternet;
+    conn_info.bExclusive  = FALSE;
+    conn_info.bDisabled   = FALSE;
 
-    conn_info.guidDestNet= gNetworkID;
-
-    if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 1000, &status) != S_OK &&
-       gNetworkID != IID_DestNetInternet)
-    {
-      conn_info.guidDestNet = IID_DestNetInternet;
-      
-      if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 5000, &status) != S_OK)
-      {
-        return NS_ERROR_FAILURE;
-      }
-    }
+    if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 25000, &status) != S_OK)
+      return NS_ERROR_FAILURE;
     
     if (status != CONNMGR_STATUS_CONNECTED)
       return NS_ERROR_FAILURE;
