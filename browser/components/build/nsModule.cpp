@@ -81,6 +81,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #ifdef MOZ_PLACES
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
@@ -139,17 +140,17 @@ static const nsModuleComponentInfo components[] =
   { "Browser Navigation History",
     NS_NAVHISTORYSERVICE_CID,
     NS_NAVHISTORYSERVICE_CONTRACTID,
-    nsNavHistory::Create },
+    nsNavHistoryConstructor },
 
   { "Browser Navigation History",
     NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/browser/global-history;2",
-    nsNavHistory::Create },
+    nsNavHistoryConstructor },
 
   { "Browser Navigation History",
     NS_NAVHISTORYSERVICE_CID,
     "@mozilla.org/autocomplete/search;1?name=history",
-    nsNavHistory::Create },
+    nsNavHistoryConstructor },
 
   { "Page Annotation Service",
     NS_ANNOTATIONSERVICE_CID,
