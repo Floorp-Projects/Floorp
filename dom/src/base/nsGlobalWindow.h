@@ -602,11 +602,12 @@ struct nsTimeout
   // Returned as value of setTimeout()
   PRUint32 mPublicId;
 
-  // Non-zero if repetitive timeout
+  // Non-zero interval in milliseconds if repetitive timeout
   PRInt32 mInterval;
 
-  // Nominal time to run this timeout
-  PRIntervalTime mWhen;
+  // Nominal time (in microseconds since the epoch) to run this
+  // timeout
+  PRTime mWhen;
 
   // Principal with which to execute
   nsCOMPtr<nsIPrincipal> mPrincipal;
