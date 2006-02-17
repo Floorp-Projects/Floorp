@@ -112,8 +112,9 @@ mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConne
         return NS_ERROR_INVALID_ARG;
     }
 
-    mozStorageConnection *msc = new mozStorageConnection();
-    // FIXME: check for out of memory
+    mozStorageConnection *msc = new mozStorageConnection(this);
+    if (! msc)
+        return NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<mozIStorageConnection> conn = msc;
     rv = msc->Initialize (storageFile);
     if (NS_FAILED(rv)) return rv;
@@ -129,7 +130,9 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
 {
     nsresult rv;
 
-    mozStorageConnection *msc = new mozStorageConnection();
+    mozStorageConnection *msc = new mozStorageConnection(this);
+    if (! msc)
+        return NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<mozIStorageConnection> conn = msc;
     rv = msc->Initialize (aDatabaseFile);
     if (NS_FAILED(rv)) return rv;
