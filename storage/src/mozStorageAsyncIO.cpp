@@ -211,9 +211,11 @@
 
 #include "mozStorageService.h"
 #include "nsAutoLock.h"
+#include "nsEventQueueUtils.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsMemory.h"
+#include "nsProxyRelease.h"
 #include "plstr.h"
 #include "prlock.h"
 #include "prcvar.h"
@@ -422,10 +424,26 @@ public:
   {
     NS_ASSERTION(! AsyncWriterHaltWhenIdle, "You don't want halt on idle when starting up!");
     ProcessAsyncMessages();
+
+    // this will delay processing the release of the storage service until we
+    // get to the main thread.
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQueue));
+    if (NS_SUCCEEDED(rv)) {
+      mozIStorageService* service = nsnull;
+      mStorageService.swap(service);
+      NS_ProxyRelease(eventQueue, service);
+    } else {
+      NS_NOTREACHED("No event queue");
+    }
     return NS_OK;
   }
 
 protected:
+  // The thread must keep a reference to the storage service to make sure the
+  // thread is destroyed before the storage service is. When the storage service
+  // is done, it will release all the locks that this thread is using. This
+  // makes sure our locks don't get deleted until we're done using them.
   nsCOMPtr<mozIStorageService> mStorageService;
 };
 NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncWriteThread, nsIRunnable)
@@ -536,13 +554,19 @@ void
 mozStorageService::FreeLocks()
 {
   // Destroy the condition variables
-  PR_DestroyCondVar(AsyncCompleteCondition);
-  AsyncCompleteCondition = nsnull;
-  PR_DestroyCondVar(AsyncQueueCondition);
-  AsyncQueueCondition = nsnull;
+  if (AsyncCompleteCondition) {
+    PR_DestroyCondVar(AsyncCompleteCondition);
+    AsyncCompleteCondition = nsnull;
+  }
+  if (AsyncQueueCondition) {
+    PR_DestroyCondVar(AsyncQueueCondition);
+    AsyncQueueCondition = nsnull;
+  }
 
-  PR_DestroyLock(AsyncQueueLock);
-  AsyncQueueLock = nsnull;
+  if (AsyncQueueLock) {
+    PR_DestroyLock(AsyncQueueLock);
+    AsyncQueueLock = nsnull;
+  }
 }
 
 

@@ -69,7 +69,6 @@ private:
     ~mozStorageService();
 protected:
     nsCOMPtr<nsIFile> mProfileStorageFile;
-    nsCOMPtr<nsIObserverService> mObserverService;
 
     nsresult InitStorageAsyncIO();
     nsresult FinishAsyncIO();

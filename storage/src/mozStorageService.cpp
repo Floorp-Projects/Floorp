@@ -69,13 +69,14 @@ mozStorageService::Init()
     sqlite3_enable_shared_cache(1);
 
     nsresult rv;
-    mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    nsCOMPtr<nsIObserverService> observerService = 
+            do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = InitStorageAsyncIO();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mObserverService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+    rv = observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
