@@ -51,7 +51,7 @@ interface nsIURI;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 
-[uuid(fb9ddeb9-26f9-46b8-85d5-3978aaee05aa)]
+[scriptable, uuid(fb9ddeb9-26f9-46b8-85d5-3978aaee05aa)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -73,9 +73,10 @@ interface nsIPrincipal : nsISerializable
      * deniedList are space-separated lists of capabilities which were
      * explicitly granted or denied by a pref.
      */
-    void getPreferences(out string prefBranch, out string id,
-                        out string subjectName,
-                        out string grantedList, out string deniedList);
+    [noscript] void getPreferences(out string prefBranch, out string id,
+                                   out string subjectName,
+                                   out string grantedList,
+                                   out string deniedList);
 
     /**
      * Returns whether the other principal is equivalent to this principal.
@@ -87,13 +88,13 @@ interface nsIPrincipal : nsISerializable
     /**
      * Returns a hash value for the principal.
      */
-    readonly attribute unsigned long hashValue;
+    [noscript] readonly attribute unsigned long hashValue;
 
     /**
      * Returns the JS equivalent of the principal.
      * @see JSPrincipals.h
      */
-    JSPrincipals getJSPrincipals(in JSContext cx);
+    [noscript] JSPrincipals getJSPrincipals(in JSContext cx);
 
     /**
      * The domain security policy of the principal.
@@ -108,30 +109,35 @@ interface nsIPrincipal : nsISerializable
     // manager a way to set this (which I question, since it can increase the
     // permissions of a page) it should be a |void clearSecurityPolicy()|
     // method.
-    attribute voidPtr securityPolicy;
+    [noscript] attribute voidPtr securityPolicy;
 
     // XXXcaa probably should be turned into {get|set}CapabilityFlags
     // XXXbz again, what if this lives in our hashtable and someone
     // messes with it?  Is that OK?
-    short canEnableCapability(in string capability);
-    void setCanEnableCapability(in string capability, in short canEnable);
-    boolean isCapabilityEnabled(in string capability, in voidPtr annotation);
-    void enableCapability(in string capability, inout voidPtr annotation);
-    void revertCapability(in string capability, inout voidPtr annotation);
-    void disableCapability(in string capability, inout voidPtr annotation);
+    [noscript] short canEnableCapability(in string capability);
+    [noscript] void setCanEnableCapability(in string capability,
+                                           in short canEnable);
+    [noscript] boolean isCapabilityEnabled(in string capability,
+                                           in voidPtr annotation);
+    [noscript] void enableCapability(in string capability,
+                                     inout voidPtr annotation);
+    [noscript] void revertCapability(in string capability,
+                                     inout voidPtr annotation);
+    [noscript] void disableCapability(in string capability,
+                                      inout voidPtr annotation);
 
     /**
      * The codebase URI to which this principal pertains.  This is
      * generally the document URI.
      */
-    readonly attribute nsIURI URI;
+    [noscript] readonly attribute nsIURI URI;
 
     /**
      * The domain URI to which this principal pertains.
      * This is congruent with HTMLDocument.domain, and may be null.
      * Setting this has no effect on the URI.
      */
-    attribute nsIURI domain;
+    [noscript] attribute nsIURI domain;
 
     /**
      * The origin of this principal's domain, if non-null, or its
@@ -141,7 +147,7 @@ interface nsIPrincipal : nsISerializable
     // XXXcaa this should probably be turned into an nsIURI.
     // The system principal's origin should be some caps namespace
     // with a chrome URI.  All of chrome should probably be the same.
-    readonly attribute string origin;
+    [noscript] readonly attribute string origin;
 
     /**
      * Whether this principal is associated with a certificate.
@@ -185,7 +191,7 @@ interface nsIPrincipal : nsISerializable
      * other codebase or certificate principal.  This may change in a future
      * release; note that nsIPrincipal is unfrozen, not slated to be frozen.
      */
-    boolean subsumes(in nsIPrincipal other);
+    [noscript] boolean subsumes(in nsIPrincipal other);
 
     /**
      * The subject name for the certificate.  This actually identifies the
