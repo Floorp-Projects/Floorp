@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # Mark Hammond <mhammond@skippinet.com.au>.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Portions created by the Initial Developer are Copyright (C) 2006
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -34,74 +34,31 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Top-level PyXPCOM makefile - build sub-dirs and install .py code.
+# The PyXPCOM test component.
 
-DEPTH   =../../..
-
-include $(DEPTH)/config/autoconf.mk
-
-DIRS = \
-        src \
-        components \
-        $(NULL)
-
-ifdef ENABLE_TESTS
-        DIRS += test $(NULL)
-endif
+DEPTH   =../../../..
 
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
 
-PYSRCS_XPCOM = \
-	__init__.py \
-	components.py \
-	file.py \
-	nsError.py \
-	primitives.py \
-	shutdown.py \
-	xpcom_consts.py \
-	xpt.py \
-	$(NULL)
+include $(DEPTH)/config/autoconf.mk
 
-PYSRCS_XPCOMCLIENT = \
-	__init__.py \
-	$(NULL)
+MODULE		= pyxpcom
+XPIDL_MODULE	= pyxpcom_test
+REQUIRES	= xpcom string $(NULL)
 
-PYSRCS_XPCOMSERVER = \
-	__init__.py \
-	enumerator.py \
-	factory.py \
-	loader.py \
-	module.py \
-	policy.py \
-	$(NULL)
+XPIDLSRCS	= 
+PYCOMPONENTS=pyabout.py
 
-PYSRCS_XPCOMTOOLS = \
-	regxpcom.py \
-	tracer_demo.py \
-	$(NULL)
+PYCOMPONENTS_INST := $(addprefix $(srcdir)/,$(PYCOMPONENTS))
 
-PYSRCS_XPCOM       := $(addprefix $(srcdir)/,$(PYSRCS_XPCOM))
-PYSRCS_XPCOMCLIENT := $(addprefix $(srcdir)/client/,$(PYSRCS_XPCOMCLIENT))
-PYSRCS_XPCOMSERVER := $(addprefix $(srcdir)/server/,$(PYSRCS_XPCOMSERVER))
-PYSRCS_XPCOMTOOLS  := $(addprefix $(srcdir)/tools/,$(PYSRCS_XPCOMTOOLS))
-
+include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(INSTALL) $(PYSRCS_XPCOM) $(DIST)/bin/python/xpcom 
-	$(INSTALL) $(PYSRCS_XPCOMCLIENT) $(DIST)/bin/python/xpcom/client
-	$(INSTALL) $(PYSRCS_XPCOMSERVER) $(DIST)/bin/python/xpcom/server
-	$(INSTALL) $(PYSRCS_XPCOMTOOLS) $(DIST)/bin/python/xpcom/tools
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOM) $(DISTDIR)$(pyexecdir)/xpcom
-	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOMCLIENT) $(DISTDIR)$(pyexecdir)/xpcom/client
-	$(SYSINSTALL) $(IFLAGS1) $(PYSRCS_XPCOMSERVER) $(DISTDIR)$(pyexecdir)/xpcom/server
+	$(INSTALL) $(PYCOMPONENTS_INST) $(DIST)/bin/components
 
 clobber::
-	rm -rf $(DIST)/bin/python/xpcom
-	rm -f test/*.pyc test/*.pyo
-
+	$(RM) $(DIST)/bin/components/py_test_component.py
+	$(RM) $(DIST)/bin/components/pyxpcom_test.xpt
