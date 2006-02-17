@@ -93,10 +93,14 @@ public:
     gfxASurface* ThebesSurface() {
         if (mOptSurface)
             return mOptSurface;
+
+        EnsureImageSurface();
         return mImageSurface;
     }
 
 protected:
+
+    void EnsureImageSurface();
 
     PRInt32 mWidth;
     PRInt32 mHeight;
