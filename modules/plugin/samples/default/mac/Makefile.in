@@ -76,10 +76,6 @@ PACKAGE_FILE = npnul.pkg
 
 unexport CC CXX
 
-# decodes resource files from AppleSingle to Resource Manager format.
-ASDECODE = $(DIST)/bin/asdecode
-RESOURCE_FILES = _NullPlugin.rsrc
-
 # for objdir builds, copy the project, and symlink the sources
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
@@ -90,6 +86,7 @@ export::
 	ln -fs $(srcdir)/NullPlugin.cpp
 	ln -fs $(srcdir)/npmac.cpp
 	ln -fs $(srcdir)/Info-*.plist .
+	ln -fs $(srcdir)/NullPlugin.rsrc
 endif
 
 libs install:: install-plugin
@@ -97,15 +94,9 @@ libs install:: install-plugin
 install-plugin: build-plugin
 	$(INSTALL) "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin" $(DIST)/bin/plugins
 
-resources: $(RESOURCE_FILES)
-
-build-plugin: resources
+build-plugin:
 	$(PBBUILD) $(PROJECT_ARG) -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_ARG)
 	echo -n NSPLMOSS > "$(XCODE_PRODUCT_DIR)/Default Plugin.plugin/Contents/PkgInfo"
 
-_%.rsrc: %.rsrc
-	$(ASDECODE) $< $@
-
 clean clobber distclean::
-	rm -f $(RESOURCE_FILES)
 	rm -rf build
