@@ -499,21 +499,17 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
     }
   }
 
-  PRBool helpMenu;
-  aMenu->IsHelpMenu(&helpMenu);
-  if (!helpMenu) {
-    NSMenu* menuRef = NULL;
-    aMenu->GetNativeData((void**)&menuRef);
-    
-    nsCOMPtr<nsIContent> menu;
-    aMenu->GetMenuContent(getter_AddRefs(menu));
-    nsAutoString menuHidden;
-    menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-    if (!menuHidden.EqualsLiteral("true") && menu->GetChildCount() > 0) {
-      [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease] atIndex:mNumMenus];
-      [[mRootMenu itemAtIndex:mNumMenus] setSubmenu:menuRef];
-      mNumMenus++;
-    }
+  NSMenu* menuRef = NULL;
+  aMenu->GetNativeData((void**)&menuRef);
+  
+  nsCOMPtr<nsIContent> menu;
+  aMenu->GetMenuContent(getter_AddRefs(menu));
+  nsAutoString menuHidden;
+  menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
+  if (!menuHidden.EqualsLiteral("true") && menu->GetChildCount() > 0) {
+    [mRootMenu insertItem:[[[NSMenuItem alloc] initWithTitle:@"SomeMenuItem" action:NULL keyEquivalent:@""] autorelease] atIndex:mNumMenus];
+    [[mRootMenu itemAtIndex:mNumMenus] setSubmenu:menuRef];
+    mNumMenus++;
   }
   
   return NS_OK;
