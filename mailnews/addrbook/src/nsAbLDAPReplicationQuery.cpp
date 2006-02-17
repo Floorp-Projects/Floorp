@@ -85,11 +85,6 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
         mDirServer->fileName=nsnull;
         DIR_SetServerFileName(mDirServer);
     }
-    // use the dir server filename for replication
-    PR_FREEIF(mDirServer->replInfo->fileName);
-    // since DeleteServer frees the replInfo->fileName make a copy of string
-    // if we donot do this the DeleteServer functions crashes.
-    mDirServer->replInfo->fileName = nsCRT::strdup(mDirServer->fileName);
 
     nsresult rv = NS_OK;
 

@@ -108,9 +108,7 @@
 
 #define kDefaultReplicateNever PR_FALSE
 #define kDefaultReplicaEnabled PR_FALSE
-#define kDefaultReplicaFileName nsnull
 #define kDefaultReplicaDataVersion nsnull
-#define kDefaultReplicaDescription nsnull
 #define kDefaultReplicaChangeNumber -1
 #define kDefaultReplicaFilter "(objectclass=*)"
 
@@ -449,10 +447,6 @@ static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo
 	if (outInfo)
 	{
 		outInfo->lastChangeNumber = inInfo->lastChangeNumber;
-		if (inInfo->description)
-            outInfo->description = nsCRT::strdup (inInfo->description);
-		if (inInfo->fileName)
-            outInfo->fileName = nsCRT::strdup (inInfo->fileName);
 		if (inInfo->dataVersion)
             outInfo->dataVersion = nsCRT::strdup (inInfo->dataVersion);
 		if (inInfo->syncURL)
@@ -921,30 +915,16 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 		{
 			switch (prefname[12]) {
 			case 'd':
-				switch (prefname[13]) {
-					case 'a': /* replication.dataVersion */
-						rc = idReplDataVersion;
-						break;
-					case 'e': /* replication.description */
-						rc = idReplDescription;
-						break;
-				}
-				break;
+        rc = idReplDataVersion;
+        break;
 			case 'e':
         if (prefname[13] == 'n') {
 					rc = idReplEnabled;
 				}
 				break;
 			case 'f':
-				switch (prefname[15]) {
-				case 'e': /* replication.fileName */
-					rc = idReplFileName;
-					break;
-				case 't': /* replication.filter */
-					rc = idReplFilter;
-					break;
-				}
-				break;
+        rc = idReplFilter;
+        break;
 			case 'l': /* replication.lastChangeNumber */
 				rc = idReplLastChangeNumber;
 				break;
@@ -1082,8 +1062,6 @@ static void dir_DeleteServerContents (DIR_Server *server)
 		{
 			if (server->fileName)
 				XP_FileRemove (server->fileName, xpAddrBookNew);
-			if (server->replInfo && server->replInfo->fileName)
-				XP_FileRemove (server->replInfo->fileName, xpAddrBookNew);
 		}
 #endif /* XP_FileRemove */
 
@@ -1099,8 +1077,6 @@ static void dir_DeleteServerContents (DIR_Server *server)
 
     if (server->replInfo)
     {
-      PR_FREEIF(server->replInfo->description);
-      PR_FREEIF(server->replInfo->fileName);
       PR_FREEIF(server->replInfo->dataVersion);
       PR_FREEIF(server->replInfo->syncURL);
       PR_FREEIF(server->replInfo->filter);
@@ -1403,16 +1379,14 @@ static void dir_GetReplicationInfo(const char *prefstring, DIR_Server *server)
     prefBool = DIR_GetBoolPref(replPrefName.get(), "enabled", kDefaultReplicaEnabled);
     DIR_ForceFlag(server, DIR_REPLICATION_ENABLED, prefBool);
 
-    server->replInfo->description = DIR_GetStringPref(replPrefName.get(), "description", kDefaultReplicaDescription);
     server->replInfo->syncURL = DIR_GetStringPref(replPrefName.get(), "syncURL", nsnull);
     server->replInfo->filter = DIR_GetStringPref(replPrefName.get(), "filter", kDefaultReplicaFilter);
 
     /* The file name and data version must be set or we ignore the
      * remaining replication prefs.
      */
-    server->replInfo->fileName = DIR_GetStringPref(replPrefName.get(), "fileName", kDefaultReplicaFileName);
     server->replInfo->dataVersion = DIR_GetStringPref(replPrefName.get(), "dataVersion", kDefaultReplicaDataVersion);
-    if (server->replInfo->fileName && server->replInfo->dataVersion)
+    if (server->fileName && server->replInfo->dataVersion)
     {
       server->replInfo->lastChangeNumber = DIR_GetIntPref(replPrefName.get(), "lastChangeNumber", kDefaultReplicaChangeNumber);
     }
@@ -2230,8 +2204,6 @@ static nsresult dir_SaveReplicationInfo(const char *prefRoot, DIR_Server *server
 
 	if (server->replInfo)
 	{
-    DIR_SetStringPref(prefLocation.get(), "description", server->replInfo->description, kDefaultReplicaDescription);
-    DIR_SetStringPref(prefLocation.get(), "fileName", server->replInfo->fileName, kDefaultReplicaFileName);
     DIR_SetStringPref(prefLocation.get(), "filter", server->replInfo->filter, kDefaultReplicaFilter);
     DIR_SetIntPref(prefLocation.get(), "lastChangeNumber", server->replInfo->lastChangeNumber, kDefaultReplicaChangeNumber);
     DIR_SetStringPref(prefLocation.get(), "syncURL", server->replInfo->syncURL, nsnull);

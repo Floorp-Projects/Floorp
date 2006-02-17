@@ -87,8 +87,6 @@ typedef enum
 	idPassword,
 	idReplNever,
 	idReplEnabled,
-	idReplDescription,
-	idReplFileName,
 	idReplFilter,
 	idReplLastChangeNumber,
 	idReplDataVersion,
@@ -103,8 +101,6 @@ typedef enum
 typedef struct _DIR_ReplicationInfo
 
 {
-	char *description;           /* Human readable description of replica                */
-	char *fileName;              /* File name of replication database                    */
 	char *filter;                /* LDAP filter string which constrains the repl search  */
 	PRInt32 lastChangeNumber;      /* Last change we saw -- start replicating here         */
 	char *syncURL;               /* Points to the server to use for replication          */

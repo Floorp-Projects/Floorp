@@ -199,7 +199,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchResult(nsILDAPMessage *aMessa
                 if(NS_FAILED(rv)) 
                     break;
 
-                rv = dbPath->AppendNative(nsDependentCString(mDirServerInfo->replInfo->fileName));
+                rv = dbPath->AppendNative(nsDependentCString(mDirServerInfo->fileName));
                 if(NS_FAILED(rv)) 
                     break;
 
