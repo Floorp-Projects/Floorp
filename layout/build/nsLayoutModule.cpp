@@ -216,6 +216,7 @@ static void Shutdown();
 #include "nsSVGTypeCIDs.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGRect.h"
+#include "nsSVGPoint.h"
 #include "nsSVGUtils.h"
 
 #ifdef MOZ_SVG_RENDERER_LIBART
@@ -615,6 +616,7 @@ MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXML
 #endif
 #ifdef MOZ_SVG
 MAKE_CTOR(CreateSVGRect,                  nsIDOMSVGRect,               NS_NewSVGRect)
+MAKE_CTOR(CreateSVGPoint,                 nsIDOMSVGPoint,              NS_NewSVGPoint)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
@@ -1279,6 +1281,10 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SVGRECT_CID,
     NS_SVGRECT_CONTRACTID,
     CreateSVGRect },
+  { "SVG Point",
+    NS_SVGPOINT_CID,
+    NS_SVGPOINT_CONTRACTID,
+    CreateSVGPoint },
 #endif
 
   { "Content HTTP Startup Listener",

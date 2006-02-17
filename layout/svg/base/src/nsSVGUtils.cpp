@@ -260,6 +260,141 @@ nsSVGUtils::GetBBox(nsFrameList *aFrames, nsIDOMSVGRect **_retval)
 }
 
 nsresult
+nsSVGUtils::GetNumberOfChars(nsISVGGlyphFragmentNode* node,
+                             PRInt32 *_retval)
+{
+  PRUint32 nchars = 0;
+  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+
+  while (fragment) {
+    nchars += fragment->GetNumberOfChars();
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  *_retval = nchars;
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetComputedTextLength(nsISVGGlyphFragmentNode* node,
+                                  float *_retval)
+{
+  float length = 0.0;
+  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+
+  while (fragment) {
+    if (fragment->GetNumberOfChars() > 0) {
+      // query the renderer metrics for the length of each fragment
+      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+      if (!metrics) return NS_ERROR_FAILURE;
+      float fragmentLength;
+      nsresult rv = metrics->GetComputedTextLength(&fragmentLength);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      length += fragmentLength;
+    }
+
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  *_retval = length;
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetSubStringLength(nsISVGGlyphFragmentNode* node,
+                               PRUint32 charnum,
+                               PRUint32 nchars,
+                               float *_retval)
+{
+  float length = 0.0;
+  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+  
+  while (fragment && nchars) {
+    PRUint32 count = fragment->GetNumberOfChars();
+    if (count > charnum) {
+      // query the renderer metrics for the length of the substring in each fragment
+      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+      if (!metrics) return NS_ERROR_FAILURE;
+      PRUint32 fragmentChars = PR_MIN(nchars, count);
+      float fragmentLength;
+      nsresult rv = metrics->GetSubStringLength(charnum,
+                                                fragmentChars,
+                                                &fragmentLength);
+      if (NS_FAILED(rv)) break;
+      length += fragmentLength;
+      nchars -= fragmentChars;
+      if (nchars == 0) break;
+    }
+    charnum -= PR_MIN(charnum, count);
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  // substring too long
+  if (nchars != 0) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  *_retval = length;
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetStartPositionOfChar(nsISVGGlyphFragmentNode* node,
+                                   PRUint32 charnum,
+                                   nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
+  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // query the renderer metrics for the start position of the character
+  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+  if (!metrics) return NS_ERROR_FAILURE;
+  nsresult rv = metrics->GetStartPositionOfChar(charnum-fragment->GetCharNumberOffset(),
+                                                _retval);
+  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // offset the bounds by the position of the fragment:
+  float x,y;
+  (*_retval)->GetX(&x);
+  (*_retval)->GetY(&y);
+  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
+  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
+
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetEndPositionOfChar(nsISVGGlyphFragmentNode* node,
+                                 PRUint32 charnum,
+                                 nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
+  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // query the renderer metrics for the end position of the character
+  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+  if (!metrics) return NS_ERROR_FAILURE;
+  nsresult rv = metrics->GetEndPositionOfChar(charnum-fragment->GetCharNumberOffset(),
+                                              _retval);
+  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // offset the bounds by the position of the fragment:
+  float x,y;
+  (*_retval)->GetX(&x);
+  (*_retval)->GetY(&y);
+  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
+  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
+
+  return NS_OK;
+}
+
+nsresult
 nsSVGUtils::GetExtentOfChar(nsISVGGlyphFragmentNode* node,
                             PRUint32 charnum,
                             nsIDOMSVGRect **_retval)
@@ -272,7 +407,7 @@ nsSVGUtils::GetExtentOfChar(nsISVGGlyphFragmentNode* node,
   // query the renderer metrics for the bounds of the character
   nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
   fragment->GetGlyphMetrics(getter_AddRefs(metrics));
-  if (!metrics) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (!metrics) return NS_ERROR_FAILURE;
   nsresult rv = metrics->GetExtentOfChar(charnum-fragment->GetCharNumberOffset(),
                                          _retval);
   if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -281,9 +416,68 @@ nsSVGUtils::GetExtentOfChar(nsISVGGlyphFragmentNode* node,
   float x,y;
   (*_retval)->GetX(&x);
   (*_retval)->GetY(&y);
-  (*_retval)->SetX(x+fragment->GetGlyphPositionX());
-  (*_retval)->SetY(y+fragment->GetGlyphPositionY());
+  (*_retval)->SetX(x + fragment->GetGlyphPositionX());
+  (*_retval)->SetY(y + fragment->GetGlyphPositionY());
 
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetRotationOfChar(nsISVGGlyphFragmentNode* node,
+                              PRUint32 charnum,
+                              float *_retval)
+{
+  nsISVGGlyphFragmentLeaf *fragment = GetGlyphFragmentAtCharNum(node, charnum);
+  if (!fragment) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  // query the renderer metrics for the rotation of the character
+  nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+  fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+  if (!metrics) return NS_ERROR_FAILURE;
+  nsresult rv = metrics->GetRotationOfChar(charnum-fragment->GetCharNumberOffset(),
+                                           _retval);
+  if (NS_FAILED(rv)) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+  return NS_OK;
+}
+
+nsresult
+nsSVGUtils::GetCharNumAtPosition(nsISVGGlyphFragmentNode* node,
+                                     nsIDOMSVGPoint *point,
+                                     PRInt32 *_retval)
+{
+  PRInt32 index = -1;
+  nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
+
+  while (fragment) {
+    if (fragment->GetNumberOfChars() > 0) {
+      // query the renderer metrics for the character position
+      nsCOMPtr<nsISVGRendererGlyphMetrics> metrics;
+      fragment->GetGlyphMetrics(getter_AddRefs(metrics));
+      if (!metrics) return NS_ERROR_FAILURE;
+
+      // subtract the fragment offset from the position:
+      float x,y;
+      point->GetX(&x);
+      point->GetY(&y);
+
+      nsCOMPtr<nsIDOMSVGPoint> position;
+      NS_NewSVGPoint(getter_AddRefs(position),
+                     x - fragment->GetGlyphPositionX(),
+                     y - fragment->GetGlyphPositionY());
+      if (!position)
+        return NS_ERROR_FAILURE;
+
+      nsresult rv = metrics->GetCharNumAtPosition(position, &index);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+      // Multiple characters may match, we must return the last one
+      // so no break here
+    }
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  *_retval = index;
   return NS_OK;
 }
 
@@ -418,11 +612,11 @@ nsSVGUtils::GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
 {
   nsISVGGlyphFragmentLeaf *fragment = node->GetFirstGlyphFragment();
   
-  while(fragment) {
+  while (fragment) {
     PRUint32 count = fragment->GetNumberOfChars();
-    if (count>charnum)
+    if (count > charnum)
       return fragment;
-    charnum-=count;
+    charnum -= count;
     fragment = fragment->GetNextGlyphFragment();
   }
 

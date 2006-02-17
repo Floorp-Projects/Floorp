@@ -298,11 +298,83 @@ nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
 //----------------------------------------------------------------------
 // nsISVGTextContentMetrics
 NS_IMETHODIMP
+nsSVGTSpanFrame::GetNumberOfChars(PRInt32 *_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  if (node)
+    return nsSVGUtils::GetNumberOfChars(node, _retval);
+
+  *_retval = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetComputedTextLength(float *_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  if (node)
+    return nsSVGUtils::GetComputedTextLength(node, _retval);
+
+  *_retval = 0.0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  if (node)
+    return nsSVGUtils::GetSubStringLength(node, charnum, nchars, _retval);
+
+  *_retval = 0.0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  return nsSVGUtils::GetStartPositionOfChar(node, charnum, _retval);
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  return nsSVGUtils::GetEndPositionOfChar(node, charnum, _retval);
+}
+
+NS_IMETHODIMP
 nsSVGTSpanFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
   if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
   return nsSVGUtils::GetExtentOfChar(node, charnum, _retval);
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+  if (!node) return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  return nsSVGUtils::GetRotationOfChar(node, charnum, _retval);
+}
+
+NS_IMETHODIMP
+nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+{
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  if (node)
+    return nsSVGUtils::GetCharNumAtPosition(node, point, _retval);
+
+  *_retval = -1;
+  return NS_OK;
 }
 
 

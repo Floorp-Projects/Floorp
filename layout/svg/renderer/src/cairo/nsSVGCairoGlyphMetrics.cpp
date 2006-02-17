@@ -47,9 +47,11 @@
 #include "nsISVGCairoGlyphMetrics.h"
 #include "nsSVGCairoGlyphMetrics.h"
 #include "nsIDOMSVGMatrix.h"
+#include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGRect.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
+#include "nsSVGUtils.h"
 #include <cairo.h>
 
 extern cairo_surface_t *gSVGCairoDummySurface;
@@ -175,47 +177,310 @@ nsSVGCairoGlyphMetrics::GetAdvance(float *aAdvance)
 }
 
 
+/** Implements float getComputedTextLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetComputedTextLength(float *_retval)
+{
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  SelectFont(mCT);
+
+  cairo_text_extents_t extent;
+  cairo_text_extents(mCT,
+                     NS_ConvertUTF16toUTF8(text).get(),
+                     &extent);
+
+  *_retval = abs(extent.x_advance) + abs(extent.y_advance);
+
+  return NS_OK;
+}
+
+/** Implements float getSubStringLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+{
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  SelectFont(mCT);
+
+  cairo_text_extents_t extent;
+  cairo_text_extents(mCT,
+                     NS_ConvertUTF16toUTF8(Substring(text, charnum, nchars)).get(),
+                     &extent);
+
+  *_retval = abs(extent.x_advance) + abs(extent.y_advance);
+
+  return NS_OK;
+}
+
+/** Implements nsIDOMSVGRect getStartPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  nsCOMPtr<nsIDOMSVGPoint> point = do_CreateInstance(NS_SVGPOINT_CONTRACTID);
+
+  NS_ASSERTION(point, "could not create point");
+  if (!point)
+    return NS_ERROR_FAILURE;
+
+  nsSVGCharacterPosition *cp;
+
+  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+    return NS_ERROR_FAILURE;
+
+  SelectFont(mCT);
+
+  if (cp) {
+    point->SetX(cp[charnum].x);
+    point->SetY(cp[charnum].y);
+
+    delete [] cp;
+  } else {
+    if (charnum > 0) {
+      cairo_text_extents_t extent;
+
+      cairo_text_extents(mCT,
+                         NS_ConvertUTF16toUTF8(Substring(text,
+                                                         0,
+                                                         charnum)).get(),
+                         &extent);
+
+      point->SetX(extent.x_advance);
+      point->SetY(extent.y_advance);
+    } else {
+      point->SetX(0.0);
+      point->SetY(0.0);
+    }
+  }
+
+  *_retval = point;
+  NS_ADDREF(*_retval);
+  
+  return NS_OK;
+}
+
+/** Implements nsIDOMSVGRect getEndPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  nsCOMPtr<nsIDOMSVGPoint> point = do_CreateInstance(NS_SVGPOINT_CONTRACTID);
+
+  NS_ASSERTION(point, "could not create point");
+  if (!point)
+    return NS_ERROR_FAILURE;
+
+  nsSVGCharacterPosition *cp;
+  
+  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+    return NS_ERROR_FAILURE;
+
+  SelectFont(mCT);
+
+  if (cp) {
+    cairo_text_extents_t extent;
+
+    cairo_text_extents(mCT, 
+                       NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
+                       &extent);
+
+    float s = sin(cp[charnum].angle);
+    float c = cos(cp[charnum].angle);
+
+    point->SetX(cp[charnum].x + extent.x_advance * c - extent.y_advance * s);
+    point->SetY(cp[charnum].y + extent.y_advance * c + extent.x_advance * s);
+
+    delete [] cp;
+  } else {
+    cairo_text_extents_t extent;
+
+    cairo_text_extents(mCT, 
+                       NS_ConvertUTF16toUTF8(Substring(text, 0, charnum + 1)).get(),
+                       &extent);
+
+    point->SetX(extent.x_advance);
+    point->SetY(extent.y_advance);
+  }
+
+  *_retval = point;
+  NS_ADDREF(*_retval);
+  
+  return NS_OK;
+}
+
 /** Implements nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
 NS_IMETHODIMP
 nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
 
-  cairo_text_extents_t preceding_extent, charnum_extent;
-
   nsAutoString text;
   mSource->GetCharacterData(text);
-
-  SelectFont(mCT);
-  if (charnum > 0) {
-    cairo_text_extents(mCT,
-                       NS_ConvertUTF16toUTF8(Substring(text,
-                                                      0,
-                                                      charnum)).get(),
-                       &preceding_extent);
-  } else {
-    preceding_extent.x_advance = 0.0;
-    preceding_extent.y_advance = 0.0;
-  }
-  cairo_text_extents(mCT,
-                     NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
-                     &charnum_extent);
 
   nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
 
   NS_ASSERTION(rect, "could not create rect");
-  if (!rect) return NS_ERROR_FAILURE;
+  if (!rect) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // add the space taken up by the text which comes before charnum
-  // to the position of the charnum character
-  rect->SetX(preceding_extent.x_advance + charnum_extent.x_bearing);
-  rect->SetY(preceding_extent.y_advance + charnum_extent.y_bearing);
-  rect->SetWidth(charnum_extent.width);
-  rect->SetHeight(charnum_extent.height);
+  nsSVGCharacterPosition *cp;
+
+  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+    return NS_ERROR_FAILURE;
+
+  SelectFont(mCT);
+
+  cairo_text_extents_t extent;
+  cairo_text_extents(mCT,
+                     NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
+                     &extent);
+
+  if (cp) {
+    cairo_matrix_t matrix;
+    cairo_get_matrix(mCT, &matrix);
+    cairo_new_path(mCT);
+    cairo_move_to(mCT, cp[charnum].x, cp[charnum].y);
+    cairo_rotate(mCT, cp[charnum].angle);
+
+    delete [] cp;
+
+    cairo_rel_move_to(mCT, extent.x_bearing, extent.y_bearing);
+    cairo_rel_line_to(mCT, extent.width, 0);
+    cairo_rel_line_to(mCT, 0, extent.height);
+    cairo_rel_line_to(mCT, -extent.width, 0);
+    cairo_close_path(mCT);
+
+    double xmin, ymin, xmax, ymax;
+
+    cairo_fill_extents(mCT, &xmin, &ymin, &xmax, &ymax);
+    cairo_user_to_device(mCT, &xmin, &ymin);
+    cairo_user_to_device(mCT, &xmax, &ymax);
+
+    cairo_set_matrix(mCT, &matrix);
+
+    rect->SetX(xmin);
+    rect->SetY(ymin);
+    rect->SetWidth(xmax - xmin);
+    rect->SetHeight(ymax - ymin);
+  } else {
+    cairo_text_extents_t precedingExtent;
+
+    if (charnum > 0) {
+      cairo_text_extents(mCT,
+                         NS_ConvertUTF16toUTF8(Substring(text,
+                                                         0,
+                                                         charnum)).get(),
+                         &precedingExtent);
+    } else {
+      precedingExtent.x_advance = 0.0;
+      precedingExtent.y_advance = 0.0;
+    }
+    // add the space taken up by the text which comes before charnum
+    // to the position of the charnum character
+    rect->SetX(precedingExtent.x_advance + extent.x_bearing);
+    rect->SetY(precedingExtent.y_advance + extent.y_bearing);
+    rect->SetWidth(extent.width);
+    rect->SetHeight(extent.height);
+  }
 
   *_retval = rect;
   NS_ADDREF(*_retval);
-  
+
+  return NS_OK;
+}
+
+/** Implements float getRotationOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
+{
+  const double radPerDeg = M_PI/180.0;
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  nsSVGCharacterPosition *cp;
+
+  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+    return NS_ERROR_FAILURE;
+
+  if (cp) {
+      *_retval = cp[charnum].angle / radPerDeg;
+      delete [] cp;
+  } else {
+      *_retval = 0.0;
+  }
+  return NS_OK;
+}
+
+/** Implements long GetCharNumAtPosition(in nsIDOMSVGPoint point); */
+NS_IMETHODIMP
+nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+{
+  float x,y;
+  point->GetX(&x);
+  point->GetY(&y);
+
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  nsSVGCharacterPosition *cp;
+
+  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+    return NS_ERROR_FAILURE;
+
+  for (PRUint32 charnum = 0; charnum < text.Length(); charnum++) {
+
+    cairo_matrix_t matrix;
+    cairo_get_matrix(mCT, &matrix);
+    cairo_new_path(mCT);
+
+    if (cp) {
+      cairo_move_to(mCT, cp[charnum].x, cp[charnum].y);
+      cairo_rotate(mCT, cp[charnum].angle);
+    } else {
+      if (charnum > 0) {
+        cairo_text_extents_t extent;
+
+        cairo_text_extents(mCT,
+                           NS_ConvertUTF16toUTF8(Substring(text,
+                                                           0,
+                                                           charnum)).get(),
+                           &extent);
+        cairo_move_to(mCT, extent.x_advance, extent.y_advance);
+      } else {
+        cairo_move_to(mCT, 0.0, 0.0);
+      }
+    }
+    cairo_text_extents_t extent;
+    cairo_text_extents(mCT,
+                       NS_ConvertUTF16toUTF8(Substring(text, charnum, 1)).get(),
+                       &extent);
+
+    cairo_rel_move_to(mCT, extent.x_bearing, extent.y_bearing);
+    cairo_rel_line_to(mCT, extent.width, 0);
+    cairo_rel_line_to(mCT, 0, extent.height);
+    cairo_rel_line_to(mCT, -extent.width, 0);
+    cairo_close_path(mCT);
+
+    cairo_identity_matrix(mCT);
+    if (cairo_in_fill(mCT, x, y))
+      *_retval = charnum;
+
+    cairo_set_matrix(mCT, &matrix);
+  }
+  delete [] cp;
   return NS_OK;
 }
 

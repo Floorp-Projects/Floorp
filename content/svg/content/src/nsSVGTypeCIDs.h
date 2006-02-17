@@ -46,4 +46,11 @@
 #define NS_SVGRECT_CONTRACTID \
 "@mozilla.org/svg/rect;1"
 
+// {F1950C48-C095-4acd-954A-9A55410E54A3}
+#define NS_SVGPOINT_CID \
+{ 0xf1950c48, 0xc095, 0x4acd, { 0x95, 0x4a, 0x9a, 0x55, 0x41, 0xe, 0x54, 0xa3 } }
+
+#define NS_SVGPOINT_CONTRACTID \
+"@mozilla.org/svg/point;1"
+
 #endif // __NS_SVGTYPECIDS_H__

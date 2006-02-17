@@ -40,10 +40,14 @@
 #include "nsIDOMSVGTextPathElement.h"
 #include "nsSVGLength.h"
 #include "nsIDOMSVGURIReference.h"
+#include "nsISVGTextContentMetrics.h"
+#include "nsIFrame.h"
+#include "nsIDocument.h"
 #include "nsSVGAnimatedLength.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGEnum.h"
+#include "nsDOMError.h"
 
 typedef nsSVGStylableElement nsSVGTextPathElementBase;
 
@@ -78,6 +82,8 @@ public:
 protected:
   // nsSVGElement overrides
   virtual PRBool IsEventName(nsIAtom* aName);
+
+  already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
 
   nsCOMPtr<nsIDOMSVGAnimatedLength> mStartOffset;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMethod;
@@ -237,82 +243,119 @@ NS_IMETHODIMP nsSVGTextPathElement::GetSpacing(nsIDOMSVGAnimatedEnumeration * *a
 /* readonly attribute nsIDOMSVGAnimatedLength textLength; */
 NS_IMETHODIMP nsSVGTextPathElement::GetTextLength(nsIDOMSVGAnimatedLength * *aTextLength)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGTextPathElement::GetTextLength!");
   return NS_ERROR_UNEXPECTED;
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration lengthAdjust; */
 NS_IMETHODIMP nsSVGTextPathElement::GetLengthAdjust(nsIDOMSVGAnimatedEnumeration * *aLengthAdjust)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGTextPathElement::GetLengthAdjust!");
   return NS_ERROR_UNEXPECTED;
 }
 
 /* long getNumberOfChars (); */
 NS_IMETHODIMP nsSVGTextPathElement::GetNumberOfChars(PRInt32 *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (metrics)
+    return metrics->GetNumberOfChars(_retval);
+
+  *_retval = 0;
+  return NS_OK;
 }
 
 /* float getComputedTextLength (); */
 NS_IMETHODIMP nsSVGTextPathElement::GetComputedTextLength(float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (metrics)
+    return metrics->GetComputedTextLength(_retval);
+
+  *_retval = 0.0;
+  return NS_OK;
 }
 
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP nsSVGTextPathElement::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (metrics)
+    return metrics->GetSubStringLength(charnum, nchars, _retval);
+
+  *_retval = 0.0;
+  return NS_OK;
 }
 
 /* nsIDOMSVGPoint getStartPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP nsSVGTextPathElement::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *_retval = nsnull;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (!metrics) return NS_ERROR_FAILURE;
+
+  return metrics->GetStartPositionOfChar(charnum, _retval);
 }
 
 /* nsIDOMSVGPoint getEndPositionOfChar (in unsigned long charnum); */
 NS_IMETHODIMP nsSVGTextPathElement::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *_retval = nsnull;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (!metrics) return NS_ERROR_FAILURE;
+
+  return metrics->GetEndPositionOfChar(charnum, _retval);
 }
 
 /* nsIDOMSVGRect getExtentOfChar (in unsigned long charnum); */
 NS_IMETHODIMP nsSVGTextPathElement::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *_retval = nsnull;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (!metrics) return NS_ERROR_FAILURE;
+
+  return metrics->GetExtentOfChar(charnum, _retval);
 }
 
 /* float getRotationOfChar (in unsigned long charnum); */
 NS_IMETHODIMP nsSVGTextPathElement::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  *_retval = 0.0;
+
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (!metrics) return NS_ERROR_FAILURE;
+
+  return metrics->GetRotationOfChar(charnum, _retval);
 }
 
 /* long getCharNumAtPosition (in nsIDOMSVGPoint point); */
 NS_IMETHODIMP nsSVGTextPathElement::GetCharNumAtPosition(nsIDOMSVGPoint *point,
-                                                      PRInt32 *_retval)
+                                                         PRInt32 *_retval)
 {
   // null check when implementing - this method can be used by scripts!
-  // if (!point)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  if (!point)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsISVGTextContentMetrics> metrics = GetTextContentMetrics();
+
+  if (metrics)
+    return metrics->GetCharNumAtPosition(point, _retval);
+
+  *_retval = -1;
+  return NS_OK;
 }
 
 /* void selectSubString (in unsigned long charnum, in unsigned long nchars); */
 NS_IMETHODIMP nsSVGTextPathElement::SelectSubString(PRUint32 charnum, PRUint32 nchars)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
+  NS_NOTYETIMPLEMENTED("nsSVGTextPathElement::SelectSubString!");
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -340,4 +383,33 @@ PRBool
 nsSVGTextPathElement::IsEventName(nsIAtom* aName)
 {
   return IsGraphicElementEventName(aName);
+}
+
+//----------------------------------------------------------------------
+// implementation helpers:
+
+already_AddRefed<nsISVGTextContentMetrics>
+nsSVGTextPathElement::GetTextContentMetrics()
+{
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    NS_ERROR("no document");
+    return nsnull;
+  }
+  
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell) {
+    NS_ERROR("no presshell");
+    return nsnull;
+  }
+
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+
+  if (!frame) {
+    return nsnull;
+  }
+  
+  nsISVGTextContentMetrics* metrics;
+  CallQueryInterface(frame, &metrics);
+  return metrics;
 }

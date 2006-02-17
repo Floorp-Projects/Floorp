@@ -46,6 +46,7 @@
 #include "float.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGRect.h"
+#include "nsIDOMSVGPoint.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 
@@ -152,6 +153,38 @@ nsSVGLibartGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
   return NS_OK;
 }
 
+/** Implements float getComputedTextLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetComputedTextLength(float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements float getSubStringLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements nsIDOMSVGRect getStartPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements nsIDOMSVGRect getEndPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /** Implements [noscript] nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
 NS_IMETHODIMP
 nsSVGLibartGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
@@ -172,6 +205,22 @@ nsSVGLibartGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retv
   NS_ADDREF(*_retval);
   
   return NS_OK;
+}
+
+/** Implements float getRotationOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements long GetCharNumAtPosition(in nsIDOMSVGPoint point); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+{
+  *_retval = -1;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /** Implements boolean update(in unsigned long updatemask); */
