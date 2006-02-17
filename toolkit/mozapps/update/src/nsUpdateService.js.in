@@ -880,7 +880,7 @@ function UpdateService() {
   try {
     gABI = gApp.XPCOMABI;
   }
-  catch {
+  catch (e) {
     LOG("UpdateService", "XPCOM ABI unknown: updates are not possible.");
   }
 
