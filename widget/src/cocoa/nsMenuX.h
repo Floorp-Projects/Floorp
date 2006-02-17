@@ -135,9 +135,6 @@ protected:
     void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* menuitemContent);
     void LoadSeparator(nsIContent* menuitemContent);
 
-    nsEventStatus HelpMenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                                    void* unused, void* aDocShell);
-
     NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 
 protected:
@@ -154,8 +151,6 @@ protected:
     PRInt16                     mMacMenuID;
     NSMenu*                     mMacMenu;               // strong ref, we own it
     MenuDelegate*               mMenuDelegate;          // strong ref, we keep this around to get events for us
-    PRInt16                     mHelpMenuOSItemsCount;
-    PRPackedBool                mIsHelpMenu;
     PRPackedBool                mIsEnabled;
     PRPackedBool                mDestroyHandlerCalled;
     PRPackedBool                mNeedsRebuild;
