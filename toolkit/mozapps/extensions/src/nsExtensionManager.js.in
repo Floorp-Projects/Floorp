@@ -1927,9 +1927,13 @@ var PendingOperations = {
    *          "id"            The GUID of the item.
    */
   addItem: function(opType, entry) {
-    if (!(opType in this._ops))
-      this._ops[opType] = [];
-    this._ops[opType].push(entry);
+    if (opType == OP_NONE)
+      this.clearOpsForItem(entry.id);
+    else {
+      if (!(opType in this._ops))
+        this._ops[opType] = [];
+      this._ops[opType].push(entry);
+    }
   },
   
   /**
@@ -1949,6 +1953,20 @@ var PendingOperations = {
   },
   
   /**
+   * Removes all Pending Operation for an item
+   * @param   id
+   *          The ID of the item to remove the entries for
+   */
+  clearOpsForItem: function(id) {
+    for (var opType in this._ops) {
+      for (var i = 0; i < this._ops[opType].length; ++i) {
+        if (this._ops[opType][i].id == id)
+          this._ops[opType].splice(i, 1);
+      }
+    }
+  },
+
+/**
    * Remove all Pending Operations of a certain type
    * @param   opType
    *          The type of Operation to remove all entries for
@@ -3074,9 +3092,7 @@ ExtensionManager.prototype = {
         // Look for extensions that need to be enabled.
         var items = PendingOperations.getOperations(OP_NEEDS_ENABLE);
         for (var i = items.length - 1; i >= 0; --i) {
-          var id = items[0].id;
-          ds.setItemProperty(id, EM_R("userDisabled"), null);
-          ds.setItemProperty(id, EM_R("appDisabled"), null);
+          var id = items[i].id;
           var installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
           PendingOperations.clearItem(OP_NEEDS_ENABLE, id);
@@ -3088,14 +3104,10 @@ ExtensionManager.prototype = {
         items = PendingOperations.getOperations(OP_NEEDS_DISABLE);
         for (i = items.length - 1; i >= 0; --i) {
           id = items[i].id;
-          // Only set the userDisabled property when the item's appDisabled
-          // property is not true since an item can't be disabled by the user
-          // when it is already disabled by the application.
-          if (ds.getItemProperty(id, "appDisabled") != "true")
-            ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
           installLocation = this.getInstallLocation(id);
           StartupCache.put(installLocation, id, OP_NONE, true);
           PendingOperations.clearItem(OP_NEEDS_DISABLE, id);
+          needsRestart = true;
         }
         PendingOperations.clearItems(OP_NEEDS_DISABLE);
 
@@ -3141,6 +3153,42 @@ ExtensionManager.prototype = {
           needsRestart = true;
         }
         PendingOperations.clearItems(OP_NEEDS_UNINSTALL);
+
+        // When there have been operations and all operations have completed.
+        if (PendingOperations.size == 0) {
+          // If there is updated app compatibility info update the data sources.
+          for (i = 0; i < updatedTargetAppInfos.length; ++i)
+            ds.updateTargetAppInfo(updatedTargetAppInfos[i].id,
+                                   updatedTargetAppInfos[i].minVersion,
+                                   updatedTargetAppInfos[i].maxVersion);
+
+          // Enumerate all items
+          var ctr = getContainer(ds, ds._itemRoot);
+          var elements = ctr.GetElements();
+          while (elements.hasMoreElements()) {
+            var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+
+            // The value of appDisabled is determined by an item being
+            // compatible and satisfying its dependencies.
+            id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
+            if (ds.getItemProperty(id, "compatible") == "true" &&
+                ds.getItemProperty(id, "satisfiesDependencies") == "true")
+              ds.setItemProperty(id, EM_R("appDisabled"), null);
+            else
+              ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
+
+            // The value of userDisabled is set based on the value being
+            // OP_NEEDS_ENABLE or OP_NEEDS_DISABLE. This allows us to have an
+            // item to be enabled by the app and disabled by the user during
+            // one restart.
+            var target = ds.GetTarget(itemResource, EM_R("userDisabled"), true);
+            var value = stringData(target);
+            if (value == OP_NEEDS_ENABLE)
+              ds.setItemProperty(id, EM_R("userDisabled"), null);
+            else if (value == OP_NEEDS_DISABLE)
+              ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
+          }
+        }
       }
       while (PendingOperations.size > 0);
       
@@ -3157,12 +3205,6 @@ ExtensionManager.prototype = {
       // not to do any extra startup checking next time round. 
       this._updateManifests(needsRestart);
 
-      // If there is updated app compatibility info update the data sources.
-      for (i = 0; i < updatedTargetAppInfos.length; ++i) {
-        ds.updateTargetAppInfo(updatedTargetAppInfos[i].id,
-                               updatedTargetAppInfos[i].minVersion,
-                               updatedTargetAppInfos[i].maxVersion);
-      }
     }
     catch (e) {
       LOG("ExtensionManager:_finishOperations - failure, catching exception - lineno: " +
@@ -4431,6 +4473,29 @@ ExtensionManager.prototype = {
   },
 
   /**
+   * Cancels a pending uninstall of an item
+   * @param   id
+   *          The ID of the item.
+   */
+  cancelUninstallItem: function(id) {
+    var ds = this.datasource;
+    var appDisabled = ds.getItemProperty(id, "appDisabled");
+    var userDisabled = ds.getItemProperty(id, "userDisabled");
+    if (appDisabled == "true" || appDisabled == OP_NONE && userDisabled == OP_NONE) {
+      this._setOp(id, OP_NONE);
+      this._notifyAction(id, EM_ITEM_CANCEL);
+    }
+    else if (appDisabled == OP_NEEDS_DISABLE || userDisabled == OP_NEEDS_DISABLE) {
+      this._setOp(id, OP_NEEDS_DISABLE);
+      this._notifyAction(id, EM_ITEM_DISABLED);
+    }
+    else if (appDisabled == OP_NEEDS_ENABLE || userDisabled == OP_NEEDS_ENABLE) {
+      this._setOp(id, OP_NEEDS_ENABLE);
+      this._notifyAction(id, EM_ITEM_ENABLED);
+    }
+  },
+
+  /**
    * Sets the pending operation for a visible item. 
    * @param   id
    *          The GUID of the item
@@ -4444,89 +4509,267 @@ ExtensionManager.prototype = {
     var ds = this.datasource;
     ds.updateProperty(id, "opType");
     ds.updateProperty(id, "updateable");
+    ds.updateProperty(id, "satisfiesDependencies");
     ds.updateProperty(id, "displayDescription");
     var restartRequired = this.installRequiresRestart(id, ds.getItemProperty(id, "type"))
+    this._updateDependentItemsForID(id);
     this._updateManifests(restartRequired);
   },
   
   /**
-   * Enables an item for the application (e.g. the item meets all requirements
-   * for it to be enabled). If the item is not disabled by the user this will
-   * also set the needs-enable operation for the next restart.
+   * Note on appDisabled and userDisable property arcs.
+   * The appDisabled and userDisabled RDF property arcs are used to store
+   * the pending operation for app disabling and user disabling for an item as
+   * well as the user and app disabled status after the pending operation has
+   * been completed upon restart. When the appDisabled value changes the value
+   * of userDisabled is reset to prevent the state of widgets and status
+   * messages from being in an incorrect state.
+   */
+
+  /**
+   * Enables an item for the application (e.g. the item satisfies all
+   * requirements like app compatibility for it to be enabled). The appDisabled
+   * property arc will be removed if the item will be app disabled on next
+   * restart to cancel the app disabled operation for the item otherwise the
+   * property value will be set to OP_NEEDS_ENABLE. The item's pending
+   * operations are then evaluated in order to set the operation to perform
+   * and notify the observers if the operation has been changed.
+   * See "Note on appDisabled and userDisable property arcs" above.
    * @param   id
    *          The ID of the item to be enabled by the application.
    */
   _appEnableItem: function(id) {
     var ds = this.datasource;
-    if (ds.getItemProperty(id, "userDisabled") != "true") {
-      this._setOp(id, OP_NEEDS_ENABLE);
-      this._notifyAction(id, EM_ITEM_ENABLED);
+    var appDisabled = ds.getItemProperty(id, "appDisabled");
+    if (appDisabled == OP_NONE || appDisabled == OP_NEEDS_ENABLE)
+      return;
+
+    var opType = ds.getItemProperty(id, "opType");
+    var userDisabled = ds.getItemProperty(id, "userDisabled");
+    // reset user disabled if it has a pending operation to prevent the ui
+    // state from getting confused as to an item's current state.
+    if (userDisabled == OP_NEEDS_DISABLE)
+      ds.setItemProperty(id, EM_R("userDisabled"), null);
+    else if (userDisabled == OP_NEEDS_ENABLE)
+      ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
+
+    if (appDisabled == OP_NEEDS_DISABLE)
+      ds.setItemProperty(id, EM_R("appDisabled"), null);
+    else if (appDisabled == "true")
+      ds.setItemProperty(id, EM_R("appDisabled"), EM_L(OP_NEEDS_ENABLE));
+
+    // Don't set a new operation when there is a pending uninstall operation.
+    if (opType == OP_NEEDS_UNINSTALL) {
+      this._updateDependentItemsForID(id);
+      return;
+    }
+
+    var operation, action;
+    // if this item is already enabled or user disabled don't set a pending
+    // operation - instead immediately enable it and reset the operation type
+    // if needed.
+    if (appDisabled == OP_NEEDS_DISABLE || appDisabled == OP_NONE ||
+        userDisabled == "true") {
+      if (opType != OP_NONE) {
+        operation = OP_NONE;
+        action = EM_ITEM_CANCEL;
+      }
     }
     else {
-      ds.setItemProperty(id, EM_R("appDisabled"), null);
-      ds.updateProperty(id, "compatible");
+      if (opType != OP_NEEDS_ENABLE) {
+        operation = OP_NEEDS_ENABLE;
+        action = EM_ITEM_ENABLED;
+      }
+    }
+
+    if (action) {
+      this._setOp(id, operation);
+      this._notifyAction(id, action);
+    }
+    else {
+      ds.updateProperty(id, "satisfiesDependencies");
       ds.updateProperty(id, "displayDescription");
+      this._updateDependentItemsForID(id);
     }
   },
 
   /**
-   * Disables an item for the application (e.g. the item does not meets all
-   * requirements like app compatibility for it to be enabled). If the item is
-   * not disabled by the user this will also set the needs-disable operation
-   * for the next restart.
+   * Disables an item for the application (e.g. the item doesn't satisfy all
+   * requirements like app compatibility for it to be enabled). The appDisabled
+   * property arc will be set to true if the item will be app enabled on next
+   * restart to cancel the app enabled operation for the item otherwise the
+   * property value will be set to OP_NEEDS_DISABLE. The item's pending
+   * operations are then evaluated in order to set the operation to perform
+   * and notify the observers if the operation has been changed.
+   * See "Note on appDisabled and userDisable property arcs" above.
    * @param   id
    *          The ID of the item to be disabled by the application.
    */
   _appDisableItem: function(id) {
     var ds = this.datasource;
-    ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
-    if (ds.getItemProperty(id, "userDisabled") != "true") {
-      this._setOp(id, OP_NEEDS_DISABLE);
-      this._notifyAction(id, EM_ITEM_DISABLED);
+    var appDisabled = ds.getItemProperty(id, "appDisabled");
+    if (appDisabled == "true" || appDisabled == OP_NEEDS_DISABLE)
+      return;
+
+    var opType = ds.getItemProperty(id, "opType");
+    var userDisabled = ds.getItemProperty(id, "userDisabled");
+
+    // reset user disabled if it has a pending operation to prevent the ui
+    // state from getting confused as to an item's current state.
+    if (userDisabled == OP_NEEDS_DISABLE)
+      ds.setItemProperty(id, EM_R("userDisabled"), null);
+    else if (userDisabled == OP_NEEDS_ENABLE)
+      ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
+
+    if (userDisabled == OP_NEEDS_ENABLE || ds.getItemProperty(id, "userDisabled") == "true")
+      ds.setItemProperty(id, EM_R("appDisabled"), EM_L("true"));
+    else if (appDisabled == OP_NONE)
+      ds.setItemProperty(id, EM_R("appDisabled"), EM_L(OP_NEEDS_DISABLE));
+
+    // Don't set a new operation when there is a pending uninstall operation.
+    if (opType == OP_NEEDS_UNINSTALL) {
+      this._updateDependentItemsForID(id);
+      return;
+    }
+
+    var operation, action;
+    // if this item is already disabled don't set a pending operation - instead
+    // immediately disable it and reset the operation type if needed.
+    if (appDisabled == OP_NEEDS_ENABLE || appDisabled == "true" ||
+        userDisabled == OP_NEEDS_ENABLE || userDisabled == "true") {
+      if (opType != OP_NONE) {
+        operation = OP_NONE;
+        action = EM_ITEM_CANCEL;
+      }
+    }
+    else {
+      if (opType != OP_NEEDS_DISABLE) {
+        operation = OP_NEEDS_DISABLE;
+        action = EM_ITEM_DISABLED;
+      }
+    }
+
+    if (action) {
+      this._setOp(id, operation);
+      this._notifyAction(id, action);
+    }
+    else {
+      ds.updateProperty(id, "satisfiesDependencies");
+      ds.updateProperty(id, "displayDescription");
+      this._updateDependentItemsForID(id);
     }
   },
     
   /**
    * Sets an item to be enabled by the user. If the item is already enabled this
-   * clears the needs-enable operation for the next restart. If the item's
-   * operation is set to needs-uninstall this will cancel the uninstall and set
-   * the needs-enable operation for the next restart if the item is disabled.
-   * 
+   * clears the needs-enable operation for the next restart.
+   * See "Note on appDisabled and userDisable property arcs" above.
    * @param   id
    *          The ID of the item to be enabled by the user.
    */
   enableItem: function(id) {
     var ds = this.datasource;
-    if (ds.getItemProperty(id, "userDisabled") == "true" ||
-        ds.getItemProperty(id, "appDisabled") == "true" &&
-        ds.getItemProperty(id, "compatible") == "true") {
-      this._setOp(id, OP_NEEDS_ENABLE);
-      this._notifyAction(id, EM_ITEM_ENABLED);
+    var opType = ds.getItemProperty(id, "opType");
+    var appDisabled = ds.getItemProperty(id, "appDisabled");
+    var userDisabled = ds.getItemProperty(id, "userDisabled");
+
+    var operation, action;
+    // if this item is already enabled don't set a pending operation - instead
+    // immediately enable it and reset the operation type if needed.
+    if (appDisabled == OP_NONE &&
+        userDisabled == OP_NEEDS_DISABLE || userDisabled == OP_NONE) {
+      if (userDisabled == OP_NEEDS_DISABLE)
+        ds.setItemProperty(id, EM_R("userDisabled"), null);
+      if (opType != OP_NONE) {
+        operation = OP_NONE;
+        action = EM_ITEM_CANCEL;
+      }
     }
     else {
-      this._setOp(id, OP_NONE);
-      this._notifyAction(id, EM_ITEM_CANCEL);
+      if (userDisabled == "true")
+        ds.setItemProperty(id, EM_R("userDisabled"), EM_L(OP_NEEDS_ENABLE));
+      if (opType != OP_NEEDS_ENABLE) {
+        operation = OP_NEEDS_ENABLE;
+        action = EM_ITEM_ENABLED;
+      }
+    }
+
+    if (action) {
+      this._setOp(id, operation);
+      this._notifyAction(id, action);
+    }
+    else {
+      ds.updateProperty(id, "satisfiesDependencies");
+      ds.updateProperty(id, "displayDescription");
+      this._updateDependentItemsForID(id);
     }
   },
   
   /**
    * Sets an item to be disabled by the user. If the item is already disabled
    * this clears the needs-disable operation for the next restart.
+   * See "Note on appDisabled and userDisable property arcs" above.
    * @param   id
    *          The ID of the item to be disabled by the user.
    */
   disableItem: function(id) {
     var ds = this.datasource;
-    if (ds.getItemProperty(id, "userDisabled") == "true") {
-      this._setOp(id, OP_NONE);
-      this._notifyAction(id, EM_ITEM_CANCEL);
+    var opType = ds.getItemProperty(id, "opType");
+    var appDisabled = ds.getItemProperty(id, "appDisabled");
+    var userDisabled = ds.getItemProperty(id, "userDisabled");
+
+    var operation, action;
+    // if this item is already disabled don't set a pending operation - instead
+    // immediately disable it and reset the operation type if needed.
+    if (userDisabled == OP_NEEDS_ENABLE || userDisabled == "true" ||
+        appDisabled == OP_NEEDS_ENABLE) {
+      if (userDisabled != "true")
+        ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
+      if (opType != OP_NONE) {
+        operation = OP_NONE;
+        action = EM_ITEM_CANCEL;
+      }
     }
     else {
-      this._setOp(id, OP_NEEDS_DISABLE);
-      this._notifyAction(id, EM_ITEM_DISABLED);
+      if (userDisabled == OP_NONE)
+        ds.setItemProperty(id, EM_R("userDisabled"), EM_L(OP_NEEDS_DISABLE));
+      if (opType != OP_NEEDS_DISABLE) {
+        operation = OP_NEEDS_DISABLE;
+        action = EM_ITEM_DISABLED;
+      }
+    }
+
+    if (action) {
+      this._setOp(id, operation);
+      this._notifyAction(id, action);
+    }
+    else {
+      ds.updateProperty(id, "satisfiesDependencies");
+      ds.updateProperty(id, "displayDescription");
+      this._updateDependentItemsForID(id);
     }
   },
   
+  /**
+   * Sets an item's dependent items disabled state for the app based on whether
+   * its dependencies are met and the item is compatible.
+   * @param   id
+   *          The ID of the item whose dependent items will be checked
+   */
+  _updateDependentItemsForID: function(id) {
+    var ds = this.datasource;
+    var dependentItems = this.getDependentItemListForID(id, true, { });
+    for (var i = 0; i < dependentItems.length; ++i) {
+      var dependentID = dependentItems[i].id;
+      ds.updateProperty(dependentID, "satisfiesDependencies");
+      if (ds.getItemProperty(dependentID, "satisfiesDependencies") == "true" &&
+          ds.getItemProperty(dependentID, "compatible") == "true")
+        this._appEnableItem(dependentID);
+      else
+        this._appDisableItem(dependentID);
+    }
+  },
+
   /**
    * Notify observers of a change to an item that has been requested by the
    * user. 
@@ -4579,6 +4822,22 @@ ExtensionManager.prototype = {
     return this.datasource.getItemForID(id);
   },
   
+  /**
+   * Retrieves a list of installed nsIUpdateItems of items that are dependent
+   * on another item.
+   * @param   id
+   *          The ID of the item that other items depend on.
+   * @param   includeDisabled
+   *          Whether to include disabled items in the set returned.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of installed nsIUpdateItems that depend on the item
+   *          specified by the id parameter.
+   */
+  getDependentItemListForID: function(id, includeDisabled, countRef) {
+    return this.datasource.getDependentItemListForID(id, includeDisabled, countRef);
+  },
+
   /**
    * Retrieves a list of nsIUpdateItems of items matching the specified type.
    * @param   type
@@ -4935,6 +5194,7 @@ ExtensionManager.prototype = {
    */
   QueryInterface: function(iid) {
     if (!iid.equals(Components.interfaces.nsIExtensionManager) &&
+        !iid.equals(Components.interfaces.nsIExtensionManager2) &&
         !iid.equals(Components.interfaces.nsITimerCallback) &&
         !iid.equals(Components.interfaces.nsIObserver) &&
         !iid.equals(Components.interfaces.nsISupports))
@@ -5645,6 +5905,58 @@ ExtensionsDataSource.prototype = {
   _defaultTheme : null,
   
   /**
+   * Determines if an item's dependencies are satisfied. An item's dependencies
+   * are satisifed when all items specified in the item's em:requires arc are
+   * installed, enabled, and the version is compatible based on the em:requires
+   * minVersion and maxVersion.
+   * @param   id
+   *          The ID of the item
+   * @returns true if the item's dependencies are satisfied.
+   *          false if the item's dependencies are not satisfied.
+   */
+  satisfiesDependencies: function(id) {
+    var ds = this._inner;
+    var itemResource = getResourceForID(id);
+    var targets = ds.GetTargets(itemResource, EM_R("requires"), true);
+    if (!targets.hasMoreElements())
+      return true;
+
+    getVersionChecker();
+    var idRes = EM_R("id");
+    var minVersionRes = EM_R("minVersion");
+    var maxVersionRes = EM_R("maxVersion");
+    while (targets.hasMoreElements()) {
+      var target = targets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var dependencyID = stringData(ds.GetTarget(target, idRes, true));
+      var version = null;
+      version = this.getItemProperty(dependencyID, "version");
+      if (version) {
+        var opType = this.getItemProperty(dependencyID, "opType");
+        if (opType ==  OP_NEEDS_DISABLE || opType == OP_NEEDS_UNINSTALL)
+          return false;
+
+        if (this.getItemProperty(dependencyID, "userDisabled") == "true" ||
+            this.getItemProperty(dependencyID, "appDisabled") == "true" ||
+            this.getItemProperty(dependencyID, "userDisabled") == OP_NEEDS_DISABLE ||
+            this.getItemProperty(dependencyID, "appDisabled") == OP_NEEDS_DISABLE)
+          return false;
+
+        var minVersion = stringData(ds.GetTarget(target, minVersionRes, true));
+        var maxVersion = stringData(ds.GetTarget(target, maxVersionRes, true));
+        var compatible = (gVersionChecker.compare(version, minVersion) >= 0 &&
+                          gVersionChecker.compare(version, maxVersion) <= 0);
+        if (!compatible)
+          return false;
+      }
+      else {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
    * Determine if an item is compatible
    * @param   datasource
    *          The datasource to inspect for compatibility - can be the main
@@ -5753,6 +6065,43 @@ ExtensionsDataSource.prototype = {
       var type = this.getItemProperty(eID, "type");
       if (type != -1 && type & desiredType)
         items.push(this.getItemForID(eID));
+    }
+    countRef.value = items.length;
+    return items;
+  },
+
+  /**
+   * Retrieves a list of installed nsIUpdateItems of items that are dependent
+   * on another item.
+   * @param   id
+   *          The ID of the item that other items depend on.
+   * @param   includeDisabled
+   *          Whether to include disabled items in the set returned.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of installed nsIUpdateItems that depend on the item
+   *          specified by the id parameter.
+   */
+  getDependentItemListForID: function(id, includeDisabled, countRef) {
+    var items = [];
+    var ds = this._inner;
+    var ctr = getContainer(this, this._itemRoot);
+    var elements = ctr.GetElements();
+    while (elements.hasMoreElements()) {
+      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var dependentID = stripPrefix(e.Value, PREFIX_ITEM_URI);
+      var targets = ds.GetTargets(e, EM_R("requires"), true);
+      var idRes = EM_R("id");
+      while (targets.hasMoreElements()) {
+        var target = targets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var dependencyID = stringData(ds.GetTarget(target, idRes, true));
+        if (dependencyID == id) {
+          if (!includeDisabled && this.getItemProperty(dependentID, "disabled") == "true")
+            continue;
+          items.push(this.getItemForID(dependentID));
+          break;
+        }
+      }
     }
     countRef.value = items.length;
     return items;
@@ -6686,6 +7035,18 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
+   * Get the em:satisfiesDependencies property - literal string "false" for
+   * dependencies not satisfied (e.g. dependency disabled, incorrect version,
+   * not installed etc.), and literal string "true" for dependencies satisfied.
+   */
+  _rdfGet_satisfiesDependencies: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if (this.satisfiesDependencies(id))
+      return EM_L("true");
+    return EM_L("false");
+  },
+
+  /**
    * Get the em:displayDescription property (description that is displayed 
    * in the UI - not always the info description of the item - sometimes
    * a message like "will be uninstalled after restart" etc)
@@ -6698,8 +7059,10 @@ ExtensionsDataSource.prototype = {
     var opType = this.getItemProperty(id, "opType");
     
     function getLiteral(key, strings) {
-      return EM_L(extensionsStrings.formatStringFromName(key, 
-                  strings, strings.length));
+      if (strings)
+        return EM_L(extensionsStrings.formatStringFromName(key, 
+                    strings, strings.length));
+      return EM_L(extensionsStrings.GetStringFromName(key));
     }
     if (id in this._updateURLs && this._updateURLs[id]) {
       switch (this._updateURLs[id]) {
@@ -6717,7 +7080,7 @@ ExtensionsDataSource.prototype = {
       case nsIAddonUpdateCheckListener.STATUS_DISABLED:
         return getLiteral("updateDisabledMessage", [itemName]);
       case nsIAddonUpdateCheckListener.STATUS_READ_ONLY:
-        return getLiteral("updateReadOnlyMessage", []);
+        return getLiteral("updateReadOnlyMessage");
       case nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED:
         return getLiteral("updateNotManagedMessage", [BundleManager.appName]);
       }
@@ -6743,6 +7106,10 @@ ExtensionsDataSource.prototype = {
     if (this.getItemProperty(id, "appDisabled") == "true" &&
         this.getItemProperty(id, "compatible") != "true")
       return getLiteral("incompatibleExtension", [BundleManager.appName, gApp.version]);
+
+    if (this.getItemProperty(id, "appDisabled") == "true" &&
+        this.getItemProperty(id, "satisfiesDependencies") == "false")
+      return getLiteral("needsDependenciesDisabled");
 
     if (inSafeMode())
       return getLiteral("disabledBySafeMode", [itemName, BundleManager.appName]);
@@ -6820,14 +7187,14 @@ ExtensionsDataSource.prototype = {
 
   /**
    * Get the em:disabled property. This will be true if the item has a
-   * appDisabled or a userDisabled property that is true as long as it is not
-   * about to be disabled.
+   * appDisabled or a userDisabled property that is true or OP_NEEDS_ENABLE.
    */
   _rdfGet_disabled: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    if ((this.getItemProperty(id, "userDisabled") == "true" ||
-        this.getItemProperty(id, "appDisabled") == "true") &&
-        this.getItemProperty(id, "opType") != OP_NEEDS_DISABLE)
+    if (this.getItemProperty(id, "userDisabled") == "true" ||
+        this.getItemProperty(id, "appDisabled") == "true" ||
+        this.getItemProperty(id, "userDisabled") == OP_NEEDS_ENABLE ||
+        this.getItemProperty(id, "appDisabled") == OP_NEEDS_ENABLE)
       return EM_L("true");
 
     // Migrate disabled in the extensions datasource to userDisabled or

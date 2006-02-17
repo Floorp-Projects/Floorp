@@ -52,7 +52,7 @@
   
   <label id="message1" hidden="true"/>
   <separator class="thin"/>
-  <tree rows="10" hidecolumnpicker="true">
+  <tree id="addonsTree" rows="10" hidecolumnpicker="true" hidden="true">
     <treecols>
       <treecol flex="1" id="nameColumn" hideheader="true"/>
     </treecols>

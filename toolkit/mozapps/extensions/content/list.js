@@ -68,6 +68,9 @@ function init() {
   // Fill the addons list
   var items = window.arguments[0];
   var addons = document.getElementById("addonsChildren");
+  if (items.length > 0)
+    document.getElementById("addonsTree").hidden = false;
+
   for (var i = 0; i < items.length; ++i) {
     var treeitem = document.createElementNS(kXULNS, "treeitem");
     var treerow  = document.createElementNS(kXULNS, "treerow");

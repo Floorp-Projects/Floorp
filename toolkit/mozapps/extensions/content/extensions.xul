@@ -94,6 +94,7 @@
     <command id="cmd_install"/>
 #endif
     <command id="cmd_uninstall"/>
+    <command id="cmd_cancelUninstall"/>
     <command id="cmd_update"/>
     <command id="cmd_update_all"/>
     <command id="cmd_enable"/>
@@ -120,6 +121,8 @@
     <menuseparator id="menuseparator_1"/>
     <menuitem id="menuitem_uninstall" command="cmd_uninstall"
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"/>
+    <menuitem id="menuitem_cancelUninstall" command="cmd_cancelUninstall"
+              label="&cmd.cancelUninstall.label;" accesskey="&cmd.cancelUninstall.accesskey;"/>
     <menuitem id="menuitem_update" command="cmd_update"
               label="&cmd.updateAddon.label;" accesskey="&cmd.updateAddon.accesskey;"/>
     <menuitem id="menuitem_enable" command="cmd_enable"
@@ -221,6 +224,9 @@
                      predicate="http://www.mozilla.org/2004/em-rdf#availableUpdateURL"
                      object="?available-update-url"/>
             <binding subject="?extension"
+                     predicate="http://www.mozilla.org/2004/em-rdf#satisfiesDependencies"
+                     object="?satisfiesDependencies"/>
+            <binding subject="?extension"
                      predicate="http://www.mozilla.org/2004/em-rdf#updateable"
                      object="?updateable"/>
           </bindings>
@@ -239,6 +245,7 @@
                        opType="?opType" downloadURL="?downloadURL"
                        state="?state" progress="?progress" status="?status"
                        incompatibleUpdate="?incompatibleUpdate"
+                       satisfiesDependencies="?satisfiesDependencies"
                        updateable="?updateable"/>
           </action>
         </rule>

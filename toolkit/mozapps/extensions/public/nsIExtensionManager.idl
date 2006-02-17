@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Google Inc.)
+ *  Robert Strong <robert.bugzilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -364,6 +365,39 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
+};
+
+/**
+ * A temporary interface to allow adding new methods without changing existing
+ * interfaces for Gecko 1.8.1. After the 1.8.1 release this interface should
+ * not be used.
+ */
+[scriptable, uuid(8058922f-9367-45d1-878e-7c5ca27eddf4)]
+interface nsIExtensionManager2 : nsIExtensionManager
+{
+  /**
+   * Cancels a pending uninstall of an item
+   * @param   id
+   *          The ID of the item.
+   */
+  void cancelUninstallItem(in AString id);
+
+  /**
+   * Retrieves a list of installed nsIUpdateItems of items that are dependent
+   * on another item.
+   * @param   id
+   *          The ID of the item that other items depend on.
+   * @param   includeDisabled
+   *          Whether to include disabled items in the set returned.
+   * @param   countRef
+   *          The XPCJS reference to the number of items returned.
+   * @returns An array of installed nsIUpdateItems that depend on the item
+   *          specified by the id parameter.
+   */
+  void getDependentItemListForID(in AString id,
+                                 in boolean includeDisabled,
+                                 out unsigned long itemCount,
+                                 [retval, array, size_is(itemCount)] out nsIUpdateItem items);
 };
 
 /**

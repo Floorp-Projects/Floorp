@@ -65,6 +65,7 @@ extension[disabled="true"] {
 }
 
 extension[disabled="true"][compatible="false"] .extension-item-description,
+extension[satisfiesDependencies="false"] .extension-item-description,
 extension[incompatibleUpdate="true"] .extension-item-description {
   color: #C77173;
 }
