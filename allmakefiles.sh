@@ -1545,6 +1545,7 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         python/xpcom ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/python/xpcom/Makefile
+            extensions/python/xpcom/components/Makefile
             extensions/python/xpcom/src/Makefile
             extensions/python/xpcom/src/loader/Makefile
             extensions/python/xpcom/src/module/Makefile
