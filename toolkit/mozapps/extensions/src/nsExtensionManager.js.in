@@ -3256,8 +3256,21 @@ ExtensionManager.prototype = {
     if (isDirty)
       this._finishOperations();
 
-    // Disable all incompatible items and let update enable them if appropriate.
     var ds = this.datasource;
+    // During app upgrade cleanup invalid entries in the extensions datasource.
+    ds.beginUpdateBatch();
+    var allResources = ds.GetAllResources();
+    while (allResources.hasMoreElements()) {
+      var res = allResources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      if (ds.GetTarget(res, EM_R("state"), true) ||
+          ds.GetTarget(res, EM_R("downloadURL"), true) ||
+          (!ds.GetTarget(res, EM_R("installLocation"), true) &&
+          stringData(ds.GetTarget(res, EM_R("appDisabled"), true)) == "true"))
+        ds.removeDownload(res.Value);
+    }
+    ds.endUpdateBatch();
+
+    // Disable all incompatible items and let update enable them if appropriate.
     var currAppID = gApp.ID;
     var items = ds.getIncompatibleItemList(currAppID, currAppVersion,
                                            nsIUpdateItem.TYPE_ADDON, true);
@@ -3356,6 +3369,8 @@ ExtensionManager.prototype = {
         // We're relying on the fact that there is only one JAR file
         // in the "chrome" directory. This is a hack, but it works.
         var jarFile = chromeEntries.nextFile;
+        if (jarFile.isDirectory())
+          continue;
         var id = location.getIDForLocation(entry);
 
         try {
@@ -3374,12 +3389,12 @@ ExtensionManager.prototype = {
             catch (e) {
             }
           }
+          zipReader.close();
         }
         catch (e) {
           LOG("ExtensionManager:_upgradeFromV10 - failed to extract theme files\r\n" +
               "Exception: " + e);
         }
-        zipReader.close();
       }
     }
 
