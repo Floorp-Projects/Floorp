@@ -119,19 +119,14 @@ nsDOMDocumentType::~nsDOMDocumentType()
 
 // QueryInterface implementation for nsDOMDocumentType
 NS_INTERFACE_MAP_BEGIN(nsDOMDocumentType)
-  NS_INTERFACE_MAP_ENTRY(nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentType)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
-  NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentType)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
 
-NS_IMPL_ADDREF(nsDOMDocumentType)
-NS_IMPL_RELEASE(nsDOMDocumentType)
+NS_IMPL_ADDREF_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(nsDOMDocumentType, nsGenericDOMDataNode)
 
 
 NS_IMETHODIMP    
