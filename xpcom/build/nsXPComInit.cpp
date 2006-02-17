@@ -130,6 +130,10 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #include "nsWindowsRegKey.h"
 #endif
 
+#ifdef XP_MACOSX
+#include "nsMacUtils.h"
+#endif
+
 #include <locale.h>
 
 // Registry Factory creation function defined in nsRegistry.cpp
@@ -216,6 +220,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHashPropertyBag, Init)
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsProperties, Init)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUUIDGenerator)
+
+#ifdef XP_MACOSX
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtils)
+#endif
 
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
@@ -408,6 +416,10 @@ static const nsModuleComponentInfo components[] = {
 
 #if defined(XP_WIN) && !defined(WINCE)
     COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor),
+#endif
+
+#ifdef XP_MACOSX
+    COMPONENT(MACUTILS, nsMacUtilsConstructor),
 #endif
 };
 

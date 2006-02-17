@@ -71,6 +71,10 @@ CPPSRCS += nsLeakDetector.cpp
 REQUIRES	+= boehm
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+CPPSRCS		+= nsMacUtils.cpp
+endif
+
 EXPORTS		= \
 		nsAgg.h \
 		nsAutoPtr.h \
@@ -124,6 +128,10 @@ XPIDLSRCS	= \
 
 ifdef GC_LEAK_DETECTOR
 XPIDLSRCS       += nsILeakDetector.idl
+endif
+
+ifeq ($(OS_ARCH),Darwin)
+XPIDLSRCS	+= nsIMacUtils.idl
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
