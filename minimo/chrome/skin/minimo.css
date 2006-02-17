@@ -53,6 +53,13 @@
       background-color:white;
 }
 
+/* Homebar max icons */ 
+
+#browserleftbar .toolbarbutton-icon {
+  width:16px;
+  height:16px;
+}
+
 /* Hack to remove the resizer icon */ 
 
 .statusbar-resizerpanel { 
