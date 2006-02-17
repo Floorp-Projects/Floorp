@@ -232,3 +232,45 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 .no-margin-button {
   min-width:0em;
 }
+
+/* Personal toolbar */
+.toolbar-drop-indicator {
+  height: 16px;
+  width: 5px;
+  margin-bottom: -8px;
+  position: relative;
+  background: url('chrome://browser/skin/places/toolbar_dropmarker.png') 50% 50% no-repeat;
+}
+
+.toolbar-drop-indicator-bar {
+  display: none;
+  height: 16px;
+  margin-bottom: -16px;
+  margin-left: 4px;
+  position: relative;
+}
+
+.toolbar-drop-indicator-bar[dragging="true"] {
+  display: -moz-box;
+}
+
+toolbarbutton.bookmark-item[dragover="true"][open="true"] {
+  -moz-appearance: none;
+  background: Highlight !important;
+  color: HighlightText !important;
+  list-style-image: url('chrome://browser/skin/places/folder_drag_over.png') !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
+}
+
+.bookmark-item[dragover-into="true"] {
+  background: Highlight !important;
+  color: HighlightText !important;
+}
+
+.bookmark-item[dragover-top="true"] {
+  -moz-border-top-colors: #000000;
+}
+
+.bookmark-item[dragover-bottom="true"] {
+  -moz-border-bottom-colors: #000000;
+}

@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 
 <?xml-stylesheet href="chrome://browser/content/places/browserShim.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
 <!DOCTYPE overlay SYSTEM "chrome://browser/locale/places/places.dtd">
 
