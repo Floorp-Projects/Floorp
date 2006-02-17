@@ -308,13 +308,21 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   nsRect dr = aDestRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
-  nsRect sr = aSrcRect;
   // We should NOT be transforming the source rect (which is based on the image
   // origin) using the rendering context's translation!
-  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+  // However, given that we are, remember that the transformation of a
+  // height depends on the position, since what we are really doing is
+  // transforming the edges.  So transform *with* a translation, based
+  // on the origin of the *destination* rect, and then fix up the
+  // origin.
+  nsRect sr(aDestRect.TopLeft(), aSrcRect.Size());
+  mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
   
   if (sr.IsEmpty() || dr.IsEmpty())
     return NS_OK;
+
+  sr.MoveTo(aSrcRect.TopLeft());
+  mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   nsCOMPtr<gfxIImageFrame> iframe;
   aImage->GetCurrentFrame(getter_AddRefs(iframe));
