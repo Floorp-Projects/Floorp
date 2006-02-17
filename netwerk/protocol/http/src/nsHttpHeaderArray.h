@@ -39,7 +39,7 @@
 #ifndef nsHttpHeaderArray_h__
 #define nsHttpHeaderArray_h__
 
-#include "nsVoidArray.h"
+#include "nsTArray.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsCOMPtr.h"
@@ -58,6 +58,17 @@ public:
     nsresult GetHeader(nsHttpAtom header, nsACString &value);
     void     ClearHeader(nsHttpAtom h);
 
+    // Find the location of the given header value, or null if none exists.
+    const char *FindHeaderValue(nsHttpAtom header, const char *value) {
+        return nsHttp::FindToken(PeekHeader(header), value,
+                                 HTTP_HEADER_VALUE_SEPS);
+    }
+
+    // Determine if the given header value exists.
+    PRBool HasHeaderValue(nsHttpAtom header, const char *value) {
+        return FindHeaderValue(header, value) != nsnull;
+    }
+
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 
     // parse a header line, return the header atom and a pointer to the 
@@ -66,7 +77,7 @@ public:
 
     void Flatten(nsACString &, PRBool pruneProxyHeaders=PR_FALSE);
 
-    PRUint32 Count() { return (PRUint32) mHeaders.Count(); }
+    PRUint32 Count() { return mHeaders.Length(); }
 
     const char *PeekHeaderAt(PRUint32 i, nsHttpAtom &header);
 
@@ -75,18 +86,23 @@ public:
 private:
     struct nsEntry
     {
-        nsEntry(nsHttpAtom h, const nsACString &v)
-            : header(h) { value = v; }
+        nsEntry() {}
 
         nsHttpAtom header;
         nsCString  value;
+
+        struct MatchHeader {
+          PRBool Equals(const nsEntry &entry, const nsHttpAtom &header) const {
+            return entry.header == header;
+          }
+        };
     };
 
     PRInt32 LookupEntry(nsHttpAtom header, nsEntry **);
     PRBool  CanAppendToHeader(nsHttpAtom header);
 
 private:
-    nsAutoVoidArray mHeaders;
+    nsTArray<nsEntry> mHeaders;
 };
 
 #endif

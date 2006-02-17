@@ -383,7 +383,8 @@ nsHttpChannel::Connect(PRBool firstTime)
         // out to net to validate it.  this call sets mCachedContentIsValid
         // and may set request headers as required for cache validation.
         rv = CheckCache();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "cache check failed");
+        if (NS_FAILED(rv))
+            NS_WARNING("cache check failed");
 
         // read straight from the cache if possible...
         if (mCachedContentIsValid) {
@@ -877,15 +878,14 @@ nsHttpChannel::ProcessNormal()
     // must do this early on so as to prevent it from being seen up stream.
     // The same problem exists for Content-Encoding: compress in default
     // Apache installs.
-    const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
-    if (encoding && PL_strcasestr(encoding, "gzip") && (
+    if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "gzip") && (
         mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP) ||
         mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP2) ||
         mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP3))) {
         // clear the Content-Encoding header
         mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
-    else if (encoding && PL_strcasestr(encoding, "compress") && (
+    else if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "compress") && (
              mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS) ||
              mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS2))) {
         // clear the Content-Encoding header
@@ -1427,7 +1427,7 @@ nsHttpChannel::CheckCache()
 
     // Get the method that was used to generate the cached response
     rv = mCacheEntry->GetMetaDataElement("request-method", getter_Copies(buf));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsHttpAtom method = nsHttp::ResolveAtom(buf);
     if (method == nsHttp::Head) {
@@ -1441,7 +1441,7 @@ nsHttpChannel::CheckCache()
     // We'll need this value in later computations...
     PRUint32 lastModifiedTime;
     rv = mCacheEntry->GetLastModified(&lastModifiedTime);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Determine if this is the first time that this cache entry
     // has been accessed during this session.
@@ -1450,7 +1450,7 @@ nsHttpChannel::CheckCache()
 
     // Get the cached HTTP response headers
     rv = mCacheEntry->GetMetaDataElement("response-head", getter_Copies(buf));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Parse the cached HTTP response headers
     NS_ASSERTION(!mCachedResponseHead, "memory leak detected");
@@ -1458,7 +1458,7 @@ nsHttpChannel::CheckCache()
     if (!mCachedResponseHead)
         return NS_ERROR_OUT_OF_MEMORY;
     rv = mCachedResponseHead->Parse((char *) buf.get());
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 
     // If we were only granted read access, then assume the entry is valid.
@@ -1480,7 +1480,7 @@ nsHttpChannel::CheckCache()
         if (contentLength != nsInt64(-1)) {
             PRUint32 size;
             rv = mCacheEntry->GetDataSize(&size);
-            if (NS_FAILED(rv)) return rv;
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (nsInt64(size) != contentLength) {
                 LOG(("Cached data size does not match the Content-Length header "
@@ -1488,7 +1488,7 @@ nsHttpChannel::CheckCache()
                 if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
                     // looks like a partial entry.
                     rv = SetupByteRangeRequest(size);
-                    if (NS_FAILED(rv)) return rv;
+                    NS_ENSURE_SUCCESS(rv, rv);
                     mCachedContentIsPartial = PR_TRUE;
                 }
                 return NS_OK;
@@ -1544,7 +1544,7 @@ nsHttpChannel::CheckCache()
         PRUint32 time = 0; // a temporary variable for storing time values...
 
         rv = mCacheEntry->GetExpirationTime(&time);
-        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         if (NowInSeconds() <= time)
             doValidation = PR_FALSE;
@@ -1557,7 +1557,7 @@ nsHttpChannel::CheckCache()
             // is consistent with existing browsers and is generally expected
             // by web authors.
             rv = mCachedResponseHead->ComputeFreshnessLifetime(&time);
-            if (NS_FAILED(rv)) return rv;
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (time == 0)
                 doValidation = PR_TRUE;
@@ -3362,8 +3362,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // Adjust mCaps according to our request headers:
     //  - If "Connection: close" is set as a request header, then do not bother
     //    trying to establish a keep-alive connection.
-    const char *connHeader = mRequestHead.PeekHeader(nsHttp::Connection);
-    if (PL_strcasestr(connHeader, "close"))
+    if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
     
     mIsPending = PR_TRUE;

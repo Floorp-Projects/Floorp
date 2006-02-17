@@ -56,22 +56,18 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
     // If an empty value is passed in, then delete the header entry...
     // unless we are merging, in which case this function becomes a NOP.
     if (value.IsEmpty()) {
-        if (!merge && entry) {
+        if (!merge && entry)
             mHeaders.RemoveElementAt(index);
-            delete entry;
-        }
         return NS_OK;
     }
 
     // Create a new entry, or...
     if (!entry) {
-        entry = new nsEntry(header, value);
+        entry = mHeaders.AppendElement(); //new nsEntry(header, value);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
-        if (!mHeaders.AppendElement(entry)) {
-            NS_WARNING("AppendElement failed");
-            delete entry;
-        }
+        entry->header = header;
+        entry->value = value;
     }
     // Append the new value to the existing value iff...
     else if (merge && CanAppendToHeader(header)) {
@@ -96,14 +92,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header,
 void
 nsHttpHeaderArray::ClearHeader(nsHttpAtom header)
 {
-    nsEntry *entry = nsnull;
-    PRInt32 index;
-
-    index = LookupEntry(header, &entry);
-    if (entry) {
-        mHeaders.RemoveElementAt(index);
-        delete entry;
-    }
+    mHeaders.RemoveElement(header, nsEntry::MatchHeader());
 }
 
 const char *
@@ -129,10 +118,11 @@ nsresult
 nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
 {
     NS_ENSURE_ARG_POINTER(visitor);
-    PRInt32 i, count = mHeaders.Count();
-    for (i=0; i<count; ++i) {
-        nsEntry *entry = (nsEntry *) mHeaders[i];
-        if (NS_FAILED(visitor->VisitHeader(nsDependentCString(entry->header), entry->value)))
+    PRUint32 i, count = mHeaders.Length();
+    for (i = 0; i < count; ++i) {
+        const nsEntry &entry = mHeaders[i];
+        if (NS_FAILED(visitor->VisitHeader(nsDependentCString(entry.header),
+                                           entry.value)))
             break;
     }
     return NS_OK;
@@ -206,16 +196,16 @@ nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
 void
 nsHttpHeaderArray::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 {
-    PRInt32 i, count = mHeaders.Count();
-    for (i=0; i<count; ++i) {
-        nsEntry *entry = (nsEntry *) mHeaders[i];
+    PRUint32 i, count = mHeaders.Length();
+    for (i = 0; i < count; ++i) {
+        const nsEntry &entry = mHeaders[i];
         // prune proxy headers if requested
-        if (pruneProxyHeaders && ((entry->header == nsHttp::Proxy_Authorization) || 
-                                  (entry->header == nsHttp::Proxy_Connection)))
+        if (pruneProxyHeaders && ((entry.header == nsHttp::Proxy_Authorization) || 
+                                  (entry.header == nsHttp::Proxy_Connection)))
             continue;
-        buf.Append(entry->header);
+        buf.Append(entry.header);
         buf.AppendLiteral(": ");
-        buf.Append(entry->value);
+        buf.Append(entry.value);
         buf.AppendLiteral("\r\n");
     }
 }
@@ -223,20 +213,15 @@ nsHttpHeaderArray::Flatten(nsACString &buf, PRBool pruneProxyHeaders)
 const char *
 nsHttpHeaderArray::PeekHeaderAt(PRUint32 index, nsHttpAtom &header)
 {
-    nsEntry *entry = (nsEntry *) mHeaders[index]; 
-    if (!entry)
-        return nsnull;
+    const nsEntry &entry = mHeaders[index];
 
-    header = entry->header;
-    return entry->value.get();
+    header = entry.header;
+    return entry.value.get();
 }
 
 void
 nsHttpHeaderArray::Clear()
 {
-    PRInt32 i, count = mHeaders.Count();
-    for (i=0; i<count; ++i)
-        delete (nsEntry *) mHeaders[i];
     mHeaders.Clear();
 }
 
@@ -247,14 +232,10 @@ nsHttpHeaderArray::Clear()
 PRInt32
 nsHttpHeaderArray::LookupEntry(nsHttpAtom header, nsEntry **entry)
 {
-    PRInt32 i, count = mHeaders.Count();
-    for (i=0; i<count; ++i) {
-        *entry = (nsEntry *) mHeaders[i];
-        if ((*entry)->header == header)
-            return i;
-    }
-    *entry = nsnull;
-    return -1;
+    PRUint32 index = mHeaders.IndexOf(header, 0, nsEntry::MatchHeader());
+    if (index != PR_UINT32_MAX)
+      *entry = &mHeaders[index];
+    return index;
 }
 
 PRBool

@@ -70,6 +70,9 @@ public:
     void ClearHeader(nsHttpAtom h)                                           { mHeaders.ClearHeader(h); }
     void ClearHeaders()                                                      { mHeaders.Clear(); }
 
+    const char *FindHeaderValue(nsHttpAtom h, const char *v) { return mHeaders.FindHeaderValue(h, v); }
+    PRBool      HasHeaderValue(nsHttpAtom h, const char *v) { return mHeaders.HasHeaderValue(h, v); }
+
     void Flatten(nsACString &, PRBool pruneProxyHeaders = PR_FALSE);
 
 private:

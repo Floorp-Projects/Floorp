@@ -122,8 +122,8 @@ typedef PRUint8 nsHttpVersion;
 
 struct nsHttpAtom
 {
-    operator const char *() { return _val; }
-    const char *get() { return _val; }
+    operator const char *() const { return _val; }
+    const char *get() const { return _val; }
 
     void operator=(const char *v) { _val = v; }
     void operator=(const nsHttpAtom &a) { _val = a._val; }
@@ -144,13 +144,20 @@ struct nsHttp
         return ResolveAtom(PromiseFlatCString(s).get());
     }
 
-    /* Declare all atoms
-     *
-     * The atom names and values are stored in nsHttpAtomList.h and
-     * are brought to you by the magic of C preprocessing
-     *
-     * Add new atoms to nsHttpAtomList and all support logic will be auto-generated
-     */
+    // find the first instance (case-insensitive comparison) of the given
+    // |token| in the |input| string.  the |token| is bounded by elements of
+    // |separators| and may appear at the beginning or end of the |input|
+    // string.  null is returned if the |token| is not found.  |input| may be
+    // null, in which case null is returned.
+    static const char *FindToken(const char *input, const char *token,
+                                 const char *separators);
+
+    // Declare all atoms
+    // 
+    // The atom names and values are stored in nsHttpAtomList.h and are brought
+    // to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
+    // and all support logic will be auto-generated.
+    //
 #define HTTP_ATOM(_name, _value) static nsHttpAtom _name;
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
@@ -163,12 +170,7 @@ struct nsHttp
 static inline PRUint32
 PRTimeToSeconds(PRTime t_usec)
 {
-    PRTime usec_per_sec;
-    PRUint32 t_sec;
-    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
-    LL_DIV(t_usec, t_usec, usec_per_sec);
-    LL_L2I(t_sec, t_usec);
-    return t_sec;
+    return PRUint32( t_usec / PR_USEC_PER_SEC );
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
@@ -177,12 +179,10 @@ PRTimeToSeconds(PRTime t_usec)
 #undef  CLAMP
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
-// nsCRT::strdup likes to convert nsnull to "" 
-#define strdup_if(s) (s ? nsCRT::strdup(s) : nsnull)
-
 // round q-value to one decimal place; return most significant digit as uint.
 #define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
 
 #define HTTP_LWS " \t"
+#define HTTP_HEADER_VALUE_SEPS HTTP_LWS ","
 
 #endif // nsHttp_h__
