@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -79,6 +80,8 @@ static const PRTime _pr_filetime_offset = 116444736000000000LL;
 #else
 static const PRTime _pr_filetime_offset = 116444736000000000i64;
 #endif
+
+static PRBool IsPrevCharSlash(const char *str, const char *current);
 
 void
 _PR_MD_INIT_IO()
@@ -508,7 +511,7 @@ _PR_MD_OPEN_DIR(_MDDir *d, const char *name)
      * If 'name' ends in a slash or backslash, do not append
      * another backslash.
      */
-    if (filename[len - 1] == '/' || filename[len - 1] == '\\') {
+    if (IsPrevCharSlash(filename, filename + len)) {
         len--;
     }
     strcpy(&filename[len], "\\*.*");
@@ -646,7 +649,7 @@ _PR_MD_STAT(const char *fn, struct stat *info)
 
         size_t len = strlen(fn);
         if (len > 0 && len <= _MAX_PATH
-                && (fn[len - 1] == '\\' || fn[len - 1] == '/')) {
+                && IsPrevCharSlash(fn, fn + len)) {
             char newfn[_MAX_PATH + 1];
 
             strcpy(newfn, fn);
@@ -662,6 +665,17 @@ _PR_MD_STAT(const char *fn, struct stat *info)
 }
 
 #define _PR_IS_SLASH(ch) ((ch) == '/' || (ch) == '\\')
+
+static PRBool
+IsPrevCharSlash(const char *str, const char *current)
+{
+    const char *prev;
+
+    if (str >= current)
+        return PR_FALSE;
+    prev = _mbsdec(str, current);
+    return (prev == current - 1) && _PR_IS_SLASH(*prev);
+}
 
 /*
  * IsRootDirectory --
@@ -709,7 +723,7 @@ IsRootDirectory(char *fn, size_t buflen)
 
         /* look for the next slash */
         do {
-            p++;
+            p = _mbsinc(p);
         } while (*p != '\0' && !_PR_IS_SLASH(*p));
         if (*p == '\0') {
             return PR_FALSE;
@@ -723,7 +737,7 @@ IsRootDirectory(char *fn, size_t buflen)
 
         /* look for the final slash */
         do {
-            p++;
+            p = _mbsinc(p);
         } while (*p != '\0' && !_PR_IS_SLASH(*p));
         if (_PR_IS_SLASH(*p) && p[1] != '\0') {
             return PR_FALSE;
@@ -813,7 +827,7 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
             info->creationTime = 0;
             return 0;
         }
-        if (!_PR_IS_SLASH(pathbuf[len - 1])) {
+        if (!IsPrevCharSlash(pathbuf, pathbuf + len)) {
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
             return -1;
         } else {
