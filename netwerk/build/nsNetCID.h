@@ -748,6 +748,14 @@
     {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
+/**
+ * General-purpose content sniffer component. Use with CreateInstance.
+ *
+ * Implements nsIContentSniffer
+ */
+#define NS_GENERIC_CONTENT_SNIFFER \
+    "@mozilla.org/network/content-sniffer;1"
+
 /******************************************************************************
  * Contracts that can be implemented by necko users.
  */

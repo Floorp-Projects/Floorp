@@ -101,7 +101,8 @@ NS_INTERFACE_MAP_BEGIN(nsUnknownDecoder)
    NS_INTERFACE_MAP_ENTRY(nsIStreamConverter)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-   NS_INTERFACE_MAP_ENTRY(nsISupports)
+   NS_INTERFACE_MAP_ENTRY(nsIContentSniffer)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
 NS_INTERFACE_MAP_END
 
 
@@ -260,6 +261,28 @@ nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
   return rv;
 }
 
+// ----
+//
+// nsIContentSniffer methods...
+//
+// ----
+NS_IMETHODIMP
+nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
+                                         const PRUint8* aData,
+                                         PRUint32 aLength,
+                                         nsACString& type)
+{
+  mBuffer = NS_CONST_CAST(char*, NS_REINTERPRET_CAST(const char*, aData));
+  mBufferLen = aLength;
+  DetermineContentType(aRequest);
+  mBuffer = nsnull;
+  mBufferLen = 0;
+  type.Assign(mContentType);
+  mContentType.Truncate();
+  return NS_OK;
+}
+
+
 // Actual sniffing code
 
 PRBool nsUnknownDecoder::AllowSniffing(nsIRequest* aRequest)
@@ -399,7 +422,8 @@ PRBool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
       continue;
     }
 
-    rv = sniffer->GetMIMETypeFromContent((const PRUint8*)mBuffer, mBufferLen, mContentType);
+    rv = sniffer->GetMIMETypeFromContent(aRequest, (const PRUint8*)mBuffer,
+                                         mBufferLen, mContentType);
     if (NS_SUCCEEDED(rv)) {
       return PR_TRUE;
     }

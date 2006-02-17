@@ -2286,7 +2286,7 @@ bookmarksFavIconLoadListener.prototype = {
           var sniffer = Components.classes[snifferCID].getService(nsIContentSniffer);
 
           try {
-            mimeType = sniffer.getMIMETypeFromContent (this.mBytes, this.mCountRead);
+            mimeType = sniffer.getMIMETypeFromContent (aRequest, this.mBytes, this.mCountRead);
           } catch (e) {
             mimeType = null;
             // ignore

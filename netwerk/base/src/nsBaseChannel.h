@@ -39,11 +39,12 @@
 #define nsBaseChannel_h__
 
 #include "nsString.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsHashPropertyBag.h"
+#include "nsInputStreamPump.h"
 
 #include "nsIChannel.h"
-#include "nsIInputStreamPump.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
@@ -212,7 +213,7 @@ private:
     mQueriedProgressSink = PR_FALSE;
   }
 
-  nsCOMPtr<nsIInputStreamPump>        mPump;
+  nsRefPtr<nsInputStreamPump>         mPump;
   nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
