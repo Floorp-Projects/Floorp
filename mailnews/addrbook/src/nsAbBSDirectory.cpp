@@ -469,8 +469,9 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
   NS_ENSURE_SUCCESS(rv, rv);
   server->maxHits = maxHits;
   
-  rv=aProperties->GetAuthDn(getter_Copies(authDn));
+  rv = aProperties->GetAuthDn(getter_Copies(authDn));
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCRT::free(server->authDn);
   server->authDn = ToNewCString(authDn);
 
   rv = aProperties->GetSyncTimeStamp(&palmSyncTimeStamp);
