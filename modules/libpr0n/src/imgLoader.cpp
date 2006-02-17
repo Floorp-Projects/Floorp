@@ -736,7 +736,10 @@ NS_IMETHODIMP imgLoader::SupportImageWithMimeType(const char* aMimeType, PRBool 
   return reg->IsContractIDRegistered(decoderId.get(),  _retval);
 }
 
-NS_IMETHODIMP imgLoader::GetMIMETypeFromContent(const PRUint8* aContents, PRUint32 aLength, nsACString& aContentType)
+NS_IMETHODIMP imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
+                                                const PRUint8* aContents,
+                                                PRUint32 aLength,
+                                                nsACString& aContentType)
 {
   return GetMimeTypeFromContent((const char*)aContents, aLength, aContentType);
 }

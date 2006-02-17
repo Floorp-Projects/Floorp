@@ -841,6 +841,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       CreateNewUnknownDecoderFactory
     },
 
+    { "Unknown Content-Type Decoder",
+      NS_UNKNOWNDECODER_CID,
+      NS_GENERIC_CONTENT_SNIFFER,
+      CreateNewUnknownDecoderFactory
+    },
+
     { "Binary Detector",
       NS_BINARYDETECTOR_CID,
       NS_ISTREAMCONVERTER_KEY MAYBE_TEXT,

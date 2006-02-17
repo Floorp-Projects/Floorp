@@ -44,6 +44,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIStreamConverterService.h"
+#include "nsIContentSniffer.h"
 
 // Determine if this URI is using a safe port.
 static nsresult
@@ -456,10 +457,14 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
-                             PR_TRUE);
-  if (NS_FAILED(rv))
+  mPump = new nsInputStreamPump();
+  if (!mPump)
+    return NS_ERROR_OUT_OF_MEMORY;
+  rv = mPump->Init(stream, -1, -1, 0, 0, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    mPump = nsnull;
     return rv;
+  }
 
   rv = mPump->AsyncRead(this, nsnull);
   if (NS_FAILED(rv)) {
@@ -525,13 +530,30 @@ nsBaseChannel::GetInterface(const nsIID &iid, void **result)
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequestObserver
 
+static void
+CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
+{
+  nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
+
+  nsCOMPtr<nsIContentSniffer> sniffer =
+    do_CreateInstance(NS_GENERIC_CONTENT_SNIFFER);
+  if (!sniffer)
+    return;
+
+  nsCAutoString detected;
+  nsresult rv = sniffer->GetMIMETypeFromContent(chan, aData, aCount, detected);
+  if (NS_SUCCEEDED(rv))
+    chan->SetContentType(detected);
+}
+
 NS_IMETHODIMP
 nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   // If our content type is unknown, then use the content type sniffer.  If the
   // sniffer is not available for some reason, then we just keep going as-is.
-  if (NS_SUCCEEDED(mStatus) && mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE))
-    PushStreamConverter(UNKNOWN_CONTENT_TYPE, "*/*", PR_FALSE);
+  if (NS_SUCCEEDED(mStatus) && mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
+    mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
+  }
 
   return mListener->OnStartRequest(this, mListenerContext);
 }

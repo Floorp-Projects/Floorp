@@ -43,6 +43,7 @@
 #include "nsITransport.h"
 #include "nsNetUtil.h"
 #include "nsEventQueueUtils.h"
+#include "nsNetSegmentUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
 
@@ -78,6 +79,38 @@ nsInputStreamPump::nsInputStreamPump()
 
 nsInputStreamPump::~nsInputStreamPump()
 {
+}
+
+struct PeekData {
+  PeekData(nsInputStreamPump::PeekSegmentFun fun, void* closure)
+    : mFunc(fun), mClosure(closure) {}
+
+  nsInputStreamPump::PeekSegmentFun mFunc;
+  void* mClosure;
+};
+
+static NS_METHOD
+CallPeekFunc(nsIInputStream *aInStream, void *aClosure,
+             const char *aFromSegment, PRUint32 aToOffset, PRUint32 aCount,
+             PRUint32 *aWriteCount)
+{
+  NS_ASSERTION(aToOffset == 0, "Called more than once?");
+  NS_ASSERTION(aCount > 0, "Called without data?");
+
+  PeekData* data = NS_STATIC_CAST(PeekData*, aClosure);
+  data->mFunc(data->mClosure,
+              NS_REINTERPRET_CAST(const PRUint8*, aFromSegment), aCount);
+  return NS_BINDING_ABORTED;
+}
+
+void
+nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
+{
+  NS_ASSERTION(mAsyncStream, "PeekStream called without stream");
+  PeekData data(callback, closure);
+  PRUint32 read;
+  mAsyncStream->ReadSegments(CallPeekFunc, &data, NET_DEFAULT_SEGMENT_SIZE,
+                             &read);
 }
 
 nsresult
