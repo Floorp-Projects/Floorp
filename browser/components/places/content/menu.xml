@@ -590,13 +590,30 @@
         }
       </handler>
       <handler event="click"><![CDATA[
+        // Only menu and menuitems are valid nodes.
+        // Filter out events coming from sub-containers that have bubbled up.
         if ((event.target.localName != "menuitem" &&
              event.target.localName != "menu") ||
             event.target.parentNode != this)
           return;
         this._selection = event.target.node;
         PlacesController.activeView = this;
+        // Only left and middle clicks should load the URI
+        if (event.button > 1)
+          return;
         PlacesController.mouseLoadURI(event);
+        // Menus selected with middle click must be closed manually.
+        if (event.button == 1) {
+          var node = this;
+          while (node && 
+                (node.localName == "menu" || 
+                 node.localName == "menupopup")) {
+            if (node.localName == "menupopup")
+              node.hidePopup();
+            
+            node = node.parentNode;
+          }
+        }
       ]]></handler>
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "menuitem")
