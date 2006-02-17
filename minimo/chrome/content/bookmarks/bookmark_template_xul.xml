@@ -17,15 +17,18 @@ xmlns:rss="http://purl.org/rss/1.0/"
 <vbox>
 
 		<xsl:for-each select="/bm/li">
-  			<toolbarbutton  style="background-color:#dddddd;-moz-border-radius:1px;margin-bottom:2px ! important;">
+  			<toolbarbutton>
 				<xsl:attribute name="image"   >
 	                         <xsl:value-of select="@iconsrc"/>
 				</xsl:attribute> 	
-				<xsl:attribute name="oncommand">BrowserOpenURLasTab('<xsl:value-of select="."/>')
+				<xsl:attribute name="oncommand">BrowserOpenURLasTab('<xsl:value-of select="."/>');
 				</xsl:attribute> 	
 			</toolbarbutton >
 
 		</xsl:for-each>
+
+
+
 </vbox>
 
 </xsl:template>
