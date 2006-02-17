@@ -540,6 +540,9 @@ NS_IMETHODIMP nsMenuX::GetEnabled(PRBool* aIsEnabled)
 }
 
 
+// This is only here because it implements a pure virtual function
+// that exists to support Carbon widgets. It can be removed when
+// Carbon widgets are dead for real.
 NS_IMETHODIMP nsMenuX::IsHelpMenu(PRBool* aIsHelpMenu)
 {
   NS_ENSURE_ARG_POINTER(aIsHelpMenu);
