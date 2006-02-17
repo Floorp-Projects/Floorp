@@ -38,24 +38,28 @@
 
 #include "nsISupports.idl"
 
-[ref] native nsMetricsEvent(const class nsMetricsEvent);
+interface nsIPropertyBag;
 
-[scriptable, uuid(614a8246-5c83-422c-8147-28b8a2946b58)]
+[scriptable, uuid(30cad119-e248-4211-9682-8f95efe995c4)]
 interface nsIMetricsService : nsISupports
 {
   /**
-   * Log a custom event.  The event is recorded with a timestamp generated at
-   * the time at which this method is called.
+   * Logs an event using the given namespace.  The event is recorded with a
+   * timestamp generated at the time at which this method is called.
    *
-   * @param aEventData
-   *        The data to be logged with this event.
+   * @param eventNS
+   *        The namespace of the event, which must be a valid XML namespace
+   *        URI.
+   * @param eventName
+   *        The name of the event, which must be a valid XML tag name.
+   * @param eventValues
+   *        A PropertyBag containing the key/value pairs to be included
+   *        in the event.  JavaScript callers can simply pass in an object
+   *        containing the key/value pairs as object properties.
+   *        The "time" key is reserved for the event timestamp.
    */
-  void logCustomEvent(in ACString aEventData);
-
-  /**
-   * Log a raw metrics event.
-   */
-  [noscript] void logEvent(in nsMetricsEvent aEvent);
+  void logEvent(in DOMString eventNS, in DOMString event,
+                in nsIPropertyBag eventValues);
 
   /**
    * Initiate the upload of the current event log.  This causes the current

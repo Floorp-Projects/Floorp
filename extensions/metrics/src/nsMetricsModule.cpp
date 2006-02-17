@@ -38,7 +38,6 @@
 
 #include "nsMetricsModule.h"
 #include "nsMetricsService.h"
-#include "nsMetricsEvent.h"
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
@@ -61,7 +60,7 @@ nsMetricsServiceRegisterSelf(nsIComponentManager *compMgr,
 
   cat->AddCategoryEntry("app-startup",
                         NS_METRICSSERVICE_CLASSNAME,
-                        NS_METRICSSERVICE_CONTRACTID,
+                        "service," NS_METRICSSERVICE_CONTRACTID,
                         PR_TRUE, PR_TRUE, nsnull);
   return NS_OK;
 }

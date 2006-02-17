@@ -40,13 +40,28 @@
 #define nsMetricsService_h__
 
 #include "nsIMetricsService.h"
+#include "nsMetricsModule.h"
 #include "nsIStreamListener.h"
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
-#include "nsTArray.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
+#include "nsHashPropertyBag.h"
 #include "prio.h"
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+// Shared log for the metrics service and collectors.
+// (NSPR_LOG_MODULES=nsMetricsService:5)
+extern PRLogModuleInfo *gMetricsLog;
+#endif
+#define MS_LOG(args) PR_LOG(gMetricsLog, PR_LOG_DEBUG, args)
+#define MS_LOG_ENABLED() PR_LOG_TEST(gMetricsLog, PR_LOG_DEBUG)
+
+// This is the namespace for the built-in metrics events.
+#define NS_METRICS_NAMESPACE "http://www.mozilla.org/metrics"
 
 // This class manages the metrics datastore.  It is responsible for persisting
 // the data when the browser closes and for uploading it to the metrics server
@@ -66,23 +81,74 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   nsMetricsService()
-    : mSuspendCount(0)
-    , mUploading(PR_FALSE)
-  {}
+      : mEventCount(0),
+        mSuspendCount(0),
+        mUploading(PR_FALSE)
+  {
+    NS_ASSERTION(!sMetricsService, ">1 MetricsService object created");
+    sMetricsService = this;
+  }
 
+  ~nsMetricsService()
+  {
+    NS_ASSERTION(sMetricsService == this, ">1 MetricsService object created");
+    sMetricsService = nsnull;
+  }
+  
   nsresult Init();
 
+  static nsMetricsService* GetMetricsService()
+  {
+    if (!sMetricsService) {
+      nsCOMPtr<nsIMetricsService> ms =
+        do_GetService(NS_METRICSSERVICE_CONTRACTID);
+    }
+    return sMetricsService;
+  }
+
+  nsresult LogEvent(const nsAString &eventName,
+                    nsHashPropertyBag *eventProperties)
+  {
+    return LogEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
+                    eventName,
+                    NS_STATIC_CAST(nsIWritablePropertyBag*, eventProperties));
+  }
+
 private:
+  // Creates a new root element to hold event nodes
+  nsresult CreateRoot();
+
   nsresult FlushData();
   nsresult UploadData();
   nsresult GetDataFile(nsCOMPtr<nsILocalFile> *result);
   nsresult OpenDataFile(PRUint32 flags, PRFileDesc **result);
 
 private:
-  // Memory buffer containing events to be flushed.
-  nsTArray<PRUint8> mEventLog;
+  // Pointer to the metrics service singleton
+  static nsMetricsService* sMetricsService;
+
+  // XML document containing events to be flushed.
+  nsCOMPtr<nsIDOMDocument> mDocument;
+  // Root element of the XML document
+  nsCOMPtr<nsIDOMNode> mRoot;
+
+  PRInt32 mEventCount;
   PRInt32 mSuspendCount;
   PRBool mUploading;
+};
+
+// Helper functions
+
+class nsMetricsUtils
+{
+public:
+  // Stores a PRUint16 into the given property bag.
+  static nsresult PutUint16(nsIWritablePropertyBag *bag,
+                            const nsAString &propertyName,
+                            PRUint16 propertyValue);
+
+  // Creates a new nsHashPropertyBag instance.
+  static nsresult NewPropertyBag(nsHashPropertyBag **result);
 };
 
 #endif  // nsMetricsService_h__

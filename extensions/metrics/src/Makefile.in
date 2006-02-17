@@ -53,10 +53,18 @@ REQUIRES	= xpcom \
 		  necko \
 		  pref \
 		  update \
+		  uriloader \
+		  dom \
+		  docshell \
+		  layout \
+		  widget \
+		  xmlextras \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsMetricsService.cpp \
+		nsLoadCollector.cpp \
+		nsWindowCollector.cpp \
 		nsMetricsModule.cpp \
 		$(NULL)
 

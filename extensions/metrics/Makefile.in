@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src tool
+DIRS		= public src
 
 PREF_JS_EXPORTS = $(srcdir)/metrics.js
 
