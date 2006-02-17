@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMSVGRect;
+interface nsIDOMSVGPoint;
 
 /**
  * \addtogroup renderer_interfaces Rendering Engine Interfaces
@@ -62,13 +63,50 @@ interface nsIDOMSVGRect;
  * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::canvasTM, and
  * other relevant style such as nsISVGGlyphMetricsSource::strokeWidth.
  */
-[scriptable, uuid(2cdc98a4-594f-42a7-970c-e4dcb7a72aa0)]
+[scriptable, uuid(f1950c48-c095-4acd-954a-9a55410e54a3)]
 interface nsISVGRendererGlyphMetrics : nsISupports
 {
   /**
    * Untransformed width of the composite glyph in pixels.
    */
   readonly attribute float advance;
+
+  /**
+   * Get the length of a string.
+   *
+   * @return The length of the substring in pixel coordinates
+   */
+  float getComputedTextLength();
+
+  /**
+   * Get the length of a substring.
+   *
+   * @param charnum The index of the first character in
+   * nsISVGGlyphMetricsSource::characterData 
+   * @param nchars The number of characters
+   * @return The length of the substring in pixel coordinates
+   */
+  float getSubStringLength(in unsigned long charnum, in unsigned long nchars);
+
+  /**
+   * Get the untransformed start position of a glyph
+   *
+   * @param charnum The index of the character in
+   * nsISVGGlyphMetricsSource::characterData whose start position
+   * is to be determined
+   * @return The start position in pixel coordinates
+   */
+  nsIDOMSVGPoint getStartPositionOfChar(in unsigned long charnum);
+
+  /**
+   * Get the untransformed end position of a glyph
+   *
+   * @param charnum The index of the character in
+   * nsISVGGlyphMetricsSource::characterData whose end position
+   * is to be determined
+   * @return The end position in pixel coordinates
+   */
+  nsIDOMSVGPoint getEndPositionOfChar(in unsigned long charnum);
 
   /**
    * Get the untransformed bounding box of an individual glyph.
@@ -79,6 +117,24 @@ interface nsISVGRendererGlyphMetrics : nsISupports
    * @return The untransformed bounding box in pixel coordinates
    */
   nsIDOMSVGRect getExtentOfChar(in unsigned long charnum);
+
+  /**
+   * Get the untransformed rotation
+   *
+   * @param charnum The index of the character in
+   * nsISVGGlyphMetricsSource::characterData whose rotation
+   * is to be determined
+   * @return The rotation
+   */
+  float getRotationOfChar(in unsigned long charnum);
+
+  /**
+   * Get the character at the specified position
+   *
+   * @param point The point to check
+   * @return The rotation
+   */
+  long GetCharNumAtPosition(in nsIDOMSVGPoint point);
 
   /**
    * Get the advance of an individual glyph.

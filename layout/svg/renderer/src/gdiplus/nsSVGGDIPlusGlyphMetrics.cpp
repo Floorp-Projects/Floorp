@@ -56,6 +56,7 @@ using namespace Gdiplus;
 #include "float.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGRect.h"
+#include "nsIDOMSVGPoint.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsDataHashtable.h"
@@ -302,6 +303,49 @@ nsSVGGDIPlusGlyphMetrics::GetAdvance(float *aAdvance)
   return NS_OK;
 }
 
+/** Implements float getComputedTextLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetComputedTextLength(float *_retval)
+{
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  RectF bounds;
+  GetSubBoundingRect(0, text.Length(), &bounds);
+
+  *_retval = bounds.Width;
+  return NS_OK;
+}
+
+/** Implements float getSubStringLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+{
+  nsAutoString text;
+  mSource->GetCharacterData(text);
+
+  RectF bounds;
+  GetSubBoundingRect(charnum, nchars, &bounds);
+
+  *_retval = bounds.Width;
+  return NS_OK;
+}
+
+/** Implements nsIDOMSVGRect getStartPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements nsIDOMSVGRect getEndPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /** Implements nsIDOMSVGRect getExtentOfChar(in unsigned long charnum); */
 NS_IMETHODIMP
@@ -326,6 +370,22 @@ nsSVGGDIPlusGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_ret
   NS_ADDREF(*_retval);
   
   return NS_OK;
+}
+
+/** Implements float getRotationOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements long GetCharNumAtPosition(in nsIDOMSVGPoint point); */
+NS_IMETHODIMP
+nsSVGGDIPlusGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+{
+  *_retval = -1;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

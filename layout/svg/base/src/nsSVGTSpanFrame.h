@@ -128,7 +128,14 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGTextContentMetrics
+  NS_IMETHOD GetNumberOfChars(PRInt32 *_retval);
+  NS_IMETHOD GetComputedTextLength(float *_retval);
+  NS_IMETHOD GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval);
+  NS_IMETHOD GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
+  NS_IMETHOD GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval);
   NS_IMETHOD GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval);
+  NS_IMETHOD GetRotationOfChar(PRUint32 charnum, float *_retval);
+  NS_IMETHOD GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference

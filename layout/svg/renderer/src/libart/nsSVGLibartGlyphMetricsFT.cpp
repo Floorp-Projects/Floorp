@@ -47,6 +47,7 @@
 #include "float.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGRect.h"
+#include "nsIDOMSVGPoint.h"
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsISVGLibartGlyphMetricsFT.h"
@@ -221,9 +222,41 @@ nsSVGLibartGlyphMetricsFT::GetAdvance(float *aAdvance)
 }
 
 NS_IMETHODIMP
-nsSVGLibartGlyphMetrics::GetAdvanceOfChar(PRUint32 charnum, float *advance)
+nsSVGLibartGlyphMetricsFT::GetAdvanceOfChar(PRUint32 charnum, float *advance)
 {
   *advance = 0.0f;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements float getComputedTextLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetComputedTextLength(float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements float getSubStringLength(in unsigned long charnum, in unsigned long nchars); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, float *_retval)
+{
+  *_retval = 0.0;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements nsIDOMSVGRect getStartPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements nsIDOMSVGRect getEndPositionOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **_retval)
+{
+  *_retval = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -247,6 +280,21 @@ nsSVGLibartGlyphMetricsFT::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_re
   NS_ADDREF(*_retval);
   
   return NS_OK;
+}
+
+/** Implements float getRotationOfChar(in unsigned long charnum); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetRotationOfChar(PRUint32 charnum, float *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements long GetCharNumAtPosition(in nsIDOMSVGPoint point); */
+NS_IMETHODIMP
+nsSVGLibartGlyphMetricsFT::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
+{
+  *_retval = -1;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /** Implements boolean update(in unsigned long updatemask); */
