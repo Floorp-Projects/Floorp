@@ -41,7 +41,7 @@
 interface nsIURI;
 
 
-[scriptable, uuid(f4d74511-2b2d-4a14-a3e4-a392ac5ac3ff)]
+[scriptable, uuid(6c86a0d8-7a19-42a4-be18-d282a26388fd)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -103,9 +103,9 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * @param uri the URI that is being loaded
      * @param flags the permission set, see above
      */
-    [noscript] void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
-                                              in nsIURI uri, 
-                                              in unsigned long flags);
+    void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
+                                   in nsIURI uri, 
+                                   in unsigned long flags);
 
     /**
      * Check that content from "from" can load "uri".
@@ -257,8 +257,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * Returns OK if aSourcePrincipal and aTargetPrincipal
      * have the same "origin" (scheme, host, and port).
      */
-    [noscript] void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
-                                             in nsIPrincipal aTargetPrincipal);
+    void checkSameOriginPrincipal(in nsIPrincipal aSourcePrincipal,
+                                  in nsIPrincipal aTargetPrincipal);
 
     /**
      * Returns the principal of the global object of the given context, or null
@@ -271,6 +271,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * are equivalent if their schemes, hosts, and ports (if any) match.  This
      * method returns true if aSubjectURI and aObjectURI have the same origin,
      * false otherwise.
+     // FIXME: Bug 327243 -- this is no longer used outside caps.
+     // Should it even be exposed?
      */
     [noscript] boolean securityCompareURIs(in nsIURI aSubjectURI,
                                            in nsIURI aObjectURI);
