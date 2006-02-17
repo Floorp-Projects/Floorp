@@ -1,3 +1,4 @@
+#if 0
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -36,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#endif
 
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_AUTO                = "app.update.auto";
@@ -116,6 +118,7 @@ const Node = Components.interfaces.nsIDOMNode;
 var gApp        = null;
 var gPref       = null;
 var gOS         = null;
+var gABI        = null;
 var gConsole    = null;
 var gLogEnabled = { };
 
@@ -873,6 +876,24 @@ function UpdateService() {
   gConsole = Components.classes["@mozilla.org/consoleservice;1"]
                        .getService(Components.interfaces.nsIConsoleService);  
 
+  // Not all builds have a known ABI
+  try {
+    gABI = gApp.XPCOMABI;
+  }
+  catch {
+    LOG("UpdateService", "XPCOM ABI unknown: updates are not possible.");
+  }
+
+#ifdef XP_MACOSX
+  // Mac universal build should report a different ABI than either macppc
+  // or mactel.
+  var macutils = Components.classes["@mozilla.org/xpcom/mac-utils;1"]
+                           .getService(Components.interfaces.nsIMacUtils);
+
+  if (macutils.isUniversalBinary)
+    gABI = "Universal-gcc3";
+#endif
+
   // Start the update timer only after a profile has been selected so that the
   // appropriate values for the update check are read from the user's profile.  
   gOS.addObserver(this, "profile-after-change", false);
@@ -1318,6 +1339,11 @@ UpdateService.prototype = {
     var enabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!enabled && gPref.prefIsLocked(PREF_APP_UPDATE_ENABLED))
       return false;
+
+    // If we don't know the binary platform we're updating, we can't update.
+    if (!gABI)
+      return false;
+
     return true;
   },
   
@@ -1691,7 +1717,7 @@ Checker.prototype = {
     url = url.replace(/%PRODUCT%/g, gApp.name);
     url = url.replace(/%VERSION%/g, gApp.version);
     url = url.replace(/%BUILD_ID%/g, gApp.appBuildID);
-    url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gApp.XPCOMABI);
+    url = url.replace(/%BUILD_TARGET%/g, gApp.OS + "_" + gABI);
     url = url.replace(/%LOCALE%/g, getLocale());
     url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/\+/g, "%2B");
