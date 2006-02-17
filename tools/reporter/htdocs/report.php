@@ -85,10 +85,19 @@ if (!$reportQuery->fields){
     exit;
 }
 
+// We need this for continuity params in particular
+$query = new query;
+$query_input = $query->getQueryInputs();
+
+
 $title = "Report for ".$reportQuery->fields['host_hostname']." - ".$reportQuery->fields['report_id'];
 $content->assign('report_id',              $reportQuery->fields['report_id']);
 $content->assign('report_url',             $reportQuery->fields['report_url']);
-$content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$reportQuery->fields['host_hostname'].'&amp;submit_query=Query');
+
+$host_continuity_params = $query->continuityParams(array('report_id', 'report_product', 'report_file_date', 'product_family', 'page'));
+$content->assign('host_continuity_params', $host_continuity_params);
+
+$content->assign('host_url',               $config['base_url'].'/app/query/?host_hostname='.$reportQuery->fields['host_hostname'].'&amp;'.$host_continuity_params.'submit_query=Query');
 $content->assign('host_hostname',          $reportQuery->fields['host_hostname']);
 $content->assign('report_problem_type',    resolveProblemTypes($reportQuery->fields['report_problem_type']));
 $content->assign('report_behind_login',    resolveBehindLogin($reportQuery->fields['report_behind_login']));
@@ -110,15 +119,13 @@ if($screenshot){
 
 // Last/Next Functionality
 if(isset($_SESSION['reportList'])){
-    $query = new query;
-    $query_input = $query->getQueryInputs();
+    $nav_continuity_params = $query->continuityParams(array('report_id'));
 
-    $continuity_params = $query->continuityParams($query_input, null);
-
-    $content->assign('continuity_params',             $continuity_params);
+    $content->assign('nav_continuity_params',             $nav_continuity_params);
 
     $reportIndex = array_search($_GET['report_id'],   $_SESSION['reportList']);
-
+//print $reportIndex.$_SESSION['reportList'][$reportIndex];
+//die();
     $content->assign('index',                         $reportIndex);
     $content->assign('total',                         sizeof($_SESSION['reportList']));
 

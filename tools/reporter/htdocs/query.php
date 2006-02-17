@@ -59,27 +59,12 @@ $db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 $query = new query;
-$query_input = $query->getQueryInputs();
-
-$continuityParams = $query->continuityParams($query_input, null);
-
-$columnHeaders = $query->columnHeaders($query_input, $continuityParams);
-
-$result = $query->doQuery($query_input['selected'],
-                          $query_input['where'],
-                          $query_input['orderby'],
-                          $query_input['show'],
-                          $query_input['page'],
-                          $query_input['product_family'],
-                          $query_input['count']
-          );
-
-$output = $query->outputHTML($result, $query_input, $continuityParams, $columnHeaders);
+$query->doQuery();
 
 // disconnect database
 $db->Close();
 
-if (sizeof($output['data']) == 0){
+if ($query->totalResults == 0){
     $content->assign('error', 'No Results found');
     displayPage($content, 'query', 'query.tpl');
     exit;
@@ -88,43 +73,45 @@ if (sizeof($output['data']) == 0){
 // Start Next/Prev Navigation
 /*******
  * We cap the navigation at 2000 items because php sometimes acts wierd
- * when sessions get to big.  In most cases, this won't effect anyone.
+ * when sessions get to big.  In most cases, this won't effect anyone.  Note
+ * that reportList won't ever return more than max_nav_count by design.
  *******/
-if($result['totalResults'] < $config['max_nav_count']){
-    $_SESSION['reportList'] = $result['reportList'];
+if($query->totalResults < $config['max_nav_count']){
+    $_SESSION['reportList'] = $query->reportList;
 } else {
     unset($_SESSION['reportList']);
     $content->assign('notice', 'This query returned too many reports for next/previous navigation to work');
 }
 
-$content->assign('column',             $columnHeaders);
-$content->assign('row',                $output['data']);
+$content->assign('column',             $query->columnHeaders());
+$content->assign('row',                $query->outputHTML());
 
 /* this particular continuity_params is for pagination (it doesn't include 'page') */
-$content->assign('continuity_params',  $query->continuityParams($query_input, array('page')));
+$content->assign('continuity_params',  $query->continuityParams(array('page')));
 
 /* Pagination */
-$pages = ceil($result['totalResults']/$query_input['show']);
+$pages = ceil($query->totalResults/$query->show);
 
 /* These variables are also used for pagination purposes */
-$content->assign('count',              $result['totalResults']);
-$content->assign('show',               $query_input['show']);
-$content->assign('page',               $query_input['page']);
+$content->assign('count',              $query->totalResults);
+$content->assign('show',               $query->show);
+$content->assign('page',               $query->page);
 $content->assign('pages',              $pages);
 
-if($query_input['page'] > 10){
-    $start = $query_input['page']-10;
+if($query->page > 10){
+    $start = $query->page-10;
 }
-if($query_input['page'] < 10){
+if($query->page < 10){
     $start = 1;
 }
 
 $content->assign('start',              $start);
 $content->assign('step',               1);
-if(ceil($result['totalResults']/$query_input['show']) < 20){
-    $content->assign('amt',            ceil($result['totalResults']/$query_input['show']));
+if(ceil($query->totalResults/$query->show) < 20){
+    $content->assign('amt',            ceil($query->totalResults/$query->show));
 } else {
     $content->assign('amt',            20);
 }
+
 displayPage($content, 'query', 'query.tpl');
 ?>
