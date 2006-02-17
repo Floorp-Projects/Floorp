@@ -1,5 +1,4 @@
 <?php
-require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
 
 class query
 {
