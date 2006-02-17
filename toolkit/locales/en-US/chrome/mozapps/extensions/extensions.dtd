@@ -30,6 +30,8 @@
 <!ENTITY cmd.homepage.accesskey           "H">
 <!ENTITY cmd.about.label                  "About this Extension">
 <!ENTITY cmd.about.accesskey              "A">
+<!ENTITY cmd.cancelUninstall.label        "Cancel Uninstall">
+<!ENTITY cmd.cancelUninstall.accesskey    "C">
 <!ENTITY cmd.updateAddon.label            "Find Update">
 <!ENTITY cmd.updateAddon.accesskey        "F">
 <!ENTITY cmd.enable.label                 "Enable">

@@ -152,7 +152,8 @@ function Startup()
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionsView.setAttribute("state", gWindowState);
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
-                                .getService(Components.interfaces.nsIExtensionManager);
+                                .getService(Components.interfaces.nsIExtensionManager)
+                                .QueryInterface(Components.interfaces.nsIExtensionManager2);
   gApp = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
                    .QueryInterface(Components.interfaces.nsIXULRuntime);
 
@@ -401,10 +402,6 @@ XPInstallDownloadManager.prototype = {
           ps.alert(window, title, message);
           element.setAttribute("status", msg);
         }
-        // Remove the dummy, since we installed successfully (only if we're a URL, 
-        // not a download operation on an existing item.
-        var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION
-                                                : nsIUpdateItem.TYPE_THEME;
         break;
       case nsIXPIProgressDialog.DIALOG_CLOSE:
         break;
@@ -634,11 +631,13 @@ function onThemeSelect(aEvent)
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
 var gExtensionContextMenus = ["menuitem_options", "menuitem_homepage", "menuitem_about", 
-                              "menuseparator_1", "menuitem_uninstall", "menuitem_update",
+                              "menuseparator_1", "menuitem_uninstall",
+                              "menuitem_cancelUninstall", "menuitem_update",
                               "menuitem_enable", "menuitem_disable", "menuseparator_2", 
                               "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn"];
 var gThemeContextMenus = ["menuitem_useTheme", "menuitem_homepage", "menuitem_about", 
-                          "menuseparator_1", "menuitem_uninstall", "menuitem_update",
+                          "menuseparator_1", "menuitem_uninstall",
+                          "menuitem_cancelUninstall", "menuitem_update",
                           "menuitem_enable"];
 
 function buildContextMenu(aEvent)
@@ -665,19 +664,14 @@ function buildContextMenu(aEvent)
   var name = selectedItem ? selectedItem.getAttribute("name") : "";
   menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
   
+  var canEnable = gExtensionsViewController.isCommandEnabled("cmd_cancelUninstall");
+  document.getElementById("menuitem_cancelUninstall_clone").hidden = !canEnable;
+  document.getElementById("menuitem_uninstall_clone").hidden = canEnable;
+
   if (isExtensions) {
-    var canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
-    var menuitemToShow, menuitemToHide;
-    if (canEnable) {
-      menuitemToShow = document.getElementById("menuitem_enable_clone");
-      menuitemToHide = document.getElementById("menuitem_disable_clone");
-    }
-    else {
-      menuitemToShow = document.getElementById("menuitem_disable_clone");
-      menuitemToHide = document.getElementById("menuitem_enable_clone");
-    }
-    menuitemToShow.hidden = false;
-    menuitemToHide.hidden = true;
+    canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
+    document.getElementById("menuitem_enable_clone").hidden = !canEnable;
+    document.getElementById("menuitem_disable_clone").hidden = canEnable;
   }
   else {
     var enableMenu = document.getElementById("menuitem_enable_clone");
@@ -890,6 +884,9 @@ var gExtensionsViewController = {
              opType != OP_NEEDS_UNINSTALL &&
              selectedItem.getAttribute("locked") != "true" &&
              canWriteToLocation(selectedItem);
+    case "cmd_cancelUninstall":
+      return selectedItem &&
+              opType == OP_NEEDS_UNINSTALL;
     case "cmd_update":
       return selectedItem &&
              selectedItem.getAttribute("updateable") != "false" &&
@@ -902,17 +899,17 @@ var gExtensionsViewController = {
       return selectedItem && 
             (selectedItem.disabled &&
              opType != OP_NEEDS_ENABLE ||
-             opType == OP_NEEDS_DISABLE ||
-             opType == OP_NEEDS_UNINSTALL);
+             opType == OP_NEEDS_DISABLE);
     case "cmd_enable":
     //controls wheter the Enable/Disable menuitem is enabled
       return selectedItem && 
-             opType != OP_NEEDS_ENABLE &&
-             opType != OP_NEEDS_INSTALL &&
-             opType != OP_NEEDS_UPGRADE &&
+             (opType == OP_NONE ||
+             opType == OP_NEEDS_DISABLE) &&
+             selectedItem.getAttribute("satisfiesDependencies") != "false" &&
              selectedItem.getAttribute("compatible") != "false";
     case "cmd_disable":
       return selectedItem &&
+            selectedItem.getAttribute("satisfiesDependencies") != "false" &&
             (opType == OP_NONE ||
              opType == OP_NEEDS_ENABLE);
     case "cmd_movetop":
@@ -1071,19 +1068,32 @@ var gExtensionsViewController = {
     {
       // Confirm the uninstall
       var extensionsStrings = document.getElementById("extensionsStrings");
-      var brandStrings = document.getElementById("brandStrings");
-
       var name = aSelectedItem.getAttribute("name");
-      var title = extensionsStrings.getFormattedString("queryUninstallTitle", [name]);
-      if (gWindowState == "extensions")
-        var message = extensionsStrings.getFormattedString("queryUninstallExtensionMessage", [name, name]);
-      else if (gWindowState == "themes")
-        message = extensionsStrings.getFormattedString("queryUninstallThemeMessage", [name]);
+      var id = getIDFromResourceURI(aSelectedItem.id);
+      var dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
 
-      // XXXben - improve the wording on the buttons here!
-      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                .getService(Components.interfaces.nsIPromptService);
-      if (!promptSvc.confirm(window, title, message))
+      if (dependentItems.length > 0)
+        var message = extensionsStrings.getFormattedString("uninstallWarningDependMessage", [name]);
+      else
+        message = extensionsStrings.getFormattedString("uninstallWarningMessage", [name]);
+
+      var params = {
+        message1: message,
+        message2: extensionsStrings.getFormattedString("uninstallQueryMessage", [name]),
+        title: extensionsStrings.getFormattedString("uninstallTitle", [name]),
+        buttons: {
+          accept: { label: extensionsStrings.getString("uninstallButton"),
+                    focused: true },
+          cancel: { label: extensionsStrings.getString("cancelButton") }
+        }
+      }
+      var names = [];
+      for (var i = 0; i < dependentItems.length; ++i)
+        names.push(dependentItems[i].name + " " + dependentItems[i].version);
+
+      window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
+                        "titlebar,modal,centerscreen", names, params);
+      if (params.result != "accept") 
         return;
 
       var selectedID = aSelectedItem.id;
@@ -1101,12 +1111,45 @@ var gExtensionsViewController = {
           this.cmd_useTheme(document.getElementById(PREFIX_ITEM_URI + "{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
       }
       gExtensionManager.uninstallItem(getIDFromResourceURI(selectedID));
+      gExtensionsViewController.onCommandUpdate();
+    },
 
+    cmd_cancelUninstall: function (aSelectedItem)
+    {
+      gExtensionManager.cancelUninstallItem(getIDFromResourceURI(aSelectedItem.id));
+      gExtensionsViewController.onCommandUpdate();
     },
 
     cmd_disable: function (aSelectedItem)
     {
-      gExtensionManager.disableItem(getIDFromResourceURI(aSelectedItem.id));
+      var id = getIDFromResourceURI(aSelectedItem.id);
+      var dependentItems = gExtensionManager.getDependentItemListForID(id, false, { });
+
+      if (dependentItems.length > 0) {
+        var extensionsStrings = document.getElementById("extensionsStrings");
+        var name = aSelectedItem.getAttribute("name");
+        var message = extensionsStrings.getFormattedString("disableWarningDependMessage", [name]);
+        var params = {
+          message1: message,
+          message2: extensionsStrings.getFormattedString("disableQueryMessage", [name]),
+          title: extensionsStrings.getFormattedString("disableTitle", [name]),
+          buttons: {
+            accept: { label: extensionsStrings.getString("disableButton"),
+                      focused: true },
+            cancel: { label: extensionsStrings.getString("cancelButton") }
+          }
+        }
+        var names = [];
+        for (var i = 0; i < dependentItems.length; ++i)
+          names.push(dependentItems[i].name + " " + dependentItems[i].version);
+
+        window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
+                          "titlebar,modal,centerscreen", names, params);
+        if (params.result != "accept") 
+          return;
+      }
+      gExtensionManager.disableItem(id);
+      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
     },
     
     cmd_enable: function (aSelectedItem)
