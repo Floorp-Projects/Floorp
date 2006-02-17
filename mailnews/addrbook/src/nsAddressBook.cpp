@@ -113,59 +113,59 @@
 #define MOZ_AB_OBJECTCLASS "mozillaAbPersonAlpha"
 
 const ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABLE_COUNT] = { 
-  {kFirstNameColumn, "givenName", PR_TRUE},
-  {kLastNameColumn, "sn", PR_TRUE},
-  {kDisplayNameColumn, "cn", PR_TRUE},
-  {kNicknameColumn, MOZ_AB_LDIF_PREFIX "Nickname", PR_TRUE},
-  {kPriEmailColumn, "mail", PR_TRUE},
-  {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", PR_TRUE},
-  {kDefaultEmailColumn, MOZ_AB_LDIF_PREFIX "DefaultEmail", PR_FALSE},
-  {kCardTypeColumn, MOZ_AB_LDIF_PREFIX "CardType", PR_FALSE},
-  {kAimScreenNameColumn, "nsAIMid", PR_FALSE},
-  {kPreferMailFormatColumn, MOZ_AB_LDIF_PREFIX "UseHtmlMail", PR_FALSE},
-  {kLastModifiedDateColumn, "modifytimestamp", PR_FALSE},
-  {kWorkPhoneColumn, "telephoneNumber", PR_TRUE}, 
-  {kWorkPhoneTypeColumn, MOZ_AB_LDIF_PREFIX "WorkPhoneType", PR_FALSE},
-  {kHomePhoneColumn, "homePhone", PR_TRUE},
-  {kHomePhoneTypeColumn, MOZ_AB_LDIF_PREFIX "HomePhoneType", PR_FALSE},
-  {kFaxColumn, "fax", PR_TRUE},
-  {kFaxTypeColumn, MOZ_AB_LDIF_PREFIX "FaxNumberType", PR_FALSE},
-  {kPagerColumn, "pager", PR_TRUE},
-  {kPagerTypeColumn, MOZ_AB_LDIF_PREFIX "PagerNumberType", PR_FALSE},
-  {kCellularColumn, "mobile", PR_TRUE},
-  {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType", PR_FALSE},
-  {kHomeAddressColumn, "homeStreet", PR_TRUE},
-  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomeStreet2", PR_TRUE},
-  {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
-  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", PR_TRUE},
-  {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", PR_TRUE},
-  {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", PR_TRUE},
-  {kWorkAddressColumn, "street", PR_TRUE},
-  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "WorkStreet2", PR_TRUE}, 
-  {kWorkCityColumn, "l", PR_TRUE}, 
-  {kWorkStateColumn, "st", PR_TRUE}, 
-  {kWorkZipCodeColumn, "postalCode", PR_TRUE}, 
-  {kWorkCountryColumn, "c", PR_TRUE}, 
-  {kJobTitleColumn, "title", PR_TRUE},
-  {kDepartmentColumn, "department", PR_TRUE},
-  {kCompanyColumn, "company", PR_TRUE},
-  {kWebPage1Column, MOZ_AB_LDIF_PREFIX "WorkUrl", PR_TRUE},
-  {kWebPage2Column, MOZ_AB_LDIF_PREFIX "HomeUrl", PR_TRUE},
-  {kBirthYearColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthMonthColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthDayColumn, nsnull, PR_TRUE}, // unused for now
-  {kCustom1Column, MOZ_AB_LDIF_PREFIX "Custom1", PR_TRUE},
-  {kCustom2Column, MOZ_AB_LDIF_PREFIX "Custom2", PR_TRUE},
-  {kCustom3Column, MOZ_AB_LDIF_PREFIX "Custom3", PR_TRUE},
-  {kCustom4Column, MOZ_AB_LDIF_PREFIX "Custom4", PR_TRUE},
-  {kNotesColumn, "description", PR_TRUE},
-  {kAnniversaryYearColumn, MOZ_AB_LDIF_PREFIX "AnniversaryYear", PR_FALSE}, 
-  {kAnniversaryMonthColumn, MOZ_AB_LDIF_PREFIX "AnniversaryMonth", PR_FALSE}, 
-  {kAnniversaryDayColumn, MOZ_AB_LDIF_PREFIX "AnniversaryDay", PR_FALSE}, 
-  {kSpouseNameColumn, MOZ_AB_LDIF_PREFIX "SpouseName", PR_FALSE}, 
-  {kFamilyNameColumn, MOZ_AB_LDIF_PREFIX "FamilyName", PR_FALSE}, 
-  {kDefaultAddressColumn, MOZ_AB_LDIF_PREFIX "DefaultAddress", PR_FALSE}, 
-  {kCategoryColumn, MOZ_AB_LDIF_PREFIX "Category", PR_FALSE}, 
+  {kFirstNameColumn, "givenName", 2100},
+  {kLastNameColumn, "sn", 2101},
+  {kDisplayNameColumn, "cn", 2102},
+  {kNicknameColumn, MOZ_AB_LDIF_PREFIX "Nickname", 2103},
+  {kPriEmailColumn, "mail", 2104},
+  {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", 2105},
+  {kDefaultEmailColumn, MOZ_AB_LDIF_PREFIX "DefaultEmail"},
+  {kCardTypeColumn, MOZ_AB_LDIF_PREFIX "CardType"},
+  {kAimScreenNameColumn, "nsAIMid"},
+  {kPreferMailFormatColumn, MOZ_AB_LDIF_PREFIX "UseHtmlMail"},
+  {kLastModifiedDateColumn, "modifytimestamp"},
+  {kWorkPhoneColumn, "telephoneNumber", 2106},
+  {kWorkPhoneTypeColumn, MOZ_AB_LDIF_PREFIX "WorkPhoneType"},
+  {kHomePhoneColumn, "homePhone", 2107},
+  {kHomePhoneTypeColumn, MOZ_AB_LDIF_PREFIX "HomePhoneType"},
+  {kFaxColumn, "fax", 2108},
+  {kFaxTypeColumn, MOZ_AB_LDIF_PREFIX "FaxNumberType"},
+  {kPagerColumn, "pager", 2109},
+  {kPagerTypeColumn, MOZ_AB_LDIF_PREFIX "PagerNumberType"},
+  {kCellularColumn, "mobile", 2110},
+  {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType"},
+  {kHomeAddressColumn, "homeStreet", 2111},
+  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomeStreet2", 2112},
+  {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", 2113},
+  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", 2114},
+  {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", 2115},
+  {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", 2116},
+  {kWorkAddressColumn, "street", 2117},
+  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "WorkStreet2", 2118},
+  {kWorkCityColumn, "l", 2119},
+  {kWorkStateColumn, "st", 2120},
+  {kWorkZipCodeColumn, "postalCode", 2121}, 
+  {kWorkCountryColumn, "c", 2122}, 
+  {kJobTitleColumn, "title", 2123},
+  {kDepartmentColumn, "department", 2124},
+  {kCompanyColumn, "company", 2125},
+  {kWebPage1Column, MOZ_AB_LDIF_PREFIX "WorkUrl", 2126},
+  {kWebPage2Column, MOZ_AB_LDIF_PREFIX "HomeUrl", 2127},
+  {kBirthYearColumn, nsnull, 2128}, // unused for now
+  {kBirthMonthColumn, nsnull, 2129}, // unused for now
+  {kBirthDayColumn, nsnull, 2130}, // unused for now
+  {kCustom1Column, MOZ_AB_LDIF_PREFIX "Custom1", 2131},
+  {kCustom2Column, MOZ_AB_LDIF_PREFIX "Custom2", 2132},
+  {kCustom3Column, MOZ_AB_LDIF_PREFIX "Custom3", 2133},
+  {kCustom4Column, MOZ_AB_LDIF_PREFIX "Custom4", 2134},
+  {kNotesColumn, "description", 2135},
+  {kAnniversaryYearColumn, MOZ_AB_LDIF_PREFIX "AnniversaryYear"},
+  {kAnniversaryMonthColumn, MOZ_AB_LDIF_PREFIX "AnniversaryMonth"},
+  {kAnniversaryDayColumn, MOZ_AB_LDIF_PREFIX "AnniversaryDay"},
+  {kSpouseNameColumn, MOZ_AB_LDIF_PREFIX "SpouseName"},
+  {kFamilyNameColumn, MOZ_AB_LDIF_PREFIX "FamilyName"},
+  {kDefaultAddressColumn, MOZ_AB_LDIF_PREFIX "DefaultAddress"},
+  {kCategoryColumn, MOZ_AB_LDIF_PREFIX "Category"},
 };
 
 //
@@ -540,28 +540,39 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
   PRUint32 i;
   PRUint32 writeCount;
   PRUint32 length;
-   
-  // XXX TODO
-  // when Outlook Express exports to .csv, the first line of the file is the column descriptions.
-  // and I think we should too.  (otherwise, this data is just data, who knows what is what.)
-  // but we have to fix the import code to skip the first card before we can do that.
-  // the problem is Netscape 4.x didn't this, so if we always skip the first card
-  // we'll lose data when importing from 4.x
-  // for now, do it how 4.x does it and how the current import code expect it.
-  // note, these are more fields that 4.x expects, so Mozilla -> 4.x will not work right.
-#ifdef EXPORT_LIKE_OE_DOES
+
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle("chrome://messenger/locale/importMsgs.properties", getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString revisedName;
+  nsXPIDLString columnName;
+
   for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-    if (EXPORT_ATTRIBUTES_TABLE[i].includeForPlainText) {
-      // XXX localize this?
-      length = strlen(EXPORT_ATTRIBUTES_TABLE[i].abColName);
-      rv = outputStream->Write(EXPORT_ATTRIBUTES_TABLE_COUNT[i].abColName, length, &writeCount);
+    if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId != 0) {
+
+      // We don't need to truncate the string here as getter_Copies will
+      // do that for us.
+      if (NS_FAILED(bundle->GetStringFromID(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId, getter_Copies(columnName))))
+        columnName.AppendInt(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId);
+
+      importService->SystemStringFromUnicode(columnName.get(), revisedName);
+
+      rv = outputStream->Write(revisedName.get(),
+                               revisedName.Length(),
+                               &writeCount);
       NS_ENSURE_SUCCESS(rv,rv);
-      if (length != writeCount)
+
+      if (revisedName.Length() != writeCount)
         return NS_ERROR_FAILURE;
       
       if (i < EXPORT_ATTRIBUTES_TABLE_COUNT - 1) {
         rv = outputStream->Write(aDelim, aDelimLen, &writeCount);
         NS_ENSURE_SUCCESS(rv,rv);
+
         if (aDelimLen != writeCount)
           return NS_ERROR_FAILURE;
       }
@@ -571,7 +582,6 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
   NS_ENSURE_SUCCESS(rv,rv);
   if (MSG_LINEBREAK_LEN != writeCount)
     return NS_ERROR_FAILURE;
-#endif
 
   rv = aDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator) {
@@ -597,7 +607,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
           nsCString valueCStr;
 
           for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-            if (EXPORT_ATTRIBUTES_TABLE[i].includeForPlainText) {
+            if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId != 0) {
               rv = card->GetCardValue(EXPORT_ATTRIBUTES_TABLE[i].abColName, getter_Copies(value));
               NS_ENSURE_SUCCESS(rv,rv);
 
