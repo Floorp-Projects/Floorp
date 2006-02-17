@@ -97,7 +97,7 @@
 
   <hbox flex="1">
     <hbox id="appcontent" flex="100%">
-      <vbox id="browserleftbar" onclick="BrowserHomeBar()">
+      <vbox id="browserleftbar">
          <vbox id="homebarcontainer">
          </vbox>
       </vbox>
