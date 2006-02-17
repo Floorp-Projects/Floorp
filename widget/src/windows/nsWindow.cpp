@@ -3890,25 +3890,6 @@ static nsresult HeapDump(const char *filename, const char *heading)
 #ifdef WINCE
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  // Make sure heapwalk() is available
-  typedef BOOL WINAPI HeapWalkProc(HANDLE hHeap, LPPROCESS_HEAP_ENTRY lpEntry);
-  typedef DWORD WINAPI GetProcessHeapsProc(DWORD NumberOfHeaps, PHANDLE ProcessHeaps);
-
-  static PRBool firstTime = PR_TRUE;
-  static HeapWalkProc *heapWalkP = NULL;
-  static GetProcessHeapsProc *getProcessHeapsP = NULL;
-
-  if (firstTime) {
-    firstTime = PR_FALSE;
-    HMODULE kernel = GetModuleHandle("kernel32.dll");
-    if (kernel) {
-      heapWalkP = (HeapWalkProc*)GetProcAddress(kernel, "HeapWalk");
-      getProcessHeapsP = (GetProcessHeapsProc*)GetProcAddress(kernel, "GetProcessHeaps");
-    }
-  }
-
-  if (!heapWalkP)
-    return NS_ERROR_NOT_AVAILABLE;
 
   PRFileDesc *prfd = PR_Open(filename, PR_CREATE_FILE | PR_APPEND | PR_WRONLY, 0777);
   if (!prfd)
@@ -3918,7 +3899,7 @@ static nsresult HeapDump(const char *filename, const char *heading)
   PRUint32 n;
   PRUint32 written = 0;
   HANDLE heapHandle[64];
-  DWORD nheap = (*getProcessHeapsP)(64, heapHandle);
+  DWORD nheap = GetProcessHeaps(64, heapHandle);
   if (nheap == 0 || nheap > 64) {
     return NS_ERROR_FAILURE;
   }
@@ -3931,7 +3912,7 @@ static nsresult HeapDump(const char *filename, const char *heading)
     n = PR_snprintf(buf, sizeof buf, "BEGIN heap %d : 0x%p\n", i+1, heapHandle[i]);
     PR_Write(prfd, buf, n);
     ent.lpData = NULL;
-    while ((*heapWalkP)(heapHandle[i], &ent)) {
+    while (HeapWalk(heapHandle[i], &ent)) {
       if (ent.wFlags & PROCESS_HEAP_REGION)
         n = PR_snprintf(buf, sizeof buf, "REGION %08p : overhead %d committed %d uncommitted %d firstblock %08p lastblock %08p\n",
                         ent.lpData, ent.cbOverhead,
