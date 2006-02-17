@@ -47,7 +47,6 @@ MODULE		= metrics
 XPIDLSRCS	= nsIMetricsService.idl
 
 EXPORTS		= \
-		nsMetricsEvent.h \
 		nsMetricsModule.h \
 		$(NULL)
 
