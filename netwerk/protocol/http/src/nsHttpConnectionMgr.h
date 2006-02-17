@@ -42,6 +42,7 @@
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpConnection.h"
 #include "nsHttpTransaction.h"
+#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "prmon.h"
 

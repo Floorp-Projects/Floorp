@@ -387,8 +387,7 @@ nsHttpResponseHead::MustValidateIfExpired()
     //  cache, that cache MUST NOT use the entry after it becomes stale to respond to 
     //  a subsequent request without first revalidating it with the origin server.
     //
-    const char *val = PeekHeader(nsHttp::Cache_Control);
-    return val && PL_strcasestr(val, "must-revalidate");
+    return HasHeaderValue(nsHttp::Cache_Control, "must-revalidate");
 }
 
 PRBool
@@ -399,7 +398,7 @@ nsHttpResponseHead::IsResumable()
     return mVersion >= NS_HTTP_VERSION_1_1 &&
            PeekHeader(nsHttp::Content_Length) && 
           (PeekHeader(nsHttp::ETag) || PeekHeader(nsHttp::Last_Modified)) &&
-           PL_strcasestr(PeekHeader(nsHttp::Accept_Ranges), "bytes");
+           HasHeaderValue(nsHttp::Accept_Ranges, "bytes");
 }
 
 PRBool
@@ -631,18 +630,13 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
         return;
     }
 
-    const char *s = val;
-
     // search header value for occurance(s) of "no-cache" but ignore
     // occurance(s) of "no-cache=blah"
-    while ((s = PL_strcasestr(s, "no-cache")) != nsnull) {
-        s += (sizeof("no-cache") - 1);
-        if (*s != '=')
-            mCacheControlNoCache = PR_TRUE;
-    }
+    if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
+        mCacheControlNoCache = PR_TRUE;
 
     // search header value for occurance of "no-store" 
-    if (PL_strcasestr(val, "no-store"))
+    if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoStore = PR_TRUE;
 }
 
@@ -660,6 +654,6 @@ nsHttpResponseHead::ParsePragma(const char *val)
     // Although 'Pragma: no-cache' is not a standard HTTP response header (it's
     // a request header), caching is inhibited when this header is present so
     // as to match existing Navigator behavior.
-    if (PL_strcasestr(val, "no-cache"))
+    if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
         mPragmaNoCache = PR_TRUE;
 }

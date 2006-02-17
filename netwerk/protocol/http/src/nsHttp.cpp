@@ -214,3 +214,30 @@ nsHttp::ResolveAtom(const char *str)
     stub->key = atom._val = heapAtom->value;
     return atom;
 }
+
+const char *
+nsHttp::FindToken(const char *input, const char *token, const char *seps)
+{
+    if (!input)
+        return nsnull;
+
+    int inputLen = strlen(input);
+    int tokenLen = strlen(token);
+
+    if (inputLen < tokenLen)
+        return nsnull;
+
+    const char *inputTop = input;
+    const char *inputEnd = input + inputLen - tokenLen;
+    for (; input <= inputEnd; ++input) {
+        if (PL_strncasecmp(input, token, tokenLen) == 0) {
+            if (input > inputTop && !strchr(seps, *(input - 1)))
+                continue;
+            if (input < inputEnd && !strchr(seps, *(input + tokenLen)))
+                continue;
+            return input;
+        }
+    }
+
+    return nsnull;
+}
