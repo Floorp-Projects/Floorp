@@ -43,7 +43,6 @@
 #include "nsMsgSearchCore.h"
 #include "nsMsgLocalSearch.h"
 #include "nsIStreamListener.h"
-#include "nsParseMailbox.h"
 #include "nsMsgSearchBoolExpression.h"
 #include "nsMsgSearchTerm.h"
 #include "nsMsgResultElement.h"
@@ -54,6 +53,7 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgWindow.h"
 #include "nsIFileSpec.h"
+#include "nsIMsgHdr.h"
 
 extern "C"
 {

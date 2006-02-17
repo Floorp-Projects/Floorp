@@ -77,17 +77,6 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  $(NULL)
 
-EXPORTS		= \
-		msgMapiFactory.h \
-		msgMapiHook.h \
-		msgMapiImp.h \
-		msgMapiMain.h \
-		msgMapiSupport.h \
-		nsMapiRegistry.h \
-		nsMapiRegistryUtils.h \
-		Registry.h \
-		$(NULL)
-
 CPPSRCS		= \
 		msgMapiFactory.cpp \
 		msgMapiHook.cpp \
