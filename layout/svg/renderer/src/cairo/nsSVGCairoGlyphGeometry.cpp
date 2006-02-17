@@ -293,9 +293,6 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
                             NS_GET_B(rgb)/255.0,
                             opacity);
       
-      nsAutoString text;
-      mSource->GetCharacterData(text);
-
       if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
         LOOP_CHARS(cairo_show_text)
       } else if (filltype == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
