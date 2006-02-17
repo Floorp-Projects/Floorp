@@ -49,12 +49,13 @@
 #include <sqlite3.h>
 
 class nsIFile;
+class mozIStorageService;
 
 class mozStorageConnection : public mozIStorageConnection
 {
 public:
 
-    mozStorageConnection();
+    mozStorageConnection(mozIStorageService* aService);
 
     NS_IMETHOD Initialize(nsIFile *aDatabaseFile);
 
@@ -76,6 +77,11 @@ protected:
     PRBool mTransactionInProgress;
 
     nsCOMPtr<nsIMutableArray> mFunctions;
+
+    // This isn't accessed but is used to make sure that the connections do
+    // not outlive the service. The service, for example, owns certain locks
+    // in mozStorageAsyncIO file that the connections depend on.
+    nsCOMPtr<mozIStorageService> mStorageService;
 };
 
 #endif /* _MOZSTORAGECONNECTION_H_ */

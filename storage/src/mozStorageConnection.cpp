@@ -45,6 +45,7 @@
 #include "mozIStorageFunction.h"
 
 #include "mozStorageConnection.h"
+#include "mozStorageService.h"
 #include "mozStorageStatement.h"
 #include "mozStorageValueArray.h"
 
@@ -57,8 +58,9 @@ PRLogModuleInfo* gStorageLog = nsnull;
 
 NS_IMPL_ISUPPORTS1(mozStorageConnection, mozIStorageConnection)
 
-mozStorageConnection::mozStorageConnection()
-    : mDBConn(nsnull), mTransactionInProgress(PR_FALSE)
+mozStorageConnection::mozStorageConnection(mozIStorageService* aService)
+    : mDBConn(nsnull), mTransactionInProgress(PR_FALSE),
+      mStorageService(aService)
 {
     
 }
