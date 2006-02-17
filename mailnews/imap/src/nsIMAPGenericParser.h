@@ -79,10 +79,10 @@ protected:
   char *CreateAstring();
   char *CreateNilString();
   char *CreateLiteral();
-  char *CreateAtom();
+  char *CreateAtom(PRBool isAstring = PR_FALSE);
   char *CreateQuoted(PRBool skipToEnd = PR_TRUE);
   char *CreateParenGroup();
-  virtual void        SetSyntaxError(PRBool error);
+  virtual void SetSyntaxError(PRBool error, const char *msg);
 
   void AdvanceToNextToken();
   void AdvanceToNextLine();

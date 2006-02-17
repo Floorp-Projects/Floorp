@@ -210,7 +210,7 @@ protected:
   // from the open socket.
   virtual PRBool  GetNextLineForParser(char **nextLine);
   // overriden to do logging
-  virtual void    SetSyntaxError(PRBool error);
+  virtual void    SetSyntaxError(PRBool error, const char *msg = nsnull);
 
 private:
   PRPackedBool    fProcessingTaggedResponse;

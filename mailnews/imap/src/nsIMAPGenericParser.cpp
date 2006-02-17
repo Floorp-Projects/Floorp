@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Hans-Andreas Engel <engel@physics.harvard.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -82,7 +83,7 @@ PRBool nsIMAPGenericParser::LastCommandSuccessful()
   return fParserState == stateOK;
 }
 
-void nsIMAPGenericParser::SetSyntaxError(PRBool error)
+void nsIMAPGenericParser::SetSyntaxError(PRBool error, const char *msg)
 {
   if (error)
       fParserState |= stateSyntaxErrorFlag;
@@ -135,7 +136,8 @@ void nsIMAPGenericParser::skip_to_close_paren()
       }
       else if (*loc == '{' || *loc == '"') {
         // quoted or literal  
-        char *a = CreateAstring();
+        fNextToken = loc;
+        char *a = CreateString();
         PR_FREEIF(a);
         break; // move to next token
       }
@@ -233,38 +235,60 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
   fCurrentTokenPlaceHolder = fLineOfTokens;
 }
 
-// Lots of things in the IMAP protocol are defined as an "astring."
-// An astring is either an atom or a string.
-// An atom is just a series of one or more characters such as:  hello
-// A string can either be quoted or literal.
-// Quoted:  "Test Folder 1"
-// Literal: {13}Test Folder 1
+// RFC3501:  astring = 1*ASTRING-CHAR / string
+//           string  = quoted / literal
 // This function leaves us off with fCurrentTokenPlaceHolder immediately after
 // the end of the Astring.  Call AdvanceToNextToken() to get the token after it.
 char *nsIMAPGenericParser::CreateAstring()
 {
   if (*fNextToken == '{')
-  {
     return CreateLiteral();		// literal
-  }
   else if (*fNextToken == '"')
-  {
     return CreateQuoted();		// quoted
-  }
   else
-  {
-    return CreateAtom();		// atom
-  }
+    return CreateAtom(PR_TRUE); // atom
 }
-
 
 // Create an atom
 // This function does not advance the parser.
 // Call AdvanceToNextToken() to get the next token after the atom.
-char *nsIMAPGenericParser::CreateAtom()
+// RFC3501:  atom            = 1*ATOM-CHAR
+//           ASTRING-CHAR    = ATOM-CHAR / resp-specials
+//           ATOM-CHAR       = <any CHAR except atom-specials>
+//           atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards /
+//                             quoted-specials / resp-specials
+//           list-wildcards  = "%" / "*"
+//           quoted-specials = DQUOTE / "\"
+//           resp-specials   = "]"
+// "Characters are 7-bit US-ASCII unless otherwise specified." [RFC3501, 1.2.]
+char *nsIMAPGenericParser::CreateAtom(PRBool isAstring)
 {
   char *rv = PL_strdup(fNextToken);
-  return (rv);
+  if (!rv)
+  {
+    HandleMemoryFailure();
+    return nsnull;
+  }
+  // We wish to stop at the following characters (in decimal ascii)
+  // 1-31 (CTL), 32 (SP), 34 '"', 37 '%', 40-42 "()*", 92 '\\', 123 '{'
+  // also, ']' is only allowed in astrings
+  char *last = rv;
+  char c = *last;
+  while ((c > 42 || c == 33 || c == 35 || c == 36 || c == 38 || c == 39)
+         && c != '\\' && c != '{' && (isAstring || c != ']'))
+     c = *++last;
+  if (rv == last) {
+     SetSyntaxError(PR_TRUE, "no atom characters found");
+     PL_strfree(rv);
+     return nsnull;
+  }
+  if (*last)
+  {
+    // not the whole token was consumed  
+    *last = '\0';
+    AdvanceTokenizerStartingPoint((fNextToken - fLineOfTokens) + (last-rv));
+  }
+  return rv;
 }
 
 // CreateNilString creates either NIL (reutrns NULL) or a string
@@ -303,7 +327,7 @@ char *nsIMAPGenericParser::CreateString()
   }
   else
   {
-    SetSyntaxError(PR_TRUE);
+    SetSyntaxError(PR_TRUE, "string does not start with '{' or '\"'");
     return NULL;
   }
 }
@@ -380,7 +404,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
     }
   }
   else
-    SetSyntaxError(PR_TRUE);
+    SetSyntaxError(PR_TRUE, "no closing '\"' found in quoted");
   
   return ToNewCString(returnString);
 }
@@ -625,7 +649,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
   
   if (numOpenParens != 0 || !ContinueParse())
   {
-    SetSyntaxError(PR_TRUE);
+    SetSyntaxError(PR_TRUE, "closing ')' not found in paren group");
     returnString.SetLength(0);
   }
   else

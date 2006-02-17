@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Lorenzo Colitti <lorenzo@colitti.com>
+ *   Hans-Andreas Engel <engel@physics.harvard.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3174,22 +3175,26 @@ nsImapServerResponseParser::GetHostSessionList()
     return fHostSessionList;
 }
 
-void nsImapServerResponseParser::SetSyntaxError(PRBool error)
+void nsImapServerResponseParser::SetSyntaxError(PRBool error, const char *msg)
 {
-  nsIMAPGenericParser::SetSyntaxError(error);
+  nsIMAPGenericParser::SetSyntaxError(error, msg);
   if (error)
   {
     if (!fCurrentLine)
     {
       HandleMemoryFailure();
-      fServerConnection.Log("PARSER", ("Internal Syntax Error: <no line>"), nsnull);
+      fServerConnection.Log("PARSER", ("Internal Syntax Error: %s: <no line>"), msg);
     }
     else
     {
       if (!nsCRT::strcmp(fCurrentLine, CRLF))
-        fServerConnection.Log("PARSER", "Internal Syntax Error: <CRLF>", nsnull);
+        fServerConnection.Log("PARSER", "Internal Syntax Error: %s: <CRLF>", msg);
       else
-        fServerConnection.Log("PARSER", "Internal Syntax Error: %s", fCurrentLine);
+      {
+        if (msg)
+          fServerConnection.Log("PARSER", "Internal Syntax Error: %s:", msg);
+        fServerConnection.Log("PARSER", "Internal Syntax Error on line: %s", fCurrentLine);
+      }      
     }
   }
 }
