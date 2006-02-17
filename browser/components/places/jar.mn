@@ -21,6 +21,8 @@ classic.jar:
     skin/classic/browser/places/bookmarks_toolbar.png    (skin-win/bookmarks_toolbar.png)
     skin/classic/browser/places/livemark_item.png        (skin-win/livemark_item.png)
     skin/classic/browser/places/places-icon.png          (skin-win/places-icon.png)
+    skin/classic/browser/places/toolbar_dropmarker.png   (skin-win/toolbar_dropmarker.png)
+    skin/classic/browser/places/folder_drag_over.png     (skin-win/folder_drag_over.png)
     skin/classic/browser/places/bookmarkProperties.css   (skin-win/bookmarkProperties.css)
 
 en-US.jar:

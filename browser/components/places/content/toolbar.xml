@@ -7,6 +7,32 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="places-bar">
+    <resources>
+      <stylesheet src="chrome://browser/skin/places/places.css"/>
+    </resources>
+    
+    <content>
+      <xul:vbox>
+        <xul:hbox class="toolbar-drop-indicator-bar">
+          <xul:hbox class="toolbar-drop-indicator"/>
+        </xul:hbox>
+        <xul:hbox flex="1">
+          <children/>
+          <xul:hbox mousethrough="always"
+                    flex="1"
+                    pack="end">
+            <xul:toolbarbutton type="menu"
+                               class="chevron"
+                               mousethrough="never"
+                               collapsed="true">
+              <xul:menupopup type="places"
+                             context="placesContext"/>
+            </xul:toolbarbutton>
+          </xul:hbox>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+    
     <implementation>
       <constructor><![CDATA[ 
       ]]></constructor>
@@ -40,6 +66,9 @@
         this._rebuild();
         ]]></body>
       </method>
+
+      <field name="_dropIndicatorBar">document.getAnonymousNodes(this)[0].firstChild</field>
+      <field name="_chevron">document.getAnonymousNodes(this)[0].childNodes[1].firstChild.firstChild</field>
       
       <field name="_selection">null</field>
       
@@ -52,12 +81,17 @@
         ]]></body>
       </method>
       
-      <field name="_chevron">null</field>
       <method name="_rebuild">
         <body><![CDATA[
+          // Clear out references to existing nodes, since we'll be deleting and re-adding.
+          if (this._DNDObserver._overFolder.node)
+            this._DNDObserver._clearOverFolder();
+          this._openedMenuButton = null;
+        
           while (this.hasChildNodes())
             this.removeChild(this.firstChild);
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          this._result.root.containerOpen = true;
           var cc = this._result.root.childCount;
           for (var i = 0; i < cc; ++i) {
             var child = this._result.root.getChild(i);
@@ -84,18 +118,7 @@
             this.appendChild(button);
           }
           
-          var overflowPadder = document.createElementNS(XULNS, "hbox");
-          overflowPadder.setAttribute("mousethrough", "always");
-          overflowPadder.setAttribute("flex", "1");
-          overflowPadder.setAttribute("pack", "end");
-          this.appendChild(overflowPadder);
-          this._chevron = document.createElementNS(XULNS, "toolbarbutton");
-          this._chevron.setAttribute("type", "menu");
-          this._chevron.setAttribute("class", "chevron");
-          this._chevron.setAttribute("mousethrough", "never");
-          this._chevron.setAttribute("collapsed", "true");
-          overflowPadder.appendChild(this._chevron);
-          var popup = document.createElementNS(XULNS, "menupopup");
+          var popup = this._chevron.firstChild;
           popup.setAttribute("type", "places");
           // This is set here and not in the XBL constructor for the menu because
           // it doesn't get initialized properly in the constructor.
@@ -104,7 +127,6 @@
           popup._resultNode = this._result.root;
           var t = this;
           popup.popupShowingCallback = function() {t.chevronPopupShowing();};
-          this._chevron.appendChild(popup);
 
           this.updateChevron();
         ]]></body>
@@ -124,7 +146,7 @@
       <method name="getElementWidth">
         <parameter name="element"/>
         <body><![CDATA[
-          var style = document.defaultView.getComputedStyle(element, '');
+          var style = document.defaultView.getComputedStyle(element, "");
           var leftMargin = style.getPropertyValue("margin-left");
           leftMargin = leftMargin ? Math.round(parseFloat(leftMargin)) : 0;
           var rightMargin = style.getPropertyValue("margin-right");
@@ -147,11 +169,11 @@
           var totalWidth = this.boxObject.width;
           var spaceLeft = totalWidth;
           var overflowed = false;
-          for (var i = 0; i < this.childNodes.length - 1; i++) {
+          for (var i = 0; i < this.childNodes.length; i++) {
             var child = this.childNodes[i];
             child.collapsed = false;
             spaceLeft -= this.getElementWidth(child);
-            var spaceNeeded = (i == this.childNodes.length - 2) ? 0 : chevronWidth;
+            var spaceNeeded = (i == this.childNodes.length - 1) ? 0 : chevronWidth;
             if (spaceLeft < spaceNeeded) {
               overflowed = true;
               child.collapsed = true;
@@ -167,7 +189,7 @@
         <body><![CDATA[
           this._result = this._places.executeQueries(queries, queries.length,
                                                      options);
-	  this._result.root.containerOpen = true;
+          this._result.root.containerOpen = true;
           this._rebuild();
         ]]></body>
       </method>
@@ -208,6 +230,14 @@
         ]]></body>
       </method>
       
+      <method name="getDragableSelection">
+        <body><![CDATA[
+          if (PlacesController.nodeIsReadOnly(this._result.root))
+            return null;
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
       <property name="selectedNode">
         <getter><![CDATA[ 
           return this.hasSelection ? this._selection : null;
@@ -238,7 +268,7 @@
               index = PlacesController.getIndexOfNode(this.selectedNode)
             }
           }
-          return new InsertionPoint(folderId, index);
+          return new InsertionPoint(folderId, index, 1);
         ]]></getter>
       </property>
       
@@ -326,47 +356,224 @@
         }
       })]]></field>
       <field name="_DNDObserver"><![CDATA[({
-        // XXXben ew.
+        // Inside the _DNDObserver object's functions, this points to 
+        // the _DNDObserver object.  _self points to the toolbar xbl object.
         _self: this,
+
+        // Menu buttons should be opened when the mouse drags over them, and closed
+        // when the mouse drags off.  The overFolder object manages opening and closing
+        // of folders when the mouse hovers.
+        _overFolder: {node: null, openTimer: null, hoverTime: 350, closeTimer: null},
+
+        // timer for turning of indicator bar, to get rid of flicker
+        _ibTimer: null, 
+        
+        _setTimer: function TBV_DO_setTimer(time) {
+          // There is a problem in Windows where timers don't fire while the
+          // mouse is dragging.  QI-ing the timer to nsITimerInternal and setting
+          // idle to false makes the timer fire.
+          var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          timer.initWithCallback(this, time, timer.TYPE_ONE_SHOT);
+          timer.QueryInterface(Ci.nsITimerInternal);
+          timer.idle = false;
+          return timer;
+        },
+        
+        // Function to process all timer notifications.
+        notify: function TBV_DO_notify(timer) {
+        
+          // Timer to turn off indicator bar.
+          if (timer == this._ibTimer) {
+            ib = this._self._dropIndicatorBar.removeAttribute('dragging');
+            this._ibTimer = null;
+          }
+          
+          // Timer to open a menubutton that's being dragged over.
+          if (timer == this._overFolder.openTimer) {
+            // Set the autoopen attribute on the folder's menupopup so that
+            // the menu will automatically close when the mouse drags off of it.
+            this._overFolder.node.lastChild.setAttribute("autoopened", "true");
+            this._overFolder.node.open = true;
+            this._overFolder.openTimer = null;
+          }
+          
+          // Timer to close a menubutton that's been dragged off of.
+          if (timer == this._overFolder.closeTimer) {
+            // Only close the menubutton if the drag session isn't currently over
+            // it or one of its children.  (The autoopened attribute will let the menu
+            // know to close later if the menu is still being dragged over.)
+            var currentNode = PlacesControllerDragHelper.currentDropTarget;
+            var inHierarchy = false;
+            while (currentNode) {
+              if (currentNode == this._self) {
+                inHierarchy = true;
+                break;
+              }
+              currentNode = currentNode.parentNode;
+            }
+            // The _clearOverFolder() function will close the menu for _overFolder.node.
+            // So null it out if we don't want to close it.
+            if (inHierarchy)
+              this._overFolder.node = null;
+            
+            // Clear out the folder and all associated timers.
+            this._clearOverFolder();
+          }
+        },
+        
+        // The mouse is no longer dragging over the stored menubutton.
+        // Close the menubutton, clear out drag styles, and clear all
+        // timers for opening/closing it.
+        _clearOverFolder: function TBV_DO_clearOverFolder() {
+          if (this._overFolder.node && this._overFolder.node.lastChild) {
+            if (!this._overFolder.node.lastChild.hasAttribute("dragover")) {
+              this._overFolder.node.lastChild.hidePopupAndChildPopups();
+            }
+            this._overFolder.node.removeAttribute("dragover");
+            this._overFolder.node = null;
+          }
+          if (this._overFolder.openTimer) {
+            this._overFolder.openTimer.cancel();
+            this._overFolder.openTimer = null;
+          }
+          if (this._overFolder.closeTimer) {
+            this._overFolder.closeTimer.cancel();
+            this._overFolder.closeTimer = null;
+          }
+        },
+        
+        // This function returns information about where to drop when
+        // dragging over this menu--insertion point, child index to drop
+        // before, and folder to drop into.
+        _getDropPoint: function TBV_DO_getDropPoint(event) {
+          // Can't drop if the toolbar isn't a folder.
+          var result = this._self.getResult();
+          if (!PlacesController.nodeIsFolder(result.root))
+            return null;
+          asFolder(result.root);
+          
+          var dropPoint = { ip: null, beforeIndex: null, folderNode: null };
+          // Loop through all the nodes to see which one this should
+          // get dropped in/next to
+          for (var i = 0; i < this._self.childNodes.length; i++) {
+            var xulNode = this._self.childNodes[i];
+            if (PlacesController.nodeIsFolder(xulNode.node) &&
+                !PlacesController.nodeIsReadOnly(xulNode.node)) {
+              ASSERT(xulNode.getAttribute("type") == "menu");
+              // This is a folder. If the mouse is in the left 25% of the
+              // node, drop to the left of the folder.  If it's in the middle
+              // 50%, drop into the folder.  If it's past that, drop to the right.
+              if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.25)) {
+                // Drop to the left of this folder.
+                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+              else if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width * 0.75)) {
+                // Drop inside this folder.
+                dropPoint.ip = new InsertionPoint(asFolder(xulNode.node).folderId, -1, 1);
+                dropPoint.beforeIndex = i;
+                dropPoint.folderNode = xulNode;
+                return dropPoint;
+              }
+            } else{
+              // This is a non-folder node. If the mouse is left of the middle,
+              // drop to the left of the folder.  If it's right, drop to the right.
+              if (event.clientX < xulNode.boxObject.x + (xulNode.boxObject.width / 2)) {
+                // Drop to the left of this bookmark.
+                dropPoint.ip = new InsertionPoint(result.root.folderId, i, -1);
+                dropPoint.beforeIndex = i;
+                return dropPoint;
+              }
+            }
+          }
+          // Should drop to the right of the last node.
+          dropPoint.ip = new InsertionPoint(result.root.folderId, -1, 1);
+          dropPoint.beforeIndex = -1;
+          return dropPoint;
+        },
+        
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
-          xferData.data = PlacesController.getTransferData();
-          // XXXben - the drag wrapper should do this automatically. 
-          if (event.ctrlKey)
+          PlacesController.activeView = this._self;
+          if (event.ctrlKey) {
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+          }
+          xferData.data = PlacesController.getTransferData(dragAction.action);
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {
           return PlacesControllerDragHelper.canDrop(this._self, -1);
         },
+        
         onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
-        },
-        onDrop: function TBV_DO_onDrop(event, dropData, session) {
-          var result = this._self.getResult();
-          if (!PlacesController.nodeIsFolder(result.root))
-            return;
-          result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-          var destContainer = result.root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
-          var destIndex = -1;
-          var orientation = 1;
-          if (event.target.localName == "toolbarbutton") {
-            if (PlacesController.nodeIsFolder(event.target.node)) {
-              event.target.node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-              destContainer = event.target.node.folderId;
-              destIndex = -1;
-              orientation = 0;
-            }
-            else {
-              destIndex = PlacesController.getIndexOfNode(event.target.node);
-              var bo = event.target.boxObject;
-              orientation = (event.screenX < bo.screenX + (bo.width / 2)) ? -1 : 1;
-              if (orientation == 1)
-                ++destIndex;
-            }
+          PlacesControllerDragHelper.currentDropTarget = event.target;
+          var dropPoint = this._getDropPoint(event);
+          var ib = this._self._dropIndicatorBar;
+          if (this._ibTimer) {
+            this._ibTimer.cancel();
+            this._ibTimer = null;
           }
-          var ip = new InsertionPoint(destContainer, destIndex);
-          PlacesControllerDragHelper.onDrop(null, this._self,
-                                            ip, orientation);
+          if (dropPoint.folderNode) {
+            // Dropping over a menubutton, set styles and timer to open folder.
+            if (this._overFolder.node != dropPoint.folderNode) {
+              this._clearOverFolder();
+              this._overFolder.node = dropPoint.folderNode;
+              this._overFolder.openTimer = this._setTimer(this._overFolder.hoverTime);
+            }
+            if (!this._overFolder.node.hasAttribute("dragover"))
+              this._overFolder.node.setAttribute("dragover", "true");
+
+            ib.removeAttribute("dragging");
+          }
+          else {
+            // Dragging over a normal toolbarbutton,
+            // show indicator bar and move it to the appropriate drop point.
+            if (!ib.hasAttribute("dragging"))
+              ib.setAttribute("dragging", "true");
+            var ind = ib.firstChild;
+            var direction = document.defaultView.getComputedStyle(this._self.parentNode, "").direction;
+            if (direction == "ltr") {
+              if (dropPoint.beforeIndex == -1)
+                ind.style.marginLeft = this._self.lastChild.boxObject.x + 
+                                       this._self.lastChild.boxObject.width - this._self.boxObject.x - 7 + 'px';
+              else
+                ind.style.marginLeft = this._self.childNodes[dropPoint.beforeIndex].boxObject.x -
+                                       this._self.boxObject.x - 7 + 'px';
+            } else {
+              if (dropPoint.beforeIndex == -1)
+                ind.style.marginRight = '0px';
+              else
+                ind.style.marginRight = (this._self.childNodes[this._self.childNodes.length - 1].boxObject.x +
+                                         this._self.childNodes[this._self.childNodes.length - 1].boxObject.width) -
+                                        (this._self.childNodes[dropPoint.beforeIndex].boxObject.x) - 5 + 'px';
+            }
+            // Clear out old folder information
+            this._clearOverFolder();
+          }
         },
+        
+        onDrop: function TBV_DO_onDrop(event, dropData, session) {
+          var dropPoint = this._getDropPoint(event);
+          if (dropPoint == null)
+            return;
+          PlacesController.activeView = this._self;
+          PlacesControllerDragHelper.onDrop(null, this._self,
+                                            dropPoint.ip, 1);
+        },
+        
+        onDragExit: function TBV_DO_onDragExit(event, session) {
+          // Set timer to turn off indicator bar (if we turn it off
+          // here, dragenter might be called immediately after, creating
+          // flicker.)
+          if (this._ibTimer)
+            this._ibTimer.cancel();
+          this._ibTimer = this._setTimer(10);
+          // Close any folder being hovered over
+          if (this._overFolder.node)
+            this._overFolder.closeTimer = this._setTimer(this._overFolder.hoverTime);
+          PlacesControllerDragHelper.currentDropTarget = null;
+        },
+        
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
           for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
@@ -375,6 +582,30 @@
         },
         
       })]]></field>
+      
+      <method name="checkForMenuEvent">
+        <parameter name="event"/>
+        <parameter name="action"/>
+        <body><![CDATA[
+          // It seems that even if the menu drag/drop event
+          // handlers set their phase to capturing, toolbarbutton
+          // menu events come to the toolbar first, and don't bubble.
+          // So if this is a menu/menuitem, try to send the event to its
+          // xbl handler.
+          if (event.target.localName.indexOf("menu") == 0) {
+            var parent = event.target.parentNode;
+            // XULDocument has no getAttribute() function, so check for it before calling.
+            while (parent && parent.getAttribute) {
+              if (parent.getAttribute("type") == "places") {
+                nsDragAndDrop[action](event, parent._DNDObserver);
+                return true;
+              }
+              parent = parent.parentNode;
+            }
+          }
+          return false;
+        ]]></body>
+      </method>
 
       <method name="saveSelection">
         <parameter name="mode"/>
@@ -401,29 +632,34 @@
         PlacesController.mouseLoadURI(event);
       </handler>
       <handler event="draggesture"><![CDATA[
-        // XXXben ew.
         if (event.target.localName == "toolbarbutton" && 
             !event.target.hasAttribute("type"))
           nsDragAndDrop.startDrag(event, this._DNDObserver);
       ]]></handler>
       <handler event="dragover"><![CDATA[
-        // XXXben ew.
-        nsDragAndDrop.dragOver(event, this._DNDObserver);
+        if (!this.checkForMenuEvent(event, "dragOver"))
+          nsDragAndDrop.dragOver(event, this._DNDObserver);
       ]]></handler>
       <handler event="dragdrop"><![CDATA[
-        // XXXben ew.
-        nsDragAndDrop.drop(event, this._DNDObserver);
+        if (!this.checkForMenuEvent(event, "drop"))
+          nsDragAndDrop.drop(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragexit"><![CDATA[
+        if (!this.checkForMenuEvent(event, "dragExit"))
+          nsDragAndDrop.dragExit(event, this._DNDObserver);
       ]]></handler>
       <handler event="popupshowing"><![CDATA[
-        if (event.target.parentNode.localName == "toolbarbutton")
+        if (event.target.parentNode.localName == "toolbarbutton" &&
+            !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = event.target.parentNode;
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
-        if (event.target.parentNode.localName == "toolbarbutton")
+        if (event.target.parentNode.localName == "toolbarbutton" &&
+            !PlacesControllerDragHelper.getSession())
           this._openedMenuButton = null;
       ]]></handler>
       <handler event="mousemove"><![CDATA[
-        if (this._openedMenuButton == null)
+        if (this._openedMenuButton == null || PlacesControllerDragHelper.getSession())
           return;
       
         var target = event.target;
