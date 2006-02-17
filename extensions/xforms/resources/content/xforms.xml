@@ -1282,15 +1282,17 @@
 
     <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
       <method name="refresh">
-        if (this.accessors.isReadonly()) {
-          this._browseButton.setAttribute("disabled", "disabled");
-          this._clearButton.setAttribute("disabled", "disabled");
-        } else {
-          this._browseButton.removeAttribute("disabled");
-          this._clearButton.removeAttribute("disabled");
-        }
+        <body>
+          if (this.accessors.isReadonly()) {
+            this.browseButton.setAttribute("disabled", "disabled");
+            this.clearButton.setAttribute("disabled", "disabled");
+          } else {
+            this.browseButton.removeAttribute("disabled");
+            this.clearButton.removeAttribute("disabled");
+          }
 
-        return true;
+          return true;
+        </body>
       </method>
 
       <destructor>
