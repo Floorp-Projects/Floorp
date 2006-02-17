@@ -3238,9 +3238,7 @@ ExtensionManager.prototype = {
     // Version mismatch, we have to load the extensions datasource and do
     // version checking. Time hit here doesn't matter since this doesn't happen
     // all that often.
-    var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
-    if (!extensionsDS.exists())
-      this._upgradeFromV10();
+    this._upgradeFromV10();
     
     // Make the extensions datasource consistent if it isn't already.
     var isDirty = false;
@@ -3339,6 +3337,10 @@ ExtensionManager.prototype = {
                                      "{641d8d09-7dda-4850-8228-ac0ab65e2ac9}"]);
     if (profileDOMi && profileDOMi.exists())
       removeDirRecursive(profileDOMi);
+
+    var extensionsDS = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
+    if (!extensionsDS.exists())
+      return;
 
     // Prepare themes for installation
     // Only enumerate directories in the app-profile and app-global locations.
