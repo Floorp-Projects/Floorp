@@ -407,7 +407,19 @@ nsBrowserStatusHandler.prototype =
    
   bmInitXUL(document,document.getElementById("homebarcontainer"));
   document.getElementById("browserleftbar").style.display="block";
-  
+
+  document.getElementById("browserleftbar").addEventListener("mousedown",HomebarHandler,true);  
+
+}
+
+function HomebarHandler(e) {
+
+  if(e.target.nodeName=="toolbarbutton") {
+
+  } else {
+	BrowserHomeBar();
+  }
+
 }
 
 /* 
