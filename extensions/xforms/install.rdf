@@ -22,14 +22,22 @@
     <!-- Mozilla -->
       <Description>
         <em:id>{86c18b42-e466-45a9-ae7a-9b95ba6f5640}</em:id>
-        <em:minVersion>@MOZILLA_VERSION@</em:minVersion>
-        <em:maxVersion>@MOZILLA_VERSION@</em:maxVersion>
+        <em:minVersion>@MOZILLA_VERSION_U@</em:minVersion>
+        <em:maxVersion>@MOZILLA_VERSION_U@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+    <!-- SeaMonkey -->
+      <Description>
+        <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+        <em:minVersion>@SEAMONKEY_VERSION@</em:minVersion>
+        <em:maxVersion>@SEAMONKEY_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
 
     <em:name>Mozilla XForms</em:name>
-    <em:description>XForms support for Mozilla</em:description>
+    <em:description>XForms support for Mozilla (Gecko v@MOZILLA_VERSION_U@ - @BUILD_ID@)</em:description>
     <em:homepageURL>http://www.mozilla.org/projects/xforms/</em:homepageURL>
   </Description>
 </RDF>
-
