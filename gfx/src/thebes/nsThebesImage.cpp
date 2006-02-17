@@ -84,8 +84,6 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 {
     NS_ASSERTION(aDepth == 24, "nsThebesImage::Init called with depth != 24");
 
-    gfxImageSurface::gfxImageFormat format;
-
     mWidth = aWidth;
     mHeight = aHeight;
 
@@ -93,22 +91,33 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     {
         case nsMaskRequirements_kNeeds1Bit:
             mAlphaDepth = 1;
-            format = gfxImageSurface::ImageFormatARGB32;
             break;
         case nsMaskRequirements_kNeeds8Bit:
             mAlphaDepth = 8;
-            format = gfxImageSurface::ImageFormatARGB32;
             break;
         default:
             mAlphaDepth = 0;
-            format = gfxImageSurface::ImageFormatARGB32;
             break;
     }
 
-    mImageSurface = new gfxImageSurface (format, mWidth, mHeight);
-    memset(mImageSurface->Data(), 0xFF, mHeight * mImageSurface->Stride());
-
     return NS_OK;
+}
+
+void
+nsThebesImage::EnsureImageSurface()
+{
+    if (!mImageSurface) {
+        // always read images as ARGB32
+        mImageSurface = new gfxImageSurface (gfxImageSurface::ImageFormatARGB32, mWidth, mHeight);
+        memset(mImageSurface->Data(), 0xFF, mHeight * mImageSurface->Stride());
+
+        if (mOptSurface) {
+            nsRefPtr<gfxContext> tmpCtx(new gfxContext(mImageSurface));
+            tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            tmpCtx->SetSource(mOptSurface);
+            tmpCtx->Paint();
+        }
+    }
 }
 
 nsThebesImage::~nsThebesImage()
@@ -194,68 +203,23 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     UpdateFromLockedData();
 
     if (!mOptSurface) {
-#ifdef MOZ_ENABLE_GTK2
-        if (!gfxPlatform::GetPlatform()->UseGlitz()) {
-            XRenderPictFormat *fmt = nsnull;
+        gfxASurface::gfxImageFormat real_format;
 
-            if (mRealAlphaDepth == 0) {
-                fmt = gfxXlibSurface::FindRenderFormat(GDK_DISPLAY(), gfxASurface::ImageFormatRGB24);
-            } else if (mRealAlphaDepth == 1) {
-                fmt = gfxXlibSurface::FindRenderFormat(GDK_DISPLAY(), gfxASurface::ImageFormatARGB32);
-            } else if (mRealAlphaDepth == 8) {
-                fmt = gfxXlibSurface::FindRenderFormat(GDK_DISPLAY(), gfxASurface::ImageFormatARGB32);
-            }
+        if (mRealAlphaDepth == 0)
+            real_format = gfxASurface::ImageFormatRGB24;
+        else
+            real_format = gfxASurface::ImageFormatARGB32;
 
-            /* XXX handle mRealAlphaDepth = 1, and create separate mask */
-
-            if (fmt) {
-                mOptSurface = new gfxXlibSurface(GDK_DISPLAY(),
-                                                 fmt,
-                                                 mWidth, mHeight);
-            }
-        } else {
-# ifdef MOZ_ENABLE_GLITZ
-            // glitz
-            nsThebesDeviceContext *tdc = NS_STATIC_CAST(nsThebesDeviceContext*, aContext);
-            glitz_drawable_format_t *gdf = glitz_glx_find_pbuffer_format (GDK_DISPLAY(),
-                                                                          gdk_x11_get_default_screen(),
-                                                                          0, NULL, 0);
-            glitz_drawable_t *gdraw = glitz_glx_create_pbuffer_drawable (GDK_DISPLAY(),
-                                                                         DefaultScreen(GDK_DISPLAY()),
-                                                                         gdf,
-                                                                         mWidth, mHeight);
-            glitz_format_t *gf =
-                glitz_find_standard_format (gdraw, GLITZ_STANDARD_ARGB32);
-            glitz_surface_t *gsurf =
-                glitz_surface_create (gdraw,
-                                      gf,
-                                      mWidth,
-                                      mHeight,
-                                      0,
-                                      NULL);
-
-            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
-            mOptSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
-# endif
-        }
-#endif
+        mOptSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(mWidth, mHeight, real_format);
     }
 
     if (mOptSurface) {
         nsRefPtr<gfxContext> tmpCtx(new gfxContext(mOptSurface));
         tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
         tmpCtx->SetSource(mImageSurface);
-#if 0
-        PRUint32 k = (PRUint32) this;
-        k |= 0xff000000;
-        tmpCtx->SetColor(gfxRGBA(nscolor(k)));
-#endif
         tmpCtx->Paint();
-#if 0
-        tmpCtx->NewPath();
-        tmpCtx->Rectangle(gfxRect(0, 0, mWidth, mHeight));
-        tmpCtx->Fill();
-#endif
+
+        mImageSurface = nsnull;
     }
 
     return NS_OK;
@@ -298,6 +262,8 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
 
     if (mLockedData && mHadAnyData && !mUpToDate)
         return NS_OK;
+
+    EnsureImageSurface();
 
     if (mAlphaDepth > 0) {
         NS_ASSERTION(mAlphaDepth == 1 || mAlphaDepth == 8,
