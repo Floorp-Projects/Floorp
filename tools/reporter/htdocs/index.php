@@ -122,7 +122,7 @@ if (isset($_GET['selected'])){
     $content->assign('selected',               	$_GET['selected']);
 }
 else {
-    $content->assign('selected',                array('report_id', 'host_hostname', 'report_file_date'));
+    $content->assign('selected',                array('host_hostname', 'report_file_date'));
 }
 
 displayPage($content, 'index', 'index.tpl');
