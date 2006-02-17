@@ -85,15 +85,15 @@ range {
 }
 
 input {
-  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-input');
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
-  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-input-boolean');
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-boolean');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-date');
+  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-date');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="dropmarker"] {
@@ -156,23 +156,23 @@ html|input.-moz-date-fwd-button {
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#gMonth"] {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-month');
+  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-month');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-day');
+  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-day');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-year');
+  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-year');
 }
 
 secret {
-  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-secret');
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-secret');
 }
 
 textarea {
-  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-textarea');
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-textarea');
 }
 
 trigger, submit {

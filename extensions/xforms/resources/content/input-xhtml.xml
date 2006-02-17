@@ -41,9 +41,10 @@
 
 
 <!--
-  This file contains xforms controls implementation for XHTML. All controls
-  are inherited from interface bindings realized in xforms.xml.
--->
+  This file contains xforms input, secret and textarea controls implementation
+  for XHTML. All controls are inherited from interface bindings realized in 
+  input.xml.
+--> 
 
 <!DOCTYPE bindings [
 <!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
@@ -57,15 +58,12 @@
           xmlns:xforms="http://www.w3.org/2002/xforms">
 
 
-  <!-- OUTPUT: <DEFAULT> -->
-  <binding id="xformswidget-output"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+  <!-- INPUT: <DEFAULT> -->
+  <binding id="xformswidget-input"
+            extends="chrome://xforms/content/input.xml#xformswidget-input-base">
     <content>
       <children includes="label"/>
-      <!-- XXX initialize span with a space until repeat is xbl-ized.  Part
-           of workaround for bug 322975
-      -->
-      <html:span class="xf-value" anonid="control"> </html:span>
+      <html:input class="xf-value" anonid="control" xbl:inherits="accesskey"/>
       <children/>
     </content>
 
@@ -76,46 +74,11 @@
             __proto__: this.ownerDocument.
               getAnonymousElementByAttribute(this, 'anonid', 'control'),
 
-          // XXX changing from setting textContent to setting nodeValue of
-          // first child (text node created by space character initializer
-          // above).  Workaround for bug 322975.  Probably should be changed
-          // back after repeat is xbl-ized
-
-            set value(val) {
-              this.firstChild.nodeValue = val;
-            }
-          };
-        </body>
-      </method>
-
-    </implementation>
-  </binding>
-
-
-  <!-- LABEL: <DEFAULT> -->
-  <binding id="xformswidget-label"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
-    <content>
-      <html:span anonid="implicitcontent"/>
-      <html:span anonid="explicitcontent"><children/></html:span>
-    </content>
-
-    <implementation>
-      <method name="getControlElement">
-        <body>
-          return {
-            _implicitContent: this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", 'implicitcontent'),
-            _explicitContent: this.ownerDocument.
-              getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
-
-            set value(val) {
-              if (val != null) {
-                this._implicitContent.textContent = val;
-                this._explicitContent.style.display = 'none';
+            set readonly(val) {
+              if (val) {
+                this.setAttribute('readonly', 'readonly');
               } else {
-                this._implicitContent.textContent = '';
-                this._explicitContent.style.display = 'inline';
+                this.removeAttribute('readonly');
               }
             }
           };
@@ -123,36 +86,6 @@
       </method>
 
     </implementation>
-  </binding>
-
-
-  <!-- TRIGGER: <DEFAULT> -->
-  <binding id="xformswidget-trigger"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
-    <content>
-      <html:button anonid="control" xbl:inherits="accesskey">
-        <children/>
-      </html:button>
-    </content>
-
-    <implementation>
-      <method name="getControlElement">
-      <body>
-        return {
-          __proto__: this.ownerDocument.
-            getAnonymousElementByAttribute(this, 'anonid', 'control'),
-
-          set disabled(val) {
-            if (val) {
-              this.setAttribute('disabled', 'disabled');
-            } else {
-              this.removeAttribute('disabled');
-            }
-          }
-        };
-      </body>
-      </method>
-    </implementation>
 
     <handlers>
       <handler event="focus" phase="capturing">
@@ -163,44 +96,69 @@
 
       <handler event="blur" phase="capturing">
         if (event.originalTarget == this.control) {
+          this.updateInstanceData();
           this.dispatchDOMUIEvent("DOMFocusOut");
         }
       </handler>
 
+      <handler event="keyup">
+        <![CDATA[
+        if (event.originalTarget == this.control &&
+            event.keyCode != event.DOM_VK_TAB) {
+          this.updateInstanceData(true);
+        }
+        ]]>
+      </handler>
+
+      <handler event="keypress" keycode="VK_RETURN">
+        <![CDATA[
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMActivate");
+        }
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
 
-  <!-- TRIGGER: MINIMAL -->
-  <binding id="xformswidget-trigger-minimal"
-            extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
+  <!-- INPUT: BOOLEAN -->
+  <binding id="xformswidget-input-boolean"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
     <content>
-      <html:span tabindex="0" anonid="control" xbl:inherits="accesskey">
-        <children/>
-      </html:span>
+      <children includes="label"/>
+      <html:input anonid="control" xbl:inherits="accesskey" type="checkbox"/>
+      <children/>
     </content>
 
     <implementation>
       <method name="getControlElement">
-      <body>
-        return {
-          __proto__: this.ownerDocument.
-            getAnonymousElementByAttribute(this, 'anonid', 'control'),
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
 
-          set disabled(val) {
-            this.isDisabled = val;
-          },
-          isDisabled: false
-        };
-      </body>
+            get value() {
+              return this.checked;
+            },
+            set value(val) {
+              this.checked = val;
+            },
+            set readonly(val) {
+              if (val) {
+                this.setAttribute('disabled', 'disabled');
+              } else {
+                this.removeAttribute('disabled');
+              }
+            }
+          };
+        </body>
       </method>
-
     </implementation>
 
     <handlers>
       <handler event="click">
-        if (!this.control.isDisabled) 
-          this.dispatchDOMUIEvent("DOMActivate");
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
       </handler>
 
       <handler event="focus" phase="capturing">
@@ -211,10 +169,81 @@
 
       <handler event="blur" phase="capturing">
         if (event.originalTarget == this.control) {
+          this.updateInstanceData();
           this.dispatchDOMUIEvent("DOMFocusOut");
         }
       </handler>
 
+      <handler event="keyup" keycode="VK_SPACE">
+        <![CDATA[
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- SECRET: <DEFAULT> -->
+  <binding id="xformswidget-secret"
+           extends="chrome://xforms/content/input-xhtml.xml#xformswidget-input">
+    <content>
+      <children includes="label"/>
+      <html:input anonid="control" xbl:inherits="accesskey" type="password"/>
+      <children/>
+    </content>
+  </binding>
+
+  
+  <!-- TEXTAREA: <DEFAULT> -->
+  <binding id="xformswidget-textarea"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+    <content>
+       <children includes="label"/>
+       <html:textarea class="xf-value" anonid="control"
+                      xbl:inherits="accesskey"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            set readonly(val) {
+              if (val) {
+                this.setAttribute('readonly', 'readonly');
+              } else {
+                this.removeAttribute('readonly');
+              }
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMFocusIn");
+        }
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.updateInstanceData();
+          this.dispatchDOMUIEvent("DOMFocusOut");
+        }
+      </handler>
+
+      <handler event="keyup">
+        <![CDATA[
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
+        ]]>
+      </handler>
     </handlers>
   </binding>
 
