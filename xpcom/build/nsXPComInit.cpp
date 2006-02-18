@@ -131,7 +131,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 #endif
 
 #ifdef XP_MACOSX
-#include "nsMacUtils.h"
+#include "nsMacUtilsImpl.h"
 #endif
 
 #include <locale.h>
@@ -222,7 +222,7 @@ NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsProperties, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUUIDGenerator)
 
 #ifdef XP_MACOSX
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtils)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUtilsImpl)
 #endif
 
 static NS_METHOD
@@ -419,7 +419,7 @@ static const nsModuleComponentInfo components[] = {
 #endif
 
 #ifdef XP_MACOSX
-    COMPONENT(MACUTILS, nsMacUtilsConstructor),
+    COMPONENT(MACUTILSIMPL, nsMacUtilsImplConstructor),
 #endif
 };
 

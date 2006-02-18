@@ -35,28 +35,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMacUtils_h___
-#define nsMacUtils_h___
+#ifndef nsMacUtilsImpl_h___
+#define nsMacUtilsImpl_h___
 
 #include "nsIMacUtils.h"
 
-class nsMacUtils : public nsIMacUtils
+class nsMacUtilsImpl : public nsIMacUtils
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMACUTILS
 
-  nsMacUtils() {}
+  nsMacUtilsImpl() {}
 
 private:
-  ~nsMacUtils() {}
+  ~nsMacUtilsImpl() {}
 };
 
 // Global singleton service
 // 697BD3FD-43E5-41CE-AD5E-C339175C0818
-#define NS_MACUTILS_CLASSNAME "Mac OS X Utilities"
-#define NS_MACUTILS_CID \
+#define NS_MACUTILSIMPL_CLASSNAME "Mac OS X Utilities"
+#define NS_MACUTILSIMPL_CID \
  {0x697BD3FD, 0x43E5, 0x41CE, {0xAD, 0x5E, 0xC3, 0x39, 0x17, 0x5C, 0x08, 0x18}}
-#define NS_MACUTILS_CONTRACTID "@mozilla.org/xpcom/mac-utils;1"
+#define NS_MACUTILSIMPL_CONTRACTID "@mozilla.org/xpcom/mac-utils;1"
 
-#endif /* nsMacUtils_h___ */
+#endif /* nsMacUtilsImpl_h___ */
