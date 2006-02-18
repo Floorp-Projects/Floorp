@@ -41,7 +41,7 @@ var gDialog = {};
 var gSelectedEngineIndex;
 
 const kTabPref    = "browser.tabs.opentabfor.searchdialog";
-const kEnginePref = "browser.search.selectedEngine";
+const kEnginePref = "browser.search.selectedEngineInDialog";
 const kDefEnginePref = "browser.search.defaultenginename";
 const nsIPLS      = Components.interfaces.nsIPrefLocalizedString;
 const kXUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
