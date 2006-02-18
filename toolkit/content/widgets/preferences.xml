@@ -50,8 +50,6 @@
             var event = document.createEvent("Events");
             event.initEvent("change", false, true);
             aPreference.dispatchEvent(event);
-            if (aPreference.hasAttribute("onchange"))
-              (new Function ("event", aPreference.getAttribute("onchange")))(event);
           }
           catch (e) {
             dump(e);
