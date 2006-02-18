@@ -23,6 +23,7 @@
 #
 # Contributor(s):
 #   Pierre Chanial V 2.0 (p_ch@verizon.net)
+#   Gavin Sharp (gavin@gavinsharp.com)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -109,9 +110,10 @@
 
       <destructor><![CDATA[
         // Because XBL and the customize toolbar code interacts poorly,
-        // there may not be a controller to remove here
+        // there may not be anything to remove here
         try {
           this.controllers.removeController(this.searchbarController);
+          this.mPrefObserver.unregister();
         } catch (ex) { }
       ]]></destructor>
 
@@ -126,26 +128,19 @@
 
       <method name="initialize">
         <body><![CDATA[
-          this.RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+          this.rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                                .getService(Components.interfaces.nsIRDFService);
-          this.ISEARCHDS = this.RDF.GetDataSource("rdf:internetsearch");
-          this.FORMHISTSVC = Components
+          this.internetSearchDS = this.rdfService.GetDataSource("rdf:internetsearch");
+          this.formHistSvc = Components
                               .classes["@mozilla.org/satchel/form-history;1"]
                               .getService(Components.interfaces.nsIFormHistory);
 
-          var engine = this.currentEngine;
-          if (!engine)
-            this.currentEngine = this.getDefaultEngine();
-          else {
-            var rEngine = this.RDF.GetResource(engine);
-            var rChild  = this.RDF.GetResource("http://home.netscape.com/NC-rdf#child");
-            if (!this.ISEARCHDS.hasArcIn(rEngine, rChild)) {
-              this.currentEngine = this.getDefaultEngine();
-            } // if default engine not found... XXXblake what to do now?
-            else {
-              this.currentEngine = engine; // Ensure tooltiptext is set
-            }
-          }
+          this.prefService = 
+                    Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch2);
+
+          this._initializeEngine();
+          this.mPrefObserver.register();
 
           var element;
           element = document.createElementNS(XUL_NS, "menuseparator");
@@ -159,15 +154,55 @@
           this.mContextMenu.appendChild(element);
           this.controllers.appendController(this.searchbarController);
 
-          this.parentNode.setAttribute("persist", "searchengine,src");
-
         ]]></body>
       </method>
 
+      <method name="_initializeEngine">
+        <body><![CDATA[
+          var selectedEngineName;
+          try {
+            selectedEngineName = 
+                    this.prefService
+                        .getComplexValue("browser.search.selectedEngine",
+                                         this.nsIPrefLocalizedString).data;
+          } catch (ex) { }
+
+          // try to set the engine by name
+          this.currentEngineName = selectedEngineName;
+
+          // check to see whether it failed
+          var engine = this.currentEngine;
+          if (!engine)
+            this.currentEngine = this.getDefaultEngine();
+        ]]></body>
+      </method>
+
+      <field name="nsIPrefLocalizedString">
+        Components.interfaces.nsIPrefLocalizedString;
+      </field>
       <field name="mStringBundle"> this.parentNode.mStringBundle </field>
-      <field name="RDF"/>
-      <field name="ISEARCHDS"/>
-      <field name="FORMHISTSVC"/>
+      <field name="rdfService"/>
+      <field name="internetSearchDS"/>
+      <field name="formHistSvc"/>
+      <field name="mPrefObserver" readonly="true"><![CDATA[
+      ({
+
+        mOuter: this,
+
+        register: function() {
+          this.mOuter.prefService.addObserver("browser.search.selectedEngine", this, false);
+        },
+
+        unregister: function() {
+          this.mOuter.prefService.removeObserver("browser.search.selectedEngine", this);
+        },
+
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic == "nsPref:changed")
+            this.mOuter._initializeEngine();
+        }
+      });
+      ]]></field>
 
       <method name="openSearch">
         <body>
@@ -183,49 +218,87 @@
       </method>
 
       <property name="currentEngine"
-                onget="return this.parentNode.getAttribute('searchengine')">
+                onget="return this.parentNode.getAttribute('searchengine');">
         <setter><![CDATA[
-          if (!val)
+
+          if (!val) {
+            if (this.parentNode)
+              this.parentNode.removeAttribute("searchengine");
             return;
+          }
 
           this.parentNode.setAttribute("searchengine", val);
-          const kNC_Icon = this.RDF.GetResource("http://home.netscape.com/NC-rdf#Icon");
-          var rEngine = this.RDF.GetResource(val);
+          const kNC_Icon = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Icon");
+          var rEngine = this.rdfService.GetResource(val);
+
           this.parentNode.setAttribute("src", this.readRDFString(rEngine, kNC_Icon));
           
-          const kNC_Name = this.RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          const kNC_Name = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
           var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
-                              .createInstance(Components.interfaces.nsIPrefLocalizedString);
+                              .createInstance(this.nsIPrefLocalizedString);
           pls.data = this.readRDFString(rEngine, kNC_Name);
-          var PREF = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefService)
-                               .getBranch(null);
-          PREF.setComplexValue("browser.search.selectedEngine", 
-                               Components.interfaces.nsIPrefLocalizedString,
-                               pls);
+
+          this.prefService.setComplexValue("browser.search.selectedEngine",
+                                           this.nsIPrefLocalizedString, pls);
+
           // XXX Why did mStringBundle say that formatStringFromName is not a method?
-          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                              .getService(Components.interfaces.nsIStringBundleService);
           var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                             .getService(Components.interfaces.nsILocaleService);
-          var bundle = stringBundleService.createBundle("chrome://browser/locale/searchbar.properties", localeService.getApplicationLocale());
+                                        .getService(Components.interfaces.nsILocaleService);
+          var bundle = stringBundleService.createBundle("chrome://browser/locale/searchbar.properties",
+                                                        localeService.getApplicationLocale());
           var toolTipText = bundle.formatStringFromName("searchtip", [pls], 1);
           this.setAttribute("tooltiptext", toolTipText);
         ]]></setter>
       </property>
 
+      <property name="currentEngineName"
+                onget="return this.parentNode.getAttribute('searchenginename');"
+                onset="this.setEngineByName(val);"/>
+
+      <method name="setEngineByName">
+        <parameter name="aName"/>
+        <body><![CDATA[
+          // XXX this shouldn't be necessary, but it avoids errors
+          // because the searchbar isn't currently destroyed when
+          // removed from the toolbar
+          if (!this.parentNode) {
+            this.mPrefObserver.unregister();
+            return false;
+          }
+
+          const kNC_Root  = this.rdfService.GetResource("NC:SearchEngineRoot");
+          const kNC_Child = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#child");
+          const kNC_Name  = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
+
+          var arcs = this.internetSearchDS.GetTargets(kNC_Root, kNC_Child, true);
+          while (arcs.hasMoreElements()) {
+            var rEngine = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+            var name = this.readRDFString(rEngine, kNC_Name);
+            if (name == aName) {
+              this.currentEngine = rEngine.Value;
+              this.parentNode.setAttribute('searchenginename', name);
+              return true;
+            }
+          }
+          this.currentEngine = null;
+          this.parentNode.removeAttribute('searchenginename')
+          return false;
+        ]]></body>
+      </method>
+
       <method name="getDefaultEngine">
         <body><![CDATA[
-          var PREF = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefService)
-                               .getBranch(null);
-          var defaultName = PREF.getComplexValue("browser.search.defaultenginename",
-                                                 Components.interfaces.nsIPrefLocalizedString).data;
+          var defaultName = this.prefService
+                                .getComplexValue("browser.search.defaultenginename",
+                                                 this.nsIPrefLocalizedString).data;
 
-          const kNC_Root  = this.RDF.GetResource("NC:SearchEngineRoot");
-          const kNC_child = this.RDF.GetResource("http://home.netscape.com/NC-rdf#child");
-          const kNC_Name  = this.RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          const kNC_Root  = this.rdfService.GetResource("NC:SearchEngineRoot");
+          const kNC_child = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#child");
+          const kNC_Name  = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
           
-          var arcs = this.ISEARCHDS.GetTargets(kNC_Root, kNC_child, true);
+          var arcs = this.internetSearchDS.GetTargets(kNC_Root, kNC_child, true);
           while (arcs.hasMoreElements()) {
             var rEngine = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
             var name = this.readRDFString(rEngine, kNC_Name);
@@ -240,7 +313,7 @@
         <parameter name="aRes"/>
         <parameter name="aProp"/>
         <body><![CDATA[
-          var n = this.ISEARCHDS.GetTarget(aRes, aProp, true);
+          var n = this.internetSearchDS.GetTarget(aRes, aProp, true);
           return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : null;
         ]]></body>
       </method>
@@ -250,7 +323,7 @@
         <body><![CDATA[
           // Save the current value in the form history
           if (!this.hasAttribute("disableautocomplete"))
-            this.FORMHISTSVC.addEntry(this.getAttribute(
+            this.formHistSvc.addEntry(this.getAttribute(
                                       "autocompletesearchparam"), this.value);
 
           var ISEARCHSVC = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
@@ -260,17 +333,17 @@
                                        this.value? encodeURIComponent(this.value):"ABC", 
                                        0, 0, {value:0});
 
-#         if the search box is empty, let''s load the host
+#         if the search box is empty, let's load the host
           if (!this.value) {
             var uri = Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.interfaces.nsIIOService)
                                 .newURI(searchURL, null, null);
 
-            searchURL = uri.host;
-            if (!searchURL)
-              return;
+            try {
+              searchURL = uri.host;
+            } catch (ex) {}
           }
-          SearchLoadURL(searchURL, this.mEnterEvent);
+          SearchLoadURL(searchURL, this.mEnterEvent.altKey);
         ]]></body>
       </method>
 
@@ -335,13 +408,13 @@
         
         isCommandEnabled: function (aCommand)
         {
-          return this.mOuter.FORMHISTSVC.nameExists(
+          return this.mOuter.formHistSvc.nameExists(
                  this.mOuter.getAttribute("autocompletesearchparam"));
         },
 
         doCommand: function (aCommand)
         {
-          this.mOuter.FORMHISTSVC.removeEntriesForName(
+          this.mOuter.formHistSvc.removeEntriesForName(
               this.mOuter.getAttribute("autocompletesearchparam"));
           this.mOuter.value = "";
         }
