@@ -49,19 +49,22 @@ const MODE_TRUNCATE = 0x20;
 const MODE_SYNC     = 0x40;
 const MODE_EXCL     = 0x80;
 
+var gItems = new Array();
 
 /**
  * loadEventsFromFile
  * shows a file dialog, reads the selected file(s) and tries to parse events from it.
+ *
+ * @param aCalendar  (optional) If specified, the items will be imported directly
+ *                              into the calendar
  */
-
-function loadEventsFromFile()
+function loadEventsFromFile(aCalendar)
 {
     const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
     var fp = Components.classes["@mozilla.org/filepicker;1"]
                        .createInstance(nsIFilePicker);
-    fp.init(window, getStringBundle().GetStringFromName("Open"),
+    fp.init(window, getCalStringBundle().GetStringFromName("Open"),
             nsIFilePicker.modeOpen);
     fp.defaultExtension = "ics";
 
@@ -96,77 +99,94 @@ function loadEventsFromFile()
 
         var inputStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                                     .createInstance(nsIFileInputStream);
-        var items;
+
         try
         {
            inputStream.init( fp.file, MODE_RDONLY, 0444, {} );
 
-           items = importer.importFromStream(inputStream, {});
+           gItems = importer.importFromStream(inputStream, {});
            inputStream.close();
         }
         catch(ex)
         {
-           showError(getStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
+           showError(getCalStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
         }
 
-        // XXX Ask for a calendar to import into
-        var destCal = getDefaultCalendar();
-
-        // Set batch for the undo/redo transaction manager
-        // XXX This might not work in lighting
-        startBatchTransaction();
-        
-        // And set batch mode on the calendar, to tell the views to not
-        // redraw until all items are imported
-        destCal.startBatch();
-
-        // This listener is needed to find out when the last addItem really
-        // finished. Using a counter to find the last item (which might not
-        // be the last item added)
-        var count = 0;
-        var failedCount = 0;
-        // Used to store the last error. Only the last error, because we don't
-        // wan't to bomb the user with thousands of error messages in case
-        // something went really wrong.
-        // (example of something very wrong: importing the same file twice.
-        //  quite easy to trigger, so we really should do this)
-        var lastError;
-        var listener = {
-            onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-                count++;
-                if (!Components.isSuccessCode(aStatus)) {
-                    failedCount++;
-                    lastError = aStatus;
-                }
-                // See if it is time to end the calendar's batch.
-                if (count == items.length) {
-                    destCal.endBatch();
-                    if (failedCount)
-                        showError(failedCount+" items failed to import. The last error was: "+lastError.toString());
-                }
-            }
+        if (aCalendar) {
+            putItemsIntoCal(aCalendar);
+            return;
         }
-        
-        for each (item in items) {
-            // XXX prompt when finding a duplicate.
-            try {
-                destCal.addItem(item, listener);
-            } catch(e) {
-                failedCount++;
-                lastError = e;
-                // Call the listener's operationComplete, to increase the
-                // counter and not miss failed items. Otherwise, endBatch might
-                // never be called.
-                listener.onOperationComplete(null, null, null, null, null);
-                Components.utils.reportError("Import error: "+e);
-            }
+
+        var count = new Object();
+        var calendars = getCalendarManager().getCalendars(count);
+
+        if (count.value == 1) {
+            // There's only one calendar, so it's silly to ask what calendar
+            // the user wants to import into.
+            putItemsIntoCal(calendars[0]);
+        } else {
+            // Ask what calendar to import into
+            var args = new Object();
+            args.onOk = putItemsIntoCal;
+            args.promptText = getCalStringBundle().GetStringFromName("importPrompt");
+            openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
+                       "_blank", "chrome,titlebar,modal", args);
         }
-        
-        // End transmgr batch
-        // XXX This might not work in lighting
-        endBatchTransaction();
     }
-    return true;
+}
+
+function putItemsIntoCal(destCal) {
+    // Set batch for the undo/redo transaction manager
+    startBatchTransaction();
+
+    // And set batch mode on the calendar, to tell the views to not
+    // redraw until all items are imported
+    destCal.startBatch();
+
+    // This listener is needed to find out when the last addItem really
+    // finished. Using a counter to find the last item (which might not
+    // be the last item added)
+    var count = 0;
+    var failedCount = 0;
+    // Used to store the last error. Only the last error, because we don't
+    // wan't to bomb the user with thousands of error messages in case
+    // something went really wrong.
+    // (example of something very wrong: importing the same file twice.
+    //  quite easy to trigger, so we really should do this)
+    var lastError;
+    var listener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+            count++;
+            if (!Components.isSuccessCode(aStatus)) {
+                failedCount++;
+                lastError = aStatus;
+            }
+            // See if it is time to end the calendar's batch.
+            if (count == gItems.length) {
+                destCal.endBatch();
+                if (failedCount)
+                    showError(failedCount+" items failed to import. The last error was: "+lastError.toString());
+            }
+        }
+    }
+
+    for each (item in gItems) {
+        // XXX prompt when finding a duplicate.
+        try {
+            destCal.addItem(item, listener);
+        } catch(e) {
+            failedCount++;
+            lastError = e;
+            // Call the listener's operationComplete, to increase the
+            // counter and not miss failed items. Otherwise, endBatch might
+            // never be called.
+            listener.onOperationComplete(null, null, null, null, null);
+            Components.utils.reportError("Import error: "+e);
+        }
+    }
+
+    // End transmgr batch
+    endBatchTransaction();
 }
 
 /**
@@ -183,7 +203,7 @@ function saveEventsToFile(calendarEventArray)
 
    if (!calendarEventArray.length)
    {
-      alert(getStringBundle().GetStringFromName("noEventsToSave"));
+      alert(getCalStringBundle().GetStringFromName("noEventsToSave"));
       return;
    }
 
@@ -193,13 +213,13 @@ function saveEventsToFile(calendarEventArray)
    var fp = Components.classes["@mozilla.org/filepicker;1"]
                       .createInstance(nsIFilePicker);
 
-   fp.init(window,  getStringBundle().GetStringFromName("SaveAs"),
+   fp.init(window,  getCalStringBundle().GetStringFromName("SaveAs"),
            nsIFilePicker.modeSave);
 
    if(calendarEventArray.length == 1 && calendarEventArray[0].title)
       fp.defaultString = calendarEventArray[0].title;
    else
-      fp.defaultString = getStringBundle().GetStringFromName("defaultFileName");
+      fp.defaultString = getCalStringBundle().GetStringFromName("defaultFileName");
 
    fp.defaultExtension = "ics";
 
@@ -263,12 +283,56 @@ function saveEventsToFile(calendarEventArray)
       }
       catch(ex)
       {
-         showError(getStringBundle().GetStringFromName("unableToWrite") + filePath );
+         showError(getCalStringBundle().GetStringFromName("unableToWrite") + filePath );
       }
    }
 }
 
-function getStringBundle()
+/* Exports all the events and tasks in a calendar.  If aCalendar is not specified,
+ * the user will be prompted with a list of calendars to choose which one to export.
+ */
+function exportEntireCalendar(aCalendar) {
+    var itemArray = [];
+    var getListener = {
+        onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
+        {
+            saveEventsToFile(itemArray);
+        },
+        onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
+        {
+            for each (item in aItems) {
+                itemArray.push(item);   
+            }
+        }
+    };
+
+    function getItemsFromCal(aCal) {
+        aCal.getItems(Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
+                      0, null, null, getListener);
+    }
+
+    if (!aCalendar) {
+        var count = new Object();
+        var calendars = getCalendarManager().getCalendars(count);
+
+        if (count.value == 1) {
+            // There's only one calendar, so it's silly to ask what calendar
+            // the user wants to import into.
+            getItemsFromCal(calendars[0]);
+        } else {
+            // Ask what calendar to import into
+            var args = new Object();
+            args.onOk = getItemsFromCal;
+            args.promptText = getCalStringBundle().GetStringFromName("exportPrompt");
+            openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
+                       "_blank", "chrome,titlebar,modal", args);
+        }
+    } else {
+        getItemsFromCal(aCalendar);
+    }
+}
+
+function getCalStringBundle()
 {
     var strBundleService = 
         Components.classes["@mozilla.org/intl/stringbundle;1"]
@@ -281,6 +345,6 @@ function showError(aMsg)
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
     promptService.alert(null,
-                        getStringBundle().GetStringFromName('errorTitle'),
+                        getCalStringBundle().GetStringFromName('errorTitle'),
                         aMsg);
 }

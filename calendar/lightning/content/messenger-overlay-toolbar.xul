@@ -46,6 +46,7 @@
 [
   <!ENTITY % dtd1 SYSTEM "chrome://lightning/locale/lightning.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %dtd3;
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -86,6 +87,14 @@
         <menuitem id="ltnGoToToday" 
                   label="&calendar.context.gototoday.label;" 
                   oncommand="goToToday()"/>
+        <menuseparator/>
+        <menuitem id="calendar-import-menu"
+                  label="&calendar.import.calendar;"
+                  accesskey="&calendar.import.accesskey;"
+                  observes="import_command"/>
+        <menuitem id="calendar-export-menu"
+                  label="&calendar.export.calendar;"
+                  observes="export_command"/>
       </menupopup>
     </menu>
   </menubar>

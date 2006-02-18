@@ -61,6 +61,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/import-export.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/lightning-utils.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
@@ -72,10 +73,15 @@
 <window id="messengerWindow">
   <commandset id="calendar_commands">
     <command id="publish_calendar" oncommand="ltnPublishCalendar()"/>
+    <command id="import_command" oncommand="loadEventsFromFile()"/>
+    <command id="export_command" oncommand="exportEntireCalendar()"/>
   </commandset>
+
   <popupset>
     <popup id="calendartree-context-menu" onpopupshowing="return true;">
       <menuitem label="&calendar.publish.label;" observes="publish_calendar"/>
+      <menuitem label="&calendar.import.into.label;" oncommand="loadEventsFromFile(ltnSelectedCalendar())"/>
+      <menuitem label="&calendar.export.specific.calendar;" oncommand="exportEntireCalendar(ltnSelectedCalendar())"/>
     </popup>
     <popup id="calendar-view-context-menu" onpopupshowing="return true;">
       <!-- These labels are set dynamically, based on the current view -->

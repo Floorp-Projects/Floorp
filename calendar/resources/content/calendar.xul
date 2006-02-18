@@ -408,6 +408,12 @@
             id="calpopup-publish"
             accesskey="&calendar.context.publish.accesskey;"
             observes="publish_calendar"/>
+  <menuitem label="&calendar.import.into.label;"
+            id="calpopup-import"
+            oncommand="loadEventsFromFile(getSelectedCalendarOrNull())"/>
+  <menuitem label="&calendar.export.calendar;"
+            id="calpopup-export"
+            oncommand="exportEntireCalendar(getSelectedCalendarOrNull())"/>
 </popup>
 
 <commandset id="commands"/>

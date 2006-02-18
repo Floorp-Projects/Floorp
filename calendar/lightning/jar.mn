@@ -28,6 +28,8 @@ calendar.jar:
   content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
   content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js)
   content/calendar/calErrorPrompt.xul           (/calendar/base/content/calErrorPrompt.xul) 
+  content/calendar/chooseCalendarDialog.xul     (/calendar/base/content/chooseCalendarDialog.xul)
+  content/calendar/import-export.js             (/calendar/base/content/import-export.js)
   content/calendar/datetimepickers/datetimepickers.css (/calendar/resources/content/datetimepickers/datetimepickers.css)
   content/calendar/datetimepickers/datetimepickers.xml (/calendar/resources/content/datetimepickers/datetimepickers.xml)
   content/calendar/datetimepickers/minimonth.css (/calendar/resources/content/datetimepickers/minimonth.css)

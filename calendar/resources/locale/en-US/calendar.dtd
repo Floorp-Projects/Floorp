@@ -345,6 +345,11 @@
 <!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
 <!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
 
+<!ENTITY calendar.import.into.label              "Import into…" >
+<!ENTITY calendar.export.specific.calendar       "Export Calendar" >
+<!ENTITY calendar.import.calendar                "Import…" >
+<!ENTITY calendar.export.calendar                "Export Calendar…" >
+
 <!ENTITY calendar.import.button.label              "Import" >
 <!ENTITY calendar.export.button.label              "Export" >
 <!ENTITY calendar.subscribe.button.label           "Subscribe" >
