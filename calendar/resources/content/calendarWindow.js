@@ -72,20 +72,22 @@ calViewController.prototype.createNewEvent = function (aCalendar, aStartTime, aE
 calViewController.prototype.modifyOccurrence = function (aOccurrence, aNewStartTime, aNewEndTime) {
     if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate 
         && !aNewEndTime.isDate) {
-        var instance = aOccurrence.clone();
+        var itemToEdit = getOccurrenceOrParent(aOccurrence);
+        var instance = itemToEdit.clone();
         instance.startDate = aNewStartTime;
         instance.endDate = aNewEndTime;
-        doTransaction('modify', instance, instance.calendar, aOccurrence, null);
+        doTransaction('modify', instance, instance.calendar, itemToEdit, null);
     } else {
         editEvent();
     }
 }
 
 calViewController.prototype.deleteOccurrence = function (aOccurrence) {
-    if (aOccurrence.parentItem != aOccurrence) {
-        var event = aOccurrence.parentItem.clone();
-        event.recurrenceInfo.removeOccurrenceAt(aOccurrence.recurrenceId);
-        doTransaction('modify', event, event.calendar, aOccurrence.parentItem, null);
+    var itemToDelete = getOccurrenceOrParent(aOccurrence);
+    if (itemToDelete.parentItem != itemToDelete) {
+        var event = itemToDelete.parentItem.clone();
+        event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);
+        doTransaction('modify', event, event.calendar, itemToDelete.parentItem, null);
     } else {
         doTransaction('delete', aOccurrence, aOccurrence.calendar, null, null);
     }

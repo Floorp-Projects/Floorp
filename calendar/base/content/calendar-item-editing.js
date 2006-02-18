@@ -165,3 +165,35 @@ function openEventDialog(calendarItem, calendar, mode, callback)
                "chrome,titlebar,modal,resizable", args);
 }
 
+// When editing a single instance of a recurring event, we need to figure out
+// whether the user wants to edit all instances, or just this one.  This
+// function prompts this question (if the item is actually an instance of a
+// recurring event) and returns the appropriate item that should be modified.
+function getOccurrenceOrParent(occurrence) {
+    // Check if this actually is an instance of a recurring event
+    if (occurrence == occurrence.parentItem) {
+        return occurrence;
+    }
+
+    var promptService = 
+             Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(Components.interfaces.nsIPromptService);
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props =  sbs.createBundle("chrome://calendar/locale/calendar.properties");
+
+    var promptTitle = props.GetStringFromName("editRecurTitle");
+    var promptMessage = props.GetStringFromName("editRecurMessage");
+    var buttonLabel1 = props.GetStringFromName("editRecurAll");
+    var buttonLabel2 = props.GetStringFromName("editRecurSingle");
+
+    var flags = promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0 +
+                promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1;
+
+    if (promptService.confirmEx(null, promptTitle, promptMessage, flags, 
+                                buttonLabel1, buttonLabel2, null, null, {})) {
+        return occurrence;
+    } else {
+        return occurrence.parentItem;
+    }
+}

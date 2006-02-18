@@ -368,7 +368,7 @@ function editEvent()
 
       if( calendarEvent != null )
       {
-         modifyEventWithDialog(calendarEvent);
+         modifyEventWithDialog(getOccurrenceOrParent(calendarEvent));
       }
    }
 }
@@ -377,7 +377,7 @@ function editToDo(task) {
     if (!task)
         return;
 
-    modifyEventWithDialog(task);
+    modifyEventWithDialog(getOccurrenceOrParent(task));
 }
 
 /**
