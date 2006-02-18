@@ -27,11 +27,11 @@
 
       <field name="mPrefObserver"><![CDATA[
         ({
-          urlbar: this,
+          searchBar: this,
           
           observe: function(aObserver, aBlah, aPref) {
             if (aPref.indexOf("browser.search") == 0)
-              this.updateEngines();
+              this.searchBar.updateEngines();
           }
         });
       ]]></field>
@@ -70,7 +70,7 @@
           try {
             var ds = rdf.GetDataSource("rdf:internetsearch");
           } catch (ex) {
-            // sometimes bad profiles cause this error, which horks the hold urlbar
+            // sometimes bad profiles cause this error, which horks the searchBar
             return;
           }
                               
