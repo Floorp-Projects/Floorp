@@ -635,11 +635,8 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
     nsIComboboxControlFrame *comboBoxFrame = nsnull;
     CallQueryInterface(selectFrame, &comboBoxFrame);
     if (comboBoxFrame) {
-      nsIFrame *listFrame = nsnull;
-      comboBoxFrame->GetDropDown(&listFrame);
-      PRBool isDroppedDown;
-      comboBoxFrame->IsDroppedDown(&isDroppedDown);
-      if (isDroppedDown && listFrame) {
+      nsIFrame *listFrame = comboBoxFrame->GetDropDown();
+      if (comboBoxFrame->IsDroppedDown() && listFrame) {
         // use this list control frame to roll up the list
         nsIListControlFrame *listControlFrame = nsnull;
         listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listControlFrame);
@@ -851,15 +848,11 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetState(PRUint32 *_retval)
   // Get focus status from base class
   nsAccessible::GetState(_retval);
 
-  // we are open or closed
-  PRBool isOpen = PR_FALSE;
   nsIFrame *frame = GetBoundsFrame();
   nsIComboboxControlFrame *comboFrame = nsnull;
   frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (comboFrame)
-    comboFrame->IsDroppedDown(&isOpen);
 
-  if (isOpen)
+  if (comboFrame && comboFrame->IsDroppedDown())
     *_retval |= STATE_EXPANDED;
   else
     *_retval |= STATE_COLLAPSED;
@@ -919,8 +912,7 @@ nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
   if (!cbxFrame) {
     return nsnull;
   }
-  nsIFrame *listFrame = nsnull;
-  cbxFrame->GetDropDown(&listFrame);
+  nsIFrame *listFrame = cbxFrame->GetDropDown();
   if (!listFrame) {
     return nsnull;
   }
@@ -1131,14 +1123,13 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
   */
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& _retval)
 {
-  PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
   boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
-  comboFrame->IsDroppedDown(&isOpen);
-  if (isOpen)
+
+  if (comboFrame->IsDroppedDown())
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("close"), _retval); 
   else
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("open"), _retval); 
@@ -1204,16 +1195,14 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetState(PRUint32 *_retval)
   // Get focus status from base class
   nsAccessible::GetState(_retval);
 
-  // we are open or closed --> pressed or not
-  PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame;
   boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
-  comboFrame->IsDroppedDown(&isOpen);
-  if (isOpen)
-  *_retval |= STATE_PRESSED;
+
+  if (comboFrame->IsDroppedDown())
+    *_retval |= STATE_PRESSED;
 
   *_retval |= STATE_FOCUSABLE;
 
@@ -1273,15 +1262,13 @@ NS_IMETHODIMP nsHTMLComboboxListAccessible::GetState(PRUint32 *aState)
   // Get focus status from base class
   nsAccessible::GetState(aState);
 
-  // we are open or closed
-  PRBool isOpen = PR_FALSE;
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;
   boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
-  comboFrame->IsDroppedDown(&isOpen);
-  if (isOpen)
+
+  if (comboFrame->IsDroppedDown())
     *aState |= STATE_FLOATING | STATE_FOCUSABLE;
   else
     *aState |= STATE_INVISIBLE | STATE_FOCUSABLE;

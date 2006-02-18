@@ -176,9 +176,7 @@ class nsComboButtonListener: public nsIDOMMouseListener
 
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) 
   {
-    PRBool isDroppedDown;
-    mComboBox->IsDroppedDown(&isDroppedDown);
-    mComboBox->ShowDropDown(!isDroppedDown);
+    mComboBox->ShowDropDown(!mComboBox->IsDroppedDown());
     return PR_FALSE; 
   }
 
@@ -1528,11 +1526,11 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 //----------------------------------------------------------------------
 // nsIComboboxControlFrame
 //----------------------------------------------------------------------
-NS_IMETHODIMP
+void
 nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown) 
 { 
   if (nsFormControlHelper::GetDisabled(mContent)) {
-    return NS_OK;
+    return;
   }
 
   if (!mDroppedDown && aDoDropDown) {
@@ -1540,37 +1538,23 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
       mListControlFrame->SyncViewWithFrame();
     }
     ToggleList(GetPresContext());
-    return NS_OK;
   } else if (mDroppedDown && !aDoDropDown) {
     ToggleList(GetPresContext());
-    return NS_OK;
   }
-
-  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+void
 nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
   mDropdownFrame = aDropDownFrame;
  
-  if (NS_OK != CallQueryInterface(mDropdownFrame, &mListControlFrame)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  CallQueryInterface(mDropdownFrame, &mListControlFrame);
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame) 
+nsIFrame*
+nsComboboxControlFrame::GetDropDown() 
 {
-  if (nsnull == aDropDownFrame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aDropDownFrame = mDropdownFrame;
- 
-  return NS_OK;
+  return mDropdownFrame;
 }
 
 // Toggle dropdown list.
@@ -1583,7 +1567,7 @@ nsComboboxControlFrame::ToggleList(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
   nsRect absoluteTwips;
@@ -1592,14 +1576,6 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   if (NS_SUCCEEDED(nsFormControlFrame::GetAbsoluteFramePosition(GetPresContext(), this,  absoluteTwips, absolutePixels))) {
     PositionDropdown(GetPresContext(), GetRect().height, absoluteTwips, absolutePixels);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
-{
-  nsRect absoluteTwips;
-  return nsFormControlFrame::GetAbsoluteFramePosition(GetPresContext(), this,  absoluteTwips, *aRect);
 }
 
 ///////////////////////////////////////////////////////////////
@@ -1700,12 +1676,10 @@ nsComboboxControlFrame::ActuallyDisplayText(PRBool aNotify)
   }
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aDisplayedIndex)
+PRInt32
+nsComboboxControlFrame::GetIndexOfDisplayArea()
 {
-  NS_ENSURE_ARG_POINTER(aDisplayedIndex);
-  *aDisplayedIndex = mDisplayedIndex;
-  return NS_OK;
+  return mDisplayedIndex;
 }
 
 //----------------------------------------------------------------------
@@ -2084,16 +2058,16 @@ nsComboboxControlFrame::Rollup()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::RollupFromList(nsPresContext* aPresContext)
+void
+nsComboboxControlFrame::RollupFromList()
 {
+  nsPresContext* aPresContext = GetPresContext();
+
   ShowList(aPresContext, PR_FALSE);
   mListControlFrame->CaptureMouseEvents(aPresContext, PR_FALSE);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRInt32)
+PRInt32
 nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
 {
   PRInt32 index = mRecentSelectedIndex;
