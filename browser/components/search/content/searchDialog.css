@@ -1,5 +1,5 @@
 /* ***** BEGIN LICENSE BLOCK *****
-#if 0
+%if 0
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -33,10 +33,10 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
-#endif
+%endif
  * ***** END LICENSE BLOCK ***** */
 
- #searchEngineList {
+#searchEngineList {
   min-height: 24px;
 }
 
