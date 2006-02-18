@@ -35,19 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMacUtils.h"
+#include "nsMacUtilsImpl.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <mach-o/fat.h>
 
-NS_IMPL_ISUPPORTS1(nsMacUtils, nsIMacUtils)
+NS_IMPL_ISUPPORTS1(nsMacUtilsImpl, nsIMacUtils)
 
 /* readonly attribute boolean isUniversalBinary; */
 // True when the main executable is a fat file supporting at least
 // ppc and x86 (universal binary).
-NS_IMETHODIMP nsMacUtils::GetIsUniversalBinary(PRBool *aIsUniversalBinary)
+NS_IMETHODIMP nsMacUtilsImpl::GetIsUniversalBinary(PRBool *aIsUniversalBinary)
 {
   static PRBool sInitialized = PR_FALSE,
                 sIsUniversalBinary = PR_FALSE;

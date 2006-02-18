@@ -72,7 +72,7 @@ REQUIRES	+= boehm
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-CPPSRCS		+= nsMacUtils.cpp
+CPPSRCS		+= nsMacUtilsImpl.cpp
 endif
 
 EXPORTS		= \
