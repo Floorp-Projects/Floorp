@@ -49,6 +49,7 @@
 #include <prthread.h>
 #include "nsIThread.h"
 #include "nsILocalFile.h"
+#include "nsTraceRefcntImpl.h"
 
 #ifdef XP_WIN
 #ifndef WIN32_LEAN_AND_MEAN
@@ -317,7 +318,16 @@ PyXPCOM_Globals_Ensure()
 
 			nsCOMPtr<nsILocalFile> ns_bin_dir;
 			NS_ConvertASCIItoUTF16 strLandmark(landmark);
+#ifdef NS_BUILD_REFCNT_LOGGING
+			// In an interesting chicken-and-egg problem, we
+			// throw assertions in creating the nsILocalFile
+			// we need to pass to InitXPCOM!
+			nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
 			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
+#ifdef NS_BUILD_REFCNT_LOGGING
+			nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
 			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
 #else
 			// Elsewhere, Mozilla can find it itself (we hope!)
