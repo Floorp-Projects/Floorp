@@ -135,7 +135,7 @@
           if (this.currentEngine != "__PhoenixFindInPage") {
             var ISEARCHSVC = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
                                        .getService(Components.interfaces.nsIInternetSearchService);
-            var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine, escape(this.value), 
+            var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine, encodeURIComponent(this.value), 
                                                             0, 0, {value:0});
             gURLBar.value = searchURL;
             BrowserLoadURL(this.mEnterEvent); // from autocomplete.xml
