@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+
+<bindings id="SearchBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="searchbar" extends="chrome://global/content/widgets/autocomplete.xml#autocomplete">
+    <implementation>
+      <constructor><![CDATA[
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi)
+          pbi.addObserver("browser.search", this.mPrefObserver, false);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi)
+          pbi.removeObserver("browser.search", this.mPrefObserver);
+      ]]></destructor>
+
+      <field name="mPrefs">
+        var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+        svc.getBranch(null);
+      </field>
+
+      <field name="mPrefObserver"><![CDATA[
+        ({
+          urlbar: this,
+          
+          observe: function(aObserver, aBlah, aPref) {
+            if (aPref.indexOf("browser.search") == 0)
+              this.updateEngines();
+          }
+        });
+      ]]></field>
+      
+      <field name="enginesReady">false</field>
+
+      <field name="currentSearchId">""</field>
+
+      <field name="currentSearchURL">""</field>
+
+      <field name="currentSearchName">""</field>
+
+      <field name="currentSearchIcon">""</field>
+
+      <property name="searchValue" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this.enginesReady)
+            this.updateEngines();
+
+          const ISEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch";
+          const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;           
+          var searchService = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
+          if (this.currentSearchURL)
+            return this.currentSearchURL;
+
+          return searchService.GetInternetSearchURL(this.currentSearchId, escape(this.value), 0, 0, {value:0});
+        ]]>
+        </getter>
+      </property>
+
+      <method name="updateEngines">
+        <body><![CDATA[
+          var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+          try {
+            var ds = rdf.GetDataSource("rdf:internetsearch");
+          } catch (ex) {
+            // sometimes bad profiles cause this error, which horks the hold urlbar
+            return;
+          }
+                              
+          const kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+          const kNC_Icon = rdf.GetResource("http://home.netscape.com/NC-rdf#Icon");
+          const kNC_searchBarUrl = rdf.GetResource("http://home.netscape.com/NC-rdf#actionBar");
+        
+          var defaultEngine = null;
+          try {
+            defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
+                                                        Components.interfaces.nsISupportsString).data;
+          } catch(ex) {
+            this.ensureDefaultEnginePrefs(rdf, ds);
+            defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
+                                                        Components.interfaces.nsISupportsString).data;
+          }
+          
+          if (defaultEngine) {
+            if (ds) {
+              var res = rdf.GetResource(defaultEngine);
+              try {
+                this.currentSearchURL = this.readRDFString(ds, res, kNC_searchBarUrl);
+              } catch(ex) { }
+              
+              this.currentSearchId = res.Value;
+              this.currentSearchName = this.readRDFString(ds, res, kNC_Name);
+              this.currentSearchIcon = this.readRDFString(ds, res, kNC_Icon);
+            }
+          }
+          
+          this.enginesReady = true;
+        ]]></body>
+      </method>
+
+      <method name="ensureDefaultEnginePrefs">
+        <parameter name="aRDF"/>
+        <parameter name="aDS"/>
+        <body><![CDATA[
+          var defaultName = this.mPrefs.getComplexValue("browser.search.defaultenginename",
+                                                        Components.interfaces.nsIPrefLocalizedString).data;
+          const kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
+          const kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+          const kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          
+          var arcs = aDS.GetTargets(kNC_Root, kNC_child, true);
+          while (arcs.hasMoreElements()) {
+            var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+            var name = this.readRDFString(aDS, engineRes, kNC_Name);
+            if (name == defaultName) {
+              var str = Components.classes["@mozilla.org/supports-string;1"]
+                                  .createInstance(Components.interfaces.nsISupportsString);
+              str.data = engineRes.Value;
+              this.mPrefs.setComplexValue("browser.search.defaultengine",
+                                          Components.interfaces.nsISupportsString,
+                                          str);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="readRDFString">
+        <parameter name="aDS"/>
+        <parameter name="aRes"/>
+        <parameter name="aProp"/>
+        <body><![CDATA[
+          var n = aDS.GetTarget(aRes, aProp, true);
+          return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : null;
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+</bindings>
