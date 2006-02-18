@@ -417,9 +417,9 @@ calMemoryCalendar.prototype = {
                                : END_OF_TIME);
             } else if (wantTodos && (item instanceof calITodo)) {
                 // if it's a todo, also filter based on completeness
-                if (item.percentComplete == 100 && !itemCompletedFilter)
+                if (item.isCompleted && !itemCompletedFilter)
                     continue;
-                else if (item.percentComplete < 100 && !itemNotCompletedFilter)
+                else if (item.isCompleted && !itemNotCompletedFilter)
                     continue;
 
                 itemEndTime = itemStartTime = 

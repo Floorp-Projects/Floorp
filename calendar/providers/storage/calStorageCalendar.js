@@ -728,15 +728,9 @@ calStorageCalendar.prototype = {
                 var item = this.getTodoFromRow(row, flags);
                 flags = flags.value;
 
-                var itemIsCompleted = false;
-                if (item.percentComplete == 100 ||
-                    item.completedDate != null ||
-                    item.ical_status == kCalITodo.CAL_TODO_STATUS_COMPLETED)
-                    itemIsCompleted = true;
-
-                if (!itemIsCompleted && !wantNotCompletedItems)
+                if (!item.isCompleted && !wantNotCompletedItems)
                     continue;
-                if (itemIsCompleted && !wantCompletedItems)
+                if (item.isCompleted && !wantCompletedItems)
                     continue;
 
                 var completed = 
