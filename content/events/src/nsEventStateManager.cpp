@@ -1796,9 +1796,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       nsIComboboxControlFrame* comboBox = nsnull;
       CallQueryInterface(scrollFrame, &comboBox);
       if (comboBox) {
-        PRBool isDroppedDown = PR_FALSE;
-        comboBox->IsDroppedDown(&isDroppedDown);
-        if (isDroppedDown) {
+        if (comboBox->IsDroppedDown()) {
           // Don't propagate to parent when drop down menu is active.
           if (passToParent) {
             passToParent = PR_FALSE;

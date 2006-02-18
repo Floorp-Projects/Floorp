@@ -66,27 +66,27 @@ public:
   /**
    * Indicates whether the list is dropped down
    */
-  NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) = 0;
+  virtual PRBool IsDroppedDown() = 0;
 
   /**
    * Shows or hides the drop down
    */
-  NS_IMETHOD ShowDropDown(PRBool aDoDropDown) = 0;
+  virtual void ShowDropDown(PRBool aDoDropDown) = 0;
 
   /**
    * Gets the Drop Down List
    */
-  NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame) = 0;
+  virtual nsIFrame* GetDropDown() = 0;
 
   /**
    * Sets the Drop Down List
    */
-  NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame) = 0;
+  virtual void SetDropDown(nsIFrame* aDropDownFrame) = 0;
 
   /**
    * Tells the combobox to roll up
    */
-  NS_IMETHOD RollupFromList(nsPresContext* aPresContext) = 0;
+  virtual void RollupFromList() = 0;
 
   /**
    * Redisplay the selected text (will do nothing if text has not changed)
@@ -96,17 +96,12 @@ public:
   /**
    * Method for the listbox to set and get the recent index
    */
-  NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex) = 0;
+  virtual PRInt32 UpdateRecentIndex(PRInt32 aIndex) = 0;
 
   /**
    *
    */
-  NS_IMETHOD AbsolutelyPositionDropDown() = 0;
-
-  /**
-   *
-   */
-  NS_IMETHOD GetAbsoluteRect(nsRect* aRect) = 0;
+  virtual void AbsolutelyPositionDropDown() = 0;
 
   /**
    * Notification that the content has been reset
@@ -129,7 +124,7 @@ public:
    * and that way it knows whether to "cancel" the current selection residing in the 
    * dropdown. Or whether to leave the selection alone.
    */
-  NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex) = 0;
+  virtual PRInt32 GetIndexOfDisplayArea() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIComboboxControlFrame,

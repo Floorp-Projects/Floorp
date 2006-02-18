@@ -147,16 +147,15 @@ public:
   virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
   //nsIComboboxControlFrame
-  NS_IMETHOD IsDroppedDown(PRBool * aDoDropDown) { *aDoDropDown = mDroppedDown; return NS_OK; }
-  NS_IMETHOD ShowDropDown(PRBool aDoDropDown);
-  NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
-  NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
-  NS_IMETHOD RollupFromList(nsPresContext* aPresContext);
-  NS_IMETHOD AbsolutelyPositionDropDown();
-  NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
-  NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
+  virtual PRBool IsDroppedDown() { return mDroppedDown; }
+  virtual void ShowDropDown(PRBool aDoDropDown);
+  virtual nsIFrame* GetDropDown();
+  virtual void SetDropDown(nsIFrame* aDropDownFrame);
+  virtual void RollupFromList();
+  virtual void AbsolutelyPositionDropDown();
+  virtual PRInt32 GetIndexOfDisplayArea();
   NS_IMETHOD RedisplaySelectedText();
-  NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex);
+  virtual PRInt32 UpdateRecentIndex(PRInt32 aIndex);
   virtual void OnContentReset();
 
   // nsISelectControlFrame

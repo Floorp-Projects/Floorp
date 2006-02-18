@@ -1330,9 +1330,7 @@ nsListControlFrame::CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrab
       viewMan->GetMouseEventGrabber(curGrabber);
       PRBool dropDownIsHidden = PR_FALSE;
       if (IsInDropDownMode()) {
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
-        dropDownIsHidden = !isDroppedDown;
+        dropDownIsHidden = !mComboboxFrame->IsDroppedDown();
       }
       if (curGrabber == view || dropDownIsHidden) {
         // only unset the grabber if *we* are the ones doing the grabbing
@@ -1965,14 +1963,13 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
   if (mComboboxFrame) {
     PerformSelection(aIndex, PR_FALSE, PR_FALSE);
 
-    PRInt32 displayIndex;
-    mComboboxFrame->GetIndexOfDisplayArea(&displayIndex);
+    PRInt32 displayIndex = mComboboxFrame->GetIndexOfDisplayArea();
 
     if (displayIndex != aIndex) {
       mComboboxFrame->RedisplaySelectedText();
     }
 
-    mComboboxFrame->RollupFromList(GetPresContext());
+    mComboboxFrame->RollupFromList();
   }
 
   return NS_OK;
@@ -2132,9 +2129,7 @@ nsListControlFrame::AboutToRollup()
   //   reset the index.
 
   if (IsInDropDownMode()) {
-    PRInt32 index;
-    mComboboxFrame->GetIndexOfDisplayArea(&index);
-    ComboboxFinish(index);
+    ComboboxFinish(mComboboxFrame->GetIndexOfDisplayArea());
   }
   return NS_OK;
 }
@@ -2387,12 +2382,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 void
 nsListControlFrame::UpdateInListState(nsIDOMEvent* aEvent)
 {
-  if (!mComboboxFrame)
-    return;
-
-  PRBool isDroppedDown;
-  mComboboxFrame->IsDroppedDown(&isDroppedDown);
-  if (!isDroppedDown)
+  if (!mComboboxFrame || !mComboboxFrame->IsDroppedDown())
     return;
 
   nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(aEvent, this);
@@ -2419,9 +2409,7 @@ PRBool nsListControlFrame::IgnoreMouseEventForSelection(nsIDOMEvent* aEvent)
 
   // Our DOM listener does get called when the dropdown is not
   // showing, because it listens to events on the SELECT element
-  PRBool isDroppedDown;
-  mComboboxFrame->IsDroppedDown(&isDroppedDown);
-  if (!isDroppedDown)
+  if (!mComboboxFrame->IsDroppedDown())
     return PR_TRUE;
 
   return !mItemSelectionStarted;
@@ -2607,8 +2595,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
       if (!nsComboboxControlFrame::ToolkitHasNativePopup())
       {
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
+        PRBool isDroppedDown = mComboboxFrame->IsDroppedDown();
         mComboboxFrame->ShowDropDown(!isDroppedDown);
         if (isDroppedDown) {
           CaptureMouseEvents(GetPresContext(), PR_FALSE);
@@ -2632,9 +2619,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
   UpdateInListState(aMouseEvent);
 
   if (IsInDropDownMode()) { 
-    PRBool isDroppedDown = PR_FALSE;
-    mComboboxFrame->IsDroppedDown(&isDroppedDown);
-    if (isDroppedDown) {
+    if (mComboboxFrame->IsDroppedDown()) {
       PRInt32 selectedIndex;
       if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
         PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
@@ -2889,9 +2874,7 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
   // Cocoa widgets do native popups, so don't try to show
   // dropdowns there.
   if (IsInDropDownMode() && !nsComboboxControlFrame::ToolkitHasNativePopup()) {
-    PRBool isDroppedDown;
-    mComboboxFrame->IsDroppedDown(&isDroppedDown);
-    mComboboxFrame->ShowDropDown(!isDroppedDown);
+    mComboboxFrame->ShowDropDown(!mComboboxFrame->IsDroppedDown());
     mComboboxFrame->RedisplaySelectedText();
     aKeyEvent->PreventDefault();
   }
@@ -2992,9 +2975,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
       if (mComboboxFrame != nsnull) {
-        PRBool droppedDown = PR_FALSE;
-        mComboboxFrame->IsDroppedDown(&droppedDown);
-        if (droppedDown) {
+        if (mComboboxFrame->IsDroppedDown()) {
           ComboboxFinish(mEndSelectionIndex);
         }
         FireOnChange();
