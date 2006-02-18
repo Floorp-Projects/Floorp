@@ -126,11 +126,21 @@ function loadDialog(item)
     if (isEvent(item)) {
         var startDate = item.startDate.getInTimezone(kDefaultTimezone);
         var endDate = item.endDate.getInTimezone(kDefaultTimezone);
+        
+        // Check if an all-day event has been passed in (to adapt endDate).
         if (startDate.isDate) {
             setElementValue("event-all-day", true, "checked");
             endDate.day -= 1;
+
+            // The date/timepicker uses jsDate internally. Because jsDate does
+            // not know the concept of dates we end up displaying times unequal
+            // to 00:00 for all-day events depending on local timezone setting. 
+            // Calling normalize() recalculates that times to represent 00:00
+            // in local timezone.
             endDate.normalize();
+            startDate.normalize();
         }
+        
         setElementValue("event-starttime",   startDate.jsDate);
         setElementValue("event-endtime",     endDate.jsDate);
         document.getElementById("component-type").selectedIndex = 0;
@@ -427,6 +437,7 @@ function updateStyle()
 
 function updateAccept()
 {
+    var kDefaultTimezone = calendarDefaultTimezone();
     var acceptButton = document.getElementById("calendar-event-dialog").getButton("accept");
 
     var title = getElementValue("item-title");
@@ -441,7 +452,21 @@ function updateAccept()
     if (isEvent(window.calendarItem)) {
         startDate = jsDateToDateTime(getElementValue("event-starttime"));
         endDate = jsDateToDateTime(getElementValue("event-endtime"));
+
+        // For all-day events we are not interested in times and compare only dates.
         if (getElementValue("event-all-day", "checked")) {
+            // jsDateToDateTime returnes the values in UTC. Depending on the local
+            // timezone and the values selected in datetimepicker the date in UTC
+            // might be shifted to the previous or next day.
+            // For example: The user (with local timezone GMT+05) selected 
+            // Feb 10 2006 00:00:00. The corresponding value in UTC is
+            // Feb 09 2006 19:00:00. If we now set isDate to true we end up with
+            // a date of Feb 09 2006 instead of Feb 10 2006 resulting in errors
+            // during the following comparison.
+            // Calling getInTimezone() ensures that we use the same dates as 
+            // displayed to the user in datetimepicker for comparison.
+            startDate = startDate.getInTimezone(kDefaultTimezone);
+            endDate = endDate.getInTimezone(kDefaultTimezone);
             startDate.isDate = true;
             endDate.isDate = true;
         }
@@ -537,6 +562,8 @@ function updateAllDay()
     var allDay = getElementValue("event-all-day", "checked");
     setElementValue("event-starttime", allDay, "timepickerdisabled");
     setElementValue("event-endtime", allDay, "timepickerdisabled");
+
+    updateAccept();
 }
 
 
