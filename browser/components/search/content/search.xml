@@ -318,7 +318,7 @@
           }
           var evt = aEvent || this.mEnterEvent;
           var openInTab = this.prefService.getBoolPref("browser.search.openintab");
-          SearchLoadURL(searchURL, (evt && evt.altKey || openInTab));
+          SearchLoadURL(searchURL, ((evt && evt.altKey) ^ openInTab));
         ]]></body>
       </method>
 
