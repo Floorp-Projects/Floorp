@@ -448,14 +448,27 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
             break;
 
         /* Use js_EscapeMap, \u, or \x only if necessary. */
-        if ((u = js_strchr(js_EscapeMap, c)) != NULL)
+        if ((u = js_strchr(js_EscapeMap, c)) != NULL) {
             ok = Sprint(sp, "\\%c", (char)u[1]) >= 0;
-        else {
+        } else {
 #ifdef JS_STRINGS_ARE_UTF8
-            /* print as UTF-8 string */
-            ok = Sprint(sp, "%hc", c) >= 0;
+            /* If this is a surrogate pair, make sure to print the pair. */
+            if (c >= 0xD800 && c <= 0xDBFF) {
+                jschar buffer[3];
+                buffer[0] = c;
+                buffer[1] = *++t;
+                buffer[2] = 0;
+                if (t == z) {
+                    ok = JS_FALSE;
+                    break;
+                }
+                ok = Sprint(sp, "%hs", buffer) >= 0;
+            } else {
+                /* Print as UTF-8 string. */
+                ok = Sprint(sp, "%hc", c) >= 0;
+            }
 #else
-            /* Use \uxxxx or \xXX  if the string cannot be displayed as UTF-8 */
+            /* Use \uXXXX or \xXX  if the string cannot be displayed as UTF-8. */
             ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
 #endif
         }
