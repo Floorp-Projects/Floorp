@@ -324,11 +324,23 @@ $(OBJDIR)/jsautokw.h: $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) jskeyword.tbl
 	$(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX) $@
 
 ifdef USE_MSVC
+
+$(OBJDIR)/jskwgen.obj: jskwgen.c jskeyword.tbl
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$(OBJDIR)/ -c $(CFLAGS) $<
+
 $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
+
 else
+
+$(OBJDIR)/jskwgen.o: jskwgen.c jskeyword.tbl
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) $<
+
 $(OBJDIR)/jskwgen$(HOST_BIN_SUFFIX): $(OBJDIR)/jskwgen.$(OBJ_SUFFIX)
 	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+
 endif
 
 #
@@ -389,6 +401,7 @@ endif
 
 # Note: generated headers must be built before descending
 #       into fdlibm directory
+
 $(FDLIBM_LIBRARY) :
 	$(MAKE) -C fdlibm -f Makefile.ref $(@F)
 
