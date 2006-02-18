@@ -8,12 +8,7 @@
   <binding id="searchbar" extends="chrome://global/content/widgets/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
-        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-        if (pbi)
-          pbi.addObserver("browser.search", this.mPrefObserver, false);
-
-        if (this.hasAttribute("searchmode"))
-          updateEngines();
+        setTimeout(function(a) { a.initialize(); }, 0, this);
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -70,8 +65,19 @@
         </getter>
       </property>
 
+      <method name="initialize">
+        <body><![CDATA[
+          var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+          if (pbi)
+            pbi.addObserver("browser.search", this.mPrefObserver, false);
+          this.updateEngines();
+        ]]></body>
+      </method>
+        
       <method name="updateEngines">
         <body><![CDATA[
+          if (this.getAttribute("searchmode") == "__PhoenixFindInPage")
+            return;
           var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
           try {
