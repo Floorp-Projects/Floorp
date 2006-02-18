@@ -186,5 +186,16 @@
     </handlers>
 
   </binding>
+  
+  <binding id="searchBarDropMarker">
+    <content>
+      <xul:stack flex="1">
+        <xul:hbox align="center">
+          <xul:image class="search-proxy-button-image" xbl:inherits="src"/>
+        </xul:hbox>
+        <xul:image class="search-proxy-button-dropmarker"/>
+      </xul:stack>
+    </content>  
+  </binding>
 
 </bindings>
