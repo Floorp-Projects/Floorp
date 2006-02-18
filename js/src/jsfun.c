@@ -1043,8 +1043,8 @@ fun_enumerate(JSContext *cx, JSObject *obj)
     prototypeId = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, prototypeId, &pobj, &prop))
         return JS_FALSE;
-    JS_ASSERT(prop);
-    OBJ_DROP_PROPERTY(cx, pobj, prop);
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
     return JS_TRUE;
 }
 
