@@ -1376,8 +1376,6 @@ function Installer(ds, id, installLocation, type) {
   this._id = id;
   this._type = type;
   this._installLocation = installLocation;
-  this._metadataFile = this._installLocation
-                           .getItemFile(this._id, FILE_INSTALL_MANIFEST);
 }
 Installer.prototype = {
   // Item metadata
@@ -1391,12 +1389,14 @@ Installer.prototype = {
    */
   get metadataDS() {
     if (!this._metadataDS) {
-      if (!this._metadataFile.exists()) 
+      var metadataFile = this._installLocation
+                             .getItemFile(this._id, FILE_INSTALL_MANIFEST);
+      if (!metadataFile.exists()) 
         return null;
-      this._metadataDS = getInstallManifest(this._metadataFile);
+      this._metadataDS = getInstallManifest(metadataFile);
       if (!this._metadataDS) {
         LOG("Installer::install: metadata datasource for extension " + 
-            this._id + " at " + this._metadataFile.path + " could not be loaded. " + 
+            this._id + " at " + metadataFile.path + " could not be loaded. " + 
             " Installation will not proceed.");
       }
     }
@@ -1841,42 +1841,71 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
     }
   }
   
-  var itemLocation = installLocation.getItemLocation(itemID);
-  if (itemLocation.exists()) {
-    var trashDirName = itemID + "-trash";
-    var itemLocationTrash = itemLocation.parent.clone();
-    itemLocationTrash.append(trashDirName);
-    if (itemLocationTrash.exists()) {
-      // We can remove recursively here since this is a folder we created, not
-      // one the user specified. If this fails, it'll throw, and the caller 
-      // should stop installation.
+  if (!installLocation.itemIsManagedIndependently(itemID)) {
+    var itemLocation = installLocation.getItemLocation(itemID);
+    if (itemLocation.exists()) {
+      var trashDirName = itemID + "-trash";
+      var itemLocationTrash = itemLocation.parent.clone();
+      itemLocationTrash.append(trashDirName);
+      if (itemLocationTrash.exists()) {
+        // We can remove recursively here since this is a folder we created, not
+        // one the user specified. If this fails, it'll throw, and the caller 
+        // should stop installation.
+        try {
+          removeDirRecursive(itemLocationTrash);
+        }
+        catch (e) {
+          LOG("safeFileOperation: failed to remove existing trash directory " + 
+              itemLocationTrash.path + " ... aborting installation.");
+          throw e;
+        }
+      }
+      
+      // Move the directory that contains the existing version of the item aside, 
+      // into {GUID}-trash. This will throw if there's a failure and the install
+      // will abort.
+      moveDirectory(itemLocation, itemLocationTrash, itemLocation);
+      
+      // Clean up the original location, if necessary. Again, this is a path we 
+      // generated, so it is safe to recursively delete.
       try {
-        removeDirRecursive(itemLocationTrash);
+        removeDirRecursive(itemLocation);
       }
       catch (e) {
-        LOG("safeFileOperation: failed to remove existing trash directory " + 
-            itemLocationTrash.path + " ... aborting installation.");
+        LOG("safeInstallOperation: failed to clean up item location after its contents " + 
+            "were properly backed up. Failed to clean up: " + itemLocation.path + 
+            " ... rolling back file moves and aborting installation.");
+        rollbackMove();
+        cleanUpTrash(itemLocationTrash);
         throw e;
       }
     }
-    
-    // Move the directory that contains the existing version of the item aside, 
-    // into {GUID}-trash. This will throw if there's a failure and the install
-    // will abort.
-    moveDirectory(itemLocation, itemLocationTrash, itemLocation);
-    
-    // Clean up the original location, if necessary. Again, this is a path we 
-    // generated, so it is safe to recursively delete.
-    try {
-      removeDirRecursive(itemLocation);
-    }
-    catch (e) {
-      LOG("safeInstallOperation: failed to clean up item location after its contents " + 
-          "were properly backed up. Failed to clean up: " + itemLocation.path + 
-          " ... rolling back file moves and aborting installation.");
-      rollbackMove();
-      cleanUpTrash(itemLocationTrash);
-      throw e;
+  }
+  else if (installLocation.name == KEY_APP_PROFILE ||
+           installLocation.name == KEY_APP_GLOBAL) {
+    // Check for a pointer file and move it aside if it exists
+    var pointerFile = installLocation.location.clone();
+    pointerFile.append(itemID);
+    if (pointerFile.exists() && !pointerFile.isDirectory()) {
+      var trashFileName = itemID + "-trash";
+      var itemLocationTrash = installLocation.location.clone();
+      itemLocationTrash.append(trashFileName);
+      if (itemLocationTrash.exists()) {
+        // We can remove recursively here since this is a folder we created, not
+        // one the user specified. If this fails, it'll throw, and the caller 
+        // should stop installation.
+        try {
+          removeDirRecursive(itemLocationTrash);
+        }
+        catch (e) {
+          LOG("safeFileOperation: failed to remove existing trash directory " + 
+              itemLocationTrash.path + " ... aborting installation.");
+          throw e;
+        }
+      }
+      itemLocationTrash.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+      // Move the pointer file to the trash.
+      moveFile(pointerFile, itemLocationTrash);
     }
   }
       
