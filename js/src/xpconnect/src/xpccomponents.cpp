@@ -2250,9 +2250,12 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (!tempcx)
         return ThrowAndFail(NS_ERROR_OUT_OF_MEMORY, cx, _retval);
 
+    AutoJSRequestWithNoCallContext req(tempcx);
     JSObject *sandbox = JS_NewObject(tempcx, &SandboxClass, nsnull, nsnull);
     if (!sandbox)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
+
+    JS_SetGlobalObject(tempcx, sandbox);
 
     // Make sure to set up principals on the sandbox before initing classes
     nsIScriptObjectPrincipal *sop = nsnull;
@@ -2415,6 +2418,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         JSPRINCIPALS_DROP(cx, jsPrincipals);
         return NS_ERROR_OUT_OF_MEMORY;
     }
+    AutoJSRequestWithNoCallContext req(sandcx);
 
     JS_SetGlobalObject(sandcx, sandbox);
 
