@@ -401,6 +401,11 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       // can simply push the new namespace URI as the default namespace for
       // aElement.
       if (!aPrefix.IsEmpty() || decl->mOwner == aElement) {
+        NS_ASSERTION(!aURI.IsEmpty(),
+                     "Not allowed to add a xmlns attribute with an empty "
+                     "namespace name unless it declares the default "
+                     "namespace.");
+
         GenerateNewPrefix(aPrefix);
         // Now we need to validate our new prefix/uri combination; check it
         // against the full namespace stack again.  Note that just restarting
@@ -587,6 +592,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   count = content->GetAttrCount();
 
   // First scan for namespace declarations, pushing each on the stack
+  PRUint32 skipAttr = count;
   for (index = 0; index < count; index++) {
     
     const nsAttrName* name = content->GetAttrNameAt(index);
@@ -604,9 +610,23 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       content->GetAttr(namespaceID, attrName, uriStr);
 
       if (!name->GetPrefix()) {
-        // Default NS attribute does not have prefix (and the name is "xmlns")
-        PushNameSpaceDecl(EmptyString(), uriStr, aElement);
-      } else {
+        if (tagNamespaceURI.IsEmpty() && !uriStr.IsEmpty()) {
+          // If the element is in no namespace we need to add a xmlns
+          // attribute to declare that. That xmlns attribute must not have a
+          // prefix (see http://www.w3.org/TR/REC-xml-names/#dt-prefix), ie it
+          // must declare the default namespace. We just found an xmlns
+          // attribute that declares the default namespace to something
+          // non-empty. We're going to ignore this attribute, for children we
+          // will detect that we need to add it again and attributes aren't
+          // affected by the default namespace.
+          skipAttr = index;
+        }
+        else {
+          // Default NS attribute does not have prefix (and the name is "xmlns")
+          PushNameSpaceDecl(EmptyString(), uriStr, aElement);
+        }
+      }
+      else {
         attrName->ToString(nameStr);
         PushNameSpaceDecl(nameStr, uriStr, aElement);
       }
@@ -643,6 +663,10 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // XXX Unfortunately we need a namespace manager to get
   // attribute URIs.
   for (index = 0; index < count; index++) {
+    if (skipAttr == index) {
+        continue;
+    }
+
     const nsAttrName* name = content->GetAttrNameAt(index);
     PRInt32 namespaceID = name->NamespaceID();
     nsIAtom* attrName = name->LocalName();
