@@ -60,9 +60,6 @@
                    autocompletesearchparam="searchbar-history"
                    completeselectedindex="true"
                    tabscrolling="true"
-                   onfocus="URLBarFocusHandler(event, this);"
-                   onmousedown="URLBarMouseDownHandler(event, this);"
-                   onclick="URLBarClickHandler(event, this);"
                    xbl:inherits="disableautocomplete,searchengine,src">
         <xul:button class="searchbar-dropmarker" type="menu"
                     id="searchbar-dropmarker" popup="_child" xbl:inherits="src">
@@ -137,6 +134,9 @@
           this.prefService = 
                     Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch2);
+
+          if (this.prefService.getBoolPref("browser.urlbar.clickSelectsAll"))
+            this.setAttribute("clickSelectsAll", true);
 
           this._initializeEngine();
 
