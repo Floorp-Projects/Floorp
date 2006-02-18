@@ -4112,8 +4112,6 @@ nsGenericElement::GetChildAt(PRUint32 aIndex) const
 PRInt32
 nsGenericElement::IndexOf(nsIContent* aPossibleChild) const
 {
-  NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-
   return mAttrsAndChildren.IndexOfChild(aPossibleChild);
 }
 
