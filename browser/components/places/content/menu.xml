@@ -598,6 +598,9 @@
           return;
         this._selection = event.target.node;
         PlacesController.activeView = this;
+        // When right clicking an item in a bookmarks menu the places commands
+        // need to be updated for the context menu to appear correctly.
+        document.commandDispatcher.updateCommands("click");
         // Only left and middle clicks should load the URI
         if (event.button > 1)
           return;

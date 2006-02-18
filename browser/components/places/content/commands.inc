@@ -1,5 +1,5 @@
   <commandset id="placesCommands" 
-              commandupdater="true" events="focus,select,mousedown" 
+              commandupdater="true" events="focus,select,mousedown,click" 
               oncommandupdate="PlacesController.onCommandUpdate()">
     <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
              oncommand="PlacesSearchBox.focus();"/>
