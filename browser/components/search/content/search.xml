@@ -301,7 +301,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           // Save the current value in the form history
-          if (!this.hasAttribute("disableautocomplete"))
+          if (this.value && !this.hasAttribute("disableautocomplete"))
             this.formHistSvc.addEntry(this.getAttribute(
                                       "autocompletesearchparam"), this.value);
 
