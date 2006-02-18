@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.308 $ ';
+$::UtilsVersion = '$Revision: 1.309 $ ';
 
 package TinderUtils;
 
@@ -1543,42 +1543,45 @@ sub get_graph_tbox_name {
   return $name;
 }
 
-sub print_log_test_result_ms {
-  my ($test_name, $test_title, $result, $print_name) = @_;
+sub print_log_test_result {
+  my ($test_name, $test_title, $num_result, $units, $print_name, $print_result) = @_;
 
   print_log "\nTinderboxPrint:";
   if ($Settings::TestsPhoneHome) {
     my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-    print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$result\">";
+    print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&units=$units&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$num_result\">";
   } else {
     print_log "<abbr title=\"$test_title\">";
   }
-  print_log $print_name . ':' . $result . 'ms';
-  if ($Settings::TestsPhoneHome) {
-    print_log "</a>";
-  } else {
+  print_log $print_name;
+  if (!$Settings::TestsPhoneHome) {
     print_log "</abbr>";
   }
+  print_log ':' . $print_result;
+  if ($Settings::TestsPhoneHome) {
+    print_log "</a>";
+  }
   print_log "\n";
+
+}
+
+sub print_log_test_result_ms {
+  my ($test_name, $test_title, $result, $print_name) = @_;
+  print_log_test_result($test_name, $test_title, $result, 'ms',
+                        $print_name, $result . 'ms');
 }
 
 sub print_log_test_result_bytes {
   my ($test_name, $test_title, $result, $print_name, $sig_figs) = @_;
 
-  print_log "\nTinderboxPrint:";
-  if ($Settings::TestsPhoneHome) {
-    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-    print_log "<a title=\"$test_title\" href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $test_name . "&units=bytes&tbox=" . get_graph_tbox_name() . "&autoscale=1&days=7&avg=1&showpoint=$time,$result\">";
-  } else {
-    print_log "<abbr title=\"$test_title\">";
-  }
-  print_log $print_name . ':' . PrintSize($result, $sig_figs) . 'B';
-  if ($Settings::TestsPhoneHome) {
-    print_log "</a>";
-  } else {
-    print_log "</abbr>";
-  }
-  print_log "\n";
+  print_log_test_result($test_name, $test_title, $result, 'bytes',
+                        $print_name, PrintSize($result, $sig_figs) . 'B');
+}
+
+sub print_log_test_result_count {
+  my ($test_name, $test_title, $result, $print_name, $sig_figs) = @_;
+  print_log_test_result($test_name, $test_title, $result, 'count',
+                        $print_name, PrintSize($result, $sig_figs));
 }
 
 
@@ -3075,32 +3078,27 @@ sub BloatTest2 {
       $embed_prefix = "m";
     }
 
-    if($Settings::TestsPhoneHome) {
-        my $leaks_testname       = "trace_malloc_leaks";
-        print_log_test_result_bytes($leaks_testname, $leaks_testname_label,
-                                    $newstats->{'leaks'},
-                                    $embed_prefix . 'Lk', 3);
+    my $leaks_testname       = "trace_malloc_leaks";
+    print_log_test_result_bytes($leaks_testname, $leaks_testname_label,
+                                $newstats->{'leaks'},
+                                $embed_prefix . 'Lk', 3);
 
-        my $maxheap_testname       = "trace_malloc_maxheap";
-        print_log_test_result_bytes($maxheap_testname,
-                                    $maxheap_testname_label,
-                                    $newstats->{'mhs'},
-                                    $embed_prefix . 'MH', 3);
+    my $maxheap_testname       = "trace_malloc_maxheap";
+    print_log_test_result_bytes($maxheap_testname,
+                                $maxheap_testname_label,
+                                $newstats->{'mhs'},
+                                $embed_prefix . 'MH', 3);
 
-        my $allocs_testname       = "trace_malloc_allocs";
-        print_log_test_result_bytes($allocs_testname, $allocs_testname_label,
-                                    $newstats->{'allocs'},
-                                    $embed_prefix . 'A', 3);
+    my $allocs_testname       = "trace_malloc_allocs";
+    print_log_test_result_count($allocs_testname, $allocs_testname_label,
+                                $newstats->{'allocs'},
+                                $embed_prefix . 'A', 3);
 
+    if ($Settings::TestsPhoneHome) {
         # Send results to server.
         send_results_to_server($newstats->{'leaks'},  "--", $leaks_testname);
         send_results_to_server($newstats->{'mhs'},    "--", $maxheap_testname);
         send_results_to_server($newstats->{'allocs'}, "--", $allocs_testname);
-
-    } else {
-        print_log "TinderboxPrint:<abbr title=\"$leaks_testname_label\">Lk</abbr>:" . PrintSize($newstats->{'leaks'},3) . "B\n";
-        print_log "TinderboxPrint:<abbr title=\"$maxheap_testname_label\">MH</abbr>:" . PrintSize($newstats->{'mhs'},3) . "B\n";
-        print_log "TinderboxPrint:<abbr title=\"$allocs_testname_label\">A</abbr>:" . PrintSize($newstats->{'allocs'},3) . "\n";
     }
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
