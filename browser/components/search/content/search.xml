@@ -436,9 +436,9 @@
         <![CDATA[
           var currentEngine = this.currentEngine;
           if (currentEngine) {
-          var searchEngineMenuitem = document.getAnonymousElementByAttribute(this.parentNode, "id", currentEngine);
+            var searchEngineMenuitem = document.getAnonymousElementByAttribute(this.parentNode, "id", currentEngine);
             var newEngine = searchEngineMenuitem.previousSibling;
-            if (newEngine)
+            if (newEngine && newEngine.localName == "menuitem")
               this.currentEngine = newEngine.id;
           }
           event.preventDefault();
@@ -465,7 +465,7 @@
 
             var newEngine = searchEngineMenuitem.nextSibling;
           
-            if (newEngine)
+            if (newEngine && newEngine.localName == "menuitem")
               this.currentEngine = newEngine.id;
           }
           event.preventDefault();
