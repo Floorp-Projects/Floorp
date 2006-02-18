@@ -11,6 +11,7 @@ var tests = [
   test4,
   test5,
   test6,
+  test7,
   null
 ];
 
@@ -210,4 +211,48 @@ function test6() {
   do_check_eq(SerializeXML(doc),
                 '<root xmlns="ns1"><child1 xmlns="ns2"><child2 xmlns="ns1"/>'+
                 '</child1></root>');
+}
+
+function test7() {
+  // Handle xmlns attribute declaring a default namespace on a non-namespaced
+  // element (bug 326994).
+  var doc = ParseXML('<root xmlns=""/>')
+  var root = doc.documentElement;
+  root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
+                      "http://www.w3.org/1999/xhtml");
+  do_check_serialize(doc);
+  do_check_eq(SerializeXML(doc), '<root/>');
+
+  doc = ParseXML('<root xmlns=""><child1/></root>')
+  root = doc.documentElement;
+  root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
+                      "http://www.w3.org/1999/xhtml");
+  do_check_serialize(doc);
+  do_check_eq(SerializeXML(doc), '<root><child1/></root>');
+
+  doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
+                 '<child1 xmlns=""><child2/></child1></root>')
+  root = doc.documentElement;
+  var child1 = root.firstChild;
+  child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
+                        "http://www.w3.org/1999/xhtml");
+  do_check_serialize(doc);
+  do_check_eq(SerializeXML(doc),
+              '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
+              '<child2/></child1></root>');
+
+  doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
+                 '<child1 xmlns="">' +
+                 '<child2 xmlns="http://www.w3.org/1999/xhtml"/>' +
+                 '</child1></root>')
+  root = doc.documentElement;
+  child1 = root.firstChild;
+  var child2 = child1.firstChild;
+  child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
+                        "http://www.w3.org/1999/xhtml");
+  child2.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "");
+  do_check_serialize(doc);
+  do_check_eq(SerializeXML(doc),
+              '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
+              '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""/></child1></root>');
 }
