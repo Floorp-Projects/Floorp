@@ -108,6 +108,13 @@ public:
         return ObjectAt(aIndex);
     }
 
+    // Ensures there is enough space to store a total of aCapacity objects.
+    // This method never deletes any objects.
+    PRBool SetCapacity(PRUint32 aCapacity) {
+      return aCapacity > 0 ? mArray.SizeTo(NS_STATIC_CAST(PRInt32, aCapacity))
+                           : PR_TRUE;
+    }
+
 private:
     
     // the actual storage
