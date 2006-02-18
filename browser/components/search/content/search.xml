@@ -320,6 +320,7 @@
 
       // overload |onTextEntered| in autocomplete.xml
       <method name="onTextEntered">
+        <parameter name="aEvent"/>
         <body><![CDATA[
           // Save the current value in the form history
           if (!this.hasAttribute("disableautocomplete"))
@@ -333,7 +334,7 @@
                                        this.value? encodeURIComponent(this.value):"ABC", 
                                        0, 0, {value:0});
 
-#         if the search box is empty, let's load the host
+          // if the search box is empty, let's load the host
           if (!this.value) {
             var uri = Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.interfaces.nsIIOService)
@@ -343,7 +344,8 @@
               searchURL = uri.host;
             } catch (ex) {}
           }
-          SearchLoadURL(searchURL, this.mEnterEvent.altKey);
+          var evt = aEvent || this.mEnterEvent;
+          SearchLoadURL(searchURL, (evt && evt.altKey));
         ]]></body>
       </method>
 
@@ -431,9 +433,8 @@
           var data = transferUtils.retrieveURLFromData(aXferData.data, 
                          aXferData.flavour.contentType);
           if (data) {
-            // XXXBlake Workaround caret crash when you try to set the 
-            // textbox's value on dropping
-            setTimeout(function(This, data, evt) { This.value = data; This.onTextEntered(evt); }, 0, this.mOuter, data, aEvent);      
+            this.mOuter.value = data;
+            this.mOuter.onTextEntered(aEvent);
           }
         },
 
