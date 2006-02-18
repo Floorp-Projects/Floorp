@@ -119,7 +119,7 @@ ToStringGuts(XPCCallContext& ccx)
 
 /***************************************************************************/
 
-JSBool JS_DLL_CALLBACK
+JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
