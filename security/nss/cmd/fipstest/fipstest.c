@@ -70,7 +70,7 @@ EC_CopyParams(PRArenaPool *arena, ECParams *dstParams,
 #define RSA_MAX_TEST_MODULUS_BITS     4096
 #define RSA_MAX_TEST_MODULUS_BYTES    RSA_MAX_TEST_MODULUS_BITS/8
 #define RSA_MAX_TEST_EXPONENT_BYTES   8
-#define DSA_TEST_SEED_BYTES           20
+#define PQG_TEST_SEED_BYTES           20
 
 SECStatus
 hex_from_2char(const char *c2, unsigned char *byteval)
@@ -3272,7 +3272,7 @@ dsa_keypair_test(char *reqfn)
             }
 
             /* Generate the parameters P, Q, and G */
-            if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+            if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
                 &pqg, &vfy) != SECSuccess) {
                 fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
                 goto loser;
@@ -3567,7 +3567,7 @@ dsa_pqggen_test(char *reqfn)
                 goto loser;
             }
             for (i = 0; i < N; i++) {
-                if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+                if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
                     &pqg, &vfy) != SECSuccess) {
                     fprintf(dsaresp,
                             "ERROR: Unable to generate PQG parameters");
@@ -3683,7 +3683,7 @@ dsa_siggen_test(char *reqfn)
             }
 
             /* Generate PQG and output PQG */
-            if (PQG_ParamGenSeedLen(keySizeIndex, DSA_TEST_SEED_BYTES,
+            if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
                 &pqg, &vfy) != SECSuccess) {
                 fprintf(dsaresp, "ERROR: Unable to generate PQG parameters");
                 goto loser;
