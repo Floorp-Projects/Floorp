@@ -115,17 +115,18 @@ function startProcessing($aTplName, $aCacheId, $aCompileId, $aPageType='default'
 
     $tpl = new AMO_Smarty();
 
-    // If our page is already cached, display from cache and exit.
-    if ($tpl->is_cached($aTplName, $aCacheId, $aCompileId)) {
-        require_once('finish.php');
-        exit;
-
     // Otherwise, we will check to see if this page is flagged for caching.
     // If it is, set caching to true and set the timeout to the value
     // in the config before continuing to the rest of the script.
-    } elseif (!empty($cache_config[SCRIPT_NAME])) {
+    if (!empty($cache_config[SCRIPT_NAME])) {
         $tpl->caching = true;
         $tpl->cache_timeout = $cache_config[SCRIPT_NAME];
+
+        // If our page is already cached, display from cache and exit.
+        if ($tpl->is_cached($aTplName, $aCacheId, $aCompileId)) {
+            require_once('finish.php');
+            exit;
+        }
     }
 }
 ?>
