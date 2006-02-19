@@ -343,9 +343,18 @@ nsSHistory::GetCount(PRInt32 * aResult)
 NS_IMETHODIMP
 nsSHistory::GetIndex(PRInt32 * aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
+    NS_PRECONDITION(aResult, "null out param?");
 	*aResult = mIndex;
 	return NS_OK;
+}
+
+/* Get the requestedIndex */
+NS_IMETHODIMP
+nsSHistory::GetRequestedIndex(PRInt32 * aResult)
+{
+    NS_PRECONDITION(aResult, "null out param?");
+    *aResult = mRequestedIndex;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

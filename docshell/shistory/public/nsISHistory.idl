@@ -62,7 +62,7 @@ interface nsISimpleEnumerator;
 #define NS_SHISTORY_CONTRACTID "@mozilla.org/browser/shistory;1"
 %}
 
-[scriptable, uuid(7294FE9B-14D8-11D5-9882-00C04FA02F40)]
+[scriptable, uuid(9883609F-CDD8-4d83-9B55-868FF08AD433)]
 interface nsISHistory: nsISupports
 {
   /**
@@ -77,6 +77,12 @@ interface nsISHistory: nsISupports
    * the index of the current document in session history.
    */
    readonly attribute long index;
+
+  /**
+   * A readonly property of the interface that returns 
+   * the index of the last document that started to load.
+   */
+   readonly attribute long requestedIndex;
 
   /**
    * A read/write property of the interface, used to Get/Set
