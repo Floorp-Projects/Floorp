@@ -155,7 +155,7 @@ install::
 GARBAGE += build_number nsBuildID \
 	$(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 
-ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
+ifneq (,$(BUILD_OFFICIAL)$(MOZILLA_OFFICIAL))
 _BN_OFFICIAL=1
 else
 _BN_OFFICIAL=
