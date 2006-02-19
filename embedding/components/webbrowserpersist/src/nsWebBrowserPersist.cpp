@@ -3227,6 +3227,12 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut)
         {
+            // Disable image loads
+            nsCOMPtr<nsIImageLoadingContent> imgCon =
+                do_QueryInterface(*aNodeOut);
+            if (imgCon)
+                imgCon->SetLoadingEnabled(PR_FALSE);
+
             FixupNodeAttribute(*aNodeOut, "src");
         }
         return rv;
