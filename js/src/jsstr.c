@@ -2908,7 +2908,7 @@ js_SkipWhiteSpace(const jschar *s)
     return s;
 }
 
-#ifdef JS_STRINGS_ARE_UTF8
+#ifdef JS_C_STRINGS_ARE_UTF8
 
 jschar *
 js_InflateString(JSContext *cx, const char *bytes, size_t *length)

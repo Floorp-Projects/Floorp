@@ -4439,7 +4439,7 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
 JS_PUBLIC_API(JSBool)
 JS_CStringsAreUTF8()
 {
-#ifdef JS_STRINGS_ARE_UTF8
+#ifdef JS_C_STRINGS_ARE_UTF8
     return JS_TRUE;
 #else
     return JS_FALSE;
