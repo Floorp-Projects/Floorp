@@ -38,7 +38,7 @@
 
 #ifdef XP_WIN
 #include <windows.h>
-#include <ObjBase.h>
+#include <objbase.h>
 #else
 #include <stdlib.h>
 #endif
