@@ -3002,6 +3002,17 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
         mURIResultedInDocument = PR_TRUE;
         OnNewURI(aURI, nsnull, mLoadType, PR_TRUE, PR_FALSE);
     }
+    // Be sure to have a correct mLSHE, it may have been cleared by
+    // EndPageLoad. See bug 302115.
+    if (mSessionHistory && !mLSHE) {
+        PRInt32 idx;
+        mSessionHistory->GetRequestedIndex(&idx);
+        nsCOMPtr<nsIHistoryEntry> entry;
+        mSessionHistory->GetEntryAtIndex(idx, PR_FALSE,
+                                         getter_AddRefs(entry));
+        mLSHE = do_QueryInterface(entry);
+
+    }
 
     nsCAutoString url;
     nsCAutoString charset;
