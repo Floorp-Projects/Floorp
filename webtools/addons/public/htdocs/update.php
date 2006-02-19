@@ -92,6 +92,15 @@ if (empty($errors)) {
     $os_query = ($sql['os_id']) ? " OR version.OSID = '{$sql['os_id']}' " : '';  // Set up os_id.
 
     // Query for possible updates.
+    //
+    // The query sorts by version.vid, which is an auto_increment primary key for that table.
+    //
+    // The reason why this was used is that the version.version column was a varchar and
+    // it was failing to sort correctly in some cases.
+    //
+    // There is a possibility that the version.vid sort could be incorrect, but only in edge
+    // cases where the version was added retroactively, and I've actually _never_ seen such
+    // a case.
     $query = "
         SELECT
             main.guid AS extguid,
@@ -119,9 +128,7 @@ if (empty($errors)) {
             '{$sql['appVersion']}+' >= version.minappver AND
             '{$sql['version']}' <= version.version
         ORDER BY
-            extversion DESC,
-            version.MaxAppVer_int DESC,
-            version.OSID DESC 
+            version.vid DESC
         LIMIT 1       
     ";
 

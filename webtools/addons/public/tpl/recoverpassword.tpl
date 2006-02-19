@@ -1,6 +1,6 @@
+<div id="mBody">
 
 <h1 class="first">{$title}</h1>
-<div class="front-section">
 {if $success}
 <p>An email has been sent.  Please follow the instructions included within it.</p>
 {else}
@@ -15,5 +15,5 @@ sent an email to help you recover it.</p>
     <input id="submit" name="submit" type="submit" value="Recover Password" />
 </form>
 {/if}
-</div>
 
+</div>

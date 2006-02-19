@@ -17,6 +17,4 @@ CREATE TABLE `session_data` (
 
 ALTER TABLE `feedback` ADD `UserID` INT( 11 ) AFTER `ID`;
 ALTER TABLE `feedback` ADD INDEX ( `UserID` );
-
-ADD CONSTRAINT `feedback_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `userprofiles`
-(`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `feedback` ADD CONSTRAINT `feedback_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;

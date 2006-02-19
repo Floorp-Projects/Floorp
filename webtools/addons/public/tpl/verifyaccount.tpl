@@ -1,6 +1,6 @@
+<div id="mBody">
 
 <h1 class="first">{$title}</h1>
-<div class="front-section">
 {if $confirmed}
 <p>The account {$email|escape} has been activated successfully.</p>
 <ul>
@@ -15,5 +15,5 @@ registered yet, please register before activating.</p>
 </ul>
 
 {/if}
-</div>
 
+</div>

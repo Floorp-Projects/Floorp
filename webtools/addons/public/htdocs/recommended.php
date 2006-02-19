@@ -4,6 +4,7 @@
  *
  * @package amo
  * @subpackage docs
+ * @todo make this dynamic based on an SQL field (recommended)
  */
 
 startProcessing('recommended.tpl', null, $compileId, 'nonav');

@@ -18,6 +18,16 @@ require_once(SMARTY_BASEDIR.'/Smarty.class.php');  // Smarty
 
 
 /**
+ * Name of the current script.
+ *
+ * This is used in important comparisons with $shadow_config and $cache_config,
+ * so it was pulled out of config.php so it's immutable.
+ */
+define('SCRIPT_NAME',substr($_SERVER['SCRIPT_NAME'], strlen(WEB_PATH.'/'), strlen($_SERVER['SCRIPT_NAME'])));
+
+
+
+/**
  * Set runtime options.
  */
 ini_set('display_errors',DISPLAY_ERRORS);
@@ -96,7 +106,7 @@ class AMO_Smarty extends Smarty
 function startProcessing($aTplName, $aCacheId, $aCompileId, $aPageType='default')
 {
     // Pass in our global variables.
-    global $tpl, $pageType, $content, $cacheId, $compileId;
+    global $tpl, $pageType, $content, $cacheId, $compileId, $cache_config;
 
     $pageType = $aPageType;
     $content = $aTplName;
@@ -105,9 +115,17 @@ function startProcessing($aTplName, $aCacheId, $aCompileId, $aPageType='default'
 
     $tpl = new AMO_Smarty();
 
+    // If our page is already cached, display from cache and exit.
     if ($tpl->is_cached($aTplName, $aCacheId, $aCompileId)) {
         require_once('finish.php');
         exit;
+
+    // Otherwise, we will check to see if this page is flagged for caching.
+    // If it is, set caching to true and set the timeout to the value
+    // in the config before continuing to the rest of the script.
+    } elseif (!empty($cache_config[SCRIPT_NAME])) {
+        $tpl->caching = true;
+        $tpl->cache_timeout = $cache_config[SCRIPT_NAME];
     }
 }
 ?>

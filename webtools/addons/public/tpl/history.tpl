@@ -6,7 +6,7 @@ released on {$addon->VersionDateAdded|date_format}
 </p>
 
 <h3>Be Careful With Old Versions</h3>
-<p>These versions are displayed for reference and testing purposes.  You should always use the latest version on an addon. </p>
+<p>These versions are displayed for reference and testing purposes.  You should always use the latest version of an addon. </p>
 
 <h3>Version History with Changelogs</h3>
 <dl>

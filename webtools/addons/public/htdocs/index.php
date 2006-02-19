@@ -4,9 +4,6 @@
  *
  * @package amo
  * @subpackage docs
- *
- * @todo Do something to spice up this page.
- * @todo Get main template spruced up.
  */
 
 $currentTab = 'home';
@@ -32,7 +29,6 @@ switch( $_GET['app'] ) {
 }
 
 // $sql['app'] can equal $clean['app'] since it was assigned in a switch().
-// We have to ucfirst() it because the DB has caps.
 $sql['app'] = $clean['app'];
 
 $amo = new AMO_Object();
