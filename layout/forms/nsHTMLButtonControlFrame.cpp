@@ -209,11 +209,14 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
   
   nsDisplayListCollection set;
-  nsresult rv =
-    BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
-                             DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
-  NS_ENSURE_SUCCESS(rv, rv);
-  // That should put the display items in set.Content()
+  // Do not allow the child subtree to receive events.
+  if (!aBuilder->IsForEventDelivery()) {
+    nsresult rv =
+      BuildDisplayListForChild(aBuilder, mFrames.FirstChild(), aDirtyRect, set,
+                               DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // That should put the display items in set.Content()
+  }
   
   // Put the foreground outline and focus rects on top of the children
   set.Content()->AppendToTop(&onTop);
@@ -230,7 +233,7 @@ nsHTMLButtonControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
   rect.Deflate(border);
   
-  rv = OverflowClip(aBuilder, set, aLists, rect);
+  nsresult rv = OverflowClip(aBuilder, set, aLists, rect);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = DisplayOutline(aBuilder, aLists);
