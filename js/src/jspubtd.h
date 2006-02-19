@@ -565,7 +565,7 @@ typedef enum JSExnType {
 } JSExnType;
 
 typedef struct JSErrorFormatString {
-    const char *format;  /* the error message (may be UTF-8 if compiled with JS_STRINGS_ARE_UTF8) */
+    const char *format;  /* the error message (may be UTF-8 if compiled with JS_C_STRINGS_ARE_UTF8) */
     uint16 argCount;     /* the number of arguments to convert in the error message */
     int16 exnType;       /* One of the JSExnType constants above */
 } JSErrorFormatString;

@@ -451,7 +451,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
         if ((u = js_strchr(js_EscapeMap, c)) != NULL) {
             ok = Sprint(sp, "\\%c", (char)u[1]) >= 0;
         } else {
-#ifdef JS_STRINGS_ARE_UTF8
+#ifdef JS_C_STRINGS_ARE_UTF8
             /* If this is a surrogate pair, make sure to print the pair. */
             if (c >= 0xD800 && c <= 0xDBFF) {
                 jschar buffer[3];

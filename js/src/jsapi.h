@@ -1827,7 +1827,7 @@ JS_MakeStringImmutable(JSContext *cx, JSString *str);
 
 /*
  * Return JS_TRUE if C (char []) strings passed via the API and internally
- * are UTF-8. The source must be compiled with JS_STRINGS_ARE_UTF8 defined
+ * are UTF-8. The source must be compiled with JS_C_STRINGS_ARE_UTF8 defined
  * to get UTF-8 support.
  */
 JS_PUBLIC_API(JSBool)
@@ -1849,7 +1849,7 @@ JS_CStringsAreUTF8();
  * NB: Neither function stores an additional zero byte or jschar after the
  * transcoded string.
  *
- * If the source has been compiled with the #define JS_STRINGS_ARE_UTF8 to
+ * If the source has been compiled with the #define JS_C_STRINGS_ARE_UTF8 to
  * enable UTF-8 interpretation of C char[] strings, then JS_EncodeCharacters
  * encodes to UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create
  * addititional errors if the character sequence is malformed.  If UTF-8
