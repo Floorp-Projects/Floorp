@@ -98,6 +98,8 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #ifdef MOZ_CAIRO_GFX
 #include "gfxPlatformGtk.h"
 #include "gfxXlibSurface.h"
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
 
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
@@ -387,7 +389,7 @@ nsWindow::Destroy(void)
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
     mCreated = PR_FALSE;
-
+    
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
                                          (gpointer)G_CALLBACK(theme_changed_cb),
                                          this);
@@ -432,6 +434,10 @@ nsWindow::Destroy(void)
     // the group, destroying it if necessary.  And, if we're a child
     // window this isn't going to harm anything.
     mWindowGroup = nsnull;
+
+    // Destroy thebes surface now. Badness can happen if we destroy
+    // the surface after its X Window.
+    mThebesSurface = nsnull;
 
     if (mShell) {
         gtk_widget_destroy(mShell);
@@ -1338,8 +1344,6 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     if (aEvent->window != mDrawingarea->inner_window)
         return FALSE;
 
-    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
-
     static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
     nsCOMPtr<nsIRegion> updateRegion = do_CreateInstance(kRegionCID);
@@ -1355,10 +1359,47 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
              (void *)this, (void *)aEvent->window,
              GDK_WINDOW_XWINDOW(aEvent->window)));
 
-    for (GdkRectangle *r = rects, *r_end = rects + nrects; r < r_end; ++r) {
+    GdkRectangle *r;
+    GdkRectangle *r_end = rects + nrects;
+    for (r = rects; r < r_end; ++r) {
         updateRegion->Union(r->x, r->y, r->width, r->height);
         LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
     }
+
+    nsCOMPtr<nsIRenderingContext> rc = getter_AddRefs(GetRenderingContext());
+
+#ifdef MOZ_CAIRO_GFX
+    PRBool translucent;
+    GetWindowTranslucency(translucent);
+    GdkRectangle collapsedRect;
+    
+    // do double-buffering and clipping here
+    nsRefPtr<gfxContext> ctx =
+      (gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+      
+    ctx->Save();
+      
+    // clip to Gdk region
+    ctx->NewPath();
+    if (translucent) {
+      // Collapse update area to the bounding box. This is so we only have to
+      // call UpdateTranslucentWindowAlpha once. After we have dropped
+      // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
+      // our private interface so we can rework things to avoid this.
+      updateRegion->GetBoundingBox(&collapsedRect.x, &collapsedRect.y,
+                                   &collapsedRect.width, &collapsedRect.height);
+      ctx->Rectangle(gfxRect(collapsedRect.x, collapsedRect.y,
+                             collapsedRect.width, collapsedRect.height));
+    } else {
+      for (r = rects; r < r_end; ++r) {
+        ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
+      }
+    }
+    ctx->Clip();
+    
+    // double buffer
+    ctx->PushGroup(translucent ? gfxContext::CONTENT_COLOR_ALPHA : gfxContext::CONTENT_COLOR);
+#endif
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
@@ -1369,6 +1410,33 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
+
+#ifdef MOZ_CAIRO_GFX
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    if (!translucent) {
+        ctx->PopGroupToSource();
+        ctx->Paint();
+    } else {
+        nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
+        ctx->SetPattern(pattern);
+        ctx->Paint();
+
+        nsRefPtr<gfxImageSurface> img =
+          new gfxImageSurface(gfxImageSurface::ImageFormatA8, 
+                              collapsedRect.width, collapsedRect.height);
+        img->SetDeviceOffset(-collapsedRect.x, -collapsedRect.y);
+        
+        nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
+        imgCtx->SetPattern(pattern);
+        imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        imgCtx->Paint();
+        
+        UpdateTranslucentWindowAlphaInternal(nsRect(collapsedRect.x, collapsedRect.y,
+                                                    collapsedRect.width, collapsedRect.height),
+                                             img->Data(), img->Stride());
+    }
+    ctx->Restore();
+#endif
 
     g_free(rects);
 
@@ -2859,15 +2927,16 @@ nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
 
 static PRBool
 ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas)
+        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
     PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
+        PRUint8* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *aAlphas > 0;
-            aAlphas++;
+            PRBool newBit = *alphas > 0;
+            alphas++;
 
             gchar maskByte = maskBytes[x >> 3];
             PRBool maskBit = (maskByte & (1 << (x & 7))) != 0;
@@ -2876,6 +2945,7 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
                 return PR_TRUE;
             }
         }
+        aAlphas += aStride;
     }
 
     return PR_FALSE;
@@ -2883,21 +2953,23 @@ ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
 
 static
 void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-        const nsRect& aRect, PRUint8* aAlphas)
+        const nsRect& aRect, PRUint8* aAlphas, PRInt32 aStride)
 {
     PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
     PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
     for (y = aRect.y; y < yMax; y++) {
         gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
+        PRUint8* alphas = aAlphas;
         for (x = aRect.x; x < xMax; x++) {
-            PRBool newBit = *aAlphas > 0;
-            aAlphas++;
+            PRBool newBit = *alphas > 0;
+            alphas++;
 
             gchar mask = 1 << (x & 7);
             gchar maskByte = maskBytes[x >> 3];
             // Note: '-newBit' turns 0 into 00...00 and 1 into 11...11
             maskBytes[x >> 3] = (maskByte & ~mask) | (-newBit & mask);
         }
+        aAlphas += aStride;
     }
 }
 
@@ -2915,8 +2987,9 @@ nsWindow::ApplyTransparencyBitmap()
     gdk_bitmap_unref(maskBitmap);
 }
 
-NS_IMETHODIMP
-nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
+nsresult
+nsWindow::UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
+                                               PRUint8* aAlphas, PRInt32 aStride)
 {
     if (!mShell) {
         // Pass the request to the toplevel window
@@ -2929,7 +3002,7 @@ nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
         if (!topWindow)
             return NS_ERROR_FAILURE;
 
-        return topWindow->UpdateTranslucentWindowAlpha(aRect, aAlphas);
+        return topWindow->UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aStride);
     }
 
     NS_ASSERTION(mIsTranslucent, "Window is not transparent");
@@ -2946,18 +3019,25 @@ nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
             && aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
             "Rect is out of window bounds");
 
-    if (!ChangedMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height, aRect, aAlphas))
+    if (!ChangedMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
+                         aRect, aAlphas, aStride))
         // skip the expensive stuff if the mask bits haven't changed; hopefully
         // this is the common case
         return NS_OK;
 
-    UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height, aRect, aAlphas);
+    UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height,
+                   aRect, aAlphas, aStride);
 
     if (!mNeedsShow) {
         ApplyTransparencyBitmap();
     }
-
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
+{
+    return UpdateTranslucentWindowAlphaInternal(aRect, aAlphas, aRect.width);
 }
 #endif
 
