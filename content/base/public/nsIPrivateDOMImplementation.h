@@ -41,21 +41,23 @@
 #include "nsISupports.h"
 
 class nsIURI;
+class nsIPrincipal;
 
 /*
  * Event listener manager interface.
  */
 #define NS_IPRIVATEDOMIMPLEMENTATION_IID \
-{ /* d3205fb8-2652-11d4-ba06-0060b0fc76dd */ \
-0xd3205fb8, 0x2652, 0x11d4, \
-{0xba, 0x06, 0x00, 0x60, 0xb0, 0xfc, 0x76, 0xdd} }
+{ /* 87c20441-8b0d-4383-a189-52fef1dd5d8a */ \
+0x87c20441, 0x8b0d, 0x4383, \
+ { 0xa1, 0x89, 0x52, 0xfe, 0xf1, 0xdd, 0x5d, 0x8a } }
 
 class nsIPrivateDOMImplementation : public nsISupports {
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMIMPLEMENTATION_IID)
 
-  NS_IMETHOD Init(nsIURI* aBaseURI) = 0;
+  NS_IMETHOD Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateDOMImplementation,

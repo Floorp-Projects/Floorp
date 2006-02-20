@@ -219,7 +219,12 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
 
     nsCOMPtr<nsIPrivateDOMImplementation> 
         privImpl(do_QueryInterface(implementation));
-    privImpl->Init(resourceURI);
+    // XXXbz I doubt this is right, but I have no idea what this code is doing
+    // or why it's creating documents without a useful principal... so I'm just
+    // going to make the fact that those documents have no principal very
+    // explicit, and if this causes issues then someone familiar with this code
+    // should figure out what principals this _should_ be using.
+    privImpl->Init(resourceURI, resourceURI, nsnull);
 
     nsCOMPtr<nsIDOMDocument> doc;
     rv = implementation->CreateDocument(mDAVNSString, EmptyString(), nsnull,
