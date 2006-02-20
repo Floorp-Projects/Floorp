@@ -284,6 +284,8 @@ public:
 #ifdef MOZ_XUL
    NS_IMETHOD          SetWindowTranslucency(PRBool aTransparent);
    NS_IMETHOD          GetWindowTranslucency(PRBool& aTransparent);
+   nsresult            UpdateTranslucentWindowAlphaInternal(const nsRect& aRect,
+                                                            PRUint8* aAlphas, PRInt32 aStride);
    NS_IMETHOD          UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
 #endif
 
