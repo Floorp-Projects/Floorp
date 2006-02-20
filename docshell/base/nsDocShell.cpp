@@ -770,29 +770,26 @@ nsDocShell::LoadURI(nsIURI * aURI,
         // We need an owner (a referring principal). 3 possibilities:
         // (1) If a principal was passed in, that's what we'll use.
         // (2) If the caller has allowed inheriting from the current document,
-        //   or if we're being called from chrome (if there's system JS on the stack),
-        //   then inheritOwner should be true and InternalLoad will get an owner
-        //   from the current document. If none of these things are true, then
+        //     or if we're being called from system code (eg chrome JS or pure
+        //     C++) then inheritOwner should be true and InternalLoad will get
+        //     an owner from the current document. If none of these things are
+        //     true, then
         // (3) we pass a null owner into the channel, and an owner will be
-        //   created later from the URL.
+        //     created later from the URL.
+        //
+        // NOTE: This all only works because the only thing the owner is used
+        //       for in InternalLoad is data: and javascript: URIs.  For other
+        //       URIs this would all be dead wrong!
         if (!owner && !inheritOwner) {
             // See if there's system or chrome JS code running
             nsCOMPtr<nsIScriptSecurityManager> secMan;
 
             secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
             if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIPrincipal> sysPrin;
-                nsCOMPtr<nsIPrincipal> subjectPrin;
-
-                // Just to compare, not to use!
-                rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
-                if (NS_SUCCEEDED(rv)) {
-                    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrin));
-                }
-                // If there's no subject principal, there's no JS running, so we're in system code.
-                if (NS_SUCCEEDED(rv) &&
-                    (!subjectPrin || sysPrin.get() == subjectPrin.get())) {
-                    inheritOwner = PR_TRUE;
+                rv = secMan->SubjectPrincipalIsSystem(&inheritOwner);
+                if (NS_FAILED(rv)) {
+                    // Set it back to false
+                    inheritOwner = PR_FALSE;
                 }
             }
         }
@@ -6740,6 +6737,11 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     //
     // XXX: Is seems wrong that the owner is ignored - even if one is
     //      supplied) unless the URI is javascript or data.
+    // XXX: If this is ever changed, check all callers for what owners they're
+    //      passing in.  In particular, see the code and comments in LoadURI
+    //      where we get the current document principal as the owner if called
+    //      from chrome.  That would be very wrong if this code changed
+    //      anything but javascript: and data:
     //
     //      (Currently chrome URIs set the owner when they are created!
     //      So setting a NULL owner would be bad!)
