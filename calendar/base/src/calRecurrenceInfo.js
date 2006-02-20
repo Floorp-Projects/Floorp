@@ -135,6 +135,10 @@ calRecurrenceInfo.prototype = {
             throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
 
         this.mBaseItem = value;
+        // patch exception's parentItem:
+        for each (exitem in this.mExceptions) {
+            exitem.item.parentItem = value;
+        }
     },
 
     mRecurrenceItems: null,
@@ -329,6 +333,43 @@ calRecurrenceInfo.prototype = {
         var startDate = this.mBaseItem.recurrenceStartDate;
         var dates = [];
         
+        // toss in exceptions first:
+        if (aIncludeExceptions && this.mExceptions) {
+            this.mExceptions.forEach(function(ex) {
+                                         var dtstart = ex.item.getProperty("DTSTART");
+                                         var dateToReturn;
+                                         if (aReturnRIDs)
+                                             dateToReturn = ex.id;
+                                         else
+                                             dateToReturn = dtstart;
+                                         // is our startdate within the range?
+                                         if ((!aRangeStart || aRangeStart.compare(dtstart) <= 0) &&
+                                             (!aRangeEnd || aRangeEnd.compare(dtstart) > 0))
+                                         {
+                                             dates.push(dateToReturn);
+                                             return;
+                                         }
+
+                                         // is our end date within the range?
+                                         var dtend = ex.item.getProperty("DTEND");
+                                         if ((!aRangeStart || aRangeStart.compare(dtend) <= 0) &&
+                                             (!aRangeEnd || aRangeEnd.compare(dtend) > 0))
+                                         {
+                                             dates.push(dateToReturn);
+                                             return;
+                                         }
+
+                                         // is the range in the middle of a long event?
+                                         if (aRangeStart && aRangeEnd &&
+                                             aRangeStart.compare(dtstart) >= 0 &&
+                                             aRangeEnd.compare(dtend) <= 0)
+                                         {
+                                             dates.push(dateToReturn);
+                                             return;
+                                         }
+                                     });
+        }
+
         // apply positive items before negative:
         var sortedRecurrenceItems = [];
         for each ( var ritem in this.mRecurrenceItems ) {
@@ -370,55 +411,10 @@ calRecurrenceInfo.prototype = {
                 var rinfo = this;
                 cur_dates.forEach (function (dateToAdd) {
                                        if (!dates.some(function (d) { return d.compare(dateToAdd) == 0; })) {
-                                           if (aIncludeExceptions && rinfo.mExceptions)
-                                           {
-                                               // only add if there's no exception for this;
-                                               // we'll test all exception dates later on
-                                               if (!rinfo.getExceptionFor(dateToAdd, false))
-                                                   dates.push(dateToAdd);
-                                           } else {
-                                               dates.push(dateToAdd);
-                                           }
+                                           dates.push(dateToAdd);
                                        }
                                    });
             }
-        }
-
-        // Now toss in exceptions into this list; we just scan them all.
-        if (aIncludeExceptions && this.mExceptions) {
-            this.mExceptions.forEach(function(ex) {
-                                         var dtstart = ex.item.getProperty("DTSTART");
-                                         var dateToReturn;
-                                         if (aReturnRIDs)
-                                             dateToReturn = ex.id;
-                                         else
-                                             dateToReturn = dtstart;
-                                         // is our startdate within the range?
-                                         if ((!aRangeStart || aRangeStart.compare(dtstart) <= 0) &&
-                                             (!aRangeEnd || aRangeEnd.compare(dtstart) > 0))
-                                         {
-                                             dates.push(dateToReturn);
-                                             return;
-                                         }
-
-                                         // is our end date within the range?
-                                         var dtend = ex.item.getProperty("DTEND");
-                                         if ((!aRangeStart || aRangeStart.compare(dtend) <= 0) &&
-                                             (!aRangeEnd || aRangeEnd.compare(dtend) > 0))
-                                         {
-                                             dates.push(dateToReturn);
-                                             return;
-                                         }
-
-                                         // is the range in the middle of a long event?
-                                         if (aRangeStart && aRangeEnd &&
-                                             aRangeStart.compare(dtstart) >= 0 &&
-                                             aRangeEnd.compare(dtend) <= 0)
-                                         {
-                                             dates.push(dateToReturn);
-                                             return;
-                                         }
-                                     });
         }
 
         // now sort the list
