@@ -1550,8 +1550,12 @@ function BrowserPanMouseHandler(e) {
 function BrowserPanMouseHandlerPan(e) {
     panDeltaY=gPanY-e.clientY;
     panDeltaX=gPanX-e.clientX;
-    gBrowser.contentWindow.scrollBy(panDeltaX,panDeltaY);
 
+    /* 
+     * Workaround to bug 327934
+     */
+    gBrowser.contentWindow.scrollBy(0,panDeltaY);
+    gBrowser.contentWindow.scrollBy(panDeltaX,0);
 
   gPanY=e.clientY;
   gPanX=e.clientX;
