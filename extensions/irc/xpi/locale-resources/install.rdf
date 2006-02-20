@@ -31,6 +31,15 @@
 			</Description>
 		</em:targetApplication>
 		
+		<!-- target: Flock, version 0.4 - 1.0+ -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id>
+				<em:minVersion>0.4</em:minVersion>
+				<em:maxVersion>1.0+</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+
 		<!-- front-end metadata -->
 		<em:name>ChatZilla @LOCALE@ localization</em:name>
 		<em:description>ChatZilla Localization.</em:description>

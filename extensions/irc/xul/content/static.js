@@ -161,7 +161,7 @@ function init()
     initApplicationCompatibility();
     initMessages();
     if (client.host == "")
-        showErrorDlg(getMsg(MSG_ERR_UNKNOWN_HOST, getBrowserURL()));
+        showErrorDlg(getMsg(MSG_ERR_UNKNOWN_HOST, client.unknownUID));
 
     initRDF();
     initCommands();
@@ -423,7 +423,12 @@ function initApplicationCompatibility()
                 client.host = "Mozilla";
                 client.hostCompat.typeChromeBrowser = true;
                 break;
+            case "{a463f10c-3994-11da-9945-000d60ca027b}": // Flock
+                client.host = "Flock";
+                client.hostCompat.typeChromeBrowser = true;
+                break;
             default:
+                client.unknownUID = app.ID;
                 client.host = ""; // Unknown host, show an error later.
         }
     }
@@ -491,7 +496,7 @@ function initIcons()
      * In XULRunner, things are more fun, as we're not an extension.
      */
     var sourceDir;
-    if (client.host == "Firefox")
+    if ((client.host == "Firefox") || (client.host == "Flock"))
     {
         sourceDir = getSpecialDirectory("ProfD");
         sourceDir.append("extensions");
