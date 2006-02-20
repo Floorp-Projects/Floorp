@@ -590,6 +590,7 @@ function pdata_loadXUL()
                     // We're cheating again here, if it ends "filename" it's 
                     // a local file path.
                     var type = (this.name.match(/filename$/i) ? "file" : "fileurl");
+                    type = (this.name.match(/folder$/i) ? "folder" : type);
                     appendButton(this.box, "onPrefBrowse", 
                                  { label: MSG_PREFS_BROWSE, spec: ext, 
                                    kind: type });
@@ -1354,14 +1355,24 @@ function pwin_onPrefBrowse(button)
     if (button.hasAttribute("spec"))
         spec = button.getAttribute("spec") + " " + spec;
     
-    var rv = pickOpen(MSG_PREFS_BROWSE_TITLE, spec);
+    var type = button.getAttribute("kind");
+    var edit = button.previousSibling.lastChild;
+
+    var rv;
+    if (type == "folder")
+    {
+        var current = getFileFromURLSpec(edit.value);
+        rv = pickGetFolder(MSG_PREFS_BROWSE_TITLE, current);
+    }
+    else
+    {
+        rv = pickOpen(MSG_PREFS_BROWSE_TITLE, spec);
+    }
+
     if (rv.reason != PICK_OK)
         return;
     
-    var data = { file: rv.file.path, fileurl: rv.picker.fileURL.spec };
-    var edit = button.previousSibling.lastChild;
-    var type = button.getAttribute("kind");
-    edit.value = data[type];
+    edit.value = (type == "file") ? rv.file.path : rv.picker.fileURL.spec;
 },
 
 // Selection changed on listbox.

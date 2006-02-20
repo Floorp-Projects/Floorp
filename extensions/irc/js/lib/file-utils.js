@@ -96,13 +96,18 @@ function futils_nosepicker(initialPath, typeList, attribs)
     const nsILocalFile = interfaces.nsILocalFile;
 
     var picker = classes[PICKER_CTRID].createInstance(nsIFilePicker);
-    if (typeof attribs == "object")
+    if (attribs)
     {
-        for (var a in attribs)
-            picker[a] = attribs[a];
+        if (typeof attribs == "object")
+        {
+            for (var a in attribs)
+                picker[a] = attribs[a];
+        }
+        else
+        {
+            throw "bad type for param |attribs|";
+        }
     }
-    else
-        throw "bad type for param |attribs|";
 
     if (initialPath)
     {
@@ -237,6 +242,23 @@ function pickOpen (title, typeList, defaultFile, defaultDir)
 
     if (rv != PICK_CANCEL)
         futils.lastOpenDir = picker.file.parent;
+
+    return {reason: rv, file: picker.file, picker: picker};
+}
+
+function pickGetFolder(title, defaultDir)
+{
+    if (!defaultDir && "lastOpenDir" in futils)
+        defaultDir = futils.lastOpenDir;
+
+    var picker = futils.getPicker(defaultDir);
+    picker.init(window, title ? title : futils.MSG_OPEN,
+                Components.interfaces.nsIFilePicker.modeGetFolder);
+
+    var rv = picker.show();
+
+    if (rv != PICK_CANCEL)
+        futils.lastOpenDir = picker.file;
 
     return {reason: rv, file: picker.file, picker: picker};
 }
