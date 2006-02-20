@@ -52,7 +52,7 @@ foreach ($required_vars as $var) {
 }
 
 // Determine a cache_id based on params.
-$cache_id = md5( $sql['os_id'] . implode('',$sql) );
+$cache_id = $sql['os_id'] . implode('',$sql);
 
 
 
@@ -69,6 +69,7 @@ $tpl->caching = true;
 $tpl->cache_timeout = 3600;
 
 if ($tpl->is_cached('update.tpl',$cache_id)) {
+    header("Content-type: text/xml");
     $tpl->display('update.tpl',$cache_id);
     exit;
 }
@@ -112,14 +113,8 @@ if (empty($errors)) {
             applications.guid AS appguid
         FROM
             main
-        INNER JOIN
-            version
-        ON
-            main.id = version.id
-        INNER JOIN
-            applications
-        ON
-            version.appid = applications.appid
+        INNER JOIN version ON main.id = version.id
+        INNER JOIN applications ON version.appid = applications.appid
         WHERE
             main.guid = '{$sql['id']}' AND
             applications.guid = '{$sql['appID']}' AND
@@ -165,7 +160,7 @@ if (empty($errors)) {
  */
 if ($debug!=true) {
     header("Content-type: text/xml");
-    $tpl->display('update.tpl'); 
+    $tpl->display('update.tpl',$cache_id); 
     exit;
 }
 
