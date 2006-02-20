@@ -89,6 +89,9 @@ void _MD_win32_map_default_error(PRInt32 err)
         case ERROR_ALREADY_EXISTS:
             prError = PR_FILE_EXISTS_ERROR;
             break;
+        case ERROR_CALL_NOT_IMPLEMENTED:
+            prError = PR_NOT_IMPLEMENTED_ERROR;
+            break;
         case ERROR_DISK_CORRUPT:
             prError = PR_IO_ERROR; 
             break;
