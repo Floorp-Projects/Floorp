@@ -182,7 +182,7 @@ function ident_listener_rawdata(e)
 
     if (!ports)
     {
-        this.disconnect(); // same meaning as "ERROR : UNKNOWN-ERROR"
+        this.connection.disconnect(); // same meaning as "ERROR : UNKNOWN-ERROR"
         return;
     }
 
@@ -209,7 +209,7 @@ function ident_listener_request(e)
     if (!validPort(e.localPort) || !validPort(e.remotePort))
     {
         this.connection.sendData(response("ERROR : INVALID-PORT"));
-        this.disconnect();
+        this.connection.disconnect();
         return;
     }
 
@@ -234,5 +234,5 @@ function ident_listener_request(e)
 
     // Spec gives us a choice: drop the connection, or listen for more queries.
     // Since IRC servers will only ever want one name, we disconnect.
-    this.disconnect();
+    this.connection.disconnect();
 }
