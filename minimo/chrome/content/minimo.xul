@@ -45,6 +45,7 @@
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-rss.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-search.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-find.xul"?>
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-pan.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-download.xul"?>
 
 <!DOCTYPE window [
@@ -203,8 +204,6 @@
           <image id="lock-icon" class="security-na" />
         </hbox>
       </textbox>
-      
-      <toolbarbutton hidden="true" id="button-icon-pan" image="chrome://minimo/skin/extensions/icon-pan.png" command="cmd_Pan" />
 
       <toolbarbutton tabindex="2" accessrule="focus_nav-bar" class="menu-button"  id="nav-menu-button" command="cmd_BrowserNavMenu" />  
       
@@ -390,6 +389,10 @@
       <menuitem id="command_go"
                 command="cmd_BrowserGo" 
                 label="&goCmd.label;"  /> 
+
+      <menuitem id="command_pan"
+                command="cmd_Pan" 
+                label="&panCmd.label;"  /> 
       
     </menupopup>  
     
