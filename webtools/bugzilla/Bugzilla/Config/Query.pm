@@ -51,7 +51,8 @@ sub get_param_list {
   {
    name => 'mostfreqthreshold',
    type => 't',
-   default => '2'
+   default => '2',
+   checker => \&check_numeric
   },
 
   {

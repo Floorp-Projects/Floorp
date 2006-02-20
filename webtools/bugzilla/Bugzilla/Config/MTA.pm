@@ -104,7 +104,8 @@ Configure bugmail: %urlbase%userprefs.cgi?tab=email
   {
    name => 'whinedays',
    type => 't',
-   default => 7
+   default => 7,
+   checker => \&check_numeric
   },
 
   {
