@@ -109,8 +109,14 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI, 
                   const nsAString& aQualifiedName, 
                   nsIDOMDocumentType* aDoctype,
-                  nsIURI* aBaseURI)
+                  nsIURI* aDocumentURI,
+                  nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal)
 {
+  // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
+  // since at least one caller (XMLHttpRequest) doesn't have decent args to
+  // pass in.
+  
   nsresult rv;
 
   *aInstancePtrResult = nsnull;
@@ -125,7 +131,9 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     return rv;
   }
 
-  doc->nsIDocument::SetDocumentURI(aBaseURI);
+  doc->nsIDocument::SetDocumentURI(aDocumentURI);
+  // Must set the principal first, since SetBaseURI checks it.
+  doc->SetPrincipal(aPrincipal);
   doc->SetBaseURI(aBaseURI);
 
   if (aDoctype) {
@@ -694,7 +702,8 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   // Create an empty document
   rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(), EmptyString(),
-                         newDocType, mDocumentURI);
+                         newDocType, nsIDocument::GetDocumentURI(),
+                         nsIDocument::GetBaseURI(), GetNodePrincipal());
   if (NS_FAILED(rv)) return rv;
 
   if (aDeep) {

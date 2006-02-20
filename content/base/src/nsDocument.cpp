@@ -476,7 +476,9 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
 {
 public:
-  nsDOMImplementation(nsIURI* aBaseURI = nsnull);
+  nsDOMImplementation(nsIURI* aDocumentURI,
+                      nsIURI* aBaseURI,
+                      nsIPrincipal* aPrincipal);
   virtual ~nsDOMImplementation();
 
   NS_DECL_ISUPPORTS
@@ -485,17 +487,20 @@ public:
   NS_DECL_NSIDOMDOMIMPLEMENTATION
 
   // nsIPrivateDOMImplementation
-  NS_IMETHOD Init(nsIURI* aBaseURI);
+  NS_IMETHOD Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal);
 
 protected:
+  nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
 nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 {
-  *aInstancePtrResult = new nsDOMImplementation();
+  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull);
   if (!*aInstancePtrResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -505,9 +510,13 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
   return NS_OK;
 }
 
-nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
+nsDOMImplementation::nsDOMImplementation(nsIURI* aDocumentURI,
+                                         nsIURI* aBaseURI,
+                                         nsIPrincipal* aPrincipal)
+  : mDocumentURI(aDocumentURI),
+    mBaseURI(aBaseURI),
+    mPrincipal(aPrincipal)
 {
-  mBaseURI = aBaseURI;
 }
 
 nsDOMImplementation::~nsDOMImplementation()
@@ -550,14 +559,8 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-
-  // XXXbz shouldn't this use the original document principal instead?
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = nsContentUtils::GetSecurityManager()->
-    GetCodebasePrincipal(mBaseURI, getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
     
-  return NS_NewDOMDocumentType(aReturn, nsnull, principal, name, nsnull,
+  return NS_NewDOMDocumentType(aReturn, nsnull, mPrincipal, name, nsnull,
                                nsnull, aPublicId, aSystemId, EmptyString());
 }
 
@@ -600,7 +603,7 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   }
 
   rv = NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
-                         mBaseURI);
+                         mDocumentURI, mBaseURI, mPrincipal);
 
   nsIDocShell *docShell = nsContentUtils::GetDocShellFromCaller();
   if (docShell) {
@@ -619,9 +622,14 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsDOMImplementation::Init(nsIURI* aBaseURI)
+nsDOMImplementation::Init(nsIURI* aDocumentURI, nsIURI* aBaseURI,
+                          nsIPrincipal* aPrincipal)
 {
+  // Note: can't require that the args be non-null, since at least one
+  // caller (XMLHttpRequest) doesn't have decent args to pass in.
+  mDocumentURI = aDocumentURI;
   mBaseURI = aBaseURI;
+  mPrincipal = aPrincipal;
   return NS_OK;
 }
 
@@ -2578,7 +2586,11 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
   // For now, create a new implementation every time. This shouldn't
   // be a high bandwidth operation
-  *aImplementation = new nsDOMImplementation(mDocumentURI);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:blank");
+  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
+  
+  *aImplementation = new nsDOMImplementation(uri, uri, GetNodePrincipal());
   if (!*aImplementation) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

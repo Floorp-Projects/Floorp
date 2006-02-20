@@ -1004,12 +1004,18 @@ NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 nsresult
 NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
                        nsNodeInfoManager *aNodeInfoManager);
+
+// Note: it's the caller's responsibility to create or get aPrincipal as needed
+// -- this method will not attempt to get a principal based on aDocumentURI.
+// Also, both aDocumentURI and aBaseURI must not be null.
 nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI, 
                   const nsAString& aQualifiedName, 
                   nsIDOMDocumentType* aDoctype,
-                  nsIURI* aBaseURI);
+                  nsIURI* aDocumentURI,
+                  nsIURI* aBaseURI,
+                  nsIPrincipal* aPrincipal);
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 
