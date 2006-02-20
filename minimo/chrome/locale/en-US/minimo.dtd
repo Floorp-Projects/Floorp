@@ -35,6 +35,7 @@
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY goCmd.label                  "Go">
+<!ENTITY panCmd.label                 "Pan">
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY linknewtab.label             "Open link in New Tab">
 <!ENTITY bookmarks.label              "Bookmarks...">
@@ -73,3 +74,7 @@
 <!-- toolbar download -->
 <!ENTITY downloadText.label          "Download Viewer " >
 <!ENTITY downloadCancelText.label    "Cancel" >
+
+<!-- toolbar pan -->
+<!ENTITY panText.label               "Pan scroll enable. Click or Tap to disable." >
+
