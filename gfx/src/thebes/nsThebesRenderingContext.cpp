@@ -1453,45 +1453,7 @@ nsThebesRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
                                            const nsRect &aDestBounds,
                                            PRUint32 aCopyFlags)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
-           ("## %p nsTRC::CopyOffScreenBits src: %d %d dst: %d %d %d %d flags: 0x%08x\n",
-            this, aSrcX, aSrcY, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height,
-            aCopyFlags));
-
-    // there's only one caller of this code, so this implementation is
-    // tailored to that one caller.
-    if (aCopyFlags != NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-        NS_ERROR("CopyOffScreenBits called with unsupported copy flags");
-
-    nsRefPtr<gfxASurface> cursurf = mThebes->CurrentSurface();
-
-    mThebes->Save();
-    mThebes->SetTarget(mLocalDrawingSurface->GetThebesSurface());
-    mThebes->IdentityMatrix();
-
-    mThebes->Translate(gfxPoint(aDestBounds.x, aDestBounds.y));
-
-    // update debugging
-#if 0
-    mThebes->SetColor(gfxRGBA(1, 0, 0, 1));
-    mThebes->NewPath();
-    mThebes->Rectangle(gfxRect(0, 0, aDestBounds.width, aDestBounds.height), PR_TRUE);
-    mThebes->Fill();
-
-    //usleep(400000);
-    //Sleep(4);
-#endif
-
-    mThebes->SetSource(NS_STATIC_CAST(nsThebesDrawingSurface*,aSrcSurf)->GetThebesSurface(),
-                   gfxPoint(FROM_TWIPS(aSrcX), FROM_TWIPS(aSrcY)));
-
-    mThebes->NewPath();
-    mThebes->Rectangle(gfxRect(0, 0, aDestBounds.width, aDestBounds.height), PR_TRUE);
-    mThebes->Fill();
-
-    mThebes->SetTarget(cursurf);
-    mThebes->Restore();
-
-    return NS_OK;
+    NS_NOTREACHED("CopyOffScreenBits should not be called in cairo builds");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -78,12 +78,6 @@ gfxASurface *gfxContext::CurrentGroupSurface()
     return new gfxUnknownSurface(s);
 }
 
-void gfxContext::SetTarget(gfxASurface *target)
-{
-    moz_cairo_set_target (mCairo, target->CairoSurface());
-    mSurface = target;
-}
-
 void gfxContext::Save()
 {
     cairo_save(mCairo);
