@@ -711,7 +711,12 @@ statusbarpanel#statusbar-display {
 	
 /* ::::: go button ::::: */
 
+#go-container {
+  -moz-box-orient: vertical; /* for go button flex hack */
+}
+
 #go-button {
+  -moz-box-flex: 1; /* expand to fill toolbar height */
   list-style-image: url("chrome://browser/skin/Go.png");
   -moz-image-region: rect(0px 20px 20px 0px);
   padding-top: 2px;
@@ -736,8 +741,13 @@ statusbarpanel#statusbar-display {
   -moz-image-region: rect(0px 60px 20px 40px);
 }
 
+#go-button > .toolbarbutton-icon {
+  margin: 0;
+}
+
 #go-button > .toolbarbutton-text {
   display: -moz-box !important;
+  margin: 0 2px 1px 2px !important;
 }
 
 #sidebar {
