@@ -670,24 +670,6 @@ nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directo
   nsresult rv = directory->GetDirName(getter_Copies(name));
 	NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(directory);
-  const char *uri = nsnull;
-  rv = resource->GetValueConst(&uri);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Get directory type.
-  nsCOMPtr <nsIAbDirectoryProperties> properties;
-  rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
-  NS_ENSURE_SUCCESS(rv,rv);
-  PRUint32 dirType;
-  rv = properties->GetDirType(&dirType);
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRInt32 position;
-  rv = properties->GetPosition(&position);
-  // Get isMailList
-  PRBool isMailList = PR_FALSE;
-  directory->GetIsMailList(&isMailList);
-
   /* sort addressbooks in this order - Personal Addressbook, Collected Addresses, MDB, LDAP -
    * by prefixing address book names with numbers and using the xul sort service.
    *
@@ -705,29 +687,59 @@ nsAbDirectoryDataSource::createDirectoryTreeNameSortNode(nsIAbDirectory* directo
    *  4MAPI2
    */
 
+  // Get isMailList
+  PRBool isMailList = PR_FALSE;
+  rv = directory->GetIsMailList(&isMailList);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoString sortString;
-  // top level sort will be by position. Sort by type under that...
-  sortString.Append((PRUnichar) (position + 'a'));
+
   if (isMailList)
-    sortString.AppendInt(5);    // mailing lists
-  else if (dirType == PABDirectory)
-  {
-    if (strcmp(uri, kPersonalAddressbookUri) == 0)
-      sortString.AppendInt(0);  // Personal addrbook
-    else if (strcmp(uri, kCollectedAddressbookUri) == 0)
-      sortString.AppendInt(1);  // Collected addrbook
-    else
-      sortString.AppendInt(2);  // Normal addrbook 
-  }
-  else if (dirType == LDAPDirectory)
-    sortString.AppendInt(3);    // LDAP addrbook
-  else if (dirType == MAPIDirectory)
-    sortString.AppendInt(4);    // MAPI addrbook
+    // Mailing Lists don't need a top level sort position.
+    sortString.AppendInt(5);
   else
-    sortString.AppendInt(6);    // everything else comes last
+  {
+    // If its not a mailing list, find out what else we need to know.
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(directory);
+    const char *uri = nsnull;
+    rv = resource->GetValueConst(&uri);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // Get directory type.
+    nsCOMPtr <nsIAbDirectoryProperties> properties;
+    rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 dirType;
+    rv = properties->GetDirType(&dirType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRInt32 position;
+    rv = properties->GetPosition(&position);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // top level sort will be by position. Sort by type under that...
+    sortString.Append((PRUnichar) (position + 'a'));
+
+    if (dirType == PABDirectory)
+    {
+      if (strcmp(uri, kPersonalAddressbookUri) == 0)
+        sortString.AppendInt(0);  // Personal addrbook
+      else if (strcmp(uri, kCollectedAddressbookUri) == 0)
+        sortString.AppendInt(1);  // Collected addrbook
+      else
+        sortString.AppendInt(2);  // Normal addrbook 
+    }
+    else if (dirType == LDAPDirectory)
+      sortString.AppendInt(3);    // LDAP addrbook
+    else if (dirType == MAPIDirectory)
+      sortString.AppendInt(4);    // MAPI addrbook
+    else
+      sortString.AppendInt(6);    // everything else comes last
+  }
 
   sortString += name;
-  PRUint8 *sortKey=nsnull;
+  PRUint8 *sortKey = nsnull;
   PRUint32 sortKeyLength;
   rv = CreateCollationKey(sortString, &sortKey, &sortKeyLength);
   NS_ENSURE_SUCCESS(rv, rv);
