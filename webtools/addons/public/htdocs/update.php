@@ -143,7 +143,7 @@ if (empty($errors)) {
         
         // An update exists.  Retrieve it.
         foreach ($db->record as $key=>$val) {
-            $update[$key] = $db->record;
+            $update[$key] = $val;
         }
 
         $update['exttype'] = $ext_typemap[$update['exttype']];
