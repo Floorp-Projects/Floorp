@@ -599,12 +599,6 @@ nsGlobalWindow::GetContext()
 PRBool
 nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
 {
-  return WouldReuseInnerWindow(aNewDocument, PR_TRUE);
-}
-
-PRBool
-nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocURI)
-{
   // We reuse the inner window when:
   // a. We are currently at about:blank
   // b. At least one of the following conditions are true:
@@ -619,22 +613,17 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIURI> newURI;
-  if (useDocURI) {
-    newURI = aNewDocument->GetDocumentURI();
-  } else {
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-
-    if (webNav) {
-      webNav->GetCurrentURI(getter_AddRefs(newURI));
-    }
-  }
-
   nsIURI* curURI = mDoc->GetDocumentURI();
-  if (!curURI || !newURI) {
+  if (!curURI) {
     return PR_FALSE;
   }
 
+  nsIPrincipal* newPrincipal = aNewDocument->GetNodePrincipal();
+  if (!newPrincipal) {
+    // This really should not be happening.... play it safe.
+    return PR_FALSE;
+  }
+    
   PRBool isAbout;
   if (NS_FAILED(curURI->SchemeIs("about", &isAbout)) || !isAbout) {
     return PR_FALSE;
@@ -653,18 +642,11 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
     return PR_TRUE;
   }
 
-  if (mOpenerScriptURL) {
-    if (sSecMan) {
-      PRBool isSameOrigin = PR_FALSE;
-      // XXXbz shouldn't we store the opener _principal_ and use
-      // CheckSameOriginPrincipal here instead?  That would make a lot more
-      // sense to me...
-      sSecMan->SecurityCompareURIs(mOpenerScriptURL, newURI, &isSameOrigin);
-      if (isSameOrigin) {
-        // The origin is the same.
-        return PR_TRUE;
-      }
-    }
+  if (mOpenerScriptPrincipal && sSecMan &&
+      NS_SUCCEEDED(sSecMan->CheckSameOriginPrincipal(mOpenerScriptPrincipal,
+                                                     newPrincipal))) {
+    // The origin is the same.
+    return PR_TRUE;
   }
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
@@ -682,11 +664,11 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
 }
 
 void
-nsGlobalWindow::SetOpenerScriptURL(nsIURI* aURI)
+nsGlobalWindow::SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal)
 {
-  FORWARD_TO_OUTER_VOID(SetOpenerScriptURL, (aURI));
+  FORWARD_TO_OUTER_VOID(SetOpenerScriptPrincipal, (aPrincipal));
 
-  mOpenerScriptURL = aURI;
+  mOpenerScriptPrincipal = aPrincipal;
 }
 
 PopupControlState
@@ -967,7 +949,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // check xpc here.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
-  PRBool reUseInnerWindow = WouldReuseInnerWindow(aDocument, PR_FALSE);
+  PRBool reUseInnerWindow = WouldReuseInnerWindow(aDocument);
 
   // Remember the old document's principal.
   nsIPrincipal *oldPrincipal = nsnull;
@@ -5726,19 +5708,15 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     // Save the principal of the calling script
     // We need it to decide whether to clear the scope in SetNewDocument
     NS_ASSERTION(sSecMan, "No Security Manager Found!");
-    // Note that the opener script URL is not relevant for openDialog
+    // Note that the opener script principal is not relevant for openDialog
     // callers, since those already have chrome privileges.  So we
     // only want to do this wen aDoJSFixups is true.
     if (aDoJSFixups && sSecMan) {
       nsCOMPtr<nsIPrincipal> principal;
       sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (principal) {
-        nsCOMPtr<nsIURI> subjectURI;
-        principal->GetURI(getter_AddRefs(subjectURI));
-        if (subjectURI) {
-          nsCOMPtr<nsPIDOMWindow> domReturnPrivate(do_QueryInterface(domReturn));
-          domReturnPrivate->SetOpenerScriptURL(subjectURI);
-        }
+        nsCOMPtr<nsPIDOMWindow> domReturnPrivate(do_QueryInterface(domReturn));
+        domReturnPrivate->SetOpenerScriptPrincipal(principal);
       }
     }
 

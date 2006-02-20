@@ -47,8 +47,9 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIDOMDocument.h"
-#include "nsIURI.h"
 #include "nsCOMPtr.h"
+
+class nsIPrincipal;
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -75,8 +76,8 @@ class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xebaabeb5, 0xb5e4, 0x4cd3, \
- { 0x9e, 0xd2, 0xb9, 0xd0, 0x15, 0xd1, 0x27, 0x63 } }
+{ 0x71201bf6, 0x0b49, 0x4b92, \
+ { 0xa3, 0x62, 0x00, 0x79, 0xb1, 0x9c, 0xc3, 0xa2 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -250,7 +251,7 @@ public:
     return win->mIsHandlingResizeEvent;
   }
 
-  virtual void SetOpenerScriptURL(nsIURI* aURI) = 0;
+  virtual void SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal) = 0;
 
   virtual PopupControlState PushPopupControlState(PopupControlState aState,
                                                   PRBool aForce) const = 0;
@@ -371,7 +372,6 @@ protected:
 
   // These members are only used on outer windows.
   nsIDOMElement *mFrameElement; // weak
-  nsCOMPtr<nsIURI> mOpenerScriptURL; // strong; used to determine whether to clear scope
   nsIDocShell           *mDocShell;  // Weak Reference
 
   // These variables are only used on inner windows.

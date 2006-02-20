@@ -207,7 +207,7 @@ public:
   virtual NS_HIDDEN_(nsresult) Deactivate();
   virtual NS_HIDDEN_(nsIFocusController*) GetRootFocusController();
 
-  virtual NS_HIDDEN_(void) SetOpenerScriptURL(nsIURI* aURI);
+  virtual NS_HIDDEN_(void) SetOpenerScriptPrincipal(nsIPrincipal* aPrincipal);
 
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, PRBool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
@@ -294,8 +294,6 @@ protected:
                           nsISupports *aState,
                           PRBool aClearScopeHint,
                           PRBool aIsInternalCall);
-
-  PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocURI);
 
   // Get the parent, returns null if this is a toplevel window
   nsIDOMWindowInternal *GetParentInternal();
@@ -496,6 +494,8 @@ protected:
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
+  nsCOMPtr<nsIPrincipal> mOpenerScriptPrincipal; // strong; used to determine
+                                                 // whether to clear scope
 
   // These member variable are used only on inner windows.
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
