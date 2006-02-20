@@ -417,7 +417,7 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
   if (aCSSValue.IsFixedLengthUnit()) {
-    return aCSSValue.GetLengthTwips();
+    return aCSSValue.GetLengthTwips(aPresContext);
   }
 
   nsCSSUnit unit = aCSSValue.GetUnit();

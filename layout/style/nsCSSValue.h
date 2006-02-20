@@ -49,6 +49,7 @@
 
 class imgIRequest;
 class nsIDocument;
+class nsPresContext;
 
 enum nsCSSUnit {
   eCSSUnit_Null         = 0,      // (n/a) null unit, value is not specified
@@ -243,7 +244,7 @@ public:
   // all over.
   NS_HIDDEN_(imgIRequest*) GetImageValue() const;
 
-  NS_HIDDEN_(nscoord)   GetLengthTwips() const;
+  NS_HIDDEN_(nscoord)   GetLengthTwips(nsPresContext* aPresContext) const;
 
   NS_HIDDEN_(void)  Reset()  // sets to null
   {
