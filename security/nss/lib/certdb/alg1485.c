@@ -394,7 +394,7 @@ ParseRFC1485Name(char *buf, int len)
     while (bp < e) {
 	ava = CERT_ParseRFC1485AVA(name->arena, &bp, e, PR_FALSE);
 	if (ava == 0) goto loser;
-	rdn = CERT_CreateRDN(name->arena, ava, 0);
+	rdn = CERT_CreateRDN(name->arena, ava, (CERTAVA *)0);
 	if (rdn == 0) goto loser;
 	rv = CERT_AddRDN(name, rdn);
 	if (rv) goto loser;
