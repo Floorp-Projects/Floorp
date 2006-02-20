@@ -57,13 +57,13 @@ function PrefRecord(name, defaultValue, label, help, group)
 function PrefManager (branchName, defaultBundle)
 {
     var prefManager = this;
-    
+
     function pm_observe (prefService, topic, prefName)
     {
         var r = prefManager.prefRecords[prefName];
         if (!r)
             return;
-        
+
         var oldValue = (r.realValue != null) ? r.realValue : r.defaultValue;
         r.realValue = prefManager.getPref(prefName, PREF_RELOAD);
         prefManager.onPrefChanged(prefName, r.realValue, oldValue);
@@ -77,6 +77,8 @@ function PrefManager (branchName, defaultBundle)
     this.prefService =
         Components.classes[PREF_CTRID].getService(nsIPrefService);
     this.prefBranch = this.prefService.getBranch(branchName);
+    this.prefSaveTime = 0;
+    this.prefSaveTimer = 0;
     this.branchName = branchName;
     this.defaultValues = new Object();
     this.prefs = new Object();
@@ -88,11 +90,18 @@ function PrefManager (branchName, defaultBundle)
     this.prefBranchInternal =
         this.prefBranch.QueryInterface(nsIPrefBranchInternal);
     this.prefBranchInternal.addObserver("", this.observer, false);
-    
+
     this.defaultBundle = defaultBundle;
 
     this.valid = true;
 }
+
+// Delay between change and save.
+PrefManager.prototype.PREF_SAVE_DELAY =  5000; // 5 seconds.
+/* The timer is reset for each change. Only reset if it hasn't been delayed by
+ * this much already, or we could put off a save indefinitely.
+ */
+PrefManager.prototype.PREF_MAX_DELAY  = 15000; // 15 seconds.
 
 PrefManager.prototype.destroy =
 function pm_destroy()
@@ -138,6 +147,41 @@ function pm_removeobserver(observer)
     }
 }
 
+PrefManager.prototype.delayedSave =
+function pm_delayedsave()
+{
+    // this.prefSaveTimer
+    var now = Number(new Date());
+
+    /* If the time == 0, there is no delayed save in progress, and we should
+     * start one. If it isn't 0, check the delayed save was started within the
+     * allowed time - this means that if we keep putting off a save, it will
+     * go through eventually, as we will stop resetting it.
+     */
+    if ((this.prefSaveTime == 0) ||
+        (now - this.prefSaveTime < this.SAVE_MAX_DELAY))
+    {
+        if (this.prefSaveTime == 0)
+            this.prefSaveTime = now;
+        if (this.prefSaveTimer != 0)
+            clearTimeout(this.prefSaveTimer);
+        this.prefSaveTimer = setTimeout(function(o) { o.forceSave() },
+                                        this.PREF_SAVE_DELAY, this);
+    }
+}
+
+PrefManager.prototype.forceSave =
+function pm_forcesave()
+{
+    this.prefSaveTime = 0;
+    this.prefSaveTimer = 0;
+    try {
+        this.prefService.savePrefFile(null);
+    } catch(ex) {
+        dd("Exception saving preferences: " + formatException(ex));
+    }
+}
+
 PrefManager.prototype.onPrefChanged =
 function pm_prefchanged(prefName, realValue, oldValue)
 {
@@ -175,13 +219,13 @@ function pm_readprefs ()
         {
             var type = this.prefBranch.getPrefType (list[i]);
             var defaultValue;
-            
+
             switch (type)
             {
                 case nsIPrefBranch.PREF_INT:
                     defaultValue = 0;
                     break;
-                
+
                 case nsIPrefBranch.PREF_BOOL:
                     defaultValue = false;
                     break;
@@ -189,7 +233,7 @@ function pm_readprefs ()
                 default:
                     defaultValue = "";
             }
-            
+
             this.addPref(list[i], defaultValue);
         }
     }
@@ -227,15 +271,15 @@ function pm_addprefsd(targetManager, writeThrough)
     };
 
     var setter = null;
-    
+
     // Make sure we know about pref changes.
     targetManager.addObserver(this);
-    
+
     if (writeThrough)
         setter = deferSet;
-    
+
     var prefs = targetManager.prefs;
-    
+
     for (var i = 0; i < prefs.length; ++i)
         this.addPref(prefs[i], deferGet, setter);
 }
@@ -249,11 +293,12 @@ function pm_arrayupdate(prefName)
 
     if (record.realValue == null)
         record.realValue = record.defaultValue;
-    
+
     if (!ASSERT(record.realValue instanceof Array, "Pref is not an array"))
         return;
 
     this.prefBranch.setCharPref(prefName, this.arrayToString(record.realValue));
+    this.delayedSave();
 }
 
 PrefManager.prototype.stringToArray =
@@ -261,7 +306,7 @@ function pm_s2a(string)
 {
     if (string.search(/\S/) == -1)
         return [];
-    
+
     var ary = string.split(/\s*;\s*/);
     for (var i = 0; i < ary.length; ++i)
         ary[i] = toUnicode(unescape(ary[i]), PREF_CHARSET);
@@ -283,13 +328,13 @@ PrefManager.prototype.getPref =
 function pm_getpref(prefName, reload)
 {
     var prefManager = this;
-    
+
     function updateArrayPref() { prefManager.updateArrayPref(prefName); };
-    
+
     var record = this.prefRecords[prefName];
     if (!ASSERT(record, "Unknown pref: " + prefName))
         return null;
-    
+
     var defaultValue;
 
     if (typeof record.defaultValue == "function")
@@ -304,7 +349,7 @@ function pm_getpref(prefName, reload)
 
         defaultValue = record.defaultValue;
     }
-    
+
     var realValue = null;
 
     try
@@ -346,18 +391,18 @@ PrefManager.prototype.setPref =
 function pm_setpref(prefName, value)
 {
     var prefManager = this;
-    
+
     function updateArrayPref() { prefManager.updateArrayPref(prefName); };
 
     var record = this.prefRecords[prefName];
     if (!ASSERT(record, "Unknown pref: " + prefName))
         return null;
-    
+
     var defaultValue = record.defaultValue;
 
     if (typeof defaultValue == "function")
         defaultValue = defaultValue(prefName);
-    
+
     if ((record.realValue == null && value == defaultValue) ||
         record.realValue == value)
     {
@@ -371,7 +416,7 @@ function pm_setpref(prefName, value)
         this.clearPref(prefName);
         return value;
     }
-    
+
     if (typeof defaultValue == "boolean")
     {
         this.prefBranch.setBoolPref(prefName, value);
@@ -390,9 +435,10 @@ function pm_setpref(prefName, value)
     {
         this.prefBranch.setCharPref(prefName, fromUnicode(value, PREF_CHARSET));
     }
+    this.delayedSave();
 
     record.realValue = value;
-    
+
     return value;
 }
 
@@ -400,7 +446,12 @@ PrefManager.prototype.clearPref =
 function pm_reset(prefName)
 {
     this.prefRecords[prefName].realValue = null;
-    this.prefBranch.clearUserPref(prefName);
+    try {
+        this.prefBranch.clearUserPref(prefName);
+    } catch(ex) {
+        // Do nothing, the pref didn't exist.
+    }
+    this.delayedSave();
 }
 
 PrefManager.prototype.addPref =
@@ -409,25 +460,25 @@ function pm_addpref(prefName, defaultValue, setter, bundle, group)
     var prefManager = this;
     if (!bundle)
         bundle = this.defaultBundle;
-    
+
     function updateArrayPref() { prefManager.updateArrayPref(prefName); };
     function prefGetter() { return prefManager.getPref(prefName); };
     function prefSetter(value) { return prefManager.setPref(prefName, value); };
-    
+
     if (!ASSERT(!(prefName in this.defaultValues),
                 "Preference already exists: " + prefName))
     {
         return;
     }
-    
+
     if (!setter)
         setter = prefSetter;
-    
+
     if (defaultValue instanceof Array)
         defaultValue.update = updateArrayPref;
-    
+
     var label = getMsgFrom(bundle, "pref." + prefName + ".label", null, prefName);
-    var help  = getMsgFrom(bundle, "pref." + prefName + ".help", null, 
+    var help  = getMsgFrom(bundle, "pref." + prefName + ".help", null,
                            MSG_NO_HELP);
     if (group != "hidden")
     {
@@ -436,13 +487,13 @@ function pm_addpref(prefName, defaultValue, setter, bundle, group)
         if (help == MSG_NO_HELP)
             dd("WARNING: Preference without help text: " + prefName);
     }
-    
-    this.prefRecords[prefName] = new PrefRecord (prefName, defaultValue, 
+
+    this.prefRecords[prefName] = new PrefRecord (prefName, defaultValue,
                                                  label, help, group);
-    
+
     this.prefNames.push(prefName);
     this.prefNames.sort();
-    
+
     this.prefs.__defineGetter__(prefName, prefGetter);
     this.prefs.__defineSetter__(prefName, setter);
 }
