@@ -435,9 +435,11 @@ nsWindow::Destroy(void)
     // window this isn't going to harm anything.
     mWindowGroup = nsnull;
 
+#ifdef MOZ_CAIRO_GFX
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
     mThebesSurface = nsnull;
+#endif
 
     if (mShell) {
         gtk_widget_destroy(mShell);
