@@ -1510,15 +1510,16 @@ function BrowserHomeBar()  {
 function BrowserPan() {
 
 	if(!gBrowser.contentWindow.gInPan) {  
-		gBrowser.contentWindow.addEventListener("mousedown",BrowserPanMouseHandler,true);
-		gBrowser.contentWindow.addEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
-		gBrowser.contentWindow.addEventListener("click",BrowserPanMouseHandlerPanNull,true);
+
+		gBrowser.contentDocument.addEventListener("mousedown",BrowserPanMouseHandler,true);
+		gBrowser.contentDocument.addEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		gBrowser.contentDocument.addEventListener("click",BrowserPanMouseHandlerPanNull,true);
 		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
 		gBrowser.contentWindow.gInPan=true;
 	} else {
-		gBrowser.contentWindow.removeEventListener("mousedown",BrowserPanMouseHandler,true);
-		gBrowser.contentWindow.removeEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
-		gBrowser.contentWindow.removeEventListener("click",BrowserPanMouseHandlerPanNull,true);
+		gBrowser.contentDocument.removeEventListener("mousedown",BrowserPanMouseHandler,true);
+		gBrowser.contentDocument.removeEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
+		gBrowser.contentDocument.removeEventListener("click",BrowserPanMouseHandlerPanNull,true);
 
 		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
 		gBrowser.contentWindow.gInPan=false;
@@ -1536,30 +1537,31 @@ function BrowserPanRefresh() {
 var gInPan=false;
 var gPanY=-1;
 var gPanX=-1;
+var gInitialPanX=null;
+var gInitialPanY=null;
 
 function BrowserPanMouseHandler(e) {
 
-  gBrowser.contentWindow.addEventListener("mousemove",BrowserPanMouseHandlerPan,true); 
+  gBrowser.contentDocument.addEventListener("mousemove",BrowserPanMouseHandlerPan,true); 
   gPanY=e.clientY;
   gPanX=e.clientX;
   e.preventDefault();
   e.stopPropagation();
+  gInitialPanY=gPanY;
+  gInitialPanX=gPanX;
 
 }
 
 function BrowserPanMouseHandlerPan(e) {
-    panDeltaY=gPanY-e.clientY;
-    panDeltaX=gPanX-e.clientX;
-
-    /* 
-     * Workaround to bug 327934
-     */
-    gBrowser.contentWindow.scrollBy(0,panDeltaY);
-    gBrowser.contentWindow.scrollBy(panDeltaX,0);
+  panDeltaY=gPanY-e.clientY;
+  panDeltaX=gPanX-e.clientX;
+  
+  /* Workaround to bug 327934 */
+  gBrowser.contentWindow.scrollBy(0,panDeltaY);
+  gBrowser.contentWindow.scrollBy(panDeltaX,0);
 
   gPanY=e.clientY;
   gPanX=e.clientX;
-
 }
 
 function BrowserPanMouseHandlerPanNull(e) {
@@ -1567,13 +1569,11 @@ function BrowserPanMouseHandlerPanNull(e) {
 }
 
 function BrowserPanMouseHandlerDestroy(e) {
-	//gBrowser.contentWindow.removeEventListener("mousedown",BrowserPanMouseHandler,true);
-	gBrowser.contentWindow.removeEventListener("mousemove",BrowserPanMouseHandlerPan,true);
-
-	//document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+  gBrowser.contentDocument.removeEventListener("mousemove",BrowserPanMouseHandlerPan,true);
   e.preventDefault();
   e.stopPropagation();
-
+  if(e.clientY==gInitialPanY || e.clientX==gInitialPanX) {
+	BrowserPan();
+  }
 }
-
 
