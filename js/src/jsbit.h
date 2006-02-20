@@ -69,21 +69,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 ** Macro version of JS_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
-#ifdef __GNUC__
-/*
- * Use __builtin_clz or count-leading-zeros to calculate ceil(log2(_n)).
- * Since __builtin_clz(0) is undefined, the macro uses explicit conditional.
- * FIXME: branch-free version?
- */
-# define JS_CEILING_LOG2(_log2,_n)                                            \
-    JS_BEGIN_MACRO                                                            \
-        typedef int COMPILER_ASSERT##__LINE__[                                \
-            sizeof(unsigned int) == sizeof(JSUint32) ? 1 : -1];               \
-        unsigned int j_ = (unsigned int)(_n);                                 \
-        (_log2) = (j_ <= 1 ? 0 : 32 - __builtin_clz(j_ - 1));                 \
-    JS_END_MACRO
-#else
-# define JS_CEILING_LOG2(_log2,_n)                                            \
+#define JS_CEILING_LOG2(_log2,_n)                                             \
     JS_BEGIN_MACRO                                                            \
         JSUint32 j_ = (JSUint32)(_n);                                         \
         (_log2) = 0;                                                          \
@@ -100,7 +86,6 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
         if ((j_) >> 1)                                                        \
             (_log2) += 1;                                                     \
     JS_END_MACRO
-#endif
 
 /*
 ** Macro version of JS_FloorLog2: Compute the log of the greatest power of
@@ -108,20 +93,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 **
 ** This is equivalent to finding the highest set bit in the word.
 */
-#ifdef __GNUC__
-/*
- * Use __builtin_clz or count-leading-zeros to calculate floor(log2(_n)).
- * Since __builtin_clz(0) is undefined, the macro set the loweset bit to 1
- * to ensure 0 result when _n == 0.
- */
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
-    JS_BEGIN_MACRO                                                            \
-        typedef int COMPILER_ASSERT##__LINE__[                                \
-            sizeof(unsigned int) == sizeof(JSUint32) ? 1 : -1];               \
-        (_log2) = 31 - __builtin_clz(((unsigned int)(_n)) | 1);               \
-    JS_END_MACRO
-#else
-# define JS_FLOOR_LOG2(_log2,_n)                                              \
+#define JS_FLOOR_LOG2(_log2,_n)                                               \
     JS_BEGIN_MACRO                                                            \
         JSUint32 j_ = (JSUint32)(_n);                                         \
         (_log2) = 0;                                                          \
@@ -136,7 +108,6 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
         if ((j_) >> 1)                                                        \
             (_log2) += 1;                                                     \
     JS_END_MACRO
-#endif
 
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */
