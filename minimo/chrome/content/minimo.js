@@ -246,7 +246,7 @@ nsBrowserStatusHandler.prototype =
     
     BrowserUpdateFeeds();
 
-    if(gPanMode) BrowserPanRefresh();
+    BrowserPanRefresh();
 
   },
   
@@ -1514,24 +1514,23 @@ function BrowserPan() {
 		gBrowser.contentDocument.addEventListener("mousedown",BrowserPanMouseHandler,true);
 		gBrowser.contentDocument.addEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
 		gBrowser.contentDocument.addEventListener("click",BrowserPanMouseHandlerPanNull,true);
-		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
+		document.getElementById("toolbar-pan").collapsed=false;
 		gBrowser.contentWindow.gInPan=true;
 	} else {
 		gBrowser.contentDocument.removeEventListener("mousedown",BrowserPanMouseHandler,true);
 		gBrowser.contentDocument.removeEventListener("mouseup",BrowserPanMouseHandlerDestroy,true);
 		gBrowser.contentDocument.removeEventListener("click",BrowserPanMouseHandlerPanNull,true);
-
-		document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+		document.getElementById("toolbar-pan").collapsed=true;
 		gBrowser.contentWindow.gInPan=false;
 	}
 }
 
 function BrowserPanRefresh() {
   if(gBrowser.contentWindow.gInPan) {
-    document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan-toggle.png";
+		document.getElementById("toolbar-pan").collapsed=false;
 
   } else {
-    document.getElementById("button-icon-pan").image="chrome://minimo/skin/extensions/icon-pan.png";
+		document.getElementById("toolbar-pan").collapsed=true;
   }
 }
 var gInPan=false;
