@@ -1342,12 +1342,24 @@ ProcessMSCAVersion(SECItem  *extData,
   unsigned long version;
   nsresult rv;
   char buf[50];
+  SECItem decoded;
 
-  rv = GetIntValue(extData, &version);
+  if (SECSuccess != SEC_ASN1DecodeItem(nsnull, &decoded, 
+				       SEC_ASN1_GET(SEC_IntegerTemplate), 
+				       extData))
+    /* This extension used to be an Integer when this code
+       was written, but apparently isn't anymore. Display
+       the raw bytes instead. */
+    return ProcessRawBytes(extData, text);
+
+  rv = GetIntValue(&decoded, &version);
+  nsMemory::Free(decoded.data);
   if (NS_FAILED(rv))
-    return rv;
+    /* Value out of range, display raw bytes */
+    return ProcessRawBytes(extData, text);
 
-  PR_snprintf(buf, sizeof(buf), "0x%x", version);
+  /* Apparently, the encoding is <minor><major>, with 16 bits each */
+  PR_snprintf(buf, sizeof(buf), "%d.%d", version & 0xFFFF, version>>16);
   text.AppendASCII(buf);
   return NS_OK;
 }
