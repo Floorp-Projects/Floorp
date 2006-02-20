@@ -106,8 +106,7 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 		// Get the Spec
 		nsCAutoString spec;
 		aURL->GetSpec(spec);
-		char* arg[1];
-		arg[0] = (char *) spec.get();
+		const char* args[] = { spec.get() };
 		
 		//Launch the app		
 		BMimeType protocol;
@@ -117,11 +116,11 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 			if(protocol.IsInstalled())
 			{
 				isInstalled = true;	
-				be_roster->Launch(protoStr.String(), 1, arg);
+				be_roster->Launch(protoStr.String(), NS_ARRAY_LENGTH(args), (char **)args);
 			}
 		}
 		if ((!isInstalled) && (!strcmp("mailto", scheme.get())))
-			be_roster->Launch("text/x-email", 1, arg);
+			be_roster->Launch("text/x-email", NS_ARRAY_LENGTH(args), (char **)args);
 	}
 	return rv;
 }
@@ -214,41 +213,10 @@ nsresult nsOSHelperAppService::GetMimeInfoFromExtension(const char *aFileExt,
 
 	LOG(("Here we do an extension lookup for '%s'\n", aFileExt));
 
-	BString fileExtToUse(aFileExt);
-	if (fileExtToUse.ByteAt(0) != '.')
-		fileExtToUse.Prepend(".");
-
-
-	BMessage mimeData;
-	BMessage extData;
 	BMimeType mimeType;
-	int32 mimeIndex = 0;
-	int32 extIndex = 0;
-	bool found = false;
-	BString mimeStr;
-	BString extStr;
-	// Get a list of all registered MIME types
-	if (BMimeType::GetInstalledTypes(&mimeData) == B_OK) {
-		// check to see if the given MIME type is registerred
-		while (!found && mimeData.FindString("types",mimeIndex,&mimeStr) == B_OK) {
-			if ((mimeType.SetTo(mimeStr.String()) == B_OK) &&
-			        (mimeType.GetFileExtensions(&extData) == B_OK)) {
-				extIndex = 0;
-				while (!found && extData.FindString("extensions",extIndex,&extStr) == B_OK) {
-					if (extStr.ByteAt(0) != '.')
-						extStr.Prepend(".");
-					if (fileExtToUse.ICompare(extStr) == 0)
-						found = true;
-					else
-						extIndex++;
-				}
-			}
-			mimeIndex++;
-		}
-		if (found) {
-			return SetMIMEInfoForType(mimeStr.String(), _retval);
-		}
-	}
+
+	if (BMimeType::GuessMimeType(aFileExt, &mimeType)  == B_OK)
+		return SetMIMEInfoForType(mimeType.Type(), _retval);
 
 	// Extension not found
 	return NS_ERROR_FAILURE;
@@ -261,25 +229,11 @@ nsresult nsOSHelperAppService::GetMimeInfoFromMIMEType(const char *aMIMEType,
 		return NS_ERROR_INVALID_ARG;
 
 	LOG(("Here we do a mimetype lookup for '%s'\n", aMIMEType));
-
-	BMessage data;
-	int32 index = 0;
-	bool found = false;
-	BString strData;
-	// Get a list of all registerred MIME types
-	if (BMimeType::GetInstalledTypes(&data) == B_OK) {
-		// check to see if the given MIME type is registerred
-		while (!found && data.FindString("types",index,&strData) == B_OK) {
-			if (strData == aMIMEType)
-				found = true;
-			else
-				index++;
-		}
-		if (found) {
-			return SetMIMEInfoForType(aMIMEType, _retval);
-		}
-	}
-
+	
+	BMimeType mimeType(aMIMEType);
+	if (mimeType.IsInstalled())
+		return SetMIMEInfoForType(aMIMEType, _retval);
+	
 	return NS_ERROR_FAILURE;
 }
 
