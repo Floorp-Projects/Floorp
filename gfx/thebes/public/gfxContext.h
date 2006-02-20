@@ -86,13 +86,6 @@ public:
     gfxASurface* CurrentGroupSurface();
 
     /**
-     * Set a new surface to render to; the previous
-     * surface is lost, but the current graphics state
-     * is maintained.
-     */
-    void SetTarget(gfxASurface *surface);
-
-    /**
      * Return the raw cairo_t object.
      * XXX this should go away at some point.
      */
