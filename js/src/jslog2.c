@@ -44,9 +44,20 @@
 */
 JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
 {
-    JSIntn log2;
+    JSIntn log2 = 0;
 
-    JS_CEILING_LOG2(log2, n);
+    if (n & (n-1))
+        log2++;
+    if (n >> 16)
+        log2 += 16, n >>= 16;
+    if (n >> 8)
+        log2 += 8, n >>= 8;
+    if (n >> 4)
+        log2 += 4, n >>= 4;
+    if (n >> 2)
+        log2 += 2, n >>= 2;
+    if (n >> 1)
+        log2++;
     return log2;
 }
 
@@ -56,8 +67,17 @@ JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
 */
 JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 n)
 {
-    JSIntn log2;
+    JSIntn log2 = 0;
 
-    JS_FLOOR_LOG2(log2, n);
+    if (n >> 16)
+        log2 += 16, n >>= 16;
+    if (n >> 8)
+        log2 += 8, n >>= 8;
+    if (n >> 4)
+        log2 += 4, n >>= 4;
+    if (n >> 2)
+        log2 += 2, n >>= 2;
+    if (n >> 1)
+        log2++;
     return log2;
 }
