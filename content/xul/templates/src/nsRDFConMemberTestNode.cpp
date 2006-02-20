@@ -432,6 +432,8 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) 
                         NS_ASSERTION(valueRes != nsnull, "container is not an nsIRDFResource");
                         if (! valueRes) continue;
 
+                        value = valueRes;
+
 #ifdef PR_LOGGING
                         if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
                             const char* s;
