@@ -81,6 +81,10 @@ static const PRTime _pr_filetime_offset = 116444736000000000LL;
 static const PRTime _pr_filetime_offset = 116444736000000000i64;
 #endif
 
+#ifdef MOZ_UNICODE
+static void InitUnicodeSupport(void);
+#endif
+
 static PRBool IsPrevCharSlash(const char *str, const char *current);
 
 void
@@ -119,6 +123,10 @@ _PR_MD_INIT_IO()
 #endif /* DEBUG */
 
     _PR_NT_InitSids();
+
+#ifdef MOZ_UNICODE
+    InitUnicodeSupport();
+#endif
 }
 
 PRStatus
@@ -1111,6 +1119,26 @@ _PR_MD_PIPEAVAILABLE(PRFileDesc *fd)
 
 #ifdef MOZ_UNICODE
 
+typedef HANDLE (WINAPI *CreateFileWFn) (LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+static CreateFileWFn createFileW = CreateFileW;
+typedef HANDLE (WINAPI *FindFirstFileWFn) (LPCWSTR, LPWIN32_FIND_DATAW);
+static FindFirstFileWFn findFirstFileW = FindFirstFileW;
+typedef BOOL (WINAPI *FindNextFileWFn) (HANDLE, LPWIN32_FIND_DATAW);
+static FindNextFileWFn findNextFileW = FindNextFileW;
+typedef DWORD (WINAPI *GetFullPathNameWFn) (LPCWSTR, DWORD, LPWSTR, LPWSTR *);
+static GetFullPathNameWFn getFullPathNameW = GetFullPathNameW;
+typedef UINT (WINAPI *GetDriveTypeWFn) (LPCWSTR);
+static GetDriveTypeWFn getDriveTypeW = GetDriveTypeW;
+
+static void InitUnicodeSupport(void)
+{
+    /*
+     * The W functions exist on Win9x as stubs that fail with the
+     * ERROR_CALL_NOT_IMPLEMENTED error.  We plan to emulate the
+     * MSLU W functions on Win9x in the future.
+     */
+}
+
 /* ================ UTF16 Interfaces ================================ */
 void FlipSlashesW(PRUnichar *cp, size_t len)
 {
@@ -1133,7 +1161,7 @@ _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
     LPSECURITY_ATTRIBUTES lpSA = NULL;
     PSECURITY_DESCRIPTOR pSD = NULL;
     PACL pACL = NULL;
- 
+
     if (osflags & PR_CREATE_FILE) {
         if (_PR_NT_MakeSecurityDescriptorACL(mode, fileAccessTable,
                 &pSD, &pACL) == PR_SUCCESS) {
@@ -1165,7 +1193,7 @@ _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
             flags = OPEN_EXISTING;
     }
 
-    file = CreateFileW(name,
+    file = createFileW(name,
                        access,
                        FILE_SHARE_READ|FILE_SHARE_WRITE,
                        lpSA,
@@ -1207,7 +1235,7 @@ _PR_MD_OPEN_DIR_UTF16(_MDDirUTF16 *d, const PRUnichar *name)
     wcscpy(&filename[len], L"\\*.*");
     FlipSlashesW( filename, wcslen(filename) );
 
-    d->d_hdl = FindFirstFileW( filename, &(d->d_entry) );
+    d->d_hdl = findFirstFileW( filename, &(d->d_entry) );
     if ( d->d_hdl == INVALID_HANDLE_VALUE ) {
         _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
         return PR_FAILURE;
@@ -1230,7 +1258,7 @@ _PR_MD_READ_DIR_UTF16(_MDDirUTF16 *d, PRIntn flags)
                 d->firstEntry = PR_FALSE;
                 rv = 1;
             } else {
-                rv = FindNextFileW(d->d_hdl, &(d->d_entry));
+                rv = findNextFileW(d->d_hdl, &(d->d_entry));
             }
             if (rv == 0) {
                 break;
@@ -1305,7 +1333,7 @@ IsRootDirectoryW(PRUnichar *fn, size_t buflen)
 
     if (iswalpha(fn[0]) && fn[1] == L':' && _PR_IS_W_SLASH(fn[2])
             && fn[3] == L'\0') {
-        rv = GetDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
+        rv = getDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
         return rv;
     }
 
@@ -1353,7 +1381,7 @@ IsRootDirectoryW(PRUnichar *fn, size_t buflen)
                 return PR_FALSE; /* name too long */
             }
         }
-        rv = GetDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
+        rv = getDriveTypeW(fn) > 1 ? PR_TRUE : PR_FALSE;
         /* restore the 'fn' buffer */
         if (slashAdded) {
             *--p = L'\0';
@@ -1368,7 +1396,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
     HANDLE hFindFile;
     WIN32_FIND_DATAW findFileData;
     PRUnichar pathbuf[MAX_PATH + 1];
-    
+
     if (NULL == fn || L'\0' == *fn) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return -1;
@@ -1383,7 +1411,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
         return -1;
     }
 
-    hFindFile = FindFirstFileW(fn, &findFileData);
+    hFindFile = findFirstFileW(fn, &findFileData);
     if (INVALID_HANDLE_VALUE == hFindFile) {
         DWORD len;
         PRUnichar *filePart;
@@ -1404,7 +1432,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
             return -1;
         } 
-        len = GetFullPathNameW(fn, sizeof(pathbuf)/sizeof(pathbuf[0]), pathbuf,
+        len = getFullPathNameW(fn, sizeof(pathbuf)/sizeof(pathbuf[0]), pathbuf,
                 &filePart);
         if (0 == len) {
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
@@ -1429,7 +1457,7 @@ _PR_MD_GETFILEINFO64_UTF16(const PRUnichar *fn, PRFileInfo64 *info)
             return -1;
         } else {
             pathbuf[len - 1] = L'\0';
-            hFindFile = FindFirstFileW(pathbuf, &findFileData);
+            hFindFile = findFirstFileW(pathbuf, &findFileData);
             if (INVALID_HANDLE_VALUE == hFindFile) {
                 _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
                 return -1;
