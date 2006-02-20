@@ -1,7 +1,6 @@
 <?php
 // Include required libraries and classes.
 require_once('DB.php');  // PEAR::DB
-require_once('Auth.php');  // PEAR::Auth
 require_once(LIB.'/amo.class.php');
 require_once(LIB.'/addon.class.php');
 require_once(LIB.'/auth.class.php');
