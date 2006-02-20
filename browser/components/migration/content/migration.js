@@ -462,29 +462,15 @@ var MigrationWizard = {
       if (this._autoMigrate) {
         if (this._newHomePage) {
           try {
-            var prefSvc2 = Components.classes["@mozilla.org/preferences-service;1"]
-                                     .getService(Components.interfaces.nsIPrefService);
-
-            const nsIDirectoryServiceContractID = "@mozilla.org/file/directory_service;1";
-            const nsIProperties = Components.interfaces.nsIProperties;
-            var directoryService =  Components.classes[nsIDirectoryServiceContractID]
-                                          .getService(nsIProperties);
-            var prefFile = directoryService.get("ProfDS", Components.interfaces.nsIFile);
-            prefFile.append("prefs.js");
-
-            prefSvc2.resetPrefs();
-            prefSvc2.readUserPrefs(prefFile);
-
             // set homepage properly
-            var prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
-                                    .getService(Components.interfaces.nsIPrefBranch);
+            var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                                       .getService(Components.interfaces.nsIPrefBranch);
             var str = Components.classes["@mozilla.org/supports-string;1"]
                                 .createInstance(Components.interfaces.nsISupportsString);
             str.data = this._newHomePage;
-            prefSvc.setComplexValue("browser.startup.homepage",
-                                    Components.interfaces.nsISupportsString, str);
-            prefSvc2.savePrefFile(prefFile);
-
+            prefBranch.setComplexValue("browser.startup.homepage",
+                                       Components.interfaces.nsISupportsString,
+                                       str);
           } catch(ex) { 
             dump(ex); 
           }

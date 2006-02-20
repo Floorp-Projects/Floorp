@@ -490,6 +490,9 @@ nsSeamonkeyProfileMigrator::TransformPreferences(const nsAString& aSourcePrefFil
   targetPrefsFile->Append(aTargetPrefFileName);
   psvc->SavePrefFile(targetPrefsFile);
 
+  psvc->ResetPrefs();
+  psvc->ReadUserPrefs(nsnull);
+
   return NS_OK;
 }
 
