@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Martijn Pieters <mj@digicool.com> (original author)
+ *   Samuel Sieb <samuel@sieb.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,9 +38,9 @@
 
 /*
  *  XPCOM XML-RPC Client, interface definition.
- *  Version: $Revision: 1.7 $
+ *  Version: $Revision: 1.8 $
  *
- *  $Id: nsIXmlRpcClient.idl,v 1.7 2005/11/25 21:56:42 timeless%mozdev.org Exp $
+ *  $Id: nsIXmlRpcClient.idl,v 1.8 2006/02/20 04:04:47 samuel%sieb.net Exp $
  */
 
 #include "nsISupports.idl"
@@ -52,7 +53,7 @@ interface nsIXmlRpcFault;
 /**
  * Simple XML-RPC client interface.
  */
-[scriptable, uuid(37127241-1e6e-46aa-ba87-601d41bb47df)]
+[scriptable, uuid(4d7d15c0-3747-4f7f-b6b3-792a5ea1a9aa)]
 interface nsIXmlRpcClient: nsISupports {
     /**
      * Set server URL. Call this before using this object.
@@ -75,6 +76,14 @@ interface nsIXmlRpcClient: nsISupports {
      * Clear authentication info.
      */
     void clearAuthentication(in string username, in string password);
+
+    /**
+     * Set character encoding.  The default charset if this function is
+     * not called is "UTF-8".
+     *
+     * @param encoding  encoding charset to be used
+     */
+    void setEncoding(in string encoding);
 
     /**
      * The URL of the XML-RPC server
