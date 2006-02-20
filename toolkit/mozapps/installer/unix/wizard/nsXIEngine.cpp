@@ -560,6 +560,7 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
                         ErrorHandler(err, currComp->GetArchive()); //handle E_INSTALL separately
                     else
                         ErrorHandler(err); //handle and continue 
+                    err = OK;
                     compNum++;
                 }
             }

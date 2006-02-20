@@ -458,12 +458,10 @@ ErrorHandler(int aErr, const char* aErrMsg)
     
   sprintf(errStr, "%d", aErr); 
   if (!IsErrFatal(aErr)) {
-	if (aErr == E_INSTALL) {
-      if (aErrMsg) {
-		sprintf(newmsg, gCtx->Res(errStr), aErrMsg);
-		sprintf(msg, gCtx->Res("ERROR"), aErr, newmsg);
-      }
-	} else {
+    if (aErr == E_INSTALL && aErrMsg) {
+      sprintf(newmsg, gCtx->Res(errStr), aErrMsg);
+      sprintf(msg, gCtx->Res("ERROR"), aErr, newmsg);
+    } else {
       sprintf(msg, gCtx->Res("ERROR"), aErr, gCtx->Res(errStr));
     }
   } else {
