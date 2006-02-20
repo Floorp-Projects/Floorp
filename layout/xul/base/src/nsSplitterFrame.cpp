@@ -697,13 +697,19 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mDidDrag = PR_FALSE;
 
   mOuter->GetParentBox(&mParentBox);
-  
-  // get our index
-  nscoord childIndex = nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
-  PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
 
-  // if its 0 or the last index then stop right here.
-  if (childIndex == 0 || childIndex == childCount-1) {
+
+  PRInt32 childIndex, childCount;
+  if (mParentBox) {
+    // get our index
+    childIndex =
+      nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
+    childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
+  }
+
+  // if we have no parent box or the index is 0 or the last index then
+  // stop right here.
+  if (!mParentBox || childIndex == 0 || childIndex == childCount-1) {
     mPressed = PR_FALSE;
     return NS_OK;
   }
