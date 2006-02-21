@@ -998,8 +998,11 @@ function CCKWriteDTD(destdir)
   } catch (ex) {}
   var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                       .createInstance(Components.interfaces.nsIFileOutputStream);
-
+  var cos = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIConverterOutputStream);
+  
   fos.init(file, -1, -1, false);
+  cos.init(fos, null, 0, null);
   
   var ioService=Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService);
@@ -1017,7 +1020,8 @@ function CCKWriteDTD(destdir)
   str = str.replace(/%mainWindow.titlemodifier%/g, document.getElementById("CompanyName").value);
   str = str.replace(/%cckHelp.label%/g, document.getElementById("HelpMenuCommandName").value);
   str = str.replace(/%cckHelp.accesskey%/g, document.getElementById("HelpMenuCommandAccesskey").value);
-  fos.write(str, str.length); 
+  cos.writeString(str); 
+  cos.close();
   fos.close();
 }
 
@@ -1032,8 +1036,11 @@ function CCKWriteProperties(destdir)
   } catch (ex) {}
   var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                       .createInstance(Components.interfaces.nsIFileOutputStream);
+  var cos = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIConverterOutputStream);
 
   fos.init(file, -1, -1, false);
+  cos.init(fos, null, 0, null);
   
   var ioService=Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService);
@@ -1051,26 +1058,33 @@ function CCKWriteProperties(destdir)
   str = str.replace(/%browser.throbber.url%/g, document.getElementById("AnimatedLogoURL").value);
   str = str.replace(/%cckhelp.url%/g, document.getElementById("HelpMenuCommandURL").value);
   str = str.replace(/%browser.startup.homepage%/g, document.getElementById("HomePageURL").value);
+  var overrideurl = document.getElementById('HomePageOverrideURL').value;
+  if (overrideurl && overrideurl.length) {
+    str = str.replace(/%startup.homepage_override_url%/g, overrideurl);
+  } else {
+    str = str.replace(/%startup.homepage_override_url%/g, document.getElementById("HomePageURL").value);
+  }
+
   str = str.replace(/%PopupAllowedSites%/g, document.getElementById("PopupAllowedSites").value);
   str = str.replace(/%InstallAllowedSites%/g, document.getElementById("InstallAllowedSites").value);
-  fos.write(str, str.length); 
+  cos.writeString(str);
   
 /* Add toolbar/bookmark stuff at end */
 
   str = document.getElementById('ToolbarFolder1').value;
   if (str && str.length) {
     str = "ToolbarFolder1=" + str + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     for (var i=1; i <= 5; i++) {
       str = document.getElementById("ToolbarFolder1.BookmarkTitle" + i).value;
       if (str && str.length) {
         str = "ToolbarFolder1.BookmarkTitle" + i + "=" + str + "\n";
-        fos.write(str, str.length);
+        cos.writeString(str);
       }
       str = document.getElementById("ToolbarFolder1.BookmarkURL" + i).value;
       if (str && str.length) {
         str = "ToolbarFolder1.BookmarkURL" + i + "=" + str + "\n";
-        fos.write(str, str.length);
+        cos.writeString(str);
       }
     }
   }
@@ -1079,29 +1093,29 @@ function CCKWriteProperties(destdir)
     str = document.getElementById("ToolbarBookmarkTitle" + i).value;
     if (str && str.length) {
       str = "ToolbarBookmarkTitle" + i + "=" + str + "\n";
-      fos.write(str, str.length);
+      cos.writeString(str);
     }
     str = document.getElementById("ToolbarBookmarkURL" + i).value;
     if (str && str.length) {
       str = "ToolbarBookmarkURL" + i + "=" + str + "\n";
-      fos.write(str, str.length);
+      cos.writeString(str);
     }
   }
 
   str = document.getElementById('BookmarkFolder1').value;
   if (str && str.length) {
     str = "BookmarkFolder1=" + str + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     for (var i=1; i <= 5; i++) {
       str = document.getElementById("BookmarkFolder1.BookmarkTitle" + i).value;
       if (str && str.length) {
         str = "BookmarkFolder1.BookmarkTitle" + i + "=" + str + "\n";
-        fos.write(str, str.length);
+        cos.writeString(str);
       }
       str = document.getElementById("BookmarkFolder1.BookmarkURL" + i).value;
       if (str && str.length) {
         str = "BookmarkFolder1.BookmarkURL" + i + "=" + str + "\n";
-        fos.write(str, str.length);
+        cos.writeString(str);
       }
     }
   }
@@ -1110,12 +1124,12 @@ function CCKWriteProperties(destdir)
     str = document.getElementById("BookmarkTitle" + i).value;
     if (str && str.length) {
       str = "BookmarkTitle" + i + "=" + str + "\n";
-      fos.write(str, str.length);
+      cos.writeString(str);
     }
     str = document.getElementById("BookmarkURL" + i).value;
     if (str && str.length) {
       str = "BookmarkURL" + i + "=" + str + "\n";
-      fos.write(str, str.length);
+      cos.writeString(str);
     }
   }
   
@@ -1124,18 +1138,18 @@ function CCKWriteProperties(destdir)
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
     str = "RegName" + (i+1) + "=" + listitem.label + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     str = "RootKey" + (i+1) + "=" + listitem.rootkey + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     str = "Key" + (i+1) + "=" + listitem.key + "\n";
     str = str.replace(/\\/g, "\\\\");
-    fos.write(str, str.length);
+    cos.writeString(str);
     str = "Name" + (i+1) + "=" + listitem.name + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     str = "NameValue" + (i+1) + "=" + listitem.namevalue + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
     str = "Type" + (i+1) + "=" + listitem.type + "\n";
-    fos.write(str, str.length);
+    cos.writeString(str);
   }
   
   for (var i = 1; i <= 5; ++i) {
@@ -1145,9 +1159,10 @@ function CCKWriteProperties(destdir)
                            .createInstance(Components.interfaces.nsILocalFile);
       file.initWithPath(certpath);
       var line = "Cert"+ i + "=" + file.leafName + "\n";
-      fos.write(line, line.length);
+      cos.writeString(str);
     }
-  }  
+  }
+  cos.close();
   fos.close();
 }
 
@@ -1156,6 +1171,7 @@ function CCKWriteDefaultJS(destdir)
   var throbber1 = 'pref("browser.throbber.url",            "chrome://cck/content/cck.properties");\n';
   var homepage1 = 'pref("browser.startup.homepage",        "chrome://cck/content/cck.properties");\n';
   var homepage2 = 'pref("browser.startup.homepage_reset",  "chrome://cck/content/cck.properties");\n';
+  var homepage3 = 'pref("startup.homepage_override_url",   "chrome://cck/content/cck.properties");\n';  
   var useragent1begin = 'pref("general.useragent.vendorComment", "CK-';
   var useragent2begin = 'pref("general.useragent.extra.cck", "(CK-';
 
@@ -1175,9 +1191,13 @@ function CCKWriteDefaultJS(destdir)
   }
 
   var browserstartuppage = document.getElementById("HomePageURL").value;
+  var overrideurl = document.getElementById('HomePageOverrideURL').value;
   if (browserstartuppage && (browserstartuppage.length > 0)) {
     fos.write(homepage1, homepage1.length);
-    fos.write(homepage2, homepage2.length);    
+    fos.write(homepage2, homepage2.length);
+    fos.write(homepage3, homepage3.length);    
+  } else if (overrideurl && overrideurl.length) {
+    fos.write(homepage3, homepage3.length);    
   }
   
   var useragent = document.getElementById("OrganizationName").value;
@@ -1233,7 +1253,7 @@ function CCKWriteDefaultJS(destdir)
       fos.write(line, line.length);
       break;
     case "2":
-      var proxystringlist = ["autoproxyurl" ];
+      var proxystringlist = ["autoproxyurl"];
   
       for (i = 0; i < proxystringlist.length; i++) {
         var proxyitem = document.getElementById(proxystringlist[i]);
@@ -1242,6 +1262,17 @@ function CCKWriteDefaultJS(destdir)
           fos.write(line, line.length);
         }
       }
+      
+      var proxyintegerlist = ["ProxyType"];
+
+      for (i = 0; i < proxyintegerlist.length; i++) {
+        var proxyitem = document.getElementById(proxyintegerlist[i]);
+        if (proxyitem.value.length > 0) {
+          var line = 'pref("' + proxyitem.getAttribute("preference") + '", ' + proxyitem.value + ');\n';
+          fos.write(line, line.length);
+        }
+      }
+
       break;
   }
 
