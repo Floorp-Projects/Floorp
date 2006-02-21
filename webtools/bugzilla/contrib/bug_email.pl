@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.31 2005/11/25 21:57:07 timeless%mozdev.org Exp $
+# $Id: bug_email.pl,v 1.32 2006/02/21 14:51:47 jocuri%softhome.net Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -292,16 +292,11 @@ sub Reply( $$$$ ) {
 # prios 
 sub getEnumList( $ )
 {
+    my $dbh = Bugzilla->dbh;
     my ($fieldname) = @_;
-    SendSQL( "describe bugs $fieldname" );
-    my ($f, $type) = FetchSQLData();
+    my $result = $dbh->selectcol_arrayref(qq{SELECT value FROM $fieldname});
 
-    # delete unneeded stuff
-    $type =~ s/enum\(|\)//g;
-    $type =~ s/\',//g;
-
-    my @all_prios = split( /\'/, $type );
-    return( @all_prios );
+    return($result);
 }
 
 ###############################################################
@@ -312,12 +307,12 @@ sub getEnumList( $ )
 sub CheckPriority
 {
     my $prio = $Control{'priority'};
-    my @all_prios = getEnumList( "priority" );
+    my $all_prios = getEnumList( "priority" );
 
-    if( $prio eq "" || (lsearch( \@all_prios, $prio ) == -1)  ) {
+    if( $prio eq "" || (lsearch( $all_prios, $prio ) == -1)  ) {
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong priority-setting, valid values are:" .
-            join( "\n\t", @all_prios ) . "\n\n";
+            join( "\n\t", @$all_prios ) . "\n\n";
         $Text .= "*  The priority is set to the default value ". 
             SqlQuote( Param('defaultpriority')) . "\n";
 
@@ -336,12 +331,12 @@ sub CheckPriority
 sub CheckSeverity
 {
     my $sever = ($Control{'bug_severity'} ||= "" );
-    my @all_sever = getEnumList( "bug_severity" );
+    my $all_sever = getEnumList( "bug_severity" );
 
-    if( (lsearch( \@all_sever, $sever ) == -1) || $sever eq "" ) {
+    if( (lsearch($all_sever, $sever) == -1) || $sever eq "" ) {
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong bug_severity-setting, valid values are:" .
-            join( "\n\t", @all_sever ) . "\n\n";
+            join( "\n\t", @$all_sever ) . "\n\n";
         $Text .= "*  The bug_severity is set to the default value ". 
             SqlQuote( "normal" ) . "\n";
 
@@ -358,12 +353,12 @@ sub CheckSeverity
 sub CheckArea
 {
     my $area = ($Control{'area'} ||= "" );
-    my @all= getEnumList( "area" );
+    my $all = getEnumList( "area" );
 
-    if( (lsearch( \@all, $area ) == -1) || $area eq "" ) {
+    if( (lsearch($all, $area) == -1) || $area eq "" ) {
         # OK, Area was not defined - create Answer
         my $Text = "You sent wrong area-setting, valid values are:" .
-            join( "\n\t", @all ) . "\n\n";
+            join( "\n\t", @$all ) . "\n\n";
         $Text .= "*  The area is set to the default value ". 
             SqlQuote( "BUILD" ) . "\n";
 
@@ -380,12 +375,12 @@ sub CheckArea
 sub CheckPlatform
 {
     my $platform = ($Control{'rep_platform'} ||= "" );
-    my @all = getEnumList( "rep_platform" );
+    my $all = getEnumList( "rep_platform" );
 
-    if( (lsearch( \@all, $platform ) == -1) ||  $platform eq "" ) {
+    if( (lsearch($all, $platform) == -1) ||  $platform eq "" ) {
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong platform-setting, valid values are:" .
-            join( "\n\t", @all ) . "\n\n";
+            join( "\n\t", @$all ) . "\n\n";
         $Text .= "*  The rep_platform is set to the default value ". 
             SqlQuote( "All" ) . "\n";
 
@@ -402,12 +397,12 @@ sub CheckPlatform
 sub CheckSystem
 {
     my $sys = ($Control{'op_sys'} ||= "" );
-    my @all = getEnumList( "op_sys" );
+    my $all = getEnumList( "op_sys" );
 
-    if(  (lsearch( \@all, $sys ) == -1) || $sys eq "" ) {
+    if(  (lsearch( $all, $sys ) == -1) || $sys eq "" ) {
         # OK, Prio was not defined - create Answer
         my $Text = "You sent wrong OS-setting, valid values are:" .
-            join( "\n\t", @all ) . "\n\n";
+            join( "\n\t", @$all ) . "\n\n";
         $Text .= "*  The op_sys is set to the default value ". 
             SqlQuote( "Linux" ) . "\n";
 
