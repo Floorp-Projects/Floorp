@@ -107,3 +107,5 @@ include $(topsrcdir)/config/rules.mk
 sqlite-shell.$(OBJ_SUFFIX): shell.c
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
+# next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
+LOCAL_INCLUDES += -I$(srcdir)
