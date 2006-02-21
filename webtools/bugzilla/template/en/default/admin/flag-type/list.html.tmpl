@@ -87,6 +87,7 @@
     <tr>
       <th>Edit name ...</th>
       <th>Description</th>
+      <th>Sortkey</th>
       <th>Actions</th>
     </tr>
 
@@ -95,6 +96,7 @@
       <tr class="[% IF type.is_active %]active[% ELSE %]inactive[% END %]">
         <td><a href="editflagtypes.cgi?action=edit&amp;id=[% type.id %]">[% type.name FILTER html FILTER no_break %]</a></td>
         <td>[% type.description FILTER html %]</td>
+        <td align="right">[% type.sortkey FILTER html %]</td>
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
           | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"
