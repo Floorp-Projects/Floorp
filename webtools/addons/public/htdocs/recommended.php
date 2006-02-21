@@ -7,7 +7,7 @@
  * @todo make this dynamic based on an SQL field (recommended)
  */
 
-startProcessing('recommended.tpl', $cacheId, $compileId, 'nonav');
+startProcessing('recommended.tpl', 'recommended', $compileId, 'nonav');
 require_once('includes.php');
 
 // If app is not set or empty, set it to null for our switch.

@@ -12,7 +12,10 @@
  * @todo fix CSS so the pull-downs look symmetrical before design freaks start crying.
  */
 
-startProcessing('search.tpl',null,null,'nonav');
+// Get our cache_id based on what we have in our query string.
+$cacheId = md5($_SERVER['QUERY_STRING']);
+
+startProcessing('search.tpl',$cacheId,$compileId,'nonav');
 require_once('includes.php');
 
 // Array to store our page information.

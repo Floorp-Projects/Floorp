@@ -13,13 +13,36 @@
 
 
 
+
+/**
+ * CHECK CACHE
+ *
+ * Check to see if we already have a matching cacheId.
+ * If it exists, we can pull from it and exit; and avoid recompiling.
+ */
+// Determine a cacheId based on params.
+$cacheId = md5($_SERVER['QUERY_STRING']);
+
+$tpl = new AMO_Smarty();
+
+// Set our cache timeout to 1 hour.
+$tpl->caching = true;
+$tpl->cache_timeout = 3600;
+
+if ($tpl->is_cached('update.tpl',$cacheId)) {
+    header("Content-type: text/xml");
+    $tpl->display('update.tpl',$cacheId);
+    exit;
+}
+
+
+
+
 /*
  *  VARIABLES
  *
  *  Initialize, set up and clean variables.
  */
-
-
 
 // Map the mysql main.type enum into the right type.
 $ext_typemap = array('T' => 'theme',
@@ -49,29 +72,6 @@ foreach ($required_vars as $var) {
     } else {
         $sql[$var] = mysql_real_escape_string($_GET[$var]);
     }
-}
-
-// Determine a cache_id based on params.
-$cache_id = $sql['os_id'] . implode('',$sql);
-
-
-
-/**
- * CHECK CACHE
- *
- * Check to see if we already have a matching cache_id.
- * If it exists, we can pull from it and exit; and avoid recompiling.
- */
-$tpl = new AMO_Smarty();
-
-// Set our cache timeout to 1 hour.
-$tpl->caching = true;
-$tpl->cache_timeout = 3600;
-
-if ($tpl->is_cached('update.tpl',$cache_id)) {
-    header("Content-type: text/xml");
-    $tpl->display('update.tpl',$cache_id);
-    exit;
 }
 
 
@@ -160,7 +160,7 @@ if (empty($errors)) {
  */
 if ($debug!=true) {
     header("Content-type: text/xml");
-    $tpl->display('update.tpl',$cache_id); 
+    $tpl->display('update.tpl',$cacheId); 
     exit;
 }
 
