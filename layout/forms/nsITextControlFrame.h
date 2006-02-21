@@ -43,6 +43,7 @@
 class nsIEditor;
 class nsIDocShell;
 class nsISelectionController;
+class nsIFrameSelection;
 
 #define NS_IGFXTEXTCONTROLFRAME2_IID \
 {/* 0c3b64da-4431-11da-94fd-00e08161165f*/ \
