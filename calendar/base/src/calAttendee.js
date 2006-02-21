@@ -93,7 +93,7 @@ calAttendee.prototype = {
 
     clone: function() {
         var a = new calAttendee();
-        var allProps = ["id", "commonName", "rsvp", "role", "participantStatus",
+        var allProps = ["id", "commonName", "rsvp", "role", "participationStatus",
                         "userType"];
         for (var i in allProps)
             a[allProps[i]] = this[allProps[i]];
