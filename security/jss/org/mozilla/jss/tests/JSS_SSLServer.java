@@ -137,11 +137,15 @@ public class JSS_SSLServer  {
             }
         }
         
-        /* enable all the SSL3 and TLS cipher suites */
-        for (int i = 0; Constants.jssCipherSuites[i] != 0;  ++i) {
+        /**
+         * Enable all the SSL3 and TLS server cipher suites.
+         * Constants.jssCipherSuites[0-9,32,33,37,43]
+         */
+        int [] jssServerCiphers = {0,1,2,3,4,5,6,7,8,9,32,33,37,43};
+        for (int i=0; i<jssServerCiphers.length; i++) {
             try {
                 SSLSocket.setCipherPreferenceDefault(
-                        Constants.jssCipherSuites[i], true);
+                    Constants.jssCipherSuites[jssServerCiphers[i]], true);
             } catch (Exception ex) {
             }
         }
