@@ -1,0 +1,142 @@
+#!/usr/bin/perl
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla Mac OS X Universal Binary Packaging System
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Mark Mentovai <mark@moxienet.com> (Original Author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+use strict;
+use warnings;
+
+use Archive::Zip(':ERROR_CODES');
+
+my ($BUILDCONFIG);
+
+sub fixBuildconfig($$);
+
+$BUILDCONFIG = 'content/global/buildconfig.html';
+
+if (scalar(@ARGV) != 2) {
+  print STDERR ("usage: fix-buildconfig <zipfile1> <zipfile2>\n");
+  exit(1);
+}
+
+if (!fixBuildconfig($ARGV[0], $ARGV[1])) {
+  exit(1);
+}
+
+exit(0);
+
+sub fixBuildconfig($$) {
+  my ($zipPath1, $zipPath2);
+  ($zipPath1, $zipPath2) = @_;
+
+  my ($ze, $zip1, $zip2);
+
+  $zip1 = Archive::Zip->new();
+  if (($ze = $zip1->read($zipPath1)) != AZ_OK) {
+    print STDERR ($0.': could not read "'.$zipPath1.'": error '.$ze."\n");
+    return 0;
+  }
+  $zip2 = Archive::Zip->new();
+  if (($ze = $zip2->read($zipPath2)) != AZ_OK) {
+    print STDERR ($0.': could not read "'.$zipPath2.'": error '.$ze."\n");
+    return 0;
+  }
+
+  my ($contents1, $contents2);
+  if (!defined($contents1 = $zip1->contents($BUILDCONFIG))) {
+    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$zipPath1.'"'.
+                  "\n");
+    return 0;
+  }
+  if (!defined($contents2 = $zip2->contents($BUILDCONFIG))) {
+    print STDERR ($0.': could not get "'.$BUILDCONFIG.'" from "'.$zipPath2.'"'.
+                  "\n");
+    return 0;
+  }
+
+  my (@lines1, @lines2);
+  @lines1 = split(/\n/, $contents1);
+  @lines2 = split(/\n/, $contents2);
+
+  my ($line, @linesNew);
+  @linesNew = ();
+
+  # Copy everything from the first file up to the end of its <body>.
+  while ($line = shift(@lines1)) {
+    if ($line eq '</body>') {
+      last;
+    }
+    push(@linesNew, $line);
+  }
+
+  # Insert a <hr> between the two files.
+  push (@linesNew, '<hr> </hr>');
+
+  # Copy the second file's content beginning after its leading <h1> and <p>.
+  while ($line = shift(@lines2)) {
+    if ($line eq '<p> </p>') {
+      last;
+    }
+  }
+  while ($line = shift(@lines2)) {
+    push(@linesNew, $line);
+  }
+
+  my ($contentsNew);
+  $contentsNew = join("\n", @linesNew);
+
+  if (!defined($zip1->contents($BUILDCONFIG, $contentsNew))) {
+    print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$zipPath1.'"'.
+                  "\n");
+    return 0;
+  }
+  if (!defined($zip2->contents($BUILDCONFIG, $contentsNew))) {
+    print STDERR ($0.': could not set "'.$BUILDCONFIG.'" to "'.$zipPath2.'"'.
+                  "\n");
+    return 0;
+  }
+
+
+  if (($ze = $zip1->overwrite()) != AZ_OK) {
+    print STDERR ($0.': could not write "'.$zipPath1.'": error '.$ze."\n");
+    return 0;
+  }
+  if (($ze = $zip2->overwrite()) != AZ_OK) {
+    print STDERR ($0.': could not write "'.$zipPath2.'": error '.$ze."\n");
+    return 0;
+  }
+
+  return 1;
+}
