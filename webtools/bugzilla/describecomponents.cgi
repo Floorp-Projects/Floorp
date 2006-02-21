@@ -42,28 +42,21 @@ my $product = trim($cgi->param('product') || '');
 my $product_id = get_product_id($product);
 
 if (!$product_id || !$user->can_enter_product($product)) {
-    # Reference to a subset of %::proddesc, which the user is allowed to see
-    my %products;
+    # Products which the user is allowed to see.
+    my @products = @{$user->get_enterable_products()};
 
-    if (AnyEntryGroups()) {
-        # OK, now only add products the user can see
-        Bugzilla->login(LOGIN_REQUIRED);
-        foreach my $p (@::legal_product) {
-            if ($user->can_enter_product($p)) {
-                $products{$p} = $::proddesc{$p};
-            }
-        }
-    }
-    else {
-        %products = %::proddesc;
-    }
-
-    my $prodsize = scalar(keys %products);
-    if ($prodsize == 0) {
+    if (scalar(@products) == 0) {
         ThrowUserError("no_products");
     }
-    elsif ($prodsize > 1) {
-        $vars->{'proddesc'} = \%products;
+    elsif (scalar(@products) > 1) {
+        # XXX - For backwards-compatibility with old template
+        # interfaces, we now create a proddesc hash. This can go away
+        # once we update the templates.
+        my %product_desc;
+        foreach my $product (@products) {
+            $product_desc{$product->name} = $product->description;
+        }
+        $vars->{'proddesc'} = \%product_desc;
         $vars->{'target'} = "describecomponents.cgi";
         # If an invalid product name is given, or the user is not
         # allowed to access that product, a message is displayed
@@ -79,8 +72,9 @@ if (!$product_id || !$user->can_enter_product($product)) {
         exit;
     }
 
-    $product = (keys %products)[0];
-    $product_id = get_product_id($product);
+    # Else, if there is only one product:
+    $product = $products[0]->name;
+    $product_id = $products[0]->id;
 }
 
 ######################################################################

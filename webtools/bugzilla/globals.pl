@@ -57,7 +57,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
-    $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
 }
 
@@ -158,11 +157,10 @@ sub GenerateVersionTable {
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
 
-    SendSQL("SELECT name, description, votesperuser, disallownew$mpart " .
+    SendSQL("SELECT name, votesperuser, disallownew$mpart " .
             "FROM products ORDER BY name");
     while (@line = FetchSQLData()) {
-        my ($p, $d, $votesperuser, $dis, $u) = (@line);
-        $::proddesc{$p} = $d;
+        my ($p, $votesperuser, $dis, $u) = (@line);
         if (!$dis && scalar($::components{$p})) {
             push @::enterable_products, $p;
         }
@@ -241,10 +239,10 @@ sub GenerateVersionTable {
                                    '*::legal_platform', '*::legal_opsys',
                                    '*::legal_bug_status', '*::legal_resolution']));
 
-    print $fh (Data::Dumper->Dump([\@::settable_resolution, \%::proddesc,
+    print $fh (Data::Dumper->Dump([\@::settable_resolution,
                                    \%::classifications,
                                    \@::enterable_products, \%::prodmaxvotes],
-                                  ['*::settable_resolution', '*::proddesc',
+                                  ['*::settable_resolution',
                                    '*::classifications',
                                    '*::enterable_products', '*::prodmaxvotes']));
 
