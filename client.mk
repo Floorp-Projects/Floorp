@@ -22,6 +22,7 @@
 #   Stephen Lamm
 #   Benjamin Smedberg <bsmedberg@covad.net>
 #   Chase Phillips <chase@mozilla.org>
+#   Mark Mentovai <mark@moxienet.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,6 +93,10 @@
 #   MOZ_CO_LOCALES       - localizations to pull (MOZ_CO_LOCALES="de-DE,pt-BR")
 #   MOZ_LOCALE_DIRS      - directories which contain localizations
 #   LOCALES_CVSROOT      - CVSROOT to use to pull localizations
+#   MOZ_PREFLIGHT_ALL  } - Makefiles to run before any project in
+#   MOZ_PREFLIGHT      }   MOZ_BUILD_PROJECTS, before each project, after
+#   MOZ_POSTFLIGHT     }   each project, and after all projects; these
+#   MOZ_POSTFLIGHT_ALL }   variables contain space-separated lists
 #
 
 AVAILABLE_PROJECTS = \
@@ -754,17 +759,43 @@ else
 #####################################################
 # After First Checkout
 
+#####################################################
+# Preflight, before building any project
+
+build profiledbuild alldep preflight_all::
+ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_PREFLIGHT_ALL),,1))
+# Don't run preflight_all for individual projects in multi-project builds
+# (when MOZ_CURRENT_PROJECT is set.)
+ifndef MOZ_BUILD_PROJECTS
+# Building a single project, OBJDIR is usable.
+	set -e; \
+	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
+	  $(MAKE) -f $$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+else
+# OBJDIR refers to the project-specific OBJDIR, which is not available at
+# this point when building multiple projects.  Only MOZ_OBJDIR is available.
+	set -e; \
+	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
+	  $(MAKE) -f $$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+endif
+endif
+
 # If we're building multiple projects, but haven't specified which project,
 # loop through them.
 
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
-configure depend build profiledbuild install export libs clean realclean distclean alldep::
+configure depend build profiledbuild install export libs clean realclean distclean alldep preflight postflight::
 	set -e; \
 	for app in $(MOZ_BUILD_PROJECTS); do \
 	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
 	done
 
 else
+
+# MOZ_CURRENT_PROJECT: either doing a single-project build, or building an
+# individual project in a multi-project build.
 
 ####################################
 # Configure
@@ -837,6 +868,17 @@ depend:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) export && $(MOZ_MAKE) depend
 
 ####################################
+# Preflight
+
+build profiledbuild alldep preflight::
+ifdef MOZ_PREFLIGHT
+	set -e; \
+	for mkfile in $(MOZ_PREFLIGHT); do \
+	  $(MAKE) -f $$mkfile preflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+endif
+
+####################################
 # Build it
 
 build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
@@ -864,7 +906,41 @@ profiledbuild:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 install export libs clean realclean distclean alldep:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
+####################################
+# Postflight
+
+build profiledbuild alldep postflight::
+ifdef MOZ_POSTFLIGHT
+	set -e; \
+	for mkfile in $(MOZ_POSTFLIGHT); do \
+	  $(MAKE) -f $$mkfile postflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+endif
+
 endif # MOZ_CURRENT_PROJECT
+
+####################################
+# Postflight, after building all projects
+
+build profiledbuild alldep postflight_all::
+ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_POSTFLIGHT_ALL),,1))
+# Don't run postflight_all for individual projects in multi-project builds
+# (when MOZ_CURRENT_PROJECT is set.)
+ifndef MOZ_BUILD_PROJECTS
+# Building a single project, OBJDIR is usable.
+	set -e; \
+	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
+	  $(MAKE) -f $$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+else
+# OBJDIR refers to the project-specific OBJDIR, which is not available at
+# this point when building multiple projects.  Only MOZ_OBJDIR is available.
+	set -e; \
+	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
+	  $(MAKE) -f $$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	done
+endif
+endif
 
 cleansrcdir:
 	@cd $(TOPSRCDIR); \
@@ -884,4 +960,4 @@ endif
 echo_objdir:
 	@echo $(OBJDIR)
 
-.PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure
+.PHONY: checkout real_checkout depend build export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all
