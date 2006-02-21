@@ -52,6 +52,18 @@ import java.security.PrivateKey;
 import java.net.*;
 import java.io.*;
 
+/**
+ * JSS_SSLClient class enables a cipher or
+ * all supported JSS ciphers and tries to 
+ * communicate with a SSL server. This can be
+ * used to test interoperability with other
+ * SSL implementations such as JSSE, OpenSSL.
+ * The result is a listing of common ciphers 
+ * between the server and this JSS client.
+ *
+ * @author  Sandeep.Konchady@Sun.COM
+ * @version 1.0
+ */
 public class JSS_SSLClient {
     
     private String  clientCertNick      = null;
@@ -215,20 +227,29 @@ public class JSS_SSLClient {
         
         SSLSocket sock = null;
         
-        if (TestCertCallBack) {
-            if ( Constants.debug_level >= 3 )
-                System.out.println("calling approvalCallBack");
-            sock = new SSLSocket(InetAddress.getByName(hostAddr),
+        try {
+            if (TestCertCallBack) {
+                if ( Constants.debug_level >= 3 )
+                    System.out.println("calling approvalCallBack");
+                sock = new SSLSocket(InetAddress.getByName(hostAddr),
                     port,
                     null,
                     0,
                     new TestCertApprovalCallback(),
                     null);
-        } else {
-            if ( Constants.debug_level >= 3 )
-                System.out.println("NOT calling approvalCallBack");
-            sock = new SSLSocket(InetAddress.getByName(hostAddr),
+            } else {
+                if ( Constants.debug_level >= 3 )
+                    System.out.println("NOT calling approvalCallBack");
+                sock = new SSLSocket(InetAddress.getByName(hostAddr),
                     port);
+            }
+        } catch (Exception ex) {
+            if (Constants.debug_level > 3) {
+                System.out.println("Could not connect to server socket\n" + 
+                                   ex.getMessage());
+                ex.printStackTrace();
+            }
+            System.exit(0);
         }
         
         if (testBypass) {
@@ -243,7 +264,7 @@ public class JSS_SSLClient {
         }
         if ( Constants.debug_level >= 3 ) {
             System.out.println("Client specified cert by nickname");
-            System.out.println("client connected");
+            System.out.println("client connected ...");
         }
         
         // Set socket timeout to 10 sec
@@ -251,23 +272,21 @@ public class JSS_SSLClient {
         sock.addHandshakeCompletedListener(
                 new HandshakeListener("client",this));
         
-        // force the handshake
-        sock.forceHandshake();
-        if ( Constants.debug_level >= 3 )
-            System.out.println("client forced handshake");
-        
         PrintWriter out = new PrintWriter(
-                new BufferedWriter(
-                new OutputStreamWriter(sock.getOutputStream())));
-        out.println(EOF);
+            new BufferedWriter(
+            new OutputStreamWriter(sock.getOutputStream())));
+
+        out.println(EOF + "\n");
         out.flush();
         
-    /*
-     * Make sure there were no surprises
-     */
+        /**
+         * Make sure there were no surprises
+         */
         if (out.checkError())
-            System.out.println("SSLSocketClient: java.io.PrintWriter error");
-        sock.close();
+            System.out.println("JSS_SSLClient: java.io.PrintWriter error");
+        try {
+            sock.close();
+        } catch (Exception e) {}
     }
     
     /**
@@ -330,7 +349,7 @@ public class JSS_SSLClient {
         String  usage      = "USAGE:\n" +
                 "java org.mozilla.jss.tests.JSS_SSLClient" +
                 " <cert db path> <password file>\n" +
-                " [server port] [bypass] [test cipher] [server host] ";
+                " [server host] [server port] [bypass] [test cipher] ";
         
         try {
             if ( ((String)args[0]).toLowerCase().equals("-h") || 
@@ -348,22 +367,22 @@ public class JSS_SSLClient {
                 setCertDbPath(certDbPath);
             
             if ( args.length >= 3) {
-                testport   = new Integer(args[2]).intValue();
-                System.out.println("using port: " + testport);
+                testhost   = (String)args[2];
+                System.out.println("testhost" + testhost);
             }
             
-            if ((args.length >= 4) && 
-                args[3].equalsIgnoreCase("bypass")== true) {
-                bypass = true;
+            if (args.length >= 4) {
+                testport   = new Integer(args[3]).intValue();
+                System.out.println("using port: " + testport);
             }
 
-            if ( args.length >= 5 ) {
-                testCipher = new Integer(args[4]).intValue();
-                System.out.println("testCipher " + testCipher);
+            if ((args.length >= 5) && 
+                args[4].equalsIgnoreCase("bypass")== true) {
+                bypass = true;
             }
             if ( args.length == 6 ) {
-                testhost   = (String)args[5];
-                System.out.println("testhost" + testhost);
+                testCipher = new Integer(args[5]).intValue();
+                System.out.println("testCipher " + testCipher);
             }
             
             Thread.sleep(5000);
@@ -425,8 +444,7 @@ public class JSS_SSLClient {
                 for ( int i=0; i<Constants.jssCipherSuites.length; i++ ) {
                     try {
                         jssTest.setCipher(Constants.jssCipherSuites[i]);
-                        jssTest.setEOF(new Integer(
-                                Constants.jssCipherSuites[i]).toString());
+                        jssTest.setEOF(new Integer(i).toString());
                         jssTest.doIt();
                         while (!jssTest.isHandshakeCompleted()) {
                             // Put the main thread to sleep.  In case we do not

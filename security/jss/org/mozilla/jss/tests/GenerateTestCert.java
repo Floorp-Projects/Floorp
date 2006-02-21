@@ -34,6 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * GenerateTestCert is a class for generating test certificate,
+ * both private and public pairs. This certificate is generated
+ * with 512 bit RSA using Mozilla-JSS provider. The cert name
+ * is "JSSCATestCert".
+ *
+ * @author      Sandeep Konchady
+ * @version     1.0
+ */
+
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.CryptoManager;
