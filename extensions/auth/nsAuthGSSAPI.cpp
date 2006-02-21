@@ -140,25 +140,64 @@ gssInit()
         lib = PR_LoadLibrary(libPath.get());
     }
     else {
-        const char *const libNames[] = {
 #ifdef XP_WIN
-            "gssapi32"
+        char *libName = PR_GetLibraryName(NULL, "gssapi32");
+        if (libName) {
+            lib = PR_LoadLibrary("gssapi32");
+            PR_FreeLibraryName(libName);
+        }
 #else
+        
+        const char *const libNames[] = {
             "gss",
             "gssapi_krb5",
             "gssapi"
-#endif
         };
+        
+        const char *const verLibNames[] = {
+            "libgssapi_krb5.so.2", /* MIT - FC, Suse10, Debian */
+            "libgssapi.so.4",      /* Heimdal - Suse10, MDK */
+            "libgssapi.so.1"       /* Heimdal - Suse9, CITI - FC, MDK, Suse10*/
+        };
+
+        for (size_t i = 0; i < NS_ARRAY_LENGTH(verLibNames) && !lib; ++i) {
+            lib = PR_LoadLibrary(verLibNames[i]);
+ 
+            /* The CITI libgssapi library calls exit() during
+             * initialization if it's not correctly configured. Try to
+             * ensure that we never use this library for our GSSAPI
+             * support, as its just a wrapper library, anyway.
+             * See Bugzilla #325433
+             */
+            if (lib &&
+                PR_FindFunctionSymbol(lib, 
+                                      "internal_krb5_gss_initialize") &&
+                PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
+                LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
+                PR_UnloadLibrary(lib);
+                lib = NULL;
+            }
+        }
 
         for (size_t i = 0; i < NS_ARRAY_LENGTH(libNames) && !lib; ++i) {
             char *libName = PR_GetLibraryName(NULL, libNames[i]);
             if (libName) {
                 lib = PR_LoadLibrary(libName);
                 PR_FreeLibraryName(libName);
+
+                if (lib &&
+                    PR_FindFunctionSymbol(lib, 
+                                          "internal_krb5_gss_initialize") &&
+                    PR_FindFunctionSymbol(lib, "gssd_pname_to_uid")) {
+                    LOG(("CITI libgssapi found, which calls exit(). Skipping\n"));
+                    PR_UnloadLibrary(lib);
+                    lib = NULL;
+                } 
             }
         }
+#endif
     }
-
+    
     if (!lib) {
         LOG(("Fail to load gssapi library\n"));
         return NS_ERROR_FAILURE;
