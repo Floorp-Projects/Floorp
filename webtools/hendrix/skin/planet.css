@@ -75,4 +75,25 @@ h1 {
   background-repeat: no-repeat;
   background-position: 2.5% 50%;
   padding-left: 80px;
+  clear: right;
+}
+
+
+body {
+  background: #fff url("http://www.mozilla.org/images/subsite_back.gif") repeat-x;
+  margin: 20px;
+  margin-top: 0;
+  padding-top: 0; 
+  min-width: 610px;
+}
+
+#mozilla-org a {
+  float: right;
+  display: block;
+  text-indent: -5000em;
+  width: 110px;
+  height: 25px;
+  text-decoration: none;
+  background: url("http://www.mozilla.org/images/subsite_mozilla-org.gif") no-repeat;
+  margin-bottom: 1.5em;
 }
