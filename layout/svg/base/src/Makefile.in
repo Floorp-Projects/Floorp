@@ -108,6 +108,7 @@ FORCE_STATIC_LIB = 1
 EXPORTS = \
 	nsSVGUtils.h \
 	nsSVGFilterInstance.h \
+        nsSVGForeignObjectFrame.h \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

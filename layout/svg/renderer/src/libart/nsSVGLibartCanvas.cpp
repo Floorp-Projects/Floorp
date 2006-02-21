@@ -158,13 +158,10 @@ NS_INTERFACE_MAP_END
 
 /** Implements [noscript] nsIRenderingContext lockRenderingContext(const in nsRectRef rect); */
 NS_IMETHODIMP
-nsSVGLibartCanvas::LockRenderingContext(const nsRect & rect,
+nsSVGLibartCanvas::LockRenderingContext(nsIDOMSVGMatrix* aCTM,
                                         nsIRenderingContext **_retval)
 {
-  *_retval = nsnull;
-  mBitmap->LockRenderingContext(rect, _retval);
-  if (!*_retval) return NS_ERROR_FAILURE;
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /** Implements void unlockRenderingContext(); */
