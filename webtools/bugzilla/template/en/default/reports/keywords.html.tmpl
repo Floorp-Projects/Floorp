@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  # Contributor(s): David D. Kilzer <ddkilzer@kilzer.net>
   #%]
 
 [%# INTERFACE:
@@ -43,7 +44,8 @@
       <tr bgcolor="#6666FF">
         <th align="left">Name</th>
         <th align="left">Description</th>
-        <th align="left">[% terms.Bugs %]</th>
+        <th align="left">Open [% terms.Bugs %]</th>
+        <th align="left">Total [% terms.Bugs %]</th>
       </tr>
   [% END %]
 
@@ -53,6 +55,14 @@
         [% keyword.name FILTER html %]</a>
     </th>
     <td>[% keyword.description %]</td>
+    <td align="center">
+      [% IF keyword.bugcount > 0 %]
+        <a href="buglist.cgi?keywords=[% keyword.name FILTER url_quote %]&amp;resolution=---">
+          Search</a>
+      [% ELSE %]
+        none
+      [% END %]
+    </td>
     <td align="right">
       [% IF keyword.bugcount > 0 %]
         <a href="buglist.cgi?keywords=[% keyword.name FILTER url_quote %]">
