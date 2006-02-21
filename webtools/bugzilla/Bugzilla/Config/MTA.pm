@@ -91,6 +91,7 @@ X-Bugzilla-Product: %product%
 X-Bugzilla-Component: %component%
 X-Bugzilla-Keywords: %keywords%
 X-Bugzilla-Severity: %severity%
+X-Bugzilla-Who: %changer%
 
 %urlbase%show_bug.cgi?id=%bugid%
 

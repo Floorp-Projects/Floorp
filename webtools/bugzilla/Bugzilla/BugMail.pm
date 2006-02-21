@@ -187,6 +187,8 @@ sub ProcessOneBug {
     }
     
     # Convert to names, for later display
+    $values{'changer'} = $changer;
+    $values{'changername'} = Bugzilla::User->new_from_login($changer)->name;
     $values{'assigned_to'} = &::DBID_to_name($values{'assigned_to'});
     $values{'reporter'} = &::DBID_to_name($values{'reporter'});
     if ($values{'qa_contact'}) {
@@ -610,6 +612,8 @@ sub sendMail {
     $substs{"reasonsheader"} = join(" ", map { $rel_names{$_} } @$relRef);
     $substs{"reasonsbody"} = $reasonsbody;
     $substs{"space"} = " ";
+    $substs{"changer"} = $values{'changer'};
+    $substs{"changername"} = $values{'changername'};
     if ($isnew) {
         $substs{'threadingmarker'} = "Message-ID: <bug-$id-" . 
                                      $user->id . "$sitespec>";
