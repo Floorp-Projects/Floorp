@@ -2299,7 +2299,6 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   // <textarea> or text <input>, we need to get the outer frame
   // note: frames are not refcounted
   nsIFrame* frame = nsnull; // may be NULL
-  nsITextControlFrame* tcFrame = nsnull; // may be NULL
   nsCOMPtr<nsIDOMNode> node;
   rv = domSelection->GetFocusNode(getter_AddRefs(node));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -2307,10 +2306,7 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   for ( ; content; content = content->GetParent()) {
     if (!content->IsNativeAnonymous()) {
       frame = aShell->GetPrimaryFrameFor(content);
-      if (frame) {
-        // not refcounted, will be NULL for some elements
-        CallQueryInterface(frame, &tcFrame);
-      }
+      NS_ASSERTION(frame, "No frame for focused content?");
       break;
     }
   }
@@ -2340,8 +2336,9 @@ nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
   // Be easy about errors, and just don't scroll in those cases. Better to have
   // the correct menu at a weird place than the wrong menu.
   nsCOMPtr<nsISelectionController> selCon;
-  if (tcFrame)
-    tcFrame->GetSelectionContr(getter_AddRefs(selCon));
+  if (frame)
+    frame->GetSelectionController(aShell->GetPresContext(),
+                                  getter_AddRefs(selCon));
   else
     selCon = do_QueryInterface(aShell);
   if (selCon) {

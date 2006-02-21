@@ -87,7 +87,8 @@ public:
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd) = 0;
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd) = 0;
 
-  NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon) = 0;
+  virtual nsISelectionController* GetOwnedSelectionController() = 0;
+  virtual nsIFrameSelection* GetOwnedFrameSelection() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlFrame,

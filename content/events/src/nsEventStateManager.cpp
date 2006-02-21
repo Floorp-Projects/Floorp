@@ -1408,29 +1408,13 @@ nsEventStateManager::GetSelection(nsIFrame* inFrame,
                                   nsPresContext* inPresContext,
                                   nsIFrameSelection** outSelection)
 {
-  *outSelection = nsnull;
-
-  if (inFrame) {
-    nsCOMPtr<nsISelectionController> selCon;
-    nsresult rv = inFrame->GetSelectionController(inPresContext, getter_AddRefs(selCon));
-
-    if (NS_SUCCEEDED(rv) && selCon) {
-      nsCOMPtr<nsIFrameSelection> frameSel;
-
-      frameSel = do_QueryInterface(selCon);
-
-      if (! frameSel) {
-        nsIPresShell *shell = inPresContext->GetPresShell();
-        if (shell)
-          frameSel = shell->FrameSelection();
-      }
-
-      *outSelection = frameSel.get();
-      NS_IF_ADDREF(*outSelection);
-    }
+  if (!inFrame || !outSelection) {
+    NS_ERROR("Invalid call");
+    return;
   }
-
-} // GetSelection
+  *outSelection = inFrame->GetFrameSelection();
+  NS_IF_ADDREF(*outSelection);
+}
 
 void
 nsEventStateManager::FillInEventFromGestureDown(nsMouseEvent* aEvent)

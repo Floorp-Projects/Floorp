@@ -101,20 +101,8 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
     return PR_FALSE;
 
   SelectionDetails* details = nsnull;
-  nsIPresShell *shell = GetPresContext()->GetPresShell();
-  if (shell) {
-    nsCOMPtr<nsIFrameSelection> frameSelection;
-    nsCOMPtr<nsISelectionController> selCon;
-    nsresult rv = GetSelectionController(GetPresContext(),
-                                         getter_AddRefs(selCon));
-    if (NS_SUCCEEDED(rv) && selCon)
-      frameSelection = do_QueryInterface(selCon);
-    if (!frameSelection)
-      frameSelection = shell->FrameSelection();
-
-    frameSelection->LookUpSelection(aFrame->GetContent(),
-				    0, 1, &details, PR_TRUE);
-  }
+  aFrame->GetFrameSelection()->LookUpSelection(aFrame->GetContent(),	 0, 1,
+                                               &details, PR_TRUE);
   if (!details)
     return PR_FALSE;
 

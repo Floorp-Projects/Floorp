@@ -426,19 +426,14 @@ void nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
       if (!frame)
         return;
       CallQueryInterface(frame, &tcFrame);
-
       break;
     }
   }
 
   nsCOMPtr<nsISelection> selection;
   nsCOMPtr<nsISelectionController> selCon;
-  if (!tcFrame) {
-    selCon = do_QueryInterface(presShell);
-  }
-  else {
-    tcFrame->GetSelectionContr(getter_AddRefs(selCon));
-  }
+  frame->GetSelectionController(presShell->GetPresContext(),
+                                getter_AddRefs(selCon));
 
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
