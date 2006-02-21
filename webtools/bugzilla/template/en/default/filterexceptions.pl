@@ -354,7 +354,9 @@
 
 'bug/show-multiple.html.tmpl' => [
   'bug.bug_id', 
-  'bug.deadline',
+  'depbug FILTER bug_link(depbug)',
+  'attachment.id', 
+  'flag.status',
 ],
 
 'bug/show.html.tmpl' => [
