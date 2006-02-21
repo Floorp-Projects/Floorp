@@ -188,6 +188,13 @@ struct JSGCArena {
  */
 #define PAGE_THING_GAP(n) (((n) & ((n) - 1)) ? (GC_PAGE_SIZE % (n)) : (n))
 
+JS_STATIC_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
+JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSObject));
+JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
+JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
+JS_STATIC_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
+JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
+
 #ifdef JS_GCMETER
 # define METER(x) x
 #else
@@ -362,13 +369,6 @@ JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     uintN i;
-
-    JS_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
-    JS_ASSERT(sizeof(JSGCThing) >= sizeof(JSObject));
-    JS_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
-    JS_ASSERT(sizeof(JSGCThing) >= sizeof(jsdouble));
-    JS_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
-    JS_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
 
     for (i = 0; i < GC_NUM_FREELISTS; i++)
         InitGCArenaList(&rt->gcArenaList[i]);

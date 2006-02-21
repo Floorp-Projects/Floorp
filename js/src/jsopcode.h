@@ -45,6 +45,8 @@
 #include <stddef.h>
 #include "jsprvtd.h"
 #include "jspubtd.h"
+#include "jsconfig.h"
+#include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -179,6 +181,11 @@ typedef enum JSOp {
 /* Atom index limit is determined by SN_3BYTE_OFFSET_FLAG, see jsemit.h. */
 #define ATOM_INDEX_LIMIT_LOG2   23
 #define ATOM_INDEX_LIMIT        ((uint32)1 << ATOM_INDEX_LIMIT_LOG2)
+
+#if JS_HAS_SHARP_VARS
+JS_STATIC_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >=
+                 ATOM_INDEX_LIMIT_LOG2 + 1);
+#endif
 
 /* Actual argument count operand format helpers. */
 #define ARGC_HI(argc)           ((jsbytecode)((argc) >> 8))

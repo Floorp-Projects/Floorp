@@ -82,6 +82,9 @@ const char *js_type_strs[] = {
     "xml",
 };
 
+JS_STATIC_ASSERT(JSTYPE_LIMIT ==
+                 sizeof js_type_strs / sizeof js_type_strs[0]);
+
 const char *js_boolean_strs[] = {
     js_false_str,
     js_true_str
@@ -293,7 +296,6 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
             return JS_FALSE;                                                  \
     JS_END_MACRO
 
-    JS_ASSERT(sizeof js_type_strs / sizeof js_type_strs[0] == JSTYPE_LIMIT);
     for (i = 0; i < JSTYPE_LIMIT; i++)
         FROB(typeAtoms[i],        js_type_strs[i]);
 
