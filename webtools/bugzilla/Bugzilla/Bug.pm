@@ -23,7 +23,7 @@
 #                 Bradley Baetz  <bbaetz@acm.org>
 #                 Dave Miller    <justdave@bugzilla.org>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 #                 Lance Larsh <lance.larsh@oracle.com>
 
 package Bugzilla::Bug;
@@ -722,7 +722,7 @@ sub AppendComment {
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
-    $timestamp =  "NOW()" unless $timestamp;
+    $timestamp ||= $dbh->selectrow_array('SELECT NOW()');
 
     $comment =~ s/\r\n/\n/g;     # Handle Windows-style line endings.
     $comment =~ s/\r/\n/g;       # Handle Mac-style line endings.
