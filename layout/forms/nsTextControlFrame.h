@@ -136,7 +136,10 @@ public:
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon);
+  virtual nsISelectionController* GetOwnedSelectionController()
+    { return mSelCon; }
+  virtual nsIFrameSelection* GetOwnedFrameSelection()
+    { return mFrameSel; }
 
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
@@ -155,8 +158,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 public: //for methods who access nsTextControlFrame directly
-
-  void FireOnInput();//notify that we have some kind of change.
   /**
    * Find out whether this is a single line text control.  (text or password)
    * @return whether this is a single line text control
@@ -177,6 +178,7 @@ public: //for methods who access nsTextControlFrame directly
    * @return whether this is a password ontrol
    */
   PRBool IsPasswordTextControl() const;
+  void FireOnInput();
   void SetValueChanged(PRBool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
   nsresult InitFocusedValue();
@@ -232,11 +234,8 @@ protected:
   /**
    * Fire the onChange event.
    */
-  nsresult FireOnChange();
 
-//helper methods
-  nsresult GetSizeFromContent(PRInt32* aSize) const;
-
+  // Helper methods
   /**
    * Get the cols attribute (if textarea) or a default
    * @return the number of columns to use
@@ -258,8 +257,6 @@ protected:
                                  nsSize&               aDesiredSize,
                                  nsSize&               aMinSize);
 
-  PRInt32 GetWidthInCharacters() const;
-
   // nsIScrollableViewProvider
   virtual nsIScrollableView* GetScrollableView();
 
@@ -276,7 +273,6 @@ private:
 
 private:
   nsCOMPtr<nsIEditor> mEditor;
-  nsCOMPtr<nsISelectionController> mSelCon;
 
   //cached sizes and states
   nsSize       mSize;
@@ -287,8 +283,10 @@ private:
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
   PRPackedBool mDidPreDestroy; // has PreDestroy been called        
 
-  nsTextInputSelectionImpl *mTextSelImpl;
-  nsTextInputListener *mTextListener;
+  nsCOMPtr<nsISelectionController> mSelCon;
+  nsCOMPtr<nsIFrameSelection> mFrameSel;
+  nsTextInputListener* mTextListener;
+  // XXX This seems unsafe; what's keeping it around?
   nsIScrollableView *mScrollableView;
   nsString mFocusedValue;
 };

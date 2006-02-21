@@ -1253,6 +1253,11 @@ public:
    */
   NS_IMETHOD  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) = 0;
 
+  /**
+   *  Call to get nsIFrameSelection for this frame; does not addref
+   */
+  nsIFrameSelection* GetFrameSelection();
+
   /** EndSelection related calls
    */
 
