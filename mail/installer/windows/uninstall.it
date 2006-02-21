@@ -57,14 +57,14 @@ Key=[Product CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
 [Check Instance0]
-Class Name=MozillaMessageWindow
+Class Name=ThunderbirdMessageWindow
 Window Name=
 Process Name=thunderbird.exe
 Pretty Name=@BRAND_PRODUCT_NAME@
 ;*** LOCALIZE ME BABY ***
-Message=$ProductNameInternal$ is detected to be currently running.  Please quit $ProductNameInternal$ before continuing.  Click OK to exit $ProductNameInternal$ automatically and proceed with uninstallation.
+Message=@UNINST_RUNNING@
 ;*** LOCALIZE ME BABY ***
-Message wait=Shutting down $ProductNameInternal$.  Please wait...
+Message wait=@UNINST_SHUTDOWN@
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.
@@ -119,7 +119,7 @@ CHARSET=0
 ;  CHINESEBIG5_CHARSET = 136
 ;  OEM_CHARSET 255
 Show Dialog=TRUE
-Title=$ProductName$ Uninstaller
+Title=@UNINST_TITLE@
 Message0=Are you sure you want to completely remove %s and all of its components?
 
 Uninstall=&Uninstall
@@ -160,10 +160,10 @@ MB_MESSAGE_STR=Message
 DLG_REMOVE_FILE_TITLE=Remove File?
 ERROR_GETVERSION=GetVersionEx() failed!
 MB_ATTENTION_STR=Attention
-MSG_FORCE_QUIT_PROCESS=Uninstall has detected that %s (%s) is still running.  Click OK to quit %s and proceed with uninstallation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with uninstallation.
-MSG_FORCE_QUIT_PROCESS_FAILED=Uninstall will now exit.  Uninstall could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Uninstall again.
-MSG_DELETE_INSTALLATION_PATH=Not all files were uninstalled from the installation directory:\n\n  %s\n\nDo you want to completely delete this directory?
-MSG_INSTALLATION_PATH_WITHIN_WINDIR=Uninstall has detected that the installation path of $ProductNameInternal$ is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
+MSG_FORCE_QUIT_PROCESS=@MSG_FORCE_QUIT_PROCESS@
+MSG_FORCE_QUIT_PROCESS_FAILED=@MSG_FORCE_QUIT_PROCESS_FAILED@
+MSG_DELETE_INSTALLATION_PATH=@MSG_DELETE_INSTALLATION_PATH@
+MSG_INSTALLATION_PATH_WITHIN_WINDIR=@MSG_INSTALLATION_PATH_WITHIN_WINDIR@
 ; Localize me!!
 MSG_UNINSTALL_COMPLETE=@BRAND_PRODUCT_NAME@ has been removed from your computer.
 MSG_UNINSTALL_SURVEY=Tell us what you thought of @BRAND_PRODUCT_NAME@.
