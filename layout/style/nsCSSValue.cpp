@@ -41,7 +41,6 @@
 #include "imgIRequest.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
-#include "nsPresContext.h"
 
 // Paint forcing
 #include "prenv.h"
@@ -208,39 +207,36 @@ imgIRequest* nsCSSValue::GetImageValue() const
   return mValue.mImage->mRequest;
 }
 
-nscoord nsCSSValue::GetLengthTwips(nsPresContext* aPresContext) const
+nscoord nsCSSValue::GetLengthTwips() const
 {
   NS_ASSERTION(IsFixedLengthUnit(), "not a fixed length unit");
-  NS_ASSERTION(aPresContext, "aPresContext is null");
 
-  float scale =
-    aPresContext->ScaledPixelsToTwips() / aPresContext->PixelsToTwips();
   if (IsFixedLengthUnit()) {
     switch (mUnit) {
     case eCSSUnit_Inch:        
-      return NS_INCHES_TO_TWIPS(mValue.mFloat * scale);
+      return NS_INCHES_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Foot:        
-      return NS_FEET_TO_TWIPS(mValue.mFloat * scale);
+      return NS_FEET_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Mile:        
-      return NS_MILES_TO_TWIPS(mValue.mFloat * scale);
+      return NS_MILES_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Millimeter:
-      return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Centimeter:
-      return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Meter:
-      return NS_METERS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_METERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Kilometer:
-      return NS_KILOMETERS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Point:
-      return NSFloatPointsToTwips(mValue.mFloat * scale);
+      return NSFloatPointsToTwips(mValue.mFloat);
     case eCSSUnit_Pica:
-      return NS_PICAS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_PICAS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Didot:
-      return NS_DIDOTS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Cicero:
-      return NS_CICEROS_TO_TWIPS(mValue.mFloat * scale);
+      return NS_CICEROS_TO_TWIPS(mValue.mFloat);
     default:
       NS_ERROR("should never get here");
       break;
