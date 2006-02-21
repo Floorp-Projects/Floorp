@@ -824,6 +824,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIForm> form = do_QueryInterface(formNode);
     SignonDataEntry* firstMatch = nsnull;
     PRBool attachedToInput = PR_FALSE;
+    PRBool prefilledUser = PR_FALSE;
     nsCOMPtr<nsIDOMHTMLInputElement> userField, passField;
     nsCOMPtr<nsIDOMHTMLInputElement> temp;
     nsAutoString fieldType;
@@ -909,6 +910,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
         // for that username.  If there are multiple saved usernames,
         // we will also attach the autocomplete listener.
 
+        prefilledUser = PR_TRUE;
         nsAutoString userValue;
         if (NS_FAILED(DecryptData(e->userValue, userValue)))
           goto done;
@@ -936,21 +938,29 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       }
     }
 
+    // If we found more than one match, attachedToInput will be true,
+    // but if we found just one, we need to attach the autocomplete listener,
+    // and fill in the username and password  only if the HTML didn't prefill
+    // the username.
     if (firstMatch && !attachedToInput) {
-      nsAutoString buffer;
+      if (userField)
+        AttachToInput(userField);
 
-      if (userField) {
-        if (NS_FAILED(DecryptData(firstMatch->userValue, buffer)))
+      if (!prefilledUser){
+        nsAutoString buffer;
+
+        if (userField) {
+          if (NS_FAILED(DecryptData(firstMatch->userValue, buffer)))
+            goto done;
+
+          userField->SetValue(buffer);
+        }
+
+        if (NS_FAILED(DecryptData(firstMatch->passValue, buffer)))
           goto done;
 
-        userField->SetValue(buffer);
-        AttachToInput(userField);
+        passField->SetValue(buffer);
       }
-
-      if (NS_FAILED(DecryptData(firstMatch->passValue, buffer)))
-        goto done;
-
-      passField->SetValue(buffer);
     }
   }
 
