@@ -47,7 +47,7 @@
 #include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
-#include "nsGFXUtils.h"
+#include "nsGfxUtils.h"
 #include "nsMacResources.h"
 #include "nsIRollupListener.h"
 #import  "nsChildView.h"
