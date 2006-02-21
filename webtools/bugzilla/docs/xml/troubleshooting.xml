@@ -1,9 +1,5 @@
-<?xml version="1.0"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-                      "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
-    <!ENTITY % myents SYSTEM "bugzilla.ent">
-    %myents;
-]>
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
+<!-- $Id: troubleshooting.xml,v 1.8 2006/02/21 21:50:45 mozilla%colinogilvie.co.uk Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>

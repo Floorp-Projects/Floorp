@@ -1,10 +1,4 @@
-<?xml version="1.0"?>
-<!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-                         "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
-    <!ENTITY % myents SYSTEM "bugzilla.ent">
-    %myents;
-]>
-
+<!-- <!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
 <glossary id="glossary">
   <glossdiv>
     <title>0-9, high ascii</title>

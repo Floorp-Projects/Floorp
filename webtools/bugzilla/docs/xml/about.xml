@@ -1,9 +1,6 @@
-<?xml version="1.0"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
-                         "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
-    <!ENTITY % myents SYSTEM "bugzilla.ent">
-    %myents;
-]>
+<!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
+<!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
+<!-- $Id: about.xml,v 1.21 2006/02/21 21:50:45 mozilla%colinogilvie.co.uk Exp $ -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -212,9 +209,9 @@
     </para>
   </section>
 
-<!-- conventions used here (didn't want to give it a chapter of its own) -->
-<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="conventions.xml" /> 
-</chapter> 
+  <!-- conventions used here (didn't want to give it a chapter of its own) -->
+&conventions;
+ </chapter> 
 
 <!-- Keep this comment at the end of the file 
 Local variables: 
