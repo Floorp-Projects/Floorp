@@ -128,7 +128,7 @@ sub initBug  {
   $self->{'who'} = new Bugzilla::User($user_id);
 
     my $custom_fields = "";
-    if (length(Bugzilla->custom_field_names) > 0) {
+    if (scalar(Bugzilla->custom_field_names) > 0) {
         $custom_fields = ", " . join(", ", Bugzilla->custom_field_names);
     }
 
@@ -742,7 +742,6 @@ sub AppendComment {
     $dbh->do("UPDATE bugs SET delta_ts = ? WHERE bug_id = ?",
              undef, $timestamp, $bugid);
 }
-
 # This method is private and is not to be used outside of the Bug class.
 sub EmitDependList {
     my ($myfield, $targetfield, $bug_id) = (@_);
