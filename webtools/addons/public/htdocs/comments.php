@@ -10,9 +10,7 @@
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
-$cacheid = $clean['ID'];
-
-startProcessing('comments.tpl',$cacheId,$compileId);
+startProcessing('comments.tpl',$clean['ID'],$compileId);
 require_once('includes.php');
 
 $addon = new AddOn($sql['ID']);
