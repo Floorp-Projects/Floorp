@@ -4244,6 +4244,7 @@ MOZ_REFLOW_PERF=
 MOZ_REORDER=
 MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
+MOZ_SVG_FOREIGNOBJECT=$MOZ_ENABLE_CAIRO_GFX
 MOZ_TIMELINE=
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -5396,19 +5397,21 @@ if test -n "$MOZ_SVG"; then
   esac
 fi
 
-dnl COMMENTED OUT because foreignobject support should
-dnl not be tweakable by distributors!
 dnl ========================================================
 dnl SVG <foreignObject>
 dnl ========================================================
-dnl MOZ_ARG_ENABLE_BOOL(svg-foreignobject,
-dnl [  --enable-svg-foreignobject
-dnl                          Enable SVG <foreignObject> support],
-dnl    MOZ_SVG_FOREIGNOBJECT=1,
-dnl    MOZ_SVG_FOREIGNOBJECT= )
-dnl if test -n "$MOZ_SVG_FOREIGNOBJECT"; then
-dnl   AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
-dnl fi
+MOZ_ARG_DISABLE_BOOL(svg-foreignobject,
+   [  --disable-svg-foreignobject
+                        Disable SVG <foreignObject> support],
+   MOZ_SVG_FOREIGNOBJECT=,
+   MOZ_SVG_FOREIGNOBJECT=1 )
+if test "$MOZ_SVG_FOREIGNOBJECT"; then
+  if test -z "$MOZ_ENABLE_CAIRO_GFX"; then
+    AC_MSG_ERROR([<foreignobject> requires cairo gfx])
+  else
+    AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
+  fi
+fi
 
 dnl ========================================================
 dnl Installer

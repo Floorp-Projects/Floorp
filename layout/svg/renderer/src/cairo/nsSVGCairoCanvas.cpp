@@ -127,7 +127,10 @@ public:
   // nsISVGCairoCanvas interface:
   NS_IMETHOD_(cairo_t*) GetContext() { return mCR; }
   NS_IMETHOD AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix);
-    
+
+protected:
+  void SetupCairoMatrix(nsIDOMSVGMatrix *aCTM);
+  
 private:
   nsCOMPtr<nsIRenderingContext> mMozContext;
   nsCOMPtr<nsPresContext> mPresContext;
@@ -421,14 +424,39 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGRendererCanvas methods:
 
+void nsSVGCairoCanvas::SetupCairoMatrix(nsIDOMSVGMatrix *aCTM)
+{
+  float m[6];
+  float val;
+  aCTM->GetA(&val);
+  m[0] = val;
+    
+  aCTM->GetB(&val);
+  m[1] = val;
+    
+  aCTM->GetC(&val);  
+  m[2] = val;  
+    
+  aCTM->GetD(&val);  
+  m[3] = val;  
+  
+  aCTM->GetE(&val);
+  m[4] = val;
+  
+  aCTM->GetF(&val);
+  m[5] = val;
+
+  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  AdjustMatrixForInitialTransform(&matrix);
+  cairo_set_matrix(mCR, &matrix);
+}
+
 /** Implements [noscript] nsIRenderingContext lockRenderingContext(const in nsRectRef rect); */
 NS_IMETHODIMP
-nsSVGCairoCanvas::LockRenderingContext(const nsRect & rect,
+nsSVGCairoCanvas::LockRenderingContext(nsIDOMSVGMatrix* aCTM,
                                        nsIRenderingContext **_retval)
 {
-  // XXX do we need to flush?
-  Flush();
-  
+  SetupCairoMatrix(aCTM);  
   *_retval = mMozContext;
   NS_ADDREF(*_retval);
   return NS_OK;
@@ -663,33 +691,10 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   if (!aCTM)
     return NS_ERROR_FAILURE;
 
-  float m[6];
-  float val;
-  aCTM->GetA(&val);
-  m[0] = val;
-    
-  aCTM->GetB(&val);
-  m[1] = val;
-    
-  aCTM->GetC(&val);  
-  m[2] = val;  
-    
-  aCTM->GetD(&val);  
-  m[3] = val;  
-  
-  aCTM->GetE(&val);
-  m[4] = val;
-  
-  aCTM->GetF(&val);
-  m[5] = val;
-
   cairo_matrix_t oldMatrix;
   cairo_get_matrix(mCR, &oldMatrix);
-  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
-  cairo_matrix_t inverse = matrix;
-  if (cairo_matrix_invert(&inverse))
-    return NS_ERROR_FAILURE;
-  cairo_transform(mCR, &matrix);
+
+  SetupCairoMatrix(aCTM);  
 
   cairo_new_path(mCR);
   cairo_rectangle(mCR, aX, aY, aWidth, aHeight);
@@ -816,28 +821,7 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
 
   cairo_save(mCR);
 
-  float m[6];
-  float val;
-  aCTM->GetA(&val);
-  m[0] = val;
-    
-  aCTM->GetB(&val);
-  m[1] = val;
-    
-  aCTM->GetC(&val);  
-  m[2] = val;  
-    
-  aCTM->GetD(&val);  
-  m[3] = val;  
-  
-  aCTM->GetE(&val);
-  m[4] = val;
-  
-  aCTM->GetF(&val);
-  m[5] = val;
-
-  cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
-  cairo_transform(mCR, &matrix);
+  SetupCairoMatrix(aCTM);
 
   cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);

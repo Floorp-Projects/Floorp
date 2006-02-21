@@ -231,7 +231,7 @@ NS_INTERFACE_MAP_END
 
 /** Implements [noscript] nsIRenderingContext lockRenderingContext(const in nsRectRef rect); */
 NS_IMETHODIMP
-nsSVGGDIPlusCanvas::LockRenderingContext(const nsRect & rect,
+nsSVGGDIPlusCanvas::LockRenderingContext(nsIDOMSVGMatrix* aCTM,
                                          nsIRenderingContext **_retval)
 {
 #ifdef SVG_GDIPLUS_ENABLE_OFFSCREEN_BUFFER

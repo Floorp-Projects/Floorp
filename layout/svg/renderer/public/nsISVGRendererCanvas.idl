@@ -69,7 +69,7 @@ interface nsISVGRendererSurface;
  * Mozilla-native rendering object with a call to
  * nsISVGRenderer::createCanvas().
  */
-[scriptable, uuid(a1ea0d56-765f-43be-88dc-e54576e5735b)]
+[scriptable, uuid(81eb1fc4-ea69-45dd-b31e-fe2cbcab04a5)]
 interface nsISVGRendererCanvas : nsISupports
 {
   /**
@@ -83,7 +83,7 @@ interface nsISVGRendererCanvas : nsISupports
    * @param rect Area to be locked.
    * @return Mozilla-native rendering context for the locked area.
    */
-  [noscript] nsIRenderingContext lockRenderingContext([const] in nsRectRef rect);
+  [noscript] nsIRenderingContext lockRenderingContext(in nsIDOMSVGMatrix aCTM);
 
   /**
    * Unlock the canvas portion locked with a previous call to
