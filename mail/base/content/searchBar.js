@@ -559,8 +559,12 @@ function onSearchInputFocus(event)
 
 function onSearchInputMousedown(event)
 {
+  GetSearchInput();
   if (gSearchInput.hasAttribute("focused")) 
+  {
     gIgnoreClick = true;
+    gQuickSearchFocusEl = null;
+  }
   else 
   {
     gIgnoreFocus = true;
@@ -581,7 +585,7 @@ function onSearchInputClick(event)
 
 function onSearchInputBlur(event)
 { 
-  if (gQuickSearchFocusEl) // ignore the blur if we are in the middle of processing the clear button
+  if (!gQuickSearchFocusEl) // ignore the blur if we are in the middle of processing the clear button
     return;
 
   if (!gSearchInput.value)
@@ -618,7 +622,7 @@ function onClearSearch()
   {
     Search("");
     // this needs to be on a timer otherwise we end up messing up the focus while the Search("") is still happening
-    if (gQuickSearchFocusEl)
+    if (gQuickSearchFocusEl) // set in onSearchInputMouseDown
       setTimeout("restoreSearchFocusAfterClear();", 0); 
   }
 }
