@@ -901,7 +901,7 @@
           Your Bugzilla administrator can stop a user from receiving
           bugmail by adding the user's name to the 
           <filename>data/nomail</filename> file. This is a drastic step
-          best taken only for disabled accounts, as it overrides the 
+          best taken only for disabled accounts, as it overrides 
           the user's individual mail preferences.
         </para>
       </note>
