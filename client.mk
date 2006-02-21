@@ -97,6 +97,8 @@
 #   MOZ_PREFLIGHT      }   MOZ_BUILD_PROJECTS, before each project, after
 #   MOZ_POSTFLIGHT     }   each project, and after all projects; these
 #   MOZ_POSTFLIGHT_ALL }   variables contain space-separated lists
+#   MOZ_UNIFY_BDATE      - Set to use the same bdate for each project in
+#                          MOZ_BUILD_PROJECTS
 #
 
 AVAILABLE_PROJECTS = \
@@ -290,6 +292,7 @@ SH := /bin/sh
 ifndef MAKE
 MAKE := gmake
 endif
+PERL ?= perl
 
 CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS_SCRIPT
@@ -758,6 +761,18 @@ else
 
 #####################################################
 # After First Checkout
+
+#####################################################
+# Build date unification
+
+ifdef MOZ_UNIFY_BDATE
+ifndef MOZ_BUILD_DATE
+ifdef MOZ_BUILD_PROJECTS
+MOZ_BUILD_DATE = $(shell $(PERL) -I$(TOPSRCDIR)/config $(TOPSRCDIR)/config/bdate.pl)
+export MOZ_BUILD_DATE
+endif
+endif
+endif
 
 #####################################################
 # Preflight, before building any project
