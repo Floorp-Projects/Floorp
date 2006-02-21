@@ -643,6 +643,10 @@ AC_SUBST(GCC_VERSION)
 AC_SUBST(XCODEBUILD_VERSION)
 AC_SUBST(HAS_XCODE_2_1)
 
+dnl The universal machinery sets UNIVERSAL_BINARY to inform packager.mk
+dnl that a universal binary is being produced.
+AC_SUBST(UNIVERSAL_BINARY)
+
 dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
