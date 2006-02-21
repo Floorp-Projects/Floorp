@@ -55,7 +55,7 @@ sub has_db {
     return 0;
 }
 
-# Returns the network address for a given ip
+# Returns the network address for a given IP
 sub get_netaddr {
     my $ipaddr = shift;
 
@@ -67,6 +67,9 @@ sub get_netaddr {
     my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
 
     my $maskbits = Param('loginnetmask');
+
+    # Make Bugzilla ignore the IP address if loginnetmask is set to 0
+    return "0.0.0.0" if ($maskbits == 0);
 
     $addr >>= (32-$maskbits);
     $addr <<= (32-$maskbits);
