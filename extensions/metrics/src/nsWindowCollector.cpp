@@ -132,7 +132,7 @@ nsWindowCollector::Observe(nsISupports *subject,
     NS_ENSURE_STATE(window);
 
     rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("id"),
+                                   NS_LITERAL_STRING("window"),
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -172,7 +172,7 @@ nsWindowCollector::Observe(nsISupports *subject,
     NS_ENSURE_STATE(window);
 
     rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("id"),
+                                   NS_LITERAL_STRING("window"),
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -199,7 +199,7 @@ nsWindowCollector::Observe(nsISupports *subject,
     NS_ENSURE_STATE(window);
 
     rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("id"),
+                                   NS_LITERAL_STRING("window"),
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -217,7 +217,7 @@ nsWindowCollector::Observe(nsISupports *subject,
     NS_ENSURE_STATE(window);
 
     rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("id"),
+                                   NS_LITERAL_STRING("window"),
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
