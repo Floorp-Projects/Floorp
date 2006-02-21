@@ -35,7 +35,7 @@
   # style: string. CSS style.
   # style_urls: list. List of URLs to CSS style sheets.
   # message: string. A message to display to the user. May contain HTML.
-  # rsslink: rss link url, May contain HTML
+  # atomlink: Atom link url, May contain HTML
   #%]
 
 [% IF message %]
@@ -100,11 +100,11 @@
       [% END %]
     [% END %]
 
-    [%# this puts the live bookmark up on firefox for the RSS feed %]
-    [% IF rsslink %]
+    [%# this puts the live bookmark up on firefox for the Atom feed %]
+    [% IF atomlink %]
        <link rel="alternate" 
-             type="application/rss+xml" title="RSS 1.0" 
-             href="[% rsslink FILTER html %]" />
+             type="application/atom+xml" title="Atom feed" 
+             href="[% atomlink FILTER html %]" />
     [% END %]
 
   </head>

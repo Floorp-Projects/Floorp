@@ -48,7 +48,7 @@
 [% PROCESS global/header.html.tmpl
   title = title
   style = style
-  rsslink = "buglist.cgi?$urlquerypart&title=$title&ctype=rss" 
+  atomlink = "buglist.cgi?$urlquerypart&title=$title&ctype=atom" 
 %]
 
 <div align="center">
@@ -169,7 +169,7 @@
         [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;title=
-        [%- title FILTER html %]&amp;ctype=rss">RSS</a> |
+        [%- title FILTER html %]&amp;ctype=atom">Feed</a> |
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;ctype=ics">iCalendar</a> |
         <a href="colchange.cgi?

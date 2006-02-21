@@ -148,7 +148,7 @@ use constant contenttypes =>
   {
    "html"=> "text/html" , 
    "rdf" => "application/rdf+xml" , 
-   "rss" => "application/rss+xml" ,
+   "atom"=> "application/atom+xml" ,
    "xml" => "application/xml" , 
    "js"  => "application/x-javascript" , 
    "csv" => "text/plain" ,

@@ -19,8 +19,9 @@
   # Contributor(s): Walter Hoehn <wassa@columbia.edu>
   #                 John Belmonte <john@neggie.net>
   #                 Jason Remillard <jremillardshop@letterboxes.org>
+  #                 Phil Ringnalda <bugzilla@philringnalda.com>
   #
-  # This is a template for generating an RSS 1.0 representation of a buglist. 
+  # This is a template for generating an Atom representation of a buglist. 
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -29,42 +30,32 @@
 [% DEFAULT title = "$terms.Bugzilla $terms.Bugs" %]
 
 <?xml version="1.0"[% IF Param('utf8') %] encoding="UTF-8"[% END %]?>
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-         xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
-         xmlns:dc="http://purl.org/dc/elements/1.1/"
-         xmlns="http://purl.org/rss/1.0/">
-  <channel rdf:about="[% Param('urlbase') %]buglist.cgi?
-         [%- urlquerypart.replace('ctype=rss[&]?','') FILTER xml %]" >
-       
-    <title>[% title FILTER xml %]</title>
-    <description>[% "$terms.Bugzilla $terms.bug list" FILTER xml %]</description>
-    
-    <link>[% Param('urlbase') %]buglist.cgi?
-          [%- urlquerypart.replace('ctype=rss[&]?','') FILTER xml -%]
-    </link>
-    
-    <sy:updatePeriod>hourly</sy:updatePeriod>
-    <sy:updateFrequency>2</sy:updateFrequency>
-    
-    <items>
-      <rdf:Seq>
-      [% FOREACH bug = bugs %]
-        <rdf:li rdf:resource="[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]" />
-      [% END %]
-      </rdf:Seq>
-    </items>
-    
-  </channel>
- 
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>[% title FILTER xml %]</title>
+  <link rel="alternate" type="text/html"
+        href="[% Param('urlbase') %]buglist.cgi?
+        [%- urlquerypart.replace('ctype=atom[&]?','') FILTER xml %]"/>
+  <link rel="self" type="application/atom+xml"
+        href="[% Param('urlbase') %]buglist.cgi?
+        [%- urlquerypart FILTER xml %]"/>
+  <updated>[% date.format(format=>"%Y-%m-%dT%H:%M:%SZ",
+              time=>bugs.nsort('changedtime').last.changedtime,
+              gmt=>1) FILTER xml %]</updated>
+  <id>[% Param('urlbase') %]buglist.cgi?[% urlquerypart FILTER xml %]</id>
+
   [% FOREACH bug = bugs %]
-  <item rdf:about="[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]">
-    <title>
-      [% "@" IF bug.secure_mode %] [[% terms.Bug %] [%+ bug.bug_id FILTER xml %]] [% bug.short_desc FILTER xml %]
-    </title>
-    <link>[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]</link>
-    <dc:creator>[% bug.reporter_realname FILTER xml %]</dc:creator>
-    <dc:date>[% date.format(format=>"%Y-%m-%dT%H:%MZ",time=>bug.opentime,gmt=>1) FILTER xml %]</dc:date> 
-    <description>
+  <entry>
+    <title>[% "@" IF bug.secure_mode %][[% terms.Bug %] [%+ bug.bug_id FILTER xml %]] [% bug.short_desc FILTER xml %]</title>
+    <link rel="alternate" type="text/html"
+          href="[% Param('urlbase') FILTER xml %]show_bug.cgi?id=
+          [%- bug.bug_id FILTER xml %]"/>
+    <id>[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]</id>
+    <author>
+      <name>[% bug.reporter_realname FILTER xml %]</name>
+    </author>
+    <updated>[% date.format(format=>"%Y-%m-%dT%H:%M:%SZ",time=>bug.changedtime,
+                gmt=>1) FILTER xml %]</updated> 
+    <summary type="html">
       [%# Filter out the entire block, so that we don't need to escape the html code out %]
       [% FILTER xml %]
       <table>
@@ -91,7 +82,7 @@
       </tr>
       </table>
       [% END %]
-    </description>
-  </item>
+    </summary>
+  </entry>
   [% END %]
-</rdf:RDF>
+</feed>
