@@ -98,8 +98,6 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
 #include "prprf.h"
-//#include "nsIDOMHTMLInputElement.h"
-//#include "nsIDOMHTMLImageElement.h"
 
 #include "nsIContent.h" // for menus
 
@@ -114,17 +112,11 @@
 
 #include "nsIMarkupDocumentViewer.h"
 
-
-// HACK for M4, should be removed by M5
-// ... its now M15
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#include <Menus.h>
-#endif
 #include "nsIMenuItem.h"
 #include "nsIDOMXULDocument.h"
-// End hack
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
+#include <Menus.h>
 #define USE_NATIVE_MENUS
 #endif
 
@@ -509,9 +501,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
-//----------------------------------------
-void nsWebShellWindow::LoadNativeMenus(nsIDOMDocument *aDOMDoc,
-                                       nsIWidget *aParentWindow) 
+#ifdef USE_NATIVE_MENUS
+static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow, nsIDocShell *aDocShell)
 {
   // Find the menubar tag (if there is more than one, we ignore all but
   // the first).
@@ -519,7 +510,6 @@ void nsWebShellWindow::LoadNativeMenus(nsIDOMDocument *aDOMDoc,
   aDOMDoc->GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),
                                   NS_LITERAL_STRING("menubar"),
                                   getter_AddRefs(menubarElements));
-
   
   nsCOMPtr<nsIDOMNode> menubarNode;
   if (menubarElements)
@@ -537,8 +527,9 @@ void nsWebShellWindow::LoadNativeMenus(nsIDOMDocument *aDOMDoc,
 
   // fake event
   nsMenuEvent fake(PR_TRUE, 0, nsnull);
-  menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mDocShell);
+  menuListener->MenuConstruct(fake, aParentWindow, menubarNode, aDocShell);
 }
+#endif
 
 void
 nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
@@ -626,7 +617,7 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(NS_LITERAL_STRING("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-    LoadNativeMenus(menubarDOMDoc, mWindow);
+    LoadNativeMenus(menubarDOMDoc, mWindow, mDocShell);
   }
 #endif // USE_NATIVE_MENUS
 
