@@ -1829,10 +1829,6 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     JSObject *proto;
     jsval eval;
 
-#if JS_HAS_SHARP_VARS
-    JS_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >= ATOM_INDEX_LIMIT_LOG2 + 1);
-#endif
-
     proto = JS_InitClass(cx, obj, NULL, &js_ObjectClass, Object, 1,
                          object_props, object_methods, NULL, NULL);
     if (!proto)
