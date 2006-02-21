@@ -199,7 +199,7 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
-    nsAutoGCRoot(&getter, &rv);
+    nsAutoGCRoot getterroot(&getter, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
     JSObject * setter = nsnull;
@@ -207,6 +207,9 @@ nsXBLProtoImplProperty::InstallMember(nsIScriptContext* aContext,
       if (!(setter = ::JS_CloneFunctionObject(cx, mJSSetterObject, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
 
+    nsAutoGCRoot setterroot(&setter, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     nsDependentString name(mName);
     if (!::JS_DefineUCProperty(cx, targetClassObject,
                                NS_REINTERPRET_CAST(const jschar*, mName), 
@@ -267,12 +270,8 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       if (mJSGetterObject && NS_SUCCEEDED(rv)) {
         mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
         // Root the compiled prototype script object.
-        JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                            aContext->GetNativeContext());
-        rv = (cx)
-          ? nsContentUtils::AddJSGCRoot(&mJSGetterObject,
-                                        "nsXBLProtoImplProperty::mJSGetterObject")
-          : NS_ERROR_UNEXPECTED;
+        rv = nsContentUtils::AddJSGCRoot(&mJSGetterObject,
+                                         "nsXBLProtoImplProperty::mJSGetterObject");
       }
       if (NS_FAILED(rv)) {
         mJSGetterObject = nsnull;
@@ -323,12 +322,8 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
       if (mJSSetterObject && NS_SUCCEEDED(rv)) {
         mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
         // Root the compiled prototype script object.
-        JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                            aContext->GetNativeContext());
-        rv = (cx)
-          ? nsContentUtils::AddJSGCRoot(&mJSSetterObject,
-                                        "nsXBLProtoImplProperty::mJSSetterObject")
-          : NS_ERROR_UNEXPECTED;
+        rv = nsContentUtils::AddJSGCRoot(&mJSSetterObject,
+                                         "nsXBLProtoImplProperty::mJSSetterObject");
       }
       if (NS_FAILED(rv)) {
         mJSSetterObject = nsnull;
