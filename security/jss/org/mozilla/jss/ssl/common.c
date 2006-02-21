@@ -96,34 +96,33 @@ JSSL_throwSSLSocketException(JNIEnv *env, char *message)
          * for timeouts, org.mozilla.jss.ssl.SSLSocketException for everything
          * else.
          */
-    if( nativeErrcode == PR_IO_TIMEOUT_ERROR ) {
-        excepClass = (*env)->FindClass(env, SOCKET_TIMEOUT_EXCEPTION);
-        PR_ASSERT(excepClass != NULL);
-        if( excepClass == NULL ) goto finish;
-    
-        excepCons = (*env)->GetMethodID(env, excepClass, "<init>",
-            "(Ljava/lang/String;)V");
-        PR_ASSERT( excepCons != NULL );
-        if( excepCons == NULL ) goto finish;
-    
-        excepObj = (*env)->NewObject(env, excepClass, excepCons, msgString);
-        PR_ASSERT(excepObj != NULL);
-        if( excepObj == NULL ) goto finish;
-    } else {
-        excepClass = (*env)->FindClass(env, SSLSOCKET_EXCEPTION);
-        PR_ASSERT(excepClass != NULL);
-        if( excepClass == NULL ) goto finish;
-    
-        excepCons = (*env)->GetMethodID(env, excepClass, "<init>",
-            "(Ljava/lang/String;I)V");
-        PR_ASSERT( excepCons != NULL );
-        if( excepCons == NULL ) goto finish;
-    
-        excepObj = (*env)->NewObject(env, excepClass, excepCons, msgString,
-            JSS_ConvertNativeErrcodeToJava(nativeErrcode));
-        PR_ASSERT(excepObj != NULL);
-        if( excepObj == NULL ) goto finish;
+    switch (nativeErrcode) {
+        case PR_PENDING_INTERRUPT_ERROR :
+            excepClass = (*env)->FindClass(env, INTERRUPTED_IO_EXCEPTION);
+            break;
+        case PR_IO_ERROR :
+            excepClass = (*env)->FindClass(env, IO_EXCEPTION);
+            break;
+        case PR_IO_TIMEOUT_ERROR :
+        case PR_CONNECT_TIMEOUT_ERROR :
+            excepClass = (*env)->FindClass(env, SOCKET_TIMEOUT_EXCEPTION);
+            break;
+        default : /* for all other PR_ERRORs throw SocketException  */
+            excepClass = (*env)->FindClass(env, SSLSOCKET_EXCEPTION);
+            break;
     }
+
+    PR_ASSERT(excepClass != NULL);
+    if( excepClass == NULL ) goto finish;
+    
+    excepCons = (*env)->GetMethodID(env, excepClass, "<init>",
+        "(Ljava/lang/String;)V");
+    PR_ASSERT( excepCons != NULL );
+    if( excepCons == NULL ) goto finish;
+    
+    excepObj = (*env)->NewObject(env, excepClass, excepCons, msgString);
+    PR_ASSERT(excepObj != NULL);
+    if( excepObj == NULL ) goto finish;
 
     /*
      * throw the exception

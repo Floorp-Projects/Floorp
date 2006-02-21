@@ -168,9 +168,16 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * Accepts a connection. This call will block until a connection is made
-     *   or the timeout is reached.
+     * or the timeout is reached.
+     *
+     * @return java.net.Socket Local socket for client communication
+     *
+     * @throws IOException  If an input or output exception occurred
+     * @throws SocketTimeoutException  If the socket timesout trying to connect
+     * @throws InterruptedIOException  If an input or output is interrupted
+     * @throws SSLSocketException  JSS subclass of java.net.SocketException
      */
-    public Socket accept() throws IOException,SocketTimeoutException {
+    public Socket accept() throws IOException {
         synchronized (acceptLock) {
             synchronized (this) {
                 if (isClosed) {
@@ -192,13 +199,6 @@ public class SSLServerSocket extends java.net.ServerSocket {
                     handshakeAsClient);
                 SocketProxy sp = new SocketProxy(socketPointer);
                 s.setSockProxy(sp);
-            } catch (SocketTimeoutException e) {
-                /* unnessary to do a s.close() since exception thrown*/
-                throw new SocketTimeoutException
-                        ("server socket accept timed out");
-            } catch (Exception e) {
-                /* unnessary to do a s.close() since exception thrown*/
-                throw new IOException("accept method failed");
             } finally {
                 synchronized (this) {
                     inAccept=false;

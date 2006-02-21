@@ -83,6 +83,8 @@ PR_BEGIN_EXTERN_C
 
 #define INVALID_PARAMETER_EXCEPTION "java/security/InvalidParameterException"
 
+#define IO_EXCEPTION "java/io/IOException"
+
 #define KEY_DATABASE_EXCEPTION "org/mozilla/jss/KeyDatabaseException"
 
 #define KEY_EXISTS_EXCEPTION "org/mozilla/jss/crypto/KeyAlreadyImportedException"
