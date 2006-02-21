@@ -4270,6 +4270,10 @@ $dbh->bz_add_column('fielddefs', 'type',
 $dbh->bz_add_column('fielddefs', 'custom',
                     { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
 
+# 2005-12-07 altlst@sonic.net -- Bug 225221
+$dbh->bz_add_column('longdescs', 'comment_id',
+                    {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

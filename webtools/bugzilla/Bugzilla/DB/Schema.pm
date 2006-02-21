@@ -256,6 +256,8 @@ use constant ABSTRACT_SCHEMA => {
 
     longdescs => {
         FIELDS => [
+            comment_id      => {TYPE => 'MEDIUMSERIAL',  NOTNULL => 1,
+                                PRIMARYKEY => 1},
             bug_id          => {TYPE => 'INT3',  NOTNULL => 1},
             who             => {TYPE => 'INT3', NOTNULL => 1},
             bug_when        => {TYPE => 'DATETIME', NOTNULL => 1},
