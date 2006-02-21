@@ -326,10 +326,10 @@ PRIntn
 nsTableColGroupFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;

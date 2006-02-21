@@ -97,10 +97,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 2fb5effc-5eeb-4ccb-b9fa-325f8642200f
+// bdf02423-88d6-41ca-818a-54d7b51328c3
 #define NS_IFRAME_IID \
-{ 0x2fb5effc, 0x5eeb, 0x4ccb, \
-  { 0xb9, 0xfa, 0x32, 0x5f, 0x86, 0x42, 0x20, 0x0f } }
+{ 0xbdf02423, 0x88d6, 0x41ca, \
+  { 0x81, 0x8a, 0x54, 0xd7, 0xb5, 0x13, 0x28, 0xc3 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -143,6 +143,11 @@ typedef PRUint32 nsFrameState;
 // once (during the DidReflow with a finished state) the bit is
 // cleared.
 #define NS_FRAME_FIRST_REFLOW                         0x00000002
+
+// For a continuation frame, if this bit is set, then this a "fluid" 
+// continuation, i.e., across a line boundary. Otherwise it's a "hard"
+// continuation, e.g. a bidi continuation.
+#define NS_FRAME_IS_FLUID_CONTINUATION                0x00000004
 
 // If this bit is set, then there is a child frame in the frame that
 // extends outside this frame's bounding box. The implication is that
@@ -914,12 +919,29 @@ public:
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const = 0;
 
   /**
+   * Continuation member functions
+   */
+  virtual nsIFrame* GetPrevContinuation() const = 0;
+  NS_IMETHOD SetPrevContinuation(nsIFrame*) = 0;
+  virtual nsIFrame* GetNextContinuation() const = 0;
+  NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
+  virtual nsIFrame* GetFirstContinuation() const {
+    return NS_CONST_CAST(nsIFrame*, this);
+  }
+  virtual nsIFrame* GetLastContinuation() const {
+    return NS_CONST_CAST(nsIFrame*, this);
+  }
+  
+  /**
    * Flow member functions
    */
-  virtual nsIFrame* GetPrevInFlow() const = 0;
-  NS_IMETHOD  SetPrevInFlow(nsIFrame*) = 0;
-  virtual nsIFrame* GetNextInFlow() const = 0;
-  NS_IMETHOD  SetNextInFlow(nsIFrame*) = 0;
+  virtual nsIFrame* GetPrevInFlowVirtual() const = 0;
+  nsIFrame* GetPrevInFlow() const { return GetPrevInFlowVirtual(); }
+  NS_IMETHOD SetPrevInFlow(nsIFrame*) = 0;
+
+  virtual nsIFrame* GetNextInFlowVirtual() const = 0;
+  nsIFrame* GetNextInFlow() const { return GetNextInFlowVirtual(); }
+  NS_IMETHOD SetNextInFlow(nsIFrame*) = 0;
 
   /**
    * Return the first frame in our current flow. 

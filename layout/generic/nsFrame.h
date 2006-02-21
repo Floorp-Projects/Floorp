@@ -216,9 +216,13 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
-  virtual nsIFrame* GetPrevInFlow() const;
+  virtual nsIFrame* GetPrevContinuation() const;
+  NS_IMETHOD  SetPrevContinuation(nsIFrame*);
+  virtual nsIFrame* GetNextContinuation() const;
+  NS_IMETHOD  SetNextContinuation(nsIFrame*);
+  virtual nsIFrame* GetPrevInFlowVirtual() const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
-  virtual nsIFrame* GetNextInFlow() const;
+  virtual nsIFrame* GetNextInFlowVirtual() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsPoint& aOffset, nsIView **aView) const;

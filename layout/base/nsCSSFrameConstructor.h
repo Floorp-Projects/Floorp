@@ -153,7 +153,8 @@ public:
   nsresult CreateContinuingFrame(nsPresContext* aPresContext,
                                  nsIFrame*       aFrame,
                                  nsIFrame*       aParentFrame,
-                                 nsIFrame**      aContinuingFrame);
+                                 nsIFrame**      aContinuingFrame,
+                                 PRBool          aIsFluid = PR_TRUE);
 
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in

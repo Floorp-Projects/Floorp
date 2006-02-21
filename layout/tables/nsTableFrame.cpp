@@ -438,7 +438,7 @@ nsTableFrame::SetInitialChildList(nsPresContext* aPresContext,
 
   // If we have a prev-in-flow, then we're a table that has been split and
   // so don't treat this like an append
-  if (!mPrevInFlow) {
+  if (!GetPrevInFlow()) {
     // process col groups first so that real cols get constructed before
     // anonymous ones due to cells in rows.
     InsertColGroups(0, mColGroups.FirstChild());
@@ -542,7 +542,7 @@ PRInt32 nsTableFrame::GetIndexOfLastRealCol()
 nsTableColFrame*
 nsTableFrame::GetColFrame(PRInt32 aColIndex) const
 {
-  NS_ASSERTION(!mPrevInFlow, "GetColFrame called on next in flow");
+  NS_ASSERTION(!GetPrevInFlow(), "GetColFrame called on next in flow");
   PRInt32 numCols = mColFrames.Count();
   if ((aColIndex >= 0) && (aColIndex < numCols)) {
     return (nsTableColFrame *)mColFrames.ElementAt(aColIndex);
@@ -1526,10 +1526,10 @@ nsTableFrame::GetSkipSides() const
   PRIntn skip = 0;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -1896,7 +1896,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     return NS_OK;
 
   aStatus = NS_FRAME_COMPLETE; 
-  if (!mPrevInFlow && !mTableLayoutStrategy) {
+  if (!GetPrevInFlow() && !mTableLayoutStrategy) {
     NS_ASSERTION(PR_FALSE, "strategy should have been created in Init");
     return NS_ERROR_NULL_POINTER;
   }
@@ -1907,7 +1907,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   // see if collapsing borders need to be calculated
-  if (!mPrevInFlow && IsBorderCollapse() && NeedToCalcBCBorders()) {
+  if (!GetPrevInFlow() && IsBorderCollapse() && NeedToCalcBCBorders()) {
     GET_TWIPS_TO_PIXELS(aPresContext, p2t);
     CalcBCBorders();
   }
@@ -1929,7 +1929,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
         NS_WARNING("table initial reflow called twice");
       }
       else {
-        if (!mPrevInFlow) { // only do pass1 on a first in flow
+        if (!GetPrevInFlow()) { // only do pass1 on a first in flow
           if (IsAutoLayout()) {     
             // only do pass1 reflow on an auto layout table
             nsTableReflowState reflowState(*aPresContext, aReflowState, *this,
@@ -1947,7 +1947,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
         }
       }
       SetHadInitialReflow(PR_TRUE);
-      if (!mPrevInFlow) {
+      if (!GetPrevInFlow()) {
         SetNeedStrategyBalance(PR_TRUE); // force a balance and then a pass2 reflow 
         if ((nextReason != eReflowReason_StyleChange) || IsAutoLayout()) 
           nextReason = eReflowReason_Resize;
@@ -1988,7 +1988,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   // reflows with a constrained width.
   if (NeedsReflow(aReflowState) && (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height 
-    if (isPaginated && !mPrevInFlow && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
+    if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
       if ((tableSpecifiedHeight > 0) && 
           (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
@@ -2073,7 +2073,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
   // See if we need to calc max elem and/or preferred widths. This isn't done on 
   // continuations or if we have balanced (since it was done then) 
   if ((aDesiredSize.mComputeMEW || (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH)) &&
-      !mPrevInFlow && !balanced) {
+      !GetPrevInFlow() && !balanced) {
     // Since the calculation has some cost, avoid doing it for an unconstrained initial 
     // reflow (it was done when the strategy was initialized in pass 1 above) and most
     // unconstrained resize reflows. XXX The latter optimization could be a problem if the
@@ -2153,7 +2153,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   aLastChildReflowed = nsnull;
 
   PRBool haveReflowedColGroups = PR_TRUE;
-  if (!mPrevInFlow) {
+  if (!GetPrevInFlow()) {
     if (NeedStrategyInit()) {
       mTableLayoutStrategy->Initialize(aReflowState);
       BalanceColumnWidths(aReflowState); 
@@ -2244,8 +2244,8 @@ nsTableFrame::PushChildren(const nsAutoVoidArray& aFrames,
     }
   }
 
-  if (nsnull != mNextInFlow) {
-    nsTableFrame* nextInFlow = (nsTableFrame*)mNextInFlow;
+  if (nsnull != GetNextInFlow()) {
+    nsTableFrame* nextInFlow = (nsTableFrame*)GetNextInFlow();
 
     // Insert the frames after any repeated header and footer frames
     nsIFrame* firstBodyFrame = nextInFlow->GetFirstBodyRowGroupFrame();
@@ -2258,7 +2258,7 @@ nsTableFrame::PushChildren(const nsAutoVoidArray& aFrames,
     for (nsIFrame* f = frames.FirstChild(); f; f = f->GetNextSibling()) {
       nsHTMLContainerFrame::ReparentFrameView(GetPresContext(), f, this, nextInFlow);
     }
-    nextInFlow->mFrames.InsertFrames(mNextInFlow, prevSibling, frames.FirstChild());
+    nextInFlow->mFrames.InsertFrames(GetNextInFlow(), prevSibling, frames.FirstChild());
   }
   else {
     // Add the frames to our overflow list
@@ -2279,7 +2279,7 @@ nsTableFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
   PRBool result = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
-  nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
+  nsTableFrame* prevInFlow = (nsTableFrame*)GetPrevInFlow();
   if (prevInFlow) {
     nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
     if (prevOverflowFrames) {
@@ -2686,7 +2686,7 @@ nsTableFrame::IncrementalReflow(const nsHTMLReflowState& aReflowState,
   // Constrain our reflow width to the computed table width. Note: this is
   // based on the width of the first-in-flow
   PRInt32 lastWidth = mRect.width;
-  if (mPrevInFlow) {
+  if (GetPrevInFlow()) {
     nsTableFrame* table = (nsTableFrame*)GetFirstInFlow();
     lastWidth = table->mRect.width;
   }
@@ -3356,7 +3356,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
   // set the repeatablility of headers and footers in the original table during its first reflow
   // the repeatability of header and footers on continued tables is handled when they are created
-  if (isPaginated && !mPrevInFlow && (NS_UNCONSTRAINEDSIZE == aReflowState.availSize.height)) {
+  if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE == aReflowState.availSize.height)) {
     nsRect actualRect;
     nsRect adjRect;
     presContext->GetPageDim(&actualRect, &adjRect);
@@ -3384,7 +3384,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 // use the cell map to determine which cell is in which column.
 void nsTableFrame::BalanceColumnWidths(const nsHTMLReflowState& aReflowState)
 {
-  NS_ASSERTION(!mPrevInFlow, "never ever call me on a continuing frame!");
+  NS_ASSERTION(!GetPrevInFlow(), "never ever call me on a continuing frame!");
 
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
@@ -3414,7 +3414,7 @@ void nsTableFrame::BalanceColumnWidths(const nsHTMLReflowState& aReflowState)
 nscoord 
 nsTableFrame::CalcDesiredWidth(const nsHTMLReflowState& aReflowState)
 {
-  NS_ASSERTION(!mPrevInFlow, "never ever call me on a continuing frame!");
+  NS_ASSERTION(!GetPrevInFlow(), "never ever call me on a continuing frame!");
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) {
     NS_ASSERTION(PR_FALSE, "never ever call me until the cell map is built!");
@@ -3493,7 +3493,7 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLRef
   }
 
   // see if a specified table height requires dividing additional space to rows
-  if (!mPrevInFlow) {
+  if (!GetPrevInFlow()) {
     nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
     if ((tableSpecifiedHeight > 0) && 
         (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE) &&
@@ -6872,7 +6872,7 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
   nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT0();
   GET_PIXELS_TO_TWIPS(GetPresContext(), p2t);
 
-  PRInt32 startRowY = (mPrevInFlow) ? 0 : childAreaOffset.top; // y position of first row in damage area
+  PRInt32 startRowY = (GetPrevInFlow()) ? 0 : childAreaOffset.top; // y position of first row in damage area
 
   const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(mStyleContext);
   // determine the damage area in terms of rows and columns and finalize startColX and startRowY
@@ -6894,8 +6894,8 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame); if (!rgFrame) ABORT0();
     for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow(); rowFrame; rowFrame = rowFrame->GetNextRow()) {
       // conservatively estimate the half border widths outside the row
-      nscoord topBorderHalf    = (mPrevInFlow) ? 0 : rowFrame->GetTopBCBorderWidth(&p2t) + onePixel; 
-      nscoord bottomBorderHalf = (mNextInFlow) ? 0 : rowFrame->GetBottomBCBorderWidth(&p2t) + onePixel;
+      nscoord topBorderHalf    = (GetPrevInFlow()) ? 0 : rowFrame->GetTopBCBorderWidth(&p2t) + onePixel; 
+      nscoord bottomBorderHalf = (GetNextInFlow()) ? 0 : rowFrame->GetBottomBCBorderWidth(&p2t) + onePixel;
       // get the row rect relative to the table rather than the row group
       nsSize rowSize = rowFrame->GetSize();
       if (haveIntersect) {

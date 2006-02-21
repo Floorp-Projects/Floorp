@@ -668,21 +668,8 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
                              nsIFrame*       aPrevFrame,
                              nsIFrame*       aFrameList)
 {
-#ifdef IBMBIDI
-  if (aPrevFrame) {
-    // Insert aFrameList after the last bidi continuation of aPrevFrame.
-    nsPropertyTable *propTable = GetPresContext()->PropertyTable();
-    nsIFrame* nextBidi;
-    for (; ;) {
-      nextBidi = NS_STATIC_CAST(nsIFrame*,
-                  propTable->GetProperty(aPrevFrame, nsLayoutAtoms::nextBidi));
-      if (!nextBidi) {
-        break;
-      }
-      aPrevFrame = nextBidi;
-    }
-  }
-#endif // IBMBIDI
+  NS_PRECONDITION(!aPrevFrame || !aPrevFrame->GetNextContinuation(),
+                  "aPrevFrame must be the last continuation in its chain!");
 
   return aParentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
 }
@@ -692,15 +679,6 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
                             nsIAtom*        aListName,
                             nsIFrame*       aOldFrame)
 {
-#ifdef IBMBIDI
-  // Don't let the parent remove next bidi. In the other cases the it should NOT be removed.
-  nsIFrame* nextBidi =
-    NS_STATIC_CAST(nsIFrame*, aOldFrame->GetProperty(nsLayoutAtoms::nextBidi));
-  if (nextBidi) {
-    RemoveFrame(aParentFrame, aListName, nextBidi);
-  }
-#endif // IBMBIDI
-
   return aParentFrame->RemoveFrame(aListName, aOldFrame);
 }
 
@@ -1257,7 +1235,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           !aFrame->IsLeaf()) {
         // Check for new :after content, but only if the frame is the
         // last-in-flow.
-        nsIFrame* nextInFlow = aFrame->GetNextInFlow();
+        nsIFrame* nextInFlow = aFrame->GetNextContinuation();
 
         if (!nextInFlow) {
           // Getting the :after frame is more expensive than getting the pseudo
@@ -1355,7 +1333,7 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   nsIFrame* frame = aFrame;
   nsIFrame* frame2 = aFrame;
 
-  NS_ASSERTION(!frame->GetPrevInFlow(), "must start with the first in flow");
+  NS_ASSERTION(!frame->GetPrevContinuation(), "must start with the first in flow");
 
   // We want to start with this frame and walk all its next-in-flows,
   // as well as all its special siblings and their next-in-flows,
@@ -1376,12 +1354,12 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
         // If it's going to cause a framechange, then don't bother
         // with the continuations or special siblings since they'll be
         // clobbered by the frame reconstruct anyway.
-        NS_ASSERTION(!frame->GetPrevInFlow(),
+        NS_ASSERTION(!frame->GetPrevContinuation(),
                      "continuing frame had more severe impact than first-in-flow");
         return topLevelChange;
       }
 
-      frame = frame->GetNextInFlow();
+      frame = frame->GetNextContinuation();
     } while (frame);
 
     // Might we have special siblings?

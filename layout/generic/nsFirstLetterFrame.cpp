@@ -304,7 +304,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
   nsIFrame* overflowFrames;
 
   // Check for an overflow list with our prev-in-flow
-  nsFirstLetterFrame* prevInFlow = (nsFirstLetterFrame*)mPrevInFlow;
+  nsFirstLetterFrame* prevInFlow = (nsFirstLetterFrame*)GetPrevInFlow();
   if (nsnull != prevInFlow) {
     overflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
     if (overflowFrames) {

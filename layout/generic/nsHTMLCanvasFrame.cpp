@@ -121,7 +121,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.width += mBorderPadding.left + mBorderPadding.right;
   aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
 
-  if (mPrevInFlow) {
+  if (GetPrevInFlow()) {
     nscoord y = GetContinuationOffset(&aMetrics.width);
     aMetrics.height -= y + mBorderPadding.top;
     aMetrics.height = PR_MAX(0, aMetrics.height);
@@ -256,8 +256,8 @@ nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const
     *aWidth = 0;
   }
 
-  if (mPrevInFlow) {
-    for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow = prevInFlow->GetPrevInFlow()) {
+  if (GetPrevInFlow()) {
+    for (nsIFrame* prevInFlow = GetPrevInFlow() ; prevInFlow; prevInFlow = prevInFlow->GetPrevInFlow()) {
       nsRect rect = prevInFlow->GetRect();
       if (aWidth) {
         *aWidth = rect.width;

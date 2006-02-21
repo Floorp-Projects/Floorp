@@ -367,11 +367,11 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   }
 
   // Output the flow linkage
-  if (nsnull != mPrevInFlow) {
-    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, mPrevInFlow));
+  if (nsnull != GetPrevInFlow()) {
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, GetPrevInFlow()));
   }
-  if (nsnull != mNextInFlow) {
-    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, mNextInFlow));
+  if (nsnull != GetNextInFlow()) {
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, GetNextInFlow()));
   }
 
   // Output the rect and state
@@ -734,7 +734,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.descent = aMetrics.height - aMetrics.ascent;
     
     // Whether or not we're complete hasn't changed
-    aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
+    aStatus = (nsnull != GetNextInFlow()) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
     
     // Factor the absolutely positioned child bounds into the overflow area
     ComputeCombinedArea(aReflowState, aMetrics);
@@ -1365,11 +1365,11 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // Figure out how much of the computed height should be
       // applied to this frame.
       nscoord computedHeightLeftOver = aReflowState.mComputedHeight;
-      if (mPrevInFlow) {
+      if (GetPrevInFlow()) {
         // Reduce the height by the computed height of prev-in-flows.
-        for (nsIFrame* prev = mPrevInFlow; prev; prev = prev->GetPrevInFlow()) {
+        for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
           nscoord contentHeight = prev->GetRect().height;
-          if (prev == mPrevInFlow) {
+          if (prev == GetPrevInFlow()) {
             // subtract off the style top borderpadding to get the
             // content height
             contentHeight -= aReflowState.mComputedBorderPadding.top;
@@ -2435,7 +2435,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState, PRBool aTryPull)
         }
         if (!overflowLines) {
           aState.mNextInFlow =
-            NS_STATIC_CAST(nsBlockFrame*, nextInFlow->mNextInFlow);
+            NS_STATIC_CAST(nsBlockFrame*, nextInFlow->GetNextInFlow());
           continue;
         }
         nifLine = overflowLines->begin();
@@ -2829,7 +2829,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
       break;
     }
 
-    nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
+    nextInFlow = (nsBlockFrame*) nextInFlow->GetNextInFlow();
     aState.mNextInFlow = nextInFlow;
   }
 
@@ -4337,7 +4337,7 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState,
 
   // XXX Not sure about this part
   // Try our next-in-flows lines to answer the question
-  nsBlockFrame* nextInFlow = (nsBlockFrame*) mNextInFlow;
+  nsBlockFrame* nextInFlow = (nsBlockFrame*) GetNextInFlow();
   while (nsnull != nextInFlow) {
     for (line_iterator line = nextInFlow->begin_lines(),
                    line_end = nextInFlow->end_lines();
@@ -4347,7 +4347,7 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState,
       if (0 != line->GetChildCount())
         return !line->IsBlock();
     }
-    nextInFlow = (nsBlockFrame*) nextInFlow->mNextInFlow;
+    nextInFlow = (nsBlockFrame*) nextInFlow->GetNextInFlow();
   }
 
   // This is the last line - so don't allow justification
@@ -4456,8 +4456,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
           bidiUtils->ReorderFrames(aState.mPresContext,
                                    aState.mReflowState.rendContext,
-                                   aLine->mFirstChild, nextInFlow,
-                                   aLine->GetChildCount() );
+                                   aLine->mFirstChild, nextInFlow);
         } // bidiUtils
       } // not visual mode
     } // bidi enabled
@@ -4861,7 +4860,7 @@ nsBlockFrame::DrainOverflowLines(nsBlockReflowState& aState)
   nsLineList* ourOverflowLines = nsnull;
 
   // First grab the prev-in-flows overflow lines
-  nsBlockFrame* prevBlock = (nsBlockFrame*) mPrevInFlow;
+  nsBlockFrame* prevBlock = (nsBlockFrame*) GetPrevInFlow();
   if (prevBlock) {
     overflowLines = prevBlock->RemoveOverflowLines();
     if (overflowLines) {
@@ -5504,7 +5503,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*        aListName,
 
   if (nsnull == aListName) {
     PRBool hasFloats = BlockHasAnyFloats(aOldFrame);
-    rv = DoRemoveFrame(aOldFrame);
+    rv = DoRemoveFrame(aOldFrame, PR_TRUE, PR_FALSE);
     if (hasFloats) {
       MarkSameSpaceManagerLinesDirty(this);
     }
@@ -5519,7 +5518,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*        aListName,
 #ifdef IBMBIDI
   else if (nsLayoutAtoms::nextBidi == aListName) {
     // Skip the call to |ReflowDirtyChild| below by returning now.
-    return DoRemoveFrame(aOldFrame);
+    return DoRemoveFrame(aOldFrame, PR_TRUE, PR_FALSE);
   }
 #endif // IBMBIDI
   else {
@@ -5594,12 +5593,13 @@ static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
 // This function removes aDeletedFrame and all its continuations.  It
 // is optimized for deleting a whole series of frames. The easy
 // implementation would invoke itself recursively on
-// aDeletedFrame->GetNextInFlow, then locate the line containing
+// aDeletedFrame->GetNextContinuation, then locate the line containing
 // aDeletedFrame and remove aDeletedFrame from that line. But here we
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
 nsresult
-nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames)
+nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
+                            PRBool aRemoveOnlyFluidContinuations)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
@@ -5702,21 +5702,22 @@ found_frame:;
     lineChildCount--;
     line->SetChildCount(lineChildCount);
 
-    // Destroy frame; capture its next-in-flow first in case we need
+    // Destroy frame; capture its next continuation first in case we need
     // to destroy that too.
-    nsIFrame* deletedNextInFlow = aDeletedFrame->GetNextInFlow();
+    nsIFrame* deletedNextContinuation = aRemoveOnlyFluidContinuations ?
+      aDeletedFrame->GetNextInFlow() : aDeletedFrame->GetNextContinuation();
 #ifdef NOISY_REMOVE_FRAME
     printf("DoRemoveFrame: %s line=%p frame=",
            searchingOverflowList?"overflow":"normal", line.get());
     nsFrame::ListTag(stdout, aDeletedFrame);
-    printf(" prevSibling=%p deletedNextInFlow=%p\n", prevSibling, deletedNextInFlow);
+    printf(" prevSibling=%p deletedNextContinuation=%p\n", prevSibling, deletedNextContinuation);
 #endif
     if (aDestroyFrames) {
       aDeletedFrame->Destroy(presContext);
     } else {
       aDeletedFrame->SetNextSibling(nsnull);
     }
-    aDeletedFrame = deletedNextInFlow;
+    aDeletedFrame = deletedNextContinuation;
 
     PRBool haveAdvancedToNextLine = PR_FALSE;
     // If line is empty, remove it now.
@@ -5759,23 +5760,23 @@ found_frame:;
     } else {
       // Make the line that just lost a frame dirty, and advance to
       // the next line.
-      if (!deletedNextInFlow || isLastFrameOnLine ||
-          !line->Contains(deletedNextInFlow)) {
+      if (!deletedNextContinuation || isLastFrameOnLine ||
+          !line->Contains(deletedNextContinuation)) {
         line->MarkDirty();
         ++line;
         haveAdvancedToNextLine = PR_TRUE;
       }
     }
 
-    if (deletedNextInFlow) {
+    if (deletedNextContinuation) {
       // Continuations for placeholder frames don't always appear in
       // consecutive lines. So for placeholders, just continue the slow easy way.
       if (isPlaceholder) {
-        return RemoveBlockChild(deletedNextInFlow, aDestroyFrames);
+        return RemoveBlockChild(deletedNextContinuation, aDestroyFrames);
       }
 
       // See if we should keep looking in the current flow's line list.
-      if (deletedNextInFlow->GetParent() != this) {
+      if (deletedNextContinuation->GetParent() != this) {
         // The deceased frames continuation is not a child of the
         // current block. So break out of the loop so that we advance
         // to the next parent.
@@ -5786,7 +5787,7 @@ found_frame:;
       // overflow line list.
       if (haveAdvancedToNextLine) {
         if (line != line_end && !searchingOverflowList &&
-            !line->Contains(deletedNextInFlow)) {
+            !line->Contains(deletedNextContinuation)) {
           // We have advanced to the next *normal* line but the next-in-flow
           // is not there - force a switch to the overflow line list.
           line = line_end;
@@ -5818,13 +5819,7 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   NS_PRECONDITION(prevInFlow, "bad next-in-flow");
   NS_PRECONDITION(IsChild(aNextInFlow), "bad geometric parent");
 
-#ifdef IBMBIDI
-  if (!(prevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) ||
-      (NS_STATIC_CAST(nsIFrame*,
-                      aPresContext->PropertyTable()->GetProperty(prevInFlow, nsLayoutAtoms::nextBidi)) !=
-       aNextInFlow))
-#endif // IBMBIDI
-    DoRemoveFrame(aNextInFlow);
+  DoRemoveFrame(aNextInFlow);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -6069,9 +6064,9 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     }
     if (lastPlaceholder) {
       // get the containing block of prevPlaceholder which is our prev-in-flow
-      if (mPrevInFlow) {
+      if (GetPrevInFlow()) {
         // get the break type of the last line in mPrevInFlow
-        line_iterator endLine = --((nsBlockFrame*)mPrevInFlow)->end_lines();
+        line_iterator endLine = --((nsBlockFrame*)GetPrevInFlow())->end_lines();
         if (endLine->HasFloatBreakAfter()) {
           aState.mFloatBreakType = endLine->GetBreakTypeAfter();
         }
@@ -6089,10 +6084,10 @@ PRIntn
 nsBlockFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -6667,7 +6662,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
   else {
 
     // Lookup up the two pseudo style contexts
-    if (nsnull == mPrevInFlow) {
+    if (nsnull == GetPrevInFlow()) {
       nsRefPtr<nsStyleContext> firstLetterStyle = GetFirstLetterStyle(aPresContext);
       if (nsnull != firstLetterStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
@@ -6687,7 +6682,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
     // here so that RenumberLists will work (it needs the bullets to
     // store the bullet numbers).
     const nsStyleDisplay* styleDisplay = GetStyleDisplay();
-    if ((nsnull == mPrevInFlow) &&
+    if ((nsnull == GetPrevInFlow()) &&
         (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) &&
         (nsnull == mBullet)) {
       // Resolve style for the bullet frame
@@ -7118,7 +7113,7 @@ nsBlockFrame::VerifyOverflowSituation()
       NS_ASSERTION(! overflowLines->empty(), "should not be empty if present");
       NS_ASSERTION(overflowLines->front()->mFirstChild, "bad overflow list");
     }
-    flow = (nsBlockFrame*) flow->mNextInFlow;
+    flow = (nsBlockFrame*) flow->GetNextInFlow();
   }
 }
 

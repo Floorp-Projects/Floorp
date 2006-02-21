@@ -538,7 +538,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
     if (IS_TABLE_CELL(kidFrame->GetType())) {
       nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
       nsSize desSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
-      if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !mPrevInFlow) {
+      if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !GetPrevInFlow()) {
         CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
       }
       // height may have changed, adjust descent to absorb any excess difference
@@ -629,10 +629,10 @@ PRIntn
 nsTableRowFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -1016,7 +1016,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
         }
         
         if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
-          if (!mPrevInFlow) {
+          if (!GetPrevInFlow()) {
             // Calculate the cell's actual size given its pass2 size. This function
             // takes into account the specified height (in the style), and any special
             // logic needed for backwards compatibility
@@ -1076,7 +1076,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   }
   else if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
     aDesiredSize.height = CalcHeight(aReflowState);
-    if (mPrevInFlow) {
+    if (GetPrevInFlow()) {
       nscoord height = CalcHeightFromUnpaginatedHeight(aPresContext, *this);
       aDesiredSize.height = PR_MAX(aDesiredSize.height, height);
     }
@@ -1366,7 +1366,7 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
   // frames. If any of them has a continuing frame, then we're not complete. We
   // can't just return the status of the cell frame we just reflowed...
   aStatus = NS_FRAME_COMPLETE;
-  if (mNextInFlow) {
+  if (GetNextInFlow()) {
     for (nsIFrame* cell = mFrames.FirstChild(); cell;
          cell = cell->GetNextSibling()) {
       nsIFrame* contFrame = cell->GetNextInFlow();
@@ -1552,7 +1552,7 @@ void
 nsTableRowFrame::SetUnpaginatedHeight(nsPresContext* aPresContext,
                                       nscoord         aValue)
 {
-  NS_ASSERTION(!mPrevInFlow, "program error");
+  NS_ASSERTION(!GetPrevInFlow(), "program error");
   // Get the property 
   nscoord* value = (nscoord*)nsTableFrame::GetProperty(this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
   if (value) {

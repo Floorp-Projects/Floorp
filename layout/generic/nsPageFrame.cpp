@@ -145,8 +145,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     NS_ASSERTION(nsLayoutAtoms::pageContentFrame == firstFrame->GetType(),
                  "This frame isn't a pageContentFrame");
 
-    if (contentPage && mPrevInFlow) {
-      nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, mPrevInFlow);
+    if (contentPage && GetPrevInFlow()) {
+      nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, GetPrevInFlow());
       nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
       nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
