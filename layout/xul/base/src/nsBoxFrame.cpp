@@ -1311,8 +1311,12 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
     
     nsIBox* parent;
     GetParentBox(&parent);
-    parent->RelayoutChildAtOrdinal(state, this);
-    parent->MarkDirty(state);
+    // If our parent is not a box, there's not much we can do... but in that
+    // case our ordinal doesn't matter anyway, so that's ok.
+    if (parent) {
+      parent->RelayoutChildAtOrdinal(state, this);
+      parent->MarkDirty(state);
+    }
   }
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
