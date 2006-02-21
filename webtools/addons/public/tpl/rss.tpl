@@ -1,7 +1,7 @@
 <rss version="2.0">
 <channel>
-    <title>{$listname} :: Mozilla Addons</title>
-    <link>{$config.host}{$config.webpath}</link>
+    <title>{$listname|escape:html:"UTF-8"} :: Mozilla Addons</title>
+    <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}</link>
     <description>Mozilla Addons is the place to get extensions and themes for your Mozilla applications.</description>
     <language>en-US</language>
     <copyright>{$smarty.now|date_format:'%Y'} The Mozilla Foundation</copyright>
@@ -9,7 +9,7 @@
     <ttl>120</ttl>
     <image>
         <title>Mozilla Addons</title>
-        <link>{$config.host}{$config.webpath}</link>
+        <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}</link>
         <url>http://mozilla.org/favicon.ico</url>
         <width>16</width>
         <height>16</height>
@@ -18,9 +18,9 @@
 {foreach item=row from=$data}
     <item>
         <pubDate>{$row.dateupdated}</pubDate>
-        <title>{$row.title} {$row.version} for {$row.appname} </title>
-        <link>{$config.host}{$config.webpath}/{$row.appname|lower}/{$row.id}/</link>
-        <description>{$row.description|escape:html}</description>
+        <title>{$row.title|escape:html:"UTF-8"} {$row.version|escape:html:"UTF-8"} for {$row.appname|escape:html:"UTF-8"} </title>
+        <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}/{$row.appname|lower|escape:html:"UTF-8"}/{$row.id}/</link>
+        <description>{$row.description|escape:html:"UTF-8"}</description>
     </item>
 {/foreach}
 
