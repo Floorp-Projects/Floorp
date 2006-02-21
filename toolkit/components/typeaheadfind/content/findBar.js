@@ -825,7 +825,7 @@ var gFindBar = {
     }
     this.setFindMode(FIND_NORMAL);
     if (this.mFlashFindBar) {
-      this.mFlashFindBarTimeout = setInterval(this.flashFindBar, 500);
+      this.mFlashFindBarTimeout = setInterval(findBar_FlashFindBar, 500);
       var prefService =
             Components.classes["@mozilla.org/preferences-service;1"]
                       .getService(Components.interfaces.nsIPrefBranch);
@@ -1038,4 +1038,9 @@ function findBar_DelayedCloseFindBar()
 function findBar_UpdateStatusBar()
 {
   gFindBar.updateStatusBar();
+}
+
+function findBar_FlashFindBar()
+{
+  gFindBar.flashFindBar();
 }
