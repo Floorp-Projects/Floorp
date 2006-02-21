@@ -87,8 +87,7 @@ nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
   if (aResult)
     *aResult = intValue;
 
-  return (!((intValue == LONG_MAX || intValue == LONG_MIN) && errno == ERANGE))
-         && *pEnd == '\0';
+  return (*pEnd == '\0');
 }
 
 PRBool
@@ -307,7 +306,7 @@ nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
     fullDate.AppendLiteral("-");
     fullDate.Append(year);
 
-    LOG(("\n      Parsed date is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
+    LOG(("      Parsed date is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
 
     PRStatus status = PR_ParseTimeString(NS_ConvertUTF16toUTF8(fullDate).get(),
                                          PR_TRUE, &dateTime);
@@ -334,7 +333,7 @@ nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
     }
   }
 
-  LOG(("\n      Date is %s \n", ((isValid) ? "Valid" : "Not Valid")));
+  LOG(("      Date is %s", ((isValid) ? "Valid" : "Not Valid")));
 
   return isValid;
 }
@@ -1177,6 +1176,7 @@ nsSchemaValidatorUtils::CompareDurations(nsISchemaDuration *aDuration1,
   PRTime foo;
   PRExplodedTime explodedTime, newTime1, newTime2;
 
+  // XXX: nspr doesn't handle pre-1900 dates and will return an error!
   char* datetimeArray[] = { "1696-09-01T00:00:00Z", "1697-02-01T00:00:00Z",
                             "1903-03-01T00:00:00Z", "1903-07-01T00:00:00Z" };
   PRBool indeterminate = PR_FALSE;
@@ -1294,6 +1294,56 @@ nsSchemaValidatorUtils::AddDurationToDatetime(PRExplodedTime aDatetime,
   return resultDatetime;
 }
 
+// http://www.w3.org/TR/xmlschema-2/#normalizedString
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaNormalizedString(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+  nsAutoString string(aStrValue);
+
+  // may not contain carriage return, line feed nor tab characters
+  if (string.FindCharInSet("\t\r\n") == kNotFound)
+    isValid = PR_TRUE;
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#token
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaToken(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+  nsAutoString string(aStrValue);
+
+  // may not contain carriage return, line feed, tab characters.  Also can
+  // not contain leading/trailing whitespace and no internal sequences of
+  // two or more spaces.
+  if ((string.FindCharInSet("\t\r\n") == kNotFound) &&
+      (string.Find(NS_LITERAL_STRING("  ")) == kNotFound) &&
+      (string.First() != ' ') &&
+      (string.Last() != ' '))
+    isValid = PR_TRUE;
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#language
+PRBool
+nsSchemaValidatorUtils::IsValidSchemaLanguage(const nsAString &aStrValue)
+{
+  PRBool isValid = PR_FALSE;
+
+  // pattern is defined in spec
+  nsAutoString pattern;
+  pattern.AssignLiteral("[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*");
+
+  nsCOMPtr<nsISchemaValidatorRegexp> regexp = do_GetService(kREGEXP_CID);
+  nsresult rv = regexp->RunRegexp(aStrValue, pattern, "g", &isValid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return isValid;
+}
+
 PRBool
 nsSchemaValidatorUtils::HandleEnumeration(const nsAString &aStrValue,
                                           const nsStringArray &aEnumerationList)
@@ -1388,7 +1438,7 @@ nsresult
 nsSchemaValidatorUtils::GetDerivedSimpleType(nsISchemaSimpleType *aSimpleType,
                                              nsSchemaDerivedSimpleType *aDerived)
 {
-  PRBool done, hasEnumerations = PR_FALSE;
+  PRBool done = PR_FALSE, hasEnumerations = PR_FALSE;
   nsCOMPtr<nsISchemaSimpleType> simpleType(aSimpleType);
   PRUint16 simpleTypeValue;
   PRUint32 facetCount;

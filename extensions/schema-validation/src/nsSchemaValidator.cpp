@@ -454,6 +454,51 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
       break;
     }
 
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING: {
+      if (nsSchemaValidatorUtils::IsValidSchemaNormalizedString(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN: {
+      if (nsSchemaValidatorUtils::IsValidSchemaToken(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE: {
+      if (nsSchemaValidatorUtils::IsValidSchemaLanguage(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue,
+                                       aDerived->length.value,
+                                       aDerived->length.isDefined,
+                                       aDerived->minLength.value,
+                                       aDerived->minLength.isDefined,
+                                       aDerived->maxLength.value,
+                                       aDerived->maxLength.isDefined,
+                                       &aDerived->enumerationList,
+                                       &isValid);
+      }
+      break;
+    }
+
     case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN: {
       rv = ValidateBuiltinTypeBoolean(aNodeValue, &isValid);
       break;
@@ -565,10 +610,8 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
       if (aDerived->maxExclusive.value.IsEmpty()) {
         aDerived->maxExclusive.value.AssignLiteral("1");
-      }
-
-      if (aDerived->minInclusive.value.IsEmpty()) {
-        aDerived->minInclusive.value.AssignLiteral("0");
+      } else if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("0");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue,
@@ -586,10 +629,174 @@ nsSchemaValidator::ValidateDerivedBuiltinType(const nsAString & aNodeValue,
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
       if (aDerived->maxExclusive.value.IsEmpty()) {
         aDerived->maxExclusive.value.AssignLiteral("0");
+      } else if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("-1");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://w3.org/TR/xmlschema-2/#positiveInteger */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER: {
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("1");
+      } else if (aDerived->minExclusive.value.IsEmpty()) {
+        aDerived->minExclusive.value.AssignLiteral("0");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#long */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LONG: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("9223372036854775807");
       }
 
       if (aDerived->minInclusive.value.IsEmpty()) {
-        aDerived->minInclusive.value.AssignLiteral("-1");
+        aDerived->minInclusive.value.AssignLiteral("-9223372036854775808");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#int */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_INT: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("2147483647");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("-2147483648");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#short */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_SHORT: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("32767");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("-32768");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedLong */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("18446744073709551615");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedInt */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("4294967295");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedShort */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("65535");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
+      }
+
+      rv = ValidateBuiltinTypeInteger(aNodeValue,
+                                      aDerived->totalDigits.value,
+                                      aDerived->maxExclusive.value,
+                                      aDerived->minExclusive.value,
+                                      aDerived->maxInclusive.value,
+                                      aDerived->minInclusive.value,
+                                      &aDerived->enumerationList,
+                                      &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedByte */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE: {
+      if (aDerived->maxInclusive.value.IsEmpty()) {
+        aDerived->maxInclusive.value.AssignLiteral("255");
+      }
+
+      if (aDerived->minInclusive.value.IsEmpty()) {
+        aDerived->minInclusive.value.AssignLiteral("0");
       }
 
       rv = ValidateBuiltinTypeInteger(aNodeValue,
@@ -745,6 +952,30 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
       break;
     }
 
+    case nsISchemaBuiltinType::BUILTIN_TYPE_NORMALIZED_STRING: {
+      if (nsSchemaValidatorUtils::IsValidSchemaNormalizedString(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue, 0, PR_FALSE, 0, PR_FALSE, 0,
+                                       PR_FALSE, nsnull, &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_TOKEN: {
+      if (nsSchemaValidatorUtils::IsValidSchemaToken(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue, 0, PR_FALSE, 0, PR_FALSE, 0,
+                                       PR_FALSE, nsnull, &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LANGUAGE: {
+      if (nsSchemaValidatorUtils::IsValidSchemaLanguage(aNodeValue)) {
+        rv = ValidateBuiltinTypeString(aNodeValue, 0, PR_FALSE, 0, PR_FALSE, 0,
+                                       PR_FALSE, nsnull, &isValid);
+      }
+      break;
+    }
+
     case nsISchemaBuiltinType::BUILTIN_TYPE_BOOLEAN: {
       rv = ValidateBuiltinTypeBoolean(aNodeValue, &isValid);
       break;
@@ -803,22 +1034,103 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
 
     /* http://w3.org/TR/xmlschema-2/#nonPositiveInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NONPOSITIVEINTEGER: {
-      // nonPositiveInteger inherits from integer, with maxExclusive
-      // being 1
-      ValidateBuiltinTypeInteger(aNodeValue, nsnull, NS_LITERAL_STRING("1"),
-                                 EmptyString(), EmptyString(), EmptyString(),
-                                 nsnull, &isValid);
+      // nonPositiveInteger inherits from integer, with maxInclusive
+      // being 0
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull, EmptyString(),
+                                 EmptyString(), NS_LITERAL_STRING("0"),
+                                 EmptyString(), nsnull, &isValid);
       break;
     }
 
     /* http://www.w3.org/TR/xmlschema-2/#negativeInteger */
     case nsISchemaBuiltinType::BUILTIN_TYPE_NEGATIVEINTEGER: {
-      // negativeInteger inherits from integer, with maxExclusive
-      // being 0 (only negative numbers)
-      ValidateBuiltinTypeInteger(aNodeValue, nsnull, NS_LITERAL_STRING("0"),
-                                 EmptyString(), EmptyString(), EmptyString(),
-                                 nsnull, &isValid);
+      // negativeInteger inherits from integer, with maxInclusive
+      // being -1 (only negative integers)
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull, EmptyString(),
+                                 EmptyString(), NS_LITERAL_STRING("-1"),
+                                 EmptyString(), nsnull, &isValid);
       break;
+    }
+
+    /* http://w3.org/TR/xmlschema-2/#positiveInteger */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER: {
+      // positiveInteger inherits from integer, with minInclusive
+      // being 1
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull, EmptyString(),
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("1"), nsnull, &isValid);
+      break;
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#long */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_LONG: {
+      // maxInclusive is 9223372036854775807 and minInclusive is
+      // -9223372036854775808
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("9223372036854775807"),
+                                 NS_LITERAL_STRING("-9223372036854775808"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#int */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_INT: {
+      // maxInclusive is 2147483647 and minInclusive is -2147483648
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("2147483647"),
+                                 NS_LITERAL_STRING("-2147483648"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#short */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_SHORT: {
+      // maxInclusive is 32767 and minInclusive is -32768
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("32767"),
+                                 NS_LITERAL_STRING("-32768"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedLong */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDLONG: {
+      // maxInclusive is 18446744073709551615. and minInclusive is 0
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("18446744073709551615"),
+                                 NS_LITERAL_STRING("0"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedInt */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDINT: {
+      // maxInclusive is 4294967295. and minInclusive is 0
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("4294967295"),
+                                 NS_LITERAL_STRING("0"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedShort */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDSHORT: {
+      // maxInclusive is 65535. and minInclusive is 0
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("65535"),
+                                 NS_LITERAL_STRING("0"),
+                                 nsnull, &isValid);
+    }
+
+    /* http://www.w3.org/TR/xmlschema-2/#unsignedByte */
+    case nsISchemaBuiltinType::BUILTIN_TYPE_UNSIGNEDBYTE: {
+      // maxInclusive is 255. and minInclusive is 0
+      ValidateBuiltinTypeInteger(aNodeValue, nsnull,
+                                 EmptyString(), EmptyString(),
+                                 NS_LITERAL_STRING("255"),
+                                 NS_LITERAL_STRING("0"),
+                                 nsnull, &isValid);
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_BYTE: {

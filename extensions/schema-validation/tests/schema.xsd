@@ -21,9 +21,56 @@
     </restriction>
   </simpleType>
 
-  <simpleType name="test-nonPositiveInteger">
+  <simpleType name="nonPositiveInteger-test-1">
     <restriction base='nonPositiveInteger'>
       <totalDigits value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="positiveInteger-test-1">
+    <restriction base='positiveInteger'>
+      <totalDigits value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="negativeInteger-test-1">
+    <restriction base='negativeInteger'>
+      <totalDigits value="3"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='long-test-1'>
+    <restriction base='long'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='int-test-1'>
+    <restriction base='int'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='short-test-1'>
+    <restriction base='short'>
+    </restriction>
+  </simpleType>
+          
+  <simpleType name='unsignedLong-test-1'>
+    <restriction base='unsignedLong'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='unsignedInt-test-1'>
+    <restriction base='unsignedInt'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='unsignedShort-test-1'>
+    <restriction base='unsignedShort'>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='unsignedByte-test-1'>
+    <restriction base='unsignedByte'>
     </restriction>
   </simpleType>
 
@@ -139,15 +186,15 @@
 
   <simpleType name="gmonth-test-2">
     <restriction base='gMonth'>
-      <maxExclusive value="--11--Z"/>
-      <minExclusive value="--05--"/>
+      <maxExclusive value="--11Z"/>
+      <minExclusive value="--05"/>
     </restriction>
   </simpleType>
 
   <simpleType name="gmonth-test-3">
     <restriction base='gMonth'>
-      <maxInclusive value="--11--"/>
-      <minInclusive value="--05--"/>
+      <maxInclusive value="--11"/>
+      <minInclusive value="--05"/>
     </restriction>
   </simpleType>
 
@@ -284,7 +331,6 @@
     </restriction>
   </simpleType>
 
-
   <simpleType name="anyuri-test-1">
     <restriction base='anyURI'>
     </restriction>
@@ -339,7 +385,6 @@
     </restriction>
   </simpleType>
 
-
   <simpleType name="list-test-1">
     <list itemType="boolean"/>
   </simpleType>
@@ -367,7 +412,76 @@
         </restriction>
       </simpleType>
     </union>
-  </simpleType> 
+  </simpleType>
+
+  <simpleType name="TypeCode">
+    <restriction base="test:UrType">
+      <enumeration value="Applicanter"/>
+      <enumeration value="Applicant"/>
+      <enumeration value="Third_Party"/>
+      <enumeration value="Trustee"/>
+      <maxLength value="50"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="UrType">
+    <restriction base="string">
+    </restriction>
+  </simpleType>
+
+  <simpleType name="IndividualRole">
+    <restriction base="test:TypeCode">
+      <enumeration value="Applicant"/>
+      <enumeration value="Third_Party"/>
+      <enumeration value="Trustee"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='IndividualRoleList'>
+    <list itemType='test:IndividualRole'/>
+  </simpleType>
+
+  <simpleType name='IndividualRoleListType'>
+    <restriction base='test:IndividualRoleList'>
+      <maxLength value='4'/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='IndividualRoleListType2'>
+    <restriction base='test:IndividualRoleList'>
+      <length value='4'/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name='IndividualRoleListType3'>
+    <restriction base='test:IndividualRoleList'>
+      <minLength value='4'/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="RoleUnion">
+    <union>
+      <simpleType>
+        <restriction base="test:IndividualRoleListType"/>
+      </simpleType>
+      <simpleType>
+        <restriction base="string">
+          <enumeration value="N/A"/>
+        </restriction>
+      </simpleType>
+      <simpleType>
+        <restriction base="string">
+          <maxLength value="4"/>
+        </restriction>
+      </simpleType>
+    </union>
+  </simpleType>
+
+  <simpleType name='IndividualRoleListType5'>
+    <restriction base='test:IndividualRoleList'>
+      <enumeration value='Applicant Trustee'/>
+    </restriction>
+  </simpleType>
 
   <!-- complex types -->
 

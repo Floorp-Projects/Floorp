@@ -138,17 +138,6 @@
 
       start = new Date();
 
-/*
-        validate("true false 0 1", "list-test-1", true);
-        validate("true false e 1", "list-test-1", false);
-
-        validate("100 33 4", "list-test-2", true);
-        validate("100 333 4", "list-test-2", false);
-
-        validate("50", "union-test-1", true);
-        validate("N/A", "union-test-1", true);
-        validate("#REF!", "union-test-1", false);*/
-
       if (1) {
         validate("220", "integer-test-1", false);
         validate("2", "integer-test-1", false);
@@ -166,6 +155,23 @@
         validate("-1", "integer-test-2", true);
         validate("-34", "integer-test-2", true);
         validate("002", "integer-test-2", true);
+
+        validate("-1", "nonPositiveInteger-test-1", true);
+        validate("0", "nonPositiveInteger-test-1", true);
+        validate("1", "nonPositiveInteger-test-1", false);
+        validate("-3452", "nonPositiveInteger-test-1", false);
+
+        validate("-1", "negativeInteger-test-1", true);
+        validate("-22", "negativeInteger-test-1", true);
+        validate("0", "negativeInteger-test-1", false);
+        validate("1", "negativeInteger-test-1", false);
+        validate("-3452", "negativeInteger-test-1", false);
+
+        validate("1", "positiveInteger-test-1", true);
+        validate("22", "positiveInteger-test-1", true);
+        validate("0", "positiveInteger-test-1", false);
+        validate("-12", "positiveInteger-test-1", false);
+        validate("3452", "positiveInteger-test-1", false);
 
         validate("127", "byte-test-1", true);
         validate("-128", "byte-test-1", true);
@@ -207,6 +213,7 @@
         validate("220.343434", "decimal-test-1", true);
         validate("220.3434a34", "decimal-test-1", false);
         validate("220.343.34", "decimal-test-1", false);
+        validate("0.2", "decimal-test-1", true);
 
         validate("220.343435", "decimal-test-2", false);
         validate("220.3434342", "decimal-test-2", true);
@@ -229,6 +236,47 @@
         validate("100.32", "decimal-test-4", true);
         validate("1002.32", "decimal-test-4", false);
         validate("100.322", "decimal-test-4", false);
+
+        validate("220", "long-test-1", true);
+        validate("-220", "long-test-1", true);
+        validate("9223372036854775807", "long-test-1", true);
+        validate("-9223372036854775808", "long-test-1", true);
+        validate("-9223372036854775809", "long-test-1", false);
+        validate("9223372036854775808", "long-test-1", false);
+
+        validate("220", "int-test-1", true);
+        validate("-220", "int-test-1", true);
+        validate("2147483647", "int-test-1", true);
+        validate("-2147483648", "int-test-1", true);
+        validate("2147483648", "int-test-1", false);
+        validate("-2147483649", "int-test-1", false);
+
+        validate("220", "short-test-1", true);
+        validate("-220", "short-test-1", true);
+        validate("32767", "short-test-1", true);
+        validate("-32768", "short-test-1", true);
+        validate("32768", "short-test-1", false);
+        validate("-32769", "short-test-1", false);
+
+        validate("220", "unsignedLong-test-1", true);
+        validate("-220", "unsignedLong-test-1", false);
+        validate("18446744073709551615", "unsignedLong-test-1", true);
+        validate("18446744073709551616", "unsignedLong-test-1", false);
+
+        validate("220", "unsignedInt-test-1", true);
+        validate("-220", "unsignedInt-test-1", false);
+        validate("4294967295", "unsignedInt-test-1", true);
+        validate("4294967296", "unsignedInt-test-1", false);
+
+        validate("220", "unsignedShort-test-1", true);
+        validate("-220", "unsignedShort-test-1", false);
+        validate("65535", "unsignedShort-test-1", true);
+        validate("65536", "unsignedShort-test-1", false);
+
+        validate("220", "unsignedByte-test-1", true);
+        validate("-220", "unsignedByte-test-1", false);
+        validate("255", "unsignedByte-test-1", true);
+        validate("256", "unsignedByte-test-1", false);
 
         validate("bla", "string-test-1", false);
         validate("blaadadad", "string-test-1", false);
@@ -256,7 +304,7 @@
         validate("---30", "gday-test-1", true);
         validate("---30Z", "gday-test-1", true);
         validate("---3", "gday-test-1", false);
-        validate("----3", "gday-test-1", false);      
+        validate("----3", "gday-test-1", false);
 
         validate("---03", "gday-test-2", false);
         validate("---14", "gday-test-2", true);
@@ -272,28 +320,28 @@
         validate("---05", "gday-test-3", true);
         validate("---21", "gday-test-3", true);
 
-        validate("--01--", "gmonth-test-1", true);
-        validate("--05--Z", "gmonth-test-1", true);
-        validate("--05---03:43", "gmonth-test-1", true);
-        validate("--05--a03:43", "gmonth-test-1", false);
-        validate("--12--", "gmonth-test-1", true);
-        validate("--32--", "gmonth-test-1", false);
-        validate("---2--", "gmonth-test-1", false);
-        validate("--543--", "gmonth-test-1", false);
+        validate("--01", "gmonth-test-1", true);
+        validate("--05Z", "gmonth-test-1", true);
+        validate("--05-03:43", "gmonth-test-1", true);
+        validate("--05a03:43", "gmonth-test-1", false);
+        validate("--12", "gmonth-test-1", true);
+        validate("--32", "gmonth-test-1", false);
+        validate("---2", "gmonth-test-1", false);
+        validate("--543", "gmonth-test-1", false);
 
-        validate("--01--", "gmonth-test-2", false);
-        validate("--05--", "gmonth-test-2", false);
-        validate("--06--", "gmonth-test-2", true);
-        validate("--10--", "gmonth-test-2", true);
-        validate("--11--", "gmonth-test-2", false);
-        validate("--12--", "gmonth-test-2", false);
+        validate("--01", "gmonth-test-2", false);
+        validate("--05", "gmonth-test-2", false);
+        validate("--06", "gmonth-test-2", true);
+        validate("--10", "gmonth-test-2", true);
+        validate("--11", "gmonth-test-2", false);
+        validate("--12", "gmonth-test-2", false);
 
-        validate("--01--", "gmonth-test-3", false);
-        validate("--05--", "gmonth-test-3", true);
-        validate("--06--", "gmonth-test-3", true);
-        validate("--10--", "gmonth-test-3", true);
-        validate("--11--", "gmonth-test-3", true);
-        validate("--12--", "gmonth-test-3", false);
+        validate("--01", "gmonth-test-3", false);
+        validate("--05", "gmonth-test-3", true);
+        validate("--06", "gmonth-test-3", true);
+        validate("--10", "gmonth-test-3", true);
+        validate("--11", "gmonth-test-3", true);
+        validate("--12", "gmonth-test-3", false);
 
         validate("1989", "gyear-test-1", true);
         validate("1234-13:43", "gyear-test-1", true); 
@@ -487,11 +535,83 @@
         validate("P32D", "duration-test-3", true);
         validate("P27D", "duration-test-3", false);
 
-
         validate("test:foo", "qname-test-1", true);
         validate(":fooasdad", "qname-test-1", false);
         validate("n:s", "qname-test-1", true);
         validate("test:123456789", "qname-test-1", false);
+
+        validate("2004-02-28T24:21:03Z", "datetime-test-1", true);
+        validate("2004-02-28T25:21:03Z", "datetime-test-1", false);
+        validate("2004-02-28T22:61:03Z", "datetime-test-1", false);
+        validate("-2004-02-28T12:21:03.434Z", "datetime-test-1", true);
+        validate("-2004-02-28T12:21:03-04:00", "datetime-test-1", true);
+        validate("-2004-02-30T12:21:03Z", "datetime-test-1", false);
+
+        validate("2004-02-11T12:21:03Z", "datetime-test-2", true);
+        validate("2004-02-18T00:00:00Z", "datetime-test-2", true);
+        validate("2004-02-18T12:21:03Z", "datetime-test-2", false);
+        validate("2004-02-30T12:21:03Z", "datetime-test-2", false);
+        validate("2002-06-29T12:21:03Z", "datetime-test-2", true);
+        validate("2001-02-18T12:21:03Z", "datetime-test-2", false);
+        validate("2001-01-18T12:21:03Z", "datetime-test-2", false);
+        validate("2002-02-30T12:21:03Z", "datetime-test-2", false);
+
+        validate("2004-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2004-02-18T00:00:00Z", "datetime-test-3", true);
+        validate("2004-02-18T12:22:03Z", "datetime-test-3", false);
+        validate("2004-02-21T12:22:03Z", "datetime-test-3", false);
+        validate("2001-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2002-02-18T12:21:03Z", "datetime-test-3", true);
+        validate("2001-02-18T12:20:03Z", "datetime-test-3", false);
+        validate("2001-01-18T22:20:03Z", "datetime-test-3", false);
+        validate("2004-02-18T12:21:03-02:00", "datetime-test-3", false);
+        validate("2004-02-18T12:21:03+02:00", "datetime-test-3", true);
+
+        validate("true false 0 1", "list-test-1", true);
+        validate("true false e 1", "list-test-1", false);
+
+        validate("100 33 4", "list-test-2", true);
+        validate("100 333 4", "list-test-2", false);
+
+        validate("50", "union-test-1", true);
+        validate("N/A", "union-test-1", true);
+        validate("#REF!", "union-test-1", false);
+
+        validateSimpleTypeString("bla", "normalizedString", true);
+        validateSimpleTypeString("bla	", "normalizedString", false);
+
+        validateSimpleTypeString("bla", "token", true);
+        validateSimpleTypeString("bla	", "token", false);
+        validateSimpleTypeString("bla ", "token", false);
+        validateSimpleTypeString(" bla ", "token", false);
+        validateSimpleTypeString("bla afaf", "token", true);
+        validateSimpleTypeString("bla  afaf", "token", false);
+
+        validateSimpleTypeString("en-US", "language", true);
+        validateSimpleTypeString("fr", "language", true);
+        validateSimpleTypeString("2", "language", false);
+
+        validate("Applicant", "IndividualRole", true);
+        validate("Applicanter", "IndividualRole", true);
+        validate("Applicant1", "IndividualRole", false);
+
+        validate("Applicant Trustee", "IndividualRoleList", true);
+        validate("Applicant Trustee Foo", "IndividualRoleList", false);
+
+        validate("Applicant Trustee", "IndividualRoleListType", true);
+        validate("Applicant Trustee Foo", "IndividualRoleListType", false);
+        validate("Applicant Trustee Trustee Applicant", "IndividualRoleListType", true);
+        validate("Applicant Trustee Trustee Applicant Trustee", "IndividualRoleListType", false);
+
+        validate("Applicant Trustee Trustee Applicant", "IndividualRoleListType2", true);
+        validate("Applicant Trustee Trustee", "IndividualRoleListType2", false);
+        validate("Applicant Trustee", "IndividualRoleListType2", false);
+
+        validate("Applicant Trustee Trustee Applicant", "IndividualRoleListType3", true);
+        validate("Applicant Trustee Trustee", "IndividualRoleListType3", false);
+
+        validate("Applicant Trustee Supplier", "IndividualRoleListType5", false);
+        validate("Applicant Trustee", "IndividualRoleListType5", true);
       }
 
       end = new Date();

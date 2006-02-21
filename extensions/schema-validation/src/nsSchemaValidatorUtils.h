@@ -42,8 +42,11 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsISchema.h"
-#include "nsISchemaDuration.h"
 #include "nsCOMArray.h"
+#include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
+#include "nsISchemaDuration.h"
+#include "nsISchemaValidatorRegexp.h"
 
 struct nsSchemaGDay {
   PRUint32 day;            // day represented (1-31)
@@ -96,6 +99,8 @@ const nsMonthShortHand monthShortHand[] = {
   { "12", "Dec" }
 };
 
+#define kREGEXP_CID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
+
 class nsSchemaStringFacet
 {
 public:
@@ -146,6 +151,9 @@ public:
   static PRBool IsValidSchemaInteger(const nsAString & aNodeValue, long *aResult);
   static PRBool IsValidSchemaInteger(const char* aString, long *aResult);
 
+  static PRBool IsValidSchemaDouble(const nsAString & aNodeValue, double *aResult);
+  static PRBool IsValidSchemaDouble(const char* aString, double *aResult);
+
   static PRBool ParseSchemaDate(const nsAString & aStrValue, char *rv_year,
                                 char *rv_month, char *rv_day);
   static PRBool ParseSchemaTime(const nsAString & aStrValue, char *rv_hour,
@@ -182,6 +190,10 @@ public:
   static PRExplodedTime AddDurationToDatetime(PRExplodedTime aDatetime,
                                               nsISchemaDuration *aDuration);
 
+  static PRBool IsValidSchemaNormalizedString(const nsAString & aStrValue);
+  static PRBool IsValidSchemaToken(const nsAString & aStrValue);
+  static PRBool IsValidSchemaLanguage(const nsAString & aStrValue);
+
   static PRBool HandleEnumeration(const nsAString &aStrValue,
                                   const nsStringArray &aEnumerationList);
 
@@ -195,9 +207,6 @@ public:
 private:
   nsSchemaValidatorUtils();
   ~nsSchemaValidatorUtils();
-
-  static PRBool IsValidSchemaDouble(const nsAString & aNodeValue, double *aResult);
-  static PRBool IsValidSchemaDouble(const char* aString, double *aResult);
 
 protected:
 };
