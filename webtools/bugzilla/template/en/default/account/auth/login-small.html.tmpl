@@ -21,7 +21,19 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-<form name="login" action="[% cgi.script_name FILTER html %]" method="POST">
+[%# Use the current script name. If an empty name is retuned,
+  # then we are accessing the home page. %]
+
+[% script_name = cgi.url(Relative => 1) %]
+
+[%# If SSL is in use, use 'sslbase', else use 'urlbase'. %]
+[% IF Param("sslbase") != "" && Param("ssl") != "never" %]
+  [% script_name = Param("sslbase") _ script_name %]
+[% ELSE %]
+  [% script_name = Param("urlbase") _ script_name %]
+[% END %]
+
+<form name="login" action="[% script_name FILTER html %]" method="POST">
   <table>
     <tr>
       <td align="right"><b>Login:</b></td>
