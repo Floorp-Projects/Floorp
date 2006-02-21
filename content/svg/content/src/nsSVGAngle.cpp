@@ -54,17 +54,17 @@
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAngle class
 
-class nsSVGAngle : public nsISVGAngle,
+class nsSVGAngle : public nsIDOMSVGAngle,
                    public nsSVGValue,
                    public nsISVGValueObserver,
                    public nsSupportsWeakReference
 {
 protected:
-  friend nsresult NS_NewSVGAngle(nsISVGAngle** result,
+  friend nsresult NS_NewSVGAngle(nsIDOMSVGAngle** result,
                                  float value,
                                  PRUint16 unit);
 
-  friend nsresult NS_NewSVGAngle(nsISVGAngle** result,
+  friend nsresult NS_NewSVGAngle(nsIDOMSVGAngle** result,
                                  const nsAString &value);
   
   nsSVGAngle(float value, PRUint16 unit);
@@ -106,7 +106,7 @@ protected:
 // Implementation
 
 nsresult
-NS_NewSVGAngle(nsISVGAngle** result,
+NS_NewSVGAngle(nsIDOMSVGAngle** result,
                float value,
                PRUint16 unit)
 {
@@ -118,7 +118,7 @@ NS_NewSVGAngle(nsISVGAngle** result,
 }
 
 nsresult
-NS_NewSVGAngle(nsISVGAngle** result,
+NS_NewSVGAngle(nsIDOMSVGAngle** result,
                const nsAString &value)
 {
   *result = nsnull;
@@ -158,7 +158,6 @@ NS_IMPL_RELEASE(nsSVGAngle)
 NS_INTERFACE_MAP_BEGIN(nsSVGAngle)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISVGAngle)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAngle)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAngle)
@@ -199,7 +198,7 @@ nsSVGAngle::DidModifySVGObservable(nsISVGValue* observable,
 }
 
 //----------------------------------------------------------------------
-// nsISVGAngle methods:
+// nsIDOMSVGAngle methods:
 
 /* readonly attribute unsigned short unitType; */
 NS_IMETHODIMP
@@ -236,27 +235,24 @@ nsSVGAngle::GetValue(float *aValue)
 NS_IMETHODIMP
 nsSVGAngle::SetValue(float aValue)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
   
-  WillModify();
-
   switch (mSpecifiedUnitType) {
   case SVG_ANGLETYPE_UNSPECIFIED:
   case SVG_ANGLETYPE_DEG:
-    mValueInSpecifiedUnits = float((aValue * 180.0) / M_PI);
+    rv = SetValueInSpecifiedUnits(float((aValue * 180.0) / M_PI));
     break;
   case SVG_ANGLETYPE_RAD:
-    mValueInSpecifiedUnits = aValue;
+    rv = SetValueInSpecifiedUnits(aValue);
     break;
   case SVG_ANGLETYPE_GRAD:
-    mValueInSpecifiedUnits = float((aValue * 100.0) / M_PI);
+    rv = SetValueInSpecifiedUnits(float((aValue * 100.0) / M_PI));
     break;
   default:
     rv = NS_ERROR_FAILURE;
     break;
   }
-  
-  DidModify();
+
   return rv;
 }
 
@@ -312,15 +308,8 @@ nsSVGAngle::SetValueAsString(const nsAString & aValueAsString)
     double value = PR_strtod(number, &rest);
     if (rest!=number) {
       PRUint16 unitType = GetUnitTypeForString(nsCRT::strtok(rest, "\x20\x9\xD\xA", &rest));
-      if (IsValidUnitType(unitType)){
-        WillModify();
-        mValueInSpecifiedUnits = (float)value;
-        mSpecifiedUnitType     = unitType;
-        DidModify();
-      }
-      else { // parse error
-        // not a valid unit type
-        rv = NS_ERROR_FAILURE;
+      rv = NewValueSpecifiedUnits(unitType, (float)value);
+      if (rv != NS_OK) {
         NS_ERROR("invalid length type");
       }
     }
@@ -355,12 +344,10 @@ nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType)
 {
   if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
 
-  WillModify();
   float valueInUserUnits;
   GetValue(&valueInUserUnits);
   mSpecifiedUnitType = unitType;
   SetValue(valueInUserUnits);
-  DidModify();
   
   return NS_OK;
 }
