@@ -73,7 +73,7 @@ nsresult nsICODecoder::SetImageData()
  
   // Since the ICO is decoded into an exact sized array, the frame may use
   // more bytes per row of pixels than the decoding array.
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
   PRUint32 decodedLineLen = mDirEntry.mWidth * 4;
 #else
   PRUint32 decodedLineLen = mDirEntry.mWidth * 3;
@@ -400,7 +400,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (mPos == (mImageOffset + BITMAPINFOSIZE + mNumColors*4)) {
       // Increment mPos to avoid reprocessing the info header.
       mPos++;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
       mDecodedBuffer = (PRUint8*)malloc(mDirEntry.mHeight*mDirEntry.mWidth*4);
 #else
       mDecodedBuffer = (PRUint8*)malloc(mDirEntry.mHeight*mDirEntry.mWidth*3);
