@@ -113,7 +113,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     if (!frameAfter)
       return NS_ERROR_NULL_POINTER;
     
-    if (frameBefore==frameAfter)
+    if (frameBefore == frameAfter)
     {
       // there was no frameAfter, i.e. the caret is at the end of the
       // document -- use the base paragraph level
@@ -143,7 +143,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     ; // perform the deletion
   else
   {
-    if (levelBefore==levelAfter)
+    if (levelBefore == levelAfter)
       ; // perform the deletion
     else
       *aCancel = PR_TRUE;
