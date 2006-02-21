@@ -994,7 +994,7 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   PRUint32 bpr; // Bytes Per Row
   aFrame->GetImageBytesPerRow(&bpr);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
   const PRUint8 bpp = 4;
 #else
   const PRUint8 bpp = 3;

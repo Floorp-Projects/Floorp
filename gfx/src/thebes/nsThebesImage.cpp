@@ -551,7 +551,7 @@ nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt3
     dst->Scale(double(aDWidth)/mWidth, double(aDHeight)/mHeight);
 
     dst->SetSource(ThebesSurface());
-    dst->Fill();
+    dst->Paint();
 
     return NS_OK;
 }
@@ -563,10 +563,17 @@ static PRUint8 Unpremultiply(PRUint8 aVal, PRUint8 aAlpha) {
 }
 
 static void ARGBToThreeChannel(PRUint32* aARGB, PRUint8* aData) {
+#ifdef IS_LITTLE_ENDIAN
     PRUint8 a = (PRUint8)(*aARGB >> 24);
     PRUint8 r = (PRUint8)(*aARGB >> 16);
     PRUint8 g = (PRUint8)(*aARGB >> 8);
     PRUint8 b = (PRUint8)(*aARGB >> 0);
+#else
+    PRUint8 a = (PRUint8)(*aARGB >> 0);
+    PRUint8 r = (PRUint8)(*aARGB >> 8);
+    PRUint8 g = (PRUint8)(*aARGB >> 16);
+    PRUint8 b = (PRUint8)(*aARGB >> 24);
+#endif
 
     if (a != 0xFF) {
         if (a == 0) {
@@ -580,17 +587,8 @@ static void ARGBToThreeChannel(PRUint32* aARGB, PRUint8* aData) {
         }
     }
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-    // BGR format; assume little-endian system
-#ifndef IS_LITTLE_ENDIAN
-#error Strange big-endian/OS combination
-#endif
-    // BGR, blue byte first
-    aData[0] = b; aData[1] = g; aData[2] = r;
-#else
     // RGB, red byte first
     aData[0] = r; aData[1] = g; aData[2] = b;
-#endif
 }
 
 static PRUint8 Premultiply(PRUint8 aVal, PRUint8 aAlpha) {
@@ -601,17 +599,8 @@ static PRUint8 Premultiply(PRUint8 aVal, PRUint8 aAlpha) {
 
 static PRUint32 ThreeChannelToARGB(PRUint8* aData, PRUint8 aAlpha) {
     PRUint8 r, g, b;
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-    // BGR format; assume little-endian system
-#ifndef IS_LITTLE_ENDIAN
-#error Strange big-endian/OS combination
-#endif
-    // BGR, blue byte first
-    b = aData[0]; g = aData[1]; r = aData[2];
-#else
     // RGB, red byte first
     r = aData[0]; g = aData[1]; b = aData[2];
-#endif
     if (aAlpha != 0xFF) {
         if (aAlpha == 0) {
             r = 0;
@@ -623,5 +612,7 @@ static PRUint32 ThreeChannelToARGB(PRUint8* aData, PRUint8 aAlpha) {
             b = Premultiply(b, aAlpha);
         }
     }
+
+    // Output is always ARGB with A in the high byte of a dword
     return (aAlpha << 24) | (r << 16) | (g << 8) | b;
 }

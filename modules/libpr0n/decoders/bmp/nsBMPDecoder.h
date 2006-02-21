@@ -116,7 +116,7 @@ struct bitFields {
 #define LITTLE_TO_NATIVE32(x) x
 #endif
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
 #define BMP_GFXFORMAT gfxIFormats::BGR
 #define RLE_GFXFORMAT_ALPHA gfxIFormats::BGR_A1
 #else
@@ -125,7 +125,7 @@ struct bitFields {
 #define RLE_GFXFORMAT_ALPHA gfxIFormats::RGB_A1
 #endif
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
 #define GFXBYTESPERPIXEL 4
 #else
 #define GFXBYTESPERPIXEL 3
@@ -232,7 +232,7 @@ private:
  * The variable passed in as aDecoded will be moved on 3 bytes! */
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
     *aDecoded++ = 0; // Mac needs this padding byte
 #endif
 #ifdef USE_RGB
