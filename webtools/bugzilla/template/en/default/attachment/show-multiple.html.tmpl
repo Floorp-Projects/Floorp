@@ -65,9 +65,7 @@
           <i>no flags</i>
         [% ELSE %]
           [% FOREACH flag = a.flags %]
-            [% IF flag.setter %]
-              [% flag.setter.nick FILTER html %]:
-            [% END %]
+            [% flag.setter.nick FILTER html %]:
             [%+ flag.type.name FILTER html %][% flag.status %]
             [% IF flag.status == "?" && flag.requestee %]
               ([% flag.requestee.nick FILTER html %])

@@ -64,9 +64,7 @@
               <i>none</i>
             [% ELSE %]
               [% FOREACH flag = attachment.flags %]
-                [% IF flag.setter %]
-                  [% flag.setter.nick FILTER html %]:
-                [% END %]
+                [% flag.setter.nick FILTER html %]:
                 [%+ flag.type.name FILTER html FILTER no_break %][% flag.status %]
                 [%+ IF flag.status == "?" && flag.requestee %]
                   ([% flag.requestee.nick FILTER html %])

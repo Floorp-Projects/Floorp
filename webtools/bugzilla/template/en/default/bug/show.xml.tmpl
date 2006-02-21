@@ -94,9 +94,7 @@
             [% FOREACH flag = a.flags %]
               <flag name="[% flag.type.name FILTER xml %]"
                     status="[% flag.status FILTER xml %]"
-                    [% IF flag.setter %]
-                      setter="[% flag.setter.email FILTER xml %]"
-                    [% END %]
+                    setter="[% flag.setter.email FILTER xml %]"
                     [% IF flag.status == "?" && flag.requestee %]
                       requestee="[% flag.requestee.email FILTER xml %]"
                     [% END %]
