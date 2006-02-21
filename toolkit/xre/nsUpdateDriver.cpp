@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -277,16 +278,16 @@ CopyUpdaterIntoUpdateDir(nsIFile *appDir, nsIFile *updateDir,
 }
 
 static void
-ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
-            int appArgc, char **appArgv)
+ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
+            nsIFile *appDir, int appArgc, char **appArgv)
 {
   // Steps:
   //  - mark update as 'applying'
   //  - copy updater into update dir
-  //  - run updater w/ app dir as the current working dir
+  //  - run updater w/ appDir as the current working dir
 
   nsCOMPtr<nsIFile> updater;
-  if (!CopyUpdaterIntoUpdateDir(appDir, updateDir, updater)) {
+  if (!CopyUpdaterIntoUpdateDir(greDir, updateDir, updater)) {
     LOG(("failed copying updater\n"));
     return;
   }
@@ -307,10 +308,11 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
-  nsCAutoString appDirPath;
+  // Get the directory to which the update will be applied. On Mac OSX we need
+  // to apply the update to the Foo.app directory which is the parent of the
+  // parent of the appDir. On other platforms we will just apply to the appDir.
+  nsCAutoString applyToDir;
 #if defined(XP_MACOSX)
-  // On Mac OSX, we need to apply the update to the Contents directory
-  // which is the parent of the parent of the appDir.
   {
     nsCOMPtr<nsIFile> parentDir1, parentDir2;
     rv = appDir->GetParent(getter_AddRefs(parentDir1));
@@ -319,10 +321,10 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
     rv = parentDir1->GetParent(getter_AddRefs(parentDir2));
     if (NS_FAILED(rv))
       return;
-    rv = parentDir2->GetNativePath(appDirPath);
+    rv = parentDir2->GetNativePath(applyToDir);
   }
 #else
-  rv = appDir->GetNativePath(appDirPath);
+  rv = appDir->GetNativePath(applyToDir);
 #endif
   if (NS_FAILED(rv))
     return;
@@ -371,10 +373,10 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
 
 #if defined(USE_EXECV)
-  chdir(appDirPath.get());
+  chdir(applyToDir.get());
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
-  _chdir(appDirPath.get());
+  _chdir(applyToDir.get());
 
   if (!WinLaunchChild(updaterPath.get(), appArgc + 4, argv))
     return;
@@ -387,7 +389,7 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (!attr)
     goto end;
 
-  status = PR_ProcessAttrSetCurrentDirectory(attr, appDirPath.get());
+  status = PR_ProcessAttrSetCurrentDirectory(attr, applyToDir.get());
   if (status != PR_SUCCESS)
     goto end;
 
@@ -401,12 +403,12 @@ end:
 }
 
 nsresult
-ProcessUpdates(nsIFile *appDir, int argc, char **argv)
+ProcessUpdates(nsIFile *greDir, nsIFile *appDir, int argc, char **argv)
 {
   nsresult rv;
 
   nsCOMPtr<nsIFile> updatesDir;
-  rv = appDir->Clone(getter_AddRefs(updatesDir));
+  rv = greDir->Clone(getter_AddRefs(updatesDir));
   if (NS_FAILED(rv))
     return rv;
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("updates"));
@@ -429,7 +431,7 @@ ProcessUpdates(nsIFile *appDir, int argc, char **argv)
   for (int i = 0; i < dirEntries.Count(); ++i) {
     nsCOMPtr<nsILocalFile> statusFile;
     if (GetStatusFile(dirEntries[i], statusFile) && IsPending(statusFile)) {
-      ApplyUpdate(appDir, dirEntries[i], statusFile, argc, argv);
+      ApplyUpdate(greDir, dirEntries[i], statusFile, appDir, argc, argv);
       break;
     }
   }

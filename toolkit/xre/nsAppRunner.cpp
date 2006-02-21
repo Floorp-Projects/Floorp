@@ -24,6 +24,7 @@
  *   Benjamin Smedberg <benjamin@smedbergs.us>
  *   Ben Goodger <ben@mozilla.org>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2104,8 +2105,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_UPDATER)
-    // Check for and process any available updates
-    ProcessUpdates(dirProvider.GetAppDir(), gRestartArgc, gRestartArgv);
+  // Check for and process any available updates
+  ProcessUpdates(dirProvider.GetGREDir(),
+                 dirProvider.GetAppDir(),
+                 gRestartArgc,
+                 gRestartArgv);
 #endif
 
     nsCOMPtr<nsIProfileLock> profileLock;

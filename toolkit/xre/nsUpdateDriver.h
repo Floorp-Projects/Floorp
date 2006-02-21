@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,11 +48,16 @@ class nsIFile;
  * This function processes any available updates.  As part of that process, it
  * may exit the current process and relaunch it at a later time.
  *
+ * Two directories are passed to this function: greDir (where the actual
+ * binary resides) and appDir (which contains application.ini for XULRunner
+ * apps). If this is not a XULRunner app then appDir is identical to greDir.
+ * 
  * The argc and argv passed to this function should be what is needed to
  * relaunch the current process.
  *
  * This function does not modify appDir.
  */
-NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *appDir, int argc, char **argv);
+NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
+                                    int argc, char **argv);
 
 #endif  // nsUpdateDriver_h__
