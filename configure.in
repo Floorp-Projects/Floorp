@@ -272,12 +272,37 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl The Darwin cross compiler doesn't necessarily point itself at a
+        dnl root that has libraries for the proper architecture, it defaults
+        dnl to the system root.  The libraries in the system root on current
+        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
+        dnl checks will fail.  Fake a working SDK in that case.
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXLAGS
+        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
+        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
+        ;;
+    esac
+
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
     unset ac_cv_prog_CC
     AC_PROG_CC
     AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", :)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl Revert the changes made above.  From this point on, the target
+        dnl compiler will never be used without applying the SDK to CFLAGS
+        dnl (see --with-macos-sdk below).
+        CFLAGS=$_SAVE_CFLAGS
+        CXXFLAGS=$_SAVE_CXXFLAGS
+        ;;
+    esac
+
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
     AC_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
@@ -665,6 +690,13 @@ tools are selected during the Xcode/Developer Tools installation.])
     dnl set because both the compiler and linker use it.
     LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
     export NEXT_ROOT=$MACOS_SDK_DIR
+
+    if test -n "$CROSS_COMPILE" ; then
+      dnl NEXT_ROOT will be in the environment, but it shouldn't be set for
+      dnl the build host.  HOST_CXX is presently unused.
+      HOST_CC="NEXT_ROOT= $HOST_CC"
+      HOST_CXX="NEXT_ROOT= $HOST_CXX"
+    fi
   else
     dnl gcc >= 4.0 uses different paths than above, but knows how to find
     dnl them itself.
@@ -687,11 +719,10 @@ tools are selected during the Xcode/Developer Tools installation.])
 
   AC_MSG_CHECKING([for valid compiler/Mac OS X SDK combination])
   AC_LANG_CPLUSPLUS
-  AC_TRY_RUN([#include <new>
-              int main() { return 0; }],
+  AC_TRY_COMPILE([#include <new>
+                 int main() { return 0; }],
    result=yes,
-   result=no,
-   result=maybe)
+   result=no)
   AC_LANG_RESTORE
   AC_MSG_RESULT($result)
 
@@ -813,6 +844,7 @@ if test -n "$CROSS_COMPILE"; then
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
+        darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
 else
     OS_TARGET=`uname -s`
@@ -1042,7 +1074,19 @@ WINCE)
     OS_TARGET=WINCE
     ;;
 Darwin)
-    OS_TEST=`uname -p`
+    case "${target_cpu}" in
+    powerpc*)
+        OS_TEST=ppc
+        ;;
+    i*86*)
+        OS_TEST=i386 
+        ;;
+    *)
+        if test -z "$CROSS_COMPILE" ; then
+            OS_TEST=`uname -p`
+        fi
+        ;;
+    esac
     ;;
 esac
 
@@ -1390,6 +1434,7 @@ case "$target" in
     STRIP="$STRIP -x -S"
     _PLATFORM_DEFAULT_TOOLKIT='mac'
     MOZ_ENABLE_POSTSCRIPT=
+    TARGET_NSPR_MDCPUCFG='\"md/_darwin.cfg\"'
     # set MACOSX to generate lib/mac/MoreFiles/Makefile
     MACOSX=1
 
@@ -1405,15 +1450,6 @@ case "$target" in
         AC_MSG_RESULT([no])
     fi
     LDFLAGS=$_SAVE_LDFLAGS
-
-    case "${target_cpu}" in
-    powerpc*)
-        DSO_LDOPTS="$DSO_LDOPTS -arch ppc"
-        ;;
-    i*86*)
-        DSO_LDOPTS="$DSO_LDOPTS -arch i386"
-        ;;
-    esac
     ;;
 
 *-freebsd*)
@@ -6578,7 +6614,7 @@ if test -n "$CROSS_COMPILE"; then
      if test -z "$HOST_LIBIDL_CONFIG"; then
         HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
     fi
-    if test -n "$HOST_LIBIDL_CONFIG"; then
+    if test -n "$HOST_LIBIDL_CONFIG" && test "$HOST_LIBIDL_CONFIG" != "no"; then
         HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
         HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
     else
