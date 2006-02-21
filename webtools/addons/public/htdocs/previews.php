@@ -10,7 +10,7 @@
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
-startProcessing('previews.tpl',$cacheId,$compileId);
+startProcessing('previews.tpl',$clean['ID'],$compileId);
 require_once('includes.php');
  
 $addon = new AddOn($sql['ID']);

@@ -8,7 +8,7 @@
 
 $currentTab = 'themes';
 
-startProcessing('themes.tpl', null, $compileId);
+startProcessing('themes.tpl', 'themes', $compileId);
 require_once('includes.php');
 
 // If app is not set or empty, set it to null for our switch.

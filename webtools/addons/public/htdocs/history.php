@@ -14,9 +14,7 @@
 $clean['ID'] = intval($_GET['id']);
 $sql['ID'] =& $clean['ID'];
 
-$cacheId = $clean['ID'];
-
-startProcessing('history.tpl',$cacheId,$compileId);
+startProcessing('history.tpl',$clean['ID'],$compileId);
 require_once('includes.php');
 
 $addon = new AddOn($sql['ID']);

@@ -8,7 +8,7 @@
  * @todo FAQ search?
  */
 
-startProcessing('faq.tpl',null,$compileId);
+startProcessing('faq.tpl','faq',$compileId);
 require_once('includes.php');
 
 $db->query("

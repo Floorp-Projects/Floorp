@@ -9,9 +9,7 @@
 $clean['UserID'] = intval($_GET['id']);
 $sql['UserID'] =& $clean['UserID'];
 
-$cacheId = $clean['UserID'];
-
-startProcessing('author.tpl',$cacheId,$compileId);
+startProcessing('author.tpl',$clean['UserID'],$compileId);
 require_once('includes.php');
 
 $user = new User($sql['UserID']);

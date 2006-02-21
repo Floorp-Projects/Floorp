@@ -11,7 +11,7 @@
 
 $currentTab = 'search-engines';
 
-startProcessing('search-engines.tpl',null,$compileId,'nonav');
+startProcessing('search-engines.tpl','searchEngines',$compileId,'nonav');
 require_once('includes.php');
 
 // Assign template variables.

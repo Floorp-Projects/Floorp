@@ -8,7 +8,7 @@
 
 $currentTab = 'home';
 
-startProcessing('index.tpl', null, $compileId, 'nonav');
+startProcessing('index.tpl', 'home', $compileId, 'nonav');
 require_once('includes.php');
 
 // If app is not set or empty, set it to null for our switch.
