@@ -336,4 +336,8 @@ td.tab.spacer
     background: white;
 }
 
+span.quote {
+    color: #65379c;
+}
+
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }

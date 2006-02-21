@@ -529,6 +529,10 @@ sub quoteUrls {
 
     $text = html_quote($text);
 
+    # Color quoted text
+    $text =~ s~^(&gt;.+)$~<span class="quote">$1</span >~mg;
+    $text =~ s~</span >\n<span class="quote">~\n~g;
+    
     # mailto:
     # Use |<nothing> so that $1 is defined regardless
     $text =~ s~\b(mailto:|)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b
