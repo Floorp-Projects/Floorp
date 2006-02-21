@@ -54,9 +54,12 @@
 #include "nsGUIEvent.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
+
+#ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
 #include "nsSVGUtils.h"
 #include "nsISVGOuterSVGFrame.h"
+#endif
 
 /**
  * A namespace class for static layout utilities.
@@ -497,7 +500,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
 
   // If it is, or is a descendant of, an SVG foreignobject frame,
   // then we need to do extra work
-  nsIFrame* rootFrame;
+  nsIFrame* rootFrame = aFrame;
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
 #ifdef MOZ_SVG_FOREIGNOBJECT
     if (f->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
