@@ -1304,8 +1304,10 @@ sub insert_new_user {
     $disabledtext ||= '';
 
     # If not specified, generate a new random password for the user.
+    # If the password is '*', do not encrypt it; we are creating a user
+    # based on the ENV auth method.
     $password ||= generate_random_password();
-    my $cryptpassword = bz_crypt($password);
+    my $cryptpassword = ($password ne '*') ? bz_crypt($password) : $password;
 
     # XXX - These should be moved into is_available_username or validate_email_syntax
     #       At the least, they shouldn't be here. They're safe for now, though.
