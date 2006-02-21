@@ -52,7 +52,7 @@ nsSplittableFrame::Init(nsPresContext*  aPresContext,
 
   if (aPrevInFlow) {
     // Hook the frame into the flow
-    mPrevInFlow = aPrevInFlow;
+    SetPrevInFlow(aPrevInFlow);
     aPrevInFlow->SetNextInFlow(this);
   }
 
@@ -63,7 +63,7 @@ NS_IMETHODIMP
 nsSplittableFrame::Destroy(nsPresContext* aPresContext)
 {
   // Disconnect from the flow list
-  if (mPrevInFlow || mNextInFlow) {
+  if (mPrevContinuation || mNextContinuation) {
     RemoveFromFlow(this);
   }
 
@@ -78,33 +78,112 @@ nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
+nsIFrame* nsSplittableFrame::GetPrevContinuation() const
+{
+  return mPrevContinuation;
+}
+
+NS_METHOD nsSplittableFrame::SetPrevContinuation(nsIFrame* aFrame)
+{
+  NS_ASSERTION (!aFrame || GetType() == aFrame->GetType(), "setting a prev continuation with incorrect type!");
+  NS_ASSERTION (!IsInPrevContinuationChain(aFrame, this), "creating a loop in continuation chain!");
+  mPrevContinuation = aFrame;
+  RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  return NS_OK;
+}
+
+nsIFrame* nsSplittableFrame::GetNextContinuation() const
+{
+  return mNextContinuation;
+}
+
+NS_METHOD nsSplittableFrame::SetNextContinuation(nsIFrame* aFrame)
+{
+  NS_ASSERTION (!aFrame || GetType() == aFrame->GetType(),  "setting a next continuation with incorrect type!");
+  NS_ASSERTION (!IsInNextContinuationChain(aFrame, this), "creating a loop in continuation chain!");
+  mNextContinuation = aFrame;
+  if (aFrame)
+    aFrame->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
+  return NS_OK;
+}
+
+nsIFrame* nsSplittableFrame::GetFirstContinuation() const
+{
+  nsSplittableFrame* firstContinuation = NS_CONST_CAST(nsSplittableFrame*, this);
+  while (firstContinuation->mPrevContinuation)  {
+    firstContinuation = NS_STATIC_CAST(nsSplittableFrame*, firstContinuation->mPrevContinuation);
+  }
+  NS_POSTCONDITION(firstContinuation, "illegal state in continuation chain.");
+  return firstContinuation;
+}
+
+nsIFrame* nsSplittableFrame::GetLastContinuation() const
+{
+  nsSplittableFrame* lastContinuation = NS_CONST_CAST(nsSplittableFrame*, this);
+  while (lastContinuation->mNextContinuation)  {
+    lastContinuation = NS_STATIC_CAST(nsSplittableFrame*, lastContinuation->mNextContinuation);
+  }
+  NS_POSTCONDITION(lastContinuation, "illegal state in continuation chain.");
+  return lastContinuation;
+}
+
+#ifdef DEBUG
+PRBool nsSplittableFrame::IsInPrevContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
+{
+  while (aFrame1) {
+    if (aFrame1 == aFrame2)
+      return PR_TRUE;
+    aFrame1 = aFrame1->GetPrevContinuation();
+  }
+  return PR_FALSE;
+}
+
+PRBool nsSplittableFrame::IsInNextContinuationChain(nsIFrame* aFrame1, nsIFrame* aFrame2)
+{
+  while (aFrame1) {
+    if (aFrame1 == aFrame2)
+      return PR_TRUE;
+    aFrame1 = aFrame1->GetNextContinuation();
+  }
+  return PR_FALSE;
+}
+#endif
+
 nsIFrame* nsSplittableFrame::GetPrevInFlow() const
 {
-  return mPrevInFlow;
+  return (GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? mPrevContinuation : nsnull;
 }
 
 NS_METHOD nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
 {
-  mPrevInFlow = aFrame;
+  NS_ASSERTION (!aFrame || GetType() == aFrame->GetType(), "setting a prev in flow with incorrect type!");
+  NS_ASSERTION (!IsInPrevContinuationChain(aFrame, this), "creating a loop in continuation chain!");
+  mPrevContinuation = aFrame;
+  AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
   return NS_OK;
 }
 
 nsIFrame* nsSplittableFrame::GetNextInFlow() const
 {
-  return mNextInFlow;
+  return mNextContinuation && (mNextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? 
+    mNextContinuation : nsnull;
 }
 
 NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
 {
-  mNextInFlow = aFrame;
+  NS_ASSERTION (!aFrame || GetType() == aFrame->GetType(),  "setting a next in flow with incorrect type!");
+  NS_ASSERTION (!IsInNextContinuationChain(aFrame, this), "creating a loop in continuation chain!");
+  mNextContinuation = aFrame;
+  if (aFrame)
+    aFrame->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
   return NS_OK;
 }
 
 nsIFrame* nsSplittableFrame::GetFirstInFlow() const
 {
-  nsSplittableFrame* firstInFlow = (nsSplittableFrame*)this;
-  while (firstInFlow->mPrevInFlow)  {
-    firstInFlow = (nsSplittableFrame*)firstInFlow->mPrevInFlow;
+  nsSplittableFrame* firstInFlow = NS_CONST_CAST(nsSplittableFrame*, this);
+  while (nsIFrame *prev = firstInFlow->GetPrevInFlow())  {
+    firstInFlow = NS_STATIC_CAST(nsSplittableFrame*, prev);
   }
   NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
   return firstInFlow;
@@ -112,9 +191,9 @@ nsIFrame* nsSplittableFrame::GetFirstInFlow() const
 
 nsIFrame* nsSplittableFrame::GetLastInFlow() const
 {
-  nsSplittableFrame* lastInFlow = (nsSplittableFrame*)this;
-  while (lastInFlow->mNextInFlow)  {
-    lastInFlow = (nsSplittableFrame*)lastInFlow->mNextInFlow;
+  nsSplittableFrame* lastInFlow = NS_CONST_CAST(nsSplittableFrame*, this);
+  while (nsIFrame* next = lastInFlow->GetNextInFlow())  {
+    lastInFlow = NS_STATIC_CAST(nsSplittableFrame*, next);
   }
   NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
@@ -124,15 +203,25 @@ nsIFrame* nsSplittableFrame::GetLastInFlow() const
 void
 nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 {
-  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
-  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
+  nsIFrame* prevContinuation = aFrame->GetPrevContinuation();
+  nsIFrame* nextContinuation = aFrame->GetNextContinuation();
 
-  if (prevInFlow) {
-    prevInFlow->SetNextInFlow(nextInFlow);
-  }
-
-  if (nextInFlow) {
-    nextInFlow->SetPrevInFlow(prevInFlow);
+  // The new continuation is fluid only if the continuation on both sides
+  // of the removed frame was fluid
+  if (aFrame->GetPrevInFlow() && aFrame->GetNextInFlow()) {
+    if (prevContinuation) {
+      prevContinuation->SetNextInFlow(nextContinuation);
+    }
+    if (nextContinuation) {
+      nextContinuation->SetPrevInFlow(prevContinuation);
+    }
+  } else {
+    if (prevContinuation) {
+      prevContinuation->SetNextContinuation(nextContinuation);
+    }
+    if (nextContinuation) {
+      nextContinuation->SetPrevContinuation(prevContinuation);
+    }
   }
 
   aFrame->SetPrevInFlow(nsnull);
@@ -144,8 +233,20 @@ void
 nsSplittableFrame::BreakFromPrevFlow(nsIFrame* aFrame)
 {
   nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
+  // If this frame has a non-fluid continuation, transfer it to its prevInFlow
+  nsIFrame* nextNonFluid = nsnull;
+  nsIFrame* nextContinuation = aFrame->GetNextContinuation();
+  if (nextContinuation && !(nextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION)) {
+    nextNonFluid = nextContinuation;
+    aFrame->SetNextContinuation(nsnull);
+  }
   if (prevInFlow) {
-    prevInFlow->SetNextInFlow(nsnull);
+    if (nextNonFluid) {
+      prevInFlow->SetNextContinuation(nextNonFluid);
+      nextNonFluid->SetPrevContinuation(prevInFlow);
+    } else {
+      prevInFlow->SetNextInFlow(nsnull);
+    }
     aFrame->SetPrevInFlow(nsnull);
   }
 }
@@ -155,13 +256,13 @@ void
 nsSplittableFrame::DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData)
 {
   nsFrame::DumpBaseRegressionData(aPresContext, out, aIndent, aIncludeStyleData);
-  if (nsnull != mNextInFlow) {
+  if (nsnull != mNextContinuation) {
     IndentBy(out, aIndent);
-    fprintf(out, "<next-in-flow va=\"%ld\"/>\n", PRUptrdiff(mNextInFlow));
+    fprintf(out, "<next-continuation va=\"%ld\"/>\n", PRUptrdiff(mNextContinuation));
   }
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != mPrevContinuation) {
     IndentBy(out, aIndent);
-    fprintf(out, "<prev-in-flow va=\"%ld\"/>\n", PRUptrdiff(mPrevInFlow));
+    fprintf(out, "<prev-continuation va=\"%ld\"/>\n", PRUptrdiff(mPrevContinuation));
   }
 
 }

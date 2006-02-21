@@ -1227,7 +1227,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
   // Only apply start-margin on the first-in flow for inline frames
-  if (HasPrevInFlow(pfd->mFrame)) {
+  if (pfd->mFrame->GetPrevContinuation()) {
     // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     if (ltr)
@@ -1274,7 +1274,8 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // XXXwaterson this is probably not exactly right; e.g., embeddings, etc.
     PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus) && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
+    if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) || (pfd->mFrame->GetNextContinuation() && !pfd->mFrame->GetNextInFlow())) 
+        && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
       // Only apply end margin for the last-in-flow. Zero this out so
       // that when we compute the max-element-width of the frame we
       // will properly avoid adding in the end margin.

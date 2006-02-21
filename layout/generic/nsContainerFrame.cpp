@@ -890,15 +890,6 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     }
   }
 
-#ifdef IBMBIDI
-  if ((prevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) &&
-      (NS_STATIC_CAST(nsIFrame*,
-                      aPresContext->PropertyTable()->GetProperty(prevInFlow, nsLayoutAtoms::nextBidi)) ==
-       aNextInFlow)) {
-    return;
-  }
-#endif // IBMBIDI
-
   // Disconnect the next-in-flow from the flow list
   nsSplittableFrame::BreakFromPrevFlow(aNextInFlow);
 
@@ -996,17 +987,17 @@ nsContainerFrame::PushChildren(nsPresContext* aPresContext,
   // Disconnect aFromChild from its previous sibling
   aPrevSibling->SetNextSibling(nsnull);
 
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     // XXX This is not a very good thing to do. If it gets removed
     // then remove the copy of this routine that doesn't do this from
     // nsInlineFrame.
-    nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
+    nsContainerFrame* nextInFlow = (nsContainerFrame*)GetNextInFlow();
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
     for (nsIFrame* f = aFromChild; f; f = f->GetNextSibling()) {
-      nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, this, mNextInFlow);
+      nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, this, nextInFlow);
     }
-    nextInFlow->mFrames.InsertFrames(mNextInFlow, nsnull, aFromChild);
+    nextInFlow->mFrames.InsertFrames(nextInFlow, nsnull, aFromChild);
   }
   else {
     // Add the frames to our overflow list
@@ -1028,7 +1019,7 @@ nsContainerFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
   PRBool result = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
-  nsContainerFrame* prevInFlow = (nsContainerFrame*)mPrevInFlow;
+  nsContainerFrame* prevInFlow = (nsContainerFrame*)GetPrevInFlow();
   if (nsnull != prevInFlow) {
     nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext,
                                                                  PR_TRUE);
@@ -1072,11 +1063,11 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mNextSibling) {
     fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
   }
-  if (nsnull != mPrevInFlow) {
-    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, mPrevInFlow));
+  if (nsnull != GetPrevContinuation()) {
+    fprintf(out, " prev-continuation=%p", NS_STATIC_CAST(void*, GetPrevContinuation()));
   }
-  if (nsnull != mNextInFlow) {
-    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, mNextInFlow));
+  if (nsnull != GetNextContinuation()) {
+    fprintf(out, " next-continuation=%p", NS_STATIC_CAST(void*, GetNextContinuation()));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {

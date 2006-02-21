@@ -228,10 +228,10 @@ PRIntn
 nsTableRowGroupFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
+  if (nsnull != GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != mNextInFlow) {
+  if (nsnull != GetNextInFlow()) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -601,7 +601,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
       // See if the row has an originating cell with rowspan > 1. We cannot determine this for a row in a 
       // continued row group by calling RowHasSpanningCells, because the row's fif may not have any originating
       // cells yet the row may have a continued cell which originates in it.
-      if (mPrevInFlow || tableFrame->RowHasSpanningCells(startRowIndex + rowIndex, numEffCols)) {
+      if (GetPrevInFlow() || tableFrame->RowHasSpanningCells(startRowIndex + rowIndex, numEffCols)) {
         nsTableCellFrame* cellFrame = rowFrame->GetFirstCell();
         // iteratate the row's cell frames 
         while (cellFrame) {
@@ -1464,7 +1464,7 @@ nsTableRowGroupFrame::IR_TargetIsMe(nsPresContext*        aPresContext,
   }
 
   // XXX If we have a next-in-flow, then we're not complete
-  if (mNextInFlow) {
+  if (GetNextInFlow()) {
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
   return rv;
@@ -1700,7 +1700,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
   // Return our desired width
   //aDesiredSize.width = aReflowState.reflowState.availableWidth;
 
-  if (mNextInFlow) {
+  if (GetNextInFlow()) {
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 

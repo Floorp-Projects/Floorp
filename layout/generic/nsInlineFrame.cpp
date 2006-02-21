@@ -174,13 +174,19 @@ nsInlineFrame::AppendFrames(nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
 {
   if (nsnull != aListName) {
-    return NS_ERROR_INVALID_ARG;
+#ifdef IBMBIDI
+    if (aListName != nsLayoutAtoms::nextBidi)
+#endif
+      return NS_ERROR_INVALID_ARG;
   }
   if (aFrameList) {
     mFrames.AppendFrames(this, aFrameList);
 
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
+#ifdef IBMBIDI
+    if (nsnull == aListName)
+#endif
+      ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return NS_OK;
 }
@@ -246,9 +252,9 @@ nsInlineFrame::RemoveFrame(nsIAtom*        aListName,
       // When the parent is an inline frame we have a simple task - just
       // remove the frame from its parents list and generate a reflow
       // command.
-      nsIFrame* oldFrameNextInFlow = aOldFrame->GetNextInFlow();
+      nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
       parent->mFrames.DestroyFrame(GetPresContext(), aOldFrame);
-      aOldFrame = oldFrameNextInFlow;
+      aOldFrame = oldFrameNextContinuation;
       if (aOldFrame) {
         parent = NS_STATIC_CAST(nsInlineFrame*, aOldFrame->GetParent());
       }
@@ -299,7 +305,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   PRBool  lazilySetParentPointer = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
-  nsInlineFrame* prevInFlow = (nsInlineFrame*)mPrevInFlow;
+  nsInlineFrame* prevInFlow = (nsInlineFrame*)GetPrevInFlow();
   if (nsnull != prevInFlow) {
     nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
 
@@ -369,7 +375,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   // aReflowState)
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
-  irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
+  irs.mNextInFlow = (nsInlineFrame*) GetNextInFlow();
   irs.mSetParentPointer = lazilySetParentPointer;
 
   nsresult rv;
@@ -433,7 +439,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
   nscoord leftEdge = 0;
-  if (nsnull == mPrevInFlow) {
+  if (nsnull == GetPrevContinuation()) {
     leftEdge = aReflowState.mComputedBorderPadding.left;
   }
   nscoord availableWidth = aReflowState.availableWidth;
@@ -485,7 +491,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   }
 
   // Attempt to pull frames from our next-in-flow until we can't
-  if (!done && (nsnull != mNextInFlow)) {
+  if (!done && (nsnull != GetNextInFlow())) {
     while (!done) {
       PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       PRBool isComplete;
@@ -531,7 +537,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   lineLayout->EndSpan(this, size,
                     aMetrics.mComputeMEW ? &aMetrics.mMaxElementWidth : nsnull);
   if ((0 == size.height) && (0 == size.width) &&
-      ((nsnull != mPrevInFlow) || (nsnull != mNextInFlow))) {
+      ((nsnull != GetPrevInFlow()) || (nsnull != GetNextInFlow()))) {
     // This is a continuation of a previous inline. Therefore make
     // sure we don't affect the line-height.
     aMetrics.width = 0;
@@ -545,10 +551,10 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   else {
     // Compute final width
     aMetrics.width = size.width;
-    if (nsnull == mPrevInFlow) {
+    if (nsnull == GetPrevContinuation()) {
       aMetrics.width += aReflowState.mComputedBorderPadding.left;
     }
-    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+    if (NS_FRAME_IS_COMPLETE(aStatus) && (!GetNextContinuation() || GetNextInFlow())) {
       aMetrics.width += aReflowState.mComputedBorderPadding.right;
     }
 
@@ -687,16 +693,16 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
         aStatus |= NS_FRAME_NOT_COMPLETE;
         PushFrames(aPresContext, nextFrame, aFrame);
       }
-      else if (nsnull != mNextInFlow) {
+      else if (nsnull != GetNextInFlow()) {
         // We must return an incomplete status if there are more child
         // frames remaining in a next-in-flow that follows this frame.
-        nsInlineFrame* nextInFlow = (nsInlineFrame*) mNextInFlow;
+        nsInlineFrame* nextInFlow = (nsInlineFrame*) GetNextInFlow();
         while (nsnull != nextInFlow) {
           if (nextInFlow->mFrames.NotEmpty()) {
             aStatus |= NS_FRAME_NOT_COMPLETE;
             break;
           }
-          nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
+          nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
         }
       }
     }
@@ -741,7 +747,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
       break;
     }
-    nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
+    nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
     irs.mNextInFlow = nextInFlow;
   }
 
@@ -777,27 +783,27 @@ PRIntn
 nsInlineFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
-  if (nsnull != mPrevInFlow) {
-    nsInlineFrame* prev = (nsInlineFrame*) mPrevInFlow;
+  if (nsnull != GetPrevContinuation()) {
+    nsInlineFrame* prev = (nsInlineFrame*) GetPrevContinuation();
     if (prev->mRect.height || prev->mRect.width) {
-      // Prev-in-flow is not empty therefore we don't render our left
+      // Prev continuation is not empty therefore we don't render our left
       // border edge.
       skip |= 1 << NS_SIDE_LEFT;
     }
     else {
-      // If the prev-in-flow is empty, then go ahead and let our left
+      // If the prev continuation is empty, then go ahead and let our left
       // edge border render.
     }
   }
-  if (nsnull != mNextInFlow) {
-    nsInlineFrame* next = (nsInlineFrame*) mNextInFlow;
+  if (nsnull != GetNextContinuation()) {
+    nsInlineFrame* next = (nsInlineFrame*) GetNextContinuation();
     if (next->mRect.height || next->mRect.width) {
-      // Next-in-flow is not empty therefore we don't render our right
+      // Next continuation is not empty therefore we don't render our right
       // border edge.
       skip |= 1 << NS_SIDE_RIGHT;
     }
     else {
-      // If the next-in-flow is empty, then go ahead and let our right
+      // If the next continuation is empty, then go ahead and let our right
       // edge border render.
     }
   }
@@ -889,7 +895,7 @@ nsIFrame*
 nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& irs, PRBool* aIsComplete)
 {
   nsIFrame* frame = nsInlineFrame::PullOneFrame(aPresContext, irs, aIsComplete);
-  if (frame && !mPrevInFlow) {
+  if (frame && !GetPrevInFlow()) {
     // We are a first-line frame. Fixup the child frames
     // style-context that we just pulled.
     aPresContext->FrameManager()->ReParentStyleContext(frame, mStyleContext);
@@ -908,7 +914,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   }
 
   // Check for an overflow list with our prev-in-flow
-  nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)mPrevInFlow;
+  nsFirstLineFrame* prevInFlow = (nsFirstLineFrame*)GetPrevInFlow();
   if (nsnull != prevInFlow) {
     nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
     if (prevOverflowFrames) {
@@ -933,7 +939,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   // aReflowState)
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
-  irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
+  irs.mNextInFlow = (nsInlineFrame*) GetNextInFlow();
 
   nsresult rv;
   PRBool wasEmpty = mFrames.IsEmpty();
@@ -944,7 +950,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     PullOneFrame(aPresContext, irs, &complete);
   }
 
-  if (nsnull == mPrevInFlow) {
+  if (nsnull == GetPrevInFlow()) {
     // XXX This is pretty sick, but what we do here is to pull-up, in
     // advance, all of the next-in-flows children. We re-resolve their
     // style while we are at at it so that when we reflow they have

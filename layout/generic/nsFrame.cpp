@@ -2829,7 +2829,34 @@ NS_IMETHODIMP nsFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-nsIFrame* nsFrame::GetPrevInFlow() const
+nsIFrame* nsFrame::GetPrevContinuation() const
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
+{
+  // Ignore harmless requests to set it to NULL
+  if (aPrevContinuation) {
+    NS_ERROR("not splittable");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  
+  return NS_OK;
+}
+
+nsIFrame* nsFrame::GetNextContinuation() const
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP nsFrame::SetNextContinuation(nsIFrame*)
+{
+  NS_ERROR("not splittable");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIFrame* nsFrame::GetPrevInFlowVirtual() const
 {
   return nsnull;
 }
@@ -2845,7 +2872,7 @@ NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
   return NS_OK;
 }
 
-nsIFrame* nsFrame::GetNextInFlow() const
+nsIFrame* nsFrame::GetNextInFlowVirtual() const
 {
   return nsnull;
 }

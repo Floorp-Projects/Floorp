@@ -102,8 +102,7 @@ public:
   void ReorderFrames(nsPresContext*      aPresContext,
                      nsIRenderingContext* aRendContext,
                      nsIFrame*            aFirstChild,
-                     nsIFrame*            aNextInFlow,
-                     PRInt32              aChildCount);
+                     nsIFrame*            aNextInFlow);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -180,13 +179,11 @@ private:
                             PRBool          aAddMarkers = PR_FALSE);
   /**
    * Reorder the frame array from logical to visual order
-   *
-   * @param aPresContext the presentation context
-   * @param aBidiEnabled TRUE on return if the visual order is different from
-   *                      the logical order
+   * 
+   * @param aReordered TRUE on return if the visual order is different from
+   *                   the logical order
    */
-  nsresult Reorder(nsPresContext* aPresContext,
-                   PRBool&         aBidiEnabled);
+  nsresult Reorder(PRBool& aReordered);
   
   /**
    *  Adjust frame positions following their visual order
@@ -198,7 +195,7 @@ private:
   void RepositionInlineFrames(nsPresContext*      aPresContext,
                               nsIRenderingContext* aRendContext,
                               nsIFrame*            aFirstChild,
-                              PRInt32              aChildCount) const;
+                              PRBool               aReordered) const;
   
   void RepositionContainerFrame(nsPresContext* aPresContext,
                                 nsIFrame*       aContainer,

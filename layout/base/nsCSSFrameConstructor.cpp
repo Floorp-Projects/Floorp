@@ -500,7 +500,7 @@ GetLastSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame)
 static nsIFrame*
 GetNifOrSpecialSibling(nsFrameManager *aFrameManager, nsIFrame *aFrame)
 {
-  nsIFrame *result = aFrame->GetNextInFlow();
+  nsIFrame *result = aFrame->GetNextContinuation();
   if (result)
     return result;
 
@@ -515,7 +515,7 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
   NS_PRECONDITION(aFrame, "bad args!");
 
   // Mark the frame and all of its siblings as "special".
-  for (nsIFrame* frame = aFrame; frame != nsnull; frame = frame->GetNextInFlow()) {
+  for (nsIFrame* frame = aFrame; frame != nsnull; frame = frame->GetNextContinuation()) {
     frame->AddStateBits(NS_FRAME_IS_SPECIAL);
   }
 
@@ -8526,8 +8526,8 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
       }
 
       // The frame may have a continuation. If so, we want the
-      // last-in-flow as our previous sibling.
-      prevSibling = prevSibling->GetLastInFlow();
+      // last continuation as our previous sibling.
+      prevSibling = prevSibling->GetLastContinuation();
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
@@ -8701,8 +8701,8 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
                                             prevSibling);
       }
 
-      // The frame may have a continuation. Get the last-in-flow
-      prevSibling = prevSibling->GetLastInFlow();
+      // The frame may have a continuation. Get the last continuation
+      prevSibling = prevSibling->GetLastContinuation();
 
       // XXXbz should the IsValidSibling check be after we get the
       // placeholder for out-of-flows?
@@ -9031,8 +9031,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     }
   }
 
-  // Get the parent frame's last-in-flow
-  parentFrame = parentFrame->GetLastInFlow();
+  // Get the parent frame's last continuation
+  parentFrame = parentFrame->GetLastContinuation();
 
   nsIAtom* frameType = parentFrame->GetType();
   // Deal with inner/outer tables, fieldsets
@@ -9902,7 +9902,7 @@ DeletingFrameSubtree(nsPresContext*  aPresContext,
     // recursing over a subtree, because those continuing frames should be
     // found as part of the walk over the top-most frame's continuing frames.
     // Walking them again will make this an N^2/2 algorithm.
-    aFrame = aFrame->GetNextInFlow();
+    aFrame = aFrame->GetNextContinuation();
   } while (aFrame);
 
   // Now destroy any out-of-flow frames that have been enqueued for
@@ -11028,12 +11028,14 @@ nsresult
 nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
                                              nsIFrame*       aFrame,
                                              nsIFrame*       aParentFrame,
-                                             nsIFrame**      aContinuingFrame)
+                                             nsIFrame**      aContinuingFrame,
+                                             PRBool          aIsFluid)
 {
   nsIPresShell*              shell = aPresContext->PresShell();
   nsStyleContext*            styleContext = aFrame->GetStyleContext();
   nsIFrame*                  newFrame = nsnull;
   nsresult                   rv = NS_OK;
+  nsIFrame*                  nextContinuation = aFrame->GetNextContinuation();
   nsIFrame*                  nextInFlow = aFrame->GetNextInFlow();
 
   // Use the frame type to determine what type of frame to create
@@ -11228,6 +11230,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // Init() set newFrame to be a fluid continuation of aFrame.
+  // If we want a non-fluid continuation, we need to call SetPrevContinuation()
+  // to reset NS_FRAME_IS_FLUID_CONTINUATION.
+  if (!aIsFluid) {
+    newFrame->SetPrevContinuation(aFrame);
+  }
+
   // Now deal with fixed-pos things....  They should appear on all pages, and
   // the placeholders must be kids of a block, so we want to move over the
   // placeholders when processing the child of the pageContentFrame.
@@ -11239,6 +11248,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     if (nextInFlow) {
       nextInFlow->SetPrevInFlow(newFrame);
       newFrame->SetNextInFlow(nextInFlow);
+    } else if (nextContinuation) {
+      nextContinuation->SetPrevContinuation(newFrame);
+      newFrame->SetNextContinuation(nextContinuation);
     }
     return NS_OK;
   }

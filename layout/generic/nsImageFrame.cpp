@@ -873,11 +873,11 @@ nsImageFrame::GetInnerArea() const
 {
   nsRect r;
   r.x = mBorderPadding.left;
-  r.y = mPrevInFlow ? 0 : mBorderPadding.top;
+  r.y = GetPrevInFlow() ? 0 : mBorderPadding.top;
   r.width = mRect.width - mBorderPadding.left - mBorderPadding.right;
   r.height = mRect.height -
-    (mPrevInFlow ? 0 : mBorderPadding.top) -
-    (mNextInFlow ? 0 : mBorderPadding.bottom);
+    (GetPrevInFlow() ? 0 : mBorderPadding.top) -
+    (GetNextInFlow() ? 0 : mBorderPadding.bottom);
   return r;
 }
 
@@ -890,8 +890,8 @@ nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
     *aWidth = 0;
   }
 
-  if (mPrevInFlow) {
-    for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow = prevInFlow->GetPrevInFlow()) {
+  if (GetPrevInFlow()) {
+    for (nsIFrame* prevInFlow = GetPrevInFlow() ; prevInFlow; prevInFlow = prevInFlow->GetPrevInFlow()) {
       nsRect rect = prevInFlow->GetRect();
       if (aWidth) {
         *aWidth = rect.width;
@@ -942,7 +942,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.width  += mBorderPadding.left + mBorderPadding.right;
   aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
   
-  if (mPrevInFlow) {
+  if (GetPrevInFlow()) {
     nscoord y = GetContinuationOffset(&aMetrics.width);
     aMetrics.height -= y + mBorderPadding.top;
     aMetrics.height = PR_MAX(0, aMetrics.height);
@@ -1297,7 +1297,7 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   nscoord offsetY = 0; 
 
   // if the image is split account for y-offset
-  if (mPrevInFlow) {
+  if (GetPrevInFlow()) {
     offsetY = GetContinuationOffset();
   }
 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Uri Bernstein <uriber@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,7 @@
 #include "nsFrameManager.h"
 #include "nsBidiFrames.h"
 #include "nsBidiUtils.h"
+#include "nsCSSFrameConstructor.h"
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -61,8 +63,6 @@ static const PRUnichar ALEF              = 0x05D0;
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
-nsIFrame*
-NS_NewContinuingTextFrame(nsIPresShell* aPresShell);
 nsIFrame*
 NS_NewDirectionalFrame(nsIPresShell* aPresShell, PRUnichar aChar);
 
@@ -98,39 +98,81 @@ nsBidiPresUtils::IsSuccessful() const
 /* Some helper methods for Resolve() */
 
 static nsresult
+SplitInlineAncestors(nsPresContext* aPresContext,
+                      nsIFrame*     aFrame)
+{
+  nsIPresShell *presShell = aPresContext->PresShell();
+  nsIFrame* frame = aFrame;
+  nsIFrame* parent = aFrame->GetParent();
+  nsIFrame* newFrame = aFrame->GetNextSibling();
+  nsIFrame* newParent;
+
+  while (nsLayoutAtoms::inlineFrame == parent->GetType() ||
+         nsLayoutAtoms::positionedInlineFrame == parent->GetType()) {
+
+    nsIFrame* grandparent = parent->GetParent();
+    NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
+    
+    nsresult rv = presShell->FrameConstructor()->
+      CreateContinuingFrame(aPresContext, parent, grandparent, &newParent, PR_FALSE);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    // The new parent adopts the new frame
+    frame->SetNextSibling(nsnull);
+    rv = newParent->InsertFrames(nsLayoutAtoms::nextBidi, nsnull, newFrame);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    // The list name nsLayoutAtoms::nextBidi would indicate we don't want reflow
+    rv = grandparent->InsertFrames(nsLayoutAtoms::nextBidi, parent, newParent);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    frame = parent;
+    newFrame = newParent;
+    parent = grandparent;
+  }
+  
+  return NS_OK;
+}
+
+static nsresult
 CreateBidiContinuation(nsPresContext* aPresContext,
-                       nsIContent*     aContent,
                        nsIFrame*       aFrame,
                        nsIFrame**      aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  NS_PRECONDITION(aFrame, "null ptr");
 
   *aNewFrame = nsnull;
 
-  NS_PRECONDITION(aFrame, "null ptr");
-
   nsIPresShell *presShell = aPresContext->PresShell();
-
   NS_ASSERTION(presShell, "PresShell must be set on PresContext before calling nsBidiPresUtils::CreateBidiContinuation");
 
-  *aNewFrame = NS_NewContinuingTextFrame(presShell);
-  if (!(*aNewFrame) ) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsStyleContext* styleContext = aFrame->GetStyleContext();
-
-  NS_ASSERTION(styleContext, "Frame has no styleContext in nsBidiPresUtils::CreateBidiContinuation");
-  
   nsIFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "Couldn't get frame parent in nsBidiPresUtils::CreateBidiContinuation");
-
-  (*aNewFrame)->Init(aPresContext, aContent, parent, styleContext, nsnull);
-
-  // XXX: TODO: Instead, create and insert entire frame list
-  (*aNewFrame)->SetNextSibling(nsnull);
-
+  
+  nsresult rv = presShell->FrameConstructor()->
+    CreateContinuingFrame(aPresContext, aFrame, parent, aNewFrame, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
   // The list name nsLayoutAtoms::nextBidi would indicate we don't want reflow
-  parent->InsertFrames(nsLayoutAtoms::nextBidi, aFrame, *aNewFrame);
+  rv = parent->InsertFrames(nsLayoutAtoms::nextBidi, aFrame, *aNewFrame);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  // Split inline ancestor frames
+  rv = SplitInlineAncestors(aPresContext, aFrame);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -309,6 +351,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 
     if (nsLayoutAtoms::directionalFrame == frameType) {
       frame->Destroy(aPresContext);
+      frame = nsnull;
       ++lineOffset;
     }
     else {
@@ -356,8 +399,38 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
     temp = runLength;
     runLength -= fragmentLength;
     fragmentLength -= temp;
+
+    // If the frame is at the end of a run, split all ancestor inlines that need splitting.
+    if (frame && fragmentLength <= 0 && runLength <= 0) {
+      // As long as we're on the last sibling, the parent doesn't have to be split.
+      nsIFrame* child = frame;
+      nsIFrame* parent = frame->GetParent();
+      while (parent &&
+             (nsLayoutAtoms::inlineFrame == parent->GetType() ||
+              nsLayoutAtoms::positionedInlineFrame == parent->GetType()) &&
+             !child->GetNextSibling()) {
+        child = parent;
+        parent = child->GetParent();
+      }
+      if (parent &&
+          (nsLayoutAtoms::inlineFrame == parent->GetType() ||
+           nsLayoutAtoms::positionedInlineFrame == parent->GetType()))
+        SplitInlineAncestors(aPresContext, child);      
+    }
   } // for
   return mSuccess;
+}
+
+// Should this frame be treated as a leaf (e.g. when building mLogicalArray)?
+PRBool IsBidiLeaf(nsIFrame* aFrame) {
+  nsIAtom* frameType = aFrame->GetType();
+  nsIFrame* kid = aFrame->GetFirstChild(nsnull);
+  return !kid
+    || aFrame->GetStyleDisplay()->IsBlockLevel()
+    || !(nsLayoutAtoms::inlineFrame == frameType
+         || nsLayoutAtoms::positionedInlineFrame == frameType
+         || nsLayoutAtoms::letterFrame == frameType
+         || nsLayoutAtoms::blockFrame == frameType);
 }
 
 nsresult
@@ -402,22 +475,14 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
           break;
       }
 
-      if (directionalFrame) {
+      // Create a directional frame before the first frame of an
+      // element specifying embedding or override
+      if (directionalFrame && !frame->GetPrevContinuation()) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }
 
-    nsIAtom* frameType = frame->GetType();
-
-    if ( (!display->IsBlockLevel() )
-        && ( (nsLayoutAtoms::inlineFrame == frameType)
-          || (nsLayoutAtoms::positionedInlineFrame == frameType)
-          || (nsLayoutAtoms::letterFrame == frameType)
-          || (nsLayoutAtoms::blockFrame == frameType) ) ) {
-      nsIFrame* kid = frame->GetFirstChild(nsnull);
-      res = InitLogicalArray(aPresContext, kid, aNextInFlow, aAddMarkers);
-    }
-    else {
+    if (IsBidiLeaf(frame)) {
       /* Bidi leaf frame: add the frame to the mLogicalFrames array,
        * and add its index to the mContentToFrameIndex hashtable. This
        * will be used in RemoveBidiContinuation() to identify the last
@@ -429,12 +494,18 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
       }
       mLogicalFrames.AppendElement(frame);
     }
+    else {
+      nsIFrame* kid = frame->GetFirstChild(nsnull);
+      res = InitLogicalArray(aPresContext, kid, aNextInFlow, aAddMarkers);
+    }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
     if (directionalFrame) {
       directionalFrame = NS_NewDirectionalFrame(shell, kPDF);
    
-      if (directionalFrame) {
+      // Create a directional frame after the last frame of an
+      // element specifying embedding or override
+      if (directionalFrame && !frame->GetNextContinuation()) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }
@@ -497,27 +568,25 @@ void
 nsBidiPresUtils::ReorderFrames(nsPresContext*      aPresContext,
                                nsIRenderingContext* aRendContext,
                                nsIFrame*            aFirstChild,
-                               nsIFrame*            aNextInFlow,
-                               PRInt32              aChildCount)
+                               nsIFrame*            aNextInFlow)
 {
   mLogicalFrames.Clear();
 
-  if (NS_SUCCEEDED(InitLogicalArray(aPresContext, aFirstChild, aNextInFlow))
-      && (mLogicalFrames.Count() > 1)) {
-    PRBool bidiEnabled;
-    // Set bidiEnabled to true if the line is reordered
-    Reorder(aPresContext, bidiEnabled);
-    if (bidiEnabled) {
-      RepositionInlineFrames(aPresContext, aRendContext, aFirstChild, aChildCount);
-    }
+  for (nsIFrame* frame = aFirstChild;
+       frame && frame != aNextInFlow;
+       frame = frame->GetNextSibling()) {
+    mLogicalFrames.AppendElement(frame);
   }
+
+  PRBool reordered;
+  Reorder(reordered);
+  RepositionInlineFrames(aPresContext, aRendContext, aFirstChild, reordered);
 }
 
 nsresult
-nsBidiPresUtils::Reorder(nsPresContext* aPresContext,
-                         PRBool&         aBidiEnabled)
+nsBidiPresUtils::Reorder(PRBool& aReordered)
 {
-  aBidiEnabled = PR_FALSE;
+  aReordered = PR_FALSE;
   PRInt32 count = mLogicalFrames.Count();
 
   if (mArraySize < count) {
@@ -544,7 +613,11 @@ nsBidiPresUtils::Reorder(nsPresContext* aPresContext,
 
   for (i = 0; i < count; i++) {
     frame = (nsIFrame*) (mLogicalFrames[i]);
-    mLevels[i] = NS_GET_EMBEDDING_LEVEL(frame);
+    nsIFrame* firstLeaf = frame;
+    while (!IsBidiLeaf(firstLeaf)) {
+      firstLeaf = firstLeaf->GetFirstChild(nsnull);
+    }
+    mLevels[i] = NS_GET_EMBEDDING_LEVEL(firstLeaf);
   }
   if (!mIndexMap) {
     mIndexMap = new PRInt32[mArraySize];
@@ -563,166 +636,59 @@ nsBidiPresUtils::Reorder(nsPresContext* aPresContext,
       for (i = 0; i < count; i++) {
         mVisualFrames.AppendElement(mLogicalFrames[mIndexMap[i]]);
         if (i != mIndexMap[i]) {
-          aBidiEnabled = PR_TRUE;
+          aReordered = PR_TRUE;
         }
       }
     } // NS_SUCCEEDED(mSuccess)
   } // indexMap
 
   if (NS_FAILED(mSuccess) ) {
-    aBidiEnabled = PR_FALSE;
+    aReordered = PR_FALSE;
   }
   return mSuccess;
 }
 
-void
-nsBidiPresUtils::RepositionInlineFrames(nsPresContext*      aPresContext,
-                                        nsIRenderingContext* aRendContext,
-                                        nsIFrame*            aFirstChild,
-                                        PRInt32              aChildCount) const
+static void 
+ReverseChildFramesPositioning(nsIFrame* aFirstChild)
 {
-  PRInt32 count = mVisualFrames.Count();
-  if (count < 2) {
+  if (!aFirstChild)
     return;
-  }
-  nsIFrame* frame = (nsIFrame*) (mVisualFrames[0]);
-  PRInt32 i;
-
-  PRInt32 ch;
-  PRInt32 charType;
-  nscoord width, dWidth, alefWidth, dx;
-  PRUnichar buf[2] = {ALEF, 0x0000};
-
-  PRBool isBidiSystem;
-  PRUint32 hints = 0;
-
-  dWidth = alefWidth = dx = 0;
-  aRendContext->GetHints(hints);
-  isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-
-  nsRect rect = frame->GetRect();
-
-  if (frame != aFirstChild) {
-    rect.x = aFirstChild->GetPosition().x;
-    frame->SetPosition(nsPoint(rect.x, rect.y));
-  }
-
-  nsPropertyTable *propTable = aPresContext->PropertyTable();
-
-  for (i = 1; i < count; i++) {
-
-    ch = 0;
-    charType = NS_PTR_TO_INT32(propTable->GetProperty((nsIFrame*)mVisualFrames[i], nsLayoutAtoms::charType));
-    if (CHARTYPE_IS_RTL(charType) ) {
-      ch = NS_PTR_TO_INT32(propTable->GetProperty(frame,
-                                             nsLayoutAtoms::endsInDiacritic));
-      if (ch) {
-        if (!alefWidth) {
-          aRendContext->GetWidth(buf, 1, alefWidth, nsnull);
-        }
-        dWidth = 0;
-        if (isBidiSystem) {
-          buf[1] = (PRUnichar) ch;
-          aRendContext->GetWidth(buf, 2, width, nsnull);
-          dWidth = width - alefWidth;
-        }
-        if (dWidth <= 0) {
-          frame->SetPosition(nsPoint(rect.x + (nscoord)((float)width/8), rect.y));
-        }
-      }
-    }
-    frame = (nsIFrame*) (mVisualFrames[i]);
-    if (ch) {
-      dx += (rect.width - dWidth);
-      frame->SetPosition(nsPoint(rect.x + dWidth, frame->GetPosition().y));
-    } else
-      frame->SetPosition(nsPoint(rect.XMost(), frame->GetPosition().y));
-    rect = frame->GetRect();
-  } // for
-
-  if (dx > 0) {
-    PRInt32 alignRight = NS_GET_BASE_LEVEL(frame);
-    if (0 == (alignRight & 1) ) {
-      const nsStyleText* styleText = frame->GetStyleText();
-      
-      if (NS_STYLE_TEXT_ALIGN_RIGHT == styleText->mTextAlign
-          || NS_STYLE_TEXT_ALIGN_MOZ_RIGHT == styleText->mTextAlign) {
-        alignRight = 1;
-      }
-    }
-    if (alignRight & 1) {
-      for (i = 0; i < count; i++) {
-        frame = (nsIFrame*) (mVisualFrames[i]);
-        frame->SetPosition(frame->GetPosition() + nsPoint(dx, 0));
-      }
-    }
-  }
   
-  // Now adjust inline container frames.
-  // Example: LTR paragraph 
-  //                <p><b>english HEBREW</b> 123</p>
-  // should be displayed as
-  //                <p><b>english </b>123 <b>WERBEH</b></p>
-
-  // We assume that <b></b> rectangle takes all the room from "english" left edge to
-  // "WERBEH" right edge.
-
-  frame = aFirstChild;
-  for (i = 0; i < aChildCount; i++) {
-    nsIAtom* frameType = frame->GetType();
-    if ( (nsLayoutAtoms::inlineFrame == frameType)
-          || (nsLayoutAtoms::positionedInlineFrame == frameType)
-          || (nsLayoutAtoms::letterFrame == frameType)
-          || (nsLayoutAtoms::blockFrame == frameType) ) {
-      PRInt32 minX = 0x7FFFFFFF;
-      PRInt32 maxX = 0;
-      RepositionContainerFrame(aPresContext, frame, minX, maxX);
-    }
-    frame = frame->GetNextSibling();
-  } // for
+  // Get the right edge of the last sibling
+  nsIFrame* lastSibling;
+  for (lastSibling = aFirstChild; lastSibling->GetNextSibling(); lastSibling = lastSibling->GetNextSibling())
+    ;
+  nscoord right = lastSibling->GetRect().XMost();
+  
+  nsIFrame* frame;
+  for (frame = aFirstChild; frame; frame = frame->GetNextSibling()) {
+    right -= frame->GetRect().width;
+    frame->SetPosition(nsPoint(right, frame->GetPosition().y));
+    if (!IsBidiLeaf(frame))
+      ReverseChildFramesPositioning(frame->GetFirstChild(nsnull));
+  }
 }
 
 void
-nsBidiPresUtils::RepositionContainerFrame(nsPresContext* aPresContext,
-                                          nsIFrame* aContainer,
-                                          PRInt32& aMinX,
-                                          PRInt32& aMaxX) const
+nsBidiPresUtils::RepositionInlineFrames(nsPresContext*       aPresContext,
+                                        nsIRenderingContext* aRendContext,
+                                        nsIFrame*            aFirstChild,
+                                        PRBool               aReordered) const
 {
+  PRInt32 count = mVisualFrames.Count();
+  nscoord left = aFirstChild->GetPosition().x;
   nsIFrame* frame;
-  PRInt32 minX = 0x7FFFFFFF;
-  PRInt32 maxX = 0;
+  
+  for (PRInt32 i = 0; i < count; i++) {
+    frame = (nsIFrame*) (mVisualFrames[i]);
+    if (aReordered) // Don't touch positioning if no reordering was done, to avoid killing margins.
+      frame->SetPosition(nsPoint(left, frame->GetPosition().y));
+    left += frame->GetRect().width;
 
-  nsIFrame* firstChild = aContainer->GetFirstChild(nsnull);
-
-  for (frame = firstChild; frame; frame = frame->GetNextSibling()) {
-    nsIAtom* frameType = frame->GetType();
-    if ( (nsLayoutAtoms::inlineFrame == frameType)
-        || (nsLayoutAtoms::positionedInlineFrame == frameType)
-        || (nsLayoutAtoms::letterFrame == frameType)
-        || (nsLayoutAtoms::blockFrame == frameType) ) {
-      RepositionContainerFrame(aPresContext, frame, minX, maxX);
-    }
-    else {
-      nsRect rect = frame->GetRect();
-      minX = PR_MIN(minX, rect.x);
-      maxX = PR_MAX(maxX, rect.XMost());
-    }
-  }
-
-  aMinX = PR_MIN(minX, aMinX);
-  aMaxX = PR_MAX(maxX, aMaxX);
-
-  if (minX < maxX) {
-    nsRect rect = aContainer->GetRect();
-    rect.x = minX;
-    rect.width = maxX - minX;
-    aContainer->SetRect(rect);
-  }
-
-  // Now adjust all the kids (kid's coordinates are relative to the parent's)
-  for (frame = firstChild; frame; frame = frame->GetNextSibling()) {
-    frame->SetPosition(frame->GetPosition() - nsPoint(minX, 0));
-  }
+    // If this is an odd-level frame, reverse the positioning of its childern
+    if ((mLevels[mIndexMap[i]] & 1) && !IsBidiLeaf(frame))
+      ReverseChildFramesPositioning(frame->GetFirstChild(nsnull));
+  } // for
 }
 
 PRBool
@@ -746,19 +712,30 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
     if (frame->GetContent() == aContent) {
       *aNewFrame = frame;
       ++aFrameIndex;
-      aFrame->SetNextInFlow(nsnull);
-      frame->SetPrevInFlow(nsnull);
+      aFrame->SetNextContinuation(frame);
+      frame->SetPrevContinuation(aFrame);
+
+      // Make existing parent continuations non-fluid
+      nsIFrame* parent = frame->GetParent();
+      while (parent && 
+             (nsLayoutAtoms::inlineFrame == parent->GetType() ||
+              nsLayoutAtoms::positionedInlineFrame == parent->GetType())) {
+        nsIFrame* prevContinuation = parent->GetPrevContinuation();
+        if (prevContinuation) {
+          parent->SetPrevContinuation(prevContinuation);
+          prevContinuation->SetNextContinuation(parent);
+        }
+        parent = parent->GetParent();
+      }
     }
   }
-  if (nsnull == *aNewFrame) {
-    mSuccess = CreateBidiContinuation(aPresContext, aContent, aFrame, aNewFrame);
+  if (!*aNewFrame) {
+    mSuccess = CreateBidiContinuation(aPresContext, aFrame, aNewFrame);
     if (NS_FAILED(mSuccess) ) {
       return PR_FALSE;
     }
   }
-  aPresContext->PropertyTable()->SetProperty(aFrame, nsLayoutAtoms::nextBidi,
-                                             (void*) *aNewFrame,
-                                             nsnull, nsnull);
+
   return PR_TRUE;
 }
 
@@ -771,7 +748,6 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
 {
   nsIFrame*         frame;
   PRInt32           index;
-  nsIFrame*         parent = aFrame->GetParent();
       
   aOffset = 0;
 
@@ -784,37 +760,23 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
     else {
       if (frame->GetStateBits() & NS_FRAME_IS_BIDI) {
         // only delete Bidi frames
-        if (parent) {
-          parent->RemoveFrame(nsLayoutAtoms::nextBidi, frame);
-        }
-        else {
-          frame->Destroy(aPresContext);
+        nsIFrame* parent = frame->GetParent();
+        parent->RemoveFrame(nsLayoutAtoms::nextBidi, frame);
+        // Make parent continuations fluid, so they can be
+        // reused or deleted by inline reflow code
+        while (parent) {
+          nsIFrame* parentPrev = parent->GetPrevContinuation();
+          if (parentPrev) {
+            parent->SetPrevInFlow(parentPrev);
+            parentPrev->SetNextInFlow(parent);
+            parent = parent->GetParent();
+          } else {
+            break;
+          }
         }
       }
     }
   }
-  nsIFrame* thisFramesNextBidiFrame;
-  nsIFrame* previousFramesNextBidiFrame;
-
-  nsPropertyTable *propTable = aPresContext->PropertyTable();
-  thisFramesNextBidiFrame = NS_STATIC_CAST(nsIFrame*,
-                      propTable->GetProperty(aFrame, nsLayoutAtoms::nextBidi));
-
-  if (thisFramesNextBidiFrame) {
-    // Remove nextBidi property, associated with the current frame
-    // and with all of its prev-in-flow.
-    frame = aFrame;
-    do {
-      propTable->DeleteProperty(frame, nsLayoutAtoms::nextBidi);
-      frame = frame->GetPrevInFlow();
-      if (!frame) {
-        break;
-      }
-      previousFramesNextBidiFrame =
-        NS_STATIC_CAST(nsIFrame*, propTable->GetProperty(frame,
-                                                    nsLayoutAtoms::nextBidi));
-    } while (thisFramesNextBidiFrame == previousFramesNextBidiFrame);
-  } // if (thisFramesNextBidiFrame)
 }
 
 nsresult
