@@ -1010,8 +1010,8 @@ cairo_win32_surface_create (HDC hdc)
 	return &_cairo_surface_nil;
     }
 
-	depth = GetDeviceCaps(hdc, BITSPIXEL);
     if (GetDeviceCaps(hdc, TECHNOLOGY) == DT_RASDISPLAY) {
+	depth = GetDeviceCaps(hdc, BITSPIXEL);
 	if (depth == 32)
 	    format = CAIRO_FORMAT_ARGB32;
 	else if (depth == 24)
