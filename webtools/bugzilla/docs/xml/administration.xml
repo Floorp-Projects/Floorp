@@ -170,25 +170,6 @@
 
       <varlistentry>
         <term>
-          passwordmail
-        </term>
-        <listitem>
-          <para>
-            Every time a user creates an account, the text of this parameter
-            (with substitutions) is sent to the new user along with their
-            password message.
-          </para>
-
-          <para>
-            Add any text you wish to the "passwordmail" parameter box. For
-            instance, many people choose to use this box to give a quick 
-            training blurb about how to use Bugzilla at your site.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
           movebugs
         </term>
         <listitem>

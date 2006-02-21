@@ -32,6 +32,7 @@ use strict;
 
 package Bugzilla::BugMail;
 
+use Bugzilla::Error;
 use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
@@ -793,11 +794,14 @@ sub encode_message_entity {
 # Send the login name and password of the newly created account to the user.
 sub MailPassword {
     my ($login, $password) = (@_);
-    my $template = Param("passwordmail");
-    my $msg = perform_substs($template,
-                            {"mailaddress" => $login . Param('emailsuffix'),
-                             "login" => $login,
-                             "password" => $password});
+    my $template = Bugzilla->template;
+    my $vars = {
+      mailaddress => $login . Param('emailsuffix'),
+      login => $login,
+      password => $password };
+    my $msg;
+    $template->process("email/password.txt.tmpl", $vars, \$msg)
+      || ThrowTemplateError($template->error());
     MessageToMTA($msg);
 }
 
