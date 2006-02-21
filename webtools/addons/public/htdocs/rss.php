@@ -6,32 +6,7 @@
  * @subpackage docs
  */
 
-
-
-/**
- * CHECK CACHE
- *
- * Check to see if we already have a matching cacheId.
- * If it exists, we can pull from it and exit; and avoid recompiling.
- */
-// Determine a cacheId based on params.
-$cacheId = md5($_SERVER['QUERY_STRING']);
- 
-$tpl = new AMO_Smarty();
-
-// Set our cache timeout to 2 hours, which is reasonable.
-$tpl->caching = 1;
-$tpl->cache_timeout = 7200;
-
-// Determine our cacheId based on the RSS feed's arguments.
-
-if ($tpl->is_cached('rss.tpl',$cacheId)) {
-    header('Content-Type: text/xml; charset=utf-8');
-    $tpl->display('rss.tpl',$cacheId);
-    exit;
-}
-
-
+startProcessing('rss.tpl',$cacheLiteId,$compileId,'xml');
 
 /**
  * Pull our input params.
@@ -124,9 +99,4 @@ $_rssSql = "
 $db->query($_rssSql,SQL_ALL,SQL_ASSOC);
 $_rssData = $db->record;
 $tpl->assign('data',$_rssData);
-
-// Set our content-type and spit it out.
-header('Content-Type: text/xml; charset=utf-8');
-$tpl->display('rss.tpl',$cacheId);
-exit;
 ?>

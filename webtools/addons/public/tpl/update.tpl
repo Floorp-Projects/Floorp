@@ -2,22 +2,22 @@
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
 {if $update}
-<RDF:Description about="urn:mozilla:{$update.exttype}:{$reqItemGuid}">
+<RDF:Description about="urn:mozilla:{$update.exttype}:{$reqItemGuid|escape:html:"UTF-8"}">
     <em:updates>
         <RDF:Seq>
-            <RDF:li resource="urn:mozilla:{$update.exttype}:{$reqItemGuid}:{$update.extversion}"/>
+            <RDF:li resource="urn:mozilla:{$update.exttype}:{$reqItemGuid|escape:html:"UTF-8"}:{$update.extversion|escape:html:"UTF-8"}"/>
         </RDF:Seq>
     </em:updates>
 </RDF:Description>
 
-<RDF:Description about="urn:mozilla:{$update.exttype}:{$update.extguid}:{$update.extversion}">
-    <em:version>{$update.extversion}</em:version>
+<RDF:Description about="urn:mozilla:{$update.exttype|escape:html:"UTF-8"}:{$update.extguid|escape:html:"UTF-8"}:{$update.extversion|escape:html:"UTF-8"}">
+    <em:version>{$update.extversion|escape:html:"UTF-8"}</em:version>
     <em:targetApplication>
         <RDF:Description>
-            <em:id>{$update.appguid}</em:id>
-            <em:minVersion>{$update.appminver}</em:minVersion>
-            <em:maxVersion>{$update.appmaxver}</em:maxVersion>
-            <em:updateLink>{$update.exturi}</em:updateLink>
+            <em:id>{$update.appguid|escape:html:"UTF-8"}</em:id>
+            <em:minVersion>{$update.appminver|escape:html:"UTF-8"}</em:minVersion>
+            <em:maxVersion>{$update.appmaxver|escape:html:"UTF-8"}</em:maxVersion>
+            <em:updateLink>{$update.exturi|escape:html:"UTF-8"}</em:updateLink>
         </RDF:Description>
     </em:targetApplication>
 </RDF:Description>

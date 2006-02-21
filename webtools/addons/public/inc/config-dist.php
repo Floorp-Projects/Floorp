@@ -74,6 +74,21 @@ define('SHADOW_PORT', '3306');
 // In the case where the PHP script is in a subdirectory, use the relative path from webroot:
 //     'somedirectory/index.php'
 $shadow_config = array(
+    'addon.php',
+    'author.php',
+    'comments.php',
+    'extensions.php',
+    'faq.php',
+    'feeds.php',
+    'history.php',
+    'index.php',
+    'policy.php',
+    'recommended.php',
+    'rss.php',
+    'search-engines.php',
+    'search.php',
+    'themes.php',
+    'update.php'
 );
 
 // Array contains [script name] => [timeout] entries.  For example, we could set 
@@ -83,5 +98,27 @@ $shadow_config = array(
 // In the case where the PHP script is in a subdirectory, use the relative path from webroot:
 //     'somedirectory/index.php' => '1800'
 $cache_config = array(
+    'addon.php' => 900,
+    'author.php' => 900,
+    'comments.php' => 900,
+    'extensions.php' => 900,
+    'faq.php' => 900,
+    'feeds.php' => 900,
+    'history.php' => 900,
+    'index.php' => 20,
+    'policy.php' => 900,
+    'recommended.php' => 900,
+    'rss.php' => 900,
+    'search-engines.php' => 900,
+    'search.php' => 900,
+    'themes.php' => 900,
+    'update.php' => 900
+);
+
+// Array contains [script name] => [content type string] entries.  These entries flag files that need to have a specific
+//     content-type that is not text/html.
+$contentType_config = array(
+    'update.php' => 'text/xml; charset=utf-8',
+    'rss.php'    => 'text/xml; charset=utf-8'
 );
 ?>

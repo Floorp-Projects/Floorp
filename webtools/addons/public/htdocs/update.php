@@ -11,34 +11,9 @@
  * @subpackage pub
  */
 
-
-
+startProcessing('update.tpl', $cacheLiteId, $compileId, 'xml');
 
 /**
- * CHECK CACHE
- *
- * Check to see if we already have a matching cacheId.
- * If it exists, we can pull from it and exit; and avoid recompiling.
- */
-// Determine a cacheId based on params.
-$cacheId = md5($_SERVER['QUERY_STRING']);
-
-$tpl = new AMO_Smarty();
-
-// Set our cache timeout to 1 hour.
-$tpl->caching = true;
-$tpl->cache_timeout = 3600;
-
-if ($tpl->is_cached('update.tpl',$cacheId)) {
-    header("Content-type: text/xml");
-    $tpl->display('update.tpl',$cacheId);
-    exit;
-}
-
-
-
-
-/*
  *  VARIABLES
  *
  *  Initialize, set up and clean variables.
@@ -146,24 +121,6 @@ if (empty($errors)) {
         $tpl->assign('update',$update);
     }
 } 
-
-
-
-
-/*
- *  DISPLAY OUTPUT
- *
- *  If we have valid RDF output set, our template will display it to the client.
- *
- *  If we do not have a full RDF, clients will see a blank RDF that is 
- *  properly formatted.
- */
-if ($debug!=true) {
-    header("Content-type: text/xml");
-    $tpl->display('update.tpl',$cacheId); 
-    exit;
-}
-
 
 
 

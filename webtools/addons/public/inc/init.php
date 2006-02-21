@@ -41,12 +41,15 @@ define('SCRIPT_NAME',substr($_SERVER['SCRIPT_NAME'], strlen(WEB_PATH.'/'), strle
  *
  * This is all done before anything else happens because we want to save cycles.
  */
+
+// Set our cacheLiteId based on our params.
+// We'll keep it around even if we aren't using the cache.
+$cacheLiteId = md5($_SERVER['QUERY_STRING']);
+
+// Is the current page set to be cached?
 if (!empty($cache_config[SCRIPT_NAME])) {
 
     require_once('Cache/Lite.php');
-
-    // Set our cacheLiteId based on our params.
-    $cacheLiteId = md5($_SERVER['QUERY_STRING']);
 
     // Set options.
     $cacheOptions = array(
@@ -59,6 +62,12 @@ if (!empty($cache_config[SCRIPT_NAME])) {
 
     // If our page is already cached, display from cache and exit.
     if ($cacheData = $cache->get($cacheLiteId,SCRIPT_NAME)) {
+
+        // If we have specified a custom content-type for this script, echo the header here.
+        if (!empty($contentType_config[SCRIPT_NAME])) {
+            header('Content-type: '.$contentType_config[SCRIPT_NAME]);
+        }
+
         echo $cacheData;
         exit;
     }
