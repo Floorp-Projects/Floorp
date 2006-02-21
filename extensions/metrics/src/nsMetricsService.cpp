@@ -134,6 +134,8 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
   // Add the event timestamp
   nsAutoString timeString;
   timeString.AppendInt(PR_Now() / PR_USEC_PER_SEC);
+  rv = eventElement->SetAttribute(NS_LITERAL_STRING("time"), timeString);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMNode> outChild;
   rv = mRoot->AppendChild(eventElement, getter_AddRefs(outChild));
