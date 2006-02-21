@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+﻿#!/usr/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -16,6 +16,7 @@
 # Contributor(s): Marc Schumann <wurblzap@gmail.com>
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 David Lawrence <dkl@redhat.com>
 
 use strict;
 use lib ".";
@@ -69,6 +70,7 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'list') {
+    my $matchvalue    = $cgi->param('matchvalue') || '';
     my $matchstr      = $cgi->param('matchstr');
     my $matchtype     = $cgi->param('matchtype');
     my $grouprestrict = $cgi->param('grouprestrict') || '0';
@@ -115,10 +117,22 @@ if ($action eq 'search') {
         $vars->{'users'} = {};
     }
     else {
-        # Handle selection by user name.
+        # Handle selection by login name, real name, or userid.
         if (defined($matchtype)) {
             $query .= " $nextCondition ";
-            my $expr = "profiles.login_name";
+            my $expr = "";
+            if ($matchvalue eq 'userid') {
+                if ($matchstr) {
+                    my $stored_matchstr = $matchstr;
+                    detaint_natural($matchstr) 
+                        || ThrowUserError('illegal_user_id', {userid => $stored_matchstr});
+                }
+                $expr = "profiles.userid";
+            } elsif ($matchvalue eq 'realname') {
+                $expr = "profiles.realname";
+            } else {
+                $expr = "profiles.login_name";
+            }
             if ($matchtype eq 'regexp') {
                 $query .= $dbh->sql_regexp($expr, '?');
                 $matchstr = '.' unless $matchstr;
@@ -752,7 +766,7 @@ sub check_user {
 # Copy incoming list selection values from CGI params to template variables.
 sub mirrorListSelectionValues {
     if (defined($cgi->param('matchtype'))) {
-        foreach ('matchstr', 'matchtype', 'grouprestrict', 'groupid') {
+        foreach ('matchvalue', 'matchstr', 'matchtype', 'grouprestrict', 'groupid') {
             $vars->{'listselectionvalues'}{$_} = $cgi->param($_);
         }
     }

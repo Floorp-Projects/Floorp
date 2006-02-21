@@ -12,6 +12,7 @@
   # The Original Code is the Bugzilla Bug Tracking System.
   #
   # Contributor(s): Marc Schumann <wurblzap@gmail.com>
+  #                 David Lawrence <dkl@redhat.com>
   #%]
 
 [%# INTERFACE:
@@ -35,7 +36,13 @@
 
 <form name="f" method="get" action="editusers.cgi">
 <input type="hidden" name="action" value="list" />
-<p><label for="matchstr">List users with login name matching</label>
+<p><label for="matchvalue">List users with</label>
+<select id="matchvalue" name="matchvalue">
+  <option value="login_name">login name</option>
+  <option value="realname">real name</option>
+  <option value="userid">user id</option>
+</select>
+<label for="matchstr">matching</label>
 <input size="32" name="matchstr" id="matchstr" />
 <select name="matchtype">
   <option value="substr" selected="selected">case-insensitive substring</option>

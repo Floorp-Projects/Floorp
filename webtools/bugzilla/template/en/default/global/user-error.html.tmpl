@@ -1256,6 +1256,10 @@
     [% title = "File Is Empty" %]
     The file you are trying to attach is empty!
 
+  [% ELSIF error == "illegal_user_id" %]
+    [% title = "Illegal User ID" %]
+    User ID '[% userid FILTER html %]' is not valid integer.
+
   [% ELSE %]
 
     [%# Try to find hooked error messages %]
