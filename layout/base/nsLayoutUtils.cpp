@@ -499,6 +499,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
   // then we need to do extra work
   nsIFrame* rootFrame;
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
+#ifdef MOZ_SVG_FOREIGNOBJECT
     if (f->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
       nsSVGForeignObjectFrame* fo = NS_STATIC_CAST(nsSVGForeignObjectFrame*, f);
       nsIFrame* outer;
@@ -507,6 +508,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsEvent* aEvent, nsIFrame* aFrame)
           GetEventCoordinatesRelativeTo(aEvent, outer)) -
         aFrame->GetOffsetTo(fo);
     }
+#endif
     rootFrame = f;
   }
 
