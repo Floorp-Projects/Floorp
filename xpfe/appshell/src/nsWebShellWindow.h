@@ -81,7 +81,6 @@ protected:
   virtual ~nsWebShellWindow();
 
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsAString & aWebShellName);
-  void LoadNativeMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
 
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();
