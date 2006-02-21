@@ -40,6 +40,8 @@
 #define jsbit_h___
 
 #include "jstypes.h"
+#include "jsutil.h"
+
 JS_BEGIN_EXTERN_C
 
 /*
@@ -66,10 +68,32 @@ extern JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 i);
 extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 
 /*
+ * Check if __builtin_clz is available which apeared first in GCC 3.4.
+ * The built-in allows to speedup calculations of ceiling/floor log2,
+ * see bug 327129.
+ */
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+# define JS_HAS_GCC_BUILTIN_CLZ
+#endif
+
+/*
 ** Macro version of JS_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
-#define JS_CEILING_LOG2(_log2,_n)                                             \
+#ifdef JS_HAS_GCC_BUILTIN_CLZ
+/*
+ * Use __builtin_clz or count-leading-zeros to calculate ceil(log2(_n)).
+ * The macro checks for "n <= 1" and not "n != 0" as __builtin_clz(0) is
+ * undefined.
+ */
+# define JS_CEILING_LOG2(_log2,_n)                                            \
+    JS_BEGIN_MACRO                                                            \
+        JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));           \
+        unsigned int j_ = (unsigned int)(_n);                                 \
+        (_log2) = (j_ <= 1 ? 0 : 32 - __builtin_clz(j_ - 1));                 \
+    JS_END_MACRO
+#else
+# define JS_CEILING_LOG2(_log2,_n)                                            \
     JS_BEGIN_MACRO                                                            \
         JSUint32 j_ = (JSUint32)(_n);                                         \
         (_log2) = 0;                                                          \
@@ -86,6 +110,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
         if ((j_) >> 1)                                                        \
             (_log2) += 1;                                                     \
     JS_END_MACRO
+#endif
 
 /*
 ** Macro version of JS_FloorLog2: Compute the log of the greatest power of
@@ -93,7 +118,19 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
 **
 ** This is equivalent to finding the highest set bit in the word.
 */
-#define JS_FLOOR_LOG2(_log2,_n)                                               \
+#if JS_GCC_HAS_BUILTIN_CLZ
+/*
+ * Use __builtin_clz or count-leading-zeros to calculate floor(log2(_n)).
+ * Since __builtin_clz(0) is undefined, the macro set the loweset bit to 1
+ * to ensure 0 result when _n == 0.
+ */
+# define JS_FLOOR_LOG2(_log2,_n)                                              \
+    JS_BEGIN_MACRO                                                            \
+        JS_STATIC_ASSERT(sizeof(unsigned int) == sizeof(JSUint32));           \
+        (_log2) = 31 - __builtin_clz(((unsigned int)(_n)) | 1);               \
+    JS_END_MACRO
+#else
+# define JS_FLOOR_LOG2(_log2,_n)                                              \
     JS_BEGIN_MACRO                                                            \
         JSUint32 j_ = (JSUint32)(_n);                                         \
         (_log2) = 0;                                                          \
@@ -108,6 +145,7 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
         if ((j_) >> 1)                                                        \
             (_log2) += 1;                                                     \
     JS_END_MACRO
+#endif
 
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */
