@@ -91,6 +91,9 @@ use base qw(Exporter);
     ADMIN_GROUP_NAME
 
     SENDMAIL_EXE
+
+    FIELD_TYPE_UNKNOWN
+    FIELD_TYPE_FREETEXT
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -242,5 +245,15 @@ use constant ADMIN_GROUP_NAME => 'admin';
 
 # Path to sendmail.exe (Windows only)
 use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
+
+# Field types.  Match values in fielddefs.type column.  These are purposely
+# not named after database column types, since Bugzilla fields comprise not
+# only storage but also logic.  For example, we might add a "user" field type
+# whose values are stored in an integer column in the database but for which
+# we do more than we would do for a standard integer type (f.e. we might
+# display a user picker).
+
+use constant FIELD_TYPE_UNKNOWN   => 0;
+use constant FIELD_TYPE_FREETEXT  => 1;
 
 1;

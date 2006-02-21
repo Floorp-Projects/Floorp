@@ -1305,7 +1305,7 @@ unless ($switch{'no_templates'}) {
 # These are the files which need to be marked executable
 my @executable_files = ('whineatnews.pl', 'collectstats.pl',
    'checksetup.pl', 'importxml.pl', 'runtests.pl', 'testserver.pl',
-   'whine.pl');
+   'whine.pl', 'customfield.pl');
 
 # tell me if a file is executable.  All CGI files and those in @executable_files
 # are executable
@@ -4262,6 +4262,13 @@ if (scalar(@$controlchar_bugs))
     }
     print " done.\n" if $found;
 }
+
+# 2005-08-10 Myk Melez <myk@mozilla.org> bug 287325
+# Record each field's type and whether or not it's a custom field in fielddefs.
+$dbh->bz_add_column('fielddefs', 'type',
+                    { TYPE => 'INT2', NOTNULL => 1, DEFAULT => 0 });
+$dbh->bz_add_column('fielddefs', 'custom',
+                    { TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'FALSE' });
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

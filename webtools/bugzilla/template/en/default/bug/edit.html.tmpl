@@ -497,6 +497,15 @@
     </table>
   [% END %]
 
+[%# *** Custom Fields *** %]
+
+[% USE Bugzilla %]
+<table>
+  [% FOREACH field = Bugzilla.get_fields({ obsolete => 0, custom => 1 }) %]
+    [% PROCESS bug/field.html.tmpl value=bug.${field.name} %]
+  [% END %]
+</table>
+
 [%# *** Attachments *** %]
 
   [% PROCESS attachment/list.html.tmpl

@@ -27,6 +27,7 @@ use strict;
 
 use lib qw(.);
 require "globals.pl";
+use Bugzilla;
 use Bugzilla::User;
 use Bugzilla::Bug;
 
