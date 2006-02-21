@@ -38,18 +38,38 @@
 
 @namespace url(http://www.w3.org/2002/xforms);
 @namespace html url(http://www.w3.org/1999/xhtml);
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 @namespace mozType url(http://www.mozilla.org/projects/xforms/2005/type);
 
-repeat,
-repeatitem,
-contextcontainer,
-group,
-switch,
-case,
-select1 item,
-select1 itemset,
-select1 choices {
+html|*:root repeat,
+html|*:root repeatitem,
+html|*:root contextcontainer,
+html|*:root group,
+html|*:root switch,
+html|*:root case,
+html|*:root select1 item,
+html|*:root select1 itemset,
+html|*:root select1 choices {
   display: block;
+}
+
+xul|*:root output,
+xul|*:root label,
+xul|*:root input,
+xul|*:root secret,
+xul|*:root textarea,
+xul|*:root trigger,
+xul|*:root submit,
+xul|*:root repeat,
+xul|*:root repeatitem,
+xul|*:root contextcontainer,
+xul|*:root group,
+xul|*:root switch,
+xul|*:root case,
+xul|*:root select1 item,
+xul|*:root select1 itemset,
+xul|*:root select1 choices {
+  display: -moz-box;
 }
 
 contextcontainer-inline {
@@ -76,20 +96,32 @@ alert {
   display: none;
 }
 
-output {
+html|*:root output {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-output');
+}
+
+xul|*:root output {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-output');
 }
 
 range {
   -moz-binding: url('chrome://xforms/content/range.xml#xformswidget-range');
 }
 
-input {
+html|*:root input {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
+xul|*:root input {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input');
+}
+
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-boolean');
+}
+
+xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-boolean');
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
@@ -167,24 +199,75 @@ input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
   -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-year');
 }
 
-secret {
+html|*:root secret {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-secret');
 }
 
-textarea {
+xul|*:root secret {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-secret');
+}
+
+html|*:root textarea {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-textarea');
 }
 
-trigger, submit {
+xul|*:root textarea {
+  -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-textarea');
+}
+
+html|*:root trigger, html|*:root submit {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-trigger');
 }
 
-trigger[appearance="minimal"], submit[appearance="minimal"] {
+xul|*:root trigger, xul|*:root submit {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-trigger');
+}
+
+html|*:root trigger[appearance="minimal"], html|*:root submit[appearance="minimal"] {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-trigger-minimal');
+}
+
+xul|*:root trigger[appearance="minimal"], xul|*:root submit[appearance="minimal"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-trigger-minimal');
 }
 
 trigger[appearance="minimal"]:hover, submit[appearance="minimal"]:hover {
   cursor: pointer;
+}
+
+/* Most of the trigger[appearance="minimal"] specific CSS is copied from toolbarbutton.css */
+xul|*:root trigger[appearance="minimal"] {
+  -moz-appearance: toolbarbutton;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  margin: 0;
+  border: 1px solid transparent;
+  padding: 3px;
+  background-color: transparent;
+  color: -moz-DialogText;
+  cursor: default;
+}
+xul|*:root trigger[appearance="minimal"]:focus {
+  -moz-appearance: toolbarbutton;
+  outline: 1px dotted -moz-DialogText;
+  -moz-outline-offset: -2px;
+}
+xul|*:root trigger[appearance="minimal"]:hover {
+  border-color: ThreeDHighlight ThreeDShadow ThreeDShadow ThreeDHighlight;
+}
+xul|*:root trigger[appearance="minimal"]:hover:active {
+  border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+  padding-top: 4px;
+  padding-bottom: 2px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
+}
+xul|*:root trigger[appearance="minimal"][disabled],
+xul|*:root trigger[appearance="minimal"][disabled]:hover,
+xul|*:root trigger[appearance="minimal"][disabled]:hover:active {
+  border-color: transparent;
+  padding: 3px;
+  color: GrayText !important;
 }
 
 input > label,
@@ -198,8 +281,15 @@ upload > label {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-label-accesskey');
 }
 
-label {
+html|*:root label {
   -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label');
+}
+
+xul|*:root label {
+  -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-label');
+}
+xul|*:root input label, xul|*:root secret label, xul|*:root textarea label {
+  padding-top: 4px;
 }
 
 select1 {

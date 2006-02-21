@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Alexander Surkov.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<!--
+  This file contains xforms input, secret and textarea controls implementation
+  for XUL. All controls are inherited from interface bindings realized in
+  xforms-input.xml.
+-->
+
+<bindings id="xformsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+  <!-- INPUT: base widget for input: <default>, textarea: <default> and
+              secret: <default> controls
+  -->
+  <binding id="xformswidget-input-base"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          var control = this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control');
+
+          return {
+            control: control,
+
+            __proto__: control.inputField,
+
+            set readonly(val) {
+              this.control.readonly = val;
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMFocusIn");
+        }
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.updateInstanceData();
+          this.dispatchDOMUIEvent("DOMFocusOut");
+        }
+      </handler>
+
+      <handler event="input">
+        if (event.originalTarget == this.control) {
+          this.updateInstanceData(true);
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- INPUT: <DEFAULT> -->
+  <binding id="xformswidget-input"
+           extends="#xformswidget-input-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox class="xf-value" anonid="control" 
+                   xbl:inherits="accesskey" flex="1"/>
+      <children/>
+    </content>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMActivate");
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- INPUT: BOOLEAN -->
+  <binding id="xformswidget-input-boolean"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-boolean-base">
+    <content>
+      <children includes="label"/>
+      <xul:checkbox anonid="control" xbl:inherits="accesskey"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            get value() {
+              return this.checked;
+            },
+            set value(val) {
+              this.checked = val;
+            },
+            set readonly(val) {
+              this.disabled = val;
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
+      </handler>
+
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMFocusIn");
+        }
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.updateInstanceData();
+          this.dispatchDOMUIEvent("DOMFocusOut");
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- SECRET: <DEFAULT> -->
+  <binding id="xformswidget-secret"
+           extends="#xformswidget-input-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox type="password" anonid="control"
+                  xbl:inherits="accesskey" flex="1"/>
+      <children/>
+    </content>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_RETURN">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMActivate");
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- TEXTAREA: <DEFAULT> -->
+  <binding id="xformswidget-textarea"
+           extends="#xformswidget-input-base">
+    <content>
+      <children includes="label"/>
+      <xul:textbox multiline="true" class="xf-value" 
+                   anonid="control" xbl:inherits="accesskey" flex="1"/>
+      <children/>
+    </content>
+  </binding>
+
+</bindings>

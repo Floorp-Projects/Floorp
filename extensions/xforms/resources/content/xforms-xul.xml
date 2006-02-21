@@ -1,0 +1,197 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Alexander Surkov.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<!--
+  This file contains xforms controls implementation for XUL. All controls
+  are inherited from interface bindings realized in xforms.xml.
+-->
+
+<bindings id="xformsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- OUTPUT: <DEFAULT> -->
+  <binding id="xformswidget-output"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <content>
+      <children includes="label"/>
+      <xul:description class="xf-value" anonid="control"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            set value(val) {
+              this.textContent = val;
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+
+  <!-- LABEL: <DEFAULT> -->
+  <binding id="xformswidget-label"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
+    <content>
+      <xul:deck anonid="contentswitcher" flex="1">
+        <xul:label anonid="implicitcontent"/>
+        <xul:label><children/></xul:label>
+      </xul:deck>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            _contentSwitcher: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'contentswitcher'),
+            _implicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'implicitcontent'),
+
+            set value(val) {
+              if (val != null) {
+                this._implicitContent.textContent = val;
+                this._contentSwitcher.selectedIndex = 0;
+              } else {
+                this._implicitContent.textContent = '';
+                this._contentSwitcher.selectedIndex = 1;
+              }
+            }
+          };
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+
+  <!-- TRIGGER: base widget for triggers -->
+  <binding id="xformswidget-trigger-base"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-trigger-base">
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMFocusIn");
+        }
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control) {
+          this.dispatchDOMUIEvent("DOMFocusOut");
+        }
+      </handler>
+    </handlers>
+
+  </binding>
+
+
+  <!-- TRIGGER: <DEFAULT> -->
+  <binding id="xformswidget-trigger"
+           extends="#xformswidget-trigger-base">
+    <content>
+      <xul:button anonid="control" xbl:inherits="accesskey" flex="1">
+        <children/>
+      </xul:button>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return this.ownerDocument.
+            getAnonymousElementByAttribute(this, 'anonid', 'control');
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handle event="command">
+        // XXX: we need to fire 'DOMActivate' event to get xforms:submit to
+        // work, since xul:button do not do it (see a bug 323005
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=323005).
+        this.dispatchDOMUIEvent("DOMActivate");
+      </handle>
+    </handlers>
+  </binding>
+
+
+  <!-- TRIGGER: MINIMAL -->
+  <binding id="xformswidget-trigger-minimal"
+           extends="#xformswidget-trigger-base">
+    <content>
+      <xul:box tabindex="0" anonid="control" flex="1"
+               xbl:inherits="accesskey, orient">
+        <children/>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            set disabled(val) {
+              this.isDisabled = val;
+            },
+            isDisabled: false
+          }
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click">
+        if (!this.control.isDisabled) 
+          this.dispatchDOMUIEvent("DOMActivate");
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>
