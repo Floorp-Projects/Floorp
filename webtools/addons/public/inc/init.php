@@ -4,16 +4,23 @@
  *
  * @package amo
  * @subpackage docs
- * @todo find a more elegant way to push in global template data (like $cats)
  */
 
 
 
 /**
- * Require our config, smarty class.
+ * Require our config.
  */
 require_once('config.php');
-require_once(SMARTY_BASEDIR.'/Smarty.class.php');  // Smarty
+
+
+
+/**
+ * Set runtime options.
+ */
+ini_set('display_errors',DISPLAY_ERRORS);
+ini_set('error_reporting',ERROR_REPORTING);
+ini_set('magic_quotes_gpc',0);
 
 
 
@@ -28,11 +35,34 @@ define('SCRIPT_NAME',substr($_SERVER['SCRIPT_NAME'], strlen(WEB_PATH.'/'), strle
 
 
 /**
- * Set runtime options.
+ * Set up caching if this page requires caching.  First we will include Cache_Lite and create an object.
+ *
+ * Second, we will check to see if the cache has already been compiled for our ID.
+ *
+ * This is all done before anything else happens because we want to save cycles.
  */
-ini_set('display_errors',DISPLAY_ERRORS);
-ini_set('error_reporting',ERROR_REPORTING);
-ini_set('magic_quotes_gpc',0);
+if (!empty($cache_config[SCRIPT_NAME])) {
+
+    require_once('Cache/Lite.php');
+
+    // Set our cacheLiteId based on our params.
+    $cacheLiteId = md5($_SERVER['QUERY_STRING']);
+
+    // Set options.
+    $cacheOptions = array(
+        'cacheDir' => CACHE_DIR.'/',
+        'lifeTime' => $cache_config[SCRIPT_NAME]
+    );
+
+    // Instantiate Cache_Lite() object.
+    $cache = new Cache_Lite($cacheOptions);
+
+    // If our page is already cached, display from cache and exit.
+    if ($cacheData = $cache->get($cacheLiteId,SCRIPT_NAME)) {
+        echo $cacheData;
+        exit;
+    }
+}
 
 
 
@@ -65,6 +95,13 @@ switch( $_GET['app'] ) {
         $compileId = 'firefox';
         break;
 }
+
+
+
+/**
+ * Include Smarty class.  If we get here, we're going to generate the page.
+ */
+require_once(SMARTY_BASEDIR.'/Smarty.class.php');  // Smarty
 
 
 
@@ -114,19 +151,5 @@ function startProcessing($aTplName, $aCacheId, $aCompileId, $aPageType='default'
     $compileId = $aCompileId;
 
     $tpl = new AMO_Smarty();
-
-    // Otherwise, we will check to see if this page is flagged for caching.
-    // If it is, set caching to true and set the timeout to the value
-    // in the config before continuing to the rest of the script.
-    if (!empty($cache_config[SCRIPT_NAME])) {
-        $tpl->caching = true;
-        $tpl->cache_timeout = $cache_config[SCRIPT_NAME];
-
-        // If our page is already cached, display from cache and exit.
-        if ($tpl->is_cached($aTplName, $aCacheId, $aCompileId)) {
-            require_once('finish.php');
-            exit;
-        }
-    }
 }
 ?>
