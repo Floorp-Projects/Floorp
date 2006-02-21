@@ -234,7 +234,7 @@
                          onpopupshowing="return FeedHandler.buildFeedList(event);"
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
             </button>
-            <image id="lock-icon" onclick="displaySecurityInfo(); event.preventBubble();"/>
+            <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.preventBubble();"/>
           </hbox>
         </textbox>
       </toolbaritem>
