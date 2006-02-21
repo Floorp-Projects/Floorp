@@ -16,8 +16,6 @@ toolkit.jar:
 * content/mozapps/preferences/ocsp.js                           (preferences/ocsp.js)
 * content/mozapps/preferences/ocsp.xul                          (preferences/ocsp.xul)
 * content/mozapps/preferences/fontbuilder.js                    (preferences/fontbuilder.js)
-* content/mozapps/preferences/fontscaling.js                    (preferences/fontscaling.js)
-* content/mozapps/preferences/fontscaling.xul                   (preferences/fontscaling.xul)
 * content/mozapps/preferences/changemp.js                       (preferences/changemp.js)
 * content/mozapps/preferences/changemp.xul                      (preferences/changemp.xul)
 * content/mozapps/preferences/removemp.js                       (preferences/removemp.js)
