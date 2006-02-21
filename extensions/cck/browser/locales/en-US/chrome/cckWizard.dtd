@@ -52,9 +52,13 @@
 <!ENTITY  orgName.label                 "Enter Your Company Identifier (up to 10 characters; no spaces):">
 <!ENTITY  orgName.caption               "Company Identifier">
 
-<!ENTITY  homePage.caption              "Default Home Page">
-<!ENTITY  homePage.label                "Home Page URL:">
+<!ENTITY  homePage.caption              "Home Pages">
+<!ENTITY  homePage.label                "Default Home Page URL:">
 <!ENTITY  homePage.description          "This page is displayed when users first start the Firefox browser, or when they click the Home button.">
+
+<!ENTITY  homePageOverride.label        "Override Home Page URL:">
+<!ENTITY  homePageOverride.description  "This page is displayed  on the very first invocation of Firefox after a new profile is created. It is optional.">
+
 
 <!ENTITY  titleBar.caption              "Browser Window's Title Bar Text">
 <!ENTITY  titleBar.label                "Custom Title Bar Text:">

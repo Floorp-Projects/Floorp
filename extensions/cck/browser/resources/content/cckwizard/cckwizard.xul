@@ -185,6 +185,11 @@
         <label control="HomePageURL">&homePage.label;</label>
         <textbox id="HomePageURL" flex="1"/>
       </hbox>
+      <description>&homePageOverride.description;</description>
+      <hbox align="center">
+        <label control="HomePageOverrideURL">&homePageOverride.label;</label>
+        <textbox id="HomePageOverrideURL" flex="1"/>
+      </hbox>
     </groupbox>
     <groupbox>
       <caption label="&titleBar.caption;"/>
