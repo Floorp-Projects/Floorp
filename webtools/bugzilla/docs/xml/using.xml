@@ -796,27 +796,76 @@
   <section id="userpreferences">
     <title>User Preferences</title>
 
-    <para>Once you have logged in, you can customise various aspects of 
+    <para>Once you have logged in, you can customise various aspects of
     Bugzilla via the "Edit prefs" link in the page footer.
     The preferences are split into three tabs:</para>
 
-    <section id="accountsettings" xreflabel="Account Settings">
-      <title>Account Settings</title>
+    <section id="accountpreferences" xreflabel="Account Preferences">
+      <title>Account Preferences</title>
 
       <para>On this tab, you can change your basic account information,
       including your password, email address and real name. For security
-      reasons, in order to change anything on this page you must type your 
+      reasons, in order to change anything on this page you must type your
       <emphasis>current</emphasis>
-      password into the 
+      password into the
       <quote>Password</quote>
-      field at the top of the page. 
+      field at the top of the page.
       If you attempt to change your email address, a confirmation
       email is sent to both the old and new addresses, with a link to use to
       confirm the change. This helps to prevent account hijacking.</para>
     </section>
 
-    <section id="emailsettings">
-      <title>Email Settings</title>
+    <section id="generalpreferences" xreflabel="General Preferences">
+      <title>General Preferences</title>
+
+      <para>
+        This tab allows you to change several Bugzilla behavior.
+      </para>
+
+      <itemizedlist spacing="compact">
+        <listitem>
+          <para>
+            Field separator character for CSV files -
+            This controls separator character used in CSV formatted Bug List.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            After changing bugs - This controls which bugs or no bugs
+            are shown in the page after you changed bugs.
+            You can select the bug you've changed this time, or the next
+            bug of the list.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Add individual bugs to saved searches - this controls
+            whether you can add individual bugs to saved searches
+            or you can't.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            When viewing a bug, show comments in this order -
+            This controls the order of comments, you can select below:
+            <simplelist>
+              <member>Initial description, comment 1, comment 2, ...</member>
+              <member>Initial description, last comment, ..., comment 2, comment 1.</member>
+              <member>Initial last comment, ..., comment 2, comment 1, description.</member>
+            </simplelist>
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Show a quip at the top of each bug list - This controls
+            whether a quip will be shown on the Bug list page or not.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section id="emailpreferences">
+      <title>Email Preferences</title>
 
       <para>
         This tab controls the amount of email Bugzilla sends you.
