@@ -255,12 +255,8 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
 
   if (methodObject) {
     // Root the compiled prototype script object.
-    JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
-                                        aContext->GetNativeContext());
-    rv = cx ?
-      nsContentUtils::AddJSGCRoot(&mJSMethodObject,
-                                  "nsXBLProtoImplMethod::mJSMethodObject") :
-      NS_ERROR_UNEXPECTED;
+    rv = nsContentUtils::AddJSGCRoot(&mJSMethodObject,
+                                     "nsXBLProtoImplMethod::mJSMethodObject");
     if (NS_FAILED(rv)) {
       mJSMethodObject = nsnull;
     }
