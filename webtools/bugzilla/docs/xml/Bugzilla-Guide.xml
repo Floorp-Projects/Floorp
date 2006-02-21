@@ -1,23 +1,9 @@
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-
-<!-- Include macros -->
-<!ENTITY about SYSTEM "about.xml">
-<!ENTITY conventions SYSTEM "conventions.xml">
-<!ENTITY doc-index SYSTEM "index.xml">
-<!ENTITY faq SYSTEM "faq.xml">
-<!ENTITY gfdl SYSTEM "gfdl.xml">
-<!ENTITY glossary SYSTEM "glossary.xml">
-<!ENTITY installation SYSTEM "installation.xml">
-<!ENTITY administration SYSTEM "administration.xml">
-<!ENTITY security SYSTEM "security.xml">
-<!ENTITY using SYSTEM "using.xml">
-<!ENTITY integration SYSTEM "integration.xml">
-<!ENTITY index SYSTEM "index.xml">
-<!ENTITY customization SYSTEM "customization.xml">
-<!ENTITY troubleshooting SYSTEM "troubleshooting.xml">
-<!ENTITY patches SYSTEM "patches.xml">
-<!ENTITY introduction SYSTEM "introduction.xml">
-<!ENTITY modules SYSTEM "modules.xml">
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+    <!ENTITY % myents SYSTEM "bugzilla.ent">
+    %myents;
+]>
 
 <!-- Things to change for a stable release:
      * bz-ver to current stable
@@ -30,47 +16,6 @@
  
      For a devel release, simple bump bz-ver and bz-date
 -->
-
-<!ENTITY bz-ver "2.22rc1">
-<!ENTITY bz-nextver "2.22">
-<!ENTITY bz-date "2006-02-20">
-<!ENTITY current-year "2006">
-
-<!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
-<!ENTITY bz "http://www.bugzilla.org/">
-<!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
-<!ENTITY mysql "http://www.mysql.com/">
-
-<!-- For minimum versions -->
-<!ENTITY min-mysql-ver "4.0.14">
-<!ENTITY min-pg-ver "7.3.x">
-<!ENTITY min-perl-ver "5.6.1">
-<!ENTITY min-perl-ver-win "5.8.1">
-<!ENTITY min-template-ver "2.08">
-<!ENTITY min-file-temp-ver "any">
-<!ENTITY min-appconfig-ver "1.52">
-<!ENTITY min-text-wrap-ver "2001.0131">
-<!ENTITY min-file-spec-ver "0.84">
-<!ENTITY min-data-dumper-ver "any">
-<!ENTITY min-dbd-mysql-ver "2.9003">
-<!ENTITY min-dbd-pg-ver "1.31">
-<!ENTITY min-dbi-ver "1.38">
-<!ENTITY min-date-format-ver "2.21">
-<!ENTITY min-cgi-ver "2.93">
-<!ENTITY min-mail-mailer-ver "1.67">
-<!ENTITY min-mime-base64-ver "3.01">
-<!ENTITY min-mime-parser-ver "5.406">
-<!ENTITY min-storable-ver "any">
-<!-- Optional modules -->
-<!ENTITY min-gd-ver "1.20">
-<!ENTITY min-gd-graph-ver "any">
-<!ENTITY min-gd-text-align-ver "any">
-<!ENTITY min-chart-base-ver "1.0">
-<!ENTITY min-xml-parser-ver "any">
-<!ENTITY min-patchreader-ver "0.9.4">
-<!ENTITY min-image-magick-ver "any">
-
-]>
 
 
 <!-- Coding standards for this document 
@@ -141,43 +86,43 @@
   </bookinfo>
 
 <!-- About This Guide -->
-&about;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="about.xml" /> 
 
 <!-- Installing Bugzilla -->
-&installation;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml" />
 
 <!-- Administering Bugzilla -->
-&administration;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="administration.xml" />
 
 <!-- Securing Bugzilla -->
-&security;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="security.xml" />
 
 <!-- Customizing Bugzilla -->
-&customization;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="customization.xml" />
 
 <!-- Using Bugzilla -->
-&using;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="using.xml" />
 
 <!-- Appendix: The Frequently Asked Questions -->
-&faq;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="faq.xml" />
 
 <!-- Appendix: Troubleshooting -->
-&troubleshooting;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="troubleshooting.xml" />
 
 <!-- Appendix: Custom Patches -->
-&patches;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="patches.xml" />
 
 <!-- Appendix: Manually Installing Perl Modules -->
-&modules;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules.xml" />
 
 <!-- Appendix: GNU Free Documentation License -->
-&gfdl;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="gfdl.xml" />
 
 <!-- Glossary -->
-&glossary;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml" />
 
 <!-- Index -->
-&index;
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="index.xml" />
 
 
 </book>

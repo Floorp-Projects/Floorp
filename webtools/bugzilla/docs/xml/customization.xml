@@ -1,4 +1,10 @@
-<!-- <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
+<?xml version="1.0"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+    <!ENTITY % myents SYSTEM "bugzilla.ent">
+    %myents;
+]>
+
 <chapter id="customization">
   <title>Customising Bugzilla</title>
 
@@ -1093,8 +1099,8 @@ this. But you need to know this stuff anyway, right?
     </section>
   </section>
 
-  <!-- Integrating Bugzilla with Third-Party Tools -->
-  &integration;
+<!-- Integrating Bugzilla with Third-Party Tools -->
+<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="integration.xml" />
 
 </chapter>
 
