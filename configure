@@ -6264,11 +6264,11 @@ EOF
 EOF
 
     cat >> confdefs.h <<EOF
-#define WINVER 0x400
+#define WINVER 0x500
 EOF
 
     cat >> confdefs.h <<EOF
-#define _WIN32_WINNT 0x400
+#define _WIN32_WINNT 0x500
 EOF
 
     cat >> confdefs.h <<\EOF
