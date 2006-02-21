@@ -6774,6 +6774,9 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   nsCOMPtr<nsISupports> srcSupport;
   nsCOMPtr<nsISupports> copySupport;
 
+  if (!(mFlags & MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK))
+    SetMRUTime();
+
   if (WeAreOffline())
     return CopyMessagesOffline(srcFolder, messages, isMove, msgWindow, listener);
 
