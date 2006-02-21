@@ -441,6 +441,9 @@ nsSyncLoader::PushAsyncStream(nsIStreamListener* aListener)
         }
     }
 
+    // Note that if AsyncOpen failed that's ok -- the only caller of
+    // this method nulls out mChannel immediately after we return.
+
     service->PopThreadEventQueue(currentThreadQ);
     
     return rv;
