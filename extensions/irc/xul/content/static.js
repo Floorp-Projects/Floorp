@@ -436,11 +436,18 @@ function initApplicationCompatibility()
     {
         var url = getBrowserURL();
         if (url == "chrome://navigator/content/navigator.xul")
+        {
             client.host = "Mozilla";
+        }
         else if (url == "chrome://browser/content/browser.xul")
+        {
             client.host = "Firefox";
+        }
         else
+        {
             client.host = ""; // We don't know this host. Show an error later.
+            client.unknownUID = url;
+        }
     }
 
     client.platform = "Unknown";
