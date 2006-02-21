@@ -231,7 +231,7 @@ nsSVGMarkerElement::Init()
 
   // DOM property: orient (angle)
   {
-    nsCOMPtr<nsISVGAngle> angle;
+    nsCOMPtr<nsIDOMSVGAngle> angle;
     rv = NS_NewSVGAngle(getter_AddRefs(angle), 0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedAngle(getter_AddRefs(mOrientAngle), angle);

@@ -37,16 +37,16 @@
 #ifndef __NS_SVGANGLE_H__
 #define __NS_SVGANGLE_H__
 
-#include "nsISVGAngle.h"
+#include "nsIDOMSVGAngle.h"
 #include "nsAString.h"
 
 nsresult
-NS_NewSVGAngle(nsISVGAngle** result,
+NS_NewSVGAngle(nsIDOMSVGAngle** result,
                float value=0.0f,
                PRUint16 unit=nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED);
 
 nsresult
-NS_NewSVGAngle(nsISVGAngle** result,
+NS_NewSVGAngle(nsIDOMSVGAngle** result,
                const nsAString &value);
 
-#endif //__NS_SVGLENGTH_H__
+#endif //__NS_SVGANGLE_H__
