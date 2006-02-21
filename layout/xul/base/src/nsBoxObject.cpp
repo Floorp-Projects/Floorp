@@ -412,9 +412,13 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
                  "exploit you");
   }
 #endif
+
+  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
   
-  if (!mPresState)
+  if (!mPresState) {
     NS_NewPresState(getter_Transfers(mPresState));
+    NS_ENSURE_TRUE(mPresState, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   nsDependentString propertyName(aPropertyName);
   return mPresState->SetStatePropertyAsSupports(propertyName, aValue);
@@ -423,6 +427,8 @@ nsBoxObject::SetPropertyAsSupports(const PRUnichar* aPropertyName, nsISupports* 
 NS_IMETHODIMP
 nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
 {
+  NS_ENSURE_ARG(aPropertyName && *aPropertyName);
+  
   if (!mPresState) {
     *aResult = nsnull;
     return NS_OK;
