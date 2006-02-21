@@ -1212,6 +1212,16 @@ static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager, nsIFra
   return aFrame->GetParent();
 }
 
+// Destructor function for the overflow area property
+static void
+DestroyRectFunc(void*    aFrame,
+                nsIAtom* aPropertyName,
+                void*    aPropertyValue,
+                void*    aDtorData)
+{
+  delete NS_STATIC_CAST(nsRect*, aPropertyValue);
+}
+
 static void MarkOutOfFlowChild(nsIFrame* aFrame, nsIFrame* aChild,
                                const nsRect& aDirtyRect, PRBool aMark) {
   if (aMark) {
@@ -1221,7 +1231,7 @@ static void MarkOutOfFlowChild(nsIFrame* aFrame, nsIFrame* aChild,
       return;
     // if "new nsRect" fails, this won't do anything, but that's okay
     aChild->SetProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty,
-                        new nsRect(dirty));
+                        new nsRect(dirty), DestroyRectFunc);
   } else {
     aChild->DeleteProperty(nsLayoutAtoms::outOfFlowDirtyRectProperty);
   }
@@ -4867,16 +4877,6 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
-
-// Destructor function for the overflow area property
-static void
-DestroyRectFunc(void*           aFrame,
-                nsIAtom*        aPropertyName,
-                void*           aPropertyValue,
-                void*           aDtorData)
-{
-  delete (nsRect*)aPropertyValue;
-}
 
 nsRect*
 nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary) 
