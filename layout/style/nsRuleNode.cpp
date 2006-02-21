@@ -196,7 +196,7 @@ nscoord CalcLength(const nsCSSValue& aValue,
 {
   NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
   if (aValue.IsFixedLengthUnit()) {
-    return aValue.GetLengthTwips(aPresContext);
+    return aValue.GetLengthTwips();
   }
   nsCSSUnit unit = aValue.GetUnit();
   if (unit == eCSSUnit_Pixel) {
