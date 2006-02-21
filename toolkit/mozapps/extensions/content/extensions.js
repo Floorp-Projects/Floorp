@@ -373,16 +373,11 @@ XPInstallDownloadManager.prototype = {
                              extensionsStrings.getString("installInstalling"));
         break;
       case nsIXPIProgressDialog.INSTALL_DONE:
-        dump("*** state change = " + aAddon.xpiURL + ", state = " + aState + ", value = " + aValue + "\n");
         element.setAttribute("state", "done");
-        extensionsStrings = document.getElementById("extensionsStrings");
-        element.setAttribute("description",
-                             extensionsStrings.getString("installSuccess"));
-        var msg;
         if (aValue != 0 && aValue != 999) {
           var xpinstallStrings = document.getElementById("xpinstallStrings");
           try {
-            msg = xpinstallStrings.getString("error" + aValue);
+            var msg = xpinstallStrings.getString("error" + aValue);
           }
           catch (e) {
             msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
