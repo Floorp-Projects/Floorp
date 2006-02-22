@@ -65,7 +65,7 @@ if ($maxdepth !~ /^\d+$/) { $maxdepth = 0 };
 # have to embed a conditional statement into each query.
 my $milestone_column = Param('usetargetmilestone') ? "target_milestone" : "''";
 
-# The greatest depth to which either tree goes.
+# Stores the greatest depth to which either tree goes.
 my $realdepth = 0;
 
 # Generate the tree of bugs that this bug depends on and a list of IDs
@@ -148,12 +148,14 @@ sub GetBug {
     if (Bugzilla->user->can_see_bug($id)) {
         ($bug->{'exists'},
          $bug->{'status'},
+         $bug->{'resolution'},
          $bug->{'summary'},
          $bug->{'milestone'},
          $bug->{'assignee_id'},
          $bug->{'assignee_email'}) = $dbh->selectrow_array(
                 "SELECT 1,
                         bug_status, 
+                        resolution,
                         short_desc, 
                         $milestone_column, 
                         assignee.userid, 
