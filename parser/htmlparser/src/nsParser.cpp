@@ -1505,20 +1505,22 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
     // was no <body> in the context.
     // XXX This is extremely ugly. Maybe CNavDTD should have FlushMisplaced()?
     NS_ASSERTION(mParserContext, "Parsing didn't create a parser context?");
-    nsCOMPtr<CNavDTD> dtd = do_QueryInterface(mParserContext->mDTD);
 
-    if (dtd) {
-      CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
-      nsCParserNode bodyNode(&bodyToken, 0);
+    CNavDTD* dtd = NS_STATIC_CAST(CNavDTD*,
+                                  NS_STATIC_CAST(nsIDTD*,
+                                                 mParserContext->mDTD));
+    NS_ASSERTION(dtd, "How did we parse anything without a dtd?");
 
-      dtd->OpenContainer(&bodyNode, eHTMLTag_body);
+    CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
+    nsCParserNode bodyNode(&bodyToken, 0);
 
-      // Now parse the flushed out tags.
-      result = BuildModel();
-      if (NS_FAILED(result)) {
-        mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
-        return result;
-      }
+    dtd->OpenContainer(&bodyNode, eHTMLTag_body);
+
+    // Now parse the flushed out tags.
+    result = BuildModel();
+    if (NS_FAILED(result)) {
+      mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED;
+      return result;
     }
 
     // Now that we've flushed all of the tags out of the body, we have to make
