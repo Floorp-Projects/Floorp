@@ -361,21 +361,6 @@ nsThebesDeviceContext::SupportsNativeWidgets(PRBool &aSupportsWidgets)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::GetCanonicalPixelScale(float &aScale) const
-{
-    aScale = mPixelScale;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThebesDeviceContext::SetCanonicalPixelScale(float aScale)
-{
-    DeviceContextImpl::SetCanonicalPixelScale(aScale);
-    mPixelScale = aScale;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesDeviceContext::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
 #ifdef XP_WIN

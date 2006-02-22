@@ -78,9 +78,6 @@ public:
     NS_IMETHOD SupportsNativeWidgets(PRBool &aSupportsWidgets);
     NS_IMETHOD PrepareNativeWidget(nsIWidget* aWidget, void** aOut);
 
-    NS_IMETHOD GetCanonicalPixelScale(float &aScale) const;
-    NS_IMETHOD SetCanonicalPixelScale(float aScale);
-
     NS_IMETHOD GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
     NS_IMETHOD GetSystemFont(nsSystemFontID aID, nsFont *aFont) const;
@@ -137,7 +134,6 @@ protected:
     void ComputeFullAreaUsingScreen(nsRect* outRect);
     void FindScreen(nsIScreen** outScreen);
 
-    float mPixelScale;
     PRUint32 mDepth;
 
 private:
