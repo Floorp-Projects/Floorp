@@ -53,7 +53,7 @@
 
 class nsXULWindow;
 
-class nsChromeTreeOwner : public nsIDocShellTreeOwner,
+class nsChromeTreeOwner : public nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH,
                           public nsIBaseWindow, 
                           public nsIInterfaceRequestor,
                           public nsIWebProgressListener,
@@ -68,6 +68,7 @@ public:
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIDOCSHELLTREEOWNER
    NS_DECL_NSIWEBPROGRESSLISTENER
+   NS_DECL_NSIDOCSHELLTREEOWNER_MOZILLA_1_8_BRANCH
 
    static nsresult InitGlobals();
    static void     FreeGlobals();

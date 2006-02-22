@@ -231,6 +231,21 @@ nsFrameLoader::Destroy()
     mOwnerContent = nsnull;
   }
 
+  // Let the tree owner know we're gone.
+  if (mIsTopLevelContent) {
+    nsCOMPtr<nsIDocShellTreeItem> ourItem = do_QueryInterface(mDocShell);
+    if (ourItem) {
+      nsCOMPtr<nsIDocShellTreeItem> parentItem;
+      ourItem->GetParent(getter_AddRefs(parentItem));
+      nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(parentItem);
+      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
+        do_QueryInterface(owner);
+      if (owner2) {
+        owner2->ContentShellRemoved(ourItem);
+      }
+    }
+  }
+  
   // Let our window know that we are gone
   nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(mDocShell));
   if (win_private) {
@@ -303,6 +318,9 @@ nsFrameLoader::EnsureDocShell()
 
   nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentAsWebNav));
   if (parentAsNode) {
+    // Note: This logic duplicates a lot of logic in
+    // nsSubDocumentFrame::AttributeChanged.  We should fix that.
+
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
       do_QueryInterface(parentAsNode);
 
@@ -317,23 +335,12 @@ nsFrameLoader::EnsureDocShell()
     }
 
     // we accept "content" and "content-xxx" values.
-    // at time of writing, we expect "xxx" to be "primary", but
-    // someday it might be an integer expressing priority
+    // at time of writing, we expect "xxx" to be "primary" or "targetable", but
+    // someday it might be an integer expressing priority or something else.
 
-    if (value.Length() >= 7) {
-      // Lowercase the value, ContentShellAdded() further down relies
-      // on it being lowercased.
-      ToLowerCase(value);
-
-      nsAutoString::const_char_iterator start, end;
-      value.BeginReading(start);
-      value.EndReading(end);
-
-      nsAutoString::const_char_iterator iter(start + 7);
-
-      isContent = Substring(start, iter).EqualsLiteral("content") &&
-                  (iter == end || *iter == '-');
-    }
+    isContent = value.LowerCaseEqualsLiteral("content") ||
+      StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                       nsCaseInsensitiveStringComparator());
 
     if (isContent) {
       // The web shell's type is content.
@@ -349,16 +356,24 @@ nsFrameLoader::EnsureDocShell()
 
     parentAsNode->AddChild(docShellAsItem);
 
-    if (isContent) {
+    if (parentType == nsIDocShellTreeItem::typeChrome && isContent) {
+      mIsTopLevelContent = PR_TRUE;
+      
       // XXXbz why is this in content code, exactly?  We should handle
-      // this some other way.....
+      // this some other way.....  Not sure how yet.
       nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
+        do_QueryInterface(parentTreeOwner);
 
-      if (parentTreeOwner) {
-        PRBool is_primary = parentType == nsIDocShellTreeItem::typeChrome &&
-                            value.EqualsLiteral("content-primary");
+      PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
+      if (owner2) {
+        PRBool is_targetable = is_primary ||
+          value.LowerCaseEqualsLiteral("content-targetable");
+        owner2->ContentShellAdded2(docShellAsItem, is_primary, is_targetable,
+                                   value);
+      } else if (parentTreeOwner) {
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());
       }

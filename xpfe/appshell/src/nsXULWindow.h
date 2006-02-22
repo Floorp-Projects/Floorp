@@ -49,6 +49,7 @@
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
+#include "nsCOMArray.h"
 
 // Interfaces needed
 #include "nsIBaseWindow.h"
@@ -68,6 +69,14 @@
 
 // nsXULWindow
 
+#define NS_XULWINDOW_IMPL_CID                         \
+{ /* 2a38ef7e-3174-44ad-a785-b5a863cf5588 */          \
+     0x2a38ef7e,                                      \
+     0x3174,                                          \
+     0x44ad,                                          \
+   { 0xa7, 0x85, 0xb5, 0xa8, 0x63, 0xcf, 0x55, 0x88 } \
+}
+
 class nsXULWindow : public nsIBaseWindow,
                     public nsIInterfaceRequestor,
                     public nsIXULWindow,
@@ -82,6 +91,8 @@ public:
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSIXULWINDOW
    NS_DECL_NSIBASEWINDOW
+
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
 
    void LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; }
    PRBool IsLocked() const { return mLockedUntilChromeLoad; }
@@ -116,8 +127,12 @@ protected:
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindowInternal** aDOMWindow);
    NS_IMETHOD GetWindowDOMElement(nsIDOMElement** aDOMElement);
    NS_IMETHOD GetDOMElementById(char* aID, nsIDOMElement** aDOMElement);
-   NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-      PRBool aPrimary, const PRUnichar* aID);
+
+  // See nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH for docs on next two methods
+   NS_HIDDEN_(nsresult) ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+                                          PRBool aPrimary, PRBool aTargetable,
+                                          const nsAString& aID);
+   NS_HIDDEN_(nsresult) ContentShellRemoved(nsIDocShellTreeItem* aContentShell);
    NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShellItem, PRInt32 aCX, 
       PRInt32 aCY);
    NS_IMETHOD ExitModalLoop(nsresult aStatus);
@@ -163,7 +178,11 @@ protected:
    PRUint32                mPersistentAttributesMask;
    PRUint32                mChromeFlags;
    nsString                mTitle;
+
+   nsCOMArray<nsIWeakReference> mTargetableShells; // targetable shells only
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
 
 // nsContentShellInfo
 // Used (in an nsVoidArray) to map shell IDs to nsIDocShellTreeItems.

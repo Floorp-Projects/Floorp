@@ -55,7 +55,7 @@
 class nsXULWindow;
 class nsSiteWindow2;
 
-class nsContentTreeOwner : public nsIDocShellTreeOwner,
+class nsContentTreeOwner : public nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH,
                            public nsIBaseWindow,
                            public nsIInterfaceRequestor,
                            public nsIWebBrowserChrome2,
@@ -73,6 +73,7 @@ public:
    NS_DECL_NSIWEBBROWSERCHROME
    NS_DECL_NSIWEBBROWSERCHROME2
    NS_DECL_NSIWINDOWPROVIDER
+   NS_DECL_NSIDOCSHELLTREEOWNER_MOZILLA_1_8_BRANCH
 
 protected:
    nsContentTreeOwner(PRBool fPrimary);

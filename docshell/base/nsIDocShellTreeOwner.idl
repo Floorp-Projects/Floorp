@@ -100,3 +100,43 @@ interface nsIDocShellTreeOwner : nsISupports
                             out boolean aPersistSize,
                             out boolean aPersistSizeMode);
 };
+
+/**
+ * Interface added to handle window targeting in tabbrowser.  This is a total
+ * hack that's only needed to work around the fact that the tree owner api is
+ * really pretty useless for dealing with multiple "real" browsers in the same
+ * "docshell tree" and that there's no way to set up multiple treeowners in
+ * XUL-land right now.  Gecko 1.9 will NOT be shipping this interface, and
+ * nsIDocShellTreeOwner will hopefully be improved significantly.
+ *
+ * @status TEMPORARY
+ */
+[scriptable, uuid(3c2a6927-e923-4ea8-bbda-a335c768ce4e)]
+interface nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH : nsIDocShellTreeOwner
+{
+  /**
+   * Called when a content shell is added to the docshell tree.  This is _only_
+   * called for "root" content shells (that is, ones whose parent is a chrome
+   * shell).
+   *
+   * @param aContentShell the shell being added.
+   * @param aPrimary whether the shell is primary.
+   * @param aTargetable whether the shell can be a target for named window
+   *                    targeting.
+   * @param aID the "id" of the shell.  What this actually means is undefined.
+   *            Don't rely on this for anything.
+   */
+  void contentShellAdded2(in nsIDocShellTreeItem aContentShell,
+			  in boolean aPrimary, in boolean aTargetable,
+			  in AString aID);
+
+  /**
+   * Called when a content shell is removed from the docshell tree.  This is
+   * _only_ called for "root" content shells (that is, ones whose parent is a
+   * chrome shell).  Note that if aContentShell was never added,
+   * contentShellRemoved should just do nothing.
+   *
+   * @param aContentShell the shell being removed.
+   */
+  void contentShellRemoved(in nsIDocShellTreeItem aContentShell);
+};

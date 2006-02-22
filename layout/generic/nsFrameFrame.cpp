@@ -83,6 +83,7 @@
 #include "nsAutoPtr.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsDisplayList.h"
+#include "nsUnicharUtils.h"
 
 #ifdef NS_PRINTING
 #include "nsIWebBrowserPrint.h"
@@ -480,6 +481,10 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)
 {
+  if (aNameSpaceID != kNameSpaceID_None) {
+    return NS_OK;
+  }
+  
   nsIAtom *type = mContent->Tag();
 
   if ((type != nsHTMLAtoms::object && aAttribute == nsHTMLAtoms::src) ||
@@ -488,6 +493,8 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   // If the noResize attribute changes, dis/allow frame to be resized
   else if (aAttribute == nsHTMLAtoms::noresize) {
+    // Note that we're not doing content type checks, but that's ok -- if
+    // they'd fail we will just end up with a null framesetFrame.
     if (mContent->GetParent()->Tag() == nsHTMLAtoms::frameset) {
       nsIFrame* parentFrame = GetParent();
 
@@ -508,38 +515,62 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
     if (!mFrameLoader) 
       return NS_OK;
 
-    nsAutoString value;
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+    if (!mContent->IsContentOfType(nsIContent::eXUL)) {
+      return NS_OK;
+    }
 
-    // Notify our enclosing chrome that the primary content shell
-    // has changed.
+    // Note: This logic duplicates a lot of logic in
+    // nsFrameLoader::EnsureDocShell.  We should fix that.
+
+    // Notify our enclosing chrome that our type has changed.  We only do this
+    // if our parent is chrome, since in all other cases we're random content
+    // subframes and the treeowner shouldn't worry about us.
 
     nsCOMPtr<nsIDocShell> docShell;
     mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    if (!docShellAsItem) {
+      return NS_OK;
+    }
 
-    // If our container is a web-shell, inform it that it has a new
-    // child. If it's not a web-shell then some things will not operate
-    // properly.
-    nsCOMPtr<nsISupports> container = GetPresContext()->GetContainer();
-    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    docShellAsItem->GetParent(getter_AddRefs(parentItem));
 
-    if (parentAsNode) {
-      nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-        do_QueryInterface(parentAsNode);
+    PRInt32 parentType;
+    parentItem->GetItemType(&parentType);
 
-      nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-      parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-      if (parentTreeOwner) {
-        PRInt32 parentType;
-        parentAsItem->GetItemType(&parentType);
-        PRBool is_primary_content =
-          parentType == nsIDocShellTreeItem::typeChrome &&
-          value.LowerCaseEqualsLiteral("content-primary");
+    if (parentType != nsIDocShellTreeItem::typeChrome) {
+      return NS_OK;
+    }
 
-        parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary_content,
+    nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+    parentItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+    if (parentTreeOwner) {
+      nsAutoString value;
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+
+      PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
+
+      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
+        do_QueryInterface(parentTreeOwner);
+
+      if (!owner2) {
+        // XXXbz this adds stuff even if it's not of type content-*, but not
+        // much we can do about that....
+        parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());
+      } else {
+        owner2->ContentShellRemoved(docShellAsItem);
+
+        if (value.LowerCaseEqualsLiteral("content") ||
+            StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                             nsCaseInsensitiveStringComparator())) {
+          PRBool is_targetable = is_primary ||
+            value.LowerCaseEqualsLiteral("content-targetable");
+
+          owner2->ContentShellAdded2(docShellAsItem, is_primary, is_targetable,
+                                     value);
+        }
       }
     }
   }
