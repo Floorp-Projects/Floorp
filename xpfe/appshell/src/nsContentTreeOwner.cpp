@@ -125,13 +125,13 @@ NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
    // NOTE: This is using aggregation because there are some properties and
-   // method on nsIBaeWindow (which we implement) and on nsIEmbeddingSiteWindow
-   // (which we also implement) that have the same name.  And it just so
-   // happens that we want different behavior for these methods and properties
-   // depending on the interface through which they're called (SetFocus() is a
-   // good example here).  If it were not for that, we could ditch the
-   // aggregation and just deal with not being able to use NS_DECL_* macros for
-   // this stuff....
+   // method on nsIBaseWindow (which we implement) and on
+   // nsIEmbeddingSiteWindow (which we also implement) that have the same name.
+   // And it just so happens that we want different behavior for these methods
+   // and properties depending on the interface through which they're called
+   // (SetFocus() is a good example here).  If it were not for that, we could
+   // ditch the aggregation and just deal with not being able to use NS_DECL_*
+   // macros for this stuff....
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow, mSiteWindow2)
    NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIEmbeddingSiteWindow2, mSiteWindow2)
 NS_INTERFACE_MAP_END
