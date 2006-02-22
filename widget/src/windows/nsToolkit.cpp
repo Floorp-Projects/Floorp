@@ -92,8 +92,6 @@ DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
 PRInt32        nsToolkit::gAIMMCount = 0;
 
-MouseTrailer MouseTrailer::mSingleton;
-
 #if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
 //
 // Dll entry point. Keep the dll instance
@@ -695,6 +693,8 @@ NS_CreateWindowEx   nsToolkit::mCreateWindowEx = nsCreateWindowEx;
 NS_RegisterClass    nsToolkit::mRegisterClass = nsRegisterClass; 
 NS_UnregisterClass  nsToolkit::mUnregisterClass = nsUnregisterClass; 
 
+MouseTrailer*       nsToolkit::gMouseTrailer;
+
 #ifndef WINCE
 NS_SHGetPathFromIDList  nsToolkit::mSHGetPathFromIDList = nsSHGetPathFromIDList; 
 NS_SHBrowseForFolder    nsToolkit::mSHBrowseForFolder = nsSHBrowseForFolder; 
@@ -751,6 +751,8 @@ nsToolkit::nsToolkit()
 #if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
     nsToolkit::Startup(GetModuleHandle(NULL));
 #endif
+
+    gMouseTrailer = new MouseTrailer();
 }
 
 
@@ -783,6 +785,12 @@ nsToolkit::~nsToolkit()
 
     // Remove reference to cached event queue
     gEventQueueService = nsnull;
+
+    if (gMouseTrailer) {
+      gMouseTrailer->DestroyTimer();
+      delete gMouseTrailer;
+      gMouseTrailer = nsnull;
+    }
 
     // Unhook the filter used to determine when
     // the user is moving a top-level window.
@@ -1212,46 +1220,48 @@ void MouseTrailer::DestroyTimer()
 //-------------------------------------------------------------------------
 void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
 {
+  MouseTrailer *mtrailer = nsToolkit::gMouseTrailer;
+  NS_ASSERTION(mtrailer, "MouseTrailer still firing after deletion!");
+
   // Check to see if we are in mouse capture mode,
   // Once capture ends we could still get back one more timer event.
   // Capture could end outside our window.
   // Also, for some reason when the mouse is on the frame it thinks that
   // it is inside the window that is being captured.
-  if (mSingleton.mCaptureWindow) {
-    if (mSingleton.mCaptureWindow != mSingleton.mMouseTrailerWindow) {
+  if (mtrailer->mCaptureWindow) {
+    if (mtrailer->mCaptureWindow != mtrailer->mMouseTrailerWindow) {
       return;
     }
   } else {
-    if (mSingleton.mIsInCaptureMode) {
+    if (mtrailer->mIsInCaptureMode) {
       // mMouseTrailerWindow could be bad from rolling over the frame, so clear 
       // it if we were capturing and now this is the first timer callback 
       // since we canceled the capture
-      mSingleton.mMouseTrailerWindow = nsnull;
-      mSingleton.mIsInCaptureMode = PR_FALSE;
+      mtrailer->mMouseTrailerWindow = nsnull;
+      mtrailer->mIsInCaptureMode = PR_FALSE;
       return;
     }
   }
 
-  if (mSingleton.mMouseTrailerWindow && ::IsWindow(mSingleton.mMouseTrailerWindow)) {
+  if (mtrailer->mMouseTrailerWindow && ::IsWindow(mtrailer->mMouseTrailerWindow)) {
     POINT mp;
     DWORD pos = ::GetMessagePos();
     mp.x = GET_X_LPARAM(pos);
     mp.y = GET_Y_LPARAM(pos);
-
     HWND mouseWnd = ::WindowFromPoint(mp);
-    if (mSingleton.mMouseTrailerWindow != mouseWnd) {
+    if (mtrailer->mMouseTrailerWindow != mouseWnd) {
 #ifndef WINCE
       // Notify someone that a mouse exit happened.
-      PostMessage(mSingleton.mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
+      PostMessage(mtrailer->mMouseTrailerWindow, WM_MOUSELEAVE, NULL, NULL);
 #endif
 
       // we are out of this window, destroy timer
-      mSingleton.DestroyTimer();
-      mSingleton.mMouseTrailerWindow = nsnull;
+      mtrailer->DestroyTimer();
+      mtrailer->mMouseTrailerWindow = nsnull;
     }
   } else {
-    mSingleton.DestroyTimer();
-    mSingleton.mMouseTrailerWindow = nsnull;
+    mtrailer->DestroyTimer();
+    mtrailer->mMouseTrailerWindow = nsnull;
   }
 }
 

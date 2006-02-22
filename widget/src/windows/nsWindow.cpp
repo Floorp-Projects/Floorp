@@ -789,11 +789,13 @@ nsWindow::~nsWindow()
     gCurrentWindow = nsnull;
   }
 
-  if (MouseTrailer::GetSingleton().GetMouseTrailerWindow() == mWnd) {
-    MouseTrailer::GetSingleton().DestroyTimer();
-  }
-  if (MouseTrailer::GetSingleton().GetCaptureWindow() == mWnd) {
-    MouseTrailer::GetSingleton().SetCaptureWindow(nsnull);
+  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
+  if (mtrailer) {
+    if (mtrailer->GetMouseTrailerWindow() == mWnd)
+      mtrailer->DestroyTimer();
+
+    if (mtrailer->GetCaptureWindow() == mWnd)
+      mtrailer->SetCaptureWindow(nsnull);
   }
 
   // If the widget was released without calling Destroy() then the native
@@ -834,11 +836,16 @@ nsWindow::~nsWindow()
 
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
+  if (!nsToolkit::gMouseTrailer) {
+    NS_ERROR("nsWindow::CaptureMouse called after nsToolkit destroyed");
+    return NS_OK;
+  }
+
   if (aCapture) {
-    MouseTrailer::GetSingleton().SetCaptureWindow(mWnd);
+    nsToolkit::gMouseTrailer->SetCaptureWindow(mWnd);
     ::SetCapture(mWnd);
   } else {
-    MouseTrailer::GetSingleton().SetCaptureWindow(NULL);
+    nsToolkit::gMouseTrailer->SetCaptureWindow(NULL);
     ::ReleaseCapture();
   }
   mIsInMouseCapture = aCapture;
@@ -5933,10 +5940,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
 
   // call the event callback
   if (nsnull != mEventCallback) {
-    MouseTrailer::GetSingleton().Disable();
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Disable();
     if (aEventType == NS_MOUSE_MOVE) {
-      if (!mIsInMouseCapture) {
-        MouseTrailer::GetSingleton().SetMouseTrailerWindow(mWnd);
+      if (nsToolkit::gMouseTrailer && !mIsInMouseCapture) {
+        nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
       }
       nsRect rect;
       GetBounds(rect);
@@ -5964,7 +5972,8 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM l
 
     result = DispatchWindowEvent(&event);
 
-    MouseTrailer::GetSingleton().Enable();
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()
