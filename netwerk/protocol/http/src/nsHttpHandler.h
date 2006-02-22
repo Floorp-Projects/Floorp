@@ -193,6 +193,10 @@ public:
         NotifyObservers(chan, NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC);
     }
 
+    // Called by channels before a redirect happens. This notifies both the
+    // channel's and the global redirect observers.
+    nsresult OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                               PRUint32 flags);
 private:
 
     //

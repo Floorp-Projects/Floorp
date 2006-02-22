@@ -42,6 +42,24 @@ nsTestServ.prototype =
                      "\r\n" +
                      "200 OK";
       stream.write(response, response.length);
+    },
+
+    "/redirect": function(stream)
+    {
+      var response = this.headers("301 Moved Permanently") +
+                     "Location: http://localhost:4444/\r\n" +
+                     "\r\n" +
+                     "Moved";
+      stream.write(response, response.length);
+    },
+
+    "/redirectfile": function(stream)
+    {
+      var response = this.headers("301 Moved Permanently") +
+                     "Location: file:///\r\n" +
+                     "\r\n" +
+                     "Moved to a file URI";
+      stream.write(response, response.length);
     }
   },
 

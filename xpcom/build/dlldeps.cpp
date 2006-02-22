@@ -93,6 +93,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsStringAPI.h"
 #include "nsStringBuffer.h"
+#include "nsCategoryCache.h"
 
 #ifndef WINCE
 #include "nsWindowsRegKey.h"
@@ -240,6 +241,9 @@ void XXXNeverCalled()
     NS_StringCloneData(str1);
     NS_UTF16ToCString(str1, NS_CSTRING_ENCODING_ASCII, str2);
     NS_CStringToUTF16(str2, NS_CSTRING_ENCODING_ASCII, str1);
+
+    nsCategoryObserver catobs(nsnull, nsnull);
+    nsCategoryCache<nsILocalFile> catcache(nsnull);
 
     // nsStringBuffer.h
     {

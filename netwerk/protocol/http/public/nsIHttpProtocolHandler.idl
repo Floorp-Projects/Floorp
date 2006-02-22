@@ -120,12 +120,14 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 };
 
 %{C++
+// ----------- Categories ----------- 
 /**
  * At initialization time, the HTTP handler will initialize each service
  * registered under this category:
  */
 #define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
 
+// ----------- Observer topics ----------- 
 /**
  * nsIObserver notification corresponding to startup category.  Services
  * registered under the startup category will receive this observer topic at
@@ -155,4 +157,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
  * things, the Content-Type header will be set correctly.
  */
 #define NS_HTTP_ON_EXAMINE_MERGED_RESPONSE_TOPIC "http-on-examine-merged-response"
+
+
 %}
