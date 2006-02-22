@@ -30,8 +30,8 @@ package Bugzilla::DB::Schema::Pg;
 ###############################################################################
 
 use strict;
-
 use base qw(Bugzilla::DB::Schema);
+use Storable qw(dclone);
 
 #------------------------------------------------------------------------------
 sub _initialize {
@@ -94,14 +94,30 @@ sub _initialize {
 sub get_add_column_ddl {
     my ($self, $table, $column, $definition, $init_value) = @_;
 
+    # So that we don't change the $definition for the caller.
+    my $def = dclone($definition);
+
     my @statements;
     my $specific = $self->{db_specific};
 
-    my $type = $definition->{TYPE};
+    my $type = $def->{TYPE};
     $type = $specific->{$type} if exists $specific->{$type};
+
+    # SERIAL Types need special handlings
+    # XXX This will create a column that doesn't look like a
+    #     "SERIAL" in a pg_dump, but functions identically.
+    if ($type =~ /serial/i) {
+        $type =~ s/serial/integer/i;
+        $def->{DEFAULT} = "nextval('${table}_${column}_seq')";
+        push(@statements, "CREATE SEQUENCE ${table}_${column}_seq");
+        # On Pg, you don't need UNIQUE if you're a PK--it creates
+        # two identical indexes otherwise.
+        $type =~ s/unique//i if $def->{PRIMARYKEY};
+    }
+
     push(@statements, "ALTER TABLE $table ADD COLUMN $column $type");
 
-    my $default = $definition->{DEFAULT};
+    my $default = $def->{DEFAULT};
     if (defined $default) {
         # Replace any abstract default value (such as 'TRUE' or 'FALSE')
         # with its database-specific implementation.
@@ -114,20 +130,20 @@ sub get_add_column_ddl {
         push(@statements, "UPDATE $table SET $column = $init_value");
     }
 
-    if ($definition->{NOTNULL}) {
+    if ($def->{NOTNULL}) {
         # Handle rows that were NULL when we added the column.
         # We *must* have a DEFAULT. This check is usually handled
         # at a higher level than this code, but I figure it can't
         # hurt to have it here.
         die "NOT NULL columns must have a DEFAULT or an init_value."
-            unless (exists $definition->{DEFAULT} || defined $init_value);
+            unless (exists $def->{DEFAULT} || defined $init_value);
         push(@statements, "UPDATE $table SET $column = $default");
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
                          . " SET NOT NULL");
     }
 
-    if ($definition->{PRIMARYKEY}) {
-         push(@statements, "ALTER TABLE $table ALTER COLUMN "
+    if ($def->{PRIMARYKEY}) {
+         push(@statements, "ALTER TABLE $table "
                          . " ADD PRIMARY KEY ($column)");
     }
 
