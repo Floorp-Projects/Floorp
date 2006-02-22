@@ -107,11 +107,6 @@
 #include "nsDTDUtils.h"
 #include "nsParser.h"
 
-#define NS_INAVHTML_DTD_IID      \
-  {0x5c5cce40, 0xcfd6,  0x11d1,  \
-  {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
-
-
 class nsIHTMLContentSink;
 class nsIParserNode;
 class nsDTDContext;
@@ -165,8 +160,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDTD
-
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAVHTML_DTD_IID);
 
 private:
     /**
