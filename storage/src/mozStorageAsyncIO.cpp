@@ -207,6 +207,26 @@
  *
  *     If the above assumptions are not true, set the preprocessor symbol
  *     SQLITE_ASYNC_TWO_FILEHANDLES to 0.
+ *
+ * ----------------------------------------------------------------------------
+ * VERSIONING
+ *
+ *     This file was originally based on version 1.5 of test_async.c in sqlite,
+ *     see http://www.sqlite.org/cvstrac/rlog?f=sqlite/src/test_async.c
+ *     Versions 1.6 and 1.7 were based on errors found and fixed here.
+ *
+ *     We've incorportated the patches for versions 1.12, 1.13, 1.15, 1.17
+ *     (which backs out some of the changes in 1.13)
+ *
+ *     FIXME: It would be nice to have "fake" in-process file locking as in
+ *     versions 1.11.
+ *
+ *     Our error handling is a little more coarse than the ones implemented
+ *     in versions 1.8 and 1.14. Those ones count the number of files and
+ *     reset the error value when all files are closed. This allows one to
+ *     potentially recover by closing all the connections and reopening them.
+ *     We don't handle this from the calling code, so there's no point in
+ *     implementing that here. Instead we just fail all operations on error.
  */
 
 #include "mozStorageService.h"
@@ -1011,18 +1031,20 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
   if (AsyncWriteError != SQLITE_OK)
     return AsyncWriteError;
   int rc = SQLITE_OK;
-  AsyncOsFile* asyncfile = NS_REINTERPRET_CAST(AsyncOsFile*, aFile);
-  if (! asyncfile->mOpen) {
-    NS_NOTREACHED("Attempting to write to a file with a close pending!");
-    return SQLITE_INTERNAL;
-  }
 
   // Grab the write queue mutex for the duration of the call. We don't want
   // the writer thread going and writing stuff to the file or processing
   // any messages while we do this. Open exclusive may also change mBaseRead.
   nsAutoLock lock(AsyncQueueLock);
 
-  if (asyncfile->mBaseRead) {
+  AsyncOsFile* asyncfile = NS_REINTERPRET_CAST(AsyncOsFile*, aFile);
+  if (! asyncfile->mOpen) {
+    NS_NOTREACHED("Attempting to write to a file with a close pending!");
+    return SQLITE_INTERNAL;
+  }
+
+  OsFile* pBase = asyncfile->mBaseRead;
+  if (pBase) {
     // Only do any actual file reading if there is a reader structure. For
     // pending OpenExclusives, there will not be any so we don't want to do
     // file reading. Reading while an OpenExclusive is pending will read
@@ -1031,7 +1053,7 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
     // queue.
     sqlite_int64 filesize;
     NS_ASSERTION(sqliteOrigFileSize, "Original file size pointer uninitialized!");
-    rc = sqliteOrigFileSize(asyncfile->mBaseRead, &filesize);
+    rc = sqliteOrigFileSize(pBase, &filesize);
     if (rc != SQLITE_OK)
       goto asyncread_out;
 
@@ -1039,15 +1061,15 @@ AsyncRead(OsFile* aFile, void *aBuffer, int aCount)
     // buffer. The OS should be OK with this. We will only try reading if there
     // is stuff for us to read there.
     NS_ASSERTION(sqliteOrigSeek, "Original seek pointer uninitialized!");
-    rc = sqliteOrigSeek(asyncfile->mBaseRead, asyncfile->mOffset);
+    rc = sqliteOrigSeek(pBase, asyncfile->mOffset);
     if (rc != SQLITE_OK)
       goto asyncread_out;
 
     // Here, we try to read as much data as we want up to EOF.
     int numread = PR_MIN(filesize - asyncfile->mOffset, aCount);
     if (numread > 0) {
-      NS_ASSERTION(sqliteOrigRead, "Original read pointer uninitialized!");
-      rc = sqliteOrigRead(asyncfile->mBaseRead, aBuffer, numread);
+      NS_ASSERTION(pBase, "Original read pointer uninitialized!");
+      rc = sqliteOrigRead(pBase, aBuffer, numread);
     }
   }
 
@@ -1130,6 +1152,8 @@ AsyncSeek(OsFile* aFile, sqlite_int64 aOffset)
 int // static
 AsyncFileSize(OsFile* aFile, sqlite_int64* aSize)
 {
+  nsAutoLock lock(AsyncQueueLock);
+
   if (AsyncWriteError != SQLITE_OK)
     return AsyncWriteError;
 
@@ -1140,8 +1164,6 @@ AsyncFileSize(OsFile* aFile, sqlite_int64* aSize)
   }
   int rc = SQLITE_OK;
   sqlite_int64 size = 0;
-
-  nsAutoLock lock(AsyncQueueLock);
 
   // Read the filesystem size from the base file. If pBaseRead is NULL, this
   // means the file hasn't been opened yet. In this case all relevant data must
@@ -1161,7 +1183,7 @@ AsyncFileSize(OsFile* aFile, sqlite_int64* aSize)
             size = PR_MAX(p->mOffset + p->mBytes, size);
             break;
           case ASYNC_TRUNCATE:
-            size = PR_MIN(size, p->mBytes);
+            size = PR_MIN(size, p->mOffset);
             break;
         }
       }
@@ -1296,7 +1318,7 @@ ProcessOneMessage(AsyncMessage* aMessage)
     case ASYNC_SYNC:
       NS_ASSERTION(pBase, "Must have base writer for writing");
       NS_ASSERTION(sqliteOrigTruncate, "No seek pointer");
-      rc = sqliteOrigSeek(pBase, aMessage->mBytes);
+      rc = sqliteOrigSeek(pBase, aMessage->mOffset);
       break;
 
     case ASYNC_TRUNCATE:
@@ -1307,9 +1329,10 @@ ProcessOneMessage(AsyncMessage* aMessage)
 
     case ASYNC_CLOSE:
       // note that the sqlite close function accepts NULL pointers here and
-      // will return success if given one
-      sqliteOrigClose(&aMessage->mFile->mBaseRead);
+      // will return success if given one (I think the order we close these
+      // two handles matters here)
       sqliteOrigClose(&aMessage->mFile->mBaseWrite);
+      sqliteOrigClose(&aMessage->mFile->mBaseRead);
       nsMemory::Free(aMessage->mFile);
       break;
 
@@ -1338,6 +1361,8 @@ ProcessOneMessage(AsyncMessage* aMessage)
       AsyncOsFile *pFile = aMessage->mFile;
       int delFlag = ((aMessage->mOffset) ? 1 : 0);
       OsFile* pBase = nsnull;
+      NS_ASSERTION(! pFile->mBaseRead && ! pFile->mBaseWrite,
+                   "OpenExclusive expects no file pointers");
       rc = sqliteOrigOpenExclusive(aMessage->mBuf, &pBase, delFlag);
 
       // exclusive opens actually go and write to the OsFile structure to set
@@ -1421,10 +1446,14 @@ ProcessAsyncMessages()
         AsyncQueueLast = nsnull;
       AsyncQueueFirst = message->mNext;
       nsMemory::Free(message);
+
+      // free any out-of-memory flags in the library
+      sqlite3ApiExit(nsnull, 0);
     }
     // Drop the queue mutex before continuing to the next write operation
-    // in order to give other threads a chance to work with the write queue.
-    // We want writers to the queue to generally have priority.
+    // in order to give other threads a chance to work with the write queue
+    // (that should have been done by the autolock in exiting the scope that
+    // just closed). We want writers to the queue to generally have priority.
     #ifdef IO_DELAY_INTERVAL_MS
       // this simulates slow disk
       PR_Sleep(PR_MillisecondsToInterval(IO_DELAY_INTERVAL_MS));
