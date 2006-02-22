@@ -1279,7 +1279,7 @@ function ctrlNumberTabSelection(event)
   // in the range U+xxx6 - U+xxxF. Find the digit 1 corresponding to our
   // character.
   var digit1 = (event.charCode & 0xFFF0) | 1;
-  if (!regExp.exec(String.fromCharCode(digit1)))
+  if (!regExp.test(String.fromCharCode(digit1)))
     digit1 += 6;
 
   var index = event.charCode - digit1;
