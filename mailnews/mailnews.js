@@ -284,7 +284,7 @@ pref("ldap_2.servers.history.isOffline",						false);
 // default mapping of addressbook properties to ldap attributes
 pref("ldap_2.servers.default.attrmap.FirstName", "givenName");
 pref("ldap_2.servers.default.attrmap.LastName", "sn,surname");
-pref("ldap_2.servers.default.attrmap.DisplayName", "displayName,cn,commonname");
+pref("ldap_2.servers.default.attrmap.DisplayName", "cn,commonname");
 pref("ldap_2.servers.default.attrmap.NickName", "mozillaNickname,xmozillanickname");
 pref("ldap_2.servers.default.attrmap.PrimaryEmail", "mail");
 pref("ldap_2.servers.default.attrmap.SecondEmail", "mozillaSecondEmail,xmozillasecondemail");
