@@ -231,19 +231,19 @@ nsViewManager::~nsViewManager()
 
   // Make sure to RevokeEvents for all viewmanagers, since some events
   // are posted by a non-root viewmanager.
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                           getter_AddRefs(eventQueue));
-  NS_ASSERTION(eventQueue, "Event queue is null"); 
-  eventQueue->RevokeEvents(this);
+  if (mInvalidateEventQueue) {
+    mInvalidateEventQueue->RevokeEvents(this);
+    mInvalidateEventQueue = nsnull;  
+  }
+  if (mSynthMouseMoveEventQueue) {
+    mSynthMouseMoveEventQueue->RevokeEvents(this);
+    mSynthMouseMoveEventQueue = nsnull;  
+  }
   
   if (!IsRootVM()) {
     // We have a strong ref to mRootViewManager
     NS_RELEASE(mRootViewManager);
   }
-  
-  mInvalidateEventQueue = nsnull;  
-  mSynthMouseMoveEventQueue = nsnull;  
 
   mRootScrollable = nsnull;
 
@@ -1218,6 +1218,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedReg
        childWidget;
        childWidget = childWidget->GetNextSibling()) {
     nsView* view = nsView::GetViewFor(childWidget);
+    NS_ASSERTION(view != aWidgetView, "will recur infinitely");
     if (view && view->GetVisibility() == nsViewVisibility_kShow) {
       // Don't mess with views that are in completely different view
       // manager trees
