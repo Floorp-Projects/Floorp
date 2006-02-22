@@ -187,16 +187,16 @@ html|input.-moz-date-fwd-button {
   background-position: center !important;
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#gMonth"] {
-  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-month');
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gMonth"] {
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-month');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
-  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-day');
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-day');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
-  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-year');
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-year');
 }
 
 html|*:root secret {

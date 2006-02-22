@@ -51,12 +51,10 @@
   %xformsDTD;
 ]>
 
-<bindings id="xformsBindings"
+<bindings id="xformsInputBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xforms="http://www.w3.org/2002/xforms"
-          xmlns:lazy="http://www.mozilla.org/projects/xforms/2005/lazy">
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
 
   <!-- INPUT: <DEFAULT>
@@ -96,9 +94,9 @@
       </method>
 
       <method name="updateInstanceData">
-        <parameter name="incremental"/>
+        <parameter name="aIncremental"/>
         <body>
-          if (!incremental || this.getAttribute("incremental") == "true")
+          if (!aIncremental || this.getAttribute("incremental") == "true")
             this.accessors.setValue(this.control.value);
         </body>
       </method>
@@ -143,10 +141,10 @@
       </method>
 
       <method name="updateInstanceData">
-        <parameter name="incremental"/>
+        <parameter name="aIncremental"/>
         <body>
           <![CDATA[
-          if (!incremental || this.getAttribute("incremental") != "false") {
+          if (!aIncremental || this.getAttribute("incremental") != "false") {
             if (this.control.value) {
               this.accessors.setValue("true");
             } else {
@@ -729,194 +727,139 @@
     </handlers>
   </binding>
 
+
   <!-- INPUT: Month
-    XXX: The widget doesn't support interface based on getElementControl()
-    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+    The input[type="xsd:gMonth"] widget assumes successors bindings implement
+    getElementControl() method what returns the object:
+    {
+      set value(); // set "string" value
+      get value(); // return "string" value
+      set readonly(); // set readonly state
+      focus(); // set focus
+      appendMonth(name, value); // append a month
+    }
   -->
-  <binding id="xformswidget-input-month"
+  <binding id="xformswidget-input-month-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children/>
-      <html:select anonid="control" xbl:inherits="style, accesskey"
-                   onchange="this.parentNode._change();"
-                   onblur="this.parentNode._setValue()">
-        <html:option value=""></html:option>
-      </html:select>
-    </content>
-
     <implementation implements="nsIXFormsUIWidget">
-
-      <constructor>
-        <![CDATA[
-          this._build();
-        ]]>
-      </constructor>
 
       <method name="refresh">
         <body>
         <![CDATA[
-          this.select.readonly = this.accessors.isReadonly();
+          this.control.readonly = this.accessors.isReadonly();
 
           if (this.accessors.isValid())
-            this.select.value = this.stringValue.substr(2,2);
+            this.control.value = this.stringValue.substr(2,2);
           else
-            this.select.value = "";
+            this.control.value = "";
 
           return true;
         ]]>
         </body>
       </method>
 
-      <method name="_build">
+      <method name="focus">
         <body>
-        <![CDATA[
-          // create the select options
-          var xhtmlNS = "http://www.w3.org/1999/xhtml";
-
-          var date = new Date();
-          var option, monthName;
-          for (var i = 0; i < 12; i++) {
-            option = document.createElementNS(xhtmlNS, "option");
-
-            var value = i + 1;
-            if (value < 10)
-              value = "0" + value;
-            option.setAttribute("value", value);
-
-            date.setMonth(i);
-            monthName = date.toLocaleFormat("%B");
-
-            var txt = document.createTextNode(monthName);
-            option.appendChild(txt);
-            this.select.appendChild(option);
-          }
-
-         this.refresh();
-        ]]>
+          this.control.focus();
+          return true;
         </body>
       </method>
 
-      <method name="_change">
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
         <body>
-          if (this.getAttribute("incremental") == "true") {
-            this._setValue();
+          if (!aIncremental || this.getAttribute("incremental") == "true") {
+            if (this.control.value != "") {
+              this.accessors.setValue("--" + this.control.value);
+            } else {
+              this.accessors.setValue("");
+            }
           }
         </body>
       </method>
 
-      <method name="_setValue">
-        <body>
-          if (this.select.value != "")
-            this.accessors.setValue("--" + this.select.value);
-          else
-            this.accessors.setValue("");
-        </body>
-      </method>
+      <constructor>
+      <![CDATA[
+        var date = new Date();
+        for (var i = 0; i < 12; i++) {
+          var value = i + 1;
+          if (value < 10)
+            value = "0" + value;
 
-      <field name="_select">null</field>
-      <property name="select" readonly="true">
-        <getter>
-          if (!this._select) {
-            this._select =
-              document.getAnonymousElementByAttribute(this, "anonid", "control");
-          }
-          return this._select;
-        </getter>
-      </property>
+          date.setMonth(i);
+          this.control.appendMonth(date.toLocaleFormat("%B"), value);
+        }
+
+        this.refresh();
+      ]]>
+      </constructor>
     </implementation>
   </binding>
 
+
   <!-- INPUT: Day
-    XXX: The widget doesn't support interface based on getElementControl()
-    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+    The input[type="xsd:gDay"] widget assumes successors bindings implement
+    getElementControl() method what returns the object:
+    {
+      set value(); // set "string" value
+      get value(); // return "string" value
+      set readonly(); // set readonly state
+      focus(); // set focus
+      appendDay(name, value); // append a day
+    }
   -->
-  <binding id="xformswidget-input-day"
+  <binding id="xformswidget-input-day-base"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children/>
-      <html:select anonid="control" xbl:inherits="style, accesskey"
-                   onchange="this.parentNode._change();"
-                   onblur="this.parentNode._setValue()">
-        <html:option value=""></html:option>
-      </html:select>
-    </content>
-
     <implementation implements="nsIXFormsUIWidget">
-
-      <constructor>
-        <![CDATA[
-          this._build();
-        ]]>
-      </constructor>
-
       <method name="refresh">
         <body>
         <![CDATA[
-          this.select.readonly = this.accessors.isReadonly();
+          this.control.readonly = this.accessors.isReadonly();
 
           if (this.accessors.isValid())
-            this.select.value = this.stringValue.substr(3,2);
+            this.control.value = this.stringValue.substr(3,2);
           else
-            this.select.value = "";
+            this.control.value = "";
 
           return true;
         ]]>
         </body>
       </method>
 
-      <method name="_build">
+      <method name="focus">
         <body>
-        <![CDATA[
-         // create the select options
-         var xhtmlNS = "http://www.w3.org/1999/xhtml";
+          this.control.focus();
+          return true;
+        </body>
+      </method>
 
-         var date = new Date();
-         var option, monthName;
+      <method name="updateInstanceData">
+        <parameter name="aIncremental"/>
+        <body>
+          if (!aIncremental || this.getAttribute("incremental") == "true") {
+            if (this.control.value != "") {
+              this.accessors.setValue("---" + this.control.value);
+            } else {
+              this.accessors.setValue("");
+            }
+          }
+        </body>
+      </method>
+
+      <constructor>
+      <![CDATA[
+        var date = new Date();
          for (var i = 0; i < 31; i++) {
-           option = document.createElementNS(xhtmlNS, "option");
-
            var value = i + 1;
-           option.textContent = value;
-
            if (value < 10)
              value = "0" + value;
-           option.setAttribute("value", value);
 
-           this.select.appendChild(option);
+           this.control.appendDay(i + 1, value);
          }
 
          this.refresh();
-        ]]>
-        </body>
-      </method>
-
-      <method name="_change">
-        <body>
-          if (this.getAttribute("incremental") == "true") {
-            this._setValue();
-          }
-        </body>
-      </method>
-
-      <method name="_setValue">
-        <body>
-          if (this.select.value != "")
-            this.accessors.setValue("---" + this.select.value);
-          else
-            this.accessors.setValue("");
-        </body>
-      </method>
-
-      <field name="_select">null</field>
-      <property name="select" readonly="true">
-        <getter>
-          if (!this._select) {
-            this._select = 
-              document.getAnonymousElementByAttribute(this, "anonid", "control");
-          }
-          return this._select;
-        </getter>
-      </property>
+      ]]>
+      </constructor>
     </implementation>
   </binding>
 

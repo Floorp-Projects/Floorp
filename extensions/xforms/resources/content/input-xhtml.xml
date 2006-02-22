@@ -51,11 +51,10 @@
   %xformsDTD;
 ]>
 
-<bindings id="xformsBindings"
+<bindings id="xformsInputBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xforms="http://www.w3.org/2002/xforms">
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
 
   <!-- INPUT: <DEFAULT> -->
@@ -182,6 +181,104 @@
       </handler>
     </handlers>
   </binding>
+
+
+<!-- INPUT: Month -->
+  <binding id="xformswidget-input-month"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-month-base">
+    <content>
+      <children includes="label"/>
+      <html:select anonid="control" xbl:inherits="style, accesskey">
+        <html:option value=""></html:option>
+      </html:select>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            XHTML_NS: 'http://www.w3.org/1999/xhtml',
+
+            set readonly(val) {
+              this.disabled = val;
+            },
+            appendMonth: function(name, value) {
+              var option = this.ownerDocument.
+                createElementNS(this.XHTML_NS, 'option');
+              option.textContent = name;
+              option.setAttribute('value', value);
+              this.appendChild(option);
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(false);
+      </handler>
+
+      <handler event="change">
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- INPUT: DAY -->
+  <binding id="xformswidget-input-day"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-day-base">
+    <content>
+      <children includes="label"/>
+      <html:select anonid="control" xbl:inherits="style, accesskey">
+        <html:option value=""></html:option>
+      </html:select>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'control'),
+
+            XHTML_NS: 'http://www.w3.org/1999/xhtml',
+
+            set readonly(val) {
+              this.disabled = val;
+            },
+            appendDay: function(name, value) {
+              var option = this.ownerDocument.
+                createElementNS(this.XHTML_NS, 'option');
+              option.textContent = name;
+              option.setAttribute('value', value);
+              this.appendChild(option);
+            }
+          };
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(false);
+      </handler>
+
+      <handler event="change">
+        if (event.originalTarget == this.control)
+          this.updateInstanceData(true);
+      </handler>
+    </handlers>
+  </binding> 
 
 
   <!-- SECRET: <DEFAULT> -->
