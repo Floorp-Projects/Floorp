@@ -412,12 +412,37 @@ if test "$target" != "$host"; then
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
 
+    case "$build:$target" in 
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl The Darwin cross compiler doesn't necessarily point itself at a
+        dnl root that has libraries for the proper architecture, it defaults
+        dnl to the system root.  The libraries in the system root on current
+        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
+        dnl checks will fail.  Fake a working SDK in that case.
+        _SAVE_CFLAGS=$CFLAGS 
+        _SAVE_CXXFLAGS=$CXXLAGS
+        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
+        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
+        ;;        
+    esac            
+
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
     unset ac_cv_prog_CC
     AC_PROG_CC
     AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", echo)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl Revert the changes made above.  From this point on, the target
+        dnl compiler will never be used without applying the SDK to CFLAGS
+        dnl (see --with-macos-sdk below).
+        CFLAGS=$_SAVE_CFLAGS
+        CXXFLAGS=$_SAVE_CXXFLAGS
+        ;;
+    esac
+
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", echo)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", echo)
     AC_CHECK_PROGS(AS, $AS "${target_alias}-as" "${target}-as", echo)
@@ -457,6 +482,15 @@ if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
 rm -f a.out
+
+case "$build:$target" in
+    i?86-apple-darwin*:powerpc-apple-darwin*)
+        dnl cross_compiling will have erroneously been set to "no" in this
+        dnl case, because the x86 build host is able to run ppc code in a
+        dnl translated environment, making a cross compiler appear native.
+        cross_compiling=yes
+        ;;
+esac
 
 if test "$cross_compiling"  = "yes"; then
     CROSS_COMPILE=1
@@ -591,6 +625,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
+        darwin*)      OS_ARCH=Darwin ;;
     esac
 else
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -943,7 +978,7 @@ case "$target" in
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@ -headerpad_max_install_names'
     # Use the standard preprocessor (cpp)
     CFLAGS="$CFLAGS -no-cpp-precomp"
-    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     STRIP="$STRIP -x -S"
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
@@ -1020,6 +1055,14 @@ tools are selected during the Xcode/Developer Tools installation.])
                 LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
                 DSO_LDOPTS="${MACOS_SDK_LIBS} $DSO_LDOPTS"
                 export NEXT_ROOT=$MACOS_SDK_DIR
+
+                if test -n "$CROSS_COMPILE" ; then
+                    dnl NEXT_ROOT will be in the environment, but it
+                    dnl shouldn't be set for the build host.  HOST_CXX is
+                    dnl presently unused.
+                    HOST_CC="NEXT_ROOT= $HOST_CC"
+                    HOST_CXX="NEXT_ROOT= $HOST_CXX"
+                fi
             else
                 dnl gcc >= 4.0 uses different paths than above, but knows
                 dnl how to find them itself.
@@ -2648,6 +2691,7 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(HOST_LDFLAGS)
 AC_SUBST(GNU_CC)
 AC_SUBST(GCC_USE_GNU_LD)
 AC_SUBST(MSC_VER)
