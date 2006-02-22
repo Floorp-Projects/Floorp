@@ -2366,14 +2366,14 @@ nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem ** aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
 
-    NS_WARN_IF_FALSE(aIndex >=0 && aIndex < mChildList.Count(),
-                     "index of child element is out of range!");
+#ifdef DEBUG
     if (aIndex < 0) {
-      printf("Don't be so negative!");
+      NS_WARNING("Negative index passed to GetChildAt");
     }
     else if (aIndex >= mChildList.Count()) {
-      printf("Don't be so unrealistic!");
+      NS_WARNING("Too large an index passed to GetChildAt");
     }
+#endif
 
     nsIDocumentLoader* child = SafeChildAt(aIndex);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
