@@ -355,6 +355,21 @@
           }
           else if (this.getAttribute("setfocus") != "false") {
             document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
+            
+            // Make sure that the focus doesn't move outside the tabbox
+            for (var parent = this.parentNode; parent; parent = parent.parentNode) {
+              if (parent.localName == "tabbox") {
+                try {
+                  var el = document.commandDispatcher.focusedElement;
+                  while (el && el != parent)
+                    el = el.parentNode;
+                  if (el != parent)
+                    aNewTab.focus();
+                } catch(e) {
+                }
+                break;
+              }
+            }
           }
         ]]>
         </body>
