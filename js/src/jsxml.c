@@ -4743,6 +4743,7 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
 {
     JSXML *target, *base;
     JSXMLQName *targetprop;
+    JSObject *targetpropobj;
     jsval id, tv;
 
     /* Our caller must be protecting newborn objects. */
@@ -4757,10 +4758,15 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
 
     target = list->xml_target;
     targetprop = list->xml_targetprop;
-    if (!target ||
-        !targetprop ||
-        OBJ_GET_CLASS(cx, targetprop->object) == &js_AttributeNameClass ||
-        IS_STAR(targetprop->localName)) {
+    if (!target || !targetprop || IS_STAR(targetprop->localName)) {
+        *result = NULL;
+        return JS_TRUE;
+    }
+
+    targetpropobj = js_GetXMLQNameObject(cx, targetprop);
+    if (!targetpropobj)
+        return JS_FALSE;
+    if (OBJ_GET_CLASS(cx, targetpropobj) == &js_AttributeNameClass) {
         *result = NULL;
         return JS_TRUE;
     }
@@ -4774,7 +4780,7 @@ ResolveValue(JSContext *cx, JSXML *list, JSXML **result)
     if (!js_GetXMLObject(cx, base))
         return JS_FALSE;
 
-    id = OBJECT_TO_JSVAL(targetprop->object);
+    id = OBJECT_TO_JSVAL(targetpropobj);
     if (!GetProperty(cx, base->object, id, &tv))
         return JS_FALSE;
     target = (JSXML *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(tv));
@@ -7238,9 +7244,9 @@ xml_mark_tail(JSContext *cx, JSXML *xml, void *arg)
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
         if (xml->xml_target)
-            js_MarkXML(cx, xml->xml_target, arg);
+            JS_MarkGCThing(cx, xml->xml_target, "target", arg);
         if (xml->xml_targetprop)
-            js_MarkXMLQName(cx, xml->xml_targetprop, arg);
+            JS_MarkGCThing(cx, xml->xml_targetprop, "targetprop", arg);
     } else {
         namespace_mark_vector(cx,
                               (JSXMLNamespace **) xml->xml_namespaces.vector,
