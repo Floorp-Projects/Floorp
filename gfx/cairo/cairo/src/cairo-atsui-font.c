@@ -53,7 +53,7 @@
 /* If this isn't defined, we must be building on non-intel,
  * hence it will be 0.
  */
-#ifdef kCGBitmapByteOrder32Host
+#ifndef kCGBitmapByteOrder32Host
 #define kCGBitmapByteOrder32Host 0
 #endif
 
