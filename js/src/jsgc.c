@@ -378,7 +378,12 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
         return JS_FALSE;
     }
     rt->gcLocksHash = NULL;     /* create lazily */
-    rt->gcMaxBytes = maxbytes;
+
+    /*
+     * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
+     * for default backward API compatibility.
+     */
+    rt->gcMaxBytes = rt->gcMaxMallocBytes = maxbytes;
     return JS_TRUE;
 }
 
@@ -649,7 +654,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
          * arenaList.
          */
         if (rt->gcBytes < rt->gcMaxBytes &&
-            (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes)) {
+            (tried_gc || rt->gcMallocBytes < rt->gcMaxMallocBytes)) {
             if (!arenaList->last || arenaList->lastLimit == GC_THINGS_SIZE) {
                 /*
                  * The last arena (and the whole arenaList) is full, time
