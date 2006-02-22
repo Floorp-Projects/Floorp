@@ -2412,13 +2412,12 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         return NS_ERROR_FAILURE;
     }
 
-    JSContext *sandcx = JS_NewContext(JS_GetRuntime(cx), 1024);
+    XPCAutoJSContext sandcx(JS_NewContext(JS_GetRuntime(cx), 1024), false);
     if(!sandcx) {
         JS_ReportError(cx, "Can't prepare context for evalInSandbox");
         JSPRINCIPALS_DROP(cx, jsPrincipals);
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    AutoJSRequestWithNoCallContext req(sandcx);
 
     JS_SetGlobalObject(sandcx, sandbox);
 
@@ -2430,7 +2429,6 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
             JS_ReportError(cx,
                     "Unable to initialize XPConnect with the sandbox context");
             JSPRINCIPALS_DROP(cx, jsPrincipals);
-            JS_DestroyContextNoGC(sandcx);
             return NS_ERROR_FAILURE;
         }
 
@@ -2447,7 +2445,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
     JSStackFrame frame;
     memset(&frame, 0, sizeof frame);
 
-    sandcx->fp = &frame;
+    NS_STATIC_CAST(JSContext *, sandcx)->fp = &frame;
 
     // Get the current source info from xpc. Use the codebase as a fallback,
     // though.
@@ -2465,14 +2463,17 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
+    AutoJSRequestWithNoCallContext req(sandcx);
     if (!JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
                                           NS_REINTERPRET_CAST(const jschar *,
                                               PromiseFlatString(source).get()),
                                           source.Length(), filename.get(),
                                           lineNo, rval)) {
-
         jsval exn;
         if (JS_GetPendingException(sandcx, &exn)) {
+            AutoJSSuspendRequestWithNoCallContext sus(sandcx);
+            AutoJSRequestWithNoCallContext cxreq(cx);
+
             JS_SetPendingException(cx, exn);
             cc->SetExceptionWasThrown(PR_TRUE);
         } else {
@@ -2486,7 +2487,6 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         stack->Pop(nsnull);
     }
 
-    JS_DestroyContextNoGC(sandcx);
     JSPRINCIPALS_DROP(cx, jsPrincipals);
     return rv;
 #endif /* !XPCONNECT_STANDALONE */
