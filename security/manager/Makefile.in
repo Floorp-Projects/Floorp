@@ -203,12 +203,8 @@ DEFAULT_GMAKE_FLAGS += \
 	RANLIB="$(RANLIB)" \
 	RC="$(RC) $(RCFLAGS)" \
 	OS_ARCH="$(OS_ARCH)" \
+	CPU_ARCH="$(TARGET_CPU)" \
 	$(NULL)
-ifeq ($(OS_ARCH),Darwin)
-DEFAULT_GMAKE_FLAGS += CPU_ARCH="$(OS_TEST)"
-else
-DEFAULT_GMAKE_FLAGS += CPU_ARCH="$(TARGET_CPU)"
-endif
 SKIP_CHK=1
 endif
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
