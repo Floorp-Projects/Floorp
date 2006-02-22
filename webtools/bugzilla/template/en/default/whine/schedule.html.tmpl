@@ -113,9 +113,14 @@
       Descriptive text sent within whine message:
     </td>
     <td>
-      <textarea name="event_[% event.key %]_body"
-                rows="5" cols="80">
-          [% event.value.body FILTER html %]</textarea>
+      [% INCLUDE global/textarea.html.tmpl
+         name           = "event_${event.key}_body"
+         minrows        = 3
+         maxrows        = 10
+         defaultrows    = 5
+         cols           = 80
+         defaultcontent = event.value.body
+       %]
     </td>
   </tr>
 

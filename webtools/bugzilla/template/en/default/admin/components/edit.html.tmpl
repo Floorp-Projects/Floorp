@@ -43,8 +43,14 @@
     </tr>
     <tr>
       <td valign="top">Component Description:</td>
-      <td><textarea rows="4" cols="64" wrap="virtual"
-        name="description">[% comp.description FILTER html %]</textarea>
+      <td>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 64
+          wrap           = 'virtual'
+          defaultcontent = comp.description
+        %]
       </td>
     </tr>
     <tr>

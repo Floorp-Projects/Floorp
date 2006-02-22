@@ -4416,6 +4416,9 @@ add_setting ("post_bug_submit_action", {"next_bug" => 1,
 # 2005-06-29 wurblzap@gmail.com -- Bug 257767
 add_setting ('csv_colsepchar', {',' => 1, ';' => 2 }, ',' );
 
+# 2005-10-26 wurblzap@gmail.com -- Bug 291459
+add_setting ("zoom_textareas", {"on" => 1, "off" => 2 }, "on" );
+
 # 2005-10-21 LpSolit@gmail.com -- Bug 313020
 add_setting('per_bug_queries', {'on' => 1, 'off' => 2}, 'on');
 

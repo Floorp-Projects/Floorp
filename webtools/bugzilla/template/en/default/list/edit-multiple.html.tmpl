@@ -209,7 +209,13 @@
 </table>
 
 <b><label for="comment">Additional Comments:</label></b><br>
-<textarea id="comment" name="comment" rows="5" cols="80"></textarea><br>
+[% INCLUDE global/textarea.html.tmpl
+  name    = 'comment'
+  id      = 'comment'
+  minrows = 5
+  maxrows = 25
+  cols    = 80
+%]<br>
 
 [% IF groups.size > 0 %]
 

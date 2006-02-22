@@ -42,8 +42,13 @@
     <tr>
       <th align="right">Description:</th>
       <td>
-        <textarea rows="4" cols="64" wrap="virtual"
-        name="description">[% description FILTER html %]</textarea>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 64
+          wrap           = 'virtual'
+          defaultcontent = description
+        %]
       </td>
     </tr>
     <tr>

@@ -85,7 +85,12 @@
       <th>Description:</th>
       <td>
         a comprehensive description of this type<br>
-        <textarea name="description" rows="4" cols="80">[% type.description FILTER html %]</textarea>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 80
+          defaultcontent = type.description
+        %]
       </td>
     </tr>
 

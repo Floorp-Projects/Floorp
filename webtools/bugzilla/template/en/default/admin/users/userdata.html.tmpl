@@ -72,9 +72,15 @@
   <tr>
     <th><label for="disabledtext">Disable text:</label></th>
     <td>
-      <textarea name="disabledtext" rows="10"
-                id="disabledtext"
-                cols="60">[% otheruser.disabledtext FILTER html %]</textarea><br />
+      [% INCLUDE global/textarea.html.tmpl
+         name           = 'disabledtext'
+         id             = 'disabledtext'
+         minrows        = 2
+         maxrows        = 10
+         defaultrows    = 10
+         cols           = 60
+         defaultcontent = otheruser.disabledtext
+       %]<br>
       (If non-empty, then the account will be disabled, and this text should
       explain why.)
       [% IF editform %]

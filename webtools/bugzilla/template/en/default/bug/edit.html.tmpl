@@ -567,8 +567,14 @@
   [% END %]
   <br>
   <a name="add_comment"></a>
-  <textarea name="comment" id="comment" rows="10" cols="80"
-            accesskey="c"></textarea>
+  [% INCLUDE global/textarea.html.tmpl
+    name      = 'comment'
+    id        = 'comment'
+    minrows   = 10
+    maxrows   = 25
+    cols      = 80
+    accesskey = 'c'
+  %]
 
   [% IF NOT bug.cc || NOT bug.cc.contains(user.login) %]
     <br>

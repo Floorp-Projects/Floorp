@@ -237,7 +237,14 @@
       <th><label for="comment">Comment:</label></th>
       <td>
         <em>(optional) Add a comment about this attachment to the [% terms.bug %].</em><br>
-        <textarea wrap="soft" id="commment" name="comment" rows="6" cols="80"></textarea>
+        [% INCLUDE global/textarea.html.tmpl
+          name    = 'comment'
+          id      = 'comment'
+          minrows = 6
+          maxrows = 15
+          cols    = 80
+          wrap    = 'soft'
+        %]
       </td>
     </tr>
     <tr>

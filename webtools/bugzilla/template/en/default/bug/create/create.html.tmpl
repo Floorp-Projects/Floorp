@@ -307,13 +307,21 @@ function set_assign_to() {
 
   <tr><td align="right" valign="top"><strong>Description:</strong></td>
     <td colspan="3">
-      <textarea name="comment" rows="10" cols="80">
+      [% defaultcontent = BLOCK %]
         [% IF cloned_bug_id %]
 +++ This [% terms.bug %] was initially created as a clone of [% terms.Bug %] #[% cloned_bug_id %] +++
 
 
         [% END %]
-        [% comment FILTER html %]</textarea>
+        [% comment FILTER html %]
+      [%- END %]
+      [% INCLUDE global/textarea.html.tmpl
+         name           = 'comment'
+         minrows        = 10
+         maxrows        = 25
+         cols           = 80
+         defaultcontent = defaultcontent
+       %]
       <br>
     </td>
   </tr>

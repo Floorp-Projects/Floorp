@@ -32,8 +32,13 @@
     </tr>
     <tr>
       <th align="right">Description:</th>
-      <td><textarea rows=4 cols=64 name="description">
-            [% classification.description FILTER none %]</textarea>
+      <td>
+        [% INCLUDE global/textarea.html.tmpl
+          name           = 'description'
+          minrows        = 4
+          cols           = 64
+          defaultcontent = classification.description
+        %]
       </td>
     </tr>
     <tr valign=top>
