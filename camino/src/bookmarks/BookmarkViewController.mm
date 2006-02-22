@@ -720,7 +720,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   // first arrange the items at the top level
   if ([bmItems count] > 1)
   {
-    BookmarkFolder* itemsParent = [[bmItems firstObject] parent];
+    BookmarkFolder* itemsParent = (BookmarkFolder*) [[bmItems firstObject] parent];
     [itemsParent arrangeChildItems:bmItems usingSelector:sortSelector reverseSort:reverseSort];
   }
   
