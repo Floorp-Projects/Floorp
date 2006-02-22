@@ -5666,7 +5666,9 @@ PRBool nsWindow::OnPaint(HDC aDC)
         // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
         // that displayed on the screen.
         UpdateTranslucentWindow();
-      } else {
+      } else if (result) {
+        // Only update if DispatchWindowEvent returned TRUE; otherwise, nothing handled
+        // this, and we'll just end up painting with black.
         thebesContext->PopGroupToSource();
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
         thebesContext->Paint();
