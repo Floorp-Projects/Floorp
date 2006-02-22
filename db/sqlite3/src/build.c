@@ -22,7 +22,7 @@
 **     COMMIT
 **     ROLLBACK
 **
-** $Id: build.c,v 1.383 2006/01/24 12:09:19 danielk1977 Exp $
+** $Id: build.c,v 1.388 2006/02/18 16:36:45 drh Exp $
 */
 #include "sqliteInt.h"
 #include <ctype.h>
@@ -135,8 +135,8 @@ void sqlite3FinishCoding(Parse *pParse){
   if( !pParse->pVdbe ){
     if( pParse->rc==SQLITE_OK && pParse->nErr ){
       pParse->rc = SQLITE_ERROR;
+      return;
     }
-    return;
   }
 
   /* Begin by generating some termination code at the end of the
@@ -185,7 +185,7 @@ void sqlite3FinishCoding(Parse *pParse){
 
   /* Get the VDBE program ready for execution
   */
-  if( v && pParse->nErr==0 ){
+  if( v && pParse->nErr==0 && !sqlite3MallocFailed() ){
     FILE *trace = (db->flags & SQLITE_VdbeTrace)!=0 ? stdout : 0;
     sqlite3VdbeTrace(v, trace);
     sqlite3VdbeMakeReady(v, pParse->nVar, pParse->nMem+3,
@@ -1662,12 +1662,10 @@ int sqlite3ViewGetColumnNames(Parse *pParse, Table *pTable){
   ** Actually, this error is caught previously and so the following test
   ** should always fail.  But we will leave it in place just to be safe.
   */
-#if 0
   if( pTable->nCol<0 ){
     sqlite3ErrorMsg(pParse, "view %s is circularly defined", pTable->zName);
     return 1;
   }
-#endif
   assert( pTable->nCol>=0 );
 
   /* If we get this far, it means we need to compute the table names.
@@ -2364,10 +2362,10 @@ void sqlite3CreateIndex(
       nExtra                       /* Collation sequence names */
   );
   if( sqlite3MallocFailed() ) goto exit_create_index;
-  pIndex->aiColumn = (int *)(&pIndex[1]);
+  pIndex->azColl = (char**)(&pIndex[1]);
+  pIndex->aiColumn = (int *)(&pIndex->azColl[nCol]);
   pIndex->aiRowEst = (unsigned *)(&pIndex->aiColumn[nCol]);
-  pIndex->azColl = (char **)(&pIndex->aiRowEst[nCol+1]);
-  pIndex->aSortOrder = (u8 *)(&pIndex->azColl[nCol]);
+  pIndex->aSortOrder = (u8 *)(&pIndex->aiRowEst[nCol+1]);
   pIndex->zName = (char *)(&pIndex->aSortOrder[nCol]);
   zExtra = (char *)(&pIndex->zName[nName+1]);
   strcpy(pIndex->zName, zName);
@@ -2849,6 +2847,7 @@ SrcList *sqlite3SrcListAppend(SrcList *pList, Token *pTable, Token *pDatabase){
   pItem->zName = sqlite3NameFromToken(pTable);
   pItem->zDatabase = sqlite3NameFromToken(pDatabase);
   pItem->iCursor = -1;
+  pItem->isPopulated = 0;
   pList->nSrc++;
   return pList;
 }
@@ -2959,7 +2958,7 @@ void sqlite3RollbackTransaction(Parse *pParse){
 ** Make sure the TEMP database is open and available for use.  Return
 ** the number of errors.  Leave any error messages in the pParse structure.
 */
-static int sqlite3OpenTempDatabase(Parse *pParse){
+int sqlite3OpenTempDatabase(Parse *pParse){
   sqlite3 *db = pParse->db;
   if( db->aDb[1].pBt==0 && !pParse->explain ){
     int rc = sqlite3BtreeFactory(db, 0, 0, MAX_PAGES, &db->aDb[1].pBt);

@@ -74,6 +74,7 @@ const void *sqlite3_value_text16le(sqlite3_value *pVal){
 int sqlite3_value_type(sqlite3_value* pVal){
   return pVal->type;
 }
+/* sqlite3_value_numeric_type() defined in vdbe.c */
 
 /**************************** sqlite3_result_  *******************************
 ** The following routines are used by user-defined functions to specify
@@ -335,9 +336,10 @@ void sqlite3_set_auxdata(
 ** Return the number of times the Step function of a aggregate has been 
 ** called.
 **
-** This routine is defined here in vdbe.c because it depends on knowing
-** the internals of the sqlite3_context structure which is only defined in
-** this source file.
+** This function is deprecated.  Do not use it for new code.  It is
+** provide only to avoid breaking legacy code.  New aggregate function
+** implementations should keep their own counts within their aggregate
+** context.
 */
 int sqlite3_aggregate_count(sqlite3_context *p){
   assert( p && p->pFunc && p->pFunc->xStep );
@@ -468,6 +470,13 @@ int sqlite3_column_type(sqlite3_stmt *pStmt, int i){
   return sqlite3_value_type( columnMem(pStmt,i) );
 }
 
+/* The following function is experimental and subject to change or
+** removal */
+/*int sqlite3_column_numeric_type(sqlite3_stmt *pStmt, int i){
+**  return sqlite3_value_numeric_type( columnMem(pStmt,i) );
+**}
+*/
+
 /*
 ** Convert the N-th element of pStmt->pColName[] into a string using
 ** xFunc() then return that string.  If N is out of range, return 0.
@@ -512,11 +521,13 @@ static const void *columnName(
 ** statement pStmt.
 */
 const char *sqlite3_column_name(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, 0);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, COLNAME_NAME);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_name16(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, 0);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, COLNAME_NAME);
 }
 #endif
 
@@ -525,26 +536,30 @@ const void *sqlite3_column_name16(sqlite3_stmt *pStmt, int N){
 ** of the result set of SQL statement pStmt.
 */
 const char *sqlite3_column_decltype(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, 1);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, COLNAME_DECLTYPE);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_decltype16(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, 1);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, COLNAME_DECLTYPE);
 }
 #endif /* SQLITE_OMIT_UTF16 */
 
-#if !defined(SQLITE_OMIT_ORIGIN_NAMES) && 0
+#ifdef SQLITE_ENABLE_COLUMN_METADATA
 /*
 ** Return the name of the database from which a result column derives.
 ** NULL is returned if the result column is an expression or constant or
 ** anything else which is not an unabiguous reference to a database column.
 */
 const char *sqlite3_column_database_name(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, 2);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, COLNAME_DATABASE);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_database_name16(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, 2);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, COLNAME_DATABASE);
 }
 #endif /* SQLITE_OMIT_UTF16 */
 
@@ -554,11 +569,13 @@ const void *sqlite3_column_database_name16(sqlite3_stmt *pStmt, int N){
 ** anything else which is not an unabiguous reference to a database column.
 */
 const char *sqlite3_column_table_name(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, 3);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, COLNAME_TABLE);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_table_name16(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, 3);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, COLNAME_TABLE);
 }
 #endif /* SQLITE_OMIT_UTF16 */
 
@@ -568,16 +585,16 @@ const void *sqlite3_column_table_name16(sqlite3_stmt *pStmt, int N){
 ** anything else which is not an unabiguous reference to a database column.
 */
 const char *sqlite3_column_origin_name(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, 4);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text, COLNAME_COLUMN);
 }
 #ifndef SQLITE_OMIT_UTF16
 const void *sqlite3_column_origin_name16(sqlite3_stmt *pStmt, int N){
-  return columnName(pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, 4);
+  return columnName(
+      pStmt, N, (const void*(*)(Mem*))sqlite3_value_text16, COLNAME_COLUMN);
 }
 #endif /* SQLITE_OMIT_UTF16 */
-#endif /* SQLITE_OMIT_ORIGIN_NAMES */
-
-
+#endif /* SQLITE_ENABLE_COLUMN_METADATA */
 
 
 /******************************* sqlite3_bind_  ***************************
@@ -800,12 +817,12 @@ int sqlite3_bind_parameter_indexes(
   }
   *pIndexes = indexes;
   return nVars;
-} 
-  
+}
+
 void sqlite3_free_parameter_indexes(int *pIndexes)
-{   
+{
   sqliteFree( pIndexes );
-} 
+}
 
 /*
 ** Transfer all bindings from the first statement over to the second.

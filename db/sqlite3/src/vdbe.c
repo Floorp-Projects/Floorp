@@ -43,7 +43,7 @@
 ** in this file for details.  If in doubt, do not deviate from existing
 ** commenting and indentation practices when changing or adding code.
 **
-** $Id: vdbe.c,v 1.540 2006/01/30 15:34:23 drh Exp $
+** $Id: vdbe.c,v 1.543 2006/02/10 14:02:07 drh Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -190,6 +190,31 @@ static Cursor *allocateCursor(Vdbe *p, int iCur, int iDb){
 }
 
 /*
+** Try to convert a value into a numeric representation if we can
+** do so without loss of information.  In other words, if the string
+** looks like a number, convert it into a number.  If it does not
+** look like a number, leave it alone.
+*/
+static void applyNumericAffinity(Mem *pRec){
+  if( (pRec->flags & (MEM_Real|MEM_Int))==0 ){
+    int realnum;
+    sqlite3VdbeMemNulTerminate(pRec);
+    if( (pRec->flags&MEM_Str)
+         && sqlite3IsNumber(pRec->z, &realnum, pRec->enc) ){
+      i64 value;
+      sqlite3VdbeChangeEncoding(pRec, SQLITE_UTF8);
+      if( !realnum && sqlite3atoi64(pRec->z, &value) ){
+        sqlite3VdbeMemRelease(pRec);
+        pRec->i = value;
+        pRec->flags = MEM_Int;
+      }else{
+        sqlite3VdbeMemRealify(pRec);
+      }
+    }
+  }
+}
+
+/*
 ** Processing is determine by the affinity parameter:
 **
 ** SQLITE_AFF_INTEGER:
@@ -220,29 +245,26 @@ static void applyAffinity(Mem *pRec, char affinity, u8 enc){
   }else if( affinity!=SQLITE_AFF_NONE ){
     assert( affinity==SQLITE_AFF_INTEGER || affinity==SQLITE_AFF_REAL
              || affinity==SQLITE_AFF_NUMERIC );
-    if( 0==(pRec->flags&(MEM_Real|MEM_Int)) ){
-      /* pRec does not have a valid integer or real representation. 
-      ** Attempt a conversion if pRec has a string representation and
-      ** it looks like a number.
-      */
-      int realnum;
-      sqlite3VdbeMemNulTerminate(pRec);
-      if( (pRec->flags&MEM_Str)
-           && sqlite3IsNumber(pRec->z, &realnum, pRec->enc) ){
-        i64 value;
-        sqlite3VdbeChangeEncoding(pRec, SQLITE_UTF8);
-        if( !realnum && sqlite3atoi64(pRec->z, &value) ){
-          sqlite3VdbeMemRelease(pRec);
-          pRec->i = value;
-          pRec->flags = MEM_Int;
-        }else{
-          sqlite3VdbeMemNumerify(pRec);
-        }
-      }
-    }else if( pRec->flags & MEM_Real ){
+    applyNumericAffinity(pRec);
+    if( pRec->flags & MEM_Real ){
       sqlite3VdbeIntegerAffinity(pRec);
     }
   }
+}
+
+/*
+** Try to convert the type of a function argument or a result column
+** into a numeric representation.  Use either INTEGER or REAL whichever
+** is appropriate.  But only do the conversion if it is possible without
+** loss of information and return the revised type of the argument.
+**
+** This is an EXPERIMENTAL api and is subject to change or removal.
+*/
+int sqlite3_value_numeric_type(sqlite3_value *pVal){
+  Mem *pMem = (Mem*)pVal;
+  applyNumericAffinity(pMem);
+  storeTypeInfo(pMem, 0);
+  return pMem->type;
 }
 
 /*
@@ -1965,6 +1987,7 @@ case OP_Column: {
     u8 *zIdx;        /* Index into header */
     u8 *zEndHdr;     /* Pointer to first byte after the header */
     u32 offset;      /* Offset into the data */
+    int szHdrSz;     /* Size of the header size field at start of record */
     int avail;       /* Number of bytes of available data */
     if( pC && pC->aType ){
       aType = pC->aType;
@@ -1997,7 +2020,8 @@ case OP_Column: {
         pC->aRow = 0;
       }
     }
-    zIdx = (u8 *)GetVarint((u8*)zData, offset);
+    assert( zRec!=0 || avail>=payloadSize || avail>=9 );
+    szHdrSz = GetVarint((u8*)zData, offset);
 
     /* The KeyFetch() or DataFetch() above are fast and will get the entire
     ** record header in most cases.  But they will fail to get the complete
@@ -2012,8 +2036,8 @@ case OP_Column: {
       }
       zData = sMem.z;
     }
-    zEndHdr = (u8 *)zData + offset;
-    zIdx = (u8 *)zData + (int)zIdx;
+    zEndHdr = (u8 *)&zData[offset];
+    zIdx = (u8 *)&zData[szHdrSz];
 
     /* Scan the header and use it to fill in the aType[] and aOffset[]
     ** arrays.  aType[i] will contain the type integer for the i-th
@@ -3815,7 +3839,7 @@ case OP_IdxGE: {        /* no-push */
   assert( p->apCsr[i]!=0 );
   assert( pTos>=p->aStack );
   if( (pC = p->apCsr[i])->pCursor!=0 ){
-    int res, rc;
+    int res;
  
     assert( pTos->flags & MEM_Blob );  /* Created using OP_Make*Key */
     Stringify(pTos, encoding);
