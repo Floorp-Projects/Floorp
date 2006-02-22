@@ -50,6 +50,13 @@
 #define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
 #endif
 
+/* If this isn't defined, we must be building on non-intel,
+ * hence it will be 0.
+ */
+#ifdef kCGBitmapByteOrder32Host
+#define kCGBitmapByteOrder32Host 0
+#endif
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 
