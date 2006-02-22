@@ -852,6 +852,8 @@ XPC_NW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
       return JS_FALSE;
     }
 
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
+
 #ifdef DEBUG_XPCNativeWrapper
     printf("Wrapping function object for %s\n",
            ::JS_GetStringBytes(JSVAL_TO_STRING(id)));
