@@ -59,6 +59,10 @@
 #include "nsplugindefs.h"
 #include <QuickDraw.h>
 
+#ifdef MOZ_CAIRO_GFX
+class gfxASurface;
+#endif
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
@@ -70,7 +74,11 @@ struct nsPluginPort;
 class nsChildView;
 
 
+#ifdef MOZ_CAIRO_GFX
+@interface ChildView : NSView<mozView, NSTextInput>
+#else
 @interface ChildView : NSQuickDrawView<mozView, NSTextInput>
+#endif
 {
 @private
   NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
@@ -254,7 +262,10 @@ public:
   
   void              LiveResizeStarted();
   void              LiveResizeEnded();
-  
+
+#ifdef MOZ_CAIRO_GFX
+  virtual gfxASurface* GetThebesSurface();
+#endif  
 protected:
 
   PRBool            ReportDestroyEvent();

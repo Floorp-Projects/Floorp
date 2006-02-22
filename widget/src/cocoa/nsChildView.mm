@@ -63,6 +63,11 @@
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#include "gfxQuartzSurface.h"
+#endif
+
 #define NSAppKitVersionNumber10_2 663
 
 // category of NSView methods to quiet warnings
@@ -1380,7 +1385,10 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 {
   if (! mVisible)
     return;
-  
+
+#ifdef DEBUG_vladimir
+  fprintf(stderr, "nsChildView[%p]::UpdateWidget called!\n", this);
+#else
   // For updating widgets, we _always_ want to use the NSQuickDrawView's port,
   // since that's the correct port for gecko to use to make rendering contexts.
   // The plugin is the only thing that uses the plugin port.
@@ -1409,6 +1417,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
       Flash(paintEvent);
   }
   EndDraw();
+#endif
 }
 
 
@@ -1976,8 +1985,10 @@ nsChildView::GetQuickDrawPort()
 GrafPtr
 nsChildView::GetChildViewQuickDrawPort()
 {
+#ifndef MOZ_CAIRO_GFX
   if ([mView isKindOfClass:[ChildView class]])
     return (GrafPtr)[(ChildView*)mView qdPort];
+#endif
 
   return nsnull;
 }
@@ -2067,6 +2078,17 @@ nsChildView::Idle()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef MOZ_CAIRO_GFX
+gfxASurface*
+nsChildView::GetThebesSurface()
+{
+#ifdef DEBUG_vladimir
+  fprintf (stderr, "nsChildView[%p]::GetThebesSurface\n", this);
+#endif
+
+  return new gfxQuartzSurface(gfxASurface::ImageFormatARGB32, 1, 1);
+}
+#endif
 
 #pragma mark -
 
@@ -2312,7 +2334,12 @@ nsChildView::Idle()
 // 
 - (BOOL)isOpaque
 {
+#ifdef MOZ_CAIRO_GFX
+  // this will be NO when we can do transparent windows/views
+  return YES;
+#else
   return mIsPluginView;
+#endif
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2412,7 +2439,64 @@ nsChildView::Idle()
   // being drawn is covered by a subview, and, if so, just bail.
   if ([self isRectObscuredBySubview:aRect])
     return;
+
+#ifdef MOZ_CAIRO_GFX
+  CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+  nsRect geckoBounds;
+  mGeckoChild->GetBounds(geckoBounds);
+  nsRefPtr<gfxQuartzSurface> targetSurface =
+    new gfxQuartzSurface(cgContext, geckoBounds.width, geckoBounds.height,
+                         PR_FALSE);
+
+  //fprintf (stderr, "Update[%p] [%f %f %f %f] cgc: %p gecko bounds: [%d %d %d %d]\n", mGeckoChild, aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, cgContext, geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
+
+  CGAffineTransform xform = CGContextGetCTM(cgContext);
+  //fprintf (stderr, "  context xform: t: %f %f xx: %f xy: %f yx: %f yy: %f\n", xform.tx, xform.ty, xform.a, xform.b, xform.c, xform.d);
+
+  nsRefPtr<gfxContext> targetContext =
+    new gfxContext(targetSurface);
+
+#if 0
+  targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y,
+                                   aRect.size.width, aRect.size.height));
+  targetContext->Clip();
+#else
+  const NSRect *rects;
+  int count, i;
+  [self getRectsBeingDrawn:&rects count:&count];
+  for (i = 0; i < count; ++i) {
+    //fprintf (stderr, " Clip rect[%d]: %f %f %f %f\n", i, rects[i].origin.x, rects[i].origin.y, rects[i].size.width, rects[i].size.height);
+    targetContext->Rectangle(gfxRect(rects[i].origin.x, rects[i].origin.y,
+                                     rects[i].size.width, rects[i].size.height));
+  }
+  targetContext->Clip();
+#endif
+
+  nsCOMPtr<nsIRenderingContext> rc;
+  mGeckoChild->GetDeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  rc->Init (mGeckoChild->GetDeviceContext(), targetContext);
   
+  nsRect r, tr;
+  ConvertCocoaToGeckoRect(aRect, r);
+  tr = r;
+
+  mGeckoChild->LocalToWindowCoordinate(tr);
+  //targetContext->Translate(gfxPoint(tr.x, tr.y));
+
+  //fprintf (stderr, "  window coords: [%d %d %d %d]\n", tr.x, tr.y, tr.width, tr.height);
+
+  nsPaintEvent paintEvent(PR_TRUE, NS_PAINT, mGeckoChild);
+  paintEvent.renderingContext = rc;
+  paintEvent.rect = &r;
+
+  nsEventStatus eventStatus = nsEventStatus_eIgnore;
+  mGeckoChild->DispatchWindowEvent(paintEvent);
+
+  paintEvent.renderingContext = nsnull;
+
+  //fprintf (stderr, "---- update done ----\n");
+
+#else
   // tell gecko to paint.
   // If < 10.3, just paint the rect
   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
@@ -2434,6 +2518,7 @@ nsChildView::Idle()
       mGeckoChild->UpdateWidget(r, rendContext);
     }
   }
+#endif
 }
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect

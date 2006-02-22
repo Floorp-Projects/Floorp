@@ -73,6 +73,14 @@ REQUIRES = xpcom \
 		  exthandler \
 		  $(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes cairo
+
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += glitz glitzagl
+endif
+endif
+
 EXPORTS = \
 		mozView.h \
 		$(NULL)
@@ -143,6 +151,10 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		$(NULL)
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LDOPTS += -lthebes
+endif
 
 GARBAGE		+= $(GFX_LCPPSRCS) $(MAC_LCPPSRCS)
 
