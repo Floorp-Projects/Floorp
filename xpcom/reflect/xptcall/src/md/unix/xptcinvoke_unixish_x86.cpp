@@ -90,13 +90,13 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
      defined.  Otherwise, they're just placeholders to keep the parameter
      indices the same for aligned and unaligned users in the inline asm
      block. */
-  unsigned int saved_esp, stack_params;
+  unsigned int saved_esp;
   
  __asm__ __volatile__(
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
     "movl  %%esp, %3\n\t"
 #endif
-    "subl  %9, %%esp\n\t" /* make room for params */
+    "subl  %8, %%esp\n\t" /* make room for params */
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
     /* For the second CALL, there will be one parameter before the ones
        copied by invoke_copy_to_stack.  Make sure that the stack will be
@@ -111,14 +111,14 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
        leaving room for the |that| parameter.  This reuses |n|, which was
        the stack space to reserve, but that's OK because it's no longer needed
        if the stack is being kept aligned. */
-    "leal  8(%%esp), %4\n\t"
-    "pushl %4\n\t"
+    "leal  8(%%esp), %8\n\t"
+    "pushl %8\n\t"
 #else
     "pushl %%esp\n\t"
 #endif
-    "pushl %8\n\t"
     "pushl %7\n\t"
-    "call  *%10\n\t"       /* copy params */
+    "pushl %6\n\t"
+    "call  *%9\n\t"       /* copy params */
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
     /* The stack is still aligned from the first CALL.  Keep it aligned for
        the next one by popping past the parameters from the first CALL and
@@ -127,10 +127,10 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 #else
     "addl  $0xc, %%esp\n\t"
 #endif
-    "movl  %5, %%ecx\n\t"
+    "movl  %4, %%ecx\n\t"
 #ifdef CFRONT_STYLE_THIS_ADJUST
     "movl  (%%ecx), %%edx\n\t"
-    "movl  %6, %%eax\n\t"   /* function index */
+    "movl  %5, %%eax\n\t"   /* function index */
     "shl   $3, %%eax\n\t"   /* *= 8 */
     "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
     "addl  %%eax, %%edx\n\t"
@@ -141,7 +141,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
 #else /* THUNK_BASED_THIS_ADJUST */
     "pushl %%ecx\n\t"
     "movl  (%%ecx), %%edx\n\t"
-    "movl  %6, %%eax\n\t"   /* function index */
+    "movl  %5, %%eax\n\t"   /* function index */
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
     "leal  (%%edx,%%eax,4), %%edx\n\t"
 #else /* not G++ V3 ABI  */
@@ -153,24 +153,28 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "movl  %3, %%esp\n\t"
 #else
     "addl  $4, %%esp\n\t"
-    "addl  %9, %%esp"
+    "addl  %8, %%esp"
 #endif
     : "=a" (result),        /* %0 */
       "=c" (temp1),         /* %1 */
       "=d" (temp2),         /* %2 */
-      "=g" (saved_esp),     /* %3 */
 #ifdef KEEP_STACK_16_BYTE_ALIGNED
-      "=D" (stack_params)   /* %4 */
+      "=&g" (saved_esp)     /* %3 */
 #else
       /* Don't waste a register, this isn't used if alignment is unimportant */
-      "=m" (stack_params)   /* %4 */
+      "=m" (saved_esp)      /* %3 */
 #endif
-    : "g" (that),           /* %5 */
-      "g" (methodIndex),    /* %6 */
-      "1" (paramCount),     /* %7 */
-      "2" (params),         /* %8 */
-      "g" (n),              /* %9 */
-      "0" (fn_copy)         /* %10 */
+    : "g" (that),           /* %4 */
+      "g" (methodIndex),    /* %5 */
+      "1" (paramCount),     /* %6 */
+      "2" (params),         /* %7 */
+#ifdef KEEP_STACK_16_BYTE_ALIGNED
+      /* Must be in a register, it's the target of an LEA instruction */
+      "r" (n),              /* %8 */
+#else
+      "g" (n),              /* %8 */
+#endif
+      "0" (fn_copy)         /* %9 */
     : "memory"
     );
     
