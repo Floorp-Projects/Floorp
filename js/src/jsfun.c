@@ -1511,6 +1511,7 @@ static JSBool
 fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval, *sp, *oldsp;
+    JSString *str;
     JSObject *tmp;
     void *mark;
     uintN i;
@@ -1522,10 +1523,13 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fval = argv[-1];
 
     if (!JSVAL_IS_FUNCTION(cx, fval)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             js_Function_str, call_str,
-                             JS_GetStringBytes(JS_ValueToString(cx, fval)));
+        str = JS_ValueToString(cx, fval);
+        if (str) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_INCOMPATIBLE_PROTO,
+                                 js_Function_str, call_str,
+                                 JS_GetStringBytes(str));
+        }
         return JS_FALSE;
     }
 
@@ -1571,6 +1575,7 @@ static JSBool
 fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval, *sp, *oldsp;
+    JSString *str;
     JSObject *aobj;
     jsuint length;
     void *mark;
@@ -1588,10 +1593,13 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fval = argv[-1];
 
     if (!JSVAL_IS_FUNCTION(cx, fval)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_INCOMPATIBLE_PROTO,
-                             js_Function_str, "apply",
-                             JS_GetStringBytes(JS_ValueToString(cx, fval)));
+        str = JS_ValueToString(cx, fval);
+        if (str) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_INCOMPATIBLE_PROTO,
+                                 js_Function_str, "apply",
+                                 JS_GetStringBytes(str));
+        }
         return JS_FALSE;
     }
 
