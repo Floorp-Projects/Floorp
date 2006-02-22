@@ -168,10 +168,12 @@ static const nsModuleComponentInfo gComponents[] =
     NS_NATIVESCROLLBAR_CID,
     "@mozilla.org/widget/nativescrollbar;1",
     nsNativeScrollbarConstructor },
+#ifndef MOZ_CAIRO_GFX
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
     nsNativeThemeMacConstructor },
+#endif
   { "nsScreenManager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
