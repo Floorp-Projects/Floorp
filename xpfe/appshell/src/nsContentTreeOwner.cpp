@@ -44,6 +44,7 @@
 // Helper Classes
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
+#include "nsAutoPtr.h"
 
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
@@ -117,6 +118,7 @@ NS_IMPL_RELEASE(nsContentTreeOwner)
 NS_INTERFACE_MAP_BEGIN(nsContentTreeOwner)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
@@ -181,22 +183,23 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    PRBool fIs_Content = PR_FALSE;
 
    /* Special Cases */
-   if(!aName || !*aName)
+   if (!aName || !*aName)
       return NS_OK;
 
    nsDependentString name(aName);
 
-   if(name.LowerCaseEqualsLiteral("_blank"))
+   if (name.LowerCaseEqualsLiteral("_blank"))
       return NS_OK;
    // _main is an IE target which should be case-insensitive but isn't
    // see bug 217886 for details
-   if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
-      {
-      fIs_Content = PR_TRUE;
-      mXULWindow->GetPrimaryContentShell(aFoundItem);
-      if(*aFoundItem)
-         return NS_OK;
-      }
+   if (name.LowerCaseEqualsLiteral("_content") ||
+       name.EqualsLiteral("_main")) {
+     mXULWindow->GetPrimaryContentShell(aFoundItem);
+     if(*aFoundItem)
+       return NS_OK;
+     // Fall through and keep looking...
+     fIs_Content = PR_TRUE;
+   }
 
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
    NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
@@ -208,57 +211,70 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    PRBool more;
    
    windowEnumerator->HasMoreElements(&more);
-   while(more)
-      {
-      nsCOMPtr<nsISupports> nextWindow = nsnull;
-      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
-      nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
-      NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+   while(more) {
+     nsCOMPtr<nsISupports> nextWindow = nsnull;
+     windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+     nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
+     NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem;
-      xulWindow->GetPrimaryContentShell(getter_AddRefs(shellAsTreeItem));
-
-      if(shellAsTreeItem)
-         {
-         if(fIs_Content)
-		    {
-            *aFoundItem = shellAsTreeItem;
-            NS_ADDREF(*aFoundItem);
-            }
-         else
-            {
-            // Get the root tree item of same type, since roots are the only
-            // things that call into the treeowner to look for named items.
-            nsCOMPtr<nsIDocShellTreeItem> root;
-            shellAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-            NS_ASSERTION(root, "Must have root tree item of same type");
-            shellAsTreeItem = root;
-            if(aRequestor != shellAsTreeItem)
-               {
+     if (fIs_Content) {
+       xulWindow->GetPrimaryContentShell(aFoundItem);
+     } else {
+       // Get all the targetable windows from xulWindow and search them
+       nsRefPtr<nsXULWindow> win;
+       xulWindow->QueryInterface(NS_GET_IID(nsXULWindow), getter_AddRefs(win));
+       if (win) {
+         PRInt32 count = win->mTargetableShells.Count();
+         PRInt32 i;
+         for (i = 0; i < count; ++i) {
+           nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem =
+             do_QueryReferent(win->mTargetableShells[i]);
+           if (shellAsTreeItem) {
+             // Get the root tree item of same type, since roots are the only
+             // things that call into the treeowner to look for named items.
+             // XXXbz ideally we could guarantee that mTargetableShells only
+             // contains roots, but the current treeowner apis don't allow
+             // that... yet.
+             nsCOMPtr<nsIDocShellTreeItem> root;
+             shellAsTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+             NS_ASSERTION(root, "Must have root tree item of same type");
+             shellAsTreeItem.swap(root);
+             if (aRequestor != shellAsTreeItem) {
                // Do this so we can pass in the tree owner as the
                // requestor so the child knows not to call back up.
                nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
                shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
-               nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
+               nsCOMPtr<nsISupports> shellOwnerSupports =
+                 do_QueryInterface(shellOwner);
 
                shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports,
                                                  aOriginalRequestor,
                                                  aFoundItem);
-               }
-            }
-         if(*aFoundItem)
-            return NS_OK;
+             }
+           }
          }
-      windowEnumerator->HasMoreElements(&more);
-      }
+       }
+     }
+     
+     if (*aFoundItem)
+       return NS_OK;
+
+     windowEnumerator->HasMoreElements(&more);
+   }
    return NS_OK;      
 }
 
 NS_IMETHODIMP nsContentTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-   mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
-   return NS_OK;
+   NS_ENSURE_STATE(mXULWindow);
+   if (aID) {
+     return mXULWindow->ContentShellAdded(aContentShell, aPrimary, PR_FALSE,
+                                          nsDependentString(aID));
+   }
+
+   return mXULWindow->ContentShellAdded(aContentShell, aPrimary, PR_FALSE,
+                                        EmptyString());
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
@@ -793,6 +809,26 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   // something, get it with a null URI.
   return browserDOMWin->OpenURI(nsnull, aParent, containerPref,
                                 nsIBrowserDOMWindow::OPEN_NEW, aReturn);
+}
+
+//*****************************************************************************
+// nsContentTreeOwner::nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH
+//*****************************************************************************   
+NS_IMETHODIMP
+nsContentTreeOwner::ContentShellAdded2(nsIDocShellTreeItem* aContentShell,
+                                       PRBool aPrimary, PRBool aTargetable,
+                                       const nsAString& aID)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->ContentShellAdded(aContentShell, aPrimary, aTargetable,
+                                       aID);
+}
+
+NS_IMETHODIMP
+nsContentTreeOwner::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->ContentShellRemoved(aContentShell);
 }
 
 //*****************************************************************************

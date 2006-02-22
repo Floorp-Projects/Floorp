@@ -146,6 +146,9 @@ NS_INTERFACE_MAP_BEGIN(nsXULWindow)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+   if (aIID.Equals(NS_GET_IID(nsXULWindow)))
+       foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
+   else
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -1602,11 +1605,10 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElem
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-   PRBool aPrimary, const PRUnichar* aID)
+nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   PRBool aPrimary, PRBool aTargetable, const nsAString& aID)
 {
   nsContentShellInfo* shellInfo = nsnull;
-  nsDependentString newID(aID);
 
   PRInt32 count = mContentShells.Count();
   PRInt32 i;
@@ -1623,7 +1625,7 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
   }
 
   if (!shellInfo) {
-    shellInfo = new nsContentShellInfo(newID, contentShellWeak);
+    shellInfo = new nsContentShellInfo(aID, contentShellWeak);
     mContentShells.AppendElement((void*)shellInfo);
   }
     
@@ -1640,6 +1642,50 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
       mPrimaryContentShell = nsnull;
   }
 
+  if (aTargetable) {
+#ifdef DEBUG
+    PRInt32 debugCount = mTargetableShells.Count();
+    PRInt32 debugCounter;
+    for (debugCounter = debugCount - 1; debugCounter >= 0; --debugCounter) {
+      nsCOMPtr<nsIDocShellTreeItem> curItem =
+        do_QueryReferent(mTargetableShells[debugCounter]);
+      NS_ASSERTION(!SameCOMIdentity(curItem, aContentShell),
+                   "Adding already existing item to mTargetableShells");
+    }
+#endif
+    
+    NS_ENSURE_TRUE(mTargetableShells.AppendObject(contentShellWeak),
+                   NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return NS_OK;
+}
+
+nsresult nsXULWindow::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
+{
+  if (mPrimaryContentShell == aContentShell) {
+    mPrimaryContentShell = nsnull;
+  }
+
+  PRInt32 count = mContentShells.Count();
+  PRInt32 i;
+  for (i = count - 1; i >= 0; --i) {
+    nsContentShellInfo* info = (nsContentShellInfo*)mContentShells.ElementAt(i);
+    nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryReferent(info->child);
+    if (!curItem || SameCOMIdentity(curItem, aContentShell)) {
+      mContentShells.RemoveElementAt(i);
+    }
+  }
+
+  count = mTargetableShells.Count();
+  for (i = count - 1; i >= 0; --i) {
+    nsCOMPtr<nsIDocShellTreeItem> curItem =
+      do_QueryReferent(mTargetableShells[i]);
+    if (!curItem || SameCOMIdentity(curItem, aContentShell)) {
+      mTargetableShells.RemoveObjectAt(i);
+    }
+  }
+  
   return NS_OK;
 }
 
