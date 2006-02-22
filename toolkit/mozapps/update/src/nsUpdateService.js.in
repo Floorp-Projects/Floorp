@@ -117,7 +117,6 @@ const Node = Components.interfaces.nsIDOMNode;
 
 var gApp        = null;
 var gPref       = null;
-var gOS         = null;
 var gABI        = null;
 var gConsole    = null;
 var gLogEnabled = { };
@@ -525,6 +524,12 @@ function readStringFromFile(file) {
   return text;
 }
 
+function getObserverService()
+{
+  return Components.classes["@mozilla.org/observer-service;1"]
+                   .getService(Components.interfaces.nsIObserverService);
+}
+
 /**
  * Update Patch
  * @param   patch
@@ -871,8 +876,6 @@ function UpdateService() {
                     .QueryInterface(Components.interfaces.nsIXULRuntime);
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
                     .getService(Components.interfaces.nsIPrefBranch2);
-  gOS   = Components.classes["@mozilla.org/observer-service;1"]
-                    .getService(Components.interfaces.nsIObserverService);
   gConsole = Components.classes["@mozilla.org/consoleservice;1"]
                        .getService(Components.interfaces.nsIConsoleService);  
 
@@ -896,11 +899,13 @@ function UpdateService() {
 
   // Start the update timer only after a profile has been selected so that the
   // appropriate values for the update check are read from the user's profile.  
-  gOS.addObserver(this, "profile-after-change", false);
+  var os = getObserverService();
+
+  os.addObserver(this, "profile-after-change", false);
 
   // Observe xpcom-shutdown to unhook pref branch observers above to avoid 
   // shutdown leaks.
-  gOS.addObserver(this, "xpcom-shutdown", false);
+  os.addObserver(this, "xpcom-shutdown", false);
 }
 
 UpdateService.prototype = {
@@ -920,18 +925,19 @@ UpdateService.prototype = {
    *          Additional data
    */
   observe: function(subject, topic, data) {
+    var os = getObserverService();
+
     switch (topic) {
     case "profile-after-change":
-      gOS.removeObserver(this, "profile-after-change");
+      os.removeObserver(this, "profile-after-change");
       this._start();
       break;
     case "xpcom-shutdown":
-      gOS.removeObserver(this, "xpcom-shutdown");
+      os.removeObserver(this, "xpcom-shutdown");
       
       // Release Services
       gApp      = null;
       gPref     = null;
-      gOS       = null;
       gConsole  = null;
       break;
     }
@@ -2409,9 +2415,7 @@ Downloader.prototype = {
  * @constructor
  */
 function TimerManager() {
-  gOS = Components.classes["@mozilla.org/observer-service;1"]
-                  .getService(Components.interfaces.nsIObserverService);
-  gOS.addObserver(this, "xpcom-shutdown", false);
+  getObserverService().addObserver(this, "xpcom-shutdown", false);
 
   const nsITimer = Components.interfaces.nsITimer;
   this._timer = Components.classes["@mozilla.org/timer;1"]
@@ -2426,7 +2430,7 @@ TimerManager.prototype = {
    */
   observe: function(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
-      gOS.removeObserver(this, "xpcom-shutdown");
+     getObserverService().removeObserver(this, "xpcom-shutdown");
 
       // Release everything we hold onto. 
       this._timer = null;
