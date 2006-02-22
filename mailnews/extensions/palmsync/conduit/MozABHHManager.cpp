@@ -232,11 +232,12 @@ long MozABHHManager::AddCategory(CPCategory & cat)
 
     // generate a new ID and Add the category
     if(!retval) {
-        for(int id=0; id<=MAX_CATEGORIES; id++)
+        int id;
+        for(id = 0; id <= MAX_CATEGORIES; id++)
             if(!m_pCatMgr->FindID(id))
                 break;
         // if ID doesnot already exist
-        if(id<MAX_CATEGORIES) {
+        if(id < MAX_CATEGORIES) {
             cat.SetID(MAKELONG(id, 0));
             retval = m_pCatMgr->Add(cat);
         }

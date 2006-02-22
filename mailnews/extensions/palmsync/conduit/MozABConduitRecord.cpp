@@ -496,7 +496,7 @@ long CMozABConduitRecord::CopyFromHHBuffer(TCHAR* pSrc, TCHAR* pDest, int len)
     if (pDest) {
 
         // Only add Cr's if newlines are present..
-        pCurr = _tcspbrk(pSrc, STR_NEWLINE);
+        pCurr = (TCHAR*) _tcspbrk(pSrc, STR_NEWLINE);
         if(pCurr) 
         {
             while (off < len && *pSrc)
@@ -532,7 +532,7 @@ int CMozABConduitRecord::StripCRs(TCHAR* pDest, const TCHAR* pSrc, int len)
     TCHAR* pStart = pDest;
 
     // See if any cr's are present in the first place.
-    pCurr = _tcspbrk(pSrc, STR_CRETURN);
+    pCurr = (TCHAR*) _tcspbrk(pSrc, STR_CRETURN);
     if (pCurr)
     {
         while (off < len && *pSrc)
