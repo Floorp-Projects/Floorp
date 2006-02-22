@@ -84,6 +84,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DIRS += wgl
 endif
 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+DIRS += agl
+endif
+
 FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 

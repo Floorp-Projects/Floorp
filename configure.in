@@ -3944,7 +3944,9 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-xlib"
+        -o "$_DEFAULT_TOOLKIT" = "cairo-xlib" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -4050,6 +4052,25 @@ cairo-xlib)
 	TK_CFLAGS='$(MOZ_XLIB_CFLAGS) $(MOZ_CAIRO_FLAGS)'
 	TK_LIBS='$(MOZ_XLIB_LDFLAGS) $(MOZ_CAIRO_LIBS)'
 	AC_DEFINE(MOZ_WIDGET_XLIB)
+    ;;
+cairo-mac|cairo-cocoa)
+    if test "$MOZ_WIDGET_TOOLKIT" = "cairo-cocoa"; then
+        MOZ_WIDGET_TOOLKIT=cocoa
+        AC_DEFINE(MOZ_WIDGET_COCOA)
+        MOZ_ENABLE_COCOA=1
+    else
+        MOZ_WIDGET_TOOLKIT=mac
+    fi
+    MOZ_ENABLE_CAIRO_GFX=1
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_USER_DIR="Mozilla"
+    AC_DEFINE(XP_MACOSX)
+    AC_DEFINE(TARGET_CARBON)
+    AC_DEFINE(TARGET_API_MAC_CARBON)
+    TK_LIBS='-framework Carbon'
+    TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
+    CFLAGS="$CFLAGS $TK_CFLAGS"
+    CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     ;;
 esac
 
@@ -6717,6 +6738,7 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
            QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
+           QUARTZGL_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZGL_SURFACE 1"
            ATSUI_FONT_FEATURE="#define CAIRO_HAS_ATSUI_FONT 1"
        fi
        if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
@@ -6755,6 +6777,7 @@ if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_
        AC_SUBST(SVG_SURFACE_FEATURE)
        AC_SUBST(XLIB_SURFACE_FEATURE)
        AC_SUBST(QUARTZ_SURFACE_FEATURE)
+       AC_SUBST(QUARTZGL_SURFACE_FEATURE)
        AC_SUBST(XCB_SURFACE_FEATURE)
        AC_SUBST(WIN32_SURFACE_FEATURE)
        AC_SUBST(OS2_SURFACE_FEATURE)

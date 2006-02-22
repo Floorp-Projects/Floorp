@@ -90,6 +90,18 @@ public:
     virtual nsresult BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
     virtual nsresult EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
 
+    void SetData(const cairo_user_data_key_t *key,
+                 void *user_data,
+                 cairo_destroy_func_t destroy)
+    {
+        cairo_surface_set_user_data (mSurface, key, user_data, destroy);
+    }
+
+    void *GetData(const cairo_user_data_key_t *key)
+    {
+        return cairo_surface_get_user_data (mSurface, key);
+    }
+
 protected:
     void Init(cairo_surface_t* surface) {
         mDestroyed = PR_FALSE;

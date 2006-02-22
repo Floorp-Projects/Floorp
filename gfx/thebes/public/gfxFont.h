@@ -111,6 +111,10 @@ struct NS_EXPORT gfxFontStyle {
     // rendering or measuring a string. A value of 0 means no adjustment
     // needs to be done.
     float sizeAdjust;
+
+    static void ComputeWeightAndOffset (const PRUint16 inWeight,
+                                        PRInt16 *outBaseWeight,
+                                        PRInt16 *outOffset);
 };
 
 

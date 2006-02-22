@@ -50,4 +50,15 @@ REQUIRES += glitzglx
 endif
 endif
 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+EXPORTS +=	gfxPlatformMac.h \
+		gfxQuartzSurface.h \
+		gfxAtsuiFonts.h \
+		$(NULL)
+
+ifdef MOZ_EABLE_GLITZ
+REQUIRES += glitzagl
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk

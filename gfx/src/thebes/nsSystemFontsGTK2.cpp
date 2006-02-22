@@ -196,3 +196,41 @@ GetXftDPI(void)
 
   return 0;
 }
+
+nsresult
+nsSystemFontsGTK2::GetSystemFont(nsSystemFontID anID, nsFont *aFont) const
+{
+    switch (anID) {
+    case eSystemFont_Menu:         // css2
+    case eSystemFont_PullDownMenu: // css3
+        *aFont = mMenuFont;
+        break;
+
+    case eSystemFont_Field:        // css3
+    case eSystemFont_List:         // css3
+        *aFont = mFieldFont;
+        break;
+
+    case eSystemFont_Button:       // css3
+        *aFont = mButtonFont;
+        break;
+
+    case eSystemFont_Caption:      // css2
+    case eSystemFont_Icon:         // css2
+    case eSystemFont_MessageBox:   // css2
+    case eSystemFont_SmallCaption: // css2
+    case eSystemFont_StatusBar:    // css2
+    case eSystemFont_Window:       // css3
+    case eSystemFont_Document:     // css3
+    case eSystemFont_Workspace:    // css3
+    case eSystemFont_Desktop:      // css3
+    case eSystemFont_Info:         // css3
+    case eSystemFont_Dialog:       // css3
+    case eSystemFont_Tooltips:     // moz
+    case eSystemFont_Widget:       // moz
+        *aFont = mDefaultFont;
+        break;
+    }
+
+    return NS_OK;
+}

@@ -71,10 +71,6 @@ ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += psshared ps
 endif
 
-ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
-DIRS	    += mac
-endif
-
 # Build xlibrgb only for X toolkits and/or Xprint
 ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
 DIRS        += xlibrgb
@@ -102,13 +98,12 @@ else
  ifdef MOZ_ENABLE_PHOTON
  DIRS        += photon
  endif
- ifeq ($(MOZ_GFX_TOOLKIT),windows)
- DIRS        += windows
+ ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
+ DIRS	     += mac
  endif
- ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
+ ifneq (,$(filter windows beos os2 mac,$(MOZ_GFX_TOOLKIT)))
  DIRS        += $(MOZ_GFX_TOOLKIT)
  endif
-
 endif
 
 CPPSRCS = \
