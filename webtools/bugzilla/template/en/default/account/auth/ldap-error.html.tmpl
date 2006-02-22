@@ -27,6 +27,8 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% admindocslinks = {'extraconfig.html#bzldap' => 'Setting up LDAP authentication'} %]
+
 [% SWITCH auth_err_tag %]
   [% CASE "cannot_retreive_attr" %]
     The specified LDAP attribute [% info.attr FILTER html %] was not found.

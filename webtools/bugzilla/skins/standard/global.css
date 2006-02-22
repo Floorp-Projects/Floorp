@@ -287,6 +287,17 @@ body
     }
 /* generic (end) */
 
+div#docslinks {
+    float: right;
+    border: 1px solid black;
+    padding: 1ex;
+    font-size: 80%;
+}
+
+#docslinks h2 {
+    margin: 0;
+}
+
 .bz_obsolete { text-decoration: line-through; }
 .bz_inactive { text-decoration: line-through; }
 .bz_closed,

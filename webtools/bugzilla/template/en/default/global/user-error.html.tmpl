@@ -31,7 +31,7 @@
   #
   # Note that you must explicitly filter every single template variable
   # in this file; if you do not wish to change it, use the "none" filter.
-  # 
+  #
   # Extension- or custom-specific error handling  can be easily added 
   # via hooks: just place your <extension>-errors.html.tmpl into 
   # template/en/extension/hook/global/user-error.html.tmpl/errors/
@@ -109,6 +109,7 @@
 
   [% ELSIF error == "auth_failure" %]
     [% title = "Authorization Required" %]
+    [% admindocslinks = {'group.html' => 'Group Security'} %]
     Sorry,
     [% IF group %]
       you aren't a member of the '[% group FILTER html %]' group,
@@ -196,10 +197,12 @@
 
   [% ELSIF error == "bug_access_denied" %]
     [% title = "Access Denied" %]
+    [% admindocslinks = {'group.html' => 'Group Security'} %]
     You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
 
   [% ELSIF error == "bug_access_query" %]
     [% title = "Access Denied" %]
+    [% docslinks = {'myaccount.html' => 'Creating an account'} %]
     You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
     To see this [% terms.bug %], you must
     first <a href="show_bug.cgi?id=
@@ -208,6 +211,8 @@
 
   [% ELSIF error == "buglist_parameters_required" %]
     [% title = "Parameters Required" %]
+    [% docslinks = {'query.html' => "Searching for $terms.bugs",
+                    'list.html'  => "$terms.Bug lists"} %]
     You may not search, or create saved searches, without any search terms.
 
   [% ELSIF error == "bugs_not_changed" %]
@@ -348,6 +353,7 @@
   
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
+    [% admindocslinks = {'group.html' => 'Group Security'} %]
     Sorry, either the product <em>[% product FILTER html %]</em>
     does not exist or you aren't authorized to
     enter [% terms.abug %] into it.
@@ -420,11 +426,17 @@
     again.
 
   [% ELSIF error == "flag_not_multiplicable" %]
+    [% docslinks = {'flags-overview.html' => 'An overview on Flags',
+                    'flags.html' => 'Using Flags'} %]
     You can't ask more than one person at a time for
     <em>[% type.name FILTER html %]</em>.
   
   [% ELSIF error == "flag_requestee_unauthorized" %]
     [% title = "Flag Requestee Not Authorized" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags',
+                         'groups.html' => 'Group Security'} %]
+    [% docslinks = {'flags-overview.html' => 'An overview on Flags',
+                    'flags.html' => 'Using Flags'} %]
 
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on [% terms.bug %] 
@@ -438,6 +450,10 @@
 
   [% ELSIF error == "flag_requestee_unauthorized_attachment" %]
     [% title = "Flag Requestee Not Authorized" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags',
+                         'groups.html' => 'Group Security'} %]
+    [% docslinks = {'flags-overview.html' => 'An overview on Flags',
+                    'flags.html' => 'Using Flags'} %]
 
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on 
@@ -449,19 +465,26 @@
 
   [% ELSIF error == "flag_type_cc_list_invalid" %]
     [% title = "Flag Type CC List Invalid" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags'} %]
     The CC list [% cc_list FILTER html %] must be less than 200 characters long.
 
   [% ELSIF error == "flag_type_description_invalid" %]
     [% title = "Flag Type Description Invalid" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags'} %]
     The description must be less than 32K.
 
   [% ELSIF error == "flag_type_name_invalid" %]
     [% title = "Flag Type Name Invalid" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags'} %]
     The name <em>[% name FILTER html %]</em> must be 1-50 characters long
     and must not contain any spaces or commas.
 
   [% ELSIF error == "flag_update_denied" %]
     [% title = "Flag Modification Denied" %]
+    [% admindocslinks = {'flags-overview.html#flags-admin'  => 'Administering Flags',
+                         'groups.html' => 'Group Security'} %]
+    [% docslinks = {'flags-overview.html' => 'An overview on Flags',
+                    'flags.html' => 'Using Flags'} %]
     You tried to [% IF status == "+" %] grant [% ELSIF status == "-" %] deny
     [% ELSIF status == "X" %] clear [% ELSE %] request [% END %]
     <code>[% name FILTER html %]
@@ -573,6 +596,7 @@
     
   [% ELSIF error == "illegal_group_control_combination" %]
     [% title = "Your Group Control Combination Is Illegal" %]
+    [% admindocslinks = {'group.html' => 'Assigning Group Controls to Products'} %]
     Your group control combination for group &quot;
     [% groupname FILTER html %]&quot; is illegal.
 
@@ -587,13 +611,18 @@
     &lt;, &gt;, &amp;.
 
   [% ELSIF error == "illegal_series_creation" %]
+    [% admindocslinks = {'group.html' => 'Group security'} %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You are not authorised to create series.
         
   [% ELSIF error == "illegal_series_edit" %]
+    [% admindocslinks = {'group.html' => 'Group security'} %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You are not authorised to edit this series. To do this, you must either
     be its creator, or an administrator.
         
   [% ELSIF error == "insufficient_data_points" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     We don't have enough data points to make a graph (yet).
         
   [% ELSIF error == "invalid_attach_id" %]
@@ -732,6 +761,8 @@
 
   [% ELSIF error == "milestone_already_exists" %]
     [% title = "Milestone Already Exists" %]
+    [% admindocslinks = {'products.html' => 'Administering products',
+                         'milestones.html' => 'About Milestones'} %]
     The milestone '[% name FILTER html %]' already exists for product '
     [%- product FILTER html %]'.
 
@@ -741,6 +772,8 @@
 
   [% ELSIF error == "milestone_is_default" %]
     [% title = "Default milestone not deletable" %]
+    [% admindocslinks = {'products.html' => 'Administering products',
+                         'milestones.html' => 'About Milestones'} %]
     Sorry, but [% name FILTER html %] is the default milestone for
     product '[% product FILTER html %]', and so it can not be deleted.
 
@@ -786,6 +819,8 @@
 
   [% ELSIF error == "missing_component" %]
     [% title = "Missing Component" %]
+    [% admindocslinks = {'products.html'   => 'Administering products',
+                         'components.html' => 'Creating a component'} %]
     Sorry, the product <em>[% product FILTER html %]</em>
     has to have at least one component in order for you to
     enter [% terms.abug %] into it.<p>
@@ -817,6 +852,7 @@
           
   [% ELSIF error == "missing_datasets" %]
     [% title = "No Datasets Selected" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You must specify one or more datasets to plot.
     
   [% ELSIF error == "missing_email_type" %]
@@ -826,10 +862,12 @@
     
   [% ELSIF error == "missing_frequency" %]
     [% title = "Missing Frequency" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You did not specify a valid frequency for this series.
                 
   [% ELSIF error == "missing_name" %]
     [% title = "Missing Name" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You did not specify a name for this series.
                 
   [% ELSIF error == "missing_query" %]
@@ -848,6 +886,7 @@
                 
   [% ELSIF error == "missing_version" %]
     [% title = "Missing Version" %]
+    [% admindocslinks = {'versions.html' => 'Defining versions'} %]
     Sorry, the product <em>[% product FILTER html %]</em>
     has to have at least one version in order for you to
     enter [% terms.abug %] into it.<p>
@@ -861,6 +900,7 @@
 
   [% ELSIF error == "need_quip" %]
     [% title = "Quip Required" %]
+    [% docslinks = {'quips.html' => 'About quips'} %]
     Please enter a quip in the text field.
 
   [% ELSIF error == "new_password_missing" %]
@@ -869,6 +909,7 @@
 
   [% ELSIF error == "no_axes_defined" %]
     [% title = "No Axes Defined" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
     You didn't define any axes to plot.
 
   [% ELSIF error == "no_bugs_chosen" %]
@@ -886,27 +927,32 @@
 
   [% ELSIF error == "no_dupe_stats" %]
     [% title = "Cannot Find Duplicate Statistics" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up the collecstats.pl job'} %]
     There are no duplicate statistics for today ([% today FILTER html %]) 
     or yesterday.
 
   [% ELSIF error == "no_dupe_stats_error_today" %]
     [% title = "Error Reading Today's Dupes File" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up the collecstats.pl job'} %]
     An error occurred opening today's dupes file: [% error_msg FILTER html %].
 
   [% ELSIF error == "no_dupe_stats_error_whenever" %]
     [% title = "Error Reading Previous Dupes File" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up the collecstats.pl job'} %]
     An error occurred opening [% changedsince FILTER html %] days ago
     ([% whenever FILTER html %])'s dupes file:
     [% error_msg FILTER html %].
 
   [% ELSIF error == "no_dupe_stats_error_yesterday" %]
     [% title = "Error Reading Yesterday's Dupes File" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up the collecstats.pl job'} %]
     There are no duplicate statistics for today ([% today FILTER html %]), 
     and an error
     occurred opening yesterday's dupes file: [% error_msg FILTER html %].
 
   [% ELSIF error == "no_new_quips" %]
     [% title = "No New Quips" %]
+    [% admindocslinks = {'quips.html' => 'Controlling quip usage'} %]
     This site does not permit the addition of new quips.
 
   [% ELSIF error == "no_page_specified" %]
@@ -915,6 +961,9 @@
 
   [% ELSIF error == "no_products" %]
     [% title = "No Products" %]
+    [% admindocslinks = {'products.html'   => 'Setting up a product',
+                         'components.html' => 'Adding components to products',
+                         'groups.html'     => 'Groups security'} %]
     Either no products have been defined to enter [% terms.bugs %] against or you have not
     been given access to any.
 
@@ -975,42 +1024,51 @@
 
   [% ELSIF error == "prod_votes_per_bug_must_be_nonnegative" %]
     [% title = "Maximum Votes Must Be Non-negative" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% maxvotesperbug FILTER html %]' is an invalid value for the 
     <em>'Maximum Votes Per [% terms.Bug %]'</em> field, which should
     contain a non-negative number.
 
   [% ELSIF error == "prod_votes_per_user_must_be_nonnegative" %]
     [% title = "Votes Per User Must Be Non-negative" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% votesperuser FILTER html %]' is an invalid value for the 
     <em>'Votes Per User'</em> field, which should contain a
     non-negative number.
 
   [% ELSIF error == "prod_votes_to_confirm_must_be_nonnegative" %]
     [% title = "Votes To Confirm Must Be Non-negative" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     '[% votestoconfirm FILTER html %]' is an invalid value for the 
     <em>'Votes To Confirm'</em> field, which should contain a
     non-negative number.
 
   [% ELSIF error == "prod_cant_delete_description" %]
     [% title = "Cannot delete product description" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     Cannot delete the description for product
     '[% product FILTER html %]'.
 
   [% ELSIF error == "prod_cant_delete_name" %]
     [% title = "Cannot delete product name" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     Cannot delete the product name for product '[% product FILTER html %]'.
 
   [% ELSIF error == "prod_name_already_in_use" %]
     [% title = "Product name already in use" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     The product name '[% product FILTER html %]' is already in use.
   
   [% ELSIF error == "prod_name_diff_in_case" %]
     [% title = "Product name differs only in case" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     The product name '[% product FILTER html %]' differs from existing 
     product '[% existing_product FILTER html %]' only in case.
 
   [% ELSIF error == "prod_must_define_defaultmilestone" %]
     [% title = "Must define new default milestone" %]
+    [% admindocslinks = {'products.html' => 'Administering products',
+                         'milestones.html' => 'About Milestones'} %]
     [% IF classification %]
       [% classification_url_part = BLOCK %]&amp;classification=
         [%- classification FILTER url_quote %]
@@ -1028,39 +1086,52 @@
 
   [% ELSIF error == "product_blank_name" %]
     [% title = "Blank Product Name Not Allowed" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     You must enter a name for the new product.
   
   [% ELSIF error == "product_disabled" %]
     [% title = BLOCK %]Product closed for [% terms.Bugs %] Entry[% END %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     Sorry, entering [% terms.bugs %] into the
     product <em>[% product FILTER html %]</em> has been disabled.
 
   [% ELSIF error == "product_edit_denied" %]
     [% title = "Product Edit Access Denied" %]
+    [% admindocslinks = {'products.html' => 'Administering products',
+                         'groups.html'   => 'Group security'} %]
     You are not permitted to edit [% terms.bugs %] in product 
     [%+ product FILTER html %].
 
   [% ELSIF error == "product_has_bugs" %]
     [% title = BLOCK %]Product has [% terms.Bugs %][% END %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     There are [% nb FILTER html %] [%+ terms.bugs %] entered for this product!
     You must reassign those [% terms.bugs %] to another product before you
     can delete this one.
 
   [% ELSIF error == "product_must_have_description" %]
     [% title = "Product needs Description" %]
+    [% admindocslinks = {'products.html' => 'Administering products'} %]
     You must enter a description for product '[% product FILTER html %]'.
 
   [% ELSIF error == "product_must_have_version" %]
     [% title = "Product needs Version" %]
+    [% admindocslinks = {'products.html' => 'Administering products',
+                         'versions.html' => 'Administering versions'} %]
     You must enter a version for product '[% product FILTER html %]'.
 
   [% ELSIF error == "product_not_specified" %]
     [% title = "No Product Specified" %]
+    [% admindocslinks = {'products.html'   => 'Administering products',
+                         'components.html' => 'Administering components',
+                         'milestones.html' => 'Administering milestones',
+                         'versions.html'   => 'Administering versions'} %]
     No product specified when trying to edit components, milestones, versions
     or product.
 
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Search Name Specified" %]
+    [% docslinks = {'list.html' => "About $terms.bug lists"} %]
     You must enter a name for your search.
 
   [% ELSIF error == "query_name_too_long" %]
@@ -1087,6 +1158,7 @@
 
   [% ELSIF error == "saved_search_used_by_whines" %]
     [% title = "Saved Search In Use" %]
+    [% docslinks = {'whining.html' => 'About Whining'} %]
     The saved search <em>[% search_name FILTER html %]</em> is being used 
     by <a href="editwhines.cgi">Whining events</a> with the following subjects:
     [%+ subjects FILTER html %]
@@ -1099,6 +1171,7 @@
 
   [% ELSIF error == "series_already_exists" %]
     [% title = "Series Already Exists" %]
+    [% docslinks = {'reporting.html' => 'Reporting'} %]
       A series named <em>[% series.category FILTER html %] /
       [%+ series.subcategory FILTER html %] / 
       [%+ series.name FILTER html %]</em>
@@ -1159,6 +1232,7 @@
 
   [% ELSIF error == "too_many_votes_for_bug" %]
     [% title = "Illegal Vote" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     You may only use at most [% max FILTER html %] votes for a single
     [%+ terms.bug %] in the
     <tt>[% prod FILTER html %]</tt> product, but you are trying to
@@ -1166,6 +1240,7 @@
 
   [% ELSIF error == "too_many_votes_for_product" %]
     [% title = "Illegal Vote" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     You tried to use [% votes FILTER html %] votes,
     which exceeds the [% max FILTER html %] vote per [% terms.bug %] limit
     for the <tt>[% prod FILTER html %]</tt> product.
@@ -1191,6 +1266,7 @@
 
   [% ELSIF error == "version_already_exists" %]
     [% title = "Version Already Exists" %]
+    [% admindocslinks = {'versions.html' => 'Administering versions'} %]
     The version '[% name FILTER html %]' already exists for product '
     [%- product FILTER html %]'.
 
@@ -1215,16 +1291,19 @@
 
   [% ELSIF error == "users_deletion_disabled" %]
     [% title = "Deletion not activated" %]
+    [% admindocslinks = {'useradmin.html' => 'User administration'} %]
     Sorry, the deletion of user accounts is not allowed.
 
   [% ELSIF error == "user_has_responsibility" %]
     [% title = "Can't Delete User Account" %]
+    [% admindocslinks = {'useradmin.html' => 'User administration'} %]
     The user you want to delete is set up for roles as default [% terms.bug %]
     assignee or QA contact for at least one component.
     For this reason, you cannot delete the account at this time.
 
   [% ELSIF error == "user_login_required" %]
     [% title = "Login Name Required" %]
+    [% admindocslinks = {'useradmin.html' => 'User administration'} %]
     You must enter a login name for the new user.
 
   [% ELSIF error == "user_match_failed" %]
@@ -1234,6 +1313,7 @@
 
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]
+    [% admindocslinks = {'voting.html' => 'Setting up the voting feature'} %]
     Only use non-negative numbers for your [% terms.bug %] votes.
 
   [% ELSIF error == "wrong_token_for_cancelling_email_change" %]
@@ -1279,6 +1359,11 @@
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]
+
+[% PROCESS global/docslinks.html.tmpl
+   docslinks      = docslinks
+   admindocslinks = admindocslinks
+%]
 
 <table cellpadding="20">
   <tr>

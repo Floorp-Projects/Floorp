@@ -195,6 +195,15 @@ sub check_urlbase {
     return "";
 }
 
+sub check_url {
+    my ($url) = (@_);
+    return '' if $url eq ''; # Allow empty URLs
+    if ($url !~ m:/$:) {
+        return 'must be a legal URL, absolute or relative, ending with a slash.';
+    }
+    return '';
+}
+
 sub check_webdotbase {
     my ($value) = (@_);
     $value = trim($value);

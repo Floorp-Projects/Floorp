@@ -39,6 +39,8 @@
 
 [% error_message = BLOCK %]
   [% IF    error == "action_unrecognized" %]
+    [% docslinks = {'query.html' => "Searching for $terms.bugs",
+                    'list.html'  => "$terms.Bug lists"} %]
     I don't recognize the value (<em>[% action FILTER html %]</em>)
     of the <em>action</em> variable.
   
@@ -70,6 +72,7 @@
     the error [% bug.error FILTER html %].
     
   [% ELSIF error == "chart_data_not_generated" %]
+    [% admindocslinks = {'extraconfig.html' => 'Setting up Charting'} %]
     [% IF product %]
       Charts for the <em>[% product FILTER html %]</em> product are not
       available yet because no charting data has been collected for it since it
@@ -93,6 +96,7 @@
     Unable to open the chart datafile <tt>[% filename FILTER html %]</tt>.
   
   [% ELSIF error == "chart_lines_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing perl modules necessary for Charting'} %]
     Charts will not work without the Chart::Lines Perl module being installed.
     Run checksetup.pl for installation instructions.
 
@@ -104,6 +108,7 @@
     and <code>[% type FILTER html %]</code> together.
 
   [% ELSIF error == "gd_not_installed" %]
+    [% admindocslinks = {'installation.html#install-perlmodules' => 'Installing perl modules necessary for Charting'} %]
     Charts will not work without the GD Perl module being installed.
     Run checksetup.pl for installation instructions.
 
@@ -343,6 +348,11 @@
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl %]
 [% END %]
+
+[% PROCESS global/docslinks.html.tmpl
+   docslinks      = docslinks
+   admindocslinks = admindocslinks
+%]
 
 <tt>
   <p>

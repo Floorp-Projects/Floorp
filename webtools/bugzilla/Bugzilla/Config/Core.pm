@@ -54,6 +54,13 @@ sub get_param_list {
   },
 
   {
+   name => 'docs_urlbase',
+   type => 't',
+   default => 'docs/html/',
+   checker => \&check_url
+  },
+
+  {
    name => 'sslbase',
    type => 't',
    default => '',
