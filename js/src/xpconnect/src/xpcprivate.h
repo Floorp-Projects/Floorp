@@ -3162,6 +3162,31 @@ private:
     jsrefcount mDepth;
 };
 
+class AutoJSSuspendRequestWithNoCallContext
+{
+public:
+    AutoJSSuspendRequestWithNoCallContext(JSContext *aCX)
+      : mCX(aCX) {SuspendRequest();}
+    ~AutoJSSuspendRequestWithNoCallContext() {ResumeRequest();}
+
+    void ResumeRequest() {
+        if(mCX) {
+            JS_ResumeRequest(mCX, mDepth);
+            mCX = nsnull;
+        }
+    }
+private:
+    void SuspendRequest() {
+        if(JS_GetContextThread(mCX))
+            mDepth = JS_SuspendRequest(mCX);
+        else
+            mCX = nsnull;
+    }
+private:
+    JSContext* mCX;
+    jsrefcount mDepth;
+};
+
 /*****************************************/
 
 class AutoJSRequestWithNoCallContext
