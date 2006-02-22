@@ -2038,10 +2038,10 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
     /* Create a prototype object for this class. */
     proto = js_NewObject(cx, clasp, parent_proto, obj);
-    if (!proto) {
-        named = JS_FALSE;
-        goto bad;
-    }
+    if (!proto)
+        return NULL;
+
+    /* After this point, control must exit via label bad or out. */
     JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(proto), &tvr);
 
     if (!constructor) {
