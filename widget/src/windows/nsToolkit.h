@@ -50,6 +50,7 @@
 
 struct MethodInfo;
 class nsIEventQueue;
+class MouseTrailer;
 
 // we used to use MAX_PATH
 // which works great for one file
@@ -138,6 +139,8 @@ public:
 #ifndef WINCE
     static NS_SHBrowseForFolder   mSHBrowseForFolder;
 #endif
+
+    static MouseTrailer *gMouseTrailer;
 };
 
 #define WM_CALLMETHOD   (WM_USER+1)
@@ -160,8 +163,6 @@ class  nsWindow;
 class MouseTrailer 
 {
 public:
-    static MouseTrailer  &GetSingleton() { return mSingleton; }
-    
     HWND                  GetMouseTrailerWindow() { return mMouseTrailerWindow; }
     HWND                  GetCaptureWindow() { return mCaptureWindow; }
 
@@ -170,17 +171,14 @@ public:
     void                  Disable() { mEnabled = PR_FALSE; DestroyTimer(); }
     void                  Enable() { mEnabled = PR_TRUE; CreateTimer(); }
     void                  DestroyTimer();
-                          ~MouseTrailer();
 
-private:
                           MouseTrailer();
+                          ~MouseTrailer();
+private:
 
     nsresult              CreateTimer();
 
     static void           TimerProc(nsITimer* aTimer, void* aClosure);
-
-    // Global nsToolkit Instance
-    static MouseTrailer   mSingleton;
 
     // Information for mouse enter/exit events
     HWND                  mMouseTrailerWindow;
