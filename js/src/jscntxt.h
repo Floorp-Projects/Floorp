@@ -83,6 +83,7 @@ struct JSRuntime {
     uint32              gcBytes;
     uint32              gcLastBytes;
     uint32              gcMaxBytes;
+    uint32              gcMaxMallocBytes;
     uint32              gcLevel;
     uint32              gcNumber;
     JSPackedBool        gcPoke;

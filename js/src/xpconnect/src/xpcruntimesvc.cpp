@@ -140,6 +140,14 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
         mRuntime = JS_NewRuntime(gGCSize);
         if(!mRuntime)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        // Unconstrain the runtime's threshold on nominal heap size, to avoid
+        // triggering GC too often if operating continuously near an arbitrary
+        // finite threshold (0xffffffff is infinity for uint32 parameters).
+        // This leaves the maximum-JS_malloc-bytes threshold still in effect
+        // to cause period, and we hope hygienic, last-ditch GCs from within
+        // the GC's allocator.
+        JS_SetGCParameter(mRuntime, JSGC_MAX_BYTES, 0xffffffff);
     }
     *runtime = mRuntime;
     return NS_OK;

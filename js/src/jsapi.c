@@ -1889,6 +1889,19 @@ JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
     return js_IsAboutToBeFinalized(cx, thing);
 }
 
+JS_PUBLIC_API(void)
+JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
+{
+    switch (key) {
+      case JSGC_MAX_BYTES:
+        rt->gcMaxBytes = value;
+        break;
+      case JSGC_MAX_MALLOC_BYTES:
+        rt->gcMaxMallocBytes = value;
+        break;
+    }
+}
+
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
