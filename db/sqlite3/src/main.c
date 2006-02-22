@@ -14,7 +14,7 @@
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 **
-** $Id: main.c,v 1.331 2006/01/24 16:37:58 danielk1977 Exp $
+** $Id: main.c,v 1.335 2006/02/16 18:16:37 drh Exp $
 */
 #include "sqliteInt.h"
 #include "os.h"
@@ -29,7 +29,6 @@ const int sqlite3one = 1;
 /*
 ** The version of the library
 */
-const char rcsid3[] = "@(#) \044Id: SQLite version " SQLITE_VERSION " $";
 const char sqlite3_version[] = SQLITE_VERSION;
 const char *sqlite3_libversion(void){ return sqlite3_version; }
 int sqlite3_libversion_number(void){ return SQLITE_VERSION_NUMBER; }
@@ -732,6 +731,10 @@ int sqlite3_errcode(sqlite3 *db){
   return db->errCode;
 }
 
+/*
+** Create a new collating function for database "db".  The name is zName
+** and the encoding is enc.
+*/
 static int createCollation(
   sqlite3* db, 
   const char *zName, 
@@ -740,6 +743,7 @@ static int createCollation(
   int(*xCompare)(void*,int,const void*,int,const void*)
 ){
   CollSeq *pColl;
+  int enc2;
   
   if( sqlite3SafetyCheck(db) ){
     return SQLITE_MISUSE;
@@ -749,15 +753,13 @@ static int createCollation(
   ** to one of SQLITE_UTF16LE or SQLITE_UTF16BE using the
   ** SQLITE_UTF16NATIVE macro. SQLITE_UTF16 is not used internally.
   */
-  if( enc==SQLITE_UTF16 ){
-    enc = SQLITE_UTF16NATIVE;
+  enc2 = enc & ~SQLITE_UTF16_ALIGNED;
+  if( enc2==SQLITE_UTF16 ){
+    enc2 = SQLITE_UTF16NATIVE;
   }
 
-  if( enc!=SQLITE_UTF8 && enc!=SQLITE_UTF16LE && enc!=SQLITE_UTF16BE ){
-    sqlite3Error(db, SQLITE_ERROR, 
-        "Param 3 to sqlite3_create_collation() must be one of "
-        "SQLITE_UTF8, SQLITE_UTF16, SQLITE_UTF16LE or SQLITE_UTF16BE"
-    );
+  if( (enc2&~3)!=0 ){
+    sqlite3Error(db, SQLITE_ERROR, "unknown encoding");
     return SQLITE_ERROR;
   }
 
@@ -765,7 +767,7 @@ static int createCollation(
   ** sequence. If so, and there are active VMs, return busy. If there
   ** are no active VMs, invalidate any pre-compiled statements.
   */
-  pColl = sqlite3FindCollSeq(db, (u8)enc, zName, strlen(zName), 0);
+  pColl = sqlite3FindCollSeq(db, (u8)enc2, zName, strlen(zName), 0);
   if( pColl && pColl->xCmp ){
     if( db->activeVdbeCnt ){
       sqlite3Error(db, SQLITE_BUSY, 
@@ -775,11 +777,11 @@ static int createCollation(
     sqlite3ExpirePreparedStatements(db);
   }
 
-  pColl = sqlite3FindCollSeq(db, (u8)enc, zName, strlen(zName), 1);
+  pColl = sqlite3FindCollSeq(db, (u8)enc2, zName, strlen(zName), 1);
   if( pColl ){
     pColl->xCmp = xCompare;
     pColl->pUser = pCtx;
-    pColl->enc = enc;
+    pColl->enc = enc2 | (enc & SQLITE_UTF16_ALIGNED);
   }
   sqlite3Error(db, SQLITE_OK, 0);
   return SQLITE_OK;
@@ -817,8 +819,9 @@ static int openDatabase(
   ** and UTF-16, so add a version for each to avoid any unnecessary
   ** conversions. The only error that can occur here is a malloc() failure.
   */
-  if( createCollation(db, "BINARY", SQLITE_UTF8, 0,binCollFunc) ||
-      createCollation(db, "BINARY", SQLITE_UTF16, 0,binCollFunc) ||
+  if( createCollation(db, "BINARY", SQLITE_UTF8, 0, binCollFunc) ||
+      createCollation(db, "BINARY", SQLITE_UTF16BE, 0, binCollFunc) ||
+      createCollation(db, "BINARY", SQLITE_UTF16LE, 0, binCollFunc) ||
       (db->pDfltColl = sqlite3FindCollSeq(db, SQLITE_UTF8, "BINARY", 6, 0))==0 
   ){
     assert( sqlite3MallocFailed() );
@@ -1113,3 +1116,116 @@ void sqlite3_thread_cleanup(void){
     sqlite3OsThreadSpecificData(-1);
   }
 }
+
+/*
+** Return meta information about a specific column of a database table.
+** See comment in sqlite3.h (sqlite.h.in) for details.
+*/
+#ifdef SQLITE_ENABLE_COLUMN_METADATA
+int sqlite3_table_column_metadata(
+  sqlite3 *db,                /* Connection handle */
+  const char *zDbName,        /* Database name or NULL */
+  const char *zTableName,     /* Table name */
+  const char *zColumnName,    /* Column name */
+  char const **pzDataType,    /* OUTPUT: Declared data type */
+  char const **pzCollSeq,     /* OUTPUT: Collation sequence name */
+  int *pNotNull,              /* OUTPUT: True if NOT NULL constraint exists */
+  int *pPrimaryKey,           /* OUTPUT: True if column part of PK */
+  int *pAutoinc               /* OUTPUT: True if colums is auto-increment */
+){
+  int rc;
+  char *zErrMsg = 0;
+  Table *pTab = 0;
+  Column *pCol = 0;
+  int iCol;
+
+  char const *zDataType = 0;
+  char const *zCollSeq = 0;
+  int notnull = 0;
+  int primarykey = 0;
+  int autoinc = 0;
+
+  /* Ensure the database schema has been loaded */
+  if( sqlite3SafetyOn(db) ){
+    return SQLITE_MISUSE;
+  }
+  rc = sqlite3Init(db, &zErrMsg);
+  if( SQLITE_OK!=rc ){
+    goto error_out;
+  }
+
+  /* Locate the table in question */
+  pTab = sqlite3FindTable(db, zTableName, zDbName);
+  if( !pTab || pTab->pSelect ){
+    pTab = 0;
+    goto error_out;
+  }
+
+  /* Find the column for which info is requested */
+  if( sqlite3IsRowid(zColumnName) ){
+    iCol = pTab->iPKey;
+    if( iCol>=0 ){
+      pCol = &pTab->aCol[iCol];
+    }
+  }else{
+    for(iCol=0; iCol<pTab->nCol; iCol++){
+      pCol = &pTab->aCol[iCol];
+      if( 0==sqlite3StrICmp(pCol->zName, zColumnName) ){
+        break;
+      }
+    }
+    if( iCol==pTab->nCol ){
+      pTab = 0;
+      goto error_out;
+    }
+  }
+
+  /* The following block stores the meta information that will be returned
+  ** to the caller in local variables zDataType, zCollSeq, notnull, primarykey
+  ** and autoinc. At this point there are two possibilities:
+  ** 
+  **     1. The specified column name was rowid", "oid" or "_rowid_" 
+  **        and there is no explicitly declared IPK column. 
+  **
+  **     2. The table is not a view and the column name identified an 
+  **        explicitly declared column. Copy meta information from *pCol.
+  */ 
+  if( pCol ){
+    zDataType = pCol->zType;
+    zCollSeq = pCol->zColl;
+    notnull = (pCol->notNull?1:0);
+    primarykey  = (pCol->isPrimKey?1:0);
+    autoinc = ((pTab->iPKey==iCol && pTab->autoInc)?1:0);
+  }else{
+    zDataType = "INTEGER";
+    primarykey = 1;
+  }
+  if( !zCollSeq ){
+    zCollSeq = "BINARY";
+  }
+
+error_out:
+  if( sqlite3SafetyOff(db) ){
+    rc = SQLITE_MISUSE;
+  }
+
+  /* Whether the function call succeeded or failed, set the output parameters
+  ** to whatever their local counterparts contain. If an error did occur,
+  ** this has the effect of zeroing all output parameters.
+  */
+  if( pzDataType ) *pzDataType = zDataType;
+  if( pzCollSeq ) *pzCollSeq = zCollSeq;
+  if( pNotNull ) *pNotNull = notnull;
+  if( pPrimaryKey ) *pPrimaryKey = primarykey;
+  if( pAutoinc ) *pAutoinc = autoinc;
+
+  if( SQLITE_OK==rc && !pTab ){
+    sqlite3SetString(&zErrMsg, "no such table column: ", zTableName, ".", 
+        zColumnName, 0);
+    rc = SQLITE_ERROR;
+  }
+  sqlite3Error(db, rc, (zErrMsg?"%s":0), zErrMsg);
+  sqliteFree(zErrMsg);
+  return sqlite3ApiExit(db, rc);
+}
+#endif

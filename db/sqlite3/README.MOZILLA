@@ -1,5 +1,5 @@
 
-This is sqlite 3.3.3
+This is sqlite 3.3.4
 
 See http://www.sqlite.org/ for more info.
 
@@ -13,11 +13,20 @@ we just bring in *.c *.h (including a full sqlite3.h).
 
 To move to a new version:
 
-Update opcodes.c, opcodes.h, parse.c, parse.h, all of which are
+Update opcodes.c, opcodes.h, parse.c, parse.h, and sqlite3.h, all of which are
 normally generated as part of the sqlite build.  Pull these out of the
 sqlite3 windows source .zip, or autoconfiscate and build a tarball and
 copy them out.  Yes, this sucks, but it's better than having to build
 the parser and all that goop as part of our build.
+
+If you do a configure, you may want to --disable-tcl because the tcl
+part may not work on all systems.
+
+You will also need to apply sqlite3-param-indexes.patch.
+
+They you need to update sqlite3file.h, which pulls out random bits of the
+internal files that we need to export. If any of these internal structures
+change, they need to be changed in sqlite3file.h as well.
 
 -- Vlad Vukicevic <vladimir@pobox.com> 02/2006
 

@@ -12,7 +12,7 @@
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.
 **
-** @(#) $Id: sqlite.h.in,v 1.156 2006/01/12 02:50:10 drh Exp $
+** @(#) $Id: sqlite.h.in,v 1.163 2006/02/16 18:16:37 drh Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -31,7 +31,7 @@ extern "C" {
 #ifdef SQLITE_VERSION
 # undef SQLITE_VERSION
 #endif
-#define SQLITE_VERSION         "3.3.3"
+#define SQLITE_VERSION         "3.3.4"
 
 /*
 ** The format of the version string is "X.Y.Z<trailing string>", where
@@ -48,7 +48,7 @@ extern "C" {
 #ifdef SQLITE_VERSION_NUMBER
 # undef SQLITE_VERSION_NUMBER
 #endif
-#define SQLITE_VERSION_NUMBER 3003003
+#define SQLITE_VERSION_NUMBER 3003004
 
 /*
 ** The version string is also compiled into the library so that a program
@@ -164,6 +164,7 @@ int sqlite3_exec(
 ** Return values for sqlite3_exec() and sqlite3_step()
 */
 #define SQLITE_OK           0   /* Successful result */
+/* beginning-of-error-codes */
 #define SQLITE_ERROR        1   /* SQL error or missing database */
 #define SQLITE_INTERNAL     2   /* NOT USED. Internal logic error in SQLite */
 #define SQLITE_PERM         3   /* Access permission denied */
@@ -192,7 +193,7 @@ int sqlite3_exec(
 #define SQLITE_NOTADB      26   /* File opened that is not a database file */
 #define SQLITE_ROW         100  /* sqlite3_step() has another row ready */
 #define SQLITE_DONE        101  /* sqlite3_step() has finished executing */
-/* end-of-return-codes */
+/* end-of-error-codes */
 
 /*
 ** Each entry in an SQLite table has a unique integer key.  (The key is
@@ -725,6 +726,30 @@ const char *sqlite3_column_name(sqlite3_stmt*,int);
 const void *sqlite3_column_name16(sqlite3_stmt*,int);
 
 /*
+** The first parameter to the following calls is a compiled SQL statement.
+** These functions return information about the Nth column returned by 
+** the statement, where N is the second function argument.
+**
+** If the Nth column returned by the statement is not a column value,
+** then all of the functions return NULL. Otherwise, the return the 
+** name of the attached database, table and column that the expression
+** extracts a value from.
+**
+** As with all other SQLite APIs, those postfixed with "16" return UTF-16
+** encoded strings, the other functions return UTF-8. The memory containing
+** the returned strings is valid until the statement handle is finalized().
+**
+** These APIs are only available if the library was compiled with the 
+** SQLITE_ENABLE_COLUMN_METADATA preprocessor symbol defined.
+*/
+const char *sqlite3_column_database_name(sqlite3_stmt*,int);
+const void *sqlite3_column_database_name16(sqlite3_stmt*,int);
+const char *sqlite3_column_table_name(sqlite3_stmt*,int);
+const void *sqlite3_column_table_name16(sqlite3_stmt*,int);
+const char *sqlite3_column_origin_name(sqlite3_stmt*,int);
+const void *sqlite3_column_origin_name16(sqlite3_stmt*,int);
+
+/*
 ** The first parameter is a compiled SQL statement. If this statement
 ** is a SELECT statement, the Nth column of the returned result set 
 ** of the SELECT is a table column then the declared type of the table
@@ -736,7 +761,7 @@ const void *sqlite3_column_name16(sqlite3_stmt*,int);
 **
 ** And the following statement compiled:
 **
-** SELECT c1 + 1, 0 FROM t1;
+** SELECT c1 + 1, c1 FROM t1;
 **
 ** Then this routine would return the string "VARIANT" for the second
 ** result column (i==1), and a NULL pointer for the first result column
@@ -756,7 +781,7 @@ const char *sqlite3_column_decltype(sqlite3_stmt *, int i);
 **
 ** And the following statement compiled:
 **
-** SELECT c1 + 1, 0 FROM t1;
+** SELECT c1 + 1, c1 FROM t1;
 **
 ** Then this routine would return the string "INTEGER" for the second
 ** result column (i==1), and a NULL pointer for the first result column
@@ -897,6 +922,7 @@ sqlite_int64 sqlite3_column_int64(sqlite3_stmt*, int iCol);
 const unsigned char *sqlite3_column_text(sqlite3_stmt*, int iCol);
 const void *sqlite3_column_text16(sqlite3_stmt*, int iCol);
 int sqlite3_column_type(sqlite3_stmt*, int iCol);
+int sqlite3_column_numeric_type(sqlite3_stmt*, int iCol);
 
 /*
 ** The sqlite3_finalize() function is called to delete a compiled
@@ -980,9 +1006,8 @@ int sqlite3_create_function16(
 );
 
 /*
-** The next routine returns the number of calls to xStep for a particular
-** aggregate function instance.  The current call to xStep counts so this
-** routine always returns at least 1.
+** This function is deprecated.  Do not use it.  It continues to exist
+** so as not to break legacy code.  But new code should avoid using it.
 */
 int sqlite3_aggregate_count(sqlite3_context*);
 
@@ -1005,6 +1030,7 @@ const void *sqlite3_value_text16(sqlite3_value*);
 const void *sqlite3_value_text16le(sqlite3_value*);
 const void *sqlite3_value_text16be(sqlite3_value*);
 int sqlite3_value_type(sqlite3_value*);
+int sqlite3_value_numeric_type(sqlite3_value*);
 
 /*
 ** Aggregate functions use the following routine to allocate
@@ -1088,11 +1114,12 @@ void sqlite3_result_value(sqlite3_context*, sqlite3_value*);
 ** These are the allowed values for the eTextRep argument to
 ** sqlite3_create_collation and sqlite3_create_function.
 */
-#define SQLITE_UTF8    1
-#define SQLITE_UTF16LE 2
-#define SQLITE_UTF16BE 3
-#define SQLITE_UTF16   4    /* Use native byte order */
-#define SQLITE_ANY     5    /* sqlite3_create_function only */
+#define SQLITE_UTF8           1
+#define SQLITE_UTF16LE        2
+#define SQLITE_UTF16BE        3
+#define SQLITE_UTF16          4    /* Use native byte order */
+#define SQLITE_ANY            5    /* sqlite3_create_function only */
+#define SQLITE_UTF16_ALIGNED  8    /* sqlite3_create_collation only */
 
 /*
 ** These two functions are used to add new collation sequences to the
@@ -1368,6 +1395,75 @@ void sqlite3_soft_heap_limit(int);
 ** prior to killing off a thread.
 */
 void sqlite3_thread_cleanup(void);
+
+/*
+** Return meta information about a specific column of a specific database
+** table accessible using the connection handle passed as the first function 
+** argument.
+**
+** The column is identified by the second, third and fourth parameters to 
+** this function. The second parameter is either the name of the database
+** (i.e. "main", "temp" or an attached database) containing the specified
+** table or NULL. If it is NULL, then all attached databases are searched
+** for the table using the same algorithm as the database engine uses to 
+** resolve unqualified table references.
+**
+** The third and fourth parameters to this function are the table and column 
+** name of the desired column, respectively. Neither of these parameters 
+** may be NULL.
+**
+** Meta information is returned by writing to the memory locations passed as
+** the 5th and subsequent parameters to this function. Any of these 
+** arguments may be NULL, in which case the corresponding element of meta 
+** information is ommitted.
+**
+** Parameter     Output Type      Description
+** -----------------------------------
+**
+**   5th         const char*      Data type
+**   6th         const char*      Name of the default collation sequence 
+**   7th         int              True if the column has a NOT NULL constraint
+**   8th         int              True if the column is part of the PRIMARY KEY
+**   9th         int              True if the column is AUTOINCREMENT
+**
+**
+** The memory pointed to by the character pointers returned for the 
+** declaration type and collation sequence is valid only until the next 
+** call to any sqlite API function.
+**
+** If the specified table is actually a view, then an error is returned.
+**
+** If the specified column is "rowid", "oid" or "_rowid_" and an 
+** INTEGER PRIMARY KEY column has been explicitly declared, then the output 
+** parameters are set for the explicitly declared column. If there is no
+** explicitly declared IPK column, then the output parameters are set as 
+** follows:
+**
+**     data type: "INTEGER"
+**     collation sequence: "BINARY"
+**     not null: 0
+**     primary key: 1
+**     auto increment: 0
+**
+** This function may load one or more schemas from database files. If an
+** error occurs during this process, or if the requested table or column
+** cannot be found, an SQLITE error code is returned and an error message
+** left in the database handle (to be retrieved using sqlite3_errmsg()).
+**
+** This API is only available if the library was compiled with the
+** SQLITE_ENABLE_COLUMN_METADATA preprocessor symbol defined.
+*/
+int sqlite3_table_column_metadata(
+  sqlite3 *db,                /* Connection handle */
+  const char *zDbName,        /* Database name or NULL */
+  const char *zTableName,     /* Table name */
+  const char *zColumnName,    /* Column name */
+  char const **pzDataType,    /* OUTPUT: Declared data type */
+  char const **pzCollSeq,     /* OUTPUT: Collation sequence name */
+  int *pNotNull,              /* OUTPUT: True if NOT NULL constraint exists */
+  int *pPrimaryKey,           /* OUTPUT: True if column part of PK */
+  int *pAutoinc               /* OUTPUT: True if colums is auto-increment */
+);
 
 /*
 ** Undo the hack that converts floating point types to integer for
