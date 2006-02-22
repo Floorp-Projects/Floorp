@@ -859,9 +859,12 @@ nsNSSCertificate::GetRawDER(PRUint32 *aLength, PRUint8 **aArray)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (mCert) {
-    *aArray = (PRUint8 *)mCert->derCert.data;
-    *aLength = mCert->derCert.len;
-    return NS_OK;
+    *aArray = (PRUint8*)nsMemory::Alloc(mCert->derCert.len);
+    if (*aArray) {
+      memcpy(*aArray, mCert->derCert.data, mCert->derCert.len);
+      *aLength = mCert->derCert.len;
+      return NS_OK;
+    }
   }
   *aLength = 0;
   return NS_ERROR_FAILURE;

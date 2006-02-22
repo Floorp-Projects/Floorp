@@ -351,6 +351,10 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nsnull, PR_FALSE, PR_TRUE);
   }
+  nsMemory::Free(der.data);
+  der.data = nsnull;
+  der.len = 0;
+  
   if (!tmpCert) {
     NS_ERROR("Couldn't create cert from DER blob\n");
     return NS_ERROR_FAILURE;
@@ -422,6 +426,10 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
 
     CERTCertificate *tmpCert2 = 
       CERT_NewTempCertificate(certdb, &der, nsnull, PR_FALSE, PR_TRUE);
+
+    nsMemory::Free(der.data);
+    der.data = nsnull;
+    der.len = 0;
 
     if (!tmpCert2) {
       NS_ASSERTION(0, "Couldn't create temp cert from DER blob\n");
@@ -1605,6 +1613,9 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   if (!tmpCert) 
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nsnull, PR_FALSE, PR_TRUE);
+  nsMemory::Free(der.data);
+  der.data = nsnull;
+  der.len = 0;
 
   if (!tmpCert) {
     NS_ASSERTION(0,"Couldn't create cert from DER blob\n");
