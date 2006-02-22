@@ -1210,7 +1210,7 @@ return_wrapper:
                 (XPCWrappedNative*) JS_GetPrivate(cx, cur);
             if(proto && proto != wrapper->GetProto() &&
                (proto->GetScope() != wrapper->GetScope() ||
-                !protoClassInfo ||
+                !protoClassInfo || !wrapper->GetProto() ||
                 protoClassInfo != wrapper->GetProto()->GetClassInfo()))
                 continue;
             if(pobj2)
@@ -1225,7 +1225,7 @@ return_tearoff:
                 (XPCWrappedNative*) JS_GetPrivate(cx, JS_GetParent(cx,cur));
             if(proto && proto != wrapper->GetProto() &&
                (proto->GetScope() != wrapper->GetScope() ||
-                !protoClassInfo ||
+                !protoClassInfo || !wrapper->GetProto() ||
                 protoClassInfo != wrapper->GetProto()->GetClassInfo()))
                 continue;
             if(pobj2)
