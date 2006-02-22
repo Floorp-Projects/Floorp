@@ -9,6 +9,8 @@ class nsSystemFontsGTK2
 public:
     nsSystemFontsGTK2(float aPixelsToTwips);
 
+    nsresult GetSystemFont(nsSystemFontID anID, nsFont *aFont) const;
+
     const nsFont& GetDefaultFont() { return mDefaultFont; }
     const nsFont& GetMenuFont() { return mMenuFont; }
     const nsFont& GetFieldFont() { return mFieldFont; }

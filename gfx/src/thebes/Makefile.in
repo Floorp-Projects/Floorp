@@ -97,14 +97,8 @@ EXTRA_DSO_LIBS	= gkgfx thebes
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
 
-ifdef MOZ_ENABLE_PANGO
-#CPPSRCS         += nsFontMetricsPango.cpp \
-#                   mozilla-decoder.cpp \
-#                   $(NULL)
-endif
-
 ifdef MOZ_ENABLE_GLITZ
-REQUIRES            += glitzglx
+REQUIRES        += glitzglx
 endif
 
 endif
@@ -117,6 +111,14 @@ REQUIRES        += glitzwgl
 
 _OS_LIBS	= usp10
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+endif
+
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+CPPSRCS          += nsSystemFontsMac.cpp
+ ifdef MOZ_ENABLE_GLITZ
+  REQUIRES         += glitzagl
+  EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
+ endif
 endif
 
 EXPORTS		+= nsIThebesRenderingContext.h

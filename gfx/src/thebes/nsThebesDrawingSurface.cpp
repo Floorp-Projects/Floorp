@@ -141,10 +141,8 @@ nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC,
         return rv;
 
     mSurface = imgSurf;
-#elif XP_WIN
-    // XXX writeme
 #else
-#error Write me!
+    NS_ERROR ("nsThebesDrawingSurface init from black/white pixmaps; either implement this or fix the caller");
 #endif
 
     return NS_OK;

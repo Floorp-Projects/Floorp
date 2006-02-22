@@ -59,11 +59,6 @@
 #include <pango/pango.h>
 #include <pango/pangox.h>
 #include <pango/pango-fontmap.h>
-
-
-#ifdef MOZ_ENABLE_GLITZ
-#include "glitz-glx.h"
-#endif /* GLITZ */
 #endif /* GTK2 */
 
 #ifdef MOZ_ENABLE_GTK2
@@ -77,6 +72,9 @@ static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #include "gfxWindowsSurface.h"
 static nsSystemFontsWin *gSystemFonts = nsnull;
 #include <Usp10.h>
+#elif XP_MACOSX
+#include "nsSystemFontsMac.h"
+static nsSystemFontsMac *gSystemFonts = nsnull;
 #else
 #error Need to declare gSystemFonts!
 #endif
@@ -388,49 +386,14 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
         gSystemFonts = new nsSystemFontsGTK2(mPixelsToTwips);
 #elif XP_WIN
         gSystemFonts = new nsSystemFontsWin(mPixelsToTwips);
+#elif XP_MACOSX
+        gSystemFonts = new nsSystemFontsMac(mPixelsToTwips);
 #else
 #error Need to know how to create gSystemFonts, fix me!
 #endif
     }
 
-#ifdef XP_WIN
-    gSystemFonts->GetSystemFont(aID, aFont);
-    return NS_OK;
-
-#else
-    switch (aID) {
-    case eSystemFont_Menu:         // css2
-    case eSystemFont_PullDownMenu: // css3
-        *aFont = gSystemFonts->GetMenuFont();
-        break;
-
-    case eSystemFont_Field:        // css3
-    case eSystemFont_List:         // css3
-        *aFont = gSystemFonts->GetFieldFont();
-        break;
-
-    case eSystemFont_Button:       // css3
-        *aFont = gSystemFonts->GetButtonFont();
-        break;
-
-    case eSystemFont_Caption:      // css2
-    case eSystemFont_Icon:         // css2
-    case eSystemFont_MessageBox:   // css2
-    case eSystemFont_SmallCaption: // css2
-    case eSystemFont_StatusBar:    // css2
-    case eSystemFont_Window:       // css3
-    case eSystemFont_Document:     // css3
-    case eSystemFont_Workspace:    // css3
-    case eSystemFont_Desktop:      // css3
-    case eSystemFont_Info:         // css3
-    case eSystemFont_Dialog:       // css3
-    case eSystemFont_Tooltips:     // moz
-    case eSystemFont_Widget:       // moz
-        *aFont = gSystemFonts->GetDefaultFont();
-        break;
-    }
-#endif
-    return status;
+    return gSystemFonts->GetSystemFont(aID, aFont);
 }
 
 NS_IMETHODIMP
@@ -757,6 +720,10 @@ nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
         return;
     }
 
+#endif
+
+#ifdef XP_MACOSX
+    // ???
 #endif
 
     mScreenManager->GetPrimaryScreen(outScreen);

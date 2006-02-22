@@ -139,7 +139,13 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mWidget = aWidget;
 
     mLocalDrawingSurface = new nsThebesDrawingSurface();
-    mLocalDrawingSurface->Init(thebesDC, aWidget);
+
+    nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
+    if (surface) {
+        mLocalDrawingSurface->Init(thebesDC, surface);
+    } else {
+        mLocalDrawingSurface->Init(thebesDC, aWidget);
+    }
     mDrawingSurface = mLocalDrawingSurface;
 
     mThebes = new gfxContext(mLocalDrawingSurface->GetThebesSurface());
@@ -839,7 +845,11 @@ nsThebesRenderingContext::DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
 NS_IMETHODIMP
 nsThebesRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
+#ifndef XP_MACOSX
     *aUseBackbuffer = PR_TRUE;
+#else
+    *aUseBackbuffer = PR_FALSE;
+#endif
     return NS_OK;
 }
 

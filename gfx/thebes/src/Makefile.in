@@ -56,6 +56,14 @@ CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS)
 endif
 
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+CPPSRCS	+= 	gfxQuartzSurface.cpp gfxPlatformMac.cpp gfxAtsuiFonts.cpp
+#CPPSRCS +=	gfxPDFSurface.cpp
+
+# Always link with OpenGL/AGL
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL
+endif
+
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += 	glitz
 CPPSRCS +=	gfxGlitzSurface.cpp
@@ -65,6 +73,11 @@ SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 REQUIRES +=	glitzglx
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
+endif
+
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+REQUIRES +=	glitzagl
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzagl.$(LIB_SUFFIX)
 endif
 endif
 

@@ -161,3 +161,19 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
     return PR_TRUE;
 }
 
+void
+gfxFontStyle::ComputeWeightAndOffset (const PRUint16 inWeight, PRInt16 *outBaseWeight, PRInt16 *outOffset)
+{
+    PRInt16 baseWeight = (inWeight + 50) / 100;
+    PRInt16 offset = inWeight - baseWeight * 100;
+
+    if (baseWeight < 0)
+        baseWeight = 0;
+    if (baseWeight > 9)
+        baseWeight = 9;
+
+    if (outBaseWeight)
+        *outBaseWeight = baseWeight;
+    if (outOffset)
+        *outOffset = offset;
+}

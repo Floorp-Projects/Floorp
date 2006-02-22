@@ -42,7 +42,6 @@
 #include "nsString.h"
 #include "nsAutoBuffer.h"
 #include <stdio.h>
-#include <malloc.h>
 
 NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
@@ -52,6 +51,8 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 #include "gfxWindowsFonts.h"
 #elif defined(MOZ_ENABLE_GTK2)
 #include "gfxPangoFonts.h"
+#elif defined(XP_MACOSX)
+#include "gfxAtsuiFonts.h"
 #endif
 
 nsThebesFontMetrics::nsThebesFontMetrics()
@@ -97,6 +98,8 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HDC)mDeviceContext->GetHDC());
 #elif defined(MOZ_ENABLE_GTK2)
     mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
+#elif defined(XP_MACOSX)
+    mFontGroup = new gfxAtsuiFontGroup(aFont.name, mFontStyle);
 #else
 #error implement me
 #endif
