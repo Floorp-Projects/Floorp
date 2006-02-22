@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir SVRCORE_LIBS PKG_CONFIG SVRCORE_CFLAGS NSS_CFLAGS NSS_LIBS NSS_CONFIG NSPR_CFLAGS NSPR_LIBS NSPR_CONFIG LIBS_ALREADY_SET WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP HAVE_MSVC_LIB SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os CC dist_prefix dist_bindir dist_libdir SVRCORE_LIBS PKG_CONFIG SVRCORE_CFLAGS NSS_CFLAGS NSS_LIBS NSS_CONFIG NSPR_CFLAGS NSPR_LIBS NSPR_CONFIG LIBS_ALREADY_SET WHOAMI CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CFLAGS ac_ct_CC CPP RANLIB ac_ct_RANLIB AS AR LD STRIP WINDRES HOST_CC PERL EGREP HAVE_MSVC_LIB SHELL_OVERRIDE MOZILLA_CLIENT HOST_CFLAGS GNU_CC CROSS_COMPILE MOZ_OPTIMIZE USE_CPLUS USE_IPV6 USE_N32 USE_64 OBJECT_MODE GC_LEAK_DETECTOR ENABLE_STRIP USE_PTHREADS USE_BTHREADS USE_USER_PTHREADS USE_NATIVE_THREADS USE_NSPR_THREADS USE_NSS CPU_ARCH OBJ_SUFFIX LIB_SUFFIX LIB_PREFIX DLL_SUFFIX ASM_SUFFIX PROG_SUFFIX MKSHLIB DSO_CFLAGS DSO_LDOPTS OS_TARGET OS_ARCH OS_RELEASE OS_TEST DEFINES AR_FLAGS ASFLAGS FILTER IMPLIB OS_LIBS RESOLVE_LINK_SYMBOLS NOSUCHFILE MOZ_OBJFORMAT ULTRASPARC_LIBRARY ULTRASPARC_FILTER_LIBRARY OBJDIR OBJDIR_NAME NSINSTALL OPTIMIZER RC DLLFLAGS EXEFLAGS OS_DLLFLAGS CYGWIN_WRAPPER WIN_TOP_SRC NEXT_ROOT LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -894,6 +894,7 @@ Optional Packages:
   --with-nspr-prefix=PFX  Prefix where NSPR is installed
   --with-nspr-exec-prefix=PFX
                           Exec prefix where NSPR is installed
+  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)
   --with-pthreads         Use system pthreads library as thread subsystem
   --with-bthreads         Use system bthreads library as thread subsystem (BeOS only)
   --with-native-threads   Use native system threads as thread subsystem (Solaris only)
@@ -4720,65 +4721,18 @@ echo "${ECHO_T}$HOST_CC" >&6
 	    HOST_LDFLAGS="$LDFLAGS"
     fi
 
-    CC="$HOST_CC"
-    CFLAGS="$HOST_CFLAGS"
-    LDFLAGS="$HOST_LDFLAGS"
-
-    echo "$as_me:$LINENO: checking whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works" >&5
-echo $ECHO_N "checking whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works... $ECHO_C" >&6
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-int
-main ()
-{
-return(0);
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_prog_host_cc_works=1 echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-{ { echo "$as_me:$LINENO: error: installation or configuration problem: $host compiler $HOST_CC cannot create executables." >&5
-echo "$as_me: error: installation or configuration problem: $host compiler $HOST_CC cannot create executables." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-
     CC=$_SAVE_CC
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+                                                _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXLAGS
+        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
+        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
+        ;;
+    esac
 
     for ac_prog in $CC "${target_alias}-gcc" "${target}-gcc"
 do
@@ -5948,6 +5902,14 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+                                CFLAGS=$_SAVE_CFLAGS
+        CXXFLAGS=$_SAVE_CXXFLAGS
+        ;;
+    esac
+
     for ac_prog in $RANLIB "${target_alias}-ranlib" "${target}-ranlib"
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -6207,6 +6169,12 @@ if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
 fi
 rm -f a.out
 
+case "$build:$target" in
+    i?86-apple-darwin*:powerpc-apple-darwin*)
+                                cross_compiling=yes
+        ;;
+esac
+
 if test "$cross_compiling"  = "yes"; then
     CROSS_COMPILE=1
 else
@@ -6228,7 +6196,8 @@ if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
     if test "$_res_as_stdin" = "yes"; then
         _SAVE_CFLAGS=$CFLAGS
         CFLAGS="$CFLAGS -pipe"
-        cat >conftest.$ac_ext <<_ACEOF
+
+cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -6360,6 +6329,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)     OS_ARCH=WINNT ;;
+        darwin*)    OS_ARCH=Darwin ;;
     esac
 else
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -6500,6 +6470,13 @@ fi
 if test "$OS_TARGET" = "WIN16"; then
     OS_RELEASE=
 fi
+
+
+# Check whether --with-macos-sdk or --without-macos-sdk was given.
+if test "${with_macos_sdk+set}" = set; then
+  withval="$with_macos_sdk"
+  MACOS_SDK_DIR=$withval
+fi;
 
 
 case "$host" in
@@ -7282,26 +7259,83 @@ _ACEOF
 _ACEOF
 
     CFLAGS="$CFLAGS -Wmost -fno-common"
-    if echo $OS_TEST | grep -c 86 2>/dev/null; then
-        cat >>confdefs.h <<\_ACEOF
+    case "${target_cpu}" in
+        i*86*)
+            cat >>confdefs.h <<\_ACEOF
 #define i386 1
 _ACEOF
 
-        CPU_ARCH=i386
-    else
-        cat >>confdefs.h <<\_ACEOF
+            CPU_ARCH=i386
+            ;;
+        *)
+            cat >>confdefs.h <<\_ACEOF
 #define ppc 1
 _ACEOF
 
-        CPU_ARCH=ppc
-    fi
+            CPU_ARCH=ppc
+            ;;
+    esac
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@'
     # Use the standard preprocessor (cpp)
     CFLAGS="$CFLAGS -no-cpp-precomp"
-    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     STRIP="$STRIP -x -S"
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
+
+
+    if test "$MACOS_SDK_DIR"; then
+                if test ! -d "$MACOS_SDK_DIR"; then
+            { { echo "$as_me:$LINENO: error: SDK not found.  When using --with-macos-sdk, you must
+specify a valid SDK.  SDKs are installed when the optional cross-development
+tools are selected during the Xcode/Developer Tools installation." >&5
+echo "$as_me: error: SDK not found.  When using --with-macos-sdk, you must
+specify a valid SDK.  SDKs are installed when the optional cross-development
+tools are selected during the Xcode/Developer Tools installation." >&2;}
+   { (exit 1); exit 1; }; }
+        fi
+
+
+        CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
+        GCC_VERSION_FULL=`echo $CC_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
+        GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
+
+        GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
+        if test "$GCC_VERSION_MAJOR" -lt "4" ; then
+            SDK_C_FRAMEWORK="-F${MACOS_SDK_DIR}/System/Library/Frameworks"
+            if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
+                SDK_C_FRAMEWORK="$SDK_C_FRAMEWORK -F${MACOS_SDK_DIR}/Library/Frameworks"
+            fi
+
+            SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include ${SDK_C_FRAMEWORK}"
+
+            CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
+
+                        CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
+
+                                                                                                                                    MACOS_SDK_LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib ${SDK_C_FRAMEWORK}"
+            LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
+            DSO_LDOPTS="${MACOS_SDK_LIBS} $DSO_LDOPTS"
+            export NEXT_ROOT=$MACOS_SDK_DIR
+
+            if test -n "$CROSS_COMPILE" ; then
+                                                                HOST_CC="NEXT_ROOT= $HOST_CC"
+                HOST_CXX="NEXT_ROOT= $HOST_CXX"
+            fi
+        else
+                                    CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+
+                        CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+
+                                                                                                if test "$GCC_VERSION_FULL" != "4.0.0" ; then
+                                                LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
+                DSO_LDOPTS="$DSO_LDOPTS -isysroot ${MACOS_SDK_DIR}"
+            else
+                                                LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
+                DSO_LDOPTS="$DSO_LDOPTS -Wl,-syslibroot,${MACOS_SDK_DIR}"
+            fi
+        fi
+    fi
     ;;
 
 *-dgux*)
@@ -9746,6 +9780,7 @@ esac
 
 
 
+
 MAKEFILES="
 Makefile
 config/Makefile
@@ -10503,6 +10538,7 @@ s,@EXEFLAGS@,$EXEFLAGS,;t t
 s,@OS_DLLFLAGS@,$OS_DLLFLAGS,;t t
 s,@CYGWIN_WRAPPER@,$CYGWIN_WRAPPER,;t t
 s,@WIN_TOP_SRC@,$WIN_TOP_SRC,;t t
+s,@NEXT_ROOT@,$NEXT_ROOT,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

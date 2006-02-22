@@ -600,18 +600,23 @@ else
 	    HOST_LDFLAGS="$LDFLAGS"
     fi
 
-    CC="$HOST_CC"
-    CFLAGS="$HOST_CFLAGS"
-    LDFLAGS="$HOST_LDFLAGS"
-
-    AC_MSG_CHECKING([whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);], 
-	[ac_cv_prog_host_cc_works=1 AC_MSG_RESULT([yes])],
-	AC_MSG_ERROR([installation or configuration problem: $host compiler $HOST_CC cannot create executables.]) )
-    
     CC=$_SAVE_CC
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
+
+    case "$build:$target" in 
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl The Darwin cross compiler doesn't necessarily point itself at a
+        dnl root that has libraries for the proper architecture, it defaults
+        dnl to the system root.  The libraries in the system root on current
+        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
+        dnl checks will fail.  Fake a working SDK in that case.
+        _SAVE_CFLAGS=$CFLAGS 
+        _SAVE_CXXFLAGS=$CXXLAGS
+        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
+        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
+        ;;        
+    esac            
 
     AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
     unset ac_cv_prog_CC
@@ -619,6 +624,17 @@ else
     AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", echo)
     unset ac_cv_prog_CXX
     AC_PROG_CXX
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl Revert the changes made above.  From this point on, the target
+        dnl compiler will never be used without applying the SDK to CFLAGS
+        dnl (see --with-macos-sdk below).
+        CFLAGS=$_SAVE_CFLAGS
+        CXXFLAGS=$_SAVE_CXXFLAGS
+        ;;
+    esac
+
     AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", echo)
     AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", echo)
     AC_CHECK_PROGS(AS, $AS "${target_alias}-as" "${target}-as", echo)
@@ -637,6 +653,15 @@ if test "`echo | $AS -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
 rm -f a.out
+
+case "$build:$target" in
+    i?86-apple-darwin*:powerpc-apple-darwin*)
+        dnl cross_compiling will have erroneously been set to "no" in this
+        dnl case, because the x86 build host is able to run ppc code in a
+        dnl translated environment, making a cross compiler appear native.
+        cross_compiling=yes
+        ;;
+esac
 
 if test "$cross_compiling"  = "yes"; then
     CROSS_COMPILE=1
@@ -712,6 +737,7 @@ if test -n "$CROSS_COMPILE"; then
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)     OS_ARCH=WINNT ;;
+        darwin*)    OS_ARCH=Darwin ;;
     esac
 else
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -852,6 +878,13 @@ fi
 if test "$OS_TARGET" = "WIN16"; then
     OS_RELEASE=
 fi
+
+dnl ========================================================
+dnl = Mac OS X SDK support
+dnl ========================================================
+AC_ARG_WITH(macos-sdk,
+    [  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
+    MACOS_SDK_DIR=$withval)
 
 dnl ========================================================
 
@@ -1029,20 +1062,105 @@ case "$target" in
     AC_DEFINE(DARWIN)
     AC_DEFINE(HAVE_BSD_FLOCK)
     CFLAGS="$CFLAGS -Wmost -fno-common"
-    if echo $OS_TEST | grep -c 86 2>/dev/null; then
-        AC_DEFINE(i386)
-        CPU_ARCH=i386
-    else
-        AC_DEFINE(ppc)
-        CPU_ARCH=ppc
-    fi
+    case "${target_cpu}" in
+        i*86*)
+            AC_DEFINE(i386)
+            CPU_ARCH=i386
+            ;;
+        *)
+            AC_DEFINE(ppc)
+            CPU_ARCH=ppc
+            ;;
+    esac
     DSO_LDOPTS='-dynamiclib -compatibility_version 1 -current_version 1 -all_load -install_name @executable_path/$@'
     # Use the standard preprocessor (cpp)
     CFLAGS="$CFLAGS -no-cpp-precomp"
-    MKSHLIB='$(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
     STRIP="$STRIP -x -S"
     DLL_SUFFIX=dylib
     USE_PTHREADS=1
+
+    dnl MACOS_SDK_DIR will be set to the SDK location whenever one is
+    dnl in use.  NEXT_ROOT will be set and exported if it's needed for
+    dnl ld.
+
+    if test "$MACOS_SDK_DIR"; then
+        dnl Sync this section with the one in Mozilla's top level.
+        if test ! -d "$MACOS_SDK_DIR"; then
+            AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
+specify a valid SDK.  SDKs are installed when the optional cross-development
+tools are selected during the Xcode/Developer Tools installation.])
+        fi
+
+        changequote(,)
+        CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
+        GCC_VERSION_FULL=`echo $CC_VERSION | $PERL -pe 's/^.*gcc version ([^ ]*).*/$1/'`
+        GCC_VERSION=`echo $GCC_VERSION_FULL | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/$1/;'`
+        changequote([,])
+        GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
+        if test "$GCC_VERSION_MAJOR" -lt "4" ; then
+            SDK_C_FRAMEWORK="-F${MACOS_SDK_DIR}/System/Library/Frameworks"
+            if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
+                SDK_C_FRAMEWORK="$SDK_C_FRAMEWORK -F${MACOS_SDK_DIR}/Library/Frameworks"
+            fi
+
+            SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include ${SDK_C_FRAMEWORK}"
+
+            CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
+
+            dnl CPP needs to be set for AC_CHECK_HEADER.
+            CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
+
+            dnl ld support for -syslibroot is compiler-agnostic, but only
+            dnl available on Tiger.  Although it's possible to switch on
+            dnl the build host's OS release to use ld -syslibroot when
+            dnl available, ld -syslibroot cause warnings as long as
+            dnl NEXT_ROOT is set.  NEXT_ROOT should be set because both
+            dnl both the compiler and linker use it.
+            dnl
+            dnl LDFLAGS is for the utilities built in config (now and
+            dnl nsinstall).  DSO_LDOPTS is used when linking shared
+            dnl libraries.
+            MACOS_SDK_LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib ${SDK_C_FRAMEWORK}"
+            LDFLAGS="${MACOS_SDK_LIBS} $LDFLAGS"
+            DSO_LDOPTS="${MACOS_SDK_LIBS} $DSO_LDOPTS"
+            export NEXT_ROOT=$MACOS_SDK_DIR
+
+            if test -n "$CROSS_COMPILE" ; then
+                dnl NEXT_ROOT will be in the environment, but it
+                dnl shouldn't be set for the build host.  HOST_CXX is
+                dnl presently unused.
+                HOST_CC="NEXT_ROOT= $HOST_CC"
+                HOST_CXX="NEXT_ROOT= $HOST_CXX"
+            fi
+        else
+            dnl gcc >= 4.0 uses different paths than above, but knows
+            dnl how to find them itself.
+            CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+
+            dnl CPP needs to be set for AC_CHECK_HEADER.
+            CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+
+            dnl If gcc >= 4.0.0, we're guaranteed to be on Tiger, which
+            dnl has an ld that supports -syslibroot.  Don't set
+            dnl NEXT_ROOT because it will be ignored and cause
+            dnl warnings when -syslibroot is specified.
+            dnl
+            dnl Both LDFLAGS and DSO_LDOPTS are set here, see the
+            dnl gcc < 4.0 case for the explanation.
+            if test "$GCC_VERSION_FULL" != "4.0.0" ; then
+                dnl gcc > 4.0.0 will pass -syslibroot to ld automatically
+                dnl based on the -isysroot it receives.
+                LDFLAGS="$LDFLAGS -isysroot ${MACOS_SDK_DIR}"
+                DSO_LDOPTS="$DSO_LDOPTS -isysroot ${MACOS_SDK_DIR}"
+            else
+                dnl gcc 4.0.0 doesn't pass -syslibroot to ld, it needs
+                dnl to be explicit.
+                LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
+                DSO_LDOPTS="$DSO_LDOPTS -Wl,-syslibroot,${MACOS_SDK_DIR}"
+            fi
+        fi
+    fi
     ;;
 
 *-dgux*)
@@ -2412,6 +2530,7 @@ AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
 AC_SUBST(CYGWIN_WRAPPER)
 AC_SUBST(WIN_TOP_SRC)
+AC_SUBST(NEXT_ROOT)
 
 dnl ========================================================
 dnl Generate output files.
