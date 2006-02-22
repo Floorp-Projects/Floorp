@@ -928,6 +928,19 @@ XPC_NW_CheckAccess(JSContext *cx, JSObject *obj, jsval id,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_NW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+  if (!XPCNativeWrapper::IsNativeWrapper(cx, obj)) {
+    // If obj is not an XPCNativeWrapper, then someone's probably trying to call
+    // our prototype (i.e., XPCNativeWrapper.prototype()). In this case, it is
+    // safe to simply ignore the call, since that's what would happen anyway.
+
+#ifdef DEBUG
+    if (!JS_ObjectIsFunction(cx, obj)) {
+      NS_WARNING("Ignoring a call for a weird object");
+    }
+#endif
+    return JS_TRUE;
+  }
+
   XPC_NW_BYPASS_TEST(cx, obj, call, (cx, obj, argc, argv, rval));
 
   return JS_TRUE;
