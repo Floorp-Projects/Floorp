@@ -4163,7 +4163,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
         return JS_FALSE;
     ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
     LAST_FRAME_CHECKS(cx, ok);
-    return JS_TRUE;
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
