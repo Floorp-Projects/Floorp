@@ -1,5 +1,6 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+// vim:cindent:ts=8:et:sw=4:
+/*
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,6 +56,8 @@ xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj, JSObject *parent)
     JSObject *clone = JS_CloneFunctionObject(ccx, funobj, parent);
     if(!clone)
         return nsnull;
+
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(clone));
 
     XPCWrappedNativeScope *scope = 
         XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
@@ -185,6 +188,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface)
     JSObject* funobj = JS_GetFunctionObject(fun);
     if(!funobj)
         return JS_FALSE;
+
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(funobj));
 
     if(!JS_SetReservedSlot(ccx, funobj, 0, PRIVATE_TO_JSVAL(iface))||
        !JS_SetReservedSlot(ccx, funobj, 1, PRIVATE_TO_JSVAL(this)))
