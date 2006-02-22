@@ -63,14 +63,14 @@ typedef struct {
 #endif // SHCNE_RENAMEITEM_DEF
 
 // Register for shell notifications func ptr
-typedef ULONG (*SHCNRegPtr)(HWND hWnd,                      // Ordinal of 2
-                            int fSources,
-                            LONG fEvents,
-                            UINT wMsg,
-                            int cEntries,
-                            SHChangeNotifyStruct *pschn);
+typedef WINSHELLAPI ULONG (WINAPI *SHCNRegPtr)(HWND hWnd,                      // Ordinal of 2
+                                               int fSources,
+                                               LONG fEvents,
+                                               UINT wMsg,
+                                               int cEntries,
+                                               SHChangeNotifyStruct *pschn);
 // Unregister form from the shell notifications func ptr
-typedef BOOL (*SHCNDeregPtr)(ULONG ulID);                   // Ordinal of 4
+typedef WINSHELLAPI BOOL (WINAPI *SHCNDeregPtr)(ULONG ulID);                   // Ordinal of 4
 
 /**
  * Native Win32 DragService wrapper

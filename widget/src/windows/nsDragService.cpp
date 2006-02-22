@@ -222,6 +222,12 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   if (NS_FAILED(rv))
     return rv;
 
+  // set the directory promise flavour
+  // if this fails it won't affect the drag so we can just continue
+  trans->SetTransferData(kFilePromiseDirectoryMime,
+                         dropLocalFile,
+                         sizeof(nsILocalFile*));
+
   // Create a new FileURI to pass to the nsIDownload
   nsCOMPtr<nsIURI> targetURI;
 
