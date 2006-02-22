@@ -238,9 +238,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     
     [mWindow setReleasedWhenClosed:NO];
 
-    // create a quickdraw view as the toplevel content view of the window
-    [mWindow setContentView:[[[NSQuickDrawView alloc] init] autorelease]];
-    
     // register for mouse-moved events. The default is to ignore them for perf reasons.
     [mWindow setAcceptsMouseMovedEvents:YES];
     
@@ -363,16 +360,13 @@ NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(PRBool aAllowSlop,
 // Move this window
 //
 //-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-// Move
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
 {  
   if (mWindow) {  
     // if we're a popup, we have to convert from our parent widget's coord
     // system to the global coord system first because the (x,y) we're given
     // is in its coordinate system.
-    if ( mWindowType == eWindowType_popup ) {
+    if (mWindowType == eWindowType_popup) {
       nsRect localRect, globalRect; 
       localRect.x = aX;
       localRect.y = aY;  
@@ -474,7 +468,6 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   // tell gecko to update all the child widgets
   ReportSizeEvent();
   
-  // Inherited::Resize(aWidth, aHeight, aRepaint);
   return NS_OK;
 }
 
@@ -626,6 +619,7 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
   return self;
 }
 
+
 - (void)windowDidResize:(NSNotification *)aNotification
 {
   if (!mGeckoWindow->IsResizing()) {
@@ -644,6 +638,11 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
   nsIMenuBar* myMenuBar = mGeckoWindow->GetMenuBar();
   if (myMenuBar)
     myMenuBar->Paint();
+  
+  nsGUIEvent guiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
 
 
@@ -667,6 +666,14 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
 
 - (void)windowDidMove:(NSNotification *)aNotification
 {
+}
+
+-(void)windowWillClose:(NSNotification *)aNotification
+{
+  nsGUIEvent guiEvent(PR_TRUE, NS_XUL_CLOSE, mGeckoWindow);
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
 
 
