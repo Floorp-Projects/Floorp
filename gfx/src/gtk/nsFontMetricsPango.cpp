@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <strings.h>
 #include "nsFont.h"
 #include "nsIDeviceContext.h"
 #include "nsICharsetConverterManager.h"
