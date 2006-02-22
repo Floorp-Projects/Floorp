@@ -1148,9 +1148,11 @@ sub ValidateBugID {
     my $dbh = Bugzilla->dbh;
     my $user = Bugzilla->user;
 
-    # Get rid of white-space around the ID.
+    # Get rid of leading '#' (number) mark, if present.
+    $id =~ s/^\s*#//;
+    # Remove whitespace
     $id = trim($id);
-    
+
     # If the ID isn't a number, it might be an alias, so try to convert it.
     my $alias = $id;
     if (!detaint_natural($id)) {
