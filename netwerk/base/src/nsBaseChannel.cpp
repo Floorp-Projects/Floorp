@@ -40,6 +40,7 @@
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
+#include "nsIOService.h"
 #include "nsIHttpEventSink.h"
 #include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
@@ -119,16 +120,12 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags)
   // we support nsIHttpEventSink if we are an HTTP channel and if this is not
   // an internal redirect.
 
-  nsresult rv;
-
-  // Give the global event sink a chance to observe/block this redirect.
-  nsCOMPtr<nsIChannelEventSink> channelEventSink =
-      do_GetService(NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID);
-  if (channelEventSink) {
-    rv = channelEventSink->OnChannelRedirect(this, newChannel, redirectFlags);
-    if (NS_FAILED(rv))
-      return rv;
-  }
+  // Global observers. These come first so that other observers don't see
+  // redirects that get aborted for security reasons anyway.
+  NS_ASSERTION(gIOService, "Must have an IO service");
+  nsresult rv = gIOService->OnChannelRedirect(this, newChannel, redirectFlags);
+  if (NS_FAILED(rv))
+    return rv;
 
   // Backwards compat for non-internal redirects from a HTTP channel.
   if (!(redirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL)) {
@@ -144,6 +141,7 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, PRUint32 redirectFlags)
     }
   }
 
+  nsCOMPtr<nsIChannelEventSink> channelEventSink;
   // Give our consumer a chance to observe/block this redirect.
   GetCallback(channelEventSink);
   if (channelEventSink) {

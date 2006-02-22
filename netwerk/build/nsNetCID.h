@@ -767,5 +767,16 @@
 #define NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID \
   "@mozilla.org/netwerk/global-channel-event-sink;1"
 
+/******************************************************************************
+ * Categories
+ */
+/**
+ * Services registered in this category will get notified via
+ * nsIChannelEventSink about all redirects that happen and have the opportunity
+ * to veto them. The value of the category entries is interpreted as the
+ * contract ID of the service.
+ */
+#define NS_CHANNEL_EVENT_SINK_CATEGORY "net-channel-event-sinks"
+
 
 #endif // nsNetCID_h__

@@ -45,6 +45,7 @@
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
 #include "prprf.h"
+#include "prlog.h"
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
@@ -76,6 +77,8 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+
+nsIOService* gIOService = nsnull;
 
 // A general port blacklist.  Connections to these ports will not be avoided unless 
 // the protocol overrides.
@@ -149,8 +152,9 @@ nsIMemory* nsIOService::gBufferCache = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mOffline(PR_FALSE),
-      mOfflineForProfileChange(PR_FALSE)
+    : mOffline(PR_FALSE)
+    , mOfflineForProfileChange(PR_FALSE)
+    , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
 {
     // Get the allocator ready
     if (!gBufferCache)
@@ -228,6 +232,8 @@ nsIOService::Init()
     }
     else
         NS_WARNING("failed to get observer service");
+
+    gIOService = this;
     
     return NS_OK;
 }
@@ -235,6 +241,7 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
+    gIOService = nsnull;
 }   
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIOService,
@@ -244,6 +251,31 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsIOService,
                               nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsIOService::OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                               PRUint32 flags)
+{
+    nsCOMPtr<nsIChannelEventSink> sink =
+        do_GetService(NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID);
+    if (sink) {
+        nsresult rv = sink->OnChannelRedirect(oldChan, newChan, flags);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    // Finally, our category
+    const nsCOMArray<nsIChannelEventSink>& entries =
+        mChannelEventSinks.GetEntries();
+    PRInt32 len = entries.Count();
+    for (PRInt32 i = 0; i < len; ++i) {
+        nsresult rv = entries[i]->OnChannelRedirect(oldChan, newChan, flags);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    return NS_OK;
+}
 
 nsresult
 nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)

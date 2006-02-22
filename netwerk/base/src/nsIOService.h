@@ -55,6 +55,8 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsINetUtil.h"
+#include "nsIChannelEventSink.h"
+#include "nsCategoryCache.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -65,7 +67,8 @@
 #endif
 #define NS_NECKO_15_MINS (15 * 60)
 
-static const char *gScheme[] = {"chrome", "file", "http", "jar", "resource"};
+static const char gScheme[][sizeof("resource")] =
+    {"chrome", "file", "http", "jar", "resource"};
 
 class nsIPrefBranch;
 class nsIPrefBranch2;
@@ -88,6 +91,11 @@ public:
     NS_HIDDEN_(nsresult) NewURI(const char* aSpec, nsIURI* aBaseURI,
                                 nsIURI* *result,
                                 nsIProtocolHandler* *hdlrResult);
+
+    // Called by channels before a redirect happens. This notifies the global
+    // redirect observers.
+    nsresult OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                               PRUint32 flags);
 
 protected:
     NS_HIDDEN_(nsresult) GetCachedProtocolHandler(const char *scheme,
@@ -113,6 +121,9 @@ protected:
     // Cached protocol handlers
     nsWeakPtr                            mWeakHandler[NS_N(gScheme)];
 
+    // cached categories
+    nsCategoryCache<nsIChannelEventSink> mChannelEventSinks;
+
     nsVoidArray                          mRestrictedPortList;
 
 public:
@@ -120,5 +131,10 @@ public:
     // allocates.
     static nsIMemory *gBufferCache;
 };
+
+/**
+ * Reference to the IO service singleton. May be null.
+ */
+extern nsIOService* gIOService;
 
 #endif // nsIOService_h__

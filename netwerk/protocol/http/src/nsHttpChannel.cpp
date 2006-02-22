@@ -993,14 +993,10 @@ nsHttpChannel::ReplaceWithProxy(nsIProxyInfo *pi)
         return rv;
 
     // Inform consumers about this fake redirect
-    nsCOMPtr<nsIChannelEventSink> channelEventSink;
-    GetCallback(channelEventSink);
-    if (channelEventSink) {
-        PRUint32 flags = nsIChannelEventSink::REDIRECT_INTERNAL;
-        rv = channelEventSink->OnChannelRedirect(this, newChannel, flags);
-        if (NS_FAILED(rv))
-            return rv;
-    }
+    PRUint32 flags = nsIChannelEventSink::REDIRECT_INTERNAL;
+    rv = gHttpHandler->OnChannelRedirect(this, newChannel, flags);
+    if (NS_FAILED(rv))
+        return rv;
 
     // open new channel
     rv = newChannel->AsyncOpen(mListener, mListenerContext);
@@ -2069,26 +2065,17 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
 
     // verify that this is a legal redirect
-    nsCOMPtr<nsIChannelEventSink> globalObserver = 
-             do_GetService(NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID);
-    if (globalObserver) {
-        rv = globalObserver->OnChannelRedirect(this, newChannel, redirectFlags);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = gHttpHandler->OnChannelRedirect(this, newChannel, redirectFlags);
+    if (NS_FAILED(rv))
+        return rv;
 
-    // call out to the event sink to notify it of this redirection.
+    // And now, the deprecated way
     nsCOMPtr<nsIHttpEventSink> httpEventSink;
     GetCallback(httpEventSink);
     if (httpEventSink) {
         // NOTE: nsIHttpEventSink is only used for compatibility with pre-1.8
         // versions.
         rv = httpEventSink->OnRedirect(this, newChannel);
-        if (NS_FAILED(rv)) return rv;
-    }
-    nsCOMPtr<nsIChannelEventSink> channelEventSink;
-    GetCallback(channelEventSink);
-    if (channelEventSink) {
-        rv = channelEventSink->OnChannelRedirect(this, newChannel, redirectFlags);
         if (NS_FAILED(rv)) return rv;
     }
     // XXX we used to talk directly with the script security manager, but that

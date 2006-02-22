@@ -72,6 +72,8 @@
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "nsQuickSort.h"
+#include "nsNetUtil.h"
+#include "nsIOService.h"
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
@@ -480,6 +482,25 @@ nsHttpHandler::NotifyObservers(nsIHttpChannel *chan, const char *event)
     LOG(("nsHttpHandler::NotifyObservers [chan=%x event=\"%s\"]\n", chan, event));
     if (mObserverService)
         mObserverService->NotifyObservers(chan, event, nsnull);
+}
+
+nsresult
+nsHttpHandler::OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
+                                 PRUint32 flags)
+{
+    // First, the global observer
+    NS_ASSERTION(gIOService, "Must have an IO service at this point");
+    nsresult rv = gIOService->OnChannelRedirect(oldChan, newChan, flags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Now, the per-channel observers
+    nsCOMPtr<nsIChannelEventSink> sink;
+    NS_QueryNotificationCallbacks(oldChan, sink);
+    if (sink)
+        rv = sink->OnChannelRedirect(oldChan, newChan, flags);
+
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
