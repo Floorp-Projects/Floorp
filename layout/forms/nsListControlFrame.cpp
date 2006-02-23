@@ -74,7 +74,6 @@
 #include "nsILookAndFeel.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFontMetrics.h"
-#include "nsVoidArray.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"

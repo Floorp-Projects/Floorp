@@ -38,7 +38,6 @@
 #define nsAreaFrame_h___
 
 #include "nsBlockFrame.h"
-#include "nsVoidArray.h"
 #include "nsAbsoluteContainingBlock.h"
 
 struct nsStyleDisplay;

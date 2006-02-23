@@ -39,7 +39,6 @@
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
 #endif
-#include "nsVoidArray.h"
 #include "nsLayoutUtils.h"
 
 #ifdef IBMBIDI

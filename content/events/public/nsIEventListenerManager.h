@@ -40,7 +40,6 @@
 
 #include "nsEvent.h"
 #include "nsISupports.h"
-#include "nsVoidArray.h"
 
 class nsPresContext;
 class nsIDOMEventListener;

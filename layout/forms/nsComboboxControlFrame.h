@@ -55,7 +55,6 @@
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
-#include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"

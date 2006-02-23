@@ -41,7 +41,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
-#include "nsVoidArray.h"
 
 nsBlockBandData::nsBlockBandData()
   : mSpaceManager(nsnull),

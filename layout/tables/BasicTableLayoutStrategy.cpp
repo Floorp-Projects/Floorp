@@ -44,7 +44,6 @@
 #include "nsTableColFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsStyleConsts.h"
-#include "nsVoidArray.h"
 #include "nsQuickSort.h"
 
 

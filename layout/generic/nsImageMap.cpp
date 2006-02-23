@@ -38,7 +38,6 @@
 #include "nsImageMap.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsVoidArray.h"
 #include "nsIRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsIURL.h"
