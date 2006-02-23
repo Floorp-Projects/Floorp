@@ -63,7 +63,7 @@ public:
                nsSVGMark *aMark, float aStrokeWidth) = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMarkerFrame, NS_SVGMARKERFRAME_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMarkerFrame, NS_ISVGMARKERFRAME_IID)
 
 nsresult
 NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
