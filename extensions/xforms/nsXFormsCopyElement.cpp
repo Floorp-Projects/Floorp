@@ -157,24 +157,15 @@ nsXFormsCopyElement::GetCopyNode(nsIDOMNode **aNode)
   NS_ENSURE_ARG_POINTER(aNode);
   *aNode = nsnull;
 
+  nsCOMPtr<nsIDOMNode> singleNode;
   nsCOMPtr<nsIModelElementPrivate> model;
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"), EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(model),
-                                       getter_AddRefs(result));
+  PRBool succeeded =
+    nsXFormsUtils::GetSingleNodeBinding(mElement,
+                                        getter_AddRefs(singleNode),
+                                        getter_AddRefs(model));
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (result) {
-    nsCOMPtr<nsIDOMNode> singleNode;
-    result->GetSingleNodeValue(getter_AddRefs(singleNode));
-
-    NS_IF_ADDREF(*aNode = singleNode);
-  }
+  if (succeeded && singleNode)
+    NS_ADDREF(*aNode = singleNode);
 
   return NS_OK;
 }

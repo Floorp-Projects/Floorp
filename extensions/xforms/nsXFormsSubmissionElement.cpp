@@ -665,18 +665,21 @@ nsXFormsSubmissionElement::GetBoundInstanceData(nsIDOMNode **result)
 {
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> xpRes;
+  PRBool usesModelBind;
   nsresult rv =
     nsXFormsUtils::EvaluateNodeBinding(mElement, 0,
                                        NS_LITERAL_STRING("ref"),
                                        NS_LITERAL_STRING("/"),
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(model),
-                                       getter_AddRefs(xpRes));
+                                       getter_AddRefs(xpRes),
+                                       &usesModelBind);
 
   if (NS_FAILED(rv) || !xpRes)
     return NS_ERROR_UNEXPECTED;
 
-  return xpRes->GetSingleNodeValue(result);
+  return usesModelBind ? xpRes->SnapshotItem(0, result)
+                       : xpRes->GetSingleNodeValue(result);
 }
 
 PRBool

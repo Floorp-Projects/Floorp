@@ -169,6 +169,14 @@ GetModelList(nsIDOMDocument *domDoc)
                         doc->GetProperty(nsXFormsAtoms::modelListProperty));
 }
 
+static void
+SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,
+                 void *aPropertyValue, void *aData)
+{
+  nsISupports *propertyValue = NS_STATIC_CAST(nsISupports*, aPropertyValue);
+  NS_IF_RELEASE(propertyValue);
+}
+
 //------------------------------------------------------------------------------
 
 static const nsIID sScriptingIIDs[] = {
@@ -650,7 +658,11 @@ nsXFormsModelElement::Rebuild()
   mNodeToType.Clear();
   mNodeToP3PType.Clear();
 
-  // 2. Re-attach all elements
+  // 2. Process bind elements
+  rv = ProcessBindElements();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // 3. Re-attach all elements
   if (mDocumentLoaded) { // if it's not during initializing phase
     // Copy the form control list as it stands right now.
     nsVoidArray *oldFormList = new nsVoidArray();
@@ -685,10 +697,7 @@ nsXFormsModelElement::Rebuild()
     mNeedsRefresh = PR_TRUE;
   }
 
-  // 3. Rebuild graph
-  rv = ProcessBindElements();
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // 4. Rebuild graph
   return mMDG.Rebuild();
 }
 
@@ -823,12 +832,22 @@ nsXFormsModelElement::Refresh()
       if (mNeedsRefresh) {
         refresh = PR_TRUE;
       } else {
-        // Get dependencies
-        nsCOMArray<nsIDOMNode> *deps = nsnull;
-        control->GetDependencies(&deps);    
+        PRBool usesModelBinding = PR_FALSE;
+        control->GetUsesModelBinding(&usesModelBinding);
 
-#ifdef DEBUG_MODEL
+        nsCOMArray<nsIDOMNode> *deps = nsnull;
+        if (usesModelBinding) {
+          if (!boundNode)
+          // If a control uses a model binding, but has no bound node a
+          // rebuild is the only thing that'll (eventually) change it
+          continue;
+        } else {
+          // Get dependencies
+          control->GetDependencies(&deps);    
+        }
         PRUint32 depCount = deps ? deps->Count() : 0;
+        
+#ifdef DEBUG_MODEL
         nsCOMPtr<nsIDOMElement> controlElement;
         control->GetElement(getter_AddRefs(controlElement));
         if (controlElement) {
@@ -864,16 +883,25 @@ nsXFormsModelElement::Refresh()
           // control (get updated node value from the bound node)
           if (!refresh && boundNode) {
             curChanged->IsSameNode(boundNode, &refresh);
-        
-            if (refresh)
-              // We need to refresh the control. We cannot break out of the loop
-              // as we need to check dependencies
+
+            // Two ways to go here. Keep in mind that controls using model
+            // binding expressions never needs to have dependencies checked as
+            // they only rebind on xforms-rebuild
+            if (refresh && usesModelBinding) {
+              // 1) If the control needs a refresh, and uses model bindings,
+              // we can stop checking here
+              break;
+            }
+            if (refresh || usesModelBinding) {
+              // 2) If either the control needs a refresh or it uses a model
+              // binding we can continue to next changed node
               continue;
+            }
           }
 
           // Check whether any dependencies are dirty. If so, we need to rebind
           // the control (re-evaluate it's binding expression)
-          for (PRInt32 k = 0; k < deps->Count(); ++k) {
+          for (PRUint32 k = 0; k < depCount; ++k) {
             /// @note beaufour: I'm not to happy about this ...
             /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
             /// for sorting and comparing does not work...
@@ -1378,7 +1406,8 @@ nsXFormsModelElement::ProcessBindElements()
       child->GetNamespaceURI(namespaceURI);
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
         rv = ProcessBind(xpath, firstInstanceRoot, 1, 1,
-                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)));
+                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)),
+                         PR_TRUE);
         if (NS_FAILED(rv)) {
           return NS_OK;
         }
@@ -1575,7 +1604,8 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                                   nsIDOMNode              *aContextNode,
                                   PRInt32                 aContextPosition,
                                   PRInt32                 aContextSize,
-                                  nsIDOMElement           *aBindElement)
+                                  nsIDOMElement           *aBindElement,
+                                  PRBool                  aIsOuter)
 {
   // Get the model item properties specified by this \<bind\>.
   nsCOMPtr<nsIDOMNSXPathExpression> props[eModel__count];
@@ -1626,6 +1656,19 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
   }
 
   NS_ENSURE_STATE(result);
+  
+  // If this is an outer bind, store the nodeset, as controls binding to this
+  // bind will need this.
+  if (aIsOuter) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aBindElement));
+    NS_ASSERTION(content, "nsIDOMElement not implementing nsIContent?!");
+    rv = content->SetProperty(nsXFormsAtoms::bind, result,
+                              SupportsDtorFunc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // addref, circumventing nsDerivedSave
+    NS_ADDREF(NS_STATIC_CAST(nsIDOMXPathResult*, result));
+  }
 
   PRUint32 snapLen;
   rv = result->GetSnapshotLength(&snapLen);

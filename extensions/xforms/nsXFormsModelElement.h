@@ -196,7 +196,8 @@ private:
                                    nsIDOMNode                *aContextNode,
                                    PRInt32                    aContextPosition,
                                    PRInt32                    aContextSize,
-                                   nsIDOMElement             *aBindElement);
+                                   nsIDOMElement             *aBindElement,
+                                   PRBool                     aIsOuter = PR_FALSE);
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 

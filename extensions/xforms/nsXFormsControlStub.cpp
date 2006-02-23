@@ -146,6 +146,7 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
 {
   // Clear existing bound node, etc.
   mBoundNode = nsnull;
+  mUsesModelBinding = PR_FALSE;
   mDependencies.Clear();
   RemoveIndexListeners();
 
@@ -166,8 +167,13 @@ nsXFormsControlStubBase::ResetBoundNode(const nsString     &aBindAttribute,
   if (!result)
     return NS_OK;
     
-  // Get context node, if any  
-  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+  // Get context node, if any
+  if (mUsesModelBinding) {
+    // When bound via @bind, we'll get a snapshot back
+    result->SnapshotItem(0, getter_AddRefs(mBoundNode));
+  } else {
+    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+  }
 
   if (mBoundNode && mModel) {
     mModel->SetStates(this, mBoundNode);
@@ -212,7 +218,13 @@ nsXFormsControlStubBase::IsEventTarget(PRBool *aOK)
   *aOK = PR_TRUE;
   return NS_OK;
 }
-  
+
+NS_IMETHODIMP
+nsXFormsControlStubBase::GetUsesModelBinding(PRBool *aRes)
+{
+  *aRes = mUsesModelBinding;
+  return NS_OK;
+}
 
 nsresult
 nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAttr,
@@ -237,6 +249,7 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   }
 
   nsresult rv;
+  PRBool usesModelBinding;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
                                           aBindingAttr,
@@ -244,6 +257,7 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
                                           aResultType,
                                           getter_AddRefs(mModel),
                                           aResult,
+                                          &usesModelBinding,
                                           &mDependencies,
                                           &indexesUsed);
   NS_ENSURE_STATE(mModel);
@@ -251,10 +265,11 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   mModel->AddFormControl(this);
   if (aModel)
     NS_ADDREF(*aModel = mModel);
+  mUsesModelBinding = usesModelBinding;
 
   if (NS_SUCCEEDED(rv) && indexesUsed.Count()) {
     // add index listeners on repeat elements
-    
+
     for (PRInt32 i = 0; i < indexesUsed.Count(); ++i) {
       // Find the repeat element and add |this| as a listener
       nsCOMPtr<nsIDOMElement> repElem;
@@ -471,6 +486,7 @@ nsXFormsControlStubBase::OnDestroyed()
 {
   ResetHelpAndHint(PR_FALSE);
   RemoveIndexListeners();
+  mDependencies.Clear();
 
   if (mModel) {
     mModel->RemoveFormControl(this);

@@ -124,7 +124,12 @@ nsXFormsOutputElement::Bind()
   }
 
   if (result) {
-    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+    if (mUsesModelBinding) {
+      // When bound via @bind, we'll get a snapshot back
+      result->SnapshotItem(0, getter_AddRefs(mBoundNode));
+    } else {
+      result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+    }
   }
 
   if (mBoundNode && mModel) {

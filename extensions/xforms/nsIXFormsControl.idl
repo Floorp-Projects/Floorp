@@ -49,7 +49,7 @@ interface nsIDOMElement;
 /**
  * Interface implemented by all XForms form control classes.
  */
-[uuid(8377c845-5d55-4eee-9a76-0f86751dcbc8)]
+[uuid(1bea8750-2133-4a00-986a-04e5cbd129b2)]
 interface nsIXFormsControl : nsIXFormsContextControl
 {
   /**
@@ -86,4 +86,10 @@ interface nsIXFormsControl : nsIXFormsContextControl
    *  need to override IsEventTarget() and return PR_FALSE
    */
   boolean isEventTarget();
+
+  /**
+   * Is true when the control is getting its instance data node binding from a
+   * model bind element, ie. it has a |bind| attribute.
+   */
+  readonly attribute boolean usesModelBinding;
 };

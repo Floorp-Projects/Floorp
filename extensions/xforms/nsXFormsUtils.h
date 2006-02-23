@@ -221,6 +221,7 @@ public:
                         PRUint16                 aResultType,
                         nsIModelElementPrivate **aModel,
                         nsIDOMXPathResult      **aResult,
+                        PRBool                  *aUsesModelBind,
                         nsCOMArray<nsIDOMNode>  *aDeps = nsnull,
                         nsStringArray           *aIndexesUsed = nsnull);
 

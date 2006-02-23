@@ -97,13 +97,15 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
   nsresult rv;
   nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> nodeset;
+  PRBool usesModelBinding;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
                                           NS_LITERAL_STRING("nodeset"),
                                           EmptyString(),
                                           nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                                           getter_AddRefs(model),
-                                          getter_AddRefs(nodeset));
+                                          getter_AddRefs(nodeset),
+                                          &usesModelBinding);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!model || !nodeset)

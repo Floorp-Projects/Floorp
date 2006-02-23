@@ -94,26 +94,12 @@ nsXFormsValueElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsValueElement::GetValue(nsAString &aValue)
 {
-  nsCOMPtr<nsIModelElementPrivate> model;
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                     nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                     NS_LITERAL_STRING("ref"),
-                                     EmptyString(),
-                                     nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                     getter_AddRefs(model),
-                                     getter_AddRefs(result));
-
-  if (result) {
-    nsCOMPtr<nsIDOMNode> singleNode;
-    result->GetSingleNodeValue(getter_AddRefs(singleNode));
-
-    if (singleNode) {
-      nsString value;
-      nsXFormsUtils::GetNodeValue(singleNode, value);
-      aValue.Assign(value);
-      return NS_OK;
-    }
+  nsString value;
+  PRBool singleNodeVal =
+    nsXFormsUtils::GetSingleNodeBindingValue(mElement, value);
+  if (singleNodeVal) {
+    aValue.Assign(value);
+    return NS_OK;
   }
 
   nsCOMPtr<nsIDOM3Node> node3 = do_QueryInterface(mElement);

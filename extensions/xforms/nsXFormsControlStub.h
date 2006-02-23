@@ -89,6 +89,7 @@ public:
   NS_IMETHOD Bind();
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
+  NS_IMETHOD GetUsesModelBinding(PRBool *aRes);
 
   nsresult Create(nsIXTFElementWrapper *aWrapper);
   // for nsIXTFElement
@@ -140,6 +141,7 @@ public:
     kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
     mHasParent(PR_FALSE),
     mPreventLoop(PR_FALSE),
+    mUsesModelBinding(PR_FALSE),
     mBindAttrsCount(0)
     {};
 
@@ -160,12 +162,17 @@ protected:
   nsCOMPtr<nsIDOMEventListener>       mEventListener;
 
   /** State that tells whether control has a parent or not */
-  PRBool                              mHasParent;
+  PRPackedBool                        mHasParent;
 
   /** State to prevent infinite loop when generating and handling xforms-next
    *  and xforms-previous events
    */
-  PRBool                              mPreventLoop;
+  PRPackedBool                        mPreventLoop;
+
+  /**
+   * Does the control use a model bind? That is, does it have a @bind.
+   */
+  PRPackedBool                        mUsesModelBinding;
 
   /**
    * Array of repeat-elements of which the control uses repeat-index.

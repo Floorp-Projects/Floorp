@@ -66,23 +66,13 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
   
   nsCOMPtr<nsIModelElementPrivate> modelPriv;
-  nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv =
-    nsXFormsUtils:: EvaluateNodeBinding(mElement,
-                                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                        NS_LITERAL_STRING("ref"),
-                                        EmptyString(),
-                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                        getter_AddRefs(modelPriv),
-                                        getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!result | !modelPriv)
-    return NS_OK;
-
   nsCOMPtr<nsIDOMNode> singleNode;
-  result->GetSingleNodeValue(getter_AddRefs(singleNode));
-  if (!singleNode)
+  PRBool succeeded =
+    nsXFormsUtils::GetSingleNodeBinding(mElement,
+                                        getter_AddRefs(singleNode),
+                                        getter_AddRefs(modelPriv));
+
+  if (!succeeded | !modelPriv | !singleNode)
     return NS_OK;
 
   nsAutoString value;
@@ -105,7 +95,8 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   }
 
   PRBool changed;
-  rv = modelPriv->SetNodeValue(singleNode, value, &changed);
+  nsresult rv =
+    modelPriv->SetNodeValue(singleNode, value, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (changed) {
