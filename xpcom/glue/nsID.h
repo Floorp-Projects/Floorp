@@ -134,23 +134,13 @@ typedef nsID nsIID;
   const nsIID _name = _iidspec
 
 /**
- * A macro to build the static const IID accessor method. The Dummy
- * template parameter only exists so that the kIID symbol will be linked
- * properly (weak symbol on linux, gnu_linkonce on mac, multiple-definitions
- * merged on windows). Dummy should always be instantiated as "int".
+ * A macro to build the static const IID accessor method
  */
 
 #define NS_DECLARE_STATIC_IID_ACCESSOR(the_iid)                         \
-  template <class Dummy>                                                \
-  struct COMTypeInfo                                                    \
-  {                                                                     \
-    static const nsIID kIID NS_HIDDEN;                                  \
-  };                                                                    \
-  static const nsIID& GetIID() {return COMTypeInfo<int>::kIID;}
+  static const nsIID& GetIID() {static const nsIID iid = the_iid; return iid;}
 
-#define NS_DEFINE_STATIC_IID_ACCESSOR(the_interface, the_iid)           \
-  template <class Dummy>                                                \
-  const nsIID the_interface::COMTypeInfo<Dummy>::kIID NS_HIDDEN = the_iid;
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_interface, the_iid)
 
 /**
  * A macro to build the static const CID accessor method
@@ -159,7 +149,7 @@ typedef nsID nsIID;
 #define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
   static const nsID& GetCID() {static const nsID cid = the_cid; return cid;}
 
-#define NS_GET_IID(T) (::T::COMTypeInfo<int>::kIID)
-#define NS_GET_TEMPLATE_IID(T) (T::template COMTypeInfo<int>::kIID)
+#define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
+#define NS_GET_TEMPLATE_IID(T) NS_GET_IID(T)
 
 #endif
