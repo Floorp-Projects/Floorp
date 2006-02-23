@@ -800,6 +800,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(XULAttr, Attr, nsDOMGenericSH,
                                      DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
+  NS_DEFINE_CLASSINFO_DATA(XULControllers, nsNonDOMObjectSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
 #ifdef MOZ_XUL
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
@@ -2361,6 +2363,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
   DOM_CLASSINFO_MAP_END
 #endif
+
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULControllers, nsIControllers)
+    DOM_CLASSINFO_MAP_ENTRY(nsIControllers)
+  DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(BoxObject, nsIBoxObject)
@@ -9590,4 +9596,13 @@ nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
 #endif
 
   return wrapped->HasInstance(wrapper, cx, obj, val, bp, _retval);
+}
+
+NS_IMETHODIMP
+nsNonDOMObjectSH::GetFlags(PRUint32 *aFlags)
+{
+  // This is NOT a DOM Object.  Use this helper class for cases when you need
+  // to do something like implement nsISecurityCheckedComponent in a meaningful
+  // way.
+  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
 }
