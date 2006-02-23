@@ -5401,7 +5401,6 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
   *aReturn = nsnull;
 
   if (!aElt) {
-    NS_ERROR("Don't call getComputedStyle with a null DOMElement reference!");
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
