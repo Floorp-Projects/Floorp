@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.31 $ 
-# $Date: 2005/11/25 21:57:10 $ 
+# $Revision: 1.32 $ 
+# $Date: 2006/02/23 04:38:47 $ 
 # $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.31 $ )[1];
+$VERSION = ( qw $Revision: 1.32 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -810,7 +810,7 @@ sub status_table_row {
 
   # Track the treestate between calls with a global variable.
 
-  # This initalization may not be correct.  If we are creating a page
+  # This initialization may not be correct.  If we are creating a page
   # for a few days ago, when we start making the page, we do not know
   # the treestate. It is not so easy to find out the right tree state
   # for the first few rows, so fake it with the current state.

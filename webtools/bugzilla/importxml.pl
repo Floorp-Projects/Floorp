@@ -330,7 +330,7 @@ sub flag_handler {
 #    exporter:   email address of the person moving the bugs
 #    maintainer: the maintainer of the bugzilla installation
 #                as set in the parameters file
-#    urlbase:    The urlbase paramter of the installation
+#    urlbase:    The urlbase parameter of the installation
 #                bugs are being moved from
 #
 sub init() {

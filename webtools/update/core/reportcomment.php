@@ -93,7 +93,7 @@ $return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&p
 include"$page_header";
 ?>
 <h1>Mozilla Update :: Report a Comment Tool</h1>
-You have sucessfully reported this comment to Mozilla Update staff.
+You have successfully reported this comment to Mozilla Update staff.
 A staff member will review your submission and take the appropriate action.<br>
 Thank you for your assistance.<br><br>
 To return to where you were browsing, <a href="/<?php echo"$return_path"; ?>">click this link</a>.
