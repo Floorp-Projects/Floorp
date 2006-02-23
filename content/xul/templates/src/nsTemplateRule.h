@@ -288,6 +288,10 @@ public:
     // CompileQuery call
     nsCOMPtr<nsISupports> mCompiledQuery;
 
+    // indicates that the query will only generate content to be inserted into
+    // a container with this tag
+    nsCOMPtr<nsIAtom> mTag;
+
     nsTemplateQuerySet(PRInt32 aPriority)
         : mPriority(aPriority)
     {
@@ -304,6 +308,9 @@ public:
     {
         return mPriority;
     }
+
+    nsIAtom* GetTag() { return mTag; }
+    void SetTag(nsIAtom* aTag) { mTag = aTag; }
 
     nsresult AddRule(nsTemplateRule *aChild)
     {
