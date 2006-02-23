@@ -766,6 +766,7 @@ var gDownloadActionsWindow = {
 
     document.getElementById("actionsIntro").value = this._bundle.getString("actionsAll");
     document.getElementById("clearFilter").disabled = true;
+    document.getElementById("filter").focus();
   },
   
   _actionMatchesFilter: function (aAction)
