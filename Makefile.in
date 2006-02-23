@@ -429,6 +429,11 @@ ifdef ENABLE_TESTS
 tier_99_dirs	+= tools/test-harness
 endif
 
+# This should be built last, after all IDL files in the tree have been processed
+ifdef MOZ_JAVAXPCOM
+tier_99_dirs += extensions/java/xpcom/interfaces
+endif
+
 default alldep all:: $(SUBMAKEFILES)
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include

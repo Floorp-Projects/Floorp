@@ -46,11 +46,8 @@ DIRS = src
 
 TOOL_DIRS = \
 	tools/genifaces \
-	interfaces \
 	glue \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-tools::
-	$(MAKE) -C src jarfile

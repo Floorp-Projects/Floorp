@@ -117,3 +117,7 @@ $(TEMP_SDK_DIR)::
 
 libs:: $(JARFILE) $(JARFILE_SRC) $(TEMP_SDK_DIR)
 	$(INSTALL) $(IFLAGS2) $^
+
+# Build the implementation Java classes, which depend on these interfaces
+libs::
+	$(MAKE) -C ../src jarfile
