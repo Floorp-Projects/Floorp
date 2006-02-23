@@ -9605,4 +9605,5 @@ nsNonDOMObjectSH::GetFlags(PRUint32 *aFlags)
   // to do something like implement nsISecurityCheckedComponent in a meaningful
   // way.
   *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+  return NS_OK;
 }
