@@ -428,6 +428,7 @@ void TimerThread::DoBeforeSleep()
 
 void TimerThread::DoAfterSleep()
 {
+  mSleeping = PR_TRUE; // wake may be notified without preceding sleep notification
   for (PRInt32 i = 0; i < mTimers.Count(); i ++) {
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, mTimers[i]);
     // get and set the delay to cause its timeout to be recomputed
