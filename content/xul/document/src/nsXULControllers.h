@@ -50,6 +50,7 @@
 #include "nsWeakPtr.h"
 #include "nsIControllers.h"
 #include "nsISupportsArray.h"
+#include "nsISecurityCheckedComponent.h"
 
 class nsIDOMXULCommandDispatcher;
 
@@ -83,7 +84,8 @@ protected:
 
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-class nsXULControllers : public nsIControllers
+class nsXULControllers : public nsIControllers,
+                         public nsISecurityCheckedComponent
 {
 public:
     friend NS_IMETHODIMP
@@ -91,6 +93,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONTROLLERS
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
   
 protected:
     nsXULControllers();

@@ -1527,6 +1527,26 @@ public:
   }
 };
 
+class nsNonDOMObjectSH : public nsDOMGenericSH
+{
+protected:
+  nsNonDOMObjectSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsNonDOMObjectSH()
+  {
+  }
+
+public:
+  NS_IMETHOD GetFlags(PRUint32 *aFlags);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsNonDOMObjectSH(aData);
+  }
+};
+
 void InvalidateContextAndWrapperCache();
 
 
