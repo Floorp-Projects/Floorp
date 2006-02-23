@@ -3592,6 +3592,12 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v);
 static JSBool
 CheckCycle(JSContext *cx, JSXML *xml, JSXML *kid)
 {
+    if (kid->xml_class == JSXML_CLASS_LIST) {
+        JS_ASSERT(kid->xml_kids.length <= 1);
+        if (kid->xml_kids.length != 0)
+            kid = XMLARRAY_MEMBER(&kid->xml_kids, 0, JSXML);
+    }
+
     do {
         if (xml == kid) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
