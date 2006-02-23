@@ -36,7 +36,8 @@
   </toolbarpalette>
   
   <toolbox id="navigator-toolbox">
-    <toolbar id="bookmarksToolbar"
+    <toolbar id="PersonalToolbar"
+             class="chromeclass-directories"
              defaultset="bookmarksBarShowPlaces,bookmarksBarContainer"
              toolbarname="&places.toolbar.label;"
              customizable="true"/>
