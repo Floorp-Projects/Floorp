@@ -157,6 +157,19 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
 
+
+# MSVC '-Gy' cc flag and '/OPT:REF' linker flag cause JS_GetArgument and
+# JS_GetLocalVariable to be folded to the same address by the linker, 
+# leading to a crash on startup. See bug 151066. So, in optimized builds,
+# add the /OPT:NOICF flag, which turns off 'identical COMDAT folding'.
+#
+# N.B.: 'identical COMDAT folding' that folds functions whose addresses
+# are taken violates the ISO C and C++ standards.
+# (same as in mozilla/js/src/Makefile.in)
+ifdef WINCE
+LDFLAGS         += -OPT:NOICF
+endif
+
 export::
 	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserStatusFilter.cpp .
 	$(NSINSTALL) $(topsrcdir)/xpfe/browser/src/nsBrowserInstance.cpp .
