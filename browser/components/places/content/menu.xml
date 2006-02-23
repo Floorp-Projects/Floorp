@@ -133,6 +133,24 @@
             this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           else
             return; // Nothing to do if this menu isn't a container.
+            
+          // Container should always be open while rebuilding.
+          var wasOpen = this._resultNode.containerOpen;
+          this._resultNode.containerOpen = true;
+          
+#ifdef XP_MACOSX
+          // On Mac OSX, we need to manually attach the XBL binding for the bookmarks menu,
+          // because menus in the OSX menubar aren't real DOM nodes, and they don't get styles
+          // applied.
+          var needsBindingAttachment = false;
+          var currentNode = this.parentNode;
+          while (currentNode && !needsBindingAttachment) {
+            if (currentNode.id == "bookmarksMenu")
+              needsBindingAttachment = true;
+            currentNode = currentNode.parentNode;
+          }
+#endif
+          
           var cc = this._resultNode.childCount;
           if (cc > 0) {
             for (var i = 0; i < cc; ++i) {
@@ -153,12 +171,22 @@
                 var popup = document.createElementNS(XULNS, "menupopup");
                 popup.setAttribute("type", "places");
                 element.appendChild(popup);
+#ifndef XP_MACOSX
+                // No context menus on menus on Mac
                 // The context menu is set here instead of in the xbl constructor
                 // because it doesn't get initialized properly if set in the constructor.
                 popup.setAttribute("context", "placesContext");
+#endif
                 popup._result = this._result;
                 popup._resultNode = child;
                 element.className = "menu-iconic bookmark-item";
+#ifdef XP_MACOSX
+                // If this is a child of the bookmarks menubar, we have to manually attach
+                // its xbl binding, because it's not a dom node and the style rules don't
+                // get applied correctly.
+                if (needsBindingAttachment)
+                  document.addBinding(popup, MENU_URI);
+#endif
               }
               // else if (nodeIsQuery) ... add menu to build kids
               if (element) {
@@ -188,6 +216,9 @@
               this.appendChild(element);
             }
           }
+          
+          // Reset the container to the same state it was in before the function was called.
+          this._resultNode.containerOpen = wasOpen;
         ]]></body>
       </method>
       
@@ -340,7 +371,7 @@
         
         // Function to process all timer notifications.
         notify: function TBV_DO_notify(timer) {
-        
+
           // Timer to open a submenu that's being dragged over.
           if (timer == this._overFolder.openTimer) {
             this._overFolder.node.lastChild.setAttribute("autoopened", "true");
@@ -589,7 +620,22 @@
           this.removeAttribute("autoopened");
         }
       </handler>
+      <handler event="command"><![CDATA[
+        // Only menu and menuitems are valid nodes.
+        // Filter out events coming from sub-containers that have bubbled up.
+        if ((event.target.localName != "menuitem" &&
+             event.target.localName != "menu") ||
+            event.target.parentNode != this)
+          return;
+        this._selection = event.target.node;
+        PlacesController.activeView = this;
+        PlacesController.mouseLoadURI(event);
+      ]]></handler>
       <handler event="click"><![CDATA[
+        // Left-click is handled by command handler.
+        if (event.button == 0)
+          return;
+      
         // Only menu and menuitems are valid nodes.
         // Filter out events coming from sub-containers that have bubbled up.
         if ((event.target.localName != "menuitem" &&
@@ -601,9 +647,11 @@
         // When right clicking an item in a bookmarks menu the places commands
         // need to be updated for the context menu to appear correctly.
         document.commandDispatcher.updateCommands("click");
-        // Only left and middle clicks should load the URI
-        if (event.button > 1)
+        // Only middle clicks should load the URI from this function 
+        // (left clicks go through command event handler)
+        if (event.button != 1)
           return;
+          
         PlacesController.mouseLoadURI(event);
         // Menus selected with middle click must be closed manually.
         if (event.button == 1) {

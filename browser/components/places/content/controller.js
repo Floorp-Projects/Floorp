@@ -109,7 +109,16 @@ const RELOAD_ACTION_REMOVE = 2;
 // rows.
 const RELOAD_ACTION_MOVE = 3;
 
+#ifdef XP_MACOSX
+// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
+// really just want "\n".
+const NEWLINE= "\n";
+#else
+// On other platforms, the transferable system converts "\r\n" to "\n".
 const NEWLINE = "\r\n";
+#endif
+
+const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
 
 function STACK(args) {
   var temp = arguments.callee.caller;
