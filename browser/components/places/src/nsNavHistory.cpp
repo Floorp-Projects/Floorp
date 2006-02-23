@@ -359,6 +359,17 @@ nsNavHistory::Init()
 
 
 // nsNavHistory::InitDB
+//
+//    sqlite page caches are discarded when a statement is complete. This sucks
+//    for things like history queries where we do many small reads. This means
+//    that for every small transaction, we have to re-read from disk (or the OS
+//    cache) all pages associated with that transaction.
+//
+//    To get around this, we keep a different connection. This dummy connection
+//    has a statement that stays open and thus keeps is pager cache in memory.
+//    When the shared pager cache is enabled before either connection has been
+//    opened (this is done by the storage service on DB init), our main
+//    connection will get the same pager cache, which will be persisted.
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -380,7 +391,17 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  
+  // dummy DB (see comment above function) and statement that stays open
+  rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDummyDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT rowid FROM sqlite_master LIMIT 1"), getter_AddRefs(mDummyStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool dummyHasResults;
+  rv = mDummyStatement->ExecuteStep(&dummyHasResults);
+  NS_ENSURE_SUCCESS(rv, rv);
+  // ...now forget about that statement, keeping it open
+
   // the favicon tables must be initialized, since we depend on those in
   // some of our queries
   rv = nsFaviconService::InitTables(mDBConn);
@@ -831,15 +852,14 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
   PRBool hasMore = PR_FALSE;
   rv = mDBGetURLPageInfo->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  if (! hasMore)
+    return PR_FALSE;
 
   // Actually get the result to make sure the visit count > 0.  there are
   // several ways that we can get pages with visit counts of 0, and those
   // should not count.
-  nsCOMPtr<mozIStorageValueArray> row = do_QueryInterface(
-      mDBGetURLPageInfo, &rv);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   PRInt32 visitCount;
-  rv = row->GetInt32(kGetInfoIndex_VisitCount, &visitCount);
+  rv = mDBGetURLPageInfo->GetInt32(kGetInfoIndex_VisitCount, &visitCount);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   return visitCount > 0;
@@ -875,13 +895,20 @@ PRBool nsNavHistory::IsURIStringVisited(const nsACString& aURIString)
 //    In some cases, you can get dangling ones, (referencing a folder that
 //    was deleted, for example) but that should be rare and insignificant.
 //
-//    Compressing space is extremely slow, so it is optional. I don't think
-//    it's very critical. Maybe we should just do it every X times the app
-//    exits. I'm unsure if the freed up space is always lost, or whether it
-//    will be used when new stuff is added.
+//    Some times we may want to vacuum which will defragment the database and
+//    return any unused space to the filesystem. This operation can be
+//    extremely slow (sometimes 1 minute) and we don't do it now. Deleted data
+//    is overwritten with 0s by sqlite since we use SQLITE_SECURE_DELETE
+//    (in the sqlite makefile). Perhaps we should expose a way to do that.
+//
+//    Implementation note if we do a vacuum: There can not be any active
+//    statements for the vacuuming to work. This includes the dummy database.
+//    To make this work you would have to complete the dummy statement (and
+//    possibly detach the connection), do the vacuum, and then re-attach
+//    everything.
 
 nsresult
-nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
+nsNavHistory::VacuumDB(PRTime aTimeAgo)
 {
   nsresult rv;
 
@@ -932,18 +959,6 @@ nsNavHistory::VacuumDB(PRTime aTimeAgo, PRBool aCompress)
   NS_ENSURE_SUCCESS(rv, rv);
 
   transaction.Commit();
-
-  // compress the tables
-  if (aCompress) {
-#ifdef DEBUG
-    PRBool inProgress = PR_FALSE;
-    rv = mDBConn->GetTransactionInProgress(&inProgress);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't get transaction status");
-    NS_ASSERTION(! inProgress, "You must not have a transaction in progress to vacuum!");
-#endif
-    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   return NS_OK;
 }
@@ -2209,7 +2224,7 @@ nsNavHistory::RemoveAllPages()
 {
   // expire everything, compress DB (compression is slow, but since the user
   // requested it, they either want the disk space or to cover their tracks).
-  VacuumDB(0, PR_TRUE);
+  VacuumDB(0);
 
   // notify observers
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnClearHistory())
@@ -2574,7 +2589,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // FIXME: should we compress sometimes? It's slow, so we shouldn't do it
     // every time.
-    VacuumDB(expireUsecsAgo, PR_FALSE);
+    VacuumDB(expireUsecsAgo);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     LoadPrefs();
   }
