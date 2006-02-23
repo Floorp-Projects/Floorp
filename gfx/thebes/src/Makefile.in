@@ -26,8 +26,7 @@ CPPSRCS	= \
 	gfxFont.cpp \
 	gfxPlatform.cpp \
 	$(NULL)
-
-
+        
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
@@ -50,9 +49,10 @@ OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-CPPSRCS	+= 	gfxXlibSurface.cpp gfxPlatformGtk.cpp
+CPPSRCS +=      gfxXlibSurface.cpp gfxPlatformGtk.cpp gfxXlibNativeRenderer.cpp
 CPPSRCS +=	gfxPangoFonts.cpp 
 CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
+CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS)
 endif
 
