@@ -144,6 +144,42 @@
 
       <field name="_loop">-1</field>
 
+      <property name="onstart">
+        <getter>
+          return this.getAttribute("onstart");
+        </getter>
+        <setter>
+          this._setEventListener("start", val, true);
+          this.setAttribute("onstart", val);
+        </setter>
+      </property>
+
+      <field name="_onstart"></field>
+
+      <property name="onfinish">
+        <getter>
+          return this.getAttribute("onfinish");
+        </getter>
+        <setter>
+          this._setEventListener("finish", val, true);
+          this.setAttribute("onfinish", val);
+        </setter>
+      </property>
+
+      <field name="_onfinish"></field>
+
+      <property name="onbounce">
+        <getter>
+          return this.getAttribute("onbounce");
+        </getter>
+        <setter>
+          this._setEventListener("bounce", val, true);
+          this.setAttribute("onbounce", val);
+        </setter>
+      </property>
+
+      <field name="_onbounce"></field>
+
       <field name="dirsign">1</field>
       <field name="startAt">0</field>
       <field name="stopAt">0</field>
@@ -256,6 +292,69 @@
         </body>
       </method>
 
+      <method name="_setEventListener">
+        <parameter name="aName"/>
+        <parameter name="aValue"/>
+        <parameter name="aIgnoreNextCall"/>
+        <body>
+          <![CDATA[
+          if (this._ignoreNextCall)
+            return this._ignoreNextCall = false;
+
+          if (aIgnoreNextCall)
+            this._ignoreNextCall = true;
+
+          if (typeof this["_on" + aName] == 'function')
+            this.removeEventListener(aName, this["_on" + aName], false);
+
+          switch (typeof aValue)
+          {
+            case "function":
+              this["_on" + aName] = aValue;
+              this.addEventListener(aName, this["_on" + aName], false);
+            break;
+
+            case "string":
+              if (!aIgnoreNextCall) {
+                try {
+                  this["_on" + aName] = new Function("event", aValue);
+                }
+                catch(e) {
+                  return false;
+                }
+                this.addEventListener(aName, this["_on" + aName], false);
+              }
+              else {
+                this["_on" + aName] = aValue;
+              }
+            break;
+
+            case "object":
+              this["_on" + aName] = aValue;
+            break;
+
+            default:
+              this._ignoreNextCall = false;
+              throw new Error("Invalid argument for Marquee::on" + aName);
+          }
+          return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="_fireEvent">
+        <parameter name="aName"/>
+        <parameter name="aBubbles"/>
+        <parameter name="aCancelable"/>
+        <body>
+        <![CDATA[
+          var e = document.createEvent("Events");
+          e.initEvent(aName, aBubbles, aCancelable);
+          this.dispatchEvent(e);
+        ]]>
+        </body>
+      </method>
+
       <method name="start">
         <body>
         <![CDATA[
@@ -335,8 +434,10 @@
                                corrvalue : (this.innerDiv.offsetWidth + this.startAt));
             }
 
-            if (aResetPosition)
+            if (aResetPosition) {
               this.newPosition = this.startAt;
+              this._fireEvent("start", false, false);
+            }
           } //end if
 
           this.newPosition = this.newPosition + (this.dirsign * this._scrollAmount);
@@ -353,25 +454,32 @@
                 // swap direction
                 const swap = {left: "right", down: "up", up: "down", right: "left"};
                 this._direction = swap[this._direction];
-                this.newPosition = this.stopAt + (this.dirsign * this._scrollAmount);
+                this.newPosition = this.stopAt;
+
+                if ((this._direction == "up") || (this._direction == "down"))
+                  this.outerDiv.scrollTop = this.newPosition;
+                else
+                  this.outerDiv.scrollLeft = this.newPosition;
+
+                if (this._loop != 1)
+                  this._fireEvent("bounce", false, true);
               break;
 
               case 'slide':
-                if (this._loop > 1) {
+                if (this._loop > 1)
                   this.newPosition = this.startAt;
-                }
-                else {
-                  if ((this._direction == "up") || (this._direction == "down"))
-                    this.outerDiv.scrollTop = this.stopAt;
-                  else
-                    this.outerDiv.scrollLeft = this.stopAt;
-                  this.stop();
-                  return;                  
-                }
               break;
 
               default:
                 this.newPosition = this.startAt;
+
+                if ((this._direction == "up") || (this._direction == "down"))
+                  this.outerDiv.scrollTop = this.newPosition;
+                else
+                  this.outerDiv.scrollLeft = this.newPosition;
+
+                //dispatch start event, even when this._loop == 1, comp. with IE6
+                this._fireEvent("start", false, false);
             }
 
             if (this._loop > 1)
@@ -382,11 +490,11 @@
               else
                 this.outerDiv.scrollLeft = this.stopAt;
               this.stop();
+              this._fireEvent("finish", false, true);
               return;
             }
           }
-
-          if (!this.startNewDirection) {
+          else {
             if ((this._direction == "up") || (this._direction == "down"))
               this.outerDiv.scrollTop = this.newPosition;
             else
@@ -423,6 +531,9 @@
           this._set_scrollDelay(this.getAttribute('scrolldelay'));
           this._set_scrollAmount(this.getAttribute('scrollamount'));
           this._set_loop(this.getAttribute('loop'));
+          this._setEventListener("start", this.getAttribute("onstart"));
+          this._setEventListener("finish", this.getAttribute("onfinish"));
+          this._setEventListener("bounce", this.getAttribute("onbounce"));
           this.startNewDirection = true;
 
           // init needs to be run after the page has loaded in order to calculate
@@ -450,13 +561,13 @@
                 if (!this._set_loop(newValue)) {
                   if (attributeRemoval) {
                     this._loop = -1;
-                    if (!this.runId)
+                    if (this.runId == 0)
                       this.start();
                   }
                   else
                     throw new Error("Invalid argument for Marquee::loop");
                 }
-                if (!this.rundId)
+                if (this.rundId == 0)
                   this.start();
                 break;
               case "scrollamount":
@@ -510,11 +621,14 @@
               case "height":
                 this.startNewDirection = true;
                 break;
-              case "onbounce":
-                //XXX needs implementing
-                break;
               case "onstart":
-                //XXX needs implementing
+                this._setEventListener("start", newValue);
+                break;
+              case "onfinish":
+                this._setEventListener("finish", newValue);
+                break;
+              case "onbounce":
+                this._setEventListener("bounce", newValue);
                 break;
             }
           }
