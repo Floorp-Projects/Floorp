@@ -5435,7 +5435,11 @@ if test "$MOZ_SVG_FOREIGNOBJECT"; then
   if test -z "$MOZ_ENABLE_CAIRO_GFX"; then
     AC_MSG_ERROR([<foreignobject> requires cairo gfx])
   else
-    AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
+    if test "$MOZ_SVG"; then
+      AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
+    else
+      MOZ_SVG_FOREIGNOBEJCT=
+    fi
   fi
 fi
 
