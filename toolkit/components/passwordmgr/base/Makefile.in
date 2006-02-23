@@ -62,6 +62,7 @@ REQUIRES = 	\
 		widget \
 		autocomplete \
 		pipnss \
+		unicharutil \
 		$(NULL)
 
 XPIDLSRCS	= \
