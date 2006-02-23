@@ -68,7 +68,6 @@ interface nsICookieManager2 : nsICookieManager
    *        expiration date, in seconds since the epoch. only relevant if
    *        aIsSession is false.
    */
-  [noscript]
   void add(in AUTF8String aDomain,
            in AUTF8String aPath,
            in ACString    aName,
