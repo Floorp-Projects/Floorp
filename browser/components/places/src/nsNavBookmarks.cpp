@@ -1371,8 +1371,6 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
                                     nsNavHistoryQueryOptions *aOptions,
                                     nsCOMArray<nsNavHistoryResultNode> *aChildren)
 {
-  mozStorageTransaction transaction(DBConn(), PR_FALSE);
-
   nsresult rv;
   mozStorageStatementScoper scope(mDBGetChildren);
 
@@ -1421,7 +1419,7 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolderId,
 
     NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
   }
-  return transaction.Commit();
+  return NS_OK;
 }
 
 PRInt32
