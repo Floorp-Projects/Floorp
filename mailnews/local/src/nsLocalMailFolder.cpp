@@ -1709,7 +1709,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
     return OnCopyCompleted(srcSupport, PR_FALSE);
   }
 
-  if (!(mFlags & MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK))
+  if (!(mFlags & (MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK)))
     SetMRUTime();
 
   nsXPIDLCString uri;
