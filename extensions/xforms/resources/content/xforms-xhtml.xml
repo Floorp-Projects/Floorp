@@ -50,11 +50,10 @@
   %xformsDTD;
 ]>
 
-<bindings id="xformsBindings"
+<bindings id="xformsBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xforms="http://www.w3.org/2002/xforms">
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
 
   <!-- OUTPUT: <DEFAULT> -->
@@ -122,6 +121,79 @@
         </body>
       </method>
 
+    </implementation>
+  </binding>
+
+
+  <!-- LABEL: <ACCESKEY SUPPORT> -->
+  <binding id="xformswidget-label-accesskey"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
+    <content>
+      <html:span anonid="implicitcontent"/>
+      <html:span anonid="explicitcontent"><children/></html:span>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+        <![CDATA[
+          return {
+            _labelControl: this,
+            _implicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", 'implicitcontent'),
+            _explicitContent: this.ownerDocument.
+              getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
+            _ownerDocument: this.ownerDocument,
+
+            set value(val) {
+              var textnode = null;
+
+              if (val != null) {
+                this._implicitContent.textContent = val;
+                this._explicitContent.style.display = 'none';
+                textnode = this._implicitContent.firstChild;
+              } else {
+                this._implicitContent.textContent = '';
+                this._explicitContent.style.display = 'inline';
+
+                for (var node = this._labelControl.firstChild; node; node = node.nextSibling) {
+                  // XXX: if label has element node children, we skip accesskey
+                  // underlining.
+                  if (node.nodeType == Node.ELEMENT_NODE)
+                    return;
+                }
+                textnode = this._labelControl.firstChild;
+              }
+
+              var accesskey = this._labelControl.parentNode.getAttribute("accesskey");
+              if (accesskey.length == 1 && textnode) {
+                this.setAccesskeyOnNode(accesskey, textnode);
+              }
+            },
+
+            setAccesskeyOnNode: function(aAccesskey, aTextNode) {
+              var text = aTextNode.nodeValue;
+              var location = text.indexOf(aAccesskey);
+
+              if (location > -1) {
+                // we create a range around the character we want and surround
+                // it with an <html:u>
+                var range = this._ownerDocument.createRange();
+                range.setStart(aTextNode, location);
+                range.setEnd(aTextNode, location + 1);
+  
+                var u = this._ownerDocument.
+                  createElementNS("http://www.w3.org/1999/xhtml", "u");
+                range.surroundContents(u);
+              } else {
+                // if we didn't find the accesskey, append it to the end
+                aTextNode.nodeValue += "(" + aAccesskey + ")";
+              }
+            }
+          };
+        ]]>
+        </body>
+      </method>
     </implementation>
   </binding>
 

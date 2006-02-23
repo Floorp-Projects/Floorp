@@ -270,15 +270,15 @@ xul|*:root trigger[appearance="minimal"][disabled]:hover:active {
   color: GrayText !important;
 }
 
-input > label,
-secret > label,
-textarea > label,
-trigger > label,
-submit > label,
-select > label,
-select1 > label,
-upload > label {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-label-accesskey');
+html|*:root input > label,
+html|*:root secret > label,
+html|*:root textarea > label,
+html|*:root trigger > label,
+html|*:root submit > label,
+html|*:root select > label,
+html|*:root select1 > label,
+html|*:root upload > label {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-label-accesskey');
 }
 
 html|*:root label {
