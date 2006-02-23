@@ -795,6 +795,7 @@ var gCookiesWindow = {
 
     document.getElementById("cookiesIntro").value = this._bundle.getString("cookiesAll");
     document.getElementById("clearFilter").disabled = true;
+    document.getElementById("filter").focus();
   },
   
   _cookieMatchesFilter: function (aCookie)
