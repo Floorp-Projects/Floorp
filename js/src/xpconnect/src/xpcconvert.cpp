@@ -1169,6 +1169,12 @@ XPCConvert::JSObject2NativeInterface(XPCCallContext& ccx,
         }
         // else...
         
+        // XXX E4X breaks the world. Don't try wrapping E4X objects!
+        // This hack can be removed (or changed accordingly) when the
+        // DOM <-> E4X bindings are complete, see bug 270553
+        if(JS_TypeOfValue(cx, OBJECT_TO_JSVAL(src)) == JSTYPE_XML)
+            return JS_FALSE;
+
         // Does the JSObject have 'nsISupportness'?
         // XXX hmm, I wonder if this matters anymore with no 
         // oldstyle DOM objects around.
