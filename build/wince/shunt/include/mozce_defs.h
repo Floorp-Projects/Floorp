@@ -517,7 +517,10 @@ typedef struct mozce_MAT2 {
 } mozce_MAT2; 
 
 
-//#if 0
+#if 0
+
+// These are already defined the 5.0 SDK.  You will needed
+// these defines if you are using another SDK
 
 #ifdef _BLENDFUNCTION
 #undef _BLENDFUNCTION
@@ -539,7 +542,7 @@ typedef struct _BLENDFUNCTION
     BYTE   AlphaFormat;
 }BLENDFUNCTION,*PBLENDFUNCTION;
 
-//#endif
+#endif
 
 
 //
@@ -561,5 +564,10 @@ struct color{
 	unsigned char Blue;
 	double Alpha;
 };
+
+
+// if using WINCE 5.0 SDK, you need these:
+#define LPRASPBDLG void*
+#define LPRASDIALDLG void*
 
 #endif
