@@ -105,7 +105,14 @@ fx.Opacity.prototype = Object.extend(new fx.Base(), {
 	},
 
 	increase: function() {
-		if (this.now == 1) this.now = 0.9999;
+		// XXX - ZLL: disable opacity effects for now on Mac due to 
+		// gecko bug 328215
+		if (navigator.platform && navigator.platform == "MacPPC") {
+			if (this.now == 1) this.now = 1;
+		} else {
+			if (this.now == 1) this.now = 0.9999;
+		}
+		
 		if (this.now > 0 && this.el.style.visibility == "hidden") this.el.style.visibility = "visible";
 		if (this.now == 0) this.el.style.visibility = "hidden";
 		if (window.ActiveXObject) this.el.style.filter = "alpha(opacity=" + this.now*100 + ")";
