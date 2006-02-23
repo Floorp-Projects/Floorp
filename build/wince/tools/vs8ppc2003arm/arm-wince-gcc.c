@@ -16,6 +16,8 @@ main(int argc, char **argv)
   args[i++] = "/I\"" SHUNT_INC "\"";
   args[i++] = "/FI\"mozce_shunt.h\"";
 
+  args[i++] = "/DMOZCE_STATIC_BUILD";
+
   args[i++] = "/DARM";
   args[i++] = "/DWINCE";
   args[i++] = "/D_WIN32_WCE=501";
@@ -32,7 +34,8 @@ main(int argc, char **argv)
   args[i++] = "/GS-";                  // disable security checks
   args[i++] = "/GR-";                  // disable C++ RTTI
 
-  args[i++] = "/fp:fast";
+  //  args[i++] = "/fp:fast";
+  args[i++] = "/fp:precise";
 
   startOfArgvs = i;
   
