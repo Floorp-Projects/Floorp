@@ -108,6 +108,7 @@ PR_BEGIN_EXTERN_C
 #define NULL_KEYTYPE_FIELD "NULL"
 #define RSA_KEYTYPE_FIELD "RSA"
 #define DSA_KEYTYPE_FIELD "DSA"
+#define EC_KEYTYPE_FIELD "EC"
 #define FORTEZZA_KEYTYPE_FIELD "FORTEZZA"
 #define DH_KEYTYPE_FIELD "DH"
 #define KEA_KEYTYPE_FIELD "KEA"
@@ -187,6 +188,11 @@ PR_BEGIN_EXTERN_C
 #define PK11_DSA_PUBKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11DSAPublicKey"
 
 /*
+ * PK11ECPublicKey
+ */
+#define PK11_EC_PUBKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11ECPublicKey"
+
+/*
  * PK11Module
  */
 #define PK11MODULE_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Module"
@@ -254,6 +260,7 @@ PR_BEGIN_EXTERN_C
 #define PRIVKEYTYPE_SIG "Lorg/mozilla/jss/crypto/PrivateKey$Type;"
 #define RSA_PRIVKEYTYPE_FIELD "RSA"
 #define DSA_PRIVKEYTYPE_FIELD "DSA"
+#define EC_PRIVKEYTYPE_FIELD "EC"
 
 /*
  * PQGParams

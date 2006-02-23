@@ -120,37 +120,19 @@ finish:
 
 int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
 
-/**********************************************************************
- * PK11KeyPairGenerator.generateRSAKeyPair
+/*
+ * make a common key gen function for both this file and PK11Token.c
  */
-JNIEXPORT jobject JNICALL
-Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
-  (JNIEnv *env, jobject this, jobject token, jint keySize, jlong publicExponent,
-    jboolean temporary, jint sensitive, jint extractable)
+SECStatus
+JSS_PK11_generateKeyPair(JNIEnv *env, CK_MECHANISM_TYPE mechanism, 
+    PK11SlotInfo *slot, SECKEYPublicKey **pubk, SECKEYPrivateKey **privk,
+    void *params, PRBool temporary, jint sensitive, jint extractable)
 {
-    PK11SlotInfo* slot;
-    PK11RSAGenParams params;
-    SECKEYPrivateKey *privk=NULL;
-    SECKEYPublicKey *pubk=NULL;
-    jobject keyPair=NULL;
     PK11AttrFlags attrFlags = 0;
+    *privk=NULL;
+    *pubk=NULL;
 
-    PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
-
-    /**************************************************
-     * get the slot pointer
-     *************************************************/
-    if( JSS_PK11_getTokenSlotPtr(env, token, &slot) != PR_SUCCESS) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
-        goto finish;
-    }
-    PR_ASSERT(slot != NULL);
-
-    /**************************************************
-     * setup parameters
-     *************************************************/
-    params.keySizeInBits = keySize;
-    params.pe = publicExponent;
+    PR_ASSERT(env!=NULL && slot!=NULL);
 
     /**************************************************
      * login to the token if necessary
@@ -191,13 +173,13 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
     } else {
         attrFlags |= (PK11_ATTR_INSENSITIVE | PK11_ATTR_PUBLIC);
     }
-    privk = PK11_GenerateKeyPairWithFlags(slot,
-                                          CKM_RSA_PKCS_KEY_PAIR_GEN,
-                                          &params, /* params is not a ptr */
-                                          &pubk,
+    *privk = PK11_GenerateKeyPairWithFlags(slot,
+                                          mechanism,
+                                          params, 
+                                          pubk,
                                           attrFlags,
                                           NULL /* default PW callback */ );
-    if( privk == NULL ) {
+    if( *privk == NULL ) {
         int errLength;
         char *errBuf;
         char *msgBuf;
@@ -220,6 +202,51 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
         PR_Free(msgBuf);
         goto finish;
     }
+    return SECSuccess;
+
+
+finish:
+    if(*privk!=NULL) {
+        SECKEY_DestroyPrivateKey(*privk);
+	*privk = NULL;
+    }
+    if(*pubk!=NULL) {
+        SECKEY_DestroyPublicKey(*pubk);
+	*pubk = NULL;
+    }
+    return SECFailure;
+}
+
+/**********************************************************************
+ * Local generic helper
+ */
+static jobject 
+PK11KeyPairGenerator(JNIEnv *env, jobject this, jobject token, 
+    CK_MECHANISM_TYPE mechanism, void *params, 
+    jboolean temporary, jint sensitive, jint extractable)
+{
+    PK11SlotInfo* slot;
+    SECKEYPrivateKey *privk=NULL;
+    SECKEYPublicKey *pubk=NULL;
+    jobject keyPair=NULL;
+    SECStatus rv;
+
+    PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
+
+    /**************************************************
+     * get the slot pointer
+     *************************************************/
+    if( JSS_PK11_getTokenSlotPtr(env, token, &slot) != PR_SUCCESS) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+        goto finish;
+    }
+    PR_ASSERT(slot != NULL);
+
+    rv = JSS_PK11_generateKeyPair(env, mechanism, slot, &pubk, &privk,
+    	params, temporary, sensitive, extractable);
+    if (rv != SECSuccess) {
+        goto finish;
+    }
 
     /**************************************************
      * wrap in a Java KeyPair object
@@ -240,6 +267,28 @@ finish:
     return keyPair;
 }
 
+/**********************************************************************
+ * PK11KeyPairGenerator.generateRSAKeyPair
+ */
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
+  (JNIEnv *env, jobject this, jobject token, jint keySize, jlong publicExponent,
+    jboolean temporary, jint sensitive, jint extractable)
+{
+    PK11RSAGenParams params;
+
+    PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
+
+    /**************************************************
+     * setup parameters
+     *************************************************/
+    params.keySizeInBits = keySize;
+    params.pe = publicExponent;
+
+    return PK11KeyPairGenerator(env, this, token, CKM_RSA_PKCS_KEY_PAIR_GEN,
+     &params, temporary, sensitive, extractable);
+}
+
 #define ZERO_SECITEM(item) {(item).len=0; (item).data=NULL;}
 
 /**********************************************************************
@@ -252,13 +301,9 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jbyteArray P, jbyteArray Q,
     jbyteArray G, jboolean temporary, jint sensitive, jint extractable)
 {
-    PK11SlotInfo *slot;
-    SECKEYPrivateKey *privk=NULL;
-    SECKEYPublicKey *pubk=NULL;
     SECItem p, q, g;
     PQGParams *params=NULL;
     jobject keyPair=NULL;
-    PK11AttrFlags attrFlags = 0;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL && P!=NULL && Q!=NULL
                 && G!=NULL);
@@ -267,15 +312,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     ZERO_SECITEM(p);
     ZERO_SECITEM(q);
     ZERO_SECITEM(g);
-
-
-    /**************************************************
-     * Get the slot pointer
-     *************************************************/
-    if( JSS_PK11_getTokenSlotPtr(env, token, &slot) != PR_SUCCESS) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
-        goto finish;
-    }
 
     /**************************************************
      * Setup the parameters
@@ -292,71 +328,60 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
         goto finish;
     }
-
-    /**************************************************
-     * login to the token if necessary
-     *************************************************/
-    if( PK11_Authenticate(slot, PR_TRUE /*loadcerts*/, NULL /* default pwcb*/)
-           != SECSuccess)
-    {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "unable to login to token");
-        goto finish;
-    }
-
-    /**************************************************
-     * generate the key pair on the token
-     *************************************************/
-    if( temporary ) {
-        attrFlags |= PK11_ATTR_SESSION;
-    } else {
-        attrFlags |= PK11_ATTR_TOKEN;
-    }
-    if( extractable == 1 ) {
-        attrFlags |= PK11_ATTR_EXTRACTABLE;
-    } else if( extractable == 0 ) {
-        attrFlags |= PK11_ATTR_UNEXTRACTABLE;
-    }
-    /*
-     * The default of sensitive is set this way to be backward
-     * compatible.
-     */
-    if( sensitive == -1 ) {
-        sensitive = !temporary; /* workaround bug 129563 */
-    }
-    /*
-     * The PRIVATE/PUBLIC attributes are set this way to be backward
-     * compatible with the original PK11_GenerateKeyPair call.
-     */
-    if( sensitive ) {
-        attrFlags |= (PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE);
-    } else {
-        attrFlags |= (PK11_ATTR_INSENSITIVE | PK11_ATTR_PUBLIC);
-    }
-    privk = PK11_GenerateKeyPairWithFlags(slot,
-                                          CKM_DSA_KEY_PAIR_GEN,
-                                          params, /* params is a ptr */
-                                          &pubk,
-                                          attrFlags,
-                                          NULL /* default PW callback */);
-    if( privk == NULL ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION,
-                "Keypair Generation failed on PKCS #11 token");
-        goto finish;
-    }
-
-    /**************************************************
-     * wrap in a Java KeyPair object
-     *************************************************/
-    keyPair = keysToKeyPair(env, &privk, &pubk);
-    if(keyPair == NULL) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
-        goto finish;
-    }
+    keyPair = PK11KeyPairGenerator(env, this, token, CKM_DSA_KEY_PAIR_GEN,
+     			params, temporary, sensitive, extractable);
 
 finish:
     SECITEM_FreeItem(&p, PR_FALSE);
     SECITEM_FreeItem(&q, PR_FALSE);
     SECITEM_FreeItem(&g, PR_FALSE);
     PK11_PQG_DestroyParams(params);
+    return keyPair;
+}
+
+void
+DumpItem(SECItem *item)
+{
+  unsigned char *data = item->data;
+  int i;
+
+  for (i=0; i < item->len; i++) {
+    printf(" %02x",data[i]);
+  }
+  printf(" : 0x%08x %d\n", data, item->len);
+}
+
+/**********************************************************************
+ *
+ * PK11KeyPairGenerator.generateECKeyPair
+ *
+ */
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateECKeyPair
+  (JNIEnv *env, jobject this, jobject token, jbyteArray Curve, 
+    jboolean temporary, jint sensitive, jint extractable)
+{
+    SECItem curve;
+    jobject keyPair=NULL;
+
+    PR_ASSERT(env!=NULL && this!=NULL && token!=NULL && Curve!=NULL );
+
+    /* zero these so we can free them indiscriminately later */
+    ZERO_SECITEM(curve);
+
+    /**************************************************
+     * Setup the parameters
+     *************************************************/
+    if( JSS_ByteArrayToOctetString(env, Curve, &curve))
+    {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+        goto finish;
+    }
+
+    keyPair = PK11KeyPairGenerator(env, this, token, CKM_EC_KEY_PAIR_GEN,
+     			&curve, temporary, sensitive, extractable);
+
+finish:
+    SECITEM_FreeItem(&curve, PR_FALSE);
     return keyPair;
 }

@@ -148,7 +148,7 @@ public interface CryptoToken {
      * on this token.
      *
      * @param algorithm The algorithm that the keys will be used with (RSA,
-     *      DSA, etc.)
+     *      DSA, EC, etc.)
      * @exception java.security.NoSuchAlgorithmException If this token does
      *      not support the given algorithm.
      * @deprecated Use the JCA interface instead ({@link java.security.KeyPairGenerator})
