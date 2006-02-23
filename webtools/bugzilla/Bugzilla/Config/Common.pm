@@ -189,7 +189,7 @@ sub check_shadowdb {
 
 sub check_urlbase {
     my ($url) = (@_);
-    if ($url !~ m:^http.*/$:) {
+    if ($url && $url !~ m:^http.*/$:) {
         return "must be a legal URL, that starts with http and ends with a slash.";
     }
     return "";

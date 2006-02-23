@@ -49,7 +49,7 @@ sub get_param_list {
   {
    name => 'urlbase',
    type => 't',
-   default => 'http://you-havent-visited-editparams.cgi-yet/',
+   default => '',
    checker => \&check_urlbase
   },
 
