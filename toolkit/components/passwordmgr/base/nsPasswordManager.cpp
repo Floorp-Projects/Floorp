@@ -70,6 +70,7 @@
 #include "nsIAutoCompleteResult.h"
 #include "nsIPK11TokenDB.h"
 #include "nsIPK11Token.h"
+#include "nsUnicharUtils.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -1502,7 +1503,7 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
       for (PRInt32 i = result->mArray.Count() - 1; i >= 0; --i) {
         nsDependentString match(NS_STATIC_CAST(PRUnichar*, result->mArray.ElementAt(i)));
         if (aSearchString.Length() > match.Length() ||
-            !StringBeginsWith(match, aSearchString)) {
+            !StringBeginsWith(match, aSearchString, nsCaseInsensitiveStringComparator())) {
           nsMemory::Free(result->mArray.ElementAt(i));
           result->mArray.RemoveElementAt(i);
         }
@@ -1541,7 +1542,7 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
           return NS_ERROR_FAILURE;
 
         if (aSearchString.Length() <= userValue.Length() &&
-            StringBeginsWith(userValue, aSearchString)) {
+            StringBeginsWith(userValue, aSearchString, nsCaseInsensitiveStringComparator())) {
           PRUnichar* data = ToNewUnicode(userValue);
           if (data)
             result->mArray.AppendElement(data);
