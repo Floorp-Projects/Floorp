@@ -389,7 +389,7 @@ TransformRect(float* aX, float *aY, float* aWidth, float *aHeight,
   float xmin, xmax, ymin, ymax;
   xmin = xmax = x[0];
   ymin = ymax = y[0];
-  for (int i=1; i<4; i++) {
+  for (i=1; i<4; i++) {
     if (x[i] < xmin)
       xmin = x[i];
     if (y[i] < ymin)
