@@ -210,12 +210,12 @@ mozSpellChecker::Replace(const nsAString &aOldWord, const nsAString &aNewWord, P
       mTsDoc->NextBlock();
     }
 
-//After we have moved to the block where the first occurance of replace was done, put the 
+//After we have moved to the block where the first occurrence of replace was done, put the 
 //selection to the next word following it. In case there is no word following it i.e if it happens
 //to be the last word in that block, then move to the next block and put the selection to the 
 //first word in that block, otherwise when the Setupdoc() is called, it queries the LastSelectedBlock()
-//and the selection offset of the last occurance of the replaced word is taken instead of the first 
-//occurance and things get messed up as reported in the bug 244969
+//and the selection offset of the last occurrence of the replaced word is taken instead of the first 
+//occurrence and things get messed up as reported in the bug 244969
 
     if( NS_SUCCEEDED(mTsDoc->IsDone(&done)) && !done ){
       nsString str;                                

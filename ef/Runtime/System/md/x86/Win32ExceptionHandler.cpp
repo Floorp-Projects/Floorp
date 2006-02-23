@@ -212,7 +212,7 @@ void win32HardwareExceptionHandler(JavaObject* exc, CONTEXT* ContextRecord)
 	context.object = exc;
 
 	// get top EBP
-	context.sucessorEBP = NULL;
+	context.successorEBP = NULL;
 	context.sourceEBP = (Uint32*)ContextRecord->Ebp;
 	context.sourceAddress = (Uint8*)ContextRecord->Eip;
 

@@ -311,7 +311,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
   decoder->mImageLoad->SetImage(decoder->mImage);
 
-  // since the png is only 1 frame, initalize the container to the width and height of the frame
+  // since the png is only 1 frame, initialize the container to the width and height of the frame
   decoder->mImage->Init(width, height, decoder->mObserver);
 
   if (decoder->mObserver)
@@ -338,7 +338,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   format += 1; // RGB to BGR
 #endif
 
-  // then initalize the frame and append it to the container
+  // then initialize the frame and append it to the container
   nsresult rv = decoder->mFrame->Init(0, 0, width, height, format, 24);
   if (NS_FAILED(rv))
     longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY

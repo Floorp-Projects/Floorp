@@ -88,7 +88,7 @@ SharedStub PROC
 
     mov     rdx, rbx
 
-    ; 1st paramter (this) (not need re-assign)
+    ; 1st parameter (this) (not need re-assign)
 
     ;mov     rcx, [rsp+16+112]
 

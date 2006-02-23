@@ -329,7 +329,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 
         /**
-         *  These methods are used to remove all occurances of the
+         *  These methods are used to remove all occurrences of the
          *  characters found in aSet from this string.
          *  
          *  @param  aSet -- characters to be cut from this

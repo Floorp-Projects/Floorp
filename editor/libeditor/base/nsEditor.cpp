@@ -284,7 +284,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
 
-  /* initalize IME stuff */
+  /* initialize IME stuff */
   IMETextTxn::ClassInit();
   mIMETextNode = do_QueryInterface(nsnull);
   mIMETextOffset = 0;

@@ -418,7 +418,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM void NS_FASTCALL SetIsVoid( PRBool );
 
         /**
-         *  This method is used to remove all occurances of aChar from this
+         *  This method is used to remove all occurrences of aChar from this
          * string.
          *  
          *  @param  aChar -- char to be stripped

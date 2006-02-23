@@ -43,7 +43,7 @@
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
-  mInitalized(PR_FALSE),
+  mInitialized(PR_FALSE),
   mMutable(PR_TRUE),
   mHasBackgroundColor(PR_FALSE),
   mTimeout(100),
@@ -61,7 +61,7 @@ gfxImageFrame::~gfxImageFrame()
 /* void init (in PRInt32 aX, in PRInt32 aY, in PRInt32 aWidth, in PRInt32 aHeight, in gfx_format aFormat); */
 NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, gfx_format aFormat,gfx_depth aDepth)
 {
-  if (mInitalized)
+  if (mInitialized)
     return NS_ERROR_FAILURE;
 
   if (aWidth <= 0 || aHeight <= 0) {
@@ -133,7 +133,7 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
   default:
 #ifdef DEBUG
-    printf("unsupposed gfx_format\n");
+    printf("unsupported gfx_format\n");
 #endif
     break;
   }
@@ -143,7 +143,7 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
   mTopToBottom = mImage->GetIsRowOrderTopToBottom();
 
-  mInitalized = PR_TRUE;
+  mInitialized = PR_TRUE;
   return NS_OK;
 }
 
@@ -151,17 +151,17 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 /* attribute boolean mutable */
 NS_IMETHODIMP gfxImageFrame::GetMutable(PRBool *aMutable)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  NS_ASSERTION(mInitalized, "gfxImageFrame::GetMutable called on non-inited gfxImageFrame");
+  NS_ASSERTION(mInitialized, "gfxImageFrame::GetMutable called on non-inited gfxImageFrame");
   *aMutable = mMutable;
   return NS_OK;
 }
 
 NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   mMutable = aMutable;
@@ -175,7 +175,7 @@ NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
 /* readonly attribute PRInt32 x; */
 NS_IMETHODIMP gfxImageFrame::GetX(PRInt32 *aX)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aX = mOffset.x;
@@ -185,7 +185,7 @@ NS_IMETHODIMP gfxImageFrame::GetX(PRInt32 *aX)
 /* readonly attribute PRInt32 y; */
 NS_IMETHODIMP gfxImageFrame::GetY(PRInt32 *aY)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aY = mOffset.y;
@@ -196,7 +196,7 @@ NS_IMETHODIMP gfxImageFrame::GetY(PRInt32 *aY)
 /* readonly attribute PRInt32 width; */
 NS_IMETHODIMP gfxImageFrame::GetWidth(PRInt32 *aWidth)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aWidth = mSize.width;
@@ -206,7 +206,7 @@ NS_IMETHODIMP gfxImageFrame::GetWidth(PRInt32 *aWidth)
 /* readonly attribute PRInt32 height; */
 NS_IMETHODIMP gfxImageFrame::GetHeight(PRInt32 *aHeight)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aHeight = mSize.height;
@@ -216,7 +216,7 @@ NS_IMETHODIMP gfxImageFrame::GetHeight(PRInt32 *aHeight)
 /* void getRect(in nsRectRef rect); */
 NS_IMETHODIMP gfxImageFrame::GetRect(nsIntRect &aRect)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   aRect.SetRect(mOffset.x, mOffset.y, mSize.width, mSize.height);
@@ -227,7 +227,7 @@ NS_IMETHODIMP gfxImageFrame::GetRect(nsIntRect &aRect)
 /* readonly attribute gfx_format format; */
 NS_IMETHODIMP gfxImageFrame::GetFormat(gfx_format *aFormat)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aFormat = mFormat;
@@ -237,7 +237,7 @@ NS_IMETHODIMP gfxImageFrame::GetFormat(gfx_format *aFormat)
 /* readonly attribute boolean needsBackground; */
 NS_IMETHODIMP gfxImageFrame::GetNeedsBackground(PRBool *aNeedsBackground)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aNeedsBackground = (mFormat != gfxIFormats::RGB && 
@@ -250,7 +250,7 @@ NS_IMETHODIMP gfxImageFrame::GetNeedsBackground(PRBool *aNeedsBackground)
 /* readonly attribute unsigned long imageBytesPerRow; */
 NS_IMETHODIMP gfxImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBytesPerRow = mImage->GetLineStride();
@@ -260,7 +260,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
 /* readonly attribute unsigned long imageDataLength; */
 NS_IMETHODIMP gfxImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBitsLength = mImage->GetLineStride() * mSize.height;
@@ -270,7 +270,7 @@ NS_IMETHODIMP gfxImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
 /* void getImageData([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
 NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
@@ -290,7 +290,7 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
 nsresult gfxImageFrame::SetData(const PRUint8 *aData, PRUint32 aLength, 
                                 PRInt32 aOffset, PRBool aSetAlpha)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(mMutable, "trying to set data on an immutable frame");
@@ -376,7 +376,7 @@ nsresult gfxImageFrame::SetData(const PRUint8 *aData, PRUint32 aLength,
 /* void lockImageData (); */
 NS_IMETHODIMP gfxImageFrame::LockImageData()
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   return mImage->LockImagePixels(PR_FALSE);
@@ -385,7 +385,7 @@ NS_IMETHODIMP gfxImageFrame::LockImageData()
 /* void unlockImageData (); */
 NS_IMETHODIMP gfxImageFrame::UnlockImageData()
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   return mImage->UnlockImagePixels(PR_FALSE);
@@ -394,7 +394,7 @@ NS_IMETHODIMP gfxImageFrame::UnlockImageData()
 /* readonly attribute unsigned long alphaBytesPerRow; */
 NS_IMETHODIMP gfxImageFrame::GetAlphaBytesPerRow(PRUint32 *aBytesPerRow)
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
+  if (!mInitialized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBytesPerRow = mImage->GetAlphaLineStride();
@@ -404,7 +404,7 @@ NS_IMETHODIMP gfxImageFrame::GetAlphaBytesPerRow(PRUint32 *aBytesPerRow)
 /* readonly attribute unsigned long alphaDataLength; */
 NS_IMETHODIMP gfxImageFrame::GetAlphaDataLength(PRUint32 *aBitsLength)
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
+  if (!mInitialized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBitsLength = mImage->GetAlphaLineStride() * mSize.height;
@@ -414,7 +414,7 @@ NS_IMETHODIMP gfxImageFrame::GetAlphaDataLength(PRUint32 *aBitsLength)
 /* void getAlphaData([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
 NS_IMETHODIMP gfxImageFrame::GetAlphaData(PRUint8 **aData, PRUint32 *length)
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
+  if (!mInitialized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
@@ -434,7 +434,7 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
 /* void lockAlphaData (); */
 NS_IMETHODIMP gfxImageFrame::LockAlphaData()
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
+  if (!mInitialized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
   return mImage->LockImagePixels(PR_TRUE);
@@ -443,7 +443,7 @@ NS_IMETHODIMP gfxImageFrame::LockAlphaData()
 /* void unlockAlphaData (); */
 NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 {
-  if (!mInitalized || !mImage->GetHasAlphaMask())
+  if (!mInitialized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
   return mImage->UnlockImagePixels(PR_TRUE);
@@ -456,7 +456,7 @@ NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 /* void drawTo */
 NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
@@ -467,7 +467,7 @@ NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 a
 /* attribute long timeout; */
 NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   // Ensure a minimal time between updates so we don't throttle the UI thread.
@@ -493,7 +493,7 @@ NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
 
 NS_IMETHODIMP gfxImageFrame::SetTimeout(PRInt32 aTimeout)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   mTimeout = aTimeout;
@@ -503,7 +503,7 @@ NS_IMETHODIMP gfxImageFrame::SetTimeout(PRInt32 aTimeout)
 /* attribute long frameDisposalMethod; */
 NS_IMETHODIMP gfxImageFrame::GetFrameDisposalMethod(PRInt32 *aFrameDisposalMethod)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aFrameDisposalMethod = mDisposalMethod;
@@ -511,7 +511,7 @@ NS_IMETHODIMP gfxImageFrame::GetFrameDisposalMethod(PRInt32 *aFrameDisposalMetho
 }
 NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   mDisposalMethod = aFrameDisposalMethod;
@@ -521,7 +521,7 @@ NS_IMETHODIMP gfxImageFrame::SetFrameDisposalMethod(PRInt32 aFrameDisposalMethod
 /* attribute gfx_color backgroundColor; */
 NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
 {
-  if (!mInitalized || !mHasBackgroundColor)
+  if (!mInitialized || !mHasBackgroundColor)
     return NS_ERROR_NOT_INITIALIZED;
 
   *aBackgroundColor = mBackgroundColor;
@@ -529,7 +529,7 @@ NS_IMETHODIMP gfxImageFrame::GetBackgroundColor(gfx_color *aBackgroundColor)
 }
 NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   mBackgroundColor = aBackgroundColor;
@@ -539,7 +539,7 @@ NS_IMETHODIMP gfxImageFrame::SetBackgroundColor(gfx_color aBackgroundColor)
 
 NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
 {
-  if (!mInitalized)
+  if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ENSURE_ARG_POINTER(result);

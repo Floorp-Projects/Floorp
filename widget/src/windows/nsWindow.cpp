@@ -808,7 +808,7 @@ nsWindow::~nsWindow()
   delete mFont;
 
   if (mCursor == -1) {
-    // A sucessfull SetCursor call will destroy the custom cursor, if it's ours
+    // A successfull SetCursor call will destroy the custom cursor, if it's ours
     SetCursor(eCursor_standard);
   }
 

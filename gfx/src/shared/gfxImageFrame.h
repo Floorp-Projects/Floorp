@@ -76,7 +76,7 @@ private:
 
   nsCOMPtr<nsIImage> mImage;
 
-  PRPackedBool mInitalized;
+  PRPackedBool mInitialized;
   PRPackedBool mMutable;
   PRPackedBool mHasBackgroundColor;
   PRPackedBool mTopToBottom;

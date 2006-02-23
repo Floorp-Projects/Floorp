@@ -123,7 +123,7 @@ static PRErrorCode RandomizeConnectError(PRErrorCode code)
 {
     //
     // To test out these errors, load http://www.yahoo.com/.  It should load
-    // correctly despite the random occurance of these errors.
+    // correctly despite the random occurrence of these errors.
     //
     int n = rand();
     if (n > RAND_MAX/2) {

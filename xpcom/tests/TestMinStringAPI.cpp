@@ -208,7 +208,7 @@ static PRBool test_append()
     return PR_TRUE;
   }
 
-// Replace all occurances of |matchVal| with |newVal|
+// Replace all occurrences of |matchVal| with |newVal|
 static void ReplaceSubstring( nsACString& str,
                               const nsACString& matchVal,
                               const nsACString& newVal )

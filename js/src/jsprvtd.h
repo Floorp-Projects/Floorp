@@ -179,7 +179,7 @@ typedef void
  * The 'closure' param is as passed to JS_SetExecuteHook or JS_SetCallHook
  * for the 'before'invocation, but is whatever value is returned from that
  * invocation for the 'after' invocation. Thus, the hook implementor *could*
- * allocate a stucture in the 'before' invocation and return a pointer to that
+ * allocate a structure in the 'before' invocation and return a pointer to that
  * structure. The pointer would then be handed to the hook for the 'after'
  * invocation. Alternately, the 'before' could just return the same value as
  * in 'closure' to cause the 'after' invocation to be called with the same

@@ -40,7 +40,7 @@ and window icons (to appear in the upper left corner of various windows).
 
 
 Requirements:
-Each icon should contain the follwing devices images:
+Each icon should contain the following devices images:
 48x48, 32x32, and 16x16 - 16 color
 48x48, 32x32, and 16x16 - True color
 48x48, 32x32, and 16x16 - True color XP (Contains alpha shadows)

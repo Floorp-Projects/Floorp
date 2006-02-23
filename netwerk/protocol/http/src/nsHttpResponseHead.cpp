@@ -630,12 +630,12 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
         return;
     }
 
-    // search header value for occurance(s) of "no-cache" but ignore
-    // occurance(s) of "no-cache=blah"
+    // search header value for occurrence(s) of "no-cache" but ignore
+    // occurrence(s) of "no-cache=blah"
     if (nsHttp::FindToken(val, "no-cache", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoCache = PR_TRUE;
 
-    // search header value for occurance of "no-store" 
+    // search header value for occurrence of "no-store" 
     if (nsHttp::FindToken(val, "no-store", HTTP_HEADER_VALUE_SEPS))
         mCacheControlNoStore = PR_TRUE;
 }

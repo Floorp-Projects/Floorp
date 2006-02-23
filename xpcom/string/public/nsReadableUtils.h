@@ -272,7 +272,7 @@ NS_COM void ToUpperCase( const nsACString& aSource, nsACString& aDest );
 NS_COM void ToLowerCase( const nsACString& aSource, nsACString& aDest );
 
   /**
-   * Finds the leftmost occurance of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
+   * Finds the leftmost occurrence of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
    *
    * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
@@ -306,7 +306,7 @@ inline PRBool FindInReadable( const nsACString& aPattern, const nsACString& aSou
 NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
   /**
-   * Finds the rightmost occurance of |aPattern| 
+   * Finds the rightmost occurrence of |aPattern| 
    * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
    *
@@ -317,7 +317,7 @@ NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_itera
 NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
 
    /**
-   * Finds the leftmost occurance of |aChar|, if any in the range 
+   * Finds the leftmost occurrence of |aChar|, if any in the range 
    * |aSearchStart|..|aSearchEnd|.
    *
    * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| to

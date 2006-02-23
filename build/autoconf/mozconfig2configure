@@ -38,7 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 # mozconfig2configure - Loads options from .mozconfig onto configure's
-#    command-line. See find-mozconfig.sh for how the config file is
+#    command-line. See mozconfig-find for how the config file is
 #    found
 #
 #    The options from .mozconfig are inserted into the command-line

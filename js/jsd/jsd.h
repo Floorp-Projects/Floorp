@@ -297,7 +297,7 @@ struct JSDProperty
 
 struct JSDAtom
 {
-    char* str;      /* must be first element in stuct for compare */
+    char* str;      /* must be first element in struct for compare */
     intN  refcount;
 };
 

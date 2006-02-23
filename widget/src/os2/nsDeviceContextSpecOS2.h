@@ -71,7 +71,7 @@ class nsDeviceContextSpecOS2 : public nsIDeviceContextSpec
 {
 public:
 /**
- * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
+ * Construct a nsDeviceContextSpecOS2, which is an object which contains and manages a mac printrecord
  * @update  dc 12/02/98
  */
   nsDeviceContextSpecOS2();
@@ -79,7 +79,7 @@ public:
   NS_DECL_ISUPPORTS
 
 /**
- * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
+ * Initialize the nsDeviceContextSpecOS2 for use.  This will allocate a printrecord for use
  * @update   dc 2/16/98
    * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
  * @return error status
@@ -101,7 +101,7 @@ public:
   NS_IMETHOD GetPRTQUEUE(PRTQUEUE *&p);
 
 /**
- * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * Destructor for nsDeviceContextSpecOS2, this will release the printrecord
  * @update  dc 2/16/98
  */
   virtual ~nsDeviceContextSpecOS2();

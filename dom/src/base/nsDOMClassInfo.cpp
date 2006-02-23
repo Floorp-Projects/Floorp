@@ -5653,7 +5653,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // We're resolving a property on an outer window for which there
       // is no inner window yet, and the window is not frozen
       // (i.e. we're not in the middle of initializing XPConnect
-      // classes on it). If the context is already initalized, force
+      // classes on it). If the context is already initialized, force
       // creation of a new inner window. This will create a synthetic
       // about:blank document, and an inner window which may be reused
       // by the actual document being loaded into this outer

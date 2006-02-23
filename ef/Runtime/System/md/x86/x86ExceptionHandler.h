@@ -50,7 +50,7 @@ struct Context
 	Uint32	EDI;
 
 	Uint32*	sourceEBP;
-	Uint32*	sucessorEBP;
+	Uint32*	successorEBP;
 
 	Uint8*	sourceAddress;
 

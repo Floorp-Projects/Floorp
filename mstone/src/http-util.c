@@ -378,7 +378,7 @@ HttpCommandResponse (
 	ret = HttpReadResponse(ptcx, cmd, me, response, resplen, msgParse);
 	event_stop(ptcx, timer);
 	if (ret == 0) {			/* got nothing */
-	    /* Probably an IO error.  It will be definate if re-tried. */
+	    /* Probably an IO error.  It will be definite if re-tried. */
 	    MS_usleep (5000);		/* time for bytes to show up */
 	    continue;			/* just re-try it */
 	} else if (ret == -1) {		/* IO error */

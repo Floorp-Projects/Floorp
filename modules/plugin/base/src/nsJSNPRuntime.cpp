@@ -194,7 +194,7 @@ OnWrapperDestroyed()
     if (sJSObjWrappers.ops) {
       NS_ASSERTION(sJSObjWrappers.entryCount == 0, "Uh, hash not empty?");
 
-      // No more wrappers, and our hash was initalized. Finish the
+      // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
       PL_DHashTableFinish(&sJSObjWrappers);
 
@@ -204,7 +204,7 @@ OnWrapperDestroyed()
     if (sNPObjWrappers.ops) {
       NS_ASSERTION(sNPObjWrappers.entryCount == 0, "Uh, hash not empty?");
 
-      // No more wrappers, and our hash was initalized. Finish the
+      // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
       PL_DHashTableFinish(&sNPObjWrappers);
 
@@ -781,7 +781,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
   }
 
   if (!sJSObjWrappers.ops) {
-    // No hash yet (or any more), initalize it.
+    // No hash yet (or any more), initialize it.
 
     static PLDHashTableOps ops =
       {
@@ -1247,7 +1247,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   }
 
   if (!sNPObjWrappers.ops) {
-    // No hash yet (or any more), initalize it.
+    // No hash yet (or any more), initialize it.
 
     if (!PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nsnull,
                            sizeof(NPObjWrapperHashEntry), 16)) {
