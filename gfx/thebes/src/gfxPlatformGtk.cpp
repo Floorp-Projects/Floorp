@@ -77,39 +77,41 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
 {
     gfxASurface *newSurface = nsnull;
 
-    int bpp, glitzf;
-    int bestbpp = gdk_visual_get_best_depth();
+    int glitzf;
+    int xrenderFormatID;
     switch (imageFormat) {
         case gfxASurface::ImageFormatARGB32:
-            bpp = 32;
             glitzf = 0; // GLITZ_STANDARD_ARGB32;
+            xrenderFormatID = PictStandardARGB32;
             break;
         case gfxASurface::ImageFormatRGB24:
-            bpp = 24;
             glitzf = 1; // GLITZ_STANDARD_RGB24;
+            xrenderFormatID = PictStandardRGB24;
             break;
         case gfxASurface::ImageFormatA8:
-            bpp = 8;
             glitzf = 2; // GLITZ_STANDARD_A8;
+            xrenderFormatID = PictStandardA8;
+            break;
         case gfxASurface::ImageFormatA1:
-            bpp = 1;
             glitzf = 3; // GLITZ_STANDARD_A1;
+            xrenderFormatID = PictStandardA1;
             break;
         default:
             return nsnull;
     }
 
-    if (bestbpp < bpp)
-        bpp = bestbpp;
-
+    // XXX we really need a different interface here, something that passes
+    // in more context, including the display and/or target surface type that
+    // we should try to match
+    Display* display = GDK_DISPLAY();
     if (!UseGlitz()) {
-        GdkPixmap *pixmap = ::gdk_pixmap_new(nsnull, width, height, bpp);
-        gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), gdk_rgb_get_colormap());
+        XRenderPictFormat* xrenderFormat =
+            XRenderFindStandardFormat(display, xrenderFormatID);
+        GdkPixmap* pixmap = ::gdk_pixmap_new(nsnull, width, height,
+                                             xrenderFormat->depth);
+        gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
 
-        newSurface = new gfxXlibSurface(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(pixmap)),
-                                        GDK_WINDOW_XWINDOW(GDK_DRAWABLE(pixmap)),
-                                        GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(pixmap))),
-                                        width, height);
+        newSurface = new gfxXlibSurface(display, xrenderFormat, width, height);
 
         // set up the surface to auto-unref the gdk pixmap when the surface
         // is released
@@ -120,13 +122,13 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
     } else {
 #ifdef MOZ_ENABLE_GLITZ
         glitz_drawable_format_t *gdformat = glitz_glx_find_pbuffer_format
-            (GDK_DISPLAY(),
+            (display,
              gdk_x11_get_default_screen(),
              0, NULL, 0);
 
         glitz_drawable_t *gdraw =
-            glitz_glx_create_pbuffer_drawable(GDK_DISPLAY(),
-                                              DefaultScreen(GDK_DISPLAY()),
+            glitz_glx_create_pbuffer_drawable(display,
+                                              DefaultScreen(display),
                                               gdformat,
                                               width,
                                               height);
