@@ -6774,7 +6774,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   nsCOMPtr<nsISupports> srcSupport;
   nsCOMPtr<nsISupports> copySupport;
 
-  if (!(mFlags & MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK))
+  if (!(mFlags & (MSG_FOLDER_FLAG_TRASH|MSG_FOLDER_FLAG_JUNK)))
     SetMRUTime();
 
   if (WeAreOffline())
@@ -7626,7 +7626,7 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsACLListed(PRBool *bVal)
   PRBool dontNeedACLListed = !m_folderNeedsACLListed;
   // if we haven't acl listed, and it's not a no select folder or the inbox,
   //  then we'll list the acl if it's not a namespace.
-  if (m_folderNeedsACLListed && !(mFlags & MSG_FOLDER_FLAG_IMAP_NOSELECT | MSG_FOLDER_FLAG_INBOX))
+  if (m_folderNeedsACLListed && !(mFlags & (MSG_FOLDER_FLAG_IMAP_NOSELECT | MSG_FOLDER_FLAG_INBOX)))
     GetIsNamespace(&dontNeedACLListed);
 
   *bVal = !dontNeedACLListed;
