@@ -619,6 +619,13 @@ nsMsgIdentity::getFolderPref(const char *prefname, char **retval, PRBool mustHav
       if (NS_SUCCEEDED(rv))
         return msgFolder->GetURI(retval);
     }
+    else // if the server doesn't exist, fall back to the default pref.
+    {
+      PR_FREEIF(*retval);	// free the empty string
+      rv = getDefaultCharPref(prefname, retval);
+      if (NS_SUCCEEDED(rv) && *retval)
+        rv = setFolderPref(prefname, (const char *)*retval);
+    }
   }
   return rv;
 }
