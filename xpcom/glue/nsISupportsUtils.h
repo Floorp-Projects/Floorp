@@ -190,26 +190,6 @@ ns_if_addref( T expr )
 #define NS_ISUPPORTS_CAST(__unambiguousBase, __expr) \
   NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(__unambiguousBase, __expr))
 
-extern "C++" {
-// ...because some one is accidentally including this file inside
-// an |extern "C"|
-
-class nsISupports;
-
-template <class T>
-struct nsCOMTypeInfo
-{
-    static const nsIID& GetIID() { return T::GetIID(); }
-};
-
-NS_SPECIALIZE_TEMPLATE
-struct nsCOMTypeInfo<nsISupports>
-{
-    static const nsIID& GetIID() {
-        static const nsIID iid_NS_ISUPPORTS_IID = NS_ISUPPORTS_IID; return iid_NS_ISUPPORTS_IID;
-    }
-};
-
 // a type-safe shortcut for calling the |QueryInterface()| member function
 template <class T, class DestinationType>
 inline
@@ -222,7 +202,5 @@ CallQueryInterface( T* aSource, DestinationType** aDestination )
     return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
                                    NS_REINTERPRET_CAST(void**, aDestination));
 }
-
-} // extern "C++"
 
 #endif /* __nsISupportsUtils_h */
