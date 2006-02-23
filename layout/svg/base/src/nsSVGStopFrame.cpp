@@ -51,7 +51,7 @@
 // events and propogate them to the parent.  Most of the heavy lifting is done
 // within the nsSVGGradientFrame, which is the parent for this frame
 
-typedef nsContainerFrame  nsSVGStopFrameBase;
+typedef nsFrame  nsSVGStopFrameBase;
 
 class nsSVGStopFrame : public nsSVGStopFrameBase,
                        public nsISVGValueObserver,
