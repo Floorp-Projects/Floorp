@@ -3876,16 +3876,6 @@ fi
 
 fi # SKIP_LIBRARY_CHECKS
 
-dnl check whether to enable canvas
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(canvas,
-[  --enable-canvas          Enable html:canvas feature],
-    MOZ_ENABLE_CANVAS=1,
-    MOZ_ENABLE_CANVAS= )
-if test "$MOZ_ENABLE_CANVAS"; then
-    AC_DEFINE(MOZ_ENABLE_CANVAS)
-fi
-
 dnl check whether to enable glitz
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(glitz,
@@ -4176,8 +4166,6 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
-AC_SUBST(MOZ_ENABLE_CANVAS)
-
 AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
@@ -4230,6 +4218,7 @@ MOZ_ACTIVEX_SCRIPTING_SUPPORT=
 MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
+MOZ_ENABLE_CANVAS=1
 MOZ_ENABLE_LIBXUL=
 MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc help p3p venkman inspector irc typeaheadfind spellcheck gnomevfs sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm icon"
@@ -4269,6 +4258,7 @@ MOZ_REFLOW_PERF=
 MOZ_REORDER=
 MOZ_SINGLE_PROFILE=
 MOZ_STATIC_MAIL_BUILD=
+MOZ_SVG=1
 MOZ_SVG_FOREIGNOBJECT=$MOZ_ENABLE_CAIRO_GFX
 MOZ_TIMELINE=
 MOZ_UI_LOCALE=en-US
@@ -4354,6 +4344,7 @@ minimo)
   MOZ_ACTIVEX_SCRIPTING_SUPPORT=
   MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
   MOZ_COMPOSER=
+  MOZ_ENABLE_CANVAS=
   MOZ_ENABLE_POSTSCRIPT=
   MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc spatialnavigation permissions"
   MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
@@ -4374,6 +4365,7 @@ minimo)
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
   MOZ_SINGLE_PROFILE=1
+  MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
   MOZ_UPDATER=
   MOZ_USE_NATIVE_UCONV=1
@@ -4404,11 +4396,13 @@ mail)
   MOZ_OJI=
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="http file viewsource res data"
+  MOZ_ENABLE_CANVAS=
   MOZ_IMG_DECODERS_DEFAULT=`echo "$MOZ_IMG_DECODERS_DEFAULT" | sed "s/ xbm//"`
   MOZ_MAIL_NEWS=1
   MOZ_LDAP_XPCOM=1
   MOZ_STATIC_MAIL_BUILD=1
   MOZ_COMPOSER=1
+  MOZ_SVG=
   MOZ_APP_VERSION=$THUNDERBIRD_VERSION
   MOZ_EXTENSIONS_DEFAULT=" wallet spellcheck"
   AC_DEFINE(MOZ_THUNDERBIRD)
@@ -5369,6 +5363,18 @@ MOZ_ARG_DISABLE_BOOL(mathml,
 if test "$MOZ_MATHML"; then
   AC_DEFINE(MOZ_MATHML)
 fi
+
+dnl ========================================================
+dnl Canvas
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(canvas,
+[  --enable-canvas          Enable html:canvas feature],
+    MOZ_ENABLE_CANVAS=1,
+    MOZ_ENABLE_CANVAS= )
+if test "$MOZ_ENABLE_CANVAS"; then
+    AC_DEFINE(MOZ_ENABLE_CANVAS)
+fi
+AC_SUBST(MOZ_ENABLE_CANVAS)
 
 dnl ========================================================
 dnl SVG
