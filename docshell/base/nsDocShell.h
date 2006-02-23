@@ -334,6 +334,11 @@ protected:
                                        WalkHistoryEntriesFunc aCallback,
                                        void *aData);
 
+    // For each child of aParentEntry, check whether it belongs to aChildShell.
+    // If it does, remove it from the child list of aParentEntry.
+    static void RemoveChildsSHEntriesFrom(nsISHEntry *aParentEntry,
+                                          nsDocShell *aChildShell);
+
     // overridden from nsDocLoader, this provides more information than the
     // normal OnStateChange with flags STATE_REDIRECTING
     virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
