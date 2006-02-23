@@ -3258,9 +3258,15 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   wrapper->GetJSObjectPrototype(&proto);
 
   JSObject *proto_proto = ::JS_GetPrototype(cx, proto);
+  if (!proto_proto) {
+    // If our prototype doesn't have a proto, then we've probably already
+    // wrapped this object and someone's done something evil, like set
+    // our prototype's proto to null, so bail.
+
+    return NS_OK;
+  }
 
   JSClass *proto_proto_class = JS_GET_CLASS(cx, proto_proto);
-
   if (proto_proto_class != sObjectClass) {
     // We've just wrapped an object of a type that has been wrapped on
     // this scope already so the prototype of the xpcwrapped native's
