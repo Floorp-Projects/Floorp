@@ -26,7 +26,10 @@
                                mousethrough="never"
                                collapsed="true">
               <xul:menupopup type="places"
-                             context="placesContext"/>
+#ifndef XP_MACOSX
+                             context="placesContext"
+#endif
+							 />
             </xul:toolbarbutton>
           </xul:hbox>
         </xul:hbox>
@@ -106,7 +109,10 @@
               popup.setAttribute("type", "places");
               // This is set here and not in the XBL constructor for the menu because
               // it doesn't get initialized properly in the constructor.
+#ifndef XP_MACOSX
+              // No context menus on menuitems on Mac
               popup.setAttribute("context", "placesContext");
+#endif
               button.appendChild(popup);
               popup._result = this._result;
               popup._resultNode = child;
@@ -122,7 +128,10 @@
           popup.setAttribute("type", "places");
           // This is set here and not in the XBL constructor for the menu because
           // it doesn't get initialized properly in the constructor.
+#ifndef XP_MACOSX
+          // No context menus on menuitems on Mac
           popup.setAttribute("context", "placesContext");
+#endif
           popup._result = this._result;
           popup._resultNode = this._result.root;
           var t = this;
