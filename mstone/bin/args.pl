@@ -152,7 +152,7 @@ sub fileInsertAfter {
 
 	print NEW $newtext;	# insert new text
 	$foundit++;
-	last;			# only change first occurance
+	last;			# only change first occurrence
     }
 
     if ($foundit) {		# copy rest of file

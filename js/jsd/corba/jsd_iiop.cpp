@@ -2234,7 +2234,7 @@ StepInto::step(JSDThreadState* jsdthreadstate)
     //     doSomething();
     //
     // The "i++" comes after the "doSomething" call as far as PCs go.
-    // But, in JS the line number associated with the "i++" instuction
+    // But, in JS the line number associated with the "i++" instruction
     // is that of the "for(...". So, the lines for the PC can look like
     // 1,1,2,1,2. Thus we are careful in deciding how to step.
     //
@@ -2242,11 +2242,11 @@ StepInto::step(JSDThreadState* jsdthreadstate)
     prword_t    topPC   = _topPC(jsdthreadstate, topFrame);
     int         topLine = _topLine(topScript, topPC);
 
-    // definately jumping back
+    // definitely jumping back
     if( topPC < topPCInitial && topLine != topLineInitial )
         return STOP;
 
-    // definately jumping forward
+    // definitely jumping forward
     if( topLine > topLineInitial )
         return STOP;
 
@@ -2284,11 +2284,11 @@ StepOver::step(JSDThreadState* jsdthreadstate)
     prword_t           topPC   = _topPC(jsdthreadstate, topFrame);
     int                topLine = _topLine(topScript, topPC);
 
-    // definately jumping back
+    // definitely jumping back
     if( topPC < topPCInitial && topLine != topLineInitial )
         return STOP;
 
-    // definately jumping forward
+    // definitely jumping forward
     if( topLine > topLineInitial )
         return STOP;
 

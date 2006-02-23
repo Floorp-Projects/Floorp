@@ -124,7 +124,7 @@ public class Utilities extends Object {
 		    // We made it to the end without "break"ing! They must be equal...
 		    returnValue = true;
 		}
-	    } // else, they're definately not equal!
+	    } // else, they're definitely not equal!
 	}
 	return returnValue;
     }

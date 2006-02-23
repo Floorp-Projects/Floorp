@@ -1367,7 +1367,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
 
         rv = dirEnum.Init(this);
         if (NS_FAILED(rv)) {
-            NS_WARNING("dirEnum initalization failed");
+            NS_WARNING("dirEnum initialization failed");
             return rv;
         }
 

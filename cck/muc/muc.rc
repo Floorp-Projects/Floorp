@@ -122,7 +122,7 @@ BEGIN
     IDS_DNS_ALREADY         "Your system is configured for another Domain Name System (DNS) server. You may need to change your Dial-Up Networking settings to connect to the Internet.\n\nPlease see the troubleshooting section of the Installation and Setup Guide for more information."
     IDS_BAD_PASSWORD        "Invalid pasword in Netscape registration file."
     IDS_NO_RNA_REGSERVER    "Unable to create RNA phone book entry!"
-    IDS_MISSING_AREA_CODE   "The service provider's phone number is missing its area code (or is not in TAPI cannonical form in the configuration file).  Account creation will fail until this is fixed."
+    IDS_MISSING_AREA_CODE   "The service provider's phone number is missing its area code (or is not in TAPI canonical form in the configuration file).  Account creation will fail until this is fixed."
     IDS_NO_RNA              "Unable to create shortcut to RNA phone book entry!"
 END
 

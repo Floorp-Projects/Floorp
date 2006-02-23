@@ -1361,7 +1361,7 @@ nsCSSStyleSheet::~nsCSSStyleSheet()
   // not be released. The document will let us know when it is going
   // away.
   if (mRuleProcessors) {
-    NS_ASSERTION(mRuleProcessors->Count() == 0, "destucting sheet with rule processor reference");
+    NS_ASSERTION(mRuleProcessors->Count() == 0, "destructing sheet with rule processor reference");
     delete mRuleProcessors; // weak refs, should be empty here anyway
   }
 }

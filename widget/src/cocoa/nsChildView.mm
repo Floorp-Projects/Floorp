@@ -388,7 +388,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   // if our parent is a popup window, we're most certainly coming from a <select> list dropdown which
   // we handle in a different way than other platforms. It's ok that we don't have a parent
   // view because we bailed before even creating the cocoa widgetry and as a result, we
-  // don't need to assert. However, if that's not the case, we definately want to assert
+  // don't need to assert. However, if that's not the case, we definitely want to assert
   // to show views aren't getting correctly parented.
   if ( aParent ) {
     nsWindowType windowType;

@@ -1586,7 +1586,7 @@ wallet_Initialize(PRBool unlockDatabase)
 #endif
   namesInitialized = PR_TRUE;
   
-  // Initalize |wallet_SchemaToValue_list| with values from the Address Book's "me" card
+  // Initialize |wallet_SchemaToValue_list| with values from the Address Book's "me" card
   // rather than from the saved schema file.
   if (!wallet_ValuesReadIn) {
     wallet_Clear(&wallet_SchemaToValue_list); /* otherwise we will duplicate the list */

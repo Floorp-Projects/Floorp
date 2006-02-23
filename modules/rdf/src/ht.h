@@ -223,7 +223,7 @@ typedef struct _HT_ResourceStruct {
 	uint16				flags;
 	uint16				depth;
 	HT_Resource			next;
-	/* a pane or view might have multiple occurances of a RDF_Resource.
+	/* a pane or view might have multiple occurrences of a RDF_Resource.
 	The hash table just points to the first of them. This allows us to
 	make a linked list of it */
 } HT_ResourceStruct;

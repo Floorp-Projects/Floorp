@@ -176,7 +176,7 @@ NOTE: These API tests are build using Gnu Compiler gcc.
 
     * Check <home dir>/.mozilla/default/prefs.js (on Solaris/Linux) or
             c:/Program Files/Mozilla/Users50/Default/prefs.js (on Win32)
-      file. If it has the follwing entries
+      file. If it has the following entries
           user_pref("capability.principal.codebase.p0.granted", "UniversalXPConnect");
           user_pref("capability.principal.codebase.p0.id", "file://");
 
@@ -272,7 +272,7 @@ NOTE: These API tests are build using Gnu Compiler gcc.
    Go to <JDKHOME>/jre/bin directory. Invoke the 'ControlPanel' executable.
    (On Win32 platforms click on  Start->Settings->Control Panel->Duke icon)
    
-   In the Java RunTime Parameters Text Field, add the follwing entry
+   In the Java RunTime Parameters Text Field, add the following entry
    -Xbootclasspath/a:<mozilla dir>/modules/oji/tests/build/classes
    
    where <mozilla dir> is absolute path  to mozilla dir.

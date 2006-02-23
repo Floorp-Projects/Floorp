@@ -192,12 +192,12 @@ The following filters are supported:
      Collapses sequences of spaces into a single space.
 
    substitution
-     Replaces occurances of "@foo@" by the value of the variable
+     Replaces occurrences of "@foo@" by the value of the variable
      "foo". If @foo@ is not defined, the preprocessor will terminate
      with a fatal error.
 
    attemptSubstitution
-     Replaces occurances of "@foo@" by the value of the variable
+     Replaces occurrences of "@foo@" by the value of the variable
      "foo". If @foo@ is not defined, the empty string is used instead.
 
 Filters are run in alphabetical order, on a per-line basis.

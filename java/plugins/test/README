@@ -48,7 +48,7 @@ How To Build and Run :
 
 *  Edit <TEST_TOP_DIR>/config/SecurityTests.keys
    
-    - Replace every occurance of Host sirius with your Host name
+    - Replace every occurrence of Host sirius with your Host name
       and port with your active port number.
 
 * cd <TEST_TOP_DIR>/src/org/mozilla/pluglet/test/basic
@@ -102,7 +102,7 @@ How To Build and Run :
 
 *  Edit <TEST_TOP_DIR>/config/SecurityTests.keys
    
-    - Replace every occurance of Host sirius with your Host name
+    - Replace every occurrence of Host sirius with your Host name
       and port with your active port number.
 
 * cd <TEST_TOP_DIR>/src/org/mozilla/pluglet/test/basic

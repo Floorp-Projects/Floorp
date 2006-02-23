@@ -35,7 +35,7 @@ public final class DBBuilder
   }
   
   /**
-   * @return true if the db was built sucessfully. Output is sent to st-out and st-err
+   * @return true if the db was built successfully. Output is sent to st-out and st-err
    */
   public static boolean build(Connection connection)
   {

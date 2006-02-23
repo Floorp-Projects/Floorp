@@ -461,7 +461,7 @@ nsDataObj :: GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG 
     }
   } // if we have an image
   else  
-    NS_WARNING ( "Definately not an image on clipboard" );
+    NS_WARNING ( "Definitely not an image on clipboard" );
 
 #endif
 	return ResultFromScode(result);

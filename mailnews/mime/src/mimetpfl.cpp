@@ -558,7 +558,7 @@ static void Update_in_tag_info(PRBool *a_in_tag, /* IN/OUT */
 
   // Not in a tag. 
   // Check if we are entering a tag by looking for '<'.
-  // All normal occurances of '<' should have been replaced
+  // All normal occurrences of '<' should have been replaced
   // by &lt;
   if ('<' == a_current_char) {
     *a_in_tag = PR_TRUE;

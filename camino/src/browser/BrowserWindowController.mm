@@ -1955,7 +1955,7 @@ enum BWCOpenDest {
 
 // - transformFormatString:domain:search
 //
-// Replaces all occurances of %d in |inFormat| with |inDomain| and all occurances of
+// Replaces all occurrences of %d in |inFormat| with |inDomain| and all occurrences of
 // %s with |inSearch|.
 - (void) transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch
 {

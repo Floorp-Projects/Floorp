@@ -16,7 +16,7 @@ import javax.swing.filechooser.FileSystemView;
 
 /**
  * This Class contains all the Inital Startup Logic for Grendel.
- * <strong>DO NOT restucture Grendel's build without checking this class.</strong>
+ * <strong>DO NOT restructure Grendel's build without checking this class.</strong>
  * @author hash9
  */
 public final class GrendelLauncher {

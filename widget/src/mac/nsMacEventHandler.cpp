@@ -807,12 +807,12 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
     PRBool aConvertChar)
 {
 	//
-	// initalize the basic message parts
+	// initialize the basic message parts
 	//
 	aKeyEvent.time				= PR_IntervalNow();
 	
 	//
-	// initalize the GUI event parts
+	// initialize the GUI event parts
 	//
   aKeyEvent.widget = aFocusedWidget;
 	aKeyEvent.nativeMsg		= (void*)&aOSEvent;

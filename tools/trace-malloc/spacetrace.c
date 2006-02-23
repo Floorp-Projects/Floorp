@@ -314,7 +314,7 @@ initOptions(int aArgCount, char **aArgArray)
     }
 
     /*
-     ** initalize the categories
+     ** initialize the categories
      */
     initCategories(&globals);
 
@@ -5790,7 +5790,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.52 2005/11/25 21:57:05 timeless%mozdev.org Exp $",
+                           "$Id: spacetrace.c,v 1.53 2006/02/23 09:36:40 timeless%mozdev.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {

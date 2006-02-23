@@ -71,7 +71,7 @@
 	To reduce the volume of code and APIs, clients can ask for the underlying list of selectors displayed by the pane,
 	and make changes directly to that list.  Right now they get an actual reference to the list.  I want to change that
 	to some kind of `ticket' that acts like a reference to the list, but automatically notifies the pane that the
-	list has changed when the ticket is destucted.  In the mean time, after a client has modified the list, but before
+	list has changed when the ticket is destroyed.  In the mean time, after a client has modified the list, but before
 	they have called |notice_selectors_changed()|, the pane will not acurately reflect the contents of the list, and
 	the results of |active_selector(void)| are not necessarily valid.  See below.
 	

@@ -75,17 +75,17 @@ class StepInto implements StepHandler
         //     doSomething();
         //
         // The "i++" comes after the "doSomething" call as far as PCs go.
-        // But, in JS the line number associated with the "i++" instuction
+        // But, in JS the line number associated with the "i++" instruction
         // is that of the "for(...". So, the lines for the PC can look like
         // 1,1,2,1,2. Thus we are careful in deciding how to step.
         //
 
-        // definately jumping back
+        // definitely jumping back
         if( pc.getPC() < _startPC.getPC() &&
             sourceLocation.getLine() != _startSourceLocation.getLine() )
             return STOP;
 
-        // definately jumping forward
+        // definitely jumping forward
         if( sourceLocation.getLine() > _startSourceLocation.getLine() )
             return STOP;
 

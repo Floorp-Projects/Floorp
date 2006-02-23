@@ -236,7 +236,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 // - managerStarted:
 //
 // Notification callback from the bookmark manager. Reload all the table data, but
-// only if we think we've fully initalized ourselves.
+// only if we think we've fully initialized ourselves.
 //
 - (void)managerStarted:(NSNotification*)inNotify
 {

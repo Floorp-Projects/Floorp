@@ -326,13 +326,13 @@ class nsTAString_CharT
 
 
         /**
-         * Returns the number of occurances of the given character.
+         * Returns the number of occurrences of the given character.
          */
       NS_COM size_type NS_FASTCALL CountChar( char_type ) const;
 
 
         /**
-         * Locates the offset of the first occurance of the character.  Pass a
+         * Locates the offset of the first occurrence of the character.  Pass a
          * non-zero offset to control where the search begins.
          */
 

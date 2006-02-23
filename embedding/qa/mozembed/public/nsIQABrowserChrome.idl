@@ -48,7 +48,7 @@ interface nsIQABrowserView;
 [scriptable, uuid(31D58E11-E4A3-49fc-B544-C100F375A280)]
 interface nsIQABrowserChrome : nsISupports
 {
-  // Hold a handle to the nsIQABrwoserUIGlue which is above the chrome 
+  // Hold a handle to the nsIQABrowserUIGlue which is above the chrome 
   // and to the nsIQABrowserView below the chrome. 
   void initQAChrome(in nsIQABrowserUIGlue uiGlue,  in nativeWindow nativeWnd);
 };

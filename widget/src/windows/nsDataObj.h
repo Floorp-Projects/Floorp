@@ -147,8 +147,8 @@ class nsDataObj : public IDataObject
 		// S_FALSE otherwise.
 		STDMETHODIMP QueryGetData (LPFORMATETC pFE);
 
-		// Set pCanonFE to the cannonical format of pFE if one exists and return
-		// NOERROR, otherwise return DATA_S_SAMEFORMATETC. A cannonical format
+		// Set pCanonFE to the canonical format of pFE if one exists and return
+		// NOERROR, otherwise return DATA_S_SAMEFORMATETC. A canonical format
 		// implies an identical rendering.
 		STDMETHODIMP GetCanonicalFormatEtc (LPFORMATETC pFE, LPFORMATETC pCanonFE);
 

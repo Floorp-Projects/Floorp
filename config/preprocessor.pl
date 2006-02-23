@@ -93,7 +93,7 @@ use File::Spec::Unix; # on all platforms, because the #include syntax is unix-ba
 
 # Note: Ideally we would use File::Spec 0.8. When this becomes
 # possible, add "0.8" to the first "use" line above, then replace
-# occurances of "::_0_8::" with "->" below. And remove the code for
+# occurrences of "::_0_8::" with "->" below. And remove the code for
 # File::Spec 0.8 much lower down the file.
 
 sub include {

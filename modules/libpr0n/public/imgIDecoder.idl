@@ -53,7 +53,7 @@ interface imgILoad;
 interface imgIDecoder : nsISupports
 {
   /**
-   * Initalize an image decoder.
+   * Initialize an image decoder.
    * @param aRequest the request that owns the decoder.
    *
    * @note The decode should QI \a aLoad to an imgIDecoderObserver

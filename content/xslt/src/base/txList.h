@@ -174,15 +174,15 @@ public:
     nsresult addBefore(void* objPtr);
 
     /**
-     * Returns true if a sucessful call to the next() method can be made
-     * @return MB_TRUE if a sucessful call to the next() method can be made,
+     * Returns true if a successful call to the next() method can be made
+     * @return MB_TRUE if a successful call to the next() method can be made,
      * otherwise MB_FALSE
     **/
     MBool  hasNext();
 
     /**
-     * Returns true if a sucessful call to the previous() method can be made
-     * @return MB_TRUE if a sucessful call to the previous() method can be made,
+     * Returns true if a successful call to the previous() method can be made
+     * @return MB_TRUE if a successful call to the previous() method can be made,
      * otherwise MB_FALSE
     **/
     MBool  hasPrevious();

@@ -81,12 +81,12 @@ class StepOver implements StepHandler
                 break;
         }
 
-        // definately jumping back
+        // definitely jumping back
         if( pc.getPC() < _startPC.getPC() &&
             sourceLocation.getLine() != _startSourceLocation.getLine() )
             return STOP;
 
-        // definately jumping forward
+        // definitely jumping forward
         if( sourceLocation.getLine() > _startSourceLocation.getLine() )
             return STOP;
 

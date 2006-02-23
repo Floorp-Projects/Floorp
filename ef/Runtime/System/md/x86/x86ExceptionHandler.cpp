@@ -55,7 +55,7 @@ extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 EBP, Uint32 EDI
 								+-------------------------------+	<- initial restoreESP
 								|		return address			|
 						========+===============================+========
-		sysThrow				|		EBP link				|	<- sucessorEBP
+		sysThrow				|		EBP link				|	<- successorEBP
 		(native)				+-------------------------------+
 								|	    arguments				|
 						========+===============================+========
@@ -121,14 +121,14 @@ extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 inEBP, Uint32 i
 	context.object = (JavaObject*) &inObject;
 
 	// get other EBPs
-	context.sucessorEBP = (Uint32*) inEBP;
-	context.sourceEBP = *((Uint32**)context.sucessorEBP);
+	context.successorEBP = (Uint32*) inEBP;
+	context.sourceEBP = *((Uint32**)context.successorEBP);
 
 	// The source address will point to the instruction to return to, NOT the instruction that
 	// generated the exception. The return address is often (always?) in a different control node, so 
 	// it may have a different exception table.
 	// The byte before the return address will be part of the call instruction that got us here.
-	context.sourceAddress = (Uint8*)(context.sucessorEBP[1]) - 1;
+	context.sourceAddress = (Uint8*)(context.successorEBP[1]) - 1;
 
 	// cache entries
 	context.sourceCE = NativeCodeCache::getCache().lookupByRange((Uint8*)context.sourceAddress);
@@ -136,7 +136,7 @@ extern "C" SYSCALL_FUNC(void) x86SoftwareExceptionHandler(Uint32 inEBP, Uint32 i
 
 	// calculate the ESP if we were to proceed directly to the catch
 	// EBP + 4 (return address) + 4 (argument) + 4 (point to last object on stack == saved regs)
-	context.restoreESP = (Uint32*) ((Uint8*)context.sucessorEBP + 12);
+	context.restoreESP = (Uint32*) ((Uint8*)context.successorEBP + 12);
 
 	// now that the context struct is filled we can print debugging information
 	DEBUG_LOG_ONLY(printExceptionBegin(UT_LOG_MODULE(x86ExceptionHandler), &context));	
@@ -172,9 +172,9 @@ bool x86PopStackFrame(Context* context)
 	}
 
 	// roll back to point to previous frame
-	context->sucessorEBP = context->sourceEBP;
+	context->successorEBP = context->sourceEBP;
 	context->sourceEBP = newSourceEBP;
-	context->sourceAddress = (Uint8*)(context->sucessorEBP[1]) - 1; 	// move back a byte to ensure we're in correct control node
+	context->sourceAddress = (Uint8*)(context->successorEBP[1]) - 1; 	// move back a byte to ensure we're in correct control node
 
 	context->successorCE = context->sourceCE;
 	context->sourceCE = NativeCodeCache::getCache().lookupByRange(context->sourceAddress);
@@ -200,13 +200,13 @@ bool x86PopStackFrame(Context* context)
 	{
 		// successor is java frame; restore regs as per saved policy
 		StackFrameInfo& successorPolicy = context->successorCE->policy;
-		restoreReg = (Uint32*) ((Uint8*)(context->sucessorEBP) - successorPolicy.getCalleeSavedBeginOffset());
+		restoreReg = (Uint32*) ((Uint8*)(context->successorEBP) - successorPolicy.getCalleeSavedBeginOffset());
 		numRegs = successorPolicy.getNumSavedGPRWords();
 	}
 	else
 	{
 		// successor is native frame; restore all regs from just below EBP
-		restoreReg = (Uint32*) ((Uint8*)(context->sucessorEBP) - 4);
+		restoreReg = (Uint32*) ((Uint8*)(context->successorEBP) - 4);
 		numRegs = 3;
 	}
 
@@ -244,7 +244,7 @@ extern void* compileStubReEntryPoint;
 // Purpose:		determines whether the source frame is a native method / syscall guard frame
 bool isGuardFrame(Context* context, bool printIdentifier = false)
 {
-	Uint32 retAddress = (Uint32)(context->sucessorEBP[1]);
+	Uint32 retAddress = (Uint32)(context->successorEBP[1]);
 	int i;
 
 	// check unrolled-loop stubs for return address
@@ -324,7 +324,7 @@ void printExceptionBegin(LogModuleObject &f, Context* context)
 		UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("a syscall or native method\n"));
 	}
 	UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Object: '%s' (object = 0x%p)\n", context->object->getClass().getName(), context->object));
-	UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Return: 0x%p\n", context->sucessorEBP[1]));
+	UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Return: 0x%p\n", context->successorEBP[1]));
 	UT_OBJECTLOG(UT_LOG_MODULE(ExceptionRegs), PR_LOG_ALWAYS, ("Entry: "));
 	printRegs(UT_LOG_MODULE(ExceptionRegs), context);
 }
@@ -365,7 +365,7 @@ void printContext(LogModuleObject &f, Context* context)
 	else if(!isGuardFrame(context, true))	// isGuardFrame(..., true) prints reference if guard frame found
 		UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Method: anonymous\n"));
 
-	UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Return: 0x%p\n", context->sucessorEBP[1]));
+	UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("Return: 0x%p\n", context->successorEBP[1]));
 }
 #endif // DEBUG_LOG
 

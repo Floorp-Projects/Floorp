@@ -72,7 +72,7 @@ NPError WINAPI NP_GetEntryPoints(NPPluginFuncs* aPluginFuncs)
 
 NPError WINAPI NP_Initialize(NPNetscapeFuncs* aNetscapeFuncs)
 {
-  dbgOut1("wrapper: NP_Initalize");
+  dbgOut1("wrapper: NP_Initialize");
 
   if(aNetscapeFuncs == NULL)
     return NPERR_INVALID_FUNCTABLE_ERROR;

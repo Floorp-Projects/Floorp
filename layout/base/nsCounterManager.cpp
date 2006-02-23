@@ -82,7 +82,7 @@ nsCounterUseNode::GetText(nsString& aResult)
         nsBulletFrame::AppendCounterText(style, n->mValueAfter, aResult);
         if (i == 0)
             break;
-        NS_ASSERTION(mAllCounters, "yikes, separator is uninitalized");
+        NS_ASSERTION(mAllCounters, "yikes, separator is uninitialized");
         aResult.Append(separator);
     }
 }

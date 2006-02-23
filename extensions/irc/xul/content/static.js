@@ -225,7 +225,7 @@ function initStatic()
     }
     catch (ex)
     {
-        dd("IO service failed to initalize: " + ex);
+        dd("IO service failed to initialize: " + ex);
     }
 
     try
@@ -238,7 +238,7 @@ function initStatic()
     }
     catch (ex)
     {
-        dd("Sound failed to initalize: " + ex);
+        dd("Sound failed to initialize: " + ex);
     }
 
     try
@@ -250,7 +250,7 @@ function initStatic()
     }
     catch (ex)
     {
-        dd("Global History failed to initalize: " + ex);
+        dd("Global History failed to initialize: " + ex);
     }
 
     try
@@ -274,7 +274,7 @@ function initStatic()
     }
     catch (ex)
     {
-        dd("Locale-correct date formatting failed to initalize: " + ex);
+        dd("Locale-correct date formatting failed to initialize: " + ex);
     }
 
     multilineInputMode(client.prefs["multiline"]);

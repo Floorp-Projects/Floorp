@@ -837,7 +837,7 @@ function loadDialog()
   dialog.cmdInput.value      = print_command;
   dialog.jobTitleInput.value = print_jobtitle;
 
-  /* First initalize with the hardcoded defaults... */
+  /* First initialize with the hardcoded defaults... */
   dialog.topInput.value    = "0.04";
   dialog.bottomInput.value = "0.04";
   dialog.leftInput.value   = "0.04";

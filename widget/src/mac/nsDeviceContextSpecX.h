@@ -49,7 +49,7 @@ class nsDeviceContextSpecX : public nsIDeviceContextSpec, public nsIPrintingCont
 {
 public:
     /**
-     * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
+     * Construct a nsDeviceContextSpecX, which is an object which contains and manages a mac printrecord
      * @update  dc 12/02/98
      */
     nsDeviceContextSpecX();
@@ -57,7 +57,7 @@ public:
     NS_DECL_ISUPPORTS
 
     /**
-     * Initialize the nsDeviceContextSpecMac for use.  This will allocate a printrecord for use
+     * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
      * @update   dc 12/02/98
      * @param aIsPrintPreview   TRUE if doing print preview, FALSE if normal printing.
      * @return error status
@@ -97,7 +97,7 @@ public:
     NS_IMETHOD GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight);
 protected:
 /**
- * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * Destructor for nsDeviceContextSpecX, this will release the printrecord
  * @update  dc 12/02/98
  */
   virtual ~nsDeviceContextSpecX();

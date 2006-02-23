@@ -476,7 +476,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
                                     nsIEventQueue * aSinkEventQueue)
 {
   NS_PRECONDITION(aSinkEventQueue && aHostSessionList, 
-             "oops...trying to initalize with a null sink event queue!");
+             "oops...trying to initialize with a null sink event queue!");
   if (!aSinkEventQueue || !aHostSessionList || !aServer)
         return NS_ERROR_NULL_POINTER;
 

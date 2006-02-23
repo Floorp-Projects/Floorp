@@ -152,7 +152,7 @@ nsPrincipal::~nsPrincipal(void)
 NS_IMETHODIMP
 nsPrincipal::GetJSPrincipals(JSContext *cx, JSPrincipals **jsprin)
 {
-  NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitalized!");
+  NS_PRECONDITION(mJSPrincipals.nsIPrincipalPtr, "mJSPrincipals is uninitialized!");
 
   JSPRINCIPALS_HOLD(cx, &mJSPrincipals);
   *jsprin = &mJSPrincipals;

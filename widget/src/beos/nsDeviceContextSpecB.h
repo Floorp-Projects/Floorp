@@ -58,7 +58,7 @@ class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec
 {
 public:
 /**
- * Construct a nsDeviceContextSpecMac, which is an object which contains and manages a mac printrecord
+ * Construct a nsDeviceContextSpecBeOS, which is an object which contains and manages a mac printrecord
  * @update  dc 12/02/98
  */
   nsDeviceContextSpecBeOS();
@@ -114,7 +114,7 @@ public:
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
 /**
- * Destuct a nsDeviceContextSpecMac, this will release the printrecord
+ * Destructor for nsDeviceContextSpecBeOS, this will release the printrecord
  * @update  dc 2/16/98
  */
 protected:

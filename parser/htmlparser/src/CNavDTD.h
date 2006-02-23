@@ -249,10 +249,10 @@ private:
     eHTMLTags GetTopNode() const;
 
     /**
-     * Finds the topmost occurance of given tag within context vector stack.
+     * Finds the topmost occurrence of given tag within context vector stack.
      *
      * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
+     * @return  index of topmost tag occurrence -- may be -1 (kNotFound).
      */
     PRInt32 LastOf(eHTMLTags aTagSet[], PRInt32 aCount) const;
 

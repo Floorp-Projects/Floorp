@@ -2863,7 +2863,7 @@ function chan_modestr (f)
     /* modeA are 'list' ones, and so should not be shown.
      * modeB are 'param' ones, like +k key, so we wont show them either.
      * modeC are 'on-param' ones, like +l limit, which we will show.
-     * modeD are 'boolean' ones, which we will definately show.
+     * modeD are 'boolean' ones, which we will definitely show.
      */
 
     // Add modeD:

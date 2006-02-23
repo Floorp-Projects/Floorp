@@ -568,7 +568,7 @@ PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName,
   versionInfo	= inVInfo;
   installedFiles = new nsVector();
       
-  /* JAR initalization */
+  /* JAR initialization */
   /* open the file, create a principal out of installer file certificate */
   errcode = OpenJARFile(errorMsg);
   if (*errorMsg != NULL)

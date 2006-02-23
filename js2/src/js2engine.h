@@ -376,7 +376,7 @@ public:
     NonWithFrame *localFrame;
 
     ParameterFrame *parameterFrame;
-    js2val *parameterSlots;             // just local copies of paramterFrame->argSlots
+    js2val *parameterSlots;             // just local copies of parameterFrame->argSlots
     uint32 parameterCount;              // ... and parameterFrame->argCount
     bool superConstructorCalled;
 

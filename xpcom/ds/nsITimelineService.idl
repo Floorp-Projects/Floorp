@@ -42,7 +42,7 @@
 %}
       
 /**
- * nsITimelineService is used to constuct a timeline of program
+ * nsITimelineService is used to construct a timeline of program
  * execution.  The timeline is output to a file, either stderr or the
  * value of the environment variable NS_TIMELINE_LOG_FILE.  On the
  * Mac, the timeline is output to the file named "timeline.txt".  The

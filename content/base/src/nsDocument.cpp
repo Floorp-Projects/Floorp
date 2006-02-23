@@ -3902,7 +3902,7 @@ nsDocument::SetUserData(const nsINode *aObject,
 #ifdef DEBUG
   nsCOMPtr<nsINode> object =
     do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
+  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
 #endif
 
   *aResult = nsnull;
@@ -3963,7 +3963,7 @@ nsDocument::GetUserData(const nsINode *aObject, nsIAtom *aKey,
 #ifdef DEBUG
   nsCOMPtr<nsINode> object =
     do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
+  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
 #endif
 
   *aResult = NS_STATIC_CAST(nsIVariant*,
@@ -4012,7 +4012,7 @@ nsDocument::CallUserDataHandler(PRUint16 aOperation,
   // XXX Should we guard from QI'ing nodes that are being destroyed?
   nsCOMPtr<nsINode> object =
     do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
+  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
 #endif
 
   nsHandlerData handlerData;
@@ -4054,7 +4054,7 @@ nsDocument::CopyUserData(const nsINode *aObject, nsIDocument *aDestination)
 #ifdef DEBUG
   nsCOMPtr<nsINode> object =
     do_QueryInterface(NS_CONST_CAST(nsINode*, aObject));
-  NS_ASSERTION(object == aObject, "Use cannonical nsINode pointer!");
+  NS_ASSERTION(object == aObject, "Use canonical nsINode pointer!");
 #endif
 
   nsCopyData copyData = { this, aDestination };

@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE inst,
       rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
       if(NS_FAILED(rv))
       {
-        ErrorBox("Failed to initalize xpcom.");
+        ErrorBox("Failed to initialize xpcom.");
         return -1;
       }
       

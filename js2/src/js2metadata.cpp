@@ -5297,7 +5297,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         DEFINE_ROOTKEEPER(meta, rk2, argsObj);
 
 		// argCount is the number of slots acquired by the frame, it will
-        // be the larger of the number of paramters defined or the number
+        // be the larger of the number of parameters defined or the number
         // of arguments passed.
         argCount = (frameSlots) ? frameSlots->size() : 0;
 		if (argc > argCount)

@@ -429,7 +429,7 @@ int nsGIFDecoder2::HaveDecodedRow(
     format += 1; // RGB to BGR
 #endif
 
-    // initalize the frame and append it to the container
+    // initialize the frame and append it to the container
     decoder->mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
     if (!decoder->mImageFrame || NS_FAILED(decoder->mImageFrame->Init(
           decoder->mGIFStruct->x_offset, decoder->mGIFStruct->y_offset, 

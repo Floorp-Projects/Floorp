@@ -2034,7 +2034,7 @@ XXX ...couldn't get this to work...
         /* utility routines */
 
         // Extract the operator from the string literal function name
-        // - requires the paramter count in order to distinguish
+        // - requires the parameter count in order to distinguish
         // between unary and binary operators.
         Operator getOperator(uint32 parameterCount, const String &name);
 

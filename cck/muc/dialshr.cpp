@@ -2206,7 +2206,7 @@ static BOOL createPhoneBookEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& l
 			if ( rasEntry.szAreaCode[ 0 ] == '\0' )
 			{
 				// Err: The service provider's phone number is missing its area code
-				//    (or is not in TAPI cannonical form in the configuration file).
+				//    (or is not in TAPI canonical form in the configuration file).
 				//    Account creation will fail until this is fixed.
 				char*	buf = (char*)malloc( sizeof(char) * 255 );
 				if ( buf )

@@ -44,7 +44,7 @@ int IO_checkTimeout( IO_t * in_pIO );
 void IO_resetFunctions( IO_t * in_pIO );
 int UpdateBuffer( IO_t * in_pIO );
 
-/* Initalize the IO structure. */
+/* Initialize the IO structure. */
 int IO_initialize( IO_t * in_pIO, 
                     unsigned int in_readBufferLimit, 
                     unsigned int in_writeBufferLimit )

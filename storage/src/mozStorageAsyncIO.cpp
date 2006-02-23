@@ -1398,7 +1398,7 @@ ProcessOneMessage(AsyncMessage* aMessage)
 //    write queue is empty.
 //
 //    If both of the above variables are false, this procedure runs
-//    indefinately, waiting for operations to be added to the write queue and
+//    indefinitely, waiting for operations to be added to the write queue and
 //    processing them in the order in which they arrive.
 //
 //    An artifical delay of async.ioDelay milliseconds is inserted before each

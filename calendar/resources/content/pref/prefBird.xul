@@ -60,7 +60,7 @@ var hPrefWindow =
 	
 	// properties 
 	queuedPanel : null,
-	initalized : false,
+	initialized : false,
 
 	cancelHandlers : [],
 	okHandlers     : [],

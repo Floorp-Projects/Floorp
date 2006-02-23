@@ -86,7 +86,7 @@ public class SourceTextItem
     public static final int CLEARED = 5;
 
     /**
-    * Constuct for url (which is immutable during the lifetime of the object)
+    * Construct for url (which is immutable during the lifetime of the object)
     * <p>
     * Presumably, text will be added later
     * @param url url or filename by which this object will be known
@@ -97,7 +97,7 @@ public class SourceTextItem
     }
 
     /**
-    * Constuct for url with text and status
+    * Construct for url with text and status
     * <p>
     * @param url url or filename by which this object will be known
     * @param text source text this object should start with

@@ -557,7 +557,7 @@ final public class SoftwareUpdate {
 			versionInfo	= inVInfo;
 			installedFiles = new java.util.Vector();
 
-			/* JAR initalization */
+			/* JAR initialization */
 			/* open	the	file, create a principal out of	installer file certificate */
 			OpenJARFile();
             InitializeInstallerCertificate();

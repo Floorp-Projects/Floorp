@@ -242,7 +242,7 @@ nsBaseURLParser::ParsePath(const char *path, PRInt32 pathLen,
 
     // XXX PL_strnpbrk would be nice, but it's buggy
 
-    // search for first occurance of either ? or #
+    // search for first occurrence of either ? or #
     const char *query_beg = 0, *query_end = 0;
     const char *ref_beg = 0;
     const char *p = 0;
