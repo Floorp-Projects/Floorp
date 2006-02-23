@@ -11,10 +11,14 @@ function showsubgroup() {
 
   var selnum;
 
-  for (var i=0; i<groupselect.length; i++) {
-    if (groupselect[i].checked) {
-      selnum = groupselect[i].value;
+  if (groupselect instanceof Array) {
+    for (var i=0; i<groupselect.length; i++) {
+      if (groupselect[i].checked) {
+        selnum = groupselect[i].value;
+      }
     }
+  } else {
+    selnum = groupselect.value;
   }
 
   // no selection yet so just keep everything as-is:
