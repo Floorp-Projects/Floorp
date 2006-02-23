@@ -479,6 +479,12 @@ calDateTime::GetIcalString(nsACString& aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMETHODIMP
+calDateTime::SetIcalString(const nsACString& aIcalString)
+{
+    FromIcalTime(&icaltime_from_string(nsPromiseFlatCString(aIcalString).get()));
+    return NS_OK;
+}
 
 /**
  ** utility/protected methods

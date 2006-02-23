@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Mike Shaver <shaver@off.net>
+ *   Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -128,8 +129,6 @@ calItemBase.prototype = {
         // make all our components immutable
         if (this.mRecurrenceInfo)
             this.mRecurrenceInfo.makeImmutable();
-        if (this.mAlarmTime)
-            this.mAlarmTime.makeImmutable();
 
         if (this.mOrganizer)
             this.mOrganizer.makeImmutable();
@@ -144,6 +143,13 @@ calItemBase.prototype = {
             if (prop.value instanceof Components.interfaces.calIDateTime) {
                 if (prop.value.isMutable)
                     prop.value.makeImmutable();
+            }
+        }
+
+        if (this.alarmOffset) {
+            this.alarmOffset.makeImmutable();
+            if (this.alarmLastAck) {
+                this.alarmLastAck.makeImmutable();
             }
         }
 
@@ -209,6 +215,20 @@ calItemBase.prototype = {
 
         // these need fixing
         m.mAttachments = this.mAttachments;
+
+        // Clone any alarm info that exists, set it to null if it doesn't
+        if (this.alarmOffset) {
+            m.alarmOffset = this.alarmOffset.clone();
+            if (this.alarmLastAck) {
+                m.alarmLastAck = this.alarmLastAck.clone();
+            } else {
+                m.alarmLastAck = null;
+            }
+        } else {
+            m.alarmOffset = null;
+        }
+        m.alarmRelated = this.alarmRelated;
+
         return m;
     },
 
@@ -434,7 +454,6 @@ calItemBase.prototype = {
         "ATTENDEE": true,
         "ORGANIZER": true,
         "RECURRENCE-ID": true,
-        "ALARMTIME": true,
     },
 
     icsBasePropMap: [
@@ -527,23 +546,21 @@ calItemBase.prototype = {
             var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                                      .createInstance(Components.interfaces.calIDuration);
             duration.icalString = triggerProp.valueAsIcalString;
-
-            if (duration.minutes) {
-                this.setProperty("alarmLength", duration.minutes);
-                this.setProperty("alarmUnits", "minutes");
-            } else if (duration.hours) {
-                this.setProperty("alarmLength", duration.hours);
-                this.setProperty("alarmUnits", "hours");
-            } else if (duration.days) {
-                this.setProperty("alarmLength", duration.days);
-                this.setProperty("alarmUnits", "days");
-            }
+            this.alarmOffset = duration;
 
             var related = triggerProp.getParameter("RELATED");
             if (related && related == "END")
-                this.setProperty("alarmRelated", "END");
+                this.alarmRelated = this.ALARM_RELATED_END;
             else
-                this.setProperty("alarmRelated", "START");
+                this.alarmRelated = this.ALARM_RELATED_START;
+
+            var lastAck = alarmComp.getFirstProperty("X-MOZ-LASTACK");
+            if (lastAck) {
+                var lastAckTime = Components.classes["@mozilla.org/calendar/datetime;1"]
+                                            .createInstance(Components.interfaces.calIDateTime);
+                lastAckTime.icalString = lastAck.valuseAsIcalString;
+                this.alarmLastAck = lastAckTime;
+            }
 
             var email = alarmComp.getFirstProperty("X-EMAILADDRESS");
             if (email)
@@ -595,29 +612,41 @@ calItemBase.prototype = {
             }
         }
         
-        if (this.alarmTime) {
+        if (this.alarmOffset) {
             const icssvc = Components.classes["@mozilla.org/calendar/ics-service;1"]
                                      .getService(Components.interfaces.calIICSService);
             var alarmComp = icssvc.createIcalComponent("VALARM");
 
-            var duration = Components.classes["@mozilla.org/calendar/duration;1"]
-                                     .createInstance(Components.interfaces.calIDuration);
-            duration.isNegative = true;
-            duration[this.getProperty("alarmUnits")] = this.getProperty("alarmLength");
-
             var triggerProp = icssvc.createIcalProperty("TRIGGER");
-            triggerProp.valueAsIcalString = duration.icalString;
+            triggerProp.valueAsIcalString = this.alarmOffset.icalString;
 
-            if (this.getProperty("alarmRelated") == "END") 
+            if (this.alarmRelated == this.ALARM_RELATED_END) 
                 triggerProp.setParameter("RELATED", "END");
 
             alarmComp.addProperty(triggerProp);
 
+            if (this.alarmLastAck) {
+                var lastAck = icssvc.createIcalProperty("X-MOZ-LASTACK");
+                lastAck.valueAsIcalString = this.alarmLastAck.icalString;
+                alarmComp.addProperty(lastAck);
+            }
+
+            // We don't use this, but the ics-spec requires it
+            var descProp = icssvc.createIcalProperty("DESCRIPTION");
+            descProp.value = "Mozilla Alarm: "+ this.title;
+            alarmComp.addProperty(descProp);
+
+            var actionProp = icssvc.createIcalProperty("ACTION");
+            actionProp.value = "DISPLAY";
+
             if (this.getProperty("alarmEmailAddress")) {
                 var emailProp = icssvc.createIcalProperty("X-EMAILADDRESS");
                 emailProp.value = this.getProperty("alarmEmailAddress");
+                actionProp.value = "EMAIL";
                 alarmComp.addProperty(emailProp);
             }
+
+            alarmComp.addProperty(actionProp);
 
             icalcomp.addSubcomponent(alarmComp);
         }

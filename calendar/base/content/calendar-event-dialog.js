@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Stuart Parmenter <stuart.parmenter@oracle.com>
+ *   Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -351,48 +352,26 @@ function saveDialog(item)
     /* alarms */
     var hasAlarm = (getElementValue("item-alarm") != "none");
     if (!hasAlarm) {
-        item.deleteProperty("alarmLength");
-        item.deleteProperty("alarmUnits");
-        item.deleteProperty("alarmRelated");
-        item.alarmTime = null;
+        item.alarmOffset = null;
+        item.alarmLastAck = null;
+        item.alarmRelated = null;
     } else {
         var alarmLength = getElementValue("alarm-length-field");
         var alarmUnits = document.getElementById("alarm-length-units").selectedItem.value;
-        var alarmRelated = document.getElementById("alarm-trigger-relation").selectedItem.value;
-
-        setItemProperty(item, "alarmLength",  alarmLength);
-        setItemProperty(item, "alarmUnits",   alarmUnits);
-        setItemProperty(item, "alarmRelated", alarmRelated);
-
-        var alarmTime = null;
-
-        if (alarmRelated == "START") {
-            if (isEvent(item))
-                alarmTime = item.startDate.clone();
-            else
-                alarmTime = item.entryDate.clone();
-        } else if (alarmRelated == "END") {
-            if (isEvent(item))
-                alarmTime = item.endDate.clone();
-            else
-                alarmTime = item.dueDate.clone();
+        if (document.getElementById("alarm-trigger-relation").selectedItem.value == "START") {
+            item.alarmRelated = item.ALARM_RELATED_START;
+        } else {
+            item.alarmRelated = item.ALARM_RELATED_END;
         }
-
-        switch (alarmUnits) {
-        case "minutes":
-            alarmTime.minute -= alarmLength;
-            break;
-        case "hours":
-            alarmTime.hour -= alarmLength;
-            break;
-        case "days":
-            alarmTime.day -= alarmLength;
-            break;
+        var duration = Components.classes["@mozilla.org/calendar/duration;1"]
+                                 .createInstance(Components.interfaces.calIDuration);
+        if (item.alarmRelated == item.ALARM_RELATED_START) {
+            duration.isNegative = true;
         }
+        duration[alarmUnits] = alarmLength;
+        duration.normalize();
 
-        alarmTime.normalize();
-
-        setItemProperty(item, "alarmTime", alarmTime);
+        item.alarmOffset = duration;
     }
 
     dump(item.icalString + "\n");
@@ -689,12 +668,6 @@ function setItemProperty(item, propertyName, value)
             item.title = value;
         break;
 
-    case "alarmTime":
-        if ((value && !item.alarmTime) ||
-            (!value && item.alarmTime) ||
-            (value.compare(item.alarmTime) != 0))
-            item.alarmTime = value;
-        break;
     default:
         if (!value || value == "")
             item.deleteProperty(propertyName);
@@ -801,14 +774,37 @@ function loadDetails() {
     }
 
     /* alarms */
-    if (item.alarmTime) {
-        var alarmLength = item.getProperty("alarmLength");
-        if (alarmLength != null) {
-            setElementValue("alarm-length-field", alarmLength);
-            setElementValue("alarm-length-units", item.getProperty("alarmUnits"));
-            setElementValue("alarm-trigger-relation", item.getProperty("alarmRelated"));
+    if (item.alarmOffset) {
+        if (item.alarmRelated == item.ALARM_RELATED_START) {
+            setElementValue("alarm-trigger-relation", "START");
+        } else {
+            setElementValue("alarm-trigger-relation", "END");
         }
-        setElementValue("item-alarm", "custom");
+
+        var offset = item.alarmOffset;
+        if (offset.minutes) {
+            var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
+            // Special cases for the common alarms
+            if (minutes == 15) {
+                document.getElementById("item-alarm").selectedIndex = 2;
+            } else if (minutes == 30) {
+                document.getElementById("item-alarm").selectedIndex = 3;
+            } else {
+                setElementValue("alarm-length-field", minutes);
+                setElementValue("alarm-length-units", "minutes");
+                setElementValue("item-alarm", "custom");
+            }
+        } else if (offset.hours) {
+            var hours = offset.hours + offset.days*24 + offset.weeks*24*7;
+            setElementValue("alarm-length-field", hours);
+            setElementValue("alarm-length-units", "hours");
+            setElementValue("item-alarm", "custom");
+        } else { // days
+            var days = offset.days + offset.weeks*7;
+            setElementValue("alarm-length-field", days);
+            setElementValue("alarm-length-units", "days");
+            setElementValue("item-alarm", "custom");
+        }
     }
 
     // update alarm checkbox/label/settings button

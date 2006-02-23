@@ -40,7 +40,8 @@ function addAlarm(event)
 
   var alarmWidget = document.createElement("calendar-alarm-widget");
   alarmWidget.setAttribute("title", event.title);
-  alarmWidget.setAttribute("time", event.alarmTime.toString());
+  var time = event.startDate || event.entryDate || event.dueDate;
+  alarmWidget.setAttribute("time", time.toString());
   alarmWidget.setAttribute("location", event.getProperty("LOCATION"));
   alarmWidget.addEventListener("snooze", onSnoozeAlarm, false);
   alarmWidget.addEventListener("dismiss", onDismissAlarm, false);
@@ -64,13 +65,21 @@ function addAlarm(event)
    }
 }
 
-function removeAlarm(event)
-{
-
-}
-
 function onDismissAll()
 {
+  var now = Components.classes["@mozilla.org/calendar/datetime;1"]
+                      .createInstance(Components.interfaces.calIDateTime);
+  now.jsDate = new Date();
+  now = now.getInTimezone("UTC");
+  var box = document.getElementById("alarmlist");
+  for each (kid in box.childNodes) {
+    // We want the parent item, otherwise we're going to accidentally create an
+    // exception.  We've relnoted (for 0.1) the slightly odd behavior this can
+    // cause if you move an event after dismissing an alarm
+    item = kid.item.parentItem.clone();
+    item.alarmLastAck = now;
+    item.calendar.modifyItem(item, kid.item, null);
+  }
   return true;
 }
 
@@ -88,13 +97,25 @@ function onSnoozeAlarm(event)
 
   alarmService.snoozeEvent(alarmWidget.item, duration);
 
-  alarmWidget.parentNode.removeChild(alarmWidget);
+  var parent = alarmWidget.parentNode;
+  parent.removeChild(alarmWidget);
+  if (!parent.hasChildNodes()) {
+    // If this was the last alarm, close the window.
+    window.close();
+  }
 }
 
 function onDismissAlarm(event)
 {
-  // everything is just visual at this point. we don't need to do anything special.
   var alarmWidget = event.target;
+  var now = Components.classes["@mozilla.org/calendar/datetime;1"]
+                      .createInstance(Components.interfaces.calIDateTime);
+  now.jsDate = new Date();
+  now = now.getInTimezone("UTC");
+  var item = alarmWidget.item.clone();
+  item.alarmLastAck = now;
+  item.calendar.modifyItem(item, alarmWidget.item, null);
+
   var parent = alarmWidget.parentNode;
   parent.removeChild(alarmWidget);
 

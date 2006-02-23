@@ -50,6 +50,8 @@ interface calICalendar;
 
 interface calIDateTime;
 
+interface calIDuration;
+
 interface calIRecurrenceInfo;
 
 interface calIAttendee;
@@ -120,10 +122,34 @@ interface calIItemBase : nsISupports
   attribute calIIcalComponent icalComponent;
 
   //
-  // alarms; alarmTime is null if there is no
-  // alarm set.
+  // alarms
   //
-  attribute calIDateTime alarmTime;
+
+  /**
+   * The amount of time from the date (specified by alarmRelated) to offset
+   * the alarm's firing time by
+   */
+  attribute calIDuration alarmOffset;
+
+  /**
+   * One of the ALARM_RELATED constants below.  
+   */
+  attribute unsigned long alarmRelated;
+
+  /**
+   * Corresponds to an alarmOffset that should be based off of the startDate or
+   * entryDate (for events and tasks, respectively)
+   */
+  const unsigned long ALARM_RELATED_START = 0;
+
+  /**
+   * Corresponds to an alarmOffset that should be based off of the endDate or
+   * dueDate (for events and tasks, respectively)
+   */
+  const unsigned long ALARM_RELATED_END = 1;
+
+  // The last time this alarm was fired and acknowledged by the user
+  attribute calIDateTime alarmLastAck;
 
   //
   // recurrence

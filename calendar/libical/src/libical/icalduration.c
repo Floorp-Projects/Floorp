@@ -310,11 +310,19 @@ int icaldurationtype_is_bad_duration(struct icaldurationtype d)
 struct icaltimetype  icaltime_add(struct icaltimetype t,
 				  struct icaldurationtype  d)
 {
-    t.second += d.seconds;
-    t.minute += d.minutes;
-    t.hour += d.hours;
-    t.day += d.days;
-    t.day += d.weeks * 7;
+    if (!d.is_neg) {
+        t.second += d.seconds;
+        t.minute += d.minutes;
+        t.hour += d.hours;
+        t.day += d.days;
+        t.day += d.weeks * 7;
+    } else {
+        t.second -= d.seconds;
+        t.minute -= d.minutes;
+        t.hour -= d.hours;
+        t.day -= d.days;
+        t.day -= d.weeks * 7;
+    }
     
     t = icaltime_normalize(t);
     

@@ -57,7 +57,9 @@
           <xul:label xbl:inherits="value=location"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:button label="&calendar.alarm.snooze.label;" oncommand="var event = document.createEvent('Events'); event.initEvent('snooze', false, false); this.dispatchEvent(event);"/>
+          <!-- Snooze button hidden for Lightning 0.1.  Most likely we need to
+               introduce calIAlarm properly before it can work without dataloss
+          <xul:button label="&calendar.alarm.snooze.label;" oncommand="var event = document.createEvent('Events'); event.initEvent('snooze', false, false); this.dispatchEvent(event);"/>-->
           <xul:button label="&calendar.alarm.dismiss.label;" oncommand="var event = document.createEvent('Events'); event.initEvent('dismiss', false, false); this.dispatchEvent(event);"/>
         </xul:vbox>
       </xul:hbox>

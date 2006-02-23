@@ -341,7 +341,7 @@ calICSCalendar.prototype = {
 
         var calComp = this.mICSService.createIcalComponent("VCALENDAR");
         calComp.version = "2.0";
-        calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
+        calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN";
 
         var i;
         for (i in this.unmappedComponents) {
