@@ -95,7 +95,10 @@ CSRCS = \
 	where.c \
 	$(NULL)
 
-DEFINES = -DSQLITE_ENABLE_REDEF_IO
+# REFEF_IO allows us to override IO functions, which is used in the AsyncIO
+# storage system. SECURE_DELETE will cause SQLITE to 0-fill delete data so we
+# don't have to vacuum to make sure the data is not visible in the file.
+DEFINES = -DSQLITE_ENABLE_REDEF_IO -DSQLITE_SECURE_DELETE=1
 
 ifdef ENABLE_TESTS
 ##LIBS = $(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX)
