@@ -201,14 +201,8 @@ case "$target" in
     echo -----------------------------------------------------------------------------
     echo Building Windows CE Shunt Library and Tool Chain
     echo -----------------------------------------------------------------------------
-    `$srcdir/build/cygwin-wrapper evc $srcdir/build/wince/shunt/build/shunt.vcw /MAKE ALL > shunt.out <<\EOF`
-    cat shunt.out
-    rm shunt.out
-    $srcdir/build/wince/tools/topsrcdir.h
 
-    `$srcdir/build/cygwin-wrapper evc $srcdir/build/wince/shunt/build/static/static.vcw /MAKE ALL > shunt.out <<\EOF`
-    cat shunt.out
-    rm shunt.out
+    `$srcdir/build/cygwin-wrapper devenv $srcdir/build/wince/shunt/build/vs8/mozce_shunt_static.vcproj /MAKE`
 
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
     `$srcdir/build/cygwin-wrapper echo -n $_topsrcdir >> $srcdir/build/wince/tools/topsrcdir.h`
@@ -1634,7 +1628,8 @@ case "$target" in
     XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib'
     ZIP=zip
     LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
-    LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6.lib $MOZ_TOOLS_DIR/lib/glib-1.2.lib"
+    LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
+    STATIC_LIBIDL=1
 
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)

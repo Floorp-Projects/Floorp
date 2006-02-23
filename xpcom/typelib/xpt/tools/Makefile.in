@@ -84,9 +84,7 @@ ifdef WINCE
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
 HOST_CFLAGS +=  -DEXPORT_XPT_API
-
-# Force MOZ_NO_DEBUG_RTL=1
-HOST_CFLAGS	+= /MD
+LDFLAGS += -NODEFAULTLIB:MSVCRT
 endif
 
 endif
