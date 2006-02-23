@@ -466,6 +466,12 @@ void gfxContext::ResetClip()
     cairo_reset_clip(mCairo);
 }
 
+void gfxContext::UpdateSurfaceClip()
+{
+    NewPath();
+    Rectangle(gfxRect(0,0,0,0));
+    Fill();
+}
 
 // rendering sources
 
@@ -523,17 +529,6 @@ gfxPattern *gfxContext::PopGroup()
 void gfxContext::PopGroupToSource()
 {
     cairo_pop_group_to_source(mCairo);
-}
-
-// filters
-void gfxContext::PushFilter(gfxFilter& filter, FilterHints hints, gfxRect& maxArea)
-{
-
-}
-
-void gfxContext::PopFilter()
-{
-
 }
 
 void gfxContext::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)

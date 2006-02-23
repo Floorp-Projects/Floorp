@@ -119,6 +119,10 @@
 #include "nsPIPluginHost.h"
 #include "nsIPluginDocument.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
+
 // accessibility support
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -1095,8 +1099,27 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       PRBool doupdatewindow = PR_FALSE;
 
       // check if we need to update hdc
-      void* hdc;
-      hdc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+      HDC hdc = (HDC)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+
+#ifdef MOZ_CAIRO_GFX
+      SaveDC(hdc);
+
+      nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+      nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+      if (!surf)
+        surf = ctx->CurrentSurface();
+
+      /* Need to force the clip to be set */
+      ctx->UpdateSurfaceClip();
+
+      /* Set the device offsets as appropriate */
+      gfxFloat xoff, yoff;
+      POINT origViewportOrigin;
+      surf->GetDeviceOffset(&xoff, &yoff);
+      GetViewportOrgEx(hdc, &origViewportOrigin);
+      SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
+#endif
+
       if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {
         window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
         doupdatewindow = PR_TRUE;
@@ -1178,6 +1201,12 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // XXX I wonder if this breaks if we give the frame a border so the
       // frame origin and plugin origin are not the same
       mInstanceOwner->Paint(aDirtyRect, (PRUint32)(HDC)hdc);
+
+#ifdef MOZ_CAIRO_GFX
+      RestoreDC(hdc, -1);
+
+      surf->MarkDirty();
+#endif
     }
   }
 #endif /* !XP_MAC */
