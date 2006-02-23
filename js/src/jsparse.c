@@ -366,6 +366,52 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
 }
 #endif
 
+static void
+MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
+                JSStackFrame *newfp)
+{
+    /*
+     * Always push a new frame if the current frame is special, so that
+     * Variables gets the correct variables object: the one from the special
+     * frame's caller.
+     */
+    if (oldfp &&
+        oldfp->varobj &&
+        oldfp->scopeChain == chain &&
+        !(oldfp->flags & JSFRAME_SPECIAL)) {
+        return;
+    }
+
+    memset(newfp, 0, sizeof *newfp);
+
+    /* Default to sharing the same variables object and scope chain. */
+    newfp->varobj = newfp->scopeChain = chain;
+    if (cx->options & JSOPTION_VAROBJFIX) {
+        while ((chain = JS_GetParent(cx, chain)) != NULL)
+            newfp->varobj = chain;
+    }
+    newfp->down = oldfp;
+    if (oldfp) {
+        /*
+         * In the case of eval and debugger frames, we need to dig down and find
+         * the real variables objects and function that our new stack frame is
+         * going to use.
+         */
+        newfp->flags = oldfp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO);
+        while (oldfp->flags & JSFRAME_SPECIAL) {
+            oldfp = oldfp->down;
+            if (!oldfp)
+                break;
+        }
+        if (oldfp && (newfp->flags & JSFRAME_SPECIAL)) {
+            newfp->varobj = oldfp->varobj;
+            newfp->vars = oldfp->vars;
+            newfp->fun = oldfp->fun;
+        }
+    }
+    cx->fp = newfp;
+}
+
 /*
  * Parse a top-level JS script.
  */
@@ -382,18 +428,7 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
      * the one passed to us.
      */
     fp = cx->fp;
-    if (!fp || !fp->varobj || fp->scopeChain != chain) {
-        memset(&frame, 0, sizeof frame);
-        frame.varobj = frame.scopeChain = chain;
-        if (cx->options & JSOPTION_VAROBJFIX) {
-            while ((chain = JS_GetParent(cx, chain)) != NULL)
-                frame.varobj = chain;
-        }
-        frame.down = fp;
-        if (fp)
-            frame.flags = fp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO);
-        cx->fp = &frame;
-    }
+    MaybeSetupFrame(cx, chain, fp, &frame);
 
     /*
      * Protect atoms from being collected by a GC activation, which might
@@ -445,18 +480,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
      * the one passed to us.
      */
     fp = cx->fp;
-    if (!fp || !fp->varobj || fp->scopeChain != chain) {
-        memset(&frame, 0, sizeof frame);
-        frame.varobj = frame.scopeChain = chain;
-        if (cx->options & JSOPTION_VAROBJFIX) {
-            while ((chain = JS_GetParent(cx, chain)) != NULL)
-                frame.varobj = chain;
-        }
-        frame.down = fp;
-        if (fp)
-            frame.flags = fp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO);
-        cx->fp = &frame;
-    }
+    MaybeSetupFrame(cx, chain, fp, &frame);
     flags = cx->fp->flags;
     cx->fp->flags = flags |
                     (JS_HAS_COMPILE_N_GO_OPTION(cx)
@@ -2164,20 +2188,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     pn->pn_op = CURRENT_TOKEN(ts).t_op;
     PN_INIT_LIST(pn);
 
-    /*
-     * Skip eval and debugger frames when looking for the function whose code
-     * is being compiled.  If we are called from FunctionBody, TCF_IN_FUNCTION
-     * will be set in tc->flags, and we can be sure fp->fun is the function to
-     * use.  But if a function calls eval, the string argument is treated as a
-     * Program (per ECMA), so TCF_IN_FUNCTION won't be set.
-     *
-     * What's more, when the following code is reached from eval, cx->fp->fun
-     * is eval's JSFunction (a native function), so we need to skip its frame.
-     * We should find the scripted caller's function frame just below it, but
-     * we code a loop out of paranoia.
-     */
-    for (fp = cx->fp; (fp->flags & JSFRAME_SPECIAL) && fp->down; fp = fp->down)
-        continue;
+    fp = cx->fp;
     obj = fp->varobj;
     fun = fp->fun;
     clasp = OBJ_GET_CLASS(cx, obj);
@@ -3716,19 +3727,7 @@ js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
      * the one passed to us.
      */
     fp = cx->fp;
-    if (!fp || !fp->varobj || fp->scopeChain != chain) {
-        memset(&frame, 0, sizeof frame);
-        frame.varobj = frame.scopeChain = chain;
-        if (cx->options & JSOPTION_VAROBJFIX) {
-            while ((chain = JS_GetParent(cx, chain)) != NULL)
-                frame.varobj = chain;
-        }
-        frame.down = fp;
-        if (fp)
-            frame.flags = fp->flags & (JSFRAME_SPECIAL | JSFRAME_COMPILE_N_GO);
-        cx->fp = &frame;
-    }
-
+    MaybeSetupFrame(cx, chain, fp, &frame);
     JS_KEEP_ATOMS(cx->runtime);
     TREE_CONTEXT_INIT(&tc);
 
