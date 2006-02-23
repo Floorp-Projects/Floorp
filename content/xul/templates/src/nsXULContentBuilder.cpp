@@ -381,7 +381,7 @@ protected:
      */
     virtual PRBool
     MayGenerateResult(nsIXULTemplateResult* aOldResult,
-                      void** aLocation);
+                      nsIContent** aLocation);
 
     /**
      * Remove the content associated with aOldResult which no longer matches,
@@ -629,7 +629,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         //
         // isUnique will be true for nodes above the generation element,
         // isGenerationElement will be true for the generation element,
-        // and both will be false for descendants 
+        // and both will be false for descendants
         PRBool isGenerationElement = PR_FALSE;
         PRBool isUnique = aIsUnique;
 
@@ -1183,7 +1183,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     // Avoid re-entrant builds for the same resource.
     if (IsActivated(refResource))
         return NS_OK;
-  
+
     ActivationEntry entry(refResource, &mTop);
 
     // Create the contents of a container by iterating over all of the
@@ -1236,10 +1236,15 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     PRInt32 querySetCount = mQuerySets.Length();
 
     for (PRInt32 r = 0; r < querySetCount; r++) {
+        nsTemplateQuerySet* queryset = mQuerySets[r];
+
+        nsIAtom* tag = queryset->GetTag();
+        if (tag && tag != aElement->Tag())
+            continue;
+
         // XXXndeakin need to revisit how aContainer and content notification
         // is handled. Currently though, this code is similar to the old code.
         // *aContainer will only be set if it is null
-        nsTemplateQuerySet* queryset = mQuerySets[r];
         CreateContainerContentsForQuerySet(aElement, aResult, aNotify, queryset,
                                            aContainer, aNewIndexInContainer);
     }
@@ -1309,6 +1314,11 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
         if (mMatchMap.Get(resultid, &existingmatch)){
             // check if there is an existing match that matched a rule
             while (existingmatch) {
+                // if the same priority is already found, replace it. This can happen
+                // when a container is removed and readded
+                if (existingmatch->mQuerySet->Priority() == aQuerySet->Priority())
+                    break;
+
                 if (existingmatch->mRule)
                     generateContent = PR_FALSE;
                 prevmatch = existingmatch;
@@ -1350,6 +1360,11 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
         else if (!mMatchMap.Put(resultid, newmatch)) {
             nsTemplateMatch::Destroy(mPool, newmatch);
             return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        if (existingmatch) {
+            newmatch->mNext = existingmatch->mNext;
+            nsTemplateMatch::Destroy(mPool, existingmatch);
         }
     }
 
@@ -1591,7 +1606,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement,
 
     NS_NAMED_LITERAL_STRING(true_, "true");
     NS_NAMED_LITERAL_STRING(false_, "false");
-    
+
     const nsAString& newcontainer =
         iscontainer ? true_ : false_;
 
@@ -1739,7 +1754,7 @@ nsXULContentBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 PRBool
 nsXULContentBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
-                                       void** aLocation)
+                                       nsIContent** aLocation)
 {
     *aLocation = nsnull;
 
@@ -1793,20 +1808,33 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
                                   void *aContext)
 
 {
+    nsresult rv;
     nsIContent* content = NS_STATIC_CAST(nsIContent*, aContext);
 
-    // update the container attributes for the match   
-    // XXX this may be updating the wrong thing (ref instead of member content)
+    // update the container attributes for the match
     if (content) {
+        nsAutoString ref;
         if (aNewMatch)
-            SetContainerAttrs(content, aNewMatch->mResult, PR_FALSE, PR_TRUE);
+            rv = aNewMatch->mResult->GetBindingFor(mRefVariable, ref);
         else
-            SetContainerAttrs(content, aOldResult, PR_FALSE, PR_TRUE);
+            rv = aOldResult->GetBindingFor(mRefVariable, ref);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!ref.IsEmpty()) {
+            nsCOMPtr<nsIXULTemplateResult> refResult;
+            rv = GetResultForId(ref, getter_AddRefs(refResult));
+            if (NS_FAILED(rv))
+                return rv;
+
+            if (refResult)
+                SetContainerAttrs(content, refResult, PR_FALSE, PR_TRUE);
+        }
     }
 
     if (aOldResult) {
         nsSupportsArray elements;
-        nsresult rv = GetElementsForResult(aOldResult, &elements);
+        rv = GetElementsForResult(aOldResult, &elements);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1815,12 +1843,12 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
 
         for (PRInt32 e = PRInt32(count) - 1; e >= 0; --e) {
             nsISupports* isupports = elements.ElementAt(e);
-            nsCOMPtr<nsIContent> content = do_QueryInterface(isupports);
+            nsCOMPtr<nsIContent> child = do_QueryInterface(isupports);
             NS_IF_RELEASE(isupports);
 
             nsTemplateMatch* match;
-            if (mContentSupportMap.Get(content, &match))
-                RemoveMember(content);
+            if (mContentSupportMap.Get(child, &match))
+                RemoveMember(child);
         }
     }
 
@@ -1863,7 +1891,7 @@ nsXULContentBuilder::SynchronizeResult(nsIXULTemplateResult* aResult)
         // this node was created by a XUL template, so update it accordingly
         SynchronizeUsingTemplate(templateNode, element, aResult);
     }
-        
+
     return NS_OK;
 }
 
@@ -1968,7 +1996,7 @@ nsXULContentBuilder::RebuildAll()
     // See if it's a XUL element whose contents have never even
     // been generated. If so, short-circuit and bail; there's nothing
     // for us to "rebuild" yet. They'll get built correctly the next
-    // time somebody asks for them. 
+    // time somebody asks for them.
     nsXULElement *xulcontent = nsXULElement::FromContent(mRoot);
 
 /*

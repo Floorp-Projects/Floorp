@@ -158,14 +158,12 @@ public:
      * @param aRuleElement <rule> element
      * @param aActionElement <action> element
      * @param aMemberVariable member variable for the query
-     * @param aTag tag specified in <content> element
      * @param aQuerySet the queryset
      */
     nsresult 
     CompileExtendedQuery(nsIContent* aRuleElement,
                          nsIContent* aActionElement,
                          nsIAtom* aMemberVariable,
-                         nsIAtom* aTag,
                          nsTemplateQuerySet* aQuerySet);
 
     /**
@@ -253,7 +251,7 @@ public:
      * The returned matched rule is always one of the rules owned by the
      * query set aQuerySet.
      *
-     * @param aContainer parent when generated content will be inserted
+     * @param aContainer parent where generated content will be inserted
      * @param aResult result to match
      * @param aQuerySet query set to examine the rules of
      * @param aMatchedRule [out] rule that has matched, or null if any.
@@ -263,15 +261,6 @@ public:
                          nsIXULTemplateResult* aResult,
                          nsTemplateQuerySet* aQuerySet,
                          nsTemplateRule** aMatchedRule);
-
-    /**
-     * Return true if the supplied content or the content generated from the
-     * result has the given tag.
-     */
-    PRBool
-    MatchTagForResult(nsIContent* aContent,
-                      nsIXULTemplateResult* aResult,
-                      nsIAtom* aTag);
 
     // XXX sigh, the string template foo doesn't mix with
     // operator->*() on egcs-1.1.2, so we'll need to explicitly pass
@@ -414,10 +403,12 @@ protected:
      * builder being used. This argument is used to optimize the content
      * builder so that it doesn't need to determined again when ReplaceMatch
      * is called.
+     *
+     * The insertion location aLocation should not be addrefed.
      */
     virtual PRBool
     MayGenerateResult(nsIXULTemplateResult* aOldResult,
-                      void** aLocation) = 0;
+                      nsIContent** aLocation) = 0;
 
     /**
      * Must be implemented by subclasses. Handle removing the generated

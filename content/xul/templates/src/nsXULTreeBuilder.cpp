@@ -215,7 +215,7 @@ protected:
      */
     PRBool
     MayGenerateResult(nsIXULTemplateResult* aResult,
-                      void** aLocation);
+                      nsIContent** aLocation);
 
     /**
      * Implement result replacement
@@ -1098,7 +1098,7 @@ nsXULTreeBuilder::HasGeneratedContent(nsIRDFResource* aResource,
 
 PRBool
 nsXULTreeBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
-                                    void** aLocation)
+                                    nsIContent** aLocation)
 {
     *aLocation = nsnull;
 
