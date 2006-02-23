@@ -43,6 +43,10 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
  
+#define BAD_FONT_NUM	-1
+#define IGNORABLE_FONT_NUM -2
+#define BAD_SCRIPT 0x7f
+
 class nsUnicodeMappingUtil;
 class nsUnicodeFontMappingCache;
 

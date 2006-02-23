@@ -47,10 +47,11 @@
 #include "nsCompressedCharMap.h"
 #include "nsMacUnicodeFontInfo.h"
 
-#define BAD_FONT_NUM	-1
-#define BAD_SCRIPT 0x7f
-
 #include <UnicodeConverter.h>
+
+//------------------------------------------------------------------------
+#include "ignorable.x-ccmap"
+DEFINE_X_CCMAP(gIgnorableCCMapExt, /* nothing */);
 
 //------------------------------------------------------------------------
 static UnicodeToTextInfo gConverters[32] = { 
@@ -502,6 +503,11 @@ short nsUnicodeFontMappingMac::GetFontID(PRUnichar aChar) {
     short firstSymbolicFont = BAD_FONT_NUM, firstNonSymbolicFont = BAD_FONT_NUM;
     PRInt32 firstSymbolicFontIndex = -1;
     
+    // Trap invisible chars
+    if (CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, aChar)) {
+      return IGNORABLE_FONT_NUM;
+    }
+
     // find the first symbolic font that has a glyph for aChar
     // and if there is one, remember it's index in the font list
     for(PRInt32 i = 0; i < mFontList.Count(); i++)

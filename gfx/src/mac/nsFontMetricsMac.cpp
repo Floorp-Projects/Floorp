@@ -44,8 +44,6 @@
 #include "nsGfxUtils.h"
 #include "nsFontUtils.h"
 
-#define BAD_FONT_NUM	-1
-
 
 nsFontMetricsMac :: nsFontMetricsMac()
 {
