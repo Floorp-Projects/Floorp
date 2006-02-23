@@ -11,7 +11,7 @@ function showsubgroup() {
 
   var selnum;
 
-  if (groupselect instanceof Array) {
+  if (groupselect instanceof NodeList) {
     for (var i=0; i<groupselect.length; i++) {
       if (groupselect[i].checked) {
         selnum = groupselect[i].value;
