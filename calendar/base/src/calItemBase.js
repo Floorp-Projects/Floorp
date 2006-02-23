@@ -483,6 +483,7 @@ calItemBase.prototype = {
         if (orgprop) {
             var org = new CalAttendee();
             org.icalProperty = orgprop;
+            org.isOrganizer = true;
             this.mOrganizer = org;
         }
         

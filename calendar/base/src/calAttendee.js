@@ -93,6 +93,11 @@ calAttendee.prototype = {
 
     clone: function() {
         var a = new calAttendee();
+
+        if (this.mIsOrganizer) {
+            a.isOrganizer = true;
+        }
+
         var allProps = ["id", "commonName", "rsvp", "role", "participationStatus",
                         "userType"];
         for (var i in allProps)
@@ -108,6 +113,10 @@ calAttendee.prototype = {
     { cal: "participationStatus", ics: "PARTSTAT" },
     { cal: "userType",            ics: "CUTYPE" },
     { cal: "role",                ics: "ROLE" } ],
+
+    mIsOrganizer: false,
+    get isOrganizer() { return this.mIsOrganizer; },
+    set isOrganizer(bool) { this.mIsOrganizer = bool; },
 
     // icalatt is a calIcalProperty of type attendee
     set icalProperty (icalatt) {
@@ -134,7 +143,14 @@ calAttendee.prototype = {
         const icssvc =
             Components.classes["@mozilla.org/calendar/ics-service;1"].
                 getService(Components.interfaces.calIICSService);
-        var icalatt = icssvc.createIcalProperty("ATTENDEE");
+
+        var icalatt;
+        if (!this.mIsOrganizer) {
+            icalatt = icssvc.createIcalProperty("ATTENDEE");
+        } else {
+            icalatt = icssvc.createIcalProperty("ORGANIZER");
+        }
+
         if (!this.id)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
         icalatt.valueAsIcalString = this.id;
