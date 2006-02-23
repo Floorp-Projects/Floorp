@@ -2345,6 +2345,37 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     return NS_OK;
 }
 
+/* static */ void
+nsDocShell::RemoveChildsSHEntriesFrom(nsISHEntry *aParentEntry,
+                                      nsDocShell *aChildShell)
+{
+    NS_PRECONDITION(aChildShell, "Must have child shell!");
+    
+    nsCOMPtr<nsISHContainer> container(do_QueryInterface(aParentEntry));
+    if (!container)
+        return;
+
+    PRInt32 childCount;
+    container->GetChildCount(&childCount);
+    // Iterate backwards so removals are ok
+    for (PRInt32 i = childCount - 1; i >= 0; --i) {
+        nsCOMPtr<nsISHEntry> childEntry;
+        container->GetChildAt(i, getter_AddRefs(childEntry));
+        if (!childEntry) {
+            // childEntry can be null for valid reasons, for example if the
+            // docshell at index i never loaded anything useful.
+            continue;
+        }
+
+        if (!aChildShell->HasHistoryEntry(childEntry)) {
+            // Not an SHEntry for aChildShell
+            continue;
+        }
+
+        container->RemoveChild(childEntry);
+    }
+}
+
 NS_IMETHODIMP
 nsDocShell::RemoveChild(nsIDocShellTreeItem * aChild)
 {
@@ -2357,6 +2388,11 @@ nsDocShell::RemoveChild(nsIDocShellTreeItem * aChild)
     NS_ENSURE_SUCCESS(rv, rv);
     
     aChild->SetTreeOwner(nsnull);
+
+    // Make sure to remove the child's SHEntry from our SHEntry's child list
+    nsDocShell* childAsDocshell = NS_STATIC_CAST(nsDocShell*, aChild);
+    RemoveChildsSHEntriesFrom(mOSHE, childAsDocshell);
+    RemoveChildsSHEntriesFrom(mLSHE, childAsDocshell);    
 
     return nsDocLoader::AddDocLoaderAsChildOfRoot(childAsDocLoader);
 }
