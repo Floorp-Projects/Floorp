@@ -63,21 +63,14 @@ enum PopupControlState {
   openOverridden    // disallow window open
 };
 
-// permissible values for GetOpenAllow
-enum OpenAllowValue {
-  allowNot = 0,     // the window opening is denied
-  allowNoAbuse,     // allowed: not a popup
-  allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
-};
-
 class nsIDocShell;
 class nsIFocusController;
 class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x71201bf6, 0x0b49, 0x4b92, \
- { 0xa3, 0x62, 0x00, 0x79, 0xb1, 0x9c, 0xc3, 0xa2 } }
+{ 0xb14e8b8b, 0x1ee2, 0x43a6, \
+ { 0xa5, 0x4a, 0x56, 0xa1, 0x88, 0xaa, 0x09, 0x98 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -257,12 +250,6 @@ public:
                                                   PRBool aForce) const = 0;
   virtual void PopPopupControlState(PopupControlState state) const = 0;
   virtual PopupControlState GetPopupControlState() const = 0;
-
-  // GetOpenAllow must not be called on a window that no longer has a docshell
-  // This function is deprecated.  It will assume that there is no existing
-  // window with name aName for purposes of its answer.  Expect this function
-  // to get removed soon!
-  virtual OpenAllowValue GetOpenAllow(const nsAString &aName) = 0;
 
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.

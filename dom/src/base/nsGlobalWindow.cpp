@@ -4101,13 +4101,6 @@ nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel)
   return allowWindow;
 }
 
-OpenAllowValue
-nsGlobalWindow::GetOpenAllow(const nsAString &aName)
-{
-  NS_ENSURE_TRUE(GetDocShell(), allowNot);
-  return CheckOpenAllow(CheckForAbusePoint());
-}
-
 /* If a window open is blocked, fire the appropriate DOM events.
    aBlocked signifies we just blocked a popup.
    aWindow signifies we just opened what is probably a popup.

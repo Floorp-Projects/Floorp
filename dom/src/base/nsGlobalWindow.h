@@ -111,6 +111,13 @@ class nsHistory;
 class nsIDocShellLoadInfo;
 class WindowStateHolder;
 
+// permissible values for CheckOpenAllow
+enum OpenAllowValue {
+  allowNot = 0,     // the window opening is denied
+  allowNoAbuse,     // allowed: not a popup
+  allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
+};
+
 //*****************************************************************************
 // nsGlobalWindow: Global Object for Scripting
 //*****************************************************************************
@@ -212,7 +219,6 @@ public:
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state, PRBool aForce) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
   virtual NS_HIDDEN_(PopupControlState) GetPopupControlState() const;
-  virtual NS_HIDDEN_(OpenAllowValue) GetOpenAllow(const nsAString &aName);
 
   virtual NS_HIDDEN_(nsresult) SaveWindowState(nsISupports **aState);
   virtual NS_HIDDEN_(nsresult) RestoreWindowState(nsISupports *aState);
