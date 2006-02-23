@@ -56,14 +56,15 @@
 #include "nsIMenuFrame.h"
 #include "nsIMenuParent.h"
 #include "prlink.h"
+#include "nsIDOMHTMLInputElement.h"
 
 #include <gdk/gdkprivate.h>
-
 #include <gdk/gdkx.h>
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
+#include "gfxXlibNativeRenderer.h"
 #endif
 
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
@@ -204,15 +205,21 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
             // widgets, so don't adjust stateFrame here.
             aFrame = aFrame->GetParent();
           }
-        } else if (content->Tag() == mInputAtom) {
-          atom = mInputCheckedAtom;
-        }
-
-        if (aWidgetFlags) {
-          if (!atom) {
-            atom = (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_LABEL) ? mCheckedAtom : mSelectedAtom;
+          if (aWidgetFlags) {
+            if (!atom) {
+              atom = (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_LABEL) ? mCheckedAtom : mSelectedAtom;
+            }
+            *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
           }
-          *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
+        } else {
+          if (aWidgetFlags) {
+            nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
+            if (inputElt) {
+              PRBool isHTMLChecked;
+              inputElt->GetChecked(&isHTMLChecked);
+              *aWidgetFlags = isHTMLChecked;
+            }
+          }
         }
       }
 
@@ -415,6 +422,105 @@ NativeThemeErrorHandler(Display* dpy, XErrorEvent* error) {
   return 0;
 }
 
+#ifdef MOZ_CAIRO_GFX
+class ThemeRenderer : public gfxXlibNativeRenderer {
+public:
+  ThemeRenderer(GtkWidgetState aState, GtkThemeWidgetType aGTKWidgetType,
+                gint aFlags, const GdkRectangle& aGDKRect,
+                const GdkRectangle& aGDKClip)
+    : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
+      mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
+  nsresult NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
+                      short offsetX, short offsetY,
+                      XRectangle* clipRects, PRUint32 numClipRects);
+private:
+  GtkWidgetState mState;
+  GtkThemeWidgetType mGTKWidgetType;
+  gint mFlags;
+  GdkWindow* mWindow;
+  const GdkRectangle& mGDKRect;
+  const GdkRectangle& mGDKClip;
+};
+
+nsresult
+ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
+                          short offsetX, short offsetY,
+                          XRectangle* clipRects, PRUint32 numClipRects)
+{
+  GdkRectangle gdk_rect = mGDKRect;
+  gdk_rect.x += offsetX;
+  gdk_rect.y += offsetY;
+
+  GdkRectangle gdk_clip = mGDKClip;
+  gdk_clip.x += offsetX;
+  gdk_clip.y += offsetY;
+  if (numClipRects > 0) {
+    NS_ASSERTION(numClipRects == 1, "gfxXlibNativeRenderer cheated on us");
+    GdkRectangle extraClip = {clipRects->x, clipRects->y,
+                              clipRects->width, clipRects->height};
+    if (!gdk_rectangle_intersect(&gdk_clip, &extraClip, &gdk_clip))
+      return NS_OK;
+  }
+  
+  GdkDisplay* gdkDpy = gdk_x11_lookup_xdisplay(dpy);
+  if (!gdkDpy)
+    return NS_ERROR_FAILURE;
+  GdkPixmap* gdkPixmap = gdk_pixmap_lookup_for_display(gdkDpy, drawable);
+  if (gdkPixmap) {
+    g_object_ref(G_OBJECT(gdkPixmap));
+  } else {
+    gdkPixmap = gdk_pixmap_foreign_new_for_display(gdkDpy, drawable);
+    if (!gdkPixmap)
+      return NS_ERROR_FAILURE;
+    if (visual) {
+      GdkScreen* gdkScreen = gdk_display_get_default_screen(gdkDpy);
+      GdkVisual* gdkVisual = gdk_x11_screen_lookup_visual(gdkScreen, visual->visualid);
+      Colormap cmap = DefaultScreenOfDisplay(dpy)->cmap;
+      GdkColormap* colormap =
+        gdk_x11_colormap_foreign_new(gdkVisual, cmap);
+                                             
+      gdk_drawable_set_colormap(gdkPixmap, colormap);
+    }
+  }
+
+  moz_gtk_widget_paint(mGTKWidgetType, gdkPixmap, &gdk_rect, &gdk_clip, &mState,
+                       mFlags);
+
+  g_object_unref(G_OBJECT(gdkPixmap));
+  return NS_OK;
+}
+#endif
+
+static PRBool
+GetExtraSizeForWidget(PRUint8 aWidgetType, nsIntMargin* aExtra)
+{
+  *aExtra = nsIntMargin(0,0,0,0);
+  // Allow an extra one pixel above and below the thumb for certain
+  // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
+  // see moz_gtk_scrollbar_thumb_paint in gtk2drawing.c
+  switch (aWidgetType) {
+  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
+    aExtra->top = aExtra->bottom = 1;
+    return PR_TRUE;
+  case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
+    aExtra->left = aExtra->right = 1;
+    return PR_TRUE;
+  default:
+    return PR_FALSE;
+  }
+}
+
+static GdkRectangle
+ConvertToGdkRect(const nsRect &aRect, float aT2P)
+{
+  GdkRectangle gdk_rect;
+  gdk_rect.x = NSToCoordRound(aRect.x * aT2P);
+  gdk_rect.y = NSToCoordRound(aRect.y * aT2P);
+  gdk_rect.width = NSToCoordRound(aRect.XMost() * aT2P) - gdk_rect.x;
+  gdk_rect.height = NSToCoordRound(aRect.YMost() * aT2P) - gdk_rect.y;
+  return gdk_rect;
+}
+
 NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                                        nsIFrame* aFrame,
@@ -428,7 +534,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (!GetGtkWidgetAndState(aWidgetType, aFrame, gtkWidgetType, &state,
                             &flags))
     return NS_OK;
-
+    
 #ifndef MOZ_CAIRO_GFX
   GdkWindow* window = NS_STATIC_CAST(GdkWindow*,
     aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE));
@@ -478,97 +584,26 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     }
   }
 #else
-  // Thebes gfx rendering; if we can get a GdkWindow and if we don't have any transform
-  // other than a translation, then just render directly.  Otherwise, we can't do
-  // native themes yet, until we figure out how to intercept gtk rendering
-
-  nsRefPtr<gfxContext> ctx = (gfxContext*) aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-
   nsIDeviceContext *dctx = nsnull;
   aContext->GetDeviceContext(dctx);
   double t2p = dctx->AppUnitsToDevUnits();
+  double p2t = dctx->DevUnitsToAppUnits();
 
-  GdkRectangle gdk_rect = { aRect.x * t2p,
-                            aRect.y * t2p,
-                            aRect.width * t2p,
-                            aRect.height * t2p };
-  GdkRectangle gdk_clip = { aClipRect.x * t2p,
-                            aClipRect.y * t2p,
-                            aClipRect.width * t2p,
-                            aClipRect.height * t2p };
+  // This is the rectangle that will actually be drawn, in appunits
+  nsRect drawingRect(aClipRect);
+  nsIntMargin extraSize;
+  // remember whether the widget might draw outside its given clip rect
+  PRBool overDrawing = GetExtraSizeForWidget(aWidgetType, &extraSize);
+  // inflate drawing rect to account for the overdraw
+  nsMargin extraSizeInTwips(NSToCoordRound(extraSize.left*p2t),
+                            NSToCoordRound(extraSize.top*p2t),
+                            NSToCoordRound(extraSize.right*p2t),
+                            NSToCoordRound(extraSize.bottom*p2t));
+  drawingRect.Inflate(extraSizeInTwips);
 
-
-  GdkWindow* gdkwin = (GdkWindow*) gfxPlatformGtk::GetPlatform()->GetSurfaceGdkDrawable(ctx->CurrentSurface());
-  GdkDrawable *target_drawable = nsnull;
-  PRBool needs_thebes_composite = PR_FALSE;
-
-  if (gdkwin && !ctx->CurrentMatrix().HasNonTranslation()) {
-    // we can draw straight to the gdkwin drawable; need to offset gdk_rect/gdk_clip
-    // by the current translation
-    target_drawable = gdkwin;
-
-    gfxPoint t = ctx->CurrentMatrix().GetTranslation();
-    gdk_rect.x += t.x;
-    gdk_rect.y += t.y;
-    gdk_clip.x += t.x;
-    gdk_clip.y += t.y;
-
-    ctx->CurrentSurface()->Flush();
-  } else {
-    // we can't draw directly to the gdkwin drawable because we're being transformed;
-    // so draw to our temporary pixmap and composite
-
-    // .. except that we can't draw to the temporary pixmap just yet, so bail
-    SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
-    RefreshWidgetWindow(aFrame);
-    return NS_OK;
-
-#if 0
-    PRUint32 maxsz = ((PRUint32)(aRect.width < aRect.height ? (aRect.height * t2p) : (aRect.width * t2p))) + 1;
-  
-    if (mGdkPixmapSize < maxsz) {
-      if (mGdkPixmap) {
-        mThebesSurface = nsnull;
-        g_object_unref(mGdkPixmap);
-        mGdkPixmap = nsnull;
-      }
-
-      fprintf (stderr, "maxsz: %d\n", maxsz);
-      mGdkPixmap = gdk_pixmap_new (gdk_get_default_root_window(),
-                                   maxsz,
-                                   maxsz,
-                                   32);
-
-      mThebesSurface = new gfxXlibSurface (gdk_x11_get_default_xdisplay(),
-                                           GDK_PIXMAP_XID(mGdkPixmap),
-                                           gfxXlibSurface::FindRenderFormat(gdk_x11_get_default_xdisplay(),
-                                                                            gfxASurface::ImageFormatARGB32),
-                                           maxsz, maxsz);
-      
-      mGdkPixmapSize = maxsz;
-    }
-
-    nsRefPtr<gfxContext> gdkCtx = new gfxContext(mThebesSurface);
-    gdkCtx->SetOperator(gfxContext::OPERATOR_CLEAR);
-    gdkCtx->Paint();
-
-    target_drawable = mGdkPixmap;
-    needs_thebes_composite = PR_TRUE;
-#endif
-  }
-
-  if (gdk_clip.x < 0) {
-    gdk_clip.width += gdk_clip.x;
-    gdk_clip.x = 0;
-  }
-
-  if (gdk_clip.y < 0) {
-    gdk_clip.height += gdk_clip.y;
-    gdk_clip.y = 0;
-  }
-
-  if (gdk_clip.width < 0 || gdk_clip.height < 0)
-    return NS_OK;
+  // translate everything so (0,0) is the top left of the drawingRect
+  nsIRenderingContext::AutoPushTranslation
+    translation(aContext, drawingRect.x, drawingRect.y);
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
@@ -580,10 +615,37 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
   }
 
+  // We do not support clip lists (because we can't currently tweak the actual
+  // Gdk GC used), and we require the use of the default display and visual
+  // because I'm afraid that otherwise the GTK theme may explode.
+  PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
+  if (!overDrawing) {
+    rendererFlags |= gfxXlibNativeRenderer::DRAW_SUPPORTS_CLIP_RECT;
+  }
+  GdkRectangle gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), t2p);
+  GdkRectangle gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), t2p);
+  ThemeRenderer renderer(state, gtkWidgetType, flags, gdk_rect, gdk_clip);
 
-  moz_gtk_widget_paint(gtkWidgetType, target_drawable, &gdk_rect, &gdk_clip, &state,
-                       flags);
-
+  gfxContext* ctx =
+    (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxRect rect(0, 0, drawingRect.width*t2p, drawingRect.height*t2p);
+  // Don't snap if it's a non-unit scale factor. We're going to have to take
+  // slow paths then in any case.
+  gfxMatrix current = ctx->CurrentMatrix();
+  PRBool snapXY = ctx->UserToDevicePixelSnapped(rect) &&
+    !current.HasNonTranslation();
+  if (snapXY) {
+    gfxMatrix translation;
+    translation.Translate(rect.TopLeft());
+    ctx->SetMatrix(translation);
+    renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
+                  NSToCoordRound(rect.Width()), NSToCoordRound(rect.Height()),
+                  rendererFlags, nsnull);
+    ctx->SetMatrix(current);
+  } else {
+    renderer.Draw(gdk_x11_get_default_xdisplay(), ctx,
+                  drawingRect.width, drawingRect.height, rendererFlags, nsnull);
+  }
 
   if (!safeState) {
     gdk_flush();
@@ -605,26 +667,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
     }
   }
-
-  if (needs_thebes_composite) {
-#if 0
-    ctx->Save();
-    ctx->NewPath();
-    ctx->Translate(gfxPoint(aRect.x * t2p,
-                            aRect.y * t2p));
-    nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
-    
-    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0,
-                                                    aRect.width * t2p,
-                                                    aRect.height * t2p),
-                                            pat);
-    ctx->Fill();
-    ctx->Restore();
 #endif
-  } else {
-    ctx->CurrentSurface()->MarkDirty();
-  }
-#endif /* MOZ_CAIRO_GFX */
 
   return NS_OK;
 }
@@ -692,21 +735,9 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aResult)
 {
-  nsIntMargin extraSize(0,0,0,0);
-  // Allow an extra one pixel above and below the thumb for certain
-  // GTK2 themes (Ximian Industrial, Bluecurve, Misty, at least);
-  // see moz_gtk_scrollbar_thumb_paint in gtk2drawing.c
-  switch (aWidgetType) {
-  case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-    extraSize.top = extraSize.bottom = 1;
-    break;
-  case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-    extraSize.left = extraSize.right = 1;
-    break;
-  default:
+  nsIntMargin extraSize;
+  if (!GetExtraSizeForWidget(aWidgetType, &extraSize))
     return PR_FALSE;
-  }
-
   float p2t = aContext->DevUnitsToAppUnits();
   nsMargin m(NSIntPixelsToTwips(extraSize.left, p2t),
              NSIntPixelsToTwips(extraSize.top, p2t),
@@ -874,11 +905,13 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
+#ifndef MOZ_CAIRO_GFX
   if (aFrame) {
-    // For now don't support HTML.
+    // don't support HTML in non-cairo builds
     if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
       return PR_FALSE;
   }
+#endif
 
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return PR_FALSE;

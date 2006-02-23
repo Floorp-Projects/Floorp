@@ -59,6 +59,12 @@ struct NS_EXPORT gfxRect {
         return (pos != s.pos) || (size != s.size);
     }
 
+    const gfxPoint& TopLeft() { return pos; }
+    gfxFloat Width() { return size.width; }
+    gfxFloat Height() { return size.height; }
+    gfxFloat X() { return pos.x; }
+    gfxFloat Y() { return pos.y; }
+
     // XXX figure out what methods (intersect, union, etc) we use and add them.
 };
 

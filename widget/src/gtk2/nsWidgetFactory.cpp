@@ -228,15 +228,10 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerGtkConstructor },
 #ifdef NATIVE_THEME_SUPPORT
-    /* XXX temporary!  Disable native theme support on linux until roc
-     * lands new native theme stuff
-     */
-#ifndef MOZ_CAIRO_GFX
    { "Native Theme Renderer",
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1",
      nsNativeThemeGTKConstructor },
-#endif
 #endif
   { "PrintSettings Service",
     NS_PRINTSETTINGSSERVICE_CID,
