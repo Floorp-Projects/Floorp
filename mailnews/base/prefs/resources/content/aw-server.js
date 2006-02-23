@@ -143,9 +143,15 @@ function serverPageInit() {
      * came from the default or the user action).
      */
     if (!serverTypeRadioGroup.value) {
-      // Set pop3 server type as default selection
-      var pop3RadioItem = document.getElementById("pop3");
-      serverTypeRadioGroup.selectedItem = pop3RadioItem;
+      /*
+       * if server type was set to imap in isp data, then
+       * we preset the server type radio group accordingly,
+       * otherwise, use pop3 as the default.
+       */
+      var serverTypeRadioItem = document.getElementById(pageData.server &&
+           pageData.server.servertype && pageData.server.servertype.value == "imap" ?
+               "imap" : "pop3");
+      serverTypeRadioGroup.selectedItem = serverTypeRadioItem;      // Set pop3 server type as default selection
     }
     setServerType();
     setDeferStorage(); // set the initial value correctly
@@ -157,9 +163,13 @@ function serverPageInit() {
 
   gPrefsBundle = document.getElementById("bundle_prefs");
   var smtpServer = null;
+  var smtpCreateNewServer = gCurrentAccountData && gCurrentAccountData.smtpCreateNewServer;
+
   // don't use the default smtp server if it has a redirector type
+  // or if smtp server creation was explicitly requested in isp rdf
   if (parent.smtpService.defaultServer &&
-      !parent.smtpService.defaultServer.redirectorType) {
+      !parent.smtpService.defaultServer.redirectorType &&
+      !smtpCreateNewServer) {
     smtpServer = parent.smtpService.defaultServer;
     setPageData(pageData, "identity", "smtpServerKey", smtpServer.key);
   }
@@ -170,6 +180,21 @@ function serverPageInit() {
   var boxToHide;
   var boxToShow;
   
+
+  if (pageData.server && pageData.server.hostname) {
+    var incomingServerTextBox = document.getElementById("incomingServer");
+    if (incomingServerTextBox && incomingServerTextBox.value == "")
+      incomingServerTextBox.value = pageData.server.hostname.value;
+  }
+
+  if (pageData.server && pageData.server.smtphostname && smtpCreateNewServer) {
+    var smtpTextBox = document.getElementById("smtphostname");
+    if (smtpTextBox && smtpTextBox.value == "")
+      smtpTextBox.value = pageData.server.smtphostname.value;
+    boxToShow = haveSmtpBox;
+    boxToHide = noSmtpBox;
+  }
+ 
   if (smtpServer && smtpServer.hostname && smtpServer.redirectorType == null) {
     // we have a hostname, so modify and show the static text and 
     // store the value of the default smtp server in the textbox.
