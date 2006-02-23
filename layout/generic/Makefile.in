@@ -49,6 +49,8 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  content \
+		  thebes \
+		  cairo \
 		  gfx \
 		  widget \
 		  locale \

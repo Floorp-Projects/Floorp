@@ -770,9 +770,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   SetGraphicsMode(hdc, GM_ADVANCED);
 
   /* Need to force the clip to be set */
-  ctx->NewPath();
-  ctx->Rectangle(gfxRect(0,0,0,0));
-  ctx->Fill();
+  ctx->UpdateSurfaceClip();
 
   //ctx->CurrentSurface()->Flush();
 
@@ -1829,9 +1827,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   SetGraphicsMode(hdc, GM_ADVANCED);
 
   /* Need to force the clip to be set */
-  ctx->NewPath();
-  ctx->Rectangle(gfxRect(0,0,0,0));
-  ctx->Fill();
+  ctx->UpdateSurfaceClip();
 
   /* Set the device offsets as appropriate */
   gfxFloat xoff, yoff;
