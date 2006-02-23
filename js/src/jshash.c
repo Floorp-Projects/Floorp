@@ -361,12 +361,10 @@ JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
         while ((he = *hep) != NULL) {
             rv = f(he, n, arg);
             n++;
-            if (rv & (HT_ENUMERATE_REMOVE | HT_ENUMERATE_UNHASH)) {
+            if (rv & HT_ENUMERATE_REMOVE) {
                 *hep = he->next;
-                if (rv & HT_ENUMERATE_REMOVE) {
-                    he->next = todo;
-                    todo = he;
-                }
+                he->next = todo;
+                todo = he;
             } else {
                 hep = &he->next;
             }

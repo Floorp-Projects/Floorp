@@ -64,7 +64,6 @@ typedef intN (* JS_DLL_CALLBACK JSHashEnumerator)(JSHashEntry *he, intN i, void 
 #define HT_ENUMERATE_NEXT       0       /* continue enumerating entries */
 #define HT_ENUMERATE_STOP       1       /* stop enumerating entries */
 #define HT_ENUMERATE_REMOVE     2       /* remove and free the current entry */
-#define HT_ENUMERATE_UNHASH     4       /* just unhash the current entry */
 
 typedef struct JSHashAllocOps {
     void *              (*allocTable)(void *pool, size_t size);
