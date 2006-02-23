@@ -20,7 +20,7 @@ if cairo is enabled.  Please upgrade to VC7.1/8.
 
 ==== Patches ====
 
-Last update: 21 Feb 2006
+Last update: 23 Feb 2006
 
 mozilla-misc.patch
   - Misc compilation fixes for pixman (submitted upstream)
@@ -88,4 +88,8 @@ cairo-win32-creation-format.patch
 cairo-xlib-create-similar.patch (Updated 21 Feb 06)
   - _cairo_xlib_surface_create_similar should not create a 24-bit
     surface for a 16-bit target; fix it to emulate the target surface
-    as closely as possible
+    as closely as possible (submitted upstream, not accepted yet)
+
+cairo-xlib-getters.patch (Updated 23 Feb 06)
+  - Add cairo_xlib_get_(display,drawable,screen,visual,depth)
+    (submitted upstream, not accepted yet)
