@@ -39,7 +39,6 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsStyleConsts.h"
-#include "nsVoidArray.h"
 
 FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame)
   : BasicTableLayoutStrategy(aFrame)

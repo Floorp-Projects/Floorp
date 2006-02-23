@@ -45,7 +45,6 @@
 #include "nsIRenderingContext.h"
 #include "nsTransform2D.h"
 #include "nsIScrollableView.h"
-#include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
 #include "nsIInterfaceRequestor.h"

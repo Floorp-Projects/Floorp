@@ -37,7 +37,6 @@
 #ifndef nsHTMLReflowCommand_h___
 #define nsHTMLReflowCommand_h___
 #include "nsReflowType.h"
-#include "nsVoidArray.h"
 #include <stdio.h>
 #include "nsIAtom.h"
 

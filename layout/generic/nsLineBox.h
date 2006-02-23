@@ -39,7 +39,6 @@
 #ifndef nsLineBox_h___
 #define nsLineBox_h___
 
-#include "nsVoidArray.h"
 #include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
 

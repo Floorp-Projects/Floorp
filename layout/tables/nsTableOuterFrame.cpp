@@ -44,7 +44,6 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsVoidArray.h"
 #include "prinrval.h"
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"

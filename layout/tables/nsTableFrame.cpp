@@ -59,7 +59,6 @@
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsStyleConsts.h"
-#include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
 #include "nsCSSAnonBoxes.h"

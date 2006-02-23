@@ -45,7 +45,6 @@
 #include "nsCoord.h"
 #include "nsCSSValue.h"
 #include "nsCSSProps.h"
-#include "nsVoidArray.h"
 #include "nsValueArray.h"
 #include "nsCSSDataBlock.h"
 #include "nsCSSStruct.h"

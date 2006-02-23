@@ -51,7 +51,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
-#include "nsVoidArray.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"

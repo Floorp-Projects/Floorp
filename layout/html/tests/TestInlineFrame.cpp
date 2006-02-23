@@ -39,7 +39,6 @@
 #include "nsCRT.h"
 #include "nsHTMLParts.h"
 #include "nsIDocument.h"
-#include "nsVoidArray.h"
 #include "nsDocument.h"
 #include "nsHTMLTagContent.h"
 #include "nsCoord.h"

@@ -44,7 +44,6 @@
 #include "nsCRT.h"
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
-#include "nsVoidArray.h"
 #include "nsFont.h"
 
 #include "nsStyleConsts.h"
