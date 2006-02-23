@@ -47,7 +47,7 @@ interface nsIDOMNode;
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(ccba3717-ef05-41cd-b831-f7f5ab3b921c)]
+[uuid(a6522c1a-a343-4b36-a130-75eb279a667a)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -100,11 +100,16 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
                     out AString  nodeValue);
 
   /**
-   * Insert a node under an instance node
+   * Insert a set of nodes underneath an instance node.
+   * @param aContextNode       The instance node
+   * @param aNodeContent       Node that holds the contents to insert under
+   *                           the instance node
+   * @param aNodeChanged       Indicates whether the contents of the instance
+   *                           node really did change due to this action
    */
-  void setNodeContent(in nsIDOMNode contextNode,
-                      in nsIDOMNode nodeContent,
-                      out boolean nodeChanged);
+  void setNodeContent(in nsIDOMNode aContextNode,
+                      in nsIDOMNode aNodeContent,
+                      out boolean   aNodeChanged);
 
   /**
    * Validates the instance node against the schemas loaded by the model.

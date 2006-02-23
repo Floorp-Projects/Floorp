@@ -95,9 +95,11 @@ interface nsIXFormsAccessors : nsISupports
    * is nothing contained under aNode, then all children of the bound node
    * will be eliminated.
    *
-   * @param aNode         aNode should be a copy of the bound node.  setContent
-   *                      will take the contents of aNode and move them under
-   *                      bound node.
+   * @param aNode         setContent will take the contents of aNode and copy
+   *                      them under the control's bound node.
+   * @param aForceUpdate  Indicates whether setContent should rebuild,
+   *                      recalculate, revalidate and refresh the model that
+   *                      this control is bound to prior to returning
    */
-  void setContent(in nsIDOMNode aNode);
+  void setContent(in nsIDOMNode aNode, in boolean aForceUpdate);
 };

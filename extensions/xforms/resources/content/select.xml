@@ -514,7 +514,7 @@
 
           // add to the control array
           this._controlArray[this._controlArraySize] =
-            {control: aItemElement, option: option, type: "item", wasSelected: false}
+            {control: aItemElement, option: option, type: "item", wasSelected: option.selected}
           this._controlArraySize++;
 
           this.uiElement.appendChild(option);
@@ -554,10 +554,27 @@
             return;
           }
 
-          var contentEnvelope = this._getSelectedValues();
+          // if a copy item is selected or deselected, then we need to replace
+          // ALL of the current content with the newly selected content.  Which
+          // means calling setContent.  setValue only messes with the first
+          // textnode under the bound node.
+          var copySelectedOrDeselected = new Boolean();
+          copySelectedOrDeselected.value = false;
+          var contentEnvelope = this._getSelectedValues(copySelectedOrDeselected);
           if (contentEnvelope) {
             if (boundNode.nodeType == Node.ELEMENT_NODE) {
-              this.accessors.setContent(contentEnvelope);
+              // we shouldn't call setContent if we haven't selected any
+              // copyItems.  We can't just test for a single text node under
+              // the bound node because this could still have been the result
+              // of a copyItem being selected.  And if a copyItem is selected,
+              // then we need to do the whole rebuild, recalculate, revalidate,
+              // refresh process according to the spec...whether we really need
+              // to or not.
+              if (copySelectedOrDeselected.value == false) {
+                this.accessors.setValue(contentEnvelope.textContent);
+              } else {
+                this.accessors.setContent(contentEnvelope, true);
+              }
             } else {
               // if some copyItems were selected by the user prior to the call
               // to _getSelectedValues, then we would not have set up
@@ -577,6 +594,7 @@
       </method>
 
       <method name="_getSelectedValues">
+        <parameter name="aIsACopyItemSelectedOrDeselected"/>
         <body>
         <![CDATA[
           var selectedValues = "";
@@ -584,6 +602,10 @@
 
           // select if found, unselect if not
           var options = this._controlArray;
+
+          if (aIsACopyItemSelectedOrDeselected) {
+            aIsACopyItemSelectedOrDeselected.value = false;
+          }
 
           var boundNode = this.accessors.getBoundNode();
           if (!boundNode) {
@@ -650,6 +672,10 @@
                   // selected items
                   if (!options[i].wasSelected) {
                     newSelectedControls.push(options[i].control);
+                    if (aIsACopyItemSelectedOrDeselected && 
+                        aIsACopyItemSelectedOrDeselected.value != true) {
+                      aIsACopyItemSelectedOrDeselected.value = true;
+                    }
                   }
     
                   options[i].wasSelected = true;
@@ -673,8 +699,17 @@
               if (options[i].wasSelected) {
                 this.dispatchSelectEvent(options[i].control, "xforms-deselect");
 
-                // XXX if this is a copyItem, we'll need to rebuild the model
-                //     per spec.
+                // if a copyItem was deselected, we need to make sure to do a
+                // rebuild.  By setting aIsACopyItemSelectedOrDeselected, this
+                // should tell _handleSelection to use setContent with
+                // aForceUpdate = true
+                var item = options[i].control.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+                if (item.isCopyItem) {
+                  if (aIsACopyItemSelectedOrDeselected && 
+                      aIsACopyItemSelectedOrDeselected.value != true) {
+                    aIsACopyItemSelectedOrDeselected.value = true;
+                  }
+                }
               }
 
               options[i].wasSelected = false;
@@ -1031,6 +1066,8 @@
               if (selectedItem) {
                 this._selectedElementArray[j].hits++;
                 item.firstChild.checked = true;
+
+                this._controlArray[this._controlArraySize - 1].wasSelected = true;
                 // XXX It is possible that two identical elements are under the
                 // bound node.  I guess we shouldn't mark one and not the other
                 // if there is an item in the select that matches it.  So we'll

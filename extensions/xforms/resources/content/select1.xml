@@ -185,8 +185,6 @@
                 // (causes a xforms-binding-exception).
                 if (this._lastSelectedItem != this._selected) {
                   if (this._lastSelectedItem) {
-                    // XXX if this is a copyItem, we'll need to rebuild the
-                    //     model per spec.
                     this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
                   }
   
@@ -222,8 +220,6 @@
                 // a xforms-binding-exception).
                 if (this._lastSelectedItem != this._selected) {
                   if (this._lastSelectedItem) {
-                    // XXX if this is a copyItem, we'll need to rebuild the
-                    //     model per spec.
                     this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
                   }
   
@@ -446,8 +442,6 @@
               // a xforms-binding-exception).
               if (this._lastSelectedItem != this._selected) {
                 if (this._lastSelectedItem) {
-                  // XXX if this is a copyItem, we'll need to rebuild the
-                  //     model per spec.
                   this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
                 }
 
@@ -832,15 +826,17 @@
             if (this._selected) {
               this.updateInputField();
             }
-            this._handleSelection();
+
+            this._handleSelection(true);
           }
           ]]>
         </body>
       </method>
 
-      // _handleSelection updates the bound node with the value from the
-      // currently selected item's value element or copy element.
+      <!-- _handleSelection updates the bound node with the value from the
+            currently selected item's value element or copy element. -->
       <method name="_handleSelection">
+        <parameter name="aInBlur"/>
         <body>
           <![CDATA[
           var boundNode = this.accessors.getBoundNode();
@@ -856,6 +852,16 @@
           if (!this._selected) {
             // no reason to continue
             return;
+          }
+
+          if (aInBlur && aInBlur == true) {
+            // if _handleSelection is called due to a blur, we only really care
+            // about making sure the bound node is in sync if @incremental is
+            // false.  Otherwise the bound node is already up to date so might
+            // as well return.
+            if (this.getAttribute("incremental") != "false") {
+              return;
+            }
           }
 
           if (boundNode.nodeType != boundNode.ELEMENT_NODE) {
@@ -888,7 +894,17 @@
           }
 
           var contentEnvelope = this._getSelectedValue();
-          this.accessors.setContent(contentEnvelope);
+          var copyInvolved = this._selected.isCopyItem;
+          if (!copyInvolved && this._lastSelectedItem) {
+            copyInvolved = this._lastSelectedItem.isCopyItem;
+          }
+          if (!copyInvolved) {
+            // Since we aren't selecting a copyItem nor causing a copyItem to
+            // be deselected, no sense using setContent.  Too expensive.
+            this.accessors.setValue(contentEnvelope.textContent);
+          } else {
+            this.accessors.setContent(contentEnvelope, true);
+          }
 
           }
           ]]>

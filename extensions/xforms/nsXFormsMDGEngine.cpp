@@ -753,17 +753,9 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
   NS_ENSURE_ARG(aContentEnvelope);
 
   // ok, this is tricky.  This function will REPLACE the contents of
-  // aContextNode with the CONTENTS of aContentEnvelope.  No, not a clone of 
-  // the contents, but the contents themselves.  If aContentEnvelope has no
-  // contents, then any contents that aContextNode has will still be removed.
-  // In order to determine whether the incoming node content is the same as what
-  // is already contained in aContextNode, aContentEnvelope MUST be a clone (not
-  // deep) of aContextNode, otherwise aNodeChanged will always be returned as
-  // being PR_TRUE.  I took this approach because I think it is much more
-  // efficient for the caller to build a complete list of what goes in the
-  // contents in one go rather than allowing any number of appends to existing
-  // content one node at a time.  There are quite a few links in the call chain
-  // to go from nsXFormsDelegateStub to here.
+  // aContextNode with the a clone of the contents of aContentEnvelope.  If
+  // aContentEnvelope has no contents, then any contents that aContextNode
+  // has will still be removed.  
 
   if (aNodeChanged) {
     *aNodeChanged = PR_FALSE;
@@ -790,10 +782,56 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
     return NS_ERROR_DOM_WRONG_TYPE_ERR;
   }
 
-  PRBool nodesEqual = nsXFormsUtils::AreNodesEqual(aContextNode,
-                                                   aContentEnvelope,
-                                                   PR_FALSE);
-  if (nodesEqual) {
+  // Need to determine if the contents of the context node and content envelope
+  // are already the same.  If so, we can avoid some unnecessary work.
+
+  PRBool hasChildren1, hasChildren2, contentsEqual = PR_FALSE;
+  nsresult rv1 = aContextNode->HasChildNodes(&hasChildren1);
+  nsresult rv2 = aContentEnvelope->HasChildNodes(&hasChildren2);
+  if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && hasChildren1 == hasChildren2) {
+    // First test passed.  Both have the same number of children nodes.
+    if (hasChildren1) {
+      nsCOMPtr<nsIDOMNodeList> children1, children2;
+      PRUint32 childrenLength1, childrenLength2;
+  
+      rv1 = aContextNode->GetChildNodes(getter_AddRefs(children1));
+      rv2 = aContentEnvelope->GetChildNodes(getter_AddRefs(children2));
+
+      if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && children1 && children2) {
+
+        // Both have child nodes.
+        rv1 = children1->GetLength(&childrenLength1);
+        rv2 = children2->GetLength(&childrenLength2);
+        if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && 
+            (childrenLength1 == childrenLength2)) {
+
+          // both have the same number of child nodes.  Now checking to see if
+          // each of the children are equal.
+          for (PRUint32 i = 0; i < childrenLength1; ++i) {
+            nsCOMPtr<nsIDOMNode> child1, child2;
+      
+            rv1 = children1->Item(i, getter_AddRefs(child1));
+            rv2 = children2->Item(i, getter_AddRefs(child2));
+            if (NS_FAILED(rv1) || NS_FAILED(rv2)) {
+              // Unexpected error.  Not as many children in the list as we
+              // were told.
+              return NS_ERROR_UNEXPECTED;
+            }
+      
+            contentsEqual = nsXFormsUtils::AreNodesEqual(child1, child2, PR_TRUE);
+            if (!contentsEqual) {
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      // neither have children
+      contentsEqual = PR_TRUE;
+    }
+  }
+
+  if (contentsEqual) {
     return NS_OK;
   }
 
@@ -821,12 +859,22 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
   nsCOMPtr<nsIDOMNode> childNode;
   rv = aContentEnvelope->GetFirstChild(getter_AddRefs(childNode));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMDocument> document;
+  rv = aContextNode->GetOwnerDocument(getter_AddRefs(document));
+  NS_ENSURE_STATE(document);
+
   while (childNode) {
-    rv = aContextNode->AppendChild(childNode, getter_AddRefs(resultNode));
+    nsCOMPtr<nsIDOMNode> importedNode;
+    rv = document->ImportNode(childNode, PR_TRUE, getter_AddRefs(importedNode));
+    NS_ENSURE_STATE(importedNode);
+    rv = aContextNode->AppendChild(importedNode, getter_AddRefs(resultNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aContentEnvelope->GetFirstChild(getter_AddRefs(childNode));
+    rv = childNode->GetNextSibling(getter_AddRefs(resultNode));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    resultNode.swap(childNode);
   }
 
   // NB: Never reached for Readonly nodes.  
@@ -834,8 +882,6 @@ nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
     *aNodeChanged = PR_TRUE;
   }
 
-  // Not calling MarkNodeAsChanged since caller will do a full rebuild
-  
   return NS_OK;
 }
 
