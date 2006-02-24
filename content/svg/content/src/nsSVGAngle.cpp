@@ -98,7 +98,8 @@ protected:
   PRBool IsValidUnitType(PRUint16 unit);
 
   float mValueInSpecifiedUnits;
-  PRUint16 mSpecifiedUnitType;
+  PRUint8 mSpecifiedUnitType : 3;
+  PRPackedBool mIsAuto : 1;
 };
 
 
@@ -137,8 +138,10 @@ NS_NewSVGAngle(nsIDOMSVGAngle** result,
 nsSVGAngle::nsSVGAngle(float value,
                        PRUint16 unit)
   : mValueInSpecifiedUnits(value),
-    mSpecifiedUnitType(unit)
+    mIsAuto(PR_FALSE)
 {
+  NS_ASSERTION(unit == SVG_ANGLETYPE_UNKNOWN || IsValidUnitType(unit), "unknown unit");
+  mSpecifiedUnitType = unit;
 }
 
 nsSVGAngle::nsSVGAngle()
@@ -268,6 +271,7 @@ NS_IMETHODIMP
 nsSVGAngle::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
 {
   WillModify();
+  mIsAuto                = PR_FALSE;
   mValueInSpecifiedUnits = aValueInSpecifiedUnits;
   DidModify();
   return NS_OK;
@@ -277,6 +281,10 @@ nsSVGAngle::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
 NS_IMETHODIMP
 nsSVGAngle::GetValueAsString(nsAString & aValueAsString)
 {
+  if (mIsAuto) {
+    aValueAsString.AssignLiteral("auto");
+    return NS_OK;
+  }
   aValueAsString.Truncate();
 
   PRUnichar buf[24];
@@ -295,6 +303,12 @@ nsSVGAngle::GetValueAsString(nsAString & aValueAsString)
 NS_IMETHODIMP
 nsSVGAngle::SetValueAsString(const nsAString & aValueAsString)
 {
+  if (aValueAsString.EqualsLiteral("auto")) {
+    WillModify();
+    mIsAuto = PR_TRUE;
+    DidModify();
+    return NS_OK;
+  }
   nsresult rv = NS_OK;
   
   char *str = ToNewCString(aValueAsString);
@@ -331,6 +345,7 @@ nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUnit
   if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
 
   WillModify();
+  mIsAuto                = PR_FALSE;
   mValueInSpecifiedUnits = valueInSpecifiedUnits;
   mSpecifiedUnitType     = unitType;
   DidModify();
