@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -466,9 +467,14 @@ nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
   jsval    *argv = nsnull;
   JSContext *cx;
   void *mark;
-  nsresult  rv;
 
-  rv = ConvertSupportsTojsvals(aParent, aArguments, &argc, &argv, &cx, &mark);
+  // This kungFuDeathGrip is filled when we are using aParent's context. It
+  // prevents the context from being destroyed before we're truly done with
+  // it.
+  nsCOMPtr<nsIScriptContext> kungFuDeathGrip;
+
+  nsresult rv = ConvertSupportsTojsvals(aParent, aArguments, &argc, &argv, &cx,
+                                        &mark, getter_AddRefs(kungFuDeathGrip));
   if (NS_SUCCEEDED(rv)) {
     PRBool dialog = argc == 0 ? PR_FALSE : PR_TRUE;
     rv = OpenWindowJSInternal(aParent, aUrl, aName, aFeatures, dialog, argc,
@@ -1946,7 +1952,8 @@ nsWindowWatcher::ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
                                          nsISupports *aArgs,
                                          PRUint32 *aArgc, jsval **aArgv,
                                          JSContext **aUsedContext,
-                                         void **aMarkp)
+                                         void **aMarkp,
+                                         nsIScriptContext **aScriptContext)
 {
   nsresult rv = NS_OK;
 
@@ -1973,6 +1980,15 @@ nsWindowWatcher::ConvertSupportsTojsvals(nsIDOMWindow *aWindow,
   JSContextAutoPopper  contextGuard;
 
   cx = GetJSContextFromWindow(aWindow);
+  if (cx) {
+    // Our caller needs to hold a strong ref to keep this context alive.
+    *aScriptContext = GetScriptContextFromJSContext(cx);
+    NS_ASSERTION(*aScriptContext,
+                 "The window's context doesn't have a script context?");
+    NS_ADDREF(*aScriptContext);
+  } else {
+    *aScriptContext = nsnull;
+  }
   if (!cx)
     cx = GetJSContextFromCallStack();
   if (!cx) {
@@ -2294,7 +2310,7 @@ nsWindowWatcher::GetJSContextFromWindow(nsIDOMWindow *aWindow)
     }
     /* (off-topic note:) the nsIScriptContext can be retrieved by
     nsCOMPtr<nsIScriptContext> scx;
-    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scx));
+    nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scx));
     */
   }
 

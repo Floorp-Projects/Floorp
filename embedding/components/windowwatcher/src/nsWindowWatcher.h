@@ -55,6 +55,7 @@ class  nsIDocShellTreeOwner;
 class  nsIWebBrowserChrome;
 class  nsString;
 class  nsWatcherWindowEnumerator;
+class  nsIScriptContext;
 struct JSContext;
 struct JSObject;
 struct nsWatcherWindowEntry;
@@ -139,7 +140,8 @@ private:
                                             nsISupports *aArgs,
                                             PRUint32 *aArgc, jsval **aArgv,
                                             JSContext **aUsedContext,
-                                            void **aMarkp);
+                                            void **aMarkp,
+                                            nsIScriptContext **aScriptContext);
   static nsresult   AddSupportsTojsvals(nsISupports *aArg,
                                         JSContext *cx, jsval *aArgv);
   static nsresult   AddInterfaceTojsvals(nsISupports *aArg,
