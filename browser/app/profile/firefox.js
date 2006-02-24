@@ -267,8 +267,8 @@ pref("dom.disable_window_open_feature.status",    true);
 // cannot do it by default because it affects UE for web applications.
 pref("dom.disable_window_open_feature.location",  false);
 pref("dom.disable_window_status_change",          true);
-// prevent JS from moving/resizing existing windows
-pref("dom.disable_window_move_resize",            true);
+// allow JS to move and resize existing windows
+pref("dom.disable_window_move_resize",            false);
 // prevent JS from monkeying with window focus, etc
 pref("dom.disable_window_flip",                   true);
  
