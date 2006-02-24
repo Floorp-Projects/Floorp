@@ -340,6 +340,11 @@
 <!ENTITY calendar.paste.button.label            "Coller" >
 <!ENTITY calendar.print.button.label            "Imprimer" >
 
+<!ENTITY calendar.import.into.label              "Importer dans…" >
+<!ENTITY calendar.export.specific.calendar       "Exporter l'agenda" >
+<!ENTITY calendar.import.calendar                "Importer…" >
+<!ENTITY calendar.export.calendar                "Exporter l'agenda…" >
+
 <!ENTITY calendar.import.button.tooltip            "Importer : Importer des événements à partir d'un fichier local." >
 <!ENTITY calendar.export.button.tooltip            "Exporter : Exporter des événements vers un fichier local." >
 <!ENTITY calendar.subscribe.button.tooltip         "Souscrire : Souscrire à un fichier d'agenda sur une machine distante." >
