@@ -39,7 +39,7 @@
 interface nsISupportsArray;
 interface nsIProfileStartup;
 
-[scriptable, uuid(6c64bc4a-881f-4fd8-8f19-3b4125dcee50)]
+[scriptable, uuid(f8365b4a-da55-4e47-be7a-230142360f62)]
 interface nsIBrowserProfileMigrator : nsISupports 
 {
   /**
