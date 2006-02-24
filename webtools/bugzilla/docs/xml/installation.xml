@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.110 2006/02/24 01:02:18 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.111 2006/02/24 01:14:40 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1512,7 +1512,7 @@ AddType application/rdf+xml .rdf</screen>
     <title>OS-Specific Installation Notes</title>
 
     <para>Many aspects of the Bugzilla installation can be affected by the
-    the operating system you choose to install it on. Sometimes it can be made
+    operating system you choose to install it on. Sometimes it can be made
     easier and others more difficult. This section will attempt to help you
     understand both the difficulties of running on specific operating systems
     and the utilities available to make it easier.
@@ -1560,7 +1560,7 @@ C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
 
         <para>
           The best source for the Windows PPM modules needed for Bugzilla
-          is probably the the Bugzilla Test Server (aka 'Landfill'), so 
+          is probably the Bugzilla Test Server (aka 'Landfill'), so 
           you should add the Landfill package repository as follows:
         </para>
 
