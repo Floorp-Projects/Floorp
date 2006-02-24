@@ -576,16 +576,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
             gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
         }
         else {
-            // We only move the toplevel window if someone has
-            // actually placed the window somewhere.  If no placement
-            // has taken place, we just let the window manager Do The
-            // Right Thing.
-            // XXX Uhhh ... aX and aY are in twips, not screen coordinates
-            // XXX mPlaced is always PR_TRUE here, see above
-            if (mPlaced) {
-                NS_WARNING("BOGUS code reached!");
-                gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-            }
+            gtk_window_move(GTK_WINDOW(mShell), aX, aY);
         }
     }
     else if (mDrawingarea) {
