@@ -61,6 +61,7 @@
 #include "nsCRT.h"
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
+
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
