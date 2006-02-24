@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.111 2006/02/24 01:14:40 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.112 2006/02/24 01:19:56 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1581,7 +1581,7 @@ C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
         <tip>
           <para>
             If you are behind a corporate firewall, you will need to let the
-            ActiveState PPM utility know how to get through it to acccess
+            ActiveState PPM utility know how to get through it to access
             the repositories by setting the HTTP_proxy system environmental
             variable. For more information on setting that variable, see
             the ActiveState documentation.
