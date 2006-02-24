@@ -71,10 +71,25 @@ manifest="$workdir/update.manifest"
 archivefiles="update.manifest"
 
 # Generate a list of all files in the target directory.
-list=$(cd "$olddir" && list_files)
+pushd "$olddir"
+if test $? -ne 0 ; then
+  exit 1
+fi
+
+list=$(list_files)
 eval "oldfiles=($list)"
-list=$(cd "$newdir" && list_files)
+
+popd
+
+pushd "$newdir"
+if test $? -ne 0 ; then
+  exit 1
+fi
+
+list=$(list_files)
 eval "newfiles=($list)"
+
+popd
 
 mkdir -p "$workdir"
 > $manifest
