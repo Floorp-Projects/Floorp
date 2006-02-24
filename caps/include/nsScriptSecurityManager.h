@@ -67,6 +67,7 @@ class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
 class ClassInfoData;
+class DomainPolicy;
 
 #if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
 #define DEBUG_CAPS_HACKER
@@ -210,6 +211,10 @@ struct ClassPolicy : public PLDHashEntryHdr
 {
     char* key;
     PLDHashTable* mPolicy;
+
+    // Note: the DomainPolicy owns us, so if if dies we will too.  Hence no
+    // need to refcount it here (and in fact, we'd probably leak if we tried).
+    DomainPolicy* mDomainWeAreWildcardFor;
 };
 
 PR_STATIC_CALLBACK(void)
@@ -223,6 +228,13 @@ ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     }
     PL_DHashTableDestroy(cp->mPolicy);
 }
+
+// Note: actual impl is going to be after the DomainPolicy class definition,
+// since we need to access members of DomainPolicy in the impl
+PR_STATIC_CALLBACK(void)
+MoveClassPolicyEntry(PLDHashTable *table,
+                     const PLDHashEntryHdr *from,
+                     PLDHashEntryHdr *to);
 
 PR_STATIC_CALLBACK(PRBool)
 InitClassPolicyEntry(PLDHashTable *table,
@@ -243,6 +255,7 @@ InitClassPolicyEntry(PLDHashTable *table,
     };
 
     ClassPolicy* cp = (ClassPolicy*)entry;
+    cp->mDomainWeAreWildcardFor = nsnull;
     cp->key = PL_strdup((const char*)key);
     if (!cp->key)
         return PR_FALSE;
@@ -281,7 +294,7 @@ public:
             PL_DHashGetKeyStub,
             PL_DHashStringKey,
             PL_DHashMatchStringKey,
-            PL_DHashMoveEntryStub,
+            MoveClassPolicyEntry,
             ClearClassPolicyEntry,
             PL_DHashFinalizeStub,
             InitClassPolicyEntry
@@ -337,6 +350,23 @@ private:
 #endif
 
 };
+
+PR_STATIC_CALLBACK(void)
+MoveClassPolicyEntry(PLDHashTable *table,
+                     const PLDHashEntryHdr *from,
+                     PLDHashEntryHdr *to)
+{
+    memcpy(to, from, table->entrySize);
+
+    // Now update the mDefaultPolicy pointer that points to us, if any.
+    ClassPolicy* cp = NS_STATIC_CAST(ClassPolicy*, to);
+    if (cp->mDomainWeAreWildcardFor) {
+        NS_ASSERTION(cp->mDomainWeAreWildcardFor->mWildcardPolicy ==
+                     NS_STATIC_CAST(const ClassPolicy*, from),
+                     "Unexpected wildcard policy on mDomainWeAreWildcardFor");
+        cp->mDomainWeAreWildcardFor->mWildcardPolicy = cp;
+    }
+}
 
 /////////////////////////////
 // nsScriptSecurityManager //
