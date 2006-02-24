@@ -1,3 +1,10 @@
+2006-02-22
+  * src/lib/TinderDB/VC_Bonsai.pm
+    src/lib/TinderDB/VC_Perforce.pm
+    src/lib/TinderDB/VC_PVCSDimensions.pm
+    A pass was made thru by the BMO gang to fix typos
+    bug 106386
+
 2005-12-01  Mike Taylor <bear@code-bear.com>
   * src/lib/VCDisplay/ViewCVS.pm
     updated tinderbox library use statement to have the #tinderbox_libdir#
