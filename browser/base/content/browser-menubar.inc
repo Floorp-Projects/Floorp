@@ -356,7 +356,8 @@
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
 #ifndef MOZ_PLACES
-                <menuitem observes="viewHistorySidebar" key="key_gotoHistory"/>
+                <menuitem observes="viewHistorySidebar"
+                          key="key_gotoHistory"/>
 #else
                 <menuitem label="&historyButton.label;"
                           command="Browser:ShowPlaces" key="key_gotoHistory"/>
@@ -434,7 +435,8 @@
 #endif
               <menuseparator id="sanitizeSeparator"/>
               <menuitem id="sanitizeItem" 
-                        accesskey="&clearPrivateDataCmd.accesskey;" label="&clearPrivateDataCmd.label;"
+                        accesskey="&clearPrivateDataCmd.accesskey;"
+                        label="&clearPrivateDataCmd.label;"
                         key="key_sanitize" command="Tools:Sanitize"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
