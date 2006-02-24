@@ -1,14 +1,13 @@
-[% IF defaultemail %]
   <div class="pagetools">
     <div>
         <h3>Welcome!</h3>
+[% IF defaultemail %]
     <span class="email"><abbr title="[% defaultemail.getDisplayName | html | email %]">
       [% defaultemail.getDisplayName.replace('\@.*','') %]</abbr></span>
     <p align="right"><a href="logout.cgi">Log out</a></p>
-<!--    <h3>Log in</h3>
-    <p>Username:<br/><input type="text" name="username" value="" size="10"></p>
-        <p>Password:<br/><input type="password" name="password" value="" size="10"></p>
-    <p class="submit"><input type="submit" value="Log in"></p>-->
+[% ELSE %]
+    <p align="right"><a href="login.cgi">Log in</a></p>
+[% END %]
+
     </div>
   </div>
-[% END %]
