@@ -11237,6 +11237,11 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     newFrame->SetPrevContinuation(aFrame);
   }
 
+  // A continuation of generated content is also generated content
+  if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
+    newFrame->AddStateBits(NS_FRAME_GENERATED_CONTENT);
+  }
+  
   // Now deal with fixed-pos things....  They should appear on all pages, and
   // the placeholders must be kids of a block, so we want to move over the
   // placeholders when processing the child of the pageContentFrame.
