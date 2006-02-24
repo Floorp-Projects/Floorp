@@ -273,7 +273,7 @@ static PRBool isDecimalNumber(const char* word)
     if (*p == '-') ++p;
     char c;
     while ((c = *p++)) {
-        if (!isdigit(c))
+        if (!isdigit((unsigned char) c))
             return PR_FALSE;
     }
     return PR_TRUE;
