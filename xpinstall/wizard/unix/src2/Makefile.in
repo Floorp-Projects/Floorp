@@ -75,8 +75,8 @@ CPPSRCS		= \
 
 LIBS        = \
         $(TK_LIBS) \
-        $(DIST)/lib/$(LIB_PREFIX)jar$(VERSION_NUMBER)_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+        $(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar$(VERSION_NUMBER)_s.$(LIB_SUFFIX) \
+        ../../libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
         -lpthread \
         $(NULL)
 
@@ -88,8 +88,9 @@ LOCAL_INCLUDES += -I$(srcdir)/../../../stub
 LOCAL_INCLUDES += -I$(srcdir)/../../libxpnet/src
 
 EXTRA_DEPS = \
+        $(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar$(VERSION_NUMBER)_s.$(LIB_SUFFIX) \
 	../../libxpnet/src/libxpnet_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/libjar50_s.$(LIB_SUFFIX)
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
