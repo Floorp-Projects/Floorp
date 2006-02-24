@@ -268,10 +268,8 @@ PRMJ_DSTOffset(JSInt64 local_time)
 size_t
 PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
-    size_t result = 0;
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;
-    int badYear = (prtm->tm_year < 1900);
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
      * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
@@ -294,12 +292,7 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
     a.tm_mday = prtm->tm_mday;
     a.tm_mon = prtm->tm_mon;
     a.tm_wday = prtm->tm_wday;
-
-    /* 
-     * Use 8099 as the year if the year is < 1900. strftime() adds 1900 to
-     * the year, resulting in 8099 + 1900 = 9999, which is a fine marker.
-     */
-    a.tm_year = badYear ? 8099 : prtm->tm_year - 1900;
+    a.tm_year = prtm->tm_year - 1900;
     a.tm_yday = prtm->tm_yday;
     a.tm_isdst = prtm->tm_isdst;
 
@@ -322,26 +315,8 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
     }
 #endif
 
-    result = strftime(buf, buflen, fmt, &a);
-
-    if (badYear) {
-        /* Need to replace the year 9999 with the real year. */
-        char years [32];
-        size_t yearslen;
-        char* p;
-        sprintf(years, "%d", prtm->tm_year);
-        yearslen = strlen(years);
-        if ((int)(strlen(buf) + yearslen - 4) > buflen)
-            return 0;
-        p = strstr(buf, "9999");
-        if(NULL == p)
-            return 0;
-        memmove(p + yearslen, p + 4, strlen(p));
-        memcpy(p, years, yearslen);
-        result = result + yearslen - 4;
-    }
+    return strftime(buf, buflen, fmt, &a);
 #endif
-    return result;
 }
 
 /* table for number of days in a month */
