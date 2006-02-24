@@ -746,14 +746,16 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
 
 }
 
-void nsViewManager::DefaultRefresh(nsView* aView, const nsRect* aRect)
+void nsViewManager::DefaultRefresh(nsView* aView, nsIRenderingContext *aContext, const nsRect* aRect)
 {
   NS_PRECONDITION(aView, "Must have a view to work with!");
   nsIWidget* widget = aView->GetNearestWidget(nsnull);
   if (! widget)
     return;
 
-  nsCOMPtr<nsIRenderingContext> context = CreateRenderingContext(*aView);
+  nsCOMPtr<nsIRenderingContext> context = aContext;
+  if (! aContext)
+    context = CreateRenderingContext(*aView);
 
   if (! context)
     return;
@@ -1465,7 +1467,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           float p2t;
           p2t = mContext->DevUnitsToAppUnits();
           damRect.ScaleRoundOut(p2t);
-          DefaultRefresh(view, &damRect);
+          DefaultRefresh(view, event->renderingContext, &damRect);
         
           // Clients like the editor can trigger multiple
           // reflows during what the user perceives as a single
