@@ -286,7 +286,8 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
                            nscoord& aWidth, PRInt32 *aFontID,
                            nsThebesRenderingContext *aContext)
 {
-    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
+    const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 
@@ -354,7 +355,8 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 {
     float app2dev = mDeviceContext->AppUnitsToDevUnits();
 
-    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(nsDependentSubstring(aString, aString+aLength));
+    const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
 
     textrun->SetRightToLeft(mIsRTL);
 

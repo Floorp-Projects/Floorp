@@ -44,6 +44,8 @@
 #include <pango/pango.h>
 
 class gfxPangoFont : public gfxFont {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxPangoFont (const nsAString& aName,
                   const gfxFontGroup *aFontGroup);

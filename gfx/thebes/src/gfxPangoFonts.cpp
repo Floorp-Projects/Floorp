@@ -75,6 +75,8 @@
 
 #endif
 
+THEBES_IMPL_REFCOUNTING(gfxPangoFont)
+
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 
 /**
@@ -143,7 +145,8 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
       fixedFamilies.Truncate(fixedFamilies.Length() - 1); // remove final comma
 
     gfxFont *f = new gfxPangoFont(fixedFamilies, this);
-    mFonts.push_back(f);
+    NS_ADDREF(f);
+    mFonts.AppendElement(f);
 }
 
 gfxPangoFontGroup::~gfxPangoFontGroup()

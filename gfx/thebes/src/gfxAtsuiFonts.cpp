@@ -46,6 +46,8 @@
 
 #include "cairo-atsui.h"
 
+THEBES_IMPL_REFCOUNTING(gfxAtsuiFont)
+
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            gfxAtsuiFontGroup *fontGroup)
     : mATSUFontID(fontID), mFontGroup(fontGroup)
@@ -136,16 +138,16 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
 #define NUM_STATIC_FIDS 16
     ATSUFontID static_fids[NUM_STATIC_FIDS];
     ATSUFontID *fids;
-    if (mFonts.size() > NUM_STATIC_FIDS)
-        fids = (ATSUFontID *) PR_Malloc(sizeof(ATSUFontID) * mFonts.size());
+    if (mFonts.Length() > NUM_STATIC_FIDS)
+        fids = (ATSUFontID *) PR_Malloc(sizeof(ATSUFontID) * mFonts.Length());
     else
         fids = static_fids;
 
-    for (unsigned int i = 0; i < mFonts.size(); i++)
+    for (unsigned int i = 0; i < mFonts.Length(); i++)
         fids[i] = ((gfxAtsuiFont*)(mFonts[i]))->GetATSUFontID();
 
     ATSUSetObjFontFallbacks(mFallbacks,
-                            mFonts.size(),
+                            mFonts.Length(),
                             fids,
                             kATSUSequentialFallbacksPreferred /* kATSUSequentialFallbacksExclusive? */);
 
@@ -242,7 +244,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     //fprintf (stderr, "FindATSUFont: %s -> %d (status: %d)\n", NS_ConvertUTF16toUTF8(aName).get(), (int) fontID, (int) status);
 
     if (fontID != kATSUInvalidFontID)
-        fontGroup->mFonts.push_back(new gfxAtsuiFont(fontID, fontGroup));
+        fontGroup->mFonts.AppendElement(new gfxAtsuiFont(fontID, fontGroup));
 #endif
 
     return PR_TRUE;

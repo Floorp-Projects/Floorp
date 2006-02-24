@@ -26,7 +26,7 @@ CPPSRCS	= \
 	gfxFont.cpp \
 	gfxPlatform.cpp \
 	$(NULL)
-        
+
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
@@ -43,9 +43,10 @@ CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		gfxWindowsSurface.cpp \
 		$(NULL)
 
-_OS_LIBS	= usp10
+_OS_LIBS	= usp10 ole32
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
+ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
