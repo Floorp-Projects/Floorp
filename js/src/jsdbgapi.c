@@ -939,10 +939,12 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 {
     jschar *chars;
     JSBool ok;
+    size_t len = length;
 
-    chars = js_InflateString(cx, bytes, &length);
+    chars = js_InflateString(cx, bytes, &len);
     if (!chars)
         return JS_FALSE;
+    length = (uintN) len;
     ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,
                                    rval);
     JS_free(cx, chars);
