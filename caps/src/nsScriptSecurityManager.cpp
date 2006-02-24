@@ -3355,8 +3355,14 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
 
         // If this is the wildcard class (class '*'), save it in mWildcardPolicy
         // (we leave it stored in the hashtable too to take care of the cleanup)
-        if ((*start == '*') && (end == start + 1))
+        if ((*start == '*') && (end == start + 1)) {
             aDomainPolicy->mWildcardPolicy = cpolicy;
+
+            // Make sure that cpolicy knows about aDomainPolicy so it can reset
+            // the mWildcardPolicy pointer as needed if it gets moved in the
+            // hashtable.
+            cpolicy->mDomainWeAreWildcardFor = aDomainPolicy;
+        }
 
         // Get the property name
         start = end + 1;
