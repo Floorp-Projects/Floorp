@@ -277,7 +277,7 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
 nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey  msgKey, nsIMsgDBHdr ** aMsgHdr)
 {
   nsresult rv = NS_OK;
-  if (aMsgHdr)
+  if (aMsgHdr && m_filePath)
   {
     nsCOMPtr<nsIMsgDatabase> mailDBFactory;
     nsCOMPtr<nsIMsgDatabase> mailDB;
