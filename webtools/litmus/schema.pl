@@ -262,13 +262,14 @@ $table{users} =
 	 password varchar(255),
 	 realname varchar(255),
 	 irc_nickname varchar(32),
-	 disabled mediumtext,
+	 disabled tinyint(1),
 	 is_admin tinyint(1),
 	 
 	 index(bugzilla_uid),
 	 unique index(email),
          index(realname),
          unique index(irc_nickname),
+         index(disabled),
 	 index(is_admin)';
 	 
 $table{sessions} =

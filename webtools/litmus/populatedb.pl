@@ -138,7 +138,7 @@ $dbtool->DropField("users", "is_trusted");
 $dbtool->AddField("users", "bugzilla_uid", "int default '1'");
 $dbtool->AddField("users", "password", "varchar(255)");
 $dbtool->AddField("users", "realname", "varchar(255)");
-$dbtool->AddField("users", "disabled", "mediumtext");
+$dbtool->AddField("users", "disabled", "tinyint(1) default '0'");
 $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 $dbtool->AddField("users", "irc_nickname", "varchar(32)");
 $dbtool->AddUniqueKey("users","email","(email)");
@@ -171,6 +171,9 @@ $dbtool->DropField("test_results", "validity_id");
 $dbtool->DropField("test_results", "vetting_status_id");
 $dbtool->DropTable("validity_lookup");
 $dbtool->DropTable("vetting_status_lookup");
+
+$dbtool->ChangeFieldType("users", "disabled", 'tinyint(1) default "0"');
+$dbtool->AddKey("users","disabled","(disabled)");
 
 # javascript cache
 print "Rebuilding JS cache...";
