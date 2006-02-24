@@ -179,6 +179,7 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 3;
 
 static nsDataHashtable<nsCStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
+static const char* gXpcomShutdown = "xpcom-shutdown";
 
 // annotation names
 const char nsNavHistory::kAnnotationPreviousEncoding[] = "history/encoding";
@@ -338,6 +339,7 @@ nsNavHistory::Init()
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
+  observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
 
   if (doImport) {
     nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
@@ -2590,6 +2592,13 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     // FIXME: should we compress sometimes? It's slow, so we shouldn't do it
     // every time.
     VacuumDB(expireUsecsAgo);
+  } else if (nsCRT::strcmp(aTopic, gXpcomShutdown) == 0) {
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    observerService->RemoveObserver(this, gXpcomShutdown);
+    observerService->RemoveObserver(this, gQuitApplicationMessage);
   } else if (nsCRT::strcmp(aTopic, "nsPref:changed") == 0) {
     LoadPrefs();
   }
