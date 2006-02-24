@@ -1035,7 +1035,7 @@ endif # NO_LD_ARCHIVE_FLAGS
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
-		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;2; \
+		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		rm -f $@.manifest; \
 	fi
 endif	# MSVC with manifest tool
