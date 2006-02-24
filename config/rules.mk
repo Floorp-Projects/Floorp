@@ -91,11 +91,24 @@ ifdef LIBXUL_SDK
 VPATH += $(LIBXUL_SDK)/lib
 endif
 
+# EXPAND_LIBNAME - $(call EXPAND_LIBNAME,foo)
+# expands to foo.lib on platforms with import libs and -lfoo otherwise
+
+# EXPAND_LIBNAME_PATH - $(call EXPAND_LIBNAME_PATH,foo,dir)
+# expands to dir/foo.lib on platforms with import libs and
+# -Ldir -lfoo otherwise
+
+# EXPAND_MOZLIBNAME - $(call EXPAND_MOZLIBNAME,foo)
+# expands to $(DIST)/lib/foo.lib on platforms with import libs and
+# -lfoo otherwise
+
 ifdef _LIBNAME_RELATIVE_PATHS
-EXPAND_LIBNAME = $(addsuffix .$(LIB_SUFFIX),$(1))
-EXPAND_MOZLIBNAME = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(1)))
+EXPAND_LIBNAME = $(foreach lib,$(1),$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
+EXPAND_LIBNAME_PATH = $(foreach lib,$(1),$(2)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
+EXPAND_MOZLIBNAME = $(foreach lib,$(1),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 else
 EXPAND_LIBNAME = $(addprefix -l,$(1))
+EXPAND_LIBNAME_PATH = -L$(2) $(addprefix -l,$(1))
 EXPAND_MOZLIBNAME = $(addprefix -l,$(1))
 endif
 
