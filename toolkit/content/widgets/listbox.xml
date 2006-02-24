@@ -354,7 +354,7 @@
           } else {
             currentItem = startItem;
           }
-            
+
           while (currentItem) {
             if (currentItem.localName == "listitem")
               this.addItemToSelection(currentItem);
@@ -376,7 +376,7 @@
             this.removeItemFromSelection(currentItem);
 
           this._suppressOnSelect = suppressSelect;
-          
+
           this._fireOnSelect();
         ]]>
         </body>
@@ -527,7 +527,7 @@
               newIndex = 0;
             var numItems = this.getRowCount();
             if (newIndex > numItems - 1)
-              var newIndex = numItems - 1;
+              newIndex = numItems - 1;
             var newItem = this.getItemAtIndex(newIndex);
             if (newItem) {
               this.ensureIndexIsVisible(newIndex);

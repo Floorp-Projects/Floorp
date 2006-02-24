@@ -577,14 +577,14 @@
       <handler event="keypress" keycode="vk_page_down" modifiers="control shift any"
                phase="target" action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"/>
       <handler event="keypress" key=" " phase="target">
-      <![CDATA[
-        if (this.currentItem) {
-          if (this.currentItem.getAttribute("type") != "checkbox")
-            this.addItemToSelection(this.currentItem);
-          else if (!this.currentItem.disabled)
-            this.currentItem.checked = !this.currentItem.checked;
-        }
-      ]]>
+        <![CDATA[
+          if (this.currentItem) {
+            if (this.currentItem.getAttribute("type") != "checkbox")
+              this.addItemToSelection(this.currentItem);
+            else if (!this.currentItem.disabled)
+              this.currentItem.checked = !this.currentItem.checked;
+          }
+        ]]>
       </handler>
       <handler event="keypress" key=" " modifiers="control" phase="target">
         <![CDATA[
