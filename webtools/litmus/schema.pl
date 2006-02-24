@@ -94,11 +94,13 @@ $table{subgroups} =
 	 name varchar(64) not null,
 	 sort_order smallint(6),
 	 testrunner_group_id int,
+         enabled tiniyint(1) default "1",
 	 
 	 index(testgroup_id),
 	 index(name),
 	 index(sort_order),
-	 index(testrunner_group_id)';
+	 index(testrunner_group_id),
+         index(enabled)';
 
 $table{test_format_lookup} = 
 	'format_id tinyint not null primary key auto_increment,
@@ -111,16 +113,16 @@ $table{test_groups} =
 	 product_id tinyint not null,
 	 name varchar(64) not null,
 	 expiration_days smallint not null,
-	 obsolete tinyint(4) default "0",
+	 enabled tinyint(1) default "1",
 	 testrunner_plan_id int,
 	 
 	 index(product_id),
 	 index(name),
 	 index(expiration_days),
-	 index(obsolete),
+	 index(enabled),
 	 index(testrunner_plan_id)';
 
-$table{test_result_bugs} = 
+$table{test_result_bugs} =
 	'test_result_id int not null primary key auto_increment,
 	 last_updated datetime not null,
 	 submission_time datetime not null,
@@ -216,20 +218,13 @@ $table{test_results} =
          index(vetted_by_user_id),
          index(validated_timestamp),
          index(vetted_timestamp)';
-
-	 
-$table{test_status_lookup} = 
-	'test_status_id tinyint not null primary key auto_increment,
-	 name varchar(64) not null,
-	 
-	 index(name)';
 	 
 $table{tests} = 
 	'test_id int not null primary key auto_increment,
 	 subgroup_id smallint not null,
 	 summary varchar(255) not null,
 	 details text,
-	 status_id tinyint not null,
+	 enabled tinyint(1) not null default \'1\',
 	 community_enabled tinyint(1),
 	 format_id tinyint not null default \'1\',
 	 regression_bug_id int,
@@ -262,7 +257,7 @@ $table{users} =
 	 password varchar(255),
 	 realname varchar(255),
 	 irc_nickname varchar(32),
-	 disabled tinyint(1),
+	 enabled tinyint(1),
 	 is_admin tinyint(1),
 	 
 	 index(bugzilla_uid),

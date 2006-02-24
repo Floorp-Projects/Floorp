@@ -72,7 +72,7 @@ sub showTest {
     my $pid = $prod->productid();
     # get a random test to display:
     Litmus::DB::Test->set_sql(random_test => qq {
-        SELECT tests.test_id, tests.subgroup_id, tests.summary, tests.details, tests.status_id, tests.community_enabled, tests.format_id, tests.regression_bug_id
+        SELECT tests.test_id, tests.subgroup_id, tests.summary, tests.details, tests.enabled, tests.community_enabled, tests.format_id, tests.regression_bug_id
         FROM __TABLE__, products,test_groups,subgroups
         WHERE
             products.product_id=? AND 

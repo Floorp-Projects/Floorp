@@ -157,8 +157,9 @@ sub getLogTypes()
 #########################################################################
 sub getTestStatuses()
 {
-    my $sql = "SELECT test_status_id,name FROM test_status_lookup ORDER BY test_status_id";
-    return _getValues($sql);
+    my @TestStatuses = ({name => 'Enabled'},
+                        {name => 'Disabled'});
+    return \@TestStatuses;
 }
 
 #########################################################################
@@ -226,8 +227,6 @@ sub getFields()
                     display_string => "Summary", }, 
                   { name => 'test_group',
                     display_string => "Testgroup", },
-                  { name => 'test_status',
-                    display_string => "Test Status", },
                   { name => 'user_agent',
                     display_string => "User Agent", },
                   );

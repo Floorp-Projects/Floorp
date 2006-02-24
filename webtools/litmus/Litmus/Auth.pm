@@ -72,7 +72,7 @@ sub validate_login($$) {
     return 0; 
   } 
 
-  if ($userobj->disabled() && $userobj->disabled() == 1) { 
+  if (!$userobj->enabled() || $userobj->enabled() == 0) { 
     die "Account ".$userobj->username()." has been disabled by the administrator"; 
   }
 	
@@ -220,7 +220,7 @@ sub processLoginForm {
                                 password => bz_crypt($password),
                                 bugzilla_uid => 0,
                                 realname => $name,
-                                disabled => 0, 
+                                enabled => 1, 
                                 is_admin => 0,
                                 irc_nickname => $nickname
                                });
@@ -314,7 +314,7 @@ sub processLoginForm {
     $userobj->password(bz_crypt($password));
     $userobj->bugzilla_uid("0");
     $userobj->realname($realname);
-    $userobj->disabled(0);
+    $userobj->enabled(1);
 #    $userobj->is_admin(0);
     $userobj->irc_nickname($nickname);
     $userobj->update();

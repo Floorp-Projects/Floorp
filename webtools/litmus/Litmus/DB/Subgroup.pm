@@ -41,7 +41,7 @@ use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name sort_order testrunner_group_id/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name sort_order testrunner_group_id enabled/);
 
 Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
 Litmus::DB::Subgroup->column_alias("testgroup_id", "testgroup");
@@ -62,12 +62,12 @@ sub community_coverage() {
   if (! $community_only) {    
     @tests = Litmus::DB::Test->search(
                                       subgroup => $self,
-                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                      enabled => 1,
                                      );    
   } else {
     @tests = Litmus::DB::Test->search(
                                       subgroup => $self,
-                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                      enabled => 1,
                                       communityenabled => 1,
                                      );    
   }
@@ -100,12 +100,12 @@ sub personal_coverage() {
   if (! $community_only) {    
     @tests = Litmus::DB::Test->search(
                                       subgroup => $self,
-                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                      enabled => 1,
                                      );    
   } else {
     @tests = Litmus::DB::Test->search(
                                       subgroup => $self,
-                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                      enabled => 1,
                                       communityenabled => 1,
                                      );    
   }

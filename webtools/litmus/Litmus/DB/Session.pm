@@ -59,7 +59,7 @@ sub isValid {
     	return 0;
     }
     
-    if ($self->user_id()->disabled() && $self->user_id()->disabled() == 1) {
+    if (!$self->user_id()->enabled() || $self->user_id()->enabled() == 0) {
     	$self->makeExpire();
     	return 0;
     }

@@ -42,18 +42,16 @@ use Litmus::Error;
 Litmus::DB::Test->table('tests');
 
 Litmus::DB::Test->columns(Primary => qw/test_id/);
-Litmus::DB::Test->columns(Essential => qw/subgroup_id summary details status_id community_enabled format_id regression_bug_id/); 
+Litmus::DB::Test->columns(Essential => qw/subgroup_id summary details enabled community_enabled format_id regression_bug_id/); 
 Litmus::DB::Test->columns(All => qw/steps expected_results sort_order author_id creation_date last_updated version testrunner_case_id testrunner_case_version/);
 
 Litmus::DB::Test->column_alias("test_id", "testid");
 Litmus::DB::Test->column_alias("subgroup_id", "subgroup");
-Litmus::DB::Test->column_alias("status_id", "status");
 Litmus::DB::Test->column_alias("community_enabled", "communityenabled");
 Litmus::DB::Test->column_alias("format_id", "format");
 Litmus::DB::Test->column_alias("author_id", "author");
 
 Litmus::DB::Test->has_a(subgroup => "Litmus::DB::Subgroup");
-Litmus::DB::Test->has_a(status => "Litmus::DB::Status");
 Litmus::DB::Test->has_a("format" => "Litmus::DB::Format");
 Litmus::DB::Test->has_a(author => "Litmus::DB::User");
 

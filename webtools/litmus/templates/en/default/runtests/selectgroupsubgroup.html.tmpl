@@ -195,7 +195,7 @@ Please select a testing group with testcases, or that has not yet been tested in
         [% END %]
             [% END %]
             
-            [% counttests = cursubgroup.tests('status_id',1) %]
+            [% counttests = cursubgroup.tests('enabled',1) %]
             <tr class="[% groupstyle | none %]">
                 <td align="left"><input [% IF ! counttests %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">

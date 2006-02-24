@@ -324,8 +324,6 @@ sub _processSearchField(\%) {
         $table_field='t.name';
     } elsif ($search_field->{'search_field'} eq 'test_group') {
         $table_field='tg.name';        
-    } elsif ($search_field->{'search_field'} eq 'test_status') {
-        $table_field='tsl.name';        
     } elsif ($search_field->{'search_field'} eq 'user_agent') {
         $table_field='tr.user_agent';        
     } else {

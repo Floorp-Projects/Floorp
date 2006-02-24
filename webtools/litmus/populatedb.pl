@@ -138,7 +138,6 @@ $dbtool->DropField("users", "is_trusted");
 $dbtool->AddField("users", "bugzilla_uid", "int default '1'");
 $dbtool->AddField("users", "password", "varchar(255)");
 $dbtool->AddField("users", "realname", "varchar(255)");
-$dbtool->AddField("users", "disabled", "tinyint(1) default '0'");
 $dbtool->AddField("users", "is_admin", "tinyint(1) default '0'");
 $dbtool->AddField("users", "irc_nickname", "varchar(32)");
 $dbtool->AddUniqueKey("users","email","(email)");
@@ -149,7 +148,6 @@ $dbtool->AddKey("users","is_admin","(is_admin)");
 
 # replace enums with more portable and flexible formats:
 $dbtool->ChangeFieldType("products", "enabled", 'tinyint(1) default "1"');
-$dbtool->ChangeFieldType("test_groups", "obsolete", 'tinyint(1) default "0"');
 
 $dbtool->DropField("test_result_logs", "log_path");
 $dbtool->AddField("test_result_logs", "log_text", "longtext");
@@ -172,8 +170,21 @@ $dbtool->DropField("test_results", "vetting_status_id");
 $dbtool->DropTable("validity_lookup");
 $dbtool->DropTable("vetting_status_lookup");
 
-$dbtool->ChangeFieldType("users", "disabled", 'tinyint(1) default "0"');
-$dbtool->AddKey("users","disabled","(disabled)");
+$dbtool->AddField("test_groups", "enabled", "tinyint(1) default '1'");
+$dbtool->AddKey("test_groups","enabled","(enabled)");
+$dbtool->AddField("subgroups", "enabled", "tinyint(1) default '1'");
+$dbtool->AddKey("subgroups","enabled","(enabled)");
+$dbtool->DropField("test_groups", "obsolete");
+
+$dbtool->AddField("users", "enabled", "tinyint(1) default '1'");
+$dbtool->AddKey("users","enabled","(enabled)");
+$dbtool->DropField("users", "disabled");
+
+# Remove reference to test_status_lookup
+$dbtool->AddField("tests", "enabled", "tinyint(1) NOT NULL default '1'");
+$dbtool->AddKey("tests","enabled","(enabled)");
+$dbtool->DropField("tests", "status_id");
+$dbtool->DropTable("test_status_lookup");
 
 # javascript cache
 print "Rebuilding JS cache...";

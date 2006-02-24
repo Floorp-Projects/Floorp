@@ -37,7 +37,7 @@ use base 'Litmus::DBI';
 
 Litmus::DB::User->table('users');
 
-Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname disabled is_admin/);
+Litmus::DB::User->columns(All => qw/user_id bugzilla_uid email password realname irc_nickname enabled is_admin/);
 
 Litmus::DB::User->column_alias("user_id", "userid");
 Litmus::DB::User->column_alias("is_trusted", "istrusted");
