@@ -61,7 +61,7 @@ if ($action eq 'prepare-sudo') {
         ThrowUserError('sudo_in_progress', { target => $user->login });
     }
 
-    # Keep a temporary record of the user visitng this page
+    # Keep a temporary record of the user visiting this page
     $vars->{'token'} = Bugzilla::Token::IssueSessionToken('sudo_prepared');
 
     # Show the sudo page
