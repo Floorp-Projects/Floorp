@@ -482,7 +482,12 @@ calDateTime::GetIcalString(nsACString& aResult)
 NS_IMETHODIMP
 calDateTime::SetIcalString(const nsACString& aIcalString)
 {
-    FromIcalTime(&icaltime_from_string(nsPromiseFlatCString(aIcalString).get()));
+    struct icaltimetype icalt;
+    icalt = icaltime_from_string(nsPromiseFlatCString(aIcalString).get());
+    if (icaltime_is_null_time(icalt)) {
+        return calIErrors::ICS_ERROR_BASE + icalerrno;
+    }
+    FromIcalTime(&icalt);
     return NS_OK;
 }
 
