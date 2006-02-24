@@ -595,7 +595,7 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
   NS_ENSURE_SUCCESS(rv, 1);
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
-  rv = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 1024);
+  rv = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 4096);
   NS_ENSURE_SUCCESS(rv, 1);
 
   int result = 1;
