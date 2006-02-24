@@ -11,5 +11,9 @@
 %charsetDTD;
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
+#ifdef MOZ_PLACES
+<!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+%placesDTD;
+#endif
 ]>
 

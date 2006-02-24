@@ -112,5 +112,5 @@ private:
                                         PRBool* aHasData, PRTime* aExpiration);
 };
 
-#define FAVICON_DEFAULT_URL "chrome://browser/skin/places/default_favicon.png"
+#define FAVICON_DEFAULT_URL "chrome://browser/skin/places/defaultFavicon.png"
 #define FAVICON_ANNOTATION_NAME "favicon"

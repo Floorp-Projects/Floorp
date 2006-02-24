@@ -56,10 +56,8 @@ EXTRA_PP_COMPONENTS = \
 	$(NULL)
 
 DIRS = \
-	bookmarks \
 	dirprovider \
 	migration \
-	history \
 	preferences \
 	shell \
 	sidebar \
@@ -67,6 +65,8 @@ DIRS = \
 
 ifdef MOZ_PLACES
 DIRS += places
+else
+DIRS += history bookmarks
 endif
 
 DIRS += build
