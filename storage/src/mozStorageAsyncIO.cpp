@@ -1324,7 +1324,7 @@ ProcessOneMessage(AsyncMessage* aMessage)
     case ASYNC_TRUNCATE:
       NS_ASSERTION(pBase, "Must have base writer for writing");
       NS_ASSERTION(sqliteOrigTruncate, "No truncate pointer");
-      rc = sqliteOrigTruncate(pBase, aMessage->mBytes);
+      rc = sqliteOrigTruncate(pBase, aMessage->mOffset);
       break;
 
     case ASYNC_CLOSE:
