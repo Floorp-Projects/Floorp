@@ -365,6 +365,30 @@ fi
 dnl Special win32 checks
 dnl ========================================================
 case "$target" in
+*-wince)
+    WINVER=400
+    ;;
+*)
+    WINVER=500
+    ;;
+esac
+
+MOZ_ARG_WITH_STRING(windows-version,
+[  --with-windows-version=400|500  Minimum Windows version to support
+                                  400: Windows 95; 500: Windows 2000],
+  WINVER=$withval)
+
+case "$WINVER" in
+400|500)
+    ;;
+
+*)
+    AC_MSG_ERROR([Invalid value --with-windows-version, must be 400 or 500]);
+    ;;
+
+esac
+
+case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
@@ -507,6 +531,9 @@ case "$target" in
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
     fi # !GNU_CC
+
+    AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
+    AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     ;;
 esac
 
@@ -1643,7 +1670,6 @@ case "$target" in
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
-    AC_DEFINE_UNQUOTED(WINVER,0x400)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(NEW_H, <new>)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -1735,8 +1761,6 @@ case "$target" in
     AC_DEFINE(XP_WIN)
     AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
-    AC_DEFINE_UNQUOTED(WINVER,0x500)
-    AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x500)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(NEW_H, <new>)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
