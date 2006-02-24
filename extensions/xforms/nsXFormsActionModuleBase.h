@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_IMETHOD OnDestroyed();
 protected:
-  nsCOMPtr<nsIDOMElement> mElement;
+  nsIDOMElement* mElement;
 };
 
 #endif

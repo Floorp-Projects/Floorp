@@ -49,7 +49,7 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 
-nsXFormsActionModuleBase::nsXFormsActionModuleBase()
+nsXFormsActionModuleBase::nsXFormsActionModuleBase() : mElement(nsnull)
 {
 }
 
@@ -65,7 +65,13 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsActionModuleBase,
 NS_IMETHODIMP
 nsXFormsActionModuleBase::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
-  aWrapper->GetElementNode(getter_AddRefs(mElement));
+  // It's ok to keep a weak pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+  nsCOMPtr<nsIDOMElement> node;
+  aWrapper->GetElementNode(getter_AddRefs(node));
+  mElement = node;
+  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
   return NS_OK;
 }
 

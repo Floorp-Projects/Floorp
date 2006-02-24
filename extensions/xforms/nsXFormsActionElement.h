@@ -60,9 +60,9 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
   NS_IMETHOD OnDestroyed();
 private:
-  nsCOMPtr<nsIDOMElement> mElement;
-  nsCOMPtr<nsIDOMElement> mVisualElement;
-  nsCOMPtr<nsIXFormsActionElement> mParentAction;
+  nsIDOMElement*                               mElement;
+  nsCOMPtr<nsIDOMElement>                      mVisualElement;
+  nsCOMPtr<nsIXFormsActionElement>             mParentAction;
   nsDataHashtable<nsISupportsHashKey,PRUint32> mDeferredUpdates;
 };
 

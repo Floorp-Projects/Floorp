@@ -52,7 +52,7 @@
 #define DEFERRED_REVALIDATE  0x04
 #define DEFERRED_REFRESH     0x08
 
-nsXFormsActionElement::nsXFormsActionElement()
+nsXFormsActionElement::nsXFormsActionElement() : mElement(nsnull)
 {
 }
 
@@ -71,9 +71,14 @@ nsXFormsActionElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aWrapper->GetElementNode(getter_AddRefs(mElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  // It's ok to keep a weak pointer to mElement.  mElement will have an
+  // owning reference to this object, so as long as we null out mElement in
+  // OnDestroyed, it will always be valid.
+  nsCOMPtr<nsIDOMElement> node;
+  aWrapper->GetElementNode(getter_AddRefs(node));
+  mElement = node;
+  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
   rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
