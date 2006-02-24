@@ -277,6 +277,7 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
   }
 
   if (!hasFill && !hasStroke) {
+    cairo_restore(ctx);
     delete [] cp;
     return NS_OK; // nothing to paint
   }
