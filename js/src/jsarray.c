@@ -228,9 +228,8 @@ PropertyExists(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
         return JS_FALSE;
 
     *foundp = prop != NULL;
-    if (*foundp) {
+    if (*foundp)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-    }
 
     return JS_TRUE;
 }
