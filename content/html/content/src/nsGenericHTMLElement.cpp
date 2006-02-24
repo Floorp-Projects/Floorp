@@ -629,7 +629,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 
   do {
     rcFrame.UnionRect(rcFrame, next->GetRect());
-    next = next->GetNextInFlow();
+    next = next->GetNextContinuation();
   } while (next);
 
   if (rcFrame.IsEmpty()) {
