@@ -1265,7 +1265,8 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
               CopyUTF8toUTF16(spec, mImageSourceString);
 
               PRBool validExtension;
-              if (NS_FAILED(mimeInfo->ExtensionExists(extension,
+              if (extension.IsEmpty() || 
+                  NS_FAILED(mimeInfo->ExtensionExists(extension,
                                                       &validExtension)) ||
                   !validExtension) {
                 // Fix the file extension in the URL
