@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.10 2006/02/21 21:50:45 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: security.xml,v 1.11 2006/02/24 01:29:38 jocuri%softhome.net Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -293,7 +293,7 @@ skip-networking
       </itemizedlist>
 
       <para>Be sure to test that data that should not be accessed remotely is
-      properly blocked. Of particular intrest is the localconfig file which
+      properly blocked. Of particular interest is the localconfig file which
       contains your database password. Also, be aware that many editors
       create temporary and backup files in the working directory and that
       those should also not be accessable. For more information, see 
