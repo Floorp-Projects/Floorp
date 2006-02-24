@@ -1449,10 +1449,6 @@ NS_IMETHODIMP
 nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable,
                                          nsISVGValue::modificationType aModType)
 {
-#ifdef DEBUG
-  printf("viewport/viewbox/preserveAspectRatio will be changed\n");
-#endif
-
   if (mDispatchEvent) {
     // Modification isn't due to calling SetCurrent[Scale]Translate, so if
     // currentScale or currentTranslate is about to change we must record their
@@ -1533,10 +1529,6 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
 #endif
   }
   
-  
-#ifdef DEBUG
-  printf("viewport/viewbox/preserveAspectRatio have been changed\n");
-#endif
   return NS_OK;
 }
 
