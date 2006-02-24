@@ -182,11 +182,11 @@ static void InitLog(void)
 
 enum nsAssertBehavior {
   NS_ASSERT_UNINITIALIZED,
-  NS_ASSSERT_WARN,
-  NS_ASSSERT_SUSPEND,
-  NS_ASSSERT_STACK,
-  NS_ASSSERT_TRAP,
-  NS_ASSSERT_ABORT
+  NS_ASSERT_WARN,
+  NS_ASSERT_SUSPEND,
+  NS_ASSERT_STACK,
+  NS_ASSERT_TRAP,
+  NS_ASSERT_ABORT
 };
 
 static nsAssertBehavior GetAssertBehavior()
@@ -196,9 +196,9 @@ static nsAssertBehavior GetAssertBehavior()
     return gAssertBehavior;
 
 #if defined(XP_WIN) || defined(XP_OS2)
-  gAssertBehavior = NS_ASSSERT_TRAP;
+  gAssertBehavior = NS_ASSERT_TRAP;
 #else
-  gAssertBehavior = NS_ASSSERT_WARN;
+  gAssertBehavior = NS_ASSERT_WARN;
 #endif
 
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
@@ -206,19 +206,19 @@ static nsAssertBehavior GetAssertBehavior()
     return gAssertBehavior;
 
    if (!strcmp(assertString, "warn"))
-     return gAssertBehavior = NS_ASSSERT_WARN;
+     return gAssertBehavior = NS_ASSERT_WARN;
 
    if (!strcmp(assertString, "suspend"))
-     return gAssertBehavior = NS_ASSSERT_SUSPEND;
+     return gAssertBehavior = NS_ASSERT_SUSPEND;
 
    if (!strcmp(assertString, "stack"))
-     return gAssertBehavior = NS_ASSSERT_STACK;
+     return gAssertBehavior = NS_ASSERT_STACK;
 
    if (!strcmp(assertString, "abort"))
-     return gAssertBehavior = NS_ASSSERT_ABORT;
+     return gAssertBehavior = NS_ASSERT_ABORT;
 
    if (!strcmp(assertString, "trap") || !strcmp(assertString, "break"))
-     return gAssertBehavior = NS_ASSSERT_TRAP;
+     return gAssertBehavior = NS_ASSERT_TRAP;
 
    fprintf(stderr, "Unrecognized value of XPCOM_DEBUG_BREAK\n");
    return gAssertBehavior;
@@ -327,10 +327,10 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
    // Now we deal with assertions
 
    switch (GetAssertBehavior()) {
-   case NS_ASSSERT_WARN:
+   case NS_ASSERT_WARN:
      return;
 
-   case NS_ASSSERT_SUSPEND:
+   case NS_ASSERT_SUSPEND:
 #ifdef XP_UNIX
       fprintf(stderr, "Suspending process; attach with the debugger.\n");
       kill(0, SIGSTOP);
@@ -339,15 +339,15 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
 #endif
       return;
 
-   case NS_ASSSERT_STACK:
+   case NS_ASSERT_STACK:
      nsTraceRefcntImpl::WalkTheStack(stderr);
      return;
 
-   case NS_ASSSERT_ABORT:
+   case NS_ASSERT_ABORT:
      Abort(buf.buffer);
      return;
 
-   case NS_ASSSERT_TRAP:
+   case NS_ASSERT_TRAP:
      Break(buf.buffer);
    }   
 }
