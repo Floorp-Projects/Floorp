@@ -247,7 +247,8 @@ const AppInstall = {
       aDirectory = Components.classes["@mozilla.org/file/local;1"].
         createInstance(nsILocalFile);
       aDirectory.initWithPath("/usr/lib");
-      aDirectory.append(vendor.toLowerCase());
+      if (vendor)
+        aDirectory.append(vendor.toLowerCase());
 #endif
 #endif
     }
