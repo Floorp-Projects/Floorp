@@ -75,4 +75,12 @@ ifndef NSPR_LIB_DIR
     NSPR_LIB_DIR = $(DIST)/lib
 endif
 
+ifdef NSS_INCLUDE_DIR
+    INCLUDES += -I$(NSS_INCLUDE_DIR)
+endif
+
+ifndef NSS_LIB_DIR
+    NSS_LIB_DIR = $(DIST)/lib
+endif
+
 MK_LOCATION = included

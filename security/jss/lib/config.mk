@@ -59,12 +59,12 @@ RES = $(OBJDIR)/jss.res
 RESNAME = jss.rc
 
 EXTRA_SHARED_LIBS += \
-    $(DIST)/lib/nss3.lib \
-    $(DIST)/lib/smime3.lib \
-    $(DIST)/lib/ssl3.lib \
-    $(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
-    $(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
-    $(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+    $(NSS_LIB_DIR)/nss3.lib \
+    $(NSS_LIB_DIR)/smime3.lib \
+    $(NSS_LIB_DIR)/ssl3.lib \
+    $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plc4.lib \
+    $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)plds4.lib \
+    $(NSPR_LIB_DIR)/$(NSPR31_LIB_PREFIX)nspr4.lib \
     $(JAVA_LIBS) \
     $(DLLSYSTEM) \
     $(NULL)
@@ -72,10 +72,11 @@ EXTRA_SHARED_LIBS += \
 else
 
 EXTRA_SHARED_LIBS += \
-    -L$(DIST)/lib \
+    -L$(NSS_LIB_DIR) \
     -lnss3 \
     -lsmime3 \
     -lssl3 \
+    -L$(NSPR_LIB_DIR) \
     -lplc4 \
     -lplds4 \
     -lnspr4 \
