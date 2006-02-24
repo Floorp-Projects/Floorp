@@ -263,6 +263,8 @@ interface calIItemBase : nsISupports
   /**
    * The recurrence ID, a.k.a. DTSTART-of-calculated-occurrence,
    * or null if this isn't an occurrence.
+   * Be conservative about setting this. It isn't marked as such, but
+   * consider it as readonly.
    */
   attribute calIDateTime recurrenceId;
 

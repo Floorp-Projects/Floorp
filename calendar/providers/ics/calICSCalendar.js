@@ -223,6 +223,10 @@ calICSCalendar.prototype = {
                 calComp = rootComp.getFirstSubcomponent('VCALENDAR');
             }
 
+            var unexpandedItems = [];
+            var uid2parent = {};
+            var excItems = [];
+            
             while (calComp) {
                 // Get unknown properties
                 var prop = calComp.getFirstProperty("ANY");
@@ -239,30 +243,41 @@ calICSCalendar.prototype = {
                     // Place each subcomp in a try block, to hopefully get as
                     // much of a bad calendar as possible
                     try {
+                        var item = null;
                         switch (subComp.componentType) {
                         case "VEVENT":
-                            var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                                  .createInstance(Components.interfaces.calIEvent);
-                            event.icalComponent = subComp;
-                            this.mMemoryCalendar.adoptItem(event, null);
+                            item = Components.classes["@mozilla.org/calendar/event;1"]
+                                             .createInstance(Components.interfaces.calIEvent);
                             break;
                         case "VTODO":
-                            var todo = Components.classes["@mozilla.org/calendar/todo;1"]
-                                                 .createInstance(Components.interfaces.calITodo);
-                            todo.icalComponent = subComp;
-                            this.mMemoryCalendar.adoptItem(todo, null);
+                            item = Components.classes["@mozilla.org/calendar/todo;1"]
+                                             .createInstance(Components.interfaces.calITodo);
                             break;
-
                         case "VTIMEZONE":
                             // this should already be attached to the relevant
                             // events in the calendar, so there's no need to
                             // do anything with it here.
                             break;
-
                         default:
                             this.unmappedComponents.push(subComp);
                             dump(subComp.componentType+"\n");
                         }
+                        if (item != null) {
+                            item.icalComponent = subComp;
+                            var rid = item.recurrenceId;
+                            if (rid == null) {
+                                unexpandedItems.push( item );
+                                if (item.recurrenceInfo != null)
+                                    uid2parent[item.id] = item;
+                            }
+                            else {
+                                item.calendar = this;
+                                // force no recurrence info:
+                                item.recurrenceInfo = null;
+                                excItems.push(item);
+                            }
+                        }
+                            
                     }
                     catch(ex) { 
                         this.mObserver.onError(ex.result, ex.toString());
@@ -271,6 +286,23 @@ calICSCalendar.prototype = {
                 }
                 calComp = rootComp.getNextSubcomponent('VCALENDAR');
             }
+            
+            // tag "exceptions", i.e. items with rid:
+            for each (var item in excItems) {
+                var parent = uid2parent[item.id];
+                if (parent == null) {
+                    debug( "no parent item for rid=" + item.recurrenceId );
+                }
+                else {
+                    item.parentItem = parent;
+                    parent.recurrenceInfo.modifyException(item);
+                }
+            }
+            
+            for each (var item in unexpandedItems) {
+                this.mMemoryCalendar.adoptItem(item, null);
+            }
+            
         } catch(e) {
             dump("Parsing the file failed:"+e+"\n");
             this.mObserver.onError(e.result, e.toString());
@@ -334,7 +366,18 @@ calICSCalendar.prototype = {
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
                 for (var i=0; i<aCount; i++) {
-                    calComp.addSubcomponent(aItems[i].icalComponent);
+                    var item = aItems[i];
+                    calComp.addSubcomponent(item.icalComponent);
+                    var rec = item.recurrenceInfo;
+                    if (rec != null) {
+                        var exceptions = rec.getExceptionIds({});
+                        for each ( var exid in exceptions ) {
+                            var ex = rec.getExceptionFor(exid, false);
+                            if (ex != null) {
+                                calComp.addSubcomponent(ex.icalComponent);
+                            }
+                        }
+                    }
                 }
             }
         };

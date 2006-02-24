@@ -464,7 +464,8 @@ calItemBase.prototype = {
     { cal: "SUMMARY", ics: "summary" },
     { cal: "PRIORITY", ics: "priority" },
     { cal: "STATUS", ics: "status" },
-    { cal: "CLASS", ics: "icalClass" } ],
+    { cal: "CLASS", ics: "icalClass" },
+    { cal: "RECURRENCE-ID", ics: "recurrenceId" } ],
 
     mapPropsFromICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {

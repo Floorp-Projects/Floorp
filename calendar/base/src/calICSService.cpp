@@ -834,6 +834,7 @@ COMP_DATE_ATTRIBUTE(StampTime, DTSTAMP)
 COMP_DATE_ATTRIBUTE(LastModified, LASTMODIFIED)
 COMP_DATE_ATTRIBUTE(CreatedTime, CREATED)
 COMP_DATE_ATTRIBUTE(CompletedTime, COMPLETED)
+COMP_DATE_ATTRIBUTE(RecurrenceId, RECURRENCEID)
 
 void
 calIcalComponent::ClearAllProperties(icalproperty_kind kind)

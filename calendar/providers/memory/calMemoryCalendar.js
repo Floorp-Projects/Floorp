@@ -218,7 +218,13 @@ calMemoryCalendar.prototype = {
                                                "item ID mismatch between old and new items");
             return;
         }
-
+        
+        if (aNewItem.parentItem != aNewItem) {
+            aNewItem.parentItem.recurrenceInfo.modifyException(aNewItem);
+            aNewItem = aNewItem.parentItem;
+        }
+        aOldItem = aOldItem.parentItem;
+        
         if (aOldItem != this.mItems[aOldItem.id]) {
             if (aListener)
                 aListener.onOperationComplete (this.calendarToReturn,

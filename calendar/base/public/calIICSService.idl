@@ -119,6 +119,12 @@ interface calIIcalComponent : nsISupports
     attribute calIDateTime completedTime;
     attribute calIDateTime lastModified;
 
+    /**
+     * The recurrence ID, a.k.a. DTSTART-of-calculated-occurrence,
+     * or null if this isn't an occurrence.
+     */
+    attribute calIDateTime recurrenceId;
+    
     AUTF8String serializeToICS();
 
     /**
