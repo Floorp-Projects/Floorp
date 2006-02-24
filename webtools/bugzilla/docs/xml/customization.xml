@@ -404,7 +404,7 @@
       you must update the <option>languages</option> parameter to contain any
       localizations you'd like to permit. You may also wish to set the
       <option>defaultlanguage</option> parameter to something other than
-      <quote>en</quote> if you don't want Engish to be the default language.
+      <quote>en</quote> if you don't want English to be the default language.
       </para>
     </section>
       
