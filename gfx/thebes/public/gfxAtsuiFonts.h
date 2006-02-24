@@ -46,6 +46,8 @@
 class gfxAtsuiFontGroup;
 
 class gfxAtsuiFont : public gfxFont {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxAtsuiFont(ATSUFontID fontID,
                  gfxAtsuiFontGroup *fontGroup);

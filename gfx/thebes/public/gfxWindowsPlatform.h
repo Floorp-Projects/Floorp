@@ -43,10 +43,13 @@
 
 #include "nsVoidArray.h"
 
+#include <windows.h>
+#include <mlang.h>
+
 class NS_EXPORT gfxWindowsPlatform : public gfxPlatform {
 public:
     gfxWindowsPlatform();
-    //virtual ~gfxWindowsPlatform();
+    virtual ~gfxWindowsPlatform();
     static gfxWindowsPlatform *GetPlatform() {
         return (gfxWindowsPlatform*) gfxPlatform::GetPlatform();
     }
@@ -59,8 +62,9 @@ public:
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
 
+    IMultiLanguage *GetMLangService();
+
 private:
-#if 0
     void Init();
 
     static int CALLBACK FontEnumProc(const LOGFONT *logFont,
@@ -68,7 +72,7 @@ private:
                                      DWORD fontType, LPARAM data);
 
     static nsStringArray *mFontList;
-#endif
+    nsRefPtr<IMultiLanguage> mMLang;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

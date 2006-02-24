@@ -39,8 +39,8 @@
 #ifndef _NS_SYSTEMFONTSWIN_H_
 #define _NS_SYSTEMFONTSWIN_H_
 
-#include <nsFont.h>
-#include <nsIDeviceContext.h>
+#include "nsFont.h"
+#include "nsIDeviceContext.h"
 
 class nsSystemFontsWin
 {

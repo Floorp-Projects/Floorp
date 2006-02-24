@@ -42,7 +42,7 @@
 #include "gfxTypes.h"
 #include "nsString.h"
 #include "gfxPoint.h"
-#include <vector>
+#include "nsTArray.h"
 
 class gfxContext;
 class gfxTextRun;
@@ -121,6 +121,8 @@ struct NS_EXPORT gfxFontStyle {
 
 /* a SPECIFIC single font family */
 class NS_EXPORT gfxFont {
+    THEBES_DECL_REFCOUNTING_ABSTRACT
+
 public:
     virtual ~gfxFont() {}
 
@@ -159,15 +161,16 @@ protected:
     const gfxFontStyle *mStyle;
 };
 
-typedef std::vector<gfxFont*> gfxFontVector;
+typedef nsTArray<gfxFont*> gfxFontVector;
 
 class NS_EXPORT gfxFontGroup {
 public:
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle);
 
     virtual ~gfxFontGroup() {
-        for (gfxFontVector::iterator it = mFonts.begin(); it!=mFonts.end(); ++it)
-            delete *it;
+        for (PRUint32 i = 0; i < mFonts.Length(); ++i)
+            NS_RELEASE(mFonts[i]);
+        mFonts.Clear();
     }
 
     gfxFontVector &GetFontList() { return mFonts; } // XXX this should really be const..

@@ -40,8 +40,43 @@
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
 
+nsStringArray *gfxWindowsPlatform::mFontList = nsnull;
+
 gfxWindowsPlatform::gfxWindowsPlatform()
 {
+    mFontList = new nsStringArray(20);
+
+    Init();
+}
+
+gfxWindowsPlatform::~gfxWindowsPlatform()
+{
+    delete mFontList;
+}
+
+void
+gfxWindowsPlatform::Init()
+{
+    LOGFONT logFont;
+    logFont.lfCharSet = DEFAULT_CHARSET;
+    logFont.lfFaceName[0] = 0;
+    logFont.lfPitchAndFamily = 0;
+
+    // Use the screen DC here.. should we use something else for printing?
+    HDC dc = ::GetDC(nsnull);
+    EnumFontFamilies(dc, nsnull, gfxWindowsPlatform::FontEnumProc, 0);
+    ::ReleaseDC(nsnull, dc);
+
+    mFontList->Sort();
+
+    PRInt32 len = mFontList->Count();
+    for (PRInt32 i = len - 1; i >= 1; --i) {
+        const nsString *string1 = mFontList->StringAt(i);
+        const nsString *string2 = mFontList->StringAt(i-1);
+        if (string1->Equals(*string2))
+            mFontList->RemoveStringAt(i);
+    }
+    mFontList->Compact();
 }
 
 gfxASurface*
@@ -52,10 +87,52 @@ gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
     return new gfxWindowsSurface(nsnull, width, height, imageFormat);
 }
 
+int CALLBACK 
+gfxWindowsPlatform::FontEnumProc(const LOGFONT *logFont,
+                                 const TEXTMETRIC *metrics,
+                                 DWORD fontType, LPARAM data)
+{
+    // Ignore vertical fonts
+    if (logFont->lfFaceName[0] == '@') {
+        return 1;
+    }
+
+    PRUnichar name[LF_FACESIZE];
+    name[0] = 0;
+    ::MultiByteToWideChar(CP_ACP, 0, logFont->lfFaceName,
+                          strlen(logFont->lfFaceName) + 1, name,
+                          sizeof(name)/sizeof(name[0]));
+
+    mFontList->AppendString(nsDependentString(name));
+
+    return 1;
+}
+
 nsresult
 gfxWindowsPlatform::GetFontList(const nsACString& aLangGroup,
                                 const nsACString& aGenericFamily,
                                 nsStringArray& aListOfFonts)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX we need to pay attention to aLangGroup and aGenericFamily here.
+    aListOfFonts.Clear();
+    aListOfFonts = *mFontList;
+    aListOfFonts.Sort();
+    aListOfFonts.Compact();
+
+    return NS_OK;
+}
+
+IMultiLanguage *
+gfxWindowsPlatform::GetMLangService()
+{
+    if (!mMLang) {
+        HRESULT rv;
+        nsRefPtr<IMultiLanguage> multiLanguage;
+        rv = CoCreateInstance(CLSID_CMultiLanguage, NULL,
+                              CLSCTX_ALL, IID_IMultiLanguage, getter_AddRefs(mMLang));
+        if (FAILED(rv))
+            return nsnull;
+    }
+
+    return mMLang;
 }

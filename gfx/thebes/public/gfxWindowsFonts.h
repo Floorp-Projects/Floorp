@@ -42,6 +42,7 @@
 #include "gfxTypes.h"
 #include "gfxFont.h"
 
+#include <Usp10.h>
 #include <cairo-win32.h>
 
 
@@ -52,14 +53,20 @@
  **********************************************************************/
 
 class gfxWindowsFont : public gfxFont {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
 public:
     gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
+    gfxWindowsFont::gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont);
+
     virtual ~gfxWindowsFont();
 
     virtual const gfxFont::Metrics& GetMetrics() { return mMetrics; }
 
     cairo_font_face_t *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
+    SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
+    HFONT GetHFONT() { return mFont; }
     void UpdateFonts(cairo_t *cr);
 
 protected:
@@ -71,11 +78,16 @@ private:
     void ComputeMetrics(HDC dc);
 
     LOGFONTW mLogFont;
+    HFONT mFont;
 
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;
 
     gfxFont::Metrics mMetrics;
+
+    SCRIPT_CACHE mScriptCache;
+
+    PRBool mIsMLangFont;
 };
 
 
@@ -120,12 +132,15 @@ public:
     virtual gfxFloat MeasureString(gfxContext *aContext);
 
 private:
-    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext,
-                                   const PRUnichar *aString, PRUint32 aLength,
-                                   PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing);
+    gfxWindowsFont *FindFallbackFont(HDC aDC,
+                                     const PRUnichar *aString, PRUint32 aLength,
+                                     gfxWindowsFont *aFont);
 
+    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw,
+                                   PRInt32 aX, PRInt32 aY,
+                                   const PRInt32 *aSpacing);
 
-    nsString mString;
+    const nsAString& mString;
     gfxWindowsFontGroup *mGroup;
 };
 
