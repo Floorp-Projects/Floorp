@@ -69,10 +69,8 @@ CPPSRCS += InstallCleanupUnix.cpp
 endif
 endif
 
-EXTRA_DSO_LIBS = mozregsa_s
-
-LIBS        = \
-	$(EXTRA_DSO_LIBS) \
+LIBS = \
+	$(DEPTH)/modules/libreg/standalone/$(LIB_PREFIX)mozregsa_s.$(LIB_SUFFIX) \
         $(NULL)
 
 DEFINES += -DSTANDALONE_REGISTRY
