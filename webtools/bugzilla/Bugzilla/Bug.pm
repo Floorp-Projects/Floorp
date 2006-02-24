@@ -38,7 +38,6 @@ use vars qw($legal_keywords @legal_platform
 use CGI::Carp qw(fatalsToBrowser);
 
 use Bugzilla::Attachment;
-use Bugzilla::BugMail;
 use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Field;
@@ -1019,6 +1018,11 @@ sub RemoveVotes {
     while (my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = $sth->fetchrow_array()) {
         push(@list, [$name, $userid, $oldvotes, $votesperuser, $maxvotesperbug]);
     }
+
+    # @messages stores all emails which have to be sent, if any.
+    # This array is passed to the caller which will send these emails itself.
+    my @messages = ();
+
     if (scalar(@list)) {
         foreach my $ref (@list) {
             my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = (@$ref);
@@ -1079,7 +1083,7 @@ sub RemoveVotes {
             $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
 
             my $msg = perform_substs(Param("voteremovedmail"), \%substs);
-            Bugzilla::BugMail::MessageToMTA($msg);
+            push(@messages, $msg);
         }
         my $votes = $dbh->selectrow_array("SELECT SUM(vote_count) " .
                                           "FROM votes WHERE bug_id = ?",
@@ -1087,6 +1091,8 @@ sub RemoveVotes {
         $dbh->do("UPDATE bugs SET votes = ? WHERE bug_id = ?",
                  undef, ($votes, $id));
     }
+    # Now return the array containing emails to be sent.
+    return \@messages;
 }
 
 # If a user votes for a bug, or the number of votes required to

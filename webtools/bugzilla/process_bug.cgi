@@ -1960,7 +1960,10 @@ foreach my $id (@idlist) {
     #
     my $origOwner = "";
     my $origQaContact = "";
-    
+
+    # $msgs will store emails which have to be sent to voters, if any.
+    my $msgs;
+
     foreach my $c (@::log_columns) {
         my $col = $c;           # We modify it, don't want to modify array
                                 # values in place.
@@ -2004,10 +2007,13 @@ foreach my $id (@idlist) {
             }
 
             if ($col eq 'product') {
-                RemoveVotes($id, 0,
-                            "This bug has been moved to a different product");
+                # If some votes have been removed, RemoveVotes() returns
+                # a list of messages to send to voters.
+                # We delay the sending of these messages till tables are unlocked.
+                $msgs = RemoveVotes($id, 0,
+                          "This bug has been moved to a different product");
             }
-            
+
             if ($col eq 'bug_status' 
                 && IsOpenedState($old) ne IsOpenedState($new))
             {
@@ -2025,6 +2031,11 @@ foreach my $id (@idlist) {
         SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");
     }
     $dbh->bz_unlock_tables();
+
+    # Now is a good time to send email to voters.
+    foreach my $msg (@$msgs) {
+        Bugzilla::BugMail::MessageToMTA($msg);
+    }
 
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 

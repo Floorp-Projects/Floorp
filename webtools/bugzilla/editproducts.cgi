@@ -23,7 +23,7 @@
 #               Dawn Endico <endico@mozilla.org>
 #               Joe Robins <jmrobins@tgix.com>
 #               Gavin Shelley <bugzilla@chimpychompy.org>
-#               Fr��ic Buclin <LpSolit@gmail.com>
+#               Frédéric Buclin <LpSolit@gmail.com>
 #               Greg Hendricks <ghendricks@novell.com>
 #               Lance Larsh <lance.larsh@oracle.com>
 #
@@ -39,6 +39,7 @@ require "globals.pl";
 use Bugzilla::Bug;
 use Bugzilla::Series;
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::BugMail;
 use Bugzilla::Product;
 use Bugzilla::Classification;
 use Bugzilla::Milestone;
@@ -899,9 +900,15 @@ if ($action eq 'update') {
 
             foreach my $vote (@$votes) {
                 my ($who, $id) = (@$vote);
-                RemoveVotes($id, $who, "The rules for voting on this product " .
-                                       "has changed;\nyou had too many votes " .
-                                       "for a single bug.");
+                # If some votes are removed, RemoveVotes() returns a list
+                # of messages to send to voters.
+                my $msgs =
+                    RemoveVotes($id, $who, "The rules for voting on this product " .
+                                           "has changed;\nyou had too many votes " .
+                                           "for a single bug.");
+                foreach my $msg (@$msgs) {
+                    Bugzilla::BugMail::MessageToMTA($msg);
+                }
                 my $name = DBID_to_name($who);
 
                 push(@toomanyvotes_list,
@@ -945,10 +952,16 @@ if ($action eq 'update') {
                                undef, ($product->id, $who));
 
                 foreach my $bug_id (@$bug_ids) {
-                    RemoveVotes($bug_id, $who, "The rules for voting on this " .
-                                               "product has changed; you had " .
-                                               "too many\ntotal votes, so all " .
-                                               "votes have been removed.");
+                    # RemoveVotes() returns a list of messages to send
+                    # in case some voters had too many votes.
+                    my $msgs =
+                        RemoveVotes($bug_id, $who, "The rules for voting on this " .
+                                                   "product has changed; you had " .
+                                                   "too many\ntotal votes, so all " .
+                                                   "votes have been removed.");
+                    foreach my $msg (@$msgs) {
+                        Bugzilla::BugMail::MessageToMTA($msg);
+                    }
                     my $name = DBID_to_name($who);
 
                     push(@toomanytotalvotes_list,
