@@ -1,5 +1,4 @@
 browser.jar:
-% overlay chrome://browser/content/browser.xul chrome://browser/content/places/browserShim.xul
 *   content/browser/places/places.xul                    (content/places.xul) 
     content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.xml                    (content/places.xml)
@@ -9,23 +8,3 @@ browser.jar:
 *   content/browser/places/menu.xml                      (content/menu.xml)
     content/browser/places/tree.xml                      (content/tree.xml)
 *   content/browser/places/controller.js                 (content/controller.js)
-    content/browser/places/browserShim.js                (content-shim/browserShim.js)
-*   content/browser/places/browserShim.xul               (content-shim/browserShim.xul)
-    content/browser/places/browserShim.css               (content-shim/browserShim.css)
-
-classic.jar:
-    skin/classic/browser/places/places.css               (skin-win/places.css)
-    skin/classic/browser/places/default_favicon.png      (skin-win/default_favicon.png)
-    skin/classic/browser/places/query.png                (skin-win/query.png)
-    skin/classic/browser/places/bookmarks_menu.png       (skin-win/bookmarks_menu.png)
-    skin/classic/browser/places/bookmarks_toolbar.png    (skin-win/bookmarks_toolbar.png)
-    skin/classic/browser/places/livemark_item.png        (skin-win/livemark_item.png)
-    skin/classic/browser/places/places-icon.png          (skin-win/places-icon.png)
-    skin/classic/browser/places/toolbar_dropmarker.png   (skin-win/toolbar_dropmarker.png)
-    skin/classic/browser/places/folder_drag_over.png     (skin-win/folder_drag_over.png)
-    skin/classic/browser/places/bookmarkProperties.css   (skin-win/bookmarkProperties.css)
-
-en-US.jar:
-    locale/browser/places/places.dtd                     (locale/places.dtd)
-    locale/browser/places/places.properties              (locale/places.properties)
-    locale/browser/places/default_places.html            (locale/default_places.html)

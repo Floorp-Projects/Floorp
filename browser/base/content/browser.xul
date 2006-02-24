@@ -110,6 +110,9 @@
 
 #include browser-context.inc
 
+#ifdef MOZ_PLACES
+#include ../../components/places/content/context.inc
+#endif
   </popupset>
 
 # The hacky hidden tree used by the Go menu to build items.
@@ -266,7 +269,20 @@
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
 
-#ifndef MOZ_PLACES
+#ifdef MOZ_PLACES
+      <toolbarbutton id="bookmarksBarShowPlaces"
+                     oncommand="PlacesBrowserShim.showHistory()"/>
+      <toolbaritem flex="1" id="bookmarksBarContainer">
+         <hbox id="bookmarksBarContent" flex="1" context="placesContext"/>
+      </toolbaritem>
+      <toolbarbutton id="places-bookmark" 
+                     label="&location.status.not_bookmarked;" 
+                     tooltiptext="&location.status.bookmark.tooltip;" 
+                     oncommand="PlacesBrowserShim.onBookmarkButtonClick();"/>
+      <toolbarbutton id="places-subscribe" 
+                     label="&feed.subscribe.label;" 
+                     tooltiptext="&feed.subscribe.tooltip;"/>
+#else
       <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
                    class="chromeclass-directories">
         <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px; overflow: hidden;"
@@ -402,7 +418,12 @@
  
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
-#ifndef MOZ_PLACES
+#ifdef MOZ_PLACES
+    <toolbar id="bookmarksToolbar"
+             defaultset="bookmarksBarShowPlaces,bookmarksBarContainer"
+             toolbarname="&places.toolbar.label;"
+             customizable="true"/>
+#else
     <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
              customizable="true" defaultset="personal-bookmarks" mode="icons"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"

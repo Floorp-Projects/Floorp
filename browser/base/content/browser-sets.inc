@@ -48,6 +48,9 @@
     <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
     <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
     <stringbundle id="bundle_preferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+#ifdef MOZ_PLACES
+    <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
+#endif
   </stringbundleset>
 
   <commandset id="globalEditCommandSet"
@@ -161,6 +164,11 @@
     <command id="Tools:Extensions" oncommand="BrowserOpenExtensions('extensions');"/>
     <command id="Tools:Themes" oncommand="BrowserOpenExtensions('themes');"/>
     <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
+#ifdef MOZ_PLACES
+#include ../../components/places/content/commands.inc
+    <command id="Browser:ShowBookmarks" oncommand="PlacesBrowserShim.showBookmarks();"/>
+    <command id="Browser:ShowHistory" oncommand="PlacesBrowserShim.showHistory();"/>
+#endif
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">

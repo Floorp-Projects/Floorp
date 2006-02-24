@@ -22,10 +22,15 @@
 *   locale/browser/searchDialog.dtd                (%chrome/browser/searchDialog.dtd)
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
+#ifdef MOZ_PLACES
+    locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
+    locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+#else
 *   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)
 *   locale/browser/bookmarks/addBookmark.dtd       (%chrome/browser/bookmarks/addBookmark.dtd)
 *   locale/browser/bookmarks/bookmarks.properties  (%chrome/browser/bookmarks/bookmarks.properties)
 *   locale/browser/bookmarks/bookmarksProperties.dtd (%chrome/browser/bookmarks/bookmarksProperties.dtd)
+#endif
     locale/browser/history/history.dtd             (%chrome/browser/history/history.dtd)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)
     locale/browser/migration/migration.properties  (%chrome/browser/migration/migration.properties)

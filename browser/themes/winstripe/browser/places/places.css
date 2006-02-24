@@ -1,0 +1,235 @@
+/* Root View */
+#placesView {
+  -moz-appearance: tabpanels;
+  margin: -10px;
+  padding: 8px 6px 6px 8px;
+  -moz-user-focus: ignore;
+}
+
+#splitter {
+  border: 0px;
+  width: 10px;
+  background-color: transparent;
+}
+
+/* Place List, Place Content */
+.placesTree {
+  margin: 0px;
+}
+
+#placesList {
+  -moz-appearance: none;
+  width: 160px;
+  margin: 0px;
+  border: 0px;
+}
+
+#placesListContainer {
+  -moz-appearance: listbox;
+  margin: 7px 0px 7px 6px;
+}
+
+#placeContent {
+  -moz-appearance: none;
+  border: 0px;
+}
+
+#content {
+  margin: 7px 6px 7px 0px;
+  -moz-appearance: listbox;
+}
+
+treechildren::-moz-tree-image(title, container) {
+  padding-right: 2px;
+  margin: 0px 2px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+treechildren::-moz-tree-image(title, container) {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+treechildren::-moz-tree-image(title, open) {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+treechildren::-moz-tree-row(session-start) {
+  border-top:1px dotted ThreeDShadow;
+}
+
+/* FIXME this should make the date field invisible, but only does it for
+         unselected items and maybe won't work for different color schemes. */
+treechildren::-moz-tree-cell-text(date, session-continue) {
+  color:white;
+}
+
+treechildren::-moz-tree-image(title, separator) {
+  list-style-image: none;
+  width: 0px !important;
+  height: 0px !important;
+  margin: 0px;
+}
+
+treechildren::-moz-tree-cell-text(title, separator) {
+  color: ThreeDShadow;
+  margin: 0px 5px;
+}
+
+treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
+  color: HighlightText;
+}
+
+/* Command Bar */
+.commands {
+  padding-bottom: 5px;  
+}
+
+.commandGroupButton {
+  margin-left: 0px;
+  margin-top: 0px;
+}
+
+
+.commandGroupButton.first {
+  margin-right: -10px;
+}
+
+.commandGroupButton.last {
+  margin-left: 20px;
+}
+
+/* Title Bar */
+#titlebar {
+  background-color: -moz-Dialog;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
+}
+
+#showingPrefix {
+  margin: 5px 0.33em 5px 8px;
+}
+
+#contentTitle {
+  margin: 5px 8px 5px 0px;
+  font-weight: bold;
+}
+
+/* Search Bar */
+#searchbar {
+  margin: 6px -4px 0px 2px;
+}
+
+.small {
+  font-size: x-small;
+  min-width: 0px;
+  padding: 0px 4px 0px 4px;
+  margin: 0px;  
+  border: 0px;
+}
+
+.small .button-text,
+.small .button-box {
+  padding: 0px;
+  border: 0px;
+}
+
+#searchFilter {
+  padding: 0px;
+}
+
+#searchFilter[empty="true"] {
+  color: GrayText;
+}
+
+#searchFilter .textbox-input-box {
+  padding: 2px 2px 3px 4px;
+}
+
+.filterList {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: 0px;
+  margin: 2px;
+  padding: 0px;
+  min-width: 0px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://browser/skin/Search-bar.png");
+  -moz-user-focus: ignore;
+  cursor: default;
+}
+
+.filterList .button-box {
+  border: 0px;
+  padding: 0px;
+}
+
+.filterList .button-menu-dropmarker {
+  margin: 9px -3px -4px 8px;
+}
+
+/* Calendar */
+.history-calendar {
+  margin: 0px 0px 7px 6px;
+}
+
+.calendar-box {
+  -moz-appearance: listbox;
+  border:1px solid black;
+  background-color:white;
+}
+.calendar-header {
+  background-color:#EEE;
+}
+.calendar-month-jump {
+  cursor:pointer;
+  padding-left:6px;
+  padding-right:6px;
+}
+.calendar-month-jump:hover {
+  background-color:#DDD;
+}
+.calendar-grid {
+  padding-left:8px;
+  padding-right:8px;
+  padding-bottom:4px;
+}
+.calendar-grid label { /* everything in the calendar grid */
+  padding:4px;
+  margin:0px;
+  text-align:center;
+  font-size:80%;
+}
+.calendar-month-title {
+  text-align:center;
+}
+.calendar-day-header {
+  border-bottom:1px solid #888;
+}
+.calendar-day { /* just days (excluding the day headers) */
+  cursor:w-resize;
+  color:white;
+  background-color:white;
+}
+.calendar-day:hover {
+  background-color:#DDD;
+}
+.calendar-day[selected="true"] {
+  cursor:w-resize;
+  background-color:#8C8;
+}
+.calendar-day[selected="true"]:hover {
+  background-color:#6A6;
+}
+.calendar-day[month="this"] {
+  color:black;
+}
+.calendar-day[month="other"] {
+  color:#888;
+}
+
+.no-margin-button {
+  min-width:0em;
+}
+
