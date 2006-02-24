@@ -2401,6 +2401,9 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
     if (!isBlock) {
       blockParent = GetBlockNodeParent(nodeToExamine);
     }
+
+    // Make sure to not walk off onto the Document node
+    nsCOMPtr<nsIDOMElement> element;
     do {
       // retrieve the computed style of background-color for blockParent
       mHTMLCSSUtils->GetComputedProperty(blockParent,
@@ -2408,9 +2411,10 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
                                          aOutColor);
       tmp.swap(blockParent);
       res = tmp->GetParentNode(getter_AddRefs(blockParent));
+      element = do_QueryInterface(blockParent);
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while (aOutColor.EqualsLiteral("transparent") && blockParent);
+    } while (aOutColor.EqualsLiteral("transparent") && element);
     if (aOutColor.EqualsLiteral("transparent")) {
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
