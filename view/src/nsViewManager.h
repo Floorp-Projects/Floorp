@@ -290,7 +290,7 @@ private:
   /**
    * Refresh aView (which must be non-null) with our default background color
    */
-  void DefaultRefresh(nsView* aView, const nsRect* aRect);
+  void DefaultRefresh(nsView* aView, nsIRenderingContext *aContext, const nsRect* aRect);
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
     const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
     PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping,
