@@ -415,6 +415,11 @@ case "$target" in
             AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
         fi
 
+        _MOZ_RTTI_FLAGS_ON='-GR'
+        _MOZ_RTTI_FLAGS_OFF='-GR-'
+        _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
+        _MOZ_EXCEPTIONS_FLAGS_OFF=''
+
         if test -n "$WIN32_REDIST_DIR"; then
             WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
