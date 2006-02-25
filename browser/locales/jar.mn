@@ -25,6 +25,7 @@
 #ifdef MOZ_PLACES
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+    locale/browser/places/default_places.html      (%chrome/browser/places/default_places.html)
 #else
 *   locale/browser/bookmarks/bookmarks.dtd         (%chrome/browser/bookmarks/bookmarks.dtd)
 *   locale/browser/bookmarks/addBookmark.dtd       (%chrome/browser/bookmarks/addBookmark.dtd)
