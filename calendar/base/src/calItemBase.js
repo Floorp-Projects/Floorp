@@ -559,7 +559,7 @@ calItemBase.prototype = {
             if (lastAck) {
                 var lastAckTime = Components.classes["@mozilla.org/calendar/datetime;1"]
                                             .createInstance(Components.interfaces.calIDateTime);
-                lastAckTime.icalString = lastAck.valuseAsIcalString;
+                lastAckTime.icalString = lastAck.valueAsIcalString;
                 this.alarmLastAck = lastAckTime;
             }
 
