@@ -419,7 +419,11 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
   char tempNameA[MAX_PATH+1];
 
   memset(&ofnA, 0, sizeof(OPENFILENAMEA));
+#if _WIN32_WINNT >= 0x0500
+  ofnA.lStructSize = OPENFILENAME_SIZE_VERSION_400; 
+#else
   ofnA.lStructSize = sizeof(OPENFILENAME); 
+#endif
   ofnA.hwndOwner = aFileNameW->hwndOwner; 
   ofnA.hInstance = aFileNameW->hInstance; 
   if (aFileNameW->lpstrFilter)  {
