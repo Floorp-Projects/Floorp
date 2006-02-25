@@ -208,7 +208,7 @@ safeCommand chmod 664 "$XPIROOT/components/chatzilla-service.js"
 echo -n .
 OLDPWD=`pwd`
 cd "$XPIROOT"
-safeCommand zip -vr ../chatzilla-$VERSION.xpi . -i "*" -x log*
+safeCommand zip -vr ../chatzilla-$VERSION.xpi . -i "*" -x "log*"
 cd "$OLDPWD"
 echo   ".         done"
 
