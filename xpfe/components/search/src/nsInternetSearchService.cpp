@@ -76,7 +76,9 @@
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIInputStream.h"
+#ifndef MOZ_PLACES
 #include "nsIBookmarksService.h"
+#endif
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -1720,6 +1722,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
           &isSearchResult);
   if (NS_SUCCEEDED(rv) && isSearchResult)
   {
+#ifndef MOZ_PLACES
     nsCOMPtr<nsIRDFDataSource>  datasource;
     if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
     {
@@ -1739,6 +1742,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
         }
       }
     }
+#endif
     cmdArray->AppendElement(mNC_SearchCommand_AddQueryToBookmarks);
     cmdArray->AppendElement(mNC_BookmarkSeparator);
 
@@ -1842,6 +1846,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
     }
   }
 
+#ifndef MOZ_PLACES
   nsCOMPtr<nsIRDFDataSource>  datasource;
   if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
   {
@@ -1857,6 +1862,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
       }
     }
   }
+#endif
 
   return(NS_OK);
 }
@@ -1910,6 +1916,7 @@ InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
     }
   }
 
+#ifndef MOZ_PLACES
   nsCOMPtr<nsIRDFDataSource>  datasource;
   if (NS_SUCCEEDED(rv = mRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
   {
@@ -1918,6 +1925,7 @@ InternetSearchDataSource::addQueryToBookmarks(nsIRDFResource *src)
       rv = bookmarks->AddBookmarkImmediately(uriUni, value.get(),
                                              nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
   }
+#endif
 
   return(NS_OK);
 }
