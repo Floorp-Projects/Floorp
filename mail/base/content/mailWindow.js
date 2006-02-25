@@ -74,6 +74,9 @@ var favoriteFoldersDSContractID = datasourceContractIDPrefix + "mailnewsfavefold
 var recentFoldersDSContractID = datasourceContractIDPrefix + "mailnewsrecentfolders";
 var accountManagerDataSource;
 var folderDataSource;
+var unreadFolderDataSource;
+var favoriteFoldersDataSource;
+var recentFoldersDataSource;
 
 var accountCentralBox = null;
 var gAccountCentralLoaded = false;
@@ -118,12 +121,16 @@ function OnMailWindowUnload()
   mailSession.RemoveMsgWindow(msgWindow);
   messenger.SetWindow(null, null);
 
-  var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-  msgDS.window = null;
-
-  msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-  msgDS.window = null;
-
+  var msgDS;
+  var viewDataSources = [accountManagerDataSource, folderDataSource, 
+                        unreadFolderDataSource, favoriteFoldersDataSource,
+                        recentFoldersDataSource];
+                        
+  for (index in viewDataSources)
+  {
+    msgDS = viewDataSources[index].QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+    msgDS.window = null;
+  }
 
   msgWindow.closeWindow();
 }
@@ -242,12 +249,15 @@ function AddDataSources()
 
   //Add statusFeedback
 
-  var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-  msgDS.window = msgWindow;
-
-  msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-  msgDS.window = msgWindow;
-
+  var msgDS;
+  var viewDataSources = [accountManagerDataSource, folderDataSource, 
+                        unreadFolderDataSource, favoriteFoldersDataSource,
+                        recentFoldersDataSource];
+  for (index in viewDataSources)
+  {
+    msgDS = viewDataSources[index].QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+    msgDS.window = msgWindow;
+  }
 }
 
 function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
