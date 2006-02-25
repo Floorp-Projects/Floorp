@@ -37,7 +37,8 @@
   <table>
     <tr>
       <td align="right"><b>Login:</b></td>
-      <td><input size="20" name="Bugzilla_login"></td>
+      <td><input size="20" name="Bugzilla_login">
+          [% Param('emailsuffix') FILTER html %]</td>
     </tr>
     <tr>
       <td align="right"><b>Password:</b></td>
