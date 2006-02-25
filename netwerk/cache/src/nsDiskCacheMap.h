@@ -422,9 +422,7 @@ public:
 /**
  *  Disk Entry operations
  */
-    nsresult    DoomRecord( nsDiskCacheRecord *  record);
     nsresult    DeleteStorage( nsDiskCacheRecord *  record);
-    nsresult    DeleteRecordAndStorage( nsDiskCacheRecord *  record);
 
     nsresult    GetFileForDiskCacheRecord( nsDiskCacheRecord * record,
                                            PRBool              meta,
