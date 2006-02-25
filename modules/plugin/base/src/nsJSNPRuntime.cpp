@@ -129,6 +129,10 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 NPObjWrapper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval);
 
+static bool
+CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
+                     NPObject *npobj, jsval id, jsval *vp);
+
 static JSClass sNPObjectJSWrapperClass =
   {
     "NPObject JS wrapper class", JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
@@ -140,7 +144,7 @@ static JSClass sNPObjectJSWrapperClass =
   };
 
 typedef struct NPObjectMemberPrivate {
-    NPObject* npobj;
+    JSObject *npobjWrapper;
     jsval fieldValue;
     jsval methodName;
     NPP   npp;
@@ -1521,6 +1525,10 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
   if (!memberPrivate)
     return false;
 
+  // Make sure to clear all members in case something fails here
+  // during initialization.
+  memset(memberPrivate, 0, sizeof(NPObjectMemberPrivate));
+
   JSObject *memobj = ::JS_NewObject(cx, &sNPObjectMemberClass, nsnull, nsnull);
   if (!memobj) {
     PR_Free(memberPrivate);
@@ -1542,8 +1550,14 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
   fieldValue = NPVariantToJSVal(npp, cx, &npv);
 
-  memberPrivate->npobj = npobj;
-  _retainobject(npobj);
+  // npobjWrapper is the JSObject through which we make sure we don't
+  // outlive the underlying NPObject, so make sure it points to the
+  // real JSObject wrapper for the NPObject.
+  while (JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
+    obj = ::JS_GetPrototype(cx, obj);
+  }
+
+  memberPrivate->npobjWrapper = obj;
 
   memberPrivate->fieldValue = fieldValue;
   memberPrivate->methodName = id;
@@ -1589,7 +1603,6 @@ NPObjectMember_Finalize(JSContext *cx, JSObject *obj)
   if (!memberPrivate)
     return;
 
-  _releaseobject(memberPrivate->npobj);
   PR_Free(memberPrivate);
 }
 
@@ -1603,9 +1616,16 @@ NPObjectMember_Call(JSContext *cx, JSObject *obj,
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, memobj,
                                                      &sNPObjectMemberClass,
-                                                     nsnull);
-  if (!memberPrivate || !memberPrivate->npobj)
+                                                     argv);
+  if (!memberPrivate || !memberPrivate->npobjWrapper)
     return JS_FALSE;
+
+  NPObject *npobj = GetNPObject(cx, memberPrivate->npobjWrapper);
+  if (!npobj) {
+    ThrowJSException(cx, "Call on invalid member object");
+
+    return JS_FALSE;
+  }
 
   NPVariant npargs_buf[8];
   NPVariant *npargs = npargs_buf;
@@ -1638,10 +1658,9 @@ NPObjectMember_Call(JSContext *cx, JSObject *obj,
   
   NPVariant npv;
   JSBool ok;
-  ok = memberPrivate->npobj->_class->invoke(memberPrivate->npobj,
-                                            (NPIdentifier)memberPrivate->methodName,
-                                            npargs, argc, &npv);
-  
+  ok = npobj->_class->invoke(npobj, (NPIdentifier)memberPrivate->methodName,
+                             npargs, argc, &npv);
+
   // Release arguments.
   for (i = 0; i < argc; ++i) {
     _releasevariantvalue(npargs + i);
@@ -1678,6 +1697,14 @@ NPObjectMember_Mark(JSContext *cx, JSObject *obj, void *arg)
   if (!JSVAL_IS_PRIMITIVE(memberPrivate->fieldValue)) {
     ::JS_MarkGCThing(cx, JSVAL_TO_OBJECT(memberPrivate->fieldValue),
                      "NPObject Member => fieldValue", arg);
+  }
+
+  // There's no strong reference from our private data to the
+  // NPObject, so make sure to mark the NPObject wrapper to keep the
+  // NPObject alive as long as this NPObjectMember is alive.
+  if (memberPrivate->npobjWrapper) {
+    ::JS_MarkGCThing(cx, memberPrivate->npobjWrapper,
+                     "NPObject Member => npobjWrapper", arg);
   }
 
   return 0;
