@@ -22,7 +22,7 @@
 [% PROCESS global/variables.none.tmpl %]
 [% filtered_summary = bugsummary FILTER html %]
 [% h1 = BLOCK %]View All Attachments for
-  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
+  [%+ "$terms.Bug $bugid" FILTER bug_link(bugid) FILTER none %][% END %]
 [% PROCESS global/header.html.tmpl
   title = "View All Attachments for $terms.Bug #$bugid"
   h1 = h1

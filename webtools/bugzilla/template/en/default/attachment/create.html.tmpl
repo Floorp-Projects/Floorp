@@ -26,7 +26,7 @@
 [%# Define strings that will serve as the title and header of this page %]
 [% title = BLOCK %]Create New Attachment for [% terms.Bug %] #[% bugid %][% END %]
 [% h1 = BLOCK %]Create New Attachment for
-  [%+ GetBugLink(bugid, "$terms.Bug $bugid") %][% END %]
+  [%+ "$terms.Bug $bugid" FILTER bug_link(bugid) FILTER none %][% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 
 [% PROCESS global/header.html.tmpl

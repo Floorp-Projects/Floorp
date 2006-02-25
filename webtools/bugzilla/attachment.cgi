@@ -837,7 +837,6 @@ sub viewall
   $vars->{'attachments'} = \@attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
-  $vars->{'GetBugLink'} = \&GetBugLink;
 
   print $cgi->header();
 
@@ -884,7 +883,6 @@ sub enter
   $vars->{'attachments'} = \@attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
-  $vars->{'GetBugLink'} = \&GetBugLink;
 
   SendSQL("SELECT product_id, component_id FROM bugs
            WHERE bug_id = $bugid");
@@ -1145,7 +1143,6 @@ sub edit {
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'isviewable'} = $isviewable; 
   $vars->{'attachments'} = $bugattachments; 
-  $vars->{'GetBugLink'} = \&GetBugLink;
 
   # Determine if PatchReader is installed
   eval {

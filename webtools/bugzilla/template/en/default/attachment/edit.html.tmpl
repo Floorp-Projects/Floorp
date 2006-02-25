@@ -28,7 +28,7 @@
 [% END %]
 [% h1 = BLOCK %]
   Attachment [% attachment.id %] Details for
-  [%+ GetBugLink(attachment.bug_id, "$terms.Bug ${attachment.bug_id}") %]
+  [%+ "$terms.Bug ${attachment.bug_id}" FILTER bug_link(attachment.bug_id) FILTER none %]
 [% END %]
 [% h2 = BLOCK %][% bugsummary FILTER html %][% END %]
 

@@ -1221,7 +1221,7 @@ sub ValidateBugAlias {
     my $vars = {};
     $vars->{'alias'} = $alias;
     if ($id) {
-        $vars->{'bug_link'} = &::GetBugLink($id, $id);
+        $vars->{'bug_id'} = $id;
         ThrowUserError("alias_in_use", $vars);
     }
 
@@ -1294,19 +1294,12 @@ sub ValidateDependencies {
 
     my @deps   = @{$deptree{'dependson'}};
     my @blocks = @{$deptree{'blocked'}};
-    my @union = ();
-    my @isect = ();
     my %union = ();
     my %isect = ();
     foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
-    @union = keys %union;
-    @isect = keys %isect;
+    my @isect = keys %isect;
     if (scalar(@isect) > 0) {
-        my $both = "";
-        foreach my $i (@isect) {
-           $both .= &::GetBugLink($i, "#" . $i) . " ";
-        }
-        ThrowUserError("dependency_loop_multi", { both => $both });
+        ThrowUserError("dependency_loop_multi", {'deps' => \@isect});
     }
     return %deps;
 }

@@ -218,6 +218,202 @@ sub get_format {
     };
 }
 
+# This routine quoteUrls contains inspirations from the HTML::FromText CPAN
+# module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
+# all that is really recognizable from the original is bits of the regular
+# expressions.
+# This has been rewritten to be faster, mainly by substituting 'as we go'.
+# If you want to modify this routine, read the comments carefully
+
+sub quoteUrls {
+    my ($text, $curr_bugid) = (@_);
+    return $text unless $text;
+
+    # We use /g for speed, but uris can have other things inside them
+    # (http://foo/bug#3 for example). Filtering that out filters valid
+    # bug refs out, so we have to do replacements.
+    # mailto can't contain space or #, so we don't have to bother for that
+    # Do this by escaping \0 to \1\0, and replacing matches with \0\0$count\0\0
+    # \0 is used because its unliklely to occur in the text, so the cost of
+    # doing this should be very small
+    # Also, \0 won't appear in the value_quote'd bug title, so we don't have
+    # to worry about bogus substitutions from there
+
+    # escape the 2nd escape char we're using
+    my $chr1 = chr(1);
+    $text =~ s/\0/$chr1\0/g;
+
+    # However, note that adding the title (for buglinks) can affect things
+    # In particular, attachment matches go before bug titles, so that titles
+    # with 'attachment 1' don't double match.
+    # Dupe checks go afterwards, because that uses ^ and \Z, which won't occur
+    # if it was subsituted as a bug title (since that always involve leading
+    # and trailing text)
+
+    # Because of entities, its easier (and quicker) to do this before escaping
+
+    my @things;
+    my $count = 0;
+    my $tmp;
+
+    # non-mailto protocols
+    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|irc|mid|news|nntp|prospero|telnet|view-source|wais)/i;
+
+    $text =~ s~\b(${protocol_re}:  # The protocol:
+                  [^\s<>\"]+       # Any non-whitespace
+                  [\w\/])          # so that we end in \w or /
+              ~($tmp = html_quote($1)) &&
+               ($things[$count++] = "<a href=\"$tmp\">$tmp</a>") &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egox;
+
+    # We have to quote now, otherwise our html is itsself escaped
+    # THIS MEANS THAT A LITERAL ", <, >, ' MUST BE ESCAPED FOR A MATCH
+
+    $text = html_quote($text);
+
+    # Color quoted text
+    $text =~ s~^(&gt;.+)$~<span class="quote">$1</span >~mg;
+    $text =~ s~</span >\n<span class="quote">~\n~g;
+
+    # mailto:
+    # Use |<nothing> so that $1 is defined regardless
+    $text =~ s~\b(mailto:|)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b
+              ~<a href=\"mailto:$2\">$1$2</a>~igx;
+
+    # attachment links - handle both cases separately for simplicity
+    $text =~ s~((?:^Created\ an\ |\b)attachment\s*\(id=(\d+)\)(\s\[edit\])?)
+              ~($things[$count++] = get_attachment_link($2, $1)) &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egmx;
+
+    $text =~ s~\b(attachment\s*\#?\s*(\d+))
+              ~($things[$count++] = get_attachment_link($2, $1)) &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egmxi;
+
+    # Current bug ID this comment belongs to
+    my $current_bugurl = $curr_bugid ? "show_bug.cgi?id=$curr_bugid" : "";
+
+    # This handles bug a, comment b type stuff. Because we're using /g
+    # we have to do this in one pattern, and so this is semi-messy.
+    # Also, we can't use $bug_re?$comment_re? because that will match the
+    # empty string
+    my $bug_re = qr/bug\s*\#?\s*(\d+)/i;
+    my $comment_re = qr/comment\s*\#?\s*(\d+)/i;
+    $text =~ s~\b($bug_re(?:\s*,?\s*$comment_re)?|$comment_re)
+              ~ # We have several choices. $1 here is the link, and $2-4 are set
+                # depending on which part matched
+               (defined($2) ? get_bug_link($2,$1,$3) :
+                              "<a href=\"$current_bugurl#c$4\">$1</a>")
+              ~egox;
+
+    # Old duplicate markers
+    $text =~ s~(?<=^\*\*\*\ This\ bug\ has\ been\ marked\ as\ a\ duplicate\ of\ )
+               (\d+)
+               (?=\ \*\*\*\Z)
+              ~get_bug_link($1, $1)
+              ~egmx;
+
+    # Now remove the encoding hacks
+    $text =~ s/\0\0(\d+)\0\0/$things[$1]/eg;
+    $text =~ s/$chr1\0/\0/g;
+
+    return $text;
+}
+
+# Creates a link to an attachment, including its title.
+sub get_attachment_link {
+    my ($attachid, $link_text) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    detaint_natural($attachid)
+      || die "get_attachment_link() called with non-integer attachment number";
+
+    my ($bugid, $isobsolete, $desc) =
+        $dbh->selectrow_array('SELECT bug_id, isobsolete, description
+                               FROM attachments WHERE attach_id = ?',
+                               undef, $attachid);
+
+    if ($bugid) {
+        my $title = "";
+        my $className = "";
+        if (Bugzilla->user->can_see_bug($bugid)) {
+            $title = $desc;
+        }
+        if ($isobsolete) {
+            $className = "bz_obsolete";
+        }
+        # Prevent code injection in the title.
+        $title = value_quote($title);
+
+        $link_text =~ s/ \[edit\]$//;
+        my $linkval = "attachment.cgi?id=$attachid&amp;action=";
+        # Whitespace matters here because these links are in <pre> tags.
+        return qq|<span class="$className">|
+               . qq|<a href="${linkval}view" title="$title">$link_text</a>|
+               . qq| <a href="${linkval}edit" title="$title">[edit]</a>|
+               . qq|</span>|;
+    }
+    else {
+        return qq{$link_text};
+    }
+}
+
+# Creates a link to a bug, including its title.
+# It takes either two or three parameters:
+#  - The bug number
+#  - The link text, to place between the <a>..</a>
+#  - An optional comment number, for linking to a particular
+#    comment in the bug
+
+sub get_bug_link {
+    my ($bug_num, $link_text, $comment_num) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined($bug_num) || ($bug_num eq "")) {
+        return "&lt;missing bug number&gt;";
+    }
+    my $quote_bug_num = html_quote($bug_num);
+    detaint_natural($bug_num) || return "&lt;invalid bug number: $quote_bug_num&gt;";
+
+    my ($bug_state, $bug_res, $bug_desc) =
+        $dbh->selectrow_array('SELECT bugs.bug_status, resolution, short_desc
+                               FROM bugs WHERE bugs.bug_id = ?',
+                               undef, $bug_num);
+
+    if ($bug_state) {
+        # Initialize these variables to be "" so that we don't get warnings
+        # if we don't change them below (which is highly likely).
+        my ($pre, $title, $post) = ("", "", "");
+
+        $title = $bug_state;
+        if ($bug_state eq 'UNCONFIRMED') {
+            $pre = "<i>";
+            $post = "</i>";
+        }
+        elsif (! &::IsOpenedState($bug_state)) {
+            $pre = '<span class="bz_closed">';
+            $title .= " $bug_res";
+            $post = '</span>';
+        }
+        if (Bugzilla->user->can_see_bug($bug_num)) {
+            $title .= " - $bug_desc";
+        }
+        # Prevent code injection in the title.
+        $title = value_quote($title);
+
+        my $linkval = "show_bug.cgi?id=$bug_num";
+        if (defined $comment_num) {
+            $linkval .= "#c$comment_num";
+        }
+        return qq{$pre<a href="$linkval" title="$title">$link_text</a>$post};
+    }
+    else {
+        return qq{$link_text};
+    }
+}
+
 ###############################################################################
 # Templatization Code
 
@@ -406,7 +602,7 @@ sub create {
                                my ($context, $bug) = @_;
                                return sub {
                                    my $text = shift;
-                                   return &::quoteUrls($text, $bug);
+                                   return quoteUrls($text, $bug);
                                };
                            },
                            1
@@ -416,7 +612,7 @@ sub create {
                               my ($context, $bug) = @_;
                               return sub {
                                   my $text = shift;
-                                  return &::GetBugLink($bug, $text);
+                                  return get_bug_link($bug, $text);
                               };
                           },
                           1

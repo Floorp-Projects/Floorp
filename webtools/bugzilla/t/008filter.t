@@ -205,7 +205,7 @@ sub directive_ok {
     return 1 if $directive =~ /^Hook.process\(/;
 
     # Other functions guaranteed to return OK output
-    return 1 if $directive =~ /^(time2str|GetBugLink|url)\(/;
+    return 1 if $directive =~ /^(time2str|url)\(/;
 
     # Safe Template Toolkit virtual methods
     return 1 if $directive =~ /\.(length$|size$|push\()/;

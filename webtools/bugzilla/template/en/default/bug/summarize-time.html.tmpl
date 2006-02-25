@@ -21,7 +21,7 @@
 [% title = "Time Summary " %]
 [% IF do_depends %]
     [% title = title _ "for " %]
-    [% h1 = title _  GetBugLink(ids.0, "$terms.Bug $ids.0") %]
+    [% h1 = title _ "$terms.Bug $ids.0" FILTER bug_link(ids.0) FILTER none %]
     [% title = title _ "$terms.Bug $ids.0: " %]
     [% h1 = (h1 _ " (and $terms.bugs blocking it)") IF do_depends %]
 [% ELSE %]

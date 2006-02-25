@@ -82,8 +82,9 @@
 
   [% ELSIF error == "alias_in_use" %]
     [% title = "Alias In Use" %]
-    [% terms.Bug %] [%+ bug_link FILTER none %] has already taken the alias 
-    <em>[% alias FILTER html %]</em>.  Please choose another one.
+    [% terms.Bug %] [%+ bug_id FILTER bug_link(bug_id) FILTER none %]
+    has already taken the alias <em>[% alias FILTER html %]</em>.
+    Please choose another one.
 
   [% ELSIF error == "alias_not_defined" %]
     [% title = "Alias Is Not Defined" %]
@@ -303,8 +304,11 @@
     [% title = "Dependency Loop Detected" %]
     The following [% terms.bug %](s) would appear on both the "depends on"
     and "blocks" parts of the dependency tree if these changes
-    are committed: [% both FILTER none %]. This would create a circular
-    dependency, which is not allowed.
+    are committed:
+    [% FOREACH dep = deps %]
+      [%+ dep FILTER bug_link(dep) FILTER none %]
+    [% END %].
+    This would create a circular dependency, which is not allowed.
 
   [% ELSIF error == "dependency_loop_single" %]
     [% title = "Dependency Loop Detected" %]
