@@ -511,7 +511,7 @@ nsDiskCacheStreamIO::Flush()
             rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
             if (NS_FAILED(rv)) {
                 NS_WARNING("cacheMap->DeleteStorage() failed.");
-                cacheMap->DoomRecord(record);
+                cacheMap->DeleteRecord(record);
                 return  rv;
             }
         }

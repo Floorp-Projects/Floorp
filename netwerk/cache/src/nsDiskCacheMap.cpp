@@ -858,16 +858,6 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
 
 
 nsresult
-nsDiskCacheMap::DoomRecord(nsDiskCacheRecord * record)
-{
-    nsresult  rv = DeleteRecord(record);
-    // XXX future: add record to doomed record journal
-
-    return rv;
-}
-
-
-nsresult
 nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record)
 {
     nsresult  rv1 = DeleteStorage(record, nsDiskCache::kData);
@@ -906,15 +896,6 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
     else           record->ClearDataLocation();
     
     return rv;
-}
-
-
-nsresult
-nsDiskCacheMap::DeleteRecordAndStorage(nsDiskCacheRecord * record)
-{
-    nsresult  rv1 = DeleteStorage(record);
-    nsresult  rv2 = DeleteRecord(record);
-    return NS_FAILED(rv1) ? rv1 : rv2;
 }
 
 

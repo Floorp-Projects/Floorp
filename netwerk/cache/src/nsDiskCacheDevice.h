@@ -101,21 +101,21 @@ public:
     PRUint32                getCacheSize();
     PRUint32                getEntryCount();
     
-    PRBool                  Initialized() { return mInitialized; }
-    nsDiskCacheMap *        CacheMap()    { return mCacheMap; }
-    nsresult                Shutdown_Private(PRBool flush);
+    nsDiskCacheMap *        CacheMap()    { return &mCacheMap; }
     
 private:    
     /**
      *  Private methods
      */
 
-    nsresult    OpenDiskCache();
-    nsresult    ClearDiskCache();
-    nsresult    InitializeCacheDirectory();
+    PRBool                  Initialized() { return mInitialized; }
 
+    nsresult                Shutdown_Private(PRBool flush);
 
-    nsresult    EvictDiskCacheEntries(PRInt32  targetCapacity);
+    nsresult                OpenDiskCache();
+    nsresult                ClearDiskCache();
+
+    nsresult                EvictDiskCacheEntries(PRInt32  targetCapacity);
     
     /**
      *  Member variables
@@ -123,7 +123,7 @@ private:
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsDiskCacheBindery      mBindery;
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
-    nsDiskCacheMap *        mCacheMap;
+    nsDiskCacheMap          mCacheMap;
     PRPackedBool            mInitialized;
 };
 
