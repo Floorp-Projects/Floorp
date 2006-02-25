@@ -119,14 +119,23 @@ function loadDialog()
             }
 
             /* load up the duration of the event radiogroup */
-            if (rule.count == -1) {
-                setElementValue("recurrence-duration", "forever");
-            } else if (rule.isByCount) {
-                setElementValue("recurrence-duration", "ntimes");
-                setElementValue("repeat-ntimes-count", rule.count );
+            if (rule.isByCount) {
+                if (rule.count == -1) {
+                    setElementValue("recurrence-duration", "forever");
+                } else {
+                    setElementValue("recurrence-duration", "ntimes");
+                    setElementValue("repeat-ntimes-count", rule.count );
+                }
             } else {
-                setElementValue("recurrence-duration", "until");
-                setElementValue("repeat-until-date", rule.endDate.jsDate); // XXX getInTimezone()
+                var endDate = rule.endDate;
+                if (!endDate) {
+                    setElementValue("recurrence-duration", "forever");
+                } else {
+                    // convert the datetime from UTC to localtime.
+                    endDate = endDate.getInTimezone(calendarDefaultTimezone());
+                    setElementValue("recurrence-duration", "until");
+                    setElementValue("repeat-until-date", endDate.jsDate);
+                }
             }        
         }
     }
@@ -211,7 +220,16 @@ function saveDialog()
         recRule.count = Math.max(1, getElementValue("repeat-ntimes-count"));
         break;
     case "until":
-        recRule.endDate = jsDateToDateTime(getElementValue("repeat-until-date"));
+        // get the datetime from the control (which is in localtime),
+        // set the time to 23:59:99 and convert that to UTC time.
+        var endDate = getElementValue("repeat-until-date")
+        endDate.setHours(23);
+        endDate.setMinutes(59);
+        endDate.setSeconds(59);
+        endDate.setMilliseconds(999);
+        endDate = jsDateToDateTime(endDate);
+        endDate.normalize();
+        recRule.endDate = endDate;
         break;
     }
 
