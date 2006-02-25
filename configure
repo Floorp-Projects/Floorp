@@ -5412,7 +5412,7 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc*)
+powerpc* | ppc)
     CPU_ARCH=ppc
     ;;
 
