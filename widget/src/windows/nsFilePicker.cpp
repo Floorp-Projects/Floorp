@@ -180,9 +180,11 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
     OPENFILENAMEW ofn;
     memset(&ofn, 0, sizeof(ofn));
-
+#if _WIN32_WINNT >= 0x0500
+    ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+#else
     ofn.lStructSize = sizeof(ofn);
-
+#endif
     nsString filterBuffer = mFilterList;
                                   
     if (!initialDir.IsEmpty()) {
