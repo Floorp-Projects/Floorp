@@ -44,6 +44,12 @@
     heading            => 'Real name'
     allow_html_content => 1
    }
+   {heading            => 'User Account Log'
+    content            => 'View'
+    contentlink        => 'editusers.cgi?action=activity' _
+                                  '&amp;userid=%%userid%%' _
+                                  listselectionurlparams
+   }
   ]
 %]
 

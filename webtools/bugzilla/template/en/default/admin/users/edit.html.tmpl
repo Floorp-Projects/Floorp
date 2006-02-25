@@ -105,6 +105,10 @@
   <input type="hidden" name="userid" value="[% otheruser.id %]" />
   <input type="hidden" name="action" value="update" />
   [% INCLUDE listselectionhiddenfields %]
+
+  or <a href="editusers.cgi?action=activity&amp;userid=[% otheruser.id %]"
+        title="View the account log for user '
+        [%- otheruser.login FILTER html %]'">View this user's account log</a>
 </p>
 </form>
 <p>

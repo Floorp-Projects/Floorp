@@ -17,6 +17,8 @@
 #                 Lance Larsh <lance.larsh@oracle.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 #                 David Lawrence <dkl@redhat.com>
+#                 Vlad Dascalu <jocuri@softhome.net>
+#                 Gavin Shelley  <bugzilla@chimpychompy.org>
 
 use strict;
 use lib ".";
@@ -729,6 +731,29 @@ if ($action eq 'search') {
     foreach (keys(%updatedbugs)) {
         Bugzilla::BugMail::Send($_);
     }
+
+###########################################################################
+} elsif ($action eq 'activity') {
+    my $otherUser = check_user($otherUserID, $otherUserLogin);
+
+    $vars->{'profile_changes'} = $dbh->selectall_arrayref(
+        "SELECT profiles.login_name AS who, " .
+                $dbh->sql_date_format('profiles_activity.profiles_when') . " AS activity_when,
+                fielddefs.description AS what,
+                profiles_activity.oldvalue AS removed,
+                profiles_activity.newvalue AS added
+         FROM profiles_activity
+         INNER JOIN profiles ON profiles_activity.who = profiles.userid
+         INNER JOIN fielddefs ON fielddefs.fieldid = profiles_activity.fieldid
+         WHERE profiles_activity.userid = ?
+         ORDER BY profiles_activity.profiles_when",
+        {'Slice' => {}},
+        $otherUser->id);
+
+    $vars->{'otheruser'} = $otherUser;
+
+    $template->process("account/profile-activity.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
 
 ###########################################################################
 } else {
