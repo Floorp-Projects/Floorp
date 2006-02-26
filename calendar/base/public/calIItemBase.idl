@@ -155,7 +155,7 @@ interface calIItemBase : nsISupports
   // recurrence
   //
   attribute calIRecurrenceInfo recurrenceInfo;
-  attribute calIDateTime recurrenceStartDate;
+  readonly attribute calIDateTime recurrenceStartDate;
 
   // attachments
   // array of nsIMsgAttachment

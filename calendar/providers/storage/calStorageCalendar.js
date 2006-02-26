@@ -746,7 +746,7 @@ calStorageCalendar.prototype = {
                 sp = this.mSelectTodosWithRecurrence.params;
                 sp.cal_id = this.mCalId;
                 while (this.mSelectTodosWithRecurrence.step()) {
-                    var row = this.mSelectTodosByRange.row;
+                    var row = this.mSelectTodosWithRecurrence.row;
                     // did we already deal with this todo id?
                     if (handledRecurringTodos[row.id] == true)
                         continue;
