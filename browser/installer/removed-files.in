@@ -5,6 +5,8 @@ chrome/chrome.rdf
 chrome/installed-chrome.txt
 chrome/app-chrome.manifest
 chrome/overlayinfo/
+chrome/m3ffxtbr.manifest
+chrome/m3ffxtbr.jar
 defaults/pref/all.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
