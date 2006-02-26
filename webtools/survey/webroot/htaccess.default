@@ -2,3 +2,8 @@
 # This allows us to have our web documents anywhere we want
 #   and keep our includes, etc. in a safe directory.
 php_value auto_prepend /YOURPATH/inc/init.php
+
+# Set up rewrites so we can get our app data in.
+RewriteEngine On
+RewriteBase /survey/web/root
+RewriteRule ^(.+)/(.+)/(.+)/exit.html index.php?version=$1&product=$2&useragent=$3

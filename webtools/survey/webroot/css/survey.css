@@ -4,6 +4,10 @@
     padding: .5em 0;
 }
 
+.survey li {
+    margin: 3px 0 0 0;
+}
+
 h2 {
     margin: .5em 0;
 }
