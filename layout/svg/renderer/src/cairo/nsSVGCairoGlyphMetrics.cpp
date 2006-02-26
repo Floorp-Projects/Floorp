@@ -191,7 +191,7 @@ nsSVGCairoGlyphMetrics::GetComputedTextLength(float *_retval)
                      NS_ConvertUTF16toUTF8(text).get(),
                      &extent);
 
-  *_retval = abs(extent.x_advance) + abs(extent.y_advance);
+  *_retval = fabs(extent.x_advance) + fabs(extent.y_advance);
 
   return NS_OK;
 }
@@ -210,7 +210,7 @@ nsSVGCairoGlyphMetrics::GetSubStringLength(PRUint32 charnum, PRUint32 nchars, fl
                      NS_ConvertUTF16toUTF8(Substring(text, charnum, nchars)).get(),
                      &extent);
 
-  *_retval = abs(extent.x_advance) + abs(extent.y_advance);
+  *_retval = fabs(extent.x_advance) + fabs(extent.y_advance);
 
   return NS_OK;
 }
