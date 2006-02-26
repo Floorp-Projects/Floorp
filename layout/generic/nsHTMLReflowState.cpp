@@ -324,7 +324,6 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         nsMargin*       aBorder,
                         nsMargin*       aPadding)
 {
-  mCompactMarginWidth = 0;
 #ifdef DEBUG
   mDebugHook = nsnull;
 #endif
