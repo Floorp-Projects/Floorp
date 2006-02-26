@@ -226,9 +226,6 @@ struct nsHTMLReflowState {
   nscoord          mComputedMinWidth, mComputedMaxWidth;
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
-  // Compact margin available space
-  nscoord          mCompactMarginWidth;
-
   // Cached pointers to the various style structs used during intialization
   const nsStyleDisplay*    mStyleDisplay;
   const nsStyleVisibility* mStyleVisibility;
