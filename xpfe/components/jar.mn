@@ -47,7 +47,6 @@ comm.jar:
     content/communicator/pref/pref-debug2.xul                   (prefwindow/resources/content/pref-debug2.xul)
     content/communicator/pref/pref-fonts.js                     (prefwindow/resources/content/pref-fonts.js)
     content/communicator/pref/pref-fonts.xul                    (prefwindow/resources/content/pref-fonts.xul)
-    content/communicator/pref/pref-calibrate-screen.xul         (prefwindow/resources/content/pref-calibrate-screen.xul)
     content/communicator/pref/pref-history.xul                  (prefwindow/resources/content/pref-history.xul)
     content/communicator/pref/pref-http.xul                     (prefwindow/resources/content/pref-http.xul)
     content/communicator/pref/pref-http.js                      (prefwindow/resources/content/pref-http.js)

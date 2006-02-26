@@ -293,31 +293,4 @@
               accesskey="&useDocumentFonts.accesskey;"/>
   </hbox>
 
-  <separator class="thin"/>
-  
-  <hbox align="center">
-    <label value="&resolution.label;" 
-           accesskey="&resolution.accesskey;" 
-           control="screenResolution"/>
-    <menulist id="screenResolution" 
-              oncommand="changeScreenResolution()"
-              dpi="&resolution.dpival;">
-      <menupopup>
-        <menuitem value="" 
-                  label="&resolution.dpival;"
-                  id="otherResolution"/>
-        <menuitem value="" 
-                  label="&resolution.dpival;" 
-                  id="defaultResolution"/>
-        <menuitem value="0"
-                  label="&resolution.system.label;" 
-                  id="systemResolution"
-                  hidden="true"/>
-        <menuseparator id="resolutionSeparator"/>
-        <menuitem id="userResolution" hidden="true"/>
-        <menuitem id="arbitraryResolution" value="other" label="&resolution.other;"/>
-      </menupopup>
-    </menulist>
-
-  </hbox>
 </page>

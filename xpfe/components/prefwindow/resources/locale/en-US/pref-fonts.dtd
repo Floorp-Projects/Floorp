@@ -78,19 +78,3 @@
 <!-- LOCALIZATION NOTE (useDocFontDynamic): Translate 'Dynamic Fonts' according to Netscape Glossary -->
 <!ENTITY  useDocFontDynamic.label                 "Use all the fonts chosen by the page">
 <!ENTITY  useDocFontDynamic.accesskey             "a">
-
-<!-- font scaling -->
-<!ENTITY  resolution.label                        "Display resolution:">
-<!ENTITY  resolution.accesskey                    "r">
-<!-- LOCALIZATION NOTE (resolution.dpi): dpi stands for "dots per inch" -->
-<!ENTITY  resolution.dpi                          "dpi">
-<!-- LOCALIZATION NOTE (resolution.dpi): $val will be replaced by a numeric dpi value. -->
-<!ENTITY  resolution.dpival                       "$val &resolution.dpi;">
-<!ENTITY  resolution.system.label                 "System setting">
-<!ENTITY  resolution.other                        "Other...">
-
-<!-- screen calibration dialog -->
-<!ENTITY  calibrateDialog.title                   "Calibrate Resolution">
-<!ENTITY  calibrate.instructions                  "The length of the line above is:">
-<!ENTITY  units.inches                            "inches">
-<!ENTITY  units.centimetres                       "centimeters">
