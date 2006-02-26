@@ -142,6 +142,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
                                           PRUint32 aSheetType)
 {
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET || aSheetType == USER_SHEET);
+  NS_ENSURE_ARG_POINTER(aSheetURI);
 
   nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID);
   nsCOMPtr<nsICSSStyleSheet> sheet;
