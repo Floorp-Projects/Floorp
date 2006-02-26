@@ -112,12 +112,7 @@ function isListOfPrinterFeaturesAvailable()
 //---------------------------------------------------
 function checkDouble(element)
 {
-  var value = element.value;
-  if (value && value.length > 0) {
-    value = value.replace(/[^\.|^0-9]/g,"");
-    if (!value) value = "";
-    element.value = value;
-  }
+  element.value = element.value.replace(/[^.0-9]/g, "");
 }
 
 // Theoretical paper width/height.
