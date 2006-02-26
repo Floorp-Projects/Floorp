@@ -76,6 +76,10 @@ function onLoad()
     // update the accept button
     updateAccept();
 
+    // disabling recurring todo until bug 328197 is fixed
+    if (isToDo(window.calendarItem))
+        disableElement("item-recurrence");
+
     // update datetime pickers
     updateDueDate();
     updateEntryDate();
