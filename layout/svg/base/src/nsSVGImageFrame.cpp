@@ -436,81 +436,17 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     mSurface->GetWidth(&nativeWidth);
     mSurface->GetHeight(&nativeHeight);
 
-    PRUint16 align, meetOrSlice;
-    mPreserveAspectRatio->GetAlign(&align);
-    mPreserveAspectRatio->GetMeetOrSlice(&meetOrSlice);
+    nsCOMPtr<nsIDOMSVGImageElement> element = do_QueryInterface(mContent);
+    nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
+    element->GetPreserveAspectRatio(getter_AddRefs(ratio));
 
-    // default to the defaults
-    if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
-      align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
-      meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
-    
-    float a, d, e, f;
-    a = width/nativeWidth;
-    d = height/nativeHeight;
-    e = 0.0f;
-    f = 0.0f;
-
-    if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-        a != d) {
-      if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          a < d ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          d < a) {
-        d = a;
-        switch (align) {
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-            f = (height - a * nativeHeight) / 2.0f;
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-            f = height - a * nativeHeight;
-            break;
-          default:
-            NS_NOTREACHED("Unknown value for align");
-        }
-      }
-      else if (
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          d < a ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          a < d) {
-        a = d;
-        switch (align) {
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-            e = (width - a * nativeWidth) / 2.0f;
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-            e = width - a * nativeWidth;
-            break;
-          default:
-            NS_NOTREACHED("Unknown value for align");
-        }
-      }
-      else NS_NOTREACHED("Unknown value for meetOrSlice");
-    }
-
-    nsCOMPtr<nsIDOMSVGMatrix> trans;
-    ctm->Translate(x + e, y + f, getter_AddRefs(trans));
-
-    nsCOMPtr<nsIDOMSVGMatrix> fini;
-    trans->ScaleNonUniform(a, d, getter_AddRefs(fini));
+    nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
+    trans = nsSVGUtils::GetViewBoxTransform(width, height,
+                                            0, 0,
+                                            nativeWidth, nativeHeight,
+                                            ratio);
+    ctm->Translate(x, y, getter_AddRefs(ctmXY));
+    ctmXY->Multiply(trans, getter_AddRefs(fini));
 
     canvas->CompositeSurfaceMatrix(mSurface,
                                    fini,

@@ -42,6 +42,7 @@
 #include <math.h>
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 
 class nsPresContext;
 class nsIContent;
@@ -62,6 +63,7 @@ class nsISVGRendererSurface;
 class nsIPresShell;
 class nsISVGRendererCanvas;
 class nsISVGOuterSVGFrame;
+class nsIDOMSVGAnimatedPreserveAspectRatio;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -204,6 +206,15 @@ public:
   /* Find the outermost SVG frame of the passed frame */
   static nsISVGOuterSVGFrame *
   GetOuterSVGFrame(nsIFrame *aFrame);
+
+  /* Generate a viewbox to viewport tranformation matrix */
+  
+  static already_AddRefed<nsIDOMSVGMatrix>
+  GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
+                      float aViewboxX, float aViewboxY,
+                      float aViewboxWidth, float aViewboxHeight,
+                      nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
+                      PRBool aIgnoreAlign = PR_FALSE);
 
 private:
   /*
