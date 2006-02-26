@@ -16,12 +16,13 @@
  *
  * The Initial Developer of the Original Code is
  *  Oracle Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005, 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Joey Minta <jminta@gmail.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -852,26 +853,32 @@ calStorageCalendar.prototype = {
         this.mDB.executeSimpleSQL("INSERT INTO cal_calendar_schema_version VALUES(" + this.DB_SCHEMA_VERSION + ")");
     },
 
-    // check db version
     DB_SCHEMA_VERSION: 5,
-    versionCheck: function () {
-        var version = -1;
+
+    /** 
+     * @return      db schema version
+     * @exception   various, depending on error
+     */
+    getVersion: function calStorageGetVersion() {
         var selectSchemaVersion;
 
         try {
-            selectSchemaVersion = createStatement (this.mDB, "SELECT version FROM cal_calendar_schema_version LIMIT 1");
+            selectSchemaVersion = createStatement(this.mDB, 
+                                  "SELECT version FROM " +
+                                  "cal_calendar_schema_version LIMIT 1");
             if (selectSchemaVersion.step()) {
-                version = selectSchemaVersion.row.version;
+                return selectSchemaVersion.row.version;
             }
         } catch (e) {
-            // either the cal_calendar_schema_version table is not
-            // found, or something else happened
-            version = -1;
-        }
-        if (selectSchemaVersion)
-            selectSchemaVersion.reset();
+            dump ("++++++++++++ calStorageGetVersion() error: " +
+                  this.mDB.lastErrorString + "\n");
+            Components.utils.reportError("Error getting storage calendar " +
+                                         "schema version! DB Error: " + 
+                                         this.mDB.lastErrorString);
+            throw e;
+	}
 
-        return version;
+	throw "cal_calendar_schema_version SELECT returned no results";
     },
 
     upgradeDB: function (oldVersion) {
@@ -1006,12 +1013,17 @@ calStorageCalendar.prototype = {
     // assumes mDB is valid
 
     initDB: function () {
-        var version = this.versionCheck();
-        dump ("*** Calendar schema version is: " + version + "\n");
-        if (version == -1) {
+        if (!this.mDB.tableExists("cal_calendar_schema_version")) {
+            dump("*** cal_calendar_schema_version not found; " +
+		 "initializing storage provider tables\n");
             this.initDBSchema();
-        } else if (version != this.DB_SCHEMA_VERSION) {
-            this.upgradeDB(version);
+        } else {
+            var version = this.getVersion();
+            dump ("*** Calendar schema version is: " + version + "\n");
+
+            if (version != this.DB_SCHEMA_VERSION) {
+                this.upgradeDB(version);
+            }
         }
 
         this.mSelectEvent = createStatement (
