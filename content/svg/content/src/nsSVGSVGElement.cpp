@@ -71,6 +71,7 @@
 #include "nsSVGEnum.h"
 #include "nsISVGChildFrame.h"
 #include "nsGUIEvent.h"
+#include "nsSVGUtils.h"
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -836,93 +837,11 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       viewboxHeight = 1.0f;
     }
     
-    PRUint16 align, meetOrSlice;
-    {
-      nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
-      mPreserveAspectRatio->GetAnimVal(getter_AddRefs(par));
-      NS_ASSERTION(par, "could not get preserveAspectRatio");
-      par->GetAlign(&align);
-      par->GetMeetOrSlice(&meetOrSlice);
-    }
-
-    // default to the defaults
-    if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
-      align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
-      meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
-    
-    float a, d, e, f;
-    a = viewportWidth/viewboxWidth;
-    d = viewportHeight/viewboxHeight;
-    e = 0.0f;
-    f = 0.0f;
-
-    if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-        a != d) {
-      if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          a < d ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          d < a) {
-        d = a;
-        switch (align) {
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-            f = (viewportHeight - a * viewboxHeight) / 2.0f;
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-            f = viewportHeight - a * viewboxHeight;
-            break;
-          default:
-            NS_NOTREACHED("Unknown value for align");
-        }
-      }
-      else if (
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          d < a ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          a < d) {
-        a = d;
-        switch (align) {
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
-            e = (viewportWidth - a * viewboxWidth) / 2.0f;
-            break;
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
-          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
-            e = viewportWidth - a * viewboxWidth;
-            break;
-          default:
-            NS_NOTREACHED("Unknown value for align");
-        }
-      }
-      else NS_NOTREACHED("Unknown value for meetOrSlice");
-    }
-
-    if (viewboxX) e += -a * viewboxX;
-    if (viewboxY) f += -d * viewboxY;
-    
-#ifdef DEBUG
-    printf("SVG Viewport=(0?,0?,%f,%f)\n", viewportWidth, viewportHeight);
-    printf("SVG Viewbox=(%f,%f,%f,%f)\n", viewboxX, viewboxY, viewboxWidth, viewboxHeight);
-    printf("SVG Viewbox->Viewport xform [a c e] = [%f,   0, %f]\n", a, e);
-    printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
-#endif
-    
-    rv = NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
-                         a, 0.0f, 0.0f, d, e, f);
+    mViewBoxToViewportTransform =
+      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                      viewboxX, viewboxY,
+                                      viewboxWidth, viewboxHeight,
+                                      mPreserveAspectRatio);
   }
 
   *_retval = mViewBoxToViewportTransform;

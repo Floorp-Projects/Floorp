@@ -162,7 +162,7 @@ protected:
   NS_IMETHOD PrivateGetHeight(nsIDOMSVGLength * *aValue);
   NS_IMETHOD PrivateGetViewBox(nsIDOMSVGAnimatedRect * *aMatrix);
   NS_IMETHOD PrivateGetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio **aPreserveAspectRatio);
-  NS_IMETHOD GetPreserveAspectRatio(nsIDOMSVGPreserveAspectRatio **aPreserveAspectRatio);
+  NS_IMETHOD GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio **aPreserveAspectRatio);
   NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
   NS_IMETHOD GetViewBox(nsIDOMSVGRect * *aMatrix);
   nsresult GetPatternRect(nsIDOMSVGRect **patternRect, 
@@ -625,8 +625,8 @@ nsSVGPatternFrame::GetViewBox(nsIDOMSVGRect **aViewBox)
 }
 
 NS_IMETHODIMP
-nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGPreserveAspectRatio 
-                                                   **aPreserveAspectRatio)
+nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio 
+                                          **aPreserveAspectRatio)
 {
   if (!mPreserveAspectRatio) {
     PrivateGetPreserveAspectRatio(getter_AddRefs(mPreserveAspectRatio));
@@ -634,7 +634,9 @@ nsSVGPatternFrame::GetPreserveAspectRatio(nsIDOMSVGPreserveAspectRatio
       return NS_ERROR_FAILURE;
     NS_ADD_SVGVALUE_OBSERVER(mPreserveAspectRatio);
   }
-  mPreserveAspectRatio->GetAnimVal(aPreserveAspectRatio);
+  *aPreserveAspectRatio = mPreserveAspectRatio;
+  NS_IF_ADDREF(*aPreserveAspectRatio);
+
   return NS_OK;
 }
 
@@ -987,71 +989,24 @@ nsSVGPatternFrame::ConstructCTM(nsIDOMSVGMatrix **resultCTM, nsIDOMSVGMatrix *aP
   aViewRect->GetHeight(&viewBoxHeight);
   aViewRect->GetWidth(&viewBoxWidth);
   if (viewBoxHeight != 0.0f && viewBoxWidth != 0.0f) {
-    // Use the viewbox to calculate the new matrix
-    PRUint16 align, meetOrSlice;
-    {
-      nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
-      GetPreserveAspectRatio(getter_AddRefs(par));
-      NS_ASSERTION(par, "could not get preserveAspectRatio");
-      par->GetAlign(&align);
-      par->GetMeetOrSlice(&meetOrSlice);
-    }
-
-    // default to the defaults
-    if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
-      align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
-      meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
 
     float viewportWidth, viewportHeight;
     GetWidth(&viewportWidth);
     GetHeight(&viewportHeight);
 
-    float a, d, e, f;
-    a = viewportWidth/viewBoxWidth;
-    d = viewportHeight/viewBoxHeight;
-    e = 0.0f;
-    f = 0.0f;
-
-    if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-        a != d) {
-      if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          a < d ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          d < a) {
-        d = a;
-      }
-      else if (
-        meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-        d < a ||
-        meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-        a < d) {
-        a = d;
-      }
-      else NS_NOTREACHED("Unknown value for meetOrSlice");
-    }
-
-    if (viewBoxX) e += -a * viewBoxX;
-    if (viewBoxY) f += -d * viewBoxY;
-
     float refX, refY;
     GetX(&refX);
     GetY(&refY);
 
-    e -= refX * a;
-    f -= refY * d;
+    nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> par;
+    GetPreserveAspectRatio(getter_AddRefs(par));
 
-#ifdef DEBUG
-    printf("Pattern Viewport=(0?,0?,%f,%f)\n", viewportWidth, viewportHeight);
-    printf("Pattern Viewbox=(%f,%f,%f,%f)\n", viewBoxX, viewBoxY, viewBoxWidth, viewBoxHeight);
-    printf("Pattern Viewbox->Viewport xform [a c e] = [%f,   0, %f]\n", a, e);
-    printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
-#endif
+    tempTM = nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                             viewBoxX + refX, viewBoxY + refY,
+                                             viewBoxWidth, viewBoxHeight,
+                                             par,
+                                             PR_TRUE);
 
-    NS_NewSVGMatrix(getter_AddRefs(tempTM),
-                    a,     0.0f,
-                    0.0f,  d,
-                    e,     f);
     tempTM->Multiply(tCTM, resultCTM);
   } else {
     // No viewBox, construct from the (modified) parent matrix

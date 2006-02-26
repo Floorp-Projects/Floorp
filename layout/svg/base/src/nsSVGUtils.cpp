@@ -67,6 +67,9 @@
 #include "nsDOMError.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
+#include "nsIDOMSVGAnimPresAspRatio.h"
+#include "nsIDOMSVGPresAspectRatio.h"
+#include "nsSVGMatrix.h"
 
 #if defined(MOZ_SVG_RENDERER_GDIPLUS)
 #include <windows.h>
@@ -647,4 +650,98 @@ nsSVGUtils::GetOuterSVGFrame(nsIFrame *aFrame)
   }
 
   return outerSVG;
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
+                                float aViewboxX, float aViewboxY,
+                                float aViewboxWidth, float aViewboxHeight,
+                                nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
+                                PRBool aIgnoreAlign)
+{
+  PRUint16 align, meetOrSlice;
+  {
+    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
+    aPreserveAspectRatio->GetAnimVal(getter_AddRefs(par));
+    NS_ASSERTION(par, "could not get preserveAspectRatio");
+    par->GetAlign(&align);
+    par->GetMeetOrSlice(&meetOrSlice);
+  }
+
+  // default to the defaults
+  if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
+    align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
+  if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
+    meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
+
+  // alignment disabled for this matrix setup
+  if (aIgnoreAlign)
+    align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN;
+    
+  float a, d, e, f;
+  a = aViewportWidth / aViewboxWidth;
+  d = aViewportHeight / aViewboxHeight;
+  e = 0.0f;
+  f = 0.0f;
+
+  if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
+      a != d) {
+    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
+        a < d ||
+        meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
+        d < a) {
+      d = a;
+      switch (align) {
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+        break;
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
+        f = (aViewportHeight - a * aViewboxHeight) / 2.0f;
+        break;
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+        f = aViewportHeight - a * aViewboxHeight;
+        break;
+      default:
+        NS_NOTREACHED("Unknown value for align");
+      }
+    }
+    else if (
+      meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
+      d < a ||
+      meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
+      a < d) {
+      a = d;
+      switch (align) {
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
+        break;
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+        e = (aViewportWidth - a * aViewboxWidth) / 2.0f;
+        break;
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
+      case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+        e = aViewportWidth - a * aViewboxWidth;
+        break;
+      default:
+        NS_NOTREACHED("Unknown value for align");
+      }
+    }
+    else NS_NOTREACHED("Unknown value for meetOrSlice");
+  }
+  
+  if (aViewboxX) e += -a * aViewboxX;
+  if (aViewboxY) f += -d * aViewboxY;
+  
+  nsIDOMSVGMatrix *retval;
+  NS_NewSVGMatrix(&retval, a, 0.0f, 0.0f, d, e, f);
+  return retval;
 }

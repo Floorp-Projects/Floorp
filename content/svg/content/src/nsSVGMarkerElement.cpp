@@ -53,6 +53,7 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
 #include "nsDOMError.h"
+#include "nsSVGUtils.h"
 
 typedef nsSVGGraphicElement nsSVGMarkerElementBase;
 
@@ -442,48 +443,6 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       viewboxWidth = 1.0f;
       viewboxHeight = 1.0f;
     }
-    
-    PRUint16 align, meetOrSlice;
-    {
-      nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
-      mPreserveAspectRatio->GetAnimVal(getter_AddRefs(par));
-      NS_ASSERTION(par, "could not get preserveAspectRatio");
-      par->GetAlign(&align);
-      par->GetMeetOrSlice(&meetOrSlice);
-    }
-
-    // default to the defaults
-    if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
-      align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
-    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
-      meetOrSlice = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
-    
-    float a, d, e, f;
-    a = viewportWidth/viewboxWidth;
-    d = viewportHeight/viewboxHeight;
-    e = 0.0f;
-    f = 0.0f;
-
-    if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
-        a != d) {
-      if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-          a < d ||
-          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-          d < a) {
-        d = a;
-      }
-      else if (
-        meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
-        d < a ||
-        meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
-        a < d) {
-        a = d;
-      }
-      else NS_NOTREACHED("Unknown value for meetOrSlice");
-    }
-
-    if (viewboxX) e += -a * viewboxX;
-    if (viewboxY) f += -d * viewboxY;
 
     float refX;
     {
@@ -491,7 +450,6 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       mRefX->GetAnimVal(getter_AddRefs(l));
       l->GetValue(&refX);
     }
-
     float refY;
     {
       nsCOMPtr<nsIDOMSVGLength> l;
@@ -499,20 +457,12 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       l->GetValue(&refY);
     }
 
-    e -= refX * a;
-    f -= refY * d;
-    
-#ifdef DEBUG
-    printf("Marker Viewport=(0?,0?,%f,%f)\n", viewportWidth, viewportHeight);
-    printf("Marker Viewbox=(%f,%f,%f,%f)\n", viewboxX, viewboxY, viewboxWidth, viewboxHeight);
-    printf("Marker Viewbox->Viewport xform [a c e] = [%f,   0, %f]\n", a, e);
-    printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
-#endif
-    
-    rv = NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
-                         a,     0.0f,
-                         0.0f,  d,
-                         e,     f);
+    mViewBoxToViewportTransform =
+      nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
+                                      viewboxX + refX, viewboxY + refY,
+                                      viewboxWidth, viewboxHeight,
+                                      mPreserveAspectRatio,
+                                      PR_TRUE);
   }
 
   *_retval = mViewBoxToViewportTransform;
