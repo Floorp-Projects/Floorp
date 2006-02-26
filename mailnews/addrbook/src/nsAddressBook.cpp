@@ -552,12 +552,12 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
   nsXPIDLString columnName;
 
   for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-    if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId != 0) {
+    if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringID != 0) {
 
       // We don't need to truncate the string here as getter_Copies will
       // do that for us.
-      if (NS_FAILED(bundle->GetStringFromID(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId, getter_Copies(columnName))))
-        columnName.AppendInt(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId);
+      if (NS_FAILED(bundle->GetStringFromID(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringID, getter_Copies(columnName))))
+        columnName.AppendInt(EXPORT_ATTRIBUTES_TABLE[i].plainTextStringID);
 
       importService->SystemStringFromUnicode(columnName.get(), revisedName);
 
@@ -607,7 +607,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
           nsCString valueCStr;
 
           for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-            if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringId != 0) {
+            if (EXPORT_ATTRIBUTES_TABLE[i].plainTextStringID != 0) {
               rv = card->GetCardValue(EXPORT_ATTRIBUTES_TABLE[i].abColName, getter_Copies(value));
               NS_ENSURE_SUCCESS(rv,rv);
 

@@ -70,7 +70,7 @@ struct ExportAttributesTableStruct
 {
     const char* abColName;
     const char* ldapPropertyName;
-    PRUint32 plainTextStringId;
+    PRUint32 plainTextStringID;
 };
 
 const extern ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABLE_COUNT];
