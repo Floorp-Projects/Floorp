@@ -1569,12 +1569,14 @@ int main(int argc, char* argv[])
 #ifdef MOZ_ACCESSIBILITY_ATK
   // Reset GTK_MODULES, strip atk-bridge if exists
   // Mozilla will load libatk-bridge.so later if necessary
-  const char* gtkModules = getenv("GTK_MODULES");
-  if (gtkModules) {
+  const char* gtkModules = PR_GetEnv("GTK_MODULES");
+  if (gtkModules && *gtkModules) {
     nsCString gtkModulesStr(gtkModules);
     gtkModulesStr.ReplaceSubstring("atk-bridge", "");
-    char* newGtkModules = strdup(gtkModulesStr.get());
-    setenv("GTK_MODULES", newGtkModules, 1);
+    char* expr = PR_smprintf("GTK_MODULES=%s", gtkModulesStr.get());
+    if (expr)
+      PR_SetEnv(expr);
+    // We intentionally leak |expr| here since it is required by PR_SetEnv.
   }
 #endif
 
