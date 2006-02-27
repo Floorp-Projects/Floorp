@@ -58,7 +58,9 @@ class nsBlockFrame;
 #define BRS_COMPUTEMAXELEMENTWIDTH 0x00000100
 #define BRS_COMPUTEMAXWIDTH       0x00000200
 #define BRS_ISFIRSTINFLOW         0x00000400
-#define BRS_LASTFLAG              BRS_ISFIRSTINFLOW
+// Set when mLineAdjacentToTop is valid
+#define BRS_HAVELINEADJACENTTOTOP 0x00000800
+#define BRS_LASTFLAG              BRS_HAVELINEADJACENTTOTOP
 
 class nsBlockReflowState {
 public:
@@ -197,6 +199,12 @@ public:
   // The current line being reflowed
   // If it is mBlock->end_lines(), then it is invalid.
   nsLineList::iterator mCurrentLine;
+
+  // When BRS_HAVELINEADJACENTTOTOP is set, this refers to a line
+  // which we know is adjacent to the top of the block (in other words,
+  // all lines before it are empty and do not have clearance. This line is
+  // always before the current line.
+  nsLineList::iterator mLineAdjacentToTop;
 
   // The current Y coordinate in the block
   nscoord mY;

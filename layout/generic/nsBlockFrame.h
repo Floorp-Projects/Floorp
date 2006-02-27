@@ -202,6 +202,7 @@ public:
   virtual PRBool IsVisibleInSelection(nsISelection* aSelection);
 
   virtual PRBool IsEmpty();
+  virtual PRBool CachedIsEmpty();
   virtual PRBool IsSelfEmpty();
 
   // nsIHTMLReflow
