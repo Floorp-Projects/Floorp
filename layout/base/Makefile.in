@@ -93,6 +93,8 @@ EXPORTS		= \
 		nsCSSFrameConstructor.h \
 		nsChangeHint.h \
 		nsCompatibility.h \
+		nsCounterManager.h \
+		nsGenConList.h \
 		nsFrameManager.h \
 		nsFrameManagerBase.h \
 		nsFrameTraversal.h \
@@ -111,6 +113,7 @@ EXPORTS		= \
 		nsLayoutUtils.h \
 		nsPresContext.h \
 		nsPresState.h \
+		nsQuoteList.h \
 		nsStyleChangeList.h \
 		nsStyleConsts.h \
 		$(NULL)

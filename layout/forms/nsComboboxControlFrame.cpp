@@ -362,9 +362,9 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  if (aIID.Equals(NS_GET_IID(nsIComboboxControlFrame))) {
-    *aInstancePtr = (void*)(nsIComboboxControlFrame*)this;
+  
+  if (aIID.Equals(GetCID())) {
+    *aInstancePtr = this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*)(nsIFormControlFrame*)this;
@@ -1549,12 +1549,6 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
   mDropdownFrame = aDropDownFrame;
  
   CallQueryInterface(mDropdownFrame, &mListControlFrame);
-}
-
-nsIFrame*
-nsComboboxControlFrame::GetDropDown() 
-{
-  return mDropdownFrame;
 }
 
 // Toggle dropdown list.

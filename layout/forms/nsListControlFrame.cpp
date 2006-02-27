@@ -1702,7 +1702,7 @@ nsListControlFrame::SetComboboxFrame(nsIFrame* aComboboxFrame)
 {
   nsresult rv = NS_OK;
   if (nsnull != aComboboxFrame) {
-    rv = aComboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),(void**) &mComboboxFrame); 
+    rv = aComboboxFrame->QueryInterface(nsComboboxControlFrame::GetCID(),(void**) &mComboboxFrame); 
   }
   return rv;
 }

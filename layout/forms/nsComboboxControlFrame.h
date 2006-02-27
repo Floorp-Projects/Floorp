@@ -54,7 +54,6 @@
 
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIComboboxControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"
@@ -76,9 +75,11 @@ class nsIScrollableView;
  */
 #define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
+#define NS_COMBOBOX_CONTROL_FRAME_CID \
+  { 0xa5df992a, 0xc832, 0x45b1, {0x8c, 0xc4, 0x00, 0x80, 0x4c, 0xba, 0xcf, 0xab}}
+
 class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,
-                               public nsIComboboxControlFrame,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
                                public nsIRollupListener,
@@ -91,6 +92,8 @@ public:
 
   nsComboboxControlFrame();
   ~nsComboboxControlFrame();
+  
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_COMBOBOX_CONTROL_FRAME_CID)
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -146,16 +149,16 @@ public:
   virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
   //nsIComboboxControlFrame
-  virtual PRBool IsDroppedDown() { return mDroppedDown; }
-  virtual void ShowDropDown(PRBool aDoDropDown);
-  virtual nsIFrame* GetDropDown();
-  virtual void SetDropDown(nsIFrame* aDropDownFrame);
-  virtual void RollupFromList();
-  virtual void AbsolutelyPositionDropDown();
-  virtual PRInt32 GetIndexOfDisplayArea();
-  NS_IMETHOD RedisplaySelectedText();
-  virtual PRInt32 UpdateRecentIndex(PRInt32 aIndex);
-  virtual void OnContentReset();
+  PRBool IsDroppedDown() { return mDroppedDown; }
+  void ShowDropDown(PRBool aDoDropDown);
+  virtual nsIFrame* GetDropDown() { return mDropdownFrame; }
+  void SetDropDown(nsIFrame* aDropDownFrame);
+  void RollupFromList();
+  void AbsolutelyPositionDropDown();
+  PRInt32 GetIndexOfDisplayArea();
+  nsresult RedisplaySelectedText();
+  PRInt32 UpdateRecentIndex(PRInt32 aIndex);
+  void OnContentReset();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsPresContext* aPresContext, PRInt32 index);

@@ -57,6 +57,7 @@ REQUIRES	= content \
 		  locale \
 		  necko \
 		  string \
+		  webshell \
 		  widget \
 		  xpcom \
 		  $(NULL)
