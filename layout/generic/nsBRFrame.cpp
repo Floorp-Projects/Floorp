@@ -53,12 +53,7 @@
 
 class BRFrame : public nsFrame {
 public:
-  // nsIFrame
-  // REVIEW: Removed debug-only Paint() method rather than porting it
-  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
-                         nsIContent **   aNewContent,
-                         PRInt32&        aContentOffset,
-                         PRInt32&        aContentOffsetEnd);
+  virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
 
   NS_IMETHOD PeekOffset(nsPresContext* aPresContext, 
                          nsPeekOffsetStruct *aPos);
@@ -184,21 +179,16 @@ BRFrame::GetType() const
   return nsLayoutAtoms::brFrame;
 }
 
-NS_IMETHODIMP BRFrame::GetPositionHelper(const nsPoint&  aPoint,
-                                   nsIContent **   aNewContent,
-                                   PRInt32&        aContentOffset,
-                                   PRInt32&        aContentOffsetEnd)
+nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)
 {
-  if (!mContent)
-    return NS_ERROR_NULL_POINTER;
-  NS_IF_ADDREF(*aNewContent = mContent->GetParent());
-
-  if (*aNewContent) {
-    aContentOffset = (*aNewContent)->IndexOf(mContent);
-    aContentOffsetEnd = aContentOffset;
-    return NS_OK;
+  ContentOffsets offsets;
+  offsets.content = mContent->GetParent();
+  if (offsets.content) {
+    offsets.offset = offsets.content->IndexOf(mContent);
+    offsets.secondaryOffset = offsets.offset;
+    offsets.associateWithNext = PR_TRUE;
   }
-  return NS_ERROR_FAILURE;
+  return offsets;
 }
 
 NS_IMETHODIMP BRFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)

@@ -2449,21 +2449,16 @@ nsSelection::HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& 
   if (!newFrame)
     return NS_ERROR_FAILURE;
 
-  PRInt32 startPos = 0;
-  PRInt32 contentOffsetEnd = 0;
-  PRBool  beginOfContent;
-  nsCOMPtr<nsIContent> newContent;
-
-  result = newFrame->GetContentAndOffsetsFromPoint(aPresContext, newPoint,
-                                                   getter_AddRefs(newContent), 
-                                                   startPos, contentOffsetEnd, beginOfContent);
+  nsIFrame::ContentOffsets offsets =
+      newFrame->GetContentOffsetsFromPoint(newPoint);
 
   if ((newFrame->GetStateBits() & NS_FRAME_SELECTED_CONTENT) &&
-       AdjustForMaintainedSelection(newContent, startPos))
+       AdjustForMaintainedSelection(offsets.content, offsets.offset))
     return NS_OK;
 
   if (NS_SUCCEEDED(result))
   {
+    // XXX Code not up to date
 #ifdef VISUALSELECTION
     if (aPresContext->BidiEnabled()) {
       PRUint8 level;
@@ -2486,8 +2481,8 @@ nsSelection::HandleDrag(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& 
     }
     else
 #endif // VISUALSELECTION
-      result = HandleClick(newContent, startPos, contentOffsetEnd, PR_TRUE,
-                           PR_FALSE, beginOfContent);
+      result = HandleClick(offsets.content, offsets.offset, offsets.offset,
+                           PR_TRUE, PR_FALSE, offsets.associateWithNext);
   }
 
   return result;
@@ -2917,28 +2912,22 @@ nsSelection::CommonPageMove(PRBool aForward,
   }
     
   // get a content at desired location
-  nsCOMPtr<nsIContent> content;
-  PRInt32 startOffset, endOffset;
-  PRBool beginFrameContent;
   nsPoint desiredPoint;
   desiredPoint.x = caretPos.x;
   desiredPoint.y = caretPos.y + caretPos.height/2;
-  nsPresContext *context = mShell->GetPresContext();
-  result = mainframe->GetContentAndOffsetsFromPoint(context, desiredPoint, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
-  
-  if (NS_FAILED(result)) 
-    return result;
-  
-  if (!content) 
+  nsIFrame::ContentOffsets offsets =
+      mainframe->GetContentOffsetsFromPoint(desiredPoint);
+
+  if (!offsets.content)
     return NS_ERROR_UNEXPECTED;
 
   // scroll one page
-
   aScrollableView->ScrollByPages(0, aForward ? 1 : -1);
-  
+
   // place the caret
-  result = aFrameSel->HandleClick(content, startOffset, startOffset, aExtend, PR_FALSE, PR_TRUE);
-  
+  result = aFrameSel->HandleClick(offsets.content, offsets.offset,
+                                  offsets.offset, aExtend, PR_FALSE, PR_TRUE);
+
   return result;
 }
 
