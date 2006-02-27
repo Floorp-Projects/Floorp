@@ -3125,24 +3125,6 @@ nsBlockFrame::IsSelfEmpty()
 }
 
 PRBool
-nsBlockFrame::CachedIsEmpty()
-{
-  if (!IsSelfEmpty()) {
-    return PR_FALSE;
-  }
-
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end;
-       ++line)
-  {
-    if (!line->CachedIsEmpty())
-      return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-
-PRBool
 nsBlockFrame::IsEmpty()
 {
   if (!IsSelfEmpty()) {
@@ -3178,11 +3160,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   }
 
   // Determine if this line is "essentially" the first line
-  line_iterator line = begin_lines();
-  if (aState.GetFlag(BRS_HAVELINEADJACENTTOTOP)) {
-    line = aState.mLineAdjacentToTop;
-  }
-  while (line != aLine) {
+  for (line_iterator line = begin_lines(); line != aLine; ++line) {
     if (!line->CachedIsEmpty() || line->HasClearance()) {
       // A line which precedes aLine is non-empty, or has clearance,
       // so therefore the top margin applies.
@@ -3191,9 +3169,6 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
     }
     // No need to apply the top margin if the line has floats.  We
     // should collapse anyway (bug 44419)
-    ++line;
-    aState.SetFlag(BRS_HAVELINEADJACENTTOTOP, PR_TRUE);
-    aState.mLineAdjacentToTop = line;
   }
 
   // The line being reflowed is "essentially" the first line in the

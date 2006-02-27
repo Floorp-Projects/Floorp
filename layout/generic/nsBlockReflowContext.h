@@ -122,7 +122,7 @@ public:
    */
   static PRBool ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
                                           nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,
-                                          PRBool* aMayNeedRetry, PRBool* aIsEmpty = nsnull);
+                                          PRBool* aMayNeedRetry);
 
 protected:
   nsPresContext* mPresContext;
