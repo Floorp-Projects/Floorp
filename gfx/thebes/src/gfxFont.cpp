@@ -139,6 +139,8 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                 prefName.AppendLiteral(".");
                 prefName.Append(mStyle.langGroup);
 
+                // prefs file always uses (must use) UTF-8 so that we can use
+                // |GetCharPref| and treat the result as a UTF-8 string.
                 nsXPIDLCString value;
                 nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
                 if (NS_SUCCEEDED(rv)) {
