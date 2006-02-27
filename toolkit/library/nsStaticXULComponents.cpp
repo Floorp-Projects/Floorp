@@ -71,54 +71,56 @@
 #define POSTSCRIPT_MODULES
 #endif
 
-#ifdef XP_WIN
+#ifdef MOZ_CAIRO_GFX
 #  define GFX_MODULES MODULE(nsGfxModule)
-#  define WIDGET_MODULES MODULE(nsWidgetModule)
-#elif defined(XP_MACOSX)
-#  define GFX_MODULES MODULE(nsGfxMacModule)
-#  define WIDGET_MODULES MODULE(nsWidgetMacModule)
-#elif defined(XP_BEOS)
-#  define GFX_MODULES MODULE(nsGfxBeOSModule)
-#  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
-#elif defined(XP_OS2)
-#  define GFX_MODULES MODULE(nsGfxOS2Module)
-#  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
-#endif
-
-#ifdef MOZ_ENABLE_CAIRO_GFX
-#define GFX_MODULES MODULE(nsGfxModule)
 #else
 #  if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
-#  define GFX_MODULES MODULE(nsGfxGTKModule)
+#    define GFX_MODULES MODULE(nsGfxGTKModule)
 #  elif defined(MOZ_WIDGET_QT)
-#  define GFX_MODULES MODULE(nsGfxQtModule)
+#    define GFX_MODULES MODULE(nsGfxQtModule)
 #  elif defined(MOZ_WIDGET_XLIB)
-#  define GFX_MODULES MODULE(nsGfxXlibModule)
+#    define GFX_MODULES MODULE(nsGfxXlibModule)
 #  elif defined(MOZ_WIDGET_PHOTON)
-#  define GFX_MODULES MODULE(nsGfxPhModule)
+#    define GFX_MODULES MODULE(nsGfxPhModule)
+#  elif defined(XP_WIN)
+#    define GFX_MODULES MODULE(nsGfxModule)
+#  elif defined(XP_MACOSX)
+#    define GFX_MODULES MODULE(nsGfxMacModule)
+#  elif defined(XP_BEOS)
+#    define GFX_MODULES MODULE(nsGfxBeOSModule)
+#  elif defined(XP_OS2)
+#    define GFX_MODULES MODULE(nsGfxOS2Module)
+#  else
+#    error Unknown GFX module.
 #  endif
+#endif
+
+#ifdef XP_WIN
+#  define WIDGET_MODULES MODULE(nsWidgetModule)
+#elif defined(XP_MACOSX)
+#  define WIDGET_MODULES MODULE(nsWidgetMacModule)
+#elif defined(XP_BEOS)
+#  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
+#elif defined(XP_OS2)
+#  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
+#elif defined(MOZ_WIDGET_GTK)
+#  define WIDGET_MODULES MODULE(nsWidgetGTKModule)
+#elif defined(MOZ_WIDGET_GTK2)
+#  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
+#elif defined(MOZ_WIDGET_XLIB)
+#  define WIDGET_MODULES MODULE(nsWidgetXLIBModule)
+#elif defined(MOZ_WIDGET_PHOTON)
+#  define WIDGET_MODULES MODULE(nsWidgetPhModule)
+#elif defined(MOZ_WIDGET_QT)
+#  define WIDGET_MODULES MODULE(nsWidgetQtModule)
+#else
+#  error Unknown widget module.
 #endif
 
 #ifdef ICON_DECODER
 #define ICON_MODULE MODULE(nsIconDecoderModule)
 #else
 #define ICON_MODULE
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-#define WIDGET_MODULES MODULE(nsWidgetGTKModule)
-#endif
-#ifdef MOZ_WIDGET_GTK2
-#define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
-#endif
-#ifdef MOZ_WIDGET_XLIB
-#define WIDGET_MODULES MODULE(nsWidgetXLIBModule)
-#endif
-#ifdef MOZ_WIDGET_PHOTON
-#define WIDGET_MODULES MODULE(nsWidgetPhModule)
-#endif
-#ifdef MOZ_WIDGET_QT
-#define WIDGET_MODULES MODULE(nsWidgetQtModule)
 #endif
 
 #ifdef MOZ_ENABLE_XPRINT

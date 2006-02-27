@@ -70,6 +70,17 @@ DEFINES += \
 	-D_IMPL_NS_WIDGET \
 	$(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+OS_LIBS += usp10.lib
+endif
+ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
+ifdef MOZ_ENABLE_GLITZ
+EXTRA_DSO_LDOPTS += -lmozglitzagl -framework OpenGL -framework AGL
+endif
+endif
+endif # MOZ_ENABLE_CAIRO_GFX
+
 ifdef MOZ_SVG_RENDERER_GDIPLUS
 OS_LIBS += Gdiplus.lib
 endif
