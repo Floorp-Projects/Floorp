@@ -307,24 +307,7 @@ nsLineBox::CachedIsEmpty()
     return mFlags.mEmptyCacheState;
   }
 
-  PRBool result;
-  if (IsBlock()) {
-    result = mFirstChild->CachedIsEmpty();
-  } else {
-    PRInt32 n;
-    nsIFrame *kid;
-    result = PR_TRUE;
-    for (n = GetChildCount(), kid = mFirstChild;
-         n > 0;
-         --n, kid = kid->GetNextSibling())
-      {
-        if (!kid->CachedIsEmpty()) {
-          result = PR_FALSE;
-          break;
-        }
-      }
-  }
-
+  PRBool result = IsEmpty();
   mFlags.mEmptyCacheValid = PR_TRUE;
   mFlags.mEmptyCacheState = result;
   return result;

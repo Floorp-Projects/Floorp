@@ -90,8 +90,7 @@ static nsIFrame* DescendIntoBlockLevelFrame(nsIFrame* aFrame)
 
 PRBool
 nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
-  nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,
-  PRBool* aMayNeedRetry, PRBool* aBlockIsEmpty)
+  nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame, PRBool* aMayNeedRetry)
 {
   // Include frame's top margin
   aMargin->Include(aRS.mComputedMargin.top);
@@ -106,7 +105,6 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
 #endif
 
   PRBool dirtiedLine = PR_FALSE;
-  PRBool setBlockIsEmpty = PR_FALSE;
 
   // Calculate the frame's generational top-margin from its child
   // blocks. Note that if the frame has a non-zero top-border or
@@ -153,10 +151,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             dirtiedLine = PR_TRUE;
           }
           
-          PRBool isEmpty;
-          if (line->IsInline()) {
-            isEmpty = line->IsEmpty();
-          } else {
+          PRBool isEmpty = line->IsEmpty();
+          if (line->IsBlock()) {
             nsIFrame* kid = line->mFirstChild;
             if (kid == aClearanceFrame) {
               line->SetHasClearance();
@@ -198,7 +194,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
               if (kid->GetStyleDisplay()->mBreakType != NS_STYLE_CLEAR_NONE) {
                 *aMayNeedRetry = PR_TRUE;
               }
-              if (ComputeCollapsedTopMargin(innerReflowState, aMargin, aClearanceFrame, aMayNeedRetry, &isEmpty)) {
+              if (ComputeCollapsedTopMargin(innerReflowState, aMargin, aClearanceFrame, aMayNeedRetry)) {
                 line->MarkDirty();
                 dirtiedLine = PR_TRUE;
               }
@@ -209,29 +205,13 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
               delete NS_CONST_CAST(nsHTMLReflowState*, outerReflowState);
             }
           }
-          if (!isEmpty) {
-            if (!setBlockIsEmpty && aBlockIsEmpty) {
-              setBlockIsEmpty = PR_TRUE;
-              *aBlockIsEmpty = PR_FALSE;
-            }
+          if (!isEmpty)
             goto done;
-          }
-        }
-        if (!setBlockIsEmpty && aBlockIsEmpty) {
-          // The first time we reach here is when this is the first block
-          // and we have processed all its normal lines.
-          setBlockIsEmpty = PR_TRUE;
-          // All lines are empty, or we wouldn't be here!
-          *aBlockIsEmpty = aRS.frame->IsSelfEmpty();
         }
       }
     }
   done:
     ;
-  }
-
-  if (!setBlockIsEmpty && aBlockIsEmpty) {
-    *aBlockIsEmpty = aRS.frame->IsEmpty();
   }
   
 #ifdef NOISY_VERTICAL_MARGINS
