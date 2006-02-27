@@ -142,30 +142,26 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  // Check for security
+  // Check for security.  The fun part is trying to figure out what principals
+  // to use.  The way I figure it, if we're doing a LoadFrame() accidentally
+  // (eg someone created a frame/iframe node, we're being parsed, XUL iframes
+  // are being reframed, etc.) then we definitely want to use the node
+  // principal of mOwnerContent for security checks.  If, on the other hand,
+  // someone's setting the src on our owner content, or created it via script,
+  // or whatever, then they can clearly access it... and we should still use
+  // the principal of mOwnerContent.  I don't think that leads to privilege
+  // escalation, and it's reasonably guaranteed to not lead to XSS issues
+  // (since caller can already access mOwnerContent in this case.  So just use
+  // the principal of mOwnerContent no matter what.  If script wants to run
+  // things with its own permissions, which differ from those of mOwnerContent
+  // (which means the script is privileged in some way) it should set
+  // window.location instead.
   nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
-  // Get referring URL
-  nsCOMPtr<nsIURI> referrer;
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If we were called from script, get the referring URL from the script
-
-  if (principal) {
-    // Pass the script principal to the docshell
-
-    loadInfo->SetOwner(principal);
-  } else {
-    // We're not being called from script, tell the docshell
-    // to inherit an owner from the current document.
-
-    loadInfo->SetInheritOwner(PR_TRUE);
-    principal = mOwnerContent->GetNodePrincipal();
-    NS_ASSERTION(principal == doc->GetNodePrincipal(),
-                 "Principal mismatch.  Should not happen");
-  }
+  // Get our principal
+  nsIPrincipal* principal = mOwnerContent->GetNodePrincipal();
+  NS_ASSERTION(principal == doc->GetNodePrincipal(),
+               "Principal mismatch.  Should not happen");
 
   if (!principal) {
     return NS_ERROR_FAILURE;
@@ -178,15 +174,36 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
     return rv; // We're not
   }
 
-  rv = principal->GetURI(getter_AddRefs(referrer));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  loadInfo->SetReferrer(referrer);
-
   // Bail out if this is an infinite recursion scenario
   rv = CheckForRecursiveLoad(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  // Is our principal the system principal?
+  nsCOMPtr<nsIPrincipal> sysPrin;
+  rv = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (principal == sysPrin) {
+    // We're a chrome node.  Belt and braces -- inherit the principal for this
+    // load instead of just forcing the system principal.  That way if we have
+    // something loaded already the principal used will be that of what we
+    // already have loaded.
+    loadInfo->SetInheritOwner(PR_TRUE);
+
+    // Also, in this case we don't set a referrer, just in case.
+  } else {
+    // We'll use our principal, not that of the document loaded inside us.
+    // This is very important; needed to prevent XSS attacks on documents
+    // loaded in subframes!
+    loadInfo->SetOwner(principal);
+
+    nsCOMPtr<nsIURI> referrer;
+    rv = principal->GetURI(getter_AddRefs(referrer));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    loadInfo->SetReferrer(referrer);
+  }
+
   // Kick off the load...
   rv = mDocShell->LoadURI(aURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE,
                           PR_FALSE);
