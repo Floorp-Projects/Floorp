@@ -84,15 +84,8 @@ REQUIRES	+= ctl
 endif
 
 EXPORTS		= \
-		nsAbsoluteContainingBlock.h \
-		nsAreaFrame.h \
-		nsBlockFrame.h \
-		nsContainerFrame.h \
-		nsFrame.h \
 		nsFrameList.h \
-		nsHTMLContainerFrame.h \
 		nsHTMLParts.h \
-		nsHTMLReflowCommand.h \
 		nsHTMLReflowMetrics.h \
 		nsHTMLReflowState.h \
 		nsIAnonymousContentCreator.h \
@@ -108,11 +101,7 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIScrollableViewProvider.h \
 		nsIStatefulFrame.h \
-		nsLineBox.h \
-		nsPlaceholderFrame.h \
-		nsReflowPath.h \
 		nsReflowType.h \
-		nsSplittableFrame.h \
 		$(NULL)
 
 ifdef IBMBIDI

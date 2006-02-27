@@ -60,7 +60,7 @@
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLOptionsCollection;
 class nsIDOMHTMLOptionElement;
-class nsComboboxControlFrame;
+class nsIComboboxControlFrame;
 class nsIViewManager;
 class nsPresContext;
 class nsVoidArray;
@@ -256,7 +256,7 @@ protected:
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;
 
-  nsComboboxControlFrame *mComboboxFrame;
+  nsIComboboxControlFrame *mComboboxFrame;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRInt32      mNumDisplayRows;

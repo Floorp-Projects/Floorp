@@ -78,7 +78,7 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
-#include "nsComboboxControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIFrame.h"
 
@@ -2035,8 +2035,8 @@ void nsHTMLSelectElement::DispatchContentReset() {
     // Only dispatch content reset notification if this is a list control
     // frame or combo box control frame.
     if (IsCombobox()) {
-      nsComboboxControlFrame* comboFrame;
-      formControlFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboFrame);
+      nsIComboboxControlFrame* comboFrame = nsnull;
+      CallQueryInterface(formControlFrame, &comboFrame);
       if (comboFrame) {
         comboFrame->OnContentReset();
       }

@@ -41,7 +41,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIFrame.h"
-#include "nsComboboxControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
@@ -632,8 +632,8 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::DoAction(PRUint8 index)
       return NS_ERROR_FAILURE;
 
     nsIFrame *selectFrame = presShell->GetPrimaryFrameFor(selectContent);
-    nsComboboxControlFrame *comboBoxFrame;
-    selectFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboBoxFrame);
+    nsIComboboxControlFrame *comboBoxFrame = nsnull;
+    CallQueryInterface(selectFrame, &comboBoxFrame);
     if (comboBoxFrame) {
       nsIFrame *listFrame = comboBoxFrame->GetDropDown();
       if (comboBoxFrame->IsDroppedDown() && listFrame) {
@@ -849,8 +849,8 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetState(PRUint32 *_retval)
   nsAccessible::GetState(_retval);
 
   nsIFrame *frame = GetBoundsFrame();
-  nsComboboxControlFrame *comboFrame;
-  frame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboFrame);
+  nsIComboboxControlFrame *comboFrame = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
 
   if (comboFrame && comboFrame->IsDroppedDown())
     *_retval |= STATE_EXPANDED;
@@ -908,10 +908,7 @@ nsHTMLComboboxAccessible::GetFocusedOptionAccessible()
   if (!mWeakShell) {
     return nsnull;  // Shut down
   }
-  
-  nsIFrame *frame = GetFrame();
-  nsComboboxControlFrame *cbxFrame;
-  frame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&cbxFrame);
+  nsCOMPtr<nsIComboboxControlFrame> cbxFrame = do_QueryInterface(GetFrame());
   if (!cbxFrame) {
     return nsnull;
   }
@@ -1127,8 +1124,8 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
 NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetActionName(PRUint8 aIndex, nsAString& _retval)
 {
   nsIFrame *boundsFrame = GetBoundsFrame();
-  nsComboboxControlFrame* comboFrame;
-  boundsFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboFrame);
+  nsIComboboxControlFrame* comboFrame;
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
 
@@ -1199,8 +1196,8 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetState(PRUint32 *_retval)
   nsAccessible::GetState(_retval);
 
   nsIFrame *boundsFrame = GetBoundsFrame();
-  nsComboboxControlFrame* comboFrame;
-  boundsFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboFrame);
+  nsIComboboxControlFrame* comboFrame;
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
 
@@ -1266,8 +1263,8 @@ NS_IMETHODIMP nsHTMLComboboxListAccessible::GetState(PRUint32 *aState)
   nsAccessible::GetState(aState);
 
   nsIFrame *boundsFrame = GetBoundsFrame();
-  nsComboboxControlFrame* comboFrame;
-  boundsFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboFrame);
+  nsIComboboxControlFrame* comboFrame = nsnull;
+  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (!comboFrame)
     return NS_ERROR_FAILURE;
 
