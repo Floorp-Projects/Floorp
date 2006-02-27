@@ -2404,6 +2404,7 @@ jsdService::SetInitAtStartup (PRBool state)
 NS_IMETHODIMP
 jsdService::GetFlags (PRUint32 *_rval)
 {
+    ASSERT_VALID_CONTEXT;
     *_rval = JSD_GetContextFlags (mCx);
     return NS_OK;
 }
@@ -2411,6 +2412,7 @@ jsdService::GetFlags (PRUint32 *_rval)
 NS_IMETHODIMP
 jsdService::SetFlags (PRUint32 flags)
 {
+    ASSERT_VALID_CONTEXT;
     JSD_SetContextFlags (mCx, flags);
     return NS_OK;
 }
