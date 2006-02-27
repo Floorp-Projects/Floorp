@@ -323,20 +323,11 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
   *aRangeParent = nsnull;
 
   if (targetFrame) {
-    nsCOMPtr<nsIContent> parent;
-    PRInt32 offset, endOffset;
-    PRBool beginOfContent;
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent,
-                                                                  targetFrame);
-    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
-                                              pt,
-                                              getter_AddRefs(parent),
-                                              offset,
-                                              endOffset,
-                                              beginOfContent))) {
-      if (parent) {
-        return CallQueryInterface(parent, aRangeParent);
-      }
+                                                              targetFrame);
+    nsCOMPtr<nsIContent> parent = targetFrame->GetContentOffsetsFromPoint(pt).content;
+    if (parent) {
+      return CallQueryInterface(parent, aRangeParent);
     }
   }
 
@@ -354,20 +345,10 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
   }
 
   if (targetFrame) {
-    nsIContent* parent = nsnull;
-    PRInt32 endOffset;
-    PRBool beginOfContent;
     nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent,
-                                                                  targetFrame);
-    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
-                                              pt,
-                                              &parent,
-                                              *aRangeOffset,
-                                              endOffset,
-                                              beginOfContent))) {
-      NS_IF_RELEASE(parent);
-      return NS_OK;
-    }
+                                                              targetFrame);
+    *aRangeOffset = targetFrame->GetContentOffsetsFromPoint(pt).offset;
+    return NS_OK;
   }
   *aRangeOffset = 0;
   return NS_OK;

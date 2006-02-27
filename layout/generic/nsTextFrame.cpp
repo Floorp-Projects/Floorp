@@ -322,6 +322,8 @@ public:
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
   
+  virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
+  
   NS_IMETHOD GetPositionSlowly(nsIRenderingContext * aRendContext,
                                const nsPoint&        aPoint,
                                nsIContent **         aNewContent,
@@ -4021,6 +4023,16 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
   if (paintBuf != paintBufMem) {
     delete [] paintBuf;
   }
+}
+
+// XXX I don't really want to rewrite GetPositionHelper, so I'm doing this
+// hack for now
+nsIFrame::ContentOffsets nsTextFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint) {
+  ContentOffsets offsets;
+  GetPositionHelper(aPoint, getter_AddRefs(offsets.content), offsets.offset,
+                    offsets.secondaryOffset);
+  offsets.associateWithNext = (mContentOffset == offsets.offset);
+  return offsets;
 }
 
 //---------------------------------------------------------------------------

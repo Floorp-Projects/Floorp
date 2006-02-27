@@ -818,20 +818,37 @@ public:
                                  nsEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
+  // This structure keeps track of the content node and offsets associated with
+  // a point; there is a primary and a secondary offset associated with any
+  // point.  The primary and secondary offsets differ when the point is over a
+  // non-text object.  The primary offset is the expected position of the
+  // cursor calculated from a point; the secondary offset, when it is different,
+  // indicates that the point is in the boundaries of some selectable object.
+  // Note that the primary offset can be after the secondary offset; for places
+  // that need the beginning and end of the object, the StartOffset and 
+  // EndOffset helpers can be used.
+  struct ContentOffsets {
+    nsCOMPtr<nsIContent> content;
+    PRBool IsNull() { return !content; }
+    PRInt32 offset;
+    PRInt32 secondaryOffset;
+    // Helpers for places that need the ends of the offsets and expect them in
+    // numerical order, as opposed to wanting the primary and secondary offsets
+    PRInt32 StartOffset() { return PR_MIN(offset, secondaryOffset); }
+    PRInt32 EndOffset() { return PR_MAX(offset, secondaryOffset; }
+    // This boolean indicates whether the associated content is before or after
+    // the offset; the most visible use is to allow the caret to know which line
+    // to display on.
+    PRBool associateWithNext;
+  };
   /**
-  * Find the content offset from a point.  aPoint is in frame coordinates.
+   * This function calculates the content offsets for selection relative to
+   * a point.  Note that this should generally only be callled on the event
+   * frame associated with an event because this function does not account
+   * for frame lists other than the primary one.
+   * @param aPoint point relative to this frame
    */
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                           const nsPoint&  aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent) = 0;
-  // Helper for GetContentAndOffsetsFromPoint
-  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
-                               nsIContent **   aNewContent,
-                               PRInt32&        aContentOffset,
-                               PRInt32&        aContentOffsetEnd) = 0;
+  ContentOffsets GetContentOffsetsFromPoint(nsPoint aPoint);
 
   /**
    * This structure holds information about a cursor. mContainer represents a

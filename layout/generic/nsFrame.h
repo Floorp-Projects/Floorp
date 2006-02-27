@@ -296,12 +296,6 @@ public:
                            nsGUIEvent *    aEvent,
                            nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
-                                           const nsPoint& aPoint,
-                                           nsIContent **   aNewContent,
-                                           PRInt32&        aContentOffset,
-                                           PRInt32&        aContentOffsetEnd,
-                                           PRBool&         aBeginFrameContent);
   NS_IMETHOD PeekBackwardAndForward(nsSelectionAmount aAmountBack,
                                     nsSelectionAmount aAmountForward,
                                     PRInt32 aStartPos,
@@ -309,11 +303,10 @@ public:
                                     PRBool aJumpLines);
 
 
-  // Helper for GetContentAndOffsetsFromPoint
-  NS_IMETHOD GetPositionHelper(const nsPoint&  aPoint,
-                         nsIContent **   aNewContent,
-                         PRInt32&        aContentOffset,
-                         PRInt32&        aContentOffsetEnd);
+  // Helper for GetContentAndOffsetsFromPoint; calculation of content offsets
+  // in this function assumes there is no child frame that can be targeted.
+  virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint);
+
   // Box layout methods
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
