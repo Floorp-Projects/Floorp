@@ -586,8 +586,6 @@ function updateAlarm()
         document.getElementById("alarm-details").removeAttribute("hidden");
         break;
     default:
-        document.getElementById("alarm-details").setAttribute("hidden", true);
-
         var customItem = document.getElementById("alarm-custom-menuitem");
         if (prevAlarmItem == customItem) {
             customItem.setAttribute("length", getElementValue("alarm-length-field"));
@@ -596,6 +594,7 @@ function updateAlarm()
         }
         setAlarmFields(alarmItem);
 
+        document.getElementById("alarm-details").setAttribute("hidden", true);
         break;
     }
 
