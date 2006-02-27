@@ -37,6 +37,7 @@
 
 #include "nsIPref.h"
 #include "nsServiceManagerUtils.h"
+#include "nsReadableUtils.h"
 
 #include "gfxFont.h"
 
@@ -69,7 +70,7 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyl
             rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
             if (NS_SUCCEEDED(rv) && value.get()) {
                 mFamilies.AppendLiteral(",");
-                mFamilies.AppendWithConversion(value);
+                AppendUTF8toUTF16(value, mFamilies);
             }
         }
     }
@@ -142,7 +143,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                 nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
                 if (NS_SUCCEEDED(rv)) {
                     genericFamily.Assign(family);
-                    family.AssignWithConversion(value);
+                    CopyUTF8toUTF16(value, family);
                 }
             } else {
                 generic = PR_FALSE;
