@@ -56,7 +56,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
-#include "nsComboboxControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
@@ -1777,8 +1777,8 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         passToParent = !canScroll;
 
       // Comboboxes need special care.
-      nsComboboxControlFrame* comboBox;
-      scrollFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboBox);
+      nsIComboboxControlFrame* comboBox = nsnull;
+      CallQueryInterface(scrollFrame, &comboBox);
       if (comboBox) {
         if (comboBox->IsDroppedDown()) {
           // Don't propagate to parent when drop down menu is active.

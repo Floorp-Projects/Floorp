@@ -72,7 +72,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLLegendElement.h"
-#include "nsComboboxControlFrame.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRadioControlFrame.h"
@@ -5254,10 +5254,10 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       ///////////////////////////////////////////////////////////////////
       // Combobox - Old Native Implementation
       ///////////////////////////////////////////////////////////////////
-      nsComboboxControlFrame* comboBox;
-      comboboxFrame->QueryInterface(nsComboboxControlFrame::GetCID(), (void**)&comboBox);
+      nsIComboboxControlFrame* comboBox = nsnull;
+      CallQueryInterface(comboboxFrame, &comboBox);
       NS_ASSERTION(comboBox, "NS_NewComboboxControlFrame returned frame that "
-                             "doesn't implement nsComboboxControlFrame");
+                             "doesn't implement nsIComboboxControlFrame");
 
         // Create a listbox
       nsIFrame* listFrame = NS_NewListControlFrame(mPresShell);
