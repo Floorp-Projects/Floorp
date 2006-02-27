@@ -571,7 +571,14 @@
               // refresh process according to the spec...whether we really need
               // to or not.
               if (copySelectedOrDeselected.value == false) {
-                this.accessors.setValue(contentEnvelope.textContent);
+                // well, no copyItems are selected, so need to find the value
+                // to set.  Will be in the first child.
+                var firstChild = contentEnvelope.firstChild;
+                var value = null;
+                if (firstChild) {
+                  value = firstChild.nodeValue;
+                }
+                this.accessors.setValue(value);
               } else {
                 this.accessors.setContent(contentEnvelope, true);
               }
