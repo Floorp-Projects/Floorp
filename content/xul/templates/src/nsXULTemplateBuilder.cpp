@@ -349,18 +349,13 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
         doc->AddObserver(this);
     }
 
-    // create the query processor. The type attribute on the template element
+    // create the query processor. The querytype attribute on the root element
     // may be used to create one of a specific type.
 
     // XXX should non-chrome be restricted to specific names?
 
-    nsCOMPtr<nsIContent> tmpl;
-    GetTemplateRoot(getter_AddRefs(tmpl));
-    if (! tmpl)
-        return rv;
-
     nsAutoString type;
-    tmpl->GetAttr(kNameSpaceID_None, nsXULAtoms::type, type);
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::querytype, type);
 
     if (type.IsEmpty() || type.EqualsLiteral("rdf")) {
         mQueryProcessor = new nsXULTemplateQueryProcessorRDF();
@@ -449,6 +444,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
 
     nsTemplateRule* matchedrule = nsnull;
     nsTemplateMatch* acceptedmatch = nsnull, * removedmatch = nsnull;
+    nsTemplateMatch* replacedmatch = nsnull;
 
     nsCOMPtr<nsIRDFResource> oldId, newId;
     if (aNewResult) {
@@ -624,11 +620,12 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                     acceptedmatch = newmatch;
 
                     // clear the matched state of the later results
-                    newmatch = newmatch->mNext;
-                    while (newmatch) {
-                        if (newmatch->mRule)
-                            newmatch->mRule = nsnull;
-                        newmatch = newmatch->mNext;
+                    // clear the matched state of the later results
+                    nsTemplateMatch* clearmatch = newmatch->mNext;
+                    while (clearmatch) {
+                        if (clearmatch->mRule)
+                            clearmatch->mRule = nsnull;
+                        clearmatch = clearmatch->mNext;
                     }
                 }
                 else if (oldmatch && oldmatch->mRule) {
@@ -671,7 +668,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                 }
 
                 if (oldmatch)
-                    removedmatch = oldmatch;
+                    replacedmatch = oldmatch;
             }
 
             // hook up the match last in case an error occurs
@@ -702,6 +699,14 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }
+    }
+
+    if (replacedmatch) {
+        // delete a replaced match
+        rv = ReplaceMatch(replacedmatch->mResult, nsnull, nsnull, insertionPoint);
+
+        replacedmatch->mResult->HasBeenRemoved();
+        nsTemplateMatch::Destroy(mPool, replacedmatch);
     }
 
     // remove the content generated for the old result and add the content for
