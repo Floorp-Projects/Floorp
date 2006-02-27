@@ -151,7 +151,7 @@
                    value="&newevent.readonly.cal.warning;"
                    class="warning-text-class" hidden="true"/>
             <spacer flex="1"/>
-            <hbox id="categories-box">
+            <hbox id="categories-box" align="center">
                 <label value="&newtodo.categories.label;" class="label"/>
                 <menulist id="item-categories"/>
             </hbox>
