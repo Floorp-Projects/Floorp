@@ -38,6 +38,7 @@
 #ifndef nsBlockFrame_h___
 #define nsBlockFrame_h___
 
+#include "nsPresContext.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -254,13 +255,15 @@ public:
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
-
+  
+#ifdef _IMPL_NS_LAYOUT
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
       ProbePseudoStyleFor(mContent,
                           nsCSSPseudoElements::firstLetter, mStyleContext);
   }
+#endif
 
   /*
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 
