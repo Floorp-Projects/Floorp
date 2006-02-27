@@ -39,6 +39,8 @@
 
 #include "nsContentUtils.h"
 
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsPresContext.h"
@@ -1869,6 +1871,16 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     if (!isTrusted) {
         // not permitted to use DrawWindow
         return NS_ERROR_DOM_SECURITY_ERR;
+    }
+    
+    // Flush layout updates
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+        if (doc) {
+            doc->FlushPendingNotifications(Flush_Layout);
+        }
     }
 
     nsCOMPtr<nsPresContext> presContext;
