@@ -933,10 +933,12 @@ CalculateBitmapSize(CompilerState *state, RENode *target, const jschar *src,
                 localMax = 0xB;
                 break;
             case 'c':
-                if (src + 1 < end && RE_IS_LETTER(src[1]))
+                if (src < end && RE_IS_LETTER(*src)) {
                     localMax = (jschar) (*src++ & 0x1F);
-                else
+                } else {
+                    --src;
                     localMax = '\\';
+                }
                 break;
             case 'x':
                 nDigits = 2;
@@ -2289,7 +2291,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
                 thisCh = 0xB;
                 break;
             case 'c':
-                if (src + 1 < end && JS_ISWORD(src[1])) {
+                if (src < end && JS_ISWORD(*src)) {
                     thisCh = (jschar)(*src++ & 0x1F);
                 } else {
                     --src;
