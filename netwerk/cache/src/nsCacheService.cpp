@@ -409,22 +409,26 @@ nsCacheProfilePrefObserver::MemoryCacheEnabled()
  * If browser.cache.memory.capacity is zero, the memory cache is disabled.
  * 
  * If browser.cache.memory.capacity is negative or not present, we use a
- * formula that grows less than linearly with the amount of system memory.
+ * formula that grows less than linearly with the amount of system memory, 
+ * with an upper limit on the cache size. No matter how much physical RAM is
+ * present, the default cache size would not exceed 32 MB. This maximum would
+ * apply only to systems with more than 4 GB of RAM (e.g. terminal servers)
  *
  *   RAM   Cache
  *   ---   -----
  *   32 Mb   2 Mb
  *   64 Mb   4 Mb
- *  128 Mb   8 Mb
- *  256 Mb  14 Mb
- *  512 Mb  22 Mb
- * 1024 Mb  32 Mb
- * 2048 Mb  44 Mb
- * 4096 Mb  58 Mb
+ *  128 Mb   6 Mb
+ *  256 Mb  10 Mb
+ *  512 Mb  14 Mb
+ * 1024 Mb  18 Mb
+ * 2048 Mb  24 Mb
+ * 4096 Mb  30 Mb
  *
  * The equation for this is (for cache size C and memory size K (kbytes)):
  *  x = log2(K) - 14
- *  C = x^2 - x + 2
+ *  C = x^2/3 + x + 2/3 + 0.1 (0.1 for rounding)
+ *  if (C > 32) C = 32
  */
 
 PRInt32
@@ -453,7 +457,9 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
 
     double x = log(kBytesD)/log(2.0) - 14;
     if (x > 0) {
-        capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
+        capacity = (PRInt32)(x * x / 3.0 + x + 2.0 / 3 + 0.1); // 0.1 for rounding
+        if (capacity > 32)
+            capacity = 32;
         capacity   *= 1024;
     } else {
         capacity    = 0;
