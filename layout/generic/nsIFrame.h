@@ -1402,7 +1402,11 @@ public:
    * should return true.
    */
   virtual PRBool IsEmpty() = 0;
-
+  /**
+   * Return the same as IsEmpty(). This may only be called after the frame
+   * has been reflowed and before any further style or content changes.
+   */
+  virtual PRBool CachedIsEmpty();
   /**
    * Determine whether the frame is logically empty, assuming that all
    * its children are empty.
