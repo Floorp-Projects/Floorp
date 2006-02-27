@@ -572,7 +572,7 @@ TRY_AGAIN_JUST_PLACE:
                 printf("error ScriptPlacing\n");
 
             if (!aDraw) {
-                length += NSToCoordRound((abs(abc.abcA) + abc.abcB + abs(abc.abcC)) * cairoToPixels);
+                length += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC) * cairoToPixels);
             } else {
                 PRInt32 *spacing = 0;
                 PRInt32 justTotal = 0;
@@ -678,7 +678,7 @@ TRY_AGAIN_JUST_PLACE:
 #endif
                 free(cglyphs);
 
-                aX += NSToCoordRound((abs(abc.abcA) + abc.abcB + abs(abc.abcC) + justTotal) * cairoToPixels);
+                aX += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC + justTotal) * cairoToPixels);
                 free(spacing);
             }
             free(offsets);
