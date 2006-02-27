@@ -5748,11 +5748,32 @@ PresShell::HandleEvent(nsIView         *aView,
   PRBool dispatchUsingCoordinates =
       !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_EVENT(aEvent) &&
          aEvent->message != NS_CONTEXTMENU_KEY && !NS_IS_FOCUS_EVENT(aEvent);
-  nsIFrame* targetFrame;
-  if (frame && dispatchUsingCoordinates) {
+
+  // if this event has no frame, we need to retarget it at a parent
+  // view that has a frame.
+  if (!frame &&
+      (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
+       NS_IS_IME_EVENT(aEvent))) {
+    nsIView* targetView = aView;
+    while (targetView && !targetView->GetClientData()) {
+      targetView = targetView->GetParent();
+    }
+    
+    if (targetView) {
+      aView = targetView;
+      frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
+    }
+  }
+
+  if (dispatchUsingCoordinates) {
+    NS_ASSERTION(frame, "Nothing to handle this event!");
+    if (!frame)
+      return NS_OK;
+      
     nsPoint eventPoint
         = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
-    targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+    nsIFrame* targetFrame =
+      targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
     if (targetFrame) {
       PresShell* shell =
           NS_STATIC_CAST(PresShell*, targetFrame->GetPresContext()->PresShell());
@@ -5775,20 +5796,6 @@ PresShell::HandleEvent(nsIView         *aView,
     return HandlePositionedEvent(aView, targetFrame, aEvent, aEventStatus);
   }
   
-  // if this event has no frame, we need to retarget it at a parent
-  // view that has a frame.
-  if (!frame && (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent))) {
-    nsIView* targetView = aView;
-    while (targetView && !targetView->GetClientData()) {
-      targetView = targetView->GetParent();
-    }
-    
-    if (targetView) {
-      aView = targetView;
-      frame = NS_STATIC_CAST(nsIFrame*, aView->GetClientData());
-    }
-  }
-
   nsresult rv = NS_OK;
   
   if (frame) {
