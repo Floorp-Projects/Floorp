@@ -95,5 +95,6 @@ list_files() {
   find . -type f \
     ! -name "channel-prefs.js" \
     ! -name "update.manifest" \
-    | sed 's/\.\/\(.*\)/"\1"/'
+    | sed 's/\.\/\(.*\)/"\1"/' \
+    | sort
 }
