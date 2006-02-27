@@ -41,9 +41,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#include <stdio.h>
-#define CAIRO_XLIB_DRAWING_NOTE(m) fprintf(stderr, m)
-/* #define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0) */
+/*#include <stdio.h>
+#define CAIRO_XLIB_DRAWING_NOTE(m) fprintf(stderr, m) */
+#define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0)
 
 static cairo_surface_t *_get_current_target (cairo_t *cr)
 {
