@@ -49,6 +49,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= mime_services
 MOZILLA_INTERNAL_API = 1
+LOCAL_INCLUDES += -I$(srcdir)/../src
 
 PACKAGE_FILE = mime.pkg
 

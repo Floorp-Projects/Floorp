@@ -50,6 +50,7 @@ SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMimeEmitterModule
 MOZILLA_INTERNAL_API = 1
+LOCAL_INCLUDES += -I$(srcdir)/../src
 
 PACKAGE_FILE = mimeemitter.pkg
 

@@ -133,8 +133,6 @@ REQUIRES += macmorefiles \
 CPPSRCS += nsMsgAppleDoubleEncode.cpp \
 		nsMsgAppleEncode.cpp \
 		$(NULL)
-EXPORTS += nsMsgAppleDouble.h \
-		$(NULL)
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

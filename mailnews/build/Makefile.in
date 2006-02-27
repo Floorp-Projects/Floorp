@@ -157,6 +157,8 @@ LOCAL_INCLUDES = -I$(srcdir) \
                  -I$(srcdir)/../imap/src \
                  -I$(srcdir)/../compose/src \
                  -I$(srcdir)/../base/search/src \
+                 -I$(srcdir)/../mime/src \
+                 -I$(srcdir)/../mime/emitters/src \
                  -I$(srcdir)/../news/src \
                  -I$(srcdir)/../extensions/bayesian-spam-filter/src \
                  -I$(srcdir)/../extensions/mailviews/src \

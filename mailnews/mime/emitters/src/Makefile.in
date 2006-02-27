@@ -65,13 +65,6 @@ REQUIRES	= xpcom \
 
 EXPORTS		= \
 		nsMimeEmitterCID.h \
-		nsEmitterUtils.h \
-		nsMimeRebuffer.h \
-		nsMimeHtmlEmitter.h \
-		nsMimeXmlEmitter.h \
-		nsMimePlainEmitter.h \
-		nsMimeRawEmitter.h \
-		nsMimeBaseEmitter.h \
 		$(NULL)
 
 CPPSRCS		= \
