@@ -3545,6 +3545,14 @@ nsFrame::IsEmpty()
   return PR_FALSE;
 }
 
+PRBool
+nsIFrame::CachedIsEmpty()
+{
+  NS_PRECONDITION(!(GetStateBits() & NS_FRAME_IS_DIRTY),
+                  "Must only be called on reflowed lines");
+  return IsEmpty();
+}
+
 /* virtual */ PRBool
 nsFrame::IsSelfEmpty()
 {
