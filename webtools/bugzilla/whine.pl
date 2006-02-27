@@ -175,8 +175,8 @@ while (my ($schedule_id, $day, $time) = $sched_h->fetchrow_array) {
         else { # set it for the next applicable day
             $day = &get_next_date($day);
             $sth = $dbh->prepare("UPDATE whine_schedules " .
-                                 "SET run_next = CURRENT_DATE + " .
-                                 $dbh->sql_interval('?', 'DAY') . " + " .
+                                 "SET run_next = (CURRENT_DATE + " .
+                                 $dbh->sql_interval('?', 'DAY') . ") + " .
                                  $dbh->sql_interval('?', 'HOUR') .
                                  " WHERE id = ?");
             $sth->execute($day, $time, $schedule_id);
@@ -192,8 +192,8 @@ while (my ($schedule_id, $day, $time) = $sched_h->fetchrow_array) {
         my $target_time = ($time =~ /^\d+$/) ? $time : 0;
 
         $sth = $dbh->prepare("UPDATE whine_schedules " .
-                             "SET run_next = CURRENT_DATE + " .
-                             $dbh->sql_interval('?', 'DAY') . " + " .
+                             "SET run_next = (CURRENT_DATE + " .
+                             $dbh->sql_interval('?', 'DAY') . ") + " .
                              $dbh->sql_interval('?', 'HOUR') .
                              " WHERE id = ?");
         $sth->execute($target_date, $target_time, $schedule_id);
@@ -601,8 +601,8 @@ sub reset_timer {
         my $nextdate = &get_next_date($run_day);
 
         $sth = $dbh->prepare("UPDATE whine_schedules " .
-                             "SET run_next = CURRENT_DATE + " .
-                             $dbh->sql_interval('?', 'DAY') . " + " .
+                             "SET run_next = (CURRENT_DATE + " .
+                             $dbh->sql_interval('?', 'DAY') . ") + " .
                              $dbh->sql_interval('?', 'HOUR') .
                              " WHERE id = ?");
         $sth->execute($nextdate, $target_time, $schedule_id);
