@@ -225,6 +225,10 @@ pref("print.print_edge_left", 0); // 1/100 of an inch
 pref("print.print_edge_right", 0); // 1/100 of an inch
 pref("print.print_edge_bottom", 0); // 1/100 of an inch
 
+// Pref used by the spellchecker extension to control the 
+// maximum number of misspelled words that will be underlined
+// in a document.
+pref("extensions.spellcheck.inline.max-misspellings", 250);
 
 // Prefs used by libeditor. Prefs specific to seamonkey composer
 // belong in mozilla/editor/ui/composer.js
