@@ -3066,46 +3066,64 @@ function LoadIdentity(startup)
 
 function setDomainName()
 {
+  var defaultDomain = "";
   if (gCurrentIdentity.autocompleteToMyDomain)
   {
     var emailAddr = gCurrentIdentity.email;
     var start = emailAddr.lastIndexOf("@");
-    gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+    defaultDomain = emailAddr.slice(start + 1);
   }
+
+  // If autocompleteToMyDomain is false the defaultDomain is emptied
+  gAutocompleteSession.defaultDomain = defaultDomain;
 }
 
 function setupAutocomplete()
 {
   //Setup autocomplete session if we haven't done so already
-  if (!gAutocompleteSession) {
+  if (!gAutocompleteSession) 
+  {
     gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
-    if (gAutocompleteSession) {
+    if (gAutocompleteSession) 
+    {
       setDomainName();
+
+      var autoCompleteWidget = document.getElementById("addressCol2#1");
+      // When autocompleteToMyDomain is off there is no default entry with the domain
+      // appended so reduce the minimum results for a popup to 2 in this case.
+      if (!gCurrentIdentity.autocompleteToMyDomain)
+        autoCompleteWidget.minResultsForPopup = 2;
 
       // if the pref is set to turn on the comment column, honor it here.
       // this element then gets cloned for subsequent rows, so they should 
       // honor it as well
       //
-      try {
+      try 
+      {
           if (sPrefs.getBoolPref("mail.autoComplete.highlightNonMatches"))
-            document.getElementById('addressCol2#1').highlightNonMatches = true;
+          autoCompleteWidget.highlightNonMatches = true;
 
-          if (sPrefs.getIntPref("mail.autoComplete.commentColumn")) {
-            document.getElementById('addressCol2#1').showCommentColumn = true;
-          }
-      } catch (ex) {
+        if (sPrefs.getIntPref("mail.autoComplete.commentColumn"))
+          autoCompleteWidget.showCommentColumn = true;
+      } catch (ex) 
+      {
           // if we can't get this pref, then don't show the columns (which is
           // what the XUL defaults to)
       }
               
-    } else {
+    } else 
+    {
       gAutocompleteSession = 1;
     }
   }
-  if (!gSetupLdapAutocomplete) {
-      try {
+  
+  if (!gSetupLdapAutocomplete) 
+  {
+    try 
+    {
           setupLdapAutocompleteSession();
-      } catch (ex) {
+    } catch (ex) 
+    {
           // catch the exception and ignore it, so that if LDAP setup 
           // fails, the entire compose window doesn't end up horked
       }
