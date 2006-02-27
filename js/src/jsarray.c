@@ -426,8 +426,8 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         } else {
             MAKE_SHARP(he);
             nchars = js_strlen(chars);
-            chars = (jschar *)
-                realloc((ochars = chars), nchars * sizeof(jschar) + growth);
+            growth += nchars * sizeof(jschar);
+            chars = (jschar *)realloc((ochars = chars), growth);
             if (!chars) {
                 free(ochars);
                 goto done;
