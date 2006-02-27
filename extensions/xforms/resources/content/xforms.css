@@ -92,6 +92,16 @@ message[level="ephemeral"], hint {
   position: absolute !important;
 }
 
+action {
+  position: absolute;
+  z-index: 2147481647;
+  visibility: hidden;
+  top: 0px;
+  left: 0px;
+  width: 0px;
+  height: 0px;
+}
+
 alert {
   display: none;
 }

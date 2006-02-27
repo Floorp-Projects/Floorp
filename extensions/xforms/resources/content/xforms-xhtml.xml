@@ -166,7 +166,7 @@
               }
 
               var accesskey = this._labelControl.parentNode.getAttribute("accesskey");
-              if (accesskey.length == 1 && textnode) {
+              if (accesskey && accesskey.length == 1 && textnode) {
                 this.setAccesskeyOnNode(accesskey, textnode);
               }
             },

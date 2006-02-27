@@ -42,10 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMElement.h"
-#include "nsIXTFXMLVisualWrapper.h"
-
-#define ACTION_STYLE_HIDDEN \
-  "position:absolute;z-index:2147483647;visibility:hidden;"
+#include "nsIXTFBindableElementWrapper.h"
 
 #define DEFERRED_REBUILD     0x01
 #define DEFERRED_RECALCULATE 0x02
@@ -56,19 +53,19 @@ nsXFormsActionElement::nsXFormsActionElement() : mElement(nsnull)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsXFormsActionElement, nsXFormsXMLVisualStub)
-NS_IMPL_RELEASE_INHERITED(nsXFormsActionElement, nsXFormsXMLVisualStub)
+NS_IMPL_ADDREF_INHERITED(nsXFormsActionElement, nsXFormsBindableStub)
+NS_IMPL_RELEASE_INHERITED(nsXFormsActionElement, nsXFormsBindableStub)
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsActionElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionModuleElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
+NS_INTERFACE_MAP_END_INHERITING(nsXFormsBindableStub)
 
 NS_IMETHODIMP
-nsXFormsActionElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
+nsXFormsActionElement::OnCreated(nsIXTFBindableElementWrapper* aWrapper)
 {
-  nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
+  nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // It's ok to keep a weak pointer to mElement.  mElement will have an
@@ -78,37 +75,12 @@ nsXFormsActionElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   aWrapper->GetElementNode(getter_AddRefs(node));
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                               NS_LITERAL_STRING("div"),
-                               getter_AddRefs(mVisualElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (mVisualElement)
-    mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                 NS_LITERAL_STRING(ACTION_STYLE_HIDDEN));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsActionElement::GetVisualContent(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mVisualElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsActionElement::GetInsertionPoint(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mVisualElement);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsActionElement::OnDestroyed() {
   mParentAction = nsnull;
-  mVisualElement = nsnull;
   mElement = nsnull;
   return NS_OK;
 }
@@ -142,22 +114,23 @@ NS_IMETHODIMP
 nsXFormsActionElement::HandleAction(nsIDOMEvent* aEvent,
                                     nsIXFormsActionElement *aParentAction)
 {
-  if (!mElement)
+  if (!mElement) {
     return NS_OK;
+  }
 
   if (!mDeferredUpdates.IsInitialized()) {
-    if (!mDeferredUpdates.Init())
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
+    NS_ENSURE_TRUE(mDeferredUpdates.Init(), NS_ERROR_OUT_OF_MEMORY);
+  } else {
     mDeferredUpdates.Clear();
   }
 
   mParentAction = aParentAction;
   nsCOMPtr<nsIDOMNodeList> childNodes;
   mElement->GetChildNodes(getter_AddRefs(childNodes));
-  if (!childNodes)
+  if (!childNodes) {
     return NS_OK;
+  }
+
   PRUint32 count;
   childNodes->GetLength(&count);
   nsCOMPtr<nsIXFormsActionModuleElement> actionChild;
@@ -166,25 +139,30 @@ nsXFormsActionElement::HandleAction(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIDOMNode> child;
     childNodes->Item(i, getter_AddRefs(child));
     actionChild = do_QueryInterface(child);
-    if (actionChild)
+    if (actionChild) {
       actionChild->HandleAction(event, this);
+    }
   }
-  if (!aParentAction) //Otherwise parent will handle deferred updates
+  if (!aParentAction) { //Otherwise parent will handle deferred updates
     mDeferredUpdates.EnumerateRead(DoDeferredActions, nsnull);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsActionElement::SetRebuild(nsIDOMNode* aModel, PRBool aEnable)
 {
-  if (mParentAction)
+  if (mParentAction) {
     return mParentAction->SetRebuild(aModel, aEnable);
+  }
+
   PRUint32 deferred = 0;
   mDeferredUpdates.Get(aModel, &deferred);
-  if (aEnable)
+  if (aEnable) {
     deferred |= DEFERRED_REBUILD;
-  else
+  } else {
     deferred &= ~DEFERRED_REBUILD;
+  }
   mDeferredUpdates.Put(aModel, deferred);
   return NS_OK;
 }
@@ -192,14 +170,17 @@ nsXFormsActionElement::SetRebuild(nsIDOMNode* aModel, PRBool aEnable)
 NS_IMETHODIMP
 nsXFormsActionElement::SetRecalculate(nsIDOMNode* aModel, PRBool aEnable)
 {
-  if (mParentAction)
+  if (mParentAction) {
     return mParentAction->SetRecalculate(aModel, aEnable);
+  }
+
   PRUint32 deferred = 0;
   mDeferredUpdates.Get(aModel, &deferred);
-  if (aEnable)
+  if (aEnable) {
     deferred |= DEFERRED_RECALCULATE;
-  else
+  } else {
     deferred &= ~DEFERRED_RECALCULATE;
+  }
   mDeferredUpdates.Put(aModel, deferred);
   return NS_OK;
 }
@@ -207,14 +188,17 @@ nsXFormsActionElement::SetRecalculate(nsIDOMNode* aModel, PRBool aEnable)
 NS_IMETHODIMP
 nsXFormsActionElement::SetRevalidate(nsIDOMNode* aModel, PRBool aEnable)
 {
-  if (mParentAction)
+  if (mParentAction) {
     return mParentAction->SetRevalidate(aModel, aEnable);
+  }
+
   PRUint32 deferred = 0;
   mDeferredUpdates.Get(aModel, &deferred);
-  if (aEnable)
+  if (aEnable) {
     deferred |= DEFERRED_REVALIDATE;
-  else
+  } else {
     deferred &= ~DEFERRED_REVALIDATE;
+  }
   mDeferredUpdates.Put(aModel, deferred);
   return NS_OK;
 }
@@ -222,14 +206,17 @@ nsXFormsActionElement::SetRevalidate(nsIDOMNode* aModel, PRBool aEnable)
 NS_IMETHODIMP
 nsXFormsActionElement::SetRefresh(nsIDOMNode* aModel, PRBool aEnable)
 {
-  if (mParentAction)
+  if (mParentAction) {
     return mParentAction->SetRefresh(aModel, aEnable);
+  }
+
   PRUint32 deferred = 0;
   mDeferredUpdates.Get(aModel, &deferred);
-  if (aEnable)
+  if (aEnable) {
     deferred |= DEFERRED_REFRESH;
-  else
+  } else {
     deferred &= ~DEFERRED_REFRESH;
+  }
   mDeferredUpdates.Put(aModel, deferred);
   return NS_OK;
 }
@@ -238,8 +225,9 @@ NS_HIDDEN_(nsresult)
 NS_NewXFormsActionElement(nsIXTFElement **aResult)
 {
   *aResult = new nsXFormsActionElement();
-  if (!*aResult)
+  if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   NS_ADDREF(*aResult);
   return NS_OK;
