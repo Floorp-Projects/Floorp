@@ -1326,6 +1326,13 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
             }
         }
 
+        if (existingmatch) {
+            // remove the generated content for the existing match
+            rv = ReplaceMatch(existingmatch->mResult, nsnull, nsnull, aElement);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+
         if (generateContent) {
             // find the rule that matches. If none match, the content does not
             // need to be generated
