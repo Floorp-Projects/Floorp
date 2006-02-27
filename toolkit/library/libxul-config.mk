@@ -182,27 +182,26 @@ DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
 endif
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gkgfxwin gkwidget
-endif
-ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gfx_beos widget_beos
-endif
-ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gfx_os2 wdgtos2
-endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-COMPONENT_LIBS += gfx_mac widget_mac
-endif
-ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += widget_qt
-endif
 
 ifdef MOZ_ENABLE_CAIRO_GFX
-DEFINES += -DMOZ_ENABLE_CAIRO_GFX
-COMPONENT_LIBS += gkgfxcairo
-else
-  ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
+COMPONENT_LIBS += gkgfxthebes
+else # Platform-specific GFX layer
+  ifeq (windows,$(MOZ_GFX_TOOLKIT))
+  COMPONENT_LIBS += gkgfxwin
+  endif
+  ifeq (beos,$(MOZ_GFX_TOOLKIT))
+  COMPONENT_LIBS += gfx_beos
+  endif
+  ifeq (os2,$(MOZ_GFX_TOOLKIT))
+  COMPONENT_LIBS += gfx_os2
+  endif
+  ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
+  COMPONENT_LIBS += gfx_mac
+  endif
+  ifeq (qt,$(MOZ_GFX_TOOLKIT))
+  COMPONENT_LIBS += widget_qt
+  endif
+  ifneq (,$(filter gtk gtk2,$(MOZ_GFX_TOOLKIT)))
   COMPONENT_LIBS += gfx_gtk
   endif
   ifdef MOZ_ENABLE_QT
@@ -214,6 +213,22 @@ else
   ifdef MOZ_ENABLE_PHOTON
   COMPONENT_LIBS += gfx_photon
   endif
+endif
+
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += gkwidget
+endif
+ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += widget_beos
+endif
+ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += wdgtos2
+endif
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+COMPONENT_LIBS += widget_mac
+endif
+ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += widget_qt
 endif
 
 ifdef MOZ_ENABLE_XLIB
