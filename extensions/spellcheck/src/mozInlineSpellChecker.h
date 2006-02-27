@@ -69,6 +69,9 @@ private:
   nsCOMPtr<nsIDOMTreeWalker> mTreeWalker;
   nsCOMPtr<mozISpellI18NUtil> mConverter;
 
+  PRInt32 mNumWordsInSpellSelection;
+  PRInt32 mMaxNumWordsInSpellSelection;
+
   // we need to keep track of the current text position in the document
   // so we can spell check the old word when the user clicks around the document.
   nsCOMPtr<nsIDOMNode> mCurrentSelectionAnchorNode;
@@ -143,8 +146,7 @@ public:
   virtual ~mozInlineSpellChecker();
 
   // spell check the selected text specified by aSelection
-  nsresult SpellCheckSelection(nsISelection *aSelection,
-                               nsISelection *aSpellCheckSelection);
+  nsresult SpellCheckSelection(nsISelection *aSelection);
 
   // spell checks all of the words between two nodes
   nsresult SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
@@ -152,10 +154,11 @@ public:
                                   nsIDOMNode *aEndNode,
                                   PRInt32 aEndOffset,
                                   nsISelection *aSpellCheckSelection);
+  
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  nsresult CheckShouldSpellCheck(nsIDOMNode *aNode, PRBool * aCheckSpelling);
+  nsresult SkipSpellCheckForNode(nsIDOMNode *aNode, PRBool * aCheckSpelling);
 
   nsresult AdjustSpellHighlighting(nsIDOMNode *aNode,
                                    PRInt32 aOffset,
@@ -174,11 +177,15 @@ public:
   nsresult CleanupRangesInSelection(nsISelection *aSelection);
   nsresult RemoveCurrentWordFromSpellSelection(nsISelection *aSpellCheckSelection, nsIDOMRange * aWordRange);
 
+  // helper routines used to control how many ranges we allow into the spell check selection
+  nsresult RemoveRange(nsISelection *aSpellCheckSelection, nsIDOMRange * aRange);
+  nsresult AddRange(nsISelection *aSpellCheckSelection, nsIDOMRange * aRange);
+  PRBool   SpellCheckSelectionIsFull() { return mNumWordsInSpellSelection >= mMaxNumWordsInSpellSelection; }
+
   // DOM and editor event registration helper routines
   nsresult RegisterEventListeners();
   nsresult UnregisterEventListeners();
   nsresult HandleNavigationEvent(nsIDOMEvent * aEvent, PRBool aForceWordSpellCheck, PRInt32 aNewPositionOffset = 0);
-
 
   // helper routine which expands a point in a text node out to the range for the containing word. 
   nsresult GenerateRangeForSurroundingWord(nsIDOMNode * aNode, PRInt32 aOffset, nsIDOMRange ** aWordRange);
