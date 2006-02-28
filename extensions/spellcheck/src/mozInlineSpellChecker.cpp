@@ -927,7 +927,7 @@ mozInlineSpellChecker::AdjustSpellHighlighting(nsIDOMNode *aNode,
   rv = GenerateRangeForSurroundingWord(currentNode, aOffset, getter_AddRefs(wordRange));
 
   // if we don't have a word range to examine, then bail out early.
-  if (!wordRange)
+  if (!wordRange || aOffset < 0)
     return NS_OK;
 
   // if the user just started typing inside of an existing word, remove that word from the spell check
