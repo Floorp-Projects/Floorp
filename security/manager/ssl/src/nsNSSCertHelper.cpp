@@ -427,7 +427,7 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
 #define SEPARATOR "\n"
 
 static nsresult
-ProcessRawBytes(SECItem *data, nsAString &text)
+ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data, nsAString &text)
 {
   // This function is used to display some DER bytes
   // that we have not added support for decoding.
@@ -435,6 +435,19 @@ ProcessRawBytes(SECItem *data, nsAString &text)
   // string that can later be displayed as a byte
   // string.  We place a new line after 24 bytes
   // to break up extermaly long sequence of bytes.
+
+  nsAutoString bytelen, bitlen;
+  bytelen.AppendInt(data->len);
+  bitlen.AppendInt(data->len*8);
+
+  const PRUnichar *params[2] = {bytelen.get(), bitlen.get()};
+  nsresult rv = nssComponent->PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
+                                                            params, 2, text);
+  if (NS_FAILED(rv))
+    return rv;
+
+  text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+
   PRUint32 i;
   char buffer[5];
   for (i=0; i<data->len; i++) {
@@ -570,7 +583,7 @@ ProcessBasicConstraints(SECItem  *extData,
   value.pathLenConstraint = -1;
   rv = CERT_DecodeBasicConstraintValue (&value, extData);
   if (rv != SECSuccess) {
-    ProcessRawBytes(extData, text);
+    ProcessRawBytes(nssComponent, extData, text);
     return NS_OK;
   }
   if (value.isCA)
@@ -809,7 +822,7 @@ ProcessGeneralName(PRArenaPool *arena,
 	  AppendUTF8toUTF16(nsCAutoString((char*)decoded.data, decoded.len),
 			    value);
 	} else {
-	  ProcessRawBytes(&current->name.OthName.name, value);
+	  ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
 	}
 	break;
     } else if (oidTag == SEC_OID(MS_NTDS_REPLICATION)) {
@@ -828,13 +841,13 @@ ProcessGeneralName(PRArenaPool *arena,
 		      d[8], d[9], d[10], d[11], d[12], d[13], d[14], d[15]);
 	  value.AssignASCII(buf);
 	} else {
-	  ProcessRawBytes(&current->name.OthName.name, value);
+	  ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
 	}
     } else {
       rv = GetDefaultOIDFormat(&current->name.OthName.oid, key, ' ');
       if (NS_FAILED(rv))
 	goto finish;
-      ProcessRawBytes(&current->name.OthName.name, value);
+      ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
     }
     break;
   }
@@ -848,7 +861,7 @@ ProcessGeneralName(PRArenaPool *arena,
     break;
   case certX400Address:
     nssComponent->GetPIPNSSBundleString("CertDumpX400Address", key);
-    ProcessRawBytes(&current->name.other, value);
+    ProcessRawBytes(nssComponent, &current->name.other, value);
     break;
   case certDirectoryName:
     nssComponent->GetPIPNSSBundleString("CertDumpDirectoryName", key);
@@ -859,7 +872,7 @@ ProcessGeneralName(PRArenaPool *arena,
     break;
   case certEDIPartyName:
     nssComponent->GetPIPNSSBundleString("CertDumpEDIPartyName", key);
-    ProcessRawBytes(&current->name.other, value);
+    ProcessRawBytes(nssComponent, &current->name.other, value);
     break;
   case certURI:
     nssComponent->GetPIPNSSBundleString("CertDumpURI", key);
@@ -882,7 +895,7 @@ ProcessGeneralName(PRArenaPool *arena,
         value.AssignASCII(buf);
       } else {
         /* invalid IP address */
-        ProcessRawBytes(&current->name.other, value);
+        ProcessRawBytes(nssComponent, &current->name.other, value);
       }
       break;
     }
@@ -967,7 +980,7 @@ ProcessSubjectKeyId(SECItem  *extData,
   nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
   text.Append(local);
   text.Append(NS_LITERAL_STRING(": "));
-  ProcessRawBytes(&decoded, text);
+  ProcessRawBytes(nssComponent, &decoded, text);
 
  finish:
   PORT_FreeArena(arena, PR_FALSE);
@@ -994,7 +1007,7 @@ ProcessAuthKeyId(SECItem  *extData,
     nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
     text.Append(local);
     text.Append(NS_LITERAL_STRING(": "));
-    ProcessRawBytes(&ret->keyID, text);
+    ProcessRawBytes(nssComponent, &ret->keyID, text);
     text.Append(NS_LITERAL_STRING(SEPARATOR));
   }
 
@@ -1011,7 +1024,7 @@ ProcessAuthKeyId(SECItem  *extData,
     nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", local);
     text.Append(local);
     text.Append(NS_LITERAL_STRING(": "));
-    ProcessRawBytes(&ret->authCertSerialNumber, text);
+    ProcessRawBytes(nssComponent, &ret->authCertSerialNumber, text);
   }
 
  finish:
@@ -1183,7 +1196,7 @@ ProcessCertificatePolicies(SECItem  *extData,
 	  GetDefaultOIDFormat(&policyQualifier->qualifierID, local, '.');
 	  text.Append(local);
 	  text.Append(NS_LITERAL_STRING(": "));
-	  ProcessRawBytes(&policyQualifier->qualifierValue, text);
+	  ProcessRawBytes(nssComponent, &policyQualifier->qualifierValue, text);
 	}
 	text.Append(NS_LITERAL_STRING(SEPARATOR));
       } /* while policyQualifiers */
@@ -1350,13 +1363,13 @@ ProcessMSCAVersion(SECItem  *extData,
     /* This extension used to be an Integer when this code
        was written, but apparently isn't anymore. Display
        the raw bytes instead. */
-    return ProcessRawBytes(extData, text);
+    return ProcessRawBytes(nssComponent, extData, text);
 
   rv = GetIntValue(&decoded, &version);
   nsMemory::Free(decoded.data);
   if (NS_FAILED(rv))
     /* Value out of range, display raw bytes */
-    return ProcessRawBytes(extData, text);
+    return ProcessRawBytes(nssComponent, extData, text);
 
   /* Apparently, the encoding is <minor><major>, with 16 bits each */
   PR_snprintf(buf, sizeof(buf), "%d.%d", version & 0xFFFF, version>>16);
@@ -1422,7 +1435,7 @@ ProcessExtensionData(SECOidTag oidTag, SECItem *extData,
       rv = ProcessMSCAVersion(extData, text, nssComponent);
       break;
     }
-    rv = ProcessRawBytes(extData, text);
+    rv = ProcessRawBytes(nssComponent, extData, text);
     break; 
   }
   return rv;
@@ -1490,7 +1503,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
     asn1Objects->AppendElement(printableItem, PR_FALSE);
     nssComponent->GetPIPNSSBundleString("CertDumpParams", text);
     printableItem->SetDisplayName(text); 
-    ProcessRawBytes(&algID->parameters,text);
+    ProcessRawBytes(nssComponent, &algID->parameters,text);
     printableItem->SetDisplayValue(text);
   }
   *retSequence = sequence;
@@ -1573,7 +1586,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
   data.data = spki->subjectPublicKey.data;
   data.len  = spki->subjectPublicKey.len / 8;
   text.Truncate();
-  ProcessRawBytes(&data, text);
+  ProcessRawBytes(nssComponent, &data, text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1765,7 +1778,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     data.data = mCert->issuerID.data;
     data.len  = mCert->issuerID.len / 8;
 
-    ProcessRawBytes(&data, text);
+    ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();
     if (printableItem == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1784,7 +1797,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     data.data = mCert->issuerID.data;
     data.len  = mCert->issuerID.len / 8;
 
-    ProcessRawBytes(&data, text);
+    ProcessRawBytes(nssComponent, &data, text);
     printableItem = new nsNSSASN1PrintableItem();
     if (printableItem == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1859,7 +1872,7 @@ nsNSSCertificate::CreateASN1Struct()
   temp.data = mCert->signatureWrap.signature.data;
   temp.len  = mCert->signatureWrap.signature.len / 8;
   text.Truncate();
-  ProcessRawBytes(&temp,text);
+  ProcessRawBytes(nssComponent, &temp,text);
   printableItem->SetDisplayValue(text);
   asn1Objects->AppendElement(printableItem, PR_FALSE);
   return NS_OK;
