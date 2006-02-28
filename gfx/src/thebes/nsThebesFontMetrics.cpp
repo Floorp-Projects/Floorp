@@ -274,17 +274,22 @@ nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
 
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
-                           nsThebesRenderingContext *aContext)
+                              nsThebesRenderingContext *aContext)
 {
-    PRInt32 aFontID = 0;
-    return GetWidth(PromiseFlatString(NS_ConvertUTF8toUTF16(aString, aLength)).get(),
-                    aLength, aWidth, &aFontID, aContext);
+    const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
+
+    textrun->SetRightToLeft(mIsRTL);
+
+    aWidth = ROUND_TO_TWIPS(textrun->MeasureString(aContext->Thebes()));
+
+    return NS_OK;
 }
 
 nsresult
 nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                           nscoord& aWidth, PRInt32 *aFontID,
-                           nsThebesRenderingContext *aContext)
+                              nscoord& aWidth, PRInt32 *aFontID,
+                              nsThebesRenderingContext *aContext)
 {
     const nsDependentSubstring& theString = nsDependentSubstring(aString, aString+aLength);
     nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
@@ -337,12 +342,20 @@ nsThebesFontMetrics::GetTextDimensions(const PRUnichar*    aString,
 // Draw a string using this font handle on the surface passed in.  
 nsresult
 nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
-                            nscoord aX, nscoord aY,
-                            const nscoord* aSpacing,
-                            nsThebesRenderingContext *aContext)
+                                nscoord aX, nscoord aY,
+                                const nscoord* aSpacing,
+                                nsThebesRenderingContext *aContext)
 {
-    return DrawString(PromiseFlatString(NS_ConvertUTF8toUTF16(aString, aLength)).get(),
-                      aLength, aX, aY, 0, aSpacing, aContext);
+    float app2dev = mDeviceContext->AppUnitsToDevUnits();
+
+    const nsDependentCSubstring& theString = nsDependentCSubstring(aString, aString+aLength);
+    nsRefPtr<gfxTextRun> textrun = mFontGroup->MakeTextRun(theString);
+
+    textrun->SetRightToLeft(mIsRTL);
+
+    textrun->DrawString(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+
+    return NS_OK;
 }
 
 // aCachedOffset will be updated with a new offset.
