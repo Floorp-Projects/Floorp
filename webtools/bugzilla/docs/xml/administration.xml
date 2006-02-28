@@ -291,6 +291,22 @@
         </listitem>
       </varlistentry>
 
+      <varlistentry>
+        <term>
+          sendmailnow
+        </term>
+        <listitem>
+          <para>
+            When Bugzilla is using Sendmail older than 8.12, turning this option
+            off will improve performance by not waiting for Sendmail to actually
+            send mail.  If Sendmail 8.12 or later is being used, there is 
+            nothing to gain by turning this off.  If another MTA is being used, 
+            such as Postfix, then this option *must* be turned on (even if you 
+            are using the fake sendmail executable that Postfix provides).
+          </para>
+        </listitem>
+      </varlistentry>
+
     </variablelist>
   </section>
 
