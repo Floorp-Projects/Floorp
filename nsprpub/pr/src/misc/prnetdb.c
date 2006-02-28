@@ -82,9 +82,9 @@ PRLock *_pr_dnsLock = NULL;
 
 /*
  * Some platforms have the reentrant getprotobyname_r() and
- * getprotobynumber_r().  However, they come in two flavors.
+ * getprotobynumber_r().  However, they come in three flavors.
  * Some return a pointer to struct protoent, others return
- * an int.
+ * an int, and glibc's flavor takes five arguments.
  */
 #if defined(XP_BEOS) && defined(BONE_VERSION)
 #include <arpa/inet.h>  /* pick up define for inet_addr */
@@ -108,7 +108,8 @@ PRLock *_pr_dnsLock = NULL;
 #define _PR_HAVE_GETPROTO_R_INT
 #endif
 
-#if (defined(__GLIBC__) && __GLIBC__ >= 2)
+/* BeOS has glibc but not the glibc-style getprotobyxxx_r functions. */
+#if (defined(__GLIBC__) && __GLIBC__ >= 2 && !defined(XP_BEOS))
 #define _PR_HAVE_GETPROTO_R
 #define _PR_HAVE_5_ARG_GETPROTO_R
 #endif
