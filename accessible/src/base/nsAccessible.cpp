@@ -214,7 +214,8 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
   }
   if (!content->IsContentOfType(nsIContent::eTEXT)) {
     nsAutoString description;
-    if (mRoleMapEntry) {
+    if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                         nsAccessibilityAtoms::role)) {
       GetTextFromRelationID(nsAccessibilityAtoms::describedby, description);
     }
     if (description.IsEmpty()) {
@@ -754,7 +755,8 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
     *aState |= STATE_UNAVAILABLE;
   }
   else if (content->IsContentOfType(nsIContent::eELEMENT)) {
-    if (!mRoleMapEntry) {
+    if (!content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                         nsAccessibilityAtoms::role)) {
       // Default state for element accessible is focusable unless role is manually set
       // Subclasses of nsAccessible will clear focusable state if necessary
       *aState |= STATE_FOCUSABLE;
@@ -1523,7 +1525,8 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   // Check for DHTML accessibility labelledby relationship property
   nsAutoString label;
   nsresult rv;
-  if (mRoleMapEntry) {
+  if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                       nsAccessibilityAtoms::role)) {
     rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
     if (NS_SUCCEEDED(rv)) {
       aLabel = label;
@@ -1577,7 +1580,8 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   // First check for label override via accessibility labelledby relationship
   nsAutoString label;
   nsresult rv;
-  if (mRoleMapEntry) {
+  if (content->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+                       nsAccessibilityAtoms::role)) {
     rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, label);
     if (NS_SUCCEEDED(rv)) {
       aLabel = label;
