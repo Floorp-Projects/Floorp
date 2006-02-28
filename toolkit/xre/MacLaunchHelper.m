@@ -40,12 +40,43 @@
 
 #include <Cocoa/Cocoa.h>
 
+#ifdef __ppc__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <mach/machine.h>
+#endif /* __ppc__ */
+
 void LaunchChildMac(int aArgc, char** aArgv)
 {
   int i;
   NSTask* child = [[NSTask alloc] init];
   NSMutableArray* args = [[NSMutableArray alloc] init];
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+
+#ifdef __ppc__
+  // It's possible that the app is a universal binary running under Rosetta
+  // translation because the user forced it to.  Relaunching via NSTask would
+  // launch the app natively, which the user apparently doesn't want.
+  // In that case, try to preserve translation.
+
+  // If the sysctl doesn't exist, it's because Rosetta doesn't exist,
+  // so don't try to force translation.  In case of other errors, just assume
+  // that the app is native.
+
+  int isNative = 0;
+  size_t sz = sizeof(isNative);
+
+  if (sysctlbyname("sysctl.proc_native", &isNative, &sz, NULL, 0) == 0 &&
+      !isNative) {
+    // Running translated on ppc.
+
+    cpu_type_t preferredCPU = CPU_TYPE_POWERPC;
+    sysctlbyname("sysctl.proc_exec_affinity", NULL, NULL,
+                 &preferredCPU, sizeof(preferredCPU));
+
+    // Nothing can be done to handle failure, relaunch anyway.
+  }
+#endif /* __ppc__ */
 
   for (i = 1; i < aArgc; ++i) 
     [args addObject: [NSString stringWithCString: aArgv[i]]];
