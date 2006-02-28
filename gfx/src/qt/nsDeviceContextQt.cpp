@@ -98,7 +98,7 @@ nsDeviceContextQt::~nsDeviceContextQt()
 {
   nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (pbi) {
-    pbi->RemoveObserver("browser.display.screen_resolution", this);
+    pbi->RemoveObserver("layout.css.dpi", this);
   }
 }
 
@@ -134,7 +134,7 @@ NS_IMETHODIMP nsDeviceContextQt::Init(nsNativeWidget aNativeWidget)
   }
 
   if (!mDpi) {
-    // Set prefVal the value of the preference "browser.display.screen_resolution"
+    // Set prefVal the value of the preference "layout.css.dpi"
     // or -1 if we can't get it.
     // If it's negative, we pretend it's not set.
     // If it's 0, it means force use of the operating system's logical resolution.
@@ -142,13 +142,13 @@ NS_IMETHODIMP nsDeviceContextQt::Init(nsNativeWidget aNativeWidget)
     PRInt32 prefVal = -1;
     nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefBranch) {
-      nsresult res = prefBranch->GetIntPref("browser.display.screen_resolution",
+      nsresult res = prefBranch->GetIntPref("layout.css.dpi",
                                             &prefVal);
       if (NS_FAILED(res)) {
         prefVal = -1;
       }
       nsCOMPtr<nsIPrefBranch2> pbi(do_QueryInterface(prefBranch));
-      pbi->AddObserver("browser.display.screen_resolution", this, PR_FALSE);
+      pbi->AddObserver("layout.css.dpi", this, PR_FALSE);
     }
 
     SetDPI(prefVal);
@@ -473,7 +473,7 @@ nsDeviceContextQt::Observe(nsISupports* aSubject, const char* aTopic,
                "All pref change observer subjects implement nsIPrefBranch");
   nsCAutoString prefName(NS_LossyConvertUTF16toASCII(aData).get());
 
-  if (prefName.Equals(NS_LITERAL_CSTRING("browser.display.screen_resolution"))) {
+  if (prefName.Equals(NS_LITERAL_CSTRING("layout.css.dpi"))) {
     PRInt32 dpi;
     nsresult rv = prefBranch->GetIntPref(prefName.get(), &dpi);
     if (NS_SUCCEEDED(rv))

@@ -81,7 +81,7 @@ nsDeviceContextBeOS::~nsDeviceContextBeOS()
   nsresult rv; 
   nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv))
-    prefs->UnregisterCallback("browser.display.screen_resolution", prefChanged, (void *)this); 
+    prefs->UnregisterCallback("layout.css.dpi", prefChanged, (void *)this); 
 }
 
 NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
@@ -112,7 +112,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
   {
     initialized = 1; 
 
-    // Set prefVal the value of the preference "browser.display.screen_resolution" 
+    // Set prefVal the value of the preference "layout.css.dpi" 
     // or -1 if we can't get it. 
     // If it's negative, we pretend it's not set. 
     // If it's 0, it means force use of the operating system's logical resolution. 
@@ -123,12 +123,12 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
     if (NS_SUCCEEDED(res) && prefs)
     { 
-      res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal); 
+      res = prefs->GetIntPref("layout.css.dpi", &prefVal); 
       if (! NS_SUCCEEDED(res))
       { 
         prefVal = -1; 
       } 
-      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged, (void *)this); 
+      prefs->RegisterCallback("layout.css.dpi", prefChanged, (void *)this); 
     } 
  
     // Set OSVal to what the operating system thinks the logical resolution is. 
@@ -418,7 +418,7 @@ int nsDeviceContextBeOS::prefChanged(const char *aPref, void *aClosure)
   nsDeviceContextBeOS *context = (nsDeviceContextBeOS*)aClosure; 
   nsresult rv; 
   
-  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0)
+  if (nsCRT::strcmp(aPref, "layout.css.dpi")==0)
   {
     PRInt32 dpi; 
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 

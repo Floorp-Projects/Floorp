@@ -390,7 +390,6 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("browser.underline_anchors",                Bool),
   MAKESAMETYPEPREFTRANSFORM("browser.display.use_system_colors",        Bool),
   MAKESAMETYPEPREFTRANSFORM("browser.display.use_document_colors",      Bool),
-  MAKESAMETYPEPREFTRANSFORM("browser.display.screen_resolution",        Int),
   MAKESAMETYPEPREFTRANSFORM("browser.display.use_document_fonts",       Bool),
   MAKESAMETYPEPREFTRANSFORM("intl.charset.default",                     String),
   MAKESAMETYPEPREFTRANSFORM("intl.accept_languages",                    String),
