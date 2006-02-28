@@ -187,7 +187,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     const gfxFontStyle *fontStyle = fontGroup->GetStyle();
 
     PRInt16 baseWeight, offsetWeight;
-    gfxFontStyle::ComputeWeightAndOffset(fontStyle->weight, &baseWeight, &offsetWeight);
+    fontStyle->ComputeWeightAndOffset(&baseWeight, &offsetWeight);
     baseWeight += offsetWeight;
     baseWeight = PR_MIN(9, PR_MAX(0, baseWeight));
 
@@ -274,7 +274,7 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
     const gfxFontStyle *fontStyle = mGroup->GetStyle();
 
     PRInt16 baseWeight, offsetWeight;
-    gfxFontStyle::ComputeWeightAndOffset(fontStyle->weight, &baseWeight, &offsetWeight);
+    fontStyle->ComputeWeightAndOffset(&baseWeight, &offsetWeight);
     baseWeight += offsetWeight;
     if (baseWeight < 0) baseWeight = 0;
     else if (baseWeight > 9) baseWeight = 9;
