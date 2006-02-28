@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.16 2005/10/03 22:01:57 relyea%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.17 2006/02/28 05:56:07 nelson%bolyard.com Exp $
  */
 
 #include "cmslocal.h"
@@ -73,9 +73,13 @@ nss_cmsrecipientinfo_usessubjectkeyid(NSSCMSRecipientInfo *ri)
  * CMSMessage for that matter */
 static const SECOidData fakeContent;
 NSSCMSRecipientInfo *
-nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, NSSCMSRecipientIDSelector type,
-                            CERTCertificate *cert, SECKEYPublicKey *pubKey, 
-                            SECItem *subjKeyID, void* pwfn_arg, SECItem* DERinput)
+nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, 
+			    NSSCMSRecipientIDSelector type,
+                            CERTCertificate *cert, 
+			    SECKEYPublicKey *pubKey, 
+                            SECItem *subjKeyID, 
+			    void* pwfn_arg, 
+			    SECItem* DERinput)
 {
     NSSCMSRecipientInfo *ri;
     void *mark;
@@ -96,7 +100,7 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg, NSSCMSRecipientIDSelector type,
 	cmsg = NSS_CMSMessage_Create(NULL);
         cmsg->pwfn_arg = pwfn_arg;
 	/* mark it as a special cms message */
-	cmsg->contentInfo.contentTypeTag = &fakeContent;
+	cmsg->contentInfo.contentTypeTag = (SECOidData *)&fakeContent;
     }
 
     poolp = cmsg->poolp;

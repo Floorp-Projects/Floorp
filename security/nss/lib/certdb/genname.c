@@ -999,8 +999,8 @@ CERT_GetNamesLength(CERTGeneralName *names)
 SECStatus
 cert_ExtractDNEmailAddrs(CERTGeneralName *name, PLArenaPool *arena)
 {
-    CERTGeneralName  *nameList = NULL;
-    const CERTRDN    **nRDNs   = name->name.directoryName.rdns;
+    CERTGeneralName *nameList = NULL;
+    const CERTRDN  **nRDNs = (const CERTRDN **)(name->name.directoryName.rdns);
     SECStatus        rv        = SECSuccess;
 
     PORT_Assert(name->type == certDirectoryName);
@@ -1124,7 +1124,8 @@ compareURIN2C(const SECItem *name, const SECItem *constraint)
     if (constraint->data[0] != '.') { 
     	/* constraint is a host name. */
     	if (name->len != constraint->len ||
-	    PL_strncasecmp(name->data, constraint->data, constraint->len))
+	    PL_strncasecmp((char *)name->data, 
+			   (char *)constraint->data, constraint->len))
 	    return SECFailure;
     	return SECSuccess;
     }
@@ -1132,7 +1133,8 @@ compareURIN2C(const SECItem *name, const SECItem *constraint)
     if (name->len < constraint->len)
         return SECFailure;
     offset = name->len - constraint->len;
-    if (PL_strncasecmp(name->data + offset, constraint->data, constraint->len))
+    if (PL_strncasecmp((char *)(name->data + offset), 
+		       (char *)constraint->data, constraint->len))
         return SECFailure;
     if (!offset || 
         (name->data[offset - 1] == '.') + (constraint->data[0] == '.') == 1)
@@ -1176,7 +1178,8 @@ compareDNSN2C(const SECItem *name, const SECItem *constraint)
     if (name->len < constraint->len)
         return SECFailure;
     offset = name->len - constraint->len;
-    if (PL_strncasecmp(name->data + offset, constraint->data, constraint->len))
+    if (PL_strncasecmp((char *)(name->data + offset), 
+		       (char *)constraint->data, constraint->len))
         return SECFailure;
     if (!offset || 
         (name->data[offset - 1] == '.') + (constraint->data[0] == '.') == 1)
@@ -1205,12 +1208,14 @@ compareRFC822N2C(const SECItem *name, const SECItem *constraint)
     for (offset = constraint->len - 1; offset >= 0; --offset) {
     	if (constraint->data[offset] == '@') {
 	    return (name->len == constraint->len && 
-	        !PL_strncasecmp(name->data, constraint->data, constraint->len))
+	        !PL_strncasecmp((char *)name->data, 
+				(char *)constraint->data, constraint->len))
 		? SECSuccess : SECFailure;
 	}
     }
     offset = name->len - constraint->len;
-    if (PL_strncasecmp(name->data + offset, constraint->data, constraint->len))
+    if (PL_strncasecmp((char *)(name->data + offset), 
+		       (char *)constraint->data, constraint->len))
         return SECFailure;
     if (constraint->data[0] == '.')
         return SECSuccess;
@@ -1358,8 +1363,10 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 	    ** no AVAs will be a wildcard, matching all directory names.
 	    */
 	    SECComparison   status = SECEqual;
-	    const CERTRDN **cRDNs = current->name.name.directoryName.rdns;  
-	    const CERTRDN **nRDNs = name->name.directoryName.rdns;
+	    const CERTRDN **cRDNs = 
+		    (const CERTRDN **)current->name.name.directoryName.rdns;  
+	    const CERTRDN **nRDNs = 
+		    (const CERTRDN **)name->name.directoryName.rdns;
 	    while (cRDNs && *cRDNs && nRDNs && *nRDNs) { 
 		/* loop over name RDNs and constraint RDNs in lock step */
 		const CERTRDN *cRDN = *cRDNs++;
