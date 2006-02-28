@@ -5104,6 +5104,18 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
       // First, tell the caret which selection to use
       caret->SetCaretDOMSelection(domSelection);
 
+      if (aVisible) {
+        // Check whether domSelection has focus node
+        // If not, we need move caret to the top of the document 
+        nsCOMPtr<nsIDOMNode> focusNode;
+        domSelection->GetFocusNode(getter_AddRefs(focusNode));
+        if (!focusNode) {
+          nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
+          if (selCon)
+            selCon->CompleteMove(PR_FALSE, PR_FALSE);
+        }
+      }
+
       // In content, we need to set the caret
       // the only other case is edit fields, where they have a different frame selection from the doc's
       // in that case they'll take care of making the caret visible themselves
