@@ -617,18 +617,15 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
      Cancel() gets called, we have a channel to cancel and we don't leave the channel
      open forever.
    */
+  nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
   if (!mChannel) {
-    nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
     if (mpchan)
       mpchan->GetBaseChannel(getter_AddRefs(mChannel));
     else
       mChannel = do_QueryInterface(aRequest);
   }
 
-  nsCAutoString contentType;
-  mChannel->GetContentType(contentType);
-  if (contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"),
-                         nsCaseInsensitiveCStringComparator()))
+  if (mpchan)
       mIsMultiPartChannel = PR_TRUE;
 
   /* set our state variables to their initial values. */
