@@ -2230,7 +2230,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         if (gDoMigration) {
           nsCOMPtr<nsIFile> file;
-          profD->Clone(getter_AddRefs(file));
+          dirProvider.GetAppDir()->Clone(getter_AddRefs(file));
           file->AppendNative(NS_LITERAL_CSTRING("override.ini"));
           nsINIParser parser;
           nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
