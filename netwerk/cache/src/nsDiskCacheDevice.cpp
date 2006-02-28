@@ -104,7 +104,7 @@ class nsDiskCacheEvictor : public nsDiskCacheRecordVisitor
 public:
     nsDiskCacheEvictor( nsDiskCacheMap *      cacheMap,
                         nsDiskCacheBindery *  cacheBindery,
-                        PRInt32               targetSize,
+                        PRUint32              targetSize,
                         const char *          clientID)
         : mCacheMap(cacheMap)
         , mBindery(cacheBindery)
@@ -119,7 +119,7 @@ public:
 private:
         nsDiskCacheMap *     mCacheMap;
         nsDiskCacheBindery * mBindery;
-        PRInt32              mTargetSize;
+        PRUint32             mTargetSize;
         const char *         mClientID;
         PRUint32             mClientIDSize;
 };
@@ -234,7 +234,8 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetEntryCount(PRUint32 *aEntryCount)
 NS_IMETHODIMP nsDiskCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
 {
     NS_ENSURE_ARG_POINTER(aTotalSize);
-    *aTotalSize = mDevice->getCacheSize();
+    // Returned unit's are in bytes
+    *aTotalSize = mDevice->getCacheSize() * 1024;
     return NS_OK;
 }
 
@@ -242,7 +243,8 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetTotalSize(PRUint32 *aTotalSize)
 NS_IMETHODIMP nsDiskCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
 {
     NS_ENSURE_ARG_POINTER(aMaximumSize);
-    *aMaximumSize = mDevice->getCacheCapacity();
+    // Returned unit's are in bytes
+    *aMaximumSize = mDevice->getCacheCapacity() * 1024;
     return NS_OK;
 }
 
@@ -390,7 +392,7 @@ nsDiskCacheDevice::Shutdown_Private(PRBool  flush)
 {
     if (Initialized()) {
         // check cache limits in case we need to evict.
-        EvictDiskCacheEntries((PRInt32)mCacheCapacity);
+        EvictDiskCacheEntries(mCacheCapacity);
 
         // write out persistent information about the cache.
         (void) mCacheMap.Close(flush);
@@ -686,21 +688,25 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad record");
 
     PRUint32  newSize = entry->DataSize() + deltaSize;
-    PRUint32  maxSize = PR_MIN(mCacheCapacity / 2, kMaxDataFileSize);
-    if (newSize > maxSize) {
+    PRUint32  newSizeK =  ((newSize + 0x3FF) >> 10);
+
+    // If the new size is larger than max. file size or larger than
+    // half the cache capacity (which is in KiB's), doom the entry and abort
+    if ((newSize > kMaxDataFileSize) || (newSizeK > mCacheCapacity/2)) {
         nsresult rv = nsCacheService::DoomEntry(entry);
         NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
         return NS_ERROR_ABORT;
     }
 
     PRUint32  sizeK = ((entry->DataSize() + 0x03FF) >> 10); // round up to next 1k
-    PRUint32  newSizeK =  ((newSize + 0x3FF) >> 10);
 
     NS_ASSERTION(sizeK < USHRT_MAX, "data size out of range");
     NS_ASSERTION(newSizeK < USHRT_MAX, "data size out of range");
 
     // pre-evict entries to make space for new data
-    PRInt32  targetCapacity = (PRInt32)(mCacheCapacity - ((newSizeK - sizeK) * 1024));
+    PRUint32  targetCapacity = mCacheCapacity > (newSizeK - sizeK)
+                             ? mCacheCapacity - (newSizeK - sizeK)
+                             : 0;
     EvictDiskCacheEntries(targetCapacity);
     
     return NS_OK;
@@ -875,11 +881,12 @@ nsDiskCacheDevice::ClearDiskCache()
 
 
 nsresult
-nsDiskCacheDevice::EvictDiskCacheEntries(PRInt32  targetCapacity)
+nsDiskCacheDevice::EvictDiskCacheEntries(PRUint32  targetCapacity)
 {
     if (mCacheMap.TotalSize() < targetCapacity)
         return NS_OK;
 
+    // targetCapacity is in KiB's
     nsDiskCacheEvictor  evictor(&mCacheMap, &mBindery, targetCapacity, nsnull);
     return mCacheMap.EvictRecords(&evictor);
 }
@@ -941,10 +948,11 @@ nsDiskCacheDevice::getCacheDirectory(nsILocalFile ** result)
 void
 nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
 {
-    mCacheCapacity = capacity * 1024;
+    // Units are KiB's
+    mCacheCapacity = capacity;
     if (Initialized()) {
         // start evicting entries if the new size is smaller!
-        EvictDiskCacheEntries((PRInt32)mCacheCapacity);
+        EvictDiskCacheEntries(mCacheCapacity);
     }
 }
 

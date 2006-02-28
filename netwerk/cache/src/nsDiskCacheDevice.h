@@ -115,14 +115,15 @@ private:
     nsresult                OpenDiskCache();
     nsresult                ClearDiskCache();
 
-    nsresult                EvictDiskCacheEntries(PRInt32  targetCapacity);
+    nsresult                EvictDiskCacheEntries(PRUint32  targetCapacity);
     
     /**
      *  Member variables
      */
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsDiskCacheBindery      mBindery;
-    PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal
+    PRUint32                mCacheCapacity;     // Unit is KiB's
+    // XXX need soft/hard limits, currentTotal
     nsDiskCacheMap          mCacheMap;
     PRPackedBool            mInitialized;
 };

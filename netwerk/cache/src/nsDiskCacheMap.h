@@ -335,7 +335,7 @@ class nsDiskCacheRecordVisitor {
 
 struct nsDiskCacheHeader {
     PRUint32    mVersion;                           // cache version.
-    PRInt32     mDataSize;                          // size of cache in bytes.
+    PRUint32    mDataSize;                          // size of cache in units of 256bytes.
     PRInt32     mEntryCount;                        // number of entries stored in cache.
     PRUint32    mIsDirty;                           // dirty flag.
     PRInt32     mRecordCount;                       // Number of records
@@ -444,21 +444,32 @@ public:
     /**
      *  Statistical Operations
      */
-    void     IncrementTotalSize( PRInt32  delta)
+    void     IncrementTotalSize( PRUint32  delta)
              {
-                NS_ASSERTION(mHeader.mDataSize >= 0, "disk cache size negative?");
                 mHeader.mDataSize += delta;
                 mHeader.mIsDirty   = PR_TRUE;
              }
              
-    void     DecrementTotalSize( PRInt32  delta)
+    void     DecrementTotalSize( PRUint32  delta)
              {
-                mHeader.mDataSize -= delta;
+                NS_ASSERTION(mHeader.mDataSize >= delta, "disk cache size negative?");
+                mHeader.mDataSize  = mHeader.mDataSize > delta ? mHeader.mDataSize - delta : 0;               
                 mHeader.mIsDirty   = PR_TRUE;
-                NS_ASSERTION(mHeader.mDataSize >= 0, "disk cache size negative?");
              }
     
-    PRInt32  TotalSize()   { return mHeader.mDataSize; }
+    inline void IncrementTotalSize( PRUint32  blocks, PRUint32 blockSize)
+             {
+                // Round up to nearest K
+                IncrementTotalSize(((blocks*blockSize) + 0x03FF) >> 10);
+             }
+
+    inline void DecrementTotalSize( PRUint32  blocks, PRUint32 blockSize)
+             {
+                // Round up to nearest K
+                DecrementTotalSize(((blocks*blockSize) + 0x03FF) >> 10);
+             }
+                 
+    PRUint32 TotalSize()   { return mHeader.mDataSize; }
     
     PRInt32  EntryCount()  { return mHeader.mEntryCount; }
 
