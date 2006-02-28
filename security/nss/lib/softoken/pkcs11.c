@@ -1956,7 +1956,10 @@ NSSLOWKEYPublicKey *sftk_GetPubKey(SFTKObject *object,CK_KEY_TYPE key_type,
 	 * based on the encoded params
 	 */
 	if (EC_FillParams(arena, &pubKey->u.ec.ecParams.DEREncoding,
-	    &pubKey->u.ec.ecParams) != SECSuccess) break;
+		    &pubKey->u.ec.ecParams) != SECSuccess) {
+	    crv = CKR_DOMAIN_PARAMS_INVALID;
+	    break;
+	}
 	    
 	crv = sftk_Attribute2SSecItem(arena,&pubKey->u.ec.publicValue,
 	                              object,CKA_EC_POINT);
@@ -2081,7 +2084,10 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
 	 * based on the encoded params
 	 */
 	if (EC_FillParams(arena, &privKey->u.ec.ecParams.DEREncoding,
-	    &privKey->u.ec.ecParams) != SECSuccess) break;
+		    &privKey->u.ec.ecParams) != SECSuccess) {
+	    crv = CKR_DOMAIN_PARAMS_INVALID;
+	    break;
+	}
 	crv = sftk_Attribute2SSecItem(arena,&privKey->u.ec.privateValue,
 							object,CKA_VALUE);
 	if (crv != CKR_OK) break;
