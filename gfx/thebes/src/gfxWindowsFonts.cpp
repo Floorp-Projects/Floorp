@@ -38,8 +38,6 @@
 #include "prtypes.h"
 #include "gfxTypes.h"
 
-#include "nsPromiseFlatString.h"
-
 #include "gfxContext.h"
 #include "gfxWindowsFonts.h"
 #include "gfxWindowsSurface.h"
@@ -133,15 +131,44 @@ gfxWindowsFont::UpdateFonts(cairo_t *cr)
 cairo_font_face_t *
 gfxWindowsFont::MakeCairoFontFace()
 {
-    cairo_font_face_t *fontFace = nsnull;
-
     if (!mFont) {
-        FillLogFont();
-        mFont = CreateFontIndirectW(&mLogFont);
-    }
-    fontFace = cairo_win32_font_face_create_for_hfont(mFont);
+        /* XXX split this code out some, make it a bit more CSS2 15.5.1 compliant */
+        PRInt16 baseWeight, weightDistance;
+        mStyle->ComputeWeightAndOffset(&baseWeight, &weightDistance);
 
-    return fontFace;
+        HDC dc = GetDC((HWND)nsnull);
+
+        int i = 0;
+        do {
+            const PRInt16 targetWeight = (baseWeight * 100) + (weightDistance ? i + 1 : 0) * 100;
+
+            FillLogFont(targetWeight);
+            mFont = CreateFontIndirectW(&mLogFont);
+
+            HGDIOBJ oldFont = SelectObject(dc, mFont);
+            TEXTMETRIC metrics;
+            GetTextMetrics(dc, &metrics);
+            if (metrics.tmWeight == targetWeight) {
+                SelectObject(dc, oldFont);
+                break;
+            }
+
+            SelectObject(dc, oldFont);
+            DeleteObject(mFont);
+            mFont = nsnull;
+
+            i++;
+        } while (i < (10 - baseWeight));
+
+        if (!mFont) {
+            FillLogFont(baseWeight * 100);
+            mFont = CreateFontIndirectW(&mLogFont);
+        }
+
+        ReleaseDC((HWND)nsnull, dc);
+    }
+
+    return cairo_win32_font_face_create_for_hfont(mFont);
 }
 
 cairo_scaled_font_t *
@@ -172,9 +199,8 @@ gfxWindowsFont::ComputeMetrics(HDC aDC)
 
     cairo_win32_scaled_font_select_font(mScaledFont, aDC);
 
-    double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
-    double multiplier = cairofontfactor * mStyle->size;
-
+    const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
+    const double multiplier = cairofontfactor * mStyle->size;
 
     // Get font metrics
     OUTLINETEXTMETRIC oMetrics;
@@ -230,7 +256,7 @@ gfxWindowsFont::ComputeMetrics(HDC aDC)
     mMetrics.aveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * multiplier));
     
     // Cache the width of a single space.
-    SIZE  size;
+    SIZE size;
     ::GetTextExtentPoint32(aDC, " ", 1, &size);
     //size.cx -= font->mOverhangCorrection;
     mMetrics.spaceWidth = NSToCoordRound(size.cx * multiplier);
@@ -241,7 +267,7 @@ gfxWindowsFont::ComputeMetrics(HDC aDC)
 }
 
 void
-gfxWindowsFont::FillLogFont()
+gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
 
@@ -265,8 +291,8 @@ gfxWindowsFont::FillLogFont()
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
     mLogFont.lfQuality        = DEFAULT_QUALITY;
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-    mLogFont.lfWeight = mStyle->weight;
-    mLogFont.lfItalic = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
+    mLogFont.lfItalic         = (mStyle->style & (FONT_STYLE_ITALIC | FONT_STYLE_OBLIQUE)) ? TRUE : FALSE;
+    mLogFont.lfWeight         = currentWeight;
 
     int len = PR_MIN(mName.Length(), LF_FACESIZE);
     memcpy(mLogFont.lfFaceName, mName.get(), len * 2);
