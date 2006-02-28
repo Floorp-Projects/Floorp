@@ -450,7 +450,7 @@ public:
         MODE_COVERAGE
     };
     void SetAntialiasMode(AntialiasMode mode);
-    AntialiasMode CurrentAntialiasMode();
+    AntialiasMode CurrentAntialiasMode() const;
 
     /**
      ** Clipping

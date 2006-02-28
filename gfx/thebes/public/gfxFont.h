@@ -112,9 +112,8 @@ struct NS_EXPORT gfxFontStyle {
     // needs to be done.
     float sizeAdjust;
 
-    static void ComputeWeightAndOffset (const PRUint16 inWeight,
-                                        PRInt16 *outBaseWeight,
-                                        PRInt16 *outOffset);
+    void ComputeWeightAndOffset(PRInt16 *outBaseWeight,
+                                PRInt16 *outOffset) const;
 };
 
 
@@ -173,7 +172,7 @@ public:
         mFonts.Clear();
     }
 
-    gfxFontVector &GetFontList() { return mFonts; } // XXX this should really be const..
+    gfxFontVector GetFontList() { return mFonts; }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString) = 0;
@@ -203,7 +202,7 @@ public:
     virtual gfxFloat MeasureString(gfxContext *aContext) = 0;
 
     virtual void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
-    virtual PRBool IsRightToLeft() { return mIsRTL; }
+    virtual PRBool IsRightToLeft() const { return mIsRTL; }
 
 private:
     PRBool mIsRTL;

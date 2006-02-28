@@ -368,7 +368,7 @@ void gfxContext::SetAntialiasMode(AntialiasMode mode)
     // XXX implement me
 }
 
-gfxContext::AntialiasMode gfxContext::CurrentAntialiasMode()
+gfxContext::AntialiasMode gfxContext::CurrentAntialiasMode() const
 {
     return MODE_COVERAGE;
 }

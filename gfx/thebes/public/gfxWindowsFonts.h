@@ -72,7 +72,7 @@ public:
 protected:
     cairo_font_face_t *MakeCairoFontFace();
     cairo_scaled_font_t *MakeCairoScaledFont(cairo_t *cr);
-    void FillLogFont();
+    void FillLogFont(PRInt16 weight);
 
 private:
     void ComputeMetrics(HDC dc);
