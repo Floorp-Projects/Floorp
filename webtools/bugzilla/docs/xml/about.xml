@@ -1,6 +1,6 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 <!ENTITY conventions SYSTEM "conventions.xml"> ] > -->
-<!-- $Id: about.xml,v 1.21 2006/02/21 21:50:45 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: about.xml,v 1.22 2006/02/28 00:28:41 jocuri%softhome.net Exp $ -->
 
 <chapter id="about">
 <title>About This Guide</title>
@@ -80,18 +80,25 @@
     <para>
       The Bugzilla Guide, or a section of it, is also available in
       the following languages:
-      <ulink url="http://bugzilla-de.sourceforge.net/docs/html/">German</ulink>.
+      <ulink url="http://www.traduc.org/docs/guides/lecture/bugzilla/">French</ulink>,
+      <ulink url="http://bugzilla-de.sourceforge.net/docs/html/">German</ulink>,
+      <ulink url="http://www.bugzilla.jp/docs/2.18/">Japanese</ulink>.
+      Note that these may be outdated or not up to date.
     </para>
     
     <para>  
       In addition, there are Bugzilla template localisation projects in
       the following languages. They may have translated documentation 
       available: 
+      <ulink url="http://sourceforge.net/projects/bugzilla-ar/">Arabic</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-be/">Belarusian</ulink>,
+      <ulink url="http://openfmi.net/projects/mozilla-bg/">Bulgarian</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-br/">Brazilian Portuguese</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-cn/">Chinese</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-fr/">French</ulink>,
-      <ulink url="http://sourceforge.net/projects/bugzilla-de/">German</ulink>,
+      <ulink url="http://germzilla.wurblzap.net/">German</ulink>,
+      <ulink url="http://sourceforge.net/projects/bugzilla-it/">Italian</ulink>,
+      <ulink url="http://www.bugzilla.jp/about/jp.html">Japanese</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-kr/">Korean</ulink>,
       <ulink url="http://sourceforge.net/projects/bugzilla-ru/">Russian</ulink> and
       <ulink url="http://sourceforge.net/projects/bugzilla-es/">Spanish</ulink>.
@@ -100,7 +107,7 @@
     <para>  
       If you would like to volunteer to translate the Guide into additional
       languages, please contact
-      <ulink url="mailto:justdave@syndicomm.com">Dave Miller</ulink>.
+      <ulink url="mailto:justdave@bugzilla.org">Dave Miller</ulink>.
     </para>
   </section>
 
