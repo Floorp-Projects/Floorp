@@ -62,3 +62,9 @@ switch {
 svg:not(:root), symbol, image, marker, pattern, foreignObject {
  overflow: hidden;
 }
+
+foreignObject {
+  margin: 0 ! important;
+  padding: 0 ! important;
+  border: none ! important;
+}

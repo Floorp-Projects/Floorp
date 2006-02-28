@@ -85,6 +85,8 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame()
   : mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE), mFilter(nsnull)
 {
+  AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT |
+               NS_FRAME_REFLOW_ROOT);
 }
 
 nsSVGForeignObjectFrame::~nsSVGForeignObjectFrame()
@@ -213,39 +215,30 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG
-  printf("nsSVGForeignObjectFrame(%p)::Reflow\n", this);
-#endif
-  
-  float twipsPerPx = GetTwipsPerPx();
-  
-  NS_ENSURE_TRUE(mX && mY && mWidth && mHeight, NS_ERROR_FAILURE);
+  nsHTMLReflowState &reflowState =
+    NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
 
-  float width, height;
-  mWidth->GetValue(&width);
-  mHeight->GetValue(&height);
+  // We could do this in DoReflow, except that we set
+  // NS_FRAME_REFLOW_ROOT, so we also need to do it when the pres shell
+  // calls us directly.
+  reflowState.mComputedHeight = mRect.height;
+  reflowState.mComputedWidth = mRect.width;
 
-  // move our frame to (0, 0), set our size to the untransformed
-  // width and height. Our frame size and position are meaningless
-  // given the possibility of non-rectilinear transforms; our size
-  // is only useful for reflowing our content
-  SetPosition(nsPoint(0, 0));
-  
-  // create a new reflow state, setting our max size to (width,height):
-  nsSize availableSpace((nscoord)(width*twipsPerPx), (nscoord)(height*twipsPerPx));
-  nsHTMLReflowState sizedReflowState(aPresContext,
-                                     aReflowState,
-                                     this,
-                                     availableSpace);
+  nsSpaceManager* spaceManager =
+    new nsSpaceManager(aPresContext->PresShell(), this);
+  if (!spaceManager) {
+    NS_ERROR("Could not create space manager");
+    return nsnull;
+  }
+  reflowState.mSpaceManager = spaceManager;
+   
+  nsresult rv = nsSVGForeignObjectFrameBase::Reflow(aPresContext, aDesiredSize,
+                                                    aReflowState, aStatus);
 
-  // XXX Not sure the dirty-state should be cleared here. We should
-  // re-examine how the reflow is driven from nsSVGOuterSVGFrame. I
-  // think we're missing a call to DidReflow somewhere ?
-  mState &= ~NS_FRAME_IS_DIRTY;
-  
-  // leverage our base class' reflow function to do all the work:
-  return nsSVGForeignObjectFrameBase::Reflow(aPresContext, aDesiredSize,
-                                             sizedReflowState, aStatus);
+  reflowState.mSpaceManager = nsnull;
+  delete spaceManager;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -742,24 +735,41 @@ nsSVGForeignObjectFrame::DoReflow()
   nsIPresShell* presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "null presShell");
   presShell->CreateRenderingContext(this,getter_AddRefs(renderingContext));
+  NS_ENSURE_TRUE(renderingContext, nsnull);
   
-  // XXX we always pass this off as an initial reflow. is that a problem?
-  nsHTMLReflowState reflowState(presContext, this, eReflowReason_Initial,
-                                renderingContext, availableSpace);
+  float twipsPerPx = GetTwipsPerPx();
+  
+  NS_ENSURE_TRUE(mX && mY && mWidth && mHeight, nsnull);
 
-  nsSpaceManager* spaceManager = new nsSpaceManager(presShell, this);
-  if (!spaceManager) {
-    NS_ERROR("Could not create space manager");
-    return nsnull;
-  }
-  reflowState.mSpaceManager = spaceManager;
-   
+  float width, height;
+  mWidth->GetValue(&width);
+  mHeight->GetValue(&height);
+
+  nsSize size(NSFloatPixelsToTwips(width, twipsPerPx),
+              NSFloatPixelsToTwips(height, twipsPerPx));
+
+  // move our frame to (0, 0), set our size to the untransformed
+  // width and height. Our frame size and position are meaningless
+  // given the possibility of non-rectilinear transforms; our size
+  // is only useful for reflowing our content
+  SetPosition(nsPoint(0, 0));
+  SetSize(size);
+  
+  // create a new reflow state, setting our max size to (width,height):
+  // Make up a potentially reasonable but perhaps too destructive reflow
+  // reason.
+  nsReflowReason reason = (GetStateBits() & NS_FRAME_FIRST_REFLOW)
+                            ? eReflowReason_Initial
+                            : eReflowReason_StyleChange;
+  nsHTMLReflowState reflowState(presContext, this, reason,
+                                renderingContext, size);
   nsHTMLReflowMetrics desiredSize(nsnull);
   nsReflowStatus status;
   
   WillReflow(presContext);
   Reflow(presContext, desiredSize, reflowState, status);
-  SetSize(nsSize(desiredSize.width, desiredSize.height));
+  NS_ASSERTION(size.width == desiredSize.width &&
+               size.height == desiredSize.height, "unexpected size");
   DidReflow(presContext, &reflowState, NS_FRAME_REFLOW_FINISHED);
 
   mIsDirty = PR_FALSE;
