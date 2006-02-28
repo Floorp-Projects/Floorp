@@ -108,7 +108,7 @@
 #define AUTOREG_CATEGORY  "xpcom-autoregistration"
 #define APPSTART_CATEGORY "app-startup"
 #define JSD_AUTOREG_ENTRY "JSDebugger Startup Observer"
-#define JSD_STARTUP_ENTRY "JSDebugger Startup Observer,service"
+#define JSD_STARTUP_ENTRY "JSDebugger Startup Observer"
 
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
@@ -122,7 +122,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
-const char jsdASObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;2";
+const char jsdARObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;2";
+const char jsdASObserverCtrID[] = "service,@mozilla.org/js/jsd/app-start-observer;2";
 
 #ifdef DEBUG_verbose
 PRUint32 gScriptCount   = 0;
@@ -2375,7 +2376,7 @@ jsdService::SetInitAtStartup (PRBool state)
     if (state) {
         rv = categoryManager->AddCategoryEntry(AUTOREG_CATEGORY,
                                                JSD_AUTOREG_ENTRY,
-                                               jsdASObserverCtrID,
+                                               jsdARObserverCtrID,
                                                PR_TRUE, PR_TRUE, nsnull);
         if (NS_FAILED(rv))
             return rv;
@@ -3318,7 +3319,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(jsdASObserver)
 
 static const nsModuleComponentInfo components[] = {
     {"JSDService", JSDSERVICE_CID,    jsdServiceCtrID, jsdServiceConstructor},
-    {"JSDASObserver",  JSDASO_CID, jsdASObserverCtrID, jsdASObserverConstructor}
+    {"JSDASObserver",  JSDASO_CID, jsdARObserverCtrID, jsdASObserverConstructor}
 };
 
 NS_IMPL_NSGETMODULE(JavaScript_Debugger, components)
