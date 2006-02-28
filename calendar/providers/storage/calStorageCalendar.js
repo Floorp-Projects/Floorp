@@ -861,24 +861,34 @@ calStorageCalendar.prototype = {
      */
     getVersion: function calStorageGetVersion() {
         var selectSchemaVersion;
+        var version = null;
 
         try {
             selectSchemaVersion = createStatement(this.mDB, 
                                   "SELECT version FROM " +
                                   "cal_calendar_schema_version LIMIT 1");
             if (selectSchemaVersion.step()) {
-                return selectSchemaVersion.row.version;
+                version = selectSchemaVersion.row.version;
+            }
+            selectSchemaVersion.reset();
+
+            if (version !== null) {
+                // This is the only place to leave this function gracefully.
+                return version;
             }
         } catch (e) {
+            if (selectSchemaVersion) {
+                selectSchemaVersion.reset();
+            }
             dump ("++++++++++++ calStorageGetVersion() error: " +
                   this.mDB.lastErrorString + "\n");
             Components.utils.reportError("Error getting storage calendar " +
                                          "schema version! DB Error: " + 
                                          this.mDB.lastErrorString);
             throw e;
-	}
+        }
 
-	throw "cal_calendar_schema_version SELECT returned no results";
+        throw "cal_calendar_schema_version SELECT returned no results";
     },
 
     upgradeDB: function (oldVersion) {
