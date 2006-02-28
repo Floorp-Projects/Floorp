@@ -820,13 +820,28 @@ if ($action eq 'update') {
                        {product => $product_name});
     }
 
-    my $milestone = new Bugzilla::Milestone($product_old->id,
-                                            $defaultmilestone);
-    if (!$milestone) {
-        ThrowUserError('prod_must_define_defaultmilestone',
-                       {product          => $product_old->name,
-                        defaultmilestone => $defaultmilestone,
-                        classification   => $classification_name});
+    # Only update milestone related stuff if 'usetargetmilestone' is on.
+    if (Param('usetargetmilestone')) {
+        my $milestone = new Bugzilla::Milestone($product_old->id,
+                                                $defaultmilestone);
+
+        unless ($milestone) {
+            ThrowUserError('prod_must_define_defaultmilestone',
+                           {product          => $product_old->name,
+                            defaultmilestone => $defaultmilestone,
+                            classification   => $classification_name});
+        }
+
+        if ($milestoneurl ne $product_old->milestone_url) {
+            trick_taint($milestoneurl);
+            $dbh->do('UPDATE products SET milestoneurl = ? WHERE id = ?',
+                     undef, ($milestoneurl, $product_old->id));
+        }
+
+        if ($milestone->name ne $product_old->default_milestone) {
+            $dbh->do('UPDATE products SET defaultmilestone = ? WHERE id = ?',
+                     undef, ($milestone->name, $product_old->id));
+        }
     }
 
     $disallownew = $disallownew ? 1 : 0;
@@ -839,13 +854,6 @@ if ($action eq 'update') {
         trick_taint($description);
         $dbh->do('UPDATE products SET description = ? WHERE id = ?',
                  undef, ($description, $product_old->id));
-    }
-
-    if (Param('usetargetmilestone')
-        && ($milestoneurl ne $product_old->milestone_url)) {
-        trick_taint($milestoneurl);
-        $dbh->do('UPDATE products SET milestoneurl = ? WHERE id = ?',
-                 undef, ($milestoneurl, $product_old->id));
     }
 
     if ($votesperuser ne $product_old->votes_per_user) {
@@ -864,12 +872,6 @@ if ($action eq 'update') {
         $dbh->do('UPDATE products SET votestoconfirm = ? WHERE id = ?',
                  undef, ($votestoconfirm, $product_old->id));
         $checkvotes = 1;
-    }
-
-    if ($defaultmilestone ne $product_old->default_milestone) {
-        trick_taint($defaultmilestone);
-        $dbh->do('UPDATE products SET defaultmilestone = ? WHERE id = ?',
-                 undef, ($defaultmilestone, $product_old->id));
     }
 
     if ($product_name ne $product_old->name) {
