@@ -95,14 +95,14 @@ EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
+	../directory/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
+	../intl/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
+	../windowds/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
+	../../browser/src/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
@@ -110,24 +110,24 @@ ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
 ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
+	../bookmarks/src/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
+	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
+	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
+	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
 ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
+	../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif # ALERTS_SERVICE
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+	../urlwidget/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
+	../winhooks/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif # WINNT
 
@@ -160,7 +160,7 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifneq ($(MOZ_BUILD_APP),macbrowser)
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../../bootstrap/appleevents/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 endif
