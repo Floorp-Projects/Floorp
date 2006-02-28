@@ -126,16 +126,19 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
             family = Substring(nameStart, p);
             family.CompressWhitespace(PR_FALSE, PR_TRUE);
 
-            if (family.EqualsLiteral("serif") ||
-                family.EqualsLiteral("sans-serif") ||
-                family.EqualsLiteral("monospace") ||
-                family.EqualsLiteral("cursive") ||
-                family.EqualsLiteral("fantasy"))
+            if (family.LowerCaseEqualsLiteral("serif") ||
+                family.LowerCaseEqualsLiteral("sans-serif") ||
+                family.LowerCaseEqualsLiteral("monospace") ||
+                family.LowerCaseEqualsLiteral("cursive") ||
+                family.LowerCaseEqualsLiteral("fantasy"))
             {
                 generic = PR_TRUE;
 
+                nsCAutoString lcFamily;
+                ToLowerCase(NS_LossyConvertUTF16toASCII(family), lcFamily);
+
                 nsCAutoString prefName("font.name.");
-                prefName.AppendWithConversion(family);
+                prefName.Append(lcFamily);
                 prefName.AppendLiteral(".");
                 prefName.Append(mStyle.langGroup);
 
@@ -144,7 +147,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
                 nsXPIDLCString value;
                 nsresult rv = prefs->GetCharPref(prefName.get(), getter_Copies(value));
                 if (NS_SUCCEEDED(rv)) {
-                    genericFamily.Assign(family);
+                    CopyASCIItoUTF16(lcFamily, genericFamily);
                     CopyUTF8toUTF16(value, family);
                 }
             } else {

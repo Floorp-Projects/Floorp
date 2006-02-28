@@ -221,13 +221,14 @@ gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
     // "monospace", slightly different from CSS's 5.
     if (aGenericFamily.IsEmpty())
         serif = sansSerif = monospace = 1;
-    else if (aGenericFamily.EqualsLiteral("serif"))
+    else if (aGenericFamily.LowerCaseEqualsLiteral("serif"))
         serif = 1;
-    else if (aGenericFamily.EqualsLiteral("sans-serif"))
+    else if (aGenericFamily.LowerCaseEqualsLiteral("sans-serif"))
         sansSerif = 1;
-    else if (aGenericFamily.EqualsLiteral("monospace"))
+    else if (aGenericFamily.LowerCaseEqualsLiteral("monospace"))
         monospace = 1;
-    else if (aGenericFamily.EqualsLiteral("cursive") || aGenericFamily.EqualsLiteral("fantasy"))
+    else if (aGenericFamily.LowerCaseEqualsLiteral("cursive") ||
+             aGenericFamily.LowerCaseEqualsLiteral("fantasy"))
         serif = sansSerif = 1;
     else
         NS_NOTREACHED("unexpected CSS generic font family");
