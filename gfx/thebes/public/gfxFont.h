@@ -175,7 +175,12 @@ public:
     gfxFontVector GetFontList() { return mFonts; }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
+    /* unicode method */
     virtual gfxTextRun *MakeTextRun(const nsAString& aString) = 0;
+    /* ASCII text only, not UTF-8 */
+    virtual gfxTextRun *MakeTextRun(const nsACString& aString) {
+        return MakeTextRun(NS_ConvertASCIItoUTF16(aString));
+    }
 
 protected:
     /* helper function for splitting font families on commas and

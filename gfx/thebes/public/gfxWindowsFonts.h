@@ -104,6 +104,7 @@ public:
     virtual ~gfxWindowsFontGroup();
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
+    virtual gfxTextRun *MakeTextRun(const nsACString& aString);
 
 protected:
     static PRBool MakeFont(const nsAString& fontName, const nsAString& genericName, void *closure);
@@ -126,6 +127,7 @@ class NS_EXPORT gfxWindowsTextRun : public gfxTextRun {
 
 public:
     gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
+    gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);
     ~gfxWindowsTextRun();
 
     virtual void DrawString(gfxContext *aContext, gfxPoint pt);
@@ -136,12 +138,21 @@ private:
                                      const PRUnichar *aString, PRUint32 aLength,
                                      gfxWindowsFont *aFont);
 
+    PRInt32 MeasureOrDrawAscii(gfxContext *aContext,
+                               PRBool aDraw,
+                               PRInt32 aX, PRInt32 aY,
+                               const PRInt32 *aSpacing);
     PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw,
                                    PRInt32 aX, PRInt32 aY,
                                    const PRInt32 *aSpacing);
 
-    const nsAString& mString;
     gfxWindowsFontGroup *mGroup;
+
+    // These should probably be in a union
+    const nsAString& mString;
+    const nsACString& mCString;
+
+    const PRBool mIsASCII;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */
