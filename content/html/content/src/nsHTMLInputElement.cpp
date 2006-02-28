@@ -1276,6 +1276,13 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
+  // Don't allow mutation events which are targeted somewhere inside
+  // <input>, except if they are dispatched to the element itself.
+  if (!(NS_EVENT_FLAG_INIT & aFlags) &&
+      aEvent->eventStructType == NS_MUTATION_EVENT) {
+    return NS_OK;
+  }
+
   //
   // Web pages expect the value of a radio button or checkbox to be set
   // *before* onclick and DOMActivate fire, and they expect that if they set
