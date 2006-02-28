@@ -151,7 +151,7 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   // or whatever, then they can clearly access it... and we should still use
   // the principal of mOwnerContent.  I don't think that leads to privilege
   // escalation, and it's reasonably guaranteed to not lead to XSS issues
-  // (since caller can already access mOwnerContent in this case.  So just use
+  // (since caller can already access mOwnerContent in this case).  So just use
   // the principal of mOwnerContent no matter what.  If script wants to run
   // things with its own permissions, which differ from those of mOwnerContent
   // (which means the script is privileged in some way) it should set
