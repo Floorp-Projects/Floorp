@@ -48,26 +48,26 @@
 #include "nsAutoPtr.h"
 
 /*
-NUM_INDEX_CACHE_INDEX_SHIFT indicates how many steps to downshift the |this|
-pointer. It should be small enough to not cause collisions between adjecent
-arrays, and large enough to make sure that all indexes are used.
-The size below is based on the size of the smallest possible element
-(currently 24[*] bytes) which is the smallest distance between two
-nsAttrAndChildArray. 24/(2^_5_) is 0.75. This means that two adjacent
-nsAttrAndChildArrays will overlap one in 4 times. However not all elements
-will have enough children to get cached. And any allocator that doesn't
-return addresses aligned to 64 bytes will ensure that any index will get used.
+CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
+It should be small enough to not cause collisions between adjecent arrays, and
+large enough to make sure that all indexes are used. The size below is based
+on the size of the smallest possible element (currently 24[*] bytes) which is
+the smallest distance between two nsAttrAndChildArray. 24/(2^_5_) is 0.75.
+This means that two adjacent nsAttrAndChildArrays will overlap one in 4 times.
+However not all elements will have enough children to get cached. And any
+allocator that doesn't return addresses aligned to 64 bytes will ensure that
+any index will get used.
 
 [*] sizeof(nsGenericElement) + 4 bytes for nsIDOMElement vtable pointer.
 */
 
-#define INDEX_CACHE_POINTER_SHIFT 4
-#define INDEX_CACHE_NUM_SLOTS 128
-#define INDEX_CACHE_CHILD_LIMIT 10
+#define CACHE_POINTER_SHIFT 5
+#define CACHE_NUM_SLOTS 128
+#define CACHE_CHILD_LIMIT 10
 
-#define INDEX_CACHE_GET_INDEX(_array) \
-  ((NS_PTR_TO_INT32(_array) >> INDEX_CACHE_POINTER_SHIFT) & \
-   (INDEX_CACHE_NUM_SLOTS - 1))
+#define CACHE_GET_INDEX(_array) \
+  ((NS_PTR_TO_INT32(_array) >> CACHE_POINTER_SHIFT) & \
+   (CACHE_NUM_SLOTS - 1))
 
 struct IndexCacheSlot
 {
@@ -78,14 +78,14 @@ struct IndexCacheSlot
 // This is inited to all zeroes since it's static. Though even if it wasn't
 // the worst thing that'd happen is a small inefficency if you'd get a false
 // positive cachehit.
-static IndexCacheSlot indexCache[INDEX_CACHE_NUM_SLOTS];
+static IndexCacheSlot indexCache[CACHE_NUM_SLOTS];
 
 static
 inline
 void
 AddIndexToCache(const nsAttrAndChildArray* aArray, PRInt32 aIndex)
 {
-  PRUint32 ix = INDEX_CACHE_GET_INDEX(aArray);
+  PRUint32 ix = CACHE_GET_INDEX(aArray);
   indexCache[ix].array = aArray;
   indexCache[ix].index = aIndex;
 }
@@ -95,7 +95,7 @@ inline
 PRInt32
 GetIndexFromCache(const nsAttrAndChildArray* aArray)
 {
-  PRUint32 ix = INDEX_CACHE_GET_INDEX(aArray);
+  PRUint32 ix = CACHE_GET_INDEX(aArray);
   return indexCache[ix].array == aArray ? indexCache[ix].index : -1;
 }
 
@@ -224,7 +224,7 @@ nsAttrAndChildArray::IndexOfChild(nsIContent* aPossibleChild) const
   // Use signed here since we compare count to cursor which has to be signed
   PRInt32 i, count = ChildCount();
 
-  if (count >= INDEX_CACHE_CHILD_LIMIT) {
+  if (count >= CACHE_CHILD_LIMIT) {
     PRInt32 cursor = GetIndexFromCache(this);
     // Need to compare to count here since we may have removed children since
     // the index was added to the cache.
