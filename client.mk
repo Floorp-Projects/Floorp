@@ -114,16 +114,67 @@ AVAILABLE_PROJECTS = \
   macbrowser \
   $(NULL)
 
+MODULES_NS_core :=                              \
+  mozilla                                       \
+  mozilla/js                                    \
+  mozilla/js/src                                \
+  mozilla/js/jsd                                \
+  $(NULL)                                       \
+
 MODULES_core :=                                 \
-  SeaMonkeyAll                                  \
-  mozilla/browser/config/version.txt            \
-  mozilla/mail/config/version.txt               \
+  mozilla/README                                \
+  mozilla/config                                \
+  mozilla/build                                 \
+  mozilla/caps                                  \
+  mozilla/content                               \
+  mozilla/db/.cvsignore                         \
+  mozilla/db/Makefile.in                        \
+  mozilla/db/README.html                        \
+  mozilla/db/mdb                                \
+  mozilla/db/mork                               \
+  mozilla/docshell                              \
+  mozilla/dom                                   \
+  mozilla/editor                                \
+  mozilla/embedding                             \
+  mozilla/extensions                            \
+  mozilla/gfx                                   \
+  mozilla/parser                                \
+  mozilla/layout                                \
+  mozilla/intl                                  \
+  mozilla/jpeg                                  \
+  mozilla/js/src/fdlibm                         \
+  mozilla/js/src/liveconnect                    \
+  mozilla/js/src/xpconnect                      \
+  mozilla/js/jsd/idl                            \
+  mozilla/modules/libimg                        \
+  mozilla/modules/libjar                        \
+  mozilla/modules/libpr0n                       \
+  mozilla/modules/libpref                       \
+  mozilla/modules/libreg                        \
+  mozilla/modules/libutil                       \
+  mozilla/modules/oji                           \
+  mozilla/modules/plugin                        \
+  mozilla/modules/zlib                          \
+  mozilla/netwerk                               \
+  mozilla/plugin/oji                            \
+  mozilla/profile                               \
+  mozilla/rdf                                   \
+  mozilla/security/manager                      \
+  mozilla/sun-java                              \
   mozilla/ipc/ipcd                              \
   mozilla/modules/libpr0n                       \
   mozilla/modules/libmar                        \
   mozilla/modules/libbz2                        \
   mozilla/accessible                            \
   mozilla/security/manager                      \
+  mozilla/tools/elf-dynstr-gc                   \
+  mozilla/uriloader                             \
+  mozilla/view                                  \
+  mozilla/webshell                              \
+  mozilla/widget                                \
+  mozilla/xpcom                                 \
+  mozilla/xpfe                                  \
+  mozilla/xpinstall                             \
   mozilla/toolkit                               \
   mozilla/storage                               \
   mozilla/db/sqlite3                            \
@@ -132,9 +183,20 @@ MODULES_core :=                                 \
   mozilla/tools/test-harness                    \
   $(NULL)
 
+# Should be NSS, bug 301249
+MODULES_core += mozilla/dbm
+
 LOCALES_core :=                                 \
   netwerk                                       \
   dom                                           \
+  $(NULL)
+
+BOOTSTRAP_core :=                               \
+  mozilla/browser/config/version.txt            \
+  mozilla/mail/config/version.txt               \
+
+MODULES_NS_toolkit :=                           \
+  $(MODULES_NS_core)                            \
   $(NULL)
 
 MODULES_toolkit :=                              \
@@ -148,13 +210,32 @@ LOCALES_toolkit :=                              \
   security/manager                              \
   $(NULL)
 
+BOOTSTRAP_toolkit :=                            \
+  $(BOOTSTRAP_core)                             \
+  $(NULL)
+
+MODULES_NS_suite :=                             \
+  $(MODULES_NS_core)                            \
+  $(NULL)
+
 MODULES_suite :=                                \
   $(MODULES_core)                               \
+  mozilla/directory/xpcom                       \
+  mozilla/mailnews                              \
+  mozilla/themes                                \
   mozilla/suite                                 \
   $(NULL)
 
 LOCALES_suite :=                                \
   $(LOCALES_core)                               \
+  $(NULL)
+
+BOOTSTRAP_suite :=                              \
+  $(BOOTSTRAP_core)                             \
+  $(NULL)
+
+MODULES_NS_browser :=                           \
+  $(MODULES_NS_toolkit)                         \
   $(NULL)
 
 MODULES_browser :=                              \
@@ -171,15 +252,32 @@ LOCALES_browser :=                              \
   other-licenses/branding/firefox               \
   $(NULL)
 
-BOOTSTRAP_browser := mozilla/browser/config/mozconfig
+BOOTSTRAP_browser :=                            \
+  $(BOOTSTRAP_toolkit)                          \
+  mozilla/browser/config/mozconfig              \
+  $(NULL)
+
+MODULES_NS_minimo :=                            \
+  $(MODULES_NS_toolkit)                         \
+  $(NULL)
 
 MODULES_minimo :=                               \
   $(MODULES_toolkit)                            \
   mozilla/minimo                                \
   $(NULL)
 
+BOOTSTRAP_minimo :=                             \
+  $(BOOTSTRAP_toolkit)                          \
+  $(NULL)
+
+MODULES_NS_mail :=                              \
+  $(MODULES_NS_toolkit)                         \
+  $(NULL)
+
 MODULES_mail :=                                 \
   $(MODULES_toolkit)                            \
+  mozilla/directory/xpcom                       \
+  mozilla/mailnews                              \
   mozilla/mail                                  \
   mozilla/other-licenses/branding/thunderbird   \
   mozilla/other-licenses/7zstub/thunderbird     \
@@ -192,11 +290,18 @@ LOCALES_mail :=                                 \
   editor/ui                                     \
   $(NULL)
 
-BOOTSTRAP_mail := mozilla/mail/config/mozconfig
+BOOTSTRAP_mail :=                               \
+  $(BOOTSTRAP_toolkit)                          \
+  mozilla/mail/config/mozconfig                 \
+  $(NULL)
 
 MODULES_composer :=                             \
   $(MODULES_toolkit)                            \
   mozilla/composer                              \
+  $(NULL)
+
+MODULES_NS_calendar :=                          \
+  $(MODULES_NS_toolkit)                         \
   $(NULL)
 
 MODULES_calendar :=                             \
@@ -206,7 +311,14 @@ MODULES_calendar :=                             \
   mozilla/calendar                              \
   $(NULL)
 
-BOOTSTRAP_calendar := mozilla/calendar/sunbird/config/mozconfig
+BOOTSTRAP_calendar :=                           \
+  $(BOOTSTRAP_toolkit)                          \
+  mozilla/calendar/sunbird/config/mozconfig     \
+  $(NULL)
+
+MODULES_NS_xulrunner :=                         \
+  $(MODULES_NS_toolkit)                         \
+  $(NULL)
 
 MODULES_xulrunner :=                            \
   $(MODULES_toolkit)                            \
@@ -217,14 +329,24 @@ LOCALES_xulrunner :=                            \
   $(LOCALES_toolkit)                            \
   $(NULL)
 
-BOOTSTRAP_xulrunner := mozilla/xulrunner/config/mozconfig
+BOOTSTRAP_xulrunner :=                          \
+  $(BOOTSTRAP_toolkit)                          \
+  mozilla/xulrunner/config/mozconfig            \
+  $(NULL)
+
+MODULES_NS_macbrowser :=                        \
+  $(MODULES_NS_toolkit)                         \
+  $(NULL)
 
 MODULES_macbrowser :=                           \
   $(MODULES_core)                               \
   mozilla/camino                                \
   $(NULL)
 
-BOOTSTRAP_macbrowser := mozilla/camino/config/mozconfig
+BOOTSTRAP_macbrowser :=                         \
+  $(BOOTSTRAP_toolkit)                          \
+  mozilla/camino/config/mozconfig               \
+  $(NULL)
 
 MODULES_all :=                                  \
   mozilla/other-licenses/bsdiff                 \
@@ -233,8 +355,6 @@ MODULES_all :=                                  \
   mozilla/tools/jprof                           \
   mozilla/tools/codesighs                       \
   mozilla/tools/update-packaging                \
-  mozilla/other-licenses/branding               \
-  mozilla/other-licenses/7zstub                 \
   $(NULL)
 
 #######################################################################
@@ -357,6 +477,7 @@ ifeq (all,$(filter all,$(MOZ_PROJECT_LIST)))
 endif
 
 MOZ_MODULE_LIST := $(subst $(comma), ,$(MOZ_CO_MODULE)) $(foreach project,$(MOZ_PROJECT_LIST),$(MODULES_$(project)))
+MOZ_MODULE_LIST_NS := $(foreach project,$(MOZ_PROJECT_LIST),$(MODULES_NS_$(project)))
 LOCALE_DIRS := $(MOZ_LOCALE_DIRS) $(foreach project,$(MOZ_PROJECT_LIST),$(LOCALES_$(project)))
 
 MOZCONFIG_MODULES += $(foreach project,$(MOZ_PROJECT_LIST),$(BOOTSTRAP_$(project)))
@@ -464,8 +585,8 @@ else
   STANDALONE_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
   STANDALONE_CO_MODULE += Makefile.in
 
-	MOZ_MODULE_LIST += $(addprefix mozilla/,$(STANDALONE_CO_MODULE))
-  NOSUBDIRS_MODULE := $(addprefix mozilla/,$(BUILD_MODULE_CVS_NS))
+  MOZ_MODULE_LIST += $(addprefix mozilla/,$(STANDALONE_CO_MODULE))
+  MOZ_MODULE_LIST_NS += $(addprefix mozilla/,$(BUILD_MODULE_CVS_NS))
 
 ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS))$(MOZ_CO_PROJECT))
   CVSCO_NSPR :=
@@ -504,11 +625,9 @@ endif
 # Checkout main modules
 #
 
-# sort is used to remove duplicates.  SeaMonkeyAll is special-cased to
-# checkout last, because if you check it out first, there is a sticky
-# tag left over from checking out the LDAP SDK, which causes files in
-# the root directory to be missed.
-MOZ_MODULE_LIST := $(sort $(filter-out SeaMonkeyAll,$(MOZ_MODULE_LIST))) $(firstword $(filter SeaMonkeyAll,$(MOZ_MODULE_LIST)))
+# sort is used to remove duplicates.
+MOZ_MODULE_LIST := $(sort $(MOZ_MODULE_LIST))
+MOZ_MODULE_LIST_NS := $(sort $(MOZ_MODULE_LIST_NS))
 
 MODULES_CO_FLAGS := -P
 ifdef MOZ_CO_FLAGS
@@ -516,16 +635,16 @@ ifdef MOZ_CO_FLAGS
 endif
 MODULES_CO_FLAGS := $(MODULES_CO_FLAGS) $(if $(MOZ_CO_TAG),-r $(MOZ_CO_TAG),-A)
 
-CVSCO_MODULES_NS = $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) -l $(NOSUBDIRS_MODULE)
+CVSCO_MODULES_NS = $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) -l $(MOZ_MODULE_LIST_NS)
 
 ifeq (,$(strip $(MOZ_MODULE_LIST)))
 FASTUPDATE_MODULES = $(error No modules or projects were specified. Use MOZ_CO_PROJECT to specify a project for checkout.)
 CHECKOUT_MODULES   = $(error No modules or projects were specified. Use MOZ_CO_PROJECT to specify a project for checkout.)
 else
 FASTUPDATE_MODULES := fast_update $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(MOZ_MODULE_LIST)
-CHECKOUT_MODULES   := $(foreach module,$(MOZ_MODULE_LIST),cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(module);)
+CHECKOUT_MODULES   := cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(MOZ_MODULE_LIST);
 endif
-ifeq (,$(NOSUBDIRS_MODULE))
+ifeq (,$(MOZ_MODULE_LIST_NS))
 FASTUPDATE_MODULES_NS := true
 CHECKOUT_MODULES_NS   := true
 else
@@ -623,8 +742,8 @@ real_checkout:
 	cvs_co $(CVSCO_NSPR); \
 	cvs_co $(CVSCO_NSS); \
 	cvs_co $(CVSCO_LDAPCSDK); \
-	$(CHECKOUT_MODULES) \
 	$(CHECKOUT_MODULES_NS); \
+	$(CHECKOUT_MODULES) \
 	$(CHECKOUT_LOCALES);
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 # update the NSS checkout timestamp
