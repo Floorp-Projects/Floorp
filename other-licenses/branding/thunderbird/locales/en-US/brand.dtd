@@ -1,5 +1,5 @@
 #expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
 <!ENTITY  brandShortName        "Thunderbird">
-<!ENTITY  brandFullName         "Mozilla Thunderbird Alpha 2">
+<!ENTITY  brandFullName         "Mozilla Thunderbird">
 <!ENTITY  vendorShortName       "Mozilla Thunderbird">
 <!ENTITY  sidebarName           "Sidebar">
