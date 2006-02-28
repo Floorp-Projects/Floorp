@@ -49,7 +49,7 @@
 
 #define LIVEMARK_TIMEOUT          15000       // fire every 15 seconds
 #define PLACES_STRING_BUNDLE_URI  "chrome://browser/locale/places/places.properties"
-#define LIVEMARK_ICON_URI         "chrome://browser/skin/places/livemark_item.png"
+#define LIVEMARK_ICON_URI         "chrome://browser/skin/places/livemarkItem.png"
 
 // Constants for parsing RDF Livemarks
 // These are used in nsBookmarksFeedHandler.cpp, but because there is
