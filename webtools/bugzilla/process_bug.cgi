@@ -234,10 +234,10 @@ if ($cgi->cookie("BUGLIST") && defined $cgi->param('id')) {
 
 GetVersionTable();
 
-check_form_field_defined($cgi, 'product');
-check_form_field_defined($cgi, 'version');
-check_form_field_defined($cgi, 'component');
-
+foreach my $field_name ('product', 'component', 'version') {
+    defined($cgi->param($field_name))
+      || ThrowCodeError('undefined_field', { field => $field_name });
+}
 
 # This function checks if there is a comment required for a specific
 # function and tests, if the comment was given.
@@ -325,7 +325,9 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
     if ( Param("usetargetmilestone") ) {
-       check_form_field_defined($cgi, 'target_milestone');
+       defined($cgi->param('target_milestone'))
+         || ThrowCodeError('undefined_field', { field => 'target_milestone' });
+
        $mok = lsearch($::target_milestone{$prod},
                       $cgi->param('target_milestone')) >= 0;
     }
@@ -595,22 +597,25 @@ if (defined $cgi->param('id')) {
     # values that have been changed instead of submitting all the new values.
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
-    #
-    check_form_field($cgi, 'product', \@::legal_product);
-    check_form_field($cgi, 'component', 
-                   \@{$::components{$cgi->param('product')}});
-    check_form_field($cgi, 'version', \@{$::versions{$cgi->param('product')}});
+    check_field('product', scalar $cgi->param('product'), \@::legal_product);
+    check_field('component', scalar $cgi->param('component'), 
+                \@{$::components{$cgi->param('product')}});
+    check_field('version', scalar $cgi->param('version'),
+                \@{$::versions{$cgi->param('product')}});
     if ( Param("usetargetmilestone") ) {
-        check_form_field($cgi, 'target_milestone', 
-                       \@{$::target_milestone{$cgi->param('product')}});
+        check_field('target_milestone', scalar $cgi->param('target_milestone'), 
+                    \@{$::target_milestone{$cgi->param('product')}});
     }
-    check_form_field($cgi, 'rep_platform', \@::legal_platform);
-    check_form_field($cgi, 'op_sys', \@::legal_opsys);
-    check_form_field($cgi, 'priority', \@::legal_priority);
-    check_form_field($cgi, 'bug_severity', \@::legal_severity);
-    check_form_field_defined($cgi, 'bug_file_loc');
-    check_form_field_defined($cgi, 'short_desc');
-    check_form_field_defined($cgi, 'longdesclength');
+    check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
+    check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
+    check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
+    check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
+
+    # Those fields only have to exist. We don't validate their value here.
+    foreach my $field_name ('bug_file_loc', 'short_desc', 'longdesclength') {
+        defined($cgi->param($field_name))
+          || ThrowCodeError('undefined_field', { field => $field_name });
+    }
     $cgi->param('short_desc', clean_text($cgi->param('short_desc')));
 
     if (trim($cgi->param('short_desc')) eq "") {
@@ -1105,7 +1110,8 @@ SWITCH: for ($cgi->param('knob')) {
     };
     /^resolve$/ && CheckonComment( "resolve" ) && do {
         # Check here, because its the only place we require the resolution
-        check_form_field($cgi, 'resolution', \@::settable_resolution);
+        check_field('resolution', scalar $cgi->param('resolution'),
+                    \@::settable_resolution);
 
         # don't resolve as fixed while still unresolved blocking bugs
         if (Param("noresolveonopenblockers")
@@ -1189,7 +1195,9 @@ SWITCH: for ($cgi->param('knob')) {
         }
 
         # Make sure we can change the original bug (issue A on bug 96085)
-        check_form_field_defined($cgi, 'dup_id');
+        defined($cgi->param('dup_id'))
+          || ThrowCodeError('undefined_field', { field => 'dup_id' });
+
         $duplicate = $cgi->param('dup_id');
         ValidateBugID($duplicate, 'dup_id');
         $cgi->param('dup_id', $duplicate);
@@ -2063,7 +2071,6 @@ foreach my $id (@idlist) {
                       " has been marked as a duplicate of this bug. ***",
                       0, $timestamp);
 
-        check_form_field_defined($cgi,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, " .
                 $cgi->param('id') . ")");
     }

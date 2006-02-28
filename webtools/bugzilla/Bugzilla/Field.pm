@@ -13,7 +13,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Dan Mosedale <dmose@mozilla.org>
-#                 Frédéric Buclin <LpSolit@gmail.com>
+#                 FrÃ©dÃ©ric Buclin <LpSolit@gmail.com>
 #                 Myk Melez <myk@mozilla.org>
 
 =head1 NAME
@@ -28,7 +28,7 @@ Bugzilla::Field - a particular piece of information about bugs
 
   # Display information about all fields.
   print Dumper(Bugzilla->get_fields());
-  
+
   # Display information about non-obsolete custom fields.
   print Dumper(Bugzilla->get_fields({ obsolete => 1, custom => 1 }));
 
@@ -41,11 +41,11 @@ Bugzilla::Field - a particular piece of information about bugs
   # Bugzilla->get_fields() is a wrapper around Bugzilla::Field::match(),
   # so both methods take the same arguments.
   print Dumper(Bugzilla::Field::match({ obsolete => 1, custom => 1 }));
-  
+
   # Create a custom field.
   my $field = Bugzilla::Field::create("hilarity", "Hilarity");
   print "$field->{description} is a custom field\n";
-  
+
   # Instantiate a Field object for an existing field.
   my $field = new Bugzilla::Field('qacontact_accessible');
   if ($field->{obsolete}) {
@@ -53,8 +53,7 @@ Bugzilla::Field - a particular piece of information about bugs
   }
 
   # Validation Routines
-  check_form_field($cgi, $fieldname, \@legal_values);
-  check_form_field_defined($cgi, $fieldname);
+  check_field($name, $value, \@legal_values, $no_warn);
   $fieldid = get_field_id($fieldname);
 
 =head1 DESCRIPTION
@@ -71,8 +70,7 @@ package Bugzilla::Field;
 use strict;
 
 use base qw(Exporter);
-@Bugzilla::Field::EXPORT = qw(check_form_field check_form_field_defined
-                              get_field_id);
+@Bugzilla::Field::EXPORT = qw(check_field get_field_id);
 
 use Bugzilla::Util;
 use Bugzilla::Constants;
@@ -286,66 +284,45 @@ sub match {
 
 =over
 
-=item C<check_form_field($cgi, $fieldname, \@legal_values)>
+=item C<check_field($name, $value, \@legal_values, $no_warn)>
 
-Description: Makes sure the field $fieldname is defined and its value
+Description: Makes sure the field $name is defined and its $value
              is non empty. If @legal_values is defined, this routine
              also checks whether its value is one of the legal values
-             associated with this field. If the test fails, an error
-             is thrown.
+             associated with this field. If the test is successful,
+             the function returns 1. If the test fails, an error
+             is thrown (by default), unless $no_warn is true, in which
+             case the function returns 0.
 
-Params:      $cgi          - a CGI object
-             $fieldname    - the field name to check
+Params:      $name         - the field name
+             $value        - the field value
              @legal_values - (optional) ref to a list of legal values
+             $no_warn      - (optional) do not throw an error if true
 
-Returns:     nothing
+Returns:     1 on success; 0 on failure if $no_warn is true (else an
+             error is thrown).
 
 =back
 
 =cut
 
-sub check_form_field {
-    my ($cgi, $fieldname, $legalsRef) = @_;
+sub check_field {
+    my ($name, $value, $legalsRef, $no_warn) = @_;
     my $dbh = Bugzilla->dbh;
 
-    if (!defined $cgi->param($fieldname)
-        || trim($cgi->param($fieldname)) eq ""
-        || (defined($legalsRef)
-            && lsearch($legalsRef, $cgi->param($fieldname)) < 0))
+    if (!defined($value)
+        || trim($value) eq ""
+        || (defined($legalsRef) && lsearch($legalsRef, $value) < 0))
     {
-        trick_taint($fieldname);
-        my ($result) = $dbh->selectrow_array("SELECT description FROM fielddefs
-                                              WHERE name = ?", undef, $fieldname);
-        
-        my $field = $result || $fieldname;
-        ThrowCodeError("illegal_field", { field => $field });
+        return 0 if $no_warn; # We don't want an error to be thrown; return.
+        trick_taint($name);
+        my ($result) = $dbh->selectrow_array('SELECT description FROM fielddefs
+                                              WHERE name = ?', undef, $name);
+
+        my $field = $result || $name;
+        ThrowCodeError('illegal_field', { field => $field });
     }
-}
-
-=pod
-
-=over
-
-=item C<check_form_field_defined($cgi, $fieldname)>
-
-Description: Makes sure the field $fieldname is defined and its value
-             is non empty. Else an error is thrown.
-
-Params:      $cgi       - a CGI object
-             $fieldname - the field name to check
-
-Returns:     nothing
-
-=back
-
-=cut
-
-sub check_form_field_defined {
-    my ($cgi, $fieldname) = @_;
-
-    if (!defined $cgi->param($fieldname)) {
-        ThrowCodeError("undefined_field", { field => $fieldname });
-    }
+    return 1;
 }
 
 =pod

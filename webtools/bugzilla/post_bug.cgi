@@ -197,18 +197,21 @@ if (!Param('letsubmitterchoosepriority')) {
 GetVersionTable();
 
 # Some more sanity checking
-check_form_field($cgi, 'product',      \@::legal_product);
-check_form_field($cgi, 'rep_platform', \@::legal_platform);
-check_form_field($cgi, 'bug_severity', \@::legal_severity);
-check_form_field($cgi, 'priority',     \@::legal_priority);
-check_form_field($cgi, 'op_sys',       \@::legal_opsys);
-check_form_field($cgi, 'bug_status',   ['UNCONFIRMED', 'NEW']);
-check_form_field($cgi, 'version',          $::versions{$product});
-check_form_field($cgi, 'component',        $::components{$product});
-check_form_field($cgi, 'target_milestone', $::target_milestone{$product});
-check_form_field_defined($cgi, 'assigned_to');
-check_form_field_defined($cgi, 'bug_file_loc');
-check_form_field_defined($cgi, 'comment');
+check_field('product',      scalar $cgi->param('product'),      \@::legal_product);
+check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
+check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
+check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
+check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
+check_field('bug_status',   scalar $cgi->param('bug_status'),   ['UNCONFIRMED', 'NEW']);
+check_field('version',      scalar $cgi->param('version'),      $::versions{$product});
+check_field('component',    scalar $cgi->param('component'),    $::components{$product});
+check_field('target_milestone', scalar $cgi->param('target_milestone'),
+            $::target_milestone{$product});
+
+foreach my $field_name ('assigned_to', 'bug_file_loc', 'comment') {
+    defined($cgi->param($field_name))
+      || ThrowCodeError('undefined_field', { field => $field_name });
+}
 
 my $everconfirmed = ($cgi->param('bug_status') eq 'UNCONFIRMED') ? 0 : 1;
 $cgi->param(-name => 'everconfirmed', -value => $everconfirmed);
