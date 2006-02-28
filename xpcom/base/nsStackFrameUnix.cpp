@@ -83,7 +83,7 @@ void DemangleSymbol(const char * aSymbol,
 }
 
 
-#if defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
+#if defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__)) // i386 or PPC Linux stackwalking code
 
 
 void DumpStackToFile(FILE* aStream)
