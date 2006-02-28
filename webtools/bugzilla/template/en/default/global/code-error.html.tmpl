@@ -103,6 +103,10 @@
   [% ELSIF error == "cookies_need_value" %]
     Every cookie must have a value.
 
+  [% ELSIF error == "extension_invalid" %]
+    An error occured processing hook [% name FILTER html %] in
+    extension [% extension FILTER html %].
+
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field FILTER html %]</code>
     and <code>[% type FILTER html %]</code> together.
@@ -291,6 +295,9 @@
 
   [% ELSIF error == "template_error" %]
     [% template_error_msg FILTER html %]
+
+  [% ELSIF error == "template_invalid" %]
+    Template with invalid file name found in hook call: [% name FILTER html %].
 
   [% ELSIF error == "unable_to_retrieve_password" %]
      I was unable to retrieve your old password from the database.

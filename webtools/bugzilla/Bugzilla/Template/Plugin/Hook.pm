@@ -52,7 +52,7 @@ sub process {
     
     # sanity check:
     if (!$template =~ /[\w\.\/\-_\\]+/) {
-        ThrowCodeError("Template with invalid file name found in hook call: $template");
+        ThrowCodeError('template_invalid', { name => $template});
     }
 
     # also get extension hook files that live in extensions/:

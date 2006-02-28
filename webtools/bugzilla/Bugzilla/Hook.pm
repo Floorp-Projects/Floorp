@@ -43,8 +43,8 @@ sub process {
         trick_taint($extension);
         if (-e $extension.'/code/'.$name.'.pl') {
             do($extension.'/code/'.$name.'.pl');
-            ThrowCodeError("An error occured processing hook \"$name\" in ".
-                "Bugzilla extension \"$extension\": $@") if $@;
+            ThrowCodeError('extension_invalid', {
+                name => $name, extension => $extension }) if $@;
         }
     }
     
