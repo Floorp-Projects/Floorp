@@ -78,7 +78,7 @@ FILTER			= emxexp -o
 # GCC for OS/2 currently predefines these, but we don't want them
 DEFINES 		+= -Uunix -U__unix -U__unix__
 
-DEFINES			+= -DTCPV40HDRS
+DEFINES			+= -DXP_OS2_EMX -DTCPV40HDRS
 
 ifndef NO_SHARED_LIB
 WRAP_MALLOC_LIB         = 
@@ -239,8 +239,6 @@ else
 		INSTALL += -R
 	endif
 endif
-
-DEFINES += -DXP_OS2
 
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
