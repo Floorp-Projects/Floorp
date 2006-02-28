@@ -42,6 +42,7 @@
 #include "nsINavBookmarksService.h"
 #include "nsIStringBundle.h"
 #include "nsNavHistory.h"
+#include "nsNavHistoryResult.h" // need for Int64 hashtable
 #include "nsBrowserCompsCID.h"
 
 class nsNavBookmarks : public nsINavBookmarksService,
@@ -64,6 +65,8 @@ public:
     }
     return sInstance;
   }
+
+  nsresult AddBookmarkToHash(PRInt64 aBookmarkId, PRTime aMinTime);
 
   nsresult ResultNodeForFolder(PRInt64 aID, nsNavHistoryQueryOptions *aOptions,
                                nsNavHistoryResultNode **aNode);
@@ -118,6 +121,15 @@ private:
   // be committed when our batch level reaches 0 again.
   PRBool mBatchHasTransaction;
 
+  // This stores a mapping from all pages reachable by redirects from bookmarked
+  // pages to the bookmarked page. Used by GetBookmarkedURIFor.
+  nsDataHashtable<nsTrimInt64HashKey, PRInt64> mBookmarksHash;
+  nsresult FillBookmarksHash();
+  nsresult RecursiveAddBookmarkHash(PRInt64 aBookmarkId, PRInt64 aCurrentSource,
+                                    PRTime aMinTime);
+  nsresult UpdateBookmarkHashOnRemove(PRInt64 aBookmarkId);
+  nsresult IsBookmarkedInDatabase(PRInt64 aBookmarkID, PRBool* aIsBookmarked);
+
   nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
@@ -137,6 +149,8 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBIndexOfItem;
   nsCOMPtr<mozIStorageStatement> mDBIndexOfFolder;
   nsCOMPtr<mozIStorageStatement> mDBGetChildAt;
+
+  nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 
   // keywords
   nsCOMPtr<mozIStorageStatement> mDBGetKeywordForURI;
