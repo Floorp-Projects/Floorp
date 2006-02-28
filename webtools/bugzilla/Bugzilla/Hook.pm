@@ -72,6 +72,8 @@ hooks. When a piece of standard Bugzilla code wants to allow an extension
 to perform additional functions, it uses Bugzilla::Hook's process() 
 subroutine to invoke any extension code if installed. 
 
+=over 4
+
 =item C<process>
 
 Invoke any code hooks with a matching name from any installed extensions. 

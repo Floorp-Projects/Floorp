@@ -229,7 +229,7 @@ Component.pm represents a Product Component object.
 =item C<bugs_ids()>
 
  Description: Returns all bug IDs that belong to the component.
- 
+
  Params:      none.
 
  Returns:     A reference to an array of bug IDs.
@@ -267,7 +267,7 @@ Component.pm represents a Product Component object.
               $comp_name - String with a component name.
 
  Returns:     Bugzilla::Component object.
-             
+
 =back
 
 =cut

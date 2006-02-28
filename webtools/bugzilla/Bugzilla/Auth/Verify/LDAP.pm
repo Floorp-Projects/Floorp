@@ -185,7 +185,7 @@ Bugzilla, which logs the user in using an LDAP directory.
 =head1 DISCLAIMER
 
 B<This module is experimental>. It is poorly documented, and not very flexible.
-Search L<http://bugzilla.mozilla.org/> for a list of known LDAP bugs.
+Search L<http:E<sol>E<sol>bugzilla.mozilla.orgE<sol>> for a list of known LDAP bugs.
 
 None of the core Bugzilla developers, nor any of the large installations, use
 this module, and so it has received less testing. (In fact, this iteration
