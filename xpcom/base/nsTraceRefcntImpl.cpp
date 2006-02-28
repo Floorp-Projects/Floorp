@@ -823,7 +823,7 @@ nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 
 // WIN32 x86 stack walking code
 // i386 or PPC Linux stackwalking code or Solaris
-#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
 #include "nsStackFrameUnix.h"
 NS_COM void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
