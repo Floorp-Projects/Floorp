@@ -49,7 +49,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(e045e635-94af-48af-9a8d-80f1a88a35f3)]
+[scriptable, uuid(4c459c8a-f548-42b7-8d7e-42ea1aed3876)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -112,6 +112,15 @@ interface mozIStorageConnection : nsISupports {
    * @returns TRUE if table exists, FALSE otherwise.
    */
   boolean tableExists(in AUTF8String aTableName);
+
+  /**
+   * Check if the given index exists.
+   *
+   * @param aIndexName   The index to check
+   * @returns TRUE if the index exists, FALSE otherwise.
+   */
+  boolean indexExists(in AUTF8String aIndexName);
+
 
   /*
    * Transactions
