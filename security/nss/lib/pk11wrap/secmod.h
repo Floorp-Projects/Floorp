@@ -55,6 +55,9 @@
 #define PUBLIC_MECH_MD2_FLAG         0x00000400ul
 #define PUBLIC_MECH_SSL_FLAG         0x00000800ul
 #define PUBLIC_MECH_TLS_FLAG         0x00001000ul
+#define PUBLIC_MECH_AES_FLAG         0x00002000ul
+#define PUBLIC_MECH_SHA256_FLAG      0x00004000ul
+#define PUBLIC_MECH_SHA512_FLAG      0x00008000ul
 
 #define PUBLIC_MECH_RANDOM_FLAG      0x08000000ul
 #define PUBLIC_MECH_FRIENDLY_FLAG    0x10000000ul
@@ -62,7 +65,7 @@
 #define PUBLIC_DISABLE_FLAG          0x40000000ul
 
 /* warning: reserved means reserved */
-#define PUBLIC_MECH_RESERVED_FLAGS   0x87FFE000ul
+#define PUBLIC_MECH_RESERVED_FLAGS   0x87FF0000ul
 
 /* These cipher flags are visible to all other libraries, */
 /* But they must be converted before used in functions */
