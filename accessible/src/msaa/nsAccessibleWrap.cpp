@@ -58,7 +58,7 @@ extern CComModule _Module;
 #define _ATLCOM_IMPL
 #include <atlcom.h>
 
-/* For documentation of the accessibility architecture, 
+/* For documentation of the accessibility architecture,
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
@@ -69,7 +69,7 @@ static gAccessibles = 0;
 #endif
 
 CComModule _Module;
-  
+
 EXTERN_C GUID CDECL CLSID_Accessible =
 { 0x61044601, 0xa811, 0x4e2b, { 0xbb, 0xba, 0x17, 0xbf, 0xab, 0xd3, 0x29, 0xd7 } };
 
@@ -78,9 +78,9 @@ EXTERN_C GUID CDECL CLSID_Accessible =
  */
 
 //-----------------------------------------------------
-// construction 
+// construction
 //-----------------------------------------------------
-nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
+nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell):
   nsAccessible(aNode, aShell), mEnumVARIANTPosition(0)
 {
 }
@@ -124,7 +124,7 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 
   if (NULL == *ppv)
     return nsAccessNodeWrap::QueryInterface(iid, ppv);
-    
+
   (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
   return S_OK;
 }
@@ -140,8 +140,8 @@ STDMETHODIMP nsAccessibleWrap::AccessibleObjectFromWindow(HWND hwnd,
                                                           void **ppvObject)
 {
   // open the dll dynamically
-  if (!gmAccLib) 
-    gmAccLib =::LoadLibrary("OLEACC.DLL");  
+  if (!gmAccLib)
+    gmAccLib =::LoadLibrary("OLEACC.DLL");
 
   if (gmAccLib) {
     if (!gmAccessibleObjectFromWindow)
@@ -161,7 +161,7 @@ STDMETHODIMP nsAccessibleWrap::NotifyWinEvent(DWORD event,
 {
   if (gmNotifyWinEvent)
     return gmNotifyWinEvent(event, hwnd, idObjectType, idObject);
-    
+
   return E_FAIL;
 }
 
@@ -178,7 +178,7 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
     if (view) {
       // This code is essentially our implementation of WindowFromAccessibleObject,
       // because MSAA iterates get_accParent() until it sees an object of ROLE_WINDOW
-      // to know where the window for a given accessible is. We must expose the native 
+      // to know where the window for a given accessible is. We must expose the native
       // window accessible that MSAA creates for us. This must be done for the document
       // object as well as any layout that creates its own window (e.g. via overflow: scroll)
       nsIWidget *widget = view->GetWidget();
@@ -233,7 +233,7 @@ STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accChild( 
+STDMETHODIMP nsAccessibleWrap::get_accChild(
       /* [in] */ VARIANT varChild,
       /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild)
 {
@@ -255,7 +255,7 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
   return (*ppdispChild)? S_OK: E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accName( 
+STDMETHODIMP nsAccessibleWrap::get_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
@@ -276,7 +276,7 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
 }
 
 
-STDMETHODIMP nsAccessibleWrap::get_accValue( 
+STDMETHODIMP nsAccessibleWrap::get_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszValue)
 {
@@ -296,7 +296,7 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
 
 NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
 {
-  // For items that are a choice in a list of choices, 
+  // For items that are a choice in a list of choices,
   // use MSAA description field to shoehorn positional info, it's becoming
   // a defacto standard use for the field.
   // Tree items override this, because they provide the current level as well
@@ -313,25 +313,25 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
     if (!description.IsEmpty()) {
       // Signal to screen readers that this description is speakable
       // and is not a formatted positional information description
-      // Don't localize the "Description: " part of this string, it will be 
+      // Don't localize the "Description: " part of this string, it will be
       // parsed out by assistive technologies.
       aDescription = NS_LITERAL_STRING("Description: ") + description;
     }
     return NS_OK;
   }
-  
+
   nsCOMPtr<nsIAccessible> parent;
   GetParent(getter_AddRefs(parent));
   if (!parent) {
     return NS_ERROR_FAILURE;
   }
-  
+
   PRInt32 indexInParent = 0, numSiblings = 0;
-  
+
   nsCOMPtr<nsIAccessible> sibling, nextSibling;
   parent->GetFirstChild(getter_AddRefs(sibling));
   NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
-  
+
   PRBool foundCurrent = PR_FALSE;
   PRUint32 siblingRole;
   while (sibling) {
@@ -341,14 +341,14 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
       if (!foundCurrent) {
         ++ indexInParent;
         if (sibling == this) {
-          foundCurrent = PR_TRUE;        
+          foundCurrent = PR_TRUE;
         }
       }
     }
     sibling->GetNextSibling(getter_AddRefs(nextSibling));
     sibling = nextSibling;
   }
-  
+
   // Don't localize the string "of" -- that's just the format of this string.
   // The AT will parse the relevant numbers out and add its own localization.
   if (currentRole == ROLE_OUTLINEITEM) {
@@ -396,7 +396,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   return NS_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accDescription( 
+STDMETHODIMP nsAccessibleWrap::get_accDescription(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszDescription)
 {
@@ -414,7 +414,7 @@ STDMETHODIMP nsAccessibleWrap::get_accDescription(
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accRole( 
+STDMETHODIMP nsAccessibleWrap::get_accRole(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarRole)
 {
@@ -443,7 +443,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   nsCOMPtr<nsIDOMNode> domNode;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
   NS_ASSERTION(accessNode, "No accessnode for accessible");
-  accessNode->GetDOMNode(getter_AddRefs(domNode));  
+  accessNode->GetDOMNode(getter_AddRefs(domNode));
   nsIContent *content = GetRoleContent(domNode);
   NS_ASSERTION(content, "No content for accessible");
   if (content && content->IsContentOfType(nsIContent::eELEMENT)) {
@@ -460,17 +460,17 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
         // Only append name space if different from that of current document
         roleString += NS_LITERAL_STRING(", ") + nameSpaceURI;
       }
-      if (!roleString.IsEmpty()) {
-        pvarRole->vt = VT_BSTR;
-        pvarRole->bstrVal = ::SysAllocString(roleString.get());
-        return S_OK;
-      }
+    }
+    if (!roleString.IsEmpty()) {
+      pvarRole->vt = VT_BSTR;
+      pvarRole->bstrVal = ::SysAllocString(roleString.get());
+      return S_OK;
     }
   }
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accState( 
+STDMETHODIMP nsAccessibleWrap::get_accState(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarState)
 {
@@ -493,7 +493,7 @@ STDMETHODIMP nsAccessibleWrap::get_accState(
 }
 
 
-STDMETHODIMP nsAccessibleWrap::get_accHelp( 
+STDMETHODIMP nsAccessibleWrap::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
@@ -501,7 +501,7 @@ STDMETHODIMP nsAccessibleWrap::get_accHelp(
   return S_FALSE;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accHelpTopic( 
+STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
       /* [out] */ BSTR __RPC_FAR *pszHelpFile,
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
@@ -511,7 +511,7 @@ STDMETHODIMP nsAccessibleWrap::get_accHelpTopic(
   return E_NOTIMPL;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut( 
+STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
@@ -530,7 +530,7 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
   return S_FALSE;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accFocus( 
+STDMETHODIMP nsAccessibleWrap::get_accFocus(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
 {
   // VT_EMPTY:    None. This object does not have the keyboard focus itself
@@ -574,12 +574,12 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   *  of options selected, unless there are none selected in which case we return an empty
   *  VARIANT.
   *
-  * The typedefs at the beginning set up the structure that will contain an array 
-  *  of the IAccessibles. It implements the IEnumVARIANT interface, allowing us to 
+  * The typedefs at the beginning set up the structure that will contain an array
+  *  of the IAccessibles. It implements the IEnumVARIANT interface, allowing us to
   *  use it to return the IAccessibles in the VARIANT.
   *
-  * We get the selected options from the select's accessible object and then put create 
-  *  IAccessible objects for them and put those in the CComObject<EnumeratorType> 
+  * We get the selected options from the select's accessible object and then put create
+  *  IAccessible objects for them and put those in the CComObject<EnumeratorType>
   *  object. Then we put the CComObject<EnumeratorType> object in the VARIANT and return.
   *
   * returns a VT_EMPTY VARIANT if:
@@ -620,7 +620,7 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
       // 1) Populate an array to store in the enumeration
       for (PRUint32 i = 0 ; i < length ; i++) {
         nsCOMPtr<nsIAccessible> tempAccess;
-        selectedOptions->QueryElementAt(i, NS_GET_IID(nsIAccessible), 
+        selectedOptions->QueryElementAt(i, NS_GET_IID(nsIAccessible),
                                         getter_AddRefs(tempAccess));
         if (tempAccess) {
           optionArray[i] = NativeAccessible(tempAccess);
@@ -643,7 +643,7 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::get_accDefaultAction( 
+STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction)
 {
@@ -661,7 +661,7 @@ STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::accSelect( 
+STDMETHODIMP nsAccessibleWrap::accSelect(
       /* [in] */ long flagsSelect,
       /* [optional][in] */ VARIANT varChild)
 {
@@ -686,7 +686,7 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accLocation( 
+STDMETHODIMP nsAccessibleWrap::accLocation(
       /* [out] */ long __RPC_FAR *pxLeft,
       /* [out] */ long __RPC_FAR *pyTop,
       /* [out] */ long __RPC_FAR *pcxWidth,
@@ -708,10 +708,10 @@ STDMETHODIMP nsAccessibleWrap::accLocation(
     return S_OK;
   }
 
-  return E_FAIL;  
+  return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accNavigate( 
+STDMETHODIMP nsAccessibleWrap::accNavigate(
       /* [in] */ long navDir,
       /* [optional][in] */ VARIANT varStart,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
@@ -725,7 +725,7 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
   PRUint32 xpRelation = 0;
 
   switch(navDir) {
-    case NAVDIR_DOWN: 
+    case NAVDIR_DOWN:
       xpAccessibleStart->GetAccessibleBelow(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
@@ -782,11 +782,11 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
     pvarEndUpAt->pdispVal = NativeAccessible(xpAccessibleResult);
     pvarEndUpAt->vt = VT_DISPATCH;
     return NS_OK;
-  } 
+  }
   return E_FAIL;
 }
 
-STDMETHODIMP nsAccessibleWrap::accHitTest( 
+STDMETHODIMP nsAccessibleWrap::accHitTest(
       /* [in] */ long xLeft,
       /* [in] */ long yTop,
       /* [retval][out] */ VARIANT __RPC_FAR *pvarChild)
@@ -829,7 +829,7 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::accDoDefaultAction( 
+STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
       /* [optional][in] */ VARIANT varChild)
 {
   nsCOMPtr<nsIAccessible> xpAccessible;
@@ -841,14 +841,14 @@ STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
   return S_OK;
 }
 
-STDMETHODIMP nsAccessibleWrap::put_accName( 
+STDMETHODIMP nsAccessibleWrap::put_accName(
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szName)
 {
   return E_NOTIMPL;
 }
 
-STDMETHODIMP nsAccessibleWrap::put_accValue( 
+STDMETHODIMP nsAccessibleWrap::put_accValue(
       /* [optional][in] */ VARIANT varChild,
       /* [in] */ BSTR szValue)
 {
@@ -905,7 +905,7 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
 
   for (long childIndex = 0; pvar[*aNumElementsFetched].vt == VT_DISPATCH; ++childIndex) {
     PRBool wasAccessibleFetched = PR_FALSE;
-    nsAccessibleWrap *msaaAccessible = 
+    nsAccessibleWrap *msaaAccessible =
       NS_STATIC_CAST(nsAccessibleWrap*, pvar[*aNumElementsFetched].pdispVal);
     if (!msaaAccessible)
       break;
@@ -930,7 +930,7 @@ nsAccessibleWrap::Skip(ULONG aNumElements)
 
   PRInt32 numChildren;
   GetChildCount(&numChildren);
-  
+
   if (mEnumVARIANTPosition > numChildren)
   {
     mEnumVARIANTPosition = numChildren;
@@ -939,7 +939,7 @@ nsAccessibleWrap::Skip(ULONG aNumElements)
   return NOERROR;
 }
 
-STDMETHODIMP 
+STDMETHODIMP
 nsAccessibleWrap::Reset(void)
 {
   mEnumVARIANTPosition = 0;
@@ -966,10 +966,10 @@ nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
 
   return NOERROR;
 }
-        
+
 
 // For IDispatch support
-STDMETHODIMP 
+STDMETHODIMP
 nsAccessibleWrap::GetTypeInfoCount(UINT *p)
 {
   *p = 0;
@@ -984,7 +984,7 @@ STDMETHODIMP nsAccessibleWrap::GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti)
 }
 
 // For IDispatch support
-STDMETHODIMP 
+STDMETHODIMP
 nsAccessibleWrap::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames,
                            UINT cNames, LCID lcid, DISPID *rgDispId)
 {
@@ -1007,7 +1007,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
   return NS_OK;
 }
 
-        
+
 //------- Helper methods ---------
 
 IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
@@ -1018,7 +1018,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
     accObject->GetHwnd(&hwnd);
     if (hwnd) {
       IDispatch *retval = nsnull;
-      AccessibleObjectFromWindow(NS_REINTERPRET_CAST(HWND, hwnd), 
+      AccessibleObjectFromWindow(NS_REINTERPRET_CAST(HWND, hwnd),
         OBJID_WINDOW, IID_IAccessible, (void **) &retval);
       return retval;
     }
@@ -1040,7 +1040,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
   // if its us real easy - this seems to always be the case
   if (aVarChild.lVal == CHILDID_SELF) {
     *aXPAccessible = NS_STATIC_CAST(nsIAccessible*, this);
-  } 
+  }
   else {
     // XXX It is rare to use a VARIANT with a child num
     // so optimizing this is not a priority
