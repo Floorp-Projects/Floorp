@@ -897,8 +897,7 @@ browsermessage {
 }
 
 #places-bookmark {
-  list-style-image: url("chrome://browser/skin/bookmarks/Bookmarks-toolbar.png");
-  -moz-image-region: rect(0px 24px 24px 0px);
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
 #places-subscribe {
@@ -911,7 +910,7 @@ browsermessage {
 }
 
 #bookmarksBarShowPlaces {
-  list-style-image: url("chrome://browser/skin/places/places-icon.png");
+  list-style-image: url("chrome://browser/skin/places/placesIcon.png");
 }
 
 /* Personal toolbar */
