@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  xmlextras \
+		  libbz2 \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -67,6 +68,8 @@ CPPSRCS		= \
 		nsWindowCollector.cpp \
 		nsMetricsModule.cpp \
 		$(NULL)
+
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS) \
 		   $(NULL)

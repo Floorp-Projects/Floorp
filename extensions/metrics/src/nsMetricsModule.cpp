@@ -44,7 +44,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPCOMCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMetricsService, Init)
 NS_DECL_CLASSINFO(nsMetricsService)
 
 static NS_METHOD
@@ -70,7 +69,7 @@ static const nsModuleComponentInfo components[] = {
     NS_METRICSSERVICE_CLASSNAME,
     NS_METRICSSERVICE_CID,
     NS_METRICSSERVICE_CONTRACTID,
-    nsMetricsServiceConstructor,
+    nsMetricsService::Create,
     nsMetricsServiceRegisterSelf,
     NULL,
     NULL,
@@ -78,6 +77,12 @@ static const nsModuleComponentInfo components[] = {
     NULL,
     &NS_CLASSINFO_NAME(nsMetricsService),
     nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::SINGLETON
+  },
+  {
+    NS_METRICSSERVICE_CLASSNAME,
+    NS_METRICSSERVICE_CID,
+    NS_ABOUT_MODULE_CONTRACTID_PREFIX "metrics",
+    nsMetricsService::Create
   }
 };
 

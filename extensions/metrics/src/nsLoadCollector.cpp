@@ -154,7 +154,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       rv = props->SetPropertyAsUint64(NS_LITERAL_STRING("loadtime"), loadTime);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsMetricsService *ms = nsMetricsService::GetMetricsService();
+      nsMetricsService *ms = nsMetricsService::get();
       rv = ms->LogEvent(NS_LITERAL_STRING("load"), props);
 
       mRequestMap.Remove(request);

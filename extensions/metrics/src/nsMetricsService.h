@@ -41,6 +41,7 @@
 
 #include "nsIMetricsService.h"
 #include "nsMetricsModule.h"
+#include "nsIAboutModule.h"
 #include "nsIStreamListener.h"
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
@@ -68,6 +69,7 @@ extern PRLogModuleInfo *gMetricsLog;
 // periodically.
 
 class nsMetricsService : public nsIMetricsService
+                       , public nsIAboutModule
                        , public nsIStreamListener
                        , public nsIObserver
                        , public nsITimerCallback
@@ -75,11 +77,31 @@ class nsMetricsService : public nsIMetricsService
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMETRICSSERVICE
+  NS_DECL_NSIABOUTMODULE
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+  
+  // Get the metrics service singleton.  This method will call do_GetService if
+  // necessary to fetch the metrics service.  It relies on the service manager
+  // to keep the singleton instance alive.  This method may return null!
+  static nsMetricsService* get();
 
+  // Create the metrics service singleton, called only by the XPCOM factory for
+  // this class.
+  static NS_METHOD Create(nsISupports *outer, const nsIID &iid, void **result);
+
+  // Helper function for logging events in the default namespace
+  nsresult LogEvent(const nsAString &eventName,
+                    nsHashPropertyBag *eventProperties)
+  {
+    return LogEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
+                    eventName,
+                    NS_STATIC_CAST(nsIWritablePropertyBag*, eventProperties));
+  }
+
+private:
   nsMetricsService()
       : mEventCount(0),
         mSuspendCount(0),
@@ -94,34 +116,21 @@ public:
     NS_ASSERTION(sMetricsService == this, ">1 MetricsService object created");
     sMetricsService = nsnull;
   }
-  
+
   nsresult Init();
 
-  static nsMetricsService* GetMetricsService()
-  {
-    if (!sMetricsService) {
-      nsCOMPtr<nsIMetricsService> ms =
-        do_GetService(NS_METRICSSERVICE_CONTRACTID);
-    }
-    return sMetricsService;
-  }
-
-  nsresult LogEvent(const nsAString &eventName,
-                    nsHashPropertyBag *eventProperties)
-  {
-    return LogEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
-                    eventName,
-                    NS_STATIC_CAST(nsIWritablePropertyBag*, eventProperties));
-  }
-
-private:
   // Creates a new root element to hold event nodes
   nsresult CreateRoot();
 
-  nsresult FlushData();
   nsresult UploadData();
   nsresult GetDataFile(nsCOMPtr<nsILocalFile> *result);
   nsresult OpenDataFile(PRUint32 flags, PRFileDesc **result);
+  nsresult GetDataFileForUpload(nsCOMPtr<nsILocalFile> *result);
+
+  // This method returns an input stream containing the complete XML for the
+  // data to upload.
+  nsresult OpenCompleteXMLStream(nsILocalFile *dataFile,
+                                 nsIInputStream **result);
 
 private:
   // Pointer to the metrics service singleton

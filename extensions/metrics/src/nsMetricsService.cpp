@@ -59,6 +59,14 @@
 #include "nsMultiplexInputStream.h"
 #include "nsStringStream.h"
 #include "nsVariant.h"
+#include "bzlib.h"
+
+// Make our MIME type inform the server of possible compression.
+#ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA
+#define NS_METRICS_MIME_TYPE "application/vnd.mozilla.metrics"
+#else
+#define NS_METRICS_MIME_TYPE "application/vnd.mozilla.metrics.bz2"
+#endif
 
 // Flush the event log whenever its size exceeds this number of events.
 #define NS_EVENTLOG_FLUSH_POINT 64
@@ -70,9 +78,9 @@ PRLogModuleInfo *gMetricsLog;
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS5_CI(nsMetricsService, nsIMetricsService,
-                      nsIStreamListener, nsIRequestObserver,
-                      nsIObserver, nsITimerCallback)
+NS_IMPL_ISUPPORTS6_CI(nsMetricsService, nsIMetricsService, nsIAboutModule,
+                      nsIStreamListener, nsIRequestObserver, nsIObserver,
+                      nsITimerCallback)
 
 NS_IMETHODIMP
 nsMetricsService::LogEvent(const nsAString &eventNS,
@@ -142,7 +150,48 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (++mEventCount > NS_EVENTLOG_FLUSH_POINT)
-    FlushData();
+    Flush();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMetricsService::Flush()
+{
+  nsresult rv;
+
+  PRFileDesc *fd;
+  rv = OpenDataFile(PR_WRONLY | PR_APPEND | PR_CREATE_FILE, &fd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Serialize our document, then strip off the root start and end tags,
+  // and write it out.
+
+  nsCOMPtr<nsIDOMSerializer> ds =
+    do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID);
+  NS_ENSURE_TRUE(ds, NS_ERROR_UNEXPECTED);
+
+  nsAutoString docText;
+  rv = ds->SerializeToString(mRoot, docText);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // The first '>' will be the end of the root start tag.
+  docText.Cut(0, docText.FindChar('>') + 1);
+
+  // The last '<' will be the beginning of the root end tag.
+  PRInt32 start = docText.RFindChar('<');
+  docText.Cut(start, docText.Length() - start);
+
+  NS_ConvertUTF16toUTF8 utf8Doc(docText);
+  PRInt32 num = utf8Doc.Length();
+  PRBool succeeded = ( PR_Write(fd, utf8Doc.get(), num) == num );
+
+  PR_Close(fd);
+  NS_ENSURE_STATE(succeeded);
+
+  // Create a new mRoot
+  rv = CreateRoot();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -152,16 +201,21 @@ nsMetricsService::Upload()
   if (mUploading)  // Ignore new uploads issued while uploading.
     return NS_OK;
 
-  // We suspend logging until the upload completes.
+  // XXX Download filtering rules and apply them.
 
-  nsresult rv = FlushData();
+  nsresult rv = Flush();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = UploadData();
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv))
     mUploading = PR_TRUE;
-    Suspend();
-  }
+
+  // Since UploadData is uploading a copy of the data, we can delete the
+  // original data file, and allow new events to be logged to a new file.
+  nsCOMPtr<nsILocalFile> dataFile;
+  GetDataFile(&dataFile);
+  if (dataFile)
+    dataFile->Remove(PR_FALSE);
 
   return NS_OK;
 }
@@ -182,6 +236,24 @@ nsMetricsService::Resume()
 }
 
 NS_IMETHODIMP
+nsMetricsService::NewChannel(nsIURI *uri, nsIChannel **result)
+{
+  nsresult rv = Flush();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> dataFile;
+  GetDataFile(&dataFile);
+  NS_ENSURE_STATE(dataFile);
+
+  nsCOMPtr<nsIInputStream> stream;
+  OpenCompleteXMLStream(dataFile, getter_AddRefs(stream));
+  NS_ENSURE_STATE(stream);
+
+  return NS_NewInputStreamChannel(result, uri, stream,
+                                  NS_LITERAL_CSTRING("text/xml"), nsnull);
+}
+
+NS_IMETHODIMP
 nsMetricsService::OnStartRequest(nsIRequest *request, nsISupports *context)
 {
   return NS_OK;
@@ -191,12 +263,10 @@ NS_IMETHODIMP
 nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
                                 nsresult status)
 {
-  nsCOMPtr<nsILocalFile> dataFile;
-  GetDataFile(&dataFile);
-  if (dataFile)
-    dataFile->Remove(PR_FALSE);
+  nsCOMPtr<nsILocalFile> uploadFile = do_QueryInterface(context);
+  if (uploadFile)
+    uploadFile->Remove(PR_FALSE);
 
-  Resume();
   mUploading = PR_FALSE;
   return NS_OK;
 }
@@ -215,7 +285,7 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
                           const PRUnichar *data)
 {
   if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    FlushData();
+    Flush();
     nsLoadCollector::Shutdown();
     nsWindowCollector::Shutdown();
   } else if (strcmp(topic, "profile-after-change") == 0) {
@@ -238,6 +308,37 @@ nsMetricsService::Notify(nsITimer *timer)
   // OK, we are ready to upload!
   Upload();
   return NS_OK;
+}
+
+/*static*/ nsMetricsService *
+nsMetricsService::get()
+{
+  if (!sMetricsService) {
+    nsCOMPtr<nsIMetricsService> ms =
+      do_GetService(NS_METRICSSERVICE_CONTRACTID);
+    if (!sMetricsService)
+      NS_WARNING("failed to initialize metrics service");
+  }
+  return sMetricsService;
+}
+
+/*static*/ NS_METHOD
+nsMetricsService::Create(nsISupports *outer, const nsIID &iid, void **result)
+{
+  NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+
+  nsRefPtr<nsMetricsService> ms;
+  if (!sMetricsService) {
+    ms = new nsMetricsService();
+    if (!ms)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ASSERTION(sMetricsService, "should be non-null");
+
+    nsresult rv = ms->Init();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return sMetricsService->QueryInterface(iid, result);
 }
 
 nsresult
@@ -322,47 +423,6 @@ nsMetricsService::OpenDataFile(PRUint32 flags, PRFileDesc **fd)
 }
 
 nsresult
-nsMetricsService::FlushData()
-{
-  nsresult rv;
-
-  PRFileDesc *fd;
-  rv = OpenDataFile(PR_WRONLY | PR_APPEND | PR_CREATE_FILE, &fd);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Serialize our document, then strip off the root start and end tags,
-  // and write it out.
-
-  nsCOMPtr<nsIDOMSerializer> ds =
-    do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID);
-  NS_ENSURE_TRUE(ds, NS_ERROR_UNEXPECTED);
-
-  nsAutoString docText;
-  rv = ds->SerializeToString(mRoot, docText);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // The first '>' will be the end of the root start tag.
-  docText.Cut(0, docText.FindChar('>') + 1);
-
-  // The last '<' will be the beginning of the root end tag.
-  PRInt32 start = docText.RFindChar('<');
-  docText.Cut(start, docText.Length() - start);
-
-  NS_ConvertUTF16toUTF8 utf8Doc(docText);
-  PRInt32 num = utf8Doc.Length();
-  PRBool succeeded = ( PR_Write(fd, utf8Doc.get(), num) == num );
-
-  PR_Close(fd);
-  NS_ENSURE_STATE(succeeded);
-
-  // Create a new mRoot
-  rv = CreateRoot();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
 nsMetricsService::UploadData()
 {
   // TODO: 1) Submit a request to the server to figure out how much data to
@@ -381,7 +441,7 @@ nsMetricsService::UploadData()
     return NS_ERROR_ABORT;
 
   nsCOMPtr<nsILocalFile> file;
-  nsresult rv = GetDataFile(&file);
+  nsresult rv = GetDataFileForUpload(&file);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // NOTE: nsIUploadChannel requires a buffered stream to upload...
@@ -397,32 +457,8 @@ nsMetricsService::UploadData()
   if (streamLen == 0)
     return NS_ERROR_ABORT;
 
-  // Construct a full XML document using the header, file contents, and
-  // footer.
-#define METRICS_XML_HEAD "<?xml version=\"1.0\"?>\n" \
-                         "<log xmlns=\"http://www.mozilla.org/metrics\">\n"
-#define METRICS_XML_TAIL "</log>"
-
-  nsCOMPtr<nsIMultiplexInputStream> miStream =
-    do_CreateInstance(NS_MULTIPLEXINPUTSTREAM_CONTRACTID);
-  NS_ENSURE_STATE(miStream);
-
-  nsCOMPtr<nsIInputStream> stringStream;
-  rv = NS_NewCStringInputStream(getter_AddRefs(stringStream),
-                                NS_LITERAL_CSTRING(METRICS_XML_HEAD));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = miStream->AppendStream(stringStream);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = miStream->AppendStream(fileStream);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewCStringInputStream(getter_AddRefs(stringStream),
-                                NS_LITERAL_CSTRING(METRICS_XML_TAIL));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = miStream->AppendStream(stringStream);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIInputStream> uploadStream;
-  NS_NewBufferedInputStream(getter_AddRefs(uploadStream), miStream, 4096);
+  NS_NewBufferedInputStream(getter_AddRefs(uploadStream), fileStream, 4096);
   NS_ENSURE_STATE(uploadStream);
 
   nsCOMPtr<nsIIOService> ios = do_GetIOService();
@@ -435,7 +471,7 @@ nsMetricsService::UploadData()
   nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(channel);
   NS_ENSURE_STATE(uploadChannel); 
 
-  NS_NAMED_LITERAL_CSTRING(binaryType, "application/vnd.mozilla.metrics");
+  NS_NAMED_LITERAL_CSTRING(binaryType, NS_METRICS_MIME_TYPE);
   rv = uploadChannel->SetUploadStream(uploadStream, binaryType, -1);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -444,9 +480,131 @@ nsMetricsService::UploadData()
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = channel->AsyncOpen(this, nsnull);
+  rv = channel->AsyncOpen(this, file);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+nsMetricsService::GetDataFileForUpload(nsCOMPtr<nsILocalFile> *result)
+{
+  nsCOMPtr<nsILocalFile> input;
+  nsresult rv = GetDataFile(&input);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIInputStream> src;
+  rv = OpenCompleteXMLStream(input, getter_AddRefs(src));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> temp;
+  rv = input->Clone(getter_AddRefs(temp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString leafName;
+  rv = temp->GetNativeLeafName(leafName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  leafName.AppendLiteral(".bz2");
+  rv = temp->SetNativeLeafName(leafName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILocalFile> ltemp = do_QueryInterface(temp, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  FILE *destFp = NULL;
+  rv = ltemp->OpenANSIFileDesc("wb", &destFp);
+
+  // Copy file using bzip2 compression:
+
+  if (NS_SUCCEEDED(rv)) {
+#ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA
+    char buf[4096];
+    PRUint32 n;
+
+    while (NS_SUCCEEDED(rv = src->Read(buf, sizeof(buf), &n)) && n) {
+      if (fwrite(buf, 1, n, destFp) != n) {
+        NS_WARNING("failed to write data");
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
+    }
+#else
+    int bzerr = BZ_OK;
+    BZFILE *destBz = BZ2_bzWriteOpen(&bzerr, destFp,
+                                     9,  // block size (1-9)
+                                     0,  // verbosity
+                                     0); // work factor
+    if (destBz) {
+      char buf[4096];
+      PRUint32 n;
+
+      while (NS_SUCCEEDED(rv = src->Read(buf, sizeof(buf), &n)) && n) {
+        BZ2_bzWrite(&bzerr, destBz, buf, n);
+        if (bzerr != BZ_OK) {
+          NS_WARNING("failed to write data");
+          rv = NS_ERROR_UNEXPECTED;
+          break;
+        }
+      }
+
+      BZ2_bzWriteClose(&bzerr, destBz,
+                       0,        // abandon
+                       nsnull,   // nbytes_in
+                       nsnull);  // nbytes_out
+    }
+#endif
+  }
+
+  if (destFp)
+    fclose(destFp);
+
+  if (NS_SUCCEEDED(rv)) {
+    *result = nsnull;
+    ltemp.swap(*result);
+  }
+
+  return rv;
+}
+
+nsresult
+nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
+                                       nsIInputStream **result)
+{
+  // Construct a full XML document using the header, file contents, and
+  // footer.
+  static const char METRICS_XML_HEAD[] =
+      "<?xml version=\"1.0\"?>\n"
+      "<log xmlns=\"http://www.mozilla.org/metrics\">\n";
+  static const char METRICS_XML_TAIL[] = "</log>";
+
+  nsCOMPtr<nsIInputStream> fileStream;
+  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), dataFile);
+  NS_ENSURE_STATE(fileStream);
+
+  nsCOMPtr<nsIMultiplexInputStream> miStream =
+    do_CreateInstance(NS_MULTIPLEXINPUTSTREAM_CONTRACTID);
+  NS_ENSURE_STATE(miStream);
+
+  nsCOMPtr<nsIInputStream> stringStream;
+  NS_NewByteInputStream(getter_AddRefs(stringStream), METRICS_XML_HEAD,
+                        sizeof(METRICS_XML_HEAD)-1);
+  NS_ENSURE_STATE(stringStream);
+
+  nsresult rv = miStream->AppendStream(stringStream);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = miStream->AppendStream(fileStream);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_NewByteInputStream(getter_AddRefs(stringStream), METRICS_XML_TAIL,
+                        sizeof(METRICS_XML_TAIL)-1);
+  NS_ENSURE_STATE(stringStream);
+
+  rv = miStream->AppendStream(stringStream);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*result = miStream);
   return NS_OK;
 }
 
