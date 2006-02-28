@@ -469,7 +469,7 @@
       "<varname>enter_bug-defaultvars</varname>". Thus, a source file at 
       <filename>BUGZILLA_ROOT/extensions/EXTENSION_NAME/code/enter_bug-entrydefaultvars.pl</filename>
       will be automatically invoked when when the code hook is reached. 
-    <para>
+    </para>
    
     <para>  
       Template hooks appear in the standard Bugzilla templates as a 
