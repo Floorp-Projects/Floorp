@@ -175,7 +175,7 @@ nsDeviceContextXlib::CommonInit(void)
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
     if (NS_SUCCEEDED(res) && prefs) {
       PRInt32 intVal = 96;
-      res = prefs->GetIntPref("browser.display.screen_resolution", &intVal);
+      res = prefs->GetIntPref("layout.css.dpi", &intVal);
       if (NS_SUCCEEDED(res)) {
         if (intVal) {
           dpi = intVal;
