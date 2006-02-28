@@ -807,6 +807,9 @@ function prepareForStartup()
 
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+
+  // Initialize the feedhandler
+  FeedHandler.init();
 }
 
 function delayedStartup()
@@ -968,8 +971,6 @@ function delayedStartup()
     document.getElementById("textfieldDirection-separator").hidden = false;
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
-
-  FeedHandler.init();
 }
 
 function BrowserShutdown()
