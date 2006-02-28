@@ -408,45 +408,18 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
   
-  // check whether this reflow request is targeted at us or a child
-  // frame (e.g. a foreignObject):
-  if (aReflowState.reason == eReflowReason_Incremental) {
-    nsReflowPath::iterator iter = aReflowState.path->FirstChild();
-    nsReflowPath::iterator end = aReflowState.path->EndChildren();
+  if (aReflowState.reason == eReflowReason_Incremental &&
+      !aReflowState.path->mReflowCommand) {
+    // We're not the target of the incremental reflow, so just bail.
+    // This means that something happened to one of our descendants
+    // (excluding those inside svg:foreignObject, since
+    // nsSVGForeignObjectFrame is a reflow root).
 
-    for ( ; iter != end; ++iter) {
-      // The actual target of this reflow is one of our child
-      // frames. Since SVG as such doesn't use reflow, this will
-      // probably be the child of a <foreignObject>. Some HTML|XUL
-      // content frames target reflow events at themselves when they
-      // need to be redrawn in response to e.g. a style change. For
-      // correct visual updating, we must make sure the reflow
-      // reaches its intended target.
-        
-      // Since it is an svg frame (probably an nsSVGForeignObjectFrame),
-      // we might as well pass in our aDesiredSize and aReflowState
-      // objects - they are ignored by svg frames:
-      nsSize availSpace(0, 0); // XXXwaterson probably wrong!
-      nsHTMLReflowState state(aPresContext, aReflowState, *iter, availSpace);
-      (*iter)->Reflow (aPresContext,
-                       aDesiredSize,
-                       state,
-                       aStatus);
-
-      // XXX do we really have to return our metrics although we're
-      // not affected by the reflow? Is there a way of telling our
-      // parent that we don't want anything changed?
-      aDesiredSize.width  = mRect.width;
-      aDesiredSize.height = mRect.height;
-      aDesiredSize.ascent = aDesiredSize.height;
-      aDesiredSize.descent = 0;
-    }
-
-    if (! aReflowState.path->mReflowCommand) {
-      // We're not the target of the incremental reflow, so just bail.
-      aStatus = NS_FRAME_COMPLETE;
-      return NS_OK;
-    }
+    // XXXldb If this incremental reflow was the result of a style
+    // change to something that *contains* a foreignObject, then we're
+    // dropping the change completely on the floor!
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
   }
   
   //  SVG CR 20001102: When the SVG content is embedded inline within
