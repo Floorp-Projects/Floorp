@@ -280,6 +280,7 @@ private:
     PRUint32                          mAuthRetryPending         : 1;
     PRUint32                          mSuppressDefensiveAuth    : 1;
     PRUint32                          mResuming                 : 1;
+    PRUint32                          mOpenedCacheForWriting    : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {

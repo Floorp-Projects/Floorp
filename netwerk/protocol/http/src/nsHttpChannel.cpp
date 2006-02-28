@@ -163,6 +163,7 @@ nsHttpChannel::nsHttpChannel()
     , mAuthRetryPending(PR_FALSE)
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
+    , mOpenedCacheForWriting(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -1709,6 +1710,7 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
         mCachePump = 0;
         mCacheEntry = 0;
         mCacheAccess = 0;
+        mOpenedCacheForWriting = PR_FALSE;
     }
     return rv;
 }
@@ -1851,6 +1853,8 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     rv = mCacheEntry->OpenOutputStream(offset, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
 
+    mOpenedCacheForWriting = PR_TRUE;
+
     // XXX disk cache does not support overlapped i/o yet
 #if 0
     // Mark entry valid inorder to allow simultaneous reading...
@@ -1865,8 +1869,8 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     rv = tee->Init(mListener, out);
     if (NS_FAILED(rv)) return rv;
 
-    mListener = do_QueryInterface(tee, &rv);
-    return rv;
+    mListener = tee;
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -4094,18 +4098,16 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     if (mCacheEntry) {
         nsresult closeStatus = status;
-        if (mCanceled) {
-            // we don't want to discard the cache entry if canceled and
-            // reading from the cache.
-            if (request == mCachePump)
-                closeStatus = NS_OK;
-            // we also don't want to discard the cache entry if the
-            // server supports byte range requests, because we could always
-            // complete the download at a later time.
-            else if (isPartial && mResponseHead && mResponseHead->IsResumable()) {
-                LOG(("keeping partial response that is resumable!\n"));
-                closeStatus = NS_OK; 
-            }
+        // we don't want to discard the cache entry if we're only reading from
+        // the cache.
+        if (!mOpenedCacheForWriting || request == mCachePump)
+            closeStatus = NS_OK;
+        // we also don't want to discard the cache entry if the server supports
+        // byte range requests, because we could always complete the download
+        // at a later time.
+        else if (isPartial && mResponseHead && mResponseHead->IsResumable()) {
+            LOG(("keeping partial response that is resumable!\n"));
+            closeStatus = NS_OK; 
         }
         CloseCacheEntry(closeStatus);
     }
