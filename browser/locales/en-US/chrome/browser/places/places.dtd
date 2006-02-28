@@ -139,23 +139,17 @@
 <!ENTITY advancedSearch.rules.label
   " of the following rules:">
 <!ENTITY advancedSearch.subj_keyword.label
-  "Keywords">
+  "Containing the text">
 <!ENTITY advancedSearch.subj_visited.label
   "Visited">
-<!ENTITY advancedSearch.subj_host.label
-  "Host">
-<!ENTITY advancedSearch.subj_uri.label
-  "URI">
-<!ENTITY advancedSearch.host_is.label
-  "is">
-<!ENTITY advancedSearch.host_endswith.label
-  "ends with">
-<!ENTITY advancedSearch.include.label
-  "include">
-<!ENTITY advancedSearch.uri_is.label
-  "is">
-<!ENTITY advancedSearch.uri_startswith.label
+<!ENTITY advancedSearch.subj_location.label
+  "Location">
+<!ENTITY advancedSearch.location_startswith.label
   "starts with">
+<!ENTITY advancedSearch.location_is.label
+  "is">
+<!ENTITY advancedSearch.location_onsite.label
+  "is on site">
 <!ENTITY advancedSearch.time_is.label
   "on">
 <!ENTITY advancedSearch.time_before.label

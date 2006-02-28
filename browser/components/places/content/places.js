@@ -588,39 +588,23 @@ var PlacesQueryBuilder = {
   
   _keywordSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectKeyword",
-    advancedSearch_N_HostMenulist: false,
-    advancedSearch_N_KeywordLabel: true,
-    advancedSearch_N_UriMenulist: false,
+    advancedSearch_N_LocationMenulist: false,
     advancedSearch_N_TimeMenulist: false,
     advancedSearch_N_Textbox: "",
     advancedSearch_N_TimePicker: false,
     advancedSearch_N_TimeMenulist2: false,
   },
-  _hostSearch: {
-    advancedSearch_N_Subject: "advancedSearch_N_SubjectHost",
-    advancedSearch_N_HostMenulist: "advancedSearch_N_HostMenuSelected",
-    advancedSearch_N_KeywordLabel: false,
-    advancedSearch_N_UriMenulist: false,
+  _locationSearch: {
+    advancedSearch_N_Subject: "advancedSearch_N_SubjectLocation",
+    advancedSearch_N_LocationMenulist: "advancedSearch_N_LocationMenuSelected",
     advancedSearch_N_TimeMenulist: false,
     advancedSearch_N_Textbox: "",
-    advancedSearch_N_TimePicker: false,
-    advancedSearch_N_TimeMenulist2: false,
-  },
-  _uriSearch: {
-    advancedSearch_N_Subject: "advancedSearch_N_SubjectUri",
-    advancedSearch_N_HostMenulist: false,
-    advancedSearch_N_KeywordLabel: false,
-    advancedSearch_N_UriMenulist: "advancedSearch_N_UriMenuSelected",
-    advancedSearch_N_TimeMenulist: false,
-    advancedSearch_N_Textbox: "http://",
     advancedSearch_N_TimePicker: false,
     advancedSearch_N_TimeMenulist2: false,
   },
   _timeSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectVisited",
-    advancedSearch_N_HostMenulist: false,
-    advancedSearch_N_KeywordLabel: false,
-    advancedSearch_N_UriMenulist: false,
+    advancedSearch_N_LocationMenulist: false,
     advancedSearch_N_TimeMenulist: true,
     advancedSearch_N_Textbox: false,
     advancedSearch_N_TimePicker: "date",
@@ -628,9 +612,7 @@ var PlacesQueryBuilder = {
   },
   _timeInLastSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectVisited",
-    advancedSearch_N_HostMenulist: false,
-    advancedSearch_N_KeywordLabel: false,
-    advancedSearch_N_UriMenulist: false,
+    advancedSearch_N_LocationMenulist: false,
     advancedSearch_N_TimeMenulist: true,
     advancedSearch_N_Textbox: "7",
     advancedSearch_N_TimePicker: false,
@@ -644,15 +626,13 @@ var PlacesQueryBuilder = {
     this._nextSearch = {
       "keyword": this._timeSearch,
       "visited": this._hostSearch,
-      "host": this._uriSearch,
-      "uri": this._keywordSearch,
+      "location": this._locationSearch,
     };
     
     this._queryBuilders = {
       "keyword": this.setKeywordQuery,
       "visited": this.setVisitedQuery,
-      "host": this.setHostQuery,
-      "uri": this.setUriQuery,
+      "location": this.setLocationQuery,
     };
     
     this._dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
@@ -896,23 +876,18 @@ var PlacesQueryBuilder = {
     query.searchTerms += document.getElementById(prefix + "Textbox").value + " ";
   },
   
-  setUriQuery: function PQB_setUriQuery(query, prefix) {
-    var matchType = document.getElementById(prefix + "UriMenulist").selectedItem.value;
-    if (matchType == "startsWith")
-      query.uriIsPrefix = true;
-    else
-      query.uriIsPrefix = false;
-
-    var ios = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService);
-    var spec = document.getElementById(prefix + "Textbox").value;
-    query.uri = ios.newURI(spec, null, null);
-  },
-  
-  setHostQuery: function PQB_setHostQuery(query, prefix) {
-    if (document.getElementById(prefix + "HostMenulist").selectedItem.value == "is")
-      query.domainIsHost = true;
-    query.domain = document.getElementById(prefix + "Textbox").value;
+  setLocationQuery: function PQB_setLocationQuery(query, prefix) {
+    var type = document.getElementById(prefix + "LocationMenulist").selectedItem.value;
+    if (type == "onsite") {
+      query.domain = document.getElementById(prefix + "Textbox").value;
+    }
+    else {
+      query.uriIsPrefix = (type == "startswith");
+      var ios = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+      var spec = document.getElementById(prefix + "Textbox").value;
+      query.uri = ios.newURI(spec, null, null);
+    }
   },
   
   setVisitedQuery: function PQB_setVisitedQuery(query, prefix) {
@@ -961,7 +936,6 @@ var PlacesQueryBuilder = {
     var queries = [];
     if (queryType == "and")
       queries.push(PlacesPage._hist.getNewQuery());
-    var onlyBookmarked = document.getElementById("advancedSearchOnlyBookmarked").checked;
     for (var i = 1; i <= this._numRows; i++) {
       var prefix = "advancedSearch" + i;
       
@@ -972,7 +946,6 @@ var PlacesQueryBuilder = {
         query = queries[0];
       else
         query = PlacesPage._hist.getNewQuery();
-      query.onlyBookmarked = onlyBookmarked;
       
       var querySubject = document.getElementById(prefix + "Subject").value;
       this._queryBuilders[querySubject](query, prefix);
@@ -981,17 +954,8 @@ var PlacesQueryBuilder = {
         queries.push(query);
     }
     
-    // Set max results
-    var result = PlacesPage._content.getResult();
-    var options = PlacesPage.getCurrentOptions();
-    if (document.getElementById("advancedSearchHasMax").checked) {
-      var max = parseInt(document.getElementById("advancedSearchMaxResults").value);
-      if (isNaN(max))
-        max = 100;
-      options.maxResults = max;
-      dump("Max results = " + options.maxResults + "(" + max + ")\n");
-    }
     // Make sure we're getting uri results, not visits
+    var options = PlacesPage.getCurrentOptions();
     options.resultType = options.RESULT_TYPE_URI;
 
     PlacesPage._content.load(queries, options);

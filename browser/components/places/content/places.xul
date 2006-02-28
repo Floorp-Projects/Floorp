@@ -133,46 +133,27 @@
                                 rowid="1"
                                 id="advancedSearch1SubjectVisited"
                                 oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
-                      <menuitem value="host"
-                                label="&advancedSearch.subj_host.label;"
+                      <menuitem value="location"
+                                label="&advancedSearch.subj_location.label;"
                                 rowid="1"
-                                id="advancedSearch1SubjectHost"
-                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._hostSearch);"/>
-                      <menuitem value="uri"
-                                label="&advancedSearch.subj_uri.label;"
-                                rowid="1"
-                                id="advancedSearch1SubjectUri"
-                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._uriSearch);"/>
+                                id="advancedSearch1SubjectLocation"
+                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._locationSearch);"/>
                     </menupopup>
                   </menulist>
 
                   <hbox flex="1" align="center">
-                    <menulist id="advancedSearch1HostMenulist"
+                    <menulist id="advancedSearch1LocationMenulist"
                               oncommand="PlacesQueryBuilder.doSearch();"
                               hidden="true">
                       <menupopup>
-                        <menuitem id="advancedSearch1HostMenuSelected"
-                                  value="is"
-                                  label="&advancedSearch.host_is.label;"
+                        <menuitem id="advancedSearch1LocationMenuSelected"
+                                  value="startswith"
+                                  label="&advancedSearch.location_startswith.label;"
                                   selected="true"/>
-                        <menuitem value="endsWith"
-                                  label="&advancedSearch.host_endswith.label;"/>
-                      </menupopup>
-                    </menulist>
-
-                    <label id="advancedSearch1KeywordLabel"
-                           value="&advancedSearch.include.label;"/>
-
-                    <menulist id="advancedSearch1UriMenulist"
-                              oncommand="PlacesQueryBuilder.doSearch();"
-                              hidden="true">
-                      <menupopup>
                         <menuitem value="is"
-                                  label="&advancedSearch.uri_is.label;"/>
-                        <menuitem id="advancedSearch1UriMenuSelected"
-                                  value="startsWith"
-                                  selected="true"
-                                  label="&advancedSearch.uri_startswith.label;"/>
+                                  label="&advancedSearch.location_is.label;"/>
+                        <menuitem value="onsite"
+                                  label="&advancedSearch.location_onsite.label;"/>
                       </menupopup>
                     </menulist>
 
@@ -198,14 +179,18 @@
                                   oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeInLastSearch);"/>
                       </menupopup>
                     </menulist>
-                    <textbox id="advancedSearch1Textbox"
+                    <textbox type="timed"
+                             timeout="50"
+                             id="advancedSearch1Textbox"
                              flex="1"
-                             oninput="PlacesQueryBuilder.doSearch();"/>
+                             oncommand="PlacesQueryBuilder.doSearch();"/>
 
-                    <textbox id="advancedSearch1TimePicker"
+                    <textbox type="timed"
+                             timeout="50"
+                             id="advancedSearch1TimePicker"
                              hidden="true" flex="1"
                              rowid="1"
-                             oninput="PlacesQueryBuilder.onDateTyped(event, this.getAttribute('rowid'));"
+                             oncommand="PlacesQueryBuilder.onDateTyped(event, this.getAttribute('rowid'));"
                              onclick="PlacesQueryBuilder.handleTimePickerClick(event, this.getAttribute('rowid'));"/>
                     <popup id="advancedSearch1DatePopup"
                            onpopupshowing="this.setAttribute('showing', true);"
@@ -243,21 +228,6 @@
                 </row>
               </rows>
             </grid>
-            <hbox align="center">
-              <checkbox id="advancedSearchOnlyBookmarked"
-                        label="&advancedSearch.onlybookmarked.label;"
-                        checked="false"
-                        oncommand="PlacesQueryBuilder.doSearch();"/>
-              <spacer flex="1"/>
-              <checkbox id="advancedSearchHasMax"
-                        label="&advancedSearch.max.label;"
-                        oncommand="PlacesQueryBuilder.doSearch();"
-                        checked="true"/>
-              <textbox id="advancedSearchMaxResults"
-                       oninput="PlacesQueryBuilder.doSearch();"
-                       value="100"/>
-              <spacer flex="1"/>
-            </hbox>
           </vbox>
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" query="" type="places" 
