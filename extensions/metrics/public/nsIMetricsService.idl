@@ -62,6 +62,11 @@ interface nsIMetricsService : nsISupports
                 in nsIPropertyBag eventValues);
 
   /**
+   * Flush data to disk.
+   */
+  void flush();
+
+  /**
    * Initiate the upload of the current event log.  This causes the current
    * event log to be truncated once the upload completes.
    */

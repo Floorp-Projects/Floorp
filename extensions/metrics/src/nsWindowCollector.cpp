@@ -159,7 +159,7 @@ nsWindowCollector::Observe(nsISupports *subject,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsMetricsService *ms = nsMetricsService::GetMetricsService();
+    nsMetricsService *ms = nsMetricsService::get();
     rv = ms->LogEvent(NS_LITERAL_STRING("windowcreate"), properties);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, "toplevel-window-ready") == 0) {
@@ -186,7 +186,7 @@ nsWindowCollector::Observe(nsISupports *subject,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsMetricsService *ms = nsMetricsService::GetMetricsService();
+    nsMetricsService *ms = nsMetricsService::get();
     rv = ms->LogEvent(NS_LITERAL_STRING("windowopen"), properties);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, "domwindowclosed") == 0) {
@@ -203,7 +203,7 @@ nsWindowCollector::Observe(nsISupports *subject,
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsMetricsService *ms = nsMetricsService::GetMetricsService();
+    nsMetricsService *ms = nsMetricsService::get();
     rv = ms->LogEvent(NS_LITERAL_STRING("windowclose"), properties);
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
@@ -221,7 +221,7 @@ nsWindowCollector::Observe(nsISupports *subject,
                                    GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsMetricsService *ms = nsMetricsService::GetMetricsService();
+    nsMetricsService *ms = nsMetricsService::get();
     rv = ms->LogEvent(NS_LITERAL_STRING("windowdestroy"), properties);
 
     // Remove the window from our map.
