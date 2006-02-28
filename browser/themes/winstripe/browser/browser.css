@@ -961,3 +961,63 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.gif");
 }
 
+#places-bookmark {
+  list-style-image: url("chrome://browser/skin/bookmarks/Bookmarks-toolbar.png");
+  -moz-image-region: rect(0px 24px 24px 0px);
+}
+
+#places-subscribe {
+  list-style-image: url("chrome://browser/skin/page-livemarks.png");
+  opacity: 1.0;
+}
+
+#places-subscribe[disabled="true"] {
+  opacity: 0.3;
+}
+
+#bookmarksBarShowPlaces {
+  list-style-image: url("chrome://browser/skin/places/places-icon.png");
+}
+
+
+/* Personal toolbar */
+.toolbar-drop-indicator {
+  height: 16px;
+  width: 5px;
+  margin-bottom: -8px;
+  position: relative;
+  background: url('chrome://browser/skin/places/toolbarDropMarker.png') 50% 50% no-repeat;
+}
+
+.toolbar-drop-indicator-bar {
+  display: none;
+  height: 16px;
+  margin-bottom: -16px;
+  margin-left: 4px;
+  position: relative;
+}
+
+.toolbar-drop-indicator-bar[dragging="true"] {
+  display: -moz-box;
+}
+
+toolbarbutton.bookmark-item[dragover="true"][open="true"] {
+  -moz-appearance: none;
+  background: Highlight !important;
+  color: HighlightText !important;
+  list-style-image: url('chrome://browser/skin/places/folderDragOver.png') !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
+}
+
+.bookmark-item[dragover-into="true"] {
+  background: Highlight !important;
+  color: HighlightText !important;
+}
+
+.bookmark-item[dragover-top="true"] {
+  -moz-border-top-colors: #000000;
+}
+
+.bookmark-item[dragover-bottom="true"] {
+  -moz-border-bottom-colors: #000000;
+}
