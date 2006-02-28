@@ -865,6 +865,12 @@ unless (-d $attachdir) {
     mkdir $attachdir, 0770;
 }
 
+# ZLL: 2005-08-20 Create extensions/ if it does not already exist:
+unless (-d $extensionsdir) {
+    print "Creating extensions directory ($extensionsdir) ...\n";
+    mkdir $extensionsdir, 0770;
+}
+
 
 # 2000-12-14 New graphing system requires a directory to put the graphs in
 # This code copied from what happens for the data dir above.

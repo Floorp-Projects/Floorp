@@ -69,6 +69,7 @@ if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
 }
 our $attachdir = "$datadir/attachments";
 our $webdotdir = "$datadir/webdot";
+our $extensionsdir = "$libpath/extensions";
 
 our @parampanels = ();
 
@@ -87,7 +88,7 @@ our @parampanels = ();
    admin => [qw(UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
    locations => [qw($libpath $localconfig $attachdir $datadir $templatedir
-                    $webdotdir $project)],
+                    $webdotdir $project $extensionsdir)],
    params => [qw(@parampanels)],
   );
 Exporter::export_ok_tags('admin', 'db', 'locations', 'params');

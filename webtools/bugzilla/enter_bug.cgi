@@ -41,6 +41,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Bug;
 use Bugzilla::User;
+use Bugzilla::Hook;
 use Bugzilla::Product;
 require "globals.pl";
 
@@ -588,6 +589,8 @@ foreach my $row (@$grouplist) {
 }
 
 $vars->{'group'} = \@groups;
+
+Bugzilla::Hook::process("enter_bug-entrydefaultvars");
 
 $vars->{'default'} = \%default;
 

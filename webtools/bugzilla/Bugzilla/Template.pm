@@ -100,6 +100,7 @@ sub sortAcceptLanguage {
 # Returns the path to the templates based on the Accept-Language
 # settings of the user and of the available languages
 # If no Accept-Language is present it uses the defined default
+# Templates may also be found in the extensions/ tree
 sub getTemplateIncludePath {
     # Return cached value if available
 
@@ -113,17 +114,14 @@ sub getTemplateIncludePath {
            $template_include_path = [
                "$templatedir/$languages/$project",
                "$templatedir/$languages/custom",
-               "$templatedir/$languages/extension",
                "$templatedir/$languages/default"
            ];
        } else {
            $template_include_path = [
                "$templatedir/$languages/custom",
-               "$templatedir/$languages/extension",
                "$templatedir/$languages/default"
            ];
        }
-        return $template_include_path;
     }
     my @languages       = sortAcceptLanguage($languages);
     my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "" );
@@ -144,7 +142,6 @@ sub getTemplateIncludePath {
            map((
                "$templatedir/$_/$project",
                "$templatedir/$_/custom",
-               "$templatedir/$_/extension",
                "$templatedir/$_/default"
                ), @usedlanguages
             )
@@ -153,12 +150,30 @@ sub getTemplateIncludePath {
         $template_include_path = [
            map((
                "$templatedir/$_/custom",
-               "$templatedir/$_/extension",
                "$templatedir/$_/default"
                ), @usedlanguages
             )
         ];
     }
+    
+    # add in extension template directories:
+    my @extensions = glob($Bugzilla::Config::extensionsdir."/*");
+    foreach my $extension (@extensions) {
+        trick_taint($extension); # since this comes right from the filesystem
+                                 # we have bigger issues if it is insecure
+        push(@$template_include_path,
+            map((
+                $extension."/template/".$_),
+               @usedlanguages));
+    }
+    
+    # remove duplicates since they keep popping up:
+    my @dirs;
+    foreach my $dir (@$template_include_path) {
+        push(@dirs, $dir) unless grep ($dir eq $_, @dirs);
+    }
+    $template_include_path = [@dirs];
+    
     return $template_include_path;
 }
 
