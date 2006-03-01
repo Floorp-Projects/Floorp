@@ -1347,6 +1347,9 @@ pre_call_clean_up:
     result = JSVAL_NULL;
     AUTO_MARK_JSVAL(ccx, &result);
 
+    result = JSVAL_NULL;
+    AUTO_MARK_JSVAL(ccx, &result);
+
     if(!readyToDoTheCall)
         goto done;
 
