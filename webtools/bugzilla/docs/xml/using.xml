@@ -803,8 +803,8 @@
 
       <para>
         You can change how much depth to show, and you can hide resolved bugs
-        from this page. You can also collaps/expand dependencies from
-        each bugs on the tree view.
+        from this page. You can also collaps/expand dependencies for
+        each bug on the tree view.
       </para>
     </section>
   </section>
