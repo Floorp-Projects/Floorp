@@ -791,8 +791,24 @@
         maximum size of a regular attachment.
       </para>
     </section>
+
+    <section id="dependencytree">
+      <title>Dependency Tree</title>
+
+      <para>
+        On the <quote>Dependency tree</quote> page linked from each bug
+        page, you can see the dependency relationship from the bug as a
+        tree structure.
+      </para>
+
+      <para>
+        You can change how much depth to show, and you can hide resolved bugs
+        from this page. You can also collaps/expand dependencies from
+        each bugs on the tree view.
+      </para>
+    </section>
   </section>
-  
+
   <section id="userpreferences">
     <title>User Preferences</title>
 
