@@ -91,8 +91,7 @@ interface nsIAsyncInputStream : nsIInputStream
      * event will be dispatched when the stream becomes readable or closed.
      * 
      * @param aCallback
-     *        This object is notified when the stream becomes ready.  This
-     *        parameter may be null to clear an existing callback.
+     *        This object is notified when the stream becomes ready.
      * @param aFlags
      *        This parameter specifies optional flags passed in to configure
      *        the behavior of this method.  Pass zero to specify no flags.

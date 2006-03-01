@@ -35,26 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIChannel.idl"
+interface nsIRequestObserver;
 
-/**
- * This interface may be used to determine if a channel is a FTP channel.
- */
-[scriptable, uuid(2315d831-8b40-446a-9138-fe09ebb1b720)]
-interface nsIFTPChannel : nsISupports
+// this interface provides a way for the FTP connection to 
+// synchronize with the owning channel.
+
+[scriptable, uuid(3476df52-1dd2-11b2-b928-925d89b33bc0)]
+interface nsIFTPChannel : nsIChannel
 {
 };
 
-/**
- * This interface may be defined as a notification callback on the FTP
- * channel.  It allows a consumer to receive a log of the FTP control
- * connection conversation.
- */
 [scriptable, uuid(455d4234-0330-43d2-bbfb-99afbecbfeb0)]
 interface nsIFTPEventSink : nsISupports
 {
-    /**
-     * XXX document this method!  (see bug 328915)
-     */
     void OnFTPControlLog(in boolean server, in string msg);
 };
+

@@ -50,7 +50,6 @@
 #include "nsITXTToHTMLConv.h"
 #include "nsIPrompt.h"
 #include "nsEventQueueUtils.h"
-#include "nsStreamUtils.h"
 #include "nsMimeTypes.h"
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
@@ -80,6 +79,8 @@ public:
     NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void *closure,
                             PRUint32 count, PRUint32 *result);
     NS_IMETHOD CloseWithStatus(nsresult status);
+    NS_IMETHOD AsyncWait(nsIInputStreamCallback *callback, PRUint32 flags,
+                         PRUint32 count, nsIEventTarget *target);
 
     nsGopherContentStream(nsGopherChannel *channel)
         : nsBaseContentStream(PR_TRUE)  // non-blocking
@@ -92,9 +93,6 @@ public:
     nsresult PromptForQueryString(nsCString &result);
     void     UpdateContentType(char type);
     nsresult SendRequest();
-
-protected:
-    virtual void OnCallbackPending();
 
 private:
     nsRefPtr<nsGopherChannel>      mChannel;
@@ -121,15 +119,14 @@ NS_IMETHODIMP
 nsGopherContentStream::ReadSegments(nsWriteSegmentFun writer, void *closure,
                                     PRUint32 count, PRUint32 *result)
 {
-    // Insert a thunk here so that the input stream passed to the writer is
-    // this input stream instead of mSocketInput.
-    if (mSocketInput) {
-        nsWriteSegmentThunk thunk = { this, writer, closure };
-        return mSocketInput->ReadSegments(NS_WriteSegmentThunk, &thunk, count,
-                                          result);
-    }
+    // TODO: Insert a thunk here so that the input stream passed to the writer
+    //       is this input stream instead of mSocketInput.  This thunk should be
+    //       some generic thunk available from nsStreamUtils.
+    if (mSocketInput)
+        return mSocketInput->ReadSegments(writer, closure, count, result);
 
-    return nsBaseContentStream::ReadSegments(writer, closure, count, result);
+    // No data yet
+    return NS_BASE_STREAM_WOULD_BLOCK;
 }
 
 NS_IMETHODIMP
@@ -142,6 +139,26 @@ nsGopherContentStream::CloseWithStatus(nsresult status)
         mSocketOutput = nsnull;
     }
     return nsBaseContentStream::CloseWithStatus(status);
+}
+
+NS_IMETHODIMP
+nsGopherContentStream::AsyncWait(nsIInputStreamCallback *callback, PRUint32 flags,
+                                 PRUint32 count, nsIEventTarget *target)
+{
+    nsresult rv = nsBaseContentStream::AsyncWait(callback, flags, count, target);
+    if (NS_FAILED(rv) && IsClosed())
+        return rv;
+
+    // We have a callback, so failure means we should close the stream.
+    if (!mSocket) {
+        rv = OpenSocket(target);
+    } else if (mSocketInput) {
+        rv = mSocketInput->AsyncWait(this, 0, 0, target);
+    }
+    if (NS_FAILED(rv))
+        CloseWithStatus(rv);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -164,22 +181,6 @@ nsGopherContentStream::OnOutputStreamReady(nsIAsyncOutputStream *stream)
         CloseWithStatus(rv);
 
     return NS_OK;
-}
-
-void
-nsGopherContentStream::OnCallbackPending()
-{
-    nsresult rv;
-
-    // We have a callback, so failure means we should close the stream.
-    if (!mSocket) {
-        rv = OpenSocket(CallbackTarget());
-    } else if (mSocketInput) {
-        rv = mSocketInput->AsyncWait(this, 0, 0, CallbackTarget());
-    }
- 
-    if (NS_FAILED(rv))
-        CloseWithStatus(rv);
 }
 
 nsresult

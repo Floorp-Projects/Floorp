@@ -107,10 +107,6 @@ nsBaseContentStream::ReadSegments(nsWriteSegmentFun fun, void *closure,
   if (mStatus == NS_BASE_STREAM_CLOSED)
     return NS_OK;
 
-  // No data yet
-  if (!IsClosed() && IsNonBlocking())
-    return NS_BASE_STREAM_WOULD_BLOCK;
-
   return mStatus;
 }
 
@@ -156,15 +152,9 @@ nsBaseContentStream::AsyncWait(nsIInputStreamCallback *callback, PRUint32 flags,
   mCallback = callback;
   mCallbackTarget = target;
 
-  if (!mCallback)
-    return NS_OK;
-
   // If we're already closed, then dispatch this callback immediately.
-  if (IsClosed()) {
+  if (IsClosed())
     DispatchCallback();
-    return NS_OK;
-  }
 
-  OnCallbackPending();
   return NS_OK;
 }
