@@ -86,6 +86,21 @@ my $vars = {};
 my $requiremilestone = 0;
 
 ######################################################################
+# Subroutines
+######################################################################
+
+sub BugInGroupId {
+    my ($bug_id, $group_id) = @_;
+    detaint_natural($bug_id);
+    detaint_natural($group_id);
+    my ($in_group) = Bugzilla->dbh->selectrow_array(
+        "SELECT CASE WHEN bug_id != 0 THEN 1 ELSE 0 END
+           FROM bug_group_map
+          WHERE bug_id = ? AND group_id = ?", undef, ($bug_id, $group_id));
+    return $in_group;
+}
+
+######################################################################
 # Begin Data/Security Validation
 ######################################################################
 

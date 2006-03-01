@@ -487,18 +487,6 @@ sub get_legal_field_values {
     return @$result_ref;
 }
 
-sub BugInGroupId {
-    my ($bugid, $groupid) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT CASE WHEN bug_id != 0 THEN 1 ELSE 0 END
-            FROM bug_group_map
-            WHERE bug_id = $bugid
-            AND group_id = $groupid");
-    my $bugingroup = FetchOneColumn();
-    PopGlobalSQLState();
-    return $bugingroup;
-}
-
 sub GroupIdToName {
     my ($groupid) = (@_);
     PushGlobalSQLState();
