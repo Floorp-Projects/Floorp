@@ -57,7 +57,7 @@
 <separator class="thin"/>
 
 <hbox>
-  <listbox id="identitiesList" onselect="updateButtons();" flex="1" style="height: 0px;"/>
+  <listbox id="identitiesList" ondblclick="onEdit(event);" onselect="updateButtons();" flex="1" style="height: 0px;"/>
 
   <vbox>
     <button id="addButton"
