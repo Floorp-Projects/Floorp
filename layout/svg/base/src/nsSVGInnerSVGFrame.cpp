@@ -164,7 +164,7 @@ protected:
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
   nsISVGFilterFrame *mFilter;
 
-  PRBool mPropagateTransform;
+  PRPackedBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------

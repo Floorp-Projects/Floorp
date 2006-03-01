@@ -199,12 +199,12 @@ protected:
   PRUint32 mGeometryUpdateFlags;
   PRUint32 mMetricsUpdateFlags;
   PRUint32 mCharOffset;
-  PRBool mFragmentTreeDirty;
   nsString mCharacterData;
   nsCOMPtr<nsISVGGradient> mFillGradient;
   nsCOMPtr<nsISVGGradient> mStrokeGradient;
   nsCOMPtr<nsISVGPattern> mFillPattern;
   nsCOMPtr<nsISVGPattern> mStrokePattern;
+  PRPackedBool mFragmentTreeDirty;
 };
 
 //----------------------------------------------------------------------

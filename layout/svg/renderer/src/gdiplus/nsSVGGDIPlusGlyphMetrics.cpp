@@ -135,7 +135,7 @@ public:
                                        RectF* retval, PRBool aLocalCoord = PR_TRUE);
   NS_IMETHOD_(const Font*) GetFont();
   NS_IMETHOD_(TextRenderingHint) GetTextRenderingHint();
-  
+
 protected:
   void MarkRectForUpdate() { mRectNeedsUpdate = PR_TRUE; }
   void ClearFontInfo() { if (mFont) { delete mFont; mFont = nsnull; }}
@@ -144,14 +144,14 @@ protected:
   void PrepareGraphics(Graphics &g);
   float GetPixelScale();
 
+public:
+  static nsDataHashtable<nsStringHashKey,const nsString*> sFontAliases;
+
 private:  
-  PRBool mRectNeedsUpdate;
   RectF mRect;
   Font *mFont;
   nsCOMPtr<nsISVGGlyphMetricsSource> mSource;
-  
-public:
-  static nsDataHashtable<nsStringHashKey,const nsString*> sFontAliases;
+  PRPackedBool mRectNeedsUpdate;
 };
 
 /** @} */

@@ -153,18 +153,19 @@ protected:
   nsISVGFilterFrame *mFilter;
 
 private:
+  void GetMarkerFrames(nsISVGMarkerFrame **markerStart,
+                       nsISVGMarkerFrame **markerMid,
+                       nsISVGMarkerFrame **markerEnd);
+
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
-  PRBool mPropagateTransform;
   nsCOMPtr<nsISVGGradient>     mFillGradient;
   nsCOMPtr<nsISVGGradient>     mStrokeGradient;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
   nsCOMPtr<nsISVGPattern>      mFillPattern;
   nsCOMPtr<nsISVGPattern>      mStrokePattern;
 
-  void GetMarkerFrames(nsISVGMarkerFrame **markerStart,
-                       nsISVGMarkerFrame **markerMid,
-                       nsISVGMarkerFrame **markerEnd);
+  PRPackedBool mPropagateTransform;
 };
 
 #endif // __NS_SVGPATHGEOMETRYFRAME_H__

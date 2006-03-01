@@ -147,9 +147,8 @@ protected:
   float                             mPreviousTranslate_x;
   float                             mPreviousTranslate_y;
   float                             mPreviousScale;
-  PRBool                            mDispatchEvent;
-
-  PRInt32 mRedrawSuspendCount;
+  PRInt32                           mRedrawSuspendCount;
+  PRPackedBool                      mDispatchEvent;
 };
 
 

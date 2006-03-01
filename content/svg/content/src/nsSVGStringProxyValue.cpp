@@ -87,7 +87,7 @@ public:
 protected:
   nsString mCachedValue;
   nsCOMPtr<nsISVGValue> mProxiedValue;
-  PRBool mUseCachedValue;
+  PRPackedBool mUseCachedValue;
 };
 
 //----------------------------------------------------------------------

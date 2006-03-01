@@ -170,11 +170,6 @@ protected:
   nsresult GetPatternMatrix(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *bbox, nsIDOMSVGRect *aViewRect);
   nsresult ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGMatrix *aPCTM, nsIDOMSVGRect *aViewRect);
 
-  //
-
-  nsSVGPatternFrame                     *mNextPattern;
-  PRBool                                 mLoopFlag;
-
 private:
   // Cached values
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration>  mPatternUnits;
@@ -194,6 +189,10 @@ private:
   nsCOMPtr<nsIDOMSVGMatrix>               mCTM;
 
   nsAutoString                            mNextPatternStr;
+
+protected:
+  nsSVGPatternFrame                      *mNextPattern;
+  PRPackedBool                            mLoopFlag;
 };
 
 //----------------------------------------------------------------------
