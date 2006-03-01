@@ -561,7 +561,7 @@ nsMorkReader::NormalizeValue(nsCString &aValue) const
 /* static */ nsTArray<nsCString>*
 nsMorkReader::NewVoidStringArray(PRInt32 aCount)
 {
-  nsAutoPtr< nsTArray<nsCString> > array = new nsTArray<nsCString>(aCount);
+  nsAutoPtr< nsTArray<nsCString> > array(new nsTArray<nsCString>(aCount));
   NS_ENSURE_TRUE(array, nsnull);
 
   for (PRInt32 i = 0; i < aCount; ++i) {
