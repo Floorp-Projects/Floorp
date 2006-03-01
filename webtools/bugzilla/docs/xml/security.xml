@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.13 2006/03/01 11:42:08 jocuri%softhome.net Exp $ -->
+<!-- $Id: security.xml,v 1.14 2006/03/01 13:03:27 jocuri%softhome.net Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -49,8 +49,8 @@
       <quote>SYSTEM</quote> introduces obvious security concerns, the
       problems introduced by running everything as <quote>nobody</quote> may
       not be so obvious. Basically, if you run every daemon as
-      <quote>nobody</quote> and one of them gets comprimised it can
-      comprimise every other daemon running as <quote>nobody</quote> on your
+      <quote>nobody</quote> and one of them gets compromised it can
+      compromise every other daemon running as <quote>nobody</quote> on your
       machine. For this reason, it is recommended that you create a user
       account for each daemon.
       </para>
