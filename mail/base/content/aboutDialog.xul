@@ -106,8 +106,10 @@
     <deck id="modes" flex="1">
       <vbox flex="1" id="clientBox">
       <vbox id="versionWrapper">
-        <textbox id="versionField" readonly="true" class="plain" tabindex="2"
+        <textbox id="versionField" readonly="true" class="plain" tabindex="2" value="&aboutVersion; 3 alpha 1"/>
+<!--        
 #expand value="&aboutVersion; __MOZ_APP_VERSION__"/>
+-->
             </vbox>
           <separator class="thin"/>
       <description id="copyright">&copyrightText;</description>
