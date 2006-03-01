@@ -21,25 +21,24 @@
   #%]
 
 [%# INTERFACE:
-  # versions: array of version objects
-  # showbugcounts: if defined, then bug counts should be included in the table
-  # product: string; the name of the product we are editing versions for
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the versions belongs.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
 
 [% title = BLOCK %]Select version of product
-                   '[% product FILTER html %]'[% END %]
+                   '[% product.name FILTER html %]'[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
 %]
 
 [% edit_contentlink = BLOCK %]editversions.cgi?action=edit&amp;product=
-  [%- product FILTER url_quote %]&amp;version=%%name%%[% END %]
+  [%- product.name FILTER url_quote %]&amp;version=%%name%%[% END %]
 [% delete_contentlink = BLOCK %]editversions.cgi?action=del&amp;product=
-  [%- product FILTER url_quote %]&amp;version=%%name%%[% END %]
+  [%- product.name FILTER url_quote %]&amp;version=%%name%%[% END %]
 [% bug_count_contentlink = BLOCK %]buglist.cgi?version=%%name%%&amp;product=
-  [%- product FILTER url_quote %][% END %]
+  [%- product.name FILTER url_quote %][% END %]
 
 
 [% columns = [
@@ -72,14 +71,14 @@
 
 [% PROCESS admin/table.html.tmpl
      columns = columns
-     data = versions
+     data = product.versions
 %]
 
 <p>
 
 [% IF ! showbugcounts %]
 
-  <p><a href="editversions.cgi?product=[% product FILTER url_quote %]&amp;showbugcounts=1">
+  <p><a href="editversions.cgi?product=[% product.name FILTER url_quote %]&amp;showbugcounts=1">
       Redisplay table with [% terms.bug %] counts (slower)</a></p>
 
 [% END %]

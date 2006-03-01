@@ -96,8 +96,7 @@ $user->can_see_product($product->name)
 unless ($action) {
 
     $vars->{'showbugcounts'} = $showbugcounts;
-    $vars->{'product'} = $product->name;
-    $vars->{'components'} = $product->components;
+    $vars->{'product'} = $product;
     $template->process("admin/components/list.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
 
@@ -113,7 +112,7 @@ unless ($action) {
 
 if ($action eq 'add') {
 
-    $vars->{'product'} = $product->name;
+    $vars->{'product'} = $product;
     $template->process("admin/components/create.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
 
@@ -212,8 +211,12 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $comp_name;
-    $vars->{'product'} = $product->name;
+    $component =
+        new Bugzilla::Component({product_id => $product->id,
+                                 name => $comp_name});
+
+    $vars->{'comp'} = $component;
+    $vars->{'product'} = $product;
     $template->process("admin/components/created.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -234,7 +237,7 @@ if ($action eq 'del') {
     $vars->{'comp'} =
         Bugzilla::Component::check_component($product, $comp_name);
 
-    $vars->{'prod'} = $product;
+    $vars->{'product'} = $product;
 
     $template->process("admin/components/confirm-delete.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
@@ -264,9 +267,7 @@ if ($action eq 'delete') {
                            {nb => $component->bug_count });
         }
     }
-
-    $vars->{'deleted_bug_count'} = $component->bug_count;
-
+    
     $dbh->bz_lock_tables('components WRITE', 'flaginclusions WRITE',
                          'flagexclusions WRITE');
 
@@ -281,8 +282,8 @@ if ($action eq 'delete') {
 
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $component->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'comp'} = $component;
+    $vars->{'product'} = $product;
     $template->process("admin/components/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
@@ -301,7 +302,7 @@ if ($action eq 'edit') {
     $vars->{'comp'} =
         Bugzilla::Component::check_component($product, $comp_name);
 
-    $vars->{'prod'} = $product;
+    $vars->{'product'} = $product;
 
     $template->process("admin/components/edit.html.tmpl",
                        $vars)
@@ -379,7 +380,6 @@ if ($action eq 'update') {
                  undef, ($description, $component_old->id));
 
         $vars->{'updated_description'} = 1;
-        $vars->{'description'} = $description;
     }
 
     if ($default_assignee ne $component_old->default_assignee->login) {
@@ -388,8 +388,6 @@ if ($action eq 'update') {
                  undef, ($default_assignee_id, $component_old->id));
 
         $vars->{'updated_initialowner'} = 1;
-        $vars->{'initialowner'} = $default_assignee;
-
     }
 
     if (Param('useqacontact')
@@ -399,13 +397,14 @@ if ($action eq 'update') {
                  ($default_qa_contact_id, $component_old->id));
 
         $vars->{'updated_initialqacontact'} = 1;
-        $vars->{'initialqacontact'} = $default_qa_contact;
     }
 
     $dbh->bz_unlock_tables();
 
-    $vars->{'name'} = $comp_name;
-    $vars->{'product'} = $product->name;
+    my $component = new Bugzilla::Component($component_old->id);
+    
+    $vars->{'comp'} = $component;
+    $vars->{'product'} = $product;
     $template->process("admin/components/updated.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

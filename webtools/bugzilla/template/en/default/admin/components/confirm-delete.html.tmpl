@@ -22,11 +22,11 @@
 [%# INTERFACE:
   # comp: object; Bugzilla::Component object representing the component the
   #               user wants to delete.
-  # prod: object; Bugzilla::Product object representing the product to
+  # product: object; Bugzilla::Product object representing the product to
   #               which the component belongs.
   #%]
 
-[% title = BLOCK %]Delete Component of Product '[% prod.name FILTER html %]'
+[% title = BLOCK %]Delete Component of Product '[% product.name FILTER html %]'
   [% END %]
 
 [% PROCESS global/header.html.tmpl
@@ -60,13 +60,13 @@
 </tr>
 <tr>
   <td valign="top">Component of Product:</td>
-  <td valign="top">[% prod.name FILTER html %]</td>
+  <td valign="top">[% product.name FILTER html %]</td>
 
-[% IF prod.description %]
+[% IF product.description %]
 </tr>
 <tr>
   <td valign="top">Product Description:</td>
-  <td valign="top">[% prod.description FILTER html %]</td>
+  <td valign="top">[% product.description FILTER html %]</td>
 [% END %]
 
 [% IF Param('usetargetmilestone') %]
@@ -74,8 +74,8 @@
 <tr>
   <td valign="top">Product Milestone URL:</td>
   <td valign="top">
-    <a href="[% prod.milestone_url FILTER uri %]">
-      [% prod.milestone_url FILTER html %]
+    <a href="[% product.milestone_url FILTER uri %]">
+      [% product.milestone_url FILTER html %]
     </a>
   </td>
 [% END %]
@@ -83,7 +83,7 @@
 </tr>
 <tr>
   <TD VALIGN="top">Closed for [% terms.bugs %]:</TD>
-  <TD VALIGN="top">[% IF prod.disallow_new %]Yes[% ELSE %]No[% END %]</td>
+  <TD VALIGN="top">[% IF product.disallow_new %]Yes[% ELSE %]No[% END %]</td>
 </tr>
 <tr>
   <td valign="top">[% terms.Bugs %]:</td>
@@ -91,7 +91,7 @@
 [% IF comp.bug_count %]
   <a title="List of [% terms.bugs %] for component '[% comp.name FILTER html %]'"
      href="buglist.cgi?component=[% comp.name FILTER url_quote %]&amp;product=
-          [%- prod.name FILTER url_quote %]">[% comp.bug_count %]</a>
+          [%- product.name FILTER url_quote %]">[% comp.bug_count %]</a>
 [% ELSE %]
   None
 [% END %]
@@ -148,15 +148,12 @@
   <form method="post" action="editcomponents.cgi">
   <input type="submit" value="Yes, delete">
   <input type="hidden" name="action" value="delete">
-  <input type="hidden" name="product" value="[% prod.name FILTER html %]">
+  <input type="hidden" name="product" value="[% product.name FILTER html %]">
   <input type="hidden" name="component" value="[% comp.name FILTER html %]">
   </form>
 
 [% END %]
 
-[% PROCESS admin/components/footer.html.tmpl
-  name = comp.name
-  product = prod.name
-%]
+[% PROCESS admin/components/footer.html.tmpl %]
 
 [% PROCESS global/footer.html.tmpl %] 

@@ -91,8 +91,7 @@ $user->can_see_product($product->name)
 
 unless ($action) {
     $vars->{'showbugcounts'} = $showbugcounts;
-    $vars->{'product'} = $product->name;
-    $vars->{'versions'} = $product->versions;
+    $vars->{'product'} = $product;
     $template->process("admin/versions/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -111,7 +110,7 @@ unless ($action) {
 
 if ($action eq 'add') {
 
-    $vars->{'product'} = $product->name;
+    $vars->{'product'} = $product;
     $template->process("admin/versions/create.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -148,8 +147,9 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $version_name;
-    $vars->{'product'} = $product->name;
+    $version = new Bugzilla::Version($product->id, $version_name);
+    $vars->{'version'} = $version;
+    $vars->{'product'} = $product;
     $template->process("admin/versions/created.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -170,11 +170,9 @@ if ($action eq 'del') {
 
     my $version = Bugzilla::Version::check_version($product,
                                                    $version_name);
-    my $bugs = $version->bug_count;
 
-    $vars->{'bug_count'} = $bugs;
-    $vars->{'name'} = $version->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'version'} = $version;
+    $vars->{'product'} = $product;
     $template->process("admin/versions/confirm-delete.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -205,8 +203,8 @@ if ($action eq 'delete') {
 
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $version->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'version'} = $version;
+    $vars->{'product'} = $product;
 
     $template->process("admin/versions/deleted.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -226,8 +224,8 @@ if ($action eq 'edit') {
     my $version = Bugzilla::Version::check_version($product,
                                                    $version_name);
 
-    $vars->{'name'}    = $version->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'version'} = $version;
+    $vars->{'product'} = $product;
 
     $template->process("admin/versions/edit.html.tmpl",
                        $vars)
@@ -290,8 +288,11 @@ if ($action eq 'update') {
 
     $dbh->bz_unlock_tables(); 
 
-    $vars->{'name'} = $version_name;
-    $vars->{'product'} = $product->name;
+    my $version =
+        Bugzilla::Version::check_version($product,
+                                         $version_name);
+    $vars->{'version'} = $version;
+    $vars->{'product'} = $product;
     $template->process("admin/versions/updated.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

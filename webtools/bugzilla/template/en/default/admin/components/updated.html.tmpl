@@ -23,22 +23,23 @@
   #
   # 'updated_XXX' variables are booleans, and are defined if the
   # 'XXX' field was updated during the edit just being handled.
-  # Variables called just 'XXX' are strings, and are the _new_ contents
-  # of the fields.
   #
-  # name & updated_name: the name of the component
+  # updated_name: the name of the component updated
   #
-  # description & updated_description: the component description
+  # updated_description: the component description updated
   #
-  # initialowner & updated_initialowner: the default assignee
+  # updated_initialowner: the default assignee updated
   #
-  # initialqacontact & updated_initialqacontact: the default qa contact
+  # updated_initialqacontact: the default qa contact updated
   #
-  # product: string; the name of the product the component belongs to
+  # comp: object; Bugzilla::Component object representing the component 
+  #               user updated.
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
   #%]
   
-[% title = BLOCK %]Updating Component '[% name FILTER html %]' of Product
-                   '[% product FILTER html %]'[% END %]
+[% title = BLOCK %]Updating Component '[% comp.name FILTER html %]' of Product
+                   '[% product.name FILTER html %]'[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
 %]
@@ -48,19 +49,19 @@
   <table>
     <tr>
       <td>Updated description to:</td>
-      <td>'[% description FILTER html %]'</td>
+      <td>'[% comp.description FILTER html %]'</td>
     </tr>
   </table>
 [% END %]
 
 [% IF updated_initialowner %]
-  <p>Updated Default Assignee to: '[% initialowner FILTER html %]'.</p>
+  <p>Updated Default Assignee to: '[% comp.initialowner FILTER html %]'.</p>
 [% END %]
 
 [% IF updated_initialqacontact %]
   <p>
   [% IF initialqacontact %]
-    Updated Default QA Contact to '[% initialqacontact FILTER html %]'.
+    Updated Default QA Contact to '[% comp.initialqacontact FILTER html %]'.
   [% ELSE %]
     Removed Default QA Contact.
   [% END %]
@@ -68,12 +69,12 @@
 [% END %]
 
 [% IF updated_name %]
-  <p>Updated Component name to: '[% name FILTER html %]'.</p>
+  <p>Updated Component name to: '[% comp.name FILTER html %]'.</p>
 [% END %]
 
 [% UNLESS updated_description || updated_initialowner || 
           updated_initialqacontact || updated_name %]
-  <p>Nothing changed for component '[% name FILTER html %]'.
+  <p>Nothing changed for component '[% comp.name FILTER html %]'.
 [% END %]
    
 

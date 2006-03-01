@@ -22,7 +22,7 @@
 [%# INTERFACE:
   # comp: object; Bugzilla::Component object representing the component the
   #               user wants to edit.
-  # prod: object; Bugzilla::Product object representing the product to
+  # product: object; Bugzilla::Product object representing the product to
   #               which the component belongs.
   #%]
 
@@ -88,7 +88,7 @@
         <a title="Bugs in component '[% comp.name FILTER html %]'"
            href="buglist.cgi?component=
                 [%- comp.name FILTER url_quote %]&amp;product=
-                [%- prod.name FILTER url_quote %]">[% comp.bug_count %]</a>
+                [%- product.name FILTER url_quote %]">[% comp.bug_count %]</a>
 [% ELSE %]
         None
 [% END %]
@@ -99,18 +99,16 @@
 
    <input type="hidden" name="action" value="update">
    <input type="hidden" name="componentold" value="[% comp.name FILTER html %]">
-   <input type="hidden" name="product" value="[% prod.name FILTER html %]">
+   <input type="hidden" name="product" value="[% product.name FILTER html %]">
    <input type="submit" value="Update"> or <a 
         href="editcomponents.cgi?action=del&amp;product=
-        [%- prod.name FILTER url_quote %]&amp;component=
+        [%- product.name FILTER url_quote %]&amp;component=
         [%- comp.name FILTER url_quote %]">Delete</a> this component.
 
 </form>
 
 [% PROCESS admin/components/footer.html.tmpl
   no_edit_component_link = 1
-  name = comp.name
-  product = prod.name
 %]
 
 [% PROCESS global/footer.html.tmpl %]

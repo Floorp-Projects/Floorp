@@ -20,12 +20,13 @@
   #%]
 
 [%# INTERFACE:
-  # product: string; name of product
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the component belongs.
   #%]
   
-[% title = BLOCK %]Add component to Product '[% product FILTER html %]'[% END %]
+[% title = BLOCK %]Add component to Product '[% product.name FILTER html %]'[% END %]
 [% h2 = BLOCK %]This page allows you to add a new component to product
-                '[% product FILTER html %]'.[% END %]
+                '[% product.name FILTER html %]'.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
   h2 = h2
@@ -81,7 +82,7 @@
   <input type="hidden" name="action" value="new">
   <input type="hidden" name='open_name' value='All Open'>
   <input type="hidden" name='nonopen_name' value='All Closed'>
-  <input type="hidden" name='product' value="[% product FILTER html %]">
+  <input type="hidden" name='product' value="[% product.name FILTER html %]">
 
 </form>
 

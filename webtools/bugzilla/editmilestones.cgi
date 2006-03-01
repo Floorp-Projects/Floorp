@@ -84,9 +84,7 @@ $user->can_see_product($product->name)
 unless ($action) {
 
     $vars->{'showbugcounts'} = $showbugcounts;
-    $vars->{'product'} = $product->name;
-    $vars->{'milestones'} = $product->milestones;
-    $vars->{'default_milestone'} = $product->default_milestone;
+    $vars->{'product'} = $product;
     $template->process("admin/milestones/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -105,7 +103,7 @@ unless ($action) {
 
 if ($action eq 'add') {
 
-    $vars->{'product'} = $product->name;
+    $vars->{'product'} = $product;
     $template->process("admin/milestones/create.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -149,8 +147,10 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    $vars->{'name'} = $milestone_name;
-    $vars->{'product'} = $product->name;
+    $milestone = new Bugzilla::Milestone($product->id,
+                                         $milestone_name);
+    $vars->{'milestone'} = $milestone;
+    $vars->{'product'} = $product;
     $template->process("admin/milestones/created.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -171,15 +171,13 @@ if ($action eq 'del') {
     my $milestone = Bugzilla::Milestone::check_milestone($product,
                                                          $milestone_name);
     
-    $vars->{'name'}    = $milestone->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'milestone'} = $milestone;
+    $vars->{'product'} = $product;
 
     # The default milestone cannot be deleted.
     if ($product->default_milestone eq $milestone->name) {
         ThrowUserError("milestone_is_default", $vars);
     }
-
-    $vars->{'bug_count'} = $milestone->bug_count;
 
     $template->process("admin/milestones/confirm-delete.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
@@ -197,23 +195,21 @@ if ($action eq 'delete') {
     my $milestone =
         Bugzilla::Milestone::check_milestone($product,
                                              $milestone_name);
-    $vars->{'name'} = $milestone->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'milestone'} = $milestone;
+    $vars->{'product'} = $product;
 
     # The default milestone cannot be deleted.
     if ($milestone->name eq $product->default_milestone) {
         ThrowUserError("milestone_is_default", $vars);
     }
 
-    # We don't want to delete bugs when deleting a milestone.
-    # Bugs concerned are reassigned to the default milestone.
-    my $bug_ids =
-      $dbh->selectcol_arrayref("SELECT bug_id FROM bugs
-                                WHERE product_id = ? AND target_milestone = ?",
-                                undef, ($product->id, $milestone->name));
-
-    my $nb_bugs = scalar(@$bug_ids);
-    if ($nb_bugs) {
+    if ($milestone->bug_count) {
+        # We don't want to delete bugs when deleting a milestone.
+        # Bugs concerned are reassigned to the default milestone.
+        my $bug_ids =
+          $dbh->selectcol_arrayref("SELECT bug_id FROM bugs
+                                    WHERE product_id = ? AND target_milestone = ?",
+                                    undef, ($product->id, $milestone->name));
         my $timestamp = $dbh->selectrow_array("SELECT NOW()");
         foreach my $bug_id (@$bug_ids) {
             $dbh->do("UPDATE bugs SET target_milestone = ?,
@@ -227,8 +223,6 @@ if ($action eq 'delete') {
                              $whoid, $timestamp);
         }
     }
-
-    $vars->{'bug_count'} = $nb_bugs;
 
     $dbh->do("DELETE FROM milestones WHERE product_id = ? AND value = ?",
              undef, ($product->id, $milestone->name));
@@ -254,9 +248,8 @@ if ($action eq 'edit') {
         Bugzilla::Milestone::check_milestone($product,
                                              $milestone_name);
 
-    $vars->{'sortkey'} = $milestone->sortkey;
-    $vars->{'name'}    = $milestone->name;
-    $vars->{'product'} = $product->name;
+    $vars->{'milestone'} = $milestone;
+    $vars->{'product'} = $product;
 
     $template->process("admin/milestones/edit.html.tmpl",
                        $vars)
@@ -301,7 +294,6 @@ if ($action eq 'update') {
 
         unlink "$datadir/versioncache";
         $vars->{'updated_sortkey'} = 1;
-        $vars->{'sortkey'} = $sortkey;
     }
 
     if ($milestone_name ne $milestone_old->name) {
@@ -352,8 +344,11 @@ if ($action eq 'update') {
 
     $dbh->bz_unlock_tables();
 
-    $vars->{'name'} = $milestone_name;
-    $vars->{'product'} = $product->name;
+    my $milestone =
+        Bugzilla::Milestone::check_milestone($product,
+                                             $milestone_name);
+    $vars->{'milestone'} = $milestone;
+    $vars->{'product'} = $product;
     $template->process("admin/milestones/updated.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

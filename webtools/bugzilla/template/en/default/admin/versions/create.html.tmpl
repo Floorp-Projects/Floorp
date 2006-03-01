@@ -20,12 +20,13 @@
   #%]
 
 [%# INTERFACE:
-  # product: string; name of the product the version is being created for
+  # product: object; Bugzilla::Product object representing the product to
+  #               which the version is being created for
   #%]
   
-[% title = BLOCK %]Add Version to Product '[% product FILTER html %]'[% END %]
+[% title = BLOCK %]Add Version to Product '[% product.name FILTER html %]'[% END %]
 [% h2 = BLOCK %]This page allows you to add a new version to product
-                '[% product FILTER html %]'.[% END %]
+                '[% product.name FILTER html %]'.[% END %]
 [% PROCESS global/header.html.tmpl
   title = title
   h2 = h2
@@ -41,7 +42,7 @@
   </table>
   <input type="submit" value="Add">
   <input type="hidden" name="action" value="new">
-  <input type="hidden" name='product' value="[% product FILTER html %]">
+  <input type="hidden" name='product' value="[% product.name FILTER html %]">
 
 </form>
 
