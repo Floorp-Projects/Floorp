@@ -283,9 +283,6 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   if (NS_SUCCEEDED(rv) && (isChrome || isRes || isAbout))
     return rv;
 
-  // Now default to reject so when NS_ENSURE_SUCCESS errors content is rejected
-  *aDecision = nsIContentPolicy::REJECT_REQUEST;
-
   // if aContentLocation is a protocol we handle (imap, pop3, mailbox, etc)
   // or is a chrome url, then allow the load
   nsCAutoString contentScheme;
@@ -314,10 +311,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isExposedProtocol || isChrome)
-  {
-    *aDecision = nsIContentPolicy::ACCEPT;
     return rv;
-  }
 
   // for unexposed protocols, we never try to load any of them with the exception of http and https.
   // this means we never even try to load urls that we don't handle ourselves like ftp and gopher.
@@ -328,16 +322,16 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   rv |= aContentLocation->SchemeIs("https", &isHttps);
 
   if (!NS_SUCCEEDED(rv) || (!isHttp && !isHttps))
+  {
+    *aDecision = nsIContentPolicy::REJECT_REQUEST;
     return rv;
+  }
 
   // Look into http and https more closely to determine if the load should be allowed
 
   // If we do not block remote content then return with an accept content here
   if (!mBlockRemoteImages)
-  {
-    *aDecision = nsIContentPolicy::ACCEPT;
     return NS_OK;
-  }
 
   // now do some more detective work to better refine our decision...
   // (1) examine the msg hdr value for the remote content policy on this particular message to
@@ -386,10 +380,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
   // Honor the message specific remote content policy
   if (isRSS || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList || trustedDomain)
-  {
-    *aDecision = nsIContentPolicy::ACCEPT;
     return rv;
-  }
 
   if (!remoteContentPolicy) // kNoRemoteContentPolicy means we have never set a value on the message
     msgHdr->SetUint32Property("remoteContentPolicy", kBlockRemoteContent);
@@ -404,6 +395,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   NS_ENSURE_TRUE(msgHdrSink, rv);
   msgHdrSink->OnMsgHasRemoteContent(msgHdr); // notify the UI to show the remote content hdr bar so the user can overide
 
+  *aDecision = nsIContentPolicy::REJECT_REQUEST;
   return rv;
 }
 
