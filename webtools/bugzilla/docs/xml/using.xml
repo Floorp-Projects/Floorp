@@ -804,7 +804,9 @@
       <para>
         You can change how much depth to show, and you can hide resolved bugs
         from this page. You can also collaps/expand dependencies for
-        each bug on the tree view.
+        each bug on the tree view, using the [-]/[+] buttons that appear
+        before its summary. This option is not available for terminal
+        bugs in the tree (that don't have further dependencies).
       </para>
     </section>
   </section>
