@@ -41,6 +41,8 @@
 
 #include "nsDataHashtable.h"
 #include "nsILineInputStream.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 // The nsMorkReader object allows a consumer to read in a mork-format
 // file and enumerate the rows that it contains.  It does not provide
@@ -54,33 +56,82 @@
 class nsMorkReader
 {
  public:
-  typedef nsDataHashtable<nsCStringHashKey,nsCString> StringMap;
+  // This string type has built-in storage for the hex string representation
+  // of a 32-bit row id or atom map key, plus the terminating null.
+  class IDString : public nsFixedCString
+  {
+  public:
+    IDString() : fixed_string_type(mStorage, sizeof(mStorage), 0) {}
+    IDString(const substring_type &str) :
+      fixed_string_type(mStorage, sizeof(mStorage), 0)
+    {
+      Assign(str);
+    }
 
-  // Enumerator callback type for processing column ids.
-  // A column id is a short way to reference a particular column in the table.
-  // These column ids can be used to look up cell values when enumerating rows.
-  // columnID is the table-unique column id
-  // name is the name of the column
-  // userData is the opaque pointer passed to EnumerateColumns()
-  // The callback can return PL_DHASH_NEXT to continue enumerating,
-  // or PL_DHASH_STOP to stop.
-  typedef PLDHashOperator
-  (*PR_CALLBACK ColumnEnumerator)(const nsACString &columnID,
-                                  nsCString name,
-                                  void *userData);
+  private:
+    static const int kStorageSize = 9;
+    char_type mStorage[kStorageSize];
+  };
+
+  // Hashtable key type that contains an IDString
+  class IDKey : public PLDHashEntryHdr
+  {
+  public:
+    typedef const nsCSubstring& KeyType;
+    typedef const nsCSubstring* KeyTypePointer;
+
+    IDKey(KeyTypePointer aStr) : mStr(*aStr) { }
+    IDKey(const IDKey& toCopy) : mStr(toCopy.mStr) { }
+    ~IDKey() { }
+
+    KeyType GetKey() const { return mStr; }
+    KeyTypePointer GetKeyPointer() const { return &mStr; }
+    PRBool KeyEquals(const KeyTypePointer aKey) const
+    {
+      return mStr.Equals(*aKey);
+    }
+
+    static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+    static PLDHashNumber HashKey(const KeyTypePointer aKey)
+    {
+      return HashString(*aKey);
+    }
+    enum { ALLOW_MEMMOVE = PR_FALSE };
+
+  private:
+    const IDString mStr;
+  };
+
+  // A convenience typedef for an IDKey-to-string mapping.
+  typedef nsDataHashtable<IDKey,nsCString> StringMap;
+
+  // A convenience typdef for an IDKey-to-index mapping, used for the
+  // column index hashtable.
+  typedef nsDataHashtable<IDKey,PRInt32> IndexMap;
+
+  // A MorkColumn represents the data associated with a single table column.
+  struct MorkColumn
+  {
+    MorkColumn(const nsCSubstring &i, const nsCSubstring &n)
+      : id(i), name(n) {}
+
+    IDString id;
+    nsCString name;
+  };
 
   // Enumerator callback type for processing table rows.
   // A row contains cells.  Each cell specifies a column id, and the value
   // for the column for that row.
   // rowID is the table-unique row id
-  // values contains the cell values, keyed by column id.
+  // values contains the cell values, in an order which corresponds to
+  //   the columns returned by GetColumns().
   //   You should call NormalizeValue() on any cell value that you plan to use.
   // userData is the opaque pointer passed to EnumerateRows()
   // The callback can return PL_DHASH_NEXT to continue enumerating,
   // or PL_DHASH_STOP to stop.
   typedef PLDHashOperator
-  (*PR_CALLBACK RowEnumerator)(const nsACString &rowID, 
-                               const StringMap *values,
+  (*PR_CALLBACK RowEnumerator)(const nsCSubstring &rowID, 
+                               const nsTArray<nsCString> *values,
                                void *userData);
 
   // Initialize the importer object's data structures
@@ -90,16 +141,17 @@ class nsMorkReader
   // Note: currently, only single-table mork files are supported
   nsresult Read(nsIFile *aFile);
 
-  // Enumerate the columns in the current table.
-  void EnumerateColumns(ColumnEnumerator aCallback, void *aUserData) const;
+  // Returns the list of columns in the current table.
+  const nsTArray<MorkColumn>& GetColumns() const { return mColumns; }
 
   // Enumerate the rows in the current table.
   void EnumerateRows(RowEnumerator aCallback, void *aUserData) const;
 
   // Get the "meta row" for the table.  Each table has at most one meta row,
   // which records information about the table.  Like normal rows, the
-  // meta row is a collection of column id / value pairs.
-  const StringMap& GetMetaRow() const { return mMetaRow; }
+  // meta row contains columns in the same order as returned by GetColumns().
+  // Returns null if there is no meta row for this table.
+  const nsTArray<nsCString>* GetMetaRow() const { return mMetaRow; }
 
   // Normalizes the cell value (resolves references to the value map).
   // aValue is modified in-place.
@@ -117,18 +169,24 @@ private:
   // Parses a line of the file which contains a table or row definition.
   // Additional lines are read from mStream of the line ends mid-row.
   // An entry is added to mTable using the row ID as the key, which contains
-  // a column id -> value map for the row.
-  nsresult ParseTable(const nsCSubstring &aLine);
+  // a column array for the row.  The supplied column hash table maps from
+  // column id to an index in mColumns.
+  nsresult ParseTable(const nsCSubstring &aLine, const IndexMap &aColumnMap);
 
   // Reads a single logical line from mStream into aLine.
   // Any continuation lines are consumed and appended to the line.
   nsresult ReadLine(nsCString &aLine);
 
-  StringMap mColumnMap;
+  // Create a new nsCString array and fill it with the supplied number
+  // of void strings.  Returns null on out-of-memory.
+  static nsTArray<nsCString>* NewVoidStringArray(PRInt32 aSize);
+
+  nsTArray<MorkColumn> mColumns;
   StringMap mValueMap;
-  StringMap mMetaRow;
-  nsDataHashtable<nsCStringHashKey,StringMap*> mTable;
+  nsAutoPtr< nsTArray<nsCString> > mMetaRow;
+  nsDataHashtable< IDKey,nsTArray<nsCString>* > mTable;
   nsCOMPtr<nsILineInputStream> mStream;
+  nsCString mEmptyString; // note: not EmptyCString() since that's not sharable
 };
 
 #endif // nsMorkReader_h_

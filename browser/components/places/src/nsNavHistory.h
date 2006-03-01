@@ -273,7 +273,25 @@ public:
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
                                    nsNavHistoryQueryOptions** aOptions);
 
-private:
+  // Import-friendly version of SetPageDetails + AddVisit.
+  // This method adds a page to history along with a single last visit.
+  // It is an error to call this method if aURI might already be in history.
+  // The given aVisitCount should include the given last-visit date.
+  // aLastVisitDate can be -1 if there is no last visit date to record.
+  nsresult AddPageWithVisit(nsIURI *aURI,
+                            const nsString &aTitle,
+                            const nsString &aUserTitle,
+                            PRBool aHidden, PRBool aTyped,
+                            PRInt32 aVisitCount,
+                            PRInt32 aLastVisitTransition,
+                            PRTime aLastVisitDate);
+
+  // Checks the database for any duplicate URLs.  If any are found,
+  // all but the first are removed.  This must be called after using
+  // AddPageWithVisit, to ensure that the database is in a consistent state.
+  nsresult RemoveDuplicateURIs();
+
+ private:
   ~nsNavHistory();
 
   // used by GetHistoryService
@@ -334,7 +352,8 @@ protected:
   nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
                          PRInt64* aSessionID, PRInt64* aRedirectBookmark);
-  nsresult InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
+  nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
+                              PRBool aHidden, PRBool aTyped,
                               PRInt32 aVisitCount, PRInt64* aPageID);
   nsresult InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
                             PRInt64 aSessionID, PRTime aTime,

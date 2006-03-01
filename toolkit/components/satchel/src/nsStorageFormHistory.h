@@ -60,6 +60,7 @@
 class nsIAutoCompleteSimpleResult;
 class nsIAutoCompleteResult;
 class nsFormHistory;
+template <class E> class nsTArray;
 
 #define NS_IFORMHISTORYPRIVATE_IID \
 {0xc4a47315, 0xaeb5, 0x4039, {0x9f, 0x34, 0x45, 0x11, 0xb3, 0xa7, 0x58, 0xdd}}
@@ -139,16 +140,10 @@ public:
   NS_DECL_NSIFORMHISTORYIMPORTER
 
 private:
-  // Enumerator callback to build up a list of columns
-  static PLDHashOperator PR_CALLBACK
-  EnumerateColumnsCB(const nsACString &aColumnID,
-                     nsCString aName,
-                     void *aData);
-
   // Enumerator callback to add a single row to the FormHistory.
   static PLDHashOperator PR_CALLBACK
-  AddToFormHistoryCB(const nsACString &aRowID,
-                     const nsMorkReader::StringMap *aMap,
+  AddToFormHistoryCB(const nsCSubstring &aRowID,
+                     const nsTArray<nsCString> *aValues,
                      void *aData);
 };
 #endif

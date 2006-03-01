@@ -556,8 +556,8 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   // mDBAddNewPage (see InternalAddNewPage)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_history "
-      "(url, rev_host, hidden, typed, visit_count) "
-      "VALUES (?1, ?2, ?3, ?4, ?5)"),
+      "(url, title, rev_host, hidden, typed, visit_count) "
+      "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
     getter_AddRefs(mDBAddNewPage));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -696,7 +696,9 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
     // create a new hidden, untyped, unvisited entry
     mDBGetURLPageInfo->Reset();
     statementResetter.Abandon();
-    rv = InternalAddNewPage(aURI, PR_TRUE, PR_FALSE, 0, aEntryID);
+    nsString voidString;
+    voidString.SetIsVoid(PR_TRUE);
+    rv = InternalAddNewPage(aURI, voidString, PR_TRUE, PR_FALSE, 0, aEntryID);
     if (NS_SUCCEEDED(rv))
       transaction.Commit();
     return rv;
@@ -729,11 +731,20 @@ nsNavHistory::SaveCollapseItem(const nsAString& aTitle)
 //    If non-null, the new page ID will be placed into aPageID.
 
 nsresult
-nsNavHistory::InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
+nsNavHistory::InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
+                                 PRBool aHidden, PRBool aTyped,
                                  PRInt32 aVisitCount, PRInt64* aPageID)
 {
   mozStorageStatementScoper scoper(mDBAddNewPage);
   nsresult rv = BindStatementURI(mDBAddNewPage, 0, aURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // title
+  if (aTitle.IsVoid()) {
+    rv = mDBAddNewPage->BindNullParameter(1);
+  } else {
+    rv = mDBAddNewPage->BindStringParameter(1, aTitle);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // host (reversed with trailing period)
@@ -741,22 +752,22 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, PRBool aHidden, PRBool aTyped,
   rv = GetReversedHostname(aURI, revHost);
   // Not all URI types have hostnames, so this is optional.
   if (NS_SUCCEEDED(rv)) {
-    rv = mDBAddNewPage->BindStringParameter(1, revHost);
+    rv = mDBAddNewPage->BindStringParameter(2, revHost);
   } else {
-    rv = mDBAddNewPage->BindNullParameter(1);
+    rv = mDBAddNewPage->BindNullParameter(2);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // hidden
-  rv = mDBAddNewPage->BindInt32Parameter(2, aHidden);
+  rv = mDBAddNewPage->BindInt32Parameter(3, aHidden);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // typed
-  rv = mDBAddNewPage->BindInt32Parameter(3, aTyped);
+  rv = mDBAddNewPage->BindInt32Parameter(4, aTyped);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // visit count
-  rv = mDBAddNewPage->BindInt32Parameter(4, aVisitCount);
+  rv = mDBAddNewPage->BindInt32Parameter(5, aVisitCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBAddNewPage->Execute();
@@ -1551,8 +1562,10 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     // See the hidden computation code above for a little more explanation.
     hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
 
-    // set as not typed, visited once
-    rv = InternalAddNewPage(aURI, hidden, PR_FALSE, 1, &pageID);
+    // set as not typed, visited once, no title
+    nsString voidString;
+    voidString.SetIsVoid(PR_TRUE);
+    rv = InternalAddNewPage(aURI, voidString, hidden, PR_FALSE, 1, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3560,6 +3573,90 @@ nsNavHistory::CreateLookupIndexes()
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::AddPageWithVisit(nsIURI *aURI,
+                               const nsString &aTitle,
+                               const nsString &aUserTitle,
+                               PRBool aHidden, PRBool aTyped,
+                               PRInt32 aVisitCount,
+                               PRInt32 aLastVisitTransition,
+                               PRTime aLastVisitDate)
+{
+  PRBool canAdd = PR_FALSE;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
+  PRInt64 pageID;
+  rv = InternalAddNewPage(aURI, aTitle, aHidden, aTyped, aVisitCount, &pageID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aLastVisitDate != -1) {
+    PRInt64 visitID;
+    rv = InternalAddVisit(pageID, 0, 0,
+                          aLastVisitDate, aLastVisitTransition, &visitID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;  
+}
+
+nsresult
+nsNavHistory::RemoveDuplicateURIs()
+{
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("SELECT id, url FROM moz_history ORDER BY url"),
+      getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<PRInt64> duplicates;
+  nsCAutoString lastURI;
+  PRBool hasMore;
+  while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
+    nsCAutoString uri;
+    statement->GetUTF8String(1, uri);
+    if (uri.Equals(lastURI)) {
+      duplicates.AppendElement(statement->AsInt64(0));
+    } else {
+      lastURI = uri;
+    }
+  }
+
+  // Now remove all of the duplicates from the history and visit tables.
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_history WHERE id = ?1"),
+      getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> visitDelete;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("DELETE FROM moz_historyvisit WHERE page_id = ?1"),
+      getter_AddRefs(visitDelete));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < duplicates.Length(); ++i) {
+    PRInt64 id = duplicates[i];
+    {
+      mozStorageStatementScoper scope(statement);
+      rv = statement->BindInt64Parameter(0, id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    {
+      mozStorageStatementScoper scope(visitDelete);
+      rv = visitDelete->BindInt64Parameter(0, id);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = visitDelete->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
   return NS_OK;
 }
 
