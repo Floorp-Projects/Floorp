@@ -2526,7 +2526,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
     nscoord closestYDistance = HUGE_DISTANCE;
     nsIFrame *closestFrame = nsnull;
 
-    do {
+    for (; kid; kid = kid->GetNextSibling()) {
       if (!SelfIsSelectable(kid) || kid->IsEmpty())
         continue;
 
@@ -2563,7 +2563,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame, nsPoint aPoint)
           closestFrame = kid;
         }
       }
-    } while (kid = kid->GetNextSibling());
+    }
     if (closestFrame)
       return GetSelectionClosestFrameForChild(closestFrame, aPoint);
   }
