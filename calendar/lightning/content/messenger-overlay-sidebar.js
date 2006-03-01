@@ -105,6 +105,7 @@ function ltnOnLoad(event)
     // fire up the alarm service
     var alarmSvc = Components.classes["@mozilla.org/calendar/alarm-service;1"]
                    .getService(Components.interfaces.calIAlarmService);
+    alarmSvc.timezone = calendarDefaultTimezone();
     alarmSvc.startup();
 
     // Add an unload function to the window so we don't leak the pref observer

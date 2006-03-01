@@ -125,6 +125,7 @@ function calendarInit()
    // fire up the alarm service
    var alarmSvc = Components.classes["@mozilla.org/calendar/alarm-service;1"]
                   .getService(Components.interfaces.calIAlarmService);
+   alarmSvc.timezone = calendarDefaultTimezone();
    alarmSvc.startup();
 
    if (("arguments" in window) && (window.arguments.length) &&

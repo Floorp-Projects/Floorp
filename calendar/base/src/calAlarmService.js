@@ -168,6 +168,15 @@ calAlarmService.prototype = {
     },
 
     /* calIAlarmService APIs */
+    mTimezone: null,
+    get timezone() {
+        return this.mTimezone;
+    },
+
+    set timezone(aTimezone) {
+        this.mTimezone = aTimezone;
+    },
+
     snoozeEvent: function(event, duration) {
         /* modify the event for a new alarm time */
         var newEvent = event.clone();
@@ -221,6 +230,10 @@ calAlarmService.prototype = {
     startup: function() {
         if (this.mStarted)
             return;
+
+        if (!this.mTimezone) {
+            throw Components.results.NS_ERROR_NOT_INITIALIZED;
+        }
 
         dump("Starting calendar alarm service\n");
 
@@ -317,6 +330,15 @@ calAlarmService.prototype = {
         }
 
         alarmTime = alarmTime.clone();
+
+        // Handle all day events.  This is kinda weird, because they don't have
+        // a well defined startTime.  We just consider the start/end to be 
+        // midnight in the user's timezone.
+        if (alarmTime.isDate) {
+            alarmTime = alarmTime.getInTimezone(this.mTimezone);
+            alarmTime.isDate = false;
+        }
+
         alarmTime.addDuration(aItem.alarmOffset);
         alarmTime = alarmTime.getInTimezone("UTC");
 dump("considering alarm for item:"+aItem.title+'\n offset:'+aItem.alarmOffset+', which makes alarm time:'+alarmTime+'\n');

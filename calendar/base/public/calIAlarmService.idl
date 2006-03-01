@@ -51,10 +51,19 @@ interface calIAlarmServiceObserver : nsISupports
 interface calIAlarmService : nsISupports
 {
   /**
+   * This is the timezone that all-day events will be converted to in order to
+   * determine when their alarms should fire.
+   */
+  attribute AUTF8String timezone;
+
+  /**
    * Cause the alarm service to start up, create a list of upcoming
    * alarms in all registered calendars, add observers to watch for
    * calendar registration and unregistration, and setup a timer to
    * maintain that list and fire alarms.
+   *
+   * @note Will throw NS_ERROR_NOT_INITIALIZED if you have not previously set
+   *       the timezone attribute.
    */
   void startup();
 
