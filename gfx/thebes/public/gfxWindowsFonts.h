@@ -106,6 +106,10 @@ public:
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
     virtual gfxTextRun *MakeTextRun(const nsACString& aString);
 
+    gfxWindowsFont *GetFontAt(PRInt32 i) {
+        return NS_STATIC_CAST(gfxWindowsFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+    }        
+
 protected:
     static PRBool MakeFont(const nsAString& fontName, const nsAString& genericName, void *closure);
 

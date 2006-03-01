@@ -311,7 +311,6 @@ gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericN
 {
     gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
     gfxFont *font = new gfxWindowsFont(aName, fg, fg->mDC);
-    NS_ADDREF(font);
     fg->mFonts.AppendElement(font);
     return PR_TRUE;
 }
@@ -468,7 +467,7 @@ gfxWindowsTextRun::MeasureOrDrawAscii(gfxContext *aContext,
 
     cairo_t *cr = aContext->GetCairo();
 
-    nsRefPtr<gfxWindowsFont> currentFont = NS_STATIC_CAST(gfxWindowsFont*, mGroup->mFonts[0]);
+    nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
     cairo_font_face_t *fontFace = currentFont->CairoFontFace();
     cairo_scaled_font_t *scaledFont = currentFont->CairoScaledFont();
 
@@ -614,7 +613,7 @@ DO_TRY_AGAIN:
         int fontIndex = 0;
 
 TRY_AGAIN_SAME_SCRIPT:
-        currentFont = NS_STATIC_CAST(gfxWindowsFont*, mGroup->mFonts[fontIndex]);
+        currentFont = mGroup->GetFontAt(fontIndex);
 
 TRY_AGAIN_HOPE_FOR_THE_BEST:
         if (fallbackFont)
@@ -706,8 +705,7 @@ TRY_AGAIN_JUST_SHAPE:
 
             if (!fallbackFont) {
                 // only look for a fallback font once
-                fallbackFont = FindFallbackFont(aDC, itemChars, itemLength,
-                                                NS_STATIC_CAST(gfxWindowsFont*, mGroup->mFonts[0]));
+                fallbackFont = FindFallbackFont(aDC, itemChars, itemLength, mGroup->GetFontAt(0));
 
                 if (fallbackFont) {
                     RestoreDC(aDC, -1);
