@@ -44,7 +44,7 @@
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "4.0.14">
 <!ENTITY min-pg-ver "7.3.x">
-<!ENTITY min-perl-ver "5.6.1">
+<!ENTITY min-perl-ver "5.8.0">
 <!ENTITY min-perl-ver-win "5.8.1">
 <!ENTITY min-template-ver "2.08">
 <!ENTITY min-file-temp-ver "any">

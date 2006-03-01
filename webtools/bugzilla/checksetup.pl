@@ -130,7 +130,7 @@ BEGIN {
     if ($^O =~ /MSWin32/i) {
         require 5.008001; # for CGI 2.93 or higher
     }
-    require 5.006_001;
+    require 5.008;
     use File::Basename;
     chdir dirname($0);
 }
