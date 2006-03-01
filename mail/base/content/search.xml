@@ -69,7 +69,7 @@
       <property name="showingSearchCriteria" onget="return this.getAttribute('searchCriteria') == 'true';"
                 onset="this.setAttribute('searchCriteria', val); return val;"/>
 
-      <property name="clearButtonHidden" onget="return document.getElementById('quick-search-clearbutton').getAttribute('searchCriteria') == 'true';"
+      <property name="clearButtonHidden" onget="return document.getElementById('quick-search-clearbutton').getAttribute('clearButtonHidden') == 'true';"
                 onset="document.getElementById('quick-search-clearbutton').setAttribute('clearButtonHidden', val); return val;"/>
 
       <field name="mQuickSearchMode">0</field>
