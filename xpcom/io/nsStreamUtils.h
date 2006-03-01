@@ -39,8 +39,8 @@
 #define nsStreamUtils_h__
 
 #include "nsStringFwd.h"
+#include "nsIInputStream.h"
 
-class nsIInputStream;
 class nsIOutputStream;
 class nsIInputStreamCallback;
 class nsIOutputStreamCallback;
@@ -203,5 +203,27 @@ extern NS_COM NS_METHOD
 NS_DiscardSegment(nsIInputStream *aInputStream, void *aClosure,
                   const char *aFromSegment, PRUint32 aToOffset,
                   PRUint32 aCount, PRUint32 *aWriteCount);
+
+/**
+ * This function is intended to be passed to nsIInputStream::ReadSegments to
+ * adjust the aInputStream parameter passed to a consumer's WriteSegmentFun.
+ * The aClosure parameter must be a pointer to a nsWriteSegmentThunk object.
+ * The mStream and mClosure members of that object will be passed to the mFun
+ * function, with the remainder of the parameters being what are passed to
+ * NS_WriteSegmentThunk.
+ *
+ * This function comes in handy when implementing ReadSegments in terms of an
+ * inner stream's ReadSegments.
+ */
+extern NS_COM NS_METHOD
+NS_WriteSegmentThunk(nsIInputStream *aInputStream, void *aClosure,
+                     const char *aFromSegment, PRUint32 aToOffset,
+                     PRUint32 aCount, PRUint32 *aWriteCount);
+
+struct nsWriteSegmentThunk {
+  nsIInputStream    *mStream;
+  nsWriteSegmentFun  mFun;
+  void              *mClosure;
+};
 
 #endif // !nsStreamUtils_h__

@@ -813,6 +813,9 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
         mCallback = 0;
         mCallbackFlags = 0;
 
+        if (!callback)
+            return NS_OK;
+
         nsCOMPtr<nsIInputStreamCallback> proxy;
         if (target) {
             nsresult rv = NS_NewInputStreamReadyEvent(getter_AddRefs(proxy),
@@ -1183,6 +1186,9 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
         // replace a pending callback
         mCallback = 0;
         mCallbackFlags = 0;
+
+        if (!callback)
+            return NS_OK;
 
         nsCOMPtr<nsIOutputStreamCallback> proxy;
         if (target) {

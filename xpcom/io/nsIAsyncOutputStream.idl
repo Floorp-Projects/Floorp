@@ -91,7 +91,8 @@ interface nsIAsyncOutputStream : nsIOutputStream
      * event will be dispatched when the stream becomes writable or closed.
      * 
      * @param aCallback
-     *        This object is notified when the stream becomes ready.
+     *        This object is notified when the stream becomes ready.  This
+     *        parameter may be null to clear an existing callback.
      * @param aFlags
      *        This parameter specifies optional flags passed in to configure
      *        the behavior of this method.  Pass zero to specify no flags.
