@@ -60,6 +60,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
+#include "nsIPrincipal.h"
 #include "nsIDOMElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"
@@ -358,7 +359,20 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
   nsCOMPtr<nsIDocument> document = formNode->GetDocument();
   if (!document) return NS_OK;
 
-  nsIURI *formURL = document->GetBaseURI();
+  nsIPrincipal *principal = formNode->GetNodePrincipal();
+  
+  if (!principal)
+  {
+    *cancelSubmit = PR_TRUE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> formURL;
+  if (NS_FAILED(principal->GetURI(getter_AddRefs(formURL))) ||
+      !formURL)
+  {
+    formURL = document->GetDocumentURI();
+  }
 
   nsCOMPtr<nsIDOMWindow> postingWindow =
     do_QueryInterface(document->GetWindow());
