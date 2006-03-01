@@ -327,8 +327,7 @@
 
             const cID = "@mozilla.org/uriloader/external-protocol-service;1";
             const nsIEPS = Components.interfaces.nsIExternalProtocolService;
-            var protocolSvc = Components.classes[contractID]
-                                        .getService(nsIEPS);
+            var protocolSvc = Components.classes[cID].getService(nsIEPS);
 
             // if the scheme is not an exposed protocol, then opening this link
             // should be deferred to the system's external protocol handler
