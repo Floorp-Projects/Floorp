@@ -81,6 +81,10 @@ public:
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
     ATSUFontFallbacks *GetATSUFontFallbacks() { return &mFallbacks; }
+    
+    gfxAtsuiFont* GetFontAt(PRInt32 i) {
+        return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, GetFontList()[i]));
+    }
 
 protected:
     static PRBool FindATSUFont(const nsAString& aName,

@@ -143,9 +143,10 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
     else
         fids = static_fids;
 
-    for (unsigned int i = 0; i < mFonts.Length(); i++)
-        fids[i] = ((gfxAtsuiFont*)(mFonts[i]))->GetATSUFontID();
-
+    for (unsigned int i = 0; i < mFonts.Length(); i++) {
+        nsRefPtr<gfxAtsuiFont> atsuiFont = NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
+        fids[i] = atsuiFont->GetATSUFontID();
+    }
     ATSUSetObjFontFallbacks(mFallbacks,
                             mFonts.Length(),
                             fids,
@@ -300,7 +301,8 @@ gfxAtsuiTextRun::gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aG
 
     // fSize is in points (72dpi)
     Fixed fSize = FloatToFixed(aGroup->GetStyle()->size);
-    ATSUFontID fid = ((gfxAtsuiFont*)(mGroup->GetFontList()[0]))->GetATSUFontID();
+    nsRefPtr<gfxAtsuiFont> atsuiFont = mGroup->GetFontAt(0);
+    ATSUFontID fid = atsuiFont->GetATSUFontID();
     Fract inhibitKerningFactor = FloatToFract(1.0);
     /* Why am I even setting these? the fid font will end up being used no matter what;
      * need smarter font selection earlier on...
@@ -366,7 +368,8 @@ void
 gfxAtsuiTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
 {
     cairo_t *cr = aContext->GetCairo();
-    cairo_set_font_face(cr, ((gfxAtsuiFont*)(mGroup->GetFontList()[0]))->CairoFontFace());
+    nsRefPtr<gfxAtsuiFont> atsuiFont = mGroup->GetFontAt(0);
+    cairo_set_font_face(cr, atsuiFont->CairoFontFace());
     cairo_set_font_size(cr, mGroup->GetStyle()->size);
 
     ItemCount cnt;
