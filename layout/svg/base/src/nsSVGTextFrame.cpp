@@ -206,15 +206,17 @@ protected:
     updating};
   UpdateState mFragmentTreeState;
   UpdateState mMetricsState;
-  PRBool mFragmentTreeDirty;
-  PRBool mPositioningDirty;
 
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
-  PRBool mPropagateTransform;
 
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
   nsISVGFilterFrame *mFilter;
+
+  PRPackedBool mFragmentTreeDirty;
+  PRPackedBool mPositioningDirty;
+
+  PRPackedBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------

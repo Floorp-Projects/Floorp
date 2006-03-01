@@ -153,7 +153,6 @@ protected:
   //
 
   nsSVGGradientFrame                     *mNextGrad;
-  PRBool                                  mLoopFlag;
   nsCOMPtr<nsIContent>                    mSourceContent;
 
 private:
@@ -166,6 +165,9 @@ private:
   PRInt32 GetStopElement(PRInt32 aIndex, 
                          nsIDOMSVGStopElement * *aStopElement,
                          nsIFrame * *aStopFrame);
+
+protected:
+  PRPackedBool                            mLoopFlag;
 };
 
 // -------------------------------------------------------------------------

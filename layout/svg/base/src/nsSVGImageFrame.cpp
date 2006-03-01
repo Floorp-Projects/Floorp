@@ -135,7 +135,7 @@ private:
   nsresult ConvertFrame(gfxIImageFrame *aNewFrame);
 
   friend class nsSVGImageListener;
-  PRBool mSurfaceInvalid;
+  PRPackedBool mSurfaceInvalid;
 };
 
 //----------------------------------------------------------------------

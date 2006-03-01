@@ -266,9 +266,9 @@ public:
 private:
   void MarkSet();
   
-  PRBool mIsSet;
   nsCOMPtr<nsIDOMSVGLength> mViewportWidth;
   nsCOMPtr<nsIDOMSVGLength> mViewportHeight;
+  PRPackedBool mIsSet;
 };
 
 //----------------------------------------------------------------------

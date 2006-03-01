@@ -1219,7 +1219,8 @@ public:
   
 protected:
   float  mX, mY, mR1, mR2, mAngle;
-  PRBool mLargeArcFlag, mSweepFlag;
+  PRPackedBool mLargeArcFlag;
+  PRPackedBool mSweepFlag;
 };
 
 //----------------------------------------------------------------------

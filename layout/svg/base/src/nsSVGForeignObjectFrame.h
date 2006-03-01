@@ -161,17 +161,18 @@ protected:
   already_AddRefed<nsIDOMSVGMatrix> GetTMIncludingOffset();
   nsresult TransformPointFromOuterPx(float aX, float aY, nsPoint* aOut);
 
-  PRBool mIsDirty;
   nsCOMPtr<nsIDOMSVGLength> mX;
   nsCOMPtr<nsIDOMSVGLength> mY;
   nsCOMPtr<nsIDOMSVGLength> mWidth;
   nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-  PRBool mPropagateTransform;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
 
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
   nsISVGFilterFrame *mFilter;
+
+  PRPackedBool mPropagateTransform;
+  PRPackedBool mIsDirty;
 };
 
 #endif
