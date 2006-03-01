@@ -46,21 +46,37 @@
 #include "nsMargin.h"
 #include "nsUnitConversion.h"
 #include "gfxCore.h"
+#include "nsTraceRefcnt.h"
 
 struct NS_GFX nsRect {
   nscoord x, y;
   nscoord width, height;
 
   // Constructors
-  nsRect() : x(0), y(0), width(0), height(0) {}
-  nsRect(const nsRect& aRect) {*this = aRect;}
-  nsRect(const nsPoint& aOrigin, const nsSize &aSize) {x = aOrigin.x; y = aOrigin.y;
-                                                       width = aSize.width; height = aSize.height;}
+  nsRect() : x(0), y(0), width(0), height(0) {
+    MOZ_COUNT_CTOR(nsRect);
+  }
+  nsRect(const nsRect& aRect) {
+    MOZ_COUNT_CTOR(nsRect);
+    *this = aRect;
+  }
+  nsRect(const nsPoint& aOrigin, const nsSize &aSize) {
+    MOZ_COUNT_CTOR(nsRect);
+    x = aOrigin.x; y = aOrigin.y;
+    width = aSize.width; height = aSize.height;
+  }
   nsRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
+    MOZ_COUNT_CTOR(nsRect);
     x = aX; y = aY; width = aWidth; height = aHeight;
     VERIFY_COORD(x); VERIFY_COORD(y); VERIFY_COORD(width); VERIFY_COORD(height);
   }
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+  ~nsRect() {
+    MOZ_COUNT_DTOR(nsRect);
+  }
+#endif
+  
   // Emptiness. An empty rect is one that has no area, i.e. its height or width
   // is <= 0
   PRBool IsEmpty() const {
