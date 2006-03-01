@@ -2487,7 +2487,14 @@ nsContentUtils::NotifyXPCIfExceptionPending(JSContext* aCx)
   nsCOMPtr<nsIXPCNativeCallContext> nccx;
   XPConnect()->GetCurrentNativeCallContext(getter_AddRefs(nccx));
   if (nccx) {
-    nccx->SetExceptionWasThrown(PR_TRUE);
+    // Check to make sure that the JSContext that nccx will mess with is the
+    // same as the JSContext we've set an exception on.  If they're not the
+    // same, don't mess with nccx.
+    JSContext* cx;
+    nccx->GetJSContext(&cx);
+    if (cx == aCx) {
+      nccx->SetExceptionWasThrown(PR_TRUE);
+    }
   }
 }
 
