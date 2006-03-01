@@ -396,6 +396,9 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.hasmethod =
     NewNPN_HasMethodProc(FP2TV(_hasmethod));
 
+  CALLBACKS.enumerate =
+    NewNPN_EnumerateProc(FP2TV(_enumerate));
+
   CALLBACKS.releasevariantvalue =
     NewNPN_ReleaseVariantValueProc(FP2TV(_releasevariantvalue));
 
@@ -1826,6 +1829,26 @@ _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
   NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->hasProperty(npobj, methodName);
+}
+
+bool NP_EXPORT
+_enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
+           uint32_t *count)
+{
+  if (!npp || !npobj || !npobj->_class)
+    return false;
+
+  if (!NP_CLASS_STRUCT_VERSION_HAS_ENUM(npobj->_class) ||
+      !npobj->_class->enumerate) {
+    *identifier = 0;
+    *count = 0;
+    return true;
+  }
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
+
+  return npobj->_class->enumerate(npobj, identifier, count);
 }
 
 void NP_EXPORT
