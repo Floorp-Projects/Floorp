@@ -54,16 +54,15 @@ enum eFlag_t {
   eFlag_CONSTRAINT_SCHEMA           = 1 << 3,
   eFlag_RELEVANT                    = 1 << 4,
   eFlag_REQUIRED                    = 1 << 5,
-  eFlag_SCHEMA_VALID                = 1 << 6,
-  eFlag_INHERITED_RELEVANT          = 1 << 7,
-  eFlag_INHERITED_READONLY          = 1 << 8,
+  eFlag_INHERITED_RELEVANT          = 1 << 6,
+  eFlag_INHERITED_READONLY          = 1 << 7,
   // Events to be dispatched
-  eFlag_DISPATCH_VALUE_CHANGED      = 1 << 9,
-  eFlag_DISPATCH_READONLY_CHANGED   = 1 << 10,
-  eFlag_DISPATCH_VALID_CHANGED      = 1 << 11,
-  eFlag_DISPATCH_RELEVANT_CHANGED   = 1 << 12,
-  eFlag_DISPATCH_REQUIRED_CHANGED   = 1 << 13,
-  eFlag_DISPATCH_CONSTRAINT_CHANGED = 1 << 14
+  eFlag_DISPATCH_VALUE_CHANGED      = 1 << 8,
+  eFlag_DISPATCH_READONLY_CHANGED   = 1 << 9,
+  eFlag_DISPATCH_VALID_CHANGED      = 1 << 10,
+  eFlag_DISPATCH_RELEVANT_CHANGED   = 1 << 11,
+  eFlag_DISPATCH_REQUIRED_CHANGED   = 1 << 12,
+  eFlag_DISPATCH_CONSTRAINT_CHANGED = 1 << 13
 };
 
 // Default flags set for new states
@@ -148,14 +147,6 @@ public:
   PRBool TestAndClear(eFlag_t aFlag);
 
   /**
-   * Get flag state and set flag.
-   * 
-   * @param aFlag            The flag
-   * @return                 The flag state
-   */
-  PRBool TestAndSet(eFlag_t aFlag);
-
-  /**
    * Get flag state
    * 
    * @param aFlag            The flag   
@@ -191,6 +182,8 @@ public:
     { return Test(eFlag_DISPATCH_REQUIRED_CHANGED); };
   PRBool ShouldDispatchValueChanged() const
     { return Test(eFlag_DISPATCH_VALUE_CHANGED); };
+
+  PRUint32 GetIntrinsicState() const;
 
 #ifdef DEBUG_XF_NODESTATE
   /** Print the flags currently set to stdout */

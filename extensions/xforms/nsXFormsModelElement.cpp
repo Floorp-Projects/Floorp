@@ -75,7 +75,6 @@
 #include "nsAutoPtr.h"
 #include "nsArray.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIEventStateManager.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -741,31 +740,21 @@ nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
   const nsXFormsNodeState *ns = mMDG.GetNodeState(aNode);
   NS_ENSURE_STATE(ns);
 
-  // XXX nsXFormsNodeState could expose a bitmask using NS_EVENTs, to avoid
-  // most of this...
-  PRBool tmp = ns->IsValid();
-  PRUint32 state =  tmp ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
-  if (aAllStates || ns->ShouldDispatchValid()) {
-    SetSingleState(element, tmp, eEvent_Valid);
-  }
-  tmp = ns->IsReadonly();
-  state |= tmp ? NS_EVENT_STATE_MOZ_READONLY : NS_EVENT_STATE_MOZ_READWRITE;
-  if (aAllStates || ns->ShouldDispatchReadonly()) {
-    SetSingleState(element, tmp, eEvent_Readonly);
-  }
-  tmp = ns->IsRequired();
-  state |= tmp ? NS_EVENT_STATE_REQUIRED : NS_EVENT_STATE_OPTIONAL;
-  if (aAllStates || ns->ShouldDispatchRequired()) {
-    SetSingleState(element, tmp, eEvent_Required);
-  }
-  tmp = ns->IsRelevant();
-  state |= tmp ? NS_EVENT_STATE_ENABLED : NS_EVENT_STATE_DISABLED;
-  if (aAllStates || ns->ShouldDispatchRelevant()) {
-    SetSingleState(element, tmp, eEvent_Enabled);
-  }
-
-  nsresult rv = xtfWrap->SetIntrinsicState(state);
+  nsresult rv = xtfWrap->SetIntrinsicState(ns->GetIntrinsicState());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aAllStates || ns->ShouldDispatchValid()) {
+    SetSingleState(element, ns->IsValid(), eEvent_Valid);
+  }
+  if (aAllStates || ns->ShouldDispatchReadonly()) {
+    SetSingleState(element, ns->IsReadonly(), eEvent_Readonly);
+  }
+  if (aAllStates || ns->ShouldDispatchRequired()) {
+    SetSingleState(element, ns->IsRequired(), eEvent_Required);
+  }
+  if (aAllStates || ns->ShouldDispatchRelevant()) {
+    SetSingleState(element, ns->IsRelevant(), eEvent_Enabled);
+  }
 
   if (ns->ShouldDispatchValueChanged()) {
     nsXFormsUtils::DispatchEvent(element, eEvent_ValueChanged);

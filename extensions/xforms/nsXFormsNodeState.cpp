@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXFormsNodeState.h"
+#include "nsIEventStateManager.h"
 
 void
 nsXFormsNodeState::Set(PRUint16 aFlags, PRBool aVal)
@@ -71,17 +72,22 @@ nsXFormsNodeState::TestAndClear(eFlag_t aFlag)
 }
 
 PRBool
-nsXFormsNodeState::TestAndSet(eFlag_t aFlag)
-{
-  PRUint16 test = mState & aFlag;
-  mState |= aFlag;
-  return test ? PR_TRUE : PR_FALSE;
-}
-
-PRBool
 nsXFormsNodeState::Test(eFlag_t aFlag) const
 {
   return (mState & aFlag) ? PR_TRUE : PR_FALSE;
+}
+
+PRUint32
+nsXFormsNodeState::GetIntrinsicState() const
+{
+  PRUint32 state =
+    (IsValid() ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID) |
+    (IsReadonly() ? NS_EVENT_STATE_MOZ_READONLY
+                  : NS_EVENT_STATE_MOZ_READWRITE) |
+    (IsRequired() ? NS_EVENT_STATE_REQUIRED : NS_EVENT_STATE_OPTIONAL) |
+    (IsRelevant() ? NS_EVENT_STATE_ENABLED : NS_EVENT_STATE_DISABLED);
+
+  return state;
 }
 
 #ifdef DEBUG_XF_NODESTATE
@@ -90,7 +96,6 @@ const char* flagnames[] = {0,
                            "eFlag_CONSTRAINT",
                            "eFlag_RELEVANT",
                            "eFlag_REQUIRED",
-                           "eFlag_SCHEMA_VALID",
                            "eFlag_VALID",
                            "eFlag_INHERITED_RELEVANT",
                            "eFlag_INHERITED_READONLY",
