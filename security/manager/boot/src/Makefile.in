@@ -73,6 +73,7 @@ REQUIRES	= nspr \
 		  widget \
 		  layout \
 		  content \
+		  caps \
 		  pref \
 		  $(NULL)
 
