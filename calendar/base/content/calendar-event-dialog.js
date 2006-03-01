@@ -778,7 +778,8 @@ function loadDetails() {
 
     /* alarms */
     if (item.alarmOffset) {
-        if (item.alarmRelated == item.ALARM_RELATED_START) {
+        var alarmRelatedStart = (item.alarmRelated == item.ALARM_RELATED_START);
+        if (alarmRelatedStart) {
             setElementValue("alarm-trigger-relation", "START");
         } else {
             setElementValue("alarm-trigger-relation", "END");
@@ -788,9 +789,9 @@ function loadDetails() {
         if (offset.minutes) {
             var minutes = offset.minutes + offset.hours*60 + offset.days*24*60 + offset.weeks*60*24*7;
             // Special cases for the common alarms
-            if (minutes == 15) {
+            if ((minutes == 15) && alarmRelatedStart) {
                 document.getElementById("item-alarm").selectedIndex = 2;
-            } else if (minutes == 30) {
+            } else if ((minutes == 30) && alarmRelatedStart) {
                 document.getElementById("item-alarm").selectedIndex = 3;
             } else {
                 setElementValue("alarm-length-field", minutes);
