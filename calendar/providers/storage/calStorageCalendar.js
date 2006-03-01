@@ -1273,7 +1273,7 @@ calStorageCalendar.prototype = {
         if (row.alarm_offset != null) {
             var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                                      .createInstance(Components.interfaces.calIDuration);
-            duration.seconds = row.alarm_offset;
+            duration.inSeconds = row.alarm_offset;
             duration.normalize();
 
             item.alarmOffset = duration;
