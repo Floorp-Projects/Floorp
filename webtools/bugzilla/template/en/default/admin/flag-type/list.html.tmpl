@@ -26,6 +26,7 @@
   style = "
     table#flag_types tr th { text-align: left; }
     .inactive { color: #787878; }
+    .multiplicable { display: block; }
   "
 %]
 
@@ -88,6 +89,9 @@
       <th>Edit name ...</th>
       <th>Description</th>
       <th>Sortkey</th>
+      <th>Properties</th>
+      <th>Grant group</th>
+      <th>Request group</th>
       <th>Actions</th>
     </tr>
 
@@ -97,6 +101,19 @@
         <td><a href="editflagtypes.cgi?action=edit&amp;id=[% type.id %]">[% type.name FILTER html FILTER no_break %]</a></td>
         <td>[% type.description FILTER html %]</td>
         <td align="right">[% type.sortkey FILTER html %]</td>
+        <td>
+          [% IF type.is_requestable %]
+            <span class="requestable">requestable</span>
+          [% END %]
+          [% IF type.is_requestable && type.is_requesteeble %]
+            <span class="requesteeble">(specifically)</span>
+          [% END %]
+          [% IF type.is_multiplicable %]
+            <span class="multiplicable">multiplicable</span>
+          [% END %]
+        </td>
+        <td>[% type.grant_group_name FILTER html %]</td>
+        <td>[% type.request_group_name FILTER html %]</td>
         <td>
           <a href="editflagtypes.cgi?action=copy&amp;id=[% type.id %]">Copy</a>
           | <a href="editflagtypes.cgi?action=confirmdelete&amp;id=[% type.id %]"

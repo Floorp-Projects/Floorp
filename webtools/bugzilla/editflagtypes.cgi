@@ -102,6 +102,20 @@ sub list {
       Bugzilla::FlagType::match({ 'target_type' => 'attachment', 
                                   'group' => scalar $cgi->param('group') }, 1);
 
+    # Users want to see group names, not IDs
+    # So get the group names
+    my %group_name_cache = ();
+    foreach my $flag_type_set ("bug_types", "attachment_types") {
+        foreach my $flag_type (@{$vars->{$flag_type_set}}) {
+            foreach my $group ("grant", "request") {
+                my $gid = $flag_type->{$group . "_gid"};
+                next if (!$gid);
+                $group_name_cache{$gid} ||= new Bugzilla::Group($gid)->name();
+                $flag_type->{$group . "_group_name"} = $group_name_cache{$gid};
+            }
+        }
+    }
+
     # Return the appropriate HTTP response headers.
     print $cgi->header();
 
