@@ -84,7 +84,6 @@ BEGIN
             VALUE "FileDescription", MY_FILEDESCRIPTION MY_DEBUG_STR "\0"
             VALUE "FileVersion", NSS_CKCAPI_LIBRARY_VERSION "\0"
             VALUE "InternalName", MY_INTERNAL_NAME "\0"
-            VALUE "LegalCopyright", "Copyright \251 1994-2005 Netscape Communications Corporation\0"
             VALUE "OriginalFilename", MY_INTERNAL_NAME ".dll\0"
             VALUE "ProductName", "Network Security Services\0"
             VALUE "ProductVersion", NSS_CKCAPI_LIBRARY_VERSION "\0"

@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.10 $ $Date: 2005/01/20 02:25:46 $";
+static const char CVS_ID[] = "@(#) $RCSfile: constants.c,v $ $Revision: 1.11 $ $Date: 2006/03/01 19:44:24 $";
 #endif /* DEBUG */
 
 /*
@@ -62,7 +62,7 @@ nss_builtins_CryptokiVersion =  {
 		NSS_BUILTINS_CRYPTOKI_VERSION_MINOR };
 
 NSS_IMPLEMENT_DATA const NSSUTF8 *
-nss_builtins_ManufacturerID = (NSSUTF8 *) "Netscape Communications Corp.";
+nss_builtins_ManufacturerID = (NSSUTF8 *) "Mozilla Foundation";
 
 NSS_IMPLEMENT_DATA const NSSUTF8 *
 nss_builtins_LibraryDescription = (NSSUTF8 *) "NSS Builtin Object Cryptoki Module";
