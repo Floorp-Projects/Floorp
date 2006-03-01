@@ -87,6 +87,11 @@ public:
     nsIOService() NS_HIDDEN;
     ~nsIOService() NS_HIDDEN;
 
+    // Gets the singleton instance of the IO Service, creating it as needed
+    // Returns nsnull on out of memory or failure to initialize.
+    // Returns an addrefed pointer.
+    static nsIOService* GetInstance();
+
     NS_HIDDEN_(nsresult) Init();
     NS_HIDDEN_(nsresult) NewURI(const char* aSpec, nsIURI* aBaseURI,
                                 nsIURI* *result,
