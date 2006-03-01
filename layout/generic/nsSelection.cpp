@@ -1437,13 +1437,16 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
 
           // force the offset to the logical beginning (for HOME) or end (for END) of the frame
           // (if it is an RTL frame it will be at the visual beginning or end, which we don't want in this case)
-          if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
-            pos.mContentOffset = frameStart;
-          else
-            pos.mContentOffset = frameEnd;
+          if (frameStart !=0 || frameEnd !=0) // Only do this for text frames
+          {
+            if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
+              pos.mContentOffset = frameStart;
+            else
+              pos.mContentOffset = frameEnd;
 
-          // set the cursor Bidi level to the paragraph embedding level
-          mShell->SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
+            // set the caret Bidi level to the paragraph embedding level
+            mShell->SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
+          }
           break;
 
         default:
