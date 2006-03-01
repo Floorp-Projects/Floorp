@@ -870,10 +870,9 @@ function delayedStartup()
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
 #else
-/*
+  // XXXben - move this to the toolbar constructor if there is no performance penalty! (Ts/Txul)
   var bookmarksBar = document.getElementById("bookmarksBarContent");
   bookmarksBar.init();
-  */
 #endif
 
   // called when we go into full screen, even if it is
