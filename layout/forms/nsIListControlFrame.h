@@ -61,61 +61,61 @@ public:
    * Sets the ComboBoxFrame
    *
    */
-  NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame) = 0;
+  virtual void SetComboboxFrame(nsIFrame* aComboboxFrame) = 0;
 
   /**
    * Get the display string for an item
    */
-  NS_IMETHOD GetOptionText(PRInt32 aIndex, nsAString & aStr) = 0;
+  virtual void GetOptionText(PRInt32 aIndex, nsAString & aStr) = 0;
 
   /**
    * Get the Selected Item's index
    *
    */
-  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex) = 0;
+  virtual PRInt32 GetSelectedIndex() = 0;
 
   /**
    * Initiates mouse capture for the listbox
    *
    */
-  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
+  virtual void CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
 
   /**
    * Returns the maximum width and height of an item in the listbox
    */
 
-  NS_IMETHOD GetMaximumSize(nsSize &aSize) = 0;
+  virtual nsSize GetMaximumSize() = 0;
 
   /**
    * Returns the number of options in the listbox
    */
 
-  NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions) = 0; 
+  virtual PRInt32 GetNumberOfOptions() = 0; 
 
   /**
    * 
    */
-  NS_IMETHOD SyncViewWithFrame() = 0;
+  virtual void SyncViewWithFrame() = 0;
 
   /**
    * Called by combobox when it's about to drop down
    */
-  NS_IMETHOD AboutToDropDown() = 0;
+  virtual void AboutToDropDown() = 0;
 
   /**
    * Called by combobox when it's about to roll up
    */
-  NS_IMETHOD AboutToRollup() = 0;
+  virtual void AboutToRollup() = 0;
 
   /**
    * Fire on change (used by combobox)
    */
-  NS_IMETHOD FireOnChange() = 0;
+  virtual void FireOnChange() = 0;
 
   /**
    *
    */
-  NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) = 0;
+  virtual void SetOverrideReflowOptimization(PRBool aValue) = 0;
 
   /**
    * Tell the selected list to roll up and ensure that the proper index is
@@ -123,7 +123,7 @@ public:
    *
    * @param aIndex the index to actually select
    */
-  NS_IMETHOD ComboboxFinish(PRInt32 aIndex) = 0;
+  virtual void ComboboxFinish(PRInt32 aIndex) = 0;
 
   /**
    * Notification that the content has been reset

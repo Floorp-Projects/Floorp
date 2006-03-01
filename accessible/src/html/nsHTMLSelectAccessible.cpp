@@ -693,7 +693,7 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
       // Can't use dom interface for this, because it will always return the first selected item
       // when there is more than 1 item selected. We need the focused item, not
       // the first selected item.
-      rv = listFrame->GetSelectedIndex(&focusedOptionIndex);
+      focusedOptionIndex = listFrame->GetSelectedIndex();
     }
     else  // Combo boxes can only have 1 selected option, so they can use the dom interface for this
       rv = selectElement->GetSelectedIndex(&focusedOptionIndex);
