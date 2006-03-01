@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.79 2006/02/28 04:20:23 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.80 2006/03/01 05:45:45 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -470,6 +470,26 @@ SSL3Statistics *
 SSL_GetStatistics(void)
 {
     return &ssl3stats;
+}
+
+typedef struct tooLongStr {
+#if defined(IS_LITTLE_ENDIAN)
+    PRInt32 low;
+    PRInt32 high;
+#else
+    PRInt32 high;
+    PRInt32 low;
+#endif
+} tooLong;
+
+static void SSL_AtomicIncrementLong(long * x)
+{
+    if ((sizeof *x) == sizeof(PRInt32)) {
+        PR_AtomicIncrement((PRInt32 *)x);
+    } else {
+    	tooLong * tl = (tooLong *)x;
+	PR_AtomicIncrement(&tl->low) || PR_AtomicIncrement(&tl->high);
+    }
 }
 
 /* return pointer to ssl3CipherSuiteDef for suite, or NULL */
@@ -3299,7 +3319,7 @@ ssl3_SendClientHello(sslSocket *ss)
 	}
 
 	if (!sidOK) {
-	    ++ssl3stats.sch_sid_cache_not_ok;
+	    SSL_AtomicIncrementLong(& ssl3stats.sch_sid_cache_not_ok );
 	    (*ss->sec.uncache)(sid);
 	    ssl_FreeSID(sid);
 	    sid = NULL;
@@ -3307,7 +3327,7 @@ ssl3_SendClientHello(sslSocket *ss)
     }
 
     if (sid) {
-	++ssl3stats.sch_sid_cache_hits;
+	SSL_AtomicIncrementLong(& ssl3stats.sch_sid_cache_hits );
 
 	rv = ssl3_NegotiateVersion(ss, sid->version);
 	if (rv != SECSuccess)
@@ -3318,7 +3338,7 @@ ssl3_SendClientHello(sslSocket *ss)
 
 	ss->ssl3.policy = sid->u.ssl3.policy;
     } else {
-	++ssl3stats.sch_sid_cache_misses;
+	SSL_AtomicIncrementLong(& ssl3stats.sch_sid_cache_misses );
 
 	rv = ssl3_NegotiateVersion(ss, SSL_LIBRARY_VERSION_3_1_TLS);
 	if (rv != SECSuccess)
@@ -4290,7 +4310,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	}
 
 	/* Got a Match */
-	++ssl3stats.hsh_sid_cache_hits;
+	SSL_AtomicIncrementLong(& ssl3stats.hsh_sid_cache_hits );
 	ss->ssl3.hs.ws         = wait_change_cipher;
 	ss->ssl3.hs.isResuming = PR_TRUE;
 
@@ -4309,9 +4329,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     } while (0);
 
     if (sid_match)
-	++ssl3stats.hsh_sid_cache_not_ok;
+	SSL_AtomicIncrementLong(& ssl3stats.hsh_sid_cache_not_ok );
     else
-	++ssl3stats.hsh_sid_cache_misses;
+	SSL_AtomicIncrementLong(& ssl3stats.hsh_sid_cache_misses );
 
     /* throw the old one away */
     sid->u.ssl3.keys.resumable = PR_FALSE;
@@ -5159,7 +5179,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	     ((ss->opt.requireCertificate == SSL_REQUIRE_FIRST_HANDSHAKE) 
 	      && !ss->firstHsDone))) {
 
-	    ++ssl3stats.hch_sid_cache_not_ok;
+	    SSL_AtomicIncrementLong(& ssl3stats.hch_sid_cache_not_ok );
 	    ss->sec.uncache(sid);
 	    ssl_FreeSID(sid);
 	    sid = NULL;
@@ -5332,7 +5352,7 @@ compression_found:
 	 *
 	 * XXX make sure compression still matches
 	 */
-	++ssl3stats.hch_sid_cache_hits;
+	SSL_AtomicIncrementLong(& ssl3stats.hch_sid_cache_hits );
 	ss->ssl3.hs.isResuming = PR_TRUE;
 
         ss->sec.authAlgorithm = sid->authAlgorithm;
@@ -5394,12 +5414,12 @@ compression_found:
     }
 
     if (sid) { 	/* we had a sid, but it's no longer valid, free it */
-	++ssl3stats.hch_sid_cache_not_ok;
+	SSL_AtomicIncrementLong(& ssl3stats.hch_sid_cache_not_ok );
 	ss->sec.uncache(sid);
 	ssl_FreeSID(sid);
 	sid = NULL;
     }
-    ++ssl3stats.hch_sid_cache_misses;
+    SSL_AtomicIncrementLong(& ssl3stats.hch_sid_cache_misses );
 
     sid = ssl3_NewSessionID(ss, PR_TRUE);
     if (sid == NULL) {
@@ -5562,7 +5582,7 @@ suite_found:
     ss->sec.send            = ssl3_SendApplicationData;
 
     /* we don't even search for a cache hit here.  It's just a miss. */
-    ++ssl3stats.hch_sid_cache_misses;
+    SSL_AtomicIncrementLong(& ssl3stats.hch_sid_cache_misses );
     sid = ssl3_NewSessionID(ss, PR_TRUE);
     if (sid == NULL) {
     	errCode = PORT_GetError();
