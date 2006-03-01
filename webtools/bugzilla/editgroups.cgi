@@ -294,7 +294,7 @@ if ($action eq 'new') {
               undef, ($name, $desc, $regexp, $isactive));
 
     my $gid = $dbh->bz_last_key('groups', 'id');
-    my $admin = GroupNameToId('admin');
+    my $admin = group_name_to_id('admin');
     # Since we created a new group, give the "admin" group all privileges
     # initially.
     my $sth = $dbh->prepare('INSERT INTO group_group_map

@@ -25,6 +25,11 @@ use strict;
 
 package Bugzilla::Group;
 
+use base qw(Exporter);
+@Bugzilla::Group::EXPORT = qw(
+    group_name_to_id
+);
+
 use Bugzilla::Config;
 use Bugzilla::Util;
 use Bugzilla::Error;
@@ -140,6 +145,14 @@ sub get_all_groups {
     return @groups;
 }
 
+sub group_name_to_id {
+    my ($name) = @_;
+    trick_taint($name);
+    my ($id) = Bugzilla->dbh->selectrow_array(
+        "SELECT id FROM groups WHERE name = ?", undef, $name);
+    return $id;
+}
+
 1;
 
 __END__
@@ -163,7 +176,8 @@ Bugzilla::Group - Bugzilla group class.
     my $is_active    = $group->is_active;
 
     my $group_id = Bugzilla::Group::ValidateGroupName('admin', @users);
-    my @groups = Bugzilla::get_all_groups();
+    my @groups   = Bugzilla::Group::get_all_groups();
+    my $group_id = group_name_to_id('admin');
 
 =head1 DESCRIPTION
 
@@ -212,6 +226,18 @@ Group.pm represents a Bugzilla Group object.
  Params:      none
 
  Returns:     An array of group objects.
+
+=item C<group_name_to_id($name)>
+
+ Description: Converts a group name to an id.
+              In general, instead of using this function, you should
+              create a Group object and get its name. This function
+              does not offer any real performance advantage.
+
+ Params:      $name - The name of a group.
+
+ Returns:     The numeric id of the group with that name,
+              or C<undef> if the group does not exist.
 
 =back
 

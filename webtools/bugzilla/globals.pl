@@ -499,24 +499,6 @@ sub BugInGroupId {
     return $bugingroup;
 }
 
-sub GroupExists {
-    my ($groupname) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT id FROM groups WHERE name=" . SqlQuote($groupname));
-    my $id = FetchOneColumn();
-    PopGlobalSQLState();
-    return $id;
-}
-
-sub GroupNameToId {
-    my ($groupname) = (@_);
-    PushGlobalSQLState();
-    SendSQL("SELECT id FROM groups WHERE name=" . SqlQuote($groupname));
-    my $id = FetchOneColumn();
-    PopGlobalSQLState();
-    return $id;
-}
-
 sub GroupIdToName {
     my ($groupid) = (@_);
     PushGlobalSQLState();
