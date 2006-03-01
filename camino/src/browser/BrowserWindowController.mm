@@ -2495,7 +2495,7 @@ enum BWCOpenDest {
   return isFocused;
 }
 
-// map delete key to Back
+// map delete key to Back according to browser.backspace_action pref
 - (void)deleteBackward:(id)sender
 {
   // there are times when backspaces can seep through from IME gone wrong. As a 
@@ -2503,11 +2503,17 @@ enum BWCOpenDest {
   // focused widget is a text field (<input type="text"> or <textarea>)
   if ([self isPageTextFieldFocused] || [self isPagePluginFocused])
     return;
-  
-  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
-    [self forward:sender];
-  else
-    [self back:sender];
+
+  int deleteKeyAction = [[PreferenceManager sharedInstance] getIntPref:"browser.backspace_action" withSuccess:NULL];  
+
+  if (deleteKeyAction == 0) { // map to back/forward
+    if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+      [self forward:sender];
+    else
+      [self back:sender];
+  }
+  // all other values for browser.backspace_action should give no mapping at all,
+  // including 1 (PgUp/PgDn mapping has no precedent on Mac OS, and we're not supporting it)
 }
 
 -(void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups

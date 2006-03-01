@@ -112,3 +112,6 @@ pref("browser.tabs.loadInBackground", false);
 
 // use the html network errors rather than sheets
 pref("browser.xul.error_pages.enabled", true);
+
+// map delete key to back button
+pref("browser.backspace_action", 0);
