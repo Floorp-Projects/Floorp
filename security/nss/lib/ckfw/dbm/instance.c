@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.2 $ $Date: 2005/01/20 02:25:47 $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.3 $ $Date: 2006/03/01 19:44:25 $";
 #endif /* DEBUG */
 
 #include "ckdbm.h"
@@ -119,7 +119,7 @@ nss_dbm_mdInstance_GetManufacturerID
   CK_RV *pError
 )
 {
-  return "Netscape Communications Corp.";
+  return "Mozilla Foundation";
 }
 
 static NSSUTF8 *
