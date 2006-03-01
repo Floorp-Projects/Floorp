@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+]>
+
 <bindings id="placesToolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
@@ -17,7 +22,9 @@
           <xul:hbox class="toolbar-drop-indicator"/>
         </xul:hbox>
         <xul:hbox flex="1">
-          <children/>
+          <xul:hbox class="bookmarks-toolbar-items places-toolbar-items" flex="1">
+            <children/>
+          </xul:hbox>
           <xul:hbox mousethrough="always"
                     flex="1"
                     pack="end">
@@ -32,6 +39,9 @@
 							 />
             </xul:toolbarbutton>
           </xul:hbox>
+          <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
+                             mousethrough="never"
+                             label="&bookmarksToolbarItem.label;"/>
         </xul:hbox>
       </xul:vbox>
     </content>
@@ -70,8 +80,8 @@
         ]]></body>
       </method>
 
-      <field name="_dropIndicatorBar">document.getAnonymousNodes(this)[0].firstChild</field>
-      <field name="_chevron">document.getAnonymousNodes(this)[0].childNodes[1].firstChild.firstChild</field>
+      <field name="_dropIndicatorBar">document.getAnonymousElementByAttribute(this, "class", "toolbar-drop-indicator-bar")</field>
+      <field name="_chevron">document.getAnonymousElementByAttribute(this, "class", "chevron")</field>
       
       <field name="_selection">null</field>
       

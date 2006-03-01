@@ -272,7 +272,7 @@
 #ifdef MOZ_PLACES
       <toolbarbutton id="bookmarksBarShowPlaces"
                      oncommand="PlacesBrowserShim.showHistory()"/>
-      <toolbaritem flex="1" id="bookmarksBarContainer">
+      <toolbaritem flex="1" id="bookmarksBarContainer" title="&bookmarksItem.title;">
          <hbox id="bookmarksBarContent" flex="1" context="placesContext"/>
       </toolbaritem>
       <toolbarbutton id="places-bookmark" 
@@ -342,11 +342,11 @@
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 
+#ifndef MOZ_PLACES
         <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
 
-#ifndef MOZ_PLACES
         <toolbarbutton id="bookmarks-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"

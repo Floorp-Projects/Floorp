@@ -127,6 +127,10 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
+toolbarpaletteitem[place="toolbar"] .places-toolbar-items {
+  display: none;
+}
+
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,
