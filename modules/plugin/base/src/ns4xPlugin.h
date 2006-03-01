@@ -241,6 +241,10 @@ _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName);
 bool NP_EXPORT
 _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName);
 
+bool NP_EXPORT
+_enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
+           uint32_t *count);
+
 void NP_EXPORT
 _releasevariantvalue(NPVariant *variant);
 

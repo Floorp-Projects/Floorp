@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.20 $
+ *  npupp.h $Revision: 3.21 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1638,6 +1638,35 @@ typedef bool (* NP_LOADDS NPN_PopPopupsEnabledStateUPP)(NPP npp);
 
 #endif
 
+/* NPN_Enumerate */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_EnumerateUPP;
+enum {
+	uppNPN_EnumerateProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier**)))
+		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(uint32_t*)))
+		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
+};
+
+#define NewNPN_EnumerateProc(FUNC)		\
+		(NPN_EnumerateUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_EnumerateProcInfo, GetCurrentArchitecture())
+#define CallNPN_EnumerateProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_EnumerateProcInfo, (ARG1), (ARG2), (ARG3), (ARG4))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_EnumerateUPP)(NPP npp, NPObject *obj, NPIdentifier **identifier, uint32_t *count);
+#define NewNPN_EnumerateProc(FUNC)		\
+		((NPN_EnumerateUPP) (FUNC))
+#define CallNPN_EnumerateProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
+
+#endif
+
 
 
 /******************************************************************************************
@@ -1714,6 +1743,7 @@ typedef struct _NPNetscapeFuncs {
     NPN_SetExceptionUPP setexception;
     NPN_PushPopupsEnabledStateUPP pushpopupsenabledstate;
     NPN_PopPopupsEnabledStateUPP poppopupsenabledstate;
+    NPN_EnumerateUPP enumerate;
 } NPNetscapeFuncs;
 
 #ifdef XP_MAC
