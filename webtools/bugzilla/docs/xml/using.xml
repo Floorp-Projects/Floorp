@@ -321,7 +321,7 @@
         selectable <emphasis>operator</emphasis> to a
         specified <emphasis>value.</emphasis>
         Using the "And," "Or," and "Add Another Boolean Chart" buttons, 
-        additonal terms can be included in the query, further
+        additional terms can be included in the query, further
         altering the list of bugs returned by the query.
       </para>
       <para>
