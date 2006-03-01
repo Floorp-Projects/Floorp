@@ -1,12 +1,20 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+<!ENTITY % tabBrowserDTD SYSTEM "chrome://global/locale/tabbrowser.dtd" >
+%tabBrowserDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+]>
+
 <bindings id="globalBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="tabbrowser-tab" extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab">
-    <content>
+    <content chromedir="&locale.dir;"
+             closetabtext="&closeTab.label;">
       <xul:hbox class="tab-image-left" xbl:inherits="selected"/>
       <xul:hbox pack="center" align="center">
         <xul:image anonid="close-button-placeholder" class="tab-close-button-placeholder"/>
