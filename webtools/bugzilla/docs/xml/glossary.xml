@@ -180,10 +180,10 @@
         are not a part of the official distribution. These scripts are written
         by third parties and may be in languages other than perl. For those
         that are in perl, there may be additional modules or other requirements
-        than those of the offical distribution.
+        than those of the official distribution.
         <note>
           <para>Scripts in the <filename class="directory">contrib</filename>
-          directory are not offically supported by the Bugzilla team and may
+          directory are not officially supported by the Bugzilla team and may
           break in between versions.
           </para>
         </note>
@@ -214,7 +214,7 @@
       
       <glossdef>
         <para>A DOS, or Denial of Service attack, is when a user attempts to
-        deny access to a web server by repeatadly accessing a page or sending
+        deny access to a web server by repeatedly accessing a page or sending
         malformed requests to a webserver. This can be effectively prevented
         by using <filename>mod_throttle</filename> as described in
         <xref linkend="security-webserver-mod-throttle"/>. A D-DOS, or
