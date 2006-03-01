@@ -593,7 +593,7 @@ sub sendMail {
         my $showattachurlbase =
             Param('urlbase') . "attachment.cgi?id=";
 
-        $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2&action=view\)/g;
+        $newcomments =~ s/(Created an attachment \(id=([0-9]+)\))/$1\n --> \(${showattachurlbase}$2\)/g;
     }
 
     $substs{"neworchanged"} = $isnew ? 'New: ' : '';

@@ -82,14 +82,14 @@
   </table>
 
   [% IF a.isviewable %]
-    <iframe src="attachment.cgi?id=[% a.attachid %]&amp;action=view" width="75%" height="350">
+    <iframe src="attachment.cgi?id=[% a.attachid %]" width="75%" height="350">
       <b>You cannot view the attachment on this page because your browser does not support IFRAMEs.
-      <a href="attachment.cgi?id=[% a.attachid %]&amp;action=view">View the attachment on a separate page</a>.</b>
+      <a href="attachment.cgi?id=[% a.attachid %]">View the attachment on a separate page</a>.</b>
     </iframe>
   [% ELSE %]
     <p><b>
       Attachment cannot be viewed because its MIME type is not text/*, image/*, or application/vnd.mozilla.*.
-      <a href="attachment.cgi?id=[% a.attachid %]&amp;action=view">Download the attachment instead</a>.
+      <a href="attachment.cgi?id=[% a.attachid %]">Download the attachment instead</a>.
     </b></p>
   [% END %]
   </div>
