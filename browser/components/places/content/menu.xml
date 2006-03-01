@@ -163,6 +163,9 @@
                 element.setAttribute("statustext", child.url);
                 element.className = "menuitem-iconic bookmark-item";
               }
+              else if (PlacesController.nodeIsSeparator(child)) {
+                element = document.createElementNS(XULNS, "menuseparator");
+              }
               else if (PlacesController.nodeIsContainer(child)) {
                 element = document.createElementNS(XULNS, "menu");
                 element.setAttribute("type", "menu");
@@ -624,6 +627,7 @@
         // Only menu and menuitems are valid nodes.
         // Filter out events coming from sub-containers that have bubbled up.
         if ((event.target.localName != "menuitem" &&
+             event.target.localName != "menuseparator" &&
              event.target.localName != "menu") ||
             event.target.parentNode != this)
           return;
@@ -639,6 +643,7 @@
         // Only menu and menuitems are valid nodes.
         // Filter out events coming from sub-containers that have bubbled up.
         if ((event.target.localName != "menuitem" &&
+             event.target.localName != "menuseparator" &&
              event.target.localName != "menu") ||
             event.target.parentNode != this)
           return;

@@ -108,11 +108,14 @@
           var cc = this._result.root.childCount;
           for (var i = 0; i < cc; ++i) {
             var child = this._result.root.getChild(i);
-            var button = document.createElementNS(XULNS, "toolbarbutton");
-            button.setAttribute("label", child.title);
+            var button = null;
             if (PlacesController.nodeIsURI(child)) {
+              button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("url", child.uri);
+            } else if (PlacesController.nodeIsSeparator(child)) {
+              button = document.createElementNS(XULNS, "toolbarseparator");
             } else if (PlacesController.nodeIsContainer(child)) {
+              button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
               var popup = document.createElementNS(XULNS, "menupopup");
@@ -127,6 +130,7 @@
               popup._result = this._result;
               popup._resultNode = child;
             }
+            button.setAttribute("label", child.title);
             if (child.icon)
               button.setAttribute("image", child.icon.spec);
             button.className = "menuitem-iconic bookmark-item";
@@ -366,12 +370,12 @@
           setTimeout(hitch(this._self, this._self._rebuild), 1);
         },
         onSeparatorAdded: function TB_O_onSeparatorAdded(parent, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (parent == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onSeparatorRemoved: function TB_O_onSeparatorRemoved(parent, index) {
-          if (!this._numBatches)
-            this._self.init();
+          if (parent == this._self._bms.toolbarRoot)
+            this._numBatches ? this._batchedOperation = true : this.doRebuild();
         }
       })]]></field>
       <field name="_DNDObserver"><![CDATA[({
@@ -640,7 +644,8 @@
       <handler event="mousedown"><![CDATA[
         // When the user clicks down on a button, set it as the selection and 
         // tell the controller that we are the active view. 
-        if (event.target.localName == "toolbarbutton")
+        if (event.target.localName == "toolbarbutton" ||
+            event.target.localName == "toolbarseparator")
           this._selection = event.target.node;
         else 
           this._selection = this.getResult().root;
