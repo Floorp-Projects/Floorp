@@ -4684,14 +4684,6 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
         return CKR_KEY_HANDLE_INVALID;
     }
 
-    /* don't use key derive to expose sensitive keys */
-    crv = sftk_DeriveSensitiveCheck(sourceKey,key);
-    if (crv != CKR_OK) {
-	sftk_FreeObject(key);
-	sftk_FreeObject(sourceKey);
-        return crv;
-    }
-
     /* get the value of the base key */
     att = sftk_FindAttribute(sourceKey,CKA_VALUE);
     if (att == NULL) {
@@ -5241,6 +5233,10 @@ key_and_mac_derive_fail:
       }
 
     case CKM_CONCATENATE_BASE_AND_DATA:
+
+	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
+	if (crv != CKR_OK) break;
+
 	stringPtr = (CK_KEY_DERIVATION_STRING_DATA *) pMechanism->pParameter;
 	tmpKeySize = att->attrib.ulValueLen+stringPtr->ulLen;
 	if (keySize == 0) keySize = tmpKeySize;
@@ -5262,6 +5258,10 @@ key_and_mac_derive_fail:
 	PORT_ZFree(buf,tmpKeySize);
 	break;
     case CKM_CONCATENATE_DATA_AND_BASE:
+
+	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
+	if (crv != CKR_OK) break;
+
 	stringPtr = (CK_KEY_DERIVATION_STRING_DATA *)pMechanism->pParameter;
 	tmpKeySize = att->attrib.ulValueLen+stringPtr->ulLen;
 	if (keySize == 0) keySize = tmpKeySize;
@@ -5283,6 +5283,10 @@ key_and_mac_derive_fail:
 	PORT_ZFree(buf,tmpKeySize);
 	break;
     case CKM_XOR_BASE_AND_DATA:
+
+	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
+	if (crv != CKR_OK) break;
+
 	stringPtr = (CK_KEY_DERIVATION_STRING_DATA *)pMechanism->pParameter;
 	tmpKeySize = PR_MIN(att->attrib.ulValueLen,stringPtr->ulLen);
 	if (keySize == 0) keySize = tmpKeySize;
@@ -5312,6 +5316,9 @@ key_and_mac_derive_fail:
 	CK_ULONG extract = *(CK_EXTRACT_PARAMS *)pMechanism->pParameter;
 	CK_ULONG shift   = extract & 0x7;      /* extract mod 8 the fast way */
 	CK_ULONG offset  = extract >> 3;       /* extract div 8 the fast way */
+
+	crv = sftk_DeriveSensitiveCheck(sourceKey,key);
+	if (crv != CKR_OK) break;
 
 	if (keySize == 0)  {
 	    crv = CKR_TEMPLATE_INCOMPLETE;
