@@ -103,6 +103,11 @@
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
 
+// see bug #319004 -- clamp title and URL to generously-large but not too large
+// length
+#define HISTORY_URI_LENGTH_MAX 65536
+#define HISTORY_TITLE_LENGTH_MAX 4096
+
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
 
@@ -122,6 +127,7 @@ static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
 static void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpot,
                                    PRInt32 aN, PRBool aIncludeDot,
                                    nsACString& aSubstr);
+static nsresult GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle);
 static PRInt32 GetTLDCharCount(const nsCString& aHost);
 static PRInt32 GetTLDType(const nsCString& aHostTail);
 static void GetUnreversedHostname(const nsString& aBackward,
@@ -740,9 +746,14 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
 
   // title
   if (aTitle.IsVoid()) {
-    rv = mDBAddNewPage->BindNullParameter(1);
+    // if no title is specified, make up a title based on the filename
+    nsAutoString title;
+    GenerateTitleFromURI(aURI, title);
+    rv = mDBAddNewPage->BindStringParameter(1,
+        StringHead(title, HISTORY_TITLE_LENGTH_MAX));
   } else {
-    rv = mDBAddNewPage->BindStringParameter(1, aTitle);
+    rv = mDBAddNewPage->BindStringParameter(1,
+        StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1431,12 +1442,12 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
   if (aTitle.IsVoid())
     statement->BindNullParameter(1);
   else
-    statement->BindStringParameter(1, aTitle);
+    statement->BindStringParameter(1, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
   if (aUserTitle.IsVoid())
     statement->BindNullParameter(2);
   else
-    statement->BindStringParameter(2, aUserTitle);
+    statement->BindStringParameter(2, StringHead(aUserTitle, HISTORY_TITLE_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   statement->BindInt32Parameter(3, aVisitCount);
@@ -2526,11 +2537,23 @@ nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 //
 //    This sets the page "real" title. Use nsINavHistory::SetPageUserTitle to
 //    set any user-defined title.
+//
+//    Note that we do not allow empty real titles and will silently ignore such
+//    requests. When a URL is added we give it a default title based on the
+//    URL. Most pages provide a title and it gets replaced to something better.
+//    Some pages don't: some say <title></title>, and some don't have any title
+//    element. In BOTH cases, we get SetPageTitle(URI, ""), but in both cases,
+//    our default title is more useful to the user than "(no title)".
+//
+//    User titles will accept empty strings so the user can still manually
+//    override it.
 
 NS_IMETHODIMP
 nsNavHistory::SetPageTitle(nsIURI *aURI,
                            const nsAString & aTitle)
 {
+  if (aTitle.IsEmpty())
+    return NS_OK;
   return SetPageTitleInternal(aURI, PR_FALSE, aTitle);
 }
 
@@ -3509,7 +3532,7 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
   if (aTitle.IsVoid())
     dbModStatement->BindNullParameter(0);
   else
-    dbModStatement->BindStringParameter(0, aTitle);
+    dbModStatement->BindStringParameter(0, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // url
@@ -3833,6 +3856,33 @@ void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms)
 }
 
 
+// GenerateTitleFromURI
+//
+//    Given a URL, we try to get a reasonable title for this page. We try
+//    to use a filename out of the URI, then fall back on the path, then fall
+//    back on the whole hostname.
+
+nsresult // static
+GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle)
+{
+  nsCAutoString name;
+  nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+  if (url)
+    url->GetFileName(name);
+  if (name.IsEmpty()) {
+    // path
+    nsresult rv = aURI->GetPath(name);
+    if (NS_FAILED(rv) || (name.Length() == 1 && name[0] == '/')) {
+      // empty path name, use hostname
+      rv = aURI->GetHost(name);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  aTitle = NS_ConvertUTF8toUTF16(name);
+  return NS_OK;
+}
+
+
 // GetTLDCharCount
 //
 //    Given a normal, forward host name ("bugzilla.mozilla.org")
@@ -3963,7 +4013,8 @@ nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
   nsresult rv = aURI->GetSpec(utf8URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = statement->BindUTF8StringParameter(index, utf8URISpec);
+  rv = statement->BindUTF8StringParameter(index,
+      StringHead(utf8URISpec, HISTORY_URI_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
