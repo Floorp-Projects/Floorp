@@ -4099,9 +4099,18 @@ static nsContentAndOffset
 FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
 {
   nsContentAndOffset result;
-  // first check the frame itself
+  result.mContent =  nsnull;
+
+  // Treat form controls as inline leaves
+  // XXX we really need a way to determine whether a frame is inline-level
+  nsIFormControlFrame* fcf; // used only for QI
+  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcf);
+  if (NS_SUCCEEDED(rv))
+    return result;
+  
+  // Check the frame itself
   nsBlockFrame* bf; // used only for QI
-  nsresult rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
+  rv = aFrame->QueryInterface(kBlockFrameCID, (void**)&bf);
   // Fall through "special" block frames because their mContent is the content
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
@@ -4114,7 +4123,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
     return result;
   }
 
-  // If this is preformatted text frame, see if this frame ends with a newline
+  // If this is a preformatted text frame, see if it ends with a newline
   if (aFrame->HasTerminalNewline() &&
       aFrame->GetStyleContext()->GetStyleText()->WhiteSpaceIsSignificant()) {
     PRInt32 startOffset, endOffset;
@@ -4124,8 +4133,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
     return result;
   }
 
-  // iterate over children and call ourselves recursively
-  result.mContent =  nsnull;
+  // Iterate over children and call ourselves recursively
   if (aDirection == eDirPrevious) {
     nsFrameList children(aFrame->GetFirstChild(nsnull));
     nsIFrame* child = children.LastChild();
