@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.12 2006/03/01 11:30:14 jocuri%softhome.net Exp $ -->
+<!-- $Id: security.xml,v 1.13 2006/03/01 11:42:08 jocuri%softhome.net Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -90,7 +90,7 @@
     <title>The MySQL System Account</title>
     
       <para>As mentioned in <xref linkend="security-os-accounts"/>, the MySQL
-      daemon should run as a non-privleged, unique user. Be sure to consult
+      daemon should run as a non-privileged, unique user. Be sure to consult
       the MySQL documentation or the documentation that came with your system
       for instructions.
       </para>
