@@ -42,6 +42,8 @@
 #include "nsINavHistoryService.h"
 #include "nsMorkReader.h"
 
+template<class E> class nsTArray;
+
 // The nsMorkHistoryImporter object parses a Mork-format history file and
 // adds the history items to the NavHistoryService.  It is invoked the first
 // time the history service is created for a given profile, if a Mork history
@@ -54,16 +56,10 @@ public:
   NS_DECL_NSIMORKHISTORYIMPORTER
 
 private:
-  // Enumerator callback to build up a list of columns
-  static PLDHashOperator PR_CALLBACK
-  EnumerateColumnsCB(const nsACString &aColumnID,
-                     nsCString aName,
-                     void *aData);
-
   // Enumerator callback to add a single row to the NavHistory.
   static PLDHashOperator PR_CALLBACK
-  AddToHistoryCB(const nsACString &aRowID,
-                 const nsMorkReader::StringMap *aMap,
+  AddToHistoryCB(const nsCSubstring &aRowID,
+                 const nsTArray<nsCString> *aValues,
                  void *aData);
 };
 

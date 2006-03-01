@@ -39,8 +39,9 @@
 #include "nsMorkReader.h"
 #include "prio.h"
 #include "nsNetUtil.h"
+#include "nsVoidArray.h"
 
-// A FixedString implementation that can hold an 80-character line
+// A FixedString implementation that can hold 2 80-character lines
 class nsCLineString : public nsFixedCString
 {
 public:
@@ -52,7 +53,7 @@ public:
   }
 
 private:
-  char mStorage[80];
+  char_type mStorage[160];
 };
 
 // Convert a hex character (0-9, A-F) to its corresponding byte value.
@@ -80,54 +81,69 @@ static void
 MorkUnescape(const nsCSubstring &aString, nsCString &aResult)
 {
   PRUint32 len = aString.Length();
-  PRInt32 startIndex = -1;
-  for (PRUint32 i = 0; i < len; ++i) {
-    char c = aString[i];
+
+  // We optimize for speed over space here -- size the result buffer to
+  // the size of the source, which is an upper bound on the size of the
+  // unescaped string.
+  aResult.SetLength(len);
+  char *result = aResult.BeginWriting();
+  const char *source = aString.BeginReading();
+  const char *sourceEnd = source + len;
+
+  const char *startPos = nsnull;
+  PRUint32 bytes;
+  for (; source < sourceEnd; ++source) {
+    char c = *source;
     if (c == '\\') {
-      if (startIndex != -1) {
-        aResult.Append(Substring(aString, startIndex, i - startIndex));
-        startIndex = -1;
+      if (startPos) {
+        bytes = source - startPos;
+        memcpy(result, startPos, bytes);
+        result += bytes;
+        startPos = nsnull;
       }
-      if (i < len - 1) {
-        aResult.Append(aString[++i]);
+      if (source < sourceEnd - 1) {
+        *(result++) = *(++source);
       }
     } else if (c == '$') {
-      if (startIndex != -1) {
-        aResult.Append(Substring(aString, startIndex, i - startIndex));
-        startIndex = -1;
+      if (startPos) {
+        bytes = source - startPos;
+        memcpy(result, startPos, bytes);
+        result += bytes;
+        startPos = nsnull;
       }
-      if (i < len - 2) {
+      if (source < sourceEnd - 2) {
         // Would be nice to use ToInteger() here, but it currently
         // requires a null-terminated string.
-        char c2 = aString[++i];
-        char c3 = aString[++i];
+        char c2 = *(++source);
+        char c3 = *(++source);
         if (ConvertChar(&c2) && ConvertChar(&c3)) {
-          aResult.Append((c2 << 4 ) | c3);
+          *(result++) = ((c2 << 4) | c3);
         }
       }
-    } else if (startIndex == -1) {
-      startIndex = PRInt32(i);
+    } else if (!startPos) {
+      startPos = source;
     }
   }
-  if (startIndex != -1) {
-    aResult.Append(Substring(aString, startIndex, len - startIndex));
+  if (startPos) {
+    bytes = source - startPos;
+    memcpy(result, startPos, bytes);
+    result += bytes;
   }
+  aResult.SetLength(result - aResult.BeginReading());
 }
 
 nsresult
 nsMorkReader::Init()
 {
-  NS_ENSURE_TRUE(mColumnMap.Init(), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mValueMap.Init(), NS_ERROR_OUT_OF_MEMORY);
-  NS_ENSURE_TRUE(mMetaRow.Init(), NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mTable.Init(), NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-DeleteStringMap(const nsACString& aKey,
-                nsMorkReader::StringMap *aData,
-                void *aUserArg)
+DeleteStringArray(const nsCSubstring& aKey,
+                  nsTArray<nsCString> *aData,
+                  void *aUserArg)
 {
   delete aData;
   return PL_DHASH_NEXT;
@@ -135,7 +151,33 @@ DeleteStringMap(const nsACString& aKey,
 
 nsMorkReader::~nsMorkReader()
 {
-  mTable.EnumerateRead(DeleteStringMap, nsnull);
+  mTable.EnumerateRead(DeleteStringArray, nsnull);
+}
+
+struct AddColumnClosure
+{
+  AddColumnClosure(nsTArray<nsMorkReader::MorkColumn> *a,
+                   nsMorkReader::IndexMap *c)
+    : array(a), columnMap(c), result(NS_OK) {}
+
+  nsTArray<nsMorkReader::MorkColumn> *array;
+  nsMorkReader::IndexMap *columnMap;
+  nsresult result;
+};
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddColumn(const nsCSubstring &id, nsCString name, void *userData)
+{
+  AddColumnClosure *closure = NS_STATIC_CAST(AddColumnClosure*, userData);
+  nsTArray<nsMorkReader::MorkColumn> *array = closure->array;
+
+  if (!array->AppendElement(nsMorkReader::MorkColumn(id, name)) ||
+      !closure->columnMap->Put(id, array->Length() - 1)) {
+    closure->result = NS_ERROR_OUT_OF_MEMORY;
+    return PL_DHASH_STOP;
+  }
+
+  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -157,6 +199,9 @@ nsMorkReader::Read(nsIFile *aFile)
     return NS_ERROR_FAILURE; // unexpected file format
   }
 
+  IndexMap columnMap;
+  NS_ENSURE_TRUE(columnMap.Init(), NS_ERROR_OUT_OF_MEMORY);
+
   while (NS_SUCCEEDED(ReadLine(line))) {
     // Trim off leading spaces
     PRUint32 idx = 0, len = line.Length();
@@ -171,16 +216,32 @@ nsMorkReader::Read(nsIFile *aFile)
 
     // Look at the line to figure out what section type this is
     if (StringBeginsWith(l, NS_LITERAL_CSTRING("< <(a=c)>"))) {
-      // Column map
-      rv = ParseMap(l, &mColumnMap);
+      // Column map.  We begin by creating a hash of column id to column name.
+      StringMap columnNameMap;
+      NS_ENSURE_TRUE(columnNameMap.Init(), NS_ERROR_OUT_OF_MEMORY);
+
+      rv = ParseMap(l, &columnNameMap);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // Now that we have the list of columns, we put them into a flat array.
+      // Rows will have value arrays of the same size, with indexes that
+      // correspond to the columns array.  As we insert each column into the
+      // array, we also make an entry in columnMap so that we can look up the
+      // index given the column id.
+      mColumns.SetCapacity(columnNameMap.Count());
+
+      AddColumnClosure closure(&mColumns, &columnMap);
+      columnNameMap.EnumerateRead(AddColumn, &closure);
+      if (NS_FAILED(closure.result)) {
+        return closure.result;
+      }
     } else if (StringBeginsWith(l, NS_LITERAL_CSTRING("<("))) {
       // Value map
       rv = ParseMap(l, &mValueMap);
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (l[0] == '{' || l[0] == '[') {
       // Table / table row
-      rv = ParseTable(l);
+      rv = ParseTable(l, columnMap);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       // Don't know, hopefully don't care
@@ -191,17 +252,10 @@ nsMorkReader::Read(nsIFile *aFile)
 }
 
 void
-nsMorkReader::EnumerateColumns(ColumnEnumerator aCallback,
-                               void *aUserData) const
-{
-  mColumnMap.EnumerateRead(aCallback, aUserData);
-}
-
-void
 nsMorkReader::EnumerateRows(RowEnumerator aCallback, void *aUserData) const
 {
   // Constify the table values
-  typedef const nsDataHashtable<nsCStringHashKey, const StringMap*> ConstTable;
+  typedef const nsDataHashtable<IDKey, const nsTArray<nsCString>* > ConstTable;
   NS_REINTERPRET_CAST(ConstTable*, &mTable)->EnumerateRead(aCallback,
                                                            aUserData);
 }
@@ -259,7 +313,7 @@ nsMorkReader::ParseMap(const nsCSubstring &aLine, StringMap *aMap)
           PRUint32 tokenEnd = PR_MIN(idx, len);
           ++idx;
 
-          nsCAutoString value;
+          nsCString value;
           MorkUnescape(Substring(line, tokenStart, tokenEnd - tokenStart),
                        value);
           aMap->Put(key, value);
@@ -287,11 +341,14 @@ nsMorkReader::ParseMap(const nsCSubstring &aLine, StringMap *aMap)
 // value map.  '=' is used as the separator when the value is a literal.
 
 nsresult
-nsMorkReader::ParseTable(const nsCSubstring &aLine)
+nsMorkReader::ParseTable(const nsCSubstring &aLine, const IndexMap &aColumnMap)
 {
   nsCLineString line(aLine);
-  nsCAutoString column;
-  StringMap *currentRow = nsnull;
+  const PRUint32 columnCount = mColumns.Length(); // total number of columns
+
+  PRInt32 columnIndex = -1; // column index of the cell we're parsing
+  // value array for the row we're parsing
+  nsTArray<nsCString> *currentRow = nsnull;
   PRBool inMetaRow = PR_FALSE;
 
   do {
@@ -317,6 +374,9 @@ nsMorkReader::ParseTable(const nsCSubstring &aLine)
       case '[':
         {
           // Start of a new row.  Consume the row id, up to the first '('.
+          // Row edits also have a table namespace, separated from the row id
+          // by a colon.  We don't make use of the namespace, but we need to
+          // make sure not to consider it part of the row id.
           if (currentRow) {
             NS_WARNING("unterminated row?");
             currentRow = nsnull;
@@ -334,24 +394,38 @@ nsMorkReader::ParseTable(const nsCSubstring &aLine)
           }
 
           tokenStart = idx;
+          while (idx < len &&
+                 line[idx] != '(' &&
+                 line[idx] != ']' &&
+                 line[idx] != ':') {
+            ++idx;
+          }
+          tokenEnd = idx;
           while (idx < len && line[idx] != '(' && line[idx] != ']') {
             ++idx;
           }
-
+          
           if (inMetaRow) {
-            currentRow = &mMetaRow;
+            mMetaRow = NewVoidStringArray(columnCount);
+            NS_ENSURE_TRUE(mMetaRow, NS_ERROR_OUT_OF_MEMORY);
+            currentRow = mMetaRow;
           } else {
-            const nsCSubstring& row = Substring(line,
-                                                tokenStart, idx - tokenStart);
+            const nsCSubstring& row = Substring(line, tokenStart,
+                                                tokenEnd - tokenStart);
             if (!mTable.Get(row, &currentRow)) {
-              currentRow = new StringMap();
-              NS_ENSURE_TRUE(currentRow && currentRow->Init(),
+              currentRow = NewVoidStringArray(columnCount);
+              NS_ENSURE_TRUE(currentRow, NS_ERROR_OUT_OF_MEMORY);
+
+              NS_ENSURE_TRUE(mTable.Put(row, currentRow),
                              NS_ERROR_OUT_OF_MEMORY);
-              mTable.Put(row, currentRow);
             }
           }
           if (cutColumns) {
-            currentRow->Clear();
+            // Set all of the columns to void
+            // (this differentiates them from columns which are empty strings).
+            for (PRUint32 i = 0; i < columnCount; ++i) {
+              currentRow->ElementAt(i).SetIsVoid(PR_TRUE);
+            }
           }
           break;
         }
@@ -361,53 +435,76 @@ nsMorkReader::ParseTable(const nsCSubstring &aLine)
         inMetaRow = PR_FALSE;
         break;
       case '(':
-        if (!currentRow) {
-          NS_WARNING("cell value outside of row");
-          break;
-        }
-
-        if (!column.IsEmpty()) {
-          NS_WARNING("unterminated cell?");
-          column.Truncate(0);
-        }
-
-        if (line[idx] == '^') {
-          ++idx; // this is not part of the column id, advance past it
-        }
-        tokenStart = idx;
-        while (idx < len && line[idx] != '^' && line[idx] != '=') {
-          if (line[idx] == '\\') {
-            ++idx; // skip escaped characters
+        {
+          if (!currentRow) {
+            NS_WARNING("cell value outside of row");
+            break;
           }
-          ++idx;
-        }
 
-        tokenEnd = PR_MIN(idx, len);
-        MorkUnescape(Substring(line, tokenStart, tokenEnd - tokenStart),
-                     column);
+          NS_WARN_IF_FALSE(columnIndex == -1, "unterminated cell?");
+
+          PRBool columnIsAtom;
+          if (line[idx] == '^') {
+            columnIsAtom = PR_TRUE;
+            ++idx; // this is not part of the column id, advance past it
+          } else {
+            columnIsAtom = PR_FALSE;
+          }
+          tokenStart = idx;
+          while (idx < len && line[idx] != '^' && line[idx] != '=') {
+            if (line[idx] == '\\') {
+              ++idx; // skip escaped characters
+            }
+            ++idx;
+          }
+
+          tokenEnd = PR_MIN(idx, len);
+
+          nsCAutoString column;
+          const nsCSubstring &colValue =
+            Substring(line, tokenStart, tokenEnd - tokenStart);
+          if (columnIsAtom) {
+            column.Assign(colValue);
+          } else {
+            MorkUnescape(colValue, column);
+          }
+
+          if (!aColumnMap.Get(colValue, &columnIndex)) {
+            NS_WARNING("Column not in column map, discarding it");
+            columnIndex = -1;
+          }
+        }
         break;
       case '=':
       case '^':
-        if (column.IsEmpty()) {
-          NS_WARNING("stray ^ or = marker");
-          break;
-        }
-
-        tokenStart = idx - 1;  // include the '=' or '^' marker in the value
-        while (idx < len && line[idx] != ')') {
-          if (line[idx] == '\\') {
-            ++idx; // skip escaped characters
+        {
+          if (columnIndex == -1) {
+            NS_WARNING("stray ^ or = marker");
+            break;
           }
-          ++idx;
-        }
-        tokenEnd = PR_MIN(idx, len);
-        ++idx;
 
-        nsCAutoString value;
-        MorkUnescape(Substring(line, tokenStart, tokenEnd - tokenStart),
-                     value);
-        currentRow->Put(column, value);
-        column.Truncate(0);
+          PRBool valueIsAtom = (line[idx - 1] == '^');
+          tokenStart = idx - 1;  // include the '=' or '^' marker in the value
+          while (idx < len && line[idx] != ')') {
+            if (line[idx] == '\\') {
+              ++idx; // skip escaped characters
+            }
+            ++idx;
+          }
+          tokenEnd = PR_MIN(idx, len);
+          ++idx;
+
+          const nsCSubstring &value =
+            Substring(line, tokenStart, tokenEnd - tokenStart);
+          if (valueIsAtom) {
+            (*currentRow)[columnIndex] = value;
+          } else {
+            nsCAutoString value2;
+            MorkUnescape(value, value2);
+            (*currentRow)[columnIndex] = value2;
+          }
+          columnIndex = -1;
+        }
         break;
       }
     }
@@ -459,4 +556,19 @@ nsMorkReader::NormalizeValue(nsCString &aValue) const
   } else {
     aValue.Truncate(0);
   }
+}
+
+/* static */ nsTArray<nsCString>*
+nsMorkReader::NewVoidStringArray(PRInt32 aCount)
+{
+  nsAutoPtr< nsTArray<nsCString> > array = new nsTArray<nsCString>(aCount);
+  NS_ENSURE_TRUE(array, nsnull);
+
+  for (PRInt32 i = 0; i < aCount; ++i) {
+    nsCString *elem = array->AppendElement();
+    NS_ENSURE_TRUE(elem, nsnull);
+    elem->SetIsVoid(PR_TRUE);
+  }
+
+  return array.forget();
 }

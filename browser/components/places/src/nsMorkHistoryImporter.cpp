@@ -41,6 +41,7 @@
 #include "mozStorageHelper.h"
 #include "prprf.h"
 #include "nsNetUtil.h"
+#include "nsTArray.h"
 
 NS_IMPL_ISUPPORTS1(nsMorkHistoryImporter, nsIMorkHistoryImporter)
 
@@ -61,44 +62,30 @@ static const char * const gColumnNames[] = {
 
 struct TableReadClosure
 {
-  TableReadClosure(nsMorkReader *aReader, nsINavHistoryService *aHistory)
-    : reader(aReader), history(aHistory), swapBytes(PR_FALSE)
+  TableReadClosure(nsMorkReader *aReader, nsNavHistory *aHistory)
+    : reader(aReader), history(aHistory), swapBytes(PR_FALSE),
+      byteOrderColumn(-1)
   {
-    voidString.SetIsVoid(PR_TRUE);
+    NS_CONST_CAST(nsString*, &voidString)->SetIsVoid(PR_TRUE);
+    for (PRUint32 i = 0; i < kColumnCount; ++i) {
+      columnIndexes[i] = -1;
+    }
   }
 
   // Backpointers to the reader and history we're operating on
-  nsMorkReader *reader;
-  nsINavHistoryService *history;
+  const nsMorkReader *reader;
+  nsNavHistory *history;
 
   // A voided string to use for the user title
-  nsString voidString;
+  const nsString voidString;
 
   // Whether we need to swap bytes (file format is other-endian)
   PRBool swapBytes;
 
-  // Column ids of the columns that we care about
-  nsCString columnIDs[kColumnCount];
-  nsCString byteOrderColumn;
+  // Indexes of the columns that we care about
+  PRInt32 columnIndexes[kColumnCount];
+  PRInt32 byteOrderColumn;
 };
-
-// Enumerator callback to build up the column list
-/* static */ PLDHashOperator PR_CALLBACK
-nsMorkHistoryImporter::EnumerateColumnsCB(const nsACString &aColumnID,
-                                          nsCString aName, void *aData)
-{
-  TableReadClosure *data = NS_STATIC_CAST(TableReadClosure*, aData);
-  for (PRUint32 i = 0; i < kColumnCount; ++i) {
-    if (aName.Equals(gColumnNames[i])) {
-      data->columnIDs[i].Assign(aColumnID);
-      return PL_DHASH_NEXT;
-    }
-  }
-  if (aName.EqualsLiteral("ByteOrder")) {
-    data->byteOrderColumn.Assign(aColumnID);
-  }
-  return PL_DHASH_NEXT;
-}
 
 // Reverses the high and low bytes in a PRUnichar buffer.
 // This is used if the file format has a different endianness from the
@@ -114,18 +101,20 @@ SwapBytes(PRUnichar *buffer)
 
 // Enumerator callback to add a table row to the NavHistoryService
 /* static */ PLDHashOperator PR_CALLBACK
-nsMorkHistoryImporter::AddToHistoryCB(const nsACString &aRowID,
-                                      const nsMorkReader::StringMap *aMap,
+nsMorkHistoryImporter::AddToHistoryCB(const nsCSubstring &aRowID,
+                                      const nsTArray<nsCString> *aValues,
                                       void *aData)
 {
   TableReadClosure *data = NS_STATIC_CAST(TableReadClosure*, aData);
-  nsMorkReader *reader = data->reader;
+  const nsMorkReader *reader = data->reader;
   nsCString values[kColumnCount];
-  nsCString *columnIDs = data->columnIDs;
+  const PRInt32 *columnIndexes = data->columnIndexes;
 
   for (PRInt32 i = 0; i < kColumnCount; ++i) {
-    aMap->Get(columnIDs[i], &values[i]);
-    reader->NormalizeValue(values[i]);
+    if (columnIndexes[i] != -1) {
+      values[i] = (*aValues)[columnIndexes[i]];
+      reader->NormalizeValue(values[i]);
+    }
   }
 
   // title is really a UTF-16 string at this point
@@ -168,29 +157,15 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsACString &aRowID,
 
   if (uri) {
     PRBool isTyped = values[kTypedColumn].EqualsLiteral("1");
-    nsINavHistoryService *history = data->history;
+    PRInt32 transition = isTyped ? nsINavHistoryService::TRANSITION_TYPED
+      : nsINavHistoryService::TRANSITION_LINK;
+    nsNavHistory *history = data->history;
 
-    if (date != -1 && count != 0) {
-      // We have a last visit date, so we'll be adding a visit on that date.
-      // Since that will increment the visit count by 1, we need to initially
-      // add the entry with count - 1 visits.
-      --count;
-    }
-
-    history->SetPageDetails(uri, nsDependentString(title, titleLength),
-                            data->voidString, count,
-                            values[kHiddenColumn].EqualsLiteral("1"), isTyped);
-
-    if (date != -1) {
-      PRInt32 transition = isTyped ? nsINavHistoryService::TRANSITION_TYPED
-        : nsINavHistoryService::TRANSITION_LINK;
-      // Referrer is not handled at present -- doing this requires adding
-      // visits in such an order that we have a visit id for the referring
-      // page already.
-
-      PRInt64 visitID;
-      history->AddVisit(uri, date, 0, transition, PR_FALSE, 0, &visitID);
-    }
+    history->AddPageWithVisit(uri,
+                              nsDependentString(title, titleLength),
+                              data->voidString,
+                              values[kHiddenColumn].EqualsLiteral("1"),
+                              isTyped, count, transition, date);
   }
   return PL_DHASH_NEXT;
 }
@@ -221,24 +196,40 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Gather up the column ids so we don't need to find them on each row
-  TableReadClosure data(&reader, aHistory);
-  reader.EnumerateColumns(EnumerateColumnsCB, &data);
+  nsNavHistory *history = NS_STATIC_CAST(nsNavHistory*, aHistory);
+  TableReadClosure data(&reader, history);
+  const nsTArray<nsMorkReader::MorkColumn> &columns = reader.GetColumns();
+  for (PRUint32 i = 0; i < columns.Length(); ++i) {
+    const nsCSubstring &name = columns[i].name;
+    for (PRUint32 j = 0; j < kColumnCount; ++j) {
+      if (name.Equals(gColumnNames[j])) {
+        data.columnIndexes[j] = i;
+        break;
+      }
+    }
+    if (name.EqualsLiteral("ByteOrder")) {
+      data.byteOrderColumn = i;
+    }
+  }
 
   // Determine the byte order from the table's meta-row.
-  nsCString byteOrder;
-  if (reader.GetMetaRow().Get(data.byteOrderColumn, &byteOrder)) {
-    // Note whether the file uses a non-native byte ordering.
-    // If it does, we'll have to swap bytes for PRUnichar values.
-    reader.NormalizeValue(byteOrder);
+  const nsTArray<nsCString> *metaRow = reader.GetMetaRow();
+  if (metaRow) {
+    const nsCString &byteOrder = (*metaRow)[data.byteOrderColumn];
+    if (!byteOrder.IsVoid()) {
+      // Note whether the file uses a non-native byte ordering.
+      // If it does, we'll have to swap bytes for PRUnichar values.
+      nsCAutoString byteOrderValue(byteOrder);
+      reader.NormalizeValue(byteOrderValue);
 #ifdef IS_LITTLE_ENDIAN
-    data.swapBytes = !byteOrder.EqualsLiteral("LE");
+      data.swapBytes = !byteOrderValue.EqualsLiteral("LE");
 #else
-    data.swapBytes = !byteOrder.EqualsLiteral("BE");
+      data.swapBytes = !byteOrderValue.EqualsLiteral("BE");
 #endif
+    }
   }
 
   // Now add the results to history
-  nsNavHistory *history = NS_STATIC_CAST(nsNavHistory*, aHistory);
   mozIStorageConnection *conn = history->GetStorageConnection();
   NS_ENSURE_TRUE(conn, NS_ERROR_NOT_INITIALIZED);
   mozStorageTransaction transaction(conn, PR_FALSE);
@@ -248,6 +239,11 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
 #endif
 
   reader.EnumerateRows(AddToHistoryCB, &data);
+
+  // Make sure we don't have any duplicate items in the database.
+  rv = history->RemoveDuplicateURIs();
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef IN_MEMORY_LINKS
   memTransaction.Commit();
 #endif

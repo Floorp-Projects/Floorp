@@ -60,6 +60,7 @@
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
 #include "nsIAutoCompleteSimpleResult.h"
+#include "nsTArray.h"
 
 // nsFormHistoryResult is a specialized autocomplete result class that knows
 // how to remove entries from the form history table.
@@ -512,51 +513,45 @@ static const char * const gColumnNames[] = {
 struct FormHistoryImportClosure
 {
   FormHistoryImportClosure(nsMorkReader *aReader, nsIFormHistory *aFormHistory)
-    : reader(aReader), formHistory(aFormHistory) { }
-
-  // Back pointers to the reader and history we're operating on
-  nsMorkReader *reader;
-  nsIFormHistory *formHistory;
-
-  // Column ids of the columns that we care about
-  nsCString columnIDs[kColumnCount];
-};
-
-// Enumerator callback to build up the column list
-/* static */ PLDHashOperator PR_CALLBACK
-nsFormHistoryImporter::EnumerateColumnsCB(const nsACString &aColumnID,
-                                          nsCString aName, void *aData)
-{
-  FormHistoryImportClosure *data = NS_STATIC_CAST(FormHistoryImportClosure*,
-                                                  aData);
-  for (PRUint32 i = 0; i < kColumnCount; ++i) {
-    if (aName.Equals(gColumnNames[i])) {
-      data->columnIDs[i].Assign(aColumnID);
-      return PL_DHASH_NEXT;
+    : reader(aReader), formHistory(aFormHistory)
+  {
+    for (PRUint32 i = 0; i < kColumnCount; ++i) {
+      columnIndexes[i] = -1;
     }
   }
-  return PL_DHASH_NEXT;
-}
+
+  // Back pointers to the reader and history we're operating on
+  const nsMorkReader *reader;
+  nsIFormHistory *formHistory;
+
+  // Indexes of the columns that we care about
+  PRInt32 columnIndexes[kColumnCount];
+};
 
 // Enumerator callback to add an entry to the FormHistory
 /* static */ PLDHashOperator PR_CALLBACK
-nsFormHistoryImporter::AddToFormHistoryCB(const nsACString &aRowID,
-                                          const nsMorkReader::StringMap *aMap,
+nsFormHistoryImporter::AddToFormHistoryCB(const nsCSubstring &aRowID,
+                                          const nsTArray<nsCString> *aValues,
                                           void *aData)
 {
   FormHistoryImportClosure *data = NS_STATIC_CAST(FormHistoryImportClosure*,
                                                   aData);
-  nsMorkReader *reader = data->reader;
+  const nsMorkReader *reader = data->reader;
   nsCString values[kColumnCount];
   const PRUnichar* valueStrings[kColumnCount];
   PRUint32 valueLengths[kColumnCount];
-  nsCString *columnIDs = data->columnIDs;
+  const PRInt32 *columnIndexes = data->columnIndexes;
   PRInt32 i;
 
   // Values are in UTF16.
 
   for (i = 0; i < kColumnCount; ++i) {
-    aMap->Get(columnIDs[i], &values[i]);
+    if (columnIndexes[i] == -1) {
+      // We didn't find this column in the map
+      continue;
+    }
+
+    values[i] = (*aValues)[columnIndexes[i]];
     reader->NormalizeValue(values[i]);
 
     PRUint32 length;
@@ -607,7 +602,16 @@ nsFormHistoryImporter::ImportFormHistory(nsIFile *aFile,
 
   // Gather up the column ids so we don't need to find them on each row
   FormHistoryImportClosure data(&reader, aFormHistory);
-  reader.EnumerateColumns(EnumerateColumnsCB, &data);
+  const nsTArray<nsMorkReader::MorkColumn> columns = reader.GetColumns();
+  for (PRUint32 i = 0; i < columns.Length(); ++i) {
+    const nsCSubstring &name = columns[i].name;
+    for (PRUint32 j = 0; j < kColumnCount; ++j) {
+      if (name.Equals(gColumnNames[j])) {
+        data.columnIndexes[j] = i;
+        break;
+      }
+    }
+  }
 
   // Add the rows to form history
   nsCOMPtr<nsIFormHistoryPrivate> fhPrivate = do_QueryInterface(aFormHistory);
