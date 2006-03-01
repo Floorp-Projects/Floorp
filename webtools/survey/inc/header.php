@@ -10,12 +10,12 @@
 <body id="mozilla-com">
     <div id="header">
         <div>
-            <h1><a href="<?=WEB_PATH?>/" title="Return to home page" accesskey="1"><img src="http://mozilla.com/images/template/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation"></a></h1>
+            <h1><a href="http://mozilla.com/" title="Return to home page" accesskey="1"><img src="http://mozilla.com/images/template/moz-com-logo.png" height="38" width="89" alt="Mozilla Corporation"></a></h1>
             <ul>
-                <li id="menu-products"><a href="/products/">Products</a></li>
-                <li id="menu-extensions"><a href="/extensions/">Extensions</a></li>
-                <li id="menu-support"><a href="/support/">Support</a></li>
-                <li id="menu-developers"><a href="/developers/">Developers</a></li>
+                <li id="menu-products"><a href="http://mozilla.com/products/">Products</a></li>
+                <li id="menu-extensions"><a href="http://mozilla.com/extensions/">Extensions</a></li>
+                <li id="menu-support"><a href="http://mozilla.com/support/">Support</a></li>
+                <li id="menu-developers"><a href="http://mozilla.com/developers/">Developers</a></li>
             </ul>
         </div>
     </div>

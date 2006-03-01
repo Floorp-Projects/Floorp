@@ -26,7 +26,7 @@ class Survey
         $retval = array();
         
         // Gather intend list.
-        $this->db->query("SELECT * FROM intend ORDER BY pos, description", SQL_INIT, SQL_ASSOC);
+        $this->db->query("SELECT * FROM intend ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
 
         do {
             $retval[$this->db->record['id']] = $this->db->record['description'];
@@ -45,7 +45,7 @@ class Survey
         $retval = array();
 
         // Gather platforms..
-        $this->db->query("SELECT * FROM issue ORDER BY pos, description", SQL_INIT, SQL_ASSOC);
+        $this->db->query("SELECT * FROM issue ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
 
         do { 
             $retval[$this->db->record['id']] = $this->db->record['description'];

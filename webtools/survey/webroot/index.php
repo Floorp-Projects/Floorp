@@ -76,22 +76,22 @@ echo '<ul class="survey">';
 foreach ($intends as $id=>$text) {
     echo '<li><input type="radio" name="intend_id" id="int'.$id.'" value="'.$id.'" /> <label for="int'.$id.'">'.$text.'</label></li>';
 }
-echo '<li><input type="radio" name="intend_id" id="int0" value="0" /> <label for="intother" onclick="getElementById(\'int0\').checked=true;">Other, please specify: </label> <input type="text" name="intend_text" id="intother" /></li>';
+echo '<li><label for="int0"><input type="radio" name="intend_id" id="int0" value="0"/> Other, please specify:</label> <input type="text" name="intend_text" id="intother" /></li>';
 echo '</ul>';
 
 // Create issue block.
 echo '<h2>What issues, if any, did you have? (select all that apply)</h2>';
 echo '<ul class="survey">';
 foreach ($issues as $id=>$text) {
-    echo '<li><input type="checkbox" name="issue_id[]" id="iss'.$id.'" value="'.$id.'" /> <label for="isstext'.$id.'" onclick="getElementById(\'iss'.$id.'\').checked=true;">'.$text.'</label> <input type="text" id="isstext'.$id.'" name="'.$id.'_text"/></li>';
+    echo '<li><label for="iss'.$id.'"> <input type="checkbox" name="issue_id[]" id="iss'.$id.'" value="'.$id.'" />'.$text.'</label></li>';
 }
 echo '</ul>';
 
 echo '<h2>Other comments or suggestions?</h2>';
 echo '<div><textarea name="comments" rows="7" cols="60"></textarea></div>';
 
-echo '<input type="hidden" name="product" value="'.htmlentities($_GET['product']).'"/>';
-echo '<input type="hidden" name="useragent" value="'.htmlentities($_GET['useragent']).'"/>';
+echo '<input type="hidden" name="product" value="'.htmlentities(!empty($_GET['product'])?$_GET['product']:null).'"/>';
+echo '<input type="hidden" name="useragent" value="'.htmlentities(!empty($_GET['useragent'])?$_GET['useragent']:null).'"/>';
 
 echo '<div><input name="submit" type="submit" class="submit" value="Submit &raquo;"/></div>';
 echo '</form>';
