@@ -623,7 +623,7 @@ gfxPangoTextRun::~gfxPangoTextRun()
 void
 gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
 {
-    gfxPangoFont *pf = ((gfxPangoFont*) mGroup->GetFontList()[0]);
+    nsRefPtr<gfxPangoFont> pf = mGroup->GetFontAt(0);
 
     if (mPangoLayout == nsnull) {
         NS_ConvertUTF16toUTF8 u8str(mString);

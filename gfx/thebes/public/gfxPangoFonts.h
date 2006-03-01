@@ -79,6 +79,11 @@ public:
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
+    gfxPangoFont *GetFontAt(PRInt32 i) {
+        return NS_STATIC_CAST(gfxPangoFont*, 
+                              NS_STATIC_CAST(gfxFont*, mFonts[i]));
+    }
+
 protected:
     static PRBool FontCallback (const nsAString& fontName,
                                 const nsAString& genericName,
