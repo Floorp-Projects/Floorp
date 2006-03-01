@@ -616,7 +616,7 @@
     <para>Don't worry about the "Closed for bug entry", "Maximum Votes
     per person", "Maximum votes a person can put on a single bug",
     "Number of votes a bug in this Product needs to automatically get out
-    of the UNCOMFIRMED state", and "Version" options yet. We'll cover
+    of the UNCONFIRMED state", and "Version" options yet. We'll cover
     those in a few moments.
     </para>
   </section>
