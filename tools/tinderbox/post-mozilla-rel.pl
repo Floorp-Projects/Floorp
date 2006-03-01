@@ -316,6 +316,12 @@ sub packit {
     }
   } # do_installer
 
+  my $lightningXpi = "$builddir/dist/xpi-stage/lightning.xpi";
+  if (-e $lightningXpi) {
+    TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi";
+    TinderUtils::run_shell_command "cp -r $lightningXpi $stagedir/linux-xpi";
+  }
+
   if ($Settings::archive) {
     TinderUtils::run_shell_command "make -C $packaging_dir";
 
