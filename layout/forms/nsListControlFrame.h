@@ -143,19 +143,19 @@ public:
   virtual PRIntn GetSkipSides() const;
 
     // nsIListControlFrame
-  NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
-  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex); 
-  NS_IMETHOD GetOptionText(PRInt32 aIndex, nsAString & aStr);
-  NS_IMETHOD CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrabMouseEvents);
-  NS_IMETHOD GetMaximumSize(nsSize &aSize);
-  NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
-  NS_IMETHOD SyncViewWithFrame();
-  NS_IMETHOD AboutToDropDown();
-  NS_IMETHOD AboutToRollup();
-  NS_IMETHOD UpdateSelection();
-  NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
-  NS_IMETHOD FireOnChange();
-  NS_IMETHOD ComboboxFinish(PRInt32 aIndex);
+  virtual void SetComboboxFrame(nsIFrame* aComboboxFrame);
+  virtual PRInt32 GetSelectedIndex(); 
+  virtual void GetOptionText(PRInt32 aIndex, nsAString & aStr);
+  virtual void CaptureMouseEvents(PRBool aGrabMouseEvents);
+  virtual nsSize GetMaximumSize();
+  virtual PRInt32 GetNumberOfOptions();  
+  virtual void SyncViewWithFrame();
+  virtual void AboutToDropDown();
+  virtual void AboutToRollup();
+  virtual void UpdateSelection();
+  virtual void SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; }
+  virtual void FireOnChange();
+  virtual void ComboboxFinish(PRInt32 aIndex);
   virtual void OnContentReset();
 
   // nsISelectControlFrame
