@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   Bradley Baetz <bbaetz@student.usyd.edu.au>
- *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,66 +37,402 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <limits.h>
-#include <ctype.h>
-
-#include "prprf.h"
-#include "prlog.h"
-#include "prtime.h"
-#include "prnetdb.h"
-
 #include "nsFTPChannel.h"
 #include "nsFtpConnectionThread.h"
 #include "nsFtpControlConnection.h"
 #include "nsFtpProtocolHandler.h"
-#include "ftpCore.h"
-#include "netCore.h"
-#include "nsCRT.h"
-#include "nsEscape.h"
-#include "nsMimeTypes.h"
-#include "nsNetUtil.h"
-#include "nsEventQueueUtils.h"
-#include "nsStreamUtils.h"
-#include "nsIURL.h"
+
+#include <limits.h>
+#include <ctype.h>
+
 #include "nsISocketTransport.h"
+#include "nsIStreamConverterService.h"
 #include "nsIStreamListenerTee.h"
+#include "nsReadableUtils.h"
+#include "prprf.h"
+#include "prlog.h"
+#include "prtime.h"
+#include "prnetdb.h"
+#include "netCore.h"
+#include "ftpCore.h"
+#include "nsProxiedService.h"
+#include "nsCRT.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIURL.h"
+#include "nsEscape.h"
+#include "nsNetUtil.h"
+#include "nsIDNSService.h" // for host error code
+#include "nsCPasswordManager.h"
+#include "nsIMemory.h"
+#include "nsIStringStream.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
-#include "nsCPasswordManager.h"
+#include "nsEventQueueUtils.h"
+#include "nsChannelProperties.h"
+
+#include "nsICacheEntryDescriptor.h"
+#include "nsICacheListener.h"
+
+#include "nsIResumableChannel.h"
+
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_CID(kStreamListenerTeeCID,      NS_STREAMLISTENERTEE_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
-#endif
 #define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
 #define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
+#else
+#define LOG(args)
+#define LOG_ALWAYS(args)
+#endif
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsFtpState,
-                             nsBaseContentStream,
-                             nsIInputStreamCallback, 
-                             nsITransportEventSink,
-                             nsICacheListener,
-                             nsIRequestObserver)
+
+/**
+ * This object observes status from a control connection.  For control
+ * connections, we don't worry about reporting transfer progress.
+ *
+ * The OnTransportStatus events are delivered to the main thread.
+ */
+class TransportEventForwarder : public nsITransportEventSink
+{
+public:
+    TransportEventForwarder(nsIProgressEventSink* aSink) : mSink(aSink) {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSITRANSPORTEVENTSINK
+
+private:
+    nsCOMPtr<nsIProgressEventSink> mSink;
+};
+
+NS_IMPL_ISUPPORTS1(TransportEventForwarder, nsITransportEventSink)
+
+NS_IMETHODIMP
+TransportEventForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
+                                           PRUint64 progress, PRUint64 progressMax)
+{
+    // We only want to forward the resolving and connecting states of the
+    // control connection and report the data connection for the rest of the
+    // transfer, to avoid continuously switching between "sending to" and
+    // "receiving from"
+    if (mSink &&
+            (status == NS_NET_STATUS_RESOLVING_HOST ||
+             status == NS_NET_STATUS_CONNECTING_TO ||
+             status == NS_NET_STATUS_CONNECTED_TO))
+        mSink->OnStatus(nsnull, nsnull, status, nsnull);
+    return NS_OK;
+}
+
+
+/**
+ * This object observes events for a data connection.
+ */
+class DataRequestForwarder : public nsIFTPChannel, 
+                             public nsIStreamListener,
+                             public nsIResumableChannel,
+                             public nsITransportEventSink
+{
+public:
+    DataRequestForwarder();
+
+    nsresult Init(nsIRequest *request);
+
+    nsresult SetStreamListener(nsIStreamListener *listener);
+    nsresult SetCacheEntry(nsICacheEntryDescriptor *entry, PRBool writing);
+    nsresult SetEntityID(const nsACString& entity);
+    void     SetFileSize(PRUint64 fileSize) { mFileSize = fileSize; }
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIRESUMABLECHANNEL
+    NS_DECL_NSITRANSPORTEVENTSINK
+
+    NS_FORWARD_NSIREQUEST(mRequest->)
+    NS_FORWARD_NSICHANNEL(mFTPChannel->)
+    NS_FORWARD_NSIFTPCHANNEL(mFTPChannel->)
+    
+    PRUint64 GetBytesTransfered() {return mBytesTransfered;}
+    void Uploading(PRBool value, PRUint32 uploadCount);
+    void SetRetrying(PRBool retry);
+    
+protected:
+
+    nsCOMPtr<nsIRequest>              mRequest;
+    nsCOMPtr<nsIFTPChannel>           mFTPChannel;
+    nsCOMPtr<nsIStreamListener>       mListener;
+    nsCOMPtr<nsIProgressEventSink>    mEventSink;
+    nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+    nsCString                         mEntityID;
+
+    nsUint64 mBytesTransfered;
+    nsUint64 mBytesToUpload;
+    PRUint64 mFileSize;
+    PRPackedBool   mDelayedOnStartFired;
+    PRPackedBool   mUploading;
+    PRPackedBool   mRetrying;
+
+    nsresult DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt);
+};
+
+
+// The whole purpose of this class is to opaque 
+// the socket transport so that clients only see
+// the same nsIChannel/nsIRequest that they started.
+
+NS_IMPL_THREADSAFE_ISUPPORTS7(DataRequestForwarder, 
+                              nsIStreamListener, 
+                              nsIRequestObserver, 
+                              nsIFTPChannel,
+                              nsIResumableChannel,
+                              nsIChannel,
+                              nsIRequest,
+                              nsITransportEventSink)
+
+
+DataRequestForwarder::DataRequestForwarder()
+{
+    LOG(("(%x) DataRequestForwarder CREATED\n", this));
+
+    mBytesTransfered = 0;
+    mBytesToUpload = 0;
+    mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
+    mFileSize = LL_MAXUINT;
+}
+
+nsresult 
+DataRequestForwarder::Init(nsIRequest *request)
+{
+    LOG(("(%x) DataRequestForwarder Init [request=%x]\n", this, request));
+
+    NS_ENSURE_ARG(request);
+
+    // for the forwarding declarations.
+    mRequest    = request;
+    mFTPChannel = do_QueryInterface(request);
+    mEventSink  = do_QueryInterface(request);
+    mListener   = do_QueryInterface(request);
+
+    if (!mRequest || !mFTPChannel)
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
+void 
+DataRequestForwarder::Uploading(PRBool value, PRUint32 uploadCount)
+{
+    mUploading = value;
+    mBytesToUpload = uploadCount;
+}
+
+nsresult 
+DataRequestForwarder::SetCacheEntry(nsICacheEntryDescriptor *cacheEntry, PRBool writing)
+{
+    // if there is a cache entry descriptor, send data to it.
+    if (!cacheEntry) 
+        return NS_ERROR_FAILURE;
+    
+    mCacheEntry = cacheEntry;
+    if (!writing)
+        return NS_OK;
+
+    nsresult rv;
+    nsCOMPtr<nsIOutputStream> out;
+    rv = cacheEntry->OpenOutputStream(0, getter_AddRefs(out));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStreamListenerTee> tee =
+        do_CreateInstance(kStreamListenerTeeCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = tee->Init(mListener, out);
+    if (NS_FAILED(rv)) return rv;
+
+    mListener = do_QueryInterface(tee, &rv);
+
+    return NS_OK;
+}
+
+
+nsresult 
+DataRequestForwarder::SetStreamListener(nsIStreamListener *listener)
+{
+    LOG(("(%x) DataRequestForwarder SetStreamListener [listener=%x]\n", this, listener)); 
+    
+    mListener = listener;
+    if (!mListener) 
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+nsresult
+DataRequestForwarder::SetEntityID(const nsACString& aEntityID)
+{
+    mEntityID = aEntityID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::GetEntityID(nsACString& aEntityID)
+{
+    if (mEntityID.IsEmpty())
+        return NS_ERROR_NOT_RESUMABLE;
+
+    aEntityID = mEntityID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::ResumeAt(PRUint64, 
+                               const nsACString&)
+{
+    // We shouldn't get here. This class only exists in the middle of a
+    // request
+    NS_NOTREACHED("DataRequestForwarder::ResumeAt");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult 
+DataRequestForwarder::DelayedOnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+    LOG(("(%x) DataRequestForwarder DelayedOnStartRequest \n", this)); 
+    return mListener->OnStartRequest(this, ctxt); 
+}
+
+void
+DataRequestForwarder::SetRetrying(PRBool retry)
+{
+    // The problem here is that if we send a second PASV, our listener would
+    // get an OnStop from the socket transport, and fail. So we temporarily
+    // suspend notifications
+    LOG(("(%x) DataRequestForwarder SetRetrying [retry=%d]\n", this, retry));
+
+    mRetrying = retry;
+    mDelayedOnStartFired = PR_FALSE;
+}
+
+NS_IMETHODIMP 
+DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+    NS_ASSERTION(mListener, "No Listener Set.");
+    LOG(("(%x) DataRequestForwarder OnStartRequest \n[mRetrying=%d]", this, mRetrying)); 
+
+    if (!mListener)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    // OnStartRequest is delayed.
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
+{
+    LOG(("(%x) DataRequestForwarder OnStopRequest [status=%x, mRetrying=%d]\n", this, statusCode, mRetrying)); 
+
+    if (mRetrying) {
+        mRetrying = PR_FALSE;
+        return NS_OK;
+    }
+
+    // If there were no calls to ODA, then the onstart won't have been
+    // fired - bug 122913
+    if (!mDelayedOnStartFired) { 
+        mDelayedOnStartFired = PR_TRUE;
+        nsresult rv = DelayedOnStartRequest(request, ctxt);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (!mListener)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return mListener->OnStopRequest(this, ctxt, statusCode);
+}
+
+NS_IMETHODIMP
+DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *input, PRUint32 offset, PRUint32 count)
+{ 
+    nsresult rv;
+    NS_ASSERTION(mListener, "No Listener Set.");
+    NS_ASSERTION(!mUploading, "Since we are uploading, we should never get a ODA");
+ 
+    if (!mListener)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    // we want to delay firing the onStartRequest until we know that there is data
+    if (!mDelayedOnStartFired) { 
+        mDelayedOnStartFired = PR_TRUE;
+        rv = DelayedOnStartRequest(request, ctxt);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // XXX mBytesTransfered will get truncated from 64-bit to 32-bit
+    rv = mListener->OnDataAvailable(this, ctxt, input, mBytesTransfered, count); 
+    if (NS_SUCCEEDED(rv))
+        mBytesTransfered += count;
+    return rv;
+} 
+
+// nsITransportEventSink methods
+NS_IMETHODIMP
+DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
+                                        PRUint64 progress, PRUint64 progressMax)
+{
+    if (mEventSink) {
+        mEventSink->OnStatus(nsnull, nsnull, status, nsnull);
+
+        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
+            status == nsISocketTransport::STATUS_SENDING_TO) {
+            // compute progress based on whether we are uploading or receiving...
+            PRUint64 count = mUploading ? progress                 : PRUint64(mBytesTransfered);
+            PRUint64 max   = mUploading ? PRUint64(mBytesToUpload) : mFileSize;
+            mEventSink->OnProgress(this, nsnull, count, max);
+        }
+    }
+    return NS_OK;
+}
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
+                              nsIStreamListener, 
+                              nsIRequestObserver, 
+                              nsIRequest)
 
 nsFtpState::nsFtpState()
-    : nsBaseContentStream(PR_TRUE)
-    , mState(FTP_INIT)
-    , mNextState(FTP_S_USER)
-    , mKeepRunning(PR_TRUE)
-    , mReceivedControlData(PR_FALSE)
-    , mTryingCachedControl(PR_FALSE)
-    , mRETRFailed(PR_FALSE)
-    , mFileSize(LL_MAXUINT)
-    , mServerType(FTP_GENERIC_TYPE)
-    , mAction(GET)
-    , mAnonymous(PR_TRUE)
-    , mRetryPass(PR_FALSE)
-    , mInternalError(NS_OK)
-    , mPort(21)
-    , mIPv6Checked(PR_FALSE)
-    , mControlStatus(NS_OK)
 {
-    LOG_ALWAYS(("FTP:(%x) nsFtpState created", this));
+    LOG_ALWAYS(("(%x) nsFtpState created", this));
+
+    // bool init
+    mRETRFailed = PR_FALSE;
+    mWaitingForDConn = mTryingCachedControl = mRetryPass = PR_FALSE;
+    mKeepRunning = mAnonymous = PR_TRUE;
+
+    mAction = GET;
+    mState = FTP_COMMAND_CONNECT;
+    mNextState = FTP_S_USER;
+
+    mInternalError = NS_OK;
+    mSuspendCount = 0;
+    mPort = 21;
+
+    mReceivedControlData = PR_FALSE;
+    mControlStatus = NS_OK;
+
+    mWriteCount = 0;
+
+    mIPv6Checked = PR_FALSE;
+    mIPv6ServerAddress = nsnull;
+    
+    mControlConnection = nsnull;
+    mDRequestForwarder = nsnull;
+    mFileSize          = LL_MAXUINT;
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -105,51 +440,71 @@ nsFtpState::nsFtpState()
 
 nsFtpState::~nsFtpState() 
 {
-    LOG_ALWAYS(("FTP:(%x) nsFtpState destroyed", this));
+    LOG_ALWAYS(("(%x) nsFtpState destroyed", this));
+    
+    if (mIPv6ServerAddress) nsMemory::Free(mIPv6ServerAddress);
+    NS_IF_RELEASE(mDRequestForwarder);
 
     // release reference to handler
     nsFtpProtocolHandler *handler = gFtpHandler;
     NS_RELEASE(handler);
 }
 
-// nsIInputStreamCallback implementation
-NS_IMETHODIMP
-nsFtpState::OnInputStreamReady(nsIAsyncInputStream *aInStream)
+nsresult
+nsFtpState::GetEntityID(nsACString& aEntityID)
 {
-    LOG(("FTP:(%p) data stream ready\n", this));
+    if (mEntityID.IsEmpty())
+        return NS_ERROR_NOT_RESUMABLE;
 
-    // We are receiving a notification from our data stream, so just forward it
-    // on to our stream callback.
-    if (HasPendingCallback())
-        DispatchCallbackSync();
-
+    aEntityID = mEntityID;
     return NS_OK;
 }
 
-void
-nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
-{
-    LOG(("FTP:(%p) control data available [%u]\n", this, aDataLen));
-    mControlConnection->WaitData(this);  // queue up another call
-
+// nsIStreamListener implementation
+NS_IMETHODIMP
+nsFtpState::OnDataAvailable(nsIRequest *request,
+                            nsISupports *aContext,
+                            nsIInputStream *aInStream,
+                            PRUint32 aOffset, 
+                            PRUint32 aCount)
+{    
+    if (aCount == 0)
+        return NS_OK; /*** should this be an error?? */
+    
     if (!mReceivedControlData) {
         // parameter can be null cause the channel fills them in.
-        OnTransportStatus(nsnull, NS_NET_STATUS_BEGIN_FTP_TRANSACTION, 0, 0);
+        mChannel->OnStatus(nsnull, nsnull, 
+                           NS_NET_STATUS_BEGIN_FTP_TRANSACTION, nsnull);
+        
         mReceivedControlData = PR_TRUE;
     }
 
+    char* buffer = (char*)nsMemory::Alloc(aCount + 1);
+    if (!buffer)
+        return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = aInStream->Read(buffer, aCount, &aCount);
+    if (NS_FAILED(rv)) 
+    {
+        LOG(("(%x) nsFtpState - error reading %x\n", this, rv));
+        nsMemory::Free(buffer);
+        return NS_ERROR_FAILURE;
+    }
+    buffer[aCount] = '\0';
+    
+    nsXPIDLCString data;
+    data.Adopt(buffer);
+
+    LOG(("(%x) reading %d bytes: \"%s\"", this, aCount, buffer));
+
     // Sometimes we can get two responses in the same packet, eg from LIST.
     // So we need to parse the response line by line
-
-    nsCString buffer = mControlReadCarryOverBuf;
-
+    nsCString lines(mControlReadCarryOverBuf);
+    lines.Append(data, aCount);
     // Clear the carryover buf - if we still don't have a line, then it will
     // be reappended below
     mControlReadCarryOverBuf.Truncate();
 
-    buffer.Append(aData, aDataLen);
-
-    const char* currLine = buffer.get();
+    const char* currLine = lines.get();
     while (*currLine) {
         PRInt32 eolLength = strcspn(currLine, CRLF);
         PRInt32 currLineLength = strlen(currLine);
@@ -173,11 +528,10 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
 
         if ((currLineLength > eolLength) &&
             (currLine[eolLength] == nsCRT::CR) &&
-            (currLine[eolLength+1] == nsCRT::LF)) {
+            (currLine[eolLength+1] == nsCRT::LF))
             crlfLength = 2; // CR +LF 
-        } else {
+        else 
             crlfLength = 1; // + LF or CR
-        }
 
         line.Assign(currLine, eolLength + crlfLength);
         
@@ -203,7 +557,7 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
         if (startNum && line[3] == ' ') {
             // yup. last line, let's move on.
             if (mState == mNextState) {
-                NS_ERROR("ftp read state mixup");
+                NS_ASSERTION(0, "ftp read state mixup");
                 mInternalError = NS_ERROR_FAILURE;
                 mState = FTP_ERROR;
             } else {
@@ -215,54 +569,70 @@ nsFtpState::OnControlDataAvailable(const char *aData, PRUint32 aDataLen)
             if (ftpSink)
                 ftpSink->OnFTPControlLog(PR_TRUE, mResponseMsg.get());
             
-            nsresult rv = Process();
+            rv = Process();
             mResponseMsg.Truncate();
-            if (NS_FAILED(rv)) {
-                CloseWithStatus(rv);
-                return;
-            }
+            if (NS_FAILED(rv)) return rv;
         }
 
         currLine = currLine + eolLength + crlfLength;
     }
+
+    return NS_OK;
 }
 
-void
-nsFtpState::OnControlError(nsresult status)
+
+// nsIRequestObserver implementation
+NS_IMETHODIMP
+nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
-    NS_ASSERTION(NS_FAILED(status), "expecting error condition");
+#if defined(PR_LOGGING)
+    nsCAutoString spec;
+    (void)mURL->GetAsciiSpec(spec);
 
-    LOG(("FTP:(%p) CC(%p) error [%x was-cached=%u]\n",
-         this, mControlConnection.get(), status, mTryingCachedControl));
+    LOG(("(%x) nsFtpState::OnStartRequest() (spec =%s)\n", this, spec.get()));
+#endif
+    return NS_OK;
+}
 
-    mControlStatus = status;
-    if (mTryingCachedControl && NS_SUCCEEDED(mInternalError)) {
+NS_IMETHODIMP
+nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *aContext,
+                            nsresult aStatus)
+{
+    LOG(("(%x) nsFtpState::OnStopRequest() rv=%x\n", this, aStatus));
+    mControlStatus = aStatus;
+
+    // HACK.  This may not always work.  I am assuming that I can mask the OnStopRequest
+    // notification since I created it via the control connection.
+    if (mTryingCachedControl && NS_FAILED(aStatus) && NS_SUCCEEDED(mInternalError)) {
+        LOG(("(%x) nsFtpState::OnStopRequest() cache connect failed.  Reconnecting...\n", this, aStatus));
         mTryingCachedControl = PR_FALSE;
         Connect();
-    } else {
-        CloseWithStatus(status);
-    }
+        return NS_OK;
+    }        
+
+    if (NS_FAILED(aStatus)) // aStatus will be NS_OK if we are successfully disconnecing the control connection. 
+        StopProcessing();
+
+    return NS_OK;
 }
 
 nsresult
 nsFtpState::EstablishControlConnection()
 {
-    NS_ASSERTION(!mControlConnection, "we already have a control connection");
-            
     nsresult rv;
 
-    LOG(("FTP:(%x) trying cached control\n", this));
+    LOG(("(%x) trying cached control\n", this));
         
-    // Look to see if we can use a cached control connection:
-    nsFtpControlConnection *connection = nsnull;
-    gFtpHandler->RemoveConnection(mChannel->URI(), &connection);
+    nsFtpControlConnection* connection;
+    (void) gFtpHandler->RemoveConnection(mURL, &connection);
 
+    nsRefPtr<TransportEventForwarder> fwd(new TransportEventForwarder(mChannel));
     if (connection) {
-        mControlConnection.swap(connection);
+        mControlConnection = connection;
         if (mControlConnection->IsAlive())
         {
             // set stream listener of the control connection to be us.        
-            mControlConnection->WaitData(this);
+            (void) mControlConnection->SetStreamListener(NS_STATIC_CAST(nsIStreamListener*, this));
             
             // read cached variables into us. 
             mServerType = mControlConnection->mServerType;           
@@ -272,54 +642,53 @@ nsFtpState::EstablishControlConnection()
             
             // we're already connected to this server, skip login.
             mState = FTP_S_PASV;
-            mResponseCode = 530;  // assume the control connection was dropped.
+            mResponseCode = 530;  //assume the control connection was dropped.
             mControlStatus = NS_OK;
             mReceivedControlData = PR_FALSE;  // For this request, we have not.
 
-            // if we succeed, return.  Otherwise, we need to create a transport
-            rv = mControlConnection->Connect(mChannel->ProxyInfo(), this);
+            // if we succeed, return.  Otherwise, we need to 
+            // create a transport
+            rv = mControlConnection->Connect(mProxyInfo, fwd);
             if (NS_SUCCEEDED(rv))
                 return rv;
         }
-        LOG(("FTP:(%p) cached CC(%p) is unusable\n", this,
-            mControlConnection.get()));
-
-        mControlConnection->WaitData(nsnull);
-        mControlConnection = nsnull;
+        else 
+        {
+            LOG(("(%x) isAlive return false\n", this));
+            NS_RELEASE(mControlConnection);
+        }
     }
 
-    LOG(("FTP:(%p) creating CC\n", this));
+    LOG(("(%x) creating control\n", this));
         
     mState = FTP_READ_BUF;
     mNextState = FTP_S_USER;
     
     nsCAutoString host;
-    rv = mChannel->URI()->GetAsciiHost(host);
-    if (NS_FAILED(rv))
-        return rv;
+    rv = mURL->GetAsciiHost(host);
+    if (NS_FAILED(rv)) return rv;
 
-    mControlConnection = new nsFtpControlConnection(host, mPort);
-    if (!mControlConnection)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mControlConnection = new nsFtpControlConnection(host.get(), mPort);
+    if (!mControlConnection) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = mControlConnection->Connect(mChannel->ProxyInfo(), this);
-    if (NS_FAILED(rv)) {
-        LOG(("FTP:(%p) CC(%p) failed to connect [rv=%x]\n", this,
-            mControlConnection.get(), rv));
-        mControlConnection = nsnull;
-        return rv;
-    }
+    NS_ADDREF(mControlConnection);
+        
+    // Must do it this way 'cuz the channel intercepts the progress notifications.
+    (void) mControlConnection->SetStreamListener(NS_STATIC_CAST(nsIStreamListener*, this));
 
-    return mControlConnection->WaitData(this);
+    return mControlConnection->Connect(mProxyInfo, fwd);
 }
 
 void 
 nsFtpState::MoveToNextState(FTP_STATE nextState)
 {
-    if (NS_FAILED(mInternalError)) {
+    if (NS_FAILED(mInternalError)) 
+    {
         mState = FTP_ERROR;
-        LOG(("FTP:(%x) FAILED (%x)\n", this, mInternalError));
-    } else {
+        LOG(("(%x) FAILED (%x)\n", this, mInternalError));
+    }
+    else
+    {
         mState = FTP_READ_BUF;
         mNextState = nextState;
     }  
@@ -331,56 +700,58 @@ nsFtpState::Process()
     nsresult    rv = NS_OK;
     PRBool      processingRead = PR_TRUE;
     
-    while (mKeepRunning && processingRead) {
-        switch (mState) {
+    while (mKeepRunning && processingRead) 
+    {
+        switch(mState) 
+        {
           case FTP_COMMAND_CONNECT:
-            KillControlConnection();
-            LOG(("FTP:(%p) establishing CC", this));
-            mInternalError = EstablishControlConnection();  // sets mState
-            if (NS_FAILED(mInternalError)) {
-                mState = FTP_ERROR;
-                LOG(("FTP:(%p) FAILED\n", this));
-            } else {
-                LOG(("FTP:(%p) SUCCEEDED\n", this));
-            }
-            break;
+              KillControlConnection();
+              LOG(("(%x) Establishing control connection...", this));
+              mInternalError = EstablishControlConnection();  // sets mState
+              if (NS_FAILED(mInternalError)) {
+                  mState = FTP_ERROR;
+                  LOG(("(%x) FAILED\n", this));
+              }
+              else
+                  LOG(("(%x) SUCCEEDED\n", this));
+              break;
     
           case FTP_READ_BUF:
-            LOG(("FTP:(%p) Waiting for CC(%p)\n", this,
-                mControlConnection.get()));
-            processingRead = PR_FALSE;
-            break;
+              LOG(("(%x) Waiting for control data (%x)...", this, rv));
+              processingRead = PR_FALSE;
+              break;
           
           case FTP_ERROR: // xx needs more work to handle dropped control connection cases
-            if ((mTryingCachedControl && mResponseCode == 530 &&
-                mInternalError == NS_ERROR_FTP_PASV) ||
-                (mResponseCode == 425 &&
-                mInternalError == NS_ERROR_FTP_PASV)) {
-                // The user was logged out during an pasv operation
-                // we want to restart this request with a new control
-                // channel.
-                mState = FTP_COMMAND_CONNECT;
-            } else if (mResponseCode == 421 && 
+              if ((mTryingCachedControl && mResponseCode == 530 &&
+                  mInternalError == NS_ERROR_FTP_PASV) ||
+                  (mResponseCode == 425 &&
+                  mInternalError == NS_ERROR_FTP_PASV)) {
+                  // The user was logged out during an pasv operation
+                  // we want to restart this request with a new control
+                  // channel.
+                  mState = FTP_COMMAND_CONNECT;
+              }
+              else if (mResponseCode == 421 && 
                        mInternalError != NS_ERROR_FTP_LOGIN) {
-                // The command channel dropped for some reason.
-                // Fire it back up, unless we were trying to login
-                // in which case the server might just be telling us
-                // that the max number of users has been reached...
-                mState = FTP_COMMAND_CONNECT;
-            } else {
-                LOG(("FTP:(%x) FTP_ERROR - calling StopProcessing\n", this));
-                rv = StopProcessing();
-                NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
-                processingRead = PR_FALSE;
-            }
-            break;
+                  // The command channel dropped for some reason.
+                  // Fire it back up, unless we were trying to login
+                  // in which case the server might just be telling us
+                  // that the max number of users has been reached...
+                  mState = FTP_COMMAND_CONNECT;
+              } else {
+                  LOG(("(%x) FTP_ERROR - Calling StopProcessing\n", this));
+                  rv = StopProcessing();
+                  NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
+                  processingRead = PR_FALSE;
+              }
+              break;
           
           case FTP_COMPLETE:
-            LOG(("FTP:(%x) COMPLETE\n", this));
-            rv = StopProcessing();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
-            processingRead = PR_FALSE;
-            break;
+              LOG(("(%x) COMPLETE\n", this));
+              rv = StopProcessing();
+              NS_ASSERTION(NS_SUCCEEDED(rv), "StopProcessing failed.");
+              processingRead = PR_FALSE;
+              break;
 
 // USER           
           case FTP_S_USER:
@@ -490,11 +861,10 @@ nsFtpState::Process()
           case FTP_S_LIST:
             rv = S_list();
 
-            if (rv == NS_ERROR_NOT_RESUMABLE) {
+            if (rv == NS_ERROR_NOT_RESUMABLE)
                 mInternalError = rv;
-            } else if (NS_FAILED(rv)) {
+            else if (NS_FAILED(rv))
                 mInternalError = NS_ERROR_FTP_CWD;
-            }
             
             MoveToNextState(FTP_R_LIST);
             break;
@@ -636,10 +1006,10 @@ nsFtpState::Process()
           default:
             ;
             
-        }
-    }
+        } 
+    } 
 
-    return rv;
+return rv;
 }
 
 ///////////////////////////////////
@@ -664,43 +1034,35 @@ nsFtpState::S_user() {
                 return NS_ERROR_NOT_INITIALIZED;
 
             nsXPIDLString user, passwd;
+            PRBool retval;
             nsCAutoString prePath;
-            rv = mChannel->URI()->GetPrePath(prePath);
-            if (NS_FAILED(rv))
-                return rv;
+            rv = mURL->GetPrePath(prePath);
+            if (NS_FAILED(rv)) return rv;
             NS_ConvertUTF8toUTF16 prePathU(prePath);
 
-            nsCOMPtr<nsIStringBundleService> bundleService =
-                    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return rv;
+            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIStringBundle> bundle;
             rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
-            if (NS_FAILED(rv))
-                return rv;
+            if (NS_FAILED(rv)) return rv;
             
-            const PRUnichar *formatStrings[] = { prePathU.get() };
-            NS_NAMED_LITERAL_STRING(name, "EnterUserPasswordFor");
-
-            nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 1,
-                                              getter_Copies(formattedString));                   
-            if (NS_FAILED(rv))
-                return rv;
-
-            PRBool retval;
+            nsXPIDLString formatedString;
+            const PRUnichar *formatStrings[1] = { prePathU.get()};
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
+                                              formatStrings, 1,
+                                              getter_Copies(formatedString));                   
             rv = prompter->PromptUsernameAndPassword(nsnull,
-                                                     formattedString,
+                                                     formatedString,
                                                      prePathU.get(),
                                                      nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                                      getter_Copies(user), 
                                                      getter_Copies(passwd), 
                                                      &retval);
-            // if the user canceled or didn't supply a username we want to fail
-            if (NS_FAILED(rv) || !retval || (user && !*user) )
-                return NS_ERROR_FAILURE;
 
+            // if the user canceled or didn't supply a username we want to fail
+            if (!retval || (user && !*user) )
+                return NS_ERROR_FAILURE;
             mUsername = user;
             mPassword = passwd;
         }
@@ -717,25 +1079,25 @@ nsFtpState::R_user() {
     if (mResponseCode/100 == 3) {
         // send off the password
         return FTP_S_PASS;
-    }
-    if (mResponseCode/100 == 2) {
+    } else if (mResponseCode/100 == 2) {
         // no password required, we're already logged in
         return FTP_S_SYST;
-    }
-    if (mResponseCode/100 == 5) {
+    } else if (mResponseCode/100 == 5) {
         // problem logging in. typically this means the server
         // has reached it's user limit.
         return FTP_ERROR;
+    } else {
+        // LOGIN FAILED
+        if (mAnonymous) {
+            // we just tried to login anonymously and failed.
+            // kick back out to S_user() and try again after
+            // gathering uname/pwd info from the user.
+            mAnonymous = PR_FALSE;
+            return FTP_S_USER;
+        } else {
+            return FTP_ERROR;
+        }
     }
-    // LOGIN FAILED
-    if (mAnonymous) {
-        // we just tried to login anonymously and failed.
-        // kick back out to S_user() and try again after
-        // gathering uname/pwd info from the user.
-        mAnonymous = PR_FALSE;
-        return FTP_S_USER;
-    }
-    return FTP_ERROR;
 }
 
 
@@ -753,14 +1115,11 @@ nsFtpState::S_pass() {
         } else {
             nsXPIDLCString anonPassword;
             PRBool useRealEmail = PR_FALSE;
-            nsCOMPtr<nsIPrefBranch> prefs =
-                    do_GetService(NS_PREFSERVICE_CONTRACTID);
+            nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
             if (prefs) {
                 rv = prefs->GetBoolPref("advanced.mailftp", &useRealEmail);
-                if (NS_SUCCEEDED(rv) && useRealEmail) {
-                    prefs->GetCharPref("network.ftp.anonymous_password",
-                                       getter_Copies(anonPassword));
-                }
+                if (NS_SUCCEEDED(rv) && useRealEmail)
+                    prefs->GetCharPref("network.ftp.anonymous_password", getter_Copies(anonPassword));
             }
             if (!anonPassword.IsEmpty()) {
                 passwordStr.AppendASCII(anonPassword);
@@ -777,42 +1136,36 @@ nsFtpState::S_pass() {
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
 
-            nsCAutoString prePath;
-            rv = mChannel->URI()->GetPrePath(prePath);
-            if (NS_FAILED(rv))
-                return rv;
-            NS_ConvertUTF8toUTF16 prePathU(prePath);
-            
-            nsCOMPtr<nsIStringBundleService> bundleService =
-                    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return rv;
-
-            nsCOMPtr<nsIStringBundle> bundle;
-            rv = bundleService->CreateBundle(NECKO_MSGS_URL,
-                                             getter_AddRefs(bundle));
-
-            const PRUnichar *formatStrings[2] = {
-                mUsername.get(), prePathU.get()
-            };
-            NS_NAMED_LITERAL_STRING(name, "EnterPasswordFor");
-
-            nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 2,
-                                              getter_Copies(formattedString)); 
-            if (NS_FAILED(rv))
-                return rv;
-
             nsXPIDLString passwd;
             PRBool retval;
+            
+            nsCAutoString prePath;
+            rv = mURL->GetPrePath(prePath);
+            if (NS_FAILED(rv)) return rv;
+            NS_ConvertUTF8toUTF16 prePathU(prePath);
+            
+            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIStringBundle> bundle;
+            rv = bundleService->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(bundle));
+
+            nsXPIDLString formatedString;
+            const PRUnichar *formatStrings[2] = { mUsername.get(), prePathU.get() };
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("EnterPasswordFor").get(),
+                                              formatStrings, 2,
+                                              getter_Copies(formatedString)); 
+
+            if (NS_FAILED(rv)) return rv;
             rv = prompter->PromptPassword(nsnull,
-                                          formattedString,
+                                          formatedString,
                                           prePathU.get(), 
                                           nsIAuthPrompt::SAVE_PASSWORD_PERMANENTLY,
                                           getter_Copies(passwd), &retval);
+
             // we want to fail if the user canceled. Note here that if they want
             // a blank password, we will pass it along.
-            if (NS_FAILED(rv) || !retval)
+            if (!retval)
                 return NS_ERROR_FAILURE;
 
             mPassword = passwd;
@@ -830,18 +1183,15 @@ nsFtpState::R_pass() {
     if (mResponseCode/100 == 3) {
         // send account info
         return FTP_S_ACCT;
-    }
-    if (mResponseCode/100 == 2) {
+    } else if (mResponseCode/100 == 2) {
         // logged in
         return FTP_S_SYST;
-    }
-    if (mResponseCode == 503) {
+    } else if (mResponseCode == 503) {
         // start over w/ the user command.
         // note: the password was successful, and it's stored in mPassword
         mRetryPass = PR_FALSE;
         return FTP_S_USER;
-    }
-    if (mResponseCode/100 == 5 || mResponseCode==421) {
+    } else if (mResponseCode/100 == 5 || mResponseCode==421) {
         // There is no difference between a too-many-users error,
         // a wrong-password error, or any other sort of error
         // So we need to tell wallet to forget the password if we had one,
@@ -849,14 +1199,14 @@ nsFtpState::R_pass() {
         // user can retry if they want to
 
         if (!mPassword.IsEmpty()) {
-            nsCOMPtr<nsIPasswordManager> pm =
-                    do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
+            nsCOMPtr<nsIPasswordManager> pm = do_GetService(NS_PASSWORDMANAGER_CONTRACTID);
             if (pm) {
                 nsCAutoString prePath;
-                nsresult rv = mChannel->URI()->GetPrePath(prePath);
+                nsresult rv = mURL->GetPrePath(prePath);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get prepath");
-                if (NS_SUCCEEDED(rv))
+                if (NS_SUCCEEDED(rv)) {
                     pm->RemoveUser(prePath, EmptyString());
+                }
             }
         }
 
@@ -875,7 +1225,8 @@ nsFtpState::R_pass() {
 
 nsresult
 nsFtpState::S_pwd() {
-    return SendFTPCommand(NS_LITERAL_CSTRING("PWD" CRLF));
+    nsCString pwdStr("PWD" CRLF);
+    return SendFTPCommand(pwdStr);
 }
 
 FTP_STATE
@@ -885,7 +1236,7 @@ nsFtpState::R_pwd() {
     nsCAutoString respStr(mResponseMsg);
     PRInt32 pos = respStr.FindChar('"');
     if (pos > -1) {
-        respStr.Cut(0, pos+1);
+        respStr.Cut(0,pos+1);
         pos = respStr.FindChar('"');
         if (pos > -1) {
             respStr.Truncate(pos);
@@ -901,7 +1252,8 @@ nsFtpState::R_pwd() {
 
 nsresult
 nsFtpState::S_syst() {
-    return SendFTPCommand(NS_LITERAL_CSTRING("SYST" CRLF));
+    nsCString systString("SYST" CRLF);
+    return SendFTPCommand( systString );
 }
 
 FTP_STATE
@@ -913,47 +1265,52 @@ nsFtpState::R_syst() {
             ( mResponseMsg.Find("MACOS Peter's Server") > -1) ||
             ( mResponseMsg.Find("MACOS WebSTAR FTP") > -1) ||
             ( mResponseMsg.Find("MVS") > -1) ||
-            ( mResponseMsg.Find("OS/390") > -1)) {
+            ( mResponseMsg.Find("OS/390") > -1))
+        {
             mServerType = FTP_UNIX_TYPE;
-        } else if (( mResponseMsg.Find("WIN32", PR_TRUE) > -1) ||
-                   ( mResponseMsg.Find("windows", PR_TRUE) > -1)) {
+        }
+        else if ( ( mResponseMsg.Find("WIN32", PR_TRUE) > -1) ||
+                  ( mResponseMsg.Find("windows", PR_TRUE) > -1) )
+        {
             mServerType = FTP_NT_TYPE;
-        } else if (mResponseMsg.Find("OS/2", PR_TRUE) > -1) {
+        }
+        else if ( mResponseMsg.Find("OS/2", PR_TRUE) > -1)
+        {
             mServerType = FTP_OS2_TYPE;
-        } else if (mResponseMsg.Find("VMS", PR_TRUE) > -1) {
+        }
+        else if ( mResponseMsg.Find("VMS", PR_TRUE) > -1)
+        {
             mServerType = FTP_VMS_TYPE;
-        } else {
-            NS_ERROR("Server type list format unrecognized.");
+        }
+        else
+        {
+            NS_ASSERTION(0, "Server type list format unrecognized.");
             // Guessing causes crashes.
             // (Of course, the parsing code should be more robust...)
             nsresult rv;
             nsCOMPtr<nsIStringBundleService> bundleService =
-                    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+                do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return FTP_ERROR;
 
             nsCOMPtr<nsIStringBundle> bundle;
             rv = bundleService->CreateBundle(NECKO_MSGS_URL,
                                              getter_AddRefs(bundle));
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            if (NS_FAILED(rv)) return FTP_ERROR;
             
+            nsXPIDLString formatedString;
             PRUnichar* ucs2Response = ToNewUnicode(mResponseMsg);
             const PRUnichar *formatStrings[1] = { ucs2Response };
-            NS_NAMED_LITERAL_STRING(name, "UnsupportedFTPServer");
-
-            nsXPIDLString formattedString;
-            rv = bundle->FormatStringFromName(name.get(), formatStrings, 1,
-                                              getter_Copies(formattedString));
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("UnsupportedFTPServer").get(),
+                                              formatStrings, 1,
+                                              getter_Copies(formatedString));
             nsMemory::Free(ucs2Response);
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            if (NS_FAILED(rv)) return FTP_ERROR;
 
-            // TODO(darin): this code should not be dictating UI like this!
+            // XXX(darin): this code should not be dictating UI like this!
             nsCOMPtr<nsIPrompt> prompter;
             mChannel->GetCallback(prompter);
             if (prompter)
-                prompter->Alert(nsnull, formattedString.get());
+                prompter->Alert(nsnull, formatedString.get());
             
             // since we just alerted the user, clear mResponseMsg,
             // which is displayed to the user.
@@ -976,20 +1333,22 @@ nsFtpState::R_syst() {
 
 nsresult
 nsFtpState::S_acct() {
-    return SendFTPCommand(NS_LITERAL_CSTRING("ACCT noaccount" CRLF));
+    nsCString acctString("ACCT noaccount" CRLF);
+    return SendFTPCommand(acctString);
 }
 
 FTP_STATE
 nsFtpState::R_acct() {
     if (mResponseCode/100 == 2)
         return FTP_S_SYST;
-
-    return FTP_ERROR;
+    else
+        return FTP_ERROR;
 }
 
 nsresult
 nsFtpState::S_type() {
-    return SendFTPCommand(NS_LITERAL_CSTRING("TYPE I" CRLF));
+    nsCString typeString("TYPE I" CRLF);
+    return SendFTPCommand(typeString);
 }
 
 FTP_STATE
@@ -1044,7 +1403,15 @@ FTP_STATE
 nsFtpState::R_size() {
     if (mResponseCode/100 == 2) {
         PR_sscanf(mResponseMsg.get() + 4, "%llu", &mFileSize);
-        mChannel->SetContentLength64(mFileSize);
+        PRUint32 size32;
+        LL_L2UI(size32, mFileSize);
+        if (NS_FAILED(mChannel->SetContentLength(size32))) return FTP_ERROR;
+
+        // Set the 64-bit length too
+        mChannel->SetPropertyAsUint64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                                      mFileSize);
+
+        mDRequestForwarder->SetFileSize(mFileSize);
     }
 
     // We may want to be able to resume this
@@ -1077,82 +1444,105 @@ nsFtpState::R_mdtm() {
         }
     }
 
-    nsCString entityID;
-    entityID.Truncate();
-    entityID.AppendInt(PRInt64(mFileSize));
-    entityID.Append('/');
-    entityID.Append(mModTime);
-    mChannel->SetEntityID(entityID);
+    mEntityID.Truncate();
+    mEntityID.AppendInt(PRInt64(mFileSize));
+    mEntityID.Append('/');
+    mEntityID.Append(mModTime);
+    mDRequestForwarder->SetEntityID(mEntityID);
 
+    // if we tried downloading this, lets try restarting it...
+    if (mDRequestForwarder && mDRequestForwarder->GetBytesTransfered() > 0) {
+        mStartPos = mDRequestForwarder->GetBytesTransfered();
+        return FTP_S_REST;
+    }
+    
     // We weren't asked to resume
-    if (!mChannel->ResumeRequested())
+    if (mStartPos == LL_MAXUINT)
         return FTP_S_RETR;
 
     //if (our entityID == supplied one (if any))
-    if (mSuppliedEntityID.IsEmpty() || entityID.Equals(mSuppliedEntityID))
+    if (mSuppliedEntityID.IsEmpty() ||
+        mEntityID.Equals(mSuppliedEntityID))
+    {
         return FTP_S_REST;
-
-    mInternalError = NS_ERROR_ENTITY_CHANGED;
-    mResponseMsg.Truncate();
-    return FTP_ERROR;
+    } else {
+        mInternalError = NS_ERROR_ENTITY_CHANGED;
+        mResponseMsg.Truncate();
+        return FTP_ERROR;
+    }
 }
 
 nsresult 
 nsFtpState::SetContentType()
 {
-    return mChannel->SetContentType(
-        NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
+    return mChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
 }
 
 nsresult
 nsFtpState::S_list() {
-    nsresult rv = SetContentType();
+    nsresult rv;
+
+    if (!mDRequestForwarder) 
+        return NS_ERROR_FAILURE;
+
+    rv = SetContentType();
+    
     if (NS_FAILED(rv)) 
         return FTP_ERROR;
+    
+    // save off the server type if we are caching.
+    if(mCacheEntry) {
+        nsCAutoString serverType;
+        serverType.AppendInt(mServerType);
+        (void) mCacheEntry->SetMetaDataElement("servertype", serverType.get());
+    }
 
-    rv = mChannel->PushStreamConverter("text/ftp-dir",
-                                       APPLICATION_HTTP_INDEX_FORMAT);
+    nsCOMPtr<nsIStreamListener> converter;
+    
+    rv = BuildStreamConverter(getter_AddRefs(converter));
     if (NS_FAILED(rv)) {
         // clear mResponseMsg which is displayed to the user.
-        // TODO: we should probably set this to something meaningful.
+        // TODO: we should probably set this to something 
+        // meaningful.
         mResponseMsg = "";
         return rv;
     }
     
-    if (mCacheEntry) {
-        // save off the server type if we are caching.
-        nsCAutoString serverType;
-        serverType.AppendInt(mServerType);
-        mCacheEntry->SetMetaDataElement("servertype", serverType.get());
-
-        // open cache entry for writing, and configure it to receive data.
-        if (NS_FAILED(InstallCacheListener())) {
-            mCacheEntry->Doom();
-            mCacheEntry = nsnull;
-        }
-    }
-
+    // the data forwarder defaults to sending notifications
+    // to the channel.  Lets hijack and send the notifications
+    // to the stream converter.
+    mDRequestForwarder->SetStreamListener(converter);
+    mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_TRUE);
     // dir listings aren't resumable
-    NS_ENSURE_TRUE(!mChannel->ResumeRequested(), NS_ERROR_NOT_RESUMABLE);
-
-    mChannel->SetEntityID(EmptyCString());
-
-    const char *listString;
-    if (mServerType == FTP_VMS_TYPE) {
-        listString = "LIST *.*;0" CRLF;
-    } else {
-        listString = "LIST" CRLF;
+    NS_ASSERTION(mSuppliedEntityID.IsEmpty(),
+                 "Entity ID given to directory request");
+    NS_ASSERTION(mStartPos == LL_MAXUINT || mStartPos == nsUint64(0),
+                 "Non-initial start position given to directory request");
+    if (!mSuppliedEntityID.IsEmpty() || (mStartPos != LL_MAXUINT && mStartPos != nsUint64(0))) {
+        // If we reach this code, then the caller is in error
+        return NS_ERROR_NOT_RESUMABLE;
     }
 
-    return SendFTPCommand(nsDependentCString(listString));
+    mDRequestForwarder->SetEntityID(EmptyCString());
+
+    nsCAutoString listString;
+    if (mServerType == FTP_VMS_TYPE)
+        listString.AssignLiteral("LIST *.*;0" CRLF);
+    else
+        listString.AssignLiteral("LIST" CRLF);
+
+    return SendFTPCommand(listString);
+
 }
 
 FTP_STATE
 nsFtpState::R_list() {
     if (mResponseCode/100 == 1) {
-        // OK, time to start reading from the data connection.
-        if (HasPendingCallback())
-            mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
+        nsresult rv = mDPipeRequest->Resume();
+        if (NS_FAILED(rv)) {
+            LOG(("(%x) dataPipe->Resume (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
         return FTP_READ_BUF;
     }
 
@@ -1166,6 +1556,7 @@ nsFtpState::R_list() {
 
 nsresult
 nsFtpState::S_retr() {
+    nsresult rv = NS_OK;
     nsCAutoString retrStr(mPath);
     if (retrStr.IsEmpty() || retrStr.First() != '/')
         retrStr.Insert(mPwd,0);
@@ -1173,7 +1564,12 @@ nsFtpState::S_retr() {
         ConvertFilespecToVMS(retrStr);
     retrStr.Insert("RETR ",0);
     retrStr.Append(CRLF);
-    return SendFTPCommand(retrStr);
+    
+    if (!mDRequestForwarder)
+        return NS_ERROR_FAILURE;
+    
+    rv = SendFTPCommand(retrStr);
+    return rv;
 }
 
 FTP_STATE
@@ -1192,8 +1588,11 @@ nsFtpState::R_retr() {
             (void)mCacheEntry->Doom();
             mCacheEntry = nsnull;
         }
-        if (HasPendingCallback())
-            mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
+        nsresult rv = mDPipeRequest->Resume();
+        if (NS_FAILED(rv)) {
+            LOG(("(%x) dataPipe->Resume (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
         return FTP_READ_BUF;
     }
     
@@ -1204,6 +1603,7 @@ nsFtpState::R_retr() {
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
+        mDRequestForwarder->SetRetrying(PR_TRUE);
         return FTP_S_PASV;
     }
 
@@ -1216,7 +1616,7 @@ nsFtpState::S_rest() {
     
     nsCAutoString restString("REST ");
     // The PRInt64 cast is needed to avoid ambiguity
-    restString.AppendInt(PRInt64(mChannel->StartPos()), 10);
+    restString.AppendInt(PRInt64(PRUint64(mStartPos)), 10);
     restString.Append(CRLF);
 
     return SendFTPCommand(restString);
@@ -1226,7 +1626,7 @@ FTP_STATE
 nsFtpState::R_rest() {
     if (mResponseCode/100 == 4) {
         // If REST fails, then we can't resume
-        mChannel->SetEntityID(EmptyCString());
+        mEntityID.Truncate();
 
         mInternalError = NS_ERROR_NOT_RESUMABLE;
         mResponseMsg.Truncate();
@@ -1239,24 +1639,30 @@ nsFtpState::R_rest() {
 
 nsresult
 nsFtpState::S_stor() {
-    NS_ENSURE_STATE(mChannel->UploadStream());
+    NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
+
+    if (!mWriteStream)
+        return NS_ERROR_FAILURE;
 
     NS_ASSERTION(mAction == PUT, "Wrong state to be here");
     
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
-    NS_ASSERTION(url, "I thought you were a nsStandardURL");
-
     nsCAutoString storStr;
-    url->GetFilePath(storStr);
+    nsresult rv;
+    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aURL->GetFilePath(storStr);
+    if (NS_FAILED(rv)) return rv;
     NS_ASSERTION(!storStr.IsEmpty(), "What does it mean to store a empty path");
         
-    // kill the first slash since we want to be relative to CWD.
     if (storStr.First() == '/')
+    {
+        // kill the first slash since we want to be relative to CWD.
         storStr.Cut(0,1);
-
-    if (mServerType == FTP_VMS_TYPE)
+    }
+    if (mServerType == FTP_VMS_TYPE) {
         ConvertFilespecToVMS(storStr);
-
+    }
     NS_UnescapeURL(storStr);
     storStr.Insert("STOR ",0);
     storStr.Append(CRLF);
@@ -1273,7 +1679,7 @@ nsFtpState::R_stor() {
     }
 
     if (mResponseCode/100 == 1) {
-        LOG(("FTP:(%x) writing on DT\n", this));
+        LOG(("(%x) writing on Data Transport\n", this));
         return FTP_READ_BUF;
     }
 
@@ -1286,52 +1692,52 @@ nsFtpState::S_pasv() {
     nsresult rv;
 
     if (mIPv6Checked == PR_FALSE) {
-        NS_ASSERTION(mIPv6ServerAddress.get() == nsnull, "already initialized");
-
         // Find IPv6 socket address, if server is IPv6
         mIPv6Checked = PR_TRUE;
+        PR_ASSERT(mIPv6ServerAddress == 0);
         nsITransport *controlSocket = mControlConnection->Transport();
-        if (!controlSocket)
-            return FTP_ERROR;
-
-        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(controlSocket);
+        if (!controlSocket) return FTP_ERROR;
+        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(controlSocket, &rv);
+        
         if (sTrans) {
             PRNetAddr addr;
             rv = sTrans->GetPeerAddr(&addr);
-            if (NS_SUCCEEDED(rv) && addr.raw.family == PR_AF_INET6 &&
-                        !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
-                const size_t size = 100;
-                mIPv6ServerAddress = new char[size];
-                if (mIPv6ServerAddress &&
-                            PR_NetAddrToString(&addr, mIPv6ServerAddress,
-                                               size) != PR_SUCCESS)
-                    mIPv6ServerAddress = nsnull;
+            if (NS_SUCCEEDED(rv)) {
+                if (addr.raw.family == PR_AF_INET6 && !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
+                    mIPv6ServerAddress = (char *) nsMemory::Alloc(100);
+                    if (mIPv6ServerAddress) {
+                        if (PR_NetAddrToString(&addr, mIPv6ServerAddress, 100) != PR_SUCCESS) {
+                            nsMemory::Free(mIPv6ServerAddress);
+                            mIPv6ServerAddress = 0;
+                        }
+                    }
+                }
             }
         }
     }
 
-    const char *string;
-    if (mIPv6ServerAddress) {
+    const char * string;
+    if (mIPv6ServerAddress)
         string = "EPSV" CRLF;
-    } else {
+    else
         string = "PASV" CRLF;
-    }
 
-    return SendFTPCommand(nsDependentCString(string));
+    nsCString pasvString(string);
+    return SendFTPCommand(pasvString);
     
 }
 
 FTP_STATE
 nsFtpState::R_pasv() {
-    if (mResponseCode/100 != 2)
-        return FTP_ERROR;
-
     nsresult rv;
     PRInt32 port;
 
-    nsCAutoString responseCopy(mResponseMsg);
-    char *response = responseCopy.BeginWriting();
+    if (mResponseCode/100 != 2)  {
+        return FTP_ERROR;
+    }
 
+    char *response = ToNewCString(mResponseMsg);
+    if (!response) return FTP_ERROR;
     char *ptr = response;
 
     nsCAutoString host;
@@ -1340,21 +1746,22 @@ nsFtpState::R_pasv() {
         // text (|||ppp|)
         // Where '|' can be any single character
         char delim;
-        while (*ptr && *ptr != '(')
-            ptr++;
-        if (*ptr++ != '(')
+        while (*ptr && *ptr != '(') ptr++;
+        if (*ptr++ != '(') {
             return FTP_ERROR;
+        }
         delim = *ptr++;
-        if (!delim || *ptr++ != delim ||
-                      *ptr++ != delim || 
-                      *ptr < '0' || *ptr > '9')
+        if (!delim || *ptr++ != delim || *ptr++ != delim || 
+            *ptr < '0' || *ptr > '9') {
             return FTP_ERROR;
+        }
         port = 0;
         do {
             port = port * 10 + *ptr++ - '0';
         } while (*ptr >= '0' && *ptr <= '9');
-        if (*ptr++ != delim || *ptr != ')')
+        if (*ptr++ != delim || *ptr != ')') {
             return FTP_ERROR;
+        }
     } else {
         // The returned address string can be of the form
         // (xxx,xxx,xxx,xxx,ppp,ppp) or
@@ -1389,8 +1796,9 @@ nsFtpState::R_pasv() {
         }
 
         NS_ASSERTION(fields == 6, "Can't parse PASV response");
-        if (fields < 6)
+        if (fields < 6) {
             return FTP_ERROR;
+        }
 
         port = ((PRInt32) (p0<<8)) + p1;
         host.AppendInt(h0);
@@ -1402,91 +1810,105 @@ nsFtpState::R_pasv() {
         host.AppendInt(h3);
     }
 
-    const char* hostStr =
-            mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
+    nsMemory::Free(response);
+
+    const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
 
     PRBool newDataConn = PR_TRUE;
-    if (mDataTransport) {
+    if (mDPipeRequest) {
         // Reuse this connection only if its still alive, and the port
         // is the same
-        nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(mDataTransport);
-        if (strans) {
+
+        if (mDPipe) {
             PRInt32 oldPort;
-            nsresult rv = strans->GetPort(&oldPort);
+            nsresult rv = mDPipe->GetPort(&oldPort);
             if (NS_SUCCEEDED(rv)) {
                 if (oldPort == port) {
                     PRBool isAlive;
-                    if (NS_SUCCEEDED(strans->IsAlive(&isAlive)) && isAlive)
+                    if (NS_SUCCEEDED(mDPipe->IsAlive(&isAlive)) && isAlive)
                         newDataConn = PR_FALSE;
                 }
             }
         }
 
         if (newDataConn) {
-            mDataTransport->Close(NS_ERROR_ABORT);
-            mDataTransport = nsnull;
-            mDataStream = nsnull;
+            mDPipeRequest->Cancel(NS_ERROR_ABORT);
+            mDPipeRequest = 0;
+            mDPipe = 0;
+        } else {
+            mDRequestForwarder->SetRetrying(PR_FALSE);
         }
     }
 
     if (newDataConn) {
         // now we know where to connect our data channel
-        nsCOMPtr<nsISocketTransportService> sts =
-            do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
         
-        nsCOMPtr<nsISocketTransport> strans;
-        rv =  sts->CreateTransport(nsnull, 0, nsDependentCString(hostStr),
-                                   port, mChannel->ProxyInfo(),
-                                   getter_AddRefs(strans)); // the data socket
-        if (NS_FAILED(rv))
-            return FTP_ERROR;
-        mDataTransport = strans;
+        rv =  sts->CreateTransport(nsnull, 0,
+                                   nsDependentCString(hostStr), port, mProxyInfo,
+                                   getter_AddRefs(mDPipe)); // the data socket
+        if (NS_FAILED(rv)) return FTP_ERROR;
         
-        LOG(("FTP:(%x) created DT (%s:%x)\n", this, hostStr, port));
+        LOG(("(%x) Created Data Transport (%s:%x)\n", this, hostStr, port));
         
+        if (!mDRequestForwarder) {
+            mDRequestForwarder = new DataRequestForwarder;
+            if (!mDRequestForwarder) return FTP_ERROR;
+            NS_ADDREF(mDRequestForwarder);
+            
+            rv = mDRequestForwarder->Init(mChannel);
+            if (NS_FAILED(rv)){
+                LOG(("(%x) forwarder->Init failed (rv=%x)\n", this, rv));
+                return FTP_ERROR;
+            }
+        }
+        
+        mWaitingForDConn = PR_TRUE;
+
         // hook ourself up as a proxy for status notifications
         nsCOMPtr<nsIEventQueue> eventQ;
         rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-        NS_ENSURE_SUCCESS(rv, FTP_ERROR);
-
-        rv = mDataTransport->SetEventSink(this, eventQ);
-        NS_ENSURE_SUCCESS(rv, FTP_ERROR);
+        if (NS_FAILED(rv)){
+            LOG(("(%x) NS_GetCurrentEventQ failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+        rv = mDPipe->SetEventSink(NS_STATIC_CAST(nsITransportEventSink*, mDRequestForwarder), eventQ);
+        if (NS_FAILED(rv)){
+            LOG(("(%x) forwarder->SetEventSink failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
 
         if (mAction == PUT) {
             NS_ASSERTION(!mRETRFailed, "Failed before uploading");
+            mDRequestForwarder->Uploading(PR_TRUE, mWriteCount);
 
             // nsIUploadChannel requires the upload stream to support ReadSegments.
             // therefore, we can open an unbuffered socket output stream.
             nsCOMPtr<nsIOutputStream> output;
-            rv = mDataTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED,
-                                                  0, 0, getter_AddRefs(output));
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            rv = mDPipe->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
+                                          getter_AddRefs(output));
+            if (NS_FAILED(rv)) return FTP_ERROR;
 
             // perform the data copy on the socket transport thread.  we do this
             // because "output" is a socket output stream, so the result is that
             // all work will be done on the socket transport thread.
-            nsCOMPtr<nsIEventTarget> stEventTarget =
-                do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            nsCOMPtr<nsIEventTarget> stEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
+            if (NS_FAILED(rv)) return FTP_ERROR;
             
             nsCOMPtr<nsIAsyncStreamCopier> copier;
             rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
-                                         mChannel->UploadStream(),
+                                         mWriteStream,
                                          output,
                                          stEventTarget,
-                                         PR_TRUE,   // upload stream is buffered
+                                         PR_TRUE,   // mWriteStream is buffered
                                          PR_FALSE); // output is NOT buffered
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            if (NS_FAILED(rv)) return FTP_ERROR;
         
-            rv = copier->AsyncCopy(this, nsnull);
-            if (NS_FAILED(rv))
-                return FTP_ERROR;
+            rv = copier->AsyncCopy(mDRequestForwarder, nsnull);
+            if (NS_FAILED(rv)) return FTP_ERROR;
 
             // hold a reference to the copier so we can cancel it if necessary.
-            mUploadRequest = copier;
+            mDPipeRequest = copier;
 
             // update the current working directory before sending the STOR
             // command.  this is needed since we might be reusing a control
@@ -1500,12 +1922,42 @@ nsFtpState::R_pasv() {
 
         // open a buffered, asynchronous socket input stream
         nsCOMPtr<nsIInputStream> input;
-        rv = mDataTransport->OpenInputStream(0,
-                                             FTP_DATA_CHANNEL_SEG_SIZE,
-                                             FTP_DATA_CHANNEL_SEG_COUNT,
-                                             getter_AddRefs(input));
-        NS_ENSURE_SUCCESS(rv, FTP_ERROR);
-        mDataStream = do_QueryInterface(input);
+        rv = mDPipe->OpenInputStream(0,
+                                     FTP_DATA_CHANNEL_SEG_SIZE,
+                                     FTP_DATA_CHANNEL_SEG_COUNT,
+                                     getter_AddRefs(input));
+        if (NS_FAILED(rv)) {
+            LOG(("(%x) OpenInputStream failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+
+        // pump data to the request forwarder...
+        nsCOMPtr<nsIInputStreamPump> pump;
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump), input, nsInt64(-1),
+                                   nsInt64(-1), 0, 0, PR_TRUE);
+        if (NS_FAILED(rv)) {
+            LOG(("(%x) NS_NewInputStreamPump failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+        
+        rv = pump->AsyncRead(mDRequestForwarder, nsnull);
+        if (NS_FAILED(rv)) {
+            LOG(("(%x) AsyncRead failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
+
+        // hold a reference to the input stream pump so we can cancel it.
+        mDPipeRequest = pump;
+
+        // Suspend the read
+        // If we don't do this, then the remote server could close the
+        // connection before we get the error message, and then we process the
+        // onstop as if it was from the real data connection
+        rv = mDPipeRequest->Suspend();
+        if (NS_FAILED(rv)){
+            LOG(("(%x) dataPipe->Suspend failed (rv=%x)\n", this, rv));
+            return FTP_ERROR;
+        }
     }
 
     if (mRETRFailed)
@@ -1513,14 +1965,153 @@ nsFtpState::R_pasv() {
     return FTP_S_SIZE;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
 
-static inline
-PRUint32 NowInSeconds()
+NS_IMETHODIMP
+nsFtpState::GetName(nsACString &result)
 {
-    return PRUint32(PR_Now() / PR_USEC_PER_SEC);
+    return mURL->GetSpec(result);
 }
+
+NS_IMETHODIMP
+nsFtpState::IsPending(PRBool *result)
+{
+    nsresult rv = NS_OK;
+    *result = PR_FALSE;
+    
+    nsIRequest *request = mControlConnection->ReadRequest();
+    if (request)
+        rv = request->IsPending(result);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFtpState::GetStatus(nsresult *status)
+{
+    *status = mInternalError;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::Cancel(nsresult status)
+{
+    NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
+    LOG(("(%x) nsFtpState::Cancel() rv=%x\n", this, status));
+
+    // we should try to recover the control connection....
+    if (NS_SUCCEEDED(mControlStatus))
+        mControlStatus = status;
+
+    if (mKeepRunning)
+        (void) StopProcessing();   
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::Suspend(void)
+{
+    nsresult rv = NS_OK;
+    
+    if (!mControlConnection)
+        return NS_ERROR_FAILURE;
+
+    // suspending the underlying socket transport will
+    // cause the FTP state machine to "suspend" when it
+    // tries to use the transport. May not be granular 
+    // enough.
+    if (mSuspendCount < 1) {
+        mSuspendCount++;
+
+        // only worry about the read request.
+        nsIRequest *request = mControlConnection->ReadRequest();
+        if (request) {
+            rv = request->Suspend();
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        if (mDPipeRequest)
+            rv = mDPipeRequest->Suspend();
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFtpState::Resume(void)
+{
+    nsresult rv = NS_ERROR_FAILURE;
+    
+    // resuming the underlying socket transports will
+    // cause the FTP state machine to unblock and 
+    // go on about it's business.
+    if (mSuspendCount) {
+
+        PRBool dataAlive = PR_FALSE;
+
+        if (mDPipe) 
+            mDPipe->IsAlive(&dataAlive);            
+            
+        if (mDPipe && dataAlive && mControlConnection->IsAlive())
+        {
+            nsIRequest *controlRequest = mControlConnection->ReadRequest();
+            NS_ASSERTION(controlRequest, "where did my request go!");
+            
+            controlRequest->Resume();
+            rv = mDPipeRequest->Resume();
+        }
+        else
+        {
+            // control or data connection went down.  need to reconnect.  
+            // if we were downloading, we need to perform REST.
+            rv = EstablishControlConnection();
+        }
+    }
+    mSuspendCount--;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFtpState::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+    *aLoadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFtpState::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    *aLoadFlags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// This really really needs to be somewhere else
+static inline PRUint32
+PRTimeToSeconds(PRTime t_usec)
+{
+    PRTime usec_per_sec;
+    PRUint32 t_sec;
+    LL_I2L(usec_per_sec, PR_USEC_PER_SEC);
+    LL_DIV(t_usec, t_usec, usec_per_sec);
+    LL_L2I(t_sec, t_usec);
+    return t_sec;
+}
+
+#define NowInSeconds() PRTimeToSeconds(PR_Now())
 
 PRUint32 nsFtpState::mSessionStartTime = NowInSeconds();
 
@@ -1543,131 +2134,120 @@ PRUint32 nsFtpState::mSessionStartTime = NowInSeconds();
  * caching files - bbaetz
  */
 PRBool
-nsFtpState::CanReadCacheEntry()
+nsFtpState::CanReadEntry()
 {
-    NS_ASSERTION(mCacheEntry, "must have a cache entry");
-
     nsCacheAccessMode access;
     nsresult rv = mCacheEntry->GetAccessGranted(&access);
-    if (NS_FAILED(rv))
-        return PR_FALSE;
+    if (NS_FAILED(rv)) return PR_FALSE;
     
     // If I'm not granted read access, then I can't reuse it...
     if (!(access & nsICache::ACCESS_READ))
         return PR_FALSE;
 
-    if (mChannel->HasLoadFlag(nsIRequest::LOAD_FROM_CACHE))
+    nsLoadFlags flags;
+    rv = mChannel->GetLoadFlags(&flags);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    if (flags & LOAD_FROM_CACHE)
         return PR_TRUE;
 
-    if (mChannel->HasLoadFlag(nsIRequest::LOAD_BYPASS_CACHE))
+    if (flags & LOAD_BYPASS_CACHE)
         return PR_FALSE;
     
-    if (mChannel->HasLoadFlag(nsIRequest::VALIDATE_ALWAYS))
+    if (flags & VALIDATE_ALWAYS)
         return PR_FALSE;
     
     PRUint32 time;
-    if (mChannel->HasLoadFlag(nsIRequest::VALIDATE_ONCE_PER_SESSION)) {
+    if (flags & VALIDATE_ONCE_PER_SESSION) {
         rv = mCacheEntry->GetLastModified(&time);
-        if (NS_FAILED(rv))
-            return PR_FALSE;
+        if (NS_FAILED(rv)) return PR_FALSE;
         return (mSessionStartTime > time);
     }
 
-    if (mChannel->HasLoadFlag(nsIRequest::VALIDATE_NEVER))
+    if (flags & VALIDATE_NEVER)
         return PR_TRUE;
 
     // OK, now we just check the expiration time as usual
     rv = mCacheEntry->GetExpirationTime(&time);
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
+    if (NS_FAILED(rv)) return rv;
     return (NowInSeconds() <= time);
 }
 
 nsresult
-nsFtpState::InstallCacheListener()
+nsFtpState::Init(nsFTPChannel* aChannel,
+                 nsICacheEntryDescriptor* cacheEntry,
+                 nsIProxyInfo* proxyInfo,
+                 PRUint64 startPos,
+                 const nsACString& entity) 
 {
-    NS_ASSERTION(mCacheEntry, "must have a cache entry");
-
-    nsCOMPtr<nsIOutputStream> out;
-    mCacheEntry->OpenOutputStream(0, getter_AddRefs(out));
-    NS_ENSURE_STATE(out);
-
-    nsCOMPtr<nsIStreamListenerTee> tee =
-            do_CreateInstance(NS_STREAMLISTENERTEE_CONTRACTID);
-    NS_ENSURE_STATE(tee);
-
-    nsresult rv = tee->Init(mChannel->StreamListener(), out);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mChannel->SetStreamListener(tee);
-    return NS_OK;
-}
-
-nsresult
-nsFtpState::OpenCacheDataStream()
-{
-    NS_ASSERTION(mCacheEntry, "must have a cache entry");
-
-    // Get a transport to the cached data...
-    nsCOMPtr<nsIInputStream> input;
-    mCacheEntry->OpenInputStream(0, getter_AddRefs(input));
-    NS_ENSURE_STATE(input);
-
-    nsCOMPtr<nsIStreamTransportService> sts =
-            do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-    NS_ENSURE_STATE(sts);
-
-    nsCOMPtr<nsITransport> transport;
-    sts->CreateInputTransport(input, -1, -1, PR_TRUE,
-                              getter_AddRefs(transport));
-    NS_ENSURE_STATE(transport);
-
-    nsCOMPtr<nsIEventQueue> eventQ;
-    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-    NS_ENSURE_STATE(eventQ);
-
-    nsresult rv = transport->SetEventSink(this, eventQ);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Open a non-blocking, buffered input stream...
-    nsCOMPtr<nsIInputStream> transportInput;
-    transport->OpenInputStream(0, FTP_DATA_CHANNEL_SEG_SIZE,
-                                  FTP_DATA_CHANNEL_SEG_COUNT,
-                                  getter_AddRefs(transportInput));
-    NS_ENSURE_STATE(transportInput);
-
-    mDataStream = do_QueryInterface(transportInput);
-    NS_ENSURE_STATE(mDataStream);
-
-    mDataTransport = transport;
-    return NS_OK;
-}
-
-nsresult
-nsFtpState::Init(nsFtpChannel *channel)
-{
-    // parameter validation
-    NS_ASSERTION(channel, "FTP: needs a channel");
-
-    mChannel = channel; // a straight ref ptr to the channel
-
     mKeepRunning = PR_TRUE;
-    mSuppliedEntityID = channel->EntityID();
-  
-    if (channel->UploadStream())
-        mAction = PUT;
+    mCacheEntry = cacheEntry;
+    mProxyInfo = proxyInfo;
+    mStartPos = startPos;
+    mSuppliedEntityID = entity;
+    
+    // parameter validation
+    NS_ASSERTION(aChannel, "FTP: needs a channel");
 
-    nsresult rv;
-    nsCAutoString path;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(mChannel->URI());
-    if (url) {
-        rv = url->GetFilePath(path);
-    } else {
-        rv = mChannel->URI()->GetPath(path);
-    }
+    mChannel = aChannel; // a straight ref ptr to the channel
+
+    nsresult rv = aChannel->GetURI(getter_AddRefs(mURL));
     if (NS_FAILED(rv))
         return rv;
+        
+    if (mCacheEntry) {
+        if (CanReadEntry()) {
+            // XXX - all this code assumes that we only cache directories
+            // If we start caching files, this needs to be updated
+
+            // make sure the channel knows wassup
+            SetContentType();
+            
+            NS_ASSERTION(!mDRequestForwarder, "there should not be a data forwarder");
+            mDRequestForwarder = new DataRequestForwarder;
+            if (!mDRequestForwarder) return NS_ERROR_OUT_OF_MEMORY;
+            NS_ADDREF(mDRequestForwarder);
+
+            rv = mDRequestForwarder->Init(mChannel);
+            
+            nsXPIDLCString serverType;
+            (void) mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
+            nsCAutoString serverNum(serverType.get());
+            PRInt32 err;
+            mServerType = serverNum.ToInteger(&err);
+            
+            nsCOMPtr<nsIStreamListener> converter;
+            rv = BuildStreamConverter(getter_AddRefs(converter));
+            if (NS_FAILED(rv)) return rv;
+            
+            mDRequestForwarder->SetStreamListener(converter);
+            mDRequestForwarder->SetCacheEntry(mCacheEntry, PR_FALSE);
+            mDRequestForwarder->SetEntityID(EmptyCString());
+
+            // Get a transport to the cached data...
+            nsCOMPtr<nsIInputStream> input;
+            rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(input));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIInputStreamPump> pump;
+            rv = NS_NewInputStreamPump(getter_AddRefs(pump), input);
+            if (NS_FAILED(rv)) return rv;
+
+            // Pump the cache data downstream
+            rv = pump->AsyncRead(mDRequestForwarder, nsnull);
+            if (NS_FAILED(rv)) return rv;
+
+            mDPipeRequest = pump;
+        }
+    }
+
+    nsCAutoString path;
+    nsCOMPtr<nsIURL> aURL(do_QueryInterface(mURL));
+    if (aURL)
+        rv = aURL->GetFilePath(path);
+    else
+        rv = mURL->GetPath(path);
+    if (NS_FAILED(rv)) return rv;
 
     // Skip leading slash
     char *fwdPtr = path.BeginWriting();
@@ -1686,7 +2266,7 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     // pull any username and/or password out of the uri
     nsCAutoString uname;
-    rv = mChannel->URI()->GetUsername(uname);
+    rv = mURL->GetUsername(uname);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1700,7 +2280,7 @@ nsFtpState::Init(nsFtpChannel *channel)
     }
 
     nsCAutoString password;
-    rv = mChannel->URI()->GetPassword(password);
+    rv = mURL->GetPassword(password);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1713,9 +2293,8 @@ nsFtpState::Init(nsFtpChannel *channel)
     // setup the connection cache key
 
     PRInt32 port;
-    rv = mChannel->URI()->GetPort(&port);
-    if (NS_FAILED(rv))
-        return rv;
+    rv = mURL->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
 
     if (port > 0)
         mPort = port;
@@ -1723,21 +2302,39 @@ nsFtpState::Init(nsFtpChannel *channel)
     return NS_OK;
 }
 
-void
+nsresult
 nsFtpState::Connect()
 {
+    if (mDRequestForwarder)
+        return NS_OK;  // we are already connected.
+    
+    nsresult rv;
+
     mState = FTP_COMMAND_CONNECT;
     mNextState = FTP_S_USER;
 
-    nsresult rv = Process();
+    rv = Process();
 
     // check for errors.
     if (NS_FAILED(rv)) {
-        LOG(("FTP:Process() failed: %x\n", rv));
+        LOG(("-- Connect() on Control Connect FAILED with rv = %x\n", rv));
         mInternalError = NS_ERROR_FAILURE;
         mState = FTP_ERROR;
-        CloseWithStatus(mInternalError);
     }
+
+    return rv;
+}
+
+nsresult
+nsFtpState::SetWriteStream(nsIInputStream* aInStream)
+{
+    if (!aInStream)
+        return NS_OK;
+
+    mAction = PUT;
+    mWriteStream = aInStream;
+    mWriteStream->Available(&mWriteCount);
+    return NS_OK;
 }
 
 void
@@ -1745,9 +2342,13 @@ nsFtpState::KillControlConnection()
 {
     mControlReadCarryOverBuf.Truncate(0);
 
-    mIPv6Checked = PR_FALSE;
-    mIPv6ServerAddress = nsnull;
+    NS_IF_RELEASE(mDRequestForwarder);
 
+    mIPv6Checked = PR_FALSE;
+    if (mIPv6ServerAddress) {
+        nsMemory::Free(mIPv6ServerAddress);
+        mIPv6ServerAddress = 0;
+    }
     // if everything went okay, save the connection. 
     // FIX: need a better way to determine if we can cache the connections.
     //      there are some errors which do not mean that we need to kill the connection
@@ -1757,44 +2358,42 @@ nsFtpState::KillControlConnection()
         return;
 
     // kill the reference to ourselves in the control connection.
-    mControlConnection->WaitData(nsnull);
+    (void) mControlConnection->SetStreamListener(nsnull);
 
-    if (NS_SUCCEEDED(mInternalError) &&
+    if (FTP_CACHE_CONTROL_CONNECTION && 
+        NS_SUCCEEDED(mInternalError) &&
         NS_SUCCEEDED(mControlStatus) &&
         mControlConnection->IsAlive()) {
 
-        LOG_ALWAYS(("FTP:(%p) caching CC(%p)", this, mControlConnection.get()));
+        LOG_ALWAYS(("(%x) nsFtpState caching control connection", this));
 
         // Store connection persistent data
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
         mControlConnection->mPwd = mPwd;
-        nsresult rv = gFtpHandler->InsertConnection(mChannel->URI(),
-                                                    mControlConnection);
+        nsresult rv = gFtpHandler->InsertConnection(mURL, mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
-    } else {
+    } 
+    else
         mControlConnection->Disconnect(NS_BINDING_ABORTED);
-    }     
 
-    mControlConnection = nsnull;
+    NS_RELEASE(mControlConnection);
+ 
+    return;
 }
 
 nsresult
 nsFtpState::StopProcessing()
 {
-    // Only do this function once.
-    if (!mKeepRunning)
-        return NS_OK;
-    mKeepRunning = PR_FALSE;
-
-    LOG_ALWAYS(("FTP:(%x) nsFtpState stopping", this));
+    LOG_ALWAYS(("(%x) nsFtpState stopping", this));
 
 #ifdef DEBUG_dougt
     printf("FTP Stopped: [response code %d] [response msg follows:]\n%s\n", mResponseCode, mResponseMsg.get());
 #endif
 
-    if (NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) {
+    if (NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) 
+    {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:
 
@@ -1806,24 +2405,112 @@ nsFtpState::StopProcessing()
     }
     
     nsresult broadcastErrorCode = mControlStatus;
-    if (NS_SUCCEEDED(broadcastErrorCode))
+    if ( NS_SUCCEEDED(broadcastErrorCode))
         broadcastErrorCode = mInternalError;
 
     mInternalError = broadcastErrorCode;
 
+    if (mDPipeRequest && NS_FAILED(broadcastErrorCode))
+        mDPipeRequest->Cancel(broadcastErrorCode);
+    
+    if (mDRequestForwarder) {
+        NS_RELEASE(mDRequestForwarder);
+    }
+    else
+    {
+        // The forwarding object was never created which  means that we never sent our notifications.
+        
+        nsCOMPtr<nsIRequestObserver> asyncObserver;
+
+        NS_NewRequestObserverProxy(getter_AddRefs(asyncObserver), 
+                                   mChannel,
+                                   NS_CURRENT_EVENTQ);
+        if(asyncObserver) {
+            (void) asyncObserver->OnStartRequest(this, nsnull);
+            (void) asyncObserver->OnStopRequest(this, nsnull, broadcastErrorCode);
+        }
+
+
+    }
+
+    // Clean up the event loop
+    mKeepRunning = PR_FALSE;
+
     KillControlConnection();
 
-    // XXX This can fire before we are done loading data.  Is that a problem?
-    OnTransportStatus(nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, 0, 0);
+    mChannel->OnStatus(nsnull, nsnull, NS_NET_STATUS_END_FTP_TRANSACTION, nsnull);
 
-    if (NS_FAILED(broadcastErrorCode))
-        CloseWithStatus(broadcastErrorCode);
+    // Release the Observers
+    mWriteStream = 0;  // should this call close before setting to null?
+
+    mChannel = 0;
+    mProxyInfo = 0;
 
     return NS_OK;
 }
 
+
+nsresult
+nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
+{
+    nsresult rv;
+    // setup a listener to push the data into. This listener sits inbetween the
+    // unconverted data of fromType, and the final listener in the chain (in this case
+    // the mListener).
+    nsCOMPtr<nsIStreamListener> converterListener;
+
+    nsCOMPtr<nsIStreamConverterService> scs = 
+             do_GetService(kStreamConverterServiceCID, &rv);
+
+    if (NS_FAILED(rv)) 
+        return rv;
+
+    rv = scs->AsyncConvertData("text/ftp-dir",
+                               APPLICATION_HTTP_INDEX_FORMAT,
+                               mChannel,
+                               mURL, 
+                               getter_AddRefs(converterListener));
+    if (NS_FAILED(rv)) {
+        LOG(("(%x) scs->AsyncConvertData failed (rv=%x)\n", this, rv));
+        return rv;
+    }
+
+    NS_ADDREF(*convertStreamListener = converterListener);
+    return rv;
+}
+
+void
+nsFtpState::DataConnectionEstablished()
+{
+    LOG(("(%x) Data Connection established.", this));
+    mWaitingForDConn = PR_FALSE;
+
+    // If we no longer have a channel, we don't need this connection
+    if (!mChannel) {
+        LOG(("    Ignoring data connection"));
+        return;
+    }
+
+    // sending empty string with (mWaitingForDConn == PR_FALSE) will cause the 
+    // control socket to write out its buffer.
+    nsCString a("");
+    SendFTPCommand(a);
+}
+
+void
+nsFtpState::DataConnectionComplete()
+{
+    LOG(("(%x) Data Connection complete.", this));
+
+    if (mDPipe) {
+        mDPipe->SetEventSink(nsnull, nsnull);
+        mDPipe->Close(NS_ERROR_ABORT);
+        mDPipe = 0;
+    }
+}
+
 nsresult 
-nsFtpState::SendFTPCommand(const nsCSubstring& command)
+nsFtpState::SendFTPCommand(nsCString& command)
 {
     NS_ASSERTION(mControlConnection, "null control connection");        
     
@@ -1832,16 +2519,16 @@ nsFtpState::SendFTPCommand(const nsCSubstring& command)
     if (StringBeginsWith(command, NS_LITERAL_CSTRING("PASS "))) 
         logcmd = "PASS xxxxx";
     
-    LOG(("FTP:(%x) writing \"%s\"\n", this, logcmd.get()));
+    LOG(("(%x)(dwait=%d) Writing \"%s\"\n", this, mWaitingForDConn, logcmd.get()));
 
     nsCOMPtr<nsIFTPEventSink> ftpSink;
     mChannel->GetFTPEventSink(ftpSink);
     if (ftpSink)
         ftpSink->OnFTPControlLog(PR_FALSE, logcmd.get());
     
-    if (mControlConnection)
-        return mControlConnection->Write(command);
-
+    if (mControlConnection) {
+        return mControlConnection->Write(command, mWaitingForDConn);
+    }
     return NS_ERROR_FAILURE;
 }
 
@@ -1858,11 +2545,9 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
     // Get a writeable copy we can strtok with.
     fileStringCopy = fileString;
     t = nsCRT::strtok(fileStringCopy.BeginWriting(), "/", &nextToken);
-    if (t)
-        while (nsCRT::strtok(nextToken, "/", &nextToken))
-            ntok++; // count number of terms (tokens)
-    LOG(("FTP:(%x) ConvertFilespecToVMS ntok: %d\n", this, ntok));
-    LOG(("FTP:(%x) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
+    if (t) while (nsCRT::strtok(nextToken, "/", &nextToken)) ntok++; // count number of terms (tokens)
+    LOG(("(%x) ConvertFilespecToVMS ntok: %d\n", this, ntok));
+    LOG(("(%x) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
 
     if (fileString.First() == '/') {
         // absolute filespec
@@ -1876,13 +2561,15 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
                 // Just a slash
                 fileString.Truncate();
                 fileString.AppendLiteral("[]");
-            } else {
+            }
+            else {
                 // just copy the name part (drop the leading slash)
                 fileStringCopy = fileString;
                 fileString = Substring(fileStringCopy, 1,
                                        fileStringCopy.Length()-1);
             }
-        } else {
+        }
+        else {
             // Get another copy since the last one was written to.
             fileStringCopy = fileString;
             fileString.Truncate();
@@ -1895,7 +2582,8 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
                     fileString.Append(nsCRT::strtok(nextToken,
                                       "/", &nextToken));
                 }
-            } else {
+            }
+            else {
                 fileString.AppendLiteral("000000");
             }
             fileString.Append(']');
@@ -1908,7 +2596,8 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
         //   a/b/c   -> [.a.b]c
         if (ntok == 1) {
             // no slashes, just use the name as is
-        } else {
+        }
+        else {
             // Get another copy since the last one was written to.
             fileStringCopy = fileString;
             fileString.Truncate();
@@ -1926,7 +2615,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             fileString.Append(nsCRT::strtok(nextToken, "/", &nextToken));
         }
     }
-    LOG(("FTP:(%x) ConvertFilespecToVMS   to: \"%s\"\n", this, fileString.get()));
+    LOG(("(%x) ConvertFilespecToVMS   to: \"%s\"\n", this, fileString.get()));
 }
 
 // Convert a unix-style dirspec to VMS format
@@ -1937,7 +2626,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
 void
 nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
 {
-    LOG(("FTP:(%x) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
+    LOG(("(%x) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
     if (!dirSpec.IsEmpty()) {
         if (dirSpec.Last() != '/')
             dirSpec.Append('/');
@@ -1946,255 +2635,22 @@ nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
         ConvertFilespecToVMS(dirSpec);
         dirSpec.Truncate(dirSpec.Length()-1);
     }
-    LOG(("FTP:(%x) ConvertDirspecToVMS   to: \"%s\"\n", this, dirSpec.get()));
+    LOG(("(%x) ConvertDirspecToVMS   to: \"%s\"\n", this, dirSpec.get()));
 }
 
 // Convert an absolute VMS style dirspec to UNIX format
 void
 nsFtpState::ConvertDirspecFromVMS(nsCString& dirSpec)
 {
-    LOG(("FTP:(%x) ConvertDirspecFromVMS from: \"%s\"\n", this, dirSpec.get()));
+    LOG(("(%x) ConvertDirspecFromVMS from: \"%s\"\n", this, dirSpec.get()));
     if (dirSpec.IsEmpty()) {
         dirSpec.Insert('.', 0);
-    } else {
+    }
+    else {
         dirSpec.Insert('/', 0);
         dirSpec.ReplaceSubstring(":[", "/");
         dirSpec.ReplaceChar('.', '/');
         dirSpec.ReplaceChar(']', '/');
     }
-    LOG(("FTP:(%x) ConvertDirspecFromVMS   to: \"%s\"\n", this, dirSpec.get()));
-}
-
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
-                              PRUint64 progress, PRUint64 progressMax)
-{
-    // Mix signals from both the control and data connections.
-
-    // Ignore data transfer events on the control connection.
-    if (mControlConnection && transport == mControlConnection->Transport()) {
-        switch (status) {
-        case NS_NET_STATUS_RESOLVING_HOST:
-        case NS_NET_STATUS_CONNECTING_TO:
-        case NS_NET_STATUS_CONNECTED_TO:
-            break;
-        default:
-            return NS_OK;
-        }
-    }
-
-    // Ignore the progressMax value from the socket.  We know the true size of
-    // the file based on the response from our SIZE request.
-    mChannel->OnTransportStatus(nsnull, status, progress, mFileSize);
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-
-
-NS_IMETHODIMP
-nsFtpState::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
-                                  nsCacheAccessMode access,
-                                  nsresult status)
-{
-    // We may have been closed while we were waiting for this cache entry.
-    if (IsClosed())
-        return NS_OK;
-
-    mCacheEntry = entry;
-    if (CanReadCacheEntry() && ReadCacheEntry()) {
-        mState = FTP_READ_CACHE;
-    } else {
-        Connect();
-    }
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *context)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *context,
-                          nsresult status)
-{
-    mUploadRequest = nsnull;
-
-    // We're done uploading.  Let our consumer know that we're done.
-    Close();
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsFtpState::Available(PRUint32 *result)
-{
-    if (mDataStream)
-        return mDataStream->Available(result);
-
-    return nsBaseContentStream::Available(result);
-}
-
-NS_IMETHODIMP
-nsFtpState::ReadSegments(nsWriteSegmentFun writer, void *closure,
-                         PRUint32 count, PRUint32 *result)
-{
-    // Insert a thunk here so that the input stream passed to the writer is this
-    // input stream instead of mDataStream.
-
-    if (mDataStream) {
-        nsWriteSegmentThunk thunk = { this, writer, closure };
-        return mDataStream->ReadSegments(NS_WriteSegmentThunk, &thunk, count,
-                                         result);
-    }
-
-    return nsBaseContentStream::ReadSegments(writer, closure, count, result);
-}
-
-NS_IMETHODIMP
-nsFtpState::CloseWithStatus(nsresult status)
-{
-    LOG(("FTP:(%p) close [%x]\n", this, status));
-
-    // Shutdown the control connection processing if we are being closed with an
-    // error.  Note: This method may be called several times.
-    if (!IsClosed() && status != NS_BASE_STREAM_CLOSED && NS_FAILED(status)) {
-        if (NS_SUCCEEDED(mInternalError))
-            mInternalError = status;
-        StopProcessing();
-    }
-
-    if (mUploadRequest) {
-        mUploadRequest->Cancel(NS_ERROR_ABORT);
-        mUploadRequest = nsnull;
-    }
-
-    if (mDataTransport) {
-        // Shutdown the data transport.
-        mDataTransport->Close(NS_ERROR_ABORT);
-        mDataTransport = nsnull;
-    }
-
-    mDataStream = nsnull;
-    mCacheEntry = nsnull;
-
-    return nsBaseContentStream::CloseWithStatus(status);
-}
-
-void
-nsFtpState::OnCallbackPending()
-{
-    // If this is the first call, then see if we could use the cache.  If we
-    // aren't going to read from (or write to) the cache, then just proceed to
-    // connect to the server.
-
-    if (mState == FTP_INIT) {
-        if (CheckCache()) {
-            mState = FTP_WAIT_CACHE;
-            return;
-        } 
-        if (mCacheEntry && CanReadCacheEntry() && ReadCacheEntry()) {
-            mState = FTP_READ_CACHE;
-            return;
-        }
-        Connect();
-    } else if (mDataStream) {
-        mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
-    }
-}
-
-PRBool
-nsFtpState::ReadCacheEntry()
-{
-    NS_ASSERTION(mCacheEntry, "should have a cache entry");
-
-    // make sure the channel knows wassup
-    SetContentType();
-
-    nsXPIDLCString serverType;
-    mCacheEntry->GetMetaDataElement("servertype", getter_Copies(serverType));
-    nsCAutoString serverNum(serverType.get());
-    PRInt32 err;
-    mServerType = serverNum.ToInteger(&err);
-    
-    mChannel->PushStreamConverter("text/ftp-dir",
-                                  APPLICATION_HTTP_INDEX_FORMAT);
-    
-    mChannel->SetEntityID(EmptyCString());
-
-    if (NS_FAILED(OpenCacheDataStream()))
-        return PR_FALSE;
-
-    if (HasPendingCallback())
-        mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
-
-    return PR_TRUE;
-}
-
-PRBool
-nsFtpState::CheckCache()
-{
-    // This function is responsible for setting mCacheEntry if there is a cache
-    // entry that we can use.  It returns true if we end up waiting for access
-    // to the cache.
-
-    // In some cases, we don't want to use the cache:
-    if (mChannel->UploadStream() || mChannel->ResumeRequested())
-        return PR_FALSE;
-
-    nsCOMPtr<nsICacheService> cache = do_GetService(NS_CACHESERVICE_CONTRACTID);
-    if (!cache)
-        return PR_FALSE;
-
-    nsCOMPtr<nsICacheSession> session;
-    cache->CreateSession("FTP",
-                         nsICache::STORE_ANYWHERE,
-                         nsICache::STREAM_BASED,
-                         getter_AddRefs(session));
-    if (!session)
-        return PR_FALSE;
-    session->SetDoomEntriesIfExpired(PR_FALSE);
-
-    // Set cache access requested:
-    nsCacheAccessMode accessReq;
-    if (NS_IsOffline()) {
-        accessReq = nsICache::ACCESS_READ; // can only read
-    } else if (mChannel->HasLoadFlag(nsIRequest::LOAD_BYPASS_CACHE)) {
-        accessReq = nsICache::ACCESS_WRITE; // replace cache entry
-    } else {
-        accessReq = nsICache::ACCESS_READ_WRITE; // normal browsing
-    }
-
-    // Check to see if we are not allowed to write to the cache:
-    if (mChannel->HasLoadFlag(nsIRequest::INHIBIT_CACHING)) {
-        accessReq &= ~nsICache::ACCESS_WRITE;
-        if (accessReq == nsICache::ACCESS_NONE)
-            return PR_FALSE;
-    }
-
-    // Generate cache key (remove trailing #ref if any):
-    nsCAutoString key;
-    mChannel->URI()->GetAsciiSpec(key);
-    PRInt32 pos = key.RFindChar('#');
-    if (pos != kNotFound)
-        key.Truncate(pos);
-    NS_ENSURE_FALSE(key.IsEmpty(), PR_FALSE);
-
-    // Try to open a cache entry immediately, but if the cache entry is busy,
-    // then wait for it to be available.
-
-    session->OpenCacheEntry(key, accessReq, PR_FALSE,
-                            getter_AddRefs(mCacheEntry));
-    if (mCacheEntry)
-        return PR_FALSE;  // great, we're ready to proceed!
-
-    nsresult rv = session->AsyncOpenCacheEntry(key, accessReq, this);
-    return NS_SUCCEEDED(rv);
+    LOG(("(%x) ConvertDirspecFromVMS   to: \"%s\"\n", this, dirSpec.get()));
 }

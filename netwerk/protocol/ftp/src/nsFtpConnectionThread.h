@@ -40,9 +40,6 @@
 #define __nsFtpState__h_
 
 #include "ftpCore.h"
-#include "nsFTPChannel.h"
-#include "nsBaseContentStream.h"
-
 #include "nsInt64.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
@@ -50,14 +47,13 @@
 #include "nsISocketTransport.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsICacheListener.h"
 #include "nsIURI.h"
 #include "prtime.h"
 #include "nsString.h"
 #include "nsIFTPChannel.h"
 #include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
-#include "nsIAsyncInputStream.h"
+#include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsAutoLock.h"
 #include "nsAutoPtr.h"
@@ -70,7 +66,6 @@
 #include "nsFtpControlConnection.h"
 
 #include "nsICacheEntryDescriptor.h"
-#include "nsICacheListener.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -83,9 +78,6 @@
 typedef enum _FTP_STATE {
 ///////////////////////
 //// Internal states
-    FTP_INIT,
-    FTP_WAIT_CACHE,
-    FTP_READ_CACHE,
     FTP_COMMAND_CONNECT,
     FTP_READ_BUF,
     FTP_ERROR,
@@ -112,46 +104,38 @@ typedef enum _FTP_STATE {
 // higher level ftp actions
 typedef enum _FTP_ACTION {GET, PUT} FTP_ACTION;
 
-class nsFtpChannel;
+class DataRequestForwarder;
+class nsFTPChannel;
 
-// The nsFtpState object is the content stream for the channel.  It implements
-// nsIInputStreamCallback, so it can read data from the control connection.  It
-// implements nsITransportEventSink so it can mix status events from both the
-// control connection and the data connection.
-
-class nsFtpState : public nsBaseContentStream,
-                   public nsIInputStreamCallback,
-                   public nsITransportEventSink,
-                   public nsICacheListener,
-                   public nsIRequestObserver,
-                   public nsFtpControlConnectionListener {
+class nsFtpState : public nsIStreamListener,
+                   public nsIRequest {
 public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIINPUTSTREAMCALLBACK
-    NS_DECL_NSITRANSPORTEVENTSINK
-    NS_DECL_NSICACHELISTENER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-
-    // Override input stream methods:
-    NS_IMETHOD CloseWithStatus(nsresult status);
-    NS_IMETHOD Available(PRUint32 *result);
-    NS_IMETHOD ReadSegments(nsWriteSegmentFun fun, void *closure,
-                            PRUint32 count, PRUint32 *result);
-
-    // nsFtpControlConnectionListener methods:
-    virtual void OnControlDataAvailable(const char *data, PRUint32 dataLen);
-    virtual void OnControlError(nsresult status);
+    NS_DECL_NSIREQUEST
 
     nsFtpState();
-    nsresult Init(nsFtpChannel *channel);
-
-protected:
-    // Notification from nsBaseContentStream::AsyncWait
-    virtual void OnCallbackPending();
-
-private:
     virtual ~nsFtpState();
 
+    nsresult Init(nsFTPChannel *aChannel, 
+                  nsICacheEntryDescriptor* cacheEntry,
+                  nsIProxyInfo* proxyInfo,
+                  PRUint64 startPos,
+                  const nsACString& entity);
+
+    // use this to provide a stream to be written to the server.
+    nsresult SetWriteStream(nsIInputStream* aInStream);
+
+    nsresult GetEntityID(nsACString& aEntityID);
+
+    nsresult Connect();
+
+    // lets the data forwarder tell us when the the data pipe has been created
+    // and when the data pipe has finished.
+    void DataConnectionEstablished();    
+    void DataConnectionComplete();
+private:
     ///////////////////////////////////
     // BEGIN: STATE METHODS
     nsresult        S_user(); FTP_STATE       R_user();
@@ -181,60 +165,13 @@ private:
     void KillControlConnection();
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
-    nsresult SendFTPCommand(const nsCSubstring& command);
+    nsresult SendFTPCommand(nsCString& command);
     void ConvertFilespecToVMS(nsCString& fileSpec);
     void ConvertDirspecToVMS(nsCString& fileSpec);
     void ConvertDirspecFromVMS(nsCString& fileSpec);
     nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
     nsresult SetContentType();
-
-    /**
-     * This method is called to kick-off the FTP state machine.  mState is
-     * reset to FTP_COMMAND_CONNECT, and the FTP state machine progresses from
-     * there.  This method is initially called (indirectly) from the channel's
-     * AsyncOpen implementation.
-     */
-    void Connect();
-
-    /**
-     * This method opens a cache entry for reading or writing depending on the
-     * state of the channel and of the system (e.g., opened for reading if we
-     * are offline).  This method is responsible for setting mCacheEntry if
-     * there is a cache entry that can be used.  It returns true if it ends up
-     * waiting (asynchronously) for access to the cache entry.  In that case,
-     * the nsFtpState's OnCacheEntryAvailable method will be called once the
-     * cache entry is available or if an error occurs.
-     */
-    PRBool CheckCache();
-
-    /**
-     * This method returns true if the data for this URL can be read from the
-     * cache.  This method assumes that mCacheEntry is non-null.
-     */
-    PRBool CanReadCacheEntry();
-
-    /**
-     * This method causes the cache entry to be read.  Data from the cache
-     * entry will be fed to the channel's listener.  This method returns true
-     * if successfully reading from the cache.  This method assumes that
-     * mCacheEntry is non-null and opened with read access.
-     */
-    PRBool ReadCacheEntry();
-
-    /**
-     * This method configures mDataStream with an asynchronous input stream to
-     * the cache entry.  The cache entry is read on a background thread.  This
-     * method assumes that mCacheEntry is non-null and opened with read access.
-     */
-    nsresult OpenCacheDataStream();
-
-    /**
-     * This method inserts the cache entry's output stream into the stream
-     * listener chain for the FTP channel.  As a result, the cache entry
-     * receives data as data is pushed to the channel's listener.  This method
-     * assumes that mCacheEntry is non-null and opened with write access. 
-     */
-    nsresult InstallCacheListener();
+    PRBool CanReadEntry();
 
     ///////////////////////////////////
     // Private members
@@ -244,22 +181,27 @@ private:
     FTP_STATE           mNextState;         // the next state
     PRPackedBool        mKeepRunning;       // thread event loop boolean
     PRInt32             mResponseCode;      // the last command response code
-    nsCString           mResponseMsg;       // the last command response text
+    nsCAutoString       mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
-    nsRefPtr<nsFtpControlConnection> mControlConnection;       // cacheable control connection (owns mCPipe)
+    nsFtpControlConnection*         mControlConnection;       // cacheable control connection (owns mCPipe)
     PRPackedBool                    mReceivedControlData;  
     PRPackedBool                    mTryingCachedControl;     // retrying the password
+    PRPackedBool                    mWaitingForDConn;         // Are we wait for a data connection
     PRPackedBool                    mRETRFailed;              // Did we already try a RETR and it failed?
+    nsCOMPtr<nsISocketTransport>    mDPipe;                   // the data transport
+    nsCOMPtr<nsIRequest>            mDPipeRequest;
+    DataRequestForwarder*           mDRequestForwarder;
     PRUint64                        mFileSize;
     nsCString                       mModTime;
 
         // ****** consumer vars
-    nsRefPtr<nsFtpChannel>          mChannel;         // our owning FTP channel we pass through our events
+    nsRefPtr<nsFTPChannel>          mChannel;         // our owning FTP channel we pass through our events
     nsCOMPtr<nsIProxyInfo>          mProxyInfo;
 
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to
+    PRPackedBool        mList;          // Use LIST instead of NLST
 
         // ****** protocol interpretation related state vars
     nsString            mUsername;      // username
@@ -270,28 +212,35 @@ private:
     nsresult            mInternalError; // represents internal state errors
 
         // ****** URI vars
+    nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
     nsString               mFilename;   // url filename (if any)
     nsCString              mPath;       // the url's path
     nsCString              mPwd;        // login Path
 
         // ****** other vars
-    nsCOMPtr<nsITransport>        mDataTransport;
-    nsCOMPtr<nsIAsyncInputStream> mDataStream;
-    nsCOMPtr<nsIRequest>    mUploadRequest;
-    PRPackedBool            mIPv6Checked;
+    PRUint8                mSuspendCount;// number of times we've been suspended.
+    PRUint32               mBufferSegmentSize;
+    PRUint32               mBufferMaxSize;
+    PRLock                 *mLock;
+    nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
+    PRUint32                 mWriteCount;
+    PRPackedBool           mIPv6Checked;
     
     static PRUint32         mSessionStartTime;
 
-    nsAutoArrayPtr<char>    mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
+    char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
 
     // ***** control read gvars
     nsresult                mControlStatus;
-    nsCString               mControlReadCarryOverBuf;
+    nsCAutoString           mControlReadCarryOverBuf;
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     
+    nsUint64 mStartPos;
     nsCString mSuppliedEntityID;
+    nsCString mEntityID;
 };
+
 
 #endif //__nsFtpState__h_

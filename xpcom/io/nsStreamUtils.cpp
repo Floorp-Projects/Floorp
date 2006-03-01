@@ -721,18 +721,3 @@ NS_DiscardSegment(nsIInputStream *inStr,
     *countWritten = count;
     return NS_OK;
 }
-
-//-----------------------------------------------------------------------------
-
-NS_COM NS_METHOD
-NS_WriteSegmentThunk(nsIInputStream *inStr,
-                     void *closure,
-                     const char *buffer,
-                     PRUint32 offset,
-                     PRUint32 count,
-                     PRUint32 *countWritten)
-{
-    nsWriteSegmentThunk *thunk = NS_STATIC_CAST(nsWriteSegmentThunk *, closure);
-    return thunk->mFun(thunk->mStream, thunk->mClosure, buffer, offset, count,
-                       countWritten);
-}

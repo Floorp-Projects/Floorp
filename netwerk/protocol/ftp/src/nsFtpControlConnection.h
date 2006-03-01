@@ -46,57 +46,33 @@
 #include "nsIRequest.h"
 #include "nsISocketTransport.h"
 #include "nsIOutputStream.h"
-#include "nsIAsyncInputStream.h"
+#include "nsIInputStream.h"
 #include "nsAutoLock.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsIProxyInfo;
 class nsITransportEventSink;
 
-class nsFtpControlConnectionListener : public nsISupports {
-public:
-    /**
-     * Called when a chunk of data arrives on the control connection.
-     * @param data
-     *        The new data or null if an error occured.
-     * @param dataLen
-     *        The data length in bytes.
-     */
-    virtual void OnControlDataAvailable(const char *data, PRUint32 dataLen) = 0;
-
-    /**
-     * Called when an error occurs on the control connection.
-     * @param status
-     *        A failure code providing more info about the error.
-     */
-    virtual void OnControlError(nsresult status) = 0;
-};
-
-class nsFtpControlConnection : public nsIInputStreamCallback
+class nsFtpControlConnection : public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAMCALLBACK
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
 
-    nsFtpControlConnection(const nsCSubstring& host, PRUint32 port);
+    nsFtpControlConnection(const char* host, PRUint32 port);
     ~nsFtpControlConnection();
 
     nsresult Connect(nsIProxyInfo* proxyInfo, nsITransportEventSink* eventSink);
     nsresult Disconnect(nsresult status);
-    nsresult Write(const nsCSubstring& command);
+    nsresult Write(nsCString& command, PRBool suspend);
 
     PRBool IsAlive();
 
-    nsITransport *Transport()   { return mSocket; }
+    nsIRequest   *ReadRequest() { return mReadRequest; }
+    nsITransport *Transport()   { return mCPipe; }
 
-    /**
-     * Call this function to be notified asynchronously when there is data
-     * available for the socket.  The listener passed to this method replaces
-     * any existing listener, and the listener can be null to disconnect the
-     * previous listener.
-     */
-    nsresult WaitData(nsFtpControlConnectionListener *listener);
+    void SetStreamListener(nsIStreamListener *l)  { mListener = l; }
 
     PRUint32         mServerType;           // what kind of server is it.
     nsString         mPassword;
@@ -107,11 +83,10 @@ private:
     nsCString mHost;
     PRUint32  mPort;
 
-    nsCOMPtr<nsISocketTransport>     mSocket;
-    nsCOMPtr<nsIOutputStream>        mSocketOutput;
-    nsCOMPtr<nsIAsyncInputStream>    mSocketInput;
-
-    nsRefPtr<nsFtpControlConnectionListener> mListener;
+    nsCOMPtr<nsIRequest>         mReadRequest;
+    nsCOMPtr<nsISocketTransport> mCPipe;
+    nsCOMPtr<nsIOutputStream>    mOutStream;
+    nsCOMPtr<nsIStreamListener>  mListener;
 };
 
 #endif

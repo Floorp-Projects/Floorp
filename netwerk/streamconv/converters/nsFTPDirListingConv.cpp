@@ -97,11 +97,27 @@ NS_IMETHODIMP
 nsFTPDirListingConv::AsyncConvertData(const char *aFromType, const char *aToType,
                                       nsIStreamListener *aListener, nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into FTP dir listing converter");
+    nsresult rv;
 
     // hook up our final listener. this guy gets the various On*() calls we want to throw
     // at him.
     mFinalListener = aListener;
     NS_ADDREF(mFinalListener);
+
+    // we need our own channel that represents the content-type of the
+    // converted data.
+    NS_ASSERTION(aCtxt, "FTP dir listing needs a context (the uri)");
+    nsIURI *uri;
+    rv = aCtxt->QueryInterface(NS_GET_IID(nsIURI), (void**)&uri);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX this seems really wrong!!
+    rv = NS_NewInputStreamChannel(&mPartChannel,
+                                  uri,
+                                  nsnull,
+                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT));
+    NS_RELEASE(uri);
+    if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, 
         ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw, TO application/http-index-format\n"));
@@ -196,7 +212,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     rv = NS_NewCStringInputStream(getter_AddRefs(inputData), indexFormat);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mFinalListener->OnDataAvailable(request, ctxt, inputData, 0, indexFormat.Length());
+    rv = mFinalListener->OnDataAvailable(mPartChannel, ctxt, inputData, 0, indexFormat.Length());
 
     return rv;
 }
@@ -207,7 +223,7 @@ NS_IMETHODIMP
 nsFTPDirListingConv::OnStartRequest(nsIRequest* request, nsISupports *ctxt) {
     // we don't care about start. move along... but start masqeurading 
     // as the http-index channel now.
-    return mFinalListener->OnStartRequest(request, ctxt);
+    return mFinalListener->OnStartRequest(mPartChannel, ctxt);
 }
 
 NS_IMETHODIMP
@@ -215,18 +231,33 @@ nsFTPDirListingConv::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                    nsresult aStatus) {
     // we don't care about stop. move along...
 
-    return mFinalListener->OnStopRequest(request, ctxt, aStatus);
+    nsresult rv;
+
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+
+    nsCOMPtr<nsILoadGroup> loadgroup;
+    rv = channel->GetLoadGroup(getter_AddRefs(loadgroup));
+    if (NS_FAILED(rv)) return rv;
+
+    if (loadgroup)
+        (void)loadgroup->RemoveRequest(mPartChannel, nsnull, aStatus);
+
+    return mFinalListener->OnStopRequest(mPartChannel, ctxt, aStatus);
 }
 
 
 // nsFTPDirListingConv methods
 nsFTPDirListingConv::nsFTPDirListingConv() {
     mFinalListener      = nsnull;
+    mPartChannel        = nsnull;
     mSentHeading        = PR_FALSE;
 }
 
 nsFTPDirListingConv::~nsFTPDirListingConv() {
     NS_IF_RELEASE(mFinalListener);
+    NS_IF_RELEASE(mPartChannel);
 }
 
 nsresult
