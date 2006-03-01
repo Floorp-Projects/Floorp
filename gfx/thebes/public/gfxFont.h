@@ -160,15 +160,13 @@ protected:
     const gfxFontStyle *mStyle;
 };
 
-typedef nsTArray<gfxFont*> gfxFontVector;
+typedef nsTArray< nsRefPtr<gfxFont> > gfxFontVector;
 
 class NS_EXPORT gfxFontGroup {
 public:
     gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle);
 
     virtual ~gfxFontGroup() {
-        for (PRUint32 i = 0; i < mFonts.Length(); ++i)
-            NS_RELEASE(mFonts[i]);
         mFonts.Clear();
     }
 

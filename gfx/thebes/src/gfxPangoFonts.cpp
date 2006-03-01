@@ -144,9 +144,7 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
     if (fixedFamilies.Length() > 0)
       fixedFamilies.Truncate(fixedFamilies.Length() - 1); // remove final comma
 
-    gfxFont *f = new gfxPangoFont(fixedFamilies, this);
-    NS_ADDREF(f);
-    mFonts.AppendElement(f);
+    mFonts.AppendElement(new gfxPangoFont(fixedFamilies, this));
 }
 
 gfxPangoFontGroup::~gfxPangoFontGroup()
