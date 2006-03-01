@@ -417,7 +417,7 @@ nsSocketInputStream::AsyncWait(nsIInputStreamCallback *callback,
     {
         nsAutoLock lock(mTransport->mLock);
 
-        if (target) {
+        if (callback && target) {
             //
             // build event proxy
             //
@@ -648,7 +648,7 @@ nsSocketOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
     {
         nsAutoLock lock(mTransport->mLock);
 
-        if (target) {
+        if (callback && target) {
             //
             // build event proxy
             //

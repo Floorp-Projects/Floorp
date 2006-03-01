@@ -219,6 +219,31 @@ nsBaseChannel::PushStreamConverter(const char *fromType,
   return rv;
 }
 
+nsresult
+nsBaseChannel::BeginPumpingData()
+{
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = OpenContentStream(PR_TRUE, getter_AddRefs(stream));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // By assigning mPump, we flag this channel as pending (see IsPending).  It's
+  // important that the pending flag is set when we call into the stream (the
+  // call to AsyncRead results in the stream's AsyncWait method being called)
+  // and especially when we call into the loadgroup.  Our caller takes care to
+  // release mPump if we return an error.
+ 
+  mPump = new nsInputStreamPump();
+  if (!mPump)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = mPump->Init(stream, -1, -1, 0, 0, PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    rv = mPump->AsyncRead(this, nsnull);
+
+  return rv;
+}
+
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
@@ -450,28 +475,25 @@ nsBaseChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIInputStream> stream;
-  rv = OpenContentStream(PR_TRUE, getter_AddRefs(stream));
-  if (NS_FAILED(rv))
-    return rv;
-
-  mPump = new nsInputStreamPump();
-  if (!mPump)
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = mPump->Init(stream, -1, -1, 0, 0, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    mPump = nsnull;
-    return rv;
-  }
-
-  rv = mPump->AsyncRead(this, nsnull);
-  if (NS_FAILED(rv)) {
-    mPump = nsnull;
-    return rv;
-  }
-
+  // Store the listener and context early so that OpenContentStream and the
+  // stream's AsyncWait method (called by AsyncRead) can have access to them
+  // via PushStreamConverter and the StreamListener methods.  However, since
+  // this typically introduces a reference cycle between this and the listener,
+  // we need to be sure to break the reference if this method does not succeed.
   mListener = listener;
   mListenerContext = ctxt;
+
+  // This method assigns mPump as a side-effect.  We need to clear mPump if
+  // this method fails.
+  rv = BeginPumpingData();
+  if (NS_FAILED(rv)) {
+    mPump = nsnull;
+    mListener = nsnull;
+    mListenerContext = nsnull;
+    return rv;
+  }
+
+  // At this point, we are going to return success no matter what.
 
   SUSPEND_PUMP_FOR_SCOPE();
 
@@ -553,6 +575,8 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
   }
 
+  SUSPEND_PUMP_FOR_SCOPE();
+
   return mListener->OnStartRequest(this, mListenerContext);
 }
 
@@ -593,6 +617,8 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *stream, PRUint32 offset,
                                PRUint32 count)
 {
+  SUSPEND_PUMP_FOR_SCOPE();
+
   nsresult rv = mListener->OnDataAvailable(this, mListenerContext, stream,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {

@@ -1011,4 +1011,17 @@ NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
     return NS_NewInterfaceRequestorAggregation(callbacks, cbs, result);
 }
 
+/**
+ * Helper function for testing online/offline state of the browser.
+ */
+inline PRBool
+NS_IsOffline()
+{
+    PRBool offline = PR_TRUE;
+    nsCOMPtr<nsIIOService> ios = do_GetIOService();
+    if (ios)
+        ios->GetOffline(&offline);
+    return offline;
+}
+
 #endif // !nsNetUtil_h__
