@@ -23,6 +23,8 @@
    -
    - Contributor(s):
    -   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+   -   Thomas Benisch <thomas.benisch@sun.com>
+   -   Dan Mosedale <dan.mosedale@oracle.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -93,9 +95,9 @@
         <parameter name="aStartMin"/>
         <parameter name="aEndMin"/>
         <body><![CDATA[
-	  if (aStartMin < 0 || aStartMin > aEndMin)
+          if (aStartMin < 0 || aStartMin > aEndMin)
               throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin >= 24*60)
+          if (aEndMin < 0 || aEndMin > 24*60)
               throw Components.results.NS_ERROR_INVALID_ARG;
 
           if (this.mStartMin != aStartMin ||
@@ -379,9 +381,9 @@
         <parameter name="aStartMin"/>
         <parameter name="aEndMin"/>
         <body><![CDATA[
-	  if (aStartMin < 0 || aStartMin > aEndMin)
+          if (aStartMin < 0 || aStartMin > aEndMin)
               throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin >= 24*60)
+          if (aEndMin < 0 || aEndMin > 24*60)
               throw Components.results.NS_ERROR_INVALID_ARG;
 
           if (this.mStartMin != aStartMin ||
@@ -550,11 +552,9 @@
         ]]></body>
       </method>
 
-      <method name="addEvent">
+      <method name="createChunk">
         <parameter name="aOccurrence"/>
         <body><![CDATA[
-           this.internalDeleteEvent(aOccurrence);
-
            var mins = this.getStartEndMinutesForOccurrence(aOccurrence);
 
            var chunk = {
@@ -562,6 +562,16 @@
                endMinute: mins.end,
                event: aOccurrence
            };
+           return chunk;
+        ]]></body>
+      </method>
+
+      <method name="addEvent">
+        <parameter name="aOccurrence"/>
+        <body><![CDATA[
+           this.internalDeleteEvent(aOccurrence);
+
+           var chunk = this.createChunk(aOccurrence);
            this.mEvents.push(chunk);
            this.relayout();
         ]]></body>
@@ -1526,6 +1536,8 @@
       <field name="mSelectedItem">null</field>
       <field name="mSelectedDayCol">null</field>
 
+      <field name="mDefaultStartMin">8*60</field>
+      <field name="mDefaultEndMin">20*60</field>
       <field name="mStartMin">8*60</field>
       <field name="mEndMin">20*60</field>
       <field name="mTasksInView">true</field>
@@ -1606,6 +1618,13 @@
                 for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
+
+                var chunks = this.calView.createChunksForNonDateItems(occs);
+                if (this.calView.readjustStartEndMinutes(chunks, false)) {
+                    this.calView.propagateStartEndMinutes();
+                }
+
+                return;
             },
             onModifyItem: function onModifyItem(aNewItem, aOldItem) {
                 //dump ("++ ModifyItem\n");
@@ -1629,6 +1648,8 @@
                 for each (var occ in occs) {
                     this.calView.doAddEvent(occ);
                 }
+
+                this.calView.readjust();
             },
             onDeleteItem: function onDeleteItem(aItem) {
                 //dump ("++ DeleteItem\n");
@@ -1641,6 +1662,8 @@
                 for each (var occ in occs) {
                     this.calView.doDeleteEvent(occ);
                 }
+
+                this.calView.readjust();
             },
             //XXXvv Alarm could, in theory, flash the event or something
             onAlarm: function onAlarm(aAlarmItem) { },
@@ -1684,6 +1707,12 @@
                                aCount, aItems) {
               if (!Components.isSuccessCode(aStatus))
                   return;
+
+              var chunks = this.calView.createChunksForNonDateItems(aItems);
+
+              if (this.calView.readjustStartEndMinutes(chunks, false)) {
+                  this.calView.propagateStartEndMinutes();
+              }
 
               for each (var item in aItems) {
                   this.calView.doAddEvent(item);
@@ -1990,14 +2019,17 @@
 	<parameter name="aStartMin"/>
         <parameter name="aEndMin"/>
         <body><![CDATA[
-	  if (aStartMin < 0 || aStartMin > aEndMin)
+          if (aStartMin < 0 || aStartMin > aEndMin)
               throw Components.results.NS_ERROR_INVALID_ARG;
-          if (aEndMin < 0 || aEndMin >= 24*60)
+          if (aEndMin < 0 || aEndMin > 24*60)
               throw Components.results.NS_ERROR_INVALID_ARG;
 
-          if (this.mStartMin != aStartMin ||
-              this.mEndMin != aEndMin)
+          if (this.mDefaultStartMin != aStartMin || 
+              this.mDefaultEndMin != aEndMin || 
+              this.mStartMin != aStartMin || this.mEndMin != aEndMin)
           {
+              this.mDefaultStartMin = aStartMin;
+              this.mDefaultEndMin = aEndMin;
               this.mStartMin = aStartMin;
               this.mEndMin = aEndMin;
 
@@ -2112,7 +2144,12 @@
           if (!this.startDate || !this.endDate)
             return;
 
-          // recreate our columns as necessary
+          // we're throwing out all the events and starting over, we
+          // should reset to the default size
+          this.mStartMin = this.mDefaultStartMin;
+          this.mEndMin = this.mDefaultEndMin;
+
+          // recreate our columns
           this.relayout();
 
           if (!this.mCalendar)
@@ -2251,6 +2288,27 @@
         ]]></body>
       </method>
 
+      <method name="propagateStartEndMinutes">
+        <body><![CDATA[
+          // update timebar
+          var timebar = document.getAnonymousElementByAttribute(this, 
+                                                                "anonid",
+                                                                "timebar");
+          timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
+
+          // fix pixels-per-minute
+          this.onResize();
+
+          for each (var d in this.mDateColumns) {
+              // each of these calls will cause the column in question
+              // to call relayout on itself
+              d.column.setStartEndMinutes(this.mStartMin, this.mEndMin);
+          }
+
+          return;
+        ]]></body>
+      </method>
+
       <method name="findColumnForDate">
         <parameter name="aDate"/>
         <body><![CDATA[
@@ -2370,6 +2428,140 @@
 
           for each (var col in this.mDateColumns) {
               col.column.pixelsPerMinute = pixPerMin;
+          }
+        ]]></body>
+      </method>
+
+      <method name="readjustStartEndMinutes">
+        <parameter name="aChunks"/>
+        <parameter name="aIsAllChunks"/>
+        <body><![CDATA[
+          var hasChanged = false;
+          const MINS_PER_HOUR = 60;
+          const DAY_START_MIN = 0 * MINS_PER_HOUR;
+          const DAY_END_MIN = 24 * MINS_PER_HOUR;
+
+          // Start at the existing boundaries if aIsAllChunks is set,
+          // since in that case, we know that the boundaries will only
+          // be expanding.  Otherwise, start at the defaults.
+          var earliestChunkStartMin = 
+              (aIsAllChunks ? this.mDefaultStartMin : this.mStartMin);
+          var latestChunkEndMin = 
+              (aIsAllChunks ? this.mDefaultEndMin : this.mEndMin);
+
+          for each (var chunk in aChunks) {
+
+              if (chunk.startMinute < earliestChunkStartMin) {
+                  earliestChunkStartMin = chunk.startMinute;
+              }
+
+              if (chunk.endMinute > latestChunkEndMin) {
+                  latestChunkEndMin = chunk.endMinute;
+              }
+
+              // break, if the start and end time match the day range
+              if (earliestChunkStartMin <= DAY_START_MIN
+                  && latestChunkEndMin >= DAY_END_MIN) {
+                  break;
+              }
+          }
+
+          // round down
+          if (earliestChunkStartMin % MINS_PER_HOUR) {
+              earliestChunkStartMin -= (earliestChunkStartMin % MINS_PER_HOUR);
+          }
+
+          // round up
+          if (latestChunkEndMin % MINS_PER_HOUR) {
+              latestChunkEndMin += MINS_PER_HOUR - 
+                                 (latestChunkEndMin % MINS_PER_HOUR);
+          }
+
+          // The only reason try/catch is necessary here is to work
+          // around XBL lossage.  Without it, control never makes it
+          // through the try block, even though no exception is ever thrown!
+          try {
+              if (aIsAllChunks) {
+                  // Since we've looked at all the in-view chunks,
+                  // it's safe to either shrink or expand the time shown.
+                  // Shrinking might be necessary when switching
+                  // weeks, or if an event has been deleted, moved or
+                  // shrunk out of the "non-default" area.
+                  if (this.mStartMin != earliestChunkStartMin) {
+                      this.mStartMin = earliestChunkStartMin;
+                      hasChanged = true;
+                  }
+                  if (this.mEndMin != latestChunkEndMin) {
+                      this.mEndMin = latestChunkEndMin;
+                      hasChanged = true;
+                  }
+              } else {
+                  // here we are doing incremental adjustment, so we 
+                  // can only expand the time shown, never shrink it
+                  if (this.mStartMin > earliestChunkStartMin) {
+                      this.mStartMin = earliestChunkStartMin;
+                      hasChanged = true;
+                  } 
+                  if (this.mEndMin < latestChunkEndMin) {
+                      this.mEndMin = latestChunkEndMin;
+                      hasChanged = true;
+                  }
+              }
+          } catch (e) {
+              Components.utils.reportError("Unexpected exception in "
+              + "readjustStartEndMinutes: " + e);
+              throw e;
+          }
+          return hasChanged;
+        ]]></body>
+      </method>
+
+      <method name="createChunksForNonDateItems">
+        <parameter name="aItems"/>
+        <body><![CDATA[
+
+          var chunks = new Array();
+          for each (var item in aItems) {
+              if (item.startDate.isDate) {
+                  continue;
+              }
+
+              var cols = this.findColumnsForItem(item);
+              if (!cols.length) {
+                  continue;
+              }
+
+              // add a chunk for each date that has one
+              for each (var col in cols) {
+                  chunks.push(col.column.createChunk(item));
+              }
+          }
+
+          return chunks;
+        ]]></body>
+      </method>
+
+
+      <method name="getAllChunks">
+        <body><![CDATA[
+          var chunks = new Array();
+          for each (var col in this.mDateColumns) {
+              for each (var chunk in col.column.mEvents) {
+                  chunks.push(chunk);
+              }
+          }
+          return chunks;
+        ]]></body>
+      </method>
+
+      <method name="readjust">
+        <body><![CDATA[
+          if (this.readjustStartEndMinutes(this.getAllChunks(), true)) {
+              var selectedDay = this.selectedDay;
+              this.propagateStartEndMinutes();
+              if (selectedDay) {
+                  this.selectedDay = selectedDay;
+              }
           }
         ]]></body>
       </method>
