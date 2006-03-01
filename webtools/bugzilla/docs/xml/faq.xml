@@ -130,7 +130,7 @@
             a bug at bugzilla.mozilla.org</ulink> and set the Severity
             to 'enhancement'. Your 'request for enhancement' (RFE) will
             start out in the UNCONFIRMED state, and will stay there until
-            someone with the ability to COMFIRM the bug reviews it.
+            someone with the ability to CONFIRM the bug reviews it.
             If that person feels it to be a good request that fits in with
             Bugzilla's overall direction, the status will be changed to
             NEW; if not, they will probably explain why and set the bug
