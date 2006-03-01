@@ -312,7 +312,7 @@
       <para>
         The boolean charts further restrict the set of results
         returned by a query. It is possible to search for bugs
-        based on elaborate combinations of critera.
+        based on elaborate combinations of criteria.
       </para>
       <para>
         The simplest boolean searches have only one term. These searches
