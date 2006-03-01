@@ -1490,6 +1490,7 @@ function loadOneOrMoreURIs(aURIString)
   }
 }
 
+#ifndef MOZ_PLACES
 function constructGoMenuItem(goMenu, beforeItem, url, title)
 {
   var menuitem = document.createElementNS(kXULNS, "menuitem");
@@ -1580,6 +1581,7 @@ function updateGoMenu(goMenu)
   if (showSep)
     endSep.hidden = false;
 }
+#endif
 
 function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
 {
@@ -2917,7 +2919,7 @@ function OpenSearch(tabName, searchStr, newTabFlag)
   }
 }
 
-function FillHistoryMenu(aParent, aMenu)
+function FillHistoryMenu(aParent, aMenu, aInsertBefore)
   {
     // Remove old entries if any
     deleteHistoryItems(aParent);
@@ -2952,14 +2954,19 @@ function FillHistoryMenu(aParent, aMenu)
                 createMenuItem(aParent, j, entry.title);
             }
           break;
-        case "go":
-          aParent.lastChild.hidden = (count == 0);
+        case "history":
+          aInsertBefore.hidden = (count == 0);
           end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
           for (j = count - 1; j >= end; j--)
             {
               entry = sessionHistory.getEntryAtIndex(j, false);
               if (entry)
-                createRadioMenuItem(aParent, j, entry.title, j==index);
+                createRadioMenuItem(aParent,
+                                    j,
+                                    entry.title,
+                                    entry.URI ? entry.URI.spec : null,
+                                    j==index,
+                                    aInsertBefore);
             }
           break;
       }
@@ -2998,15 +3005,19 @@ function createMenuItem( aParent, aIndex, aLabel)
     aParent.appendChild( menuitem );
   }
 
-function createRadioMenuItem( aParent, aIndex, aLabel, aChecked)
+function createRadioMenuItem( aParent, aIndex, aLabel, aStatusText, aChecked, aInsertBefore)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "type", "radio" );
     menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
+    menuitem.setAttribute( "statustext", aStatusText );
     if (aChecked==true)
       menuitem.setAttribute( "checked", "true" );
-    aParent.appendChild( menuitem );
+    if (aInsertBefore)
+      aParent.insertBefore( menuitem, aInsertBefore );
+    else
+      aParent.appendChild( menuitem );
   }
 
 function deleteHistoryItems(aParent)
@@ -6934,5 +6945,39 @@ TransactionList.prototype = {
     throw Cr.NS_ERROR_NOINTERFACE;
   }
 };
+
+// Functions for the history menu.
+var HistoryMenu = {
+
+  /*
+   * Updates the history menu with the session history of the current tab.
+   * This function is called every time the history menu is shown.
+   * @params menu XULNode for the history menu
+   */
+  update: function PHM_update(menu) {
+    FillHistoryMenu(menu, "history", document.getElementById("endTabHistorySeparator"));
+  },
+
+  /*
+   * Shows the places search page.
+   * (Will be fully implemented when there is a places search page.)
+   */
+  showPlacesSearch: function PHM_showPlacesSearch() {
+    // XXX The places view needs to be updated before this
+    // does something different than show history.
+    PlacesBrowserShim._showPlacesView("chrome://browser/content/places/places.xul?history");
+  },
+  
+  /*
+   * Clears the browser history.
+   * (XXX This might be changed to show the Clear Private Data menu instead)
+   */
+  clearHistory: function PHM_clearHistory() {
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+    globalHistory.removeAllPages();
+  },
+};
+
 #endif
 
