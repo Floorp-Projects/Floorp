@@ -117,18 +117,45 @@ public:
    * @param aOption the option to insert
    * @param aIndex the index to insert at
    */
-  nsresult InsertElementAt(nsIDOMHTMLOptionElement* aOption, PRInt32 aIndex);
+  PRBool InsertOptionAt(nsIDOMHTMLOptionElement* aOption, PRInt32 aIndex)
+  {
+    return mElements.InsertObjectAt(aOption, aIndex);
+  }
+
   /**
    * Remove an option
    * @param aIndex the index of the option to remove
    */
-  nsresult RemoveElementAt(PRInt32 aIndex);
+  void RemoveOptionAt(PRInt32 aIndex)
+  {
+    mElements.RemoveObjectAt(aIndex);
+  }
+
   /**
    * Get the option at the index
    * @param aIndex the index
    * @param aReturn the option returned [OUT]
    */
-  nsIDOMHTMLOptionElement *ItemAsOption(PRInt32 aIndex);
+  nsIDOMHTMLOptionElement *ItemAsOption(PRInt32 aIndex)
+  {
+    return mElements.SafeObjectAt(aIndex);
+  }
+
+  /**
+   * Clears out all options
+   */
+  void Clear()
+  {
+    mElements.Clear();
+  }
+
+  /**
+   * Append an option to end of array
+   */
+  PRBool AppendOption(nsIDOMHTMLOptionElement* aOption)
+  {
+    return mElements.AppendObject(aOption);
+  }
 
   /**
    * Drop the reference to the select.  Called during select destruction.
@@ -229,12 +256,10 @@ public:
 
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
-  // nsGenericElement
-  virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
-                                        PRUint32 aIndex,
-                                        PRBool aRemove);
-  
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
@@ -420,8 +445,17 @@ protected:
    */
   void DispatchContentReset();
 
+  /**
+   * Rebuilds the options array from scratch as a fallback in error cases.
+   */
+  void RebuildOptionsArray();
+
+#ifdef DEBUG
+  void VerifyOptionsArray();
+#endif
+
   /** The options[] array */
-  nsHTMLOptionCollection* mOptions;
+  nsRefPtr<nsHTMLOptionCollection> mOptions;
   /** false if the parser is in the middle of adding children. */
   PRBool    mIsDoneAddingChildren;
   /** The number of non-options as children of the select */
@@ -437,7 +471,7 @@ protected:
    * The temporary restore state in case we try to restore before parser is
    * done adding options
    */
-  nsSelectState* mRestoreState;
+  nsRefPtr<nsSelectState> mRestoreState;
 };
 
 
@@ -458,22 +492,20 @@ nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo,
     mIsDoneAddingChildren(!aFromParser),
     mNonOptionChildren(0),
     mOptGroupCount(0),
-    mSelectedIndex(-1),
-    mRestoreState(nsnull)
+    mSelectedIndex(-1)
 {
+  // FIXME: Bug 328908, set mOptions in an Init function and get rid of null
+  // checks.
+
   // DoneAddingChildren() will be called later if it's from the parser,
   // otherwise it is
-
-  NS_IF_ADDREF(mOptions);
 }
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
 {
   if (mOptions) {
     mOptions->DropReference();
-    NS_RELEASE(mOptions);
   }
-  NS_IF_RELEASE(mRestoreState);
 }
 
 // ISupports
@@ -506,17 +538,57 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 nsresult
-nsHTMLSelectElement::WillAddOrRemoveChild(nsIContent* aKid,
-                                          PRUint32 aIndex,
-                                          PRBool aRemove)
+nsHTMLSelectElement::InsertChildAt(nsIContent* aKid,
+                                   PRUint32 aIndex,
+                                   PRBool aNotify)
 {
-  if (aRemove) {
-    WillRemoveOptions(this, aIndex);
-  } else {
-    WillAddOptions(aKid, this, aIndex);
+  PRUint32 prevOptGroups = mOptGroupCount;
+
+  nsresult rv = WillAddOptions(aKid, this, aIndex);
+  PRBool rebuild = NS_FAILED(rv);
+
+  rv = nsGenericHTMLFormElement::InsertChildAt(aKid, aIndex, aNotify);
+  if (rebuild || NS_FAILED(rv)) {
+    RebuildOptionsArray();
+    return rv;
   }
 
-  return nsGenericHTMLFormElement::WillAddOrRemoveChild(aKid, aIndex, aRemove);
+  if (mOptGroupCount && !prevOptGroups) {
+    // FIXME: Bug 328907, get rid of this event
+    DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
+  }
+
+#ifdef DEBUG
+  VerifyOptionsArray();
+#endif
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLSelectElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+{
+  PRUint32 prevOptGroups = mOptGroupCount;
+
+  nsresult rv = WillRemoveOptions(this, aIndex);
+  PRBool rebuild = NS_FAILED(rv);
+
+  rv = nsGenericHTMLFormElement::RemoveChildAt(aIndex, aNotify);
+  if (rebuild || NS_FAILED(rv)) {
+    RebuildOptionsArray();
+    return rv;
+  }
+
+  if (!mOptGroupCount && prevOptGroups) {
+    // FIXME: Bug 328907, get rid of this event
+    DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
+  }
+
+#ifdef DEBUG
+  VerifyOptionsArray();
+#endif
+
+  return NS_OK;
 }
 
 
@@ -602,16 +674,12 @@ nsHTMLSelectElement::PrintOptions(nsIContent* aOptions, PRInt32 tabs)
   }
 
   // Recurse down into optgroups
-  //
-  // I *would* put a restriction in here to only search under
-  // optgroups (and not, for example, <P></P>), but it really
-  // doesn't *hurt* to search under other stuff and it's more
-  // efficient in the normal only-optgroup-and-option case
-  // (one less QueryInterface).
-  PRUint32 numChildren = aOptions->GetChildCount();
+  if (IsOptGroup(aOptions)) {
+    PRUint32 numChildren = aOptions->GetChildCount();
 
-  for (PRUint32 i = 0; i < numChildren; ++i) {
-    PrintOptions(aOptions->GetChildAt(i), tabs + 1);
+    for (PRUint32 i = 0; i < numChildren; ++i) {
+      PrintOptions(aOptions->GetChildAt(i), tabs + 1);
+    }
   }
 
   return NS_OK;
@@ -680,7 +748,7 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
 
   nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(aOptions));
   if (optElement) {
-    nsresult rv = mOptions->InsertElementAt(optElement, *aInsertIndex);
+    nsresult rv = mOptions->InsertOptionAt(optElement, *aInsertIndex);
     NS_ENSURE_SUCCESS(rv, rv);
     (*aInsertIndex)++;
     return NS_OK;
@@ -692,24 +760,16 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
     mNonOptionChildren++;
   }
 
+  // Recurse down into optgroups
   if (IsOptGroup(aOptions)) {
     mOptGroupCount++;
-    DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
-  }
 
-  // Recurse down into optgroups
-  //
-  // I *would* put a restriction in here to only search under
-  // optgroups (and not, for example, <P></P>), but it really
-  // doesn't *hurt* to search under other stuff and it's more
-  // efficient in the normal only-optgroup-and-option case
-  // (one less QueryInterface).
-  PRUint32 numChildren = aOptions->GetChildCount();
-
-  for (PRUint32 i = 0; i < numChildren; ++i) {
-    nsresult rv = InsertOptionsIntoListRecurse(aOptions->GetChildAt(i),
-                                               aInsertIndex, aDepth+1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 numChildren = aOptions->GetChildCount();
+    for (PRUint32 i = 0; i < numChildren; ++i) {
+      nsresult rv = InsertOptionsIntoListRecurse(aOptions->GetChildAt(i),
+                                                 aInsertIndex, aDepth+1);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   return NS_OK;
@@ -730,8 +790,11 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
 
   nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(aOptions));
   if (optElement) {
-    nsresult rv = mOptions->RemoveElementAt(aRemoveIndex);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mOptions->ItemAsOption(aRemoveIndex) != optElement) {
+      NS_ERROR("wrong option at index");
+      return NS_ERROR_UNEXPECTED;
+    }
+    mOptions->RemoveOptionAt(aRemoveIndex);
     (*aNumRemoved)++;
     return NS_OK;
   }
@@ -741,28 +804,18 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
     mNonOptionChildren--;
   }
 
-  if (mOptGroupCount) {
-    if (IsOptGroup(aOptions)) {
-      mOptGroupCount--;
-      DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
-    }
-  }
-
   // Recurse down deeper for options
-  //
-  // I *would* put a restriction in here to only search under
-  // optgroups (and not, for example, <P></P>), but it really
-  // doesn't *hurt* to search under other stuff and it's more
-  // efficient in the normal only-optgroup-and-option case
-  // (one less QueryInterface).
-  PRUint32 numChildren = aOptions->GetChildCount();
+  if (mOptGroupCount && IsOptGroup(aOptions)) {
+    mOptGroupCount--;
 
-  for (PRUint32 i = 0; i < numChildren; ++i) {
-    nsresult rv = RemoveOptionsFromListRecurse(aOptions->GetChildAt(i),
-                                               aRemoveIndex,
-                                               aNumRemoved,
-                                               aDepth + 1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 numChildren = aOptions->GetChildCount();
+    for (PRUint32 i = 0; i < numChildren; ++i) {
+      nsresult rv = RemoveOptionsFromListRecurse(aOptions->GetChildAt(i),
+                                                 aRemoveIndex,
+                                                 aNumRemoved,
+                                                 aDepth + 1);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   return NS_OK;
@@ -818,9 +871,8 @@ NS_IMETHODIMP
 nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
                                        PRInt32 aContentIndex)
 {
-  nsresult rv = NS_OK;
-
   PRInt32 level = GetContentDepth(aParent);
+  NS_ASSERTION(level >= 0, "getting notified by unexpected content");
   if (level == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -838,11 +890,12 @@ nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
       ind = GetFirstOptionIndex(currentKid);
     }
     if (ind != -1) {
-      rv = RemoveOptionsFromList(currentKid, ind, level);
+      nsresult rv = RemoveOptionsFromList(currentKid, ind, level);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 PRInt32
@@ -1688,7 +1741,7 @@ nsHTMLSelectElement::DoneAddingChildren(PRBool aHaveNotified)
   // content, restore the rest of the options proper-like
   if (mRestoreState) {
     RestoreStateTo(mRestoreState);
-    NS_RELEASE(mRestoreState);
+    mRestoreState = nsnull;
   }
 
   // Notify the frame
@@ -1806,11 +1859,10 @@ nsHTMLSelectElement::HandleDOMEvent(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLSelectElement::SaveState()
 {
-  nsSelectState* state = new nsSelectState();
+  nsRefPtr<nsSelectState> state = new nsSelectState();
   if (!state) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  NS_ADDREF(state);
 
   PRUint32 len;
   GetLength(&len);
@@ -1835,8 +1887,6 @@ nsHTMLSelectElement::SaveState()
                                            state);
     NS_ASSERTION(NS_SUCCEEDED(rv), "selecteditems set failed!");
   }
-
-  NS_RELEASE(state);
 
   return rv;
 }
@@ -1877,7 +1927,6 @@ nsHTMLSelectElement::RestoreStateTo(nsSelectState* aNewSelected)
 {
   if (!mIsDoneAddingChildren) {
     mRestoreState = aNewSelected;
-    NS_ADDREF(mRestoreState);
     return;
   }
 
@@ -2050,6 +2099,58 @@ void nsHTMLSelectElement::DispatchContentReset() {
   }
 }
 
+static void
+AddOptionsRecurse(nsIContent* aRoot, nsHTMLOptionCollection* aArray)
+{
+  nsIContent* child;
+  for(PRUint32 i = 0; (child = aRoot->GetChildAt(i)); ++i) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> opt = do_QueryInterface(child);
+    if (opt) {
+      // If we fail here, then at least we've tried our best
+      aArray->AppendOption(opt);
+    }
+    else if (IsOptGroup(child)) {
+      AddOptionsRecurse(child, aArray);
+    }
+  }
+}
+
+void
+nsHTMLSelectElement::RebuildOptionsArray()
+{
+  mOptions->Clear();
+  AddOptionsRecurse(this, mOptions);
+}
+
+#ifdef DEBUG
+
+static void
+VerifyOptionsRecurse(nsIContent* aRoot, PRInt32& aIndex,
+                     nsHTMLOptionCollection* aArray)
+{
+  nsIContent* child;
+  for(PRUint32 i = 0; (child = aRoot->GetChildAt(i)); ++i) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> opt = do_QueryInterface(child);
+    if (opt) {
+      NS_ASSERTION(opt == aArray->ItemAsOption(aIndex++),
+                   "Options collection broken");
+    }
+    else if (IsOptGroup(child)) {
+      VerifyOptionsRecurse(child, aIndex, aArray);
+    }
+  }
+}
+
+void
+nsHTMLSelectElement::VerifyOptionsArray()
+{
+  PRInt32 aIndex = 0;
+  VerifyOptionsRecurse(this, aIndex, mOptions);
+}
+
+
+#endif
+
 //----------------------------------------------------------------------
 //
 // nsHTMLOptionCollection implementation
@@ -2216,12 +2317,6 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-nsIDOMHTMLOptionElement *
-nsHTMLOptionCollection::ItemAsOption(PRInt32 aIndex)
-{
-  return mElements.SafeObjectAt(aIndex);
-}
-
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
@@ -2254,17 +2349,4 @@ nsHTMLOptionCollection::GetSelect(nsIDOMHTMLSelectElement **aReturn)
 {
   NS_IF_ADDREF(*aReturn = mSelect);
   return NS_OK;
-}
-
-nsresult
-nsHTMLOptionCollection::InsertElementAt(nsIDOMHTMLOptionElement* aOption,
-                                        PRInt32 aIndex)
-{
-  return mElements.InsertObjectAt(aOption, aIndex);
-}
-
-nsresult
-nsHTMLOptionCollection::RemoveElementAt(PRInt32 aIndex)
-{
-  return mElements.RemoveObjectAt(aIndex);
 }
