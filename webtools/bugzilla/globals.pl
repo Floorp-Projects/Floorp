@@ -526,20 +526,6 @@ sub GroupIdToName {
     return $name;
 }
 
-
-# Determines whether or not a group is active by checking 
-# the "isactive" column for the group in the "groups" table.
-# Note: This function selects groups by id rather than by name.
-sub GroupIsActive {
-    my ($groupid) = (@_);
-    $groupid ||= 0;
-    PushGlobalSQLState();
-    SendSQL("SELECT isactive FROM groups WHERE id=$groupid");
-    my $isactive = FetchOneColumn();
-    PopGlobalSQLState();
-    return $isactive;
-}
-
 # Determines if the given bug_status string represents an "Opened" bug.  This
 # routine ought to be parameterizable somehow, as people tend to introduce
 # new states into Bugzilla.

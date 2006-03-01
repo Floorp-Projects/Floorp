@@ -55,6 +55,26 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
+######################################################################
+# Subroutines
+######################################################################
+
+# Determines whether or not a group is active by checking
+# the "isactive" column for the group in the "groups" table.
+# Note: This function selects groups by id rather than by name.
+sub GroupIsActive {
+    my ($group_id) = @_;
+    $group_id ||= 0;
+    detaint_natural($group_id);
+    my ($is_active) = Bugzilla->dbh->selectrow_array(
+        "SELECT isactive FROM groups WHERE id = ?", undef, $group_id);
+    return $is_active;
+}
+
+######################################################################
+# Main Script
+######################################################################
+
 # do a match on the fields if applicable
 
 &Bugzilla::User::match_field ($cgi, {
