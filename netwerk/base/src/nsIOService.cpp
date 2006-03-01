@@ -244,6 +244,25 @@ nsIOService::~nsIOService()
     gIOService = nsnull;
 }   
 
+nsIOService*
+nsIOService::GetInstance() {
+    if (!gIOService) {
+        gIOService = new nsIOService();
+        if (!gIOService)
+            return nsnull;
+        NS_ADDREF(gIOService);
+
+        nsresult rv = gIOService->Init();
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(gIOService);
+            return nsnull;
+        }
+        return gIOService;
+    }
+    NS_ADDREF(gIOService);
+    return gIOService;
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsIOService,
                               nsIIOService,
                               nsINetUtil,

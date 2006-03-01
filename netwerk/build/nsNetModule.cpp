@@ -72,7 +72,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsIOService.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIOService, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetInstance)
 
 #include "nsDNSService2.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
