@@ -168,11 +168,16 @@
 #include ../../components/places/content/commands.inc
     <command id="Browser:ShowBookmarks" oncommand="PlacesBrowserShim.showBookmarks();"/>
     <command id="Browser:ShowHistory" oncommand="PlacesBrowserShim.showHistory();"/>
+    <command id="Browser:SearchHistory" oncommand="HistoryMenu.showPlacesSearch();"/>
+    <command id="Browser:ClearHistory" oncommand="HistoryMenu.clearHistory();"/>
 #endif
   </commandset>
 
   <broadcasterset id="mainBroadcasterSet">
-#ifndef MOZ_PLACES
+#ifdef MOZ_PLACES
+    <broadcaster id="viewHistoryPlaces" autoCheck="false" label="&historyButton.label;"
+                 oncommand="PlacesBrowserShim.showHistory();"/>
+#else
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
                  oncommand="toggleSidebar('viewBookmarksSidebar');"/>
@@ -318,12 +323,26 @@
 # don't use |command="Browser:Stop"|, ESC is being used to freeze animated gifs,
 # even if the stop button and menuitem are disabled (see Bug 284140)
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    
 #ifdef XP_MACOSX
+
     <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
+#ifdef MOZ_PLACES
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
+#else
+    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistoryPlaces" modifiers="accel,shift"/>
+#endif
+
+#else
+
+#ifdef MOZ_PLACES
+    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistoryPlaces" modifiers="accel"/>
 #else
     <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
 #endif
+
+#endif
+
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>

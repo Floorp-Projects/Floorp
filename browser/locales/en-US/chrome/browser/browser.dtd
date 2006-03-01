@@ -178,10 +178,23 @@
 <!ENTITY viewCustomizeToolbar.label       "Customize..."> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C"> 
 
+<!-- XXX places only -->
+<!ENTITY historyMenu.label "History">
+<!ENTITY historyMenu.accesskey "h">
+<!ENTITY historyHomeCmd.label "Home">
+<!ENTITY historyHomeCmd.accesskey "h">
+<!ENTITY historySearchCmd.label "Search in History...">
+<!ENTITY historySearchCmd.accesskey "s">
+<!ENTITY historyShowCmd.label "View All History...">
+<!ENTITY historyShowCmd.accesskey "v">
+<!ENTITY historyClearCmd.label "Clear History...">
+<!ENTITY historyClearCmd.accesskey "c">
+<!-- XXX remove below if places sticks -->
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY earlierHistory.label "Earlier History">
+<!-- XXX remove above if places sticks --> 
 
 <!ENTITY releaseCmd.accesskey "R">
 <!ENTITY releaseCmd.label     "Release Notes">

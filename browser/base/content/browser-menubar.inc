@@ -323,7 +323,50 @@
                           oncommand="SwitchDocumentDirection(window.content)"/>
               </menupopup>
             </menu>
-  
+
+#ifdef MOZ_PLACES
+            <menu id="history-menu"
+                  oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
+                  onclick="checkForMiddleClick(this, event);"
+                  label="&historyMenu.label;"
+                  accesskey="&historyMenu.accesskey;">
+              <menupopup id="goPopup" onpopupshowing="HistoryMenu.update(this);">
+                <menuitem label="&backCmd.label;"
+#ifdef XP_MACOSX
+                          key="goBackKb2"
+#else
+                          key="goBackKb"
+#endif
+                          oncommand="BrowserBack(event, true)"
+                          onclick="checkForMiddleClick(this, event);">
+                  <observes element="Browser:Back" attribute="disabled" />
+                </menuitem>
+                <menuitem label="&forwardCmd.label;" 
+#ifdef XP_MACOSX
+                          key="goForwardKb2"
+#else
+                          key="goForwardKb"
+#endif
+                          oncommand="BrowserForward(event, true)"
+                          onclick="checkForMiddleClick(this, event);">
+                  <observes element="Browser:Forward" attribute="disabled" />
+                </menuitem>
+
+                <menuitem label="&historyHomeCmd.label;"
+                          command="Browser:Home"
+                          key="historyHome"/>
+                <menuseparator/>
+                <menuitem label="&historySearchCmd.label;"
+                          command="Browser:SearchHistory"/>
+                <menuitem label="&historyShowCmd.label;"
+                          command="Browser:ShowHistory"/>
+                <menuseparator id="startTabHistorySeparator"/>
+                <menuseparator hidden="true" id="endTabHistorySeparator"/>
+                <menuitem label="&historyClearCmd.label;"
+                          command="Browser:ClearHistory"/>
+              </menupopup>
+            </menu>
+#else
             <menu id="go-menu" label="&goMenu.label;" accesskey="&goMenu.accesskey;" 
                   oncommand="var url = event.target.getAttribute('statustext'); if (url) openUILink(url, event, false, true);"
                   onclick="checkForMiddleClick(this, event);">
@@ -355,15 +398,11 @@
                           key="goHome"/>
                 <menuseparator id="startHistorySeparator"/>
                 <menuseparator hidden="true" id="endHistorySeparator"/>
-#ifndef MOZ_PLACES
                 <menuitem observes="viewHistorySidebar"
                           key="key_gotoHistory"/>
-#else
-                <menuitem label="&historyButton.label;"
-                          command="Browser:ShowPlaces" key="key_gotoHistory"/>
-#endif
               </menupopup>
             </menu>
+#endif
 
 #ifndef MOZ_PLACES
             <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
