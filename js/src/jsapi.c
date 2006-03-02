@@ -4694,8 +4694,21 @@ JS_PUBLIC_API(JSBool)
 JS_ReportPendingException(JSContext *cx)
 {
 #if JS_HAS_EXCEPTIONS
+    JSBool ok;
+
     CHECK_REQUEST(cx);
-    return js_ReportUncaughtException(cx);
+    JS_ASSERT(!cx->creatingException);
+
+    /*
+     * Set cx->creatingException to suppress the standard error-to-exception
+     * conversion done by all {js,JS}_Report* functions except for OOM.  The
+     * cx->creatingException flag was added to suppress recursive divergence
+     * under js_ErrorToException, but it serves for our purposes here too.
+     */
+    cx->creatingException = JS_TRUE;
+    ok = js_ReportUncaughtException(cx);
+    cx->creatingException = JS_FALSE;
+    return ok;
 #else
     return JS_TRUE;
 #endif
