@@ -60,6 +60,7 @@ function init()
   var blurfun = inp.blur;
   blurfun.__proto__ = null;
   countProps(blurfun);
+  reportCompare(expect, actual, summary);
 }
 
 if (typeof window != 'undefined')
