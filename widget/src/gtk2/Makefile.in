@@ -112,7 +112,7 @@ ifdef ACCESSIBILITY
 REQUIRES	+= accessibility
 endif
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
+SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
