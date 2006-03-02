@@ -235,6 +235,9 @@ struct FixedBuffer
 static PRIntn
 StuffFixedBuffer(void *closure, const char *buf, PRUint32 len)
 {
+  if (!len)
+    return 0;
+  
   FixedBuffer *fb = (FixedBuffer*) closure;
 
   // strip the trailing null, we add it again later
