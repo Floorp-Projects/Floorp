@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.80 2006/03/01 05:45:45 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.81 2006/03/02 00:07:08 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -765,7 +765,7 @@ ssl3_SignHashes(SSL3Hashes *hash, SECKEYPrivateKey *key, SECItem *buf,
     }
 
     buf->len  = (unsigned)signatureLen;
-    buf->data = (unsigned char *)PORT_Alloc(signatureLen + 1);
+    buf->data = (unsigned char *)PORT_Alloc(signatureLen);
     if (!buf->data)
         goto done;	/* error code was set. */
 
@@ -799,7 +799,7 @@ ssl3_SignHashes(SSL3Hashes *hash, SECKEYPrivateKey *key, SECItem *buf,
 	SECItem   derSig	= {siBuffer, NULL, 0};
 
 	/* This also works for an ECDSA signature */
-	rv = DSAU_EncodeDerSigWithLen(&derSig, buf, (unsigned) signatureLen);
+	rv = DSAU_EncodeDerSigWithLen(&derSig, buf, buf->len);
 	if (rv == SECSuccess) {
 	    PORT_Free(buf->data);	/* discard unencoded signature. */
 	    *buf = derSig;		/* give caller encoded signature. */

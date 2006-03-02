@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.14 2006/02/08 06:14:07 rrelyea%redhat.com Exp $ */
+/* $Id: keyhi.h,v 1.15 2006/03/02 00:06:58 wtchang%redhat.com Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_
@@ -283,7 +283,23 @@ SECKEY_AddPublicKeyToListTail( SECKEYPublicKeyList *list,
 #define PUBKEY_LIST_NEXT(n) ((SECKEYPublicKeyListNode *)n->links.next)
 #define PUBKEY_LIST_END(n,l) (((void *)n) == ((void *)&l->list))
 
+/*
+ * Length in bits of the EC's field size.  This is also the length of
+ * the x and y coordinates of EC points, such as EC public keys and
+ * base points.
+ *
+ * Return 0 on failure (unknown EC domain parameters).
+ */
 extern int SECKEY_ECParamsToKeySize(const SECItem *params);
+
+/*
+ * Length in bits of the EC base point order, usually denoted n.  This
+ * is also the length of EC private keys and ECDSA signature components
+ * r and s.
+ *
+ * Return 0 on failure (unknown EC domain parameters).
+ */
+extern int SECKEY_ECParamsToBasePointOrderLen(const SECItem *params);
 
 SEC_END_PROTOS
 
