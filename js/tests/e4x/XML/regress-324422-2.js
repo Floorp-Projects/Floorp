@@ -55,7 +55,7 @@ for (var icount = 0; icount < 24; icount++)
 
 printStatus(str.length);
 
-var x = new XML(str);
+var x = new XML('<root>' + str + '</root>');
 
 TEST(1, expect, actual);
 
