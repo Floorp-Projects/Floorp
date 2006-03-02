@@ -2464,39 +2464,40 @@ PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsPresContext *aPresContext, 
 //   PR_TRUE  - the aTextFrame was found in its block frame;
 //   PR_FALSE - the aTextFrame was NOT found in its block frame;
 {
-  if (! aCurFrame)
-    return PR_FALSE;
+  while (aCurFrame) {
 
-  if (aCurFrame == aTextFrame) {
-    if (index == 0)
-      *aFirstTextFrame = aCurFrame;
-    // we got it, stop traversing
-    return PR_TRUE;
-  }
-
-  nsIAtom* frameType = aCurFrame->GetType();
-  if (frameType == nsAccessibilityAtoms::blockFrame) {
-    // every block frame will reset the index
-    index = 0;
-  }
-  else {
-    if (frameType == nsAccessibilityAtoms::textFrame) {
-      nsRect frameRect = aCurFrame->GetRect();
-      // skip the empty frame
-      if (! frameRect.IsEmpty()) {
-        if (index == 0)
-          *aFirstTextFrame = aCurFrame;
-        index++;
-      }
+    if (aCurFrame == aTextFrame) {
+      if (index == 0)
+        *aFirstTextFrame = aCurFrame;
+      // we got it, stop traversing
+      return PR_TRUE;
     }
 
-    // we won't expand the tree under a block frame.
-    if (FindTextFrame(index, aPresContext, aCurFrame->GetFirstChild(nsnull),
-                      aFirstTextFrame, aTextFrame))
-      return PR_TRUE;
-  }
+    nsIAtom* frameType = aCurFrame->GetType();
+    if (frameType == nsAccessibilityAtoms::blockFrame) {
+      // every block frame will reset the index
+      index = 0;
+    }
+    else {
+      if (frameType == nsAccessibilityAtoms::textFrame) {
+        nsRect frameRect = aCurFrame->GetRect();
+       // skip the empty frame
+        if (! frameRect.IsEmpty()) {
+          if (index == 0)
+            *aFirstTextFrame = aCurFrame;
+          index++;
+        }
+      }
 
-  nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
-  return FindTextFrame(index, aPresContext, siblingFrame, aFirstTextFrame, aTextFrame);
+      // we won't expand the tree under a block frame.
+      if (FindTextFrame(index, aPresContext, aCurFrame->GetFirstChild(nsnull),
+                        aFirstTextFrame, aTextFrame))
+        return PR_TRUE;
+    }
+
+    nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
+    aCurFrame = siblingFrame;
+  }
+  return PR_FALSE;
 }
 #endif //MOZ_ACCESSIBILITY_ATK
