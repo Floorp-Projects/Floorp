@@ -110,7 +110,7 @@
 
   [% ELSIF error == "auth_failure" %]
     [% title = "Authorization Required" %]
-    [% admindocslinks = {'group.html' => 'Group Security'} %]
+    [% admindocslinks = {'groups.html' => 'Group Security'} %]
     Sorry,
     [% IF group %]
       you aren't a member of the '[% group FILTER html %]' group,
@@ -198,7 +198,7 @@
 
   [% ELSIF error == "bug_access_denied" %]
     [% title = "Access Denied" %]
-    [% admindocslinks = {'group.html' => 'Group Security'} %]
+    [% admindocslinks = {'groups.html' => 'Group Security'} %]
     You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
 
   [% ELSIF error == "bug_access_query" %]
@@ -357,7 +357,7 @@
   
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
-    [% admindocslinks = {'group.html' => 'Group Security'} %]
+    [% admindocslinks = {'groups.html' => 'Group Security'} %]
     Sorry, either the product <em>[% product FILTER html %]</em>
     does not exist or you aren't authorized to
     enter [% terms.abug %] into it.
@@ -600,7 +600,7 @@
     
   [% ELSIF error == "illegal_group_control_combination" %]
     [% title = "Your Group Control Combination Is Illegal" %]
-    [% admindocslinks = {'group.html' => 'Assigning Group Controls to Products'} %]
+    [% admindocslinks = {'groups.html' => 'Assigning Group Controls to Products'} %]
     Your group control combination for group &quot;
     [% groupname FILTER html %]&quot; is illegal.
 
@@ -615,12 +615,12 @@
     &lt;, &gt;, &amp;.
 
   [% ELSIF error == "illegal_series_creation" %]
-    [% admindocslinks = {'group.html' => 'Group security'} %]
+    [% admindocslinks = {'groups.html' => 'Group security'} %]
     [% docslinks = {'reporting.html' => 'Reporting'} %]
     You are not authorised to create series.
         
   [% ELSIF error == "illegal_series_edit" %]
-    [% admindocslinks = {'group.html' => 'Group security'} %]
+    [% admindocslinks = {'groups.html' => 'Group security'} %]
     [% docslinks = {'reporting.html' => 'Reporting'} %]
     You are not authorised to edit this series. To do this, you must either
     be its creator, or an administrator.
