@@ -147,8 +147,7 @@ function displayResult()
     gConsole.mCService.logStringMessage(result);
     // or could use appendMessage which doesn't persist
   var iframe = document.getElementById("Evaluator");
-  if (iframe.getAttribute("src") != "about:blank")
-    iframe.setAttribute("src", "about:blank");
+  iframe.setAttribute("src", "chrome://global/content/blank.html");
 }
 
 /* :::::::: Command Controller for the Window ::::::::::::::: */
