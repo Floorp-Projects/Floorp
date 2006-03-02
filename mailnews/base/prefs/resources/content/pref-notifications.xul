@@ -54,7 +54,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["mailnewsSoundFileUrl", "newMailNotification", 
-                       "newMailNotificationType",
+                       "newMailNotificationType", "newMailNotificationBounce",
                        "newMailNotificationAlert"];
   ]]>
   </script>
@@ -67,6 +67,9 @@
       <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
                 prefstring="mail.biff.show_alert"
                 accesskey="&showAnimatedAlert.accesskey;" />
+      <checkbox id="newMailNotificationBounce" label="&bounceSystemDockIcon.label;"
+                prefstring="mail.biff.animate_dock_icon"
+                accesskey="&bounceSystemDockIcon.accesskey;"/>
       <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
                 prefstring="mail.biff.play_sound" label="&playSound.label;"
                 oncommand="PlaySoundCheck()"/>

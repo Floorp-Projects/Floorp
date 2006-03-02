@@ -131,7 +131,8 @@ CPPSRCS		= \
 
 # MacOSX requires the MoreFiles module
 ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
-REQUIRES += macmorefiles
+REQUIRES	+= macmorefiles
+CPPSRCS		+= nsMessengerOSXIntegration.cpp
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -156,12 +157,6 @@ REQUIRES    += mozldap \
 
 DEFINES         += -DMOZ_LDAP_XPCOM
 
-endif
-
-ifdef MOZ_THUNDERBIRD
-ifneq (,$(filter cocoa mac, $(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS		+= nsMessengerOSXIntegration.cpp 
-endif
 endif
 
 EXPORTS = \

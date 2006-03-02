@@ -6,6 +6,8 @@ function Startup()
   // see bug #158711
   var newMailNotificationAlertUI = document.getElementById("newMailNotificationAlert");
   newMailNotificationAlertUI.hidden = !("@mozilla.org/alerts-service;1" in Components.classes);
+  if (!/Mac/.test(navigator.platform))
+    document.getElementById('newMailNotificationBounce').setAttribute("hidden", true);
 }
 
 function PlaySoundCheck()
