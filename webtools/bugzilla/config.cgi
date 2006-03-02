@@ -45,7 +45,6 @@ use vars
 
     @legal_components 
     @legal_target_milestone 
-    @legal_versions 
     @legal_keywords 
   );
 

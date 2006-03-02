@@ -34,6 +34,8 @@ use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
 use Bugzilla::Util;
+use Bugzilla::Product;
+use Bugzilla::Version;
 
 use vars qw(
     @legal_resolution
@@ -46,9 +48,7 @@ use vars qw(
     @legal_product
     @legal_severity
     @legal_target_milestone
-    @legal_versions
     @log_columns
-    %versions
     %components
 );
 
@@ -220,33 +220,23 @@ GetVersionTable();
 # if using groups for entry, then we don't want people to see products they 
 # don't have access to. Remove them from the list.
 
-my @selectable_product_objects = @{$user->get_selectable_products};
+my @selectable_products = sort {lc($a->name) cmp lc($b->name)} 
+                               @{$user->get_selectable_products};
 
 my %component_set;
 my %version_set;
 my %milestone_set;
-# extract product names
-my @products = map { $_->name } @selectable_product_objects;
 
-foreach my $prod_name (@products) {
+foreach my $prod_obj (@selectable_products) {
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.
-    if ($::components{$prod_name}) {
-        foreach my $c (@{$::components{$prod_name}}) {
-            $component_set{$c} = 1;
-        }
-    }
-    foreach my $v (@{$::versions{$prod_name}}) {
-        $version_set{$v} = 1;
-    }
-    foreach my $m (@{$::target_milestone{$prod_name}}) {
-        $milestone_set{$m} = 1;
-    }
+    my @component_names = map($_->name, @{$prod_obj->components});
+    my @version_names   = map($_->name, @{$prod_obj->versions});
+    my @milestone_names = map($_->name, @{$prod_obj->milestones});
+    $component_set{$_} = 1 foreach (@component_names);
+    $version_set{$_}   = 1 foreach (@version_names);
+    $milestone_set{$_} = 1 foreach (@milestone_names);
 }
-
-# @products is now all the products we are ever concerned with, as a list
-# %x_set is now a unique "list" of the relevant components/versions/tms
-@products = sort { lc($a) cmp lc($b) } @products;
 
 # Create the component, version and milestone lists.
 my @components = ();
@@ -257,7 +247,8 @@ foreach my $c (@::legal_components) {
         push @components, $c;
     }
 }
-foreach my $v (@::legal_versions) {
+my @all_versions = Bugzilla::Version::distinct_names();
+foreach my $v (@all_versions) {
     if ($version_set{$v}) {
         push @versions, $v;
     }
@@ -268,33 +259,7 @@ foreach my $m (@::legal_target_milestone) {
     }
 }
 
-# Create data structures representing each product.
-for (my $i = 0; $i < @products; ++$i) {
-    my $p = $products[$i];
-    
-    # Bug 190611: band-aid to avoid crashing with no versions defined
-    if (!defined ($::components{$p})) {
-        $::components{$p} = [];
-    }
-    
-    # Create hash to hold attributes for each product.
-    my %product = (
-        'name'       => $p,
-        'components' => [ sort { lc($a) cmp lc($b) } @{$::components{$p}} ],
-        'versions'   => [ sort { lc($a) cmp lc($b) } @{$::versions{$p}}   ]
-    );
-    
-    if (Param('usetargetmilestone')) {
-        # Sorting here is required for ordering multiple selections 
-        # correctly; see bug 97736 for discussion on how to fix this
-        $product{'milestones'} =  
-                      [ sort { lc($a) cmp lc($b) } @{$::target_milestone{$p}} ];
-    }
-    
-    # Assign hash back to product array.
-    $products[$i] = \%product;
-}
-$vars->{'product'} = \@products;
+$vars->{'product'} = \@selectable_products;
 
 # Create data structures representing each classification
 if (Param('useclassification')) {

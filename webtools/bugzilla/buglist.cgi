@@ -40,6 +40,7 @@ use Bugzilla::Search::Quicksearch;
 use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Bug;
+use Bugzilla::Product;
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
@@ -51,8 +52,7 @@ use vars qw(@components
             @legal_product
             @legal_severity
             @settable_resolution
-            @target_milestone
-            @versions);
+            @target_milestone);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -1062,10 +1062,12 @@ if ($dotweak) {
     # products), and a list of components for the product.
     $vars->{'bugproducts'} = [ keys %$bugproducts ];
     if (scalar(@{$vars->{'bugproducts'}}) == 1) {
-        my $product = $vars->{'bugproducts'}->[0];
-        $vars->{'versions'} = $::versions{$product};
-        $vars->{'components'} = $::components{$product};
-        $vars->{'targetmilestones'} = $::target_milestone{$product} if Param('usetargetmilestone');
+        my $product = new Bugzilla::Product(
+            {name => $vars->{'bugproducts'}->[0]});
+        $vars->{'versions'} = [map($_->name ,@{$product->versions})];
+        $vars->{'components'} = [map($_->name, @{$product->components})];
+        $vars->{'targetmilestones'} = [map($_->name, @{$product->milestones})]
+            if Param('usetargetmilestone');
     }
 }
 

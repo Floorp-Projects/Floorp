@@ -32,7 +32,7 @@ use strict;
 
 use vars qw($legal_keywords @legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bug_status
-            @settable_resolution %components %versions %target_milestone
+            @settable_resolution %components %target_milestone
             @enterable_products %milestoneurl %prodmaxvotes);
 
 use CGI::Carp qw(fatalsToBrowser);
@@ -46,6 +46,7 @@ use Bugzilla::FlagType;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::Product;
 
 use base qw(Exporter);
 @Bugzilla::Bug::EXPORT = qw(
@@ -641,6 +642,7 @@ sub choices {
     &::GetVersionTable();
 
     $self->{'choices'} = {};
+    $self->{prod_obj} ||= new Bugzilla::Product({name => $self->{product}});
 
     # Fiddle the product list.
     my $seen_curr_prod;
@@ -686,7 +688,7 @@ sub choices {
        'bug_status' => \@::legal_bug_status,
        'resolution' => \@res,
        'component' => $::components{$self->{product}},
-       'version' => $::versions{$self->{product}},
+       'version' => [map($_->name, @{$self->{prod_obj}->versions})],
        'target_milestone' => $::target_milestone{$self->{product}},
       };
 

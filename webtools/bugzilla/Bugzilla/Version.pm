@@ -109,6 +109,13 @@ sub check_version {
     return $version;
 }
 
+sub distinct_names {
+    my $dbh = Bugzilla->dbh;
+    my $names = $dbh->selectcol_arrayref(
+        'SELECT DISTINCT value FROM versions ORDER BY value');
+    return @$names;
+}
+
 1;
 
 __END__
@@ -171,6 +178,17 @@ Version.pm represents a Product Version object.
               $version_name - String with a version name.
 
  Returns:     Bugzilla::Version object.
+
+=item C<distinct_names()>
+
+ Description: A utility function for getting all the
+              possible version values from the database,
+              regardless of what product they're in.
+              Returns a list with no duplicate versions.
+
+ Params:      none
+
+ Returns:     A list of strings (versions).
 
 =back
 

@@ -56,6 +56,7 @@ use Bugzilla::BugMail;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Field;
+use Bugzilla::Product;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
@@ -64,7 +65,6 @@ use Bugzilla::FlagType;
 # Shut up misguided -w warnings about "used only once":
 
 use vars qw(@legal_product
-          %versions
           %components
           %legal_opsys
           %legal_platform
@@ -308,6 +308,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     }
 
     my $prod = $cgi->param('product');
+    my $prod_obj = new Bugzilla::Product({name => $prod});
     trick_taint($prod);
 
     # If at least one bug does not belong to the product we are
@@ -335,7 +336,8 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     # pretty weird case, and not terribly unreasonable behavior, but 
     # worthy of a comment, perhaps.
     #
-    my $vok = lsearch($::versions{$prod}, $cgi->param('version')) >= 0;
+    my @version_names = map($_->name, @{$prod_obj->versions});
+    my $vok = lsearch(\@version_names, $cgi->param('version')) >= 0;
     my $cok = lsearch($::components{$prod}, $cgi->param('component')) >= 0;
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
@@ -359,7 +361,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             # We set the defaults to these fields to the old value,
             # if its a valid option, otherwise we use the default where
             # that's appropriate
-            $vars->{'versions'} = $::versions{$prod};
+            $vars->{'versions'} = \@version_names;
             if ($vok) {
                 $defaults{'version'} = $cgi->param('version');
             }
@@ -612,11 +614,11 @@ if (defined $cgi->param('id')) {
     # values that have been changed instead of submitting all the new values.
     # (XXX those error checks need to happen too, but implementing them 
     # is more work in the current architecture of this script...)
-    check_field('product', scalar $cgi->param('product'), \@::legal_product);
+    my $prod_obj = Bugzilla::Product::check_product($cgi->param('product'));
     check_field('component', scalar $cgi->param('component'), 
                 \@{$::components{$cgi->param('product')}});
     check_field('version', scalar $cgi->param('version'),
-                \@{$::versions{$cgi->param('product')}});
+                [map($_->name, @{$prod_obj->versions})]);
     if ( Param("usetargetmilestone") ) {
         check_field('target_milestone', scalar $cgi->param('target_milestone'), 
                     \@{$::target_milestone{$cgi->param('product')}});

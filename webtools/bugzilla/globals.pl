@@ -55,7 +55,6 @@ sub globals_pl_sillyness {
     $zz = @main::legal_product;
     $zz = @main::legal_severity;
     $zz = @main::legal_target_milestone;
-    $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
 }
@@ -107,21 +106,7 @@ $::SIG{PIPE} = 'IGNORE';
 sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;
 
-    SendSQL("SELECT versions.value, products.name " .
-            "FROM versions, products " .
-            "WHERE products.id = versions.product_id " .
-            "ORDER BY versions.value");
-    my @line;
-    my %varray;
-    my %carray;
-    while (@line = FetchSQLData()) {
-        my ($v,$p1) = (@line);
-        if (!defined $::versions{$p1}) {
-            $::versions{$p1} = [];
-        }
-        push @{$::versions{$p1}}, $v;
-        $varray{$v} = 1;
-    }
+    my (@line, %carray);
     SendSQL("SELECT components.name, products.name " .
             "FROM components, products " .
             "WHERE products.id = components.product_id " .
@@ -202,8 +187,7 @@ sub GenerateVersionTable {
         splice(@::settable_resolution, $z, 1);
     }
 
-    my @list = sort { uc($a) cmp uc($b)} keys(%::versions);
-    @::legal_product = @list;
+    @::legal_product = map($_->name, Bugzilla::Product::get_all_products());
 
     require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile("versioncache.XXXXX",
@@ -217,17 +201,16 @@ sub GenerateVersionTable {
     print $fh "#\n";
 
     require Data::Dumper;
-    print $fh (Data::Dumper->Dump([\@::log_columns, \%::versions],
-                                  ['*::log_columns', '*::versions']));
+    print $fh (Data::Dumper->Dump([\@::log_columns],
+                                  ['*::log_columns']));
 
-    foreach my $i (@list) {
+    foreach my $i (@::legal_product) {
         if (!defined $::components{$i}) {
             $::components{$i} = [];
         }
     }
-    @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
-    print $fh (Data::Dumper->Dump([\@::legal_versions, \%::components],
-                                  ['*::legal_versions', '*::components']));
+    print $fh (Data::Dumper->Dump([\%::components],
+                                  ['*::components']));
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
 
     print $fh (Data::Dumper->Dump([\@::legal_components, \@::legal_product,
@@ -311,11 +294,11 @@ sub GetVersionTable {
         $file_generated = 1;
     }
     require "$datadir/versioncache";
-    if (!defined %::versions && !$file_generated) {
+    if (!defined @::legal_keywords && !$file_generated) {
         GenerateVersionTable();
         do "$datadir/versioncache";
     }
-    if (!defined %::versions) {
+    if (!defined @::legal_keywords) {
         die "Can't generate file $datadir/versioncache";
     }
     $::VersionTableLoaded = 1;

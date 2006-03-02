@@ -52,7 +52,6 @@ use vars qw(
   @legal_priority
   @legal_severity
   @legal_keywords
-  %versions
   %target_milestone
 );
 
@@ -467,7 +466,7 @@ else {
 #
 # Eventually maybe each product should have a "current version"
 # parameter.
-$vars->{'version'} = $::versions{$product} || [];
+$vars->{'version'} = [map($_->name, @{$prod_obj->versions})];
 
 if ( ($cloned_bug_id) &&
      ("$product" eq "$cloned_bug->{'product'}" ) ) {

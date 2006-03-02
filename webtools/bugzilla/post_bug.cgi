@@ -33,13 +33,13 @@ use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Field;
+use Bugzilla::Product;
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
 sub sillyness {
     my $zz;
     $zz = %::components;
-    $zz = %::versions;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
@@ -100,7 +100,8 @@ ValidateComment($comment);
 my $product = $cgi->param('product');
 $user->can_enter_product($product, 1);
 
-my $product_id = get_product_id($product);
+my $prod_obj = new Bugzilla::Product({name => $product});
+my $product_id = $prod_obj->id;
 
 # Set cookies
 if (defined $cgi->param('product')) {
@@ -223,7 +224,8 @@ check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severi
 check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);
 check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
 check_field('bug_status',   scalar $cgi->param('bug_status'),   ['UNCONFIRMED', 'NEW']);
-check_field('version',      scalar $cgi->param('version'),      $::versions{$product});
+check_field('version',      scalar $cgi->param('version'),
+            [map($_->name, @{$prod_obj->versions})]);
 check_field('component',    scalar $cgi->param('component'),    $::components{$product});
 check_field('target_milestone', scalar $cgi->param('target_milestone'),
             $::target_milestone{$product});
