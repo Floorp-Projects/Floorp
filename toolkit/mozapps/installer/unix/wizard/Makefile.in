@@ -71,8 +71,8 @@ CPPSRCS		= \
 
 LIBS        = \
 	$(TK_LIBS) \
-	$(DIST)/lib/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+	$(DEPTH)/xpinstall/wizard/libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
         -lpthread \
         $(NULL)
 
@@ -81,8 +81,8 @@ LIBS    += -lnsl
 endif
 
 EXTRA_DEPS = \
-	$(DIST)/lib/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+	$(DEPTH)/xpinstall/wizard/libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 NO_DIST_INSTALL = 1

@@ -55,8 +55,8 @@ PROGRAM = updater$(BIN_SUFFIX)
 REQUIRES = libmar libbz2
 
 LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+	$(DEPTH)/modules/libbz2/src/$(LIB_PREFIX)bz2.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
