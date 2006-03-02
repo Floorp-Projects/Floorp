@@ -342,6 +342,7 @@ MODULES_NS_macbrowser :=                        \
 MODULES_macbrowser :=                           \
   $(MODULES_core)                               \
   mozilla/camino                                \
+  mozilla/themes                                \
   $(NULL)
 
 BOOTSTRAP_macbrowser :=                         \
