@@ -613,17 +613,17 @@ CheckStandardNames(nsIDOMSVGAnimatedString *aStr)
   nsAutoString str;
   aStr->GetAnimVal(str);
 
-  if (str.Equals(NS_LITERAL_STRING("SourceGraphic")))
+  if (str.EqualsLiteral("SourceGraphic"))
     return NS_FE_SOURCEGRAPHIC;
-  if (str.Equals(NS_LITERAL_STRING("SourceAlpha")))
+  if (str.EqualsLiteral("SourceAlpha"))
     return NS_FE_SOURCEALPHA;
-  if (str.Equals(NS_LITERAL_STRING("BackgroundImage")))
+  if (str.EqualsLiteral("BackgroundImage"))
     return NS_FE_BACKGROUNDIMAGE;
-  if (str.Equals(NS_LITERAL_STRING("BackgroundAlpha")))
+  if (str.EqualsLiteral("BackgroundAlpha"))
     return NS_FE_BACKGROUNDALPHA;
-  if (str.Equals(NS_LITERAL_STRING("FillPaint")))
+  if (str.EqualsLiteral("FillPaint"))
     return NS_FE_FILLPAINT;
-  if (str.Equals(NS_LITERAL_STRING("StrokePaint")))
+  if (str.EqualsLiteral("StrokePaint"))
     return NS_FE_STROKEPAINT;
   return 0;
 }
