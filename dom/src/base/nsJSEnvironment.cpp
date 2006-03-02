@@ -169,6 +169,10 @@ NS_ScriptErrorReporter(JSContext *cx,
 
   nsEventStatus status = nsEventStatus_eIgnore;
 
+  // Note: we must do this before running any more code on cx (if cx is the
+  // dynamic script context).
+  ::JS_ClearPendingException(cx);
+
   if (context) {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(context->GetGlobalObject()));
 
@@ -320,9 +324,6 @@ NS_ScriptErrorReporter(JSContext *cx,
     }
   }
 #endif
-
-  // XXX do we really want to be doing this?
-  ::JS_ClearPendingException(cx);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
