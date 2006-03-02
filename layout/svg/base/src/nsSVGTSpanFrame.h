@@ -189,8 +189,8 @@ protected:
 private:
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
   PRUint32 mCharOffset; // index of first character of this node relative to the enclosing <text>-element
-  PRBool mFragmentTreeDirty; 
-  PRBool mPropagateTransform;
+  PRPackedBool mFragmentTreeDirty;
+  PRPackedBool mPropagateTransform;
 };
 
 #endif
