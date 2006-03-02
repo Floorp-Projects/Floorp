@@ -110,13 +110,8 @@ ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
-ifndef MOZ_THUNDERBIRD
-SHARED_LIBRARY_LIBS += \
-		../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX) \
-		$(NULL)
-
+SHARED_LIBRARY_LIBS += ../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX)
 EXTRA_DSO_LIBS = gkgfx
-endif # MOZ_THUNDERBIRD
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \

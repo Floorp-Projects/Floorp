@@ -56,6 +56,7 @@ DIRS += \
 	alerts \
 	console \
 	filepicker \
+	typeaheadfind \
 	viewconfig \
 	$(NULL)
 
@@ -70,7 +71,6 @@ endif
 ifndef MOZ_THUNDERBIRD
 DIRS +=	\
 	cookie \
-	typeaheadfind \
 	$(NULL)
 
 ifdef MOZ_XUL
@@ -79,10 +79,13 @@ DIRS += \
 	history \
 	passwordmgr \
 	satchel \
-	help \
 	$(NULL)
 endif # MOZ_XUL
 endif # MOZ_THUNDERBIRD
+
+ifdef MOZ_XUL
+DIRS += help
+endif
 
 ifdef MOZ_XPINSTALL
 DIRS +=	downloads

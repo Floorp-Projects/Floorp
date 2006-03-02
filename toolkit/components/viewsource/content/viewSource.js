@@ -68,16 +68,12 @@ function onLoadViewSource()
 {
   viewSource(window.arguments[0]);
   document.commandDispatcher.focusedWindow = content;
-#ifdef MOZ_PHOENIX
   gFindBar.initFindBar();
-#endif
 }
 
 function onUnloadViewSource()
 {
-#ifdef MOZ_PHOENIX
   gFindBar.uninitFindBar();
-#endif
 }
 
 function getBrowser()

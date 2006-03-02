@@ -64,7 +64,6 @@
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
