@@ -108,9 +108,11 @@
 #endif
 #endif
 
+#ifndef WINCE
 #include <pbt.h>
 #ifndef PBT_APMRESUMEAUTOMATIC
 #define PBT_APMRESUMEAUTOMATIC 0x0012
+#endif
 #endif
 
 #include "nsNativeDragTarget.h"
