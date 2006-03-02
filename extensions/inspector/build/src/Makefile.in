@@ -72,14 +72,13 @@ CPPSRCS 	= \
 
 LOCAL_INCLUDES = -I$(srcdir)/../../base/src
 
-EXTRA_DSO_LIBS = gkgfx
-
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
+		../../base/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
+	$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
