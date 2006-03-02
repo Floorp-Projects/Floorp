@@ -318,6 +318,8 @@ function delayedOnLoadMessageWindow()
 
   CreateView(originalView);
   
+  gFindBar.initFindBar();
+  
   // initialize the customizeDone method on the customizeable toolbar
   var toolbox = document.getElementById("mail-toolbox");
   toolbox.customizeDone = MailToolboxCustomizeDone;
@@ -534,6 +536,8 @@ function OnUnloadMessageWindow()
 	OnUnloadMsgHeaderPane();
 
 	OnMailWindowUnload();
+	
+	gFindBar.uninitFindBar();
 }
 
 function CreateMessageWindowGlobals()
@@ -798,7 +802,7 @@ var MessageWindowController =
       case "cmd_getNextNMessages":
       case "cmd_find":
       case "cmd_findAgain":
-      case "cmd_findPrev":
+      case "cmd_findPrevious":
       case "cmd_search":
       case "cmd_reload":
       case "cmd_getNewMessages":
@@ -904,7 +908,7 @@ var MessageWindowController =
 			case "cmd_previousUnreadMsg":
 				return true;
 			case "cmd_findAgain":
-			case "cmd_findPrev":
+			case "cmd_findPrevious":
 				return MsgCanFindAgain();
       case "cmd_search":
         var loadedFolder = GetLoadedMsgFolder();
@@ -1019,7 +1023,7 @@ var MessageWindowController =
 			case "cmd_findAgain":
 				MsgFindAgain(false);
 				break;
-			case "cmd_findPrev":
+			case "cmd_findPrevious":
 				MsgFindAgain(true);
 				break;
       case "cmd_search":

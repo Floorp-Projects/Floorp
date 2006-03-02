@@ -245,8 +245,6 @@
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.key "g">
 <!ENTITY findAgainCmd.key2 "VK_F3">
-<!ENTITY findPrevCmd.label "Find Previous">
-<!ENTITY findPrevCmd.accesskey "v">
 <!ENTITY findPrevCmd.key "g">
 <!ENTITY findPrevCmd.key2 "VK_F3">
 <!ENTITY searchMailCmd.label "Search Messages...">

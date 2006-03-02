@@ -1372,26 +1372,16 @@ function MsgViewPageSource()
     ViewPageSource(messages);
 }
 
-var gFindInstData;
-function getFindInstData()
-{
-  if (!gFindInstData) {
-    gFindInstData = new nsFindInstData();
-    gFindInstData.browser = getMessageBrowser();
-    gFindInstData.__proto__.rootSearchWindow = window.top.content;
-    gFindInstData.__proto__.currentSearchWindow = window.top.content;
-  }
-  return gFindInstData;
-}
-
 function MsgFind()
 {
-  findInPage(getFindInstData());
+  gFindBar.onFindCmd();
 }
-
 function MsgFindAgain(reverse)
 {
-  findAgainInPage(getFindInstData(), reverse);
+  if (reverse)
+    gFindBar.onFindPreviousCmd();
+  else
+    gFindBar.onFindAgainCmd();
 }
 
 function MsgCanFindAgain()

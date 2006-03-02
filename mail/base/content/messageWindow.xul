@@ -67,7 +67,6 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
-    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
     <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
   </stringbundleset>
 
@@ -165,8 +164,8 @@
              disablesecurity="true" disablehistory="true" type="content-primary" 
              src="about:blank" onclick="return contentAreaClick(event);" autofind="false"/>
     <hbox id="attachmentView"/>
+    <toolbar id="FindToolbar"/>
   </vbox>  
 
   <statusbar class="chromeclass-status" id="status-bar"/>
-
 </window>

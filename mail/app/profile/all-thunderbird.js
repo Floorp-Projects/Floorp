@@ -179,6 +179,11 @@ pref("browser.preferences.animateFadeIn", true);
 pref("browser.preferences.animateFadeIn", false);
 #endif
 
+pref("accessibility.typeaheadfind", false);
+pref("accessibility.typeaheadfind.timeout", 5000);
+pref("accessibility.typeaheadfind.linksonly", false);
+pref("accessibility.typeaheadfind.flashBar", 1);
+
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs
 ///////////////////////////////////////////////////////////////// 

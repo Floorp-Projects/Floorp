@@ -200,7 +200,7 @@ var DefaultController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
-			case "cmd_findPrev":
+			case "cmd_findPrevious":
       case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
@@ -366,7 +366,7 @@ var DefaultController =
         return IsFolderSelected();
       case "cmd_find":
       case "cmd_findAgain":
-      case "cmd_findPrev":
+      case "cmd_findPrevious":
         return IsMessageDisplayedInMessagePane();
         break;
       case "cmd_search":
@@ -592,7 +592,7 @@ var DefaultController =
         SetFocusMessagePane(); 
 				MsgFindAgain(false);
 				return;
-			case "cmd_findPrev":
+			case "cmd_findPrevious":
         // make sure the message pane has focus before we start a find since we only support searching
         // within the message body. Do it here and not in MsgFind() which can be called from standalone where we don't want to set focus
         SetFocusMessagePane(); 

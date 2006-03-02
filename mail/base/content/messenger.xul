@@ -66,7 +66,6 @@
         windowtype="mail:3pane">
 
 <stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
 </stringbundleset>
@@ -399,11 +398,11 @@
                    disablehistory="true" type="content-primary" src="about:blank"
                    disablesecurity="true" onclick="return contentAreaClick(event);"/>
           <hbox id="attachmentView"/>
+          <toolbar id="FindToolbar"/>
         </vbox>  
       </box>
     </vbox>             
   </hbox>
-
   </box> <!-- end of mailContentWrapper -->
 
   <statusbar id="status-bar" class="chromeclass-status">

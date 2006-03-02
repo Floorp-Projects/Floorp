@@ -224,7 +224,7 @@ function InitMsgWindow()
   msgWindow.msgHeaderSink = messageHeaderSink;
   msgWindow.SetDOMWindow(window);
   mailSession.AddMsgWindow(msgWindow);
-  document.getElementById("messagepane").docShell.allowAuth = false;
+  getBrowser().docShell.allowAuth = false;
   msgWindow.rootDocShell.allowAuth = true; 
 }
 
@@ -600,6 +600,12 @@ function ShowingThreadPane()
 function HidingThreadPane()
 {
     ClearThreadPane();
+}
+
+// the find toolbar needs a method called getBrowser
+function getBrowser() 
+{
+  return document.getElementById("messagepane");
 }
 
 function ObserveDisplayDeckChange(event)

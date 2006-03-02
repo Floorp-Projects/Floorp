@@ -37,7 +37,8 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
@@ -51,6 +52,8 @@
   %contentAreaCommandsDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   %brandDTD;
+  <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd">
+  %findBarDTD;
 ]>
 
 <overlay
@@ -60,14 +63,14 @@
 <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
-<script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
+<script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgViewPickerOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
 <stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/> 
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>  
 </stringbundleset>
  
 <!-- Performance optimization...we include utilityOverlay.xul which defines some command sets
@@ -185,7 +188,7 @@
          valueGeneric="&folderPropsCmd.label;"/>
   <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
   <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
-  <command id="cmd_findPrev"  oncommand="goDoCommand('cmd_findPrev')"  disabled="true"/>
+  <command id="cmd_findPrevious"  oncommand="goDoCommand('cmd_findPrevious')"  disabled="true"/>
   <command id="cmd_stop" oncommand="MsgStop();"/>
 </commandset>
 
@@ -376,9 +379,9 @@
        modifiers="accel, shift"/>
   <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
   <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
-  <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="accel, shift"/>
+  <key id="key_findPrev"  key="&findPrevCmd.key;"    oncommand="goDoCommand('cmd_findPrevious')"  modifiers="accel, shift"/>
   <key keycode="&findAgainCmd.key2;"   oncommand="goDoCommand('cmd_findAgain')"/>
-  <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrev')"  modifiers="shift"/>
+  <key keycode="&findPrevCmd.key2;"    oncommand="goDoCommand('cmd_findPrevious')"  modifiers="shift"/>
   <key key="&quickSearchCmd.key;"  oncommand="QuickSearchFocus()" modifiers="accel"/>
   <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
 
@@ -1191,9 +1194,8 @@
         <menuseparator/>
         <menu label="&find.label;" accesskey="&find.accesskey;">
           <menupopup>
-        <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-        <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
-        <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
+            <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+            <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
             <menuseparator/>
             <menuitem id="searchMailCmd" label="&searchMailCmd.label;" 
                       key="key_searchMail" 
@@ -2056,7 +2058,9 @@
   </hbox>
 </deck>
 
-<statusbar class="chromeclass-status" id="status-bar">
+#include ../../../toolkit/components/typeaheadfind/content/findBar.inc
+
+  <statusbar class="chromeclass-status" id="status-bar">
   <hbox insertbefore="unreadMessageCount"  id="statusTextBox" flex="1">
     <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
