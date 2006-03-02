@@ -559,8 +559,6 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
       nsMsgDBView::RemoveByIndex(viewIndexOfThread - 1);
       if (m_deletingRows)
         mIndicesToNoteChange.Add(viewIndexOfThread - 1);
-      else
-        NoteChange(viewIndexOfThread - 1, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
     }
     else if (rootDeleted)
     {
