@@ -576,6 +576,25 @@
     </section>
   </section>
 
+  <section id="classifications">
+    <title>Classifications</title>
+
+    <para>Classifications tend to be used in order to group several related
+    products into one distinct entity.</para>
+
+    <para>The classifications layer is disabled by default; it can be turned
+    on or off using the useclassification parameter,
+    in the <emphasis>Bug Fields</emphasis> section of the edit parameters screen.</para>
+
+    <para>Access to the administration of classifications is controlled using
+    the <emphasis>editclassifications</emphasis> system group, which defines
+    a privilege for creating, destroying, and editing classifications.</para>
+
+    <para>When activated, classifications will introduce an additional
+    step when filling bugs (dedicated to classification selection), and they
+    will also appear in the advanced search form.</para>
+  </section>
+
   <section id="products">
     <title>Products</title>
 
@@ -583,7 +602,7 @@
     <glossterm linkend="gloss-product" baseform="product">
     Products</glossterm>
 
-    are the broadest category in Bugzilla, and tend to represent real-world
+    tend to represent real-world
     shipping products. E.g. if your company makes computer games, 
     you should have one product per game, perhaps a "Common" product for 
     units of technology used in multiple games, and maybe a few special
