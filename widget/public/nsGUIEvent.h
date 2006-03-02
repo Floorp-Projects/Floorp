@@ -950,8 +950,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_RIGHT_DOUBLECLICK) || \
         ((evnt)->message == NS_MOUSE_ENTER) || \
         ((evnt)->message == NS_MOUSE_EXIT) || \
-        ((evnt)->message == NS_MOUSE_ENTER) || \
-        ((evnt)->message == NS_MOUSE_EXIT) || \
+        ((evnt)->message == NS_MOUSE_ACTIVATE) || \
         ((evnt)->message == NS_MOUSE_ENTER_SYNTH) || \
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
