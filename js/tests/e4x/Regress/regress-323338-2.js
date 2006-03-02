@@ -48,4 +48,5 @@ printStatus (summary);
 
 <x/>.(function::children());
 
+TEST(1, expect, actual);
 END();

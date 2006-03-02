@@ -70,4 +70,6 @@ function testFunc()
              </div>;
 }
 
+TEST(1, expect, actual);
+
 END();
