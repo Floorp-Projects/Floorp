@@ -66,6 +66,16 @@ public:
    * the image frame, in preparation for rendering
    */
   NS_IMETHOD UpdateImageFrame () = 0;
+  
+  /**
+   * Determine whether the canvas is write-only.
+   */
+  virtual PRBool IsWriteOnly() = 0;
+
+  /**
+   * Force the canvas to be write-only.
+   */
+  virtual void SetWriteOnly() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasElement, NS_ICANVASELEMENT_IID)
