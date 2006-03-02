@@ -12,6 +12,7 @@ classic.jar:
   skin/classic/global/expander.css
   skin/classic/global/filepicker.css
   skin/classic/global/Filepicker.png
+  skin/classic/global/findBar.css
   skin/classic/global/formatting.css
   skin/classic/global/global.css
   skin/classic/global/globalBindings.xml
@@ -80,14 +81,18 @@ classic.jar:
   skin/classic/global/filepicker/folder-up.gif          (filepicker/folder-up.gif)
   skin/classic/global/icons/Close.gif                   (icons/Close.gif)
   skin/classic/global/icons/Error.png                   (icons/Error.png)
+  skin/classic/global/icons/find.png                    (icons/find.png)
   skin/classic/global/icons/folder-item.png             (icons/folder-item.png)
   skin/classic/global/icons/Loading.gif                 (icons/Loading.gif)
   skin/classic/global/icons/Message.png                 (icons/Message.png)
   skin/classic/global/icons/Minimize.gif                (icons/Minimize.gif)
+  skin/classic/global/icons/notfound.png                (icons/notfound.png)
   skin/classic/global/icons/Question.png                (icons/Question.png)
   skin/classic/global/icons/Restore.gif                 (icons/Restore.gif)
   skin/classic/global/icons/Warning.png                 (icons/Warning.png)
   skin/classic/global/icons/warning-large.png           (icons/warning-large.png)
+  skin/classic/global/icons/wrap.png                    (icons/wrap.png)
+  skin/classic/global/icons/close.png                   (icons/close.png)
   skin/classic/global/menu/Menu-arrow.png               (menu/Menu-arrow.png)
   skin/classic/global/menu/Menu-arrow-rtl.png           (menu/Menu-arrow-rtl.png)
   skin/classic/global/menu/Menu-arrow-disabled.png      (menu/Menu-arrow-disabled.png)
