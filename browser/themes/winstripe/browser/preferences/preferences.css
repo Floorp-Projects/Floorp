@@ -173,9 +173,8 @@ filefield[disabled="true"] .fileFieldIcon {
   background-color: transparent;
 }
 
-#backgroundBox {
-  background-color: #FFFFFF; 
-  opacity: 0.5;
+#cookieInfoGrid {
+  background-color: #E9E7E3; 
 }
 
 /* Download Actions Manager */

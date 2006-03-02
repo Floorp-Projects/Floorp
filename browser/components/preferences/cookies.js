@@ -514,9 +514,7 @@ var gCookiesWindow = {
   _updateCookieData: function (aItem)
   {
     var seln = this._view.selection;
-    var ids = ["nameLabel", "name", "valueLabel", "value", "isDomain", "host", 
-               "pathLabel", "path", "isSecureLabel", "isSecure", "expiresLabel", 
-               "expires"];
+    var ids = ["name", "value", "host", "path", "isSecure", "expires"];
     var properties;
     
     if (aItem && !aItem.container && seln.count > 0) {
