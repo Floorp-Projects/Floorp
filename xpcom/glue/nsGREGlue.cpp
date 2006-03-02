@@ -211,11 +211,10 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
           if (CFURLGetFileSystemRepresentation(xpcomurl, PR_TRUE,
                                                (UInt8*) tbuffer,
                                                sizeof(tbuffer)) &&
-              access(tbuffer, R_OK | X_OK) == 0 &&
-              realpath(tbuffer, aBuffer)) {
-            char *lastslash = strrchr(aBuffer, '/');
-            if (lastslash)
-              *lastslash = '\0';
+              access(tbuffer, R_OK | X_OK) == 0) {
+            if (!realpath(tbuffer, aBuffer)) {
+              aBuffer[0] = '\0';
+            }
           }
 
           CFRelease(xpcomurl);
