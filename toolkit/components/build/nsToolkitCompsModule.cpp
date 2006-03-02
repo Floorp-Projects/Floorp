@@ -49,9 +49,7 @@
 #include "nsDownloadProxy.h"
 #endif
 
-#ifndef MOZ_THUNDERBIRD
 #include "nsTypeAheadFind.h"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -67,9 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 #endif
 
-#ifndef MOZ_THUNDERBIRD
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -100,11 +96,11 @@ static const nsModuleComponentInfo components[] =
     NS_TRANSFER_CONTRACTID,
     nsDownloadProxyConstructor },
 #endif
-#ifndef MOZ_THUNDERBIRD
-  { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID,
-    NS_TYPEAHEADFIND_CONTRACTID, nsTypeAheadFindConstructor
+  { "TypeAheadFind Component",
+    NS_TYPEAHEADFIND_CID,
+    NS_TYPEAHEADFIND_CONTRACTID,
+    nsTypeAheadFindConstructor
   },
-#endif
 };
 
 NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)

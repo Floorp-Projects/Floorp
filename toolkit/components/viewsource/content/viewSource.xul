@@ -42,15 +42,9 @@
 #
 #***** END LICENSE BLOCK ***** -->
 
-#ifndef MOZ_THUNDERBIRD
-#define USE_FIND_TOOLBAR
-#endif
-
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
-#ifdef USE_FIND_TOOLBAR
 <?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
-#endif
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -59,10 +53,8 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
-#ifdef USE_FIND_TOOLBAR
 <!ENTITY % findBarDTD SYSTEM "chrome://global/locale/findbar.dtd" >
 %findBarDTD;
-#endif
 ]>
 
 <window id="viewSource"
@@ -89,13 +81,9 @@
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 #endif
-#ifdef USE_FIND_TOOLBAR
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
   <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
-#else
-  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
-#endif
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
   <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
@@ -104,15 +92,9 @@
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
-#ifdef USE_FIND_TOOLBAR
   <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
   <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
   <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>    
-#else
-  <command id="cmd_find" oncommand="getBrowser().find();"/>
-  <command id="cmd_findAgain" oncommand="getBrowser().findAgain()"/>
-  <command id="cmd_findPrevious" oncommand="getBrowser().findPrevious()"/>
-#endif
   <command id="cmd_reload" oncommand="ViewSourceReload();"/>
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
@@ -137,13 +119,11 @@
     <key key="&reloadCmd.commandkey;" command="cmd_reload" modifiers="accel,shift"/>
     <key keycode="VK_F5" command="cmd_reload"/>
     <key keycode="VK_F5" command="cmd_reload" modifiers="accel"/>
-#ifdef USE_FIND_TOOLBAR
     <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
     <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
     <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
     <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
-#endif
   </keyset>
 
   <popup id="viewSourceContextMenu">
@@ -231,9 +211,7 @@
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu"/>
-#ifdef USE_FIND_TOOLBAR
 #include ../../typeaheadfind/content/findBar.inc
-#endif
 
   </vbox> 
 
