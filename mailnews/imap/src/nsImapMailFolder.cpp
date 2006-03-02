@@ -7040,28 +7040,6 @@ nsImapFolderCopyState::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         case nsIImapUrl::nsImapEnsureExistsFolder:
         {
 
-          nsCOMPtr<nsISimpleEnumerator> messages;
-          rv = m_srcFolder->GetMessages(m_msgWindow, getter_AddRefs(messages));
-
-          nsCOMPtr<nsISupportsArray> msgSupportsArray;
-          NS_NewISupportsArray(getter_AddRefs(msgSupportsArray));
-
-          PRBool hasMoreElements;
-          nsCOMPtr<nsISupports> aSupport;
-
-          if (messages)
-            messages->HasMoreElements(&hasMoreElements);
-  
-          if (!hasMoreElements)
-            return StartNextCopy();
-
-          while (hasMoreElements && NS_SUCCEEDED(rv))
-          {
-            rv = messages->GetNext(getter_AddRefs(aSupport));
-            rv = msgSupportsArray->AppendElement(aSupport);
-            messages->HasMoreElements(&hasMoreElements);
-          }
-  
           nsCOMPtr<nsIMsgFolder> newMsgFolder;
 
           nsXPIDLString folderName;
@@ -7087,6 +7065,28 @@ nsImapFolderCopyState::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             }
           }
 
+          nsCOMPtr<nsISimpleEnumerator> messages;
+          rv = m_srcFolder->GetMessages(m_msgWindow, getter_AddRefs(messages));
+
+          nsCOMPtr<nsISupportsArray> msgSupportsArray;
+          NS_NewISupportsArray(getter_AddRefs(msgSupportsArray));
+
+          PRBool hasMoreElements;
+          nsCOMPtr<nsISupports> aSupport;
+
+          if (messages)
+            messages->HasMoreElements(&hasMoreElements);
+  
+          if (!hasMoreElements)
+            return AdvanceToNextFolder(NS_OK);
+
+          while (hasMoreElements && NS_SUCCEEDED(rv))
+          {
+            rv = messages->GetNext(getter_AddRefs(aSupport));
+            rv = msgSupportsArray->AppendElement(aSupport);
+            messages->HasMoreElements(&hasMoreElements);
+          }
+  
           nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv))
             rv = copyService->CopyMessages(m_srcFolder,
