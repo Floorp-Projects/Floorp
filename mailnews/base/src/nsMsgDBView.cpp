@@ -2903,9 +2903,18 @@ nsMsgDBView::PerformActionsOnJunkMsgs()
   }
   if (movingJunkMessages) 
   {
-    // tell the FE to call SetNextMessageAfterDelete() because a delete is coming
-    rv = mCommandUpdater->UpdateNextMessageAfterDelete();
-    NS_ENSURE_SUCCESS(rv,rv);
+    // check if one of the messages to be junked is actually selected
+    // if more than one message being junked, one must be selected
+    PRBool junkedMsgSelected = mNumJunkIndices > 1;
+    for (nsMsgViewIndex junkIndex = 0; !junkedMsgSelected && junkIndex < mNumJunkIndices; junkIndex++)
+      mTreeSelection->IsSelected(mJunkIndices[junkIndex], &junkedMsgSelected);
+
+    // if a junked msg is selected, tell the FE to call SetNextMessageAfterDelete() because a delete is coming
+    if (junkedMsgSelected)
+    {
+      rv = mCommandUpdater->UpdateNextMessageAfterDelete();
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
   
     NoteStartChange(nsMsgViewNotificationCode::none, 0, 0);
     if (junkTargetFolder) 
