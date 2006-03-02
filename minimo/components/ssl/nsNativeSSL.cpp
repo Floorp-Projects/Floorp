@@ -208,7 +208,7 @@ static int SSLValidationHook(DWORD dwType, LPVOID pvArg, DWORD dwChainLen, LPBLO
 
   if (! _stricmp (destinationHost, subject))
   {
-    info->mSecurityState = nsIWebProgressListener::STATE_IS_SECURE | nsIWebProgressListener.STATE_SECURE_HIGH;
+    info->mSecurityState = nsIWebProgressListener::STATE_IS_SECURE | nsIWebProgressListener::STATE_SECURE_HIGH;
     res = SSL_ERR_OKAY;
   }
   else
