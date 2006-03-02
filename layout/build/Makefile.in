@@ -118,70 +118,70 @@ EXPORTS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconcvs_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)txbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)txxml_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)txxpath_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)txxslt_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
-		$(NULL)
+	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
+	../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
+	../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
+	../style/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
+	../tables/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
+	../xul/base/src/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/base/src/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/canvas/src/$(LIB_PREFIX)gkconcvs_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/events/src/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/html/content/src/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xml/content/src/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xml/document/src/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xslt/src/base/$(LIB_PREFIX)txbase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xslt/src/xml/$(LIB_PREFIX)txxml_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xslt/src/xpath/$(LIB_PREFIX)txxpath_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xslt/src/xslt/$(LIB_PREFIX)txxslt_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xbl/src/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xul/document/src/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
+	$(DEPTH)/view/src/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
+		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
+		../xul/base/src/tree/src/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
+		../xul/base/src/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+		$(DEPTH)/content/xul/content/src/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
+		$(DEPTH)/content/xul/templates/src/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gkmathmlcon_s.$(LIB_SUFFIX) \
-                $(DIST)/lib/$(LIB_PREFIX)gkmathmlbase_s.$(LIB_SUFFIX) \
+                ../mathml/content/src/$(LIB_PREFIX)gkmathmlcon_s.$(LIB_SUFFIX) \
+                ../mathml/base/src/$(LIB_PREFIX)gkmathmlbase_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
 
 ifdef MOZ_XTF
 SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)gkcontentxtf_s.$(LIB_SUFFIX) \
-                $(DIST)/lib/$(LIB_PREFIX)gkxtfbase_s.$(LIB_SUFFIX) \
+		$(DEPTH)/content/xtf/src/$(LIB_PREFIX)gkcontentxtf_s.$(LIB_SUFFIX) \
+                ../xtf/src/$(LIB_PREFIX)gkxtfbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 
 ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
+                ../svg/base/src/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
+		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
+		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
                 $(NULL)
 
 ifdef MOZ_SVG_RENDERER_GDIPLUS
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gksvgrenderergdiplus_s.$(LIB_SUFFIX) \
+                ../svg/renderer/src/gdiplusshim/$(LIB_PREFIX)gksvgrenderergdiplus_s.$(LIB_SUFFIX) \
                 $(NULL)
 
 OS_LIBS += \
@@ -190,12 +190,12 @@ OS_LIBS += \
 endif
 ifdef MOZ_SVG_RENDERER_LIBART
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
+                ../svg/renderer/src/libart/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
 ifdef MOZ_SVG_RENDERER_CAIRO
 SHARED_LIBRARY_LIBS += \
-                $(DIST)/lib/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
+                ../svg/renderer/src/cairo/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
                 $(NULL)
 endif
 endif

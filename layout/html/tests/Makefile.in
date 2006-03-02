@@ -61,28 +61,26 @@ CPPSRCS		= \
 		TestCSSPropertyLookup.cpp \
 		$(NULL)
 
-EXTRA_DSO_LIBS += gkgfx
-
 LIBS		= \
-		$(LIBS_DIR) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
-		$(MOZ_JS_LIBS) \
-		$(EXTRA_DSO_LIBS) \
-		$(TK_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+	$(LIBS_DIR) \
+	$(DEPTH)/content/html/content/src/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
+	../../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
+	../../style/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
+	../../tables/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
+	../../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
+	../../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/base/src/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/events/src/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xml/content/src/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
+	$(DEPTH)/content/xml/document/src/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
+	../../xul/base/src/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
+	$(MOZ_JS_LIBS) \
+	$(call EXPAND_LIBNAME_PATH,gkgfx,$(DEPTH)/gfx/src) \
+	$(TK_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
