@@ -86,6 +86,8 @@ public:
   NS_IMETHOD GetCanvasImageContainer(imgIContainer **aImageContainer);
   NS_IMETHOD GetPrimaryCanvasFrame(nsIFrame **aFrame);
   NS_IMETHOD UpdateImageFrame();
+  virtual PRBool IsWriteOnly();
+  virtual void SetWriteOnly();
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -113,8 +115,15 @@ protected:
   nsString mCurrentContextId;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
 
-  nsCOMPtr<imgIContainer> mImageContainer;
+  nsCOMPtr<imgIContainer>  mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
+  
+public:
+  // Record whether this canvas should be write-only or not.
+  // We set this when script paints an image from a different origin.
+  // We also transitively set it when script paints a canvas which
+  // is itself write-only.
+  PRPackedBool             mWriteOnly;
 };
 
 nsGenericHTMLElement*
@@ -124,7 +133,7 @@ NS_NewHTMLCanvasElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 }
 
 nsHTMLCanvasElement::nsHTMLCanvasElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo), mWriteOnly(PR_FALSE)
 {
 }
 
@@ -290,6 +299,11 @@ nsHTMLCanvasElement::ToDataURLAs(const nsAString& aMimeType,
                                  nsAString& aDataURL)
 {
   nsresult rv;
+  
+  if (mWriteOnly) {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
+    return NS_ERROR_FAILURE;
+  }
 
   // We get an input stream from the context. If more than one context type
   // is supported in the future, this will have to be changed to do the right
@@ -303,6 +317,7 @@ nsHTMLCanvasElement::ToDataURLAs(const nsAString& aMimeType,
   NS_ConvertUTF16toUTF8 aMimeType8(aMimeType);
   rv = context->GetInputStream(aMimeType8, aEncoderOptions,
                                getter_AddRefs(imgStream));
+  // XXX ERRMSG we need to report an error to developers here! (bug 329026)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Generally, there will be only one chunk of data, and it will be available
@@ -367,6 +382,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
           (ctxId[i] != '-') &&
           (ctxId[i] != '_'))
       {
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_INVALID_ARG;
       }
     }
@@ -378,6 +394,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     if (rv == NS_ERROR_OUT_OF_MEMORY)
       return NS_ERROR_OUT_OF_MEMORY;
     if (NS_FAILED(rv))
+      // XXX ERRMSG we need to report an error to developers here! (bug 329026)
       return NS_ERROR_INVALID_ARG;
 
     rv = mCurrentContext->SetCanvasElement(this);
@@ -472,4 +489,16 @@ nsHTMLCanvasElement::UpdateImageFrame()
     return mCurrentContext->UpdateImageFrame();
 
   return NS_OK;
+}
+
+PRBool
+nsHTMLCanvasElement::IsWriteOnly()
+{
+  return mWriteOnly;
+}
+
+void
+nsHTMLCanvasElement::SetWriteOnly()
+{
+  mWriteOnly = PR_TRUE;
 }

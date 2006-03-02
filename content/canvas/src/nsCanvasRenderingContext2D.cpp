@@ -157,8 +157,9 @@ class nsCanvasPattern : public nsIDOMCanvasPattern
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
 
-    nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree)
-        : mPattern(cpat), mData(dataToFree)
+    nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree,
+                    nsIURI* URIForSecurityCheck)
+        : mPattern(cpat), mData(dataToFree), mURI(URIForSecurityCheck)
     { }
 
     ~nsCanvasPattern() {
@@ -171,12 +172,15 @@ public:
     void Apply(cairo_t *cairo) {
         cairo_set_source(cairo, mPattern);
     }
+    
+    nsIURI* GetURI() { return mURI; }
 
     NS_DECL_ISUPPORTS
 
 protected:
     cairo_pattern_t *mPattern;
     PRUint8 *mData;
+    nsCOMPtr<nsIURI> mURI;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
@@ -238,6 +242,15 @@ protected:
 
     void DirtyAllStyles();
     void ApplyStyle(PRInt32 aWhichStyle);
+    
+    // If aURI has a different origin than the current script, then
+    // we make the canvas write-only so bad guys can't extract the pixel
+    // data.
+    void DoDrawImageSecurityCheck(nsIURI* aURI);
+    // If aImage is a write-only canvas, then we make this canvas write-only
+    // so bad guys can't extract the pixel data of foreign-origin images
+    // by copying them into a canvas and then that canvas into another canvas.
+    void DoDrawCanvasSecurityCheck(nsIDOMHTMLCanvasElement* aImage);
 
     // Member vars
     PRInt32 mWidth, mHeight;
@@ -280,7 +293,8 @@ protected:
     nsresult CairoSurfaceFromElement(nsIDOMElement *imgElt,
                                      cairo_surface_t **aCairoSurface,
                                      PRUint8 **imgDataOut,
-                                     PRInt32 *widthOut, PRInt32 *heightOut);
+                                     PRInt32 *widthOut, PRInt32 *heightOut,
+                                     nsIURI **uriOut);
 
     nsresult DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
                                 nsIDrawingSurface* aWhiteSurface,
@@ -469,6 +483,38 @@ nsCanvasRenderingContext2D::DirtyAllStyles()
 }
 
 void
+nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI)
+{
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    if (elem && ssm) {
+        nsIPrincipal* elemPrincipal = elem->GetNodePrincipal();
+        nsCOMPtr<nsIPrincipal> uriPrincipal;
+        ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
+        if (uriPrincipal && elemPrincipal) {
+            nsresult rv =
+                ssm->CheckSameOriginPrincipal(elemPrincipal, uriPrincipal);
+            if (NS_SUCCEEDED(rv)) {
+                // Same origin
+                return;
+            }
+        }
+    }
+    
+    mCanvasElement->SetWriteOnly();
+}
+
+void
+nsCanvasRenderingContext2D::DoDrawCanvasSecurityCheck(nsIDOMHTMLCanvasElement* aCanvas)
+{
+    nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(aCanvas);
+    if (canvas && !canvas->IsWriteOnly())
+        return;
+    
+    mCanvasElement->SetWriteOnly();
+}
+
+void
 nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
 {
     if (mLastStyle == aWhichStyle &&
@@ -481,8 +527,12 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
     mDirtyStyle[aWhichStyle] = PR_FALSE;
     mLastStyle = aWhichStyle;
 
-    if (mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle]) {
-        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle]->Apply(mCairo);
+    nsCanvasPattern* pattern = mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle];
+    if (pattern) {
+        if (pattern->GetURI()) {
+            DoDrawImageSecurityCheck(pattern->GetURI());
+        }
+        pattern->Apply(mCairo);
         return;
     }
 
@@ -802,6 +852,7 @@ nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant* aStyle)
     if (StyleVariantToColor(aStyle, STYLE_STROKE))
         return NS_OK;
 
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_ERROR_INVALID_ARG;
 }
 
@@ -840,6 +891,7 @@ nsCanvasRenderingContext2D::SetFillStyle(nsIVariant* aStyle)
     if (StyleVariantToColor(aStyle, STYLE_FILL))
         return NS_OK;
 
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_ERROR_INVALID_ARG;
 }
 
@@ -927,13 +979,16 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
     } else if (repeat.EqualsLiteral("no-repeat")) {
         extend = CAIRO_EXTEND_NONE;
     } else {
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
     cairo_surface_t *imgSurf = nsnull;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
-    rv = CairoSurfaceFromElement(image, &imgSurf, &imgData, &imgWidth, &imgHeight);
+    nsCOMPtr<nsIURI> uri;
+    rv = CairoSurfaceFromElement(image, &imgSurf, &imgData,
+                                 &imgWidth, &imgHeight, getter_AddRefs(uri));
     if (NS_FAILED(rv))
         return rv;
 
@@ -942,7 +997,7 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
 
     cairo_pattern_set_extend (cairopat, extend);
 
-    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData);
+    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData, uri);
     if (!pat) {
         cairo_pattern_destroy(cairopat);
         nsMemory::Free(imgData);
@@ -959,6 +1014,7 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetX(float x)
 {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
 
@@ -972,6 +1028,7 @@ nsCanvasRenderingContext2D::GetShadowOffsetX(float *x)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetY(float y)
 {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
 
@@ -985,6 +1042,7 @@ nsCanvasRenderingContext2D::GetShadowOffsetY(float *y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowBlur(float blur)
 {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
 
@@ -998,6 +1056,7 @@ nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowColor(const nsAString& color)
 {
+    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_OK;
 }
 
@@ -1188,6 +1247,7 @@ nsCanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
     else if (capstyle.EqualsLiteral("square"))
         cap = CAIRO_LINE_CAP_SQUARE;
     else
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_NOT_IMPLEMENTED;
 
     cairo_set_line_cap (mCairo, cap);
@@ -1223,6 +1283,7 @@ nsCanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
     else if (joinstyle.EqualsLiteral("miter"))
         j = CAIRO_LINE_JOIN_MITER;
     else
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_NOT_IMPLEMENTED;
 
     cairo_set_line_join (mCairo, j);
@@ -1313,15 +1374,25 @@ nsCanvasRenderingContext2D::DrawImage()
         nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imgElt);
         nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(imgElt);
         if (!image && !canvas)
+            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
             return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+        
+        if (canvas) {
+            DoDrawCanvasSecurityCheck(canvas);
+        }
     }
 
     cairo_surface_t *imgSurf = nsnull;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
-    rv = CairoSurfaceFromElement(imgElt, &imgSurf, &imgData, &imgWidth, &imgHeight);
+    nsCOMPtr<nsIURI> uri;
+    rv = CairoSurfaceFromElement(imgElt, &imgSurf, &imgData,
+                                 &imgWidth, &imgHeight, getter_AddRefs(uri));
     if (NS_FAILED(rv))
         return rv;
+    if (uri) {
+        DoDrawImageSecurityCheck(uri);
+    }
 
 #define GET_ARG(dest,whicharg) \
     if (!ConvertJSValToDouble(dest, ctx, whicharg)) return NS_ERROR_INVALID_ARG
@@ -1350,6 +1421,7 @@ nsCanvasRenderingContext2D::DrawImage()
         GET_ARG(&dw, argv[7]);
         GET_ARG(&dh, argv[8]);
     } else {
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_INVALID_ARG;
     }
 #undef GET_ARG
@@ -1360,6 +1432,7 @@ nsCanvasRenderingContext2D::DrawImage()
         sh < 0.0 || sh > (double) imgHeight ||
         dw < 0.0 || dh < 0.0)
     {
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
@@ -1513,7 +1586,8 @@ nsresult
 nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
                                                     cairo_surface_t **aCairoSurface,
                                                     PRUint8 **imgData,
-                                                    PRInt32 *widthOut, PRInt32 *heightOut)
+                                                    PRInt32 *widthOut, PRInt32 *heightOut,
+                                                    nsIURI **uriOut)
 {
     nsresult rv;
 
@@ -1526,8 +1600,13 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
                                      getter_AddRefs(imgRequest));
         NS_ENSURE_SUCCESS(rv, rv);
         if (!imgRequest)
+            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
             return NS_ERROR_NOT_AVAILABLE;
-        
+
+        nsCOMPtr<nsIURI> uri;
+        rv = imageLoader->GetCurrentURI(uriOut);
+        NS_ENSURE_SUCCESS(rv, rv);
+       
         rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
@@ -1870,6 +1949,7 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
 
     if (!isTrusted) {
         // not permitted to use DrawWindow
+        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         return NS_ERROR_DOM_SECURITY_ERR;
     }
     
