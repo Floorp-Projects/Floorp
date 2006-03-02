@@ -180,9 +180,10 @@ function gc()
   catch(ex)
   {
     // Thanks to igor.bukanov@gmail.com
+    var tmp = Math.PI * 1e500, tmp2;
     for (var i = 0; i != 1 << 15; ++i) 
     {
-      new Object();
+      tmp2 = tmp * 1.5;
     }
   }
 }
