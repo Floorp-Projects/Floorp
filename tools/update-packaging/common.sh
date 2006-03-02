@@ -18,8 +18,8 @@ notice() {
 }
 
 get_file_size() {
-  info=($(ls -gG "$1"))
-  echo ${info[2]}
+  info=($(ls -ln "$1"))
+  echo ${info[4]}
 }
 
 copy_perm() {
