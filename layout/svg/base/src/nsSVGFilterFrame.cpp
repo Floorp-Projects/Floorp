@@ -61,10 +61,14 @@
 #include "nsSVGPoint.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsSVGUtils.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 
 class nsSVGFilterFrame : public nsSVGDefsFrame,
                          public nsSVGValue,
-                         public nsISVGFilterFrame
+                         public nsISVGFilterFrame,
+                         public nsISVGValueObserver,
+                         public nsSupportsWeakReference
 {
 protected:
   friend nsIFrame*
@@ -121,6 +125,8 @@ private:
 NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGFilterFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 

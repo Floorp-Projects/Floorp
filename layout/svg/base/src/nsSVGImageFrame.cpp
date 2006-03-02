@@ -59,6 +59,8 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMaskFrame.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -91,9 +93,10 @@ protected:
   NS_IMETHOD InitSVG();
 
 public:
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -157,18 +160,6 @@ NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 
 nsSVGImageFrame::~nsSVGImageFrame()
 {
-  nsCOMPtr<nsISVGValue> value;
-  if (mX && (value = do_QueryInterface(mX)))
-      value->RemoveObserver(this);
-  if (mY && (value = do_QueryInterface(mY)))
-      value->RemoveObserver(this);
-  if (mWidth && (value = do_QueryInterface(mWidth)))
-      value->RemoveObserver(this);
-  if (mHeight && (value = do_QueryInterface(mHeight)))
-      value->RemoveObserver(this);
-  if (mPreserveAspectRatio && (value = do_QueryInterface(mPreserveAspectRatio)))
-      value->RemoveObserver(this);
-
   // set the frame to null so we don't send messages to a dead object.
   if (mListener) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
@@ -195,9 +186,6 @@ nsSVGImageFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no x");
     if (!mX) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -206,9 +194,6 @@ nsSVGImageFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no y");
     if (!mY) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -217,9 +202,6 @@ nsSVGImageFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mWidth));
     NS_ASSERTION(mWidth, "no width");
     if (!mWidth) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -228,9 +210,6 @@ nsSVGImageFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mHeight));
     NS_ASSERTION(mHeight, "no height");
     if (!mHeight) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -239,9 +218,6 @@ nsSVGImageFrame::InitSVG()
     ratio->GetAnimVal(getter_AddRefs(mPreserveAspectRatio));
     NS_ASSERTION(mHeight, "no preserveAspectRatio");
     if (!mPreserveAspectRatio) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mPreserveAspectRatio);
-    if (value)
-      value->AddObserver(this);
   }
 
   mSurface = nsnull;
@@ -257,19 +233,25 @@ nsSVGImageFrame::InitSVG()
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGImageFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                        nsISVGValue::modificationType aModType)
+nsSVGImageFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                  nsIAtom*        aAttribute,
+                                  PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
-  if (l && (mX==l || mY==l || mWidth==l || mHeight==l)) {
-    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
-    return NS_OK;
-  }
-  // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+   if (aNameSpaceID == kNameSpaceID_None &&
+       (aAttribute == nsGkAtoms::x ||
+        aAttribute == nsGkAtoms::y ||
+        aAttribute == nsGkAtoms::width ||
+        aAttribute == nsGkAtoms::height ||
+        aAttribute == nsGkAtoms::preserveAspectRatio)) {
+     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+     return NS_OK;
+   }
+
+   return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                   aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------

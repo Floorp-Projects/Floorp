@@ -40,12 +40,16 @@
 #define NSSVGGFRAME_H
 
 #include "nsSVGDefsFrame.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 
 typedef nsSVGDefsFrame nsSVGGFrameBase;
 
 class nsISVGFilterFrame;
 
-class nsSVGGFrame : public nsSVGGFrameBase
+class nsSVGGFrame : public nsSVGGFrameBase,
+                    public nsISVGValueObserver,
+                    public nsSupportsWeakReference
 {
 public:
   nsSVGGFrame() : mFilter(nsnull), mPropagateTransform(PR_TRUE) {}
@@ -67,6 +71,11 @@ public:
 #endif
 
 protected:
+   // nsISupports interface:
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
+
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 

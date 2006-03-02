@@ -49,6 +49,8 @@
 #include "nsLayoutAtoms.h"
 #include "nsISVGPathFlatten.h"
 #include "nsSVGUtils.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 class nsSVGPathFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable,
@@ -58,13 +60,13 @@ protected:
   friend nsIFrame*
   NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  ~nsSVGPathFrame();
   NS_IMETHOD InitSVG();
   
 public:
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -121,13 +123,6 @@ NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGPathFrame;
 }
 
-nsSVGPathFrame::~nsSVGPathFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mSegments && (value = do_QueryInterface(mSegments)))
-      value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGPathFrame::InitSVG()
 {
@@ -139,27 +134,26 @@ nsSVGPathFrame::InitSVG()
   anim_data->GetAnimatedPathSegList(getter_AddRefs(mSegments));
   NS_ASSERTION(mSegments, "no pathseglist");
   if (!mSegments) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(mSegments);
-  if (value)
-    value->AddObserver(this);
   
   return NS_OK;
 }  
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsISVGFrame methods:
 
 NS_IMETHODIMP
-nsSVGPathFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                       nsISVGValue::modificationType aModType)
+nsSVGPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                 nsIAtom*        aAttribute,
+                                 PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGPathSegList> l = do_QueryInterface(observable);
-  if (l && mSegments==l) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::d) {
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
-  // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------

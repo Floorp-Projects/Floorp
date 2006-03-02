@@ -91,7 +91,9 @@ static void printRect(char *msg, nsIDOMSVGRect *aRect);
 
 class nsSVGPatternFrame : public nsSVGPatternFrameBase,
                           public nsSVGValue,
-                          public nsISVGPattern
+                          public nsISVGPattern,
+                          public nsISVGValueObserver,
+                          public nsSupportsWeakReference
 {
 protected:
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 

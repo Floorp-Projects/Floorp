@@ -44,9 +44,7 @@
 #include "nsPresContext.h"
 #include "nsISVGTextContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsWeakReference.h"
 #include "nsISVGValue.h"
-#include "nsISVGValueObserver.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLengthList.h"
@@ -73,17 +71,13 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
                         public nsISVGGlyphFragmentNode,
                         public nsISVGChildFrame,
                         public nsISVGContainerFrame,
-                        public nsISVGValueObserver,
-                        public nsISVGTextContentMetrics,
-                        public nsSupportsWeakReference
+                        public nsISVGTextContentMetrics
 {
   friend nsIFrame*
   NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                       nsIFrame* parentFrame);
 protected:
   nsSVGTSpanFrame();
-  virtual ~nsSVGTSpanFrame();
-  virtual nsresult InitSVG();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -100,11 +94,9 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   /**
    * Get the "type" of the frame
@@ -120,12 +112,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGTSpan"), aResult);
   }
 #endif
-
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
 
   // nsISVGTextContentMetrics
   NS_IMETHOD GetNumberOfChars(PRInt32 *_retval);

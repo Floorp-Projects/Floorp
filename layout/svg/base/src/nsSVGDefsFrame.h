@@ -42,23 +42,17 @@
 #include "nsContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGContainerFrame.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 #include "nsLayoutAtoms.h"
 
 typedef nsContainerFrame nsSVGDefsFrameBase;
 
 class nsSVGDefsFrame : public nsSVGDefsFrameBase,
                        public nsISVGChildFrame,
-                       public nsISVGContainerFrame,
-                       public nsISVGValueObserver,
-                       public nsSupportsWeakReference
+                       public nsISVGContainerFrame
 {
   friend nsIFrame*
   NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
-  nsSVGDefsFrame();
-  virtual ~nsSVGDefsFrame();
   NS_IMETHOD InitSVG();
   
    // nsISupports interface:
@@ -81,6 +75,10 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
+  NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType);
+
   /**
    * Get the "type" of the frame
    *
@@ -96,15 +94,6 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
                       const nsRect& dirtyRectTwips,

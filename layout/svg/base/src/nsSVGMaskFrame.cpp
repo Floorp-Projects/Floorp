@@ -55,7 +55,6 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase,
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGMaskFrame();
   NS_IMETHOD InitSVG();
 
  public:
@@ -141,16 +140,6 @@ NS_GetSVGMaskFrame(nsISVGMaskFrame **aResult,
   return NS_OK;
 }
 
-nsSVGMaskFrame::~nsSVGMaskFrame()
-{
-  NS_REMOVE_SVGVALUE_OBSERVER(mX);
-  NS_REMOVE_SVGVALUE_OBSERVER(mY);
-  NS_REMOVE_SVGVALUE_OBSERVER(mWidth);
-  NS_REMOVE_SVGVALUE_OBSERVER(mHeight);
-  NS_REMOVE_SVGVALUE_OBSERVER(mMaskUnits);
-  NS_REMOVE_SVGVALUE_OBSERVER(mMaskContentUnits);
-}
-
 NS_IMETHODIMP
 nsSVGMaskFrame::InitSVG()
 {
@@ -169,7 +158,6 @@ nsSVGMaskFrame::InitSVG()
     length->GetBaseVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no X");
     if (!mX) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mX);
   }
 
   {
@@ -178,7 +166,6 @@ nsSVGMaskFrame::InitSVG()
     length->GetBaseVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no Y");
     if (!mY) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mY);
   }
 
   {
@@ -187,7 +174,6 @@ nsSVGMaskFrame::InitSVG()
     length->GetBaseVal(getter_AddRefs(mWidth));
     NS_ASSERTION(mWidth, "no Width");
     if (!mWidth) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mWidth);
   }
 
   {
@@ -196,14 +182,11 @@ nsSVGMaskFrame::InitSVG()
     length->GetBaseVal(getter_AddRefs(mHeight));
     NS_ASSERTION(mHeight, "no Height");
     if (!mHeight) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mHeight);
   }
 
   mask->GetMaskUnits(getter_AddRefs(mMaskUnits));
-  NS_ADD_SVGVALUE_OBSERVER(mMaskUnits);
 
   mask->GetMaskContentUnits(getter_AddRefs(mMaskContentUnits));
-  NS_ADD_SVGVALUE_OBSERVER(mMaskContentUnits);
 
   return NS_OK;
 }

@@ -44,6 +44,8 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsSVGMatrix.h"
 #include "nsLayoutAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -64,6 +66,10 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 
 public:
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -126,9 +132,6 @@ nsSVGUseFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no x");
     if (!mX) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    if (value)
-      value->AddObserver(this);  // nsISVGValueObserver
   }
 
   {
@@ -137,9 +140,6 @@ nsSVGUseFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no y");
     if (!mY) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    if (value)
-      value->AddObserver(this);
   }
 
   return NS_OK;
@@ -157,6 +157,35 @@ nsSVGUseFrame::GetType() const
 NS_INTERFACE_MAP_BEGIN(nsSVGUseFrame)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGUseFrameBase)
+
+//----------------------------------------------------------------------
+// nsIFrame methods:
+
+NS_IMETHODIMP
+nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                nsIAtom*        aAttribute,
+                                PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y)) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+    
+    for (nsIFrame* kid = mFrames.FirstChild(); kid;
+         kid = kid->GetNextSibling()) {
+      nsISVGChildFrame* SVGFrame=nsnull;
+      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+      if (SVGFrame)
+        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+    }
+    return NS_OK;
+  }
+
+  return nsSVGUseFrameBase::AttributeChanged(aNameSpaceID,
+                                             aAttribute, aModType);
+}
+
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:

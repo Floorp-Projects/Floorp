@@ -52,6 +52,11 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGMaskFrame.h"
 
+NS_INTERFACE_MAP_BEGIN(nsSVGGFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
+
 //----------------------------------------------------------------------
 // Implementation
 
@@ -336,11 +341,9 @@ nsSVGGFrame::WillModifySVGObservable(nsISVGValue* observable,
     nsCOMPtr<nsISVGRendererRegion> region;
     nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
     outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-
-    return NS_OK;
   }
 
-  return nsSVGGFrameBase::WillModifySVGObservable(observable, aModType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -370,5 +373,5 @@ nsSVGGFrame::DidModifySVGObservable(nsISVGValue* observable,
       outerSVGFrame->InvalidateRegion(region, PR_TRUE);
   }
 
-  return nsSVGGFrameBase::DidModifySVGObservable(observable, aModType);
+  return NS_OK;
 }

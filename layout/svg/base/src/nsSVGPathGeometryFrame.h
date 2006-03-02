@@ -105,7 +105,6 @@ public:
 #endif
 
 protected:
-  
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);

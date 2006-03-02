@@ -136,6 +136,8 @@ protected:
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
+
+  PRPackedBool mSuppressNotification;
 };
 
 /**

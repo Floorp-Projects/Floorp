@@ -47,6 +47,8 @@
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
 #include "nsLayoutAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 class nsSVGLineFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable
@@ -55,7 +57,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGLineFrame();
   NS_IMETHOD InitSVG();
 
   /**
@@ -73,9 +74,10 @@ protected:
 #endif
 
 public:
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -117,19 +119,6 @@ NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGLineFrame;
 }
 
-nsSVGLineFrame::~nsSVGLineFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mX1 && (value = do_QueryInterface(mX1)))
-      value->RemoveObserver(this);
-  if (mY1 && (value = do_QueryInterface(mY1)))
-      value->RemoveObserver(this);
-  if (mX2 && (value = do_QueryInterface(mX2)))
-      value->RemoveObserver(this);
-  if (mY2 && (value = do_QueryInterface(mY2)))
-      value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGLineFrame::InitSVG()
 {
@@ -145,9 +134,6 @@ nsSVGLineFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mX1));
     NS_ASSERTION(mX1, "no x1");
     if (!mX1) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX1);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -156,9 +142,6 @@ nsSVGLineFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mY1));
     NS_ASSERTION(mY1, "no y1");
     if (!mY1) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY1);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -167,9 +150,6 @@ nsSVGLineFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mX2));
     NS_ASSERTION(mX2, "no x2");
     if (!mX2) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX2);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -178,13 +158,13 @@ nsSVGLineFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mY2));
     NS_ASSERTION(mY2, "no y2");
     if (!mY2) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY2);
-    if (value)
-      value->AddObserver(this);
   }
 
   return NS_OK; 
 }
+
+//----------------------------------------------------------------------
+// nsIFrame methods:
 
 nsIAtom *
 nsSVGLineFrame::GetType() const
@@ -192,20 +172,22 @@ nsSVGLineFrame::GetType() const
   return nsLayoutAtoms::svgLineFrame;
 }
 
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
 NS_IMETHODIMP
-nsSVGLineFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                       nsISVGValue::modificationType aModType)
+nsSVGLineFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                 nsIAtom*        aAttribute,
+                                 PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
-  if (l && (mX1==l || mY1==l || mX2==l || mY2==l)) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x1 ||
+       aAttribute == nsGkAtoms::y1 ||
+       aAttribute == nsGkAtoms::x2 ||
+       aAttribute == nsGkAtoms::y2)) {
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
-  // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------

@@ -45,6 +45,8 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 class nsSVGPolylineFrame : public nsSVGPathGeometryFrame,
                            public nsISVGMarkable
@@ -53,7 +55,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGPolylineFrame();
   NS_IMETHOD InitSVG();
 
 public:
@@ -64,6 +65,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
+  // nsIFrame interface:
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -71,14 +73,12 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
-
-//  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
 
   nsCOMPtr<nsIDOMSVGPointList> mPoints;
 
@@ -114,13 +114,6 @@ NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGPolylineFrame;
 }
 
-nsSVGPolylineFrame::~nsSVGPolylineFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mPoints && (value = do_QueryInterface(mPoints)))
-      value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGPolylineFrame::InitSVG()
 {
@@ -132,9 +125,7 @@ nsSVGPolylineFrame::InitSVG()
   anim_points->GetPoints(getter_AddRefs(mPoints));
   NS_ASSERTION(mPoints, "no points");
   if (!mPoints) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(mPoints);
-  if (value)
-    value->AddObserver(this);
+
   return NS_OK; 
 }  
 
@@ -145,19 +136,21 @@ nsSVGPolylineFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGPolylineFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                           nsISVGValue::modificationType aModType)
+nsSVGPolylineFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGPointList> l = do_QueryInterface(observable);
-  if (l && mPoints==l) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::points) {
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
-  // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------

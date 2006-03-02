@@ -54,16 +54,16 @@ protected:
   friend nsIFrame*
   NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGRectFrame();
   NS_IMETHOD InitSVG();
 
 public:
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
-
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   /**
    * Get the "type" of the frame
@@ -103,23 +103,6 @@ NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGRectFrame;
 }
 
-nsSVGRectFrame::~nsSVGRectFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mX && (value = do_QueryInterface(mX)))
-      value->RemoveObserver(this);
-  if (mY && (value = do_QueryInterface(mY)))
-      value->RemoveObserver(this);
-  if (mWidth && (value = do_QueryInterface(mWidth)))
-      value->RemoveObserver(this);
-  if (mHeight && (value = do_QueryInterface(mHeight)))
-      value->RemoveObserver(this);
-  if (mRx && (value = do_QueryInterface(mRx)))
-      value->RemoveObserver(this);
-  if (mRy && (value = do_QueryInterface(mRy)))
-      value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGRectFrame::InitSVG()
 {
@@ -136,9 +119,6 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mX, "no x");
     if (!mX)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -148,9 +128,6 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mY, "no y");
     if (!mY)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -160,10 +137,8 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mWidth, "no width");
     if (!mWidth)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
-    if (value)
-      value->AddObserver(this);
   }
+
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetHeight(getter_AddRefs(length));
@@ -171,9 +146,6 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mHeight, "no height");
     if (!mHeight)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -183,9 +155,6 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mRx, "no rx");
     if (!mRx)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRx);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -195,28 +164,32 @@ nsSVGRectFrame::InitSVG()
     NS_ASSERTION(mRy, "no ry");
     if (!mRy)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRy);
-    if (value)
-      value->AddObserver(this);
   }
 
   return NS_OK; 
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGRectFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                       nsISVGValue::modificationType aModType)
+nsSVGRectFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                 nsIAtom*        aAttribute,
+                                 PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
-  if (l && (mX==l || mY==l || mWidth==l || mHeight==l || mRx==l || mRy==l)) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width ||
+       aAttribute == nsGkAtoms::height ||
+       aAttribute == nsGkAtoms::rx ||
+       aAttribute == nsGkAtoms::ry)) {
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
 
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 //----------------------------------------------------------------------

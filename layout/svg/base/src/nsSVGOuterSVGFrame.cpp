@@ -49,9 +49,7 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsWeakReference.h"
 #include "nsISVGValue.h"
-#include "nsISVGValueObserver.h"
 #include "nsHTMLParts.h"
 #include "nsReflowPath.h"
 #include "nsISVGRenderer.h"
@@ -156,15 +154,12 @@ typedef nsContainerFrame nsSVGOuterSVGFrameBase;
 class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsISVGOuterSVGFrame,
                            public nsISVGContainerFrame,
-                           public nsISVGValueObserver,
-                           public nsSupportsWeakReference,
                            public nsSVGCoordCtxProvider
 {
   friend nsIFrame*
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGOuterSVGFrame();
-  virtual ~nsSVGOuterSVGFrame();
   nsresult Init();
   
    // nsISupports interface:
@@ -198,9 +193,9 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               PRInt32         aModType);
+  // We don't define an AttributeChanged method since changes to the
+  // 'x', 'y', 'width' and 'height' attributes of our content object
+  // are handled in nsSVGSVGElement::DidModifySVGObservable
 
   nsIFrame* GetFrameForPoint(const nsPoint& aPoint);
 
@@ -227,15 +222,6 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
   // nsISVGOuterSVGFrame interface:
   NS_IMETHOD InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedraw);
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended);
@@ -249,16 +235,13 @@ public:
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
-  
+
 protected:
   // implementation helpers:
   void InitiateReflow();
   
   float GetPxPerTwips();
   float GetTwipsPerPx();
-
-  void AddAsWidthHeightObserver();
-  void RemoveAsWidthHeightObserver();
 
   void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
                                nsPresContext* aPresContext,
@@ -302,18 +285,6 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame()
 {
 }
 
-nsSVGOuterSVGFrame::~nsSVGOuterSVGFrame()
-{
-#ifdef DEBUG
-//  printf("~nsSVGOuterSVGFrame %p\n", this);
-#endif
-
-  if (mZoomAndPan)
-    NS_REMOVE_SVGVALUE_OBSERVER(mZoomAndPan);
-
-  RemoveAsWidthHeightObserver();
-}
-
 nsresult nsSVGOuterSVGFrame::Init()
 {
   nsresult rv;
@@ -348,12 +319,10 @@ nsresult nsSVGOuterSVGFrame::Init()
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc && doc->GetRootContent() == mContent) {
     SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
-    NS_ADD_SVGVALUE_OBSERVER(mZoomAndPan);
     SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
     SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
   }
 
-  AddAsWidthHeightObserver();
   SuspendRedraw();
 
   AddStateBits(NS_STATE_IS_OUTER_SVG);
@@ -368,8 +337,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGOuterSVGFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGSVGFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsSVGCoordCtxProvider)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 
@@ -461,11 +428,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   SuspendRedraw(); 
   
-  // As soon as we set the coordinate context, the width/height
-  // attributes might emit change-notifications. We don't want those
-  // right now:
-  RemoveAsWidthHeightObserver();
-
   nsCOMPtr<nsIDOMSVGRect> r;
   NS_NewSVGRect(getter_AddRefs(r), 0, 0, preferredWidth, preferredHeight);
   SetCoordCtxRect(r);
@@ -538,8 +500,6 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
-  AddAsWidthHeightObserver();
-  
   UnsuspendRedraw();
   
   return NS_OK;
@@ -640,22 +600,6 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
 
   NS_ASSERTION(result, "didn't find frame to delete");
   return result ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
-{
-#ifdef DEBUG
-//  {
-//    nsAutoString str;
-//    aAttribute->ToString(str);
-//    printf("** nsSVGOuterSVGFrame::AttributeChanged(%s)\n",
-//           NS_LossyConvertUTF16toASCII(str).get());
-//  }
-#endif
-  return NS_OK;
 }
 
 MOZ_DECL_CTOR_COUNTER(nsDisplaySVG)
@@ -838,30 +782,6 @@ nsSVGOuterSVGFrame::IsFrameOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~nsIFrame::eSVG);
 }
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                            nsISVGValue::modificationType aModType)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                           nsISVGValue::modificationType aModType)
-{
-  mNeedsReflow = PR_TRUE;
-  if (mRedrawSuspendCount==0) {
-    InitiateReflow();
-  }
-  
-  return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 // nsISVGOuterSVGFrame methods:
@@ -1075,58 +995,6 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   presShell->FlushPendingNotifications(Flush_OnlyReflow);  
 }
 
-
-void nsSVGOuterSVGFrame::AddAsWidthHeightObserver()
-{
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
-  NS_ASSERTION(svgElement, "wrong content element");  
- 
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    svgElement->GetWidth(getter_AddRefs(animLength));
-    NS_ASSERTION(animLength, "could not get <svg>:width");
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ASSERTION(length, "could not get <svg>:width:animval");
-    NS_ADD_SVGVALUE_OBSERVER(length);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    svgElement->GetHeight(getter_AddRefs(animLength));
-    NS_ASSERTION(animLength, "could not get <svg>:height");
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ASSERTION(length, "could not get <svg>:height:animval");
-    NS_ADD_SVGVALUE_OBSERVER(length);
-  }  
-}
-
-void nsSVGOuterSVGFrame::RemoveAsWidthHeightObserver()
-{
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
-  NS_ASSERTION(svgElement, "wrong content element");  
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    svgElement->GetWidth(getter_AddRefs(animLength));
-    NS_ASSERTION(animLength, "could not get <svg>:width");
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ASSERTION(length, "could not get <svg>:width:animval");
-    NS_REMOVE_SVGVALUE_OBSERVER(length);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    svgElement->GetHeight(getter_AddRefs(animLength));
-    NS_ASSERTION(animLength, "could not get <svg>:height");
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ASSERTION(length, "could not get <svg>:height:animval");
-    NS_REMOVE_SVGVALUE_OBSERVER(length);
-  }  
-}
 
 void
 nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
