@@ -153,7 +153,7 @@ EXPORTS += \
 endif
 
 EXTRA_DSO_LDOPTS = \
-        $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
+        $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
         $(NULL)

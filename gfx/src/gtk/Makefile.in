@@ -88,7 +88,7 @@ X11SHARED_LCPPSRCS += \
 		nsNameValuePairDB.cpp \
 		$(NULL)
 endif
-                
+
 CPPSRCS		= \
 		nsDeviceContextGTK.cpp \
 		nsDrawingSurfaceGTK.cpp \
@@ -134,10 +134,10 @@ GARBAGE         += $(X11SHARED_LCPPSRCS) $(XPU_LCSRCS) $(wildcard *.$(OBJ_SUFFIX
 
 ifdef MOZ_ENABLE_FREETYPE2
 # the SHARED_LIBRARY_LIBS line must be before the rules.mk include
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)gfxft2_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../freetype/$(LIB_PREFIX)gfxft2_s.$(LIB_SUFFIX)
 endif
 
-EXTRA_DSO_LDOPTS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS = ../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
