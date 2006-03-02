@@ -90,41 +90,38 @@
       <treechildren id="cookiesChildren"/>
     </tree>
     <hbox id="cookieInfoBox">
-      <stack flex="1">
-        <hbox id="backgroundBox" flex="1"/>
-        <grid flex="1">
-          <columns>
-            <column/>
-            <column flex="1"/>
-          </columns>
-          <rows>
-            <row align="center">
-              <hbox pack="end"><label id="nameLabel" value="&props.name.label;"/></hbox>
-              <textbox id="name" readonly="true" class="plain"/>
-            </row>
-            <row align="center">
-              <hbox pack="end"><label id="valueLabel" value="&props.value.label;"/></hbox>
-              <textbox id="value" readonly="true" class="plain"/>
-            </row>
-            <row align="center">
-              <hbox pack="end"><label id="isDomain" value="&props.domain.label;"/></hbox>
-              <textbox id="host" readonly="true" class="plain"/>
-            </row>
-            <row align="center">
-              <hbox pack="end"><label id="pathLabel" value="&props.path.label;"/></hbox>
-              <textbox id="path" readonly="true" class="plain"/>
-            </row>
-            <row align="center">
-              <hbox pack="end"><label id="isSecureLabel" value="&props.secure.label;"/></hbox>
-              <textbox id="isSecure" readonly="true" class="plain"/>
-            </row>
-            <row align="center">
-              <hbox pack="end"><label id="expiresLabel" value="&props.expires.label;"/></hbox>
-              <textbox id="expires" readonly="true" class="plain"/>
-            </row>
-          </rows>
-        </grid>
-      </stack>
+      <grid flex="1" id="cookieInfoGrid">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <hbox pack="end"><label id="nameLabel" value="&props.name.label;"/></hbox>
+            <textbox id="name" readonly="true" class="plain"/>
+          </row>
+          <row align="center">
+            <hbox pack="end"><label id="valueLabel" value="&props.value.label;"/></hbox>
+            <textbox id="value" readonly="true" class="plain"/>
+          </row>
+          <row align="center">
+            <hbox pack="end"><label id="isDomain" value="&props.domain.label;"/></hbox>
+            <textbox id="host" readonly="true" class="plain"/>
+          </row>
+          <row align="center">
+            <hbox pack="end"><label id="pathLabel" value="&props.path.label;"/></hbox>
+            <textbox id="path" readonly="true" class="plain"/>
+          </row>
+          <row align="center">
+            <hbox pack="end"><label id="isSecureLabel" value="&props.secure.label;"/></hbox>
+            <textbox id="isSecure" readonly="true" class="plain"/>
+          </row>
+          <row align="center">
+            <hbox pack="end"><label id="expiresLabel" value="&props.expires.label;"/></hbox>
+            <textbox id="expires" readonly="true" class="plain"/>
+          </row>
+        </rows>
+      </grid>
     </hbox>
   </vbox>
   <hbox align="end">
