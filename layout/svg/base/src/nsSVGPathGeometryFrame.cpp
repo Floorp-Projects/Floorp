@@ -64,6 +64,7 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererSurface.h"
+#include "nsINameSpaceManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
@@ -84,11 +85,6 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
 //  printf("~nsSVGPathGeometryFrame %p\n", this);
 #endif
   
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content element");
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
-  transformable->GetTransform(getter_AddRefs(transforms));
-  NS_REMOVE_SVGVALUE_OBSERVER(transforms);
   if (mFillGradient) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFillGradient);
   }
@@ -147,17 +143,9 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                          nsIAtom*        aAttribute,
                                          PRInt32         aModType)
 {
-  // we don't use this notification mechanism
-  
-#ifdef DEBUG
-//  printf("** nsSVGPathGeometryFrame::AttributeChanged(");
-//  nsAutoString str;
-//  aAttribute->ToString(str);
-//  nsCAutoString cstr;
-//  cstr.AssignWithConversion(str);
-//  printf(cstr.get());
-//  printf(")\n");
-#endif
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::transform)
+    UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
   
   return NS_OK;
 }
@@ -616,10 +604,8 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
       }
       UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
-  } else {
-    // No, all of our other observables update the canvastm by default
-    UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
   }
+
   return NS_OK;
 }
 
@@ -1027,14 +1013,6 @@ nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::InitSVG()
 {
-  // all path geometry frames listen in on changes to their
-  // corresponding content element's transform attribute:
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content element");
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
-  transformable->GetTransform(getter_AddRefs(transforms));
-  NS_ADD_SVGVALUE_OBSERVER(transforms);
-
   // construct a pathgeometry object:
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {

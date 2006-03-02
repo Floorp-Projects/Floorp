@@ -50,14 +50,27 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsISVGValueObserver.h"
+#include "nsWeakReference.h"
 
 typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
 class nsSVGTextPathFrame : public nsSVGTextPathFrameBase,
-                           public nsISVGPathFlatten
+                           public nsISVGPathFlatten,
+                           public nsISVGValueObserver,
+                           public nsSupportsWeakReference
 {
 public:
 
+  // nsIFrame:
+  NS_IMETHOD Init(nsPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow);
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
   /**
    * Get the "type" of the frame
    *
@@ -73,6 +86,8 @@ public:
 #endif
 
   // nsISVGValueObserver interface:
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable, 
+                                     nsISVGValue::modificationType aModType);
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
                                     nsISVGValue::modificationType aModType);
 
@@ -88,7 +103,6 @@ private:
 
 protected:
   virtual ~nsSVGTextPathFrame();
-  virtual nsresult InitSVG();
 
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetX();
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetY();
@@ -106,6 +120,8 @@ private:
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGPathFlatten)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrame)
 
 
@@ -136,14 +152,19 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
 
 nsSVGTextPathFrame::~nsSVGTextPathFrame()
 {
-  NS_REMOVE_SVGVALUE_OBSERVER(mStartOffset);
-  NS_REMOVE_SVGVALUE_OBSERVER(mHref);
   NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
 }
 
-nsresult
-nsSVGTextPathFrame::InitSVG()
+NS_IMETHODIMP
+nsSVGTextPathFrame::Init(nsPresContext*  aPresContext,
+                         nsIContent*      aContent,
+                         nsIFrame*        aParent,
+                         nsStyleContext*  aContext,
+                         nsIFrame*        aPrevInFlow)
 {
+  nsSVGTextPathFrameBase::Init(aPresContext, aContent, aParent,
+                               aContext, aPrevInFlow);
+
   nsCOMPtr<nsIDOMSVGTextPathElement> tpath = do_QueryInterface(mContent);
 
   {
@@ -159,8 +180,6 @@ nsSVGTextPathFrame::InitSVG()
       nsCOMPtr<nsIDOMSVGLength> length;
       mX->AppendItem(mStartOffset, getter_AddRefs(length));
     }
-
-    NS_ADD_SVGVALUE_OBSERVER(mStartOffset);
   }
 
   {
@@ -169,7 +188,6 @@ nsSVGTextPathFrame::InitSVG()
       aRef->GetHref(getter_AddRefs(mHref));
     if (!mHref)
       return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mHref);
   }
 
   return NS_OK;
@@ -251,14 +269,41 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
+nsSVGTextPathFrame::WillModifySVGObservable(nsISVGValue* observable, 
+                                            nsISVGValue::modificationType aModType)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGTextPathFrame::DidModifySVGObservable(nsISVGValue* observable,
                                            nsISVGValue::modificationType aModType)
 {
-  nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(observable);
-  if (s && mHref==s) {
+  nsISVGTextFrame* text_frame = GetTextFrame();
+  if (text_frame)
+    text_frame->NotifyGlyphMetricsChange(this);
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIFrame methods
+
+NS_IMETHODIMP
+nsSVGTextPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::startOffset) {
+    nsISVGTextFrame* text_frame = GetTextFrame();
+    if (text_frame)
+      text_frame->NotifyGlyphMetricsChange(this);
+  } else if (aNameSpaceID == kNameSpaceID_XLink &&
+             aAttribute == nsGkAtoms::href) {
     NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
     mSegments = nsnull;
   }
 
-  return nsSVGTextPathFrameBase::DidModifySVGObservable(observable, aModType);
+  return NS_OK;
 }

@@ -47,6 +47,8 @@
 #include "nsIDOMSVGTransformList.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGUtils.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -57,37 +59,11 @@ NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGDefsFrame;
 }
 
-nsSVGDefsFrame::nsSVGDefsFrame()
-{
-}
-
-nsSVGDefsFrame::~nsSVGDefsFrame()
-{
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  if (!transformable)
-    return;
-
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
-  transformable->GetTransform(getter_AddRefs(transforms));
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(transforms);
-  NS_ASSERTION(value, "interface not found");
-  if (value)
-    value->RemoveObserver(this);
-}
-
+// Stub method specialized by subclasses.  Not called by said
+// specializations.
 NS_IMETHODIMP
 nsSVGDefsFrame::InitSVG()
 {
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  if (!transformable)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
-  transformable->GetTransform(getter_AddRefs(transforms));
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(transforms);
-  NS_ASSERTION(value, "interface not found");
-  if (value)
-    value->AddObserver(this);
   return NS_OK;
 }
 
@@ -97,8 +73,6 @@ nsSVGDefsFrame::InitSVG()
 NS_INTERFACE_MAP_BEGIN(nsSVGDefsFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrameBase)
 
 
@@ -195,34 +169,27 @@ nsSVGDefsFrame::IsFrameOfType(PRUint32 aFlags) const
   return !(aFlags & ~nsIFrame::eSVG);
 }
 
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
 NS_IMETHODIMP
-nsSVGDefsFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                        nsISVGValue::modificationType aModType)
+nsSVGDefsFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                 nsIAtom*        aAttribute,
+                                 PRInt32         aModType)
 {
-  return NS_OK;
-}
+  if (aNameSpaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::transform) {
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
 
-
-NS_IMETHODIMP
-nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable,
-                                        nsISVGValue::modificationType aModType)
-{
-  // make sure our cached transform matrix gets (lazily) updated
-  mCanvasTM = nsnull;
+    for (nsIFrame* kid = mFrames.FirstChild(); kid;
+         kid = kid->GetNextSibling()) {
+      nsISVGChildFrame* SVGFrame=nsnull;
+      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+      if (SVGFrame)
+        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+    }  
+  }
   
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
-  }  
-  return NS_OK;
-}
-
+    return NS_OK;
+  }
 
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods

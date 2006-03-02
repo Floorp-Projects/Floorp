@@ -43,9 +43,10 @@
 #include "nsIDOMSVGCircleElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-//#include "nsASVGPathBuilder.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsLayoutAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
@@ -53,7 +54,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGCircleFrame();
   NS_IMETHOD InitSVG();
 
 public:
@@ -71,9 +71,10 @@ public:
   }
 #endif
 
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -101,17 +102,6 @@ NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGCircleFrame;
 }
 
-nsSVGCircleFrame::~nsSVGCircleFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mCx && (value = do_QueryInterface(mCx)))
-      value->RemoveObserver(this);
-  if (mCy && (value = do_QueryInterface(mCy)))
-      value->RemoveObserver(this);
-  if (mR && (value = do_QueryInterface(mR)))
-      value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGCircleFrame::InitSVG()
 {
@@ -128,31 +118,22 @@ nsSVGCircleFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mCx));
     NS_ASSERTION(mCx, "no cx");
     if (!mCx) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCx);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     circle->GetCy(getter_AddRefs(length));
     length->GetAnimVal(getter_AddRefs(mCy));
-    NS_ASSERTION(mCx, "no cy");
-    if (!mCx) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCy);
-    if (value)
-      value->AddObserver(this);
+    NS_ASSERTION(mCy, "no cy");
+    if (!mCy) return NS_ERROR_FAILURE;
   }
 
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     circle->GetR(getter_AddRefs(length));
     length->GetAnimVal(getter_AddRefs(mR));
-    NS_ASSERTION(mCx, "no r");
-    if (!mCx) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mR);
-    if (value)
-      value->AddObserver(this);
+    NS_ASSERTION(mR, "no r");
+    if (!mR) return NS_ERROR_FAILURE;
   }
   
   return NS_OK;
@@ -165,19 +146,23 @@ nsSVGCircleFrame::GetType() const
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGCircleFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
+nsSVGCircleFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                   nsIAtom*        aAttribute,
+                                   PRInt32         aModType)
 {
-  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
-  if (l && (mCx==l || mCy==l || mR==l)) {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::cx ||
+       aAttribute == nsGkAtoms::cy ||
+       aAttribute == nsGkAtoms::r)) {
     UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
     return NS_OK;
   }
-  // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
+
+  return nsSVGPathGeometryFrame::AttributeChanged(aNameSpaceID,
+                                                  aAttribute, aModType);
 }
 
 

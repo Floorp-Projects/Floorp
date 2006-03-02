@@ -71,88 +71,6 @@ nsSVGTSpanFrame::nsSVGTSpanFrame()
 {
 }
 
-nsSVGTSpanFrame::~nsSVGTSpanFrame()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> element = do_QueryInterface(mContent);
-
-  // clean up our listener refs:
-  if (element) {
-    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-    element->GetX(getter_AddRefs(animLengthList));
-    if (animLengthList) {
-      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
-      if (lengthList)
-        NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-    }
-  }
-
-  if (element) {
-    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-    element->GetY(getter_AddRefs(animLengthList));
-    if (animLengthList) {
-      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
-      if (lengthList)
-        NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-    }
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
-    if (lengthList)
-      NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
-    if (lengthList)
-      NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-}
-
-nsresult nsSVGTSpanFrame::InitSVG()
-{
-  nsCOMPtr<nsIDOMSVGTextPositioningElement> element = do_QueryInterface(mContent);
-
-  // set us up as a listener for various <tspan>-properties: 
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-    element->GetX(getter_AddRefs(animLengthList));
-    if (animLengthList) {
-      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
-      if (lengthList)
-        NS_ADD_SVGVALUE_OBSERVER(lengthList);
-    }
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
-    element->GetY(getter_AddRefs(animLengthList));
-    if (animLengthList) {
-      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
-      if (lengthList)
-        NS_ADD_SVGVALUE_OBSERVER(lengthList);
-    }
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
-    if (lengthList)
-      NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
-    if (lengthList)
-      NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  return NS_OK;
-}
-
 nsIAtom *
 nsSVGTSpanFrame::GetType() const
 {
@@ -173,29 +91,12 @@ NS_INTERFACE_MAP_BEGIN(nsSVGTSpanFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGGlyphFragmentNode)
   NS_INTERFACE_MAP_ENTRY(nsISVGContainerFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGChildFrame)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGTextContentMetrics)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrameBase)
 
 
 //----------------------------------------------------------------------
 // nsIFrame methods
-NS_IMETHODIMP
-nsSVGTSpanFrame::Init(nsPresContext*  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
-                      nsIFrame*        aPrevInFlow)
-{
-  nsresult rv;
-  rv = nsSVGTSpanFrameBase::Init(aPresContext, aContent, aParent,
-                                 aContext, aPrevInFlow);
-
-  InitSVG();
-  
-  return rv;
-}
 
 NS_IMETHODIMP
 nsSVGTSpanFrame::AppendFrames(nsIAtom*        aListName,
@@ -272,28 +173,23 @@ nsSVGTSpanFrame::RemoveFrame(nsIAtom*        aListName,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods:
-
 NS_IMETHODIMP
-nsSVGTSpanFrame::WillModifySVGObservable(nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
+nsSVGTSpanFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                  nsIAtom*        aAttribute,
+                                  PRInt32         aModType)
 {
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::dx ||
+       aAttribute == nsGkAtoms::dy)) {
+    nsISVGTextFrame* text_frame = GetTextFrame();
+    if (text_frame)
+      text_frame->NotifyGlyphMetricsChange(this);
+  }
+
   return NS_OK;
 }
-
-
-NS_IMETHODIMP
-nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
-{
-  nsISVGTextFrame* text_frame = GetTextFrame();
-  if (text_frame)
-    text_frame->NotifyGlyphMetricsChange(this);
-  
-  return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 // nsISVGTextContentMetrics

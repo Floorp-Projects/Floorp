@@ -72,6 +72,8 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsISVGRendererSurface.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -88,7 +90,6 @@ class nsSVGTextFrame : public nsSVGTextFrameBase,
 protected:
   nsSVGTextFrame();
   virtual ~nsSVGTextFrame();
-  nsresult Init();
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -106,12 +107,6 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -246,69 +241,9 @@ nsSVGTextFrame::nsSVGTextFrame()
 
 nsSVGTextFrame::~nsSVGTextFrame()
 {
-  // clean up our listener refs:
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetX();
-    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
-    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
-    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
-    NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-    NS_ASSERTION(transformable, "wrong content element");
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms;
-    transformable->GetTransform(getter_AddRefs(transforms));
-    NS_REMOVE_SVGVALUE_OBSERVER(transforms);
-  }
-
   if (mFilter) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
   }
-}
-
-nsresult nsSVGTextFrame::Init()
-{
-  // set us up as a listener for various <text>-properties: 
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetX();
-    NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
-    NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDx();
-    NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetDy();
-    NS_ADD_SVGVALUE_OBSERVER(lengthList);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms = GetTransform();
-    NS_ADD_SVGVALUE_OBSERVER(transforms);
-  }
-  
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -327,38 +262,40 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextFrameBase)
 
 //----------------------------------------------------------------------
 // nsIFrame methods
-NS_IMETHODIMP
-nsSVGTextFrame::Init(nsPresContext*   aPresContext,
-                     nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
-                     nsIFrame*        aPrevInFlow)
-{
-  nsresult rv;
-  rv = nsSVGTextFrameBase::Init(aPresContext, aContent, aParent,
-                                aContext, aPrevInFlow);
-
-  Init();
-  
-  return rv;
-}
 
 NS_IMETHODIMP
 nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  PRInt32         aModType)
 {
-  // we don't use this notification mechanism
-  
-#ifdef DEBUG
-  printf("** nsSVGTextFrame::AttributeChanged(");
-  nsAutoString str;
-  aAttribute->ToString(str);
-  printf(NS_ConvertUTF16toUTF8(str).get());
-  printf(")\n");
-#endif
-  
-  return NS_OK;
+  if (aNameSpaceID != kNameSpaceID_None)
+    return NS_OK;
+
+  if (aAttribute == nsGkAtoms::transform) {
+    // transform has changed
+
+    // make sure our cached transform matrix gets (lazily) updated
+    mCanvasTM = nsnull;
+    
+    nsIFrame* kid = mFrames.FirstChild();
+    while (kid) {
+      nsISVGChildFrame* SVGFrame=0;
+      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+      if (SVGFrame)
+        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+      kid = kid->GetNextSibling();
+    }
+  } else if (aAttribute == nsGkAtoms::x ||
+             aAttribute == nsGkAtoms::y ||
+             aAttribute == nsGkAtoms::dx ||
+             aAttribute == nsGkAtoms::dy) {
+    mPositioningDirty = PR_TRUE;
+    if (mMetricsState == unsuspended) {
+      UpdateGlyphPositioning();
+    }
+  }
+
+ return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -489,7 +426,6 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
 {  
   nsISVGFilterFrame *filter;
   CallQueryInterface(observable, &filter);
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> transforms = GetTransform();
 
   if (filter) {
     if (aModType == nsISVGValue::mod_die) {
@@ -509,28 +445,8 @@ nsSVGTextFrame::DidModifySVGObservable (nsISVGValue* observable,
     
     if (region)
       outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-  } else if (SameCOMIdentity(observable, transforms)) {
-    // transform has changed
+  }
 
-    // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nsnull;
-    
-    nsIFrame* kid = mFrames.FirstChild();
-    while (kid) {
-      nsISVGChildFrame* SVGFrame=0;
-      kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-      if (SVGFrame)
-        SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
-      kid = kid->GetNextSibling();
-    }
-  }
-  else {
-    // x, y have changed
-    mPositioningDirty = PR_TRUE;
-    if (mMetricsState == unsuspended) {
-      UpdateGlyphPositioning();
-    }
-  }
   return NS_OK;
 }
 

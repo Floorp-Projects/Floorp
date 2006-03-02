@@ -57,6 +57,8 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
+#include "nsINameSpaceManager.h"
+#include "nsGkAtoms.h"
 
 class nsSVGMarkerFrame : public nsSVGDefsFrame,
                          public nsISVGMarkerFrame
@@ -65,7 +67,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual ~nsSVGMarkerFrame();
   NS_IMETHOD InitSVG();
 
 public:
@@ -74,9 +75,10 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
-  // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
-                                    nsISVGValue::modificationType aModType);
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
 
   /**
    * Get the "type" of the frame
@@ -163,30 +165,9 @@ NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
   return NS_OK;
 }
 
-nsSVGMarkerFrame::~nsSVGMarkerFrame()
-{
-  nsCOMPtr<nsISVGValue> value;
-  if (mRefX && (value = do_QueryInterface(mRefX)))
-    value->RemoveObserver(this);
-  if (mRefY && (value = do_QueryInterface(mRefY)))
-    value->RemoveObserver(this);
-  if (mMarkerWidth && (value = do_QueryInterface(mMarkerWidth)))
-    value->RemoveObserver(this);
-  if (mMarkerHeight && (value = do_QueryInterface(mMarkerHeight)))
-    value->RemoveObserver(this);
-  if (mOrientAngle && (value = do_QueryInterface(mOrientAngle)))
-    value->RemoveObserver(this);
-  if (mViewBox && (value = do_QueryInterface(mViewBox)))
-    value->RemoveObserver(this);
-}
-
 NS_IMETHODIMP
 nsSVGMarkerFrame::InitSVG()
 {
-  nsresult rv = nsSVGDefsFrame::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(mContent);
   NS_ASSERTION(marker, "wrong content element");
 
@@ -196,9 +177,6 @@ nsSVGMarkerFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mRefX));
     NS_ASSERTION(mRefX, "no RefX");
     if (!mRefX) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefX);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -207,9 +185,6 @@ nsSVGMarkerFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mRefY));
     NS_ASSERTION(mRefY, "no RefY");
     if (!mRefY) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefY);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -218,9 +193,6 @@ nsSVGMarkerFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mMarkerWidth));
     NS_ASSERTION(mMarkerWidth, "no markerWidth");
     if (!mMarkerWidth) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mMarkerWidth);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -229,9 +201,6 @@ nsSVGMarkerFrame::InitSVG()
     length->GetAnimVal(getter_AddRefs(mMarkerHeight));
     NS_ASSERTION(mMarkerHeight, "no markerHeight");
     if (!mMarkerHeight) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mMarkerHeight);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -240,9 +209,6 @@ nsSVGMarkerFrame::InitSVG()
     angle->GetAnimVal(getter_AddRefs(mOrientAngle));
     NS_ASSERTION(mOrientAngle, "no orientAngle");
     if (!mOrientAngle) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mOrientAngle);
-    if (value)
-      value->AddObserver(this);
   }
 
   {
@@ -252,11 +218,8 @@ nsSVGMarkerFrame::InitSVG()
 
     if (rect) {
       rect->GetAnimVal(getter_AddRefs(mViewBox));
-      NS_ASSERTION(mRefY, "no viewBox");
-      if (!mRefY) return NS_ERROR_FAILURE;
-      nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRefY);
-      if (value)
-        value->AddObserver(this);
+      NS_ASSERTION(mViewBox, "no viewBox");
+      if (!mViewBox) return NS_ERROR_FAILURE;
     }
   }
 
@@ -270,14 +233,28 @@ nsSVGMarkerFrame::InitSVG()
 }
 
 //----------------------------------------------------------------------
-// nsISVGValueObserver methods:
+// nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGMarkerFrame::DidModifySVGObservable(nsISVGValue* observable,
-                                         nsISVGValue::modificationType aModType)
+nsSVGMarkerFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                   nsIAtom*        aAttribute,
+                                   PRInt32         aModType)
 {
-  return nsSVGDefsFrame::DidModifySVGObservable(observable, aModType);
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::refX ||
+       aAttribute == nsGkAtoms::refY ||
+       aAttribute == nsGkAtoms::markerWidth ||
+       aAttribute == nsGkAtoms::markerHeight ||
+       aAttribute == nsGkAtoms::orient ||
+       aAttribute == nsGkAtoms::viewBox)) {
+    // XXX: marker frame should be a nsSVGValue and call DidModify() here
+    return NS_OK;
+  }
+
+  return nsSVGDefsFrame::AttributeChanged(aNameSpaceID,
+                                          aAttribute, aModType);
 }
+  
 
 //----------------------------------------------------------------------
 // nsISVGContainerFrame methods:
