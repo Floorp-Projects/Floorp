@@ -49,7 +49,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPSModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
-EXTRA_DSO_LIBS = mozutil_s gfxshared_s gfxpsshar gkgfx
+EXTRA_DSO_LIBS = gfxpsshar gkgfx
 REQUIRES	= xpcom \
 		  string \
 		  widget \
@@ -88,11 +88,13 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/sample.unixpsfonts.properties
 
 EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NULL)
+	$(LIBS_DIR) \
+	$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
+	../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+	$(EXTRA_DSO_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(NULL)
 
 ifdef MOZ_ENABLE_XFT
 EXTRA_DSO_LDOPTS += \
