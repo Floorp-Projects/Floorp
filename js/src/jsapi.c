@@ -1855,7 +1855,7 @@ JS_MaybeGC(JSContext *cx)
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
     if ((bytes > 8192 && bytes > lastBytes + lastBytes / 2) ||
-        rt->gcMallocBytes > rt->gcMaxBytes) {
+        rt->gcMallocBytes > rt->gcMaxMallocBytes) {
         /*
          * Run the GC if we have half again as many bytes of GC-things as
          * the last time we GC'd, or if we have malloc'd more bytes through

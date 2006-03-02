@@ -98,7 +98,7 @@ InitMinimalScope(JSScope *scope)
 }
 
 static JSBool
-CreateScopeTable(JSScope *scope)
+CreateScopeTable(JSContext *cx, JSScope *scope, JSBool report)
 {
     int sizeLog2;
     JSScopeProperty *sprop, **spp;
@@ -120,8 +120,14 @@ CreateScopeTable(JSScope *scope)
 
     scope->table = (JSScopeProperty **)
         calloc(JS_BIT(sizeLog2), sizeof(JSScopeProperty *));
-    if (!scope->table)
+    if (!scope->table) {
+        if (report)
+            JS_ReportOutOfMemory(cx);
         return JS_FALSE;
+    }
+
+    /* Racy update after calloc, to help keep the GC self-scheduled well. */
+    cx->runtime->gcMallocBytes += JS_BIT(sizeLog2) * sizeof(JSScopeProperty *);
 
     scope->hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = scope->lastProp; sprop; sprop = sprop->parent) {
@@ -347,6 +353,9 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
     scope->removedCount = 0;
     oldtable = scope->table;
     scope->table = table;
+
+    /* Treat the above calloc as a JS_malloc, to match CreateScopeTable. */
+    cx->runtime->gcMallocBytes += nbytes;
 
     /* Copy only live entries, leaving removed and free ones behind. */
     for (oldspp = oldtable; oldsize != 0; oldspp++) {
@@ -968,10 +977,8 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                  * delete code is simple-minded that way!
                  */
                 if (!scope->table) {
-                    if (!CreateScopeTable(scope)) {
-                        JS_ReportOutOfMemory(cx);
+                    if (!CreateScopeTable(cx, scope, JS_TRUE))
                         return NULL;
-                    }
                     spp = js_SearchScope(scope, id, JS_TRUE);
                     sprop = overwriting = SPROP_FETCH(spp);
                 }
@@ -1167,7 +1174,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
          * entry count just reached the threshold.
          */
         if (!scope->table && scope->entryCount >= SCOPE_HASH_THRESHOLD)
-            (void) CreateScopeTable(scope);
+            (void) CreateScopeTable(cx, scope, JS_FALSE);
     }
 
     METER(adds);
@@ -1309,10 +1316,8 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
 
     /* Convert from a list to a hash so we can handle "middle deletes". */
     if (!scope->table && sprop != scope->lastProp) {
-        if (!CreateScopeTable(scope)) {
-            JS_ReportOutOfMemory(cx);
+        if (!CreateScopeTable(cx, scope, JS_TRUE))
             return JS_FALSE;
-        }
         spp = js_SearchScope(scope, id, JS_FALSE);
         stored = *spp;
         sprop = SPROP_CLEAR_COLLISION(stored);
