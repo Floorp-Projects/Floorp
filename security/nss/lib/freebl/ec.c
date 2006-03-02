@@ -638,15 +638,11 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 
     ecParams = &(key->ecParams);
     flen = (ecParams->fieldID.size + 7) >> 3;
-    /*
-     * FIXME: temporary workaround until we change PK11_SignatureLen
-     * to use the length of the base point order.
-     */
-#if 0
     olen = ecParams->order.len;  
-#else
-    olen = flen;  
-#endif
+    if (signature->data == NULL) {
+	/* a call to get the signature length only */
+	goto finish;
+    }
     if (signature->len < 2*olen) {
 	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
 	goto cleanup;
@@ -769,6 +765,7 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     */
     CHECK_MPI_OK( mp_to_fixlen_octets(&r, signature->data, olen) );
     CHECK_MPI_OK( mp_to_fixlen_octets(&s, signature->data + olen, olen) );
+finish:
     signature->len = 2*olen;
 
     rv = SECSuccess;
@@ -906,14 +903,15 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
 	goto cleanup;
     }
 
-    if (signature->len == 0 || signature->len%2 != 0) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	goto cleanup;
-    }
-    slen = signature->len/2;
     ecParams = &(key->ecParams);
     flen = (ecParams->fieldID.size + 7) >> 3;  
     olen = ecParams->order.len;  
+    if (signature->len == 0 || signature->len%2 != 0 ||
+	signature->len > 2*olen) {
+	PORT_SetError(SEC_ERROR_INPUT_LEN);
+	goto cleanup;
+    }
+    slen = signature->len/2;
 
     /* truncate digest to the length of the base point order */
     localDigest = *digest;

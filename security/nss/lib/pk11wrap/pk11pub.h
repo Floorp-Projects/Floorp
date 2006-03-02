@@ -582,6 +582,14 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
 /**********************************************************************
  *                   Sign/Verify 
  **********************************************************************/
+
+/*
+ * Return the length in bytes of a signature generated with the
+ * private key.
+ *
+ * Return 0 or -1 on failure.  (XXX Should we fix it to always return
+ * -1 on failure?)
+ */
 int PK11_SignatureLen(SECKEYPrivateKey *key);
 PK11SlotInfo * PK11_GetSlotFromPrivateKey(SECKEYPrivateKey *key);
 SECStatus PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash);

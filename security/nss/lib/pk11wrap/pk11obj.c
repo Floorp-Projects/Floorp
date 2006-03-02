@@ -571,11 +571,14 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
 	    if (theTemplate.pValue != NULL) {
 	        params.len = theTemplate.ulValueLen;
 		params.data = (unsigned char *) theTemplate.pValue;
-	        length = SECKEY_ECParamsToKeySize(&params);
+	        length = SECKEY_ECParamsToBasePointOrderLen(&params);
 	        PORT_Free(theTemplate.pValue);
+		if (length == 0) {
+		    return pk11_backupGetSignLength(key);
+		}
+		length = ((length + 7)/8) * 2;
+		return length;
 	    }
-	    length = ((length + 7)/8) * 2;
-	    return length;
 	}
 	break;
     default:
