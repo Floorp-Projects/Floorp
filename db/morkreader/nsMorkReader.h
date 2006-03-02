@@ -69,8 +69,7 @@ class nsMorkReader
     }
 
   private:
-    static const int kStorageSize = 9;
-    char_type mStorage[kStorageSize];
+    char_type mStorage[9];
   };
 
   // Hashtable key type that contains an IDString
