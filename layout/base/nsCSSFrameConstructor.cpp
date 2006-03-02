@@ -331,9 +331,6 @@ nsIFrame*
 NS_NewButtonBoxFrame (nsIPresShell* aPresShell);
 
 nsIFrame*
-NS_NewGrippyFrame (nsIPresShell* aPresShell);
-
-nsIFrame*
 NS_NewSplitterFrame (nsIPresShell* aPresShell);
 
 nsIFrame*
@@ -3458,7 +3455,6 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsXULAtoms::scrollbarbutton ||
 #ifdef MOZ_XUL
       aTag == nsXULAtoms::splitter ||
-      aTag == nsXULAtoms::grippy ||
 #endif
       PR_FALSE;
 
@@ -6361,13 +6357,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       }
       // End of SPLITTER CONSTRUCTION logic
 
-      // GRIPPY CONSTRUCTION
-      else if (aTag == nsXULAtoms::grippy) {
-        isReplaced = PR_TRUE;
-        newFrame = NS_NewGrippyFrame(mPresShell);
-      }
-      // End of GRIPPY CONSTRUCTION logic
-      
       else {
         triedFrame = PR_FALSE;
       }
