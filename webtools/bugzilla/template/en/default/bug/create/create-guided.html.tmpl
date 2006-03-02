@@ -336,7 +336,7 @@ function PutDescription() {
       [% INCLUDE global/textarea.html.tmpl
         name    = 'comment'
         minrows = 6
-        cols    = 80
+        cols    = constants.COMMENT_COLS
       %]
       <p>
         Expand on the Summary. Please be
@@ -388,7 +388,7 @@ function PutDescription() {
       [% INCLUDE global/textarea.html.tmpl
         name           = 'reproduce_steps'
         minrows        = 4
-        cols           = 80
+        cols           = constants.COMMENT_COLS
         defaultcontent = "1.\n2.\n3."
       %]
       <p>
@@ -406,7 +406,7 @@ function PutDescription() {
       [% INCLUDE global/textarea.html.tmpl
         name    = 'actual_results'
         minrows = 4
-        cols    = 80
+        cols    = constants.COMMENT_COLS
       %]
       <p>
         What happened after you performed the steps above?
@@ -422,7 +422,7 @@ function PutDescription() {
       [% INCLUDE global/textarea.html.tmpl
         name    = 'expected_results'
         minrows = 4
-        cols    = 80
+        cols    = constants.COMMENT_COLS
       %]
       <p>
         What should the software have done instead?
@@ -438,7 +438,7 @@ function PutDescription() {
       [% INCLUDE global/textarea.html.tmpl
         name    = 'additional_info'
         minrows = 8
-        cols    = 80
+        cols    = constants.COMMENT_COLS
       %]
       <p>
         Add any additional information you feel may be
