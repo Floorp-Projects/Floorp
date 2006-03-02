@@ -90,39 +90,40 @@ void nsAccessibleHyperText::Shutdown()
 
 PRBool nsAccessibleHyperText::GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave)
 {
-  if (! aCurFrame)
-    return PR_FALSE;
+  while (aCurFrame) {
 
-  nsIAtom* frameType = aCurFrame->GetType();
-  if (frameType == nsAccessibilityAtoms::blockFrame) {
-    if (bSave)
-      return PR_TRUE;
-  }
-  else {
-    if (frameType == nsAccessibilityAtoms::textFrame) {
-      // Skip the empty text frames that usually only consist of "\n"
-      if (! aCurFrame->GetRect().IsEmpty()) {
-        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aCurFrame->GetContent()));
-        if (bSave || node == aNode) {
-          // some long text node may be divided into several frames, 
-          // so we must check whether this node is already in the array
-          PRUint32 index;
-          nsresult rv = mTextChildren->IndexOf(0, node, &index);
-          if (NS_FAILED(rv)) {
-            mTextChildren->AppendElement(node, PR_FALSE);
+    nsIAtom* frameType = aCurFrame->GetType();
+    if (frameType == nsAccessibilityAtoms::blockFrame) {
+      if (bSave)
+        return PR_TRUE;
+    }
+    else {
+      if (frameType == nsAccessibilityAtoms::textFrame) {
+        // Skip the empty text frames that usually only consist of "\n"
+        if (! aCurFrame->GetRect().IsEmpty()) {
+          nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aCurFrame->GetContent()));
+          if (bSave || node == aNode) {
+            // some long text node may be divided into several frames, 
+            // so we must check whether this node is already in the array
+            PRUint32 index;
+            nsresult rv = mTextChildren->IndexOf(0, node, &index);
+            if (NS_FAILED(rv)) {
+              mTextChildren->AppendElement(node, PR_FALSE);
+            }
+            bSave = PR_TRUE;
           }
-          bSave = PR_TRUE;
         }
       }
+
+      nsIFrame* childFrame = aCurFrame->GetFirstChild(nsnull);
+      if (GetAllTextChildren(aPresContext, childFrame, aNode, bSave))
+        return PR_TRUE;
     }
 
-    nsIFrame* childFrame = aCurFrame->GetFirstChild(nsnull);
-    if (GetAllTextChildren(aPresContext, childFrame, aNode, bSave))
-      return PR_TRUE;
+    nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
+    aCurFrame = siblingFrame;
   }
-
-  nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
-  return GetAllTextChildren(aPresContext, siblingFrame, aNode, bSave);
+  return PR_FALSE;
 }
 
 PRInt32 nsAccessibleHyperText::GetIndex()
