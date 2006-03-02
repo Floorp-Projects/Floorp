@@ -55,4 +55,4 @@ reportCompare(expect, actual, summary + ' ' + inSection(1));
 
 expect = 'AB';
 actual = /(?!AB+D)AB/.exec("AB") + '';
-reportCompare(expect, actual, status + ' ' + inSection(2));
+reportCompare(expect, actual, summary + ' ' + inSection(2));
