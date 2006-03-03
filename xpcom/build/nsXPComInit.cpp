@@ -645,6 +645,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 // The shutdown sequence for xpcom would be
 //
 // - Notify "xpcom-shutdown" for modules to release primary (root) references
+// - Shutdown XPCOM timers
 // - Notify "xpcom-shutdown-threads" for thread joins
 // - Shutdown the event queues
 // - Release the Global Service Manager
@@ -694,6 +695,12 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
                                     nsnull);
             }
         }
+
+        if (currentQ)
+            currentQ->ProcessPendingEvents();
+
+        // Shutdown the timer thread and all timers that might still be alive
+        nsTimerImpl::Shutdown();
 
         if (currentQ)
             currentQ->ProcessPendingEvents();
@@ -768,10 +775,6 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #ifdef XP_UNIX
     NS_ShutdownNativeCharsetUtils();
 #endif
-
-    // Shutdown the timer thread and all timers that might still be alive before
-    // shutting down the component manager
-    nsTimerImpl::Shutdown();
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
