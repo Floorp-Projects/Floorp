@@ -375,7 +375,7 @@ PRBool GIFInit(gif_struct* gs, void* aClientData)
     return PR_FALSE;
 
   // Clear out the structure, excluding the arrays
-  memset(gs, 0, offsetof(gif_struct, prefix));
+  memset(gs, 0, sizeof(gif_struct));
   gs->clientptr = aClientData;
 
   // Start with the version (GIF89a|GIF87a)
