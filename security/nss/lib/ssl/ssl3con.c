@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.81 2006/03/02 00:07:08 wtchang%redhat.com Exp $ */
+/* $Id: ssl3con.c,v 1.82 2006/03/03 18:48:09 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -7800,8 +7800,7 @@ ssl3_NewKeyPair( SECKEYPrivateKey * privKey, SECKEYPublicKey * pubKey)
 {
     ssl3KeyPair * pair;
 
-    if (!privKey && !pubKey) {
-	/* one or the other may be NULL, but not both. */
+    if (!privKey || !pubKey) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
     	return NULL;
     }
