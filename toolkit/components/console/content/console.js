@@ -133,6 +133,8 @@ function displayResult()
   if (result)
     gConsole.mCService.logStringMessage(result);
     // or could use appendMessage which doesn't persist
+  var iframe = document.getElementById("Evaluator");
+  iframe.setAttribute("src", "chrome://global/content/blank.html");
 }
 
 // XXX DEBUG
