@@ -1938,10 +1938,24 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
     nsCOMPtr<nsIDOMNode> tSCParentNode;
     res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
     if(NS_FAILED(res)) return res;
+    
+    PRBool isCollapsed;
+    res = GetCollapsed(&isCollapsed);
+    if(NS_FAILED(res)) return res;
+
+    PRInt32 tEndOffset;
+    GetEndOffset(&tEndOffset);
 
     nsCOMPtr<nsIDOMText> secondPart;
     res = startTextNode->SplitText(tStartOffset, getter_AddRefs(secondPart));
     if (NS_FAILED(res)) return res;
+    
+    // SplitText collapses the range; fix that (bug 253609)
+    if (!isCollapsed)
+    {
+      res = SetEnd(secondPart, tEndOffset - tStartOffset);
+      if(NS_FAILED(res)) return res;
+    }
     
     nsCOMPtr<nsIDOMNode> tResultNode;
     return tSCParentNode->InsertBefore(aN, secondPart, getter_AddRefs(tResultNode));
