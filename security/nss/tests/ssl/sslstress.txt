@@ -1,5 +1,5 @@
 #
-# This file defines the stress tests for ssl/tls
+# This file defines the stress tests for SSL/TLS.
 #
 #        expected
 # Enable  return  server     client                         Test Case name
@@ -13,7 +13,7 @@
 #
 # noECC     0      -r    -w_bogus_-n_"Test_User"  TLS Request don't require client auth (bad password)
 #
-########################## ECC ciphers ##############################
+# ############################ ECC ciphers ############################
 # Currently, session reuse does not work for ECDH-ECDSA and ECDHE-ECDSA 
 # ciphers (see Bug 238051). Setting up 1000 connections without session
 # reuse would take too long, so use only 10 connections
