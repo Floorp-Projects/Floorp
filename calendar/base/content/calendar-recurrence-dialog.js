@@ -45,6 +45,7 @@ function onLoad()
     window.originalRecurrenceInfo = args.recurrenceInfo;
 
     window.removedExceptions = [];
+    window.addedExceptions = [];
 
     loadDialog();
 
@@ -77,6 +78,11 @@ function onCancel()
 
 function loadDialog()
 {
+    /* Set a starting value for the exceptions picker */
+    var item = window.calendarEvent;
+    var date = item.startDate || item.entryDate || item.dueDate;
+    document.getElementById("exdate-picker").value = date.jsDate;
+
     if (!window.originalRecurrenceInfo)
         return;
 
@@ -239,6 +245,14 @@ function saveDialog()
         recurrenceInfo.restoreOccurrenceAt(date);
     }
 
+    var exceptionsBox = document.getElementById("recurrence-exceptions-listbox");
+    for each (var ex in window.addedExceptions) {
+        var dateitem = new calRecurrenceDate();
+        dateitem.isNegative = true;
+        dateitem.date = ex;
+        recurrenceInfo.appendRecurrenceItem(dateitem);
+    }
+
     return recurrenceInfo;
 }
 
@@ -304,11 +318,44 @@ function updateAccept()
     this.sizeToContent();
 }
 
+function addException() {
+    var jsDate = document.getElementById("exdate-picker").value;
+    var exDate = jsDateToDateTime(jsDate);
+    exDate.isDate = true;
+    if (window.calendarEvent.startDate) {
+        exDate.timezone = window.calendarEvent.startDate.timezone;
+    } else if (window.calendarEvent.entryDate) {
+        exDate.timezone = window.calendarEvent.entryDate.timezone;
+    } else {
+        exDate.timezone = window.calendarEvent.dueDate.timezone;
+    }
+
+    window.addedExceptions.push(exDate);
+
+    var exBox = document.getElementById("recurrence-exceptions-listbox");
+    var exItem = exBox.appendItem(exDate.toString());
+    exItem.date = exDate;
+
+    this.sizeToContent();
+}
+
 function removeSelectedException()
 {
     var exceptionList = document.getElementById("recurrence-exceptions-listbox");
     var item = exceptionList.selectedItem;
-    window.removedExceptions.push(item.date);
+
+    var addedRecently = false;
+    for (var ii in window.addedExceptions) {
+        if (window.addedExceptions[ii].compare(item.date) == 0) {
+            window.addedExceptions.splice(ii, 1);
+            addedRecently = true;
+            break;
+        }
+    }
+
+    if (!addedRecently) {
+        window.removedExceptions.push(item.date);
+    }
     exceptionList.removeItemAt(exceptionList.getIndexOfItem(item));
 }
 
