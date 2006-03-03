@@ -101,6 +101,9 @@ protected:
   nsTArray<PRInt64> mFolders;
 };
 
+#ifndef MOZILLA_1_8_BRANCH
+NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQuery, NS_NAVHISTORYQUERY_IID)
+#endif
 
 // nsNavHistoryQueryOptions
 
@@ -165,6 +168,10 @@ private:
   PRBool mIncludeHidden;
   PRUint32 mMaxResults;
 };
+
+#ifndef MOZILLA_1_8_BRANCH
+NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQueryOptions, NS_NAVHISTORYQUERYOPTIONS_IID)
+#endif
 
 #endif // nsNavHistoryQuery_h_
 
