@@ -55,6 +55,22 @@ typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
 typedef void    (_cdecl *XpiExit)(void);
 typedef BOOL    (WINAPI *SetDllPathProc)(const char*);
 
+#if _MSC_VER >= 1400
+typedef HANDLE  (WINAPI *FnCreateActCtxA)(PCACTCTXA pActCtx);
+typedef BOOL    (WINAPI *FnActivateActCtx)(HANDLE hActCtx, ULONG_PTR* lpCookie);
+typedef BOOL    (WINAPI *FnDeactivateActCtx)(DWORD dwFlags, ULONG_PTR ulCookie);
+typedef VOID    (WINAPI *FnReleaseActCtx)(HANDLE hActCtx);
+
+ACTCTXA actctx;
+HANDLE hActCtx = INVALID_HANDLE_VALUE;
+ULONG_PTR ulpActivationCookie;
+
+static FnCreateActCtxA    pfnCreateActCtxA    = NULL;
+static FnActivateActCtx   pfnActivateActCtx   = NULL;
+static FnDeactivateActCtx pfnDeactivateActCtx = NULL;
+static FnReleaseActCtx    pfnReleaseActCtx    = NULL;
+#endif
+
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
@@ -113,6 +129,38 @@ HRESULT InitializeXPIStub(char *xpinstallPath)
   if(FileExists(szXPIStubFile) == FALSE)
     return(2);
 
+#if _MSC_VER >= 1400
+  /* Windows XP + Visual C++ 8 requires proper
+   * Side by Side configuration, which means
+   * we have to have a manifest to create an
+   * Activation Context so we can locate the
+   * VC8 runtime.
+   */
+  if (hKernel != NULL &&
+      (pfnCreateActCtxA = (FnCreateActCtxA)GetProcAddress(hKernel, "CreateActCtxA")) != NULL &&
+      (pfnActivateActCtx = (FnActivateActCtx)GetProcAddress(hKernel, "ActivateActCtx")) != NULL &&
+      (pfnDeactivateActCtx = (FnDeactivateActCtx)GetProcAddress(hKernel, "DeactivateActCtx")) != NULL &&
+      (pfnReleaseActCtx = (FnReleaseActCtx)GetProcAddress(hKernel, "ReleaseActCtx")) != NULL)
+  {
+    memset(&actctx, 0, sizeof(actctx));
+    actctx.cbSize = sizeof(actctx);
+    actctx.lpSource = (LPCSTR)szXPIStubFile;
+    actctx.lpResourceName = MAKEINTRESOURCE(17);
+    actctx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID;
+
+    hActCtx = pfnCreateActCtxA(&actctx);
+
+    if (hActCtx == INVALID_HANDLE_VALUE)
+      return(2); /* XXX: is this a good return value? */
+
+    if (!pfnActivateActCtx(hActCtx, &ulpActivationCookie))
+    {
+      pfnReleaseActCtx(hActCtx);
+      return(2);
+    }
+  }
+#endif
+
   /* load xpistub.dll */
   if((hXPIStubInst = LoadLibraryEx(szXPIStubFile, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) == NULL)
   {
@@ -147,6 +195,19 @@ HRESULT DeInitializeXPIStub()
   pfnXpiInit    = NULL;
   pfnXpiInstall = NULL;
   pfnXpiExit    = NULL;
+
+#if _MSC_VER >= 1400
+  if (pfnDeactivateActCtx)
+  {
+    pfnDeactivateActCtx(0, ulpActivationCookie);
+    pfnReleaseActCtx(hActCtx);
+  }
+
+  pfnCreateActCtxA    = NULL;
+  pfnActivateActCtx   = NULL;
+  pfnDeactivateActCtx = NULL;
+  pfnReleaseActCtx    = NULL;
+#endif
 
   if(hXPIStubInst)
     FreeLibrary(hXPIStubInst);
