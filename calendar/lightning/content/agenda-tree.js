@@ -430,9 +430,6 @@ function observer_onAddItem(item)
 agendaTreeView.calendarObserver.onDeleteItem =
 function observer_onDeleteItem(item, rebuildFlag)
 {
-    if (!(item instanceof Components.interfaces.calIEvent))
-        return;
-
     var occs = item.getOccurrencesBetween(this.agendaTreeView.today.start,
                                           this.agendaTreeView.soon.end, {});
     occs.forEach(this.agendaTreeView.deleteItem, this.agendaTreeView);
