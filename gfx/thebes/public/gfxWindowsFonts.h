@@ -142,10 +142,10 @@ private:
                                      const PRUnichar *aString, PRUint32 aLength,
                                      gfxWindowsFont *aFont);
 
-    PRInt32 MeasureOrDrawAscii(gfxContext *aContext,
-                               PRBool aDraw,
-                               PRInt32 aX, PRInt32 aY,
-                               const PRInt32 *aSpacing);
+    PRInt32 MeasureOrDrawFast(gfxContext *aContext,
+                              PRBool aDraw,
+                              PRInt32 aX, PRInt32 aY,
+                              const PRInt32 *aSpacing);
     PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw,
                                    PRInt32 aX, PRInt32 aY,
                                    const PRInt32 *aSpacing);
