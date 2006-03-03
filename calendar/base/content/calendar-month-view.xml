@@ -207,8 +207,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for each (ed in this.mItemData) {
-            if (ed.item == aItem ||
-                (ed.item.id == aItem.id && ed.item.recurrence_id == aItem.recurrence_id))
+            if (aItem.sameId(ed.item))
             {
               return;
             }
@@ -251,8 +250,7 @@
           var origLen = this.mItemData.length;
           this.mItemData = this.mItemData.filter(
             function(itd) {
-              if (itd.item == aItem ||
-                  (itd.item.id == aItem.id && itd.item.recurrence_id == aItem.recurrence_id))
+              if (aItem.sameId(itd.item))
               {
                 deleted.push(itd);
                 return false;

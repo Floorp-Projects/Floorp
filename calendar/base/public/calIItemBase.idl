@@ -78,6 +78,16 @@ interface calIItemBase : nsISupports
   // clone always returns a mutable event
   calIItemBase clone();
 
+  /**
+   * Checks whether the argument object refers the same calendar item as
+   * this one, by testing both the id and recurrenceId property.  This 
+   *
+   * @arg aItem     the item to compare against this one
+   *
+   * @return        true if both ids match, false otherwise
+   */
+  boolean hasSameIds(in calIItemBase aItem);
+  
   //
   // the generation number of this item; 0 means
   // that it's never been stored in a store

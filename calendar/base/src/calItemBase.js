@@ -157,6 +157,13 @@ calItemBase.prototype = {
         this.mImmutable = true;
     },
 
+    hasSameIds: function(that) {
+        return (that && this.id == that.id &&
+                (this.recurrenceId == that.recurrenceId || // both null
+                 (this.recurrenceId && that.recurrenceId &&
+                  this.recurrenceId.compare(that.recurrenceId) == 0)));
+    },
+
     // initialize this class's members
     initItemBase: function () {
         var now = new Date();
