@@ -6257,7 +6257,6 @@ var FeedHandler = {
   }
 };
 
-
 #ifdef MOZ_PLACES
 var PlacesBrowserShim = {
   _bms: null,  // Bookmark Service
