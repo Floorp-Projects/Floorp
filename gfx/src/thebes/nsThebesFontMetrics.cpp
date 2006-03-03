@@ -117,7 +117,7 @@ nsThebesFontMetrics::Destroy()
 
 gfxFont::Metrics nsThebesFontMetrics::GetMetrics()
 {
-    return mFontGroup->GetFontList()[0]->GetMetrics();
+    return mFontGroup->GetFontAt(0)->GetMetrics();
 }
 
 NS_IMETHODIMP
