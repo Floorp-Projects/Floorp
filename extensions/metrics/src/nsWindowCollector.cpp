@@ -121,20 +121,19 @@ nsWindowCollector::Observe(nsISupports *subject,
                            const char *topic,
                            const PRUnichar *data)
 {
-  nsresult rv;
+  nsRefPtr<nsHashPropertyBag> properties;
+  nsresult rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindow> window;
+  nsCAutoString action;
+
   if (strcmp(topic, "domwindowcreated") == 0) {
     // Log a window creation event.
-    nsRefPtr<nsHashPropertyBag> properties;
-    rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
-    NS_ENSURE_SUCCESS(rv, rv);
+    action.AssignLiteral("create");
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(subject);
+    window = do_QueryInterface(subject);
     NS_ENSURE_STATE(window);
-
-    rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("window"),
-                                   GetWindowID(window));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // We want the window's real parent, even if it crosses a chrome/content
     // boundary.  This requires going up the docshell tree.
@@ -158,23 +157,12 @@ nsWindowCollector::Observe(nsISupports *subject,
       rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("chrome"), PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    nsMetricsService *ms = nsMetricsService::get();
-    rv = ms->LogEvent(NS_LITERAL_STRING("windowcreate"), properties);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, "toplevel-window-ready") == 0) {
     // Log a window open event.
-    nsRefPtr<nsHashPropertyBag> properties;
-    rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
-    NS_ENSURE_SUCCESS(rv, rv);
+    action.AssignLiteral("open");
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(subject);
+    window = do_QueryInterface(subject);
     NS_ENSURE_STATE(window);
-
-    rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("window"),
-                                   GetWindowID(window));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMWindowInternal> opener;
     window->GetOpener(getter_AddRefs(opener));
@@ -185,51 +173,36 @@ nsWindowCollector::Observe(nsISupports *subject,
                                      GetWindowID(opener));
       NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    nsMetricsService *ms = nsMetricsService::get();
-    rv = ms->LogEvent(NS_LITERAL_STRING("windowopen"), properties);
-    NS_ENSURE_SUCCESS(rv, rv);
   } else if (strcmp(topic, "domwindowclosed") == 0) {
     // Log a window close event.
-    nsRefPtr<nsHashPropertyBag> properties;
-    rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(subject);
-    NS_ENSURE_STATE(window);
-
-    rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("window"),
-                                   GetWindowID(window));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsMetricsService *ms = nsMetricsService::get();
-    rv = ms->LogEvent(NS_LITERAL_STRING("windowclose"), properties);
-    NS_ENSURE_SUCCESS(rv, rv);
+    action.AssignLiteral("close");
+    window = do_QueryInterface(subject);
   } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
              strcmp(topic, NS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
     // Log a window destroy event.
-    nsRefPtr<nsHashPropertyBag> properties;
-    rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(subject);
-    NS_ENSURE_STATE(window);
-
-    rv = nsMetricsUtils::PutUint16(properties,
-                                   NS_LITERAL_STRING("window"),
-                                   GetWindowID(window));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsMetricsService *ms = nsMetricsService::get();
-    rv = ms->LogEvent(NS_LITERAL_STRING("windowdestroy"), properties);
+    action.AssignLiteral("destroy");
+    window = do_GetInterface(subject);
 
     // Remove the window from our map.
     mWindowMap.Remove(subject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return NS_OK;
+  if (window) {
+    rv = nsMetricsUtils::PutUint16(properties, NS_LITERAL_STRING("windowid"),
+                                   GetWindowID(window));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = properties->SetPropertyAsACString(NS_LITERAL_STRING("action"),
+                                           action);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsMetricsService *ms = nsMetricsService::get();
+    NS_ENSURE_STATE(ms);
+    rv = ms->LogEvent(NS_LITERAL_STRING("window"), properties);
+  }
+
+  return rv;
 }
 
 /* static */ PRUint16
