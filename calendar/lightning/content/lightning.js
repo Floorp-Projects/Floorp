@@ -37,7 +37,7 @@
 // This file contains all of the default preference values for Lightning
 
 pref("calendar.alarms.playsound", false);
-pref("calendar.alarms.playfile", "");
+pref("calendar.alarms.soundURL", "");
 pref("calendar.alarms.defaultsnoozelength", 5);
 pref("calendar.view.defaultstarthour", 8);
 pref("calendar.view.defaultendhour", 17);

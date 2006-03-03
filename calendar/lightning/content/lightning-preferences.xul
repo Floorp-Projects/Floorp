@@ -51,7 +51,7 @@
 
     <preferences>
       <preference id="calendar.alarms.playsound" name="calendar.alarms.playsound" type="bool"/>
-      <preference id="calendar.alarms.playfile" name="calendar.alarms.playfile" type="string"/>
+      <preference id="calendar.alarms.soundURL" name="calendar.alarms.soundURL" type="string"/>
       <preference id="calendar.alarms.defaultsnoozelength" name="calendar.alarms.defaultsnoozelength" type="int"/>
       <preference id="calendar.view.defaultstarthour" name="calendar.view.defaultstarthour" type="int"/>
       <preference id="calendar.view.defaultendhour" name="calendar.view.defaultendhour" type="int"/>
@@ -79,7 +79,7 @@
             <rows>
               <row align="center">
                 <checkbox label="&pref.playasound;" preference="calendar.alarms.playsound"/>
-<!--                <filewidget flex="1" preference="calendar.alarms.playfile" preference-editable="true"/> -->
+<!--                <filewidget flex="1" preference="calendar.alarms.soundURL" preference-editable="true"/> -->
                 <spacer/>
               </row>
               <row align="center">

@@ -57,10 +57,17 @@ function addAlarm(event)
    var playSound = calendarPrefs.getBoolPref("alarms.playsound");
    if (playSound) {
      try {
-       var soundURL = makeURL(calendarPrefs.getCharPref("alarms.soundURL"));
-       var sound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
-       sound.init();
-       sound.play(soundURL);
+       var soundURL = calendarPrefs.getCharPref("alarms.soundURL");
+       var sound = Components.classes["@mozilla.org/sound;1"]
+                             .createInstance(Components.interfaces.nsISound);
+       if (soundURL & soundURL.length & soundURL.length > 0) {
+         soundURL = makeURL(soundURL);
+         sound.init();
+         sound.play(soundURL);
+       } else {
+         sound.init();
+         sound.beep();
+       }
      } catch (ex) {
        dump("unable to play sound...\n" + ex + "\n");
      }
