@@ -492,7 +492,9 @@ calRecurrenceInfo.prototype = {
         d.isNegative = true;
         d.date = aRecurrenceId.clone();
 
-        return this.appendRecurrenceItem(d);
+        this.removeExceptionFor(d.date);
+
+        this.appendRecurrenceItem(d);
     },
 
     restoreOccurrenceAt: function (aRecurrenceId) {
