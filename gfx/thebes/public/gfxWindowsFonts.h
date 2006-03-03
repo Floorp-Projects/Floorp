@@ -61,7 +61,7 @@ public:
 
     virtual ~gfxWindowsFont();
 
-    virtual const gfxFont::Metrics& GetMetrics() { return mMetrics; }
+    virtual const gfxFont::Metrics& GetMetrics();
 
     cairo_font_face_t *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
@@ -75,19 +75,19 @@ protected:
     void FillLogFont(PRInt16 weight);
 
 private:
-    void ComputeMetrics(HDC dc);
+    void ComputeMetrics();
 
-    LOGFONTW mLogFont;
     HFONT mFont;
+    SCRIPT_CACHE mScriptCache;
 
     cairo_font_face_t *mFontFace;
     cairo_scaled_font_t *mScaledFont;
 
-    gfxFont::Metrics mMetrics;
+    gfxFont::Metrics *mMetrics;
 
-    SCRIPT_CACHE mScriptCache;
+    LOGFONTW mLogFont;
 
-    PRBool mIsMLangFont;
+    PRPackedBool mIsMLangFont;
 };
 
 

@@ -58,7 +58,7 @@
 THEBES_IMPL_REFCOUNTING(gfxWindowsFont)
 
 gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aDC)
-    : mFont(nsnull), mScriptCache(nsnull), mIsMLangFont(PR_FALSE)
+    : mFont(nsnull), mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(PR_FALSE)
 {
     mName = aName;
     mGroup = aFontGroup;
@@ -69,17 +69,10 @@ gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFont
 
     mScaledFont = MakeCairoScaledFont(nsnull);
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
-
-    HDC dc = aDC ? aDC : GetDC((HWND)nsnull);
-
-    ComputeMetrics(dc);
-
-    if (dc != aDC)
-        ReleaseDC((HWND)nsnull, dc);
 }
 
 gfxWindowsFont::gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont)
-    : mScriptCache(nsnull), mIsMLangFont(aIsMLangFont)
+    : mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(aIsMLangFont)
 {
     mFont = aFont;
     mGroup = aFontGroup;
@@ -90,8 +83,6 @@ gfxWindowsFont::gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBo
 
     mScaledFont = MakeCairoScaledFont(nsnull);
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
-
-    // don't bother creating the metrics.
 }
 
 gfxWindowsFont::~gfxWindowsFont()
@@ -114,6 +105,17 @@ gfxWindowsFont::~gfxWindowsFont()
         DeleteObject(mFont);
 
     ScriptFreeCache(&mScriptCache);
+
+    delete mMetrics;
+}
+
+const gfxFont::Metrics&
+gfxWindowsFont::GetMetrics()
+{
+    if (!mMetrics)
+        ComputeMetrics();
+
+    return *mMetrics;
 }
 
 void
@@ -193,11 +195,16 @@ gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 }
 
 void
-gfxWindowsFont::ComputeMetrics(HDC aDC)
+gfxWindowsFont::ComputeMetrics()
 {
-    SaveDC(aDC);
+    if (!mMetrics)
+        mMetrics = new gfxFont::Metrics;
 
-    cairo_win32_scaled_font_select_font(mScaledFont, aDC);
+    HDC dc = GetDC((HWND)nsnull);
+
+    SaveDC(dc);
+
+    cairo_win32_scaled_font_select_font(mScaledFont, dc);
 
     const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
     const double multiplier = cairofontfactor * mStyle->size;
@@ -207,63 +214,65 @@ gfxWindowsFont::ComputeMetrics(HDC aDC)
     TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
     gfxFloat descentPos = 0;
 
-    if (0 < ::GetOutlineTextMetrics(aDC, sizeof(oMetrics), &oMetrics)) {
+    if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
         //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * mDev2App);  XXX not really supported on windows
-        mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * multiplier * 0.56f); // 50% of ascent, best guess for true type
-        mMetrics.superscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * multiplier);
-        mMetrics.subscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * multiplier);
+        mMetrics->xHeight = NSToCoordRound((float)metrics.tmAscent * multiplier * 0.56f); // 50% of ascent, best guess for true type
+        mMetrics->superscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * multiplier);
+        mMetrics->subscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * multiplier);
         
-        mMetrics.strikeoutSize = PR_MAX(1, NSToCoordRound(oMetrics.otmsStrikeoutSize * multiplier));
-        mMetrics.strikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * multiplier);
-        mMetrics.underlineSize = PR_MAX(1, NSToCoordRound(oMetrics.otmsUnderscoreSize * multiplier));
+        mMetrics->strikeoutSize = PR_MAX(1, NSToCoordRound(oMetrics.otmsStrikeoutSize * multiplier));
+        mMetrics->strikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * multiplier);
+        mMetrics->underlineSize = PR_MAX(1, NSToCoordRound(oMetrics.otmsUnderscoreSize * multiplier));
 
-        mMetrics.underlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * multiplier);
+        mMetrics->underlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * multiplier);
         
         // Begin -- section of code to get the real x-height with GetGlyphOutline()
         GLYPHMETRICS gm;
         MAT2 mMat = { 1, 0, 0, 1 };    // glyph transform matrix (always identity in our context)
-        DWORD len = GetGlyphOutlineW(aDC, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
+        DWORD len = GetGlyphOutlineW(dc, PRUnichar('x'), GGO_METRICS, &gm, 0, nsnull, &mMat);
 
         if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0) {
-            mMetrics.xHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * multiplier);
+            mMetrics->xHeight = NSToCoordRound(gm.gmptGlyphOrigin.y * multiplier);
         }
         // End -- getting x-height
     }
     else {
         // Make a best-effort guess at extended metrics
         // this is based on general typographic guidelines
-        ::GetTextMetrics(aDC, &metrics);
-        mMetrics.xHeight = NSToCoordRound((float)metrics.tmAscent * 0.56f); // 56% of ascent, best guess for non-true type
-        mMetrics.superscriptOffset = mMetrics.xHeight;     // XXX temporary code!
-        mMetrics.subscriptOffset = mMetrics.xHeight;     // XXX temporary code!
+        ::GetTextMetrics(dc, &metrics);
+        mMetrics->xHeight = NSToCoordRound((float)metrics.tmAscent * 0.56f); // 56% of ascent, best guess for non-true type
+        mMetrics->superscriptOffset = mMetrics->xHeight;     // XXX temporary code!
+        mMetrics->subscriptOffset = mMetrics->xHeight;     // XXX temporary code!
         
-        mMetrics.strikeoutSize = 1; // XXX this is a guess
-        mMetrics.strikeoutOffset = NSToCoordRound(mMetrics.xHeight / 2.0f); // 50% of xHeight
-        mMetrics.underlineSize = 1; // XXX this is a guess
-        mMetrics.underlineOffset = -NSToCoordRound((float)metrics.tmDescent * 0.30f); // 30% of descent
+        mMetrics->strikeoutSize = 1; // XXX this is a guess
+        mMetrics->strikeoutOffset = NSToCoordRound(mMetrics->xHeight / 2.0f); // 50% of xHeight
+        mMetrics->underlineSize = 1; // XXX this is a guess
+        mMetrics->underlineOffset = -NSToCoordRound((float)metrics.tmDescent * 0.30f); // 30% of descent
     }
     
 
-    mMetrics.internalLeading = NSToCoordRound(metrics.tmInternalLeading * multiplier);
-    mMetrics.externalLeading = NSToCoordRound(metrics.tmExternalLeading * multiplier);
-    mMetrics.emHeight = NSToCoordRound((metrics.tmHeight - metrics.tmInternalLeading) * multiplier);
-    mMetrics.emAscent = NSToCoordRound((metrics.tmAscent - metrics.tmInternalLeading) * multiplier);
-    mMetrics.emDescent = NSToCoordRound(metrics.tmDescent * multiplier);
-    mMetrics.maxHeight = NSToCoordRound(metrics.tmHeight * multiplier);
-    mMetrics.maxAscent = NSToCoordRound(metrics.tmAscent * multiplier);
-    mMetrics.maxDescent = NSToCoordRound(metrics.tmDescent * multiplier);
-    mMetrics.maxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * multiplier);
-    mMetrics.aveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * multiplier));
+    mMetrics->internalLeading = NSToCoordRound(metrics.tmInternalLeading * multiplier);
+    mMetrics->externalLeading = NSToCoordRound(metrics.tmExternalLeading * multiplier);
+    mMetrics->emHeight = NSToCoordRound((metrics.tmHeight - metrics.tmInternalLeading) * multiplier);
+    mMetrics->emAscent = NSToCoordRound((metrics.tmAscent - metrics.tmInternalLeading) * multiplier);
+    mMetrics->emDescent = NSToCoordRound(metrics.tmDescent * multiplier);
+    mMetrics->maxHeight = NSToCoordRound(metrics.tmHeight * multiplier);
+    mMetrics->maxAscent = NSToCoordRound(metrics.tmAscent * multiplier);
+    mMetrics->maxDescent = NSToCoordRound(metrics.tmDescent * multiplier);
+    mMetrics->maxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * multiplier);
+    mMetrics->aveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * multiplier));
     
     // Cache the width of a single space.
     SIZE size;
-    ::GetTextExtentPoint32(aDC, " ", 1, &size);
+    ::GetTextExtentPoint32(dc, " ", 1, &size);
     //size.cx -= font->mOverhangCorrection;
-    mMetrics.spaceWidth = NSToCoordRound(size.cx * multiplier);
+    mMetrics->spaceWidth = NSToCoordRound(size.cx * multiplier);
 
     cairo_win32_scaled_font_done_font(mScaledFont);
 
-    RestoreDC(aDC, -1);
+    RestoreDC(dc, -1);
+
+    ReleaseDC((HWND)nsnull, dc);
 }
 
 void
@@ -426,12 +435,14 @@ gfxWindowsTextRun::FindFallbackFont(HDC aDC, const PRUnichar *aString, PRUint32 
     long cchActual;
     rv = langFontLink->GetStrCodePages(aString, aLength, fontCodePages, &actualCodePages, &cchActual);
 
-    HFONT retFont;
-    rv = langFontLink->MapFont(aDC, actualCodePages, aString[0], &retFont);
-    if (FAILED(rv))
-        return nsnull;
+    for (PRUint32 i = 0; i < aLength; ++i) {
+        HFONT retFont;
+        rv = langFontLink->MapFont(aDC, actualCodePages, aString[0], &retFont);
+        if (SUCCEEDED(rv))
+            return new gfxWindowsFont(retFont, mGroup, PR_TRUE);
+    }
 
-    return new gfxWindowsFont(retFont, mGroup, PR_TRUE);
+    return nsnull;
 }
 
 PRInt32
@@ -494,6 +505,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         ret = GetGlyphIndicesA(aDC, aCString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
     else
         ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
+
     for (PRInt32 i = 0; i < ret; ++i) {
         if (glyphs[i] == 0xffff) {
             free(glyphs);
