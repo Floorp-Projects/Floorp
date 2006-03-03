@@ -233,7 +233,7 @@ calCompositeCalendar.prototype = {
     },
 
     setDefaultCalendar: function (cal, usePref) {
-        if (this.mDefaultCalendar == cal) // .equals(uri) ??
+        if (this.mDefaultCalendar && this.mDefaultCalendar.uri.equals(cal.uri))
             return;
         if (usePref && this.mPrefPrefix) {
             this.mCalMgr.deleteCalendarPref(this.mDefaultCalendar,

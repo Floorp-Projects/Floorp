@@ -185,7 +185,7 @@ calRecurrenceInfo.prototype = {
         if (!this.mBaseItem)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
-        if (aIndex < 0 || aIndex >= mRecurrenceItems.length)
+        if (aIndex < 0 || aIndex >= this.mRecurrenceItems.length)
             throw Components.results.NS_ERROR_INVALID_ARG;
 
         return this.mRecurrenceItems[aIndex];
@@ -221,8 +221,15 @@ calRecurrenceInfo.prototype = {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_OBJECT_IS_IMMUTABLE;
 
+        // Because xpcom objects can be wrapped in various ways, testing for
+        // mere == sometimes returns false even when it should be true.  Use
+        // the interface pointer returned by sip to avoid that problem.
+        var sip1 = Components.classes["@mozilla.org/supports-interface-pointer;1"]
+                            .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+        sip1.data = aItem;
+        sip1.dataIID = Components.interfaces.calIRecurrenceItem;
         for (var i = 0; i < this.mRecurrenceItems.length; i++) {
-            if (this.mRecurrenceItems[i] == aItem) {
+            if (this.mRecurrenceItems[i] == sip1.data) {
                 this.deleteRecurrenceItemAt(i);
                 return;
             }
