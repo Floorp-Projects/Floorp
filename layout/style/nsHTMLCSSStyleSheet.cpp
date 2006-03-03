@@ -147,8 +147,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   // NOTE: 'text-align', 'text-indent', and 'white-space' should not be
   // handled by the frames so we don't need to bother.
 
-  // Disable everything in the nsRuleDataDisplay struct except 'float'
-  // and 'clear'.
+  // Disable everything in the nsRuleDataDisplay struct except 'float'.
   if (aData->mSID == eStyleStruct_Visibility) {
     nsCSSValue inherit(eCSSUnit_Inherit);
     aData->mDisplayData->mVisibility = inherit;
@@ -179,6 +178,8 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     nsCSSValue visible(NS_STYLE_OVERFLOW_VISIBLE, eCSSUnit_Enumerated);
     aData->mDisplayData->mOverflowX = visible;
     aData->mDisplayData->mOverflowY = visible;
+
+    aData->mDisplayData->mClear = none;
 
     // Nobody will care about 'break-before' or 'break-after', since
     // they only apply to blocks (assuming we implement them correctly).
@@ -253,11 +254,13 @@ NS_IMETHODIMP
 CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
 {
   /*
-   * See CSS2 section 5.12.1, which says that the properties that apply
+   * See CSS2.1 section 5.12.1, which says that the properties that apply
    * to :first-line are: font properties, color properties, background
    * properties, 'word-spacing', 'letter-spacing', 'text-decoration',
-   * 'vertical-align', 'text-transform', 'line-height', 'text-shadow',
-   * and 'clear'.
+   * 'vertical-align', 'text-transform', and 'line-height'.
+   *
+   * We also allow 'text-shadow', which was listed in CSS2 (where the
+   * property existed).
    */
 
   CommonMapRuleInfoInto(aData);
@@ -301,21 +304,15 @@ NS_IMETHODIMP
 CSSFirstLetterRule::MapRuleInfoInto(nsRuleData* aData)
 {
   /*
-   * See CSS2 5.12.2, which says that the properties that apply to
-   * :first-letter are: font properties, color properties, background
-   * properties, 'text-decoration', 'vertical-align' (only if 'float' is
-   * 'none'), 'text-transform', 'line-height', margin properties,
-   * padding properties, border properties, 'float', 'text-shadow', and
-   * 'clear'.
+   * See CSS2.1 section 5.12.2, which says that the properties that
+   * apply to :first-letter are: font properties, 'text-decoration',
+   * 'text-transform', 'letter-spacing', 'word-spacing' (when
+   * appropriate), 'line-height', 'float', 'vertical-align' (only if
+   * 'float' is 'none'), margin properties, padding properties, border
+   * properties, 'color', and background properties.
    */
 
   CommonMapRuleInfoInto(aData);
-
-  if (aData->mSID == eStyleStruct_Text) {
-    nsCSSValue inherit(eCSSUnit_Inherit);
-    aData->mTextData->mWordSpacing = inherit;
-    aData->mTextData->mLetterSpacing = inherit;
-  }
 
   // NOTE:  'vertical-align' is only supposed to be relevant if 'float'
   // is 'none', but we don't do anything with it if 'float' is not none,
