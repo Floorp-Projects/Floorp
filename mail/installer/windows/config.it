@@ -594,7 +594,7 @@ $InstallSize$:talkback
 $InstallSizeSystem$
 $InstallSizeArchive$:talkback.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
+Force Upgrade File0=[SETUP PATH]\extensions\talkback@mozilla.org\components\fullsoft.dll
 FileCount=$FileCount$
 ; This is to randomly set the default checkbox for this component.
 ; This particular value will set the checkbox checked [number]% of the time.
