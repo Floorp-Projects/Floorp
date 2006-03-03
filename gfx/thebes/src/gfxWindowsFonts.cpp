@@ -364,11 +364,9 @@ gfxWindowsTextRun::~gfxWindowsTextRun()
 void
 gfxWindowsTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
 {
-    if (mIsASCII) {
-        PRInt32 ret = MeasureOrDrawAscii(aContext, PR_TRUE, pt.x, pt.y, nsnull);
-        if (ret != -1) {
-            return;
-        }
+    PRInt32 ret = MeasureOrDrawFast(aContext, PR_TRUE, pt.x, pt.y, nsnull);
+    if (ret != -1) {
+        return;
     }
 
     MeasureOrDrawUniscribe(aContext, PR_TRUE, pt.x, pt.y, nsnull);
@@ -399,11 +397,9 @@ gfxWindowsTextRun::MeasureString(gfxContext *aContext)
         return ret;
     }
 #else
-    if (mIsASCII) {
-        PRInt32 ret = MeasureOrDrawAscii(aContext, PR_FALSE, 0, 0, nsnull);
-        if (ret != -1) {
-            return ret;
-        }
+    PRInt32 ret = MeasureOrDrawFast(aContext, PR_FALSE, 0, 0, nsnull);
+    if (ret != -1) {
+        return ret;
     }
 #endif
     return MeasureOrDrawUniscribe(aContext, PR_FALSE, 0, 0, nsnull);
@@ -439,15 +435,15 @@ gfxWindowsTextRun::FindFallbackFont(HDC aDC, const PRUnichar *aString, PRUint32 
 }
 
 PRInt32
-gfxWindowsTextRun::MeasureOrDrawAscii(gfxContext *aContext,
-                                      PRBool aDraw,
-                                      PRInt32 aX, PRInt32 aY,
-                                      const PRInt32 *aSpacing)
+gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
+                                     PRBool aDraw,
+                                     PRInt32 aX, PRInt32 aY,
+                                     const PRInt32 *aSpacing)
 {
     PRInt32 length = 0;
 
+    /* this function doesn't handle RTL text. */
     if (IsRightToLeft()) {
-        NS_WARNING("Trying to draw ASCII text with RTL set.");
         return -1;
     }
 
@@ -458,8 +454,19 @@ gfxWindowsTextRun::MeasureOrDrawAscii(gfxContext *aContext,
     HDC aDC = cairo_win32_surface_get_dc(surf->CairoSurface());
     NS_ASSERTION(aDC, "No DC");
 
-    const char *aString = mCString.BeginReading();
-    const PRUint32 aLength = mCString.Length();
+    const char *aCString;
+    const PRUnichar *aWString;
+    PRUint32 aLength;
+
+    if (mIsASCII) {
+        aCString = mCString.BeginReading();
+        aLength = mCString.Length();
+    } else {
+        aWString = mString.BeginReading();
+        aLength = mString.Length();
+        if (ScriptIsComplex(aWString, aLength, SIC_COMPLEX) == S_OK)
+            return -1;
+    }
 
     // cairo munges it underneath us
     XFORM savedxform;
@@ -482,7 +489,11 @@ gfxWindowsTextRun::MeasureOrDrawAscii(gfxContext *aContext,
     const double cairoToPixels = cairofontfactor * mGroup->mStyle.size;
 
     LPWORD glyphs = (LPWORD)malloc(aLength * sizeof(WORD));
-    DWORD ret = GetGlyphIndicesA(aDC, aString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
+    DWORD ret;
+    if (mIsASCII)
+        ret = GetGlyphIndicesA(aDC, aCString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
+    else
+        ret = GetGlyphIndicesW(aDC, aWString, aLength, glyphs, GGI_MARK_NONEXISTING_GLYPHS);
     for (PRInt32 i = 0; i < ret; ++i) {
         if (glyphs[i] == 0xffff) {
             free(glyphs);
@@ -494,30 +505,49 @@ gfxWindowsTextRun::MeasureOrDrawAscii(gfxContext *aContext,
 
     if (!aDraw) {
         SIZE len;
-        GetTextExtentPoint32A(aDC, aString, aLength, &len);
+        if (mIsASCII)
+            GetTextExtentPoint32A(aDC, aCString, aLength, &len);
+        else
+            GetTextExtentPoint32W(aDC, aWString, aLength, &len);
         length = NSToCoordRound(len.cx * cairoToPixels);
     } else {
-        GCP_RESULTSA results;
-        memset(&results, 0, sizeof(GCP_RESULTS));
-        results.lStructSize = sizeof(GCP_RESULTS);
+        PRInt32 numGlyphs;
         int stackBuf[1024];
         int *dxBuf = stackBuf;
-        if (aLength > sizeof(stackBuf))
+        if (aLength > sizeof(stackBuf) / sizeof(int))
             dxBuf = (int *)malloc(aLength * sizeof(int));
 
-        results.nGlyphs = aLength;
-        results.lpDx = dxBuf;
+        if (mIsASCII) {
+            GCP_RESULTSA results;
+            memset(&results, 0, sizeof(GCP_RESULTSA));
+            results.lStructSize = sizeof(GCP_RESULTSA);
 
-        length = GetCharacterPlacementA(aDC, aString, aLength, 0, &results, GCP_USEKERNING);
+            results.nGlyphs = aLength;
+            results.lpDx = dxBuf;
 
-        const PRInt32 numGlyphs = results.nGlyphs;
+            length = GetCharacterPlacementA(aDC, aCString, aLength, 0, &results, GCP_USEKERNING);
+
+            numGlyphs = results.nGlyphs;
+        } else {
+            GCP_RESULTSW results;
+            memset(&results, 0, sizeof(GCP_RESULTSW));
+            results.lStructSize = sizeof(GCP_RESULTSW);
+
+            results.nGlyphs = aLength;
+            results.lpDx = dxBuf;
+
+            length = GetCharacterPlacementW(aDC, aWString, aLength, 0, &results, GCP_USEKERNING);
+
+            numGlyphs = results.nGlyphs;
+        }
+        
         cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
         double offset = 0;
         for (PRInt32 k = 0; k < numGlyphs; k++) {
             cglyphs[k].index = glyphs[k];
             cglyphs[k].x = aX + offset;
             cglyphs[k].y = aY;
-            offset += NSToCoordRound(results.lpDx[k] * cairoToPixels);
+            offset += NSToCoordRound(dxBuf[k] * cairoToPixels);
         }
 
         SetWorldTransform(aDC, &savedxform);
@@ -554,7 +584,7 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
     HDC aDC = cairo_win32_surface_get_dc(surf->CairoSurface());
     NS_ASSERTION(aDC, "No DC");
 
-    const nsAString& theString = (mIsASCII) ? NS_STATIC_CAST(nsAString&, NS_ConvertASCIItoUTF16(mCString)) : mString;
+    const nsAString& theString = (mIsASCII) ? NS_STATIC_CAST(const nsAString&, NS_ConvertASCIItoUTF16(mCString)) : mString;
     const PRUnichar *aString = theString.BeginReading();
     const PRUint32 aLength = theString.Length();
     const PRBool isComplex = (::ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK);
@@ -841,12 +871,13 @@ TRY_AGAIN_JUST_PLACE:
                     fontSelected = PR_TRUE;
                 }
 
-                SaveDC(aDC);
+                XFORM currentxform;
+                GetWorldTransform(aDC, &currentxform);
                 SetWorldTransform(aDC, &savedxform);
 
                 cairo_show_glyphs(cr, cglyphs, numGlyphs);
 
-                RestoreDC(aDC, -1);
+                SetWorldTransform(aDC, &currentxform);
 #endif
                 free(cglyphs);
 
