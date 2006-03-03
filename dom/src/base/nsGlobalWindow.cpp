@@ -140,7 +140,6 @@
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
-#include "nsIObserverService.h"
 
 #include "plbase64.h"
 
@@ -355,16 +354,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
 nsGlobalWindow::~nsGlobalWindow()
 {
-  if (IsOuterWindow()) {
-    // Only notify about outer window destruction
-    nsCOMPtr<nsIObserverService> obsSvc =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obsSvc) {
-      obsSvc->NotifyObservers(NS_STATIC_CAST(nsPIDOMWindow*, this),
-                              "domwindowdestroyed", nsnull);
-    }
-  }
-
   if (!--gRefCnt) {
     NS_IF_RELEASE(gEntropyCollector);
   }
