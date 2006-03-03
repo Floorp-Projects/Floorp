@@ -27,6 +27,7 @@
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
 #                 Greg Hendricks <ghendricks@novell.com>
+#                 David D. Kilzer <ddkilzer@kilzer.net>
 
 
 package Bugzilla::Template;
@@ -271,6 +272,13 @@ sub quoteUrls {
     my $count = 0;
     my $tmp;
 
+    # Provide tooltips for full bug links (Bug 74355)
+    my $urlbase_re = '(' . join('|', map { qr/$_/ } grep($_, Param('urlbase'), Param('sslbase'))) . ')';
+    $text =~ s~\b(${urlbase_re}\Qshow_bug.cgi?id=\E([0-9]+))\b
+              ~($things[$count++] = get_bug_link($3, $1)) &&
+               ("\0\0" . ($count-1) . "\0\0")
+              ~egox;
+
     # non-mailto protocols
     my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|irc|mid|news|nntp|prospero|telnet|view-source|wais)/i;
 
@@ -282,7 +290,7 @@ sub quoteUrls {
                ("\0\0" . ($count-1) . "\0\0")
               ~egox;
 
-    # We have to quote now, otherwise our html is itsself escaped
+    # We have to quote now, otherwise the html itself is escaped
     # THIS MEANS THAT A LITERAL ", <, >, ' MUST BE ESCAPED FOR A MATCH
 
     $text = html_quote($text);
