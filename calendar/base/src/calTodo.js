@@ -248,6 +248,27 @@ calTodo.prototype = {
 
         aCount.value = 0;
         return null;
+    },
+
+    set entryDate(value) {
+        this.modify();
+        
+        // We're about to change the start date of an item which probably
+        // could break the associated calIRecurrenceInfo. We're calling
+        // the appropriate method here to adjust the internal structure in
+        // order to free clients from worrying about such details.
+        if (this.parentItem == this) {
+            var rec = this.recurrenceInfo;
+            if (rec) {
+                rec.onStartDateChange(value,this.entryDate);
+            }
+        }
+
+        this.setProperty("DTSTART", value);
+    },
+
+    get entryDate() {
+        return this.getProperty("DTSTART");
     }
 };
         
@@ -255,7 +276,6 @@ calTodo.prototype = {
 
 var makeMemberAttr;
 if (makeMemberAttr) {
-    makeMemberAttr(calTodo, "DTSTART", null, "entryDate", true);
     makeMemberAttr(calTodo, "DUE", null, "dueDate", true);
     makeMemberAttr(calTodo, "COMPLETED", null, "completedDate", true);
     makeMemberAttr(calTodo, "PERCENT-COMPLETE", 0, "percentComplete", true);

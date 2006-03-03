@@ -63,6 +63,15 @@ interface calIRecurrenceInfo : nsISupports
   // applies, so that the start date can be tracked
   attribute calIItemBase item;
 
+  /**
+   * The start date of an item is directly referenced by parts of calIRecurrenceInfo,
+   * thus changing the former without adjusting the latter would break the internal structure.
+   * This method provides the necessary functionality. There's no need to call it manually
+   * after writing to the start date of an item, since it's called automatically in the
+   * appropriate setter of an item.
+   */
+  void onStartDateChange (in calIDateTime aNewStartTime, in calIDateTime aOldStartTime);
+
   /*
    * Set of recurrence items; the order of these matters.
    */

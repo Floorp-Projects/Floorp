@@ -175,6 +175,19 @@ function getOccurrenceOrParent(occurrence) {
         return occurrence;
     }
 
+    // if the user wants to edit an occurrence which is already
+    // an exception, always edit this single item.
+    var parentItem = occurrence.parentItem;
+    var rec = parentItem.recurrenceInfo;
+    if (rec) {
+        var exceptions = rec.getExceptionIds({});
+        if (exceptions.some(function (exid) {
+                                return exid.compare(occurrence.recurrenceId) == 0;
+                            })) {
+            return occurrence;
+        }
+    }
+
     var promptService = 
              Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                        .getService(Components.interfaces.nsIPromptService);

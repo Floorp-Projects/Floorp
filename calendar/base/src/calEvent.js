@@ -251,6 +251,27 @@ calEvent.prototype = {
 
         aCount.value = 0;
         return null;
+    },
+
+    set startDate(value) {
+        this.modify();
+
+        // We're about to change the start date of an item which probably
+        // could break the associated calIRecurrenceInfo. We're calling
+        // the appropriate method here to adjust the internal structure in
+        // order to free clients from worrying about such details.
+        if (this.parentItem == this) {
+            var rec = this.recurrenceInfo;
+            if (rec) {
+                rec.onStartDateChange(value,this.startDate);
+            }
+        }
+
+        this.setProperty("DTSTART", value);
+    },
+
+    get startDate() {
+        return this.getProperty("DTSTART");
     }
 };
 
@@ -258,6 +279,5 @@ calEvent.prototype = {
 
 var makeMemberAttr;
 if (makeMemberAttr) {
-    makeMemberAttr(calEvent, "DTSTART", null, "startDate", true);
     makeMemberAttr(calEvent, "DTEND", null, "endDate", true);
 }

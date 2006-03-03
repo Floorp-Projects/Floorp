@@ -206,7 +206,20 @@ var ltnCalendarViewController = {
         // then do so; otherwise pop up the dialog
         var itemToEdit = getOccurrenceOrParent(aOccurrence);
         if (aNewStartTime && aNewEndTime && !aNewStartTime.isDate && !aNewEndTime.isDate) {
+        
             var instance = itemToEdit.clone();
+
+            // if we're about to modify the parentItem, we need to account
+            // for the possibility that the item passed as argument was
+            // some other ocurrence, but the user said she would like to
+            // modify all ocurrences instead.
+            if (instance.parentItem == instance) {
+
+                var startDiff = instance.startDate.subtractDate(aOccurrence.startDate);
+                aNewStartTime.addDuration(startDiff);
+                var endDiff = instance.endDate.subtractDate(aOccurrence.endDate);
+                aNewEndTime.addDuration(endDiff);
+            }
 
             instance.startDate = aNewStartTime;
             instance.endDate = aNewEndTime;

@@ -666,4 +666,54 @@ calRecurrenceInfo.prototype = {
         aCount.value = ids.length;
         return ids;
     },
+    
+    // changing the startdate of an item needs to take exceptions into account.
+    // in case we're about to modify a parentItem (aka 'folded' item), we need
+    // to modify the recurrenceId's of all possibly existing exceptions as well.
+    onStartDateChange: function (aNewStartTime, aOldStartTime) {
+    
+        // convert both dates to UTC since subtractDate is not timezone aware.
+        aOldStartTime = aOldStartTime.getInTimezone("UTC");
+        aNewStartTime = aNewStartTime.getInTimezone("UTC");
+        var timeDiff = aNewStartTime.subtractDate(aOldStartTime);
+        var exceptions = this.getExceptionIds({});
+        var modifiedExceptions = [];
+        for each (var exid in exceptions) {
+            var ex = this.getExceptionFor(exid, false);
+            if (ex) {
+                if (!ex.isMutable) {
+                    ex = ex.cloneShallow(this.item);
+                }
+                ex.recurrenceId.addDuration(timeDiff);
+                ex.recurrenceId.normalize();
+                
+                modifiedExceptions.push(ex);
+                this.removeExceptionFor(exid);
+            }
+        }
+        for each (var modifiedEx in modifiedExceptions) {
+            this.modifyException(modifiedEx);
+        }
+
+        // also take RDATE's and EXDATE's into account.
+        const kCalIRecurrenceDate = Components.interfaces.calIRecurrenceDate;
+        const kCalIRecurrenceDateSet = Components.interfaces.calIRecurrenceDateSet;
+        var ritems = this.getRecurrenceItems({});
+        for (var i in ritems) {
+            var ritem = ritems[i];
+            if (ritem instanceof kCalIRecurrenceDate) {
+                ritem = ritem.QueryInterface(kCalIRecurrenceDate);
+                ritem.date.addDuration(timeDiff);
+                ritem.date.normalize();
+            } else if (ritem instanceof kCalIRecurrenceDateSet) {
+                ritem = ritem.QueryInterface(kCalIRecurrenceDateSet);
+                var rdates = ritem.getDates({});
+                for each (var date in rdates) {
+                    date.addDuration(timeDiff);
+                    date.normalize();
+                }
+                ritem.setDates(rdates.length,rdates);
+            }
+        }
+    }
 };
