@@ -575,7 +575,7 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
   }
 
-  // TODO(darin): SUSPEND_PUMP_FOR_SCOPE();
+  SUSPEND_PUMP_FOR_SCOPE();
 
   return mListener->OnStartRequest(this, mListenerContext);
 }
@@ -617,7 +617,7 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                nsIInputStream *stream, PRUint32 offset,
                                PRUint32 count)
 {
-  // TODO(darin): SUSPEND_PUMP_FOR_SCOPE();
+  SUSPEND_PUMP_FOR_SCOPE();
 
   nsresult rv = mListener->OnDataAvailable(this, mListenerContext, stream,
                                            offset, count);
