@@ -307,6 +307,7 @@ bin\regxpcom.exe
 bin\components\autocomplete.xpt
 bin\components\alerts.xpt
 bin\components\jsdservice.xpt
+bin\components\fastfind.xpt
 bin\components\find.xpt
 bin\components\chardet.xpt
 bin\components\jsconsole-clhandler.js
