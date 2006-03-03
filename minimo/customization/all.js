@@ -405,20 +405,23 @@ pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indenti
 pref("ime.password.onFocus.dontCare",       false);
 pref("ime.password.onBlur.dontCare",        false);
 
-pref("intl.accept_languages",               "chrome://minimo/locale/minimo.properties");
-pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.collationOption",                "chrome://minimo/locale/minimo.properties");
-pref("intl.menuitems.alwaysappendaccesskeys","chrome://minimo/locale/minimo.properties");
-pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://navigator/locale/navigator.properties");
-ref("intl.charset.detector",               "chrome://minimo/locale/minimo.properties");
-pref("intl.charset.default",                "chrome://minimo/locale/minimo.properties.properties");
-pref("intl.content.langcode",               "chrome://minimo/locale/minimo.properties.properties");
-pref("intl.locale.matchOS",                 false);
-// fallback charset list for Unicode conversion (converting from Unicode)
-// currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
-// for ISO-8859-1
-pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
-pref("font.language.group",                 "chrome://minimo/locale/minimo.properties");
+// l12n and i18n
+pref("intl.accept_languages", "chrome://global/locale/intl.properties");
+// collationOption is only set on linux for japanese. see bug 18338 and 62015
+// we need to check if this pref is still useful.
+pref("intl.collationOption",  "chrome://global-platform/locale/intl.properties");
+pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.unicode",  "chrome://global/locale/intl.properties");
+pref("intl.charset.detector", "chrome://global/locale/intl.properties");
+pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
+pref("font.language.group", "chrome://global/locale/intl.properties");
+pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
+pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 
 pref("images.dither", "auto");
 pref("security.directory",              "");
