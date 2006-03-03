@@ -80,14 +80,15 @@ echo '<li><label for="int0"><input type="radio" name="intend_id" id="int0" value
 echo '</ul>';
 
 // Create issue block.
-echo '<h2>What issues, if any, did you have? (select all that apply)</h2>';
+echo '<h2>What issues did Firefox have? (select all that apply)</h2>';
 echo '<ul class="survey">';
 foreach ($issues as $id=>$text) {
     echo '<li><label for="iss'.$id.'"> <input type="checkbox" name="issue_id[]" id="iss'.$id.'" value="'.$id.'" />'.$text.'</label></li>';
 }
 echo '</ul>';
 
-echo '<h2>Other comments or suggestions?</h2>';
+echo '<h2>How can we improve Firefox?</h2>';
+echo '<p>Please share your ideas, suggestions or details about any issues below.</p>';
 echo '<div><textarea name="comments" rows="7" cols="60"></textarea></div>';
 
 echo '<input type="hidden" name="product" value="'.htmlentities(!empty($_GET['product'])?$_GET['product']:null).'"/>';
