@@ -877,24 +877,15 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
             for (i = 0; i < argCount; i++) {
                 if (charArgs) {
                     char *charArg = va_arg(ap, char *);
-                    argLengths[i] = strlen(charArg);
+                    size_t charArgLength = strlen(charArg);
                     reportp->messageArgs[i]
-                        = js_InflateString(cx, charArg, &argLengths[i]);
+                        = js_InflateString(cx, charArg, &charArgLength);
                     if (!reportp->messageArgs[i])
                         goto error;
                 } else {
-                    jschar *jscharArg = va_arg(ap, jschar *);
-                    jschar *copiedArg;
-                    argLengths[i] = js_strlen(jscharArg);
-                    copiedArg = (jschar*)
-                        JS_malloc(cx, (argLengths[i] + 1) * sizeof(jschar));
-                    if (!copiedArg)
-                        goto error;
-                    memcpy(copiedArg, 
-                           jscharArg, 
-                           (argLengths[i] + 1) * sizeof(jschar));
-                    reportp->messageArgs[i] = copiedArg;
+                    reportp->messageArgs[i] = va_arg(ap, jschar *);
                 }
+                argLengths[i] = js_strlen(reportp->messageArgs[i]);
                 totalArgsLength += argLengths[i];
             }
             /* NULL-terminate for easy copying. */
