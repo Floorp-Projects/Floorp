@@ -97,7 +97,9 @@ nsWindowCollector::Init()
     do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = obsSvc->AddObserver(this, "domwindowcreated", PR_FALSE);
+  rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_CREATE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_CREATE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   // toplevel-window-ready is similar to "domwindowopened", but is dispatched
   // after the window has been initialized (the opener is set, etc).
@@ -105,9 +107,6 @@ nsWindowCollector::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, "domwindowclosed", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  // domwindowdestroyed happens too late during shutdown (inside the final gc)
-  // for us to be able to construct XML elements.  NS_WEBNAVIGATION_DESTROY and
-  // NS_CHROME_WEBNAVIGATION_DESTROY happen at a more convenient time.
   rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_DESTROY, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_DESTROY, PR_FALSE);
@@ -128,32 +127,30 @@ nsWindowCollector::Observe(nsISupports *subject,
   nsCOMPtr<nsPIDOMWindow> window;
   nsCAutoString action;
 
-  if (strcmp(topic, "domwindowcreated") == 0) {
+  if (strcmp(topic, NS_WEBNAVIGATION_CREATE) == 0 ||
+      strcmp(topic, NS_CHROME_WEBNAVIGATION_CREATE) == 0) {
     // Log a window creation event.
     action.AssignLiteral("create");
 
-    window = do_QueryInterface(subject);
+    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(subject);
+    NS_ENSURE_STATE(item);
+
+    window = do_GetInterface(subject);
     NS_ENSURE_STATE(window);
 
     // We want the window's real parent, even if it crosses a chrome/content
     // boundary.  This requires going up the docshell tree.
-    nsCOMPtr<nsIDocShellTreeItem> item =
-      do_QueryInterface(window->GetDocShell());
-    if (item) {
-      nsCOMPtr<nsIDocShellTreeItem> parentItem;
-      item->GetParent(getter_AddRefs(parentItem));
-      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentItem);
-      if (parentWindow) {
-        rv = nsMetricsUtils::PutUint16(properties,
-                                       NS_LITERAL_STRING("parent"),
-                                       GetWindowID(parentWindow));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    item->GetParent(getter_AddRefs(parentItem));
+    nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentItem);
+    if (parentWindow) {
+      rv = nsMetricsUtils::PutUint16(properties,
+                                     NS_LITERAL_STRING("parent"),
+                                     GetWindowID(parentWindow));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    PRInt32 itemType;
-    item->GetItemType(&itemType);
-    if (itemType == nsIDocShellTreeItem::typeChrome) {
+    if (strcmp(topic, NS_CHROME_WEBNAVIGATION_CREATE) == 0) {
       rv = properties->SetPropertyAsBool(NS_LITERAL_STRING("chrome"), PR_TRUE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
