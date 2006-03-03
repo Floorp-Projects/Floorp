@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,7 +76,11 @@ cert_init()
   fi
   SCRIPTNAME="cert.sh"
   CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
-  html_head "Certutil and Crlutil Tests"
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      html_head "Certutil and Crlutil Tests with ECC"
+  else
+      html_head "Certutil and Crlutil Tests"
+  fi
 
   ################## Generate noise for our CA cert. ######################
   # NOTE: these keys are only suitable for testing, as this whole thing 
@@ -140,7 +145,7 @@ certu()
     return $RET
 }
 
-################################ certu #################################
+################################ crlu #################################
 # local shell function to call crlutil, also: writes action and options to
 # stdout, sets variable RET and writes results to the html file results
 ########################################################################
@@ -257,6 +262,14 @@ cert_create_cert()
     if [ "$RET" -ne 0 ]; then
         return $RET
     fi
+    if [ -n "$NSS_ENABLE_ECC" ] ; then
+	CU_ACTION="Import EC Root CA for $CERTNAME"
+	certu -A -n "TestCA-ec" -t "TC,TC,TC" -f "${R_PWFILE}" \
+	    -d "${PROFILEDIR}" -i "${R_CADIR}/ecroot.cert" 2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+    fi
     cert_add_cert "$5"
     return $?
 }
@@ -270,7 +283,6 @@ cert_create_cert()
 ########################################################################
 cert_add_cert()
 {
-
     CU_ACTION="Generate Cert Request for $CERTNAME"
     CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req  2>&1
@@ -293,6 +305,36 @@ cert_add_cert()
     fi
 
     cert_log "SUCCESS: $CERTNAME's Cert Created"
+
+#
+#   Generate and add EC cert
+#
+    if [ -n "$NSS_ENABLE_ECC" ] ; then
+	CURVE="secp384r1"
+	CU_ACTION="Generate EC Cert Request for $CERTNAME"
+	CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	certu -R -k ec -q "${CURVE}" -d "${PROFILEDIR}" -f "${R_PWFILE}" \
+	    -z "${R_NOISE_FILE}" -o req  2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+
+	CU_ACTION="Sign ${CERTNAME}'s EC Request"
+	certu -C -c "TestCA-ec" -m "$CERTSERIAL" -v 60 -d "${P_R_CADIR}" \
+            -i req -o "${CERTNAME}-ec.cert" -f "${R_PWFILE}" "$1" 2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+
+	CU_ACTION="Import $CERTNAME's EC Cert"
+	certu -A -n "${CERTNAME}-ec" -t "u,u,u" -d "${PROFILEDIR}" \
+	    -f "${R_PWFILE}" -i "${CERTNAME}-ec.cert" 2>&1
+	if [ "$RET" -ne 0 ]; then
+            return $RET
+	fi
+	cert_log "SUCCESS: $CERTNAME's EC Cert Created"
+    fi
+
     return 0
 }
 
@@ -325,8 +367,37 @@ cert_all_CA()
     cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u" ${D_CLIENT_CA} "7"
 
     rm $CLIENT_CADIR/root.cert $SERVER_CADIR/root.cert
-    # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is the one of the last 
+
+    # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is one of the last 
     # in the chain
+
+    if [ -n "$NSS_ENABLE_ECC" ] ; then
+#
+#       Create EC version of TestCA
+	CA_CURVE="secp521r1"
+	ALL_CU_SUBJECT="CN=NSS Test CA (ECC), O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+	cert_ec_CA $CADIR TestCA-ec -x "CTu,CTu,CTu" ${D_CA} "1" ${CA_CURVE}
+#
+#       Create EC versions of the intermediate CA certs
+	ALL_CU_SUBJECT="CN=NSS Server Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+	cert_ec_CA $SERVER_CADIR serverCA-ec -x "Cu,Cu,Cu" ${D_SERVER_CA} "2" ${CA_CURVE}
+	ALL_CU_SUBJECT="CN=NSS Chain1 Server Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+	cert_ec_CA $SERVER_CADIR chain-1-serverCA-ec "-c serverCA-ec" "u,u,u" ${D_SERVER_CA} "3" ${CA_CURVE}
+	ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US" 
+	cert_ec_CA $SERVER_CADIR chain-2-serverCA-ec "-c chain-1-serverCA-ec" "u,u,u" ${D_SERVER_CA} "4" ${CA_CURVE}
+
+	ALL_CU_SUBJECT="CN=NSS Client Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+	cert_ec_CA $CLIENT_CADIR clientCA-ec -x "Tu,Cu,Cu" ${D_CLIENT_CA} "5" ${CA_CURVE}
+	ALL_CU_SUBJECT="CN=NSS Chain1 Client Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+	cert_ec_CA $CLIENT_CADIR chain-1-clientCA-ec "-c clientCA-ec" "u,u,u" ${D_CLIENT_CA} "6" ${CA_CURVE}
+	ALL_CU_SUBJECT="CN=NSS Chain2 Client Test CA (ECC), O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+	cert_ec_CA $CLIENT_CADIR chain-2-clientCA-ec "-c chain-1-clientCA-ec" "u,u,u" ${D_CLIENT_CA} "7" ${CA_CURVE}
+
+	rm $CLIENT_CADIR/ecroot.cert $SERVER_CADIR/ecroot.cert
+#	ecroot.cert in $CLIENT_CADIR and in $SERVER_CADIR is one of the last 
+#	in the chain
+
+    fi
 }
 
 ################################# cert_CA ################################
@@ -400,6 +471,70 @@ CERTSCRIPT
   cp root.cert ${NICKNAME}.ca.cert
 }
 
+################################ cert_ec_CA ##############################
+# local shell function to build the Temp. Certificate Authority (CA)
+# used for testing purposes, creating  a CA Certificate and a root cert
+# This is the ECC version of cert_CA.
+##########################################################################
+cert_ec_CA()
+{
+  CUR_CADIR=$1
+  NICKNAME=$2
+  SIGNER=$3
+  TRUSTARG=$4
+  DOMAIN=$5
+  CERTSERIAL=$6
+  CURVE=$7
+
+  echo "$SCRIPTNAME: Creating an EC CA Certificate $NICKNAME =========================="
+
+  if [ ! -d "${CUR_CADIR}" ]; then
+      mkdir -p "${CUR_CADIR}"
+  fi
+  cd ${CUR_CADIR}
+  pwd
+
+  LPROFILE=.
+  if [ -n "${MULTIACCESS_DBM}" ]; then
+	LPROFILE="multiaccess:${DOMAIN}"
+  fi
+
+  ################# Creating an EC CA Cert ################################
+  #
+  CU_ACTION="Creating EC CA Cert $NICKNAME "
+  CU_SUBJECT=$ALL_CU_SUBJECT
+  certu -S -n $NICKNAME -k ec -q $CURVE -t $TRUSTARG -v 600 $SIGNER \
+    -d ${LPROFILE} -1 -2 -5 -f ${R_PWFILE} -z ${R_NOISE_FILE} \
+    -m $CERTSERIAL 2>&1 <<CERTSCRIPT
+5
+6
+9
+n
+y
+-1
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
+  if [ "$RET" -ne 0 ]; then
+      echo "return value is $RET"
+      Exit 6 "Fatal - failed to create EC CA cert"
+  fi
+
+  ################# Exporting EC Root Cert ################################
+  #
+  CU_ACTION="Exporting EC Root Cert"
+  certu -L -n  $NICKNAME -r -d ${LPROFILE} -o ecroot.cert 
+  if [ "$RET" -ne 0 ]; then
+      Exit 7 "Fatal - failed to export ec root cert"
+  fi
+  cp ecroot.cert ${NICKNAME}.ca.cert
+}
+
 ############################## cert_smime_client #############################
 # local shell function to create client Certificates for S/MIME tests 
 ##############################################################################
@@ -414,6 +549,17 @@ cert_smime_client()
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
   cert_create_cert "${DAVEDIR}" Dave 50 ${D_DAVE}
 
+## XXX With this new script merging ECC and non-ECC tests, the
+## call to cert_create_cert ends up creating two separate certs
+## one for Eve and another for Eve-ec but they both end up with
+## the same Subject Alt Name Extension, i.e., both the cert for
+## Eve@bogus.com and the cert for Eve-ec@bogus.com end up 
+## listing eve@bogus.net in the Certificate Subject Alt Name extension. 
+## This can cause a problem later when cmsutil attempts to create
+## enveloped data and accidently picks up the ECC cert (NSS currently
+## does not support ECC for enveloped data creation). This script
+## avoids the problem by ensuring that these conflicting certs are
+## never added to the same cert database (see comment marked XXXX).
   echo "$SCRIPTNAME: Creating multiEmail's Certificate --------------------"
   cert_create_cert "${EVEDIR}" "Eve" 60 ${D_EVE} "-7 eve@bogus.net,eve@bogus.cc,beve@bogus.com"
 
@@ -456,6 +602,32 @@ cert_smime_client()
   certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
         -i ${R_EVEDIR}/Eve.cert 2>&1
 
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      echo "$SCRIPTNAME: Importing EC Certificates =============================="
+      CU_ACTION="Import Bob's EC cert into Alice's db"
+      certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+          -i ${R_BOBDIR}/Bob-ec.cert 2>&1
+
+      CU_ACTION="Import Dave's EC cert into Alice's DB"
+      certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+          -i ${R_DAVEDIR}/Dave-ec.cert 2>&1
+
+      CU_ACTION="Import Dave's EC cert into Bob's DB"
+      certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+          -i ${R_DAVEDIR}/Dave-ec.cert 2>&1
+
+## XXXX Do not import Eve's EC cert until we can make sure that
+## the email addresses listed in the Subject Alt Name Extension 
+## inside Eve's ECC and non-ECC certs are different.
+#     CU_ACTION="Import Eve's EC cert into Alice's DB"
+#     certu -E -t "p,p,p" -d ${P_R_ALICEDIR} -f ${R_PWFILE} \
+#         -i ${R_EVEDIR}/Eve-ec.cert 2>&1
+
+#     CU_ACTION="Import Eve's EC cert into Bob's DB"
+#     certu -E -t "p,p,p" -d ${P_R_BOBDIR} -f ${R_PWFILE} \
+#         -i ${R_EVEDIR}/Eve-ec.cert 2>&1
+  fi
+
   if [ "$CERTFAILED" != 0 ] ; then
       cert_log "ERROR: SMIME failed $RET"
   else
@@ -463,11 +635,12 @@ cert_smime_client()
   fi
 }
 
-############################## cert_ssl ################################
+############################## cert_extended_ssl #######################
 # local shell function to create client + server certs for extended SSL test
 ########################################################################
 cert_extended_ssl()
 {
+
   ################# Creating Certs for extended SSL test ####################
   #
   CERTFAILED=0
@@ -496,11 +669,39 @@ cert_extended_ssl()
   CU_ACTION="Import Client Root CA -t T,, for $CERTNAME (ext.)"
   certu -A -n "clientCA" -t "T,," -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${CLIENT_CADIR}/clientCA.ca.cert" 2>&1
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+#
+#     Repeat the above for EC certs
+#
+      EC_CURVE="secp256r1"
+      CU_ACTION="Generate EC Cert Request for $CERTNAME (ext)"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
+	  -z "${R_NOISE_FILE}" -o req 2>&1
+
+      CU_ACTION="Sign ${CERTNAME}'s EC Request (ext)"
+      cp ${CERTDIR}/req ${SERVER_CADIR}
+      certu -C -c "chain-2-serverCA-ec" -m 200 -v 60 -d "${P_SERVER_CADIR}" \
+          -i req -o "${CERTNAME}-ec.cert" -f "${R_PWFILE}" 2>&1
+
+      CU_ACTION="Import $CERTNAME's EC Cert  -t u,u,u (ext)"
+      certu -A -n "${CERTNAME}-ec" -t "u,u,u" -d "${PROFILEDIR}" \
+	  -f "${R_PWFILE}" -i "${CERTNAME}-ec.cert" 2>&1
+
+      CU_ACTION="Import Client EC Root CA -t T,, for $CERTNAME (ext.)"
+      certu -A -n "clientCA-ec" -t "T,," -f "${R_PWFILE}" -d "${PROFILEDIR}" \
+          -i "${CLIENT_CADIR}/clientCA-ec.ca.cert" 2>&1
+#
+#     done with EC certs
+#
+  fi
+
   echo "Importing all the server's own CA chain into the servers DB"
   for CA in `find ${SERVER_CADIR} -name "?*.ca.cert"` ;
   do
       N=`basename $CA | sed -e "s/.ca.cert//"`
-      if [ $N = "serverCA" ] ; then
+      if [ $N = "serverCA" -o $N = "serverCA-ec" ] ; then
           T="-t C,C,C"
       else
           T="-t u,u,u"
@@ -518,7 +719,8 @@ cert_extended_ssl()
 
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
   CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+  certu -R -d "${PROFILEDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" \
+      -o req 2>&1
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${CLIENT_CADIR}
@@ -531,11 +733,38 @@ cert_extended_ssl()
   CU_ACTION="Import Server Root CA -t C,C,C for $CERTNAME (ext.)"
   certu -A -n "serverCA" -t "C,C,C" -f "${R_PWFILE}" -d "${PROFILEDIR}" \
           -i "${SERVER_CADIR}/serverCA.ca.cert" 2>&1
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+#
+#     Repeat the above for EC certs
+#
+      CU_ACTION="Generate EC Cert Request for $CERTNAME (ext)"
+      CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}-ec@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+      certu -R -d "${PROFILEDIR}" -k ec -q "${EC_CURVE}" -f "${R_PWFILE}" \
+	  -z "${R_NOISE_FILE}" -o req 2>&1
+
+      CU_ACTION="Sign ${CERTNAME}'s EC Request (ext)"
+      cp ${CERTDIR}/req ${CLIENT_CADIR}
+      certu -C -c "chain-2-clientCA-ec" -m 300 -v 60 -d "${P_CLIENT_CADIR}" \
+          -i req -o "${CERTNAME}-ec.cert" -f "${R_PWFILE}" 2>&1
+
+      CU_ACTION="Import $CERTNAME's EC Cert -t u,u,u (ext)"
+      certu -A -n "${CERTNAME}-ec" -t "u,u,u" -d "${PROFILEDIR}" \
+	  -f "${R_PWFILE}" -i "${CERTNAME}-ec.cert" 2>&1
+
+      CU_ACTION="Import Server EC Root CA -t C,C,C for $CERTNAME (ext.)"
+      certu -A -n "serverCA-ec" -t "C,C,C" -f "${R_PWFILE}" \
+	  -d "${PROFILEDIR}" -i "${SERVER_CADIR}/serverCA-ec.ca.cert" 2>&1
+#
+# done with EC certs
+#
+  fi
+
   echo "Importing all the client's own CA chain into the servers DB"
   for CA in `find ${CLIENT_CADIR} -name "?*.ca.cert"` ;
   do
       N=`basename $CA | sed -e "s/.ca.cert//"`
-      if [ $N = "clientCA" ] ; then
+      if [ $N = "clientCA" -o $N = "clientCA-ec" ] ; then
           T="-t T,C,C"
       else
           T="-t u,u,u"
@@ -565,7 +794,12 @@ cert_ssl()
   echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
   echo "             ${HOSTADDR} ------------------------------------"
   cert_create_cert ${SERVERDIR} "${HOSTADDR}" 100 ${D_SERVER}
+  CU_ACTION="Modify trust attributes of Root CA -t TC,TC,TC"
   certu -M -n "TestCA" -t "TC,TC,TC" -d ${PROFILEDIR}
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Modify trust attributes of EC Root CA -t TC,TC,TC"
+      certu -M -n "TestCA-ec" -t "TC,TC,TC" -d ${PROFILEDIR}
+  fi
 #  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
 #  echo "************* Copying CA files to ${SERVERDIR}"
 #  cp ${CADIR}/*.db .
@@ -759,7 +993,8 @@ cert_crl_ssl()
   CRLUPDATE=`date +%Y%m%d%H%M%SZ`
   CU_ACTION="Generating CRL for range ${CRL_GRP_1_BEGIN}-${CRL_GRP_END} TestCA authority"
   CRL_GRP_END_=`expr ${CRL_GRP_END} - 1`
-  crlu -d $CADIR -G -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
+  crlu -d $CADIR -G -n "TestCA" -f ${R_PWFILE} \
+      -o ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
 update=$CRLUPDATE
 addcert ${CRL_GRP_1_BEGIN}-${CRL_GRP_END_} $CRL_GRP_DATE
 addext reasonCode 0 4
@@ -768,8 +1003,24 @@ EOF_CRLINI
 # This extension should be added to the list, but currently nss has bug
 #addext authKeyId 0 "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" 1
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
-  
   chmod 600 ${CRL_FILE_GRP_1}_or
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Generating CRL (ECC) for range ${CRL_GRP_1_BEGIN}-${CRL_GRP_END} TestCA-ec authority"
+
+#     Until Bug 292285 is resolved, do not encode x400 Addresses. After
+#     the bug is resolved, reintroduce "x400Address:x400Address" within
+#     addext issuerAltNames ...
+      crlu -q -d $CADIR -G -n "TestCA-ec" -f ${R_PWFILE} \
+	  -o ${CRL_FILE_GRP_1}_or-ec <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_1_BEGIN}-${CRL_GRP_END_} $CRL_GRP_DATE
+addext reasonCode 0 4
+addext issuerAltNames 0 "rfc822Name:ca-ecemail@ca.com|dnsName:ca-ec.com|directoryName:CN=NSS Test CA (ECC),O=BOGUS NSS,L=Mountain View,ST=California,C=US|URI:http://ca-ec.com|ipAddress:192.168.0.1|registerID=reg CA (ECC)"
+EOF_CRLINI
+      CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+      chmod 600 ${CRL_FILE_GRP_1}_or-ec
+  fi
 
   echo test > file
   ############################# Modification ##################################
@@ -777,7 +1028,7 @@ EOF_CRLINI
   echo "$SCRIPTNAME: Modifying CA CRL by adding one more cert ============"
   sleep 2
   CRL_GRP_DATE=`date "+%Y%m%d%H%M%SZ"`
-  CU_ACTION="Modification CRL by adding one more cert"
+  CU_ACTION="Modify CRL by adding one more cert"
   crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}_or1 \
       -i ${CRL_FILE_GRP_1}_or <<EOF_CRLINI
 addcert ${CRL_GRP_END} $CRL_GRP_DATE
@@ -785,16 +1036,35 @@ EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   chmod 600 ${CRL_FILE_GRP_1}_or1
   TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or"
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Modify CRL (ECC) by adding one more cert"
+      crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} \
+	  -o ${CRL_FILE_GRP_1}_or1-ec -i ${CRL_FILE_GRP_1}_or-ec <<EOF_CRLINI
+addcert ${CRL_GRP_END} $CRL_GRP_DATE
+EOF_CRLINI
+      CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+      chmod 600 ${CRL_FILE_GRP_1}_or1-ec
+      TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or-ec"
+  fi
 
   ########### Removing one cert ${UNREVOKED_CERT_GRP_1} #######################
   echo "$SCRIPTNAME: Modifying CA CRL by removing one cert ==============="
-  CU_ACTION="Modification CRL by removing one cert"
+  CU_ACTION="Modify CRL by removing one cert"
   crlu -d $CADIR -M -n "TestCA" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1} \
       -i ${CRL_FILE_GRP_1}_or1 <<EOF_CRLINI
 rmcert  ${UNREVOKED_CERT_GRP_1}
 EOF_CRLINI
   chmod 600 ${CRL_FILE_GRP_1}
   TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or1"
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Modify CRL (ECC) by removing one cert"
+      crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_1}-ec \
+	  -i ${CRL_FILE_GRP_1}_or1-ec <<EOF_CRLINI
+rmcert  ${UNREVOKED_CERT_GRP_1}
+EOF_CRLINI
+      chmod 600 ${CRL_FILE_GRP_1}-ec
+      TEMPFILES="$TEMPFILES ${CRL_FILE_GRP_1}_or1-ec"
+  fi
 
   ########### Creating second CRL which includes groups 1 and 2 ##############
   CRL_GRP_END=`expr ${CRL_GRP_2_BEGIN} + ${CRL_GRP_2_RANGE} - 1`
@@ -813,6 +1083,18 @@ rmcert  ${UNREVOKED_CERT_GRP_2}
 EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   chmod 600 ${CRL_FILE_GRP_2}
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Creating CRL (ECC) for groups 1 and 2"
+      crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_2}-ec \
+          -i ${CRL_FILE_GRP_1}-ec <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_2_BEGIN}-${CRL_GRP_END} $CRL_GRP_DATE
+addext invalidityDate 0 $CRLUPDATE
+rmcert  ${UNREVOKED_CERT_GRP_2}
+EOF_CRLINI
+      CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+      chmod 600 ${CRL_FILE_GRP_2}-ec
+  fi
 
   ########### Creating second CRL which includes groups 1, 2 and 3 ##############
   CRL_GRP_END=`expr ${CRL_GRP_3_BEGIN} + ${CRL_GRP_3_RANGE} - 1`
@@ -832,6 +1114,18 @@ addext crlNumber 0 2
 EOF_CRLINI
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
   chmod 600 ${CRL_FILE_GRP_3}
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Creating CRL (ECC) for groups 1, 2 and 3"
+      crlu -d $CADIR -M -n "TestCA-ec" -f ${R_PWFILE} -o ${CRL_FILE_GRP_3}-ec \
+          -i ${CRL_FILE_GRP_2}-ec <<EOF_CRLINI
+update=$CRLUPDATE
+addcert ${CRL_GRP_3_BEGIN}-${CRL_GRP_END} $CRL_GRP_DATE
+rmcert  ${UNREVOKED_CERT_GRP_3}
+addext crlNumber 0 2
+EOF_CRLINI
+      CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+      chmod 600 ${CRL_FILE_GRP_3}-ec
+  fi
 
   ############ Importing Server CA Issued CRL for certs of first group #######
 
@@ -839,6 +1133,12 @@ EOF_CRLINI
   CU_ACTION="Importing CRL for groups 1"
   crlu -I -i ${CRL_FILE} -n "TestCA" -f "${R_PWFILE}" -d "${R_SERVERDIR}"
   CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      CU_ACTION="Importing CRL (ECC) for groups 1"
+      crlu -I -i ${CRL_FILE}-ec -n "TestCA-ec" -f "${R_PWFILE}" \
+	  -d "${R_SERVERDIR}"
+      CRL_GEN_RES=`expr $? + $CRL_GEN_RES`
+  fi
 
   if [ "$CERTFAILED" != 0 -o "$CRL_GEN_RES" != 0 ] ; then
       cert_log "ERROR: SSL CRL prep failed $CERTFAILED : $CRL_GEN_RES"
