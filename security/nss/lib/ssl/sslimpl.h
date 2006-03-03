@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.44 2006/01/18 23:06:57 wtchang%redhat.com Exp $ */
+/* $Id: sslimpl.h,v 1.45 2006/03/03 18:45:54 wtchang%redhat.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -727,8 +727,8 @@ typedef struct {
 } SSL3Ciphertext;
 
 struct ssl3KeyPairStr {
-    SECKEYPrivateKey *    privKey;		/* RSA step down key */
-    SECKEYPublicKey *     pubKey;		/* RSA step down key */
+    SECKEYPrivateKey *    privKey;
+    SECKEYPublicKey *     pubKey;
     PRInt32               refCount;	/* use PR_Atomic calls for this. */
 };
 
