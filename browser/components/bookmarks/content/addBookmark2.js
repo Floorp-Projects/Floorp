@@ -154,7 +154,7 @@ function Startup()
     localStore.Unassert(rDialog, rPersist, rElement, true);
     gExpander.setAttribute("class", "down");
   }
-  
+
   // Select the specified folder after the window is made visible
   function initMenulist() {
     if ("folderURI" in gArg) {

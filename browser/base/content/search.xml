@@ -157,7 +157,7 @@
 
       <method name="_initializeEngine">
         <body><![CDATA[
-          var selectedEngineName;
+          var selectedEngineName = null;
           try {
             selectedEngineName = 
                     this.prefService
@@ -169,8 +169,7 @@
           this.currentEngineName = selectedEngineName;
 
           // check to see whether it failed
-          var engine = this.currentEngine;
-          if (!engine)
+          if (!this.currentEngine)
             this.currentEngine = this.getDefaultEngine();
         ]]></body>
       </method>
@@ -250,12 +249,12 @@
             var name = this.readRDFString(rEngine, kNC_Name);
             if (name == aName) {
               this.currentEngine = rEngine.Value;
-              this.parentNode.setAttribute('searchenginename', name);
+              this.parentNode.setAttribute("searchenginename", name);
               return true;
             }
           }
           this.currentEngine = null;
-          this.parentNode.removeAttribute('searchenginename')
+          this.parentNode.removeAttribute("searchenginename")
           return false;
         ]]></body>
       </method>
