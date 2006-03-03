@@ -123,9 +123,11 @@ static PRBool IsValidToken(const nsCString &s)
     if (start == end)
         return PR_FALSE;
 
-    for (; start != end; ++start)
-        if (((unsigned char) *start) > 127 || !kValidTokenMap[*start])
+    for (; start != end; ++start) {
+        const unsigned char idx = *start;
+        if (idx > 127 || !kValidTokenMap[idx])
             return PR_FALSE;
+    }
 
     return PR_TRUE;
 }
