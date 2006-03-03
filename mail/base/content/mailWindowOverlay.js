@@ -2295,9 +2295,13 @@ function ClearPendingReadTimer()
 // mail message. OnMsgLoaded is called when libmime is done parsing the message
 function OnMsgParsed(aUrl)
 {
-  if ("onQuickSearchNewMsgLoaded" in this)
-    onQuickSearchNewMsgLoaded();
-  
+  // browser doesn't do this, but I thought it could be a useful thing to test out...
+  // If the find bar is visible and we just loaded a new message, re-run 
+  // the find command. This means the new message will get highlighted and
+  // we'll scroll to the first word in the message that matches the find text.
+  if (gFindBar.isFindBarVisible())
+    gFindBar.find();
+    
   gMessageNotificationBar.setPhishingMsg(aUrl);
 }
 

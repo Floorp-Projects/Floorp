@@ -1973,12 +1973,10 @@
               <menuitem value="1" label="&searchSenderMenu.label;" type="radio" 
                         oncommand="changeQuickSearchMode(this)" />
               <menuitem value="2" label="&searchSubjectOrSenderMenu.label;" type="radio" 
-                        checked="true" oncommand="changeQuickSearchMode(this)"/>
+                        oncommand="changeQuickSearchMode(this)"/>
               <menuitem value="5" label="&searchRecipient.label;" type="radio" 
                         oncommand="changeQuickSearchMode(this)"/>
               <menuitem value="3" label="&searchMessageBody.label;" type="radio" 
-                        oncommand="changeQuickSearchMode(this)"/>
-              <menuitem value="4" label="&findInMessageMenu.label;" type="radio" 
                         oncommand="changeQuickSearchMode(this)"/>
               <menuseparator/>
               <!-- if the value for the save as virtual folder menu changes, please update the 

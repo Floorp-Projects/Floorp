@@ -49,7 +49,6 @@ var gSearchInProgress = false;
 var gSearchInput = null;
 var gDefaultSearchViewTerms = null;
 var gQSViewIsDirty = false;
-var gHighlightedMessageText = false; 
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 var gNumTotalMessages;
@@ -64,15 +63,8 @@ const kQuickSearchSubject = 0;
 const kQuickSearchSender = 1;
 const kQuickSearchSenderOrSubject = 2;
 const kQuickSearchBody = 3;
-const kQuickSearchHighlight = 4;
+// const kQuickSearchHighlight = 4; // * We no longer support this quick search mode..*
 const kQuickSearchRecipient = 5;
-
-var gFinder = Components.classes["@mozilla.org/embedcomp/rangefind;1"].createInstance()
-                        .QueryInterface(Components.interfaces.nsIFind);
-// Colors for highlighting
-var gHighlightColors = new Array("yellow", "lightpink", "aquamarine", 
-                                 "darkgoldenrod", "darkseagreen", "lightgreen", 
-                                 "rosybrown", "seagreen", "chocolate", "violet");
 
 
 function SetQSStatusText(aNumHits)
@@ -221,10 +213,7 @@ function initializeSearchBar()
 function onEnterInSearchBar()
 {
    if (!gSearchInput || gSearchInput.value == "" || gSearchInput.showingSearchCriteria) 
-   {
-     if (gSearchInput && gSearchInput.searchMode == kQuickSearchHighlight)
-       removeHighlighting();
-   
+   { 
      if (gDBView.viewType == nsMsgViewType.eShowQuickSearchResults 
         || gDBView.viewType == nsMsgViewType.eShowVirtualFolderResults)
      {
@@ -252,18 +241,13 @@ function onEnterInSearchBar()
      return;
    }
 
-   if (gSearchInput.searchMode == kQuickSearchHighlight)
-     highlightMessage(true);
-   else
-   {
-     initializeSearchBar();
+   initializeSearchBar();
 
-     ClearThreadPaneSelection();
-     ClearMessagePane();
+   ClearThreadPaneSelection();
+   ClearMessagePane();
 
-     onSearch(null);
-     gQSViewIsDirty = false;
-  }
+   onSearch(null);
+   gQSViewIsDirty = false;
 }
 
 function restorePreSearchView()
@@ -695,23 +679,7 @@ function loadVirtualFolder()
   onEnterInSearchBar();
 }
 
-// this notification gets generated from layout when it finishes laying out a message
-// in the message pane. 
-function onQuickSearchNewMsgLoaded()
-{
-  // if we are in highlighting mode and we have highlight text in the search box then 
-  // re-highlight this new message.
-  // Optimization: We'll special case Message Body quick searches and highlight those as well as find in message
-  // searches.
-  if (gSearchInput && (gSearchInput.searchMode == kQuickSearchHighlight || gSearchInput.searchMode == kQuickSearchBody)
-       && gSearchInput.value && !gSearchInput.showingSearchCriteria)
-  {
-    highlightMessage(false);
-  }
-}
-
 // helper methods for the quick search drop down menu
-
 function changeQuickSearchMode(aMenuItem)
 {
   viewDebug("changing quick search mode\n");
@@ -732,11 +700,7 @@ function changeQuickSearchMode(aMenuItem)
   else if (gSearchInput.showingSearchCriteria) // if we are showing criteria text and the box isn't empty, change the criteria text
     gSearchInput.setSearchCriteriaText();     
   else if (oldSearchMode != gSearchInput.searchMode) // the search mode just changed so we need to redo the quick search
-  {
-    if (gHighlightedMessageText)
-      removeHighlighting(); // remove any existing highlighting in the message before switching gears
     onEnterInSearchBar();
-  }
 }
 
 function saveViewAsVirtualFolder()
@@ -749,116 +713,10 @@ function InitQuickSearchPopup()
   // disable the create virtual folder menu item if the current radio
   // value is set to Find in message since you can't really  create a VF from find
   // in message
-
-  if (gSearchInput.searchMode == 4 /* find in page */ || gSearchInput.value == "" || gSearchInput.showingSearchCriteria)
+  
+  GetSearchInput();  
+  if (!gSearchInput ||gSearchInput.value == "" || gSearchInput.showingSearchCriteria)
     document.getElementById('quickSearchSaveAsVirtualFolder').setAttribute('disabled', 'true');
   else
     document.getElementById('quickSearchSaveAsVirtualFolder').removeAttribute('disabled');
-}
-
-// Methods to support highlighting. Most of this was shamelessly copied from the mozdev google toolbar project
-function highlightMessage(removeExistingHighlighting)
-{
-  // remove any existing highlighting
-  if (removeExistingHighlighting)
-    removeHighlighting(); 
-
-  // wanted to use selection to extend to the word
-  // and compare with the found range, in order to match
-  // only whole words
-    
-  // Save selection
-  // XXX: Note to self, we may want to break on | and white space here
-  // even though normal quick searches treat white spaces as signficant
-  var termList = gSearchInput.value.split("|");
-  for (var i = 0; i < termList.length; i++) 
-      highlight(termList[i], gHighlightColors[i %10]);
-  
-  gHighlightedMessageText = true;
-}
-
-function removeHighlighting()
-{
-  if (!gHighlightedMessageText)
-    return;
-
-  var msgDocument = window.top.content;
-  var doc = msgDocument.document;
-  var elem = null;
-  while ((elem = doc.getElementById('mail-highlight-id'))) 
-  {
-    var child = null;
-    var docfrag = doc.createDocumentFragment();
-    var next = elem.nextSibling;
-    var parent = elem.parentNode;
-    while((child = elem.firstChild))
-      docfrag.appendChild(child);
-  
-    parent.removeChild(elem);
-    parent.insertBefore(docfrag, next);
-  }  
-
-  gHighlightedMessageText = false;
-
-  return;
-}
-
-function highlight(word, color)
-{
-  var msgDocument = window.top.content;
-
-  var doc = msgDocument.document;
-  if (!doc) 
-    return;
-  
-  if (!("body" in doc))
-    return;
-  
-  var body = doc.body; 
-  var count = body.childNodes.length;
-  searchRange = doc.createRange();
-  startPt = doc.createRange();
-  endPt = doc.createRange();
-
-  var baseNode = doc.createElement("span");
-  baseNode.setAttribute("style", "background-color: " + color + ";");
-  baseNode.setAttribute("id", "mail-highlight-id");
-
-  searchRange.setStart(body, 0);
-  searchRange.setEnd(body, count);
-
-  startPt.setStart(body, 0);
-  startPt.setEnd(body, 0);
-  endPt.setStart(body, count);
-  endPt.setEnd(body, count);
-  highlightText(word, baseNode);
-}
-
-// search through the message looking for occurrences of word
-// and highlighting them. 
-function highlightText(word, baseNode)
-{
-  var retRange = null;
-  while((retRange = gFinder.Find(word, searchRange, startPt, endPt))) 
-  {
-    // Highlight
-    var nodeSurround = baseNode.cloneNode(true);
-    var node = highlightRange(retRange, nodeSurround);
-    startPt = node.ownerDocument.createRange();
-    startPt.setStart(node, node.childNodes.length);
-    startPt.setEnd(node, node.childNodes.length);
-  }
-}
-
-function highlightRange(range, node)
-{
-  var startContainer = range.startContainer;
-  var startOffset = range.startOffset;
-  var endOffset = range.endOffset;
-  var docfrag = range.extractContents();
-  var before = startContainer.splitText(startOffset);
-  var parent = before.parentNode;
-  node.appendChild(docfrag);
-  parent.insertBefore(node, before);
-  return node;
 }

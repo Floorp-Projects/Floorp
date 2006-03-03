@@ -58,13 +58,32 @@
     </content>
 
     <implementation>
-      <constructor><![CDATA[
-        // initialize the quick search mode based on the checked menu item
-        var selectedMenuItemVal = document.getElementById('quick-search-menupopup').getAttribute('value');
-        var menuItems = document.getElementById('quick-search-menupopup').getElementsByAttribute('value', selectedMenuItemVal);
-        this.mQuickSearchMode = menuItems[0].value; // the checked menu item
-        this.setSearchCriteriaText();
-      ]]></constructor>
+      <constructor>
+        <![CDATA[
+          // initialize the quick search mode based on the checked menu item
+          var desiredQuickSearchMode = document.getElementById('quick-search-menupopup').getAttribute('value');             
+          
+          var menuItems = document.getElementById('quick-search-menupopup').getElementsByAttribute('value', '*');
+          var selectedMenuItem;
+          for (var index = 0; index < menuItems.length; index++) 
+            if (menuItems[index].value == desiredQuickSearchMode)
+            {
+              selectedMenuItem = menuItems[index];
+              break;
+            }
+          
+          // if we failed to find selectedMenuItemVal in our array of menuitems
+          // then just use the first menu item in the array (surely we have at least one menu item!)
+          // This scenario happens when we decide to obsolete/delete search modes from 
+          // the quick search drop down.
+          if (!selectedMenuItem)
+            selectedMenuItem = menuItems[0];
+            
+          selectedMenuItem.setAttribute('checked', 'true');
+          this.mQuickSearchMode = selectedMenuItem.value; // the checked menu item                
+          this.setSearchCriteriaText();
+        ]]>
+      </constructor>
 
       <property name="showingSearchCriteria" onget="return this.getAttribute('searchCriteria') == 'true';"
                 onset="this.setAttribute('searchCriteria', val); return val;"/>
@@ -81,7 +100,7 @@
         <body><![CDATA[
           this.showingSearchCriteria = true;
          // extract the label value from the menu item
-         var menuItems = document.getElementById('quick-search-menupopup').getElementsByAttribute('value', this.searchMode);
+         var menuItems = document.getElementById('quick-search-menupopup').getElementsByAttribute('value', this.searchMode);          
          this.inputField.value = menuItems[0].getAttribute('label');
          this.clearButtonHidden = true;
         ]]></body>
