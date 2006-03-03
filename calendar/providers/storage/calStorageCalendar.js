@@ -1699,7 +1699,6 @@ calStorageCalendar.prototype = {
         // XXX how does this work for proxy stuffs?
         var attendees = item.getAttendees({});
         if (attendees && attendees.length > 0) {
-            flags |= CAL_ITEM_FLAG_HAS_ATTENDEES;
             for each (var att in attendees) {
                 var ap = this.mInsertAttendee.params;
                 ap.item_id = item.id;
