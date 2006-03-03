@@ -42,6 +42,7 @@
 #include "nsNavHistory.h"
 #include "nsBrowserCompsCID.h"
 #include "nsILoadGroup.h"
+#include "nsIObserver.h"
 
 // Constants for livemark annotations
 #define LMANNO_FEEDURI     "livemark/feedURI"
@@ -49,12 +50,13 @@
 #define LMANNO_EXPIRATION  "livemark/expiration"
 #define LMANNO_BMANNO      "livemark/bookmarkFeedURI"
 
-class nsLivemarkService : public nsILivemarkService
+class nsLivemarkService : public nsILivemarkService, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREMOTECONTAINER
   NS_DECL_NSILIVEMARKSERVICE
+  NS_DECL_NSIOBSERVER
 
   nsLivemarkService();
   nsresult Init();
