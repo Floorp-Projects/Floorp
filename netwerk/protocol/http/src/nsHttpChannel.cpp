@@ -3646,7 +3646,7 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream, const nsACString &content
         mUploadStreamHasHeaders = PR_FALSE;
         mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
     }
-    mUploadStream = stream;    
+    mUploadStream = stream;
     return NS_OK;
 }
 

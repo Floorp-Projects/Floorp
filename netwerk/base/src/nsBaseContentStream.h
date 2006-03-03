@@ -96,6 +96,14 @@ public:
   // Helper function to make code more self-documenting.
   void DispatchCallbackSync() { DispatchCallback(PR_FALSE); }
 
+protected:
+  virtual ~nsBaseContentStream() {}
+
+private:
+  // Called from the base stream's AsyncWait method when a pending callback
+  // is installed on the stream.
+  virtual void OnCallbackPending() {}
+
 private:
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget>         mCallbackTarget;

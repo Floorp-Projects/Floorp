@@ -85,11 +85,13 @@ public:
     return nsHashPropertyBag::Init();
   }
 
+protected:
   // -----------------------------------------------
   // Methods to be implemented by the derived class:
 
   virtual ~nsBaseChannel() {}
 
+private:
   // Implemented by subclass to supply data stream.  The parameter, async, is
   // true when called from nsIChannel::AsyncOpen and false otherwise.  When
   // async is true, the resulting stream will be used with a nsIInputStreamPump
@@ -115,6 +117,11 @@ public:
     return PR_FALSE;
   }
 
+  // Called when the callbacks available to this channel may have changed.
+  virtual void OnCallbacksChanged() {
+  }
+
+public:
   // ----------------------------------------------
   // Methods provided for use by the derived class:
 
@@ -192,6 +199,15 @@ public:
     mSynthProgressEvents = enable;
   }
 
+  // Some subclasses may wish to manually insert a stream listener between this
+  // and the channel's listener.  The following methods make that possible.
+  void SetStreamListener(nsIStreamListener *listener) {
+    mListener = listener;
+  }
+  nsIStreamListener *StreamListener() {
+    return mListener;
+  }
+
   // Pushes a new stream converter in front of the channel's stream listener.
   // The fromType and toType values are passed to nsIStreamConverterService's
   // AsyncConvertData method.  If invalidatesContentLength is true, then the
@@ -207,10 +223,14 @@ private:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
+  // Called to setup mPump and call AsyncRead on it.
+  nsresult BeginPumpingData();
+
   // Called when the callbacks available to this channel may have changed.
   void CallbacksChanged() {
     mProgressSink = nsnull;
     mQueriedProgressSink = PR_FALSE;
+    OnCallbacksChanged();
   }
 
   nsRefPtr<nsInputStreamPump>         mPump;
