@@ -155,6 +155,7 @@ nsIOService::nsIOService()
     : mOffline(PR_FALSE)
     , mOfflineForProfileChange(PR_FALSE)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
+    , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
 {
     // Get the allocator ready
     if (!gBufferCache)

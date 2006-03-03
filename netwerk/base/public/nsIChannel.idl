@@ -182,7 +182,7 @@ interface nsIChannel : nsIRequest
     /**************************************************************************
      * Channel specific load flags:
      *
-     * Bits 21-31 are reserved for future use by this interface or one of its
+     * Bits 22-31 are reserved for future use by this interface or one of its
      * derivatives (e.g., see nsICachingChannel).
      */
 
@@ -216,4 +216,13 @@ interface nsIChannel : nsIRequest
      * for this load has been determined.
      */
     const unsigned long LOAD_TARGETED = 1 << 20;
+
+    /**
+     * If this flag is set, the channel should call the content sniffers as
+     * described in nsNetCID.h about NS_CONTENT_SNIFFER_CATEGORY.
+     *
+     * Note: Channels may ignore this flag; however, new channel implementations
+     * should only do so with good reason.
+     */
+    const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
 };

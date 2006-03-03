@@ -61,6 +61,15 @@ public:
     nsInputStreamPump(); 
     ~nsInputStreamPump();
 
+    static NS_HIDDEN_(nsresult)
+                      Create(nsInputStreamPump  **result,
+                             nsIInputStream      *stream,
+                             PRInt64              streamPos = -1,
+                             PRInt64              streamLen = -1,
+                             PRUint32             segsize = 0,
+                             PRUint32             segcount = 0,
+                             PRBool               closeWhenDone = PR_FALSE);
+
     typedef void (*PeekSegmentFun)(void *closure, const PRUint8 *buf,
                                    PRUint32 bufLen);
     /**

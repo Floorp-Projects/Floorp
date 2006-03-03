@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com> (original author)
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,9 @@
 #include "nsHttpTransaction.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpAuthCache.h"
+#include "nsInputStreamPump.h"
 #include "nsXPIDLString.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsInt64.h"
 
@@ -71,7 +74,6 @@
 #include "nsIStringEnumerator.h"
 #include "nsIOutputStream.h"
 #include "nsIAsyncInputStream.h"
-#include "nsIInputStreamPump.h"
 #include "nsIPrompt.h"
 #include "nsIResumableChannel.h"
 #include "nsISupportsPriority.h"
@@ -228,7 +230,7 @@ private:
     nsHttpRequestHead                 mRequestHead;
     nsHttpResponseHead               *mResponseHead;
 
-    nsCOMPtr<nsIInputStreamPump>      mTransactionPump;
+    nsRefPtr<nsInputStreamPump>       mTransactionPump;
     nsHttpTransaction                *mTransaction;     // hard ref
     nsHttpConnectionInfo             *mConnectionInfo;  // hard ref
 
@@ -246,7 +248,7 @@ private:
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    nsCOMPtr<nsIInputStreamPump>      mCachePump;
+    nsRefPtr<nsInputStreamPump>       mCachePump;
     nsHttpResponseHead               *mCachedResponseHead;
     nsCacheAccessMode                 mCacheAccess;
     PRUint32                          mPostID;
