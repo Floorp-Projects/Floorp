@@ -75,7 +75,7 @@
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
 #include "nsPresState.h"
-#include "nsIGlobalHistory2.h"
+#include "nsIGlobalHistory3.h"
 #include "nsDocShellCID.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -2623,7 +2623,7 @@ nsGfxScrollFrameInner::SaveVScrollbarStateToGlobalHistory()
   if (!uri)
     return;
 
-  nsCOMPtr<nsIGlobalHistory2> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
+  nsCOMPtr<nsIGlobalHistory3> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
   if (!history)
     return;
   
@@ -2646,7 +2646,7 @@ nsGfxScrollFrameInner::GetVScrollbarHintFromGlobalHistory(PRBool* aVScrollbarNee
   if (!uri)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIGlobalHistory2> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
+  nsCOMPtr<nsIGlobalHistory3> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
   if (!history)
     return NS_ERROR_FAILURE;
   

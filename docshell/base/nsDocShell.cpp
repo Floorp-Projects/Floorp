@@ -4683,14 +4683,18 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
         return; // not a toplevel document
 
     nsCOMPtr<nsIGlobalHistory3> history3(do_QueryInterface(mGlobalHistory));
+    nsresult result = NS_ERROR_NOT_IMPLEMENTED;
     if (history3) {
         // notify global history of this redirect
-        history3->AddToplevelRedirect(aOldChannel, aNewChannel,
-                                      aRedirectFlags);
-    } else {
-        // when there is no GlobalHistory3, we fall back to GlobalHistory2.
-        // Just notify that the redirecting page was a redirect so it will
-        // be link colored but not visible.
+        result = history3->AddDocumentRedirect(aOldChannel, aNewChannel,
+                                               aRedirectFlags, !IsFrame());
+    }
+
+    if (result == NS_ERROR_NOT_IMPLEMENTED) {
+        // when there is no GlobalHistory3, or it doesn't implement
+        // AddToplevelRedirect, we fall back to GlobalHistory2.  Just notify
+        // that the redirecting page was a redirect so it will be link colored
+        // but not visible.
         nsCOMPtr<nsIURI> oldURI;
         aOldChannel->GetURI(getter_AddRefs(oldURI));
         if (! oldURI)

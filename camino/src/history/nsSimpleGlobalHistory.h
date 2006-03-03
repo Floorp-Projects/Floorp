@@ -48,6 +48,7 @@
 #include "mdb.h"
 #include "nsIPrefBranch.h"
 #include "nsIBrowserHistory.h"
+#include "nsIGlobalHistory3.h"
 #include "nsIHistoryItems.h"
 #include "nsIHistoryObserver.h"
 
@@ -102,7 +103,8 @@ class nsSimpleGlobalHistory : nsSupportsWeakReference,
                         public nsIBrowserHistory,
                         public nsIHistoryItems,
                         public nsIObserver,
-                        public nsIAutoCompleteSession
+                        public nsIAutoCompleteSession,
+                        public nsIGlobalHistory3
 {
 friend class HistoryAutoCompleteEnumerator;
 friend class nsHistoryItem;
@@ -117,6 +119,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIGLOBALHISTORY2
+  NS_DECL_NSIGLOBALHISTORY3
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIHISTORYITEMS
   NS_DECL_NSIOBSERVER

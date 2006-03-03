@@ -539,13 +539,19 @@ nsSimpleGlobalHistory::~nsSimpleGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS6(nsSimpleGlobalHistory,
-                   nsIGlobalHistory2,
-                   nsIBrowserHistory,
-                   nsIHistoryItems,
-                   nsIObserver,
-                   nsISupportsWeakReference,
-                   nsIAutoCompleteSession)
+NS_IMPL_ADDREF(nsSimpleGlobalHistory)
+NS_IMPL_RELEASE(nsSimpleGlobalHistory)
+
+NS_INTERFACE_MAP_BEGIN(nsSimpleGlobalHistory)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
+  NS_INTERFACE_MAP_ENTRY(nsIHistoryItems)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSession)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserHistory)
+NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 //
@@ -1616,6 +1622,15 @@ nsSimpleGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
 
   SetDirty();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleGlobalHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
+                                           nsIChannel *aNewChannel,
+                                           PRInt32 aFlags,
+                                           PRBool aTopLevel)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
