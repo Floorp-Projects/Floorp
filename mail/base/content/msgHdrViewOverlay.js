@@ -128,7 +128,7 @@ var gCollapsedHeaderList = [ {name:"subject", outputFunction:updateHeaderValueIn
 var gExpandedHeaderList = [ {name:"subject"}, 
                             {name:"from", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"sender", outputFunction:OutputEmailAddresses},
-                            {name:"reply-to", outputFunction:OutputEmailAddresses},
+                            {name:"reply-to", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"date"},
                             {name:"to", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
