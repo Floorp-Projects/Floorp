@@ -229,7 +229,7 @@ pref("browser.sessionhistory.max_entries", 50);
 pref("browser.link.open_external", 3);
 
 // handle links targeting new windows
-pref("browser.link.open_newwindow", 2);
+pref("browser.link.open_newwindow", 3);
 
 // 0: no restrictions - divert everything
 // 1: don't divert window.open at all
