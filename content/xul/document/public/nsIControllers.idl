@@ -39,11 +39,9 @@
 
 interface nsIDOMXULCommandDispatcher;
 
-[scriptable, uuid(A5ED3A01-7CC7-11d3-BF87-00105A1B0627)]
+[scriptable, uuid(f36e3ec1-9197-4ad8-8d4c-d3b1927fd6df)]
 interface nsIControllers : nsISupports
 {
-	attribute nsIDOMXULCommandDispatcher commandDispatcher;
-
 	nsIController getControllerForCommand(in string command);
 
 	void insertControllerAt(in unsigned long index, in nsIController controller);
