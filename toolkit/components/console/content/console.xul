@@ -132,7 +132,7 @@
   
   <vbox id="ConsoleBox" class="console-box" flex="1" context="ConsoleContext" persist="sortOrder"/>
 
-  <iframe name="Evaluator" id="Evaluator" collapsed="true"/>
+  <iframe name="Evaluator" id="Evaluator" collapsed="true" src="chrome://global/content/blank.html"/>
 
 </window>
 
