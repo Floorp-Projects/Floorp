@@ -216,7 +216,7 @@
             version of Perl and other tools that were completely under his
             control. This location was abandoned for the 2.18 release in favor
             of the more sensible <filename>/usr/bin/perl</filename>. If you
-            installed an older verion of Bugzilla and created the symlink we
+            installed an older version of Bugzilla and created the symlink we
             suggested, you can remove it now (provided that you don't have
             anything else, such as Bonsai, using it and you don't intend to
             reinstall an older version of Bugzilla).
