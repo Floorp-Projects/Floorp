@@ -40,7 +40,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(6c60f476-4c8d-4046-a11c-6923d486178b)]
+[scriptable, uuid(b7fc8b9b-d85f-4d89-9b2a-0e67bd6e8d78)]
 interface nsIFaviconService : nsISupports
 {
   /**
@@ -72,14 +72,17 @@ interface nsIFaviconService : nsISupports
    * saved in the database without any further work from the caller.
    *
    * If the icon data already exists, we won't normally try to re-load the
-   * icon from the net (or more likely the cache). Use forceReload to force
-   * a reload of the data.
+   * icon from the net (or more likely the cache). If the icon is in the
+   * failed favicon cache we won't do anything. Use forceReload to force
+   * a reload of the data. This will remove the favicon from the failed
+   * cache. If it then fails again, it will be re-added to the failed cache.
    *
    * SetFaviconUrlForPage and SetFaviconData will take any URL you provide
    * and save it. This function is intended for automatic usage, and will
    * only save favicons for "good" URLs, as defined by what gets added to
    * history. For "bad" URLs, this function will succeed and do nothing.
-   * This function will also ignore favicons that are data URLs.
+   * This function will also ignore favicons that are data URLs. Icons that
+   * fail to load will automatically be added to the failed favicon cache.
    *
    * @param aPage
    *        URI of the page whose favicon is being set.
@@ -221,4 +224,30 @@ interface nsIFaviconService : nsISupports
    *          URIs, you'll get a broken image.
    */
   nsIURI getFaviconLinkForIcon(in nsIURI aIcon);
+
+  /**
+   * Adds a given favicon's URI to the failed favicon cache.
+   *
+   * The lifespan of the favicon cache is up to the caching system. This cache
+   * will also be written to if you use setAndLoadFaviconForPage and it
+   * encounters an error.
+   *
+   * @see isFailedFavicon
+   */
+  void addFailedFavicon(in nsIURI aIcon);
+
+  /**
+   * Removes the given favicon from the failed favicon cache. If the icon is
+   * not in the cache, this function will silently succeed.
+   */
+  void removeFailedFavicon(in nsIURI aIcon);
+
+  /**
+   * Checks to see if this favicon is in the failed favicon cache. Returns true
+   * if the favicon is in the failed cache, meaning you probably shouldn't try
+   * to load it. A false return value means that it's worth trying to load it.
+   * This allows you to avoid trying to load "foo.com/favicon.ico" for every
+   * page on a site that doesn't have a favicon.
+   */
+  boolean isFailedFavicon(in nsIURI aIcon);
 };
