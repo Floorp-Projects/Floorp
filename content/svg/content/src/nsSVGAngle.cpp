@@ -98,8 +98,8 @@ protected:
   PRBool IsValidUnitType(PRUint16 unit);
 
   float mValueInSpecifiedUnits;
-  PRUint8 mSpecifiedUnitType : 3;
-  PRPackedBool mIsAuto : 1;
+  PRUint8 mSpecifiedUnitType;
+  PRPackedBool mIsAuto;
 };
 
 
@@ -285,13 +285,11 @@ nsSVGAngle::GetValueAsString(nsAString & aValueAsString)
     aValueAsString.AssignLiteral("auto");
     return NS_OK;
   }
-  aValueAsString.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                             NS_LITERAL_STRING("%g").get(),
                             (double)mValueInSpecifiedUnits);
-  aValueAsString.Append(buf);
+  aValueAsString.Assign(buf);
   
   nsAutoString unitString;
   GetUnitString(unitString);
@@ -416,7 +414,7 @@ PRUint16 nsSVGAngle::GetUnitTypeForString(const char* unitStr)
 
 PRBool nsSVGAngle::IsValidUnitType(PRUint16 unit)
 {
-  if (unit>0 && unit<=4)
+  if (unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD)
     return PR_TRUE;
 
   return PR_FALSE;

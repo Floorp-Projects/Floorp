@@ -150,13 +150,11 @@ nsSVGAnimatedInteger::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGAnimatedInteger::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                             NS_LITERAL_STRING("%d").get(),
                             mBaseVal);
-  aValue.Append(buf);
+  aValue.Assign(buf);
   
   return NS_OK;
 }

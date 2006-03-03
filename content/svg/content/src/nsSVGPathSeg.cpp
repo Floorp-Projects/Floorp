@@ -56,8 +56,7 @@ cname::GetPathSegType(PRUint16 *aPathSegType)                           \
 NS_IMETHODIMP                                                           \
 cname::GetPathSegTypeAsLetter(nsAString & aPathSegTypeAsLetter)         \
 {                                                                       \
-  aPathSegTypeAsLetter.Truncate();                                      \
-  aPathSegTypeAsLetter.AppendLiteral(letter);               \
+  aPathSegTypeAsLetter.AssignLiteral(letter);                           \
   return NS_OK;                                                         \
 }
 
@@ -130,8 +129,7 @@ nsSVGPathSegClosePath::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegClosePath::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-  aValue.AppendLiteral("z");
+  aValue.AssignLiteral("z");
   
   return NS_OK;
 }
@@ -203,11 +201,9 @@ nsSVGPathSegMovetoAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegMovetoAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[48];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("M%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -311,11 +307,9 @@ nsSVGPathSegMovetoRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegMovetoRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[48];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("m%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -418,11 +412,9 @@ nsSVGPathSegLinetoAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[48];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("L%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -526,11 +518,9 @@ nsSVGPathSegLinetoRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[48];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("l%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -640,12 +630,10 @@ nsSVGPathSegCurvetoCubicAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoCubicAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[144];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("C%g,%g %g,%g %g,%g").get(), 
                             mX1, mY1, mX2, mY2, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -811,12 +799,10 @@ nsSVGPathSegCurvetoCubicRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoCubicRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[144];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("c%g,%g %g,%g %g,%g").get(),
                             mX1, mY1, mX2, mY2, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -978,12 +964,10 @@ nsSVGPathSegCurvetoQuadraticAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoQuadraticAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[96];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("Q%g,%g %g,%g").get(),
                             mX1, mY1, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1118,12 +1102,10 @@ nsSVGPathSegCurvetoQuadraticRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoQuadraticRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[96];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("q%g,%g %g,%g").get(), 
                             mX1, mY1, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1265,12 +1247,10 @@ nsSVGPathSegArcAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegArcAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[168];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("A%g,%g %g %d,%d %g,%g").get(), 
                             mR1, mR2, mAngle, mLargeArcFlag, mSweepFlag, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1454,12 +1434,10 @@ nsSVGPathSegArcRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegArcRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[168];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("a%g,%g %g %d,%d %g,%g").get(), 
                             mR1, mR2, mAngle, mLargeArcFlag, mSweepFlag, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1632,11 +1610,9 @@ nsSVGPathSegLinetoHorizontalAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoHorizontalAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("H%g").get(), mX);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1724,11 +1700,9 @@ nsSVGPathSegLinetoHorizontalRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoHorizontalRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("h%g").get(), mX);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1816,11 +1790,9 @@ nsSVGPathSegLinetoVerticalAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoVerticalAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("V%g").get(), mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -1908,11 +1880,9 @@ nsSVGPathSegLinetoVerticalRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegLinetoVerticalRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("v%g").get(), mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -2004,12 +1974,10 @@ nsSVGPathSegCurvetoCubicSmoothAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoCubicSmoothAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[96];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("S%g,%g %g,%g").get(),
                             mX2, mY2, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -2143,12 +2111,10 @@ nsSVGPathSegCurvetoCubicSmoothRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoCubicSmoothRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[96];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("s%g,%g %g,%g").get(),
                             mX2, mY2, mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -2279,11 +2245,9 @@ nsSVGPathSegCurvetoQuadraticSmoothAbs::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoQuadraticSmoothAbs::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[48];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("T%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
@@ -2386,11 +2350,9 @@ nsSVGPathSegCurvetoQuadraticSmoothRel::SetValueString(const nsAString& aValue)
 NS_IMETHODIMP
 nsSVGPathSegCurvetoQuadraticSmoothRel::GetValueString(nsAString& aValue)
 {
-  aValue.Truncate();
-
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("t%g,%g").get(), mX, mY);
-  aValue.Append(buf);
+  aValue.Assign(buf);
 
   return NS_OK;
 }
