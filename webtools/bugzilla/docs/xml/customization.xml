@@ -483,7 +483,7 @@
       available hooks, either use your favorite multi-file search
       tool (e.g. <command>grep</command>) to search the standard templates
       for occurrences of <methodname>Hook.process</methodname> or the source 
-      files for occurences of <methodname>Bugzilla::Hook::process</methodname>.
+      files for occurrences of <methodname>Bugzilla::Hook::process</methodname>.
     </para>
 
     <para>
