@@ -57,7 +57,7 @@ class gfxWindowsFont : public gfxFont {
 
 public:
     gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
-    gfxWindowsFont::gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont);
+    gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont);
 
     virtual ~gfxWindowsFont();
 
