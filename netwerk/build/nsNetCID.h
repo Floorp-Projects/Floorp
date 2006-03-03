@@ -778,5 +778,22 @@
  */
 #define NS_CHANNEL_EVENT_SINK_CATEGORY "net-channel-event-sinks"
 
+/**
+ * Services in this category will get told about each load that happens and get
+ * the opportunity to override the detected MIME type via nsIContentSniffer.
+ * Services should not set the MIME type on the channel directly, but return the
+ * new type. If getMIMETypeFromContent throws an exception, the type will remain
+ * unchanged.
+ *
+ * Note that only channels with the LOAD_CALL_CONTENT_SNIFFERS flag will call
+ * content sniffers. Also note that there can be security implications about
+ * changing the MIME type -- proxies filtering responses based on their MIME
+ * type might consider certain types to be safe, which these sniffers can
+ * override.
+ *
+ * Not all channels may implement content sniffing. See also
+ * nsIChannel::LOAD_CALL_CONTENT_SNIFFERS.
+ */
+#define NS_CONTENT_SNIFFER_CATEGORY "net-content-sniffers"
 
 #endif // nsNetCID_h__

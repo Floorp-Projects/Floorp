@@ -6891,10 +6891,11 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader)
 {
     nsresult rv;
-    // Mark the channel as being a document URI...
+    // Mark the channel as being a document URI and allow content sniffing...
     nsLoadFlags loadFlags = 0;
     (void) aChannel->GetLoadFlags(&loadFlags);
-    loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
+    loadFlags |= nsIChannel::LOAD_DOCUMENT_URI |
+                 nsIChannel::LOAD_CALL_CONTENT_SNIFFERS;
 
     // Load attributes depend on load type...
     switch (mLoadType) {

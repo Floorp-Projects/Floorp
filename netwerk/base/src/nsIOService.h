@@ -56,6 +56,7 @@
 #include "nsWeakReference.h"
 #include "nsINetUtil.h"
 #include "nsIChannelEventSink.h"
+#include "nsIContentSniffer.h"
 #include "nsCategoryCache.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
@@ -99,6 +100,11 @@ public:
     nsresult OnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
                                PRUint32 flags);
 
+    // Gets the array of registered content sniffers
+    const nsCOMArray<nsIContentSniffer>& GetContentSniffers() const {
+      return mContentSniffers.GetEntries();
+    }
+
 private:
     // These shouldn't be called directly:
     // - construct using GetInstance
@@ -131,6 +137,7 @@ private:
 
     // cached categories
     nsCategoryCache<nsIChannelEventSink> mChannelEventSinks;
+    nsCategoryCache<nsIContentSniffer>   mContentSniffers;
 
     nsVoidArray                          mRestrictedPortList;
 

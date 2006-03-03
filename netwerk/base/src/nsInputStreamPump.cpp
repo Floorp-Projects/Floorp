@@ -81,6 +81,30 @@ nsInputStreamPump::~nsInputStreamPump()
 {
 }
 
+nsresult
+nsInputStreamPump::Create(nsInputStreamPump  **result,
+                          nsIInputStream      *stream,
+                          PRInt64              streamPos,
+                          PRInt64              streamLen,
+                          PRUint32             segsize,
+                          PRUint32             segcount,
+                          PRBool               closeWhenDone)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    nsRefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
+    if (pump) {
+        rv = pump->Init(stream, streamPos, streamLen,
+                        segsize, segcount, closeWhenDone);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            pump.swap(*result);
+        }
+    }
+    return rv;
+}
+
+
+
 struct PeekData {
   PeekData(nsInputStreamPump::PeekSegmentFun fun, void* closure)
     : mFunc(fun), mClosure(closure) {}

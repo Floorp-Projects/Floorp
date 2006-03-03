@@ -233,11 +233,8 @@ nsBaseChannel::BeginPumpingData()
   // and especially when we call into the loadgroup.  Our caller takes care to
   // release mPump if we return an error.
  
-  mPump = new nsInputStreamPump();
-  if (!mPump)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = mPump->Init(stream, -1, -1, 0, 0, PR_TRUE);
+  rv = nsInputStreamPump::Create(getter_AddRefs(mPump), stream, -1, -1, 0, 0,
+                                 PR_TRUE);
   if (NS_SUCCEEDED(rv))
     rv = mPump->AsyncRead(this, nsnull);
 
@@ -555,6 +552,25 @@ CallTypeSniffers(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
 {
   nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
 
+  const nsCOMArray<nsIContentSniffer>& sniffers =
+    gIOService->GetContentSniffers();
+  PRUint32 length = sniffers.Count();
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsCAutoString newType;
+    nsresult rv =
+      sniffers[i]->GetMIMETypeFromContent(chan, aData, aCount, newType);
+    if (NS_SUCCEEDED(rv) && !newType.IsEmpty()) {
+      chan->SetContentType(newType);
+      break;
+    }
+  }
+}
+
+static void
+CallUnknownTypeSniffer(void *aClosure, const PRUint8 *aData, PRUint32 aCount)
+{
+  nsIChannel *chan = NS_STATIC_CAST(nsIChannel*, aClosure);
+
   nsCOMPtr<nsIContentSniffer> sniffer =
     do_CreateInstance(NS_GENERIC_CONTENT_SNIFFER);
   if (!sniffer)
@@ -572,8 +588,13 @@ nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   // If our content type is unknown, then use the content type sniffer.  If the
   // sniffer is not available for some reason, then we just keep going as-is.
   if (NS_SUCCEEDED(mStatus) && mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
+    mPump->PeekStream(CallUnknownTypeSniffer, NS_STATIC_CAST(nsIChannel*, this));
   }
+
+  // Now, the general type sniffers. Skip this if we have none.
+  if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
+      gIOService->GetContentSniffers().Count() != 0)
+    mPump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
 
   SUSPEND_PUMP_FOR_SCOPE();
 
