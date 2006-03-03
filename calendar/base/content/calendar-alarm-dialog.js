@@ -41,7 +41,9 @@ function addAlarm(event)
   var alarmWidget = document.createElement("calendar-alarm-widget");
   alarmWidget.setAttribute("title", event.title);
   var time = event.startDate || event.entryDate || event.dueDate;
-  alarmWidget.setAttribute("time", time.toString());
+  var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                .getService(Components.interfaces.calIDateTimeFormatter);
+  alarmWidget.setAttribute("time", dateFormatter.formatDateTime(time));
   alarmWidget.setAttribute("location", event.getProperty("LOCATION"));
   alarmWidget.addEventListener("snooze", onSnoozeAlarm, false);
   alarmWidget.addEventListener("dismiss", onDismissAlarm, false);
