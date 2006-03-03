@@ -288,12 +288,16 @@ function newEvent(startDate, endDate, allDay)
    var alarmsBranch = prefService.getBranch("calendar.alarms.");
 
    if (alarmsBranch.getIntPref("onforevents") == 1) {
-       // alarmTime doesn't matter, it just can't be null
-       calendarEvent.alarmTime = createDateTime();
-
-       calendarEvent.setProperty("alarmUnits", alarmsBranch.getCharPref("eventalarmunit"));
-       calendarEvent.setProperty("alarmLength", alarmsBranch.getIntPref("eventalarmlen"));
-       calendarEvent.setProperty("alarmRelation", "START");
+       var alarmOffset = Components.classes["@mozilla.org/calendar/duration;1"]
+                                   .createInstance(Components.interfaces.calIDuration);
+       try {
+           var units = alarmsBranch.getCharPref("eventalarmunit");
+           alarmOffset[units] = alarmsBranch.getIntPref("eventalarmlen");
+       } catch(ex) {
+           alarmOffset.minutes = 15;
+       }
+       calendarEvent.alarmOffset = alarmOffset;
+       calendarEvent.alarmRelated = calendarEvent.ALARM_RELATED_START;
    }
 
    if (allDay)
@@ -325,17 +329,20 @@ function newToDo ( startDate, dueDate )
    var alarmsBranch = prefService.getBranch("calendar.alarms.");
 
    if (alarmsBranch.getIntPref("onfortodos") == 1) {
-       // alarmTime doesn't matter, it just can't be null
-       calendarToDo.alarmTime = createDateTime();
-
        // You can't have an alarm if the entryDate doesn't exist.
        if (!calendarToDo.entryDate)
            calendarToDo.entryDate = jsDateToDateTime(
                                     gCalendarWindow.currentView.getNewEventDate());
-
-       calendarToDo.setProperty("alarmUnits", alarmsBranch.getCharPref("todoalarmunit"));
-       calendarToDo.setProperty("alarmLength", alarmsBranch.getIntPref("todoalarmlen"));
-       calendarToDo.setProperty("alarmRelation", "START");
+       var alarmOffset = Components.classes["@mozilla.org/calendar/duration;1"]
+                                   .createInstance(Components.interfaces.calIDuration);
+       try {
+           var units = alarmsBranch.getCharPref("todoalarmunit");
+           alarmOffset[units] = alarmsBranch.getIntPref("todoalarmlen");
+       } catch(ex) {
+           alarmOffset.minutes = 15;
+       }
+       calendarToDo.alarmOffset = alarmOffset;
+       calendarToDo.alarmRelated = calendarToDo.ALARM_RELATED_START;
    }
 
     var calendar = getSelectedCalendarOrNull();
