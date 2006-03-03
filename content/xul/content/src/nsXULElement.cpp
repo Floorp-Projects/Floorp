@@ -971,8 +971,9 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 PRBool
 nsXULElement::IsNativeAnonymous() const
 {
-    // XXX Workarond for bug 280541
-    return PR_FALSE;
+    // XXX Workaround for bug 280541, wallpaper for bug 326644
+    return NodeInfo()->Equals(nsXULAtoms::popupgroup) &&
+           nsGenericElement::IsNativeAnonymous();
 }
 
 PRUint32
