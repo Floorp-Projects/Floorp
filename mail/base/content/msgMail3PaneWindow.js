@@ -1116,7 +1116,11 @@ function loadFolderView(aNewFolderView)
   // add the new data sources
   var dataSourcesToAdd = folderViews[aNewFolderView].dataSources;
   for (index in dataSourcesToAdd)
+  {
     database.AddDataSource(dataSourcesToAdd[index]);
+    var msgDS = dataSourcesToAdd[index].QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+    msgDS.window = msgWindow;
+  }
 
   folderTree.setAttribute('ref', folderViews[aNewFolderView].ref);
   folderPaneHeader.label = gMessengerBundle.getString(folderViews[aNewFolderView].label);
