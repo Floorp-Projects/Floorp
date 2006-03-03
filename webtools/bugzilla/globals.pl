@@ -294,13 +294,6 @@ sub GetVersionTable {
         $file_generated = 1;
     }
     require "$datadir/versioncache";
-    if (!defined @::legal_keywords && !$file_generated) {
-        GenerateVersionTable();
-        do "$datadir/versioncache";
-    }
-    if (!defined @::legal_keywords) {
-        die "Can't generate file $datadir/versioncache";
-    }
     $::VersionTableLoaded = 1;
 }
 
