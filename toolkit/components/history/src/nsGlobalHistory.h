@@ -42,7 +42,7 @@
 #define nsglobalhistory__h____
 
 #include "nsIBrowserHistory.h"
-
+#include "nsIGlobalHistory3.h"
 #include "mdb.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
@@ -132,13 +132,15 @@ class nsGlobalHistory : nsSupportsWeakReference,
                         public nsIObserver,
                         public nsIRDFDataSource,
                         public nsIRDFRemoteDataSource,
-                        public nsIAutoCompleteSearch
+                        public nsIAutoCompleteSearch,
+                        public nsIGlobalHistory3
 {
 public:
   // nsISupports methods 
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIGLOBALHISTORY2
+  NS_DECL_NSIGLOBALHISTORY3
   NS_DECL_NSIBROWSERHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIRDFDATASOURCE

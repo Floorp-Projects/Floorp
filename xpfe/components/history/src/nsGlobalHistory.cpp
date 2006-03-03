@@ -528,14 +528,20 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS7(nsGlobalHistory,
-                   nsIGlobalHistory2,
-                   nsIBrowserHistory,
-                   nsIObserver,
-                   nsISupportsWeakReference,
-                   nsIRDFDataSource,
-                   nsIRDFRemoteDataSource,
-                   nsIAutoCompleteSession)
+NS_IMPL_ADDREF(nsGlobalHistory)
+NS_IMPL_RELEASE(nsGlobalHistory)
+
+NS_INTERFACE_MAP_BEGIN(nsGlobalHistory)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIGlobalHistory2, nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalHistory3)
+  NS_INTERFACE_MAP_ENTRY(nsIBrowserHistory)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFRemoteDataSource)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSession)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBrowserHistory)
+NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 //
@@ -1396,6 +1402,15 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   }
   
   return SetRowValue(row, kToken_TypedColumn, 1);
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
+                                     nsIChannel *aNewChannel,
+                                     PRInt32 aFlags,
+                                     PRBool aTopLevel)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
