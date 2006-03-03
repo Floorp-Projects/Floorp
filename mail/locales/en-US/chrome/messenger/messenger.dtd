@@ -516,7 +516,6 @@
 <!ENTITY searchSubjectOrSenderMenu.label "Subject or Sender">
 <!ENTITY searchRecipient.label "To or Cc">
 <!ENTITY searchMessageBody.label "Entire Message">
-<!ENTITY findInMessageMenu.label "Find In Message">
 <!ENTITY saveAsVirtualFolderMenu.label "Save Search as a Folder...">
 
 <!-- Thread Pane -->
