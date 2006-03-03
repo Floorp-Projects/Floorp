@@ -23,6 +23,7 @@
    -
    - Contributor(s):
    -   Vladimir Vukicevic <vladimir@pobox.com>
+   -   Stefan Sitter <ssitter@googlemail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -207,7 +208,7 @@
         <parameter name="aItem"/>
         <body><![CDATA[
           for each (ed in this.mItemData) {
-            if (aItem.sameId(ed.item))
+            if (aItem.hasSameIds(ed.item))
             {
               return;
             }
@@ -250,7 +251,7 @@
           var origLen = this.mItemData.length;
           this.mItemData = this.mItemData.filter(
             function(itd) {
-              if (aItem.sameId(itd.item))
+              if (aItem.hasSameIds(itd.item))
               {
                 deleted.push(itd);
                 return false;
