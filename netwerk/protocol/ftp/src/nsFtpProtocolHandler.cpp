@@ -73,7 +73,7 @@
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsFTPProtocol:5
+//    set NSPR_LOG_MODULES=nsFtp:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
@@ -86,7 +86,7 @@ PRLogModuleInfo* gFTPLog = nsnull;
 //-----------------------------------------------------------------------------
 
 #define IDLE_TIMEOUT_PREF     "network.ftp.idleConnectionTimeout"
-#define IDLE_CONNECTION_LIMIT 8 /* XXX pref me */
+#define IDLE_CONNECTION_LIMIT 8 /* TODO pref me */
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
@@ -99,16 +99,17 @@ nsFtpProtocolHandler::nsFtpProtocolHandler()
     : mIdleTimeout(-1)
 {
 #if defined(PR_LOGGING)
-    if (!gFTPLog) gFTPLog = PR_NewLogModule("nsFTPProtocol");
+    if (!gFTPLog)
+        gFTPLog = PR_NewLogModule("nsFtp");
 #endif
-    LOG(("Creating nsFtpProtocolHandler @%x\n", this));
+    LOG(("FTP:creating handler @%x\n", this));
 
     gFtpHandler = this;
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler()
 {
-    LOG(("Destroying nsFtpProtocolHandler @%x\n", this));
+    LOG(("FTP:destroying handler @%x\n", this));
 
     NS_ASSERTION(mRootConnectionList.Count() == 0, "why wasn't Observe called?");
 
@@ -143,7 +144,7 @@ nsFtpProtocolHandler::Init()
     if (observerService)
         observerService->AddObserver(this,
                                      "network:offline-about-to-go-offline",
-                                     PR_FALSE);
+                                     PR_TRUE);
     
     return NS_OK;
 }
@@ -211,27 +212,17 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 }
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, nsIChannel* *result)
+nsFtpProtocolHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* proxyInfo,
+                                        nsIChannel* *result)
 {
-    NS_ENSURE_ARG_POINTER(url);
-    nsFTPChannel *channel = new nsFTPChannel();
+    NS_ENSURE_ARG_POINTER(uri);
+    nsFtpChannel *channel = new nsFtpChannel(uri, proxyInfo);
     if (!channel)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(channel);
 
-    nsCOMPtr<nsICacheService> cache = do_GetService(kCacheServiceCID);
-    if (cache) {
-        cache->CreateSession("FTP",
-                             nsICache::STORE_ANYWHERE,
-                             nsICache::STREAM_BASED,
-                             getter_AddRefs(mCacheSession));
-        if (mCacheSession)
-            mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
-    }
-
-    nsresult rv = channel->Init(url, proxyInfo, mCacheSession);
+    nsresult rv = channel->Init();
     if (NS_FAILED(rv)) {
-        LOG(("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         NS_RELEASE(channel);
         return rv;
     }
@@ -252,7 +243,7 @@ nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retva
 void
 nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure)
 {
-    LOG(("Timeout reached for %0x\n", aClosure));
+    LOG(("FTP:timeout reached for %p\n", aClosure));
 
     PRBool found = gFtpHandler->mRootConnectionList.RemoveElement(aClosure);
     if (!found) {
@@ -275,7 +266,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
     nsCAutoString spec;
     aKey->GetPrePath(spec);
     
-    LOG(("Removing connection for %s\n", spec.get()));
+    LOG(("FTP:removing connection for %s\n", spec.get()));
    
     timerStruct* ts = nsnull;
     PRInt32 i;
@@ -310,7 +301,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
     nsCAutoString spec;
     aKey->GetPrePath(spec);
 
-    LOG(("Inserting connection for %s\n", spec.get()));
+    LOG(("FTP:inserting connection for %s\n", spec.get()));
 
     nsresult rv;
     nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -373,7 +364,7 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
                               const char *aTopic,
                               const PRUnichar *aData)
 {
-    LOG(("nsFtpProtocolHandler::Observe [topic=%s]\n", aTopic));
+    LOG(("FTP:observing [%s]\n", aTopic));
 
     if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
@@ -385,14 +376,12 @@ nsFtpProtocolHandler::Observe(nsISupports *aSubject,
         nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = timeout;
-    }
-    else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
+    } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
         PRInt32 i;
         for (i=0;i<mRootConnectionList.Count();++i)
             delete (timerStruct*)mRootConnectionList[i];
         mRootConnectionList.Clear();
-    }
-    else {
+    } else {
         NS_NOTREACHED("unexpected topic");
     }
 

@@ -58,6 +58,17 @@ static PRLogModuleInfo *gStreamPumpLog = nsnull;
 #define LOG(args) PR_LOG(gStreamPumpLog, PR_LOG_DEBUG, args)
 
 //-----------------------------------------------------------------------------
+
+static NS_METHOD
+GetBytesAvailable(nsIInputStream *stream, void *closure, const char *segment,
+                  PRUint32 offset, PRUint32 count, PRUint32 *result)
+{
+    PRUint32 *avail = NS_STATIC_CAST(PRUint32 *, closure);
+    *avail = count;
+    return NS_ERROR_ABORT;  // return from ReadSegments call
+}
+
+//-----------------------------------------------------------------------------
 // nsInputStreamPump methods
 //-----------------------------------------------------------------------------
 
@@ -351,11 +362,11 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
     // this function has been called from a PLEvent, so we can safely call
     // any listener or progress sink methods directly from here.
 
+    mWaiting = PR_FALSE;
+
     for (;;) {
-        if (mSuspendCount || mState == STATE_IDLE) {
-            mWaiting = PR_FALSE;
+        if (mSuspendCount || mState == STATE_IDLE)
             break;
-        }
 
         PRUint32 nextState;
         switch (mState) {
@@ -374,7 +385,6 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
             NS_ASSERTION(mState == STATE_TRANSFER, "unexpected state");
             NS_ASSERTION(NS_SUCCEEDED(mStatus), "unexpected status");
 
-            mWaiting = PR_FALSE;
             mStatus = EnsureWaiting();
             if (NS_SUCCEEDED(mStatus))
                 break;
@@ -510,13 +520,20 @@ nsInputStreamPump::OnStateTransfer()
     if (NS_SUCCEEDED(mStatus)) {
         if (NS_FAILED(rv))
             mStatus = rv;
-        else if (avail) {
-            // if stream is now closed, advance to STATE_STOP right away.
-            // Available may return 0 bytes available at the moment; that
-            // would not mean that we are done.
-            // XXX async streams should have a GetStatus method!
-            rv = mAsyncStream->Available(&avail);
-            if (NS_SUCCEEDED(rv))
+        else {
+            // Check to see if stream will have more data.  If so, then stay in
+            // the STATE_TRANSFER state.  Otherwise, advance to STATE_STOP.
+            //
+            // NOTE: Calling Available is insufficient since that method could
+            //       return 0 bytes available and NS_OK when it is at end-of-
+            //       file but not closed.  We would not be able to distinguish
+            //       that case from a stream that is merely waiting for more
+            //       data to become available.  By using ReadSegments we can
+            //       tell if the stream will ever have more data.
+            // 
+            PRUint32 n;
+            rv = mAsyncStream->ReadSegments(GetBytesAvailable, &avail, 1, &n);
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK || (NS_SUCCEEDED(rv) && avail))
                 return STATE_TRANSFER;
         }
     }

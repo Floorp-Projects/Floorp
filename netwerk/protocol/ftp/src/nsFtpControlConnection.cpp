@@ -47,130 +47,172 @@
 #include "nsEventQueueUtils.h"
 #include "nsCRT.h"
 
-
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
+#endif
 #define LOG(args)         PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
 #define LOG_ALWAYS(args)  PR_LOG(gFTPLog, PR_LOG_ALWAYS, args)
-#else
-#define LOG(args)
-#define LOG_ALWAYS(args)
-#endif
-
-
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpControlConnection, 
-                              nsIStreamListener, 
-                              nsIRequestObserver)
+NS_IMPL_ISUPPORTS1(nsFtpControlConnection, nsIInputStreamCallback)
 
-nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
-    : mServerType(0), mPort(port)
+NS_IMETHODIMP
+nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
 {
-    LOG_ALWAYS(("(%x) nsFtpControlConnection created", this));
+    char data[4096];
 
-    mHost.Assign(host);
+    // Consume data whether we have a listener or not.
+    PRUint32 avail;
+    nsresult rv = stream->Available(&avail);
+    if (NS_SUCCEEDED(rv)) {
+        if (avail > sizeof(data))
+            avail = sizeof(data);
+
+        PRUint32 n;
+        rv = stream->Read(data, avail, &n);
+        if (NS_SUCCEEDED(rv) && n != avail)
+            avail = n;
+    }
+
+    // It's important that we null out mListener before calling one of its
+    // methods as it may call WaitData, which would queue up another read.
+
+    nsRefPtr<nsFtpControlConnectionListener> listener;
+    listener.swap(mListener);
+
+    if (!listener)
+        return NS_OK;
+
+    if (NS_FAILED(rv)) {
+        listener->OnControlError(rv);
+    } else {
+        listener->OnControlDataAvailable(data, avail);
+    }
+
+    return NS_OK;
+}
+
+nsFtpControlConnection::nsFtpControlConnection(const nsCSubstring& host, PRUint32 port)
+    : mServerType(0), mHost(host), mPort(port)
+{
+    LOG_ALWAYS(("FTP:CC created @%p", this));
 }
 
 nsFtpControlConnection::~nsFtpControlConnection() 
 {
-    LOG_ALWAYS(("(%x) nsFtpControlConnection destroyed", this));
+    LOG_ALWAYS(("FTP:CC destroyed @%p", this));
 }
 
 PRBool
 nsFtpControlConnection::IsAlive()
 {
-    if (!mCPipe) 
+    if (!mSocket) 
         return PR_FALSE;
 
     PRBool isAlive = PR_FALSE;
-    mCPipe->IsAlive(&isAlive);
+    mSocket->IsAlive(&isAlive);
     return isAlive;
 }
 nsresult 
 nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
                                 nsITransportEventSink* eventSink)
 {
+    if (mSocket)
+        return NS_OK;
+
+    // build our own
     nsresult rv;
+    nsCOMPtr<nsISocketTransportService> sts =
+            do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (!mCPipe) {
-        // build our own
-        nsCOMPtr<nsISocketTransportService> sts =
-                do_GetService(kSocketTransportServiceCID, &rv);
+    rv = sts->CreateTransport(nsnull, 0, mHost, mPort, proxyInfo,
+                              getter_AddRefs(mSocket)); // the command transport
+    if (NS_FAILED(rv))
+        return rv;
 
-        rv = sts->CreateTransport(nsnull, 0, mHost, mPort, proxyInfo,
-                                  getter_AddRefs(mCPipe)); // the command transport
-        if (NS_FAILED(rv)) return rv;
-
-        // proxy transport events back to current thread
-        if (eventSink) {
-            nsCOMPtr<nsIEventQueue> eventQ;
-            rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
-            if (NS_SUCCEEDED(rv))
-                mCPipe->SetEventSink(eventSink, eventQ);
-        }
-
-        // open buffered, blocking output stream to socket.  so long as commands
-        // do not exceed 1024 bytes in length, the writing thread (the main thread)
-        // will not block.  this should be OK.
-        rv = mCPipe->OpenOutputStream(nsITransport::OPEN_BLOCKING, 1024, 1,
-                                      getter_AddRefs(mOutStream));
-        if (NS_FAILED(rv)) return rv;
-
-        // open buffered, non-blocking/asynchronous input stream to socket.
-        nsCOMPtr<nsIInputStream> inStream;
-        rv = mCPipe->OpenInputStream(0,
-                                     FTP_COMMAND_CHANNEL_SEG_SIZE, 
-                                     FTP_COMMAND_CHANNEL_SEG_COUNT,
-                                     getter_AddRefs(inStream));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIInputStreamPump> pump;
-        rv = NS_NewInputStreamPump(getter_AddRefs(pump), inStream);
-        if (NS_FAILED(rv)) return rv;
-
-        // get the ball rolling by reading on the control socket.
-        rv = pump->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
-        if (NS_FAILED(rv)) return rv;
-
-        // cyclic reference!
-        mReadRequest = pump;
+    // proxy transport events back to current thread
+    if (eventSink) {
+        nsCOMPtr<nsIEventQueue> eventQ;
+        rv = NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+        if (NS_SUCCEEDED(rv))
+            mSocket->SetEventSink(eventSink, eventQ);
     }
-    return NS_OK;
+
+    // open buffered, blocking output stream to socket.  so long as commands
+    // do not exceed 1024 bytes in length, the writing thread (the main thread)
+    // will not block.  this should be OK.
+    rv = mSocket->OpenOutputStream(nsITransport::OPEN_BLOCKING, 1024, 1,
+                                   getter_AddRefs(mSocketOutput));
+    if (NS_FAILED(rv))
+        return rv;
+
+    // open buffered, non-blocking/asynchronous input stream to socket.
+    nsCOMPtr<nsIInputStream> inStream;
+    rv = mSocket->OpenInputStream(0,
+                                  FTP_COMMAND_CHANNEL_SEG_SIZE, 
+                                  FTP_COMMAND_CHANNEL_SEG_COUNT,
+                                  getter_AddRefs(inStream));
+    if (NS_SUCCEEDED(rv))
+        mSocketInput = do_QueryInterface(inStream);
+    
+    return rv;
+}
+
+nsresult
+nsFtpControlConnection::WaitData(nsFtpControlConnectionListener *listener)
+{
+    LOG(("FTP:(%p) wait data [listener=%p]\n", this, listener));
+
+    // If listener is null, then simply disconnect the listener.  Otherwise,
+    // ensure that we are listening.
+    if (!listener) {
+        mListener = nsnull;
+        return NS_OK;
+    }
+
+    NS_ENSURE_STATE(mSocketInput);
+
+    nsCOMPtr<nsIEventQueue> eventQ;
+    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    NS_ENSURE_STATE(eventQ);
+
+    mListener = listener;
+    return mSocketInput->AsyncWait(this, 0, 0, eventQ);
 }
 
 nsresult 
 nsFtpControlConnection::Disconnect(nsresult status)
 {
-    if (!mCPipe) return NS_ERROR_FAILURE;
+    if (!mSocket)
+        return NS_OK;  // already disconnected
     
-    LOG_ALWAYS(("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
+    LOG_ALWAYS(("FTP:(%p) CC disconnecting (%x)", this, status));
 
     if (NS_FAILED(status)) {
         // break cyclic reference!
-        mOutStream = 0;
-        mReadRequest->Cancel(status);
-        mReadRequest = 0;
-        mCPipe->Close(status);
-        mCPipe = 0;
+        mSocket->Close(status);
+        mSocket = 0;
+        mSocketInput->AsyncWait(nsnull, 0, 0, nsnull);  // clear any observer
+        mSocketInput = nsnull;
+        mSocketOutput = nsnull;
     }
 
     return NS_OK;
 }
 
 nsresult 
-nsFtpControlConnection::Write(nsCString& command, PRBool suspend)
+nsFtpControlConnection::Write(const nsCSubstring& command)
 {
-    if (!mCPipe)
-        return NS_ERROR_FAILURE;
+    NS_ENSURE_STATE(mSocketOutput);
 
     PRUint32 len = command.Length();
     PRUint32 cnt;
-    nsresult rv = mOutStream->Write(command.get(), len, &cnt);
+    nsresult rv = mSocketOutput->Write(command.Data(), len, &cnt);
 
     if (NS_FAILED(rv))
         return rv;
@@ -178,59 +220,5 @@ nsFtpControlConnection::Write(nsCString& command, PRBool suspend)
     if (len != cnt)
         return NS_ERROR_FAILURE;
     
-    if (suspend)
-        return NS_OK;
-
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContext)
-{
-    if (!mCPipe)
-        return NS_OK;
-
-    if (!mListener)
-        return NS_OK;
-    
-    // In case our listener tries to remove itself via SetStreamListener(nsnull),
-    // we need to keep an extra reference to it on the stack.
-    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
-    return mListener->OnStartRequest(request, aContext);
-}
-
-NS_IMETHODIMP
-nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext,
-                                      nsresult aStatus)
-{
-    if (!mCPipe) 
-        return NS_OK;
-
-    if (!mListener)
-        return NS_OK;
-
-    // In case our listener tries to remove itself via SetStreamListener(nsnull),
-    // we need to keep an extra reference to it on the stack.
-    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
-    return mListener->OnStopRequest(request, aContext, aStatus);
-}
-
-NS_IMETHODIMP
-nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
-                                        nsISupports *aContext,
-                                        nsIInputStream *aInStream,
-                                        PRUint32 aOffset, 
-                                        PRUint32 aCount)
-{
-    if (!mCPipe) 
-        return NS_OK;
-    
-    if (!mListener)
-        return NS_OK;
-
-    // In case our listener tries to remove itself via SetStreamListener(nsnull),
-    // we need to keep an extra reference to it on the stack.
-    nsCOMPtr<nsIStreamListener> deathGrip = mListener;
-    return mListener->OnDataAvailable(request, aContext, aInStream,
-                                      aOffset,  aCount);
 }
