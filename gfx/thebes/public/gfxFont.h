@@ -160,7 +160,6 @@ protected:
     const gfxFontStyle *mStyle;
 };
 
-typedef nsTArray< nsRefPtr<gfxFont> > gfxFontVector;
 
 class NS_EXPORT gfxFontGroup {
 public:
@@ -170,7 +169,13 @@ public:
         mFonts.Clear();
     }
 
-    gfxFontVector GetFontList() { return mFonts; }
+    gfxFont *GetFontAt(PRInt32 i) {
+        return NS_STATIC_CAST(gfxFont*, mFonts[i]);
+    }
+    PRUint32 FontListLength() const {
+        return mFonts.Length();
+    }
+
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
     /* unicode method */
@@ -189,7 +194,7 @@ protected:
 
     nsString mFamilies;
     gfxFontStyle mStyle;
-    gfxFontVector mFonts;
+    nsTArray< nsRefPtr<gfxFont> > mFonts;
 };
 
 
