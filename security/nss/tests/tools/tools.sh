@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,7 +75,12 @@ tools_init()
       . ./cert.sh
   fi
   SCRIPTNAME=tools.sh
-  html_head "Tools Tests"
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      html_head "Tools Tests with ECC"
+  else
+      html_head "Tools Tests"
+  fi
 
   grep "SUCCESS: SMIME passed" $CERT_LOG_FILE >/dev/null || {
       Exit 15 "Fatal - S/MIME of cert.sh needs to pass first"
@@ -87,7 +93,7 @@ tools_init()
   R_COPYDIR=../tools/copydir
   P_R_COPYDIR=${R_COPYDIR}
   if [ -n "${MULTIACCESS_DBM}" ]; then
-    P_R_COPYDIR="multiaccess:Tools.$version"
+      P_R_COPYDIR="multiaccess:Tools.$version"
   fi
 
   mkdir -p ${TOOLSDIR}
@@ -125,6 +131,32 @@ tools_p12()
   ret=$?
   html_msg $ret 0 "Listing Alice's pk12 file (pk12util -l)"
   check_tmpfile
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      echo "$SCRIPTNAME: Exporting Alice's email EC cert & key---------------"
+      echo "pk12util -o Alice-ec.p12 -n \"Alice-ec\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
+      echo "         -w ${R_PWFILE}"
+      pk12util -o Alice-ec.p12 -n "Alice-ec" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \
+           -w ${R_PWFILE} 2>&1 
+      ret=$?
+      html_msg $ret 0 "Exporting Alice's email EC cert & key (pk12util -o)"
+      check_tmpfile
+
+      echo "$SCRIPTNAME: Importing Alice's email EC cert & key --------------"
+      echo "pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE}"
+      pk12util -i Alice-ec.p12 -d ${P_R_COPYDIR} -k ${R_PWFILE} -w ${R_PWFILE} 2>&1
+      ret=$?
+      html_msg $ret 0 "Importing Alice's email EC cert & key (pk12util -i)"
+      check_tmpfile
+
+      echo "$SCRIPTNAME: Listing Alice's pk12 EC file -----------------"
+      echo "pk12util -l Alice-ec.p12 -w ${R_PWFILE}"
+      pk12util -l Alice-ec.p12 -w ${R_PWFILE} 2>&1
+      ret=$?
+      html_msg $ret 0 "Listing Alice's pk12 EC file (pk12util -l)"
+      check_tmpfile
+  fi
+
 }
 
 ############################## tools_sign ##############################

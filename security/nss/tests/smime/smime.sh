@@ -21,6 +21,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -71,7 +72,12 @@ smime_init()
       . ./cert.sh
   fi
   SCRIPTNAME=smime.sh
-  html_head "S/MIME Tests"
+
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      html_head "S/MIME Tests with ECC"
+  else
+      html_head "S/MIME Tests"
+  fi
 
   grep "SUCCESS: SMIME passed" $CERT_LOG_FILE >/dev/null || {
       Exit 11 "Fatal - S/MIME of cert.sh needs to pass first"
@@ -110,6 +116,32 @@ smime_sign()
   echo "diff alice.txt alice.data.${HASH}"
   diff alice.txt alice.data.${HASH}
   html_msg $? 0 "Compare Attached Signed Data and Original (${HASH})" "."
+
+# Test ECDSA signing for all hash algorithms.
+  if [ -n "$NSS_ENABLE_ECC" ] ; then
+      echo "$SCRIPTNAME: Signing Detached Message ECDSA w/ {$HASH} ------------------"
+      echo "cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}"
+      cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}
+      html_msg $? 0 "Create Detached Signature Alice (ECDSA w/ ${HASH})" "."
+
+      echo "cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} "
+      cmsutil -D -i alice-ec.d${SIG} -c alice.txt -d ${P_R_BOBDIR} 
+      html_msg $? 0 "Verifying Alice's Detached Signature (ECDSA w/ ${HASH})" "."
+
+      echo "$SCRIPTNAME: Signing Attached Message (ECDSA w/ ${HASH}) ------------------"
+      echo "cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}"
+      cmsutil -S -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.${SIG}
+      html_msg $? 0 "Create Attached Signature Alice (ECDSA w/ ${HASH})" "."
+
+      echo "cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}"
+      cmsutil -D -i alice-ec.${SIG} -d ${P_R_BOBDIR} -o alice-ec.data.${HASH}
+      html_msg $? 0 "Decode Alice's Attached Signature (ECDSA w/ ${HASH})" "."
+
+      echo "diff alice.txt alice-ec.data.${HASH}"
+      diff alice.txt alice-ec.data.${HASH}
+      html_msg $? 0 "Compare Attached Signed Data and Original (ECDSA w/ ${HASH})" "."
+  fi
+
 }
 
 
@@ -146,7 +178,7 @@ smime_main()
 
   # multiple recip
   echo "$SCRIPTNAME: Testing multiple recipients ------------------------------"
-  echo "cmsutil -E -i alicecc.txt -d ${P_R_ALICEDIR} -o alicecc.env \\"
+  echo "cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o alicecc.env \\"
   echo "        -r bob@bogus.com,dave@bogus.com"
   cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o alicecc.env \
           -r bob@bogus.com,dave@bogus.com
@@ -160,7 +192,7 @@ smime_main()
   fi
 
   echo "$SCRIPTNAME: Testing multiple email addrs ------------------------------"
-  echo "cmsutil -E -i alicecc.txt -d ${P_R_ALICEDIR} -o aliceve.env \\"
+  echo "cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o aliceve.env \\"
   echo "        -r eve@bogus.net"
   cmsutil -E -i alice.txt -d ${P_R_ALICEDIR} -o aliceve.env \
           -r eve@bogus.net
