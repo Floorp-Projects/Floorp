@@ -37,7 +37,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.17 2006/02/28 05:56:07 nelson%bolyard.com Exp $
+ * $Id: cmsrecinfo.c,v 1.18 2006/03/03 04:00:49 nelson%bolyard.com Exp $
  */
 
 #include "cmslocal.h"
@@ -299,6 +299,9 @@ done:
     return ri;
 
 loser:
+    if (ri && ri->cert) {
+        CERT_DestroyCertificate(ri->cert);
+    }
     if (freeSpki) {
       SECKEY_DestroySubjectPublicKeyInfo(freeSpki);
     }
