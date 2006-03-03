@@ -48,7 +48,6 @@
 
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsXULControllers.h"
 #include "nsString.h"
 #include "nsContentUtils.h"
@@ -110,23 +109,6 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsXULControllers)
 NS_IMPL_RELEASE(nsXULControllers)
 
-
-NS_IMETHODIMP
-nsXULControllers::GetCommandDispatcher(nsIDOMXULCommandDispatcher** _result)
-{
-  nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryReferent(mCommandDispatcher);
-  *_result = dispatcher;
-  NS_IF_ADDREF(*_result);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULControllers::SetCommandDispatcher(nsIDOMXULCommandDispatcher* aCommandDispatcher)
-{
-  mCommandDispatcher = do_GetWeakReference(aCommandDispatcher);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** _retval)

@@ -2201,12 +2201,6 @@ NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)
 {
     if (! Controllers()) {
-        // XXX sXBL/XBL2 issue! Owner or current document?
-        nsIDocument* doc = GetCurrentDoc();
-        NS_PRECONDITION(doc, "no document");
-        if (!doc)
-            return NS_ERROR_NOT_INITIALIZED;
-
         nsDOMSlots* slots = GetDOMSlots();
         if (!slots)
           return NS_ERROR_OUT_OF_MEMORY;
@@ -2216,18 +2210,6 @@ nsXULElement::GetControllers(nsIControllers** aResult)
                                   NS_REINTERPRET_CAST(void**, &slots->mControllers));
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a controllers");
-        if (NS_FAILED(rv)) return rv;
-
-        // Set the command dispatcher on the new controllers object
-        nsCOMPtr<nsIDOMXULDocument> domxuldoc = do_QueryInterface(doc);
-        if (! domxuldoc)
-            return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
-        rv = domxuldoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = slots->mControllers->SetCommandDispatcher(dispatcher);
         if (NS_FAILED(rv)) return rv;
     }
 
