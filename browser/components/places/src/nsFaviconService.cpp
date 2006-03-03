@@ -54,6 +54,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsISupportsPrimitives.h"
+#include "nsNavBookmarks.h"
 #include "nsNavHistory.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
@@ -69,6 +70,9 @@
 
 #define FAVICON_BUFFER_INCREMENT 8192
 
+#define MAX_FAVICON_CACHE_SIZE 512
+#define FAVICON_CACHE_REDUCE_COUNT 64
+
 #define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
 
 
@@ -77,7 +81,7 @@ class FaviconLoadListener : public nsIStreamListener,
                             public nsIChannelEventSink
 {
 public:
-  FaviconLoadListener(nsIFaviconService* aFaviconService,
+  FaviconLoadListener(nsFaviconService* aFaviconService,
                       nsIURI* aPageURI, nsIURI* aFaviconURI,
                       nsIChannel* aChannel);
 
@@ -90,7 +94,7 @@ public:
 private:
   ~FaviconLoadListener();
 
-  nsCOMPtr<nsIFaviconService> mFaviconService;
+  nsCOMPtr<nsFaviconService> mFaviconService;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mPageURI;
   nsCOMPtr<nsIURI> mFaviconURI;
@@ -105,7 +109,7 @@ NS_IMPL_ISUPPORTS1(nsFaviconService, nsIFaviconService)
 
 // nsFaviconService::nsFaviconService
 
-nsFaviconService::nsFaviconService()
+nsFaviconService::nsFaviconService() : mFailedFaviconSerial(0)
 {
   NS_ASSERTION(! gFaviconService, "ATTEMPTING TO CREATE TWO FAVICON SERVICES!");
   gFaviconService = this;
@@ -157,6 +161,10 @@ nsFaviconService::Init()
                                 getter_AddRefs(mDBSetPageFavicon));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // failed favicon cache
+  if (! mFailedFavicons.Init(256))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
@@ -188,12 +196,7 @@ nsFaviconService::InitTables(mozIStorageConnection* aDBConn)
 //    Called by the history service after history entries have been expired.
 //    This will delete all favicon entries that are not referenced.
 //
-//    TODO: Check the speed of this. This might be very slow because there is no
-//    index on the history table's favicon column. It seems like a bad idea to
-//    add another index to history just to speed up expiration. Another approach
-//    would be to add a "used" column to the favicon table. For expiration we
-//    would go through history and set the "used" column to true when there is
-//    a reference. Then we delete all columns that have used != 1.
+//    FIXME: This is very slow, and slows down shutdown. See bug 328598.
 
 nsresult // static
 nsFaviconService::VacuumFavicons(mozIStorageConnection* aDBConn)
@@ -219,15 +222,8 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPage, nsIURI* aFavicon)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // send favicon change notifications if the URL has any data
-  if (hasData) {
-    nsCAutoString faviconSpec;
-    nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-    if (historyService && NS_SUCCEEDED(aFavicon->GetSpec(faviconSpec))) {
-      historyService->SendPageChangedNotification(aPage,
-                                       nsINavHistoryObserver::ATTRIBUTE_FAVICON,
-                                       NS_ConvertUTF8toUTF16(faviconSpec));
-    }
-  }
+  if (hasData)
+    SendFaviconNotifications(aPage, aFavicon);
   return NS_OK;
 }
 
@@ -324,17 +320,92 @@ nsFaviconService::SetFaviconUrlForPageInternal(nsIURI* aPage, nsIURI* aFavicon,
 }
 
 
+// nsFaviconService::UpdateBookmarkRedirectFavicon
+//
+//    It is not uncommon to have a bookmark (usually manually entered or
+//    modified) that redirects to some other page. For example, "mozilla.org"
+//    redirects to "www.mozilla.org". We want that bookmark's favicon to get
+//    updated. So, we see if this URI has a bookmark redirect and set the
+//    favicon there as well.
+//
+//    This should be called only when we know there is data for the favicon
+//    already loaded. We will always send out notifications for the bookmarked
+//    page.
+
+nsresult
+nsFaviconService::UpdateBookmarkRedirectFavicon(nsIURI* aPage, nsIURI* aFavicon)
+{
+  NS_ENSURE_TRUE(aPage, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aFavicon, NS_ERROR_INVALID_ARG);
+
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIURI> bookmarkURI;
+  nsresult rv = bookmarks->GetBookmarkedURIFor(aPage, getter_AddRefs(bookmarkURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! bookmarkURI)
+    return NS_OK; // no bookmark redirect
+
+  PRBool sameAsBookmark;
+  if (NS_SUCCEEDED(bookmarkURI->Equals(aPage, &sameAsBookmark)) && sameAsBookmark)
+    return NS_OK; // bookmarked directly, not through a redirect
+
+  PRBool hasData = PR_FALSE;
+  PRTime expiration = 0;
+  rv = SetFaviconUrlForPageInternal(bookmarkURI, aFavicon, &hasData, &expiration);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (hasData) {
+    // send notifications
+    SendFaviconNotifications(bookmarkURI, aFavicon);
+  } else {
+    NS_WARNING("Calling UpdateBookmarkRedirectFavicon when you don't have data for the favicon yet.");
+  }
+  return NS_OK;
+}
+
+
+// nsFaviconService::SendFaviconNotifications
+//
+//    Call to send out favicon changed notifications. Shuold only be called
+//    when you know there is data loaded for the favicon.
+
+void
+nsFaviconService::SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI)
+{
+  nsCAutoString faviconSpec;
+  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
+  if (historyService && NS_SUCCEEDED(aFaviconURI->GetSpec(faviconSpec))) {
+    historyService->SendPageChangedNotification(aPage,
+                                       nsINavHistoryObserver::ATTRIBUTE_FAVICON,
+                                       NS_ConvertUTF8toUTF16(faviconSpec));
+  }
+}
+
+
 // nsFaviconService::SetAndLoadFaviconForPage
 
 NS_IMETHODIMP
 nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
                                            PRBool aForceReload)
 {
+  // check the failed favicon cache
+  PRBool previouslyFailed;
+  nsresult rv = IsFailedFavicon(aFavicon, &previouslyFailed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (previouslyFailed) {
+    if (aForceReload)
+      RemoveFailedFavicon(aFavicon); // force reload clears from failed cache
+    else
+      return NS_OK; // ignore previously failed favicons
+  }
+
   // filter out bad URLs
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
   PRBool canAdd;
-  nsresult rv = history->CanAddURI(aPage, &canAdd);
+  rv = history->CanAddURI(aPage, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! canAdd)
     return NS_OK; // ignore favicons for this url
@@ -358,29 +429,55 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
   if (isDataURL)
     return NS_OK;
 
-  // This will associate the favicon URL with the page. It will not send favicon
-  // change notifications. That will happen from OnStopRequest so that we know
-  // we have data before wasting time sending out notifications.
-  PRBool hasData;
-  PRTime expiration;
-  rv = SetFaviconUrlForPageInternal(aPage, aFavicon, &hasData, &expiration);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // See if we have data and get the expiration time for this favicon. It might
+  // be nice to say SetFaviconUrlForPageInternal here but we DON'T want to set
+  // the favicon for the page unless we know we have it. For example, if I go
+  // to random site x.com, the browser will still tell us that the favicon is
+  // x.com/favicon.ico even if there is no such file. We don't want to pollute
+  // our tables with this useless data.
+  PRBool hasData = PR_FALSE;
+  PRTime expiration = 0;
+  { // scope for statement
+    mozStorageStatementScoper scoper(mDBGetIconInfo);
+    rv = BindStatementURI(mDBGetIconInfo, 0, aFavicon);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  /*
-   * This has been commented out because the caching system may have noticed
-   * the favicon changed, and we don't actually know about it here. This causes
-   * the favicon to load every time, hopefully from the cache. It is unknown
-   * how much extra time this takes, but not reloading favicons when they
-   * changed will annoy many web delelopers.
+    PRBool hasMatch;
+    rv = mDBGetIconInfo->ExecuteStep(&hasMatch);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasMatch) {
+      PRInt32 dataSize;
+      mDBGetIconInfo->GetInt32(1, &dataSize);
+      hasData = dataSize > 0;
+      mDBGetIconInfo->GetInt64(2, &expiration);
+    }
+  }
 
+  // See if this favicon has expired yet. We don't want to waste time reloading
+  // from the web or cache if we have a recent version.
   PRTime now = PR_Now();
   if (hasData && now < expiration && ! aForceReload) {
-    // FIXME: icon data has not changed put page's icon may have, send out notifications
-    return NS_OK; // no need to reload data
-  }
-  */
+    // data still valid, no need to reload
 
-  // FIXME: do we want to keep track of failed favicons here?
+    // For page revisits (pretty common) we DON'T want to send out any
+    // notifications if we've already set the favicon. These notifications will
+    // cause parts of the UI to update and will be slow. This also saves us a
+    // database write in these cases.
+    nsCOMPtr<nsIURI> oldFavicon;
+    PRBool faviconsEqual;
+    if (NS_SUCCEEDED(GetFaviconForPage(aPage, getter_AddRefs(oldFavicon))) &&
+        NS_SUCCEEDED(aFavicon->Equals(oldFavicon, &faviconsEqual)) &&
+        faviconsEqual)
+      return NS_OK; // already set
+
+    // This will associate the favicon URL with the page.
+    rv = SetFaviconUrlForPageInternal(aPage, aFavicon, &hasData, &expiration);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    SendFaviconNotifications(aPage, aFavicon);
+    UpdateBookmarkRedirectFavicon(aPage, aFavicon);
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIIOService> ioservice = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -401,7 +498,8 @@ nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
   rv = channel->AsyncOpen(listener, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // observers will be notified when the data has finished loading
+  // DB will be update and observers will be notified when the data has
+  // finished loading
   return NS_OK;
 }
 
@@ -554,6 +652,71 @@ nsFaviconService::GetFaviconLinkForIcon(nsIURI* aIcon, nsIURI** aOutput)
 }
 
 
+// nsFaviconService::AddFailedFavicon
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+ExpireFailedFaviconsCallback(nsCStringHashKey::KeyType aKey,
+                             PRUint32& aData,
+                             void* userArg)
+{
+  PRUint32* threshold = NS_REINTERPRET_CAST(PRUint32*, userArg);
+  if (aData < *threshold)
+    return PL_DHASH_REMOVE;
+  return PL_DHASH_NEXT;
+}
+
+NS_IMETHODIMP
+nsFaviconService::AddFailedFavicon(nsIURI* aIcon)
+{
+  nsCAutoString spec;
+  nsresult rv = aIcon->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (! mFailedFavicons.Put(spec, mFailedFaviconSerial))
+    return NS_ERROR_OUT_OF_MEMORY;
+  mFailedFaviconSerial ++;
+
+  if (mFailedFavicons.Count() > MAX_FAVICON_CACHE_SIZE) {
+    // need to expire some entries, delete the FAVICON_CACHE_REDUCE_COUNT number
+    // of items that are the oldest
+    PRUint32 threshold = mFailedFaviconSerial -
+      MAX_FAVICON_CACHE_SIZE + FAVICON_CACHE_REDUCE_COUNT;
+    mFailedFavicons.Enumerate(ExpireFailedFaviconsCallback, &threshold);
+  }
+  return NS_OK;
+}
+
+
+// nsFaviconService::RemoveFailedFavicon
+
+NS_IMETHODIMP
+nsFaviconService::RemoveFailedFavicon(nsIURI* aIcon)
+{
+  nsCAutoString spec;
+  nsresult rv = aIcon->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we silently do nothing and succeed if the icon is not in the cache
+  mFailedFavicons.Remove(spec);
+  return NS_OK;
+}
+
+
+// nsFaviconService::IsFailedFavicon
+
+NS_IMETHODIMP
+nsFaviconService::IsFailedFavicon(nsIURI* aIcon, PRBool* _retval)
+{
+  nsCAutoString spec;
+  nsresult rv = aIcon->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 serial;
+  *_retval = mFailedFavicons.Get(spec, &serial);
+  return NS_OK;
+}
+
+
 // nsFaviconService::GetFaviconLinkForIconString
 //
 //    This computes a favicon URL with string input and using the cached
@@ -611,7 +774,7 @@ NS_IMPL_ISUPPORTS3(FaviconLoadListener,
 
 // FaviconLoadListener::FaviconLoadListener
 
-FaviconLoadListener::FaviconLoadListener(nsIFaviconService* aFaviconService,
+FaviconLoadListener::FaviconLoadListener(nsFaviconService* aFaviconService,
                                          nsIURI* aPageURI, nsIURI* aFaviconURI,
                                          nsIChannel* aChannel) :
   mFaviconService(aFaviconService),
@@ -639,15 +802,14 @@ FaviconLoadListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
 
 // FaviconLoadListener::OnStopRequest (nsIRequestObserver)
-//
-//    FIXME: add bad icon cache for failures
 
 NS_IMETHODIMP
 FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
                                  nsresult aStatusCode)
 {
-  if (NS_FAILED(aStatusCode)) {
-    // load failed FIXME
+  if (NS_FAILED(aStatusCode) || mData.Length() == 0) {
+    // load failed, add to failed cache
+    mFaviconService->AddFailedFavicon(mFaviconURI);
     return NS_OK;
   }
 
@@ -691,52 +853,39 @@ FaviconLoadListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 
   if (mimeType.IsEmpty()) {
     // we can not handle favicons that do not have a recognisable MIME type
-    // FIXME: add to failed cache
+    mFaviconService->AddFailedFavicon(mFaviconURI);
     return NS_OK;
   }
 
-  // extract the expiration time, if there is an error, make up an expiration
-  // time of tomorrow
-  PRTime expiration = -1;
-  nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(mChannel, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISupports> cacheToken;
-    rv = cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICacheEntryInfo> cacheEntry = do_QueryInterface(cacheToken, &rv);
-      PRUint32 seconds;
-      rv = cacheEntry->GetExpirationTime(&seconds);
-      if (NS_SUCCEEDED(rv))
-        expiration = NS_STATIC_CAST(PRInt64, seconds)
-                   * NS_STATIC_CAST(PRInt64, PR_USEC_PER_SEC);
-    }
-  }
-  if (expiration < 0) {
-    expiration = PR_Now();
-    expiration += (PRInt64)(24 * 60 * 60) * (PRInt64)PR_USEC_PER_SEC;
-  }
+  // Expire this favicon in one day. An old version of this actually extracted
+  // the expiration time from the cache. But what if people (especially web
+  // developers) get a bad favicon or change it? The problem is that we're not
+  // aware when the icon has been reloaded in the cache or cleared. This way
+  // we'll always pick up any changes in the cache after a day. In most cases
+  // re-set favicons will come from the cache anyway and reloading them is not
+  // very expensive.
+  PRTime expiration = PR_Now() +
+                      (PRInt64)(24 * 60 * 60) * (PRInt64)PR_USEC_PER_SEC;
 
-  // save the favicon
+  // save the favicon data
   rv = mFaviconService->SetFaviconData(mFaviconURI,
                NS_REINTERPRET_CAST(PRUint8*, NS_CONST_CAST(char*, mData.get())),
                mData.Length(), mimeType, expiration);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // send favicon change notifications
-  nsCAutoString faviconSpec;
-  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
-  if (historyService && NS_SUCCEEDED(mFaviconURI->GetSpec(faviconSpec))) {
-    historyService->SendPageChangedNotification(mPageURI,
-                       nsINavHistoryObserver::ATTRIBUTE_FAVICON,
-                       NS_ConvertUTF8toUTF16(faviconSpec));
-  }
+  // set the favicon for the page
+  PRBool hasData;
+  rv = mFaviconService->SetFaviconUrlForPageInternal(mPageURI, mFaviconURI,
+                                                     &hasData, &expiration);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mFaviconService->SendFaviconNotifications(mPageURI, mFaviconURI);
+  mFaviconService->UpdateBookmarkRedirectFavicon(mPageURI, mFaviconURI);
   return NS_OK;
 }
 
 
 // FaviconLoadListener::OnDataAvailable (nsIStreamListener)
-//
-//    FIXME: if we want a bad icon list, we'll need to mark those here
 
 NS_IMETHODIMP
 FaviconLoadListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
@@ -774,3 +923,5 @@ FaviconLoadListener::OnChannelRedirect(nsIChannel* oldChannel,
   mChannel = newChannel;
   return NS_OK;
 }
+
+

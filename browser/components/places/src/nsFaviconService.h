@@ -37,12 +37,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
 #include "nsIFaviconService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageValueArray.h"
 #include "mozIStorageStatement.h"
+
+// forward definition for friend class
+class FaviconLoadListener;
 
 class nsFaviconService : public nsIFaviconService
 {
@@ -108,8 +112,16 @@ private:
    */
   nsCOMPtr<nsIURI> mDefaultIcon;
 
+  PRUint32 mFailedFaviconSerial;
+  nsDataHashtable<nsCStringHashKey, PRUint32> mFailedFavicons;
+
   nsresult SetFaviconUrlForPageInternal(nsIURI* aURI, nsIURI* aFavicon,
                                         PRBool* aHasData, PRTime* aExpiration);
+
+  nsresult UpdateBookmarkRedirectFavicon(nsIURI* aPage, nsIURI* aFavicon);
+  void SendFaviconNotifications(nsIURI* aPage, nsIURI* aFaviconURI);
+
+  friend class FaviconLoadListener;
 };
 
 #define FAVICON_DEFAULT_URL "chrome://browser/skin/places/defaultFavicon.png"
