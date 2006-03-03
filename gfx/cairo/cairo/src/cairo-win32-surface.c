@@ -1023,6 +1023,8 @@ cairo_win32_surface_create (HDC hdc)
 	    format = CAIRO_FORMAT_ARGB32;
 	else if (depth == 24)
 	    format = CAIRO_FORMAT_RGB24;
+	else if (depth == 16)
+	    format = CAIRO_FORMAT_RGB24;
 	else if (depth == 8)
 	    format = CAIRO_FORMAT_A8;
 	else if (depth == 1)
