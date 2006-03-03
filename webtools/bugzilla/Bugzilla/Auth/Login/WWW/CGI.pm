@@ -49,7 +49,7 @@ sub login {
     my $dbh = Bugzilla->dbh;
 
     # First, try the actual login method against form variables
-    my $username = $cgi->param("Bugzilla_login");
+    my $username = trim($cgi->param("Bugzilla_login"));
     my $passwd = $cgi->param("Bugzilla_password");
     
     $cgi->delete('Bugzilla_login', 'Bugzilla_password');
