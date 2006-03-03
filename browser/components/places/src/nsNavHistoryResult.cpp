@@ -1363,6 +1363,8 @@ nsNavHistoryContainerResultNode::GetChild(PRUint32 aIndex,
 
 
 // nsNavHistoryContainerResultNode::GetChildrenReadOnly
+//
+//    Overridden for folders to query the bookmarks service directly.
 
 NS_IMETHODIMP
 nsNavHistoryContainerResultNode::GetChildrenReadOnly(PRBool *aChildrenReadOnly)
@@ -2472,6 +2474,26 @@ nsNavHistoryFolderResultNode::GetHasChildren(PRBool* aHasChildren)
   }
   *aHasChildren = (mChildren.Count() > 0);
   return NS_OK;
+}
+
+
+// nsNavHistoryFolderResultNode::GetChildrenReadOnly
+//
+//    Here, we override the getter and ignore the value stored in our object.
+//    The bookmarks service can tell us whether this folder should be read-only
+//    or not.
+//
+//    It would be nice to put this code in the folder constructor, but the
+//    database was complaining. I believe it is because most folders are
+//    created while enumerating the bookmarks table and having a statement
+//    open, and doing another statement might make it unhappy in some cases.
+
+NS_IMETHODIMP
+nsNavHistoryFolderResultNode::GetChildrenReadOnly(PRBool *aChildrenReadOnly)
+{
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
+  return bookmarks->GetFolderReadonly(mFolderId, aChildrenReadOnly);
 }
 
 
