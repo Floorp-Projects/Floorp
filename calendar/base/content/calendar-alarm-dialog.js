@@ -73,10 +73,13 @@ function onDismissAll()
   now = now.getInTimezone("UTC");
   var box = document.getElementById("alarmlist");
   for each (kid in box.childNodes) {
+    if (!kid.item) {
+        continue;
+    }
     // We want the parent item, otherwise we're going to accidentally create an
     // exception.  We've relnoted (for 0.1) the slightly odd behavior this can
     // cause if you move an event after dismissing an alarm
-    item = kid.item.parentItem.clone();
+    var item = kid.item.parentItem.clone();
     item.alarmLastAck = now;
     item.calendar.modifyItem(item, kid.item, null);
   }
