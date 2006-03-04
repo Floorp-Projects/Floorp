@@ -247,8 +247,8 @@ calDavCalendar.prototype = {
                     aListener.onOperationComplete(thisCalendar,
                                                   retVal,
                                                   aListener.ADD,
-                                                  newItem.id,
-                                                  newItem);
+                                                  aItem.id,
+                                                  aItem);
                 } catch (ex) {
                     debug("addItem's onOperationComplete threw an exception "
                           + ex + "; ignoring\n");
@@ -257,13 +257,13 @@ calDavCalendar.prototype = {
 
             // notify observers
             if (Components.isSuccessCode(retVal)) {
-                thisCalendar.observeAddItem(newItem);
+                thisCalendar.observeAddItem(aItem);
             }
         }
   
         aItem.calendar = this;
         aItem.generation = 1;
-        aItem.setProperty("locationURI", itemUri.spec);
+        aItem.setProperty("X-MOZ-LOCATIONURI", itemUri.spec);
         aItem.makeImmutable();
 
         debug("icalString = " + aItem.icalString + "\n");
@@ -306,8 +306,8 @@ calDavCalendar.prototype = {
 
         var eventUri = this.mCalendarUri.clone();
         try {
-            eventUri.spec = aNewItem.getProperty("locationURI");
-            debug("using locationURI: " + eventUri.spec + "\n");
+            eventUri.spec = aNewItem.getProperty("X-MOZ-LOCATIONURI");
+            debug("using X-MOZ-LOCATIONURI: " + eventUri.spec + "\n");
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
             eventUri.spec = eventUri.spec + aNewItem.id + ".ics";
@@ -555,8 +555,8 @@ calDavCalendar.prototype = {
                 item.calendar = thisCalendar;
 
                 // save the location name in case we need to modify
-                item.setProperty("locationURI", aResource.spec);
-                debug("locationURI = " + aResource.spec + "\n");
+                item.setProperty("X-MOZ-LOCATIONURI", aResource.spec);
+                debug("X-MOZ-LOCATIONURI = " + aResource.spec + "\n");
                 item.makeImmutable();
 
                 // figure out what type of item to return
