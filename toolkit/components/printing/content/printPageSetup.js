@@ -283,7 +283,7 @@ function setPrinterDefaultsForSelectedPrinter()
   gPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
 
   // now augment them with any values from last time
-  gPrintService.initPrintSettingsFromPrefs(gPrintSettings, gPrintSettingsInterface.kInitSaveAll);
+  gPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettingsInterface.kInitSaveAll);
   
   if (gDoDebug) {
     dump("pagesetup/setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', orientation='"+gPrintSettings.orientation+"'\n");

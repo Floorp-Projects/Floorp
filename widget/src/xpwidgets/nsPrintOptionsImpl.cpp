@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -580,6 +579,13 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
+  if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
+    if (GETSTRPREF(kPrinterName, str)) {
+      aPS->SetPrinterName(str.get());
+      DUMP_STR(kReadStr, kPrinterName, str.get());
+    }
+  }
+
   if (aFlags & nsIPrintSettings::kInitSavePrintToFile) {
     if (GETBOOLPREF(kPrintToFile, &b)) {
       aPS->SetPrintToFile(b);
@@ -841,12 +847,10 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  // Only the general version of this pref is saved
-  if ((aFlags & nsIPrintSettings::kInitSavePrinterName)
-      && aPrinterName.IsEmpty()) {
+  if (aFlags & nsIPrintSettings::kInitSavePrinterName) {
     if (NS_SUCCEEDED(aPS->GetPrinterName(&uStr))) {
       DUMP_STR(kWriteStr, kPrinterName, uStr);
-      WritePrefString(uStr, kPrinterName);
+      WritePrefString(uStr, GetPrefName(kPrinterName, aPrinterName));
     }
   }
 
@@ -942,13 +946,8 @@ nsresult nsPrintOptions::_CreatePrintSettings(nsIPrintSettings **_retval)
   NS_ENSURE_TRUE(printSettings, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*_retval = printSettings); // ref count
-
-  nsXPIDLString printerName;
-  nsresult rv = GetDefaultPrinterName(getter_Copies(printerName));
-  NS_ENSURE_SUCCESS(rv, rv);
-  (*_retval)->SetPrinterName(printerName.get());
-
-  (void)InitPrintSettingsFromPrefs(*_retval, nsIPrintSettings::kInitSaveAll);
+  (void)InitPrintSettingsFromPrefs(*_retval, PR_FALSE,
+                                   nsIPrintSettings::kInitSaveAll);
 
   return NS_OK;
 }
@@ -985,32 +984,6 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
                                                          &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Look up the printer from the last print job
-  nsAutoString lastPrinterName;
-  ReadPrefString(kPrinterName, lastPrinterName);
-  if (!lastPrinterName.IsEmpty()) {
-    // Verify it's still a valid printer
-    PRUnichar **printers;
-    PRUint32 ctPrinters;
-    rv = prtEnum->EnumeratePrinters(&ctPrinters, &printers);
-    if (NS_SUCCEEDED(rv)) {
-      PRBool isValid = PR_FALSE;
-      for (PRUint32 ii = ctPrinters; ii--; ) {
-        if (lastPrinterName.Equals(printers[ii])) {
-          isValid = PR_TRUE;
-          break;
-        }
-      }
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ctPrinters, printers);
-      if (isValid) {
-        *aDefaultPrinterName = ToNewUnicode(lastPrinterName);
-        return NS_OK;
-      }
-    }
-  }
-
-  // There is no last printer preference, or it doesn't name a valid printer.
-  // Return the default from the printer enumeration.
   return prtEnum->GetDefaultPrinterName(aDefaultPrinterName);
 }
 
@@ -1114,7 +1087,7 @@ nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings,
 
 NS_IMETHODIMP 
 nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
-                                           PRUint32 aFlags)
+                                           PRBool aUsePNP, PRUint32 aFlags)
 {
   NS_ENSURE_ARG_POINTER(aPS);
 
@@ -1132,13 +1105,11 @@ nsPrintOptions::InitPrintSettingsFromPrefs(nsIPrintSettings* aPS,
 
   // Get the Printer Name from the PrintSettings
   // to use as a prefix for Pref Names
-  rv = GetAdjustedPrinterName(aPS, PR_TRUE, prtName);
+  rv = GetAdjustedPrinterName(aPS, aUsePNP, prtName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (prtName.IsEmpty()) {
-    NS_WARNING("Caller should supply a printer name.");
+  if (prtName.IsEmpty())
     return NS_OK;
-  }
 
   // Now read any printer specific prefs
   rv = ReadPrefs(aPS, prtName, aFlags);
@@ -1417,7 +1388,8 @@ Tester::Tester()
         printf("------------------------------------------------\n");
         printf("%d) %s -> 0x%X\n", i, gSettings[i].mName, gSettings[i].mFlag);
         printService->SavePrintSettingsToPrefs(ps, PR_TRUE, gSettings[i].mFlag);
-        printService->InitPrintSettingsFromPrefs(ps, gSettings[i].mFlag);
+        printService->InitPrintSettingsFromPrefs(ps, PR_TRUE,
+                                                 gSettings[i].mFlag);
         i++;
       }
   }

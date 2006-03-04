@@ -154,7 +154,7 @@ var PrintUtils = {
     // First get any defaults from the printer 
     aPSSVC.initPrintSettingsFromPrinter(aPrintSettings.printerName, aPrintSettings);
     // now augment them with any values from last time
-    aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, aPrintSettings.kInitSaveAll);
+    aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, true,  aPrintSettings.kInitSaveAll);
   },
 
   getPrintSettings: function ()
