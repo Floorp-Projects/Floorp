@@ -2351,12 +2351,13 @@ nsCellMap::GetDataAt(nsTableCellMap& aMap,
           break;
         }
       }
-    }
-    if (!didZeroExpand) {
-      // mark this point dead
-      CellData* cellData = AllocCellData(nsnull);
-      if (cellData)
-        SetDataAt(aMap, *cellData, aMapRowIndex, aColIndex, PR_FALSE);
+    
+      if (!didZeroExpand) {
+        // mark this point dead as we checked rowspans above
+        CellData* cellData = AllocCellData(nsnull);
+        if (cellData)
+          SetDataAt(aMap, *cellData, aMapRowIndex, aColIndex, PR_FALSE);
+      }
     }
     // if zero span adjustments were made the data may be available now
     if (!data && didZeroExpand) {
