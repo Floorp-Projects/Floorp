@@ -50,15 +50,15 @@
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/newmailalert.js"/>
 
-  <hbox id="alertBox" class="alertBox">
+  <hbox id="alertBox">
     
-    <hbox class="alertImageBox" align="center" valign="center">
+    <hbox id ="alertImageBox" align="center" valign="center">
       <image id="alertImage"/>
     </hbox>
 
-    <vbox id="alertTextBox" class="alertTextBox">
-      <label id="alertTitle" class="alertTitle"/>
-      <separator class="groove"/>
+    <vbox id="alertTextBox">
+      <label id="alertTitle"/>
+      <separator id="alertGroove" class="groove"/>
       <folderSummary id="folderSummaryInfo"/>
     </vbox>
   </hbox>

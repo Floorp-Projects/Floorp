@@ -160,6 +160,7 @@ pref("xpinstall.whitelist.add.103", "addons.mozilla.org");
 
 pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
 pref("mail.spellcheck.inline", true);
+pref("mail.showPreviewText", true); // enables preview text in mail alerts and folder tooltips
 
 // Folder Pane View
 // 0 == All Folders
