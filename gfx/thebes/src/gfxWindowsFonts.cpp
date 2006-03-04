@@ -64,39 +64,28 @@ gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFont
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
 
-    Init();
+    mFontFace = MakeCairoFontFace();
+    NS_ASSERTION(mFontFace, "Failed to make font face");
+
+    mScaledFont = MakeCairoScaledFont(nsnull);
+    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 }
 
-gfxWindowsFont::gfxWindowsFont(HFONT aFont,
-                               const gfxFontGroup *aFontGroup,
-                               PRBool aIsMLangFont,
-                               const gfxMatrix& aMatrix)
-    : mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(aIsMLangFont), mCTM(aMatrix)
+gfxWindowsFont::gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont)
+    : mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(aIsMLangFont)
 {
     mFont = aFont;
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
 
-    Init();
-}
-
-gfxWindowsFont::~gfxWindowsFont()
-{
-    Destroy();
-}
-
-void
-gfxWindowsFont::Init()
-{
     mFontFace = MakeCairoFontFace();
     NS_ASSERTION(mFontFace, "Failed to make font face");
 
-    mScaledFont = MakeCairoScaledFont();
+    mScaledFont = MakeCairoScaledFont(nsnull);
     NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 }
 
-void
-gfxWindowsFont::Destroy()
+gfxWindowsFont::~gfxWindowsFont()
 {
     cairo_font_face_destroy(mFontFace);
     cairo_scaled_font_destroy(mScaledFont);
@@ -118,12 +107,6 @@ gfxWindowsFont::Destroy()
     ScriptFreeCache(&mScriptCache);
 
     delete mMetrics;
-
-    mFont = nsnull;
-    mScriptCache = nsnull;
-    mFontFace = nsnull;
-    mScaledFont = nsnull;
-    mMetrics = nsnull;
 }
 
 const gfxFont::Metrics&
@@ -136,16 +119,15 @@ gfxWindowsFont::GetMetrics()
 }
 
 void
-gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
+gfxWindowsFont::UpdateFonts(cairo_t *cr)
 {
-    if (aMatrix.ToCairoMatrix().yy == mCTM.ToCairoMatrix().yy)
-        return;
-
-    Destroy();
-
-    mCTM = aMatrix;
-
-    Init();
+    cairo_font_face_destroy(mFontFace);
+    cairo_scaled_font_destroy(mScaledFont);
+    
+    mFontFace = MakeCairoFontFace();
+    NS_ASSERTION(mFontFace, "Failed to make font face");
+    mScaledFont = MakeCairoScaledFont(nsnull);
+    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 }
 
 cairo_font_face_t *
@@ -192,16 +174,21 @@ gfxWindowsFont::MakeCairoFontFace()
 }
 
 cairo_scaled_font_t *
-gfxWindowsFont::MakeCairoScaledFont()
+gfxWindowsFont::MakeCairoScaledFont(cairo_t *cr)
 {
     cairo_scaled_font_t *font = nsnull;
 
-    cairo_matrix_t sizeMatrix;
+    cairo_matrix_t sizeMatrix, ctm;
+
+    if (cr)
+        cairo_get_matrix(cr, &ctm);
+    else
+        cairo_matrix_init_identity(&ctm);
 
     cairo_matrix_init_scale(&sizeMatrix, mStyle->size, mStyle->size);
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
-    font = cairo_scaled_font_create(mFontFace, &sizeMatrix, &mCTM.ToCairoMatrix(), fontOptions);
+    font = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
     cairo_font_options_destroy(fontOptions);
 
     return font;
@@ -292,10 +279,8 @@ void
 gfxWindowsFont::FillLogFont(PRInt16 currentWeight)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
-    
-    const double yScale = mCTM.ToCairoMatrix().yy;
 
-    mLogFont.lfHeight = -NSToCoordRound(mStyle->size * yScale * 32);
+    mLogFont.lfHeight = -NSToCoordRound(mStyle->size * 32);
 
     if (mLogFont.lfHeight == 0)
         mLogFont.lfHeight = -1;
@@ -454,7 +439,7 @@ gfxWindowsTextRun::FindFallbackFont(HDC aDC, const PRUnichar *aString, PRUint32 
         HFONT retFont;
         rv = langFontLink->MapFont(aDC, actualCodePages, aString[0], &retFont);
         if (SUCCEEDED(rv))
-            return new gfxWindowsFont(retFont, mGroup, PR_TRUE, aFont->CurrentMatrix());
+            return new gfxWindowsFont(retFont, mGroup, PR_TRUE);
     }
 
     return nsnull;
@@ -501,7 +486,6 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     cairo_t *cr = aContext->GetCairo();
 
     nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
-    currentFont->UpdateCTM(aContext->CurrentMatrix());
     cairo_font_face_t *fontFace = currentFont->CairoFontFace();
     cairo_scaled_font_t *scaledFont = currentFont->CairoScaledFont();
 
@@ -679,7 +663,7 @@ TRY_AGAIN_HOPE_FOR_THE_BEST:
 
         SaveDC(aDC);
 
-        currentFont->UpdateCTM(aContext->CurrentMatrix());
+        //currentFont->UpdateFonts(cr);
         fontFace = currentFont->CairoFontFace();
         scaledFont = currentFont->CairoScaledFont();
 
@@ -867,7 +851,7 @@ TRY_AGAIN_JUST_PLACE:
                 /* Draw using ScriptTextOut() */
                 SaveDC(aDC);
 
-                const gfxMatrix& m = aContext->CurrentMatrix();
+                gfxMatrix m = aContext->CurrentMatrix();
                 XFORM xform;
                 double dm[6];
                 m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
