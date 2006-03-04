@@ -241,7 +241,7 @@ public:
     /**
      * Returns the current transformation matrix.
      */
-    gfxMatrix CurrentMatrix() const;
+    const gfxMatrix& CurrentMatrix() const;
 
     /**
      * Converts a point from device to user coordinates using the inverse
