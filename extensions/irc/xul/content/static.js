@@ -4420,11 +4420,11 @@ function cli_quit (reason)
 }
 
 client.wantToQuit =
-function cli_wantToQuit(reason)
+function cli_wantToQuit(reason, deliberate)
 {
     
     var close = true;
-    if (client.prefs["warnOnClose"])
+    if (client.prefs["warnOnClose"] && !deliberate)
     {
         const buttons = ["!yes", "!no"];
         var checkState = { value: true };

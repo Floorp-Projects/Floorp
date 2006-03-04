@@ -125,12 +125,9 @@ function onClose()
     if ("userClose" in client && client.userClose)
         return true;
 
-    if (!("getConnectionCount" in client) ||
-        client.getConnectionCount() == 0)
-    {
-        /* if we're not connected to anything, just close the window */
+    // if we're not connected to anything, just close the window
+    if (!("getConnectionCount" in client) || (client.getConnectionCount() == 0))
         return true;
-    }
 
     /* otherwise, try to close out gracefully */
     client.wantToQuit();

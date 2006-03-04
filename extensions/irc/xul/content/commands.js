@@ -1454,7 +1454,16 @@ function cmdSSLServer(e)
 
 function cmdQuit(e)
 {
-    client.wantToQuit(e.reason);
+    // if we're not connected to anything, just close the window
+    if (!("getConnectionCount" in client) || (client.getConnectionCount() == 0))
+    {
+         client.userClose = true;
+         window.close();
+         return;
+    }
+
+    // Otherwise, try to close gracefully:
+    client.wantToQuit(e.reason, true);
 }
 
 function cmdDisconnect(e)
