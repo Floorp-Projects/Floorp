@@ -58,12 +58,6 @@ ifdef NARCISSUS
 DEFINES += -DNARCISSUS
 endif
 
-ifdef USE_MSVC
-OTHER_LIBS += fdlibm/$(OBJDIR)/fdlibm.lib
-else
-OTHER_LIBS += -Lfdlibm/$(OBJDIR) -lfdm
-endif
-
 # Look in OBJDIR to find jsautocfg.h and jsautokw.h
 INCLUDES   += -I$(OBJDIR)
 
@@ -253,24 +247,6 @@ JS_CFILES =		\
 	prmjtime.c	\
 	$(NULL)
 
-PREDIRS	+= fdlibm
-
-ifdef USE_MSVC
-FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/fdlibm.lib
-else
-FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/libfdm.a
-endif
-JSMATH_PRELINK	= $(OBJDIR)/jsmathtemp.$(OBJ_SUFFIX)
-# Flag for incremental linking
-DASH_R		= -r
-
-ifeq ($(OS_ARCH),QNX)
-ifneq ($(OS_TARGET),NTO)
-# Don't use wildcard here, because we only want this resolved at link time.
-OBJS		+= fdlibm/*.$(OBJ_SUFFIX)
-endif
-endif
-
 ifdef JS_LIVECONNECT
 DIRS      += liveconnect
 endif
@@ -348,10 +324,10 @@ endif
 #
 
 ifdef USE_MSVC
-$(PROGRAM): $(PROG_OBJS) $(LIBRARY) $(FDLIBM_LIBRARY)
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
 	link.exe -out:"$@" $(EXE_LINK_FLAGS) $^
 else
-$(PROGRAM): $(PROG_OBJS) $(LIBRARY) $(FDLIBM_LIBRARY)
+$(PROGRAM): $(PROG_OBJS) $(LIBRARY)
 	$(CC) -o $@ $(CFLAGS) $(PROG_OBJS) $(LIBRARY) $(LDFLAGS) $(OTHER_LIBS) \
 	    $(PROG_LIBS)
 endif
@@ -373,37 +349,8 @@ $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
 
 # Add to TARGETS for clobber rule
 TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
-	$(OBJDIR)/jscpucfg.o $(OBJDIR)/jsmathtemp.o
+	$(OBJDIR)/jscpucfg.o
 endif
-
-# special rule for jsmath.o since we want to incrementally link
-# against fdlibm to pull in only what is needed
-$(OBJDIR)/jsmath.o: jsmath.c jsmath.h jslibmath.h $(FDLIBM_LIBRARY)
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CC) -Fo$(JSMATH_PRELINK) -c $(CFLAGS) $<
-else
-	$(CC) -o $(JSMATH_PRELINK) -c $(CFLAGS) $<
-endif
-
-ifeq ($(OS_ARCH),QNX)
-ifneq ($(OS_TARGET),NTO)
-	@cp $(JSMATH_PRELINK) $@
-else
-	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-endif
-else
-ifdef USE_MSVC
-	@echo Warning: to use $(LIBRARY) must also link against $(FDLIBM_LIBRARY)
-	@cp $(JSMATH_PRELINK) $@
-endif
-	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
-endif
-
-# Note: generated headers must be built before descending
-#       into fdlibm directory
-
-$(FDLIBM_LIBRARY) :
-	$(MAKE) -C fdlibm -f Makefile.ref $(@F)
 
 #
 # Hardwire dependencies on jsopcode.tbl
