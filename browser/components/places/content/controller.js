@@ -632,6 +632,7 @@ var PlacesController = {
       this.nodeIsFolder(this._activeView.selectedNode);
     this._setEnabled("placesCmd_open:tabs", 
       singleFolderSelected || !hasSingleSelection);
+    this._setEnabled("placesCmd_open:tabsEnabled", true); // Always on
     
     // Some views, like menupopups, destroy their result as they hide, but they
     // are still the "last-active" view. Don't barf. 
@@ -799,6 +800,8 @@ var PlacesController = {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
       asFolder(node);
+      var wasOpen = node.containerOpen;
+      node.containerOpen = true;
       var cc = node.childCount;
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
@@ -806,6 +809,7 @@ var PlacesController = {
           this._activeView.browserWindow.openNewTabWith(childNode.uri,
               null, null);
       }
+      node.containerOpen = wasOpen;
     }
     else {
       var nodes = this._activeView.getSelectionNodes();
@@ -1065,8 +1069,11 @@ var PlacesController = {
     var parent = node.parent;
     if (!parent || !this.nodeIsContainer(parent))
       return -1;
-    var cc = asContainer(parent).childCount;
+    var wasOpen = parent.containerOpen;
+    parent.containerOpen = true;
+    var cc = parent.childCount;
     for (var i = 0; i < cc && asContainer(parent).getChild(i) != node; ++i);
+    parent.containerOpen = wasOpen;
     return i < cc ? i : -1;
   },
   
@@ -1195,6 +1202,8 @@ var PlacesController = {
     
       // Get the folder's children
       var kids = self.getFolderContents(folderId, false, false);
+      var wasOpen = kids.containerOpen;
+      kids.containerOpen = true;
       var cc = kids.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = kids.getChild(i);
@@ -1206,6 +1215,7 @@ var PlacesController = {
                                                          index));
         }
       }
+      kids.containerOpen = wasOpen;
     }
     createTransactions(data.folderId, container, index);
     return new PlacesAggregateTransaction("FolderCopy", transactions);
@@ -1800,6 +1810,9 @@ PlacesRemoveFolderTransaction.prototype = {
    */
   _saveFolderContents: function PRFT__saveFolderContents(id, parent) {
     var contents = PlacesController.getFolderContents(id, false, false);
+    // Container open status doesn't need to be reset to what it was before
+    // because it's being deleted.
+    contents.containerOpen = true;
     for (var i = contents.childCount - 1; i >= 0; --i) {
       var child = contents.getChild(i);
       var obj = null;

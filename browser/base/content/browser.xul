@@ -273,7 +273,10 @@
       <toolbarbutton id="bookmarksBarShowPlaces"
                      oncommand="PlacesBrowserShim.showHistory()"/>
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
-         <hbox id="bookmarksBarContent" flex="1" context="placesContext"/>
+         <hbox id="bookmarksBarContent" flex="1"
+               context="placesContext"
+               onclick="BookmarksToolbar.onClick(event);"
+               oncommand="BookmarksToolbar.onCommand(event);"/>
       </toolbaritem>
       <toolbarbutton id="places-bookmark" 
                      label="&location.status.not_bookmarked;" 
