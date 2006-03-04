@@ -73,7 +73,8 @@
 #define fd_atan atan
 #define fd_atan2 atan2
 #define fd_ceil ceil
-// the right copysign function is not always named the same thing
+
+/* The right copysign function is not always named the same thing. */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
 #define fd_copysign __builtin_copysign
 #elif (defined _WIN32 && !defined WINCE)
@@ -81,6 +82,7 @@
 #else
 #define fd_copysign copysign
 #endif
+
 #define fd_cos cos
 #define fd_exp exp
 #define fd_fabs fabs
