@@ -143,8 +143,7 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
   }
   // if the row group doesn't have any children, get it the hard way
   if (-1 == result) {
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
       return tableFrame->GetStartRowIndex(*this);
     }
@@ -192,9 +191,7 @@ static void
 PaintRowGroupBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(aFrame, tableFrame);
-  NS_ASSERTION(tableFrame, "null table frame");
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aFrame);
 
   nsIRenderingContext::AutoPushTranslation translate(aCtx, aPt.x, aPt.y);
   TableBackgroundPainter painter(tableFrame,
@@ -292,8 +289,11 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*        aPresContext,
   if (aPageBreakBeforeEnd) 
     *aPageBreakBeforeEnd = PR_FALSE;
 
-  nsTableFrame* tableFrame = nsnull;
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(rv);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    ABORT1(NS_ERROR_NULL_POINTER);
+
+  nsresult rv = NS_OK;
 
   PRBool borderCollapse = tableFrame->IsBorderCollapse();
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
@@ -493,8 +493,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
                                           const nsHTMLReflowState& aReflowState,
                                           nsTableRowFrame*         aStartRowFrameIn)
 {
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame) return;
 
   PRBool isPaginated = aPresContext->IsPaginated();
@@ -783,6 +782,48 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
   delete [] rowInfo; // cleanup
 }
 
+nscoord
+nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
+                                                  nscoord aWidth)
+{
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+
+  const nsStyleVisibility* groupVis = GetStyleVisibility();
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
+  if (collapseGroup) {
+    tableFrame->SetNeedToCollapse(PR_TRUE);
+  }
+
+  nsRect overflowArea(0, 0, 0, 0);
+
+  nsTableRowFrame* rowFrame= GetFirstRow();
+  PRBool didCollapse = PR_FALSE;
+  nscoord yGroupOffset = 0;
+  while (rowFrame) {
+    yGroupOffset += rowFrame->CollapseRowIfNecessary(yGroupOffset,
+                                                     aWidth, collapseGroup,
+                                                     didCollapse);
+    ConsiderChildOverflow(overflowArea, rowFrame);
+    rowFrame = rowFrame->GetNextRow();
+  }
+
+  nsRect groupRect = GetRect();
+  groupRect.height -= yGroupOffset;
+  if (didCollapse) {
+    // add back the cellspacing between rowgroups
+    groupRect.height += tableFrame->GetCellSpacingY();
+  }
+
+  groupRect.y -= aYTotalOffset;
+  groupRect.width = aWidth;
+  SetRect(groupRect);
+  overflowArea.UnionRect(nsRect(0, 0, groupRect.width, groupRect.height),
+                         overflowArea);
+  FinishAndStoreOverflow(&overflowArea, nsSize(groupRect.width,
+                                              groupRect.height));
+  nsTableFrame::RePositionViews(this);
+  return yGroupOffset;
+}
 
 // Called by IR_TargetIsChild() to adjust the sibling frames that follow
 // after an incremental reflow of aKidFrame.
@@ -1189,8 +1230,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
         
   PRBool isPaginated = aPresContext->IsPaginated();
 
-  nsTableFrame* tableFrame = nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
   // see if a special height reflow needs to occur due to having a pct height
@@ -1202,7 +1242,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
   const nsStyleVisibility* groupVis = GetStyleVisibility();
   PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
-    tableFrame->SetNeedToCollapseRows(PR_TRUE);
+    tableFrame->SetNeedToCollapse(PR_TRUE);
   }
 
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -1323,8 +1363,7 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
   mFrames.AppendFrames(nsnull, aFrameList);
 
   if (rows.Count() > 0) {
-    nsTableFrame* tableFrame = nsnull;
-    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame) {
       tableFrame->AppendRows(*this, rowIndex, rows);
       // Reflow the new frames. They're already marked dirty, so generate a reflow
@@ -1354,12 +1393,10 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrame,
                                    nsIFrame*       aFrameList)
 {
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!tableFrame) {
-    NS_ASSERTION(PR_FALSE, "no table frame");
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
     return NS_ERROR_NULL_POINTER;
-  }
+
   // collect the new row frames in an array
   nsVoidArray rows;
   PRBool gotFirstRow = PR_FALSE;
@@ -1410,8 +1447,7 @@ NS_IMETHODIMP
 nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
     if (nsLayoutAtoms::tableRowFrame == aOldFrame->GetType()) {
       // remove the rows from the table (and flag a rebalance)
@@ -1474,8 +1510,7 @@ nscoord
 nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
 {
   nscoord result = 0;
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame((nsIFrame*)this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
     if ((aReflowState.mComputedHeight > 0) && (aReflowState.mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
       nscoord cellSpacing = PR_MAX(0, GetRowCount() - 1) * tableFrame->GetCellSpacingY();
@@ -1500,8 +1535,7 @@ nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
 nscoord 
 nsTableRowGroupFrame::GetHeightOfRows()
 {
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame) return 0;
 
   nscoord height = 0;
@@ -1529,8 +1563,7 @@ nsresult
 nsTableRowGroupFrame::RecoverState(nsRowGroupReflowState& aReflowState,
                                    nsIFrame*              aKidFrame)
 {
-  nsTableFrame* tableFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
   aReflowState.y = 0;
@@ -1596,8 +1629,9 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
 {
   nsresult rv;
   
-  nsTableFrame* tableFrame = nsnull; 
-  nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(NS_ERROR_NULL_POINTER);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    ABORT1(NS_ERROR_NULL_POINTER);
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
 
   // Recover the state as if aNextFrame is about to be reflowed
@@ -1836,8 +1870,8 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
   NS_ENSURE_ARG_POINTER(aNumFramesOnLine);
   NS_ENSURE_ARG_POINTER(aLineFlags);
 
-  nsTableFrame* parentFrame = nsnull; 
-  if (NS_FAILED(nsTableFrame::GetTableFrame(this, parentFrame)))
+  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
+  if (!parentFrame)
     return NS_ERROR_FAILURE;
 
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
@@ -1922,8 +1956,10 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
   CellData* cellData;
   nsIFrame* tempFrame = nsnull;
 
-  nsTableFrame* parentFrame = nsnull;
-  nsTableFrame::GetTableFrame(this, parentFrame);
+  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
+  if (!parentFrame)
+    return NS_ERROR_FAILURE;
+
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
   if (!cellMap)
      return NS_ERROR_FAILURE;
@@ -1992,8 +2028,9 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
   if (NS_FAILED(result))
     return result;
 
-  nsTableFrame* parentFrame = nsnull;
-  result = nsTableFrame::GetTableFrame(this, parentFrame);
+  nsTableFrame* parentFrame = nsTableFrame::GetTableFrame(this);
+  if (!parentFrame)
+    return NS_ERROR_FAILURE;
   nsTableCellMap* cellMap = parentFrame->GetCellMap();
   if (!cellMap)
      return NS_ERROR_FAILURE;

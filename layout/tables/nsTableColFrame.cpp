@@ -140,10 +140,9 @@ NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
   const nsStyleVisibility* colVis = GetStyleVisibility();
   PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
   if (collapseCol) {
-    nsTableFrame* tableFrame = nsnull;
-    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {
-      tableFrame->SetNeedToCollapseColumns(PR_TRUE);
+      tableFrame->SetNeedToCollapse(PR_TRUE);
     }    
   }
   if (aDesiredSize.mComputeMEW)

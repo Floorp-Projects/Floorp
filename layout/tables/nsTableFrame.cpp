@@ -1804,8 +1804,7 @@ nsTableFrame::IsPrematureSpecialHeightReflow(const nsHTMLReflowState& aReflowSta
   PRBool premature = PR_FALSE; 
   if (aReflowState.mFlags.mSpecialHeightReflow) { 
     if (aNeedSpecialHeightReflow) { 
-      nsTableFrame* tableFrame; 
-      nsTableFrame::GetTableFrame(aReflowState.frame, tableFrame); 
+      nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aReflowState.frame);
       if (tableFrame && (tableFrame != aReflowState.mPercentHeightReflowInitiator)) { 
         premature = PR_TRUE; 
       } 
@@ -2062,11 +2061,9 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
 
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
   SetColumnDimensions(aDesiredSize.height, borderPadding);
-  if (NeedToCollapseRows()) {
-    AdjustForCollapsingRows(aDesiredSize);
-  }
-  if (NeedToCollapseColumns()) {
-    AdjustForCollapsingCols(aDesiredSize);
+  if (NeedToCollapse() &&
+      (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
+    AdjustForCollapsingRowsCols(aDesiredSize, borderPadding);
   }
 
   // See if we need to calc max elem and/or preferred widths. This isn't done on 
@@ -2301,205 +2298,76 @@ nsTableFrame::MoveOverflowToChildList(nsPresContext* aPresContext)
   return result;
 }
 
-NS_METHOD 
-nsTableFrame::CollapseRowGroupIfNecessary(nsIFrame* aRowGroupFrame,
-                                          const nscoord& aYTotalOffset,
-                                          nscoord& aYGroupOffset, PRInt32& aRowX)
-{
-  const nsStyleVisibility* groupVis = aRowGroupFrame->GetStyleVisibility();
-  
-  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
-  if (collapseGroup) {
-    SetNeedToCollapseRows(PR_TRUE);
-  }
-  nsIFrame* rowFrame = aRowGroupFrame->GetFirstChild(nsnull);
 
-  while (nsnull != rowFrame) {
-    const nsStyleDisplay* rowDisplay = rowFrame->GetStyleDisplay();
-    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-      const nsStyleVisibility* rowVis = rowFrame->GetStyleVisibility();
-      PRBool collapseRow = (NS_STYLE_VISIBILITY_COLLAPSE == rowVis->mVisible);
-      if (collapseRow) {
-        SetNeedToCollapseRows(PR_TRUE);
-      }
-      nsRect rowRect = rowFrame->GetRect();
-      if (collapseGroup || collapseRow) {
-        aYGroupOffset += rowRect.height;
-        rowRect.height = 0;
-        rowFrame->SetRect(rowRect);
-        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
-        while (nsnull != cellFrame) {
-          const nsStyleDisplay* cellDisplay = cellFrame->GetStyleDisplay();
-          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
-            nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
-            nsRect cRect = cFrame->GetRect();
-            cRect.height -= rowRect.height;
-            cFrame->SetCollapseOffsetY(-aYGroupOffset);
-            cFrame->SetRect(cRect);
-          }
-          cellFrame = cellFrame->GetNextSibling();
-        }
-        // check if a cell above spans into here
-        nsTableCellMap* cellMap = GetCellMap();
-        if (cellMap) {
-          PRInt32 numCols = cellMap->GetColCount();
-          nsTableCellFrame* lastCell = nsnull;
-          for (int colX = 0; colX < numCols; colX++) {
-            CellData* cellData = cellMap->GetDataAt(aRowX, colX);
-            if (cellData && cellData->IsRowSpan()) { // a cell above is spanning into here
-              // adjust the real cell's rect only once
-              nsTableCellFrame* realCell = cellMap->GetCellFrame(aRowX, colX, *cellData, PR_TRUE);
-              NS_ASSERTION(realCell, "row span without origin?");
-              if (realCell && (realCell != lastCell)) {
-                nsRect realRect = realCell->GetRect();
-                realRect.height -= rowRect.height;
-                realCell->SetRect(realRect);
-              }
-              lastCell = realCell;
-            }
-          }
-        }
-      } else { // row is not collapsed but needs to be adjusted by those that are
-        rowRect.y -= aYGroupOffset;
-        rowFrame->SetRect(rowRect);
-        // reset the collapse yoffset
-        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
-        while (cellFrame) {
-          const nsStyleDisplay* cellDisplay = cellFrame->GetStyleDisplay();
-          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
-            nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
-            // reset the offset as this row is not collapsed
-            cFrame->SetCollapseOffsetY(0);
-          }
-          cellFrame = cellFrame->GetNextSibling();
-        }
-      }
-      aRowX++;
-    }
-    rowFrame = rowFrame->GetNextSibling();
-  } // end row frame while
-
-  nsRect groupRect = aRowGroupFrame->GetRect();
-  groupRect.height -= aYGroupOffset;
-  groupRect.y -= aYTotalOffset;
-  aRowGroupFrame->SetRect(groupRect);
-
-  return NS_OK;
-}
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
 // reflow so that it has no effect on the calculations of reflow.
-NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsHTMLReflowMetrics& aDesiredSize)
+void
+nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
+                                          nsMargin             aBorderPadding)
 {
-  nscoord yGroupOffset = 0; // total offset among rows within a single row group
   nscoord yTotalOffset = 0; // total offset among all rows in all row groups
-  PRInt32 rowIndex = 0;
+
   // reset the bit, it will be set again if row/rowgroup is collapsed
-  SetNeedToCollapseRows(PR_FALSE); 
+  SetNeedToCollapse(PR_FALSE);
   
   // collapse the rows and/or row groups as necessary
   // Get the ordered children
   nsAutoVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups);
-  
+  nscoord width = GetCollapsedWidth(aBorderPadding);
+  nscoord rgWidth = width - 2 * GetCellSpacingX();
+  nsRect overflowArea(0, 0, 0, 0);
   // Walk the list of children
   for (PRUint32 childX = 0; childX < numRowGroups; childX++) {
     nsIFrame* childFrame = (nsIFrame*)rowGroups.ElementAt(childX);
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
     if (!rgFrame) continue; // skip foreign frame types
-    CollapseRowGroupIfNecessary(rgFrame, yTotalOffset, yGroupOffset, rowIndex);
-    yTotalOffset += yGroupOffset;
-    yGroupOffset = 0;
+    yTotalOffset += rgFrame->CollapseRowGroupIfNecessary(yTotalOffset, rgWidth);
+    ConsiderChildOverflow(overflowArea, rgFrame);
   } 
 
   aDesiredSize.height -= yTotalOffset;
- 
-  return NS_OK;
+  aDesiredSize.width   = width;
+  overflowArea.UnionRect(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height),
+                         overflowArea);
+  FinishAndStoreOverflow(&overflowArea,
+                         nsSize(aDesiredSize.width, aDesiredSize.height));
 }
 
-NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsHTMLReflowMetrics& aDesiredSize)
+nscoord
+nsTableFrame::GetCollapsedWidth(nsMargin aBorderPadding)
 {
-  nsTableCellMap* cellMap = GetCellMap();
-  if (!cellMap) return NS_OK;
-   // reset the bit, it will be set again if col/colgroup is collapsed
-  SetNeedToCollapseColumns(PR_FALSE);
- 
-  PRInt32 numRows = cellMap->GetRowCount();
-  nsTableIterator groupIter(mColGroups, eTableDIR);
-  nsIFrame* groupFrame = groupIter.First(); 
   nscoord cellSpacingX = GetCellSpacingX();
-  nscoord xOffset = 0;
-  PRInt32 colX = (groupIter.IsLeftToRight()) ? 0 : GetColCount() - 1; 
-  PRInt32 direction = (groupIter.IsLeftToRight()) ? 1 : -1; 
-  // iterate over the col groups
-  while (nsnull != groupFrame) {
+  nscoord width = cellSpacingX;
+  width += aBorderPadding.left + aBorderPadding.right;
+  for (nsIFrame* groupFrame = mColGroups.FirstChild(); groupFrame;
+         groupFrame = groupFrame->GetNextSibling()) {
     const nsStyleVisibility* groupVis = groupFrame->GetStyleVisibility();
-    
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
-    if (collapseGroup) {
-      SetNeedToCollapseColumns(PR_TRUE);
-    }
-    nsTableIterator colIter(*groupFrame, eTableDIR);
-    nsIFrame* colFrame = colIter.First();
-    // iterate over the cols in the col group
-    while (nsnull != colFrame) {
+    nsTableColGroupFrame* cgFrame = (nsTableColGroupFrame*)groupFrame;
+    for (nsTableColFrame* colFrame = cgFrame->GetFirstColumn(); colFrame;
+         colFrame = colFrame->GetNextCol()) {
       const nsStyleDisplay* colDisplay = colFrame->GetStyleDisplay();
+      PRInt32 colX = colFrame->GetColIndex();
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay) {
         const nsStyleVisibility* colVis = colFrame->GetStyleVisibility();
         PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colVis->mVisible);
-        if (collapseCol) {
-          SetNeedToCollapseColumns(PR_TRUE);
-        }
         PRInt32 colWidth = GetColumnWidth(colX);
-        if (collapseGroup || collapseCol) {
-          xOffset += colWidth + cellSpacingX;
+        if (!collapseGroup && !collapseCol) {
+          width += colWidth;
+          if (GetNumCellsOriginatingInCol(colX) > 0)
+            width += cellSpacingX;
         }
-        nsTableCellFrame* lastCell  = nsnull;
-        nsTableCellFrame* cellFrame = nsnull;
-        for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
-          CellData* cellData = cellMap->GetDataAt(rowX, colX);
-          if (cellData) {
-            if (cellData->IsOrig()) { // the cell originates at (rowX, colX)
-              cellFrame = cellData->GetCellFrame();
-              // reset the collapse offsets since they may have been collapsed previously
-              cellFrame->SetCollapseOffsetX(0);
-              cellFrame->SetCollapseOffsetY(0);
-              nsRect cellRect = cellFrame->GetRect();
-              if (collapseGroup || collapseCol) {
-                if (lastCell != cellFrame) { // do it only once if there is a row span
-                  cellRect.width -= colWidth;
-                  cellFrame->SetCollapseOffsetX(-xOffset);
-                }
-              } else { // the cell is not in a collapsed col but needs to move
-                cellRect.x -= xOffset;
-              }
-              cellFrame->SetRect(cellRect);
-              // if the cell does not originate at (rowX, colX), adjust the real cells width
-            } else if (collapseGroup || collapseCol) { 
-              if (cellData->IsColSpan()) {
-                cellFrame = cellMap->GetCellFrame(rowX, colX, *cellData, PR_FALSE);
-              }
-              if ((cellFrame) && (lastCell != cellFrame)) {
-                nsRect cellRect = cellFrame->GetRect();
-                cellRect.width -= colWidth + cellSpacingX;
-                cellFrame->SetRect(cellRect);
-              }
-            }
-          }
-          lastCell = cellFrame;
-        }
-        colX += direction;
       }
-      colFrame = colIter.Next();
-    } // inner while
-    groupFrame = groupIter.Next();
-  } // outer while
-
-  aDesiredSize.width -= xOffset;
- 
-  return NS_OK;
+    }
+  }
+  return width;
 }
+
+
+
 
 NS_IMETHODIMP
 nsTableFrame::AppendFrames(nsIAtom*        aListName,
@@ -4108,26 +3976,20 @@ NS_NewTableFrame(nsIPresShell* aPresShell)
   return new (aPresShell) nsTableFrame;
 }
 
-NS_METHOD 
-nsTableFrame::GetTableFrame(nsIFrame*      aSourceFrame, 
-                            nsTableFrame*& aTableFrame)
+nsTableFrame*
+nsTableFrame::GetTableFrame(nsIFrame* aSourceFrame)
 {
-  nsresult rv = NS_ERROR_UNEXPECTED;  // the value returned
-  aTableFrame = nsnull;               // initialize out-param
   if (aSourceFrame) {
     // "result" is the result of intermediate calls, not the result we return from this method
     for (nsIFrame* parentFrame = aSourceFrame->GetParent(); parentFrame;
          parentFrame = parentFrame->GetParent()) {
       if (nsLayoutAtoms::tableFrame == parentFrame->GetType()) {
-        aTableFrame = (nsTableFrame*)parentFrame;
-        rv = NS_OK; // only set if we found the table frame
-        break;
+        return (nsTableFrame*)parentFrame;
       }
     }
   }
-  NS_POSTCONDITION(nsnull!=aTableFrame, "unable to find table parent. aTableFrame null.");
-  NS_POSTCONDITION(NS_OK==rv, "unable to find table parent. result!=NS_OK");
-  return rv;
+  NS_NOTREACHED("unable to find table parent");
+  return nsnull;
 }
 
 PRBool 
@@ -4445,9 +4307,8 @@ void nsTableIterator::Init(nsIFrame*        aFirstChild,
     return;
   }
   if (eTableDIR == aType) {
-    nsTableFrame* table = nsnull;
-    nsresult rv = nsTableFrame::GetTableFrame(mFirstChild, table);
-    if (NS_SUCCEEDED(rv) && (table != nsnull)) {
+    nsTableFrame* table = nsTableFrame::GetTableFrame(mFirstChild);
+    if (table) {
       mLeftToRight = (NS_STYLE_DIRECTION_LTR ==
                       table->GetStyleVisibility()->mDirection);
     }
@@ -7738,7 +7599,7 @@ nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
     tableFrame = NS_STATIC_CAST(nsTableFrame*, aFrame);
   }
   else {
-    nsTableFrame::GetTableFrame(aFrame, tableFrame);
+    tableFrame = nsTableFrame::GetTableFrame(aFrame);
   }
   tableFrame = NS_STATIC_CAST(nsTableFrame*, tableFrame->GetFirstInFlow());
   while (tableFrame) {

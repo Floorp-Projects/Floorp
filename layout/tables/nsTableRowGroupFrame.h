@@ -207,6 +207,17 @@ public:
    */
   void SetContinuousBCBorderWidth(PRUint8     aForSide,
                                   BCPixelSize aPixelValue);
+  /**
+    * Adjust to the effect of visibibility:collapse on the row group and
+    * its children
+    * @return              additional shift upward that should be applied to
+    *                      subsequent rowgroups due to rows and this rowgroup
+    *                      being collapsed
+    * @param aYTotalOffset the total amount that the rowgroup is shifted up
+    * @param aWidth        new width of the rowgroup
+    */
+  nscoord CollapseRowGroupIfNecessary(nscoord aYTotalOffset,
+                                      nscoord        aWidth);
 
 // nsILineIterator methods
 public:
