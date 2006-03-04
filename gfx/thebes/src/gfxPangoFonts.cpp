@@ -56,11 +56,12 @@
 
 #include "cairo.h"
 
+#ifndef THEBES_USE_PANGO_CAIRO
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkpango.h>
 
-#ifndef THEBES_USE_PANGO_CAIRO
+
 #include <freetype/tttables.h>
 #include <fontconfig/fontconfig.h>
 
@@ -640,6 +641,7 @@ gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
     if (aContext) {
         pango_cairo_update_context (aContext->GetCairo(), pf->GetPangoContext());
     }
+    pango_layout_context_changed (mPangoLayout);
 #endif
 }
 
