@@ -907,6 +907,13 @@
       </note>
 
       <para>
+        Each user listed in the <quote>Users watching you</quote> field
+        has you listed in their <quote>Users to watch</quote> list
+        and can get bugmail according to your relationship to the bug and
+        their <quote>Field/recipient specific options</quote> setting.
+      </para>
+
+      <para>
         In general, users have almost complete control over how much (or
         how little) email Bugzilla sends them. If you want to receive the
         maximum amount of email possible, click the <quote>Enable All 
