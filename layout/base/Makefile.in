@@ -176,4 +176,8 @@ LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
 endif
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+endif
+
 DEFINES += -D_IMPL_NS_LAYOUT

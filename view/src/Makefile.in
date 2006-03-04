@@ -69,5 +69,8 @@ CPPSRCS		= \
 		nsViewManager.cpp \
 		$(NULL)
 
-
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_ENABLE_CAIRO_GFX
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+endif

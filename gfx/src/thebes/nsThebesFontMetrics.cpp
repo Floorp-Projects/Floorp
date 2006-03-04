@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
 #if defined(XP_WIN)
 #include "gfxWindowsFonts.h"
-#elif defined(MOZ_ENABLE_GTK2)
+#elif defined(MOZ_ENABLE_PANGO)
 #include "gfxPangoFonts.h"
 #elif defined(XP_MACOSX)
 #include "gfxAtsuiFonts.h"
@@ -96,7 +96,7 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
 #if defined(XP_WIN)
     mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HDC)mDeviceContext->GetHDC());
-#elif defined(MOZ_ENABLE_GTK2)
+#elif defined(MOZ_ENABLE_PANGO)
     mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
 #elif defined(XP_MACOSX)
     mFontGroup = new gfxAtsuiFontGroup(aFont.name, mFontStyle);
