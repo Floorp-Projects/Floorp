@@ -38,7 +38,7 @@
 
 <!ENTITY loading.label  "Please wait, loading...">
 
-<!ENTITY homepage.url   "http://www.hacksrus.com/~ginda/chatzilla/">
+<!ENTITY homepage.url   "http://chatzilla.hacksrus.com/">
 <!ENTITY homepage.label "ChatZilla Homepage">
 
 <!ENTITY object.add.label       "Add...">

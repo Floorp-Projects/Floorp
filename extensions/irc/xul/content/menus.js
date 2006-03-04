@@ -167,6 +167,8 @@ function initMenus()
          // Planned future menu items, not implemented yet.
          //["-"]
          //[">popup:current_networks"]
+         [">popup:nickname"],
+         ["-"],
          ["leave",       {visibleif: ChannelActive}],
          ["rejoin",      {visibleif: ChannelInactive}],
          ["disconnect",  {visibleif: NetConnected}],
@@ -263,7 +265,11 @@ function initMenus()
         domID: "menu_Help",
         items:
         [
-         ["about"],
+         ["-", {visibleif: Mozilla}],
+         ["homepage"],
+         ["faq"],
+         ["-"],
+         ["about"]
         ]
     };
 
@@ -436,6 +442,12 @@ function initMenus()
         ]
     };
 
+    client.menuSpecs["popup:nickname"] = {
+        label: MSG_STATUS,
+        getContext: getDefaultContext,
+        items: client.menuSpecs["mainmenu:nickname"].items
+    };
+
 }
 
 function createMenus()
@@ -453,6 +465,15 @@ function createMenus()
         winMenu.parentNode.removeChild(winMenu);
     } else {
         comBar.collapsed = false;
+    }
+
+    if (client.host == "XULrunner")
+    {
+        // This is a hack to work around Gecko bug 98997, which means that
+        // :empty causes menus to be hidden until we force a reflow.
+        var menuBar = document.getElementById("mainmenu");
+        menuBar.hidden = true;
+        menuBar.hidden = false;
     }
 }
 

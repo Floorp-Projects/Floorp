@@ -209,6 +209,9 @@ function initCommands()
          ["j",                "join",                              CMD_CONSOLE],
          ["part",             "leave",                             CMD_CONSOLE],
          ["raw",              "quote",                             CMD_CONSOLE],
+         // Shortcuts to useful URLs:
+         ["faq",              "goto-url http://chatzilla.hacksrus.com/faq/", 0],
+         ["homepage",         "goto-url http://chatzilla.hacksrus.com/",     0],
          // Used to display a nickname in the menu only.
          ["label-user",       "echo",                                        0],
          // These are all the font family/size menu commands...
@@ -2108,7 +2111,7 @@ function cmdGotoURL(e)
         return;
     }
 
-    if (e.command.name == "goto-url-external")
+    if ((e.command.name == "goto-url-external") || (client.host == "XULrunner"))
     {
         const ioSvc = getService(IO_SVC, "nsIIOService");
         const extProtoSvc = getService(EXT_PROTO_SVC,

@@ -41,7 +41,7 @@
 		<em:contributor>James Ross</em:contributor>
 		<em:contributor>Lim Chee Aun (graphics)</em:contributor>
 		<em:iconURL>chrome://chatzilla/skin/images/logo.png</em:iconURL>
-		<em:homepageURL>http://www.hacksrus.com/~ginda/chatzilla/</em:homepageURL>
+		<em:homepageURL>http://chatzilla.hacksrus.com/</em:homepageURL>
 		<em:optionsURL>javascript:opener.openDialog('chrome://chatzilla/content/config.xul','','chrome,modal,resizable');window.close();</em:optionsURL>
 		
 		<!-- package files -->
