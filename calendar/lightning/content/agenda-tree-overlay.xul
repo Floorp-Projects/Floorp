@@ -65,8 +65,13 @@
     <tree id="agenda-tree" hidecolumnpicker="true" flex="1"
           ondblclick="agendaTreeView.onDoubleClick(event);">
       <treecols>
-        <treecol id="col-agenda-item" primary="true" label="&agenda.treeview.item.label;" flex="3"/>
-        <treecol id="col-agenda-when" label="" flex="1"/>
+        <treecol id="col-agenda-item" primary="true"
+                 persist="hidden ordinal width"
+                 label="&agenda.treeview.item.label;" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="col-agenda-when"
+                 persist="hidden ordinal width"  
+                 label="" flex="1"/>
       </treecols>
       <treechildren/>
     </tree>
