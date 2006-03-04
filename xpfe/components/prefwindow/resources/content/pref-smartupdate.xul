@@ -7,6 +7,8 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');"
       headertitle="&pref.smartUpdate.title;">
   
+  <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
+
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["XPInstallEnabled", "updateNotificationsEnabled", 
@@ -26,10 +28,15 @@
   ]]>
   </script>
    
-  <groupbox align="start">
+  <groupbox>
     <caption label="&smartTitle.label;"/>
-    <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
-              prefstring="xpinstall.enabled"/>
+    <hbox align="center">
+      <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
+                prefstring="xpinstall.enabled"/>
+      <spacer flex="1"/>
+      <button id="allowedSitesButton" label="&allowedSites.label;" permissiontype="install"
+              accesskey="&allowedSites.accesskey;" oncommand="viewInstalls('');"/>
+    </hbox>
   </groupbox>
 
   <groupbox align="start">

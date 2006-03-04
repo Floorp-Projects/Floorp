@@ -48,12 +48,14 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-popups.xul');"
       headertitle="&pref.popups.title;">
           
+  <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsOverlay.js"/>
+
   <script type="application/x-javascript">
     <![CDATA[
 
       var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon","removeBlacklist","prefillWhitelist"];
 
-      const nsIPermissionManager = Components.interfaces.nsIPermissionManager
+      const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
       const popupType = "popup";
 
       var gPolicyCheckbox;
@@ -68,7 +70,7 @@
 
       function Startup() {
         permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
-                                      .getService(Components.interfaces.nsIPermissionManager);
+                                      .getService(nsIPermissionManager);
 
         ioService = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
@@ -114,7 +116,7 @@
           }
         }
         
-        for (var i = 0; i < hosts.length; i++) {
+        for (var i in hosts) {
           permissionManager.remove(hosts[i], popupType);
         }    
       
@@ -122,16 +124,11 @@
 
       function loadWhitelist() {
         try {
-          var whitelist;
-          var hosts;
-          var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService);
-          var prefs = prefService.getBranch(null);
-          whitelist = prefs.getComplexValue("privacy.popups.default_whitelist",
-                                            Components.interfaces.nsIPrefLocalizedString).data;
-          hosts = whitelist.split(",");
+          var whitelist = parent.hPrefWindow.getPref("localizedstring",
+                                                     "privacy.popups.default_whitelist");
+          var hosts = whitelist.split(",");
 
-          for (var i = 0; i < hosts.length; i++) {
+          for (var i in hosts) {
             var host = hosts[i];
             host = "http://" + host;
             var uri = ioService.newURI(host, null, null);
@@ -207,11 +204,6 @@
         gPreviewSoundButton.disabled = gSoundUrlBox.value == "";
       }
 
-      function viewPopups() {
-        window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "",
-                          "chrome,resizable=yes", "");
-      }
-
     ]]>
   </script>
 
@@ -226,7 +218,7 @@
             <spacer flex="1"/>
       <button id="exceptionsButton" label="&popupExceptions.label;"
               accesskey="&popupExceptions.accesskey;"
-                    oncommand="viewPopups();"/>
+                    oncommand="viewPopups('');"/>
           </hbox>
     <separator class="thin"/>
     <description id="whenBlock">&whenBlock.description;</description>

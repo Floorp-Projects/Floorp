@@ -20,6 +20,10 @@
    - Portions created by the Initial Developer are Copyright (C) 2002
    - the Initial Developer. All Rights Reserved.
    -
+   - Contributor(s):
+   -  Blake Ross (original author)
+   -  Ian Neal (iann_bugzilla@arlen.demon.co.uk)
+   -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
    - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -38,63 +42,62 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://communicator/locale/permissions/permissionsManager.dtd" >
 
-<dialog id="popupManager"
+<dialog id="permissionsManager"
         buttons="accept,cancel,help"
-        title="&windowtitle.label;"        
+        windowtype="exceptions"
+        title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width:32em; height:42em;"
         persist="width height screenX screenY"
-        onload="Startup();"        
+        onload="Startup();"
         ondialogaccept="return onAccept();"
         ondialoghelp="return doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/permissions/permissionsManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/permissions/treeUtils.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <keyset id="dialogKeys"/>
-  <stringbundle id="popupStringBundle"
+  <stringbundle id="permissionsBundle"
                 src="chrome://communicator/locale/permissions/permissionsManager.properties"/>
- 
-  <vbox id="servers" flex="1">
-  
-      <description id="allowPopups" value="&allowPopups.label;"/>
 
-      <separator class="thin"/>
-
-      <hbox align="center">
-        <vbox flex="1">
-          <textbox id="addSiteBox" flex="1"/>
-        </vbox>
-        <button id="addSiteButton"
-                label="&addSite.label;" accesskey="&addSite.accesskey;"
-                oncommand="addPermission();"/>
-      </hbox>
-
-      <separator class="thin"/>
-
-      <tree id="permissionsTree" flex="1"
-            hidecolumnpicker="true"
-            onkeypress="handlePermissionKeyPress(event)"
-            onselect="permissionSelected();"
-            sortAscending="false"
-            persist="sortAscending">
-        <treecols>
-          <treecol id="siteCol" label="&treehead.sitename.label;" flex="1"
-                   onclick="permissionColumnSort();"/>
-        </treecols>
-        <treechildren/>
-      </tree>
-
-      <hbox>
-        <button id="removePermission" disabled="true" 
-                label="&remove.label;" accesskey="&remove.accesskey;"
-                oncommand="deletePermissions();"/>
-        <button id="removeAllPermissions"
-                label="&removeAll.label;" accesskey="&removeAll.accesskey;"
-                oncommand="deleteAllPermissions();"/>
-      </hbox>
-  </vbox>
-
+  <description id="permissionsText"/>
+  <separator class="thin"/>
+  <label value="&address.label;"/>
+  <hbox align="start">
+    <textbox id="url" flex="1" oninput="handleHostInput(event.target);"/>
+  </hbox>
+  <hbox pack="end">
+     <button id="btnBlock" disabled="true" accesskey="&block.accesskey;"
+             label="&block.label;" oncommand="addPermission(nsIPermissionManager.DENY_ACTION);"/>
+     <button id="btnSession" disabled="true" accesskey="&session.accesskey;"
+             label="&session.label;" oncommand="addPermission(nsICookiePermission.ACCESS_SESSION);"/>
+     <button id="btnAllow" disabled="true" accesskey="&allow.accesskey;"
+             label="&allow.label;" oncommand="addPermission(nsIPermissionManager.ALLOW_ACTION);"/>
+  </hbox>
+  <separator class="thin"/>
+  <tree id="permissionsTree" flex="1" style="height: 18em;"
+        hidecolumnpicker="true"
+        onkeypress="handlePermissionKeyPress(event)"
+        onselect="permissionSelected();"
+        sortAscending="false"
+        sortColumn="rawHost"
+        persist="sortAscending sortColumn">
+    <treecols>
+      <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
+                    onclick="permissionColumnSort('rawHost', true);" persist="width"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="statusCol" label="&treehead.status.label;" flex="1"
+                    onclick="permissionColumnSort('capability', true);" persist="width"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+  <separator class="thin"/>
+  <hbox>
+    <button id="removePermission" disabled="true"
+            label="&remove.label;" accesskey="&remove.accesskey;"
+            oncommand="deletePermissions();"/>
+    <button id="removeAllPermissions"
+            label="&removeall.label;" accesskey="&removeall.accesskey;"
+            oncommand="deleteAllPermissions();"/>
+  </hbox>
 </dialog>
