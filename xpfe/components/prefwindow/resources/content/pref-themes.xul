@@ -106,8 +106,6 @@
   <vbox class="inset" style="overflow: auto;" flex="1">
     <label id="description"/>
   </vbox>
-  <hbox align="start">
-    <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
-            style="display: block;" target="_blank">&getNewThemes.label;</html:a>
-  </hbox>
+  <label class="small-margin"><html:a href="&getNewThemesURL;" id="themesLink"
+         class="themesLink" target="_blank">&getNewThemes.label;</html:a></label>
 </page>
