@@ -2528,7 +2528,8 @@ nsPkcs11::~nsPkcs11()
 PRBool
 confirm_user(const PRUnichar *message)
 {
-  PRBool confirmation = PR_FALSE;
+  PRInt32 buttonPressed = 1; // If the user exits by clicking the close box, assume No (button 1)
+
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIPrompt> prompter;
   if (wwatch)
@@ -2537,11 +2538,16 @@ confirm_user(const PRUnichar *message)
   if (prompter) {
     nsPSMUITracker tracker;
     if (!tracker.isUIForbidden()) {
-      prompter->Confirm(0, message, &confirmation);
+      prompter->ConfirmEx(0, message,
+                          (nsIPrompt::BUTTON_DELAY_ENABLE) +
+                          (nsIPrompt::BUTTON_POS_1_DEFAULT) +
+                          (nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
+                          nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
     }
   }
 
-  return confirmation;
+  return (buttonPressed == 0);
 }
 
 //Delete a PKCS11 module from the user's profile.
