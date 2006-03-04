@@ -26,7 +26,8 @@
 
 [% param_descs = {
   LDAPserver => "The name (and optionally port) of your LDAP server " _
-                "(e.g. ldap.company.com, or ldap.company.com:portnum).",
+                "(e.g. ldap.company.com, or ldap.company.com:portnum). " _
+                "Can be prefixed with ldap:// (default) or ldaps:// (for a secure connection).",
 
   LDAPbinddn => "If your LDAP server requires that you use a binddn and password " _
                 "instead of binding anonymously, enter it here " _

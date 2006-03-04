@@ -73,10 +73,29 @@ sub authenticate {
     }
 
     my $LDAPport = "389";  # default LDAP port
-    if($LDAPserver =~ /:/) {
-        ($LDAPserver, $LDAPport) = split(":",$LDAPserver);
+    my $LDAPprotocol = "ldap";
+
+    if ($LDAPserver =~ /(ldap|ldaps):\/\/(.*)/) {
+        # ldap(s)://server(:port)
+        $LDAPprotocol = $1;
+        my $serverpart = $2;
+        if ($serverpart =~ /:/) {
+            # ldap(s)://server:port
+            ($LDAPserver, $LDAPport) = split(":", $serverpart);
+        } else {
+            # ldap(s)://server
+            $LDAPserver = $serverpart;
+            if ($LDAPprotocol eq "ldaps") {
+                $LDAPport = "636";
+            }
+        }
+    } elsif ($LDAPserver =~ /:/) {
+        # server:port
+        ($LDAPserver, $LDAPport) = split(":", $LDAPserver);
     }
-    my $LDAPconn = Net::LDAP->new($LDAPserver, port => $LDAPport, version => 3);
+
+
+    my $LDAPconn = Net::LDAP->new("$LDAPprotocol://$LDAPserver:$LDAPport", version => 3);
     if(!$LDAPconn) {
         return (AUTH_ERROR, undef, "connect_failed");
     }
