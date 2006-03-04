@@ -53,37 +53,14 @@
  * Define on which platforms to use fdlibm. Not used by default under
  * assumption that native math library works unless proved guilty.
  * Plus there can be problems with endian-ness and such in fdlibm itself.
+ *
+ * fdlibm compatibility notes:
+ * - fdlibm broken on OSF1/alpha
  */
 
 #ifndef JS_USE_FDLIBM_MATH
-
-#if defined(_WIN32) && !defined(__MWERKS__)
-#define JS_USE_FDLIBM_MATH 1
-
-#elif defined(SUNOS4)
-#define JS_USE_FDLIBM_MATH 1
-
-#elif defined(IRIX)
-#define JS_USE_FDLIBM_MATH 1
-
-#elif defined(SOLARIS)
-#define JS_USE_FDLIBM_MATH 1
-
-#elif defined(HPUX)
-#define JS_USE_FDLIBM_MATH 1
-
-#elif defined(OSF1)
-/* Want to use some fdlibm functions but fdlibm broken on OSF1/alpha. */
-#define JS_USE_FDLIBM_MATH 0
-
-#elif defined(AIX)
-#define JS_USE_FDLIBM_MATH 1
-
-#else
 #define JS_USE_FDLIBM_MATH 0
 #endif
-
-#endif /* JS_USE_FDLIBM_MATH */
 
 #if !JS_USE_FDLIBM_MATH
 
@@ -96,7 +73,14 @@
 #define fd_atan atan
 #define fd_atan2 atan2
 #define fd_ceil ceil
+// the right copysign function is not always named the same thing
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#define fd_copysign __builtin_copysign
+#elif (defined _WIN32 && !defined WINCE)
+#define fd_copysign _copysign
+#else
 #define fd_copysign copysign
+#endif
 #define fd_cos cos
 #define fd_exp exp
 #define fd_fabs fabs
