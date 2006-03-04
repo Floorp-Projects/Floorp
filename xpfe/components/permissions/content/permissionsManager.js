@@ -19,6 +19,9 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ben Goodger <ben@mozilla.org>
+ *   Blake Ross <firefox@blakeross.com>
+ *   Ian Neal (iann_bugzilla@arlen.demon.co.uk)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,17 +38,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-const popupType = "popup";
+const nsICookiePermission = Components.interfaces.nsICookiePermission;
 
-var permissionManager = null;
-
-var permissions = [];
+var permissionManager;
 
 var additions = [];
 var removals = [];
 
-var sortColumn = "host";
-var sortAscending = false;
+var sortColumn;
+var sortAscending;
 
 var permissionsTreeView = {
     rowCount: 0,
@@ -54,112 +55,97 @@ var permissionsTreeView = {
     getProgressMode: function(row, column) {},
     getCellValue: function(row, column) {},
     getCellText: function(row, column) {
-      var rv = permissions[row].host;
-      return rv;
-  },
-  isSeparator: function(index) { return false; },
-  isSorted: function() { return false; },
-  isContainer: function(index) { return false; },
-  cycleHeader: function(column) {},
-  getRowProperties: function(row, column, prop) {},
-  getColumnProperties: function(column, prop) {},
-  getCellProperties: function(row, column, prop) {}
-};
+      if (column.id == "siteCol")
+        return additions[row].rawHost;
+      else if (column.id == "statusCol")
+        return additions[row].capability;
+      return "";
+    },
+    isSeparator: function(index) { return false; },
+    isSorted: function() { return false; },
+    isContainer: function(index) { return false; },
+    cycleHeader: function(column) {},
+    getRowProperties: function(row, column, prop) {},
+    getColumnProperties: function(column, prop) {},
+    getCellProperties: function(row, column, prop) {}
+  };
 
 var permissionsTree;
-var popupStringBundle;
+var permissionType = "popup";
+
+var permissionsBundle;
 
 function Startup() {
   permissionManager = Components.classes["@mozilla.org/permissionmanager;1"]
-                                .getService(Components.interfaces.nsIPermissionManager);
+                                .getService(nsIPermissionManager);
 
   permissionsTree = document.getElementById("permissionsTree");
 
-  popupStringBundle = document.getElementById("popupStringBundle");
+  permissionsBundle = document.getElementById("permissionsBundle");
 
   sortAscending = (permissionsTree.getAttribute("sortAscending") == "true");
+  sortColumn = permissionsTree.getAttribute("sortColumn");
 
-  loadPermissions(permissions);
-  loadTree();
-
-  // window.arguments[0] contains the host to prefill   
-  if (window.arguments[0] != "") {
-    // fill textbox to unblock/add to whitelist
-    var prefill = window.arguments[0];
-    if (prefill.indexOf("www.") == 0) 
-      prefill = prefill.slice(4);
-    document.getElementById("addSiteBox").value = prefill;
+  if (window.arguments && window.arguments[0]) {
+    document.getElementById("btnBlock").hidden = !window.arguments[0].blockVisible;
+    document.getElementById("btnSession").hidden = !window.arguments[0].sessionVisible;
+    document.getElementById("btnAllow").hidden = !window.arguments[0].allowVisible;
+    setHost(window.arguments[0].prefilledHost);
+    permissionType = window.arguments[0].permissionType;
   }
 
-  document.documentElement.addEventListener("keypress", onReturnHit, true);
-}
+  var introString = permissionsBundle.getString(permissionType + "permissionstext");
+  document.getElementById("permissionsText").textContent = introString;
 
-function getMatch(host) {
-  // pre-pend '.' so we always match on host boundaries. Otherwise 
-  // we might think notfoo.com matches foo.com
-  var currentLoc = '.'+host;
-  var nextHost;
-  var inList;
+  document.title = permissionsBundle.getString(permissionType + "permissionstitle");
 
-  var matchIndex = null;
-  var matchLength = 0;
+  var dialogElement = document.getElementById("permissionsManager");
+  dialogElement.setAttribute("windowtype", "permissions-" + permissionType);
 
-  for (var i = 0; i < permissionsTreeView.rowCount; i++) {
-    nextHost = '.'+permissions[i].host;
-
-    if (currentLoc.length < nextHost.length)
-      continue; // can't be a match, list host is more specific
-
-    // look for an early out exact match -- check length first for speed
-    if (currentLoc.length == nextHost.length && nextHost == currentLoc) {
-      inList = true;
-      matchIndex = i;
-      break;
-    }
-
-    if (nextHost == currentLoc.substr(currentLoc.length - nextHost.length)) { 
-      inList = true;
-      if (nextHost.length > matchLength) {
-        matchIndex = i;
-        matchLength = nextHost.length;
-      }
-    }        
+  if (permissionManager) {
+    handleHostInput(document.getElementById("url"));
+    loadPermissions();
   }
-      
-  return matchIndex;
+  else {
+    btnDisable(true);
+    document.getElementById("removeAllPermissions").disabled = true;
+    document.getElementById("url").disabled = true;
+    document.documentElement.getButton("accept").disabled = true;
+  }
 }
 
 function onAccept() {
   finalizeChanges();
-  
-  var unblocked = additions; 
 
   permissionsTree.setAttribute("sortAscending", !sortAscending);
+  permissionsTree.setAttribute("sortColumn", sortColumn);
 
-  var nextLocation;
-  var nextUnblocked;
+  if (permissionType != "popup")
+    return true;
 
+  var unblocked = additions; 
   var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1']
                                  .getService(Components.interfaces.nsIWindowMediator);
   var enumerator = windowMediator.getEnumerator("navigator:browser");
 
   //if a site that is currently open is unblocked, make icon go away
-  while(enumerator.hasMoreElements()) {
+  while (enumerator.hasMoreElements()) {
     var win = enumerator.getNext();
-    
+
     var browsers = win.getBrowser().browsers;
-    for (var i = 0; i < browsers.length; i++) {
+    for (var i in browsers) {
+      var nextLocation;
       try {
         nextLocation = browsers[i].currentURI.hostPort;
       }
       catch(ex) { 
-        //blank window
+        nextLocation = null; //blank window
       }
 
       if (nextLocation) {
         nextLocation = '.'+nextLocation;
         for (var j in unblocked) {
-          nextUnblocked = '.'+unblocked[j];
+          var nextUnblocked = '.'+unblocked[j];
 
           if (nextUnblocked.length > nextLocation.length)
              continue; // can't be a match
@@ -174,142 +160,136 @@ function onAccept() {
     } 
   }
 
-  return true;                                           
+  return true;
 }
 
-function Permission(host, number) {
+function setHost(aHost) {
+  document.getElementById("url").value = aHost;
+}
+
+function Permission(id, host, rawHost, type, capability, perm) {
+  this.id = id;
   this.host = host;
-  this.number = number;
+  this.rawHost = rawHost;
+  this.type = type;
+  this.capability = capability;
+  this.perm = perm;
 }
 
-function loadPermissions(table) {
+function handleHostInput(aSiteField) {
+  // trim any leading and trailing spaces and scheme
+  // and set buttons appropiately
+  btnDisable(!trimSpacesAndScheme(aSiteField.value));
+}
+
+function trimSpacesAndScheme(aString) {
+  if (!aString)
+    return "";
+  return aString.replace(/(^\s+)|(\s+$)/g, "")
+                .replace(/([-\w]*:\/+)?/, "");
+}
+
+function btnDisable(aDisabled) {
+  document.getElementById("btnSession").disabled = aDisabled;
+  document.getElementById("btnBlock").disabled = aDisabled;
+  document.getElementById("btnAllow").disabled = aDisabled;
+}
+
+function loadPermissions() {
   var enumerator = permissionManager.enumerator;
   var count = 0;
-  
-  while (enumerator.hasMoreElements()) {
-    var permission = enumerator.getNext();
-    if (permission) {
-      permission = permission.QueryInterface(Components.interfaces.nsIPermission);
-      if ((permission.type == popupType) && (permission.capability == nsIPermissionManager.ALLOW_ACTION)) {
-        var host = permission.host;
-        table[count] = new Permission(host,count++);
-      }
+  var permission;
+
+  try {
+    while (enumerator.hasMoreElements()) {
+      permission = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
+      if (permission.type == permissionType)
+        permissionPush(count++, permission.host, permission.type,
+                       capabilityString(permission.capability), permission.capability);
     }
+  } catch(ex) {
   }
-}
 
-function loadTree() {
-  var rowCount = permissions.length;
-  permissionsTreeView.rowCount = rowCount;
+  permissionsTreeView.rowCount = additions.length;
+
+  // sort and display the table
   permissionsTree.treeBoxObject.view = permissionsTreeView;
-  permissionColumnSort();
-  
-  if (permissions.length == 0)
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-  else
-    document.getElementById("removeAllPermissions").removeAttribute("disabled");
+  permissionColumnSort(sortColumn, false);
+
+  // disable "remove all" button if there are none
+  document.getElementById("removeAllPermissions").disabled = additions.length == 0;
 }
 
-function permissionColumnSort() {
+function capabilityString(aCapability) {
+  var capability = null;
+  switch (aCapability) {
+    case nsIPermissionManager.ALLOW_ACTION:
+      capability = "can";
+      break;
+    case nsIPermissionManager.DENY_ACTION:
+      capability = "cannot";
+      break;
+    // we should only ever hit this for cookies
+    case nsICookiePermission.ACCESS_SESSION:
+      capability = "canSession";
+      break;
+    default:
+      break;
+  } 
+  return permissionsBundle.getString(capability);
+}
+
+function permissionPush(aId, aHost, aType, aString, aCapability) {
+  var rawHost = (aHost.charAt(0) == ".") ? aHost.substring(1, aHost.length) : aHost;
+  var p = new Permission(aId, aHost, rawHost, aType, aString, aCapability);
+  additions.push(p);
+}
+
+function permissionColumnSort(aColumn, aUpdateSelection) {
   sortAscending = 
-    SortTree(permissionsTree, permissionsTreeView, permissions,
-             sortColumn, sortColumn, sortAscending);
+    SortTree(permissionsTree, permissionsTreeView, additions,
+             aColumn, sortColumn, sortAscending, aUpdateSelection);
+  sortColumn = aColumn;
 }
 
 function permissionSelected() {
-  var selections = GetTreeSelections(permissionsTree);
-  if (selections.length) {
-    document.getElementById("removePermission").removeAttribute("disabled");
+  if (permissionManager) {
+    var selections = GetTreeSelections(permissionsTree);
+    document.getElementById("removePermission").disabled = (selections.length < 1);
   }
 }
 
 function deletePermissions() {
-  var selections = GetTreeSelections(permissionsTree);
-  
-  for (var s = selections.length - 1; s >= 0; s--) {
-    var i = selections[s];
-
-    var host = permissions[i].host;
-    updatePendingRemovals(host);
-
-    permissions[i] = null;
-  }
-
-  for (var j = 0; j < permissions.length; j++) {
-    if (permissions[j] == null) {
-      var k = j;
-      while ((k < permissions.length) && (permissions[k] == null)) {
-        k++;
-      }
-      permissions.splice(j, k-j);
-      permissionsTreeView.rowCount -= k - j;
-      permissionsTree.treeBoxObject.rowCountChanged(j, j - k);
-    }
-  }
-
-  if (permissions.length) {
-    var nextSelection = (selections[0] < permissions.length) ? selections[0] : permissions.length - 1;
-    permissionsTreeView.selection.select(nextSelection);
-    permissionsTree.treeBoxObject.ensureRowIsVisible(nextSelection);
-  } 
-  else {
-    document.getElementById("removePermission").setAttribute("disabled", "true")
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-  }
+  DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView, additions, removals,
+                             "removePermission", "removeAllPermissions");
 }
 
 function deleteAllPermissions() {
-  for (var i = 0; i < permissions.length; i++) {
-    var host = permissions[i].host;
-    updatePendingRemovals(host);
-  }
-
-  permissions.length = 0;
-  clearTree();
-}
-
-function updatePendingRemovals(host) {
-  if (additions[host])
-    additions[host] = null;
-  else
-    removals[host] = host;
-}
-
-function clearTree() {
-  var oldCount = permissionsTreeView.rowCount;
-  permissionsTreeView.rowCount = 0;
-  permissionsTree.treeBoxObject.rowCountChanged(0, -oldCount);
-
-  document.getElementById("removePermission").setAttribute("disabled", "true")
-  document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  DeleteAllFromTree(permissionsTree, permissionsTreeView, additions, removals,
+                    "removePermission", "removeAllPermissions");
 }
 
 function finalizeChanges() {
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService);
-  
-  var uri;
-  var host;
-  var i;
-  
-  //note: the scheme will be taken off later, it is being added now only to
-  //create the uri for add/remove
-  for (i in additions) {
-    host = additions[i];
-    if (host != null) {
-      host = "http://" + host;
-      uri = ioService.newURI(host, null, null);
-      permissionManager.add(uri, popupType, true);
-    }
-  }
+  var i, p;
 
   for (i in removals) {
-    host = removals[i];
-    if (host != null) {
-      permissionManager.remove(host, popupType);
+    p = removals[i];
+    try {
+      permissionManager.remove(p.host, p.type);
+    } catch(ex) {
     }
   }
 
+  for (i in additions) {
+    p = additions[i];
+    try {
+      var uri = ioService.newURI("http://" + p.host, null, null);
+      permissionManager.add(uri, p.type, p.perm);
+    } catch(ex) {
+    }
+  }
 }
 
 function handlePermissionKeyPress(e) {
@@ -318,86 +298,59 @@ function handlePermissionKeyPress(e) {
   }
 }
 
-function addPermission() {
-  var addSiteBox = document.getElementById("addSiteBox");
-  var host = addSiteBox.value;
-  
-  if (host != "") {
-    host = host.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
-    
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                  .getService(Components.interfaces.nsIPromptService); 
+function addPermission(aPermission) {
+  var textbox = document.getElementById("url");
+  // trim any leading and trailing spaces and scheme
+  var host = trimSpacesAndScheme(textbox.value);
+  try {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
-    
-    try {
-      var uri = ioService.newURI("http://"+host, null, null);
-    }
-    catch(ex) {
-      var msgInvalid = popupStringBundle.getFormattedString("alertInvalid", [host]);
-      if (promptService)
-        promptService.alert(window, "", msgInvalid);
-      addSiteBox.value = "";
-      return;
-    }
-
-    host = uri.hostPort;
-
-    if (!host) {
-      addSiteBox.value = "";
-      return;
-    }
-
-    var length = permissions.length;   
- 
-    var isDuplicate = false;
-    for (var i = 0; i < length; i++) {
-      if (permissions[i].host == host) {
-        var msgDuplicate = popupStringBundle.getFormattedString("alertDuplicate", [host]); 
-        if (promptService)
-          promptService.alert(window, "", msgDuplicate);
-        isDuplicate = true;
-        break;
-      }
-    }
-
-    if (!isDuplicate) {
-      var newPermission = new Permission(host, length);
-      permissions.push(newPermission);
-
-      sortAscending = !sortAscending; //keep same sort direction
-      loadTree();
-    
-      if (removals[host] != null)
-        removals[host] = null;
-      else
-        additions[host] = host;
-    }
-
-    addSiteBox.value = "";
+    var uri = ioService.newURI("http://" + host, null, null);
+    host = uri.host;
+  } catch(ex) {
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                  .getService(Components.interfaces.nsIPromptService);
+    var message = permissionsBundle.getFormattedString("alertInvalid", [host]);
+    var title = permissionsBundle.getString("alertInvalidTitle");
+    promptService.alert(window, title, message);
+    textbox.value = "";
+    textbox.focus();
+    handleHostInput(textbox);
+    return;
   }
-}
 
-function onReturnHit(event) {
-  var focusedElement = document.commandDispatcher.focusedElement;
-  var addSiteBox = document.getElementById("addSiteBox");
-  if (event.keyCode == 13) {
-    if (focusedElement) {
-      if (focusedElement.id == "permissionsTree")
-        return;
-      else {
-        event.preventBubble();
-        if (focusedElement == addSiteBox.inputField) {
-          var addSiteButton = document.getElementById("addSiteButton");
-          addSiteButton.doCommand();
-        }
-      }
+  // we need this whether the perm exists or not
+  var stringCapability = capabilityString(aPermission);
+
+  // check whether the permission already exists, if not, add it
+  var exists = false;
+  for (var i in additions) {
+    if (additions[i].rawHost == host) {
+      exists = true;
+      additions[i].capability = stringCapability;
+      additions[i].perm = aPermission;
+      break;
     }
   }
+
+  if (!exists) {
+    permissionPush(additions.length, host, permissionType, stringCapability, aPermission);
+
+    permissionsTreeView.rowCount = additions.length;
+    permissionsTree.treeBoxObject.rowCountChanged(additions.length - 1, 1);
+    permissionsTree.treeBoxObject.ensureRowIsVisible(additions.length - 1);
+  }
+  textbox.value = "";
+  textbox.focus();
+
+  // covers a case where the site exists already, so the buttons don't disable
+  handleHostInput(textbox);
+
+  // enable "remove all" button as needed
+  document.getElementById("removeAllPermissions").disabled = additions.length == 0;
 }
 
 function doHelpButton() {
-  openHelp("pop_up_blocking");
+  openHelp(permissionsBundle.getString(permissionType + "permissionshelp"));
   return true;
 }
-

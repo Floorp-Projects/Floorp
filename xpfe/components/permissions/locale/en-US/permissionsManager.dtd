@@ -1,14 +1,14 @@
-<!ENTITY windowtitle.label              "Allowed Web Sites">
-
-<!ENTITY allowPopups.label              "Allow popups from the following web sites:">
-
-<!ENTITY addSite.label                  "Add">
-<!ENTITY addSite.accesskey              "A">
-
+<!ENTITY windowtitle.label              "Exceptions">
 <!ENTITY treehead.sitename.label        "Site">
-
-<!ENTITY remove.label                   "Remove">
+<!ENTITY treehead.status.label          "Status">
+<!ENTITY remove.label                   "Remove Site">
 <!ENTITY remove.accesskey               "R">
-
-<!ENTITY removeAll.label                "Remove All">
-<!ENTITY removeAll.accesskey            "e">
+<!ENTITY removeall.label                "Remove All Sites">
+<!ENTITY removeall.accesskey            "e">
+<!ENTITY address.label                  "Address of web site:">
+<!ENTITY block.label                    "Block">
+<!ENTITY block.accesskey                "B">
+<!ENTITY session.label                  "Allow for Session">
+<!ENTITY session.accesskey              "S">
+<!ENTITY allow.label                    "Allow">
+<!ENTITY allow.accesskey                "A">

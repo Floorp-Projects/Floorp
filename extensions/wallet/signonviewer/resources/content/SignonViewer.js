@@ -244,8 +244,8 @@ var signonsTreeView = {
  };
 var signonsTree;
 
-function Signon(number, host, user, rawuser, password) {
-  this.number = number;
+function Signon(id, host, user, rawuser, password) {
+  this.id = id;
   this.host = host;
   this.user = user;
   this.rawuser = rawuser;
@@ -436,8 +436,8 @@ var rejectsTreeView = {
  };
 var rejectsTree;
 
-function Reject(number, host) {
-  this.number = number;
+function Reject(id, host) {
+  this.id = id;
   this.host = host;
 }
 
@@ -533,8 +533,8 @@ var nopreviewsTreeView = {
  };
 var nopreviewsTree;
 
-function Nopreview(number, host) {
-  this.number = number;
+function Nopreview(id, host) {
+  this.id = id;
   this.host = host;
 }
 
@@ -588,7 +588,7 @@ function FinalizeNopreviewDeletions() {
   var i;
   var result = "|goneP|";
   for (i=0; i<deletedNopreviews.length; i++) {
-    result += deletedNopreviews[i].number;
+    result += deletedNopreviews[i].id;
     result += ",";
   }
   result += "|";
@@ -638,8 +638,8 @@ var nocapturesTreeView = {
  };
 var nocapturesTree;
 
-function Nocapture(number, host) {
-  this.number = number;
+function Nocapture(id, host) {
+  this.id = id;
   this.host = host;
 }
 
@@ -693,7 +693,7 @@ function FinalizeNocaptureDeletions() {
   var i;
   var result = "|goneC|";
   for (i=0; i<deletedNocaptures.length; i++) {
-    result += deletedNocaptures[i].number;
+    result += deletedNocaptures[i].id;
     result += ",";
   }
   result += "|";

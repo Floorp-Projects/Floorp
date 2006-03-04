@@ -53,8 +53,35 @@ function openCookieViewer(viewerType)
                     "_blank", "chrome,resizable", viewerType);
 }
 
+function showPermissionsManager(viewerType, host) {
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var existingWindow = wm.getMostRecentWindow("permissions-" + viewerType);
+  if (existingWindow) {
+    existingWindow.setHost(host);
+    existingWindow.focus();
+  }
+  else {
+    var params = { blockVisible: (viewerType == "image"),
+                   sessionVisible: false,
+                   allowVisible: true,
+                   prefilledHost: host,
+                   permissionType: viewerType };
+    window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "_blank",
+                      "chrome,resizable=yes", params);
+  }
+}
+
+function viewPopups(host) {
+  showPermissionsManager("popup", host);
+}
+
 function viewImages() {
-  openCookieViewer("imageManager");
+  showPermissionsManager("image", "");
+}
+
+function viewInstalls() {
+  showPermissionsManager("install", "");
 }
 
 function viewCookies() {

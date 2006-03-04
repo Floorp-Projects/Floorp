@@ -22,6 +22,7 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
+   Ian Neal (iann_bugzilla@arlen.demon.co.uk)
 
  Alternatively, the contents of this file may be used under the terms of
  either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -181,10 +182,13 @@
                         false);
     }
 
-    function OpenManagePopups(host) {
-      window.openDialog("chrome://communicator/content/permissions/permissionsManager.xul", "",
-                        "chrome,resizable=yes", 
-                        host);
+    function popupHost() {
+      var hostPort = "";
+      try {
+        host = getBrowser().currentURI.hostPort;
+      } catch (e) {
+      }
+      return hostPort;
     }
 
   ]]>
@@ -264,14 +268,14 @@
       <menupopup>
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
-                  oncommand="OpenManagePopups(getBrowser().currentURI.host);"/>
+                  oncommand="viewPopups(popupHost());"/>
         <menuitem id="AboutPopups" label="&cookieAboutPopupBlocking.label;"
                   accesskey="&cookieAboutPopupBlocking.accesskey;"
                   oncommand="OpenAboutPopups();"
                   hidden="true"/>
         <menuitem id="ManagePopups" label="&cookieManagePopups.label;"
                   accesskey="&cookieManagePopups.accesskey;"
-                  oncommand="OpenManagePopups('');"
+                  oncommand="viewPopups('');"
                   hidden="true"/>
         <menuseparator id="popupMenuSeparator" hidden="true"/>
         <!-- Additional items are generated, see popupBlockerMenuShowing()
