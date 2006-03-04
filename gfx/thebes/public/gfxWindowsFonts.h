@@ -57,8 +57,7 @@ class gfxWindowsFont : public gfxFont {
 
 public:
     gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
-    gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont);
-
+    gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont, const gfxMatrix& aMatrix);
     virtual ~gfxWindowsFont();
 
     virtual const gfxFont::Metrics& GetMetrics();
@@ -67,14 +66,17 @@ public:
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
     HFONT GetHFONT() { return mFont; }
-    void UpdateFonts(cairo_t *cr);
+    const gfxMatrix& CurrentMatrix() const { return mCTM; }
+    void UpdateCTM(const gfxMatrix& aMatrix);
 
 protected:
     cairo_font_face_t *MakeCairoFontFace();
-    cairo_scaled_font_t *MakeCairoScaledFont(cairo_t *cr);
+    cairo_scaled_font_t *MakeCairoScaledFont();
     void FillLogFont(PRInt16 weight);
 
 private:
+    void Init();
+    void Destroy();
     void ComputeMetrics();
 
     HFONT mFont;
@@ -88,6 +90,8 @@ private:
     LOGFONTW mLogFont;
 
     PRPackedBool mIsMLangFont;
+
+    gfxMatrix mCTM;
 };
 
 
