@@ -917,6 +917,10 @@ function my_unknown (e)
             e.channel = new CIRCChannel(e.server, null, e.params[0]);
         }
 
+        var targetDisplayObj = this;
+        if (e.channel && ("messages" in e.channel))
+            targetDisplayObj = e.channel;
+
         // Check for /knock support for the +i message.
         if (((e.code == 471) || (e.code == 473) || (e.code == 475)) &&
             ("knock" in e.server.servCmds))
@@ -925,12 +929,12 @@ function my_unknown (e)
                         "knock " + e.channel.unicodeName];
             msg = getMsg("msg.irc." + e.code + ".knock", args, "");
             client.munger.entries[".inline-buttons"].enabled = true;
-            this.display(msg);
+            targetDisplayObj.display(msg);
             client.munger.entries[".inline-buttons"].enabled = false;
         }
         else
         {
-            this.display(msg);
+            targetDisplayObj.display(msg);
         }
 
         if (e.channel)
