@@ -258,10 +258,7 @@ public:
   nsMargin GetContentAreaOffset(const nsHTMLReflowState* aReflowState) const;
 
   /** helper method to find the table parent of any table frame object */
-  // TODO: today, this depends on display types.  This should be changed to rely
-  // on stronger criteria, like an inner table frame atom
-  static NS_METHOD GetTableFrame(nsIFrame*      aSourceFrame, 
-                                 nsTableFrame*& aTableFrame);
+  static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
                                  
   /**
    * Helper method to handle display common to table frames, rowgroup frames
@@ -632,13 +629,21 @@ protected:
   nsresult RecoverState(nsTableReflowState& aReflowState,
                         nsIFrame*           aKidFrame);
 
-  NS_METHOD CollapseRowGroupIfNecessary(nsIFrame* aRowGroupFrame,
-                                        const nscoord& aYTotalOffset,
-                                        nscoord& aYGroupOffset, PRInt32& aRowX);
+  /** return the width of the table taking into account visibility collapse
+    * on columns and colgroups
+    * @param aBorderPadding  the border and padding of the table
+    */
+  nscoord GetCollapsedWidth(nsMargin aBorderPadding);
 
-  NS_METHOD AdjustForCollapsingRows(nsHTMLReflowMetrics&  aDesiredSize);
+  
+  /** Adjust the table for visibilty.collapse set on rowgroups, rows, colgroups
+    * and cols
+    * @param aDesiredSize    the metrics of the table
+    * @param aBorderPadding  the border and padding of the table
+    */
+  void AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
+                                   nsMargin             aBorderPadding);
 
-  NS_METHOD AdjustForCollapsingCols(nsHTMLReflowMetrics&  aDesiredSize);
   // end incremental reflow methods
 
 
@@ -752,12 +757,9 @@ public:
 
   PRBool NeedToCalcBCBorders() const;
   void SetNeedToCalcBCBorders(PRBool aValue);
-  
-  PRBool NeedToCollapseRows() const;
-  void SetNeedToCollapseRows(PRBool aValue);
-  
-  PRBool NeedToCollapseColumns() const;
-  void SetNeedToCollapseColumns(PRBool aValue);
+
+  PRBool NeedToCollapse() const;
+  void SetNeedToCollapse(PRBool aValue);
 
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
@@ -886,9 +888,8 @@ protected:
     PRUint32 mInitiatedSpecialReflow:1;
     PRUint32 mNeedToCalcBCBorders:1;
     PRUint32 mLeftContBCBorder:8;
-    PRUint32 mNeedToCollapseRows:1;    // rows that have visibility need to be collapse
-    PRUint32 mNeedToCollapseColumns:1; // colums that have visibility need to be collapsed
-    PRUint32 :9;                       // unused
+    PRUint32 mNeedToCollapse:1;    // rows, cols that have visibility:collapse need to be collapsed
+    PRUint32 :10;                       // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -1006,24 +1007,14 @@ inline void nsTableFrame::SetRowInserted(PRBool aValue)
   mBits.mRowInserted = (unsigned)aValue;
 }
 
-inline void nsTableFrame::SetNeedToCollapseRows(PRBool aValue)
+inline void nsTableFrame::SetNeedToCollapse(PRBool aValue)
 {
-  mBits.mNeedToCollapseRows = (unsigned)aValue;
+  mBits.mNeedToCollapse = (unsigned)aValue;
 }
 
-inline PRBool nsTableFrame::NeedToCollapseRows() const
+inline PRBool nsTableFrame::NeedToCollapse() const
 {
-  return (PRBool)mBits.mNeedToCollapseRows;
-}
-
-inline void nsTableFrame::SetNeedToCollapseColumns(PRBool aValue)
-{
-  mBits.mNeedToCollapseColumns = (unsigned)aValue;
-}
-
-inline PRBool nsTableFrame::NeedToCollapseColumns() const
-{
-  return (PRBool)mBits.mNeedToCollapseColumns;
+  return (PRBool)mBits.mNeedToCollapse;
 }
 
 inline nsFrameList& nsTableFrame::GetColGroups()

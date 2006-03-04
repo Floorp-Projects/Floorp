@@ -103,9 +103,9 @@ nsTableColGroupFrame::AddColsToTable(PRInt32          aFirstColIndex,
                                      nsIFrame*        aLastFrame)
 {
   nsresult rv = NS_OK;
-  nsTableFrame* tableFrame = nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!tableFrame || !aFirstFrame) return NS_ERROR_NULL_POINTER;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame || !aFirstFrame)
+    return NS_ERROR_NULL_POINTER;
 
   // set the col indices of the col frames and and add col info to the table
   PRInt32 colIndex = aFirstColIndex;
@@ -177,9 +177,9 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!tableFrame) return NS_ERROR_NULL_POINTER;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return NS_ERROR_NULL_POINTER;
 
   if (!aChildList) {
     nsIFrame* firstChild;
@@ -249,9 +249,9 @@ nsTableColGroupFrame::InsertColsReflow(PRInt32         aColIndex,
 {
   AddColsToTable(aColIndex, PR_TRUE, aFirstFrame, aLastFrame);
 
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!tableFrame) return;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return;
 
   // XXX this could be optimized with much effort
   tableFrame->SetNeedStrategyInit(PR_TRUE);
@@ -283,9 +283,9 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
       }
     }
   }
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  if (!tableFrame) return;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return;
 
   // XXX this could be optimized with much effort
   tableFrame->SetNeedStrategyInit(PR_TRUE);
@@ -304,9 +304,9 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
     PRInt32 colIndex = colFrame->GetColIndex();
     RemoveChild(*colFrame, PR_TRUE);
     
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    if (!tableFrame) return NS_ERROR_NULL_POINTER;
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+    if (!tableFrame)
+      return NS_ERROR_NULL_POINTER;
 
     tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
 
@@ -348,10 +348,9 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   const nsStyleVisibility* groupVis = GetStyleVisibility();
   PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
   if (collapseGroup) {
-    nsTableFrame* tableFrame = nsnull;
-    nsTableFrame::GetTableFrame(this, tableFrame);
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
     if (tableFrame)  {
-      tableFrame->SetNeedToCollapseColumns(PR_TRUE);
+      tableFrame->SetNeedToCollapse(PR_TRUE);;
     }
   }
   // for every content child that (is a column thingy and does not already have a frame)
@@ -438,15 +437,15 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsHTMLReflowMetrics&     aDesire
                                                 const nsHTMLReflowState& aReflowState,
                                                 nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
   // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
   // XXX: we can optimize this when we know which style attribute changed
-  nsTableFrame* tableFrame = nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (tableFrame)  {
-    tableFrame->SetNeedStrategyInit(PR_TRUE);
-  }
-  return rv;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return NS_ERROR_NULL_POINTER;
+  
+  tableFrame->SetNeedStrategyInit(PR_TRUE);
+  return NS_OK;
+  
 }
 
 NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsHTMLReflowMetrics&     aDesiredSize,
@@ -467,16 +466,16 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsHTMLReflowMetrics&     aDesir
   if (NS_FAILED(rv))
     return rv;
 
-  nsTableFrame *tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (tableFrame) {
-    // compare the new col count to the old col count.  
-    // If they are the same, we just need to rebalance column widths
-    // If they differ, we need to fix up other column groups and the column cache
-    // XXX for now assume the worse
-    tableFrame->SetNeedStrategyInit(PR_TRUE);
-  }
-  return rv;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return NS_ERROR_NULL_POINTER;
+  
+  // compare the new col count to the old col count.
+  // If they are the same, we just need to rebalance column widths
+  // If they differ, we need to fix up other column groups and the column cache
+  // XXX for now assume the worse
+  tableFrame->SetNeedStrategyInit(PR_TRUE);
+  return NS_OK;
 }
 
 nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()
@@ -488,9 +487,13 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
 {
   nsTableColFrame *result = nsnull;
   nsIFrame *childFrame = aChildFrame;
-  if (nsnull==childFrame)
+  if (!childFrame) {
     childFrame = mFrames.FirstChild();
-  while (nsnull!=childFrame)
+  }
+  else {
+    childFrame = childFrame->GetNextSibling();
+  }
+  while (childFrame)
   {
     if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
         childFrame->GetStyleDisplay()->mDisplay)
@@ -542,8 +545,7 @@ void nsTableColGroupFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
 void nsTableColGroupFrame::GetContinuousBCBorderWidth(float     aPixelsToTwips,
                                                       nsMargin& aBorder)
 {
-  nsTableFrame* table;
-  nsTableFrame::GetTableFrame(this, table);
+  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
   nsTableColFrame* col = table->GetColFrame(mStartColIndex + mColCount - 1);
   col->GetContinuousBCBorderWidth(aPixelsToTwips, aBorder);
   aBorder.top = BC_BORDER_BOTTOM_HALF_COORD(aPixelsToTwips,

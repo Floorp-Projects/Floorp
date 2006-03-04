@@ -250,19 +250,6 @@ public:
   nscoord GetLastBlockHeight();
   void    SetLastBlockHeight(nscoord aValue);
 
-  // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
-  void    SetCollapseOffsetX(nscoord aXOffset);
-  void    SetCollapseOffsetY(nscoord aYOffset);
-  void    GetCollapseOffset(nsPoint& aOffset);
-  
-  /**
-   * This gets called when the collapse offset X or Y changes. Currently it's
-   * a disgusting hack (but not worse than the previous disgusting hack it
-   * replaces).
-   * XXX fix this when views have been removed.
-   */
-  void UpdateChildOffset(nsPoint aDelta);
-
   nsTableCellFrame* GetNextCell() const;
 
   virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,

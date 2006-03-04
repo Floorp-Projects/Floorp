@@ -409,27 +409,25 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
       PRBool cgDataOwnershipTaken = PR_FALSE;
       
       /*Loop over columns in this colgroup*/
-      if (cgData->IsVisible()) {
-        for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
-             col = NS_STATIC_CAST(nsTableColFrame*, col->GetNextSibling())) {
-          /*Create data struct for column*/
-          PRUint32 colIndex = col->GetColIndex();
-          NS_ASSERTION(colIndex < mNumCols, "prevent array boundary violation");
-          if (mNumCols <= colIndex)
-            break;
-          mCols[colIndex].mCol.SetFull(col);
-          //Bring column mRect into table's coord system
-          mCols[colIndex].mCol.mRect.MoveBy(cgData->mRect.x, cgData->mRect.y);
-          //link to parent colgroup's data
-          mCols[colIndex].mColGroup = cgData;
-          cgDataOwnershipTaken = PR_TRUE;
-          if (mIsBorderCollapse) {
-            border.left = lastLeftBorder;
-            lastLeftBorder = col->GetContinuousBCBorderWidth(mP2t, border);
-            if (mCols[colIndex].mCol.ShouldSetBCBorder()) {
-              nsresult rv = mCols[colIndex].mCol.SetBCBorder(border, this);
-              if (NS_FAILED(rv)) return rv;
-            }
+      for (nsTableColFrame* col = cgFrame->GetFirstColumn(); col;
+           col = NS_STATIC_CAST(nsTableColFrame*, col->GetNextSibling())) {
+        /*Create data struct for column*/
+        PRUint32 colIndex = col->GetColIndex();
+        NS_ASSERTION(colIndex < mNumCols, "prevent array boundary violation");
+        if (mNumCols <= colIndex)
+          break;
+        mCols[colIndex].mCol.SetFull(col);
+        //Bring column mRect into table's coord system
+        mCols[colIndex].mCol.mRect.MoveBy(cgData->mRect.x, cgData->mRect.y);
+        //link to parent colgroup's data
+        mCols[colIndex].mColGroup = cgData;
+        cgDataOwnershipTaken = PR_TRUE;
+        if (mIsBorderCollapse) {
+          border.left = lastLeftBorder;
+          lastLeftBorder = col->GetContinuousBCBorderWidth(mP2t, border);
+          if (mCols[colIndex].mCol.ShouldSetBCBorder()) {
+            nsresult rv = mCols[colIndex].mCol.SetBCBorder(border, this);
+            if (NS_FAILED(rv)) return rv;
           }
         }
       }

@@ -208,9 +208,8 @@ nsTableCellFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                    PRInt32         aModType)
 {
   // let the table frame decide what to do
-  nsTableFrame* tableFrame = nsnull; 
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (tableFrame)) {
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (tableFrame) {
     tableFrame->AttributeChangedFor(this, mContent, aAttribute); 
   }
   return NS_OK;
@@ -404,9 +403,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // take account of 'empty-cells'
   if (GetStyleVisibility()->IsVisible() &&
       (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    NS_ASSERTION(tableFrame, "null table frame");
+    nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
 
     // display background if we need to. Note that we don't try to display
     // a background item to catch events; our anonymous inner block will catch
@@ -446,13 +443,11 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsresult rv = DisplayOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsPoint offset;
-  GetCollapseOffset(offset);
   PRBool quirkyClip = HasPctOverHeight() &&
     eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode();
   nsIFrame* kid = mFrames.FirstChild();
   NS_ASSERTION(kid && !kid->GetNextSibling(), "Table cells should have just one child");
-  if (0 == offset.x && 0 == offset.y && !quirkyClip) {
+  if (!quirkyClip) {
     // The child's background will go in our BorderBackground() list.
     // This isn't a problem since it won't have a real background except for
     // event handling. We do not call BuildDisplayListForNonBlockChildren
@@ -470,22 +465,6 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRect clip = GetOverflowRect();
   if (quirkyClip) {
     clip = nsRect(nsPoint(0, 0), GetSize());
-  }
-  if (offset.x < 0) {
-    // Clip off content to the left of the x=0 line. This is bogus really,
-    // but the whole handling of collapsed-offset cells is bogus.
-    if (clip.x < 0) {
-      clip.width = PR_MAX(0, clip.XMost());
-      clip.x = 0;
-    }
-  }
-  if (offset.y < 0) {
-    // Clip off content above the y=0 line. This is bogus really,
-    // but the whole handling of collapsed-offset cells is bogus.
-    if (clip.y < 0) {
-      clip.height = PR_MAX(0, clip.YMost());
-      clip.y = 0;
-    }
   }
   return OverflowClip(aBuilder, set, aLists, clip + aBuilder->ToReferenceFrame(this));
 }
@@ -778,8 +757,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   PRBool noBorderBeforeReflow = GetContentEmpty() &&
     GetStyleTableBorder()->mEmptyCells != NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   /* XXX: remove tableFrame when border-collapse inherits */
-  nsTableFrame* tableFrame = nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(NS_ERROR_NULL_POINTER);
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    ABORT1(NS_ERROR_NULL_POINTER);
 
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;
@@ -877,10 +857,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     }
     kidOrigin = firstKid->GetPosition();
   }
-  nsPoint collapsedOffset;
-  GetCollapseOffset(collapsedOffset);
-  kidOrigin += collapsedOffset;
-
+  
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState);
 #endif
@@ -922,7 +899,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
       topInset    += border.top;
       bottomInset += border.bottom;
       kidOrigin.MoveTo(leftInset, topInset);
-      kidOrigin += collapsedOffset;
     }
   }
 
@@ -1133,10 +1109,9 @@ nsTableCellFrame::GetPreviousCellInColumn(nsITableCellLayout **aCellLayout)
   if (!aCellLayout) return NS_ERROR_NULL_POINTER;
   *aCellLayout = nsnull;
 
-  nsTableFrame* tableFrame = nsnull; 
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (NS_FAILED(rv)) return rv;
-  if (!tableFrame) return NS_ERROR_FAILURE;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return NS_ERROR_FAILURE;
 
   // Get current cell location
   PRInt32 rowIndex, colIndex;
@@ -1157,10 +1132,9 @@ nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
   if (!aCellLayout) return NS_ERROR_NULL_POINTER;
   *aCellLayout = nsnull;
 
-  nsTableFrame* tableFrame = nsnull; 
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if (NS_FAILED(rv)) return rv;
-  if (!tableFrame) return NS_ERROR_FAILURE;
+  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
+  if (!tableFrame)
+    return NS_ERROR_FAILURE;
 
   // Get current cell location
   PRInt32 rowIndex, colIndex;
@@ -1203,51 +1177,6 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("TableCell"), aResult);
 }
 #endif
-
-void nsTableCellFrame::UpdateChildOffset(nsPoint aDelta)
-{
-  nsIFrame* kid = mFrames.FirstChild();
-  NS_ASSERTION(kid, "Table cells must have one kid");
-  
-  // XXX this is obscene! It doesn't move views or adjust overflow areas.
-  // On the other hand, the old approach of adjusting the rendering
-  // context translation was utterly wrong too.
-  kid->SetRect(kid->GetRect() + aDelta);
-}
-
-void nsTableCellFrame::SetCollapseOffsetX(nscoord aXOffset)
-{
-  // Get the frame property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aXOffset != 0);
-
-  if (offset) {
-    UpdateChildOffset(nsPoint(aXOffset, 0) - *offset);
-    offset->x = aXOffset;
-  }
-}
-
-void nsTableCellFrame::SetCollapseOffsetY(nscoord aYOffset)
-{
-  // Get the property (creating a point struct if necessary)
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty, aYOffset != 0);
-
-  if (offset) {
-    UpdateChildOffset(nsPoint(0, aYOffset) - *offset);
-    offset->y = aYOffset;
-  }
-}
-
-void nsTableCellFrame::GetCollapseOffset(nsPoint& aOffset)
-{
-  // See if the property is set
-  nsPoint* offset = (nsPoint*)nsTableFrame::GetProperty(this, nsLayoutAtoms::collapseOffsetProperty);
-
-  if (offset) {
-    aOffset = *offset;
-  } else {
-    aOffset.MoveTo(0, 0);
-  }
-}
 
 // nsBCTableCellFrame
 
