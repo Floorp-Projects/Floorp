@@ -54,6 +54,7 @@ function CIRCServer() {}
 function CIRCChannel() {}
 function CIRCChanUser() {}
 function CIRCUser() {}
+function CIRCDCC() {}
 function CIRCDCCUser() {}
 function CIRCDCCChat() {}
 function CIRCDCCFileTransfer() {}

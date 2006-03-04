@@ -263,6 +263,7 @@ function initPrefs()
     var dccUserMaxLines = client.prefs["dccUserMaxLines"];
     CIRCDCCChat.prototype.MAX_MESSAGES  = dccUserMaxLines;
     CIRCDCCFileTransfer.prototype.MAX_MESSAGES = dccUserMaxLines;
+    CIRCDCC.prototype.listenPorts       = client.prefs["dcc.listenPorts"];
     client.MAX_MESSAGES                 = client.prefs["clientMaxLines"];
     client.charset                      = client.prefs["charset"];
 
@@ -657,6 +658,10 @@ function onPrefChanged(prefName, newValue, oldValue)
 
         case "connectTries":
             CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = newValue;
+            break;
+
+        case "dcc.listenPorts":
+            CIRCDCC.prototype.listenPorts = newValue;
             break;
 
         case "dccUserMaxLines":

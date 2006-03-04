@@ -90,6 +90,7 @@ function CIRCDCC(parent)
 }
 
 CIRCDCC.prototype.TYPE = "IRCDCC";
+CIRCDCC.prototype.listenPorts = [];
 
 CIRCDCC.prototype.addUser =
 function dcc_adduser(user, remoteIP)
@@ -200,7 +201,7 @@ function dcc_getmatches(nickname, filename, types, dirs, states)
 CIRCDCC.prototype.getNextPort =
 function dcc_getnextport()
 {
-    var portList = this.parent.prefs["dcc.listenPorts"];
+    var portList = this.listenPorts;
 
     var newPort = this._lastPort;
 

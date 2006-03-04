@@ -2462,7 +2462,7 @@ function serv_cact (e)
 CIRCServer.prototype.onCTCPFinger =
 function serv_cfinger (e)
 {
-    e.user.ctcp("FINGER", this.parent.prefs["desc"], "NOTICE");
+    e.user.ctcp("FINGER", this.parent.INITIAL_DESC, "NOTICE");
     return true;
 }
 
