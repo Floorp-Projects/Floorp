@@ -85,6 +85,13 @@
 #define NS_ARRAY_CONTRACTID  "@mozilla.org/array;1"
 
 /**
+ * Observer Service ContractID
+ * The observer service implements the global nsIObserverService object.
+ * It should be used from the main thread only.
+ */
+#define NS_OBSERVERSERVICE_CONTRACTID "@mozilla.org/observer-service;1"
+
+/**
  * The following are the CIDs and Contract IDs of the nsISupports wrappers for 
  * primative types.  
  */
