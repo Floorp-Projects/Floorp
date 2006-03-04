@@ -73,7 +73,7 @@ DEFINES += -DFIREFOX_VERSION=$(FIREFOX_VERSION)
 
 DEFINES += -DTARGET_PLATFORM=$(OS_TARGET)_$(TARGET_XPCOM_ABI)
 
-MOZ_BUILD_DATE = $(shell $(PERL) -I$(TOPSRCDIR)/config $(TOPSRCDIR)/config/bdate.pl)
+MOZ_BUILD_DATE = $(shell $(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/bdate.pl)
 DEFINES += -DMOZ_BUILD_DATE=$(MOZ_BUILD_DATE)
 
 PREF_JS_EXPORTS = $(srcdir)/content/lightning.js
