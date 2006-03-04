@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prlog.h"
-#include "prlock.h"
+#include "nsAutoPtr.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -48,6 +48,8 @@
 #include "nsObserverList.h"
 #include "nsHashtable.h"
 #include "nsIWeakReference.h"
+#include "nsIThread.h"
+#include "nsIEnumerator.h"
 
 #define NOTIFY_GLOBAL_OBSERVERS
 
@@ -68,17 +70,26 @@ PRLogModuleInfo* observerServiceLog = nsnull;
 // nsObserverService Implementation
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsObserverService, nsIObserverService)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsObserverService, nsIObserverService, nsObserverService)
 
-nsObserverService::nsObserverService()
-    : mObserverTopicTable(nsnull)
+nsObserverService::nsObserverService() :
+    mShuttingDown(PR_FALSE)
 {
+    mObserverTopicTable.Init();
 }
 
 nsObserverService::~nsObserverService(void)
 {
-    if(mObserverTopicTable)
-        delete mObserverTopicTable;
+    Shutdown();
+}
+
+void
+nsObserverService::Shutdown()
+{
+    mShuttingDown = PR_TRUE;
+
+    if (mObserverTopicTable.IsInitialized())
+        mObserverTopicTable.Clear();
 }
 
 NS_METHOD
@@ -89,158 +100,85 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
         observerServiceLog = PR_NewLogModule("ObserverService");
 #endif
 
-    nsresult rv;
-    nsObserverService* os = new nsObserverService();
-    if (os == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(os);
-    rv = os->QueryInterface(aIID, aInstancePtr);
-    NS_RELEASE(os);
-    return rv;
-}
+    nsRefPtr<nsObserverService> os = new nsObserverService();
 
-static PRBool PR_CALLBACK 
-ReleaseObserverList(nsHashKey *aKey, void *aData, void* closure)
-{
-    nsObserverList* observerList = NS_STATIC_CAST(nsObserverList*, aData);
-    delete(observerList);
-    return PR_TRUE;
-}
-
-nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList** anObserverList)
-{
-    if (anObserverList == nsnull)
-        return NS_ERROR_NULL_POINTER;
-    
-    if(mObserverTopicTable == nsnull) 
-    {
-        mObserverTopicTable = new nsObjectHashtable(nsnull, 
-                                                    nsnull,   // should never be cloned
-                                                    ReleaseObserverList, 
-                                                    nsnull,
-                                                    256, 
-                                                    PR_TRUE);
-        if (mObserverTopicTable == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-
-    nsCStringKey key(aTopic);
-
-    nsObserverList *topicObservers;
-    topicObservers = (nsObserverList *) mObserverTopicTable->Get(&key);
-
-    if (topicObservers) 
-    {
-        *anObserverList = topicObservers;    
-        return NS_OK;
-    }
-
-    nsresult rv = NS_OK;
-    topicObservers = new nsObserverList(rv);
-    if (!topicObservers)
+    // The cast is required for MSVC6, otherwise it complains about calling
+    // a private function.
+    if (!os || !((nsObserverService*) os)->mObserverTopicTable.IsInitialized())
         return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv)) {
-        delete topicObservers;
-        return rv;
+    return os->QueryInterface(aIID, aInstancePtr);
+}
+
+#define NS_ENSURE_VALIDCALL \
+    if (!nsIThread::IsMainThread()) {                             \
+        NS_ERROR("Using observer service off the main thread!");  \
+        return NS_ERROR_UNEXPECTED;                               \
+    }                                                             \
+    if (mShuttingDown) {                                          \
+        NS_ERROR("Using observer service after XPCOM shutdown!"); \
+        return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;                  \
     }
-    
-    *anObserverList = topicObservers;
-    mObserverTopicTable->Put(&key, topicObservers);
-    
-    return NS_OK;
+
+NS_IMETHODIMP
+nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic,
+                               PRBool ownsWeak)
+{
+    NS_ENSURE_VALIDCALL
+    NS_ENSURE_ARG(anObserver && aTopic);
+
+    nsObserverList *observerList = mObserverTopicTable.PutEntry(aTopic);
+    if (!observerList)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return observerList->AddObserver(anObserver, ownsWeak);
 }
 
-NS_IMETHODIMP nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic, PRBool ownsWeak)
+NS_IMETHODIMP
+nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
 {
-    nsObserverList* anObserverList;
-    nsresult rv;
+    NS_ENSURE_VALIDCALL
+    NS_ENSURE_ARG(anObserver && aTopic);
 
-    if (anObserver == nsnull || aTopic == nsnull)
-        return NS_ERROR_NULL_POINTER;
+    nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
+    if (!observerList)
+        return NS_ERROR_FAILURE;
 
-    rv = GetObserverList(aTopic, &anObserverList);
-    if (NS_FAILED(rv)) return rv;
-
-    return anObserverList->AddObserver(anObserver, ownsWeak);
+    return observerList->RemoveObserver(anObserver);
 }
 
-NS_IMETHODIMP nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
+NS_IMETHODIMP
+nsObserverService::EnumerateObservers(const char* aTopic,
+                                      nsISimpleEnumerator** anEnumerator)
 {
-    nsObserverList* anObserverList;
-    nsresult rv;
+    NS_ENSURE_VALIDCALL
+    NS_ENSURE_ARG(aTopic && anEnumerator);
 
-    if (anObserver == nsnull || aTopic == nsnull)
-        return NS_ERROR_NULL_POINTER;
+    nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
+    if (!observerList)
+        return NS_NewEmptyEnumerator(anEnumerator);
 
-    rv = GetObserverList(aTopic, &anObserverList);
-    if (NS_FAILED(rv)) return rv;
-
-    return anObserverList->RemoveObserver(anObserver);
-}
-
-NS_IMETHODIMP nsObserverService::EnumerateObservers(const char* aTopic, nsISimpleEnumerator** anEnumerator)
-{
-    nsObserverList* anObserverList;
-    nsresult rv;
-
-    if (anEnumerator == nsnull || aTopic == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    rv = GetObserverList(aTopic, &anObserverList);
-    if (NS_FAILED(rv)) return rv;
-
-    return anObserverList->GetObserverList(anEnumerator);
+    return observerList->GetObserverList(anEnumerator);
 }
 
 // Enumerate observers of aTopic and call Observe on each.
 NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
                                                  const char *aTopic,
-                                                 const PRUnichar *someData) {
-    nsresult rv = NS_OK;
-#ifdef NOTIFY_GLOBAL_OBSERVERS
-    nsCOMPtr<nsISimpleEnumerator> globalObservers;
-#endif
-    nsCOMPtr<nsISimpleEnumerator> observers;
-    nsCOMPtr<nsISupports> observerRef;
+                                                 const PRUnichar *someData)
+{
+    NS_ENSURE_VALIDCALL
+    NS_ENSURE_ARG(aTopic);
+
+    nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
+    if (observerList)
+        observerList->NotifyObservers(aSubject, aTopic, someData);
 
 #ifdef NOTIFY_GLOBAL_OBSERVERS
-    EnumerateObservers("*", getter_AddRefs(globalObservers));
-#endif
-    rv = EnumerateObservers(aTopic, getter_AddRefs(observers));
-#ifdef NOTIFY_GLOBAL_OBSERVERS
-    /* If there are no global observers and we failed to get normal observers
-     * then we return the error indicating failure to get normal observers.
-     */
-    if (!globalObservers && NS_FAILED(rv))
-        return rv;
+    observerList = mObserverTopicTable.GetEntry("*");
+    if (observerList)
+        observerList->NotifyObservers(aSubject, aTopic, someData);
 #endif
 
-    do
-    {
-        PRBool more = PR_FALSE;
-        /* If observers is non null then null it out unless it really
-         * has more elements (i.e. that call doesn't fail).
-         */
-        if (observers && NS_FAILED(observers->HasMoreElements(&more)) || !more)
-        {
-#ifdef NOTIFY_GLOBAL_OBSERVERS
-            if (observers = globalObservers) 
-                globalObservers = nsnull;
-#else
-            observers = nsnull;
-#endif
-        }
-        else
-        {
-            observers->GetNext(getter_AddRefs(observerRef));
-            nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
-            if (observer) 
-                observer->Observe(aSubject, aTopic, someData);
-        }
-    } while (observers);
     return NS_OK;
 }
-////////////////////////////////////////////////////////////////////////////////
 
