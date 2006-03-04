@@ -654,7 +654,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
 
   ctx->Restore();
 
-#else
+#elif !defined(XP_MACOSX)
 
   nsIViewManager::BlendingBuffers* buffers =
       vm->CreateBlendingBuffers(aCtx, PR_FALSE, nsnull, mNeedAlpha, bounds);
@@ -686,6 +686,9 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
                  opacity, buffers->mWhiteCX,
                  NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
   delete buffers;
+#else
+// bug 325296 workaround
+  nsDisplayWrapList::Paint(aBuilder, aCtx, aDirtyRect);
 #endif /* MOZ_CAIRO_GFX */
 }
 
