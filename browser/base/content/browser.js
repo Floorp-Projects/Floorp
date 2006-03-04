@@ -6974,5 +6974,87 @@ var HistoryMenu = {
   },
 };
 
+/*
+ * Functions for the Bookmarks Menu
+ */
+var BookmarksMenu = {
+  /*
+   * Handler for when an item in the bookmarks menu is clicked.
+   * If the click is a middle-click, opens the item in a new tab
+   * and closes the menu.  (Left-clicks are handled by the command handler)
+   * @param event DOMEvent for the click
+   */
+  onClick: function BM_onClick(event) {
+    if (event.button == 1) {
+      PlacesController.mouseLoadURI(event);
+      // Menus selected with middle click must be closed manually.
+      var node = event.target;
+      while (node && 
+             (node.localName == "menu" || 
+              node.localName == "menupopup")) {
+        if (node.localName == "menupopup")
+          node.hidePopup();
+        
+        node = node.parentNode;
+      }
+    }
+  },
+  
+  /*
+   * Handler for command event for an item in the bookmarks menu.
+   * Opens the item.
+   * @param event DOMEvent for the command
+   */
+  onCommand: function BM_onCommand(event) {
+    PlacesController.mouseLoadURI(event);
+  }
+};
+
+/*
+ * Functions for the Bookmarks Toolbar
+ */
+var BookmarksToolbar = {  
+  /*
+   * Handler for click event for an item in the bookmarks toolbar.
+   * Menus and submenus from the folder buttons bubble up to this handler.
+   * Only handle middle-click; left-click is handled in the onCommand function.
+   * When items are middle-clicked, open them in tabs.
+   * If the click came through a menu, close the menu.
+   * @param event DOMEvent for the click
+   */
+  onClick: function BT_onClick(event) {
+    // Only handle middle-clicks.
+    if (event.button != 1)
+      return;
+    
+    PlacesController.openLinksInTabs();
+    
+    // If this event bubbled up from a menu or menuitem,
+    // close the menus.
+    if (event.target.localName == "menu" ||
+        event.target.localName == "menuitem") {
+      var node = event.target;
+      while (node && 
+             (node.localName == "menu" || 
+              node.localName == "menupopup")) {
+        if (node.localName == "menupopup")
+          node.hidePopup();
+        
+        node = node.parentNode;
+      }
+    }
+  },
+  
+  /*
+   * Handler for command event for an item in the bookmarks toolbar.
+   * Menus and submenus from the folder buttons bubble up to this handler.
+   * Opens the item.
+   * @param event DOMEvent for the command
+   */
+  onCommand: function BM_onCommand(event) {
+    PlacesController.mouseLoadURI(event);
+  }
+};
+
 #endif
 

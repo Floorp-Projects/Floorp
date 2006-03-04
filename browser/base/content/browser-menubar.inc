@@ -439,13 +439,18 @@
 #else
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;">
-    <menupopup id="bookmarksMenuPopup" type="places" context="placesContext">
+    <menupopup id="bookmarksMenuPopup"
+               type="places"
+               context="placesContext"
+               openInTabs="children"
+               oncommand="BookmarksMenu.onCommand(event);"
+               onclick="BookmarksMenu.onClick(event);">
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
-      <!-- XXXben - this should move to the end of the list -->
+      <menuseparator builder="start"/>
+      <menuseparator builder="end"/>
       <menuitem label="&manBookmarksCmd.label;" 
                 command="Browser:ShowBookmarks" key="manBookmarkKb"/>
-      <menuseparator builder="start"/>
     </menupopup>
   </menu>
 #endif
