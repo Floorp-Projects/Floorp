@@ -1229,7 +1229,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 {
   NPObject *npobj = GetNPObject(cx, obj);
   NPIdentifier *enum_value;
-  PRUint32 length;
+  uint32_t length;
   NPObjectEnumerateState *state;
 
   if (!npobj || !npobj->_class) {
