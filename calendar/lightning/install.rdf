@@ -21,6 +21,8 @@
       </Description>
     </em:targetApplication>
 
+<!-- Temporarily turned off for 0.1 release -->
+#ifdef FIREFOX_SUPPORT
     <em:targetApplication>
       <Description>
         <!-- firefox -->
@@ -34,12 +36,18 @@
 #endif
       </Description>
     </em:targetApplication>
+#endif
 
     <em:id>{e2fda1a4-762b-4020-b5ad-a41df1933103}</em:id>
     <em:name>Lightning</em:name>
-    <em:version>0.0.1+</em:version>
+    <em:version>0.1</em:version>
 
-    <em:description>An experimental calendar extension for Thunderbird</em:description>
-    <em:creator>Mozilla Foundation Calendar Squad</em:creator>
+    <em:description>An experimental calendar extension (build @MOZ_BUILD_DATE@)</em:description>
+    <em:creator>Mozilla Calendar Squad</em:creator>
+
+    <em:updateURL>http://www.mozilla.org/projects/calendar/lightning/@TARGET_PLATFORM@/update.rdf</em:updateURL>
+    <em:homepageURL>http://wiki.mozilla.org/Calendar:Lightning:0.1:Release_Notes</em:homepageURL>
+    <em:targetPlatform>@TARGET_PLATFORM@</em:targetPlatform>
+
   </Description>
 </RDF>
