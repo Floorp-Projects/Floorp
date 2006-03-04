@@ -103,8 +103,6 @@ nsInputStreamPump::Create(nsInputStreamPump  **result,
     return rv;
 }
 
-
-
 struct PeekData {
   PeekData(nsInputStreamPump::PeekSegmentFun fun, void* closure)
     : mFunc(fun), mClosure(closure) {}
