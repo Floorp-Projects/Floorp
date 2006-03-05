@@ -18,3 +18,10 @@ CREATE TABLE `session_data` (
 ALTER TABLE `feedback` ADD `UserID` INT( 11 ) AFTER `ID`;
 ALTER TABLE `feedback` ADD INDEX ( `UserID` );
 ALTER TABLE `feedback` ADD CONSTRAINT `feedback_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- If you want the app to show up on the "supported applications" table for the
+-- extension this has to be '1'
+ALTER TABLE `applications` ADD `supported` TINYINT( 1 ) DEFAULT '0' NOT NULL ;
+
+-- Set the "supported" applications:
+UPDATE `applications` SET `supported`=1 WHERE `AppName` IN('Firefox','Thunderbird','Mozilla');

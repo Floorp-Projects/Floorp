@@ -32,14 +32,13 @@ class AddOn extends AMO_Object {
     // Current version information.
     var $vID;
     var $Version;
-    var $MinAppVer;
-    var $MaxAppVer;
     var $Size;
     var $URI;
     var $Notes;
     var $VersionDateAdded;
     var $AppName;
-    var $OSName;
+
+    var $AppVersions;
 
     // Preview information.
     var $PreviewID;
@@ -87,6 +86,7 @@ class AddOn extends AMO_Object {
         $this->getCurrentVersion();
         $this->getMainPreview();
         $this->getUserInfo();
+        $this->getAppVersions();
     }
     
     /**
@@ -189,18 +189,14 @@ class AddOn extends AMO_Object {
             SELECT 
                 version.vID, 
                 version.Version, 
-                version.MinAppVer, 
-                version.MaxAppVer, 
                 version.Size, 
                 version.URI, 
                 version.Notes, 
                 version.DateAdded as VersionDateAdded,
-                applications.AppName, 
-                os.OSName
+                applications.AppName
             FROM  
                 version
             INNER JOIN applications ON version.AppID = applications.AppID
-            INNER JOIN os ON version.OSID = os.OSID
             WHERE 
                 version.ID = '{$this->ID}' AND 
                 version.approved = 'YES'
@@ -300,6 +296,42 @@ class AddOn extends AMO_Object {
         ", SQL_ALL, SQL_ASSOC);
 
         $this->setVar('AddonCats',$this->db->record);
+    }
+
+    /**
+     * Retrieve all compatible applications and their versions.  This only returns
+     * the applications that are marked as "supported" in the db!
+     */
+    function getAppVersions() {
+        $_final = array();
+        $this->db->query("
+          SELECT 
+            `applications`.`AppName`, 
+            `version`.`MinAppVer`, 
+            `version`.`MaxAppVer` 
+          FROM 
+            `version` 
+          INNER JOIN
+            `applications`
+          ON
+            `version`.`AppID` = `applications`.`AppID`
+          WHERE
+            `version`.`Version`='{$this->Version}'
+          AND 
+            `version`.`ID`={$this->ID}
+          AND
+            `applications`.`supported` = 1
+        ", SQL_ALL, SQL_ASSOC);
+
+        foreach ($this->db->record as $var => $val) {
+            $_final[] = array (
+                'AppName'   => $val['AppName'],
+                'MinAppVer' => $val['MinAppVer'],
+                'MaxAppVer' => $val['MaxAppVer'],
+            );
+        }
+
+        $this->setVar('AppVersions',$_final);
     }
 }
 ?>

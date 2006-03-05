@@ -21,7 +21,16 @@ released on {$addon->VersionDateAdded|date_format}
 <p>{$addon->Description}</p>
 
 <p class="requires">
-Requires: {$addon->AppName} {$addon->MinAppVer} - {$addon->MaxAppVer} <img src="{$config.webpath}/images/{$addon->AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppName}">
+<b>Requires:</b>
+<table>
+{section name=AppVersions loop=$addon->AppVersions}
+<tr>
+    <td><img src="{$config.webpath}/images/{$addon->AppVersions[AppVersions].AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppVersions[AppVersions].AppName}"></td>
+    <td>{$addon->AppVersions[AppVersions].AppName}</td>
+    <td>{$addon->AppVersions[AppVersions].MinAppVer} - {$addon->AppVersions[AppVersions].MaxAppVer}</td>
+</tr>
+{/section}
+</table>
 </p>
 
 <div class="key-point install-box">
