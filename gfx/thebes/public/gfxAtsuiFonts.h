@@ -83,7 +83,7 @@ public:
     ATSUFontFallbacks *GetATSUFontFallbacks() { return &mFallbacks; }
     
     gfxAtsuiFont* GetFontAt(PRInt32 i) {
-        return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, GetFontList()[i]));
+        return NS_STATIC_CAST(gfxAtsuiFont*, NS_STATIC_CAST(gfxFont*, mFonts[i]));
     }
 
 protected:
