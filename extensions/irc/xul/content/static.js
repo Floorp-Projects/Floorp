@@ -182,6 +182,9 @@ function init()
     // start logging.  nothing should call display() before this point.
     if (client.prefs["log"])
         client.openLogFile(client);
+    // kick-start a log-check interval to make sure we change logfiles in time:
+    // It will fire 2 seconds past the next full hour.
+    setTimeout("checkLogFiles()", 3602000 - (Date.now() % 3600000));
 
     // Make sure the userlist is on the correct side.
     updateUserlistSide(client.prefs["userlistLeft"]);
@@ -4492,6 +4495,33 @@ function gettabmatch_usr (line, wordStart, wordEnd, word, cursorPos)
 client.openLogFile =
 function cli_startlog (view)
 {
+    function getNextLogFileDate()
+    {
+        var d = new Date();
+        d.setMilliseconds(0);
+        d.setSeconds(0);
+        d.setMinutes(0);
+        switch (view.smallestLogInterval)
+        {
+            case "h":
+                return d.setHours(d.getHours() + 1);
+            case "d":
+                d.setHours(0);
+                return d.setDate(d.getDate() + 1);
+            case "m":
+                d.setHours(0);
+                d.setDate(1);
+                return d.setMonth(d.getMonth() + 1);
+            case "y":
+                d.setHours(0);
+                d.setDate(1);
+                d.setMonth(0);
+                return d.setFullYear(d.getFullYear() + 1);
+        }
+        //XXXhack: This should work...
+        return Infinity;
+    };
+
     const NORMAL_FILE_TYPE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
 
     try
@@ -4503,6 +4533,8 @@ function cli_startlog (view)
             file.localFile.create(NORMAL_FILE_TYPE, 0666 & ~futils.umask);
         }
         view.logFile = fopen(file.localFile, ">>");
+        // If we're here, it's safe to say when we should re-open:
+        view.nextLogFileDate = getNextLogFileDate();
     }
     catch (ex)
     {
@@ -4518,13 +4550,69 @@ function cli_startlog (view)
 client.closeLogFile =
 function cli_stoplog (view)
 {
-    view.displayHere(getMsg(MSG_LOGFILE_CLOSING, getLogPath(view)));
+    if ("frame" in view)
+        view.displayHere(getMsg(MSG_LOGFILE_CLOSING, getLogPath(view)));
 
     if (view.logFile)
     {
         view.logFile.close();
         view.logFile = null;
     }
+}
+
+function checkLogFiles()
+{
+    // For every view that has a logfile, check if we need a different file
+    // based on the current date and the logfile preference. We close the
+    // current logfile, and display will open the new one based on the pref
+    // when it's needed.
+
+    var d = new Date();
+    for (var n in client.networks)
+    {
+        var net = client.networks[n];
+        if (net.logFile && (d > net.nextLogFileDate))
+            client.closeLogFile(net);
+        if (("primServ" in net) && net.primServ && ("channels" in net.primServ))
+        {
+            for (var c in net.primServ.channels)
+            {
+                var chan = net.primServ.channels[c];
+                if (chan.logFile && (d > chan.nextLogFileDate))
+                    client.closeLogFile(chan);
+            }
+        }
+        if ("users" in net)
+        {
+            for (var u in net.users)
+            {
+                var user = net.users[u];
+                if (user.logFile && (d > user.nextLogFileDate))
+                    client.closeLogFile(user);
+            }
+        }
+    }
+
+    for (var dc in client.dcc.chats)
+    {
+        var dccChat = client.dcc.chats[dc];
+        if (dccChat.logFile && (d > dccChat.nextLogFileDate))
+            client.closeLogFile(dccChat);
+    }
+    for (var df in client.dcc.files)
+    {
+        var dccFile = client.dcc.files[df];
+        if (dccFile.logFile && (d > dccFile.nextLogFileDate))
+            client.closeLogFile(dccFile);
+    }
+
+    // Don't forget about the client tab:
+    if (client.logFile && (d > client.nextLogFileDate))
+        client.closeLogFile(client);
+
+    // We use the same line again to make sure we keep a constant offset
+    // from the full hour, in case the timers go crazy at some point.
+    setTimeout("checkLogFiles()", 3602000 - (Date.now() % 3600000));
 }
 
 CIRCChannel.prototype.getLCFunction =
