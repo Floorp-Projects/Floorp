@@ -944,6 +944,7 @@
 | profiles          |
 | profiles_activity |
 | tokens            |
+| user_group_map    |
 | versions          |
 | votes             |
 | watch             |
