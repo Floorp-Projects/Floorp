@@ -159,7 +159,7 @@ function pm_delayedsave()
      * go through eventually, as we will stop resetting it.
      */
     if ((this.prefSaveTime == 0) ||
-        (now - this.prefSaveTime < this.SAVE_MAX_DELAY))
+        (now - this.prefSaveTime < this.PREF_MAX_DELAY))
     {
         if (this.prefSaveTime == 0)
             this.prefSaveTime = now;

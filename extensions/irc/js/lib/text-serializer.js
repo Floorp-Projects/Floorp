@@ -137,7 +137,7 @@ function ts_serialize(obj)
     if (!this._open)
         this.open(">");
     if (!ASSERT(this._open, "Unable to open the file for writing!"))
-        return false;
+        return;
 
     var me = this;
 
