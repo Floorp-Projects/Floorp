@@ -77,6 +77,8 @@ EXTRA_LIBS		+= \
 
 include $(topsrcdir)/config/config.mk
 
+DEFINES += -DMOZILLA_INTERNAL_API
+
 ifeq ($(OS_ARCH),Darwin)
  INCLUDES += -I$(MOZ_JDKHOME)/include -I.
  DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljvm_compat

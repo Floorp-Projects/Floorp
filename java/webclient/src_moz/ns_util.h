@@ -45,7 +45,6 @@
 #include "nsIBaseWindow.h" // to get methods like SetVisibility
 #include "nsIPresShell.h"
 #include "nsIThread.h" // for PRThread
-#include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsIDOMDocument.h"
 

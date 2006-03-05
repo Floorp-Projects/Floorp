@@ -41,7 +41,7 @@
 #include <windows.h>
 #endif
 
-#include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
+//#include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
 #include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
 //nsIDocShell is included in ns_util.h
 #include "nsIEventQueueService.h" // for PLEventQueue
@@ -63,12 +63,6 @@
 
 #include "prlog.h" // for PR_ASSERT
 
-
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-
-static NS_DEFINE_IID(kISHistoryIID, NS_ISHISTORY_IID);
-static NS_DEFINE_CID(kSHistoryCID, NS_SHISTORY_CID);
 
 
 static const char *NS_DOCSHELL_PROGID = "component://netscape/docshell/html";

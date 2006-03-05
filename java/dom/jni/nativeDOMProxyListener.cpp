@@ -46,7 +46,7 @@ NativeDOMProxyListener::~NativeDOMProxyListener()
 {
     JNIEnv *env;
 
-    if (vm->AttachCurrentThread((void **) &env, NULL) != 0) 
+    if (vm->AttachCurrentThread(&env, NULL) != 0) 
         PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
             ("NativeDOMProxyListener: Can't attach current thread to JVM\n"));
 
@@ -64,7 +64,7 @@ NS_IMETHODIMP NativeDOMProxyListener::HandleEvent(nsIDOMEvent* aEvent)
     jobject jevent;
     JNIEnv *env;
 
-    if (vm->AttachCurrentThread((void **) &env, NULL) != 0) {
+    if (vm->AttachCurrentThread(&env, NULL) != 0) {
         PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
             ("NativeDOMProxyListener:HandleEvent Can't attach current thread to JVM\n"));
         return NS_ERROR_FAILURE;

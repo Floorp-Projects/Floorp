@@ -40,7 +40,6 @@
 #include "InputStreamShim.h"
 #include "nsNetUtil.h"
 
-#include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsILinkHandler.h"
 #include "nsIContent.h"

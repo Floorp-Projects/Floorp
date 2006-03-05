@@ -282,8 +282,8 @@ NativeBrowserControl::TopLevelFocusIn(void)
   if (!piWin)
     return;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController = nsnull;
+  focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_TRUE);
 }
@@ -300,8 +300,8 @@ NativeBrowserControl::TopLevelFocusOut(void)
   if (!piWin)
     return;
 
-  nsCOMPtr<nsIFocusController> focusController;
-  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  nsIFocusController *focusController;
+  focusController = piWin->GetRootFocusController();
   if (focusController)
     focusController->SetActive(PR_FALSE);
 }
@@ -387,8 +387,8 @@ NativeBrowserControl::GetListener()
         return;
     }
     
-    nsCOMPtr<nsIChromeEventHandler> chromeHandler;
-    piWin->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+    nsIChromeEventHandler *chromeHandler;
+    chromeHandler = piWin->GetChromeEventHandler();
     
     mEventReceiver = do_QueryInterface(chromeHandler);
     
@@ -475,8 +475,8 @@ NativeBrowserControl::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
     // get the private DOM window
     nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
     // and the root window for that DOM window
-    nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-    domWindowPrivate->GetPrivateRoot(getter_AddRefs(rootWindow));
+    nsIDOMWindowInternal *rootWindow;
+    rootWindow = domWindowPrivate->GetPrivateRoot();
     
     nsCOMPtr<nsIChromeEventHandler> chromeHandler;
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(rootWindow));

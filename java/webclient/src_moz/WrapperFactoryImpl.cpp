@@ -280,8 +280,9 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeTermina
         NS_RELEASE(wcContext->sAppShell);
         wcContext->sAppShell = nsnull;
     }
-    PR_ASSERT(nsnull == wcContext->sProfile);
-    PR_ASSERT(nsnull == wcContext->sProfileInternal);
+	// PENDING(edburns): 20060304 Fix this when ProfileManager is fixed
+//    PR_ASSERT(nsnull == wcContext->sProfile);
+//    PR_ASSERT(nsnull == wcContext->sProfileInternal);
 
     util_DeallocateShareInitContext(env, &(wcContext->shareContext));
     

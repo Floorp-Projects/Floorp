@@ -29,7 +29,6 @@
 
  */
 
-#include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 
 

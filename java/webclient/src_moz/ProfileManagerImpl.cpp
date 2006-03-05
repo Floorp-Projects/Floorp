@@ -32,13 +32,15 @@
 
 #include <nsCRT.h> // for nsCRT::strlen
 
-#include <nsICmdLineService.h> // for the cmdline service to give to the
+// edburns_20060216
+// #include <nsICmdLineService.h> // for the cmdline service to give to the
                                // profile manager.
 #include <nsIProfile.h> // for the profile manager
 #include <nsIProfileInternal.h> // for the profile manager
 #include <nsString.h> // for nsCAutoString
 
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
+// edburns_20060216
+// static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 
 //
 // global data
@@ -54,6 +56,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: entering\n"));
+#if 0 // edburns_20060219 comment this out
     nsresult rv;
     NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
     
@@ -166,6 +169,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     NS_ADDREF(wcContext->sProfile);
     wcContext->sProfileInternal = profileInt.get();
     NS_ADDREF(wcContext->sProfileInternal);
+
+#endif // edburns_20060216
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: exiting\n"));
@@ -176,6 +181,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
 {
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeShutdown: entering\n"));
+    // edburns_20060216
+#if 0
 
     NativeWrapperFactory *wcContext = (NativeWrapperFactory *) nativeContext;
 
@@ -192,6 +199,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     wcContext->sProfile = nsnull;
     NS_RELEASE(wcContext->sProfileInternal);
     wcContext->sProfileInternal = nsnull;
+#endif // edburns_20060216
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeShutdown: exiting\n"));

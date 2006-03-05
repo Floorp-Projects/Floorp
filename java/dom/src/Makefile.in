@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
  		  necko \
  		  docshell \
  		  dom \
+ 		  layout \
  		  widget \
  		  uriloader \
  		  shistory \
@@ -102,6 +103,8 @@ EXPORTS 	= \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DMOZILLA_INTERNAL_API
 
 edburns:
 	@echo $(XPCOM_LIBS)

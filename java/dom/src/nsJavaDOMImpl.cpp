@@ -549,7 +549,7 @@ JNIEnv* nsJavaDOMImpl::GetJNIEnv() {
    if (!jvm) {
 	StartJVM();
    }
-   jvm->AttachCurrentThread((void**)&env,NULL);
+   jvm->AttachCurrentThread(&env,NULL);
 #endif /* JAVA_DOM_OJI_ENABLE */
    return env;
 }

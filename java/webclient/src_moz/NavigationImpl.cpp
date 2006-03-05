@@ -30,9 +30,7 @@
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h"
 
-#include "nsIServiceManagerUtils.h" // PENDING(edburns): when moving
-                                    // past 1.7, this changes to
-                                    // nsServiceManagerUtils.h
+#include "nsServiceManagerUtils.h" 
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsString.h"
