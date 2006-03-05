@@ -181,7 +181,7 @@ calICSCalendar.prototype = {
     onStreamComplete: function(loader, ctxt, status, resultLength, result)
     {
         // Allow the hook to get needed data (like an etag) of the channel
-        this.mHooks.onAfterGet(loader.request.QueryInterface(Components.interfaces.nsIChannel));
+        this.mHooks.onAfterGet();
 
         // Create a new calendar, to get rid of all the old events
         this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
@@ -209,7 +209,12 @@ calICSCalendar.prototype = {
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
         // for non-existing or empty files, but not good for invalid files.
         // That's why we put them in readOnly mode
+        tryParse:
         try {
+            if (!str) {
+                break tryParse; // new file (empty), so nothing to parse
+            }
+
             var rootComp = this.mICSService.parseICS(str);
 
             var calComp;
@@ -848,7 +853,7 @@ dummyHooks.prototype = {
         return true;
     },
     
-    onAfterGet: function(aChannel) {
+    onAfterGet: function() {
         return true;
     },
 
@@ -862,21 +867,24 @@ dummyHooks.prototype = {
 }
 
 function httpHooks() {
+    this.mChannel = null;
 }
 
 httpHooks.prototype = {
     onBeforeGet: function(aChannel) {
+        this.mChannel = aChannel;
         return true;
     },
     
-    onAfterGet: function(aChannel) {
-        var httpchannel = aChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+    onAfterGet: function() {
+        var httpchannel = this.mChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
         try {
             this.mEtag = httpchannel.getResponseHeader("ETag");
         } catch(e) {
             // No etag header. Now what?
             this.mEtag = null;
         }
+        this.mChannel = null;
         return true;
     },
 
