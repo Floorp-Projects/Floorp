@@ -60,7 +60,7 @@ function addAlarm(event)
        var soundURL = calendarPrefs.getCharPref("alarms.soundURL");
        var sound = Components.classes["@mozilla.org/sound;1"]
                              .createInstance(Components.interfaces.nsISound);
-       if (soundURL & soundURL.length & soundURL.length > 0) {
+       if (soundURL && soundURL.length && soundURL.length > 0) {
          soundURL = makeURL(soundURL);
          sound.init();
          sound.play(soundURL);
