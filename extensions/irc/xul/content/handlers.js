@@ -666,42 +666,44 @@ function onNotifyTimeout()
     }
 }
 
-var lastWhoCheckTime = new Date();
-var lastWhoCheckChannel = null;
-
 function onWhoTimeout()
 {
-    lastWhoCheckTime = new Date();
-    var checkNext = (lastWhoCheckChannel == null);
+    function checkWho()
+    {
+        var checkNext = (net.lastWhoCheckChannel == null);
+        for (var c in net.primServ.channels)
+        {
+            var chan = net.primServ.channels[c];
+
+            if (checkNext && chan.active &&
+                chan.getUsersLength() < client.prefs["autoAwayCap"])
+            {
+                net.primServ.LIGHTWEIGHT_WHO = true;
+                net.primServ.sendData("WHO " + chan.encodedName + "\n");
+                net.lastWhoCheckChannel = chan;
+                net.lastWhoCheckTime = Date.now();
+                return;
+            }
+
+            if (chan == net.lastWhoCheckChannel)
+                checkNext = true;
+        }
+        if (net.lastWhoCheckChannel)
+        {
+            net.lastWhoCheckChannel = null;
+            checkWho();
+        }
+    };
 
     for (var n in client.networks)
     {
         var net = client.networks[n];
-        if (net.isConnected())
-        {
-            for (var c in net.primServ.channels)
-            {
-                var chan = net.primServ.channels[c];
-
-                if (checkNext && chan.active &&
-                    chan.getUsersLength() < client.prefs["autoAwayCap"])
-                {
-                    net.primServ.LIGHTWEIGHT_WHO = true;
-                    net.primServ.sendData("WHO " + chan.encodedName + "\n");
-                    lastWhoCheckChannel = chan;
-                    return;
-                }
-
-                if (chan == lastWhoCheckChannel)
-                    checkNext = true;
-            }
-        }
-    }
-
-    if (lastWhoCheckChannel)
-    {
-        lastWhoCheckChannel = null;
-        onWhoTimeout();
+        var period = net.prefs["autoAwayPeriod"];
+        // The time since the last check, with a 5s error margin to
+        // stop us from not checking because the timer fired a tad early:
+        var waited = Date.now() - net.lastWhoCheckTime + 5000;
+        if (net.isConnected() && (period != 0) && (period * 60000 < waited))
+            checkWho();
     }
 }
 
@@ -969,6 +971,8 @@ function my_unknown (e)
     this.display(toUnicode(e.params.join(" "), this), e.code.toUpperCase());
 }
 
+CIRCNetwork.prototype.lastWhoCheckChannel = null;
+CIRCNetwork.prototype.lastWhoCheckTime = 0;
 CIRCNetwork.prototype.on001 = /* Welcome! */
 CIRCNetwork.prototype.on002 = /* your host is */
 CIRCNetwork.prototype.on003 = /* server born-on date */

@@ -127,6 +127,7 @@ function initPrefs()
          ["activityFlashDelay", 200,      "global"],
          ["aliases",            [],       "lists.aliases"],
          ["autoAwayCap",        300,      "global"],
+         ["autoAwayPeriod",     2,        "appearance.misc"],
          ["autoRejoin",         false,    ".connect"],
          ["awayNick",           "",       ".ident"],
          ["bugURL",           "https://bugzilla.mozilla.org/show_bug.cgi?id=%s",
@@ -406,6 +407,7 @@ function getNetworkPrefManager(network)
 
     var prefs =
         [
+         ["autoAwayPeriod",   defer, "appearance.misc"],
          ["autoRejoin",       defer, ".connect"],
          ["away",             "",    "hidden"],
          ["awayNick",         defer, ".ident"],

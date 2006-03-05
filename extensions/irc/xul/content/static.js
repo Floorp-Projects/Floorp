@@ -43,7 +43,7 @@ const __cz_version   = "0.9.71";
 const __cz_condition = "green";
 const __cz_suffix    = "";
 const __cz_guid      = "59c81df5-4b7a-477b-912d-4e0fdf64e5f2";
-const __cz_locale    = "0.9.71.0";
+const __cz_locale    = "0.9.71.1";
 
 var warn;
 var ASSERT;
@@ -85,7 +85,9 @@ client.MAX_MSG_PER_ROW = 3; /* default number of messages to collapse into a
 client.INITIAL_COLSPAN = 5; /* MAX_MSG_PER_ROW cannot grow to greater than
                              * one half INITIAL_COLSPAN + 1. */
 client.NOTIFY_TIMEOUT = 5 * 60 * 1000; /* update notify list every 5 minutes */
-client.AWAY_TIMEOUT = 2 * 60 * 1000; /* update away status every 2 mins */
+
+// Check every minute which networks have away statuses that need an update.
+client.AWAY_TIMEOUT = 60 * 1000;
 
 client.SLOPPY_NETWORKS = true; /* true if msgs from a network can be displayed
                                 * on the current object if it is related to
@@ -354,6 +356,7 @@ function initStatic()
 
     client.logFile = null;
     setInterval("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
+    // Call every minute, will check only the networks necessary.
     setInterval("onWhoTimeout()", client.AWAY_TIMEOUT);
 
     client.awayMsgs = [{ message: MSG_AWAY_DEFAULT }];
