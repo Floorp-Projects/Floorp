@@ -2760,6 +2760,7 @@ function my_dccfileprogress(e)
     {
         this.progress = pcent;
         updateProgress();
+        updateTitle();
 
         var tab = getTabForObject(this);
         if (tab)

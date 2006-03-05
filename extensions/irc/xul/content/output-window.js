@@ -79,7 +79,7 @@ var headers = {
     
     IRCDCCChat: {
         prefix: "dcc-chat-",
-        fields: ["container", "url-anchor", "remotestr", "title"],
+        fields: ["container", "remotestr", "title"],
         update: updateDCCChat
     },
     
@@ -489,18 +489,12 @@ function updateUser()
 
 function updateDCCChat()
 {
-    var source;
-    if (view.user)
-        source = view.user.displayName;
-    else
-        source = MSG_UNKNOWN;
-
-    if (view.state == 3)
+    if (view.state.state == 4)
         setText("remotestr", view.remoteIP + ":" + view.port, true);
     else
         setText("remotestr", null, true);
 
-    setText("title", getMsg(MSG_TITLE_USER, [view.user.displayName, source]));
+    setText("title", getMsg(MSG_TITLE_DCCCHAT, view.user.unicodeName));
 }
 
 function updateDCCFile()

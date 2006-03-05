@@ -1953,7 +1953,8 @@ function getObjectDetails (obj, rv)
             //rv.viewType = MSG_USER;
             rv.file = obj;
             rv.user = obj.user;
-            rv.fileName = obj.unicodeName;
+            rv.userName = obj.unicodeName;
+            rv.fileName = obj.filename;
             break;
 
         default:
@@ -2461,10 +2462,11 @@ function updateTitle (obj)
         (obj && obj != client.currentObject))
         return;
 
-    var tstring;
+    var tstring = MSG_TITLE_UNKNOWN;
     var o = getObjectDetails(client.currentObject);
     var net = o.network ? o.network.unicodeName : "";
     var nick = "";
+    client.statusBar["server-nick"].disabled = false;
 
     switch (client.currentObject.TYPE)
     {
@@ -2534,9 +2536,22 @@ function updateTitle (obj)
 
         case "IRCClient":
             nick = client.prefs["nickname"];
+            break;
 
-        default:
-            tstring = MSG_TITLE_UNKNOWN;
+        case "IRCDCCChat":
+            client.statusBar["server-nick"].disabled = true;
+            nick = o.chat.me.unicodeName;
+            tstring = getMsg(MSG_TITLE_DCCCHAT, o.userName);
+            break;
+
+        case "IRCDCCFileTransfer":
+            client.statusBar["server-nick"].disabled = true;
+            nick = o.file.me.unicodeName;
+            var data = [o.file.progress, o.file.filename, o.userName];
+            if (o.file.state.dir == 1)
+                tstring = getMsg(MSG_TITLE_DCCFILE_SEND, data);
+            else
+                tstring = getMsg(MSG_TITLE_DCCFILE_GET, data);
             break;
     }
 

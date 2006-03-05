@@ -24,7 +24,8 @@
 
         .h-table,
         #net-url,
-        #ch-url {
+        #ch-url,
+        #dcc-chat-title {
           width: 100%;
         }
 
@@ -170,16 +171,9 @@
         <table class="h-table">
           <tbody>
             <tr>
-              <td class="label" localize="output.url"></td>
-              <td class="value crop-right" width="100%">
-                <a id="dcc-chat-url-anchor" class="chatzilla-link"
-                   href="irc://foo/bar">irc://foo/bar</a>
-              </td>
+              <td id="dcc-chat-title" localize="none"></td>
               <td class="label" id="dcc-chat-remotestr-l" localize="output.to"></td>
               <td class="value" id="dcc-chat-remotestr" localize="none"></td>
-            </tr>
-            <tr>
-              <td id="dcc-chat-title" colspan="4" localize="none"></td>
             </tr>
           </tbody>
         </table>
