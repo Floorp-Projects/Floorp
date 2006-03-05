@@ -120,7 +120,6 @@
               button.setAttribute("container", "true");
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");
-              popup.setAttribute("openInTabs", "all"); // Include menu option to open in tabs.
               // This is set here and not in the XBL constructor for the menu because
               // it doesn't get initialized properly in the constructor.
 #ifndef XP_MACOSX

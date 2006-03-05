@@ -443,8 +443,9 @@
                type="places"
                context="placesContext"
                openInTabs="children"
-               oncommand="BookmarksMenu.onCommand(event);"
-               onclick="BookmarksMenu.onClick(event);">
+               oncommand="BookmarksEventHandler.onCommand(event);"
+               onclick="BookmarksEventHandler.onClick(event);"
+               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
       <menuseparator builder="start"/>

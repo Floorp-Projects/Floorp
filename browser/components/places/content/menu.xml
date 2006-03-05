@@ -10,9 +10,6 @@
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
-        var bundle = document.getElementById("placeBundle");
-        this._labelOpenInTabs = bundle.getString("menuOpenInTabs.label");
-        this._accesskeyOpenInTabs = bundle.getString("menuOpenInTabs.accesskey");
       ]]></constructor>
       
       <destructor><![CDATA[
@@ -181,8 +178,6 @@
                 element.setAttribute("label", child.title);
                 var popup = document.createElementNS(XULNS, "menupopup");
                 popup.setAttribute("type", "places");
-                if (this.hasAttribute("openInTabs"))
-                  popup.setAttribute("openInTabs", "all"); // Include menu option to open in tabs.
                 element.appendChild(popup);
 #ifndef XP_MACOSX
                 // No context menus on menus on Mac
@@ -228,18 +223,6 @@
               element.setAttribute("disabled", true);
               this.appendChild(element);
             }
-          }
-          
-          // If this menu has the attribute set to open children in tabs,
-          // add the menuitems here to do that.
-          if ((cc > 0) && this.getAttribute("openInTabs") == "all") {
-            var separator = document.createElementNS(XULNS, "menuseparator");
-            this.appendChild(separator);
-            var openInTabs = document.createElementNS(XULNS, "menuitem");
-            openInTabs.setAttribute("label", this._labelOpenInTabs);
-            openInTabs.setAttribute("accesskey", this._accesskeyOpenInTabs);
-            openInTabs.setAttribute("command", "placesCmd_open:tabsEnabled");
-            this.appendChild(openInTabs);
           }
           
           // Reset the container to the same state it was in before the function was called.

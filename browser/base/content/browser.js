@@ -6975,47 +6975,11 @@ var HistoryMenu = {
 };
 
 /*
- * Functions for the Bookmarks Menu
+ * Functions for handling events in the Bookmarks Toolbar and menu.
  */
-var BookmarksMenu = {
+var BookmarksEventHandler = {  
   /*
-   * Handler for when an item in the bookmarks menu is clicked.
-   * If the click is a middle-click, opens the item in a new tab
-   * and closes the menu.  (Left-clicks are handled by the command handler)
-   * @param event DOMEvent for the click
-   */
-  onClick: function BM_onClick(event) {
-    if (event.button == 1) {
-      PlacesController.mouseLoadURI(event);
-      // Menus selected with middle click must be closed manually.
-      var node = event.target;
-      while (node && 
-             (node.localName == "menu" || 
-              node.localName == "menupopup")) {
-        if (node.localName == "menupopup")
-          node.hidePopup();
-        
-        node = node.parentNode;
-      }
-    }
-  },
-  
-  /*
-   * Handler for command event for an item in the bookmarks menu.
-   * Opens the item.
-   * @param event DOMEvent for the command
-   */
-  onCommand: function BM_onCommand(event) {
-    PlacesController.mouseLoadURI(event);
-  }
-};
-
-/*
- * Functions for the Bookmarks Toolbar
- */
-var BookmarksToolbar = {  
-  /*
-   * Handler for click event for an item in the bookmarks toolbar.
+   * Handler for click event for an item in the bookmarks toolbar or menu.
    * Menus and submenus from the folder buttons bubble up to this handler.
    * Only handle middle-click; left-click is handled in the onCommand function.
    * When items are middle-clicked, open them in tabs.
@@ -7053,8 +7017,24 @@ var BookmarksToolbar = {
    */
   onCommand: function BM_onCommand(event) {
     PlacesController.mouseLoadURI(event);
+  },
+  
+  /*
+   * Handler for popupshowing event for an item in bookmarks toolbar or menu.
+   * If the item isn't the main bookmarks menu, add an "Open in Tabs" menuitem
+   * to the bottom of the popup.
+   * @param event DOMEvent for popupshowing
+   */
+  onPopupShowing: function BM_onPopupShowing(event) {
+    if (event.target.localName == "menupopup" &&
+        event.target.id != "bookmarksMenuPopup") {
+      var separator = document.createElement("menuseparator");
+      event.target.appendChild(separator);
+      var openInTabs = document.createElement("menuitem");
+      openInTabs.setAttribute("command", "placesCmd_open:tabsEnabled");
+      event.target.appendChild(openInTabs);
+    }
   }
 };
 
 #endif
-
