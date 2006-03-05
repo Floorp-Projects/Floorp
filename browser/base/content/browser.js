@@ -7034,6 +7034,19 @@ var BookmarksEventHandler = {
       openInTabs.setAttribute("command", "placesCmd_open:tabsEnabled");
       event.target.appendChild(openInTabs);
     }
+  },
+  
+  /*
+   * Handler for dragover event for an item in the bookmarks menu.
+   * If this is the top-level bookmarks menu, open the menu so that
+   * items can be dropped into it.
+   * @param event DOMEvent for the dragover.
+   */
+  onDragOver: function BM_onDragOver(event) {
+    if (event.target.id == "bookmarksMenu") {
+      // If this is the bookmarks menu, tell its menupopup child to show.
+      event.target.lastChild.showPopup(event.target.lastChild);
+    }
   }
 };
 
