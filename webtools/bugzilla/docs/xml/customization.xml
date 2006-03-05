@@ -1034,6 +1034,10 @@ sshh... don't tell your users!)
 profiles_activity:  Need to know who did what when to who's profile?  This'll
 tell you, it's a pretty complete history.
 
+user_group_map:  This table stores which user belongs to which group,
+whether the user can bless others, and how the users obtained the
+membership of the group.
+
 versions:  Version information for every product
 
 votes:  Who voted for what when
