@@ -109,14 +109,17 @@ var ltnCalendarManagerObserver = {
 
     onCalendarRegistered: function(aCalendar) {
         addCalendarToTree(aCalendar);
+        getCompositeCalendar().addCalendar(aCalendar);
     },
 
     onCalendarUnregistering: function(aCalendar) {
         removeCalendarFromTree(aCalendar);
+        getCompositeCalendar().removeCalendar(aCalendar.uri);
     },
 
     onCalendarDeleting: function(aCalendar) {
         removeCalendarFromTree(aCalendar); // XXX what else?
+        getCompositeCalendar().removeCalendar(aCalendar.uri);
     },
 
     onCalendarPrefSet: function(aCalendar, aName, aValue) {
