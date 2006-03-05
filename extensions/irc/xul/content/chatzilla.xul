@@ -81,6 +81,8 @@
                 
                 <bindings>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#sortname" object="?sortname"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#founder" object="?founder"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#admin" object="?admin"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#op" object="?op"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#halfop" object="?halfop"/>
                   <binding subject="?member" predicate="http://home.netscape.com/NC-irc#voice" object="?voice"/>
@@ -92,9 +94,9 @@
                 <action>
                   <treechildren>
                     <treeitem uri="?member" flex="1"
-                      properties="op-?op halfop-?halfop voice-?voice away-?away">
+                      properties="founder-?founder admin-?admin op-?op halfop-?halfop voice-?voice away-?away">
                       <treerow>
-                          <treecell properties="op-?op halfop-?halfop voice-?voice away-?away"
+                          <treecell properties="founder-?founder admin-?admin op-?op halfop-?halfop voice-?voice away-?away"
                            label="?nick" unicodeName="?unicodeName"/>
                       </treerow>
                     </treeitem>
@@ -105,7 +107,7 @@
     
             <treecols>
               <treecol id="usercol" hideheader="true" flex="1"
-                properties="op-?op halfop-?halfop voice-?voice away-?away"/>
+                properties="founder-?founder admin-?admin op-?op halfop-?halfop voice-?voice away-?away"/>
             </treecols>
           </tree>
     

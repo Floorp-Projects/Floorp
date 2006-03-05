@@ -201,6 +201,40 @@ treechildren::-moz-tree-image(op-true) {
     list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
 }
 
+/* admin */
+treechildren:-moz-tree-image(admin-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/admin-symbol.png);
+}
+
+treechildren::-moz-tree-image(admin-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/admin-symbol.png);
+}
+
+#user-list[mode="graphic"] treechildren:-moz-tree-image(admin-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/admin-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image(admin-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/admin-graphic.png);
+}
+
+/* founder */
+treechildren:-moz-tree-image(founder-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/founder-symbol.png);
+}
+
+treechildren::-moz-tree-image(founder-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/founder-symbol.png);
+}
+
+#user-list[mode="graphic"] treechildren:-moz-tree-image(founder-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/founder-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image(founder-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/founder-graphic.png);
+}
+
 /* away */
 treechildren:-moz-tree-cell-text(away-true) {
     color: GrayText;

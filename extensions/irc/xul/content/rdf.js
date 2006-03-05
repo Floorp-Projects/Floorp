@@ -75,6 +75,8 @@ function RDFHelper()
     this.resChannel  = this.svc.GetResource (RES_PFX + "channel");
     this.resChanUser = this.svc.GetResource (RES_PFX + "chanuser");
     this.resSortName = this.svc.GetResource (RES_PFX + "sortname");
+    this.resFounder  = this.svc.GetResource (RES_PFX + "founder");
+    this.resAdmin    = this.svc.GetResource (RES_PFX + "admin");
     this.resOp       = this.svc.GetResource (RES_PFX + "op");
     this.resHalfOp   = this.svc.GetResource (RES_PFX + "halfop");
     this.resVoice    = this.svc.GetResource (RES_PFX + "voice");
@@ -89,6 +91,8 @@ function RDFHelper()
     this.litFalse    = this.svc.GetLiteral ("false");
     this.litUnk      = this.svc.GetLiteral ("");
 
+    this.ds.Assert (this.resNullUser, this.resFounder, this.litFalse, true);
+    this.ds.Assert (this.resNullUser, this.resAdmin, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resOp, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resHalfOp, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resVoice, this.litFalse, true);

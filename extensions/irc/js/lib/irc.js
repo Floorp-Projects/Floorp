@@ -3177,6 +3177,10 @@ function CIRCChanUser(parent, unicodeName, encodedName, modes)
                 }
             }
         }
+        existingUser.isFounder = (arrayContains(existingUser.modes, "q")) ?
+            true : false;
+        existingUser.isAdmin = (arrayContains(existingUser.modes, "a")) ?
+            true : false;
         existingUser.isOp = (arrayContains(existingUser.modes, "o")) ?
             true : false;
         existingUser.isHalfOp = (arrayContains(existingUser.modes, "h")) ?
@@ -3207,6 +3211,8 @@ function CIRCChanUser(parent, unicodeName, encodedName, modes)
     this.modes = new Array();
     if (typeof modes != "undefined")
         this.modes = modes;
+    this.isFounder = (arrayContains(this.modes, "q")) ? true : false;
+    this.isAdmin = (arrayContains(this.modes, "a")) ? true : false;
     this.isOp = (arrayContains(this.modes, "o")) ? true : false;
     this.isHalfOp = (arrayContains(this.modes, "h")) ? true : false;
     this.isVoice = (arrayContains(this.modes, "v")) ? true : false;

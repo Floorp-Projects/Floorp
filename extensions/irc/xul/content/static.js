@@ -2493,7 +2493,11 @@ function updateTitle (obj)
                 if (o.parent.me.canonicalName in client.currentObject.users)
                 {
                     var cuser = client.currentObject.users[o.parent.me.canonicalName];
-                    if (cuser.isOp)
+                    if (cuser.isFounder)
+                        nick = "~" + nick;
+                    else if (cuser.isAdmin)
+                        nick = "&" + nick;
+                    else if (cuser.isOp)
                         nick = "@" + nick;
                     else if (cuser.isHalfOp)
                         nick = "%" + nick;
@@ -4641,6 +4645,8 @@ function usr_graphres()
         rdf.Assert (this.rdfRes, rdf.resUser, rdf.litUnk);
         rdf.Assert (this.rdfRes, rdf.resHost, rdf.litUnk);
         rdf.Assert (this.rdfRes, rdf.resSortName, rdf.litUnk);
+        rdf.Assert (this.rdfRes, rdf.resFounder, rdf.litUnk);
+        rdf.Assert (this.rdfRes, rdf.resAdmin, rdf.litUnk);
         rdf.Assert (this.rdfRes, rdf.resOp, rdf.litUnk);
         rdf.Assert (this.rdfRes, rdf.resHalfOp, rdf.litUnk);
         rdf.Assert (this.rdfRes, rdf.resVoice, rdf.litUnk);
@@ -4681,7 +4687,7 @@ function usr_updres()
     // Check for the highest mode the user has.
     const userModes = this.parent.parent.userModes;
     var modeLevel = 0;
-    var mode = "";
+    var mode;
     for (var i = 0; i < this.modes.length; i++)
     {
         for (var j = 0; j < userModes.length; j++)
@@ -4691,7 +4697,7 @@ function usr_updres()
                 if (userModes.length - j > modeLevel)
                 {
                     modeLevel = userModes.length - j;
-                    mode = userModes[j].symbol;
+                    mode = userModes[j];
                 }
                 break;
             }
@@ -4701,17 +4707,17 @@ function usr_updres()
     // Counts numerically down from 9.
     var sortname = (9 - modeLevel) + "-" + this.unicodeName;
 
-    // We want to show mode symbols, but only those we don't 'style'.
-    if (mode && !mode.match(/^[@%+]$/))
-    {
-        rdf.Change(this.rdfRes, rdf.resNick,
-                   rdf.GetLiteral(mode + " " + this.unicodeName));
-    }
-    else
-    {
-        rdf.Change (this.rdfRes, rdf.resNick, rdf.GetLiteral(this.unicodeName));
-    }
+    // We want to show mode symbols, but only for modes we don't 'style'.
+    var displayname = this.unicodeName;
+    if (mode && !mode.mode.match(/^[qaohv]$/))
+        displayname = mode.symbol + " " + displayname;
+
+    rdf.Change(this.rdfRes, rdf.resNick, rdf.GetLiteral(displayname));
     rdf.Change(this.rdfRes, rdf.resSortName, rdf.GetLiteral(sortname));
+    rdf.Change(this.rdfRes, rdf.resFounder,
+               this.isFounder ? rdf.litTrue : rdf.litFalse);
+    rdf.Change(this.rdfRes, rdf.resAdmin,
+               this.isAdmin ? rdf.litTrue : rdf.litFalse);
     rdf.Change(this.rdfRes, rdf.resOp,
                this.isOp ? rdf.litTrue : rdf.litFalse);
     rdf.Change(this.rdfRes, rdf.resHalfOp,
