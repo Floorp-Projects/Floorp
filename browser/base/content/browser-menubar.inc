@@ -438,7 +438,8 @@
             </menu>
 #else
   <menu id="bookmarksMenu" 
-        label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;">
+        label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
+        ondragover="BookmarksEventHandler.onDragOver(event);">
     <menupopup id="bookmarksMenuPopup"
                type="places"
                context="placesContext"
