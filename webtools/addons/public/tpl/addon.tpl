@@ -21,7 +21,8 @@ released on {$addon->VersionDateAdded|date_format}
 <p>{$addon->Description}</p>
 
 <p class="requires">
-<b>Requires:</b>
+Requires:
+</p>
 <table>
 {section name=AppVersions loop=$addon->AppVersions}
 <tr>
@@ -31,7 +32,6 @@ released on {$addon->VersionDateAdded|date_format}
 </tr>
 {/section}
 </table>
-</p>
 
 <div class="key-point install-box">
 <div class="install">
