@@ -1848,13 +1848,11 @@ function getShortcutOrURI(aURL, aPostDataRef)
   try {
     var shortcutURL = null;
 #ifdef MOZ_PLACES
-/*
     var bookmarkService = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
                              .getService(nsCI.nsINavBookmarksService);
     var shortcutURI = bookmarkService.getURIForKeyword(aURL);
     if (shortcutURI)
       shortcutURL = shortcutURI.spec;
-      */
 #else
     shortcutURL = BMSVC.resolveKeyword(aURL, aPostDataRef);
 #endif
@@ -1866,11 +1864,9 @@ function getShortcutOrURI(aURL, aPostDataRef)
         var cmd = aURL.substr(0, aOffset);
         var text = aURL.substr(aOffset+1);
 #ifdef MOZ_PLACES
-/*
         shortcutURI = bookmarkService.getURIForKeyword(cmd);
         if (shortcutURI)
           shortcutURL = shortcutURI.spec;
-          */
 #else
         shortcutURL = BMSVC.resolveKeyword(cmd, aPostDataRef);
 #endif
