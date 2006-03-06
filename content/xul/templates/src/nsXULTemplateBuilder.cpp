@@ -271,8 +271,8 @@ nsXULTemplateBuilder::AddRuleFilter(nsIDOMNode* aRule, nsIXULTemplateRuleFilter*
     for (PRInt32 q = 0; q < count; q++) {
         nsTemplateQuerySet* queryset = mQuerySets[q];
 
-        PRInt32 rulecount = queryset->RuleCount();
-        for (PRInt32 r = 0; r < rulecount; r++) {
+        PRInt16 rulecount = queryset->RuleCount();
+        for (PRInt16 r = 0; r < rulecount; r++) {
             nsTemplateRule* rule = queryset->GetRuleAt(r);
 
             nsCOMPtr<nsIDOMNode> rulenode;
@@ -417,7 +417,13 @@ nsXULTemplateBuilder::ReplaceResult(nsIXULTemplateResult* aOldResult,
     NS_ENSURE_ARG_POINTER(aNewResult);
     NS_ENSURE_ARG_POINTER(aQueryNode);
 
-    return UpdateResult(aOldResult, aNewResult, aQueryNode);
+    // just remove the old result and then add a new result separately
+
+    nsresult rv = UpdateResult(aOldResult, nsnull, nsnull);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return UpdateResult(nsnull, aNewResult, aQueryNode);
 }
 
 nsresult
@@ -429,49 +435,108 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
            ("nsXULTemplateBuilder::UpdateResult %p %p %p",
            aOldResult, aNewResult, aQueryNode));
 
-    // get the container where content should be inserted. If
-    // MayGenerateResult returns false, the container hasn't generated
+    // get the containers where content may be inserted. If
+    // GetInsertionLocations returns false, no container has generated
     // any content yet so new content should not be generated either. This
     // will be false if the result applies to content that is in a closed menu
     // or treeitem for example.
 
-    nsIContent* insertionPoint;
-    PRBool mayReplace = MayGenerateResult(aOldResult ? aOldResult : aNewResult, &insertionPoint);
+    nsCOMPtr<nsISupportsArray> insertionPoints;
+    PRBool mayReplace = GetInsertionLocations(aOldResult ? aOldResult : aNewResult,
+                                              getter_AddRefs(insertionPoints));
     if (! mayReplace)
         return NS_OK;
 
     nsresult rv = NS_OK;
 
-    nsTemplateRule* matchedrule = nsnull;
-    nsTemplateMatch* acceptedmatch = nsnull, * removedmatch = nsnull;
-    nsTemplateMatch* replacedmatch = nsnull;
-
     nsCOMPtr<nsIRDFResource> oldId, newId;
-    if (aNewResult) {
-        rv = GetResultResource(aNewResult, getter_AddRefs(newId));
-        if (NS_FAILED(rv))
-            return rv;
-
-        // XXXndeakin figure out why id is often null
-        if (! newId)
-            return NS_OK;
-    }
+    nsTemplateQuerySet* queryset = nsnull;
 
     if (aOldResult) {
         rv = GetResultResource(aOldResult, getter_AddRefs(oldId));
         if (NS_FAILED(rv))
             return rv;
 
-        if (aNewResult && (oldId != newId))
-            return NS_ERROR_INVALID_ARG;
-
         // Ignore re-entrant builds for content that is currently in our
         // activation stack.
         if (IsActivated(oldId))
             return NS_OK;
+    }
 
+    if (aNewResult) {
+        rv = GetResultResource(aNewResult, getter_AddRefs(newId));
+        if (NS_FAILED(rv))
+            return rv;
+
+        // skip results that don't have ids
+        if (! newId)
+            return NS_OK;
+
+        // Ignore re-entrant builds for content that is currently in our
+        // activation stack.
+        if (IsActivated(newId))
+            return NS_OK;
+
+        // look for the queryset associated with the supplied query node
+        nsCOMPtr<nsIContent> querycontent = do_QueryInterface(aQueryNode);
+
+        PRInt32 count = mQuerySets.Length();
+        for (PRInt32 q = 0; q < count; q++) {
+            nsTemplateQuerySet* qs = mQuerySets[q];
+            if (qs->mQueryNode == querycontent) {
+                queryset = qs;
+                break;
+            }
+        }
+
+        if (! queryset)
+            return NS_OK;
+    }
+
+    if (insertionPoints) {
+        // iterate over each insertion point and add or remove the result from
+        // that container
+        PRUint32 count;
+        insertionPoints->Count(&count);
+
+        for (PRUint32 t = 0; t < count; t++) {
+            nsCOMPtr<nsIContent> insertionPoint =
+                do_QueryElementAt(insertionPoints, t);
+            if (insertionPoint) {
+                rv = UpdateResultInContainer(aOldResult, aNewResult, queryset,
+                                             oldId, newId, insertionPoint);
+                if (NS_FAILED(rv))
+                    return rv;
+            }
+        }
+    }
+    else {
+        // The tree builder doesn't use insertion points, so no insertion
+        // points will be set. In this case, just update the one result.
+        rv = UpdateResultInContainer(aOldResult, aNewResult, queryset,
+                                     oldId, newId, nsnull);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsXULTemplateBuilder::UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
+                                              nsIXULTemplateResult* aNewResult,
+                                              nsTemplateQuerySet* aQuerySet,
+                                              nsIRDFResource* aOldId,
+                                              nsIRDFResource* aNewId,
+                                              nsIContent* aInsertionPoint)
+{
+    nsresult rv = NS_OK;
+    PRInt16 ruleindex;
+    nsTemplateRule* matchedrule = nsnull;
+    nsTemplateMatch* acceptedmatch = nsnull, * removedmatch = nsnull;
+    nsTemplateMatch* replacedmatch = nsnull;
+
+    if (aOldResult) {
         nsTemplateMatch* firstmatch;
-        if (mMatchMap.Get(oldId, &firstmatch)) {
+        if (mMatchMap.Get(aOldId, &firstmatch)) {
             nsTemplateMatch* oldmatch = firstmatch;
             nsTemplateMatch* prevmatch = nsnull;
 
@@ -488,23 +553,30 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                 // the end in case an error occurs
                 nsTemplateMatch* nextmatch = findmatch;
 
-                if (oldmatch->mRule) {
+                if (oldmatch->IsActive()) {
                     // the match being removed is the active match, so scan
                     // through the later matches to determine if one should
                     // now become the active match.
                     while (findmatch) {
-                        DetermineMatchedRule(insertionPoint, findmatch->mResult,
-                                             findmatch->mQuerySet, &matchedrule);
+                        // only other matches with the same container should
+                        // now match, leave other containers alone
+                        if (findmatch->GetContainer() == aInsertionPoint) {
+                            nsTemplateQuerySet* qs =
+                                mQuerySets[findmatch->QuerySetPriority()];
+                        
+                            DetermineMatchedRule(aInsertionPoint, findmatch->mResult,
+                                                 qs, &matchedrule, &ruleindex);
 
-                        if (matchedrule) {
-                            rv = findmatch->RuleMatched(findmatch->mQuerySet,
-                                                        matchedrule,
-                                                        findmatch->mResult);
-                            if (NS_FAILED(rv))
-                                return rv;
+                            if (matchedrule) {
+                                rv = findmatch->RuleMatched(qs,
+                                                            matchedrule, ruleindex,
+                                                            findmatch->mResult);
+                                if (NS_FAILED(rv))
+                                    return rv;
 
-                            acceptedmatch = findmatch;
-                            break;
+                                acceptedmatch = findmatch;
+                                break;
+                            }
                         }
 
                         findmatch = findmatch->mNext;
@@ -514,11 +586,11 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                 if (oldmatch == firstmatch) {
                     // the match to remove is at the beginning
                     if (oldmatch->mNext) {
-                        if (!mMatchMap.Put(oldId, oldmatch->mNext))
+                        if (!mMatchMap.Put(aOldId, oldmatch->mNext))
                             return NS_ERROR_OUT_OF_MEMORY;
                     }
                     else {
-                        mMatchMap.Remove(oldId);
+                        mMatchMap.Remove(aOldId);
                     }
                 }
 
@@ -531,40 +603,21 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
     }
 
     if (aNewResult) {
-        // Ignore re-entrant builds for content that is currently in our
-        // activation stack.
-        if (IsActivated(newId))
+        // only allow a result to be inserted into containers with a matching tag
+        nsIAtom* tag = aQuerySet->GetTag();
+        if (aInsertionPoint && tag && tag != aInsertionPoint->Tag())
             return NS_OK;
 
-        nsTemplateQuerySet* queryset = nsnull;
-
-        nsCOMPtr<nsIContent> querycontent = do_QueryInterface(aQueryNode);
-
-        PRInt32 count = mQuerySets.Length();
-        for (PRInt32 q = 0; q < count; q++) {
-            nsTemplateQuerySet* qs = mQuerySets[q];
-            if (qs->mQueryNode == querycontent) {
-                queryset = qs;
-                break;
-            }
-        }
-
-        if (! queryset)
-            return NS_OK;
-
-        nsIAtom* tag = queryset->GetTag();
-        if (insertionPoint && tag && tag != insertionPoint->Tag())
-            return NS_OK;
+        PRInt32 findpriority = aQuerySet->Priority();
 
         nsTemplateMatch *newmatch =
-            nsTemplateMatch::Create(mPool, queryset, aNewResult);
+            nsTemplateMatch::Create(mPool, findpriority,
+                                    aNewResult, aInsertionPoint);
         if (!newmatch)
             return NS_ERROR_OUT_OF_MEMORY;
 
         nsTemplateMatch* firstmatch;
-        if (mMatchMap.Get(newId, &firstmatch)) {
-            PRInt32 findpriority = queryset->Priority();
-
+        if (mMatchMap.Get(aNewId, &firstmatch)) {
             PRBool hasEarlierActiveMatch = PR_FALSE;
 
             // scan through the existing matches to find where the new one
@@ -573,17 +626,22 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
             nsTemplateMatch* prevmatch = nsnull;
             nsTemplateMatch* oldmatch = firstmatch;
             while (oldmatch) {
-                PRInt32 priority = oldmatch->mQuerySet->Priority();
-                if (priority == findpriority) {
-                    break;
-                }
-                else if (priority > findpriority) {
+                // break out once we've reached a query in the list with a
+                // higher priority. The new match will be inserted at this
+                // location so that the match list is sorted by priority
+                PRInt32 priority = oldmatch->QuerySetPriority();
+                if (priority > findpriority) {
                     oldmatch = nsnull;
                     break;
                 }
 
-                if (oldmatch->mRule)
-                    hasEarlierActiveMatch = PR_TRUE;
+                if (oldmatch->GetContainer() == aInsertionPoint) {
+                    if (priority == findpriority)
+                        break;
+
+                    if (oldmatch->IsActive())
+                        hasEarlierActiveMatch = PR_TRUE;
+                }
 
                 prevmatch = oldmatch;
                 oldmatch = oldmatch->mNext;
@@ -601,16 +659,16 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
             // list in case it will match later
             if (! hasEarlierActiveMatch) {
                 // check if the new result matches the rules
-                rv = DetermineMatchedRule(insertionPoint, newmatch->mResult,
-                                          newmatch->mQuerySet, &matchedrule);
+                rv = DetermineMatchedRule(aInsertionPoint, newmatch->mResult,
+                                          aQuerySet, &matchedrule, &ruleindex);
                 if (NS_FAILED(rv)) {
                     nsTemplateMatch::Destroy(mPool, newmatch);
                     return rv;
                 }
 
                 if (matchedrule) {
-                    rv = newmatch->RuleMatched(newmatch->mQuerySet,
-                                               matchedrule,
+                    rv = newmatch->RuleMatched(aQuerySet,
+                                               matchedrule, ruleindex,
                                                newmatch->mResult);
                     if (NS_FAILED(rv)) {
                         nsTemplateMatch::Destroy(mPool, newmatch);
@@ -620,39 +678,41 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                     acceptedmatch = newmatch;
 
                     // clear the matched state of the later results
-                    // clear the matched state of the later results
+                    // for the same container
                     nsTemplateMatch* clearmatch = newmatch->mNext;
                     while (clearmatch) {
-                        if (clearmatch->mRule)
-                            clearmatch->mRule = nsnull;
+                        if (clearmatch->GetContainer() == aInsertionPoint)
+                            clearmatch->SetInactive();
                         clearmatch = clearmatch->mNext;
                     }
                 }
-                else if (oldmatch && oldmatch->mRule) {
+                else if (oldmatch && oldmatch->IsActive()) {
                     // the result didn't match the rules, so look for a later
                     // one. However, only do this if the old match was the
                     // active match
 
                     newmatch = newmatch->mNext;
                     while (newmatch) {
-                        rv = DetermineMatchedRule(insertionPoint, newmatch->mResult,
-                                                  newmatch->mQuerySet, &matchedrule);
-                        if (NS_FAILED(rv)) {
-                            nsTemplateMatch::Destroy(mPool, newmatch);
-                            return rv;
-                        }
-
-                        if (matchedrule) {
-                            rv = newmatch->RuleMatched(newmatch->mQuerySet,
-                                                       matchedrule,
-                                                       newmatch->mResult);
+                        if (newmatch->GetContainer() == aInsertionPoint) {
+                            rv = DetermineMatchedRule(aInsertionPoint, newmatch->mResult,
+                                                      aQuerySet, &matchedrule, &ruleindex);
                             if (NS_FAILED(rv)) {
                                 nsTemplateMatch::Destroy(mPool, newmatch);
                                 return rv;
                             }
 
-                            acceptedmatch = newmatch;
-                            break;
+                            if (matchedrule) {
+                                rv = newmatch->RuleMatched(aQuerySet,
+                                                           matchedrule, ruleindex,
+                                                           newmatch->mResult);
+                                if (NS_FAILED(rv)) {
+                                    nsTemplateMatch::Destroy(mPool, newmatch);
+                                    return rv;
+                                }
+
+                                acceptedmatch = newmatch;
+                                break;
+                            }
                         }
 
                         newmatch = newmatch->mNext;
@@ -661,7 +721,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
 
                 // put the match in the map if there isn't an earlier match
                 if (! prevmatch) {
-                    if (!mMatchMap.Put(newId, newmatch)) {
+                    if (!mMatchMap.Put(aNewId, newmatch)) {
                         nsTemplateMatch::Destroy(mPool, newmatch);
                         return rv;
                     }
@@ -677,15 +737,16 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
         }
         else {
             // the id is not used in a match yet so add a new match
-            rv = DetermineMatchedRule(insertionPoint, aNewResult,
-                                      queryset, &matchedrule);
+            rv = DetermineMatchedRule(aInsertionPoint, aNewResult,
+                                      aQuerySet, &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
                 nsTemplateMatch::Destroy(mPool, newmatch);
                 return rv;
             }
 
             if (matchedrule) {
-                rv = newmatch->RuleMatched(queryset, matchedrule, aNewResult);
+                rv = newmatch->RuleMatched(aQuerySet, matchedrule,
+                                           ruleindex, aNewResult);
                 if (NS_FAILED(rv)) {
                     nsTemplateMatch::Destroy(mPool, newmatch);
                     return rv;
@@ -694,7 +755,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
                 acceptedmatch = newmatch;
             }
 
-            if (!mMatchMap.Put(newId, newmatch)) {
+            if (!mMatchMap.Put(aNewId, newmatch)) {
                 nsTemplateMatch::Destroy(mPool, newmatch);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
@@ -703,7 +764,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
 
     if (replacedmatch) {
         // delete a replaced match
-        rv = ReplaceMatch(replacedmatch->mResult, nsnull, nsnull, insertionPoint);
+        rv = ReplaceMatch(replacedmatch->mResult, nsnull, nsnull, aInsertionPoint);
 
         replacedmatch->mResult->HasBeenRemoved();
         nsTemplateMatch::Destroy(mPool, replacedmatch);
@@ -712,7 +773,7 @@ nsXULTemplateBuilder::UpdateResult(nsIXULTemplateResult* aOldResult,
     // remove the content generated for the old result and add the content for
     // the new result if it matched a rule
     if (aOldResult || acceptedmatch)
-        rv = ReplaceMatch(aOldResult, acceptedmatch, matchedrule, insertionPoint);
+        rv = ReplaceMatch(aOldResult, acceptedmatch, matchedrule, aInsertionPoint);
 
     if (removedmatch) {
         // delete the old match
@@ -758,7 +819,7 @@ nsXULTemplateBuilder::GetResultForId(const nsAString& aId,
     if (mMatchMap.Get(resource, &match)) {
         // find the active match
         while (match) {
-            if (match->mRule) {
+            if (match->IsActive()) {
                 *aResult = match->mResult;
                 NS_IF_ADDREF(*aResult);
                 break;
@@ -1112,11 +1173,12 @@ nsresult
 nsXULTemplateBuilder::DetermineMatchedRule(nsIContent *aContainer,
                                            nsIXULTemplateResult* aResult,
                                            nsTemplateQuerySet* aQuerySet,
-                                           nsTemplateRule** aMatchedRule)
+                                           nsTemplateRule** aMatchedRule,
+                                           PRInt16 *aRuleIndex)
 {
     // iterate through the rules and look for one that the result matches
-    PRInt32 count = aQuerySet->RuleCount();
-    for (PRInt32 r = 0; r < count; r++) {
+    PRInt16 count = aQuerySet->RuleCount();
+    for (PRInt16 r = 0; r < count; r++) {
         nsTemplateRule* rule = aQuerySet->GetRuleAt(r);
         // If a tag was specified, it must match the tag of the container
         // where content is being inserted.
@@ -1124,10 +1186,12 @@ nsXULTemplateBuilder::DetermineMatchedRule(nsIContent *aContainer,
         if ((!aContainer || !tag || tag == aContainer->Tag()) &&
             rule->CheckMatch(aResult)) {
             *aMatchedRule = rule;
+            *aRuleIndex = r;
             return NS_OK;
         }
     }
 
+    *aRuleIndex = -1;
     *aMatchedRule = nsnull;
     return NS_OK;
 }
@@ -1477,6 +1541,10 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
     for (PRUint32 i = 0; i < count; i++) {
         nsIContent *rulenode = aTemplate->GetChildAt(i);
         nsINodeInfo *ni = rulenode->NodeInfo();
+
+        // don't allow more queries than can be supported
+        if (*aPriority == PR_INT16_MAX)
+            return NS_ERROR_FAILURE;
 
         // XXXndeakin queryset isn't a good name for this tag since it only
         //            ever contains one query
