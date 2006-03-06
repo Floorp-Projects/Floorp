@@ -89,8 +89,13 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollTo(PRInt32 x, PRInt32 y)
   nsIScrollableView* scrollableView = GetScrollableView();
   if (!scrollableView)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (!shell) {
+    return NS_ERROR_UNEXPECTED;
+  }
   
-  float pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
+  float pixelsToTwips = shell->GetPresContext()->PixelsToTwips();
 
   return scrollableView->ScrollTo(NSToIntRound(x * pixelsToTwips),
                                   NSToIntRound(y * pixelsToTwips),
@@ -239,8 +244,13 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     if (!scrollableView)
        return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    if (!shell) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    
     // prepare for twips
-    float pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
+    float pixelsToTwips = shell->GetPresContext()->PixelsToTwips();
     
     nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)
@@ -307,7 +317,12 @@ NS_IMETHODIMP nsScrollBoxObject::GetPosition(PRInt32 *x, PRInt32 *y)
   if (NS_FAILED(rv))
     return rv;
 
-  float twipsToPixels = mPresShell->GetPresContext()->TwipsToPixels();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (!shell) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  float twipsToPixels = shell->GetPresContext()->TwipsToPixels();
 
   *x = NSToIntRound(xc * twipsToPixels);
   *y = NSToIntRound(yc * twipsToPixels);
@@ -323,7 +338,13 @@ NS_IMETHODIMP nsScrollBoxObject::GetScrolledSize(PRInt32 *width, PRInt32 *height
         return NS_ERROR_FAILURE;
         	
     nsRect scrollRect = scrolledBox->GetRect();
-    float twipsToPixels = mPresShell->GetPresContext()->TwipsToPixels();
+
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    if (!shell) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    float twipsToPixels = shell->GetPresContext()->TwipsToPixels();
  
     *width  = NSTwipsToIntPixels(scrollRect.width, twipsToPixels);
     *height = NSTwipsToIntPixels(scrollRect.height, twipsToPixels);
@@ -339,9 +360,14 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
     if (!scrollableView)
        return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    if (!shell) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     // prepare for twips
     float pixelsToTwips = 0.0;
-    pixelsToTwips = mPresShell->GetPresContext()->PixelsToTwips();
+    pixelsToTwips = shell->GetPresContext()->PixelsToTwips();
     
     nsIFrame* scrolledBox = GetScrolledBox(this);
     if (!scrolledBox)

@@ -135,7 +135,7 @@ NS_IMETHODIMP
 nsBoxObject::Init(nsIContent* aContent, nsIPresShell* aShell)
 {
   mContent = aContent;
-  mPresShell = aShell;
+  mPresShell = do_GetWeakReference(aShell);
   return NS_OK;
 }
 
@@ -144,7 +144,7 @@ nsBoxObject::SetDocument(nsIDocument* aDocument)
 {
   mPresState = nsnull;
   if (aDocument) {
-    mPresShell = aDocument->GetShellAt(0);
+    mPresShell = do_GetWeakReference(aDocument->GetShellAt(0));
   }
   else {
     mPresShell = nsnull;
@@ -163,11 +163,26 @@ nsBoxObject::InvalidatePresentationStuff()
 nsIFrame*
 nsBoxObject::GetFrame()
 {
-  if (!mPresShell)
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (!shell)
     return nsnull;
 
-  mPresShell->FlushPendingNotifications(Flush_Frames);
-  return mPresShell->GetPrimaryFrameFor(mContent);
+  // XXXbz should flush on document, no?  Except people call this from
+  // frame code, maybe?
+  shell->FlushPendingNotifications(Flush_Frames);
+  return shell->GetPrimaryFrameFor(mContent);
+}
+
+already_AddRefed<nsIPresShell>
+nsBoxObject::GetPresShell()
+{
+  if (!mPresShell) {
+    return nsnull;
+  }
+  
+  nsIPresShell* shell = nsnull;
+  CallQueryReferent(mPresShell.get(), &shell);
+  return shell;
 }
 
 nsresult 
@@ -551,10 +566,6 @@ nsBoxObject::GetDocShell(nsIDocShell** aResult)
 {
   *aResult = nsnull;
 
-  if (!mPresShell) {
-    return NS_OK;
-  }
-
   nsIFrame *frame = GetFrame();
 
   if (frame) {
@@ -572,8 +583,14 @@ nsBoxObject::GetDocShell(nsIDocShell** aResult)
   // No nsIFrameFrame available for mContent, try if there's a mapping
   // between mContent's document to mContent's subdocument.
 
-  nsIDocument *sub_doc =
-    mPresShell->GetDocument()->GetSubDocumentFor(mContent);
+  // XXXbz sXBL/XBL2 issue -- ownerDocument or currentDocument?
+  nsIDocument *doc = mContent->GetDocument();
+
+  if (!doc) {
+    return NS_OK;
+  }
+  
+  nsIDocument *sub_doc = doc->GetSubDocumentFor(mContent);
 
   if (!sub_doc) {
     return NS_OK;
