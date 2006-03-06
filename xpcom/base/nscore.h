@@ -242,14 +242,14 @@
  */
 
 #ifdef __cplusplus
-#define EXTERN_C extern "C"
+#define NS_EXTERN_C extern "C"
 #else
-#define EXTERN_C
+#define NS_EXTERN_C
 #endif
 
-#define EXPORT_XPCOM_API(type) EXTERN_C NS_EXPORT type NS_FROZENCALL
-#define IMPORT_XPCOM_API(type) EXTERN_C NS_IMPORT type NS_FROZENCALL
-#define GLUE_XPCOM_API(type) EXTERN_C NS_HIDDEN_(type) NS_FROZENCALL
+#define EXPORT_XPCOM_API(type) NS_EXTERN_C NS_EXPORT type NS_FROZENCALL
+#define IMPORT_XPCOM_API(type) NS_EXTERN_C NS_IMPORT type NS_FROZENCALL
+#define GLUE_XPCOM_API(type) NS_EXTERN_C NS_HIDDEN_(type) NS_FROZENCALL
 
 #ifdef _IMPL_NS_COM
 #define XPCOM_API(type) EXPORT_XPCOM_API(type)
