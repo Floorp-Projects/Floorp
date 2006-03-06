@@ -1750,7 +1750,11 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
             // EndContext(). Ex: <center><table><a></center>.
             // In the Ex. above </center> should not close <center> above table.
             // Doing so will cause the current context to get closed prematurely.
-            PRInt32 theIndex = mBodyContext->LastOf(theTag);
+            eHTMLTags closed = FindAutoCloseTargetForEndTag(theTag, *mBodyContext,
+                                                            mDTDMode);
+            PRInt32 theIndex = closed != eHTMLTag_unknown
+                               ? mBodyContext->LastOf(closed)
+                               : kNotFound;
 
             if (theIndex != kNotFound &&
                 theIndex <= mBodyContext->mContextTopIndex) {
