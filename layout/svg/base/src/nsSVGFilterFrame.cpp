@@ -452,13 +452,10 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
                         nsRect(0, 0, filterResX, filterResY));
 
   for (PRUint32 k=0; k<count; ++k) {
-    nsresult rv;
     nsIContent* child = mContent->GetChildAt(k);
 
     nsCOMPtr<nsISVGFilter> filter = do_QueryInterface(child);
-    if (filter)
-      rv = filter->Filter(&instance);
-    if (NS_FAILED(rv)) {
+    if (filter && NS_FAILED(filter->Filter(&instance))) {
       FilterFailCleanup(aCanvas, aTarget);
       return NS_OK;
     }
