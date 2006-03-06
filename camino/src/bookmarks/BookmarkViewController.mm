@@ -490,15 +490,12 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       [[NetworkServices sharedNetworkServices] attemptResolveService:[(RendezvousBookmark*)curItem serviceID] forSender:curItem];
       mOpenActionFlag = kOpenBookmarkAction;
     }    
-    else if ([curItem isKindOfClass:[BookmarkFolder class]])
+    else if ([curItem isKindOfClass:[BookmarkFolder class]] && ![curItem isGroup])
     {
-      if (![curItem isGroup])
-      {
-        if ([mBookmarksOutlineView isItemExpanded:curItem])
-          [mBookmarksOutlineView collapseItem: curItem];
-        else
-          [mBookmarksOutlineView expandItem: curItem];
-      }
+      if ([mBookmarksOutlineView isItemExpanded:curItem])
+        [mBookmarksOutlineView collapseItem:curItem];
+      else
+        [mBookmarksOutlineView expandItem:curItem];
     }
     else
     {
