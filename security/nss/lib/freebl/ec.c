@@ -353,27 +353,25 @@ EC_NewKeyFromSeed(ECParams *ecParams, ECPrivateKey **privKey,
     return rv;
 }
 
-/* Generates a new EC key pair. The private key is a random value and
- * the public key is the result of performing a scalar point multiplication
- * of that value with the curve's base point.  The random value for the
- * private key is generated using the algorithm A.4.1 of ANSI X9.62,
+/* Generate a random private key using the algorithm A.4.1 of ANSI X9.62,
  * modified a la FIPS 186-2 Change Notice 1 to eliminate the bias in the
  * random number generator.
+ *
+ * Parameters
+ * - order: a buffer that holds the curve's group order
+ * - len: the length in octets of the order buffer
+ *
+ * Return Value
+ * Returns a buffer of len octets that holds the private key. The caller
+ * is responsible for freeing the buffer with PORT_ZFree.
  */
-SECStatus 
-EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
+static unsigned char *
+ec_GenerateRandomPrivateKey(const unsigned char *order, int len)
 {
-    SECStatus rv = SECFailure;
-#ifdef NSS_ENABLE_ECC
+    SECStatus rv = SECSuccess;
     mp_err err;
-    int len;
     unsigned char *privKeyBytes = NULL;
     mp_int privKeyVal, order_1, one;
-
-    if (!ecParams || !privKey) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
 
     MP_DIGITS(&privKeyVal) = 0;
     MP_DIGITS(&order_1) = 0;
@@ -382,35 +380,61 @@ EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
     CHECK_MPI_OK( mp_init(&order_1) );
     CHECK_MPI_OK( mp_init(&one) );
 
-    /* Generate random private key.
-     * Generates 2*len random bytes using the global random bit generator
+    /* Generates 2*len random bytes using the global random bit generator
      * (which implements Algorithm 1 of FIPS 186-2 Change Notice 1) then
      * reduces modulo the group order.
      */
-    len = ecParams->order.len;
     if ((privKeyBytes = PORT_Alloc(2*len)) == NULL) goto cleanup;
     CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(privKeyBytes, 2*len) );
     CHECK_MPI_OK( mp_read_unsigned_octets(&privKeyVal, privKeyBytes, 2*len) );
-    CHECK_MPI_OK( mp_read_unsigned_octets(&order_1,
-					  ecParams->order.data, len) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&order_1, order, len) );
     CHECK_MPI_OK( mp_set_int(&one, 1) );
     CHECK_MPI_OK( mp_sub(&order_1, &one, &order_1) );
     CHECK_MPI_OK( mp_mod(&privKeyVal, &order_1, &privKeyVal) );
     CHECK_MPI_OK( mp_add(&privKeyVal, &one, &privKeyVal) );
     CHECK_MPI_OK( mp_to_fixlen_octets(&privKeyVal, privKeyBytes, len) );
-    /* generate public key */
-    CHECK_SEC_OK( ec_NewKey(ecParams, privKey, privKeyBytes, len) );
-
+    memset(privKeyBytes+len, 0, len);
 cleanup:
     mp_clear(&privKeyVal);
     mp_clear(&order_1);
     mp_clear(&one);
-    if (privKeyBytes) {
-	PORT_ZFree(privKeyBytes, 2*len);
-    }
     if (err < MP_OKAY) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
+    }
+    if (rv != SECSuccess && privKeyBytes) {
+	PORT_Free(privKeyBytes);
+	privKeyBytes = NULL;
+    }
+    return privKeyBytes;
+}
+
+/* Generates a new EC key pair. The private key is a random value and
+ * the public key is the result of performing a scalar point multiplication
+ * of that value with the curve's base point.
+ */
+SECStatus 
+EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
+{
+    SECStatus rv = SECFailure;
+#ifdef NSS_ENABLE_ECC
+    int len;
+    unsigned char *privKeyBytes = NULL;
+
+    if (!ecParams) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    len = ecParams->order.len;
+    privKeyBytes = ec_GenerateRandomPrivateKey(ecParams->order.data, len);
+    if (privKeyBytes == NULL) goto cleanup;
+    /* generate public key */
+    CHECK_SEC_OK( ec_NewKey(ecParams, privKey, privKeyBytes, len) );
+
+cleanup:
+    if (privKeyBytes) {
+	PORT_ZFree(privKeyBytes, len);
     }
 #if EC_DEBUG
     printf("EC_NewKey returning %s\n", 
@@ -807,47 +831,26 @@ ECDSA_SignDigest(ECPrivateKey *key, SECItem *signature, const SECItem *digest)
 {
     SECStatus rv = SECFailure;
 #ifdef NSS_ENABLE_ECC
-    int prerr = 0;
-    int n = key->ecParams.order.len;
-    unsigned char *kseed = NULL;
-    unsigned char *mask;
-    int i;
+    int len;
+    unsigned char *kBytes= NULL;
 
-    /* Generate random seed of appropriate size as dictated 
-     * by field size.
-     */
-    if ((kseed = PORT_Alloc(n)) == NULL) return SECFailure;
+    if (!key) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
 
-    do {
-        if (RNG_GenerateGlobalRandomBytes(kseed, n) != SECSuccess) 
-	    goto cleanup;
-	/* make sure that kseed is smaller than the curve order */
-	mask = key->ecParams.order.data;
-	for (i = 0; (i < n) && (*mask == 0x00); i++, mask++) {
-#if EC_DEBUG
-	  printf("replacing byte %02x in position %d [n=%d] with zero\n", 
-		 *(kseed + i), i, n);
-#endif
-	  *(kseed + i) = 0x00;
-	}
+    /* Generate random value k */
+    len = key->ecParams.order.len;
+    kBytes = ec_GenerateRandomPrivateKey(key->ecParams.order.data, len);
+    if (kBytes == NULL) goto cleanup;
 
-	if (i == n) {
-	    rv = SECFailure;
-	    prerr = SEC_ERROR_NEED_RANDOM;
-	} else {
-#if EC_DEBUG
-	    printf("replacing byte %02x in position %d [n=%d] with %d\n", 
-		   *(kseed + i), i, n, (*mask - 1));
-#endif
-	    if (*(kseed + i) >= *mask) 
-	        *(kseed + i) = *mask - 1;
-	    rv = ECDSA_SignDigestWithSeed(key, signature, digest, kseed, n);
-	    if (rv) prerr = PORT_GetError();
-	}
-    } while ((rv != SECSuccess) && (prerr == SEC_ERROR_NEED_RANDOM));
+    /* Generate ECDSA signature with the specified k value */
+    rv = ECDSA_SignDigestWithSeed(key, signature, digest, kBytes, len);
 
 cleanup:    
-    if (kseed) PORT_ZFree(kseed, n);
+    if (kBytes) {
+	PORT_ZFree(kBytes, len);
+    }
 
 #if EC_DEBUG
     printf("ECDSA signing %s\n",
