@@ -260,12 +260,12 @@ nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString
       PRUint32 len = yarn.mYarn_Fill / sizeof(PRUnichar);
       if (mReverseByteOrder) {
         // The mdb file is other-endian, byte-swap the result
-        PRUnichar *swapval = (PRUnichar *)malloc(yarn.mYarn_Fill);
+        PRUnichar *swapval = new PRUnichar[len];
         if (!swapval)
           return NS_ERROR_OUT_OF_MEMORY;
         SwapBytes(swapval, (const PRUnichar *)yarn.mYarn_Buf, len);
         aValue.Assign(swapval, len);
-        free(swapval);
+        delete swapval;
       }
       else
         aValue.Assign((const PRUnichar *)yarn.mYarn_Buf, len);
