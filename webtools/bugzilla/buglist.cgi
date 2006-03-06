@@ -132,12 +132,14 @@ my $format = $template->get_format("list/list", scalar $cgi->param('format'),
 # Server push is a Netscape 3+ hack incompatible with MSIE, Lynx, and others. 
 # Even Communicator 4.51 has bugs with it, especially during page reload.
 # http://www.browsercaps.org used as source of compatible browsers.
+# Safari (WebKit) does not support it, despite a UA that says otherwise (bug 188712)
+# MSIE 5+ supports it on Mac (but not on Windows) (bug 190370)
 #
 my $serverpush =
   $format->{'extension'} eq "html"
     && exists $ENV{'HTTP_USER_AGENT'} 
       && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ 
-        && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/
+        && (($ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/) || ($ENV{'HTTP_USER_AGENT'} =~ /MSIE 5.*Mac_PowerPC/))
           && $ENV{'HTTP_USER_AGENT'} !~ /WebKit/
             && !defined($cgi->param('serverpush'))
               || $cgi->param('serverpush');
