@@ -51,10 +51,6 @@
   'bug.bug_id',
 ],
 
-'sidebar.xul.tmpl' => [
-  'template_version', 
-],
-
 'flag/list.html.tmpl' => [
   'flag.id', 
   'flag.status', 
