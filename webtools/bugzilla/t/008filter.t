@@ -163,6 +163,9 @@ sub directive_ok {
     # Empty directives are ok; they are usually line break helpers
     return 1 if $directive eq '';
 
+    # Make sure we're not looking for ./ in the $safe hash
+    $file =~ s#^\./##;
+
     # Exclude those on the nofilter list
     if (defined($safe{$file}{$directive})) {
         $safe{$file}{$directive}++;
