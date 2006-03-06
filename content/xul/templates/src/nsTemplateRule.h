@@ -314,17 +314,22 @@ public:
 
     nsresult AddRule(nsTemplateRule *aChild)
     {
+        // nsTemplateMatch stores the index as a 16-bit value,
+        // so check to make sure for overflow
+        if (mRules.Count() == PR_INT16_MAX)
+            return NS_ERROR_FAILURE;
+
         if (!mRules.AppendElement(aChild))
             return NS_ERROR_OUT_OF_MEMORY;
         return NS_OK;
     }
 
-    PRInt32 RuleCount() const
+    PRInt16 RuleCount() const
     {
         return mRules.Count();
     }
 
-    nsTemplateRule* GetRuleAt(PRInt32 aIndex)
+    nsTemplateRule* GetRuleAt(PRInt16 aIndex)
     {
         return NS_STATIC_CAST(nsTemplateRule*, mRules[aIndex]);
     }

@@ -102,10 +102,38 @@ public:
                                   PRInt32 aModType);
     virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
+    /**
+     * Remove an old result and/or add a new result. This method will retrieve
+     * the set of containers where the result could be inserted and either add
+     * the new result to those containers, or remove the result from those
+     * containers. UpdateResultInContainer is called for each container.
+     *
+     * @param aOldResult result to remove
+     * @param aNewResult result to add
+     * @param aQueryNode query node for new result
+     */
     nsresult
     UpdateResult(nsIXULTemplateResult* aOldResult,
                  nsIXULTemplateResult* aNewResult,
                  nsIDOMNode* aQueryNode);
+
+    /**
+     * Remove an old result and/or add a new result from a specific container.
+     *
+     * @param aOldResult result to remove
+     * @param aNewResult result to add
+     * @param aQueryNode queryset for the new result
+     * @param aOldId id of old result
+     * @param aNewId id of new result
+     * @param aInsertionPoint container to remove or add result inside
+     */
+    nsresult
+    UpdateResultInContainer(nsIXULTemplateResult* aOldResult,
+                            nsIXULTemplateResult* aNewResult,
+                            nsTemplateQuerySet* aQuerySet,
+                            nsIRDFResource* aOldId,
+                            nsIRDFResource* aNewId,
+                            nsIContent* aInsertionPoint);
 
     nsresult
     ComputeContainmentProperties();
@@ -255,12 +283,14 @@ public:
      * @param aResult result to match
      * @param aQuerySet query set to examine the rules of
      * @param aMatchedRule [out] rule that has matched, or null if any.
+     * @param aRuleIndex [out] index of the rule
      */
     nsresult
     DetermineMatchedRule(nsIContent* aContainer,
                          nsIXULTemplateResult* aResult,
                          nsTemplateQuerySet* aQuerySet,
-                         nsTemplateRule** aMatchedRule);
+                         nsTemplateRule** aMatchedRule,
+                         PRInt16 *aRuleIndex);
 
     // XXX sigh, the string template foo doesn't mix with
     // operator->*() on egcs-1.1.2, so we'll need to explicitly pass
@@ -398,17 +428,14 @@ protected:
      * Returns true if content may be generated for a result, or false if it
      * cannot, for example, if it would be created inside a closed container.
      * Those results will be generated when the container is opened.
-     * If false is returned, no content should be generated. The insertion
-     * location may optionally be set for new content, depending on the
-     * builder being used. This argument is used to optimize the content
-     * builder so that it doesn't need to determined again when ReplaceMatch
-     * is called.
-     *
-     * The insertion location aLocation should not be addrefed.
+     * If false is returned, no content should be generated. Possible 
+     * insertion locations may optionally be set for new content, depending on
+     * the builder being used. Note that some items within aLocations may be
+     * null.
      */
     virtual PRBool
-    MayGenerateResult(nsIXULTemplateResult* aOldResult,
-                      nsIContent** aLocation) = 0;
+    GetInsertionLocations(nsIXULTemplateResult* aResult,
+                          nsISupportsArray** aLocations) = 0;
 
     /**
      * Must be implemented by subclasses. Handle removing the generated

@@ -371,17 +371,20 @@ protected:
     virtual nsresult
     RebuildAll();
 
-    // MayGenerateResult, ReplaceMatch and SynchronizeResult are inherited from
-    // nsXULTemplateBuilder
+    // GetInsertionLocations, ReplaceMatch and SynchronizeResult are inherited
+    // from nsXULTemplateBuilder
 
     /**
      * Return true if the result can be inserted into the template as
-     * generated content. For the content builder, aLocation will be set
-     * to the container where the content should be inserted.
+     * generated content. For the content builder, aLocations will be set
+     * to the list of containers where the content should be inserted.
+     *
+     * XXX aLocations is currently an nsISupportsArray, because of
+     *     GetElementsForID; will be switched to an nsCOMArray with bug 321174
      */
     virtual PRBool
-    MayGenerateResult(nsIXULTemplateResult* aOldResult,
-                      nsIContent** aLocation);
+    GetInsertionLocations(nsIXULTemplateResult* aOldResult,
+                          nsISupportsArray** aLocations);
 
     /**
      * Remove the content associated with aOldResult which no longer matches,
@@ -637,7 +640,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // We identify the resource element by presence of a
             // "uri='rdf:*'" attribute. (We also support the older
             // "uri='...'" syntax.)
-            if (tmplKid->HasAttr(kNameSpaceID_None, nsXULAtoms::uri) && aMatch->mRule) {
+            if (tmplKid->HasAttr(kNameSpaceID_None, nsXULAtoms::uri) && aMatch->IsActive()) {
                 isGenerationElement = PR_TRUE;
                 isUnique = PR_FALSE;
             }
@@ -1299,7 +1302,8 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
             continue;
 
         nsTemplateMatch *newmatch =
-            nsTemplateMatch::Create(mPool, aQuerySet, nextresult);
+            nsTemplateMatch::Create(mPool, aQuerySet->Priority(),
+                                    nextresult, aElement);
         if (!newmatch)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1311,24 +1315,38 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
 
         nsTemplateMatch* prevmatch = nsnull;
         nsTemplateMatch* existingmatch = nsnull;
+        nsTemplateMatch* removematch = nsnull;
         if (mMatchMap.Get(resultid, &existingmatch)){
             // check if there is an existing match that matched a rule
             while (existingmatch) {
-                // if the same priority is already found, replace it. This can happen
-                // when a container is removed and readded
-                if (existingmatch->mQuerySet->Priority() == aQuerySet->Priority())
+                // break out once we've reached a query in the list with a
+                // higher priority, as the new match list is sorted by
+                // priority, and the new match should be inserted here
+                PRInt32 priority = existingmatch->QuerySetPriority();
+                if (priority > aQuerySet->Priority())
                     break;
 
-                if (existingmatch->mRule)
-                    generateContent = PR_FALSE;
+                // skip over non-matching containers 
+                if (existingmatch->GetContainer() == aElement) {
+                    // if the same priority is already found, replace it. This can happen
+                    // when a container is removed and readded
+                    if (priority == aQuerySet->Priority()) {
+                        removematch = existingmatch;
+                        break;
+                    }
+
+                    if (existingmatch->IsActive())
+                        generateContent = PR_FALSE;
+                }
+
                 prevmatch = existingmatch;
                 existingmatch = existingmatch->mNext;
             }
         }
 
-        if (existingmatch) {
+        if (removematch) {
             // remove the generated content for the existing match
-            rv = ReplaceMatch(existingmatch->mResult, nsnull, nsnull, aElement);
+            rv = ReplaceMatch(removematch->mResult, nsnull, nsnull, aElement);
             if (NS_FAILED(rv))
                 return rv;
         }
@@ -1337,15 +1355,18 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
             // find the rule that matches. If none match, the content does not
             // need to be generated
 
+            PRInt16 ruleindex;
             nsTemplateRule* matchedrule = nsnull;
-            rv = DetermineMatchedRule(aElement, nextresult, aQuerySet, &matchedrule);
+            rv = DetermineMatchedRule(aElement, nextresult, aQuerySet,
+                                      &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
                 nsTemplateMatch::Destroy(mPool, newmatch);
                 return rv;
             }
 
             if (matchedrule) {
-                rv = newmatch->RuleMatched(aQuerySet, matchedrule, nextresult);
+                rv = newmatch->RuleMatched(aQuerySet, matchedrule,
+                                           ruleindex, nextresult);
                 if (NS_FAILED(rv)) {
                     nsTemplateMatch::Destroy(mPool, newmatch);
                     return rv;
@@ -1369,9 +1390,12 @@ nsXULContentBuilder::CreateContainerContentsForQuerySet(nsIContent* aElement,
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        if (existingmatch) {
-            newmatch->mNext = existingmatch->mNext;
-            nsTemplateMatch::Destroy(mPool, existingmatch);
+        if (removematch) {
+            newmatch->mNext = removematch->mNext;
+            nsTemplateMatch::Destroy(mPool, removematch);
+        }
+        else {
+            newmatch->mNext = existingmatch;
         }
     }
 
@@ -1760,10 +1784,10 @@ nsXULContentBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 
 PRBool
-nsXULContentBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
-                                       nsIContent** aLocation)
+nsXULContentBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
+                                           nsISupportsArray** aLocations)
 {
-    *aLocation = nsnull;
+    *aLocations = nsnull;
 
     nsAutoString ref;
     nsresult rv = aResult->GetBindingFor(mRefVariable, ref);
@@ -1784,6 +1808,8 @@ nsXULContentBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
     PRUint32 count;
     elements->Count(&count);
 
+    PRBool found = PR_FALSE;
+
     for (PRUint32 t = 0; t < count; t++) {
         nsCOMPtr<nsIContent> content = do_QueryElementAt(elements, t);
 
@@ -1796,16 +1822,21 @@ nsXULContentBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
             // yet been dropped.
             nsXULElement *xulcontent = nsXULElement::FromContent(content);
             if (!xulcontent ||
-                xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt))
+                xulcontent->GetLazyState(nsXULElement::eContainerContentsBuilt)) {
                 // non-XUL content is never built lazily, nor is content that's
                 // already been built
-                *aLocation = content;
-
-            break;
+                found = PR_TRUE;
+                continue;
+            }
         }
+
+        // clear the item in the list since we don't want to insert there
+        elements->SetElementAt(t, nsnull);
     }
 
-    return (*aLocation != nsnull);
+    elements.swap(*aLocations);
+
+    return found;
 }
 
 nsresult
@@ -1854,8 +1885,10 @@ nsXULContentBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
             NS_IF_RELEASE(isupports);
 
             nsTemplateMatch* match;
-            if (mContentSupportMap.Get(child, &match))
-                RemoveMember(child);
+            if (mContentSupportMap.Get(child, &match)) {
+                if (content == match->GetContainer())
+                    RemoveMember(child);
+            }
         }
     }
 

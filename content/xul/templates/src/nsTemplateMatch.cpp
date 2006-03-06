@@ -47,9 +47,12 @@ void nsTemplateMatch::operator=(const nsTemplateMatch& aMatch) {}
 nsresult
 nsTemplateMatch::RuleMatched(nsTemplateQuerySet* aQuerySet,
                              nsTemplateRule* aRule,
+                             PRInt16 aRuleIndex,
                              nsIXULTemplateResult* aResult)
 {
-    mRule = aRule;
+    // assign the rule index, used to indicate that a match is active, and
+    // so the tree builder can get the right action body to generate
+    mRuleIndex = aRuleIndex;
 
     nsCOMPtr<nsIDOMNode> rulenode;
     aRule->GetRuleNode(getter_AddRefs(rulenode));

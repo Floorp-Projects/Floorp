@@ -206,16 +206,16 @@ protected:
                         nsIAtom* aTag,
                         PRBool* aGenerated);
 
-    // MayGenerateResult, ReplaceMatch and SynchronizeResult are inherited from
-    // nsXULTemplateBuilder
+    // GetInsertionLocations, ReplaceMatch and SynchronizeResult are inherited
+    // from nsXULTemplateBuilder
 
     /**
      * Return true if the result can be inserted into the template as a new
      * row.
      */
     PRBool
-    MayGenerateResult(nsIXULTemplateResult* aResult,
-                      nsIContent** aLocation);
+    GetInsertionLocations(nsIXULTemplateResult* aResult,
+                          nsISupportsArray** aLocations);
 
     /**
      * Implement result replacement
@@ -1097,10 +1097,10 @@ nsXULTreeBuilder::HasGeneratedContent(nsIRDFResource* aResource,
 }
 
 PRBool
-nsXULTreeBuilder::MayGenerateResult(nsIXULTemplateResult* aResult,
-                                    nsIContent** aLocation)
+nsXULTreeBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
+                                        nsISupportsArray** aLocations)
 {
-    *aLocation = nsnull;
+    *aLocations = nsnull;
 
     // Get the reference point and check if it is an open container. Rows
     // should not be generated otherwise.
@@ -1410,24 +1410,32 @@ nsXULTreeBuilder::GetTemplateActionRowFor(PRInt32 aRow, nsIContent** aResult)
     nsTreeRows::Row& row = *(mRows[aRow]);
 
     nsCOMPtr<nsIContent> action;
-    nsTemplateRule* rule = row.mMatch->mRule;
-    if (rule) {
-        rule->GetAction(getter_AddRefs(action));
 
-        nsCOMPtr<nsIContent> children;
-        nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL,
-                                          nsXULAtoms::treechildren,
-                                          getter_AddRefs(children));
-        if (children) {
-            nsCOMPtr<nsIContent> item;
-            nsXULContentUtils::FindChildByTag(children, kNameSpaceID_XUL,
-                                              nsXULAtoms::treeitem,
-                                              getter_AddRefs(item));
-            if (item)
-                return nsXULContentUtils::FindChildByTag(item,
-                                                         kNameSpaceID_XUL,
-                                                         nsXULAtoms::treerow,
-                                                         aResult);
+    // The match stores the indices of the rule and query to use. Use these
+    // to look up the right nsTemplateRule and use that rule's action to get
+    // the treerow in the template.
+    PRInt16 ruleindex = row.mMatch->RuleIndex();
+    if (ruleindex >= 0) {
+        nsTemplateQuerySet* qs = mQuerySets[row.mMatch->QuerySetPriority()];
+        nsTemplateRule* rule = qs->GetRuleAt(ruleindex);
+        if (rule) {
+            rule->GetAction(getter_AddRefs(action));
+
+            nsCOMPtr<nsIContent> children;
+            nsXULContentUtils::FindChildByTag(action, kNameSpaceID_XUL,
+                                              nsXULAtoms::treechildren,
+                                              getter_AddRefs(children));
+            if (children) {
+                nsCOMPtr<nsIContent> item;
+                nsXULContentUtils::FindChildByTag(children, kNameSpaceID_XUL,
+                                                  nsXULAtoms::treeitem,
+                                                  getter_AddRefs(item));
+                if (item)
+                    return nsXULContentUtils::FindChildByTag(item,
+                                                             kNameSpaceID_XUL,
+                                                             nsXULAtoms::treerow,
+                                                             aResult);
+            }
         }
     }
 
@@ -1611,7 +1619,7 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
         if (mMatchMap.Get(resultid, &existingmatch)){
             // check if there is an existing match that matched a rule
             while (existingmatch) {
-                if (existingmatch->mRule)
+                if (existingmatch->IsActive())
                     generateContent = PR_FALSE;
                 prevmatch = existingmatch;
                 existingmatch = existingmatch->mNext;
@@ -1619,7 +1627,8 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
         }
 
         nsTemplateMatch *newmatch =
-            nsTemplateMatch::Create(mPool, aQuerySet, nextresult);
+            nsTemplateMatch::Create(mPool, aQuerySet->Priority(),
+                                    nextresult, nsnull);
         if (!newmatch)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1649,15 +1658,18 @@ nsXULTreeBuilder::OpenSubtreeForQuerySet(nsTreeRows::Subtree* aSubtree,
                 continue;
             }
 
+            PRInt16 ruleindex;
             nsTemplateRule* matchedrule = nsnull;
-            rv = DetermineMatchedRule(nsnull, nextresult, aQuerySet, &matchedrule);
+            rv = DetermineMatchedRule(nsnull, nextresult, aQuerySet,
+                                      &matchedrule, &ruleindex);
             if (NS_FAILED(rv)) {
                 nsTemplateMatch::Destroy(mPool, newmatch);
                 return rv;
             }
 
             if (matchedrule) {
-                rv = newmatch->RuleMatched(aQuerySet, matchedrule, nextresult);
+                rv = newmatch->RuleMatched(aQuerySet, matchedrule, ruleindex,
+                                           nextresult);
                 if (NS_FAILED(rv)) {
                     nsTemplateMatch::Destroy(mPool, newmatch);
                     return rv;

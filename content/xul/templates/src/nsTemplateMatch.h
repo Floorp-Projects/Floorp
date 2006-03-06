@@ -52,9 +52,12 @@
  * there are multiple querysets and each may generate results with the same
  * id, they are all chained together in a linked list, ordered in the same
  * order as the respective <queryset> elements they were generated from.
- * Only one match is active at a time, but which match is active may change
- * as new results are added or removed. When a match is active, content is
- * generated for that match.
+ * A match can be identified by the container and id. The id is retrievable
+ * from the result.
+ *
+ * Only one match per container and id pair is active at a time, but which
+ * match is active may change as new results are added or removed. When a
+ * match is active, content is generated for that match.
  *
  * Matches are stored and owned by the mMatchToMap hash in the template
  * builder.
@@ -71,10 +74,12 @@ private:
     void operator delete(void*, size_t) {}
 
 public:
-    nsTemplateMatch(nsTemplateQuerySet* aQuerySet,
-                    nsIXULTemplateResult* aResult)
-        : mRule(nsnull),
-          mQuerySet(aQuerySet),
+    nsTemplateMatch(PRUint16 aQuerySetPriority,
+                    nsIXULTemplateResult* aResult,
+                    nsIContent* aContainer)
+        : mRuleIndex(-1),
+          mQuerySetPriority(aQuerySetPriority),
+          mContainer(aContainer),
           mResult(aResult),
           mNext(nsnull) {}
 
@@ -82,37 +87,68 @@ public:
 
     static nsTemplateMatch*
     Create(nsFixedSizeAllocator& aPool,
-           nsTemplateQuerySet* aQuerySet,
-           nsIXULTemplateResult* aResult) {
+           PRUint16 aQuerySetPriority,
+           nsIXULTemplateResult* aResult,
+           nsIContent* aContainer) {
         void* place = aPool.Alloc(sizeof(nsTemplateMatch));
-        return place ? ::new (place) nsTemplateMatch(aQuerySet, aResult) : nsnull; }
+        return place ? ::new (place) nsTemplateMatch(aQuerySetPriority,
+                                                     aResult, aContainer)
+                     : nsnull; }
 
     static void
     Destroy(nsFixedSizeAllocator& aPool, nsTemplateMatch* aMatch) {
         aMatch->~nsTemplateMatch();
         aPool.Free(aMatch, sizeof(*aMatch)); }
 
-    PRBool operator==(const nsTemplateMatch& aMatch) const {
-        return mRule == aMatch.mRule && mResult == aMatch.mResult; }
+    // return true if the the match is active, and has generated output
+    PRBool IsActive() {
+        return mRuleIndex >= 0;
+    }
 
-    PRBool operator!=(const nsTemplateMatch& aMatch) const {
-        return !(*this == aMatch); }
+    // indicate that a rule is no longer active, used when a query with a
+    // lower priority has overriden the match
+    void SetInactive() {
+        mRuleIndex = -1;
+    }
+
+    // return matching rule index
+    PRInt16 RuleIndex() {
+        return mRuleIndex;
+    }
+
+    // return priority of query set
+    PRUint16 QuerySetPriority() {
+        return mQuerySetPriority;
+    }
+
+    // return container, not addrefed. May be null.
+    nsIContent* GetContainer() {
+        return mContainer;
+    }
 
     nsresult RuleMatched(nsTemplateQuerySet* aQuerySet,
                          nsTemplateRule* aRule,
+                         PRInt16 aRuleIndex,
                          nsIXULTemplateResult* aResult);
 
-    /**
-     * The rule that this match applies to. If the rule is null, the result
-     * has not matched a rule and no content has been generated. However, a
-     * later queryset may still have matched.
-     */
-    nsTemplateRule* mRule; // not owned
+private:
 
     /**
-     * The queryset for this rule
+     * The index of the rule that matched, or -1 if the match is not active.
      */
-    nsTemplateQuerySet* mQuerySet; // not owned
+    PRInt16 mRuleIndex;
+
+    /**
+     * The priority of the queryset for this rule
+     */
+    PRUint16 mQuerySetPriority;
+
+    /**
+     * The container the content generated for the match is inside.
+     */
+    nsCOMPtr<nsIContent> mContainer;
+
+public:
 
     /**
      * The result associated with this match
@@ -128,6 +164,7 @@ public:
     nsTemplateMatch *mNext;
 
 private:
+
     nsTemplateMatch(const nsTemplateMatch& aMatch); // not to be implemented
     void operator=(const nsTemplateMatch& aMatch); // not to be implemented
 };
