@@ -358,7 +358,8 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsIFrame* currFrame = targetFrame;
     // Look for the nearest enclosing focusable frame.
     while (currFrame) {
-        if (currFrame->IsFocusable()) {
+        PRInt32 tabIndexUnused;
+        if (currFrame->IsFocusable(&tabIndexUnused, PR_TRUE)) {
           newFocus = currFrame->GetContent();
           nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
           if (domElement) {
