@@ -241,7 +241,7 @@ math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if ((x==0)&&(x==z)&&(fd_copysign(1.0,z)==-1))
+        if (x == 0 && x == z && fd_copysign(1.0, z) == -1)
             z = x;
         else
             z = (x > z) ? x : z;
@@ -266,7 +266,7 @@ math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
-        if ((x==0)&&(x==z)&&(fd_copysign(1.0,x)==-1))
+        if (x == 0 && x == z && fd_copysign(1.0,x) == -1)
             z = x;
         else
             z = (x < z) ? x : z;
@@ -383,6 +383,21 @@ math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_UNLOCK_RUNTIME(rt);
     return js_NewNumberValue(cx, z, rval);
 }
+
+#if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
+/* Try to work around apparent _copysign bustage in VC6 and VC7. */
+double
+js_copysign(double x, double y)
+{
+    jsdpun xu, yu;
+
+    xu.d = x;
+    yu.d = y;
+    xu.s.hi &= ~JSDOUBLE_HI32_SIGNBIT;
+    xu.s.hi |= yu.s.hi & JSDOUBLE_HI32_SIGNBIT;
+    return xu.d;
+}
+#endif
 
 static JSBool
 math_round(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
