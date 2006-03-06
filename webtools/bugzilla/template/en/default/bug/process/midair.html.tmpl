@@ -62,7 +62,7 @@
 </p>
 [% END %]
 
-[% IF defined cgi.param("comment") %]
+[% IF cgi.param("comment") %]
 <p>
   Your comment was:<br>
   <blockquote><pre>[% cgi.param("comment") FILTER wrap_comment FILTER html %]</pre></blockquote>
