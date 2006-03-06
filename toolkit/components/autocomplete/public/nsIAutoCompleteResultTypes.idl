@@ -81,3 +81,10 @@ interface nsIAutoCompleteMdbResult : nsIAutoCompleteBaseResult
 
   long getIntRowValue(in nsIMdbRow row, in mdb_column col);
 };
+
+/* noscript */
+[uuid(148C9DC5-0FBB-408B-80FE-544F6A85B433)]
+interface nsIAutoCompleteMdbResult2 : nsIAutoCompleteMdbResult
+{
+  attribute boolean reverseByteOrder;
+};
