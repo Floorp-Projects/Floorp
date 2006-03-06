@@ -44,7 +44,7 @@
 #include "nsArray.h"
 #include "mdb.h"
 
-class nsAutoCompleteMdbResult : public nsIAutoCompleteMdbResult
+class nsAutoCompleteMdbResult : public nsIAutoCompleteMdbResult2
 {
 public:
   NS_DECL_ISUPPORTS
@@ -55,6 +55,7 @@ public:
 
   NS_DECL_NSIAUTOCOMPLETEBASERESULT
   NS_DECL_NSIAUTOCOMPLETEMDBRESULT
+  NS_DECL_NSIAUTOCOMPLETEMDBRESULT2
 
 protected:
   nsCOMArray<nsIMdbRow> mResults;
@@ -71,6 +72,8 @@ protected:
   PRInt16   mValueType;
   mdb_scope mCommentToken;
   PRInt16   mCommentType;
+
+  PRPackedBool mReverseByteOrder;
 };
 
 #endif // __nsAutoCompleteResultBase__

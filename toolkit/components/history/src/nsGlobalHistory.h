@@ -215,11 +215,11 @@ protected:
   nsStringArray mIgnoreSchemes;
   nsStringArray mIgnoreHostnames;
   
-  nsresult AutoCompleteTypedSearch(nsIAutoCompleteMdbResult **aResult);
+  nsresult AutoCompleteTypedSearch(nsIAutoCompleteMdbResult2 **aResult);
   nsresult AutoCompleteSearch(const nsAString& aSearchString,
                               AutocompleteExclude* aExclude,
-                              nsIAutoCompleteMdbResult* aPrevResult,
-                              nsIAutoCompleteMdbResult** aResult);
+                              nsIAutoCompleteMdbResult2* aPrevResult,
+                              nsIAutoCompleteMdbResult2** aResult);
   void AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude);
   void AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude);
   nsString AutoCompletePrefilter(const nsAString& aSearchString);
