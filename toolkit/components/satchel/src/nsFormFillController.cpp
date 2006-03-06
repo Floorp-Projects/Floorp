@@ -500,7 +500,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   // while PasswordManager does not.
   nsCOMPtr<nsIAutoCompleteSimpleResult> historyResult;
 #elif defined(MOZ_MORK)
-  nsCOMPtr<nsIAutoCompleteMdbResult> historyResult;
+  nsCOMPtr<nsIAutoCompleteMdbResult2> historyResult;
 #else
 #error either mozstorage or mork must be compiled
 #endif
