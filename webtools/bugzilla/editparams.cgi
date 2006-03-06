@@ -41,7 +41,7 @@ print $cgi->header();
 
 $user->in_group('tweakparams')
   || ThrowUserError("auth_failure", {group  => "tweakparams",
-                                     action => "modify",
+                                     action => "access",
                                      object => "parameters"});
 
 my $action = trim($cgi->param('action') || '');
