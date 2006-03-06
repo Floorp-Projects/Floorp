@@ -77,7 +77,12 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPopupBoxObject, nsBoxObject, nsIPopupBoxObject)
 nsIPopupSetFrame*
 nsPopupBoxObject::GetPopupSetFrame()
 {
-  nsIFrame* rootFrame = mPresShell->FrameManager()->GetRootFrame();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (!shell) {
+    return nsnull;
+  }
+
+  nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
   if (!rootFrame)
     return nsnull;
 

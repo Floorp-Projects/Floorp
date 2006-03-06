@@ -165,7 +165,12 @@ nsTreeBoxObject::GetTreeBody()
   nsCOMPtr<nsIContent> content;
   FindBodyElement(frame->GetContent(), getter_AddRefs(content));
 
-  frame = mPresShell->GetPrimaryFrameFor(content);
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  if (!shell) {
+    return nsnull;
+  }
+
+  frame = shell->GetPrimaryFrameFor(content);
   if (!frame)
      return nsnull;
 

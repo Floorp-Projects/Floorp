@@ -41,6 +41,8 @@
 #include "nsPresState.h"
 #include "nsPoint.h"
 #include "nsAutoPtr.h"
+#include "nsIWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
@@ -63,6 +65,7 @@ public:
   NS_IMETHOD InvalidatePresentationStuff();
 
   virtual nsIFrame* GetFrame();
+  already_AddRefed<nsIPresShell> GetPresShell();
   nsresult GetOffsetRect(nsRect& aRect);
   nsresult GetScreenPosition(nsIntPoint& aPoint);
 
@@ -81,5 +84,5 @@ protected:
   nsAutoPtr<nsPresState> mPresState; // [OWNER]
 
   nsIContent* mContent; // [WEAK]
-  nsIPresShell* mPresShell; // [WEAK]
+  nsWeakPtr mPresShell;
 };
