@@ -26,6 +26,8 @@ use strict;
 use Bugzilla;
 use Bugzilla::Config;
 use Bugzilla::Error;
+use Bugzilla::Constants;
+use Bugzilla::Bug;
 
 use base qw(Exporter);
 @Bugzilla::Search::Quicksearch::EXPORT = qw(quicksearch);
@@ -153,12 +155,12 @@ sub quicksearch {
 
         my @words = splitString($searchstring);
         my $searchComments = $#words < Param('quicksearch_comment_cutoff');
-        my @openStates = &::OpenStates();
+        my @openStates = BUG_STATE_OPEN;
         my @closedStates;
         my (%states, %resolutions);
 
         foreach (@::legal_bug_status) {
-            push(@closedStates, $_) unless &::IsOpenedState($_);
+            push(@closedStates, $_) unless is_open_state($_);
         }
         foreach (@openStates) { $states{$_} = 1 }
         if ($words[0] eq 'ALL') {

@@ -500,7 +500,7 @@ sub CheckCanChangeField {
     if ($field eq "canconfirm"
         || ($field eq "bug_status"
             && $oldvalue eq 'UNCONFIRMED'
-            && IsOpenedState($newvalue)))
+            && is_open_state($newvalue)))
     {
         $PrivilegesRequired = 3;
         return $UserInCanConfirmGroupSet;
@@ -785,7 +785,7 @@ sub ChangeStatus {
             # confirmed or not
             $::query .= "bug_status = CASE WHEN everconfirmed = 1 THEN " .
                          SqlQuote($str) . " ELSE 'UNCONFIRMED' END";
-        } elsif (IsOpenedState($str)) {
+        } elsif (is_open_state($str)) {
             # Note that we cannot combine this with the above branch - here we
             # need to check if bugs.bug_status is open, (since we don't want to
             # reopen closed bugs when reassigning), while above the whole point
@@ -811,7 +811,7 @@ sub ChangeStatus {
             # This also relies on the fact that confirming and accepting have
             # already called DoConfirm before this is called
 
-            my @open_state = map(SqlQuote($_), OpenStates());
+            my @open_state = map(SqlQuote($_), BUG_STATE_OPEN);
             my $open_state = join(", ", @open_state);
 
             # If we are changing everconfirmed to 1, we have to take this change
@@ -2040,7 +2040,7 @@ foreach my $id (@idlist) {
             }
 
             if ($col eq 'bug_status' 
-                && IsOpenedState($old) ne IsOpenedState($new))
+                && is_open_state($old) ne is_open_state($new))
             {
                 $check_dep_bugs = 1;
             }

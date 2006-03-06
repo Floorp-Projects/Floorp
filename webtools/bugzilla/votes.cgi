@@ -186,7 +186,7 @@ sub show_user {
             push (@bugs, { id => $id, 
                            summary => $summary,
                            count => $count,
-                           opened => IsOpenedState($status) });
+                           opened => is_open_state($status) });
         }
         
         # In case we didn't populate this earlier (i.e. an error, or

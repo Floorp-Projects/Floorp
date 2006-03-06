@@ -166,7 +166,7 @@ sub GetBug {
                   WHERE bugs.bug_id = ?", undef, $id);
      }
     
-    $bug->{'open'} = $bug->{'exists'} && IsOpenedState($bug->{'status'});
+    $bug->{'open'} = $bug->{'exists'} && is_open_state($bug->{'status'});
     $bug->{'dependencies'} = [];
     
     return $bug;

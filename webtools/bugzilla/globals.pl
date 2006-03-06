@@ -472,25 +472,6 @@ sub GroupIdToName {
     return $name;
 }
 
-# Determines if the given bug_status string represents an "Opened" bug.  This
-# routine ought to be parameterizable somehow, as people tend to introduce
-# new states into Bugzilla.
-
-sub IsOpenedState {
-    my ($state) = (@_);
-    if (grep($_ eq $state, OpenStates())) {
-        return 1;
-    }
-    return 0;
-}
-
-# This sub will return an array containing any status that
-# is considered an open bug.
-
-sub OpenStates {
-    return ('NEW', 'REOPENED', 'ASSIGNED', 'UNCONFIRMED');
-}
-
 ############# Live code below here (that is, not subroutine defs) #############
 
 use Bugzilla;

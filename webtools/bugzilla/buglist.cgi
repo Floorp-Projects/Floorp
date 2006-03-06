@@ -1007,7 +1007,7 @@ $vars->{'buglist_joined'} = join(',', @bugidlist);
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
-my @openstates = OpenStates();
+my @openstates = BUG_STATE_OPEN;
 $vars->{'openstates'} = \@openstates;
 $vars->{'closedstates'} = ['CLOSED', 'VERIFIED', 'RESOLVED'];
 

@@ -37,6 +37,7 @@ use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Util;
+use Bugzilla::Bug;
 
 use Date::Parse;
 use Date::Format;
@@ -309,7 +310,7 @@ sub ProcessOneBug {
             $interestingchange = 0;
         }
         $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
-        if ($what eq 'bug_status' && &::IsOpenedState($old) ne &::IsOpenedState($new)) {
+        if ($what eq 'bug_status' && is_open_state($old) ne is_open_state($new)) {
             $interestingchange = 1;
         }
         

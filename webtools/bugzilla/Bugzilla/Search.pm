@@ -41,6 +41,7 @@ use Bugzilla::Constants;
 use Bugzilla::Group;
 use Bugzilla::User;
 use Bugzilla::Field;
+use Bugzilla::Bug;
 
 use Date::Format;
 use Date::Parse;
@@ -186,11 +187,11 @@ sub init {
             $params->delete('bug_status');
         }
         elsif ($bug_statuses[0] eq '__open__') {
-            $params->param('bug_status', map(&::IsOpenedState($_) ? $_ : undef, 
+            $params->param('bug_status', map(is_open_state($_) ? $_ : undef, 
                                              @::legal_bug_status));
         }
         elsif ($bug_statuses[0] eq "__closed__") {
-            $params->param('bug_status', map(&::IsOpenedState($_) ? undef : $_, 
+            $params->param('bug_status', map(is_open_state($_) ? undef : $_, 
                                              @::legal_bug_status));
         }
     }

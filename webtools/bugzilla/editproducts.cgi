@@ -294,7 +294,7 @@ if ($action eq 'new') {
 
         # For localisation reasons, we get the name of the "global" subcategory
         # and the title of the "open" query from the submitted form.
-        my @openedstatuses = OpenStates();
+        my @openedstatuses = BUG_STATE_OPEN;
         my $query = 
                join("&", map { "bug_status=" . url_quote($_) } @openedstatuses);
         push(@series, [$open_name, $query]);

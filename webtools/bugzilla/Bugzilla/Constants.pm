@@ -94,6 +94,8 @@ use base qw(Exporter);
 
     FIELD_TYPE_UNKNOWN
     FIELD_TYPE_FREETEXT
+
+    BUG_STATE_OPEN
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -255,5 +257,9 @@ use constant SENDMAIL_EXE => '/usr/lib/sendmail.exe';
 
 use constant FIELD_TYPE_UNKNOWN   => 0;
 use constant FIELD_TYPE_FREETEXT  => 1;
+
+# States that are considered to be "open" for bugs.
+use constant BUG_STATE_OPEN => ('NEW', 'REOPENED', 'ASSIGNED', 
+                                'UNCONFIRMED');
 
 1;

@@ -40,6 +40,7 @@ use Bugzilla::Util;
 use Bugzilla::User;
 use Bugzilla::Error;
 use MIME::Base64;
+use Bugzilla::Bug;
 
 # for time2str - replace by TT Date plugin??
 use Date::Format ();
@@ -415,7 +416,7 @@ sub get_bug_link {
             $pre = "<i>";
             $post = "</i>";
         }
-        elsif (! &::IsOpenedState($bug_state)) {
+        elsif (!is_open_state($bug_state)) {
             $pre = '<span class="bz_closed">';
             $title .= " $bug_res";
             $post = '</span>';

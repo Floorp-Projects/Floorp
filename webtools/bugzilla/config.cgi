@@ -33,6 +33,7 @@ use lib qw(.);
 require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Bug;
 
 # Suppress "used only once" warnings.
 use vars 
@@ -80,7 +81,7 @@ $vars->{'products'} = $user->get_selectable_products;
 my @open_status;
 my @closed_status;
 foreach my $status (@::legal_bug_status) {
-    IsOpenedState($status) ? push(@open_status, $status) 
+    is_open_state($status) ? push(@open_status, $status) 
                            : push(@closed_status, $status);
 }
 $vars->{'open_status'} = \@open_status;

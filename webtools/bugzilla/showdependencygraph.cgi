@@ -188,7 +188,7 @@ foreach my $k (keys(%seen)) {
         push(@params, "shape=box");
     }
 
-    if (IsOpenedState($stat)) {
+    if (is_open_state($stat)) {
         push(@params, "color=green");
     }
 

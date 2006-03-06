@@ -54,6 +54,7 @@ use base qw(Exporter);
     bug_alias_to_id ValidateBugAlias ValidateBugID
     RemoveVotes CheckIfVotedConfirmed
     LogActivityEntry
+    is_open_state
 );
 
 #####################################################################
@@ -203,7 +204,7 @@ sub initBug  {
   }
 
   $self->{'isunconfirmed'} = ($self->{bug_status} eq 'UNCONFIRMED');
-  $self->{'isopened'} = &::IsOpenedState($self->{bug_status});
+  $self->{'isopened'} = is_open_state($self->{bug_status});
   
   return $self;
 }
@@ -758,6 +759,12 @@ sub EmitDependList {
     return $list_ref;
 }
 
+# Tells you whether or not the argument is a valid "open" state.
+sub is_open_state {
+    my ($state) = @_;
+    return (grep($_ eq $state, BUG_STATE_OPEN) ? 1 : 0);
+}
+
 sub ValidateTime {
     my ($time, $field) = @_;
 
@@ -979,7 +986,7 @@ sub CountOpenDependencies {
             "FROM bugs, dependencies " .
            "WHERE blocked IN (" . (join "," , @bug_list) . ") " .
              "AND bug_id = dependson " .
-             "AND bug_status IN ('" . (join "','", &::OpenStates())  . "') " .
+             "AND bug_status IN ('" . (join "','", BUG_STATE_OPEN)  . "') " .
           $dbh->sql_group_by('blocked'));
     $sth->execute();
 
