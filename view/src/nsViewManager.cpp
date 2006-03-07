@@ -1415,6 +1415,11 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
               // Paint later.
               vm->UpdateView(vm->mRootView, NS_VMREFRESH_NO_SYNC);
               didResize = PR_TRUE;
+
+              // not sure if it's valid for us to claim that we
+              // ignored this, but we're going to do so anyway, since
+              // we didn't actually paint anything
+              *aStatus = nsEventStatus_eIgnore;
             }
           }
 
