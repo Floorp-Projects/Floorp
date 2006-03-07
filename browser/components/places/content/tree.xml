@@ -61,6 +61,7 @@
             return this.view.QueryInterface(Ci.nsINavHistoryResult);
           }
           catch (e) {
+            return null;
           }
         ]]></body>
       </method>
@@ -480,8 +481,8 @@
             var dragService = 
                 Cc["@mozilla.org/widget/dragservice;1"].
                 getService(Ci.nsIDragService);
-            var session = dragService.getCurrentSession();
-            session.canDrop = this._viewObserver.canDrop(-1, 1);
+            var dragSession = dragService.getCurrentSession();
+            dragSession.canDrop = this._viewObserver.canDrop(-1, 1);
           }
         ]]></body>
       </method>
@@ -669,7 +670,7 @@
         onCycleCell: function VO_onCycleCell(row, column) { },
         onPerformAction: function VO_onPerformAction(action) { },
         onPerformActionOnRow: function VO_onPerformActionOnRow(action, row) { },
-        onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
+        onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { }
       })]]></field>
       
       <field name="_nextSelection">[]</field>

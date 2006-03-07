@@ -165,7 +165,7 @@
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
                 element.setAttribute("url", child.uri);
-                element.setAttribute("statustext", child.url);
+                element.setAttribute("statustext", child.uri);
                 element.className = "menuitem-iconic bookmark-item";
               }
               else if (PlacesController.nodeIsSeparator(child)) {
@@ -605,7 +605,7 @@
           for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
             flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
           return flavorSet;
-        },
+        }
         
       })]]></field>
       
