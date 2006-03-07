@@ -54,24 +54,12 @@
 
 #include "nsIEventQueueService.h"
 
-#include <Quickdraw.h>
-
 // Define Class IDs -- i hate having to do this
 static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
-// from MacHeaders.c
-#ifndef topLeft
-  #define topLeft(r) (((Point *) &(r))[0])
-#endif
-#ifndef botRight
-  #define botRight(r) (((Point *) &(r))[1])
-#endif
-
-// externs defined in nsWindow.cpp
+// externs defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
-
-#define kWindowPositionSlop 20
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
@@ -609,6 +597,26 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener, 
+                                                 PRBool aDoCapture, 
+                                                 PRBool aConsumeRollupEvent)
+{
+  if (aDoCapture) {
+    NS_IF_RELEASE(gRollupListener);
+    NS_IF_RELEASE(gRollupWidget);
+    gRollupListener = aListener;
+    NS_ADDREF(aListener);
+    gRollupWidget = this;
+    NS_ADDREF(this);
+  } else {
+    NS_IF_RELEASE(gRollupListener);
+    NS_IF_RELEASE(gRollupWidget);
+  }
+  
+  return NS_OK;
+}
+
+
 @implementation WindowDelegate
 
 
@@ -622,14 +630,15 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
-  if (!mGeckoWindow->IsResizing()) {
-    // must remember to give Gecko top-left, not straight cocoa origin
-    // and that Gecko already compensates for the title bar, so we have to
-    // strip it out here.
-    NSRect frameRect = [[aNotification object] frame];
-    mGeckoWindow->Resize (NS_STATIC_CAST(PRInt32,frameRect.size.width),
-                          NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE);
-  }
+  if (mGeckoWindow->IsResizing())
+    return;
+  
+  // must remember to give Gecko top-left, not straight cocoa origin
+  // and that Gecko already compensates for the title bar, so we have to
+  // strip it out here.
+  NSRect frameRect = [[aNotification object] frame];
+  mGeckoWindow->Resize (NS_STATIC_CAST(PRInt32,frameRect.size.width),
+                        NS_STATIC_CAST(PRInt32,frameRect.size.height - nsCocoaWindow::kTitleBarHeight), PR_TRUE);
 }
 
 
@@ -648,32 +657,44 @@ nsIMenuBar* nsCocoaWindow::GetMenuBar()
 
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
-  //printf(@"got deactivate");
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
+  
+  // tell Gecko that we lost focus
+  nsGUIEvent guiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
 
 
-- (void)windowDidBecomeKey:(NSNotification *)aNotification
+- (void)windowWillMove:(NSNotification *)aNotification
 {
-  //printf("we're key window\n");
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 }
 
-
-- (void)windowDidResignKey:(NSNotification *)aNotification
-{
-  //printf("we're not the key window\n");
-}
-
-
-- (void)windowDidMove:(NSNotification *)aNotification
-{
-}
 
 -(void)windowWillClose:(NSNotification *)aNotification
 {
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
+  
   nsGUIEvent guiEvent(PR_TRUE, NS_XUL_CLOSE, mGeckoWindow);
   guiEvent.time = PR_IntervalNow();
   nsEventStatus status = nsEventStatus_eIgnore;
   mGeckoWindow->DispatchEvent(&guiEvent, status);
+}
+
+
+- (void)windowWillMiniaturize:(NSNotification *)aNotification
+{
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
 }
 
 

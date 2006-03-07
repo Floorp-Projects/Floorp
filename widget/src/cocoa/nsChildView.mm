@@ -533,8 +533,8 @@ NS_IMETHODIMP nsChildView::Destroy()
 
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.
-  if ( this == gRollupWidget ) {
-    if ( gRollupListener )
+  if (this == gRollupWidget) {
+    if (gRollupListener)
       gRollupListener->Rollup();
     CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
   }
@@ -1868,8 +1868,8 @@ void nsChildView::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 
 NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener, 
-                                            PRBool aDoCapture, 
-                                            PRBool aConsumeRollupEvent)
+                                               PRBool aDoCapture, 
+                                               PRBool aConsumeRollupEvent)
 {
   if (aDoCapture) {
     NS_IF_RELEASE(gRollupListener);
@@ -1880,7 +1880,6 @@ NS_IMETHODIMP nsChildView::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ADDREF(this);
   } else {
     NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
     NS_IF_RELEASE(gRollupWidget);
   }
 

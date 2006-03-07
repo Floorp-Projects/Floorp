@@ -41,7 +41,6 @@
 #undef DARWIN
 
 #import <Cocoa/Cocoa.h>
-#include <Controls.h>
 
 #include "nsBaseWidget.h"
 
@@ -142,10 +141,10 @@ public:
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight) { return NS_OK; }
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) { return NS_OK; }
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) ;
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) { return NS_OK; }
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     
     // be notified that a some form of drag event needs to go into Gecko
-    virtual PRBool DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+    virtual PRBool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
 
     // Helpers to prevent recursive resizing during live-resize
     PRBool IsResizing () const { return mIsResizing; }
