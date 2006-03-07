@@ -1799,28 +1799,21 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
    *          |sourceDir| itself) we are moving files from.
    */
   function moveDirectory(sourceDir, targetDir, currentDir) {
-    var entries = currentDir.directoryEntries;
-    try {
-      while (true) {
-        var entry = entries.nextFile;
-        if (!entry)
-          break;
-        if (entry.isDirectory())
-          moveDirectory(sourceDir, targetDir, entry);
-        else {
-          if (entry instanceof nsILocalFile) {
-            var rd = entry.getRelativeDescriptor(sourceDir);
-            var destination = targetDir.clone().QueryInterface(nsILocalFile);
-            destination.setRelativeDescriptor(targetDir, rd);
-            moveFile(entry, destination.parent);
-          }
-        }
+    var entries = currentDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+    while (true) {
+      var entry = entries.nextFile;
+      if (!entry)
+        break;
+      if (entry.isDirectory())
+        moveDirectory(sourceDir, targetDir, entry);
+      else if (entry instanceof nsILocalFile) {
+        var rd = entry.getRelativeDescriptor(sourceDir);
+        var destination = targetDir.clone().QueryInterface(nsILocalFile);
+        destination.setRelativeDescriptor(targetDir, rd);
+        moveFile(entry, destination.parent);
       }
-      if (entries instanceof nsIDirectoryEnumerator)
-        entries.close();
     }
-    catch (e) {
-    }
+    entries.close();
   }
   
   /**
