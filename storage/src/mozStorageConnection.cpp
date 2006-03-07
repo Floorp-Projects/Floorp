@@ -101,7 +101,7 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
         rv = aDatabaseFile->GetPath(path);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        srv = sqlite3_open16 (path.get(), &mDBConn);
+        srv = sqlite3_open (NS_ConvertUTF16toUTF8(path).get(), &mDBConn);
     } else {
         // in memory database requested, sqlite uses a magic file name
         srv = sqlite3_open (":memory:", &mDBConn);
