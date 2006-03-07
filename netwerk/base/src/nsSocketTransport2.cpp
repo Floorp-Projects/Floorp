@@ -282,7 +282,7 @@ nsSocketInputStream::Available(PRUint32 *avail)
 
         fd = mTransport->GetFD_Locked();
         if (!fd)
-            return NS_BASE_STREAM_WOULD_BLOCK;
+            return NS_OK;
     }
 
     // cannot hold lock while calling NSPR.  (worried about the fact that PSM
@@ -301,7 +301,7 @@ nsSocketInputStream::Available(PRUint32 *avail)
         else {
             PRErrorCode code = PR_GetError();
             if (code == PR_WOULD_BLOCK_ERROR)
-                return NS_BASE_STREAM_WOULD_BLOCK;
+                return NS_OK;
             mCondition = ErrorAccordingToNSPR(code);
         }
         rv = mCondition;
