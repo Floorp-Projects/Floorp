@@ -125,11 +125,27 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
       continue;
     }
 
+    // If the type is boolean, we want to use the strings "true" and "false",
+    // rather than "1" and "0" which is what nsVariant generates on its own.
+    PRUint16 dataType;
+    value->GetDataType(&dataType);
+
     nsAutoString valueString;
-    rv = value->GetAsDOMString(valueString);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to convert property value to string");
-      continue;
+    if (dataType == nsIDataType::VTYPE_BOOL) {
+      PRBool valueBool;
+      rv = value->GetAsBool(&valueBool);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Variant has bool type but couldn't get bool value");
+        continue;
+      }
+      valueString = valueBool ? NS_LITERAL_STRING("true")
+        : NS_LITERAL_STRING("false");
+    } else {
+      rv = value->GetAsDOMString(valueString);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to convert property value to string");
+        continue;
+      }
     }
 
     rv = eventElement->SetAttribute(name, valueString);
