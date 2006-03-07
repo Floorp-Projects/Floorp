@@ -16,22 +16,22 @@
       ]]></destructor>
             
       <method name="init">
-        <body><![CDATA[ 
+        <body><![CDATA[
+          // This function should only be called for top-level menus like the bookmarks menu.
+          // Submenus get their _result and _resultNode from their parents.
           var hist =           
               Cc["@mozilla.org/browser/nav-history-service;1"].
               getService(Ci.nsINavHistoryService);
-          
-          var bms = 
-              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
 
-          var query = hist.getNewQuery();
-          query.setFolders([bms.bookmarksRoot], 1);
-          var options = hist.getNewQueryOptions();
-          options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-          options.expandQueries = true;
-          this._result = hist.executeQuery(query, options);
+          var queryString = this.getAttribute("place");
+          var queries = { }, options = { };
+          hist.queryStringToQueries(queryString, queries, { }, options);
+          if (!queries.value.length) 
+            queries.value = [hist.getNewQuery()];
+          this._result = hist.executeQueries(queries.value, queries.value.length, options.value);
+          this._result.root.containerOpen = true;
           this._resultNode = this._result.root;
+          this._rebuild();
         ]]></body>
       </method>
             
@@ -119,7 +119,7 @@
                 --this._endMarker;
             }
           }
-          LOG("KIDS = " + this.childNodes.length);
+          //LOG("KIDS = " + this.childNodes.length);
         ]]></body>
       </method>
       

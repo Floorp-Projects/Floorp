@@ -274,6 +274,7 @@
                      oncommand="PlacesBrowserShim.showHistory()"/>
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
          <hbox id="bookmarksBarContent" flex="1"
+               place="place:&amp;folder=3&amp;group=3&amp;expandQueries=1"
                context="placesContext"
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
