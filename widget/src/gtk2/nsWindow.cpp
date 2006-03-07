@@ -836,6 +836,55 @@ nsWindow::SetCursor(nsCursor aCursor)
 }
 
 
+static
+PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
+                         PRUint32 aImageBytesPerRow,
+                         PRUint32 aWidth, PRUint32 aHeight)
+{
+  PRUint32 outBpr = (aWidth + 7) / 8;
+  
+  PRUint8* outData = new PRUint8[outBpr * aHeight];
+  if (!outData)
+      return NULL;
+
+  PRUint8 *outRow = outData,
+          *imageRow = aImageData;
+
+  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
+      PRUint8 *irow = imageRow;
+      PRUint8 *orow = outRow;
+      PRUint8 imagePixels = 0;
+      PRUint8 offset = 0;
+
+      for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
+          PRUint8 r = *imageRow++,
+                  g = *imageRow++,
+                  b = *imageRow++;
+               /* a = * */imageRow++;
+
+          if ((r + b + g) < 3 * 128)
+              imagePixels |= (1 << offset);
+
+          if (offset == 7) {
+              *outRow++ = imagePixels;
+              offset = 0;
+              imagePixels = 0;
+          } else {
+              offset++;
+          }
+      }
+      if (offset != 0)
+          *outRow++ = imagePixels;
+
+      imageRow = irow + aImageBytesPerRow;
+      outRow = orow + outBpr;
+  }
+
+  return outData;
+}
+
+
+
 NS_IMETHODIMP
 nsWindow::SetCursor(imgIContainer* aCursor,
                     PRUint32 aHotspotX, PRUint32 aHotspotY)
@@ -857,9 +906,6 @@ nsWindow::SetCursor(imgIContainer* aCursor,
             PR_FindFunctionSymbolAndLibrary("gdk_display_get_default", &lib);
         sPixbufCursorChecked = PR_TRUE;
     }
-    if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default)
-        return NS_ERROR_NOT_IMPLEMENTED;
-
     mCursor = nsCursor(-1);
 
     // Get first image frame
@@ -892,10 +938,47 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         pixbuf = alphaBuf;
     }
 
-    // Now create the cursor
-    GdkCursor* cursor = _gdk_cursor_new_from_pixbuf(_gdk_display_get_default(),
-                                                    pixbuf,
-                                                    aHotspotX, aHotspotY);
+    GdkCursor* cursor;
+    if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default) {
+        // Fallback to a monochrome cursor
+        int width = gdk_pixbuf_get_width(pixbuf);
+        int height = gdk_pixbuf_get_height(pixbuf);
+        GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
+        if (!mask)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PRUint8* data = Data32BitTo1Bit(gdk_pixbuf_get_pixels(pixbuf),
+                                        gdk_pixbuf_get_rowstride(pixbuf),
+                                        width, height);
+        if (!data) {
+            g_object_unref(mask);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        GdkPixmap* image = gdk_bitmap_create_from_data(NULL, (const gchar*)data, width,
+                                                       height);
+        delete[] data;
+        if (!image) {
+            g_object_unref(mask);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        gdk_pixbuf_render_threshold_alpha(pixbuf, mask, 0, 0, 0, 0, width,
+                                          height, 1);
+
+        const GdkColor fg = { 0, 0, 0, 0 }; // Black
+        const GdkColor bg = { 0, 0xFFFF, 0xFFFF, 0xFFFF }; // White
+
+        cursor = gdk_cursor_new_from_pixmap(image, mask, &fg, &bg, aHotspotX,
+                                            aHotspotY);
+        g_object_unref(image);
+        g_object_unref(mask);
+    } else {
+        // Now create the cursor
+        cursor = _gdk_cursor_new_from_pixbuf(_gdk_display_get_default(),
+                                             pixbuf,
+                                             aHotspotX, aHotspotY);
+    }
     gdk_pixbuf_unref(pixbuf);
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     if (cursor) {
