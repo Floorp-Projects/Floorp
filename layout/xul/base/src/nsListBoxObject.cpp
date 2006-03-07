@@ -61,7 +61,8 @@ public:
   nsListBoxObject();
   virtual ~nsListBoxObject();
 
-  NS_IMETHOD InvalidatePresentationStuff();
+  // nsPIBoxObject
+  virtual void Clear();
   
 protected:
   nsIListBoxObject* mListBoxBody;
@@ -204,11 +205,11 @@ nsListBoxObject::GetListBoxBody()
     return mListBoxBody;
   }
 
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return nsnull;
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  nsIPresShell* shell = GetPresShell(PR_FALSE);
   if (!shell) {
     return nsnull;
   }
@@ -236,12 +237,12 @@ nsListBoxObject::GetListBoxBody()
   return mListBoxBody;
 }
 
-NS_IMETHODIMP
-nsListBoxObject::InvalidatePresentationStuff()
+void
+nsListBoxObject::Clear()
 {
   ClearCachedListBoxBody();
 
-  return nsBoxObject::InvalidatePresentationStuff();
+  nsBoxObject::Clear();
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

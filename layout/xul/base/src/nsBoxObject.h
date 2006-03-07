@@ -41,8 +41,6 @@
 #include "nsPresState.h"
 #include "nsPoint.h"
 #include "nsAutoPtr.h"
-#include "nsIWeakReference.h"
-#include "nsIWeakReferenceUtils.h"
 
 class nsIBoxLayoutManager;
 class nsIBoxPaintManager;
@@ -60,12 +58,11 @@ public:
   virtual ~nsBoxObject();
 
   // nsPIBoxObject
-  NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument);
-  NS_IMETHOD InvalidatePresentationStuff();
+  virtual void Init(nsIContent* aContent);
+  virtual void Clear();
 
-  virtual nsIFrame* GetFrame();
-  already_AddRefed<nsIPresShell> GetPresShell();
+  nsIFrame* GetFrame(PRBool aFlushLayout);
+  nsIPresShell* GetPresShell(PRBool aFlushLayout);
   nsresult GetOffsetRect(nsRect& aRect);
   nsresult GetScreenPosition(nsIntPoint& aPoint);
 
@@ -84,5 +81,4 @@ protected:
   nsAutoPtr<nsPresState> mPresState; // [OWNER]
 
   nsIContent* mContent; // [WEAK]
-  nsWeakPtr mPresShell;
 };

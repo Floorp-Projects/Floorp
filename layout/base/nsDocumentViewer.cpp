@@ -1996,14 +1996,6 @@ DocumentViewerImpl::Hide(void)
     selPrivate->RemoveSelectionListener(mSelectionListener);
   }
 
-#ifdef MOZ_XUL
-  nsCOMPtr<nsIXULDocument> xul_doc(do_QueryInterface(mDocument));
-
-  if (xul_doc) {
-    xul_doc->OnHide();
-  }
-#endif
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRBool saveLayoutState = PR_FALSE;

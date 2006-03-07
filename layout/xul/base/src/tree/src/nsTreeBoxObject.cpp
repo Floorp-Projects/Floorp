@@ -62,9 +62,7 @@ public:
   nsITreeBoxObject* GetTreeBody();
 
   //NS_PIBOXOBJECT interfaces
-  NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument);
-  NS_IMETHOD InvalidatePresentationStuff();
+  virtual void Clear();
 
   // nsPITreeBoxObject
   virtual void ClearCachedTreeBody();  
@@ -78,16 +76,15 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject,
                              nsPITreeBoxObject)
 
 
-NS_IMETHODIMP
-nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
+void
+nsTreeBoxObject::Clear()
 {
-  // this should only be called with a null document, which indicates
-  // that we're being torn down.
-  NS_ASSERTION(aDocument == nsnull, "SetDocument called with non-null document");
+  ClearCachedTreeBody();
 
   // Drop the view's ref to us.
+  NS_NAMED_LITERAL_STRING(viewString, "view");
   nsCOMPtr<nsISupports> suppView;
-  GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
+  GetPropertyAsSupports(viewString.get(), getter_AddRefs(suppView));
   nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
   if (treeView) {
     nsCOMPtr<nsITreeSelection> sel;
@@ -97,19 +94,12 @@ nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
     treeView->SetTree(nsnull); // Break the circular ref between the view and us.
   }
 
-  return nsBoxObject::SetDocument(aDocument);
+  SetPropertyAsSupports(viewString.get(), nsnull);
+
+  nsBoxObject::Clear();
 }
 
 
-NS_IMETHODIMP
-nsTreeBoxObject::InvalidatePresentationStuff()
-{
-  ClearCachedTreeBody();
-  SetPropertyAsSupports(NS_LITERAL_STRING("view").get(), nsnull);
-
-  return nsBoxObject::InvalidatePresentationStuff();
-}
-  
 nsTreeBoxObject::nsTreeBoxObject()
   : mTreeBody(nsnull)
 {
@@ -120,13 +110,6 @@ nsTreeBoxObject::~nsTreeBoxObject()
   /* destructor code */
 }
 
-
-NS_IMETHODIMP nsTreeBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresShell)
-{
-  nsresult rv = nsBoxObject::Init(aContent, aPresShell);
-  if (NS_FAILED(rv)) return rv;
-  return NS_OK;
-}
 
 static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
 {
@@ -157,7 +140,7 @@ nsTreeBoxObject::GetTreeBody()
     return mTreeBody;
   }
 
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return nsnull;
 
@@ -165,7 +148,7 @@ nsTreeBoxObject::GetTreeBody()
   nsCOMPtr<nsIContent> content;
   FindBodyElement(frame->GetContent(), getter_AddRefs(content));
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  nsIPresShell* shell = GetPresShell(PR_FALSE);
   if (!shell) {
     return nsnull;
   }
