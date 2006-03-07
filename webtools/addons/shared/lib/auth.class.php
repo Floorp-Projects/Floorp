@@ -99,6 +99,7 @@ class AMO_Auth extends AMO_Object{
                  )";
 
        $this->db->query($_sql);
+       $this->setUsernameCookie();
        return true;
     }
 
@@ -297,6 +298,54 @@ class AMO_Auth extends AMO_Object{
     function getId()
     {
         return $this->_user_id;
+    }
+
+    /**
+     * Will return the username of the user_id in the user object or an empty string
+     * on failure.
+     * @access public
+     * @return string username
+     */
+    function getUserName()
+    {
+        $_user_id = mysql_real_escape_string($this->_user_id);
+
+        $_sql =    "SELECT 
+                        `UserName`
+                    FROM 
+                        `{$this->_user_table}` 
+                    WHERE 
+                        `UserID` = '{$_user_id}'
+                    LIMIT 1";
+
+        $this->db->query($_sql, SQL_INIT, SQL_ASSOC);
+
+        if (!empty($this->db->record)) {
+            $_record = $this->db->record;
+            return $_record['UserName'];
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * Because of the way caching is setup on AMO, we decided to use javascript to
+     * display the username in the headers of the page.  This function will set a
+     * non-secure cookie that just holds that username.  Do not read from this
+     * cookie assuming the username value is accurate - this is merely for aesthetic
+     * purposes.
+     */
+    function setUsernameCookie()
+    {
+        $_username = $this->getUserName();
+
+        if (empty($_username)) {
+            return false;
+        }
+
+        setcookie('amo_user', $_username, time() + $this->_expires, '/', false);
+
+        return true;
     }
 }
 ?>

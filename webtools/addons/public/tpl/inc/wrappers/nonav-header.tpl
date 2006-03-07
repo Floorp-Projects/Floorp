@@ -15,6 +15,7 @@
     <link rel="icon" href="{$config.webpath}/images/favicon.ico" type="image/png">
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
+    <script src="{$config.webpath}/js/auth.js" type="text/javascript"></script>
 </head>
 
 <body>
@@ -61,6 +62,12 @@
 
 </div>
 <!-- end header -->
+
+<script type="text/javascript">
+//<![CDATA[
+    addUsernameToHeader();
+//]]>
+</script>
 
 
 <hr class="hide">
