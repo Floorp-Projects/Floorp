@@ -927,6 +927,10 @@ pref("bidi.support", 1);
 // 1 = doccharactersetBidi *
 // 2 = defaultcharactersetBidi
 pref("bidi.characterset", 1);
+// Whether delete and backspace should immediately delete characters not
+// visually adjacent to the caret, or adjust the visual position of the caret
+// on the first keypress and delete the character on a second keypress
+pref("bidi.edit.delete_immediately", false);
 
 
 // used for double-click word selection behavior. Win will override.

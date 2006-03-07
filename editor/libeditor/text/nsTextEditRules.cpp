@@ -165,6 +165,14 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor, PRUint32 aFlags)
     res = ReplaceNewlines(wholeDoc);
   }
 
+  PRBool deleteBidiImmediately = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &res);
+  if (NS_SUCCEEDED(res))
+    prefBranch->GetBoolPref("bidi.edit.delete_immediately",
+                            &deleteBidiImmediately);
+  mDeleteBidiImmediately = deleteBidiImmediately;
+
   return res;
 }
 
