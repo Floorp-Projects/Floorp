@@ -56,7 +56,7 @@ class gfxWindowsFont : public gfxFont {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
-    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aHWnd);
+    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup);
     gfxWindowsFont(HFONT aFont, const gfxFontGroup *aFontGroup, PRBool aIsMLangFont);
 
     virtual ~gfxWindowsFont();
@@ -100,7 +100,7 @@ private:
 class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
 
 public:
-    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HDC hwnd);
+    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle);
     virtual ~gfxWindowsFontGroup();
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
@@ -114,8 +114,6 @@ protected:
     static PRBool MakeFont(const nsAString& fontName, const nsAString& genericName, void *closure);
 
 private:
-    HDC mDC;
-
     friend class gfxWindowsTextRun;
 };
 
