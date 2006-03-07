@@ -140,11 +140,12 @@ function resizeAlert()
   // use resizeTo and make up our measurements...
   //sizeToContent();
   
-  // alertGroove is the widest of the elements in alertTextBox so use its width, then 
+  // Use the wider of the alert groove and the folderSummaryInfo box, then 
   // add on the width of alertImageBox + some small amount of fudge. For the height, 
   // just use the size of the alertBox, that appears to be pretty accurate.
-  resizeTo(document.getBoxObjectFor(document.getElementById('alertGroove')).width + 
-           document.getBoxObjectFor(document.getElementById('alertImageBox')).width + 30, 
+  var windowWidth = Math.max (document.getBoxObjectFor(document.getElementById('alertGroove')).width,
+                              document.getBoxObjectFor(document.getElementById('folderSummaryInfo')).width);
+  resizeTo(windowWidth + document.getBoxObjectFor(document.getElementById('alertImageBox')).width + 30, 
            document.getBoxObjectFor(document.getElementById('alertBox')).height + 10);
   gFinalHeight = window.outerHeight;
   window.outerHeight = 1;
