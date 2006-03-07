@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Conrad Carlen <ccarlen@netscape.com>
+ *  Mark Mentovai <mark@moxienet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -239,5 +240,8 @@ NS_EXPORT const char* NS_TruncNodeName(const char *aNode, char *outBuf);
 #endif
 
 NS_EXPORT nsresult NS_NewLocalFileWithFSSpec(const FSSpec* inSpec, PRBool followSymlinks, nsILocalFileMac* *result);
+
+// NS_NewLocalFileWithFSRef is available since Mozilla 1.8.1.
+NS_EXPORT nsresult NS_NewLocalFileWithFSRef(const FSRef* aFSRef, PRBool aFollowSymlinks, nsILocalFileMac** result);
 }
 %}
