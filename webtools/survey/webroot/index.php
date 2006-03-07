@@ -34,28 +34,21 @@ if (!empty($_POST['issue_id']) && is_array($_POST['issue_id'])) {
     }
 }
 
-// Insert the stuff.
-$query = "";
-
 // Result record.
-$query .= "
+$query = "
     INSERT INTO
         result(intend_id, intend_text, product, useragent, http_user_agent, comments, date_submitted)
     VALUES(
         '{$sql['intend_id']}', '{$sql['intend_text']}', '{$sql['product']}', '{$sql['useragent']}', '{$sql['http_user_agent']}', '{$sql['comments']}', NOW()
     );\n
 ";
+$db->query($query, SQL_NONE);
 
 if (!empty($sql['issue_id']) && count($sql['issue_id']) > 0) {
     foreach ($sql['issue_id'] as $id => $text) {
-        $query .= "
-            INSERT INTO issue_result_map() VALUES(LAST_INSERT_ID(), '{$id}', '{$text}');\n
-        ";
+        $db->query("INSERT INTO issue_result_map() VALUES(LAST_INSERT_ID(), '{$id}', '{$text}')", SQL_NONE);
     }
 }
-
-// Do the query.
-$db->query($query);
 
 // Redirect to thank you page, and we're done.
 header('Location: http://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/thanks.php');
@@ -80,7 +73,7 @@ echo '<li><label for="int0"><input type="radio" name="intend_id" id="int0" value
 echo '</ul>';
 
 // Create issue block.
-echo '<h2>What issues did Firefox have? (select all that apply)</h2>';
+echo '<h2>Why did you uninstall Firefox? (select all that apply)</h2>';
 echo '<ul class="survey">';
 foreach ($issues as $id=>$text) {
     echo '<li><label for="iss'.$id.'"> <input type="checkbox" name="issue_id[]" id="iss'.$id.'" value="'.$id.'" />'.$text.'</label></li>';

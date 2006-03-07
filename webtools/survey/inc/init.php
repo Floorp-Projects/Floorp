@@ -14,10 +14,6 @@ require_once(ROOT_PATH.'/lib/sql.class.php');
 require_once(ROOT_PATH.'/lib/survey.class.php');
 
 /**
- * Set runtime options.
- */
-
-/**
  * Configure database.
  */
 class Survey_SQL extends SQL {
