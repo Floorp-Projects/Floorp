@@ -966,8 +966,8 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         gdk_pixbuf_render_threshold_alpha(pixbuf, mask, 0, 0, 0, 0, width,
                                           height, 1);
 
-        const GdkColor fg = { 0, 0, 0, 0 }; // Black
-        const GdkColor bg = { 0, 0xFFFF, 0xFFFF, 0xFFFF }; // White
+        GdkColor fg = { 0, 0, 0, 0 }; // Black
+        GdkColor bg = { 0, 0xFFFF, 0xFFFF, 0xFFFF }; // White
 
         cursor = gdk_cursor_new_from_pixmap(image, mask, &fg, &bg, aHotspotX,
                                             aHotspotY);
