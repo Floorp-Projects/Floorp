@@ -4174,7 +4174,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 
     case WM_PAINT:
+#ifdef MOZ_CAIRO_GFX
+      *aRetValue = (int) OnPaint();
+      result = PR_TRUE;
+#else
       result = OnPaint();
+#endif
       break;
 
 #ifndef WINCE
