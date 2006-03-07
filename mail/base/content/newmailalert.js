@@ -104,10 +104,7 @@ urlListener.prototype = {
     // when we are done running all of our urls for fetching the preview text,
     // start the alert.
     if (!gPendingPreviewFetchRequests)
-    {
-      resizeAlert();
-      setTimeout(animateAlert, gSlideTime);
-    }
+      showAlert();
   },
 }
 
@@ -124,12 +121,24 @@ function onAlertLoad()
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
   } catch (ex) {}
 
-  resizeAlert();
-  
   // if we aren't waiting to fetch preview text, then go ahead and 
   // start showing the alert.
   if (!gPendingPreviewFetchRequests)
+    showAlert();
+  else
+    resizeAlert(); // we need to still do this so the alert gets 
+                   // moved off screen until we are ready for it
+}
+
+// helper routine which kicks off the animated alert if we have messages
+// in our folder summary info object. Otherwise we turn around and just close the alert.
+function showAlert()
+{
+  resizeAlert();
+  if (document.getElementById('folderSummaryInfo').hasMessages)
     setTimeout(animateAlert, gSlideTime);
+  else
+    closeAlert();
 }
 
 function resizeAlert()

@@ -2022,6 +2022,7 @@
     
     <implementation>
       <field name="mMaxMsgHdrsInPopup">8</field>
+      <property name="hasMessages" readonly="true" onget="return document.getAnonymousNodes(this)[0].hasChildNodes();"/>
       <method name="parseFolder">
         <parameter name="aFolder"/>
         <parameter name="aUrlListener"/>
