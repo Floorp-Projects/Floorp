@@ -1,0 +1,17 @@
+.safebrowsing-preferences-paragraph {
+  padding-bottom: 2em;
+}
+
+.content-box { 
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+}
+
+.safebrowsing-preferences-link { 
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0px;
+  border: 0px;
+  margin: 0px;
+}

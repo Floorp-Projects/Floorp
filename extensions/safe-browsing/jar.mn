@@ -1,0 +1,23 @@
+safe-browsing.jar:
+% content safe-browsing %content/safe-browsing/ xpcnativewrappers=no
+% overlay chrome://browser/content/browser.xul chrome://safe-browsing/content/safebrowsing-overlay-bootstrapper.xul
+% locale safe-browsing en-US %locale/safe-browsing/en-US/
+% style chrome://global/content/customizeToolbar.xul chrome://safe-browsing/skin/safebrowsing-overlay.css
+% style chrome://browser/content/browser.xul chrome://safe-browsing/skin/safebrowsing-overlay.css
+% skin safe-browsing classic/1.0 %skin/safe-browsing/
+*  content/safe-browsing/safebrowsing-overlay-bootstrapper.xul (content/safebrowsing-overlay-bootstrapper.xul)
+*  content/safe-browsing/safebrowsing-overlay.xul (content/safebrowsing-overlay.xul)
+  content/safe-browsing/safebrowsing.js (content/safebrowsing.js)
+  skin/safe-browsing/logo.png (skin/logo.png)
+  skin/safe-browsing/dim.png (skin/dim.png)
+  skin/safe-browsing/tail.png (skin/tail.png)
+  skin/safe-browsing/safebrowsing-overlay.css (skin/safebrowsing-overlay.css)
+*  content/safe-browsing/safebrowsing-preferences.xul (content/safebrowsing-preferences.xul)
+  skin/safe-browsing/safebrowsing-preferences.css (skin/safebrowsing-preferences.css)
+  skin/safe-browsing/phishing-afterload-warning-message.css (skin/phishing-afterload-warning-message.css)
+  skin/safe-browsing/close16x16.png (skin/close16x16.png)
+  skin/safe-browsing/warning16x16.png (skin/warning16x16.png)
+  skin/safe-browsing/warning24x24.png (skin/warning24x24.png)
+  skin/safe-browsing/safebrowsinglogo.png (skin/safebrowsinglogo.png)
+  locale/safe-browsing/en-US/safebrowsing.dtd (locale/en-US/safebrowsing.dtd)
+  locale/safe-browsing/en-US/phishing-afterload-warning-message.dtd (locale/en-US/phishing-afterload-warning-message.dtd)
