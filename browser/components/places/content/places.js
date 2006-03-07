@@ -188,7 +188,7 @@ var PlacesUIHook = {
     this._topWindow.gFindEnabled = true;
     this._topWindow.removeEventListener("find-activated", this.onFindActivated, false);
     */
-  },
+  }
 };
 
 var PlacesPage = {
@@ -504,7 +504,7 @@ var PlacesPage = {
   getCurrentOptions: function PP_getCurrentOptions() {
     var result = this._content.getResult();
     return result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode).queryOptions;
-  },
+  }
 };
 
 /**
@@ -574,7 +574,7 @@ var PlacesSearchBox = {
     searchFilter.value = searchDefault;
     searchFilter.setAttribute("empty", "true");
     searchFilter.focus();
-  },
+  }
 
 };
 
@@ -592,7 +592,7 @@ var PlacesQueryBuilder = {
     advancedSearch_N_TimeMenulist: false,
     advancedSearch_N_Textbox: "",
     advancedSearch_N_TimePicker: false,
-    advancedSearch_N_TimeMenulist2: false,
+    advancedSearch_N_TimeMenulist2: false
   },
   _locationSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectLocation",
@@ -600,7 +600,7 @@ var PlacesQueryBuilder = {
     advancedSearch_N_TimeMenulist: false,
     advancedSearch_N_Textbox: "",
     advancedSearch_N_TimePicker: false,
-    advancedSearch_N_TimeMenulist2: false,
+    advancedSearch_N_TimeMenulist2: false
   },
   _timeSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectVisited",
@@ -608,7 +608,7 @@ var PlacesQueryBuilder = {
     advancedSearch_N_TimeMenulist: true,
     advancedSearch_N_Textbox: false,
     advancedSearch_N_TimePicker: "date",
-    advancedSearch_N_TimeMenulist2: false,
+    advancedSearch_N_TimeMenulist2: false
   },
   _timeInLastSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectVisited",
@@ -616,7 +616,7 @@ var PlacesQueryBuilder = {
     advancedSearch_N_TimeMenulist: true,
     advancedSearch_N_Textbox: "7",
     advancedSearch_N_TimePicker: false,
-    advancedSearch_N_TimeMenulist2: true,
+    advancedSearch_N_TimeMenulist2: true
   },
   _nextSearch: null,
   _queryBuilders: null,
@@ -626,13 +626,13 @@ var PlacesQueryBuilder = {
     this._nextSearch = {
       "keyword": this._timeSearch,
       "visited": this._hostSearch,
-      "location": this._locationSearch,
+      "location": this._locationSearch
     };
     
     this._queryBuilders = {
       "keyword": this.setKeywordQuery,
       "visited": this.setVisitedQuery,
-      "location": this.setLocationQuery,
+      "location": this.setLocationQuery
     };
     
     this._dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
@@ -959,5 +959,5 @@ var PlacesQueryBuilder = {
     options.resultType = options.RESULT_TYPE_URI;
 
     PlacesPage._content.load(queries, options);
-  },
+  }
 };

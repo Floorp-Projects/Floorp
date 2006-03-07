@@ -237,7 +237,7 @@ PrefHandler.prototype = {
     if (value != this._value)
       this._pb.setCharPref(this._pref, this._serializable.serialize(value));
     return value;
-  },
+  }
 };
 
 function QI_node(node, iid) {
@@ -419,13 +419,13 @@ var PlacesController = {
   
   /**
    * Updates the enabled state of a command element. 
-   * @param   command
+   * @param   commandId
    *          The id of the command element to update
    * @param   enabled
    *          Whether or not the command element should be enabled.
    */
-  _setEnabled: function PC__setEnabled(command, enabled) {
-    var command = document.getElementById(command);
+  _setEnabled: function PC__setEnabled(commandId, enabled) {
+    var command = document.getElementById(commandId);
     // Prevents excessive setAttributes
     var disabled = command.hasAttribute("disabled");
     if (enabled && disabled)
@@ -918,7 +918,7 @@ var PlacesController = {
    */
   loadNodeIntoView: function PC_loadQueries(view, node, groupings, sortingMode) {
     ASSERT(view, "Must have a view to load node contents into!");
-    var node = asQuery(node);
+    asQuery(node);
     var queries = node.getQueries({ });
     var newQueries = [];
     for (var i = 0; i < queries.length; ++i) {
@@ -929,6 +929,7 @@ var PlacesController = {
     
     // Update the grouping mode only after persisting, so that the URI is not 
     // changed. 
+    var e = new Error();
     newOptions.setGroupingMode(groupings, groupings.length);
     
     // Set the sort order of the results
@@ -1007,7 +1008,7 @@ var PlacesController = {
   function PC_groupByAnnotation(annotation, groupings, sortingMode) {
     ASSERT(this._groupableView, "Need a groupable view to load!");
     if (!this._groupableView)
-      return null;
+      return;
     var query = this._hist.getNewQuery();
     var options = this._hist.getNewQueryOptions();
     options.setGroupingMode(groupings, groupings.length);
@@ -1528,7 +1529,7 @@ var PlacesController = {
     
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     this.tm.doTransaction(txn);
-  },
+  }
 };
 
 /**
@@ -1671,7 +1672,7 @@ PlacesBaseTransaction.prototype = {
   
   merge: function PIT_merge(transaction) {
     return false;
-  },
+  }
 };
 
 /**
@@ -1703,7 +1704,7 @@ PlacesAggregateTransaction.prototype = {
       this._transactions[i].undoTransaction();
     this._bms.endUpdateBatch();
     LOG("== UN" + this._name + " (UNAggregate Ends) =======");
-  },
+  }
 };
 
 
@@ -1730,7 +1731,7 @@ PlacesCreateFolderTransaction.prototype = {
   undoTransaction: function PCFT_undoTransaction() {
     LOG("UNCreate Folder: " + this._name + " from: " + this._container + "," + this._index);
     this._bms.removeFolder(this._id);
-  },
+  }
 };
 
 /**
@@ -1755,7 +1756,7 @@ PlacesCreateItemTransaction.prototype = {
   undoTransaction: function PCIT_undoTransaction() {
     LOG("UNCreate Item: " + this._uri.spec + " from: " + this._container + "," + this._index);
     this._bms.removeItem(this._container, this._uri);
-  },
+  }
 };
 
 /**
@@ -1777,7 +1778,7 @@ PlacesInsertSeparatorTransaction.prototype = {
   undoTransaction: function PIST_undoTransaction() {
     LOG("UNCreate separator from: " + this._container + "," + this._index);
     this._bms.removeChildAt(this._container, this._index);
-  },
+  }
 };
 
 /**
@@ -1805,7 +1806,7 @@ PlacesMoveFolderTransaction.prototype = {
   undoTransaction: function PMFT_undoTransaction() {
     LOG("UNMove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this._bms.moveFolder(this._id, this._oldContainer, this._oldIndex);
-  },
+  }
 };
 
 /**
@@ -1834,7 +1835,7 @@ PlacesMoveItemTransaction.prototype = {
     LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this._bms.removeItem(this._newContainer, this._uri);
     this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
-  },
+  }
 };
 
 /**
@@ -1944,7 +1945,7 @@ PlacesRemoveFolderTransaction.prototype = {
     
     for (var i = 0; i < this._contents.children.length; ++i)
       this._restore(this._id, this._contents.children[i]);
-  },
+  }
 };
 
 /**
@@ -1971,7 +1972,7 @@ PlacesRemoveItemTransaction.prototype = {
     LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
     LOG("UNDO: PAGETXN: " + this.pageTransaction);
-  },
+  }
 };
 
 /**
@@ -1992,7 +1993,7 @@ PlacesRemoveSeparatorTransaction.prototype = {
   undoTransaction: function PRST_undoTransaction() {
     LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
     this._bms.insertSeparator(this._oldContainer, this._oldIndex);
-  },
+  }
 };
 
 /**
@@ -2017,7 +2018,7 @@ PlacesEditFolderTransaction.prototype = {
   undoTransaction: function PEFT_undoTransaction() {
     LOG("UNEdit Folder: " + this._id + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
     // Use Bookmarks and Annotation Services to perform these operations.
-  },
+  }
 };
 
 /**
@@ -2056,7 +2057,7 @@ PlacesEditItemTransaction.prototype = {
         // Use Annotation Service
       }
     }
-  },
+  }
 };
 /*
  
