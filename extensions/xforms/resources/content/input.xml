@@ -167,13 +167,14 @@
   <binding id="xformswidget-input-date"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <children/>
+      <children includes="label"/>
       <html:input anonid="control"
                   onblur="this.parentNode.accessors.setValue(this.value); this.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                   onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn'); this.parentNode._hidePicker(true);"
                   onclick="this.parentNode._change(); this.parentNode._hidePicker(true);"
                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                  xbl:inherits="accesskey" size="10"/>
+                  xbl:inherits="accesskey" size="10"
+                  class="xf-value"/>
       <html:input type="button" anonid="dropmarker" title="&xforms.datepicker.title;"
                   onkeypress="if (event.keyCode == event.DOM_VK_ENTER) this.parentNode._togglePicker();"
                   onclick="this.parentNode._togglePicker();"/>
@@ -198,6 +199,7 @@
           </html:tbody>
         </html:table>
       </html:div>
+      <children/>
     </content>
 
     <implementation>
