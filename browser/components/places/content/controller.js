@@ -396,9 +396,13 @@ var PlacesController = {
 
   supportsCommand: function PC_supportsCommand(command) {
     //LOG("supportsCommand: " + command);
+    // Non-Places specific commands that we also support 
     if (command == "cmd_undo" || command == "cmd_redo")
       return true;
-    return document.getElementById(command) != null;
+    // All other Places Commands are prefixed with "placesCmd_" ... this 
+    // filters out other commands that we do _not_ support (see 329587).
+    const CMD_PREFIX = "placesCmd_";
+    return (command.substr(0, CMD_PREFIX.length) == CMD_PREFIX);
   },
 
   doCommand: function PC_doCommand(command) {
