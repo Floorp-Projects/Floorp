@@ -685,30 +685,6 @@ nsXULDocument::OnPrototypeLoadDone()
     return ResumeWalk();
 }
 
-
-PR_STATIC_CALLBACK(PRBool)
-ClearPresentationStuff(nsHashKey *aKey, void *aData, void* aClosure)
-{
-    nsISupports *supp = NS_STATIC_CAST(nsISupports *, aData);
-    nsCOMPtr<nsPIBoxObject> boxObject(do_QueryInterface(supp));
-
-    if (boxObject) {
-        boxObject->InvalidatePresentationStuff();
-    }
-
-    return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsXULDocument::OnHide()
-{
-    if (mBoxObjectTable) {
-        mBoxObjectTable->Enumerate(ClearPresentationStuff, nsnull);
-    }
-
-    return NS_OK;
-}
-
 PR_STATIC_CALLBACK(void)
 ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {

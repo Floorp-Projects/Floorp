@@ -51,22 +51,12 @@ public:
 
   nsEditorBoxObject();
   virtual ~nsEditorBoxObject();
-//NS_PIBOXOBJECT interfaces
-  NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument);
 };
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS_INHERITED1(nsEditorBoxObject, nsBoxObject, nsIEditorBoxObject)
 
 
-NS_IMETHODIMP
-nsEditorBoxObject::SetDocument(nsIDocument* aDocument)
-{
-  return nsBoxObject::SetDocument(aDocument);
-}
-
-  
 nsEditorBoxObject::nsEditorBoxObject()
 {
 }
@@ -76,11 +66,6 @@ nsEditorBoxObject::~nsEditorBoxObject()
   /* destructor code */
 }
 
-
-NS_IMETHODIMP nsEditorBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresShell)
-{
-  return nsBoxObject::Init(aContent, aPresShell);
-}
 
 NS_IMETHODIMP nsEditorBoxObject::GetDocShell(nsIDocShell** aResult)
 {

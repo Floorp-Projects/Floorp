@@ -88,7 +88,7 @@ nsMenuBoxObject::~nsMenuBoxObject()
 /* void openMenu (in boolean openFlag); */
 NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
 {
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return NS_OK;
 
@@ -103,7 +103,7 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
 NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return NS_OK;
 
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 
 NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 {
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return NS_OK;
 
@@ -148,7 +148,7 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool*
   if (nsMenuBarListener::IsAccessKeyPressed(aKeyEvent))
     return NS_OK;
 
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame)
     return NS_OK;
 

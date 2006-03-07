@@ -3322,10 +3322,6 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     }
   }
 
-  nsIPresShell *shell = GetShellAt(0);
-  if (!shell)
-    return NS_ERROR_FAILURE;
-
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> tag;
   nsCOMPtr<nsIXBLService> xblService =
@@ -3360,11 +3356,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(boxObject));
-  rv = privateBox->Init(content, shell);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  privateBox->Init(content);
 
   SetBoxObjectFor(aElement, boxObject);
 
@@ -3392,7 +3384,7 @@ nsDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
     mBoxObjectTable->Remove(&key, getter_AddRefs(supp));
     nsCOMPtr<nsPIBoxObject> boxObject(do_QueryInterface(supp));
     if (boxObject) {
-      boxObject->SetDocument(nsnull);
+      boxObject->Clear();
     }
   }
 

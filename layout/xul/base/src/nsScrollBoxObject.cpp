@@ -90,7 +90,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollTo(PRInt32 x, PRInt32 y)
   if (!scrollableView)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  nsCOMPtr<nsIPresShell> shell = GetPresShell(PR_FALSE);
   if (!shell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -130,7 +130,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByLine(PRInt32 dlines)
 // the <scrollbox>'s box frame is the scrollframe's "scrolled frame", and
 // the <scrollbox>'s child box is a child of that.
 static nsIFrame* GetScrolledBox(nsBoxObject* aScrollBox) {
-  nsIFrame* frame = aScrollBox->GetFrame();
+  nsIFrame* frame = aScrollBox->GetFrame(PR_FALSE);
   if (!frame) 
     return nsnull;
   nsIScrollableFrame* scrollFrame;
@@ -244,7 +244,7 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollToElement(nsIDOMElement *child)
     if (!scrollableView)
        return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    nsCOMPtr<nsIPresShell> shell = GetPresShell(PR_FALSE);
     if (!shell) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -317,7 +317,7 @@ NS_IMETHODIMP nsScrollBoxObject::GetPosition(PRInt32 *x, PRInt32 *y)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  nsIPresShell* shell = GetPresShell(PR_FALSE);
   if (!shell) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -339,7 +339,7 @@ NS_IMETHODIMP nsScrollBoxObject::GetScrolledSize(PRInt32 *width, PRInt32 *height
         	
     nsRect scrollRect = scrolledBox->GetRect();
 
-    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    nsIPresShell* shell = GetPresShell(PR_FALSE);
     if (!shell) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -356,11 +356,32 @@ NS_IMETHODIMP nsScrollBoxObject::GetScrolledSize(PRInt32 *width, PRInt32 *height
 NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
 {
     NS_ENSURE_ARG_POINTER(child);
+
+    // Start with getting info about the child, since that will flush
+    // layout and possibly destroy scrollable views, presshells, etc.
+    nsCOMPtr<nsIDOMDocument> doc;
+    // XXXbz sXBL/XBL2 issue -- which document?
+    child->GetOwnerDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+    if(!nsDoc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIBoxObject> childBoxObject;
+    nsDoc->GetBoxObjectFor(child, getter_AddRefs(childBoxObject));
+    if(!childBoxObject)
+      return NS_ERROR_UNEXPECTED;
+
+    PRInt32 x, y, width, height;
+    childBoxObject->GetX(&x);
+    childBoxObject->GetY(&y);
+    childBoxObject->GetWidth(&width);
+    childBoxObject->GetHeight(&height);
+
     nsIScrollableView* scrollableView = GetScrollableView();
     if (!scrollableView)
        return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPresShell> shell = GetPresShell();
+    nsIPresShell* shell = GetPresShell(PR_FALSE);
     if (!shell) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -374,22 +395,6 @@ NS_IMETHODIMP nsScrollBoxObject::EnsureElementIsVisible(nsIDOMElement *child)
        return NS_ERROR_FAILURE;
 
     nsRect rect, crect;
-    nsCOMPtr<nsIDOMDocument> doc;
-    child->GetOwnerDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
-    if(!nsDoc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsCOMPtr<nsIBoxObject> childBoxObject;
-    nsDoc->GetBoxObjectFor(child, getter_AddRefs(childBoxObject));
-    if(!childBoxObject)
-      return NS_ERROR_UNEXPECTED;
-
-    PRInt32 x,y,width,height;
-    childBoxObject->GetX(&x);
-    childBoxObject->GetY(&y);
-    childBoxObject->GetWidth(&width);
-    childBoxObject->GetHeight(&height);
     // get the twips rectangle from the boxobject (which has pixels)    
     rect.x = NSToIntRound(x * pixelsToTwips);
     rect.y = NSToIntRound(y * pixelsToTwips);
@@ -448,7 +453,7 @@ nsIScrollableView*
 nsScrollBoxObject::GetScrollableView()
 {
   // get the frame.
-  nsIFrame* frame = GetFrame();
+  nsIFrame* frame = GetFrame(PR_FALSE);
   if (!frame) 
     return nsnull;
   

@@ -63,9 +63,10 @@ class nsIURI;
 class nsIContent;
 class nsIRDFDataSource;
 
-// {954F0811-81DC-11d2-B52A-000000000000}
+// {7f9c0158-1da3-4279-9ee5-fa7931b94db1}
 #define NS_IXULDOCUMENT_IID \
-{ 0x954f0811, 0x81dc, 0x11d2, { 0xb5, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+{ 0x7f9c0158, 0x1da3, 0x4279, \
+ { 0x9e, 0xe5, 0xfa, 0x79, 0x31, 0xb9, 0x4d, 0xb1 } }
 
 /**
  * XUL extensions to nsIDocument
@@ -151,11 +152,6 @@ public:
    * request than the one whose document is being notified here.
    */
   NS_IMETHOD OnPrototypeLoadDone() = 0;
-
-  /**
-   * Notify the XUL document that it's being hidden
-   */
-  NS_IMETHOD OnHide() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULDocument, NS_IXULDOCUMENT_IID)

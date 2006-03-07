@@ -140,7 +140,6 @@ public:
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder** aResult);
     NS_IMETHOD OnPrototypeLoadDone();
-    NS_IMETHOD OnHide();
 
     // nsIDOMNode interface overrides
     NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval);
