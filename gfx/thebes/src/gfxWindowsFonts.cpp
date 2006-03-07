@@ -57,7 +57,7 @@
 
 THEBES_IMPL_REFCOUNTING(gfxWindowsFont)
 
-gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HDC aDC)
+gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup)
     : mFont(nsnull), mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(PR_FALSE)
 {
     mName = aName;
@@ -319,14 +319,14 @@ PRBool
 gfxWindowsFontGroup::MakeFont(const nsAString& aName, const nsAString& aGenericName, void *closure)
 {
     gfxWindowsFontGroup *fg = NS_STATIC_CAST(gfxWindowsFontGroup*, closure);
-    gfxFont *font = new gfxWindowsFont(aName, fg, fg->mDC);
+    gfxFont *font = new gfxWindowsFont(aName, fg);
     fg->mFonts.AppendElement(font);
     return PR_TRUE;
 }
 
 
-gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, HDC dc)
-    : gfxFontGroup(aFamilies, aStyle), mDC(dc)
+gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
+    : gfxFontGroup(aFamilies, aStyle)
 {
     ForEachFont(MakeFont, this);
 }
@@ -339,12 +339,20 @@ gfxWindowsFontGroup::~gfxWindowsFontGroup()
 gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
 {
+    if (aString.IsEmpty()) {
+        NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
+        return nsnull;
+    }
     return new gfxWindowsTextRun(aString, this);
 }
 
 gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const nsACString& aString)
 {
+    if (aString.IsEmpty()) {
+        NS_WARNING("It is illegal to create a gfxTextRun with empty strings");
+        return nsnull;
+    }
     return new gfxWindowsTextRun(aString, this);
 }
 
