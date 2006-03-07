@@ -143,7 +143,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     ; // perform the deletion
   else
   {
-    if (levelBefore == levelAfter)
+    if (mDeleteBidiImmediately || levelBefore == levelAfter)
       ; // perform the deletion
     else
       *aCancel = PR_TRUE;

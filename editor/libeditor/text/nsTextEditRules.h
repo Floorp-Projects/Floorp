@@ -211,6 +211,10 @@ protected:
   PRUint32             mActionNesting;
   PRPackedBool         mLockRulesSniffing;
   PRPackedBool         mDidExplicitlySetInterline;
+  PRPackedBool         mDeleteBidiImmediately; // in bidirectional text, delete
+                                               // characters not visually 
+                                               // adjacent to the caret without
+                                               // moving the caret first.
   PRInt32              mTheAction;     // the top level editor action
   // friends
   friend class nsAutoLockRulesSniffing;
