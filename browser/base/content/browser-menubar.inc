@@ -442,6 +442,7 @@
         ondragover="BookmarksEventHandler.onDragOver(event);">
     <menupopup id="bookmarksMenuPopup"
                type="places"
+               place="place:&amp;folder=2&amp;group=3&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"

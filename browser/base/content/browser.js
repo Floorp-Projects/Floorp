@@ -874,6 +874,8 @@ function delayedStartup()
   // XXXben - move this to the toolbar constructor if there is no performance penalty! (Ts/Txul)
   var bookmarksBar = document.getElementById("bookmarksBarContent");
   bookmarksBar.init();
+  var bookmarksMenuPopup = document.getElementById("bookmarksMenuPopup");
+  bookmarksMenuPopup.init();
 #endif
 
   // called when we go into full screen, even if it is
@@ -6290,17 +6292,6 @@ var PlacesBrowserShim = {
     // XXXben - wrong
     var addBookmarkCmd = document.getElementById("Browser:AddBookmarkAs");
     addBookmarkCmd.setAttribute("oncommand", "PlacesBrowserShim.addBookmark()");
-
-    // XXXben - why isn't this done by the binding?
-    var newMenuPopup = document.getElementById("bookmarksMenuPopup");
-    var query = this._hist.getNewQuery();
-    query.setFolders([this._bms.bookmarksRoot], 1);
-    var options = this._hist.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-    options.expandQueries = true;
-    var result = this._hist.executeQuery(query, options);
-    newMenuPopup._result = result;
-    newMenuPopup._resultNode = result.root;
 
     this._registerEventHandlers();
 

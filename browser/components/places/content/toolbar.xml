@@ -47,7 +47,7 @@
     </content>
     
     <implementation>
-      <constructor><![CDATA[ 
+      <constructor><![CDATA[
       ]]></constructor>
       
       <destructor><![CDATA[ 
@@ -69,12 +69,12 @@
                                 function f(e) { t.updateChevron(e); },
                                 false);
 
-        var query = this._places.getNewQuery();
-        query.setFolders([this._bms.toolbarRoot], 1);
-        var options = this._places.getNewQueryOptions();
-        options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-        options.expandQueries = true;
-        this._result = this._places.executeQuery(query, options);
+        var queryString = this.getAttribute("place");
+        var queries = { }, options = { };
+        this._places.queryStringToQueries(queryString, queries, { }, options);
+        if (!queries.value.length) 
+          queries.value = [this._places.getNewQuery()];
+        this._result = this._places.executeQueries(queries.value, queries.value.length, options.value);
         this._result.root.containerOpen = true;
         this._rebuild();
         ]]></body>
