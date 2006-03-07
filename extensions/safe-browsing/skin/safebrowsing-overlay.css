@@ -1,0 +1,28 @@
+#safebrowsing-dim-area-canvas {
+  background-image: url("chrome://safe-browsing/skin/dim.png");
+  height: 0px;
+}
+
+#safebrowsing-dim-area-transp {
+  background-image: url("chrome://safe-browsing/skin/dim.png");
+  height: 0px;
+  left: 0px;
+  top: 0px;
+  position: fixed;
+  display: none;
+}
+
+#safebrowsing-pref-caption { 
+  background-color: #2222EE;
+}
+
+#safebrowsing-pref-caption text { 
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 150%;
+  font-family: arial, helvetica, sans-serif;
+}
+
+#safebrowsing-urlbar-icon { 
+  padding-right: 2px;
+}

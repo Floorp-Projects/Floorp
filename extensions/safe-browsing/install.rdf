@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+#filter substitution
+
+<!-- TODO: this file contains basically what it contained for the
+     stand-alone SafeBrowsing extension. It will need to be updated 
+     with more appropriate values. -->
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <RDF:Description about="urn:mozilla:install-manifest">
+
+  <em:id>safebrowsing@mozilla.org</em:id>
+  <em:version>1.0</em:version>
+  <em:targetApplication>
+    <RDF:Description>
+      <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+      <em:minVersion>@FIREFOX_VERSION@</em:minVersion>
+      <em:maxVersion>@FIREFOX_VERSION@</em:maxVersion>
+    </RDF:Description>
+  </em:targetApplication>
+
+  <!-- NOTE: If you want to use forced auto-updating, the updater will
+       rely on this name. But if we are in Firfox, we probably dont
+       want to -->
+  <em:name>Google Safe Browsing</em:name>
+
+  <em:description>Warns you about fraudulent web pages.</em:description>
+
+  <em:creator>Google, Inc.</em:creator>
+
+  <em:homepageURL>http://www.google.com/tools/service/npredir?r=ff_sb_home</em:homepageURL>
+
+<!-- UNUSED because we are now part of Firefox 
+  <em:updateURL><![CDATA[http://toolbar.google.com/firefox/extensions/safebrowsing/update?guid=%ITEM_ID%&version=%ITEM_VERSION%&application=%APP_ID%&appversion=%APP_VERSION%&dist=google]]></em:updateURL>
+-->
+
+  <em:optionsURL>chrome://safe-browsing/content/safebrowsing-preferences.xul</em:optionsURL>
+  <em:iconURL>chrome://safe-browsing/content/safebrowsinglogo.png</em:iconURL>
+
+  </RDF:Description>      
+</RDF:RDF>
+

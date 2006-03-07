@@ -1494,6 +1494,11 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/reporter/Makefile
 	    extensions/reporter/locales/Makefile
             " ;;
+
+        safe-browsing ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/safe-browsing/Makefile
+            " ;;
+
         spellcheck ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/spellcheck/Makefile
             extensions/spellcheck/idl/Makefile
