@@ -2147,22 +2147,54 @@ function my_topic (e)
 }
 
 CIRCChannel.prototype.on367 = /* channel ban stuff */
-CIRCChannel.prototype.on368 =
 function my_bans(e)
 {
-    // Uh, we'll format this some other time.
-    if (!("pendingBanList" in this))
-        this.display(toUnicode(e.params.join(" "), this), e.code.toUpperCase());
+    if ("pendingBanList" in this)
+        return;
+
+    var msg = getMsg(MSG_BANLIST_ITEM,
+                     [e.user.unicodeName, e.ban, this.unicodeName, e.banTime]);
+    if (this.iAmHalfOp() || this.iAmOp())
+        msg += " " + getMsg(MSG_BANLIST_BUTTON, "mode -b " + e.ban);
+
+    client.munger.entries[".inline-buttons"].enabled = true;
+    this.display(msg, "BAN");
+    client.munger.entries[".inline-buttons"].enabled = false;
+}
+
+CIRCChannel.prototype.on368 =
+function my_endofbans(e)
+{
+    if ("pendingBanList" in this)
+        return;
+
+    this.display(getMsg(MSG_BANLIST_END, this.unicodeName), "BAN");
 }
 
 CIRCChannel.prototype.on348 = /* channel except stuff */
-CIRCChannel.prototype.on349 =
 function my_excepts(e)
 {
-    if (!("pendingExceptList" in this))
-        this.display(toUnicode(e.params.join(" "), this), e.code.toUpperCase());
+    if ("pendingExceptList" in this)
+        return;
+
+    var msg = getMsg(MSG_EXCEPTLIST_ITEM, [e.user.unicodeName, e.except,
+                                           this.unicodeName, e.exceptTime]);
+    if (this.iAmHalfOp() || this.iAmOp())
+        msg += " " + getMsg(MSG_EXCEPTLIST_BUTTON, "mode -e " + e.except);
+
+    client.munger.entries[".inline-buttons"].enabled = true;
+    this.display(msg, "EXCEPT");
+    client.munger.entries[".inline-buttons"].enabled = false;
 }
 
+CIRCChannel.prototype.on349 =
+function my_endofexcepts(e)
+{
+    if ("pendingExceptList" in this)
+        return;
+
+    this.display(getMsg(MSG_EXCEPTLIST_END, this.unicodeName), "EXCEPT");
+}
 
 CIRCChannel.prototype.onNotice =
 function my_notice (e)

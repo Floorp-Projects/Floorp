@@ -1816,6 +1816,15 @@ function serv_348(e)
     e.channel = new CIRCChannel(this, null, e.params[2]);
     e.destObject = e.channel;
     e.set = "channel";
+    e.except = e.params[3];
+    e.user = new CIRCUser(this, null, e.params[4]);
+    e.exceptTime = new Date (Number(e.params[5]) * 1000);
+
+    if (typeof e.channel.excepts[e.except] == "undefined")
+    {
+        e.channel.excepts[e.except] = {host: e.except, user: e.user,
+                                       time: e.exceptTime };
+    }
 
     return true;
 }
@@ -2623,6 +2632,7 @@ function CIRCChannel(parent, unicodeName, encodedName)
 
     this.users = new Object();
     this.bans = new Object();
+    this.excepts = new Object();
     this.mode = new CIRCChanMode(this);
     this.usersStable = true;
     /* These next two flags represent a subtle difference in state:
