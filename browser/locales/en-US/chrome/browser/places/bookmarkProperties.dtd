@@ -1,0 +1,16 @@
+<!ENTITY bookmark.property.panel.title
+  "Bookmark Properties">
+<!ENTITY bookmark.property.location
+  "Location">
+<!ENTITY bookmark.property.title
+  "Name">
+<!ENTITY bookmark.property.shortcut
+  "Shortcut">
+<!ENTITY bookmark.property.folders
+  "Folders">
+<!ENTITY bookmark.property.folder_list
+  "Folder List">
+<!ENTITY cmd.delete_bookmark.label
+  "Delete Bookmark">
+<!ENTITY cmd.hide_bookmark_properties.label
+  "Done">

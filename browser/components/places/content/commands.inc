@@ -16,10 +16,13 @@
                label="&cmd.edit_copy.label;" accesskey="&cmd.edit_copy.accesskey;"
                oncommand="PlacesController.copy();"/>
       <command id="placesCmd_show:info" 
+               oncommand="PlacesController.showBookmarkPropertiesForSelection();"
 #ifdef XP_WIN
-               label="&cmd.show_infoWin.label;" accesskey="&cmd.show_infoWin.accesskey;"/>
+               label="&cmd.show_infoWin.label;" 
+	       accesskey="&cmd.show_infoWin.accesskey;"/>
 #else
-               label="&cmd.show_infoMac.label;" accesskey="&cmd.show_infoMac.accesskey;"/>
+               label="&cmd.show_infoMac.label;" 
+               accesskey="&cmd.show_infoMac.accesskey;"/>
 #endif
     </commandset>
     <commandset>

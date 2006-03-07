@@ -298,7 +298,17 @@ var PlacesController = {
     }
     return this.__hist;
   },
-  
+
+  /** UI Text Strings */
+
+  __strings: null,
+  get _strings() {
+    if (!this.__strings) {
+      this.__strings = document.getElementById("placeBundle");
+    }
+    return this.__strings;
+  },
+
   /**
    * Generates a HistoryResultNode for the contents of a folder. 
    * @param   folderId
@@ -319,6 +329,7 @@ var PlacesController = {
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeItems = excludeItems;
     options.expandQueries = expandQueries;
+
     var result = this._hist.executeQuery(query, options);
     result.root.containerOpen = true;
     return asContainer(result.root);
@@ -764,6 +775,73 @@ var PlacesController = {
     var node = this._activeView.selectedURINode;
     if (node)
       this._activeView.browserWindow.openUILink(node.uri, event, false, false);
+  },
+
+  /**
+   * Opens the bookmark properties for the selected URI Node.
+   */
+
+  showBookmarkPropertiesForSelection: 
+  function PC_showBookmarkPropertiesForSelection() {
+    var node = this._activeView.selectedURINode;
+    if (!node || !node.uri) return;
+
+    this.showBookmarkProperties(this._uri(node.uri));
+  },
+
+  /**
+   * This method can be run on a URI parameter to ensure that it didn't
+   * receive a string instead of an nsIURI object.
+   */
+
+  _assertURINotString: function PC__assertURINotString(value) {
+    ASSERT((typeof(value) == "object") && !(value instanceof String), "This method should be passed a URI as a nsIURI object, not as a string.");
+  },
+
+  /**
+   * Opens the bookmark properties panel for a given bookmarked URI.
+   *
+   * @param bookmarkURI  an nsIURI object representing a bookmarked URI
+   */
+
+  showBookmarkProperties: function PC_showBookmarkProperties(bookmarkURI) {
+    this._assertURINotString(bookmarkURI);
+    ASSERT(this._bms.isBookmarked(bookmarkURI), "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + bookmarkURI.spec);
+
+    if (!this._bms.isBookmarked(bookmarkURI)) return;
+
+    var view = this._activeView.browserWindow;
+    view.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
+                    "bookmarkproperties",
+                    "width=600,height=400,chrome,dependent,modal,resizable",
+                    bookmarkURI, this);
+  },
+
+  /**
+   * This method changes the URI of a bookmark.  Because of the URI-based
+   * identity model, it accomplishes this by replacing instances of the old
+   * URI with the new URI in each applicable folder, then copies the
+   * metadata from the old URI to the new URI.
+   */
+  /* NOTE(jhughes): don't use yet; UI doesn't update correctly 2006-03-04
+                    see bug 329524 */
+  changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
+    this._assertURINotString(oldURI);
+    this._assertURINotString(newURI);
+    ASSERT(this._bms.isBookmarked(oldURI));
+
+    if (oldURI.spec == newURI.spec) return;
+
+    var folders = this._bms.getBookmarkFolders(oldURI, {});
+    this._bms.beginUpdateBatch();
+    for (var i = 0; i < folders.length; i++) {
+      this._bms.replaceItem(folders[i], oldURI, newURI);
+    }
+    this._bms.setItemTitle(newURI,
+                           this._bms.getItemTitle(oldURI));
+    this._bms.setKeywordForURI(newURI, 
+                               this._bms.getKeywordForURI(oldURI));
+    this._bms.endUpdateBatch();
   },
 
   /**

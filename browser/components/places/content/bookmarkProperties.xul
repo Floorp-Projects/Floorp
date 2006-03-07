@@ -1,15 +1,19 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
+<!DOCTYPE window 
+  SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
 
 <dialog id="bookmarkproperties" title="&bookmark.property.panel.title;"
-	buttons="accept"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="window.PlacesBrowserShim = window.opener.PlacesBrowserShim; window.PlacesBrowserShim.prepareBookmarkDialog(window);">
-      <hbox id="edit-urlbox">
-	<textbox id="edit-urlbar" flex="1" size="10" tooltiptext="&bookmark.property.location;"/>
-      </hbox>
+        buttons="accept"
+        ondialogaccept="BookmarkPropertiesPanel.dialogDone();"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1]);">
+
+  <script type="application/x-javascript"
+          src="chrome://browser/content/places/bookmarkProperties.js"/>
 
       <vbox id="places-info-options">
 	<grid id="places-info-grid" flex="1">
@@ -29,10 +33,26 @@
 	    <row>
 	      <vbox align="end">
 		<hbox align="center" flex="1">
+		  <label value="&bookmark.property.location;" align="middle"/>
+		</hbox>
+	      </vbox>
+	      <textbox id="edit-urlbar" size="10"/>
+	    </row>
+	    <row>
+	      <vbox align="end">
+		<hbox align="center" flex="1">
+		  <label value="&bookmark.property.shortcut;" align="middle"/>
+		</hbox>
+	      </vbox>
+	      <textbox id="edit-shortcutbox" value=""/>
+	    </row>
+	    <row>
+	      <vbox align="end">
+		<hbox align="center" flex="1">
 		  <label value="&bookmark.property.folders;"/>
 		</hbox>
 	      </vbox>
-	      <textbox id="places-folder-list" value="Chronic-what" disabled="true"/>
+	      <textbox id="places-folder-list" value="" disabled="true"/>
 	    </row>
 	    <row>
 	      <vbox align="end">
@@ -46,10 +66,12 @@
 	    <row>
 	      <vbox></vbox>
 	      <vbox><hbox align="end">
-		<button id="places-link" label="&cmd.show_bookmarks.label;" oncommand="PlacesBrowserShim.dialogShowBookmarks(window);"/>		
-		<button label="&cmd.delete_bookmark.label;" oncommand="PlacesBrowserShim.dialogDeleteBookmark(window);" align="end"/>
+		<button label="&cmd.delete_bookmark.label;"
+                        oncommand="BookmarkPropertiesPanel.dialogDeleteBookmark();"
+                        align="end"/>
 		<spacer flex="1"/>
-		<button label="&cmd.hide_bookmark_properties.label;" oncommand="PlacesBrowserShim.dialogDone(window);"/>
+		<button label="&cmd.hide_bookmark_properties.label;" 
+                        oncommand="BookmarkPropertiesPanel.dialogDone();"/>
 	      </hbox>
 	      </vbox>
 	    </row>
