@@ -64,6 +64,10 @@
 #include "nsSound.h"
 #include "nsNativeScrollbar.h"
 #include "nsScreenManagerMac.h"
+#include "nsDeviceContextSpecX.h"
+#include "nsDeviceContextSpecFactoryM.h"
+#include "nsPrintOptionsX.h"
+#include "nsPrintSessionX.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
@@ -83,6 +87,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 
 #include "nsBidiKeyboard.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -177,7 +185,23 @@ static const nsModuleComponentInfo gComponents[] =
   { "nsScreenManager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerMacConstructor }
+    nsScreenManagerMacConstructor },
+  { "nsDeviceContextSpec",
+     NS_DEVICE_CONTEXT_SPEC_CID,
+     "@mozilla.org/gfx/devicecontextspec;1",
+     nsDeviceContextSpecXConstructor },
+  { "nsDeviceContextSpecFactory",
+     NS_DEVICE_CONTEXT_SPEC_FACTORY_CID,
+     "@mozilla.org/gfx/devicecontextspecfactory;1",
+     nsDeviceContextSpecFactoryMacConstructor },
+  { "PrintSettings Service",
+     NS_PRINTSETTINGSSERVICE_CID,
+     "@mozilla.org/gfx/printsettings-service;1",
+     nsPrintOptionsXConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionXConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)
