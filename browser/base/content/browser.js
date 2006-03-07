@@ -36,6 +36,7 @@
 #   Giorgio Maone <g.maone@informaction.com>
 #   Tom Germeau <tom.germeau@epigoon.com>
 #   Jesse Ruderman <jruderman@gmail.com>
+#   Joe Hughes <joe@retrovirus.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -6263,8 +6264,6 @@ var PlacesBrowserShim = {
   
   // XXXben: these should die
   _currentURI: null, // URI of the bookmark being modified
-  _assignableFolderResult: null, // root of user-writable folders
-  MAX_INDENT_DEPTH: 6, // maximum indentation level of "tag" display
 
   init: function PBS_init() {
     this._bms =
@@ -6309,23 +6308,6 @@ var PlacesBrowserShim = {
 
     PlacesController.topWindow = window;
     PlacesController.tm = PlacesTransactionManager;
-  },
-
-  /**
-   * This method creates a query for the set of assignable folders.
-   * This only needs to be created once; when closed (using
-   * root.containerOpen = false) and reopened, the results will be regenerated
-   * if the data has changed since the close.
-   * XXXben - why is this done during startup?!
-   */
-  _initAssignableFolderResult: function PBS__initAssignableFolderRoot() {
-    var query = this._hist.getNewQuery();
-    query.setFolders([this._bms.placesRoot], 1);
-    var options = this._hist.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-    options.excludeItems = true;
-
-    this._assignableFolderResult = this._hist.executeQuery(query, options);
   },
 
   addBookmark: function PBS_addBookmark() {
@@ -6378,7 +6360,7 @@ var PlacesBrowserShim = {
   /**
    * Gets the URI that the visible browser tab is rendering.
    *
-   * @returns a string containing the URI currently being shown
+   * @returns an nsIURI object representing the URI currently being shown
    */
   _getCurrentLocation: function PBS__getCurrentLocation() {
     return getBrowser().selectedBrowser.webNavigation.currentURI;
@@ -6391,10 +6373,13 @@ var PlacesBrowserShim = {
   _updateControlStates: function PBS__updateControlStates() {
     var bookmarkButton = document.getElementById("places-bookmark");
     if (bookmarkButton) {
-      if (this._bms.isBookmarked(this._getCurrentLocation()))
+      if (this._bms.isBookmarked(this._getCurrentLocation())) {
         bookmarkButton.label = this._strings.getString("locationStatusBookmarked");
-      else
+        bookmarkButton.setAttribute("bookmarked", "true");
+      } else {
         bookmarkButton.label = this._strings.getString("locationStatusNotBookmarked");
+        bookmarkButton.setAttribute("bookmarked", "false");
+      }
     }
 
     var feedButton = document.getElementById("places-subscribe");
@@ -6425,37 +6410,6 @@ var PlacesBrowserShim = {
   },
 
   /**
-   * Prepares the bookmark properties dialog for display; should be called
-   * from the dialog's onload handler with a reference to the dialog's
-   * DOM window object.
-   */
-  prepareBookmarkDialog: function PBS_prepareBookmarkDialog(dialogWindow) {
-    this.populateProperties(dialogWindow.document);
-    this.sizeAndPositionBookmarkDialog(dialogWindow);
-  },
-
-  sizeAndPositionBookmarkDialog: function PBS_sizeAndPositionBookmarkDialog(childWindow) {
-    var urlbar = document.getElementById("urlbar");
-    var editUrlbar = childWindow.document.getElementById("edit-urlbar");
-
-    var newx = Math.max(0, urlbar.boxObject.x + window.screenX - editUrlbar.boxObject.x);
-    var newy = urlbar.boxObject.y + window.screenY - editUrlbar.boxObject.y;
-    childWindow.moveTo(newx, newy);
-
-    var childDoc = childWindow.document;
-
-    var tagbox = childDoc.getElementById("tagbox");
-    tagbox.style.overflow="auto";
-
-    var pio = childDoc.getElementById("places-info-options");
-    var pig = childDoc.getElementById("places-info-grid");
-    childDoc.documentElement.getButton("accept").hidden=true;
-
-    var newHeight = pio.boxObject.y + pio.boxObject.height + 5;
-    childWindow.resizeTo(childWindow.innerWidth, newHeight);
-  },
-
-  /**
    * This method should be called when the location currently being
    * rendered by a browser changes (loading new page or forward/back).
    */
@@ -6474,9 +6428,7 @@ var PlacesBrowserShim = {
 
     this._updateControlStates();
   },
-  
-  ///////////////// ALL THIS NEEDS TO MOVE TO SEPARATE DIALOG SCRIPT FILE! --->
-  
+
   /**
    * This method should be called when the bookmark button is clicked.
    */
@@ -6487,47 +6439,6 @@ var PlacesBrowserShim = {
     } else {
       this._bms.insertItem(this._bms.bookmarksRoot, this._currentURI, -1);
       this._updateControlStates();
-    }
-  },
-
-  populateProperties: function PBS_populateProperties(document, location, title) {
-    if (!location) {
-      location = this._currentURI;
-      title = this._currentTitle;
-    }
-
-    var nurl = document.getElementById("edit-urlbar");
-
-    var titlebox = document.getElementById("edit-titlebox");
-
-    nurl.value = location.spec;
-    titlebox.value = title;
-
-    var tagArea = document.getElementById("tagbox");
-
-    while (tagArea.hasChildNodes()) {
-      tagArea.removeChild(tagArea.firstChild);
-    }
-
-    var elementDict = {};
-
-    var root = this._assignableFolderResult.root; //Root is always a container.
-    root.containerOpen = true;
-    this._populateTags(root, 0, tagArea, elementDict);
-    root.containerOpen = false;
-
-    var categories = this._bms.getBookmarkFolders(location, {});
-
-    this._updateFolderTextbox(document, location);
-
-    var length = 0;
-    for (key in elementDict) {
-      length++;
-    }
-
-    for (var i=0; i < categories.length; i++) {
-      var elm = elementDict[categories[i]];
-      elm.setAttribute("selected", "true");
     }
   },
 
@@ -6546,229 +6457,11 @@ var PlacesBrowserShim = {
     ASSERT(this._bms.isBookmarked(this._currentURI), "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + this._currentURI.spec);
 
     this._currentTitle = this._bms.getItemTitle(this._currentURI);
-    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul", "bookmarkproperties", "width=600,height=400,chrome,dependent,modal,resizable");
+    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
+                      "bookmarkproperties",
+                      "width=600,height=400,chrome,dependent,modal,resizable",
+                      this._currentURI, PlacesController);
   },
-
-  /**
-   * This method is called to exit the Bookmark Properties panel.
-   *
-   * @param aSaveChanges boolean, should be true if changes performed while
-   *                     the panel was active should be saved
-   * @param document the document containing the fields needing to be saved
-   */
-  hideBookmarkProperties:
-  function PBS_hideBookmarkProperties(saveChanges, document) {
-    if (saveChanges) {
-      var titlebox = document.getElementById("edit-titlebox");
-      this._bms.setItemTitle(this._currentURI, titlebox.value);
-
-      var urlbox = document.getElementById("edit-urlbar");
-      if (urlbox.value != this._currentURI.spec) {
-        // TODO delete existing bookmark, create new one with same folder/locations
-      }
-    }
-
-    this._updateControlStates();
-  },
-
-
-  /**
-   * This method deletes the bookmark corresponding to the URI stored
-   * in _currentURI.  _currentURI represents the URI that the Bookmark
-   * Properties panel is currently viewing/editing.  Therefore, this method
-   * is only relevant in when the Bookmark Properties panel is active.
-   */
-  deleteBookmark: function PBS_deleteBookmark() {
-    if (!this._currentURI)
-      return;
-
-    var folders = this._bms.getBookmarkFolders(this._currentURI, {});
-    if (folders.length == 0)
-      return;
-
-    this._bms.beginUpdateBatch();
-    for (var i = 0; i < folders.length; i++) {
-      this._bms.removeItem(folders[i], this._currentURI);
-    }
-    this._bms.endUpdateBatch();
-  },
-
-  /**
-   * This method implements the "Show all bookmarks" action
-   * in the Bookmark Properties dialog.
-   */
-  dialogShowBookmarks: function PBS_dialogShowBookmarks(dialogWindow) {
-    this.hideBookmarkProperties(true, dialogWindow.document);
-    dialogWindow.close();
-    this.showBookmarks();
-  },
-
- /**
-   * This method implements the "Delete Bookmark" action
-   * in the Bookmark Properties dialog.
-   */
-  dialogDeleteBookmark: function PBS_dialogDeleteBookmark(dialogWindow) {
-    this.deleteBookmark();
-    this.hideBookmarkProperties(false, dialogWindow.document);
-    dialogWindow.close();
-  },
-
- /**
-   * This method implements the "Done" action
-   * in the Bookmark Properties dialog.
-   */
-  dialogDone: function PBS_dialogDone(dialogWindow) {
-    this.hideBookmarkProperties(true, dialogWindow.document);
-    dialogWindow.close();
-  },
-
-  /**
-   * This method sets the contents of the "Folders" textbox in the
-   * Bookmark Properties panel.
-   *
-   * @param document the document containing the textbox element
-   * @param uri an nsIURI object representing the current bookmark's URI
-   */
-  _updateFolderTextbox: function PBS__updateFolderTextbox(document, uri) {
-    var folderTextbox = document.getElementById("places-folder-list");
-    folderTextbox.value = this._getFolderNameListForURI(uri);
-  },
-
-  /**
-   * This method gets the list of folders that contain the current bookmark.
-   *
-   * @param aURI a nsIURI object representing the URI of the current bookmark
-   *
-   * @returns a comma-separated list of folder names in string form
-   */
-  _getFolderNameListForURI: function PBS__getFolderNameListForURI(uri) {
-    var folders = this._bms.getBookmarkFolders(uri, {});
-    var results = [];
-    for (var i = 0; i < folders.length; i++) {
-      results.push(this._bms.getFolderTitle(folders[i]));
-    }
-    return results.join(", ");
-  },
-
-  /**
-   * Recursively populates the tag-like set of clickable folders.
-   *
-   * @param aContainer a reference to an nsINavHistoryContainerResultNode
-   *        (whose) containerOpen property is set to true) representing
-   *        the roote of the bookmark folder tree
-   * @param aDepth the current iteration depth -- pass this 0 at the top level.
-   *        This only affects the visual indentation level of the tag display.
-   * @param aParentElement a vbox element into which the tags will be populated
-   * @param aElementDict a dictionary mapping folder IDs to element references
-   *        to be populated in this method
-   *
-   * @returns none
-   */
-  _populateTags:
-  function PBS__populateTags (container, depth, parentElement, elementDict) {
-    ASSERT(container.containerOpen, "The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
-
-    var row = null;
-    for (var i = 0; i < container.childCount; i++) {
-      var childNode = container.getChild(i);
-
-      if (childNode.type != childNode.RESULT_TYPE_FOLDER)
-        continue;
-
-      var childFolder =
-        childNode.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-      childFolder.containerOpen = true;
-
-      // If we can't alter it, no use showing it as an option.
-
-      // childFolder.childrenReadOnly currently returns wrong answer for
-      // livemarks (joe@retrovirus.com 2006-02-14)
-        //      if (childFolder.childrenReadOnly) {
-      if (this._bms.getFolderReadonly(childFolder.folderId)) {
-        childFolder.containerOpen = false;
-        continue;
-      }
-
-      if (childFolder.hasChildren) {
-        row = document.createElement("hbox");
-        row.setAttribute("class", "l" + depth);
-        var tag = this._createTagElement(childFolder, false);
-        elementDict[childFolder.folderId] = tag;
-        tag.setAttribute("isparent", "true");
-        row.appendChild(tag);
-        parentElement.appendChild(row);
-        row = null;
-        var nextDepth = depth + 1;
-        // We're limiting max indentation level here.
-        if (nextDepth > this.MAX_INDENT_DEPTH)
-          nextDepth = this.MAX_INDENT_DEPTH;
-        this._populateTags(childFolder, nextDepth, parentElement, elementDict);
-      } else {
-        if (row == null) {
-          row = document.createElement("description");
-          row.setAttribute("class", "l" + depth);
-          parentElement.appendChild(row);
-        } else {
-          // we now know that there must"ve been a tag before us on the same row
-          var separator = document.createElement("label");
-          separator.setAttribute("value", eval("\"\\u2022\"")); // bullet
-          separator.setAttribute("class", "tag-separator");
-          row.appendChild(separator);
-        }
-        var tag = this._createTagElement(childFolder, false);
-        elementDict[childFolder.folderId] = tag;
-        row.appendChild(tag);
-      }
-      childFolder.containerOpen = false;
-    }
-  },
-
-  /**
-   * This method creates a XUL element to represent a given Bookmark
-   * folder node.
-   *
-   * @param aNode an nsINavHistoryFolderResultNode object
-   * @param aIsSelected boolean, true if the given folder is currently selected
-   *
-   * @return a new XUL element corresponding to aNode
-   */
-  _createTagElement: function PBS_createTagElement(node, isSelected) {
-    var tag = document.createElement("label");
-    tag.setAttribute("value", node.title);
-    tag.setAttribute("folderid", node.folderId);
-    tag.setAttribute("selected", "" + isSelected);
-    var self = this;
-    function onClick(e) {
-      self.tagClicked(e);
-    }
-    tag.addEventListener("command", onClick, false);
-    // We need the click event handler until we change the element from labels
-    // to something like checkboxes.
-    tag.addEventListener("click", onClick, false);
-    tag.setAttribute("class", "tag");
-    return tag;
-  },
-
-  /**
-   * This method should be called when a tag element generated by
-   * _createTagElement is clicked by the user.
-   */
-  tagClicked: function PBS_tagClicked(event) {
-    var tagElement = event.target;
-
-    var folderId = parseInt(tagElement.getAttribute("folderid"));
-
-    if (tagElement.getAttribute("selected") == "true") {
-      this._bms.removeItem(folderId, this._currentURI);
-      tagElement.setAttribute("selected", "false");
-    } else {
-      this._bms.insertItem(folderId, this._currentURI, -1);
-      tagElement.setAttribute("selected", "true");
-    }
-
-    this._updateFolderTextbox(tagElement.ownerDocument, this._currentURI);
-  },
-
 };
 
 
