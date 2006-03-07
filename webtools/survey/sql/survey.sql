@@ -1,7 +1,3 @@
--- 
--- Database: `survey`
--- 
-
 -- --------------------------------------------------------
 
 -- 
@@ -22,7 +18,6 @@ CREATE TABLE `intend` (
 INSERT INTO `intend` VALUES (1, 'To fully replace my previous web browser', 0);
 INSERT INTO `intend` VALUES (2, 'To use in addition to another web browser', 0);
 INSERT INTO `intend` VALUES (3, 'I just wanted to try it out', 0);
-INSERT INTO `intend` VALUES (4, 'Other (please specify)', 0);
 
 -- --------------------------------------------------------
 
@@ -41,7 +36,7 @@ CREATE TABLE `issue` (
 -- Dumping data for table `issue`
 -- 
 
-INSERT INTO `issue` VALUES (1, 'Some web pages wouldn''t work', 0);
+INSERT INTO `issue` VALUES (1, 'Some web pages wouldn''t work', 200);
 INSERT INTO `issue` VALUES (2, 'Plugin compatibility (Flash, Adobe Acrobat, Windows Media Player, etc.)', 0);
 INSERT INTO `issue` VALUES (3, 'Performance (load delays, memory usage)', 0);
 INSERT INTO `issue` VALUES (4, 'Hard to use/confusing (menus, display, etc.)', 0);
@@ -49,7 +44,7 @@ INSERT INTO `issue` VALUES (5, 'Missing features', 0);
 INSERT INTO `issue` VALUES (6, 'Security', 0);
 INSERT INTO `issue` VALUES (7, 'Some features didn''t work', 0);
 INSERT INTO `issue` VALUES (8, 'Printing', 0);
-INSERT INTO `issue` VALUES (9, 'Just temporary, I''m planning to install Firefox again soon', 10);
+INSERT INTO `issue` VALUES (9, 'Just temporary, I''m planning to install Firefox again soon', 201);
 
 -- --------------------------------------------------------
 
@@ -63,20 +58,6 @@ CREATE TABLE `issue_result_map` (
   `other` varchar(255) collate utf8_unicode_ci NOT NULL default '',
   PRIMARY KEY  (`result_id`,`issue_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-
--- 
--- Dumping data for table `issue_result_map`
--- 
-
-INSERT INTO `issue_result_map` VALUES (2, 9, 'asdfasdf');
-INSERT INTO `issue_result_map` VALUES (2, 4, 'asdfasd');
-INSERT INTO `issue_result_map` VALUES (2, 5, 'asdf');
-INSERT INTO `issue_result_map` VALUES (2, 3, 'sdfasd');
-INSERT INTO `issue_result_map` VALUES (2, 2, 'asdf');
-INSERT INTO `issue_result_map` VALUES (2, 8, 'sdfasd');
-INSERT INTO `issue_result_map` VALUES (2, 6, 'asdf');
-INSERT INTO `issue_result_map` VALUES (2, 7, 'dfasd');
-INSERT INTO `issue_result_map` VALUES (2, 1, 'asdfasdf');
 
 -- --------------------------------------------------------
 
@@ -94,10 +75,4 @@ CREATE TABLE `result` (
   `comments` text collate utf8_unicode_ci NOT NULL,
   `date_submitted` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=3 ;
-
--- 
--- Dumping data for table `result`
--- 
-
-INSERT INTO `result` VALUES (2, 0, 'asdfasdfasdf', 'Mozilla Firefox', '1.5 (en-US)', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8b5) Gecko/20051023 Firefox/1.5', 'asdfasdfasdf', '2006-02-26 15:53:20');
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=8 ;
