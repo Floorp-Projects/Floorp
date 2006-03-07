@@ -179,7 +179,6 @@ private:
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
     FindInstanceDocument(const nsAString &aID);
   NS_HIDDEN_(void)     Reset();
-  NS_HIDDEN_(void)     Ready();
   NS_HIDDEN_(void)     BackupOrRestoreInstanceData(PRBool restore);
 
   /** Initializes the MIPs on all form controls */

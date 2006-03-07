@@ -557,9 +557,6 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     rv = Rebuild();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_ModelConstructDone].name)) {
     rv = ConstructDone();
-  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Ready].name)) {
-    Ready();
-    mReadyHandled = PR_TRUE;
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
     Reset();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
@@ -1417,12 +1414,6 @@ nsXFormsModelElement::Reset()
   nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
 }
 
-void
-nsXFormsModelElement::Ready()
-{
-  BackupOrRestoreInstanceData(PR_FALSE);
-}
-
 // This function will restore all of the model's instance data to it's original
 // state if the supplied boolean is PR_TRUE.  If it is PR_FALSE, this function
 // will cause this model's instance data to be backed up.
@@ -1584,6 +1575,8 @@ nsXFormsModelElement::MaybeNotifyCompletion()
   for (i = 0; i < models->Count(); ++i) {
     nsXFormsModelElement *model =
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
+    model->BackupOrRestoreInstanceData(PR_FALSE);
+    model->mReadyHandled = PR_TRUE;
     nsXFormsUtils::DispatchEvent(model->mElement, eEvent_Ready);
   }
 }
