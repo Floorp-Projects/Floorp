@@ -198,7 +198,8 @@ PLDHashOperator PR_CALLBACK
 EntryEnumerator::enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg)
 {
   EntryEnumerator* mythis = NS_STATIC_CAST(EntryEnumerator*, userArg);
-  mythis->mArray[mythis->mCount++] = aLeaf->GetKey();
+  if (aLeaf->nonpValue)
+    mythis->mArray[mythis->mCount++] = aLeaf->GetKey();
 
   return PL_DHASH_NEXT;
 }
