@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -578,6 +578,8 @@ var gScrollingView;
 var gAutoScrollTimer;
 var gIgnoreMouseEvents;
 var gAutoScrollPopup = null;
+var gAccumulatedScrollErrorX;
+var gAccumulatedScrollErrorY;
 
 function startScrolling(event)
 {
@@ -630,6 +632,8 @@ function startScrolling(event)
   addEventListener('mouseup', handleMouseUpDown, true);
   addEventListener('mousedown', handleMouseUpDown, true);
   gAutoScrollTimer = setInterval(autoScrollLoop, 10);
+  gAccumulatedScrollErrorX = 0;
+  gAccumulatedScrollErrorY = 0;
 }
 
 function handleMouseMove(event)
@@ -638,14 +642,40 @@ function handleMouseMove(event)
   gCurrY = event.screenY;
 }
 
+function roundToZero(num)
+{
+  if (num > 0)
+    return Math.floor(num);
+  return Math.ceil(num);
+}
+
+function accelerate(curr, start)
+{
+    var speed = 12;
+    var val = (curr - start) / speed;
+
+    if (val > 1)
+        return val * Math.sqrt(val) - 1;
+    if (val < -1)
+        return val * Math.sqrt(-val) + 1;
+    return 0;
+}
+
 function autoScrollLoop()
 {
-  var x = gCurrX - gStartX;
-  var y = gCurrY - gStartY;
-  const speed = 4;
-  if (Math.abs(x) >= speed || Math.abs(y) >= speed)
+  var x = accelerate(gCurrX, gStartX);
+  var y = accelerate(gCurrY, gStartY);
+
+  if (x || y)
     gIgnoreMouseEvents = false;
-  gScrollingView.scrollBy(x / speed, y / speed);
+
+  var desiredScrollX = gAccumulatedScrollErrorX + x;
+  var actualScrollX = roundToZero(desiredScrollX);
+  gAccumulatedScrollErrorX = (desiredScrollX - actualScrollX);
+  var desiredScrollY = gAccumulatedScrollErrorY + y;
+  var actualScrollY = roundToZero(desiredScrollY);
+  gAccumulatedScrollErrorY = (desiredScrollY - actualScrollY);
+  gScrollingView.scrollBy(actualScrollX, actualScrollY);
 }
 
 function handleMouseUpDown(event)
