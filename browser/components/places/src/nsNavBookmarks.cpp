@@ -930,6 +930,13 @@ nsNavBookmarks::ReplaceItem(PRInt64 aFolder, nsIURI *aItem, nsIURI *aNewItem)
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // update the bookmark hash, something could have gone away, and something
+  // else could have been created
+  rv = UpdateBookmarkHashOnRemove(childID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = AddBookmarkToHash(newChildID, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnItemReplaced(aFolder, aItem, aNewItem))
 
