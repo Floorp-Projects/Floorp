@@ -45,7 +45,8 @@
 #include "nsIWebProgress.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
-#include "nsPIDOMWindow.h"
+#include "nsIDOMWindow.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 static nsLoadCollector *gLoadCollector = nsnull;
 
@@ -82,8 +83,8 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
     RequestEntry entry;
     NS_ASSERTION(!mRequestMap.Get(request, &entry), "duplicate STATE_START");
 
-    nsCOMPtr<nsIDOMWindow> window;
-    webProgress->GetDOMWindow(getter_AddRefs(window));
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webProgress);
+    nsCOMPtr<nsIDOMWindow> window = do_GetInterface(docShell);
     if (!window) {
       // We don't really care about windowless loads
       return NS_OK;
@@ -102,43 +103,38 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsCOMPtr<nsPIDOMWindow> winPriv = do_QueryInterface(window);
-    NS_ENSURE_STATE(winPriv);
-
-    nsIDocShell *docShell = winPriv->GetDocShell();
     nsAutoString origin;
-    if (docShell) {
-      PRUint32 loadType;
-      docShell->GetLoadType(&loadType);
-      switch (loadType) {
-        case LOAD_NORMAL:
-        case LOAD_NORMAL_REPLACE:
-        case LOAD_BYPASS_HISTORY:
-          origin.AssignLiteral("typed");
-          break;
-        case LOAD_NORMAL_EXTERNAL:
-          origin.AssignLiteral("external");
-          break;
-        case LOAD_HISTORY:
-          origin.AssignLiteral("session-history");
-          break;
-        case LOAD_RELOAD_NORMAL:
-        case LOAD_RELOAD_BYPASS_CACHE:
-        case LOAD_RELOAD_BYPASS_PROXY:
-        case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-        case LOAD_RELOAD_CHARSET_CHANGE:
-          origin.AssignLiteral("reload");
-          break;
-        case LOAD_LINK:
-          origin.AssignLiteral("link");
-          break;
-        case LOAD_REFRESH:
-          origin.AssignLiteral("refresh");
-          break;
-        default:
-          origin.AssignLiteral("other");
-          break;
-      }
+    PRUint32 loadType;
+    docShell->GetLoadType(&loadType);
+
+    switch (loadType) {
+    case LOAD_NORMAL:
+    case LOAD_NORMAL_REPLACE:
+    case LOAD_BYPASS_HISTORY:
+      origin.AssignLiteral("typed");
+      break;
+    case LOAD_NORMAL_EXTERNAL:
+      origin.AssignLiteral("external");
+      break;
+    case LOAD_HISTORY:
+      origin.AssignLiteral("session-history");
+      break;
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_CHARSET_CHANGE:
+      origin.AssignLiteral("reload");
+      break;
+    case LOAD_LINK:
+      origin.AssignLiteral("link");
+      break;
+    case LOAD_REFRESH:
+      origin.AssignLiteral("refresh");
+      break;
+    default:
+      origin.AssignLiteral("other");
+      break;
     }
     rv = props->SetPropertyAsAString(NS_LITERAL_STRING("origin"), origin);
     NS_ENSURE_SUCCESS(rv, rv);
