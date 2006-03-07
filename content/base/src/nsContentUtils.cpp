@@ -2805,29 +2805,9 @@ nsContentUtils::HasNonEmptyAttr(nsIContent* aContent, PRInt32 aNameSpaceID,
 }
 
 /* static */
-nsIEventListenerManager*
-nsContentUtils::LookupListenerManager(nsIContent *aContent)
-{
-  if (!sEventListenerManagersHash.ops) {
-    // We're already shut down.
-
-    return nsnull;
-  }
-
-  EventListenerManagerMapEntry *entry =
-    NS_STATIC_CAST(EventListenerManagerMapEntry *,
-                   PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
-                                        PL_DHASH_LOOKUP));
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    return entry->mListenerManager;
-  }
-
-  return nsnull;
-}
-
-/* static */
 nsresult
 nsContentUtils::GetListenerManager(nsIContent *aContent,
+                                   PRBool aCreateIfNotFound,
                                    nsIEventListenerManager **aResult,
                                    PRBool *aCreated)
 {
@@ -2839,6 +2819,18 @@ nsContentUtils::GetListenerManager(nsIContent *aContent,
     // manager.
 
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!aCreateIfNotFound) {
+    EventListenerManagerMapEntry *entry =
+      NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                     PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                                          PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      *aResult = entry->mListenerManager;
+      NS_ADDREF(*aResult);
+    }
+    return NS_OK;
   }
 
   EventListenerManagerMapEntry *entry =

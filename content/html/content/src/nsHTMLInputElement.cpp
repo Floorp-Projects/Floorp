@@ -84,6 +84,7 @@
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
@@ -131,6 +132,13 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 #define SET_BOOLBIT(bitfield, field, b) ((b) \
                                         ? ((bitfield) |=  (0x01 << (field))) \
                                         : ((bitfield) &= ~(0x01 << (field))))
+
+// First bits are needed for the control type.
+#define NS_OUTER_ACTIVATE_EVENT   (1 << 9)
+#define NS_ORIGINAL_CHECKED_VALUE (1 << 10)
+#define NS_NO_CONTENT_DISPATCH    (1 << 11)
+#define NS_CONTROL_TYPE(bits)  ((bits) & ~( \
+  NS_OUTER_ACTIVATE_EVENT | NS_ORIGINAL_CHECKED_VALUE | NS_NO_CONTENT_DISPATCH))
 
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
@@ -190,10 +198,10 @@ public:
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
@@ -1030,7 +1038,8 @@ nsHTMLInputElement::FireOnChange()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_FORM_CHANGE);
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
-  HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                              &event, nsnull, &status);
 }
 
 NS_IMETHODIMP
@@ -1139,8 +1148,8 @@ nsHTMLInputElement::Select()
       nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_TRUE);
-      rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                          &status);
+      nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                  presContext, &event, nsnull, &status);
       SET_BOOLBIT(mBitField, BF_HANDLING_SELECT_EVENT, PR_FALSE);
     }
 
@@ -1234,8 +1243,8 @@ nsHTMLInputElement::Click()
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
 
-        rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
-                            &status);
+        nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), context,
+                                    &event, nsnull, &status);
 
         SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_FALSE);
       }
@@ -1246,19 +1255,15 @@ nsHTMLInputElement::Click()
 }
 
 nsresult
-nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
+nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-
   // Do not process any DOM events if the element is disabled
+  aVisitor.mCanHandle = PR_FALSE;
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (disabled) {
+  //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
+  if (disabled || !aVisitor.mPresContext) {
     return NS_OK;
   }
   
@@ -1278,8 +1283,8 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
 
   // Don't allow mutation events which are targeted somewhere inside
   // <input>, except if they are dispatched to the element itself.
-  if (!(NS_EVENT_FLAG_INIT & aFlags) &&
-      aEvent->eventStructType == NS_MUTATION_EVENT) {
+  if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT &&
+      aVisitor.mEvent->originalTarget != NS_STATIC_CAST(nsIContent*, this)) {
     return NS_OK;
   }
 
@@ -1299,23 +1304,22 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   // This is a compatibility hack.
   //
 
-  // Track whether we're in the outermost HandleDOMEvent invocation that will
+  // Track whether we're in the outermost Dispatch invocation that will
   // cause activation of the input.  That is, if we're a click event, or a
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
   PRBool outerActivateEvent =
-    !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-    !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-    (aEvent->message == NS_MOUSE_LEFT_CLICK ||
-     (aEvent->message == NS_UI_ACTIVATE &&
+    (aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK ||
+     (aVisitor.mEvent->message == NS_UI_ACTIVATE &&
       !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
+
+  if (outerActivateEvent) {
+    aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
+  }
 
   PRBool originalCheckedValue = PR_FALSE;
 
-  nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
-
   if (outerActivateEvent) {
-
     SET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED, PR_FALSE);
 
     switch(mType) {
@@ -1333,8 +1337,10 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
           if (container) {
             nsAutoString name;
             if (GetNameIfExists(name)) {
+              nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
               container->GetCurrentRadioButton(name,
                                                getter_AddRefs(selectedRadioButton));
+              aVisitor.mItemData = selectedRadioButton;
             }
           }
 
@@ -1361,25 +1367,38 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
     } //switch
   }
 
+  if (originalCheckedValue) {
+    aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
+  }
+
   // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
-  PRBool noContentDispatch = aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH) {
+    aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
+  }
   if ((mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD) &&
-      aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
-    aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+      aVisitor.mEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
-  //
-  PRInt32 oldType = mType;
+  aVisitor.mItemFlags |= NS_STATIC_CAST(PRUint8, mType);
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
 
-  // Try script event handlers first if its not a focus/blur event
-  //we don't want the doc to get these
-  rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
-                                                aDOMEvent, aFlags,
-                                                aEventStatus);
-
+nsresult
+nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  if (!aVisitor.mPresContext) {
+    return NS_OK;
+  }
+  nsresult rv = NS_OK;
+  PRBool outerActivateEvent = aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT;
+  PRBool originalCheckedValue =
+    aVisitor.mItemFlags & NS_ORIGINAL_CHECKED_VALUE;
+  PRBool noContentDispatch = aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH;
+  PRInt8 oldType = NS_CONTROL_TYPE(aVisitor.mItemFlags);
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/
   // radio state and fire onchange.  However, for backwards compatibility, we
@@ -1387,12 +1406,12 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   // when space is pressed.  So, we just nest the firing of DOMActivate inside
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
-  if (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      aEvent->message == NS_MOUSE_LEFT_CLICK && mType != NS_FORM_INPUT_TEXT) {
-    nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aEvent), NS_UI_ACTIVATE, 1);
+  if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
+      mType != NS_FORM_INPUT_TEXT &&
+      aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK) {
+    nsUIEvent actEvent(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_UI_ACTIVATE, 1);
 
-    nsIPresShell *shell = aPresContext->GetPresShell();
+    nsIPresShell *shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
       nsEventStatus status = nsEventStatus_eIgnore;
       SET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE, PR_TRUE);
@@ -1402,7 +1421,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
       // If activate is cancelled, we must do the same as when click is
       // cancelled (revert the checkbox to its original value).
       if (status == nsEventStatus_eConsumeNoDefault)
-        *aEventStatus = status;
+        aVisitor.mEventStatus = status;
     }
   }
 
@@ -1422,14 +1441,17 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   }
 
   // Reset the flag for other content besides this text field
-  aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+  aVisitor.mEvent->flags |=
+    noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
   if (GET_BOOLBIT(mBitField, BF_CHECKED_IS_TOGGLED) && outerActivateEvent) {
-    if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+    if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
       // if it was cancelled and a radio button, then set the old
       // selected btn to TRUE. if it is a checkbox then set it to its
       // original value
+      nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton =
+        do_QueryInterface(aVisitor.mItemData);
       if (selectedRadioButton) {
         selectedRadioButton->SetChecked(PR_TRUE);
         // If this one is no longer a radio button we must reset it back to
@@ -1445,21 +1467,19 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
 #ifdef ACCESSIBILITY
       // Fire an event to notify accessibility
       if (mType == NS_FORM_INPUT_CHECKBOX) {
-        FireEventForAccessibility(aPresContext,
+        FireEventForAccessibility(aVisitor.mPresContext,
                                   NS_LITERAL_STRING("CheckboxStateChange"));
       } else {
-        FireEventForAccessibility(aPresContext,
+        FireEventForAccessibility(aVisitor.mPresContext,
                                   NS_LITERAL_STRING("RadioStateChange"));
       }
 #endif
     }
   }
 
-  if (NS_SUCCEEDED(rv) && 
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-    if (nsEventStatus_eIgnore == *aEventStatus) {
-      switch (aEvent->message) {
+  if (NS_SUCCEEDED(rv)) {
+    if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+      switch (aVisitor.mEvent->message) {
 
         case NS_FOCUS_CONTENT:
         {
@@ -1467,10 +1487,10 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
           // child textfield or button.  If that's the case, don't focus
           // this parent file control -- leave focus on the child.
           nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
-          if (formControlFrame && !(aFlags & NS_EVENT_FLAG_BUBBLE) &&
-              ShouldFocus(this))
+          if (formControlFrame && ShouldFocus(this) &&
+              aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsINode*, this))
             formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-        }                                                                         
+        }
         break; // NS_FOCUS_CONTENT
 
         case NS_KEY_PRESS:
@@ -1478,11 +1498,11 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         {
           // For backwards compat, trigger checks/radios/buttons with
           // space or enter (bug 25300)
-          nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+          nsKeyEvent * keyEvent = (nsKeyEvent *)aVisitor.mEvent;
 
-          if ((aEvent->message == NS_KEY_PRESS &&
+          if ((aVisitor.mEvent->message == NS_KEY_PRESS &&
                keyEvent->keyCode == NS_VK_RETURN) ||
-              (aEvent->message == NS_KEY_UP &&
+              (aVisitor.mEvent->message == NS_KEY_UP &&
                keyEvent->keyCode == NS_VK_SPACE)) {
             switch(mType) {
               case NS_FORM_INPUT_CHECKBOX:
@@ -1490,7 +1510,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
               {
                 // Checkbox and Radio try to submit on Enter press
                 if (keyEvent->keyCode != NS_VK_SPACE) {
-                  MaybeSubmitForm(aPresContext);
+                  MaybeSubmitForm(aVisitor.mPresContext);
 
                   break;  // If we are submitting, do not send click event
                 }
@@ -1501,18 +1521,20 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
-                nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
+                nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                    NS_MOUSE_LEFT_CLICK, nsnull,
                                    nsMouseEvent::eReal);
                 nsEventStatus status = nsEventStatus_eIgnore;
 
-                rv = HandleDOMEvent(aPresContext, &event, nsnull,
-                                    NS_EVENT_FLAG_INIT, &status);
+                nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                            aVisitor.mPresContext, &event,
+                                            nsnull, &status);
               } // case
             } // switch
           }
-          if (aEvent->message == NS_KEY_PRESS && mType == NS_FORM_INPUT_RADIO &&
-              !keyEvent->isAlt && !keyEvent->isControl && !keyEvent->isMeta) {
+          if (aVisitor.mEvent->message == NS_KEY_PRESS &&
+              mType == NS_FORM_INPUT_RADIO && !keyEvent->isAlt &&
+              !keyEvent->isControl && !keyEvent->isMeta) {
             PRBool isMovingBack = PR_FALSE;
             switch (keyEvent->keyCode) {
               case NS_VK_UP: 
@@ -1525,6 +1547,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
               if (container) {
                 nsAutoString name;
                 if (GetNameIfExists(name)) {
+                  nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
                   container->GetNextRadioButton(name, isMovingBack, this,
                                                 getter_AddRefs(selectedRadioButton));
                   nsCOMPtr<nsIContent> radioContent =
@@ -1533,14 +1556,14 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                     rv = selectedRadioButton->Focus();
                     if (NS_SUCCEEDED(rv)) {
                       nsEventStatus status = nsEventStatus_eIgnore;
-                      nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
+                      nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                          NS_MOUSE_LEFT_CLICK, nsnull,
                                          nsMouseEvent::eReal);
-                      rv = radioContent->HandleDOMEvent(aPresContext, &event,
-                                                        nsnull, NS_EVENT_FLAG_INIT, 
-                                                        &status);
+                      rv = nsEventDispatcher::Dispatch(radioContent,
+                                                       aVisitor.mPresContext,
+                                                       &event, nsnull, &status);
                       if (NS_SUCCEEDED(rv)) {
-                        *aEventStatus = nsEventStatus_eConsumeNoDefault;
+                        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
                       }
                     }
                   }
@@ -1562,7 +1585,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
            *     not submit, period.
            */
 
-          if (aEvent->message == NS_KEY_PRESS &&
+          if (aVisitor.mEvent->message == NS_KEY_PRESS &&
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
               (mType == NS_FORM_INPUT_TEXT ||
@@ -1572,21 +1595,17 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
             PRBool isButton = PR_FALSE;
             // If this is an enter on the button of a file input, don't submit
             // -- that's supposed to put up the filepicker
-            if (mType == NS_FORM_INPUT_FILE && aDOMEvent) {
-              nsCOMPtr<nsIDOMNSEvent> nsEvent(do_QueryInterface(*aDOMEvent));
-              if (nsEvent) {
-                nsCOMPtr<nsIDOMEventTarget> originalTarget;
-                nsEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
-                nsCOMPtr<nsIContent> maybeButton(do_QueryInterface(originalTarget));
-                if (maybeButton) {
-                  nsAutoString type;
-                  maybeButton->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
-                                       type);
-                  isButton = type.EqualsLiteral("button");
-                }
+            if (mType == NS_FORM_INPUT_FILE) {
+              nsCOMPtr<nsIContent> maybeButton =
+                do_QueryInterface(aVisitor.mEvent->originalTarget);
+              if (maybeButton) {
+                nsAutoString type;
+                maybeButton->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type,
+                                     type);
+                isButton = type.EqualsLiteral("button");
               }
             }
-            
+
             if (!isButton) {
               nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
               if (primaryFrame) {
@@ -1599,7 +1618,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
                 }
               }
 
-              rv = MaybeSubmitForm(aPresContext);
+              rv = MaybeSubmitForm(aVisitor.mPresContext);
               NS_ENSURE_SUCCESS(rv, rv);
             }
           }
@@ -1607,6 +1626,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         } break; // NS_KEY_PRESS || NS_KEY_UP
 
         // cancel all of these events for buttons
+        //XXXsmaug Why?
         case NS_MOUSE_MIDDLE_BUTTON_DOWN:
         case NS_MOUSE_MIDDLE_BUTTON_UP:
         case NS_MOUSE_MIDDLE_DOUBLECLICK:
@@ -1614,15 +1634,11 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
         case NS_MOUSE_RIGHT_BUTTON_DOWN:
         case NS_MOUSE_RIGHT_BUTTON_UP:
         {
-          if (mType == NS_FORM_INPUT_BUTTON || 
-              mType == NS_FORM_INPUT_RESET || 
-              mType == NS_FORM_INPUT_SUBMIT ) {
-            nsCOMPtr<nsIDOMNSEvent> nsevent;
-
-            if (aDOMEvent) {
-              nsevent = do_QueryInterface(*aDOMEvent);
-            }
-
+          if (mType == NS_FORM_INPUT_BUTTON ||
+              mType == NS_FORM_INPUT_RESET ||
+              mType == NS_FORM_INPUT_SUBMIT) {
+            nsCOMPtr<nsIDOMNSEvent> nsevent =
+              do_QueryInterface(aVisitor.mDOMEvent);
             if (nsevent) {
               nsevent->PreventBubble();
             } else {
@@ -1632,8 +1648,8 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
 
           break;
         }
-      default:
-        break;
+        default:
+          break;
       }
 
       if (outerActivateEvent) {
@@ -1656,12 +1672,11 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
             event.originator      = this;
             nsEventStatus status  = nsEventStatus_eIgnore;
 
-            nsIPresShell *presShell = aPresContext->GetPresShell();
+            nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
 
             // If |nsIPresShell::Destroy| has been called due to
-            // handling the event (base class HandleDOMEvent, above),
-            // the pres context will return a null pres shell.  See
-            // bug 125624.
+            // handling the event the pres context will return a null
+            // pres shell.  See bug 125624.
             if (presShell) {
               nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
               presShell->HandleDOMEventWithTarget(form, &event, &status);
@@ -1673,17 +1688,16 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
           break;
         } //switch 
       } //click or outer activate event
-    } else {
-      if (outerActivateEvent &&
-          (oldType == NS_FORM_INPUT_SUBMIT || oldType == NS_FORM_INPUT_IMAGE) &&
-          mForm) {
-        // tell the form to flush a possible pending submission.
-        // the reason is that the script returned false (the event was
-        // not ignored) so if there is a stored submission, it needs to
-        // be submitted immediately.
-        mForm->FlushPendingSubmission();
-      }
-    } //if
+    } else if (outerActivateEvent &&
+               (oldType == NS_FORM_INPUT_SUBMIT ||
+                oldType == NS_FORM_INPUT_IMAGE) &&
+               mForm) {
+      // tell the form to flush a possible pending submission.
+      // the reason is that the script returned false (the event was
+      // not ignored) so if there is a stored submission, it needs to
+      // be submitted immediately.
+      mForm->FlushPendingSubmission();
+    }
   } // if
 
   return rv;
@@ -2058,12 +2072,9 @@ nsHTMLInputElement::FireEventForAccessibility(nsPresContext* aPresContext,
                                               const nsAString& aEventType)
 {
   nsCOMPtr<nsIDOMEvent> event;
-  nsCOMPtr<nsIEventListenerManager> manager;
-  GetListenerManager(getter_AddRefs(manager));
-  if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull,
-                                        NS_LITERAL_STRING("Events"),
-                                        getter_AddRefs(event)))) {
+  if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(aPresContext, nsnull,
+                                                  NS_LITERAL_STRING("Events"),
+                                                  getter_AddRefs(event)))) {
     event->InitEvent(aEventType, PR_TRUE, PR_TRUE);
 
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
@@ -2072,9 +2083,7 @@ nsHTMLInputElement::FireEventForAccessibility(nsPresContext* aPresContext,
     }
 
     nsISupports *target = NS_STATIC_CAST(nsIDOMHTMLInputElement*, this);
-    PRBool defaultActionEnabled;
-    aPresContext->EventStateManager()->DispatchNewEvent(target, event,
-                                                        &defaultActionEnabled);
+    nsEventDispatcher::DispatchDOMEvent(target, nsnull, event, nsnull, nsnull);
   }
 
   return NS_OK;

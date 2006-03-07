@@ -516,7 +516,7 @@ void nsRootAccessible::FireCurrentFocusEvent()
   if (rootContent && presContext) {
     nsCOMPtr<nsIDOMEvent> event;
     nsCOMPtr<nsIEventListenerManager> manager;
-    rootContent->GetListenerManager(getter_AddRefs(manager));
+    rootContent->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
     if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
                                                      NS_LITERAL_STRING("Events"),
                                                      getter_AddRefs(event))) &&

@@ -51,7 +51,7 @@
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
-
+#include "nsEventDispatcher.h"
 
 class nsHTMLLabelElement : public nsGenericHTMLFormElement,
                            public nsIDOMHTMLLabelElement
@@ -87,10 +87,9 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   virtual void SetFocus(nsPresContext* aContext);
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
@@ -208,37 +207,26 @@ EventTargetIn(nsPresContext *aPresContext, nsEvent *aEvent,
 }
 
 nsresult
-nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
+nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-
-  nsresult rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
-                                                         aDOMEvent, aFlags,
-                                                         aEventStatus);
-  if (NS_FAILED(rv))
-    return rv;
-
   if (mHandlingEvent ||
-      *aEventStatus == nsEventStatus_eConsumeNoDefault ||
-      (aEvent->message != NS_MOUSE_LEFT_CLICK &&
-       aEvent->message != NS_FOCUS_CONTENT) ||
-      aFlags & NS_EVENT_FLAG_CAPTURE ||
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT))
+      (aVisitor.mEvent->message != NS_MOUSE_LEFT_CLICK &&
+       aVisitor.mEvent->message != NS_FOCUS_CONTENT) ||
+      aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
+      !aVisitor.mPresContext) {
     return NS_OK;
+  }
 
   nsCOMPtr<nsIContent> content = GetForContent();
-  if (content && !EventTargetIn(aPresContext, aEvent, content, this)) {
+  if (content && !EventTargetIn(aVisitor.mPresContext, aVisitor.mEvent,
+                                content, this)) {
     mHandlingEvent = PR_TRUE;
-    switch (aEvent->message) {
+    switch (aVisitor.mEvent->message) {
       case NS_MOUSE_LEFT_CLICK:
-        if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+        if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
           if (ShouldFocus(this)) {
             // Focus the for content.
-            content->SetFocus(aPresContext);
+            content->SetFocus(aVisitor.mPresContext);
           }
 
           // Dispatch a new click event to |content|
@@ -247,9 +235,12 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
           //    would do nothing.  If we wanted to do something
           //    sensible, we might send more events through like
           //    this.)  See bug 7554, bug 49897, and bug 96813.
-          nsEventStatus status = *aEventStatus;
-          rv = DispatchClickEvent(aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent),
-                                  content, PR_FALSE, &status);
+          nsEventStatus status = aVisitor.mEventStatus;
+          // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
+          // will actually create a new event.
+          DispatchClickEvent(aVisitor.mPresContext,
+                             NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent),
+                             content, PR_FALSE, &status);
           // Do we care about the status this returned?  I don't think we do...
         }
         break;
@@ -261,16 +252,17 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
         // Since focus doesn't bubble, this is basically the second part
         // of redirecting |SetFocus|.
         {
-          nsEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_FOCUS_CONTENT);
-          nsEventStatus status = *aEventStatus;
-          rv = DispatchEvent(aPresContext, &event, content, PR_TRUE, &status);
+          nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_FOCUS_CONTENT);
+          nsEventStatus status = aVisitor.mEventStatus;
+          DispatchEvent(aVisitor.mPresContext, &event,
+                        content, PR_TRUE, &status);
           // Do we care about the status this returned?  I don't think we do...
         }
         break;
     }
     mHandlingEvent = PR_FALSE;
   }
-  return rv;
+  return NS_OK;
 }
 
 void

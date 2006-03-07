@@ -647,7 +647,7 @@ nsXBLBinding::InstallEventHandlers()
 
     if (handlerChain) {
       nsCOMPtr<nsIEventListenerManager> manager;
-      mBoundElement->GetListenerManager(getter_AddRefs(manager));
+      mBoundElement->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
       if (!manager)
         return;
 

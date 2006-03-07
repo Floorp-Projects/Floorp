@@ -231,7 +231,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 {
   if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    GetListenerManager(getter_AddRefs(manager));
+    GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager) {
       nsIAtom* eventName = GetEventNameForAttr(aName);
       manager->RemoveScriptEventListener(eventName);

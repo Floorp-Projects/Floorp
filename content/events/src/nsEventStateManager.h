@@ -132,9 +132,6 @@ public:
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
                        nsIWidget* aWidget, PRBool aLockCursor);
 
-  //Method for centralized distribution of new DOM events
-  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aDefaultActionEnabled);
-
   NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
 
   virtual PRBool GetBrowseWithCaret();

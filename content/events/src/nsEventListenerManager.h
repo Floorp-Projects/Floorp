@@ -159,7 +159,7 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsEvent* aEvent, 
                          nsIDOMEvent** aDOMEvent,
-                         nsIDOMEventTarget* aCurrentTarget,
+                         nsISupports* aCurrentTarget,
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus);
 
@@ -198,7 +198,8 @@ public:
                                    const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
@@ -208,7 +209,7 @@ protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEventListener* aListener,
                               nsIDOMEvent* aDOMEvent,
-                              nsIDOMEventTarget* aCurrentTarget,
+                              nsISupports* aCurrentTarget,
                               PRUint32 aSubType,
                               PRUint32 aPhaseFlags);
   nsresult CompileEventHandlerInternal(nsIScriptContext *aContext,
@@ -216,7 +217,7 @@ protected:
                                        nsISupports *aObject,
                                        nsIAtom *aName,
                                        nsListenerStruct *aListenerStruct,
-                                       nsIDOMEventTarget* aCurrentTarget,
+                                       nsISupports* aCurrentTarget,
                                        PRUint32 aSubType);
   nsListenerStruct* FindJSEventListener(EventArrayType aType);
   nsresult SetJSEventListener(nsIScriptContext *aContext,
@@ -241,7 +242,7 @@ protected:
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
   nsresult FixContextMenuEvent(nsPresContext* aPresContext,
-                               nsIDOMEventTarget* aCurrentTarget,
+                               nsISupports* aCurrentTarget,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent);
   PRBool PrepareToUseCaretPosition(nsIWidget* aEventWidget,

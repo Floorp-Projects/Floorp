@@ -67,6 +67,7 @@
 #include "nsIXBLService.h"
 #include "nsIBindingManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsEventDispatcher.h"
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -254,35 +255,29 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 }
 
 nsresult
-nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
-                             nsEvent* aEvent,
-                             nsIDOMEvent** aDOMEvent,
-                             PRUint32 aFlags,
-                             nsEventStatus* aEventStatus)
+nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-  // Try script event handlers first
-  nsresult ret = nsGenericElement::HandleDOMEvent(aPresContext, aEvent,
-                                                  aDOMEvent, aFlags,
-                                                  aEventStatus);
-
-  if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+  nsresult rv = NS_OK;
+  if (mIsLink && nsEventStatus_eIgnore == aVisitor.mEventStatus) {
     nsIDocument *document = GetCurrentDoc();
-    switch (aEvent->message) {
+    switch (aVisitor.mEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
-        aPresContext->EventStateManager()->
-          SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+        if (aVisitor.mPresContext) {
+          aVisitor.mPresContext->EventStateManager()->
+            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
 
-        *aEventStatus = nsEventStatus_eConsumeDoDefault;
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
       }
       break;
 
     case NS_MOUSE_LEFT_CLICK:
       {
-        if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
-          nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aEvent);
+        if (nsEventStatus_eConsumeNoDefault != aVisitor.mEventStatus &&
+            aVisitor.mPresContext) {
+          nsInputEvent* inputEvent =
+            NS_STATIC_CAST(nsInputEvent*, aVisitor.mEvent);
           if (inputEvent->isControl || inputEvent->isMeta ||
               inputEvent->isAlt || inputEvent->isShift) {
             break;  // let the click go through so we can handle it in JS/XUL
@@ -291,7 +286,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
           nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
           nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
           if (!uri) {
-            *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
             break;
           }
 
@@ -308,10 +303,10 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
           nsAutoString target;
           GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::_moz_target, target);
-          ret = TriggerLink(aPresContext, verb, uri,
-                            target, PR_TRUE, PR_TRUE);
+          rv = TriggerLink(aVisitor.mPresContext, verb, uri,
+                           target, PR_TRUE, PR_TRUE);
 
-          *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
         }
       }
       break;
@@ -321,25 +316,27 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
       break;
 
     case NS_KEY_PRESS:
-      if (aEvent->eventStructType == NS_KEY_EVENT) {
-        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
+      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT &&
+          aVisitor.mPresContext) {
+        nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
           //fire click
-          nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
-          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_MOUSE_LEFT_CLICK,
+          nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aVisitor.mEvent);
+          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                             NS_MOUSE_LEFT_CLICK,
                              guiEvent->widget, nsMouseEvent::eReal);
-          event.refPoint = aEvent->refPoint;
+          event.refPoint = aVisitor.mEvent->refPoint;
           event.clickCount = 1;
           event.isShift = keyEvent->isShift;
           event.isControl = keyEvent->isControl;
           event.isAlt = keyEvent->isAlt;
           event.isMeta = keyEvent->isMeta;
 
-          nsIPresShell *presShell = aPresContext->GetPresShell();
+          nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
           if (presShell) {
-            ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
+            rv = presShell->HandleDOMEventWithTarget(this, &event, &status);
             // presShell may no longer be alive, don't use it here
             // unless you keep a reference.
           }
@@ -349,24 +346,28 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
 
     case NS_MOUSE_ENTER_SYNTH:
       {
-        nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
-        if (!uri) {
-          *aEventStatus = nsEventStatus_eConsumeDoDefault; 
-          break;
-        }
+        if (aVisitor.mPresContext) {
+          nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
+          if (!uri) {
+            aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+            break;
+          }
 
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace, uri,
-                          EmptyString(), PR_FALSE, PR_TRUE);
-        
-        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+          rv = TriggerLink(aVisitor.mPresContext, eLinkVerb_Replace, uri,
+                           EmptyString(), PR_FALSE, PR_TRUE);
+
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
       }
       break;
 
       // XXX this doesn't seem to do anything yet
     case NS_MOUSE_EXIT_SYNTH:
       {
-        ret = LeaveLink(aPresContext);
-        *aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        if (aVisitor.mPresContext) {
+          rv = LeaveLink(aVisitor.mPresContext);
+          aVisitor.mEventStatus = nsEventStatus_eConsumeDoDefault;
+        }
       }
       break;
 
@@ -375,7 +376,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  return ret;
+  return rv;
 }
 
 PRBool

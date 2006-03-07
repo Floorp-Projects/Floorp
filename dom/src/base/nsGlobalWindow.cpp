@@ -140,6 +140,7 @@
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
+#include "nsEventDispatcher.h"
 
 #include "plbase64.h"
 
@@ -1473,40 +1474,14 @@ nsGlobalWindow::GetGlobalObjectOwner()
 }
 
 nsresult
-nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
-                               nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                               nsEventStatus* aEventStatus)
+nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  FORWARD_TO_INNER(HandleDOMEvent,
-                   (aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus),
-                   NS_OK);
-
-  nsGlobalWindow *outer = GetOuterWindowInternal();
-
-  // Make sure to tell the event that dispatch has started.
-  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
-
-  nsresult ret = NS_OK;
-  PRBool externalDOMEvent = PR_FALSE;
-  nsIDOMEvent *domEvent = nsnull;
+  FORWARD_TO_INNER(PreHandleEvent, (aVisitor), NS_OK);
   static PRUint32 count = 0;
+  PRUint32 msg = aVisitor.mEvent->message;
 
-  /* mChromeEventHandler and mContext go dangling in the middle of this
-     function under some circumstances (events that destroy the window)
-     without this addref. */
-  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
-  nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
-
-  /* If this is a mouse event, use the struct to provide entropy for
-   * the system.
-   */
-  if (gEntropyCollector &&
-      (NS_EVENT_FLAG_CAPTURE & aFlags) &&
-      (aEvent->message == NS_MOUSE_MOVE)) {
-    //I'd like to not come in here if there is a mChromeEventHandler
-    //present, but there is always one when the message is
-    //NS_MOUSE_MOVE.
-    //
+  aVisitor.mCanHandle = PR_TRUE;
+  if ((msg == NS_MOUSE_MOVE) && gEntropyCollector) {
     //Chances are this counter will overflow during the life of the
     //process, but that's OK for our case. Means we get a little
     //more entropy.
@@ -1515,21 +1490,46 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
       //let's only take the lowest half of the point structure.
       PRInt16 myCoord[2];
 
-      myCoord[0] = aEvent->refPoint.x;
-      myCoord[1] = aEvent->refPoint.y;
+      myCoord[0] = aVisitor.mEvent->refPoint.x;
+      myCoord[1] = aVisitor.mEvent->refPoint.y;
       gEntropyCollector->RandomUpdate((void*)myCoord, sizeof(myCoord));
-      gEntropyCollector->RandomUpdate((void*)&aEvent->time, sizeof(PRUint32));
+      gEntropyCollector->RandomUpdate((void*)&(aVisitor.mEvent->time),
+                                      sizeof(PRUint32));
     }
+  } else if (msg == NS_RESIZE_EVENT) {
+    mIsHandlingResizeEvent = PR_TRUE;
   }
+
+  // Check chrome document capture here.
+  // XXX The chrome can not handle this, see bug 51211
+  // FIXME Fix this for other *LOAD events, bug 329514.
+  if (mChromeEventHandler && msg != NS_IMAGE_LOAD) {
+    aVisitor.mParentTarget = mChromeEventHandler;
+    aVisitor.mParentIsChromeHandler = PR_TRUE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  FORWARD_TO_INNER(PostHandleEvent, (aVisitor), NS_OK);
+  /* mChromeEventHandler and mContext go dangling in the middle of this
+   function under some circumstances (events that destroy the window)
+   without this addref. */
+  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
+  nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(GetContextInternal());
+  nsGlobalWindow* outer = GetOuterWindowInternal();
 
   // if the window is deactivated while in full screen mode,
   // restore OS chrome, and hide it again upon re-activation
-  if (outer && outer->mFullScreen && (NS_EVENT_FLAG_BUBBLE & aFlags)) {
-    if (aEvent->message == NS_DEACTIVATE || aEvent->message == NS_ACTIVATE) {
+  if (outer && outer->mFullScreen) {
+    if (aVisitor.mEvent->message == NS_DEACTIVATE ||
+        aVisitor.mEvent->message == NS_ACTIVATE) {
       nsCOMPtr<nsIFullScreen> fullScreen =
         do_GetService("@mozilla.org/browser/fullscreen;1");
       if (fullScreen) {
-        if (aEvent->message == NS_DEACTIVATE)
+        if (aVisitor.mEvent->message == NS_DEACTIVATE)
           fullScreen->ShowAllOSChrome();
         else
           fullScreen->HideAllOSChrome();
@@ -1537,87 +1537,20 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     }
   }
 
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (aDOMEvent) {
-      if (*aDOMEvent) {
-        externalDOMEvent = PR_TRUE;
-      }
-    }
-    else {
-      aDOMEvent = &domEvent;
-    }
-    aEvent->flags |= aFlags;
-    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
-
+  if (aVisitor.mEvent->message == NS_RESIZE_EVENT) {
+    mIsHandlingResizeEvent = PR_FALSE;
+  } else if (aVisitor.mEvent->message == NS_PAGE_UNLOAD) {
     // Execute bindingdetached handlers before we tear ourselves
     // down.
-    if (aEvent->message == NS_PAGE_UNLOAD && mDocument &&
-        !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
+    if (mDocument) {
       NS_ASSERTION(mDoc, "Must have doc");
       mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
-  }
-
-  if (aEvent->message == NS_PAGE_UNLOAD) {
     mIsDocumentLoaded = PR_FALSE;
-  }
-
-  // Capturing stage
-  if ((NS_EVENT_FLAG_CAPTURE & aFlags) && mChromeEventHandler) {
-    // Check chrome document capture here.
-    // XXX The chrome can not handle this, see bug 51211
-    if (aEvent->message != NS_IMAGE_LOAD) {
-      mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent, aDOMEvent,
-                                             aFlags & NS_EVENT_CAPTURE_MASK,
-                                             aEventStatus);
-    }
-  }
-
-  if (aEvent->message == NS_RESIZE_EVENT) {
-    mIsHandlingResizeEvent = PR_TRUE;
-  }
-
-  // Local handling stage
-  if (outer && (aEvent->message != NS_BLUR_CONTENT || !GetBlurSuppression()) &&
-      mListenerManager &&
-      !((NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags) &&
-        (NS_EVENT_FLAG_BUBBLE & aFlags) &&
-        !(NS_EVENT_FLAG_INIT & aFlags))) {
-    aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent,
-                                  outer, aFlags, aEventStatus);
-    aEvent->flags &= ~aFlags;
-  }
-
-  if (aEvent->message == NS_RESIZE_EVENT) {
-    mIsHandlingResizeEvent = PR_FALSE;
-  }
-
-  if (aEvent->message == NS_PAGE_LOAD) {
+  } else if (aVisitor.mEvent->message == NS_PAGE_LOAD) {
     mIsDocumentLoaded = PR_TRUE;
-  }
 
-  // Bubbling stage
-  if ((NS_EVENT_FLAG_BUBBLE & aFlags) && mChromeEventHandler) {
-    // Bubble to a chrome document if it exists
-    // XXX Need a way to know if an event should really bubble or not.
-    // For now filter out load and unload, since they cause problems.
-    if ((aEvent->message != NS_PAGE_LOAD) &&
-        (aEvent->message != NS_PAGE_UNLOAD) &&
-        (aEvent->message != NS_IMAGE_LOAD) &&
-        (aEvent->message != NS_FOCUS_CONTENT) &&
-        (aEvent->message != NS_BLUR_CONTENT)) {
-      mChromeEventHandler->HandleChromeEvent(aPresContext, aEvent,
-                                             aDOMEvent,
-                                             aFlags & NS_EVENT_BUBBLE_MASK,
-                                             aEventStatus);
-    }
-  }
-
-  if (aEvent->message == NS_PAGE_LOAD) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(GetFrameElementInternal()));
-
     nsCOMPtr<nsIDocShellTreeItem> treeItem =
       do_QueryInterface(GetDocShell());
 
@@ -1633,7 +1566,8 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_PAGE_LOAD);
+      nsEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent), NS_PAGE_LOAD);
+      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
       // Most of the time we could get a pres context to pass in here,
       // but not always (i.e. if this window is not shown there won't
@@ -1641,35 +1575,23 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
 
-      ret = content->HandleDOMEvent(nsnull, &event, nsnull,
-                                    NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(content, nsnull, &event, nsnull, &status);
     }
   }
 
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    // We're leaving the DOM event loop so if we created an event,
-    // release here.
-    if (*aDOMEvent && !externalDOMEvent) {
-      nsrefcnt rc;
-      NS_RELEASE2(*aDOMEvent, rc);
-      if (rc) {
-        // Okay, so someone in the DOM loop (a listener, JS object) still has
-        // a ref to the DOM Event but the internal data hasn't been malloc'd.
-        // Force a copy of the data here so the DOM Event is still valid.
-        nsCOMPtr<nsIPrivateDOMEvent>
-          privateEvent(do_QueryInterface(*aDOMEvent));
-        if (privateEvent)
-          privateEvent->DuplicatePrivateData();
-      }
-      aDOMEvent = nsnull;
-    }
+  return NS_OK;
+}
 
-    // Now that we're done with this event, remove the flag that says
-    // we're in the process of dispatching this event.
-    NS_MARK_EVENT_DISPATCH_DONE(aEvent);
-  }
-
-  return ret;
+nsresult
+nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
+                                 nsIDOMEvent* aDOMEvent,
+                                 nsPresContext* aPresContext,
+                                 nsEventStatus* aEventStatus)
+{
+  return
+    nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsPIDOMWindow*, this),
+                                       aEvent, aDOMEvent, aPresContext,
+                                       aEventStatus);
 }
 
 JSObject *
@@ -3922,26 +3844,18 @@ NS_IMETHODIMP
 nsGlobalWindow::CaptureEvents(PRInt32 aEventFlags)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
-    manager->CaptureEvent(aEventFlags);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return manager->CaptureEvent(aEventFlags);
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::ReleaseEvents(PRInt32 aEventFlags)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
-    manager->ReleaseEvent(aEventFlags);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsresult rv = GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return manager ? manager->ReleaseEvent(aEventFlags) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4973,14 +4887,19 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 
   // Obtain a presentation shell
   nsIPresShell *shell = mDoc->GetShellAt(0);
-  if (!shell) {
-    return NS_OK;
+  nsCOMPtr<nsPresContext> presContext;
+  if (shell) {
+    // Retrieve the context
+    presContext = shell->GetPresContext();
   }
 
-  // Retrieve the context
-  nsCOMPtr<nsPresContext> presContext = shell->GetPresContext();
-  return presContext->EventStateManager()->
-    DispatchNewEvent(GetOuterWindow(), aEvent, _retval);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv =
+    nsEventDispatcher::DispatchDOMEvent(GetOuterWindow(), nsnull, aEvent,
+                                        presContext, &status);
+
+  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  return rv;
 }
 
 //*****************************************************************************
@@ -4998,7 +4917,7 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
 
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager)))) {
+  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
     manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
@@ -5045,7 +4964,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  PRBool aUseCapture, PRBool aWantsUntrusted)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -5068,7 +4987,7 @@ nsGlobalWindow::AddEventListenerByIID(nsIDOMEventListener* aListener,
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  if (NS_SUCCEEDED (GetListenerManager(getter_AddRefs(manager)))) {
+  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager)))) {
     manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     return NS_OK;
   }
@@ -5091,11 +5010,17 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetListenerManager(nsIEventListenerManager **aResult)
+nsGlobalWindow::GetListenerManager(PRBool aCreateIfNotFound,
+                                   nsIEventListenerManager** aResult)
 {
-  FORWARD_TO_INNER_CREATE(GetListenerManager, (aResult));
+  FORWARD_TO_INNER_CREATE(GetListenerManager, (aCreateIfNotFound, aResult));
 
   if (!mListenerManager) {
+    if (!aCreateIfNotFound) {
+      *aResult = nsnull;
+      return NS_OK;
+    }
+
     static NS_DEFINE_CID(kEventListenerManagerCID,
                          NS_EVENTLISTENERMANAGER_CID);
     nsresult rv;
@@ -5122,7 +5047,8 @@ NS_IMETHODIMP
 nsGlobalWindow::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager))) && manager) {
+  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
+      manager) {
     return manager->GetSystemEventGroupLM(aGroup);
   }
   return NS_ERROR_FAILURE;

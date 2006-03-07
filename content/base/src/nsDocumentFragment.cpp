@@ -153,14 +153,6 @@ public:
   {
     return nsnull;
   }
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags, nsEventStatus* aEventStatus)
-  {
-    NS_ENSURE_ARG_POINTER(aEventStatus);
-    *aEventStatus = nsEventStatus_eIgnore;
-    return NS_OK;
-  }
 
 protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,

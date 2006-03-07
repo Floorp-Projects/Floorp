@@ -212,7 +212,7 @@
         <![CDATA[      
           try {
             var event = document.createEvent("Events");
-            event.initEvent(aEventName, false, true);
+            event.initEvent(aEventName, true, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));
@@ -483,7 +483,7 @@
         <![CDATA[      
           try {
             var event = document.createEvent("Events");
-            event.initEvent(aEventName, false, true);
+            event.initEvent(aEventName, true, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));

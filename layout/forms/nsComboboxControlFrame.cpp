@@ -59,6 +59,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
 #include "nsIScrollableView.h"
+#include "nsEventDispatcher.h"
 #include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMNode.h"
@@ -2220,19 +2221,16 @@ void nsComboboxControlFrame::FireValueChangeEvent()
 {
   // Fire ValueChange event to indicate data value of combo box has changed
   nsCOMPtr<nsIDOMEvent> event;
-  nsCOMPtr<nsIEventListenerManager> manager;
-  mContent->GetListenerManager(getter_AddRefs(manager));
   nsPresContext* presContext = GetPresContext();
-  if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+  if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                                  NS_LITERAL_STRING("Events"),
+                                                  getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("ValueChange"), PR_TRUE, PR_TRUE);
 
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
     privateEvent->SetTrusted(PR_TRUE);
-
-    PRBool defaultActionEnabled;
-    presContext->EventStateManager()->DispatchNewEvent(mContent, event,
-                                                       &defaultActionEnabled);
+    nsEventDispatcher::DispatchDOMEvent(mContent, nsnull, event, nsnull,
+                                        nsnull);
   }
 }
 

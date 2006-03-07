@@ -52,6 +52,7 @@
 #ifdef WIN32
 #undef ERROR
 #endif
+#include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
 
 class nsIRenderingContext;
@@ -61,6 +62,7 @@ class nsIMenuItem;
 class nsIAccessible;
 class nsIContent;
 class nsIURI;
+class nsIDOMEventTarget;
            
 /**
  * Event Struct Types
@@ -92,7 +94,7 @@ class nsIURI;
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
 #define NS_UI_EVENT                       27
 #define NS_QUERYCARETRECT_EVENT           28
-#define NS_PAGETRANSITION_EVENT               29
+#define NS_PAGETRANSITION_EVENT           29
 #ifdef MOZ_SVG
 #define NS_SVG_EVENT                      30
 #define NS_SVGZOOM_EVENT                  31
@@ -422,6 +424,12 @@ public:
   PRUint32    internalAppFlags;
   // Additional type info for user defined events
   nsHashKey*  userType;
+  // Event targets, needed by DOM Events
+  // Using nsISupports, not nsIDOMEventTarget because in some cases
+  // nsIDOMEventTarget is implemented as a tearoff.
+  nsCOMPtr<nsISupports> target;
+  nsCOMPtr<nsISupports> currentTarget;
+  nsCOMPtr<nsISupports> originalTarget;
 };
 
 /**

@@ -467,6 +467,11 @@ public:
     virtual PRUint32 GetChildCount() const;
     virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
     virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+    virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+    virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
+                                             nsIEventListenerManager** aRes) {
+      return GetListenerManager(aCreateIfNotFound, aRes);
+    }
 
     // nsIContent
     virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -501,11 +506,6 @@ public:
     {
     }
 #endif
-    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                              nsEvent* aEvent,
-                              nsIDOMEvent** aDOMEvent,
-                              PRUint32 aFlags,
-                              nsEventStatus* aEventStatus);
 
     virtual nsresult RangeAdd(nsIDOMRange* aRange);
     virtual void RangeRemove(nsIDOMRange* aRange);
@@ -515,7 +515,8 @@ public:
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-    virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
+    virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                        nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
     virtual nsIAtom* GetID() const;
     virtual const nsAttrValue* GetClasses() const;

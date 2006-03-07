@@ -64,10 +64,9 @@ class nsAttrValue;
 class nsAttrName;
 
 // IID for the nsIContent interface
-// b61222e2-88b6-4f7f-ae81-679484a4493a
-#define NS_ICONTENT_IID \
-{ 0xb61222e2, 0x88b6, 0x4f7f, \
- { 0xae, 0x81, 0x67, 0x94, 0x84, 0xa4, 0x49, 0x3a } }
+#define NS_ICONTENT_IID       \
+{ 0xda0e2f6c, 0x6cd2, 0x4fdc, \
+  { 0x9b, 0x03, 0x35, 0xb5, 0x65, 0x09, 0xa6, 0xab } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -422,43 +421,6 @@ public:
   virtual const nsVoidArray *GetRangeList() const = 0;
 
   /**
-   * Handle a DOM event for this piece of content.  This method is responsible
-   * for handling and controlling all three stages of events, capture, local
-   * and bubble.  It also does strange things to anonymous content which whiz
-   * right by this author's head.
-   *
-   * Here are some beginning explanations:
-   * - if in INIT or CAPTURE mode, it must pass the event to its parent in
-   *   CAPTURE mode (this happens before the event is fired, therefore the
-   *   firing of events will occur from the root up to the target).
-   * - The event is fired to listeners.
-   * - If in INIT or BUBBLE mode, it passes the event to its parent in BUBBLE
-   *   mode.  This means that the events will be fired up the chain starting
-   *   from the target to the ancestor.
-   *
-   * NOTE: if you are extending nsGenericElement and have to do a default
-   * action, call super::HandleDOMEvent() first and check for
-   * aEventStatus != nsEventStatus_eIgnore and make sure you are not in CAPTURE
-   * mode before proceeding.
-   *
-   * XXX Go comment that method, Will Robinson.
-   * @param aPresContext the current presentation context
-   * @param aEvent the event that is being propagated
-   * @param aDOMEvent a special event that may contain a modified target.  Pass
-   *        in null here or aDOMEvent if you are in HandleDOMEvent already;
-   *        don't worry your pretty little head about it.
-   * @param aFlags flags that describe what mode we are in.  Generally
-   *        NS_EVENT_FLAG_CAPTURE, NS_EVENT_FLAG_BUBBLE and NS_EVENT_FLAG_INIT
-   *        are the ones that matter.
-   * @param aEventStatus the status returned from the function.  Generally
-   *        nsEventStatus_eIgnore
-   */
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus) = 0;
-
-  /**
    * Set the focus on this content.  This is generally something for the event
    * state manager to do, not ordinary people.  Ordinary people should do
    * something like nsGenericHTMLElement::SetElementFocus().  This method is
@@ -594,9 +556,14 @@ public:
   /**
    * Get the event listener manager, the guy you talk to to register for events
    * on this element.
-   * @param aResult the event listener manager [OUT]
+   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
+   *                          one already exists. [IN]
+   * @param aResult           The event listener manager [OUT]
+   *
+   * FIXME! Remove this method, there is similar in nsINode. Bug 329112
    */
-  virtual nsresult GetListenerManager(nsIEventListenerManager** aResult) = 0;
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult) = 0;
 
   /**
    * Get the base URI for any relative URIs within this piece of

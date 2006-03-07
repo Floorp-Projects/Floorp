@@ -91,10 +91,9 @@ class nsIVariant;
 class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
-// 0a87ec89-5589-4690-93b9-6c6c86e1e072
-#define NS_IDOCUMENT_IID \
-{ 0x0a87ec89, 0x5589, 0x4690, \
- { 0x93, 0xb9, 0x6c, 0x6c, 0x86, 0xe1, 0xe0, 0x72 } }
+#define NS_IDOCUMENT_IID      \
+{ 0xb657335d, 0x43db, 0x41f3, \
+  { 0x8c, 0xc0, 0xe2, 0x29, 0x88, 0xb5, 0x99, 0x69 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -552,11 +551,6 @@ public:
                               nsIStyleRule* aStyleRule) = 0;
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule) = 0;
-
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus) = 0;
 
   /**
    * Flush notifications for this document and its parent documents

@@ -85,6 +85,7 @@
 #include "nsLayoutUtils.h"
 
 #include "nsUnicharUtils.h"
+#include "nsEventDispatcher.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -205,10 +206,9 @@ public:
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
@@ -629,20 +629,10 @@ nsHTMLFormElement::Submit()
 NS_IMETHODIMP
 nsHTMLFormElement::Reset()
 {
-  // Send the reset event
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsPresContext> presContext = GetPresContext();
-  // XXXbz shouldn't need prescontext here!  Fix events!
-  if (presContext) {
-    // Calling HandleDOMEvent() directly so that reset() will work even if
-    // the frame does not exist.  This does not have an effect right now, but
-    // If PresShell::HandleEventWithTarget() ever starts to work for elements
-    // without frames, that should be called instead.
-    nsFormEvent event(PR_TRUE, NS_FORM_RESET);
-    nsEventStatus status  = nsEventStatus_eIgnore;
-    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-  }
-  return rv;
+  nsFormEvent event(PR_TRUE, NS_FORM_RESET);
+  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), nsnull,
+                              &event);
+  return NS_OK;
 }
 
 static const nsAttrValue::EnumTable kFormMethodTable[] = {
@@ -709,60 +699,49 @@ nsHTMLFormElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsresult
-nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent,
-                                  nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus)
+nsHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  NS_ENSURE_ARG_POINTER(aEvent);
+  if (aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsIContent*, this)) {
+    PRUint32 msg = aVisitor.mEvent->message;
+    if (msg == NS_FORM_SUBMIT) {
+      if (mGeneratingSubmit) {
+        aVisitor.mCanHandle = PR_FALSE;
+        return NS_OK;
+      }
+      mGeneratingSubmit = PR_TRUE;
 
-  // If this is the bubble stage, there is a nested form below us which received
-  // a submit event.  We do *not* want to handle the submit event for this form
-  // too.  So to avert a disaster, we stop the bubbling altogether.
-  if ((aFlags & NS_EVENT_FLAG_BUBBLE) &&
-      (aEvent->message == NS_FORM_RESET || aEvent->message == NS_FORM_SUBMIT)) {
-    return NS_OK;
-  }
-
-  // Ignore recursive calls to submit and reset
-  if (aEvent->message == NS_FORM_SUBMIT) {
-    if (mGeneratingSubmit) {
-      return NS_OK;
+      // let the form know that it needs to defer the submission,
+      // that means that if there are scripted submissions, the
+      // latest one will be deferred until after the exit point of the handler.
+      mDeferSubmission = PR_TRUE;
     }
-    mGeneratingSubmit = PR_TRUE;
-
-    // let the form know that it needs to defer the submission,
-    // that means that if there are scripted submissions, the
-    // latest one will be deferred until after the exit point of the handler. 
-    mDeferSubmission = PR_TRUE;
-  }
-  else if (aEvent->message == NS_FORM_RESET) {
-    if (mGeneratingReset) {
-      return NS_OK;
+    else if (msg == NS_FORM_RESET) {
+      if (mGeneratingReset) {
+        aVisitor.mCanHandle = PR_FALSE;
+        return NS_OK;
+      }
+      mGeneratingReset = PR_TRUE;
     }
-    mGeneratingReset = PR_TRUE;
   }
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
 
+nsresult
+nsHTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  if (aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsIContent*, this)) {
+    PRUint32 msg = aVisitor.mEvent->message;
+    if (msg == NS_FORM_SUBMIT) {
+      // let the form know not to defer subsequent submissions
+      mDeferSubmission = PR_FALSE;
+    }
 
-  nsresult rv = nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent,
-                                                     aDOMEvent, aFlags,
-                                                     aEventStatus); 
-  if (aEvent->message == NS_FORM_SUBMIT) {
-    // let the form know not to defer subsequent submissions
-    mDeferSubmission = PR_FALSE;
-  }
-
-  if (NS_SUCCEEDED(rv) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-
-    if (*aEventStatus == nsEventStatus_eIgnore) {
-      switch (aEvent->message) {
+    if (aVisitor.mEventStatus == nsEventStatus_eIgnore) {
+      switch (msg) {
         case NS_FORM_RESET:
         case NS_FORM_SUBMIT:
         {
-          if (mPendingSubmission && aEvent->message == NS_FORM_SUBMIT) {
+          if (mPendingSubmission && msg == NS_FORM_SUBMIT) {
             // tell the form to forget a possible pending submission.
             // the reason is that the script returned true (the event was
             // ignored) so if there is a stored submission, it will miss
@@ -770,12 +749,12 @@ nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
             // to forget it and the form element will build a new one
             ForgetPendingSubmission();
           }
-          DoSubmitOrReset(aEvent, aEvent->message);
+          DoSubmitOrReset(aVisitor.mEvent, msg);
         }
         break;
       }
     } else {
-      if (aEvent->message == NS_FORM_SUBMIT) {
+      if (msg == NS_FORM_SUBMIT) {
         // tell the form to flush a possible pending submission.
         // the reason is that the script returned false (the event was
         // not ignored) so if there is a stored submission, it needs to
@@ -783,16 +762,15 @@ nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
         FlushPendingSubmission();
       }
     }
-  }
 
-  if (aEvent->message == NS_FORM_SUBMIT) {
-    mGeneratingSubmit = PR_FALSE;
+    if (msg == NS_FORM_SUBMIT) {
+      mGeneratingSubmit = PR_FALSE;
+    }
+    else if (msg == NS_FORM_RESET) {
+      mGeneratingReset = PR_FALSE;
+    }
   }
-  else if (aEvent->message == NS_FORM_RESET) {
-    mGeneratingReset = PR_FALSE;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult

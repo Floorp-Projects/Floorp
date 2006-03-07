@@ -2909,29 +2909,19 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
 NS_IMETHODIMP
 nsHTMLDocument::CaptureEvents(PRInt32 aEventFlags)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->CaptureEvent(aEventFlags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return manager->CaptureEvent(aEventFlags);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::ReleaseEvents(PRInt32 aEventFlags)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->ReleaseEvent(aEventFlags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  nsresult rv = GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return manager ? manager->ReleaseEvent(aEventFlags) : NS_OK;
 }
 
 NS_IMETHODIMP

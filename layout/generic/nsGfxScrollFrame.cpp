@@ -77,6 +77,7 @@
 #include "nsPresState.h"
 #include "nsIGlobalHistory3.h"
 #include "nsDocShellCID.h"
+#include "nsEventDispatcher.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -1872,12 +1873,13 @@ nsGfxScrollFrameInner::FireScrollEvent()
   if (mIsRoot) {
     nsIDocument* doc = content->GetCurrentDoc();
     if (doc) {
-      doc->HandleDOMEvent(prescontext, &event, nsnull,
-                          NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(doc, prescontext, &event, nsnull,  &status);
     }
   } else {
-    content->HandleDOMEvent(prescontext, &event, nsnull,
-                            NS_EVENT_FLAG_INIT, &status);
+    // scroll events fired at elements don't bubble (although scroll events
+    // fired at documents do, to the window)
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    nsEventDispatcher::Dispatch(content, prescontext, &event, nsnull, &status);
   }
 }
 

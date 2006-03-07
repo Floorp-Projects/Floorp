@@ -87,10 +87,8 @@ public:
   NS_IMETHOD LinkAdded() { return NS_OK; }
   NS_IMETHOD LinkRemoved() { return NS_OK; }
 
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   virtual void SetFocus(nsPresContext* aPresContext);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -169,14 +167,9 @@ nsHTMLAreaElement::SetTarget(const nsAString& aValue)
 }
 
 nsresult
-nsHTMLAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent,
-                                  nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus)
+nsHTMLAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  return HandleDOMEventForAnchors(aPresContext, aEvent, aDOMEvent, 
-                                  aFlags, aEventStatus);
+  return PostHandleEventForAnchors(aVisitor);
 }
 
 void

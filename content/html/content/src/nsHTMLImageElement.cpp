@@ -77,6 +77,7 @@
 #include "nsIView.h"
 #include "nsImageMapUtils.h"
 #include "nsIDOMHTMLMapElement.h"
+#include "nsEventDispatcher.h"
 
 // XXX nav attrs: suppress
 
@@ -121,10 +122,9 @@ public:
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // SetAttr override.  C++ is stupid, so have to override both
@@ -491,25 +491,20 @@ nsHTMLImageElement::GetAttributeMappingFunction() const
 
 
 nsresult
-nsHTMLImageElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
+nsHTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // If we are a map and get a mouse click, don't let it be handled by
   // the Generic Element as this could cause a click event to fire
   // twice, once by the image frame for the map and once by the Anchor
   // element. (bug 39723)
-  if (NS_MOUSE_LEFT_CLICK == aEvent->message) {
+  if (NS_MOUSE_LEFT_CLICK == aVisitor.mEvent->message) {
     PRBool isMap = PR_FALSE;
     GetIsMap(&isMap);
     if (isMap) {
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     }
   }
-
-  return nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                              aFlags, aEventStatus);
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
 PRBool

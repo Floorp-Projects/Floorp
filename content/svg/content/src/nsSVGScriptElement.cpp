@@ -53,6 +53,7 @@
 #include "nsPresContext.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMText.h"
+#include "nsEventDispatcher.h"
 
 typedef nsSVGElement nsSVGScriptElementBase;
 
@@ -256,8 +257,8 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
     NS_ConvertUTF8toUTF16 fileName(spec);
     event.fileName = fileName.get();
 
-    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                   &status);
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                                &event, nsnull, &status);
   }
 
   return NS_OK;
@@ -286,8 +287,9 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE,
                   NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                        &status);
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                presContext, &event, nsnull, &status);
   }
 
   return rv;

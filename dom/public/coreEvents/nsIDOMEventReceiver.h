@@ -49,11 +49,11 @@ class nsIDOMEventGroup;
  * DOM event source class.  Object that allow event registration and
  * distribution from themselves implement this interface.
  */
-
+ 
+/* 2fa04cfb-2494-41e5-ba76-9a79293eeb7e */
 #define NS_IDOMEVENTRECEIVER_IID \
-{ /* e1dbcba0-fb38-11d1-bd87-00805f8ae3f4 */ \
-0xe1dbcba0, 0xfb38, 0x11d1, \
-{0xbd, 0x87, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{0x2fa04cfb, 0x2494, 0x41e5, \
+  { 0xba, 0x76, 0x9a, 0x79, 0x29, 0x3e, 0xeb, 0x7e } }
 
 class nsIDOMEventReceiver : public nsIDOMEventTarget
 {
@@ -64,7 +64,8 @@ public:
                                    const nsIID& aIID) = 0;
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID) = 0;
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult) = 0;
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };

@@ -49,6 +49,7 @@
 #include "nsIDOM3Attr.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsITextContent.h"
+#include "nsEventDispatcher.h"
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -803,6 +804,36 @@ nsDOMAttribute::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 nsresult
 nsDOMAttribute::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMAttribute::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+{
+  // We don't support event dispatching to attributes yet.
+  aVisitor.mCanHandle = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsDOMAttribute::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
+}
+
+nsresult
+nsDOMAttribute::DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                 nsPresContext* aPresContext,
+                                 nsEventStatus* aEventStatus)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsDOMAttribute::GetEventListenerManager(PRBool aCreateIfNotFound,
+                                        nsIEventListenerManager** aResult)
+{
+  *aResult = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

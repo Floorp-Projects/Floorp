@@ -109,7 +109,8 @@
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
-        <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
+        <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer"
+                       onselect="if (event.originalTarget == this) this.parentNode.parentNode.updateCurrentBrowser();">
           <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
         </xul:tabpanels>
       </xul:tabbox>
@@ -1830,8 +1831,6 @@
     </implementation>
 
     <handlers>
-      <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
-
       <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
 
       <handler event="DOMWindowClose">

@@ -89,6 +89,7 @@
 #include "nsIJSContextStack.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsEventDispatcher.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -665,7 +666,8 @@ nsXMLDocument::EndLoad()
 
     nsCxPusher pusher(sgo);
 
-    HandleDOMEvent(nsnull, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIDocument*, this), nsnull,
+                                &event, nsnull, &status);
   }    
   nsDocument::EndLoad();  
 }

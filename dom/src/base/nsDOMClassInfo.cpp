@@ -6639,7 +6639,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(receiver, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIEventListenerManager> manager;
-  receiver->GetListenerManager(getter_AddRefs(manager));
+  receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   NS_ENSURE_TRUE(manager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIAtom> atom(do_GetAtom(nsDependentJSString(id)));

@@ -47,7 +47,7 @@
 
 #include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-
+#include "nsEventDispatcher.h"
 
 /**
  * The implementation of &lt;optgroup&gt;
@@ -80,10 +80,7 @@ public:
                                         PRBool aRemove);
 
   // nsIContent
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
   virtual PRInt32 IntrinsicState() const;
  
@@ -146,13 +143,11 @@ NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label)
 
 
 nsresult
-nsHTMLOptGroupElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                      nsEvent* aEvent,
-                                      nsIDOMEvent** aDOMEvent,
-                                      PRUint32 aFlags,
-                                      nsEventStatus* aEventStatus)
+nsHTMLOptGroupElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
+  aVisitor.mCanHandle = PR_FALSE;
   // Do not process any DOM events if the element is disabled
+  // XXXsmaug This is not the right thing to do. But what is?
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
@@ -168,8 +163,7 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  return nsGenericHTMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                              aFlags, aEventStatus);
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
 void

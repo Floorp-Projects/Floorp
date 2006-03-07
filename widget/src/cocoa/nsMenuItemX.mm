@@ -269,10 +269,10 @@ NS_METHOD nsMenuItemX::DoCommand()
     domDoc->GetElementById(command, getter_AddRefs(commandElt));
     nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
     if (commandContent)
-      commandContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      commandContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
   }
   else
-    mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    mContent->DispatchDOMEvent(&event, nsnull, presContext, &status);
   
   return nsEventStatus_eConsumeNoDefault;
 }

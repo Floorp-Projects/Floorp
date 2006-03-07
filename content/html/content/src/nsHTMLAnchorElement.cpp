@@ -111,10 +111,7 @@ public:
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRBool *aTabIndex = nsnull);
 
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)
@@ -285,14 +282,9 @@ nsHTMLAnchorElement::IsFocusable(PRInt32 *aTabIndex)
 }
 
 nsresult
-nsHTMLAnchorElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
+nsHTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  return HandleDOMEventForAnchors(aPresContext, aEvent, aDOMEvent, 
-                                  aFlags, aEventStatus);
+  return PostHandleEventForAnchors(aVisitor);
 }
 
 NS_IMETHODIMP

@@ -44,8 +44,9 @@ class nsIDOMWindow;
 class nsIDOMEventListener;
 class nsIEventListenerManager;
 class nsIDOMEvent;
+class nsEventChainPreVisitor;
+class nsEventChainPostVisitor;
 
-#include "nsGUIEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
@@ -70,13 +71,13 @@ public:
   NS_DECL_NSIDOM3EVENTTARGET
   NS_DECL_NSIDOMNSEVENTTARGET
 
-  NS_IMETHOD HandleChromeEvent(nsPresContext* aPresContext,
-                               nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                               PRUint32 aFlags, nsEventStatus* aEventStatus);
+  NS_IMETHOD PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor);
+  NS_IMETHOD PostHandleChromeEvent(nsEventChainPostVisitor& aVisitor);
 
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
