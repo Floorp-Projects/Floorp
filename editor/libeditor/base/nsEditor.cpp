@@ -363,7 +363,7 @@ nsEditor::InstallEventListeners()
   nsCOMPtr<nsIDOMEventGroup> sysGroup;
   erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
   nsCOMPtr<nsIEventListenerManager> elmP;
-  erP->GetListenerManager(getter_AddRefs(elmP));
+  erP->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
 
   if (sysGroup && elmP)
   {
@@ -415,7 +415,7 @@ nsEditor::RemoveEventListeners()
       nsCOMPtr<nsIDOMEventGroup> sysGroup;
       erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
       nsCOMPtr<nsIEventListenerManager> elmP;
-      erP->GetListenerManager(getter_AddRefs(elmP));
+      erP->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
       if (sysGroup && elmP)
       {
         elmP->RemoveEventListenerByType(mKeyListenerP,

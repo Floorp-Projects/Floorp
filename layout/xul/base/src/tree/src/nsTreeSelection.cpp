@@ -54,6 +54,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsPLDOMEvent.h"
+#include "nsEventDispatcher.h"
 
 // A helper class for managing our ranges of selection.
 struct nsTreeRange
@@ -783,8 +784,7 @@ nsTreeSelection::FireOnSelectHandler()
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_FORM_SELECTED);
 
-    content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                            &status);
+    nsEventDispatcher::Dispatch(content, aPresContext, &event, nsnull, &status);
   }
 
   return NS_OK;

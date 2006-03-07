@@ -2185,8 +2185,8 @@ void nsAccessible::DoCommandCallback(nsITimer *aTimer, void *aClosure)
                               nsMouseEvent::eSynthesized);
 
       nsEventStatus eventStatus = nsEventStatus_eIgnore;
-      content->HandleDOMEvent(presShell->GetPresContext(), &clickEvent, nsnull,
-                              NS_EVENT_FLAG_INIT, &eventStatus);
+      content->DispatchDOMEvent(&clickEvent, nsnull,
+                                 presShell->GetPresContext(), &eventStatus);
     }
   }
 }

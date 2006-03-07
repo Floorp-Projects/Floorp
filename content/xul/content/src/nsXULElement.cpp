@@ -151,6 +151,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
 #include "nsRange.h"
+#include "nsEventDispatcher.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -529,7 +530,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
         if (!receiver)
             return NS_ERROR_UNEXPECTED;
 
-        nsresult rv = receiver->GetListenerManager(aManager);
+        nsresult rv = receiver->GetListenerManager(PR_TRUE, aManager);
         if (NS_SUCCEEDED(rv)) {
             NS_ADDREF(*aTarget = window);
         }
@@ -543,9 +544,15 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
 }
 
 nsresult
-nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
+nsXULElement::GetListenerManager(PRBool aCreateIfNotFound,
+                                 nsIEventListenerManager** aResult)
 {
     if (!mListenerManager) {
+        if (!aCreateIfNotFound) {
+            *aResult = nsnull;
+            return NS_OK;
+        }
+
         nsresult rv =
             NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
         if (NS_FAILED(rv))
@@ -1024,7 +1031,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
           do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(oldKid, nsnull, &mutation, nsnull, &status);
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -1448,8 +1455,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
             nsEventStatus status = nsEventStatus_eIgnore;
-            this->HandleDOMEvent(nsnull, &mutation, nsnull,
-                                 NS_EVENT_FLAG_INIT, &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        nsnull, &mutation, nsnull, &status);
         }
 
         nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
@@ -1678,277 +1685,56 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 nsresult
-nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
-                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                             nsEventStatus* aEventStatus)
+nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-    // Make sure to tell the event that dispatch has started.
-    NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
-
-    nsresult ret = NS_OK;
-
-    PRBool retarget = PR_FALSE;
-    PRBool externalDOMEvent = PR_FALSE;
-    nsCOMPtr<nsIDOMEventTarget> oldTarget;
-
-    nsIDOMEvent* domEvent = nsnull;
-    if (NS_EVENT_FLAG_INIT & aFlags) {
-        nsIAtom* tag = Tag();
-        if (aEvent->message == NS_XUL_COMMAND && tag != nsXULAtoms::command) {
-            // See if we have a command elt.  If so, we execute on the command instead
-            // of on our content element.
-            nsAutoString command;
-            GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
-            if (!command.IsEmpty()) {
-                // XXX sXBL/XBL2 issue! Owner or current document?
-                nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetCurrentDoc()));
-                nsCOMPtr<nsIDOMElement> commandElt;
-                domDoc->GetElementById(command, getter_AddRefs(commandElt));
-                nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-                if (commandContent &&
-                    commandContent->IsContentOfType(nsIContent::eXUL) &&
-                    commandContent->Tag() == nsXULAtoms::command) {
-                    return commandContent->HandleDOMEvent(aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, aEventStatus);
-                }
-                else {
-                    NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
-                    return NS_ERROR_FAILURE;
-                }
+    aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
+    nsIAtom* tag = Tag();
+    if (aVisitor.mEvent->message == NS_XUL_COMMAND &&
+        aVisitor.mEvent->originalTarget == NS_STATIC_CAST(nsIContent*, this) &&
+        tag != nsXULAtoms::command) {
+        // See if we have a command elt.  If so, we execute on the command
+        // instead of on our content element.
+        nsAutoString command;
+        GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
+        if (!command.IsEmpty()) {
+            aVisitor.mCanHandle = PR_FALSE;
+            // XXX sXBL/XBL2 issue! Owner or current document?
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(GetCurrentDoc()));
+            nsCOMPtr<nsIDOMElement> commandElt;
+            domDoc->GetElementById(command, getter_AddRefs(commandElt));
+            nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
+            if (commandContent &&
+                commandContent->IsContentOfType(nsIContent::eXUL) &&
+                commandContent->Tag() == nsXULAtoms::command) {
+                // Reusing the event here, but DISPATCH_DONE/STARTED hack
+                // is needed.
+                NS_MARK_EVENT_DISPATCH_DONE(aVisitor.mEvent);
+                aVisitor.mEvent->flags &=
+                  ~NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY;
+                // Dispatch will set the right target.
+                aVisitor.mEvent->target = nsnull;
+                nsEventDispatcher::Dispatch(commandContent,
+                                            aVisitor.mPresContext,
+                                            aVisitor.mEvent,
+                                            aVisitor.mDOMEvent,
+                                            &aVisitor.mEventStatus);
+                NS_MARK_EVENT_DISPATCH_STARTED(aVisitor.mEvent);
+            } else {
+                NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
             }
-        }
-        if (aDOMEvent) {
-            if (*aDOMEvent)
-                externalDOMEvent = PR_TRUE;
-        }
-        else
-            aDOMEvent = &domEvent;
-
-        aEvent->flags |= aFlags;
-        aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-        aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
-
-        if (!externalDOMEvent) {
-            // In order for the event to have a proper target for events that don't go through
-            // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
-            // ourselves. Also, key sets and menus don't have frames and therefore need their
-            // targets explicitly specified.
-            //
-            // We need this for drag&drop as well since the mouse may have moved into a different
-            // frame between the initial mouseDown and the generation of the drag gesture.
-            // Obviously, the target should be the content/frame where the mouse was depressed,
-            // not one computed by the current mouse location.
-            if (aEvent->message == NS_XUL_COMMAND || aEvent->message == NS_XUL_POPUP_SHOWING ||
-                aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
-                aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
-                aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
-                aEvent->message == NS_XUL_CLICK || aEvent->message == NS_DRAGDROP_GESTURE ||
-                tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem ||
-                tag == nsXULAtoms::menulist || tag == nsXULAtoms::menubar ||
-                tag == nsXULAtoms::menupopup || tag == nsXULAtoms::key ||
-                tag == nsXULAtoms::keyset) {
-
-                nsCOMPtr<nsIEventListenerManager> listenerManager;
-                if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-                    NS_ERROR("Unable to instantiate a listener manager on this event.");
-                    return ret;
-                }
-                if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext,
-                                                                 aEvent,
-                                                                 EmptyString(),
-                                                                 aDOMEvent))) {
-                    NS_ERROR("This event will fail without the ability to create the event early.");
-                    return ret;
-                }
-
-                // We need to explicitly set the target here, because the
-                // DOM implementation will try to compute the target from
-                // the frame. If we don't have a frame (e.g., we're a
-                // menu), then that breaks.
-                nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
-                if (privateEvent) {
-                    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-                    privateEvent->SetTarget(target);
-                }
-                else
-                    return NS_ERROR_FAILURE;
-
-                // if we are a XUL click, we have the private event set.
-                // now switch to a left mouse click for the duration of the event
-                if (aEvent->message == NS_XUL_CLICK)
-                    aEvent->message = NS_MOUSE_LEFT_CLICK;
-            }
-        }
-    }
-    else if (aEvent->message == NS_IMAGE_LOAD)
-        return NS_OK; // Don't let these events bubble or be captured.  Just allow them
-                    // on the target image.
-
-    // Find out whether we're anonymous.
-    // XXX Workaround bug 280541 without regressing bug 251197
-    if (nsGenericElement::IsNativeAnonymous()) {
-        retarget = PR_TRUE;
-    } else {
-        nsIContent* parent = GetParent();
-        if (parent) {
-            if (*aDOMEvent) {
-                (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-                nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
-                if (content && content->GetBindingParent() == parent)
-                    retarget = PR_TRUE;
-            } else if (GetBindingParent() == parent) {
-                retarget = PR_TRUE;
-            }
+            return NS_OK;
         }
     }
 
-    // determine the parent:
-    nsCOMPtr<nsIContent> parent;
-    // XXX sXBL/XBL2 issue! Owner or current document?
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-        // check for an anonymous parent
-        doc->BindingManager()->GetInsertionParent(this,
-                                                  getter_AddRefs(parent));
+    // if we are a XUL click, we have the private event set.
+    // now switch to a left mouse click for the duration of the event
+    //FIXME remove NS_XUL_CLICK, Bug 329512.
+    if (aVisitor.mEvent->message == NS_XUL_CLICK) {
+        aVisitor.mEvent->message = NS_MOUSE_LEFT_CLICK;
     }
 
-    if (!parent) {
-        // if we didn't find an anonymous parent, use the explicit one,
-        // whether it's null or not...
-        parent = GetParent();
-    }
-
-    if (retarget || (parent != GetParent())) {
-        if (!*aDOMEvent) {
-            // We haven't made a DOMEvent yet.  Force making one now.
-            nsCOMPtr<nsIEventListenerManager> listenerManager;
-            if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-                return ret;
-            }
-            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext,
-                                                             aEvent,
-                                                             EmptyString(),
-                                                             aDOMEvent)))
-                return ret;
-
-            if (!*aDOMEvent) {
-                return NS_ERROR_FAILURE;
-            }
-        }
-
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-            do_QueryInterface(*aDOMEvent);
-        if (!privateEvent) {
-            return NS_ERROR_FAILURE;
-        }
-
-        (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-
-        PRBool hasOriginal;
-        privateEvent->HasOriginalTarget(&hasOriginal);
-
-        if (!hasOriginal)
-            privateEvent->SetOriginalTarget(oldTarget);
-
-        if (retarget) {
-            nsCOMPtr<nsIDOMEventTarget> target =
-                do_QueryInterface(GetParent());
-            privateEvent->SetTarget(target);
-      }
-    }
-
-    //Capturing stage evaluation
-    if (NS_EVENT_FLAG_CAPTURE & aFlags) {
-        //Initiate capturing phase.  Special case first call to document
-        if (parent) {
-            parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
-        }
-        else if (doc) {
-            ret = doc->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      aFlags & NS_EVENT_CAPTURE_MASK,
-                                      aEventStatus);
-        }
-    }
-
-
-    if (retarget) {
-        // The event originated beneath us, and we performed a retargeting.
-        // We need to restore the original target of the event.
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-        if (privateEvent)
-            privateEvent->SetTarget(oldTarget);
-    }
-
-    //Local handling stage
-    if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
-        aEvent->flags |= aFlags;
-        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, target, aFlags, aEventStatus);
-        aEvent->flags &= ~aFlags;
-    }
-
-    if (retarget) {
-        // The event originated beneath us, and we need to perform a
-        // retargeting.
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-        if (privateEvent) {
-            nsCOMPtr<nsIDOMEventTarget> parentTarget =
-                do_QueryInterface(GetParent());
-            privateEvent->SetTarget(parentTarget);
-        }
-    }
-
-    //Bubbling stage
-    if (NS_EVENT_FLAG_BUBBLE & aFlags) {
-        if (parent != nsnull) {
-            // We have a parent. Let them field the event.
-            ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                         aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
-      }
-        else if (IsInDoc()) {
-        // We must be the document root. The event should bubble to the
-        // document.
-        ret = GetCurrentDoc()->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                            aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
-        }
-    }
-
-    if (retarget) {
-        // The event originated beneath us, and we performed a retargeting.
-        // We need to restore the original target of the event.
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-        if (privateEvent)
-            privateEvent->SetTarget(oldTarget);
-    }
-
-    if (NS_EVENT_FLAG_INIT & aFlags) {
-        // We're leaving the DOM event loop so if we created a DOM event,
-        // release here.  If externalDOMEvent is set the event was passed in
-        // and we don't own it
-        if (*aDOMEvent && !externalDOMEvent) {
-            nsrefcnt rc;
-            NS_RELEASE2(*aDOMEvent, rc);
-            if (0 != rc) {
-                // Okay, so someone in the DOM loop (a listener, JS object)
-                // still has a ref to the DOM Event but the internal data
-                // hasn't been malloc'd.  Force a copy of the data here so the
-                // DOM Event is still valid.
-                nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-                    do_QueryInterface(*aDOMEvent);
-                if (privateEvent) {
-                    privateEvent->DuplicatePrivateData();
-                }
-            }
-            aDOMEvent = nsnull;
-        }
-
-        // Now that we're done with this event, remove the flag that says
-        // we're in the process of dispatching this event.
-        NS_MARK_EVENT_DISPATCH_DONE(aEvent);
-    }
-
-    return ret;
+    return nsGenericElement::PreHandleEvent(aVisitor);
 }
-
 
 nsresult
 nsXULElement::RangeAdd(nsIDOMRange* aRange)
@@ -2404,23 +2190,24 @@ nsXULElement::Click()
                                    nsnull, nsMouseEvent::eReal);
             nsMouseEvent eventUp(isCallerChrome, NS_MOUSE_LEFT_BUTTON_UP,
                                  nsnull, nsMouseEvent::eReal);
+            //FIXME remove NS_XUL_CLICK, Bug 329512.
             nsMouseEvent eventClick(isCallerChrome, NS_XUL_CLICK, nsnull,
                                     nsMouseEvent::eReal);
 
             // send mouse down
             nsEventStatus status = nsEventStatus_eIgnore;
-            HandleDOMEvent(context, &eventDown,  nsnull, NS_EVENT_FLAG_INIT,
-                           &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        context, &eventDown,  nsnull, &status);
 
             // send mouse up
             status = nsEventStatus_eIgnore;  // reset status
-            HandleDOMEvent(context, &eventUp, nsnull, NS_EVENT_FLAG_INIT,
-                           &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        context, &eventUp, nsnull, &status);
 
             // send mouse click
             status = nsEventStatus_eIgnore;  // reset status
-            HandleDOMEvent(context, &eventClick, nsnull, NS_EVENT_FLAG_INIT,
-                           &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        context, &eventClick, nsnull, &status);
         }
     }
 
@@ -2443,8 +2230,8 @@ nsXULElement::DoCommand()
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull,
                                nsMouseEvent::eReal);
-            HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT,
-                           &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        context, &event, nsnull, &status);
         }
     }
 
@@ -2516,15 +2303,16 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
 // nsXULElement::nsIChromeEventHandler
 //*****************************************************************************
 
-NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsPresContext* aPresContext,
-   nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-   nsEventStatus* aEventStatus)
+NS_IMETHODIMP
+nsXULElement::PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor)
 {
-  // XXX This is a disgusting hack to prevent the doc from going
-  // away until after we've finished handling the event.
-  // We will be coming up with a better general solution later.
-  nsCOMPtr<nsIDocument> kungFuDeathGrip(GetCurrentDoc());
-  return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+  return PreHandleEvent(aVisitor);
+}
+
+NS_IMETHODIMP
+nsXULElement::PostHandleChromeEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

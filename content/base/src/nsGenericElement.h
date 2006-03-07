@@ -267,7 +267,8 @@ public:
                                    const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
@@ -313,6 +314,15 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                    nsPresContext* aPresContext,
+                                    nsEventStatus* aEventStatus);
+  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
+                                           nsIEventListenerManager** aResult) {
+    return GetListenerManager(aCreateIfNotFound, aResult);
+  }
   virtual nsresult SetProperty(nsIAtom            *aPropertyName,
                                void               *aValue,
                                NSPropertyDtorFunc  aDtor);
@@ -355,15 +365,11 @@ public:
   virtual nsresult RangeAdd(nsIDOMRange* aRange);
   virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus);
   virtual void SetFocus(nsPresContext* aContext);
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-  virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;

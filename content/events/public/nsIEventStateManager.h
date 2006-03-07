@@ -141,9 +141,6 @@ public:
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
                        nsIWidget* aWidget, PRBool aLockCursor) = 0;
 
-  //Method for centralized distribution of new DOM events
-  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool* aDefaultActionEnabled) = 0;
-
   // Method for moving the focus forward/back.
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 };

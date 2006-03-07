@@ -107,6 +107,7 @@
 #include "nsJSUtils.h"
 #include "nsIDOMEventGroup.h"
 #include "nsContentCID.h"
+#include "nsEventDispatcher.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1494,7 +1495,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
                                                     nsISupports *aObject,
                                                     nsIAtom *aName,
                                                     nsListenerStruct *aListenerStruct,
-                                                    nsIDOMEventTarget* aCurrentTarget,
+                                                    nsISupports* aCurrentTarget,
                                                     PRUint32 aSubType)
 {
   nsresult result = NS_OK;
@@ -1602,7 +1603,7 @@ nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEventListener* aListener,
                                            nsIDOMEvent* aDOMEvent,
-                                           nsIDOMEventTarget* aCurrentTarget,
+                                           nsISupports* aCurrentTarget,
                                            PRUint32 aSubType,
                                            PRUint32 aPhaseFlags)
 {
@@ -1648,10 +1649,8 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   nsCxPusher pusher(aCurrentTarget);
 
   if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIPrivateDOMEvent> aPrivDOMEvent(do_QueryInterface(aDOMEvent));
-    aPrivDOMEvent->SetCurrentTarget(aCurrentTarget);
+    // nsIDOMEvent::currentTarget is set in nsEventDispatcher.
     result = aListener->HandleEvent(aDOMEvent);
-    aPrivDOMEvent->SetCurrentTarget(nsnull);
   }
 
   return result;
@@ -1665,7 +1664,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 nsresult
 nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
                                     nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                    nsIDOMEventTarget* aCurrentTarget,
+                                    nsISupports* aCurrentTarget,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus)
 {
@@ -1721,7 +1720,8 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
  found:
   if (listeners) {
     if (!*aDOMEvent) {
-      ret = CreateEvent(aPresContext, aEvent, EmptyString(), aDOMEvent);
+      ret = nsEventDispatcher::CreateEvent(aPresContext, aEvent,
+                                           EmptyString(), aDOMEvent);
     }
 
     if (NS_SUCCEEDED(ret)) {
@@ -1779,93 +1779,8 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
                                     const nsAString& aEventType,
                                     nsIDOMEvent** aDOMEvent)
 {
-  *aDOMEvent = nsnull;
-
-  if (aEvent) {
-    switch(aEvent->eventStructType) {
-    case NS_MUTATION_EVENT:
-      return NS_NewDOMMutationEvent(aDOMEvent, aPresContext,
-                                    NS_STATIC_CAST(nsMutationEvent*,aEvent));
-    case NS_GUI_EVENT:
-    case NS_COMPOSITION_EVENT:
-    case NS_RECONVERSION_EVENT:
-    case NS_QUERYCARETRECT_EVENT:
-    case NS_SCROLLPORT_EVENT:
-      return NS_NewDOMUIEvent(aDOMEvent, aPresContext,
-                              NS_STATIC_CAST(nsGUIEvent*,aEvent));
-    case NS_KEY_EVENT:
-      return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext,
-                                    NS_STATIC_CAST(nsKeyEvent*,aEvent));
-    case NS_MOUSE_EVENT:
-    case NS_MOUSE_SCROLL_EVENT:
-    case NS_POPUP_EVENT:
-      return NS_NewDOMMouseEvent(aDOMEvent, aPresContext,
-                                 NS_STATIC_CAST(nsInputEvent*,aEvent));
-    case NS_POPUPBLOCKED_EVENT:
-      return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext,
-                                        NS_STATIC_CAST(nsPopupBlockedEvent*,
-                                                       aEvent));
-    case NS_TEXT_EVENT:
-      return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
-                                NS_STATIC_CAST(nsTextEvent*,aEvent));
-    case NS_BEFORE_PAGE_UNLOAD_EVENT:
-      return
-        NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext,
-                                   NS_STATIC_CAST(nsBeforePageUnloadEvent*,
-                                                  aEvent));
-    case NS_PAGETRANSITION_EVENT:
-      return NS_NewDOMPageTransitionEvent(aDOMEvent, aPresContext,
-                                          NS_STATIC_CAST(nsPageTransitionEvent*,
-                                                         aEvent));
-#ifdef MOZ_SVG
-    case NS_SVG_EVENT:
-      return NS_NewDOMSVGEvent(aDOMEvent, aPresContext,
-                               aEvent);
-    case NS_SVGZOOM_EVENT:
-      return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext,
-                                   NS_STATIC_CAST(nsGUIEvent*,aEvent));
-#endif // MOZ_SVG
-    }
-
-    // For all other types of events, create a vanilla event object.
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, aEvent);
-  }
-
-  // And if we didn't get an event, check the type argument.
-
-  if (aEventType.LowerCaseEqualsLiteral("mouseevent") ||
-      aEventType.LowerCaseEqualsLiteral("mouseevents") ||
-      aEventType.LowerCaseEqualsLiteral("mousescrollevents") ||
-      aEventType.LowerCaseEqualsLiteral("popupevents"))
-    return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("keyboardevent") ||
-      aEventType.LowerCaseEqualsLiteral("keyevents"))
-    return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
-        aEventType.LowerCaseEqualsLiteral("mutationevents"))
-    return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("textevent") ||
-      aEventType.LowerCaseEqualsLiteral("textevents"))
-    return NS_NewDOMTextEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("popupblockedevents"))
-    return NS_NewDOMPopupBlockedEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("uievent") ||
-      aEventType.LowerCaseEqualsLiteral("uievents"))
-    return NS_NewDOMUIEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("event") ||
-      aEventType.LowerCaseEqualsLiteral("events") ||
-      aEventType.LowerCaseEqualsLiteral("htmlevents"))
-    return NS_NewDOMEvent(aDOMEvent, aPresContext, nsnull);
-#ifdef MOZ_SVG
-  if (aEventType.LowerCaseEqualsLiteral("svgevent") ||
-      aEventType.LowerCaseEqualsLiteral("svgevents"))
-    return NS_NewDOMSVGEvent(aDOMEvent, aPresContext, nsnull);
-  if (aEventType.LowerCaseEqualsLiteral("svgzoomevent") ||
-      aEventType.LowerCaseEqualsLiteral("svgzoomevents"))
-    return NS_NewDOMSVGZoomEvent(aDOMEvent, aPresContext, nsnull);
-#endif // MOZ_SVG
-
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return nsEventDispatcher::CreateEvent(aPresContext, aEvent,
+                                        aEventType, aDOMEvent);
 }
 
 /**
@@ -2110,14 +2025,17 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 
   // Obtain a presentation shell
   nsIPresShell *shell = document->GetShellAt(0);
-  if (!shell) {
-    return NS_OK;
+  nsCOMPtr<nsPresContext> context;
+  if (shell) {
+    context = shell->GetPresContext();
   }
 
-  nsCOMPtr<nsPresContext> context = shell->GetPresContext();
-
-  return context->EventStateManager()->
-    DispatchNewEvent(mTarget, aEvent, _retval);
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv =
+    nsEventDispatcher::DispatchDOMEvent(targetContent, nsnull, aEvent,
+                                        context, &status);
+  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  return rv;
 }
 
 // nsIDOM3EventTarget interface
@@ -2170,11 +2088,11 @@ nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
 }
 
 NS_IMETHODIMP 
-nsEventListenerManager::GetListenerManager(nsIEventListenerManager** aInstancePtrResult)
+nsEventListenerManager::GetListenerManager(PRBool aCreateIfNotFound,
+                                           nsIEventListenerManager** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  *aInstancePtrResult = NS_STATIC_CAST(nsIEventListenerManager*, this);
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ADDREF(*aResult = this);
   return NS_OK;
 }
  
@@ -2193,7 +2111,7 @@ nsEventListenerManager::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 
 nsresult
 nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
-                                            nsIDOMEventTarget* aCurrentTarget,
+                                            nsISupports* aCurrentTarget,
                                             nsEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent)
 {
@@ -2231,7 +2149,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   // If we're here because of the key-equiv for showing context menus, we
   // have to reset the event target to the currently focused element. Get it
   // from the focus controller.
-  nsCOMPtr<nsIDOMEventTarget> currentTarget(aCurrentTarget);
+  nsCOMPtr<nsIDOMEventTarget> currentTarget = do_QueryInterface(aCurrentTarget);
   nsCOMPtr<nsIDOMElement> currentFocus;
 
   if (aEvent->message == NS_CONTEXTMENU_KEY) {

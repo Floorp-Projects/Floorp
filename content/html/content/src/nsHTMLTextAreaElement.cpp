@@ -69,10 +69,12 @@
 #include "nsIDOMText.h"
 #include "nsReadableUtils.h"
 #include "nsITextContent.h"
+#include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
+#define NS_NO_CONTENT_DISPATCH (1 << 0)
 
 class nsHTMLTextAreaElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLTextAreaElement,
@@ -130,10 +132,10 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+
   virtual void SetFocus(nsPresContext* aPresContext);
 
   virtual void DoneAddingChildren(PRBool aHaveNotified);
@@ -277,8 +279,8 @@ nsHTMLTextAreaElement::Select()
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event(PR_TRUE, NS_FORM_SELECTED, nsnull);
-  rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                      &status);
+  nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                              &event, nsnull, &status);
 
   // If the DOM event was not canceled (e.g. by a JS event handler
   // returning false)
@@ -546,15 +548,11 @@ nsHTMLTextAreaElement::GetAttributeMappingFunction() const
   return &MapAttributesIntoRule;
 }
 
-
 nsresult
-nsHTMLTextAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                      nsEvent* aEvent,
-                                      nsIDOMEvent** aDOMEvent,
-                                      PRUint32 aFlags,
-                                      nsEventStatus* aEventStatus)
+nsHTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
+  aVisitor.mCanHandle = PR_FALSE;
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
@@ -575,37 +573,39 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  PRBool isSelectEvent = (aEvent->message == NS_FORM_SELECTED);
   // Don't dispatch a second select event if we are already handling
   // one.
-  if (isSelectEvent && mHandlingSelect) {
-    return NS_OK;
+  if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
+    if (mHandlingSelect) {
+      return NS_OK;
+    }
+    mHandlingSelect = PR_TRUE;
   }
 
   // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
-  PRBool noContentDispatch = aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
-  if (aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
-    aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
+  if (aVisitor.mEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)
+    aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
+  if (aVisitor.mEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
-  if (isSelectEvent) {
-    mHandlingSelect = PR_TRUE;
-  }
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
 
-  rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
-                                                aDOMEvent, aFlags,
-                                                aEventStatus);
-
-  if (isSelectEvent) {
+nsresult
+nsHTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
     mHandlingSelect = PR_FALSE;
   }
 
   // Reset the flag for other content besides this text field
-  aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
+  aVisitor.mEvent->flags |= (aVisitor.mItemFlags & NS_NO_CONTENT_DISPATCH)
+    ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
-  return rv;
+  return NS_OK;
 }
 
 void

@@ -123,10 +123,7 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
     mTmpRealOriginalTarget = mExplicitOriginalTarget;
     nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
     if (content) {
-      if (content->IsNativeAnonymous()) {
-        mExplicitOriginalTarget = nsnull;
-      }
-      if (content->GetBindingParent()) {
+      if (content->IsNativeAnonymous() || content->GetBindingParent()) {
         mExplicitOriginalTarget = nsnull;
       }
     }
@@ -175,51 +172,20 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 
 NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
 {
-  if (nsnull != mTarget) {
-    *aTarget = mTarget;
-    NS_ADDREF(*aTarget);
-    return NS_OK;
+  if (mEvent->target) {
+    return CallQueryInterface(mEvent->target, aTarget);
   }
-  
   *aTarget = nsnull;
-
-  nsCOMPtr<nsIContent> targetContent;  
-
-  if (mPresContext) {
-    mPresContext->EventStateManager()->
-      GetEventTargetContent(mEvent, getter_AddRefs(targetContent));
-  }
-  
-  if (targetContent) {
-    mTarget = do_QueryInterface(targetContent);
-    if (mTarget) {
-      *aTarget = mTarget;
-      NS_ADDREF(*aTarget);
-    }
-  }
-  else {
-    //Always want a target.  Use document if nothing else.
-    nsIPresShell *presShell;
-    if (mPresContext && (presShell = mPresContext->GetPresShell())) {
-      nsIDocument *doc = presShell->GetDocument();
-      if (doc) {
-        mTarget = do_QueryInterface(doc);
-        if (mTarget) {
-          *aTarget = mTarget;
-          NS_ADDREF(*aTarget);
-        }      
-      }
-    }
-  }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
-  *aCurrentTarget = mCurrentTarget;
-  NS_IF_ADDREF(*aCurrentTarget);
+  if (mEvent->currentTarget) {
+    return CallQueryInterface(mEvent->currentTarget, aCurrentTarget);
+  }
+  *aCurrentTarget = nsnull;
   return NS_OK;
 }
 
@@ -274,18 +240,17 @@ nsDOMEvent::GetTmpRealOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 NS_IMETHODIMP
 nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 {
-  if (!mOriginalTarget)
-    return GetTarget(aOriginalTarget);
+  if (mEvent->originalTarget) {
+    return CallQueryInterface(mEvent->originalTarget, aOriginalTarget);
+  }
 
-  *aOriginalTarget = mOriginalTarget;
-  NS_IF_ADDREF(*aOriginalTarget);
-  return NS_OK;
+  return GetTarget(aOriginalTarget);
 }
 
 NS_IMETHODIMP
 nsDOMEvent::HasOriginalTarget(PRBool* aResult)
 {
-  *aResult = (mOriginalTarget != nsnull);
+  *aResult = !!(mEvent->originalTarget);
   return NS_OK;
 }
 
@@ -539,9 +504,138 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
-  //XXX Write me!
+  // FIXME! Simplify this method and make it somehow easily extendable,
+  //        Bug 329127
+  
+  NS_ASSERTION(mEvent, "No nsEvent for nsDOMEvent duplication!");
+  if (mEventIsInternal) {
+    return NS_OK;
+  }
 
-  //XXX And when you do, make sure to copy over the event target here, too!
+  nsEvent* newEvent = nsnull;
+  PRUint32 msg = mEvent->message;
+
+  // Note, making all events untrusted. Otherwise scripts could perhaps reuse
+  // trusted events.
+  switch (mEvent->eventStructType) {
+    case NS_EVENT:
+      newEvent = new nsEvent(PR_FALSE, msg);
+      break;
+    case NS_GUI_EVENT:
+      // Not copying widget, it is a weak reference.
+      newEvent = new nsGUIEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_SIZE_EVENT:
+      newEvent = new nsSizeEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_SIZEMODE_EVENT:
+      newEvent = new nsSizeModeEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_ZLEVEL_EVENT:
+      newEvent = new nsZLevelEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_PAINT_EVENT:
+      newEvent = new nsPaintEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_SCROLLBAR_EVENT:
+      newEvent = new nsScrollbarEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_INPUT_EVENT:
+      newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_KEY_EVENT:
+      newEvent = new nsKeyEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_MOUSE_EVENT:
+      newEvent = new nsMouseEvent(PR_FALSE, msg, nsnull,
+                                  ((nsMouseEvent*) mEvent)->reason);
+      break;
+    case NS_MENU_EVENT:
+      newEvent = new nsMenuEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_SCRIPT_ERROR_EVENT:
+      newEvent = new nsScriptErrorEvent(PR_FALSE, msg);
+      break;
+    case NS_TEXT_EVENT:
+      newEvent = new nsTextEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_COMPOSITION_EVENT:
+      newEvent = new nsCompositionEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_RECONVERSION_EVENT:
+      newEvent = new nsReconversionEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_MOUSE_SCROLL_EVENT:
+      newEvent = new nsMouseScrollEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_SCROLLPORT_EVENT:
+      newEvent = new nsScrollPortEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_MUTATION_EVENT:
+      newEvent = new nsMutationEvent(PR_FALSE, msg);
+      break;
+    case NS_ACCESSIBLE_EVENT:
+      newEvent = new nsAccessibleEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_FORM_EVENT:
+      newEvent = new nsFormEvent(PR_FALSE, msg);
+      break;
+    case NS_FOCUS_EVENT:
+      newEvent = new nsFocusEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_POPUP_EVENT:
+      newEvent = new nsInputEvent(PR_FALSE, msg, nsnull);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      newEvent->eventStructType = NS_POPUP_EVENT;
+      break;
+    case NS_APPCOMMAND_EVENT:
+      newEvent = new nsAppCommandEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_POPUPBLOCKED_EVENT:
+      newEvent = new nsPopupBlockedEvent(PR_FALSE, msg);
+      break;
+    case NS_BEFORE_PAGE_UNLOAD_EVENT:
+      newEvent = new nsBeforePageUnloadEvent(PR_FALSE, msg);
+      break;
+    case NS_UI_EVENT:
+      newEvent = new nsUIEvent(PR_FALSE, msg, ((nsUIEvent*) mEvent)->detail);
+      break;
+    case NS_QUERYCARETRECT_EVENT:
+      newEvent = new nsQueryCaretRectEvent(PR_FALSE, msg, nsnull);
+      break;
+    case NS_PAGETRANSITION_EVENT:
+      newEvent =
+        new nsPageTransitionEvent(PR_FALSE, msg,
+                                  ((nsPageTransitionEvent*) mEvent)->persisted);
+      break;
+#ifdef MOZ_SVG
+    case NS_SVG_EVENT:
+      newEvent = new nsEvent(PR_FALSE, msg);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      newEvent->eventStructType = NS_SVG_EVENT;
+      break;
+    case NS_SVGZOOM_EVENT:
+      newEvent = new nsGUIEvent(PR_FALSE, msg, nsnull);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      newEvent->eventStructType = NS_SVGZOOM_EVENT;
+      break;
+#endif // MOZ_SVG
+    default:
+      NS_WARNING("Unknown event type!!!");
+      return NS_ERROR_FAILURE;
+  }
+
+  NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+
+  newEvent->target                 = mEvent->target;
+  newEvent->currentTarget          = mEvent->currentTarget;
+  newEvent->originalTarget         = mEvent->originalTarget;
+  newEvent->flags                  = mEvent->flags;
+
+  mEvent = newEvent;
+  mPresContext = nsnull;
+  mEventIsInternal = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -556,7 +650,7 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
   }
 #endif
 
-  mTarget = aTarget;
+  mEvent->target = aTarget;
   return NS_OK;
 }
 
@@ -571,7 +665,7 @@ NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
   }
 #endif
 
-  mCurrentTarget = aCurrentTarget;
+  mEvent->currentTarget = aCurrentTarget;
   return NS_OK;
 }
 
@@ -586,7 +680,7 @@ NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
   }
 #endif
 
-  mOriginalTarget = aOriginalTarget;
+  mEvent->originalTarget = aOriginalTarget;
   return NS_OK;
 }
 

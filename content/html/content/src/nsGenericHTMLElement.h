@@ -215,15 +215,7 @@ public:
                                 PRBool aFullDispatch,
                                 nsEventStatus* aStatus);
 
-  /**
-   * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
-   * are the same as HandleDOMEvent)
-   */
-  nsresult HandleDOMEventForAnchors(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus);
+  nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
 
   // Used by A, AREA, LINK, and STYLE.
   // Callers must hold a reference to nsHTMLUtils's global reference count.

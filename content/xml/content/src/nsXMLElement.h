@@ -77,10 +77,7 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
 protected:

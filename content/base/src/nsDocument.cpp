@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
+#include "nsEventDispatcher.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -2326,8 +2327,8 @@ nsDocument::DispatchContentLoadedEvents()
         privateEvent->SetTrusted(PR_TRUE);
 
         // To dispatch this event we must manually call
-        // HandleDOMEvent() on the ancestor document since the target
-        // is not in the same document, so the event would never reach
+        // nsEventDispatcher::Dispatch() on the ancestor document since the
+        // target is not in the same document, so the event would never reach
         // the ancestor document if we used the normal event
         // dispatching code.
 
@@ -2341,16 +2342,8 @@ nsDocument::DispatchContentLoadedEvents()
             nsCOMPtr<nsPresContext> context = shell->GetPresContext();
 
             if (context) {
-              // The event argument to HandleDOMEvent() is inout, and
-              // that doesn't mix well with nsCOMPtr's. We'll need to
-              // perform some refcounting magic here.
-              nsIDOMEvent *tmp_event = event;
-              NS_ADDREF(tmp_event);
-
-              ancestor_doc->HandleDOMEvent(context, innerEvent, &tmp_event,
-                                           NS_EVENT_FLAG_INIT, &status);
-
-              NS_IF_RELEASE(tmp_event);
+              nsEventDispatcher::Dispatch(ancestor_doc, context, innerEvent,
+                                          event, &status);
             }
           }
         }
@@ -4238,12 +4231,17 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 nsresult
-nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
+nsDocument::GetListenerManager(PRBool aCreateIfNotFound,
+                               nsIEventListenerManager** aInstancePtrResult)
 {
   if (mListenerManager) {
     *aInstancePtrResult = mListenerManager;
     NS_ADDREF(*aInstancePtrResult);
 
+    return NS_OK;
+  }
+  if (!aCreateIfNotFound) {
+    *aInstancePtrResult = nsnull;
     return NS_OK;
   }
 
@@ -4269,7 +4267,8 @@ NS_IMETHODIMP
 nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager))) && manager) {
+  if (NS_SUCCEEDED(GetListenerManager(PR_TRUE, getter_AddRefs(manager))) &&
+      manager) {
     return manager->GetSystemEventGroupLM(aGroup);
   }
 
@@ -4277,85 +4276,31 @@ nsDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 }
 
 nsresult
-nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
-                           nsEventStatus* aEventStatus)
+nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  // Make sure to tell the event that dispatch has started.
-  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
-
-  PRBool externalDOMEvent = PR_FALSE;
-
-  nsIDOMEvent* domEvent = nsnull;
-
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (aDOMEvent) {
-      if (*aDOMEvent) {
-        externalDOMEvent = PR_TRUE;
-      }
-    }
-    else {
-      aDOMEvent = &domEvent;
-    }
-    aEvent->flags |= aFlags;
-    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
-  }
-
-  nsPIDOMWindow *window = GetWindow();
-
-  // Capturing stage
-  if (NS_EVENT_FLAG_CAPTURE & aFlags && window) {
-    window->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                           aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
-  }
-
-  // Local handling stage
-  // Check for null ELM, check if we're a non-bubbling
-  // event in the bubbling state (bubbling state is indicated by the
-  // presence of the NS_EVENT_FLAG_BUBBLE flag and not the
-  // NS_EVENT_FLAG_INIT).
-  if (mListenerManager &&
-      !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags &&
-        NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags))) {
-    aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this,
-                                  aFlags, aEventStatus);
-    aEvent->flags &= ~aFlags;
-  }
-
-  // Bubbling stage
-  if (NS_EVENT_FLAG_BUBBLE & aFlags && window) {
-    window->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                           aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
-  }
-
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    // We're leaving the DOM event loop so if we created a DOM event,
-    // release here.
-    if (*aDOMEvent && !externalDOMEvent) {
-      nsrefcnt rc;
-      NS_RELEASE2(*aDOMEvent, rc);
-      if (0 != rc) {
-        // Okay, so someone in the DOM loop (a listener, JS object)
-        // still has a ref to the DOM Event but the internal data
-        // hasn't been malloc'd.  Force a copy of the data here so the
-        // DOM Event is still valid.
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-          do_QueryInterface(*aDOMEvent);
-        if (privateEvent) {
-          privateEvent->DuplicatePrivateData();
-        }
-      }
-      aDOMEvent = nsnull;
-    }
-
-    // Now that we're done with this event, remove the flag that says
-    // we're in the process of dispatching this event.
-    NS_MARK_EVENT_DISPATCH_DONE(aEvent);
-  }
-
+  aVisitor.mCanHandle = PR_TRUE;
+   // FIXME! This is a hack to make middle mouse paste working also in Editor.
+   // Bug 329119
+  aVisitor.mForceContentDispatch = PR_TRUE;
+  aVisitor.mParentTarget = GetWindow();
   return NS_OK;
+}
+
+nsresult
+nsDocument::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  return NS_OK;
+}
+
+nsresult
+nsDocument::DispatchDOMEvent(nsEvent* aEvent,
+                             nsIDOMEvent* aDOMEvent,
+                             nsPresContext* aPresContext,
+                             nsEventStatus* aEventStatus)
+{
+  return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
+                                             aEvent, aDOMEvent,
+                                             aPresContext, aEventStatus);
 }
 
 nsresult
@@ -4364,7 +4309,7 @@ nsDocument::AddEventListenerByIID(nsIDOMEventListener *aListener,
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  GetListenerManager(getter_AddRefs(manager));
+  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   if (manager) {
     manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
     return NS_OK;
@@ -4408,13 +4353,18 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
 {
   // Obtain a presentation context
   nsIPresShell *shell = GetShellAt(0);
-  if (!shell)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPresContext> context;
+  if (shell) {
+     context = shell->GetPresContext();
+  }
 
-  nsCOMPtr<nsPresContext> context = shell->GetPresContext();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsresult rv =
+    nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsINode*, this),
+                                        nsnull, aEvent, context, &status);
 
-  return context->EventStateManager()->
-    DispatchNewEvent(NS_STATIC_CAST(nsIDOMDocument*, this), aEvent, _retval);
+  *_retval = (status != nsEventStatus_eConsumeNoDefault);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4425,7 +4375,7 @@ nsDocument::AddGroupedEventListener(const nsAString& aType,
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   if (NS_SUCCEEDED(rv) && manager) {
     PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
@@ -4471,7 +4421,7 @@ nsDocument::AddEventListener(const nsAString& aType,
                              PRBool aUseCapture, PRBool aWantsUntrusted)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -4500,13 +4450,9 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
     presContext = shell->GetPresContext();
   }
 
-  nsCOMPtr<nsIEventListenerManager> manager;
-  GetListenerManager(getter_AddRefs(manager));
-  if (manager) {
-    return manager->CreateEvent(presContext, nsnull, aEventType, aReturn);
-  }
-
-  return NS_ERROR_FAILURE;
+  // Create event even without presContext.
+  return nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                        aEventType, aReturn);
 }
 
 NS_IMETHODIMP
@@ -5141,11 +5087,11 @@ CanCacheSubDocument(PLDHashTable *table, PLDHashEntryHdr *hdr,
 PRBool
 nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
-  // Check our event listneer manager for unload/beforeunload listeners.
+  // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<nsIDOMEventReceiver> er = do_QueryInterface(mScriptGlobalObject);
   if (er) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    er->GetListenerManager(getter_AddRefs(manager));
+    er->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager && manager->HasUnloadListeners()) {
       return PR_FALSE;
     }
@@ -5350,31 +5296,8 @@ nsDocument::DispatchEventToWindow(nsEvent *aEvent)
   if (!window)
     return;
 
-  nsEventStatus status = nsEventStatus_eIgnore;
-
-  // There's not always a prescontext that we can use for the event.
-  // So, we force creation of a DOMEvent so that it can explicitly targeted.
-
-  nsCOMPtr<nsIEventListenerManager> lm;
-  GetListenerManager(getter_AddRefs(lm));
-  if (!lm)
-    return;
-
-  nsCOMPtr<nsIDOMEvent> domEvt;
-  lm->CreateEvent(nsnull, aEvent, EmptyString(), getter_AddRefs(domEvt));
-  if (!domEvt)
-    return;
-
-  nsCOMPtr<nsIPrivateDOMEvent> privEvt = do_QueryInterface(domEvt);
-  NS_ASSERTION(privEvt, "DOM Event objects must implement nsIPrivateDOMEvent");
-
-  privEvt->SetTarget(this);
-
-  nsIDOMEvent *domEvtPtr = domEvt;
-  window->HandleDOMEvent(nsnull, aEvent, &domEvtPtr, NS_EVENT_FLAG_INIT,
-                         &status);
-
-  NS_ASSERTION(domEvtPtr == domEvt, "event modified during dipatch");
+  aEvent->target = NS_STATIC_CAST(nsIDocument*, this);
+  nsEventDispatcher::Dispatch(window, nsnull, aEvent);
 }
 
 void

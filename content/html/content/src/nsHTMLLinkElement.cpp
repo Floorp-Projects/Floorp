@@ -107,10 +107,7 @@ public:
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
 protected:
   virtual void GetStyleSheetURL(PRBool* aIsInline,
@@ -325,14 +322,9 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 }
 
 nsresult
-nsHTMLLinkElement::HandleDOMEvent(nsPresContext* aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus* aEventStatus)
+nsHTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  return HandleDOMEventForAnchors(aPresContext, aEvent, aDOMEvent,
-                                  aFlags, aEventStatus);
+  return PostHandleEventForAnchors(aVisitor);
 }
 
 NS_IMETHODIMP

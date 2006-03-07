@@ -117,6 +117,7 @@
 #include "nsIParserService.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIScriptError.h"
+#include "nsEventDispatcher.h"
 
 //----------------------------------------------------------------------
 //
@@ -950,8 +951,8 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
-            child->HandleDOMEvent(aPresContext, &event, nsnull,
-                                  NS_EVENT_FLAG_INIT, &status);
+            nsEventDispatcher::Dispatch(child, aPresContext, &event, nsnull,
+                                        &status);
         }
     }
 

@@ -63,6 +63,7 @@
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsEventDispatcher.h"
 #include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMKeyEvent.h"
@@ -1972,8 +1973,7 @@ nsListControlFrame::FireOnChange()
 
   nsIPresShell *presShell = GetPresContext()->GetPresShell();
   if (presShell) {
-    presShell->HandleEventWithTarget(&event, this, nsnull,
-                                           NS_EVENT_FLAG_INIT, &status);
+    presShell->HandleEventWithTarget(&event, this, nsnull, &status);
   }
 }
 
@@ -2409,19 +2409,18 @@ nsListControlFrame::FireMenuItemActiveEvent()
   }
 
   nsCOMPtr<nsIDOMEvent> event;
-  nsCOMPtr<nsIEventListenerManager> manager;
-  mContent->GetListenerManager(getter_AddRefs(manager));
   nsPresContext* presContext = GetPresContext();
-  if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
+  nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                 NS_LITERAL_STRING("Events"),
+                                 getter_AddRefs(event));
+  if (event) {
     event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"), PR_TRUE, PR_TRUE);
 
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
     privateEvent->SetTrusted(PR_TRUE);
 
-    PRBool defaultActionEnabled;
-    presContext->EventStateManager()->DispatchNewEvent(optionContent, event,
-                                                       &defaultActionEnabled);
+    nsEventDispatcher::DispatchDOMEvent(optionContent, nsnull, event, nsnull,
+                                        nsnull);
   }
 }
 #endif

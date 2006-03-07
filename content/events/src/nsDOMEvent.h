@@ -170,16 +170,11 @@ protected:
   static const char* GetEventName(PRUint32 aEventType);
   already_AddRefed<nsIDOMEventTarget> GetTargetFromFrame();
 
-  nsEvent* mEvent;
-  nsCOMPtr<nsPresContext> mPresContext;
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
-  nsCOMPtr<nsIDOMEventTarget> mCurrentTarget;
-  nsCOMPtr<nsIDOMEventTarget> mOriginalTarget;
-  nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  nsEvent*                    mEvent;
+  nsCOMPtr<nsPresContext>     mPresContext;
   nsCOMPtr<nsIDOMEventTarget> mTmpRealOriginalTarget;
-  PRPackedBool mEventIsInternal;
-
-  void* mScriptObject;
+  nsCOMPtr<nsIDOMEventTarget> mExplicitOriginalTarget;
+  PRPackedBool                mEventIsInternal;
 };
 
 #define NS_FORWARD_TO_NSDOMEVENT \

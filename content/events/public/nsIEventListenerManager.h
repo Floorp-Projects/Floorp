@@ -52,10 +52,9 @@ struct JSObject;
 /*
  * Event listener manager interface.
  */
-// dbb34a55-276d-4105-a26a-401bbb3e60c3
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0xdbb34a55, 0x276d, 0x4105, \
-  { 0xa2, 0x6a, 0x40, 0x1b, 0xbb, 0x3e, 0x60, 0xc3 } }
+{ 0xdbd8fcee, 0xb93e, 0x42f3, \
+  { 0x9d, 0xe5, 0xf9, 0x90, 0xfc, 0x66, 0xb7, 0x5a } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -139,14 +138,15 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
                          nsEvent* aEvent,
                          nsIDOMEvent** aDOMEvent,
-                         nsIDOMEventTarget* aCurrentTarget,
+                         nsISupports* aCurrentTarget,
                          PRUint32 aFlags,
                          nsEventStatus* aEventStatus) = 0;
 
   /**
-  * Creates a DOM event that can subsequently be passed into HandleEvent.
-  * (used rarely in the situation where methods on the event need to be
-  * invoked prior to the processing of the event).
+  * Creates a DOM event.
+  * Preferred way to create an event is to use either
+  * nsEventDispatcher::CreateEvent or nsIDOMDocumentEvent::createEvent.
+  * FIXME! Remove this method, Bug 329126.
   */
   NS_IMETHOD CreateEvent(nsPresContext* aPresContext,
                          nsEvent* aEvent,

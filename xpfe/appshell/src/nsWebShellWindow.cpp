@@ -56,6 +56,9 @@
 #include "nsEscape.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIEventListenerManager.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
@@ -797,8 +800,8 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
       nsMouseEvent event(PR_TRUE, NS_XUL_CLOSE, nsnull,
                          nsMouseEvent::eReal);
 
-      nsresult rv = window->HandleDOMEvent(presContext, &event, nsnull,
-                                           NS_EVENT_FLAG_INIT, &status);
+      nsresult rv =
+        window->DispatchDOMEvent(&event, nsnull, presContext, &status);
       if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
         return PR_TRUE;
       // else fall through and return PR_FALSE

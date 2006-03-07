@@ -186,6 +186,15 @@ public:
                                  PRBool aNotify);
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult DispatchDOMEvent(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                    nsPresContext* aPresContext,
+                                    nsEventStatus* aEventStatus);
+  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
+                                           nsIEventListenerManager** aResult) {
+    return GetListenerManager(aCreateIfNotFound, aResult);
+  }
   virtual nsresult SetProperty(nsIAtom *aPropertyName,
                                void *aValue,
                                NSPropertyDtorFunc aDtor);
@@ -220,10 +229,7 @@ public:
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
   virtual nsresult RangeAdd(nsIDOMRange* aRange);
   virtual void RangeRemove(nsIDOMRange* aRange);
   virtual const nsVoidArray *GetRangeList() const;
@@ -231,7 +237,8 @@ public:
   virtual nsIContent *GetBindingParent() const;
   virtual PRBool IsContentOfType(PRUint32 aFlags) const;
 
-  virtual nsresult GetListenerManager(nsIEventListenerManager **aResult);
+  virtual nsresult GetListenerManager(PRBool aCreateIfNotFound,
+                                      nsIEventListenerManager** aResult);
   virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   virtual PRBool MayHaveFrame() const;

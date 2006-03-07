@@ -190,6 +190,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsISHistoryInternal.h"
 #include "nsIWebNavigation.h"
 #include "nsWeakPtr.h"
+#include "nsEventDispatcher.h"
 
 //paint forcing
 #include "prenv.h"
@@ -1001,6 +1002,9 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   if(NS_SUCCEEDED(aStatus)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(PR_TRUE, NS_PAGE_LOAD);
+    event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+     // XXX Dispatching to |window|, but using |document| as the target.
+    event.target = mDocument;
 
     // If the document presentation is being restored, we don't want to fire
     // onload to the document content since that would likely confuse scripts
@@ -1011,8 +1015,8 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 
     docShell->GetRestoringDocument(&restoring);
     if (!restoring) {
-      rv = window->HandleDOMEvent(mPresContext, &event, nsnull,
-                                  NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull,
+                                  &status);
 #ifdef MOZ_TIMELINE
       // if navigator.xul's load is complete, the main nav window is visible
       // mark that point.
@@ -1095,6 +1099,9 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
   // to unload...
   nsEventStatus status = nsEventStatus_eIgnore;
   nsBeforePageUnloadEvent event(PR_TRUE, NS_BEFORE_PAGE_UNLOAD);
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  // XXX Dispatching to |window|, but using |document| as the target.
+  event.target = mDocument;
   nsresult rv = NS_OK;
 
   {
@@ -1107,8 +1114,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
 
     mInPermitUnload = PR_TRUE;
-    rv = window->HandleDOMEvent(mPresContext, &event, nsnull,
-                                NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
     mInPermitUnload = PR_FALSE;
   }
 
@@ -1201,13 +1207,16 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   // Now, fire an Unload event to the document...
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, NS_PAGE_UNLOAD);
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  // XXX Dispatching to |window|, but using |document| as the target.
+  event.target = mDocument;
 
   // Never permit popups from the unload handler, no matter how we get
   // here.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-  return window->HandleDOMEvent(mPresContext, &event, nsnull,
-                                NS_EVENT_FLAG_INIT, &status);
+  nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
+  return NS_OK;
 }
 
 static void

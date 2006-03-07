@@ -156,6 +156,7 @@
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
+#include "nsEventDispatcher.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -1007,6 +1008,7 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 }
 
 // ----------------------------------------------------------------------------
+class nsPresShellEventCB;
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
@@ -1146,7 +1148,9 @@ public:
   virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet);
   virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet);
 
-  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
+  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
+                                   nsIContent* aContent,
+                                   nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
   NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
 
@@ -1182,8 +1186,8 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                            nsEvent* aEvent,
-                            nsEventStatus* aStatus);
+                                      nsEvent* aEvent,
+                                      nsEventStatus* aStatus);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD_(PRBool) IsVisible();
   NS_IMETHOD_(void) WillPaint();
@@ -1309,6 +1313,7 @@ protected:
   PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand);
   
   friend struct ReflowEvent;
+  friend class nsPresShellEventCB;
 
   // Utility to determine if we're in the middle of a drag.
   PRBool IsDragInProgress ( ) const ;
@@ -1426,10 +1431,14 @@ private:
   void FreeDynamicStack();
 
   //helper funcs for event handling
+protected:
+  //protected because nsPresShellEventCB needs this.
   nsIFrame* GetCurrentEventFrame();
+private:
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
-  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, PRUint32 aFlags, nsEventStatus *aStatus);
+  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView,
+                               nsEventStatus *aStatus);
   nsresult HandlePositionedEvent(nsIView*       aView,
                                  nsIFrame*      aTargetFrame,
                                  nsGUIEvent*    aEvent,
@@ -1446,6 +1455,26 @@ private:
   void EnumeratePlugins(nsIDOMDocument *aDocument,
                         const nsString &aPluginTag,
                         nsPluginEnumCallback aCallback);
+};
+
+class nsPresShellEventCB : public nsDispatchingCallback
+{
+public:
+  nsPresShellEventCB(PresShell* aPresShell) : mPresShell(aPresShell) {}
+
+  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
+  {
+    if (aVisitor.mPresContext && aVisitor.mEvent->eventStructType != NS_EVENT) {
+      nsIFrame* frame = mPresShell->GetCurrentEventFrame();
+      if (frame) {
+        frame->HandleEvent(aVisitor.mPresContext,
+                           (nsGUIEvent*) aVisitor.mEvent,
+                           &aVisitor.mEventStatus);
+      }
+    }
+  }
+
+  nsRefPtr<PresShell> mPresShell;
 };
 
 #ifdef PR_LOGGING
@@ -3015,8 +3044,7 @@ PresShell::FireResizeEvent()
 
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
-    window->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                           &status);
+    nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
   }
 }
 
@@ -4945,7 +4973,7 @@ PresShell::HandlePostedDOMEvents()
    while(mFirstDOMEventRequest)
    {
       /* pull the node from the event request list. Be prepared for reentrant access to the list
-         from within HandleDOMEvent and its callees! */
+         from within Dispatch and its callees! */
       nsDOMEventRequest* node = mFirstDOMEventRequest;
       nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -4954,7 +4982,8 @@ PresShell::HandlePostedDOMEvents()
         mLastDOMEventRequest = nsnull;
       }
 
-      node->content->HandleDOMEvent(mPresContext, node->event, nsnull, NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(node->content, mPresContext, node->event,
+                                  nsnull, &status);
       NS_RELEASE(node->content);
       delete node->event;
       node->nsDOMEventRequest::~nsDOMEventRequest(); // doesn't do anything, but just in case
@@ -5712,8 +5741,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT) {
-    return HandleEventInternal(aEvent, aView,
-                               NS_EVENT_FLAG_INIT, aEventStatus);
+    return HandleEventInternal(aEvent, aView, aEventStatus);
   }
 #endif
 
@@ -5861,8 +5889,7 @@ PresShell::HandleEvent(nsIView         *aView,
       mCurrentEventFrame = frame;
     }
     if (GetCurrentEventFrame()) {
-      rv = HandleEventInternal(aEvent, aView,
-                               NS_EVENT_FLAG_INIT, aEventStatus);
+      rv = HandleEventInternal(aEvent, aView, aEventStatus);
     }
   
 #ifdef NS_DEBUG
@@ -5875,8 +5902,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
     if (!NS_EVENT_NEEDS_FRAME(aEvent)) {
       mCurrentEventFrame = nsnull;
-      return HandleEventInternal(aEvent, aView,
-                                 NS_EVENT_FLAG_INIT, aEventStatus);
+      return HandleEventInternal(aEvent, aView, aEventStatus);
     }
     else if (NS_IS_KEY_EVENT(aEvent)) {
       // Keypress events in new blank tabs should not be completely thrown away.
@@ -5967,8 +5993,7 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
   }
 
   if (GetCurrentEventFrame()) {
-    rv = HandleEventInternal(aEvent, aView,
-                             NS_EVENT_FLAG_INIT, aEventStatus);
+    rv = HandleEventInternal(aEvent, aView, aEventStatus);
   }
 
 #ifdef NS_DEBUG
@@ -5979,12 +6004,13 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
 }
 
 NS_IMETHODIMP
-PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus)
+PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
+                                 nsIContent* aContent, nsEventStatus* aStatus)
 {
   nsresult ret;
 
   PushCurrentEventInfo(aFrame, aContent);
-  ret = HandleEventInternal(aEvent, nsnull, aFlags, aStatus);
+  ret = HandleEventInternal(aEvent, nsnull, aStatus);
   PopCurrentEventInfo();
   return NS_OK;
 }
@@ -5998,7 +6024,7 @@ IsSynthesizedMouseMove(nsEvent* aEvent)
 
 nsresult
 PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
-                               PRUint32 aFlags, nsEventStatus* aStatus)
+                               nsEventStatus* aStatus)
 {
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
@@ -6085,58 +6111,23 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (PreHandleEvent above), but not mousemove DOM events.
       if (!IsSynthesizedMouseMove(aEvent)) {
+        nsPresShellEventCB eventCB(this);
         if (mCurrentEventContent) {
-          rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
-                                                    aFlags, aStatus);
+          nsEventDispatcher::Dispatch(mCurrentEventContent, mPresContext,
+                                      aEvent, nsnull, aStatus, &eventCB);
         }
         else {
           nsCOMPtr<nsIContent> targetContent;
           rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
                                                       getter_AddRefs(targetContent));
           if (NS_SUCCEEDED(rv) && targetContent) {
-            rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                               aFlags, aStatus);
-          }
-        }
-
-        // Stopping propagation in the default group does not affect
-        // propagation in the system event group.
-        // (see also section 1.2.2.6 of the DOM3 Events Working Draft)
-
-        aEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
-
-        // 3. Give event to the Frames for browser default processing.
-        // This is the nearest we can get to being an at target
-        // system event group handler. In particular we need to
-        // fire before bubbling system event group handlers.
-        if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
-            aEvent->eventStructType != NS_EVENT) {
-          rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent,
-                                               aStatus);
-        }
-
-        // Continue with second dispatch to system event handlers.
-
-        // Need to null check mCurrentEventContent and mCurrentEventFrame
-        // since the previous dispatch could have nuked them.
-        if (mCurrentEventContent) {
-          rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
-                                                    aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
-                                                    aStatus);
-        }
-        else if (mCurrentEventFrame) {
-          nsCOMPtr<nsIContent> targetContent;
-          rv = mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent,
-                                                      getter_AddRefs(targetContent));
-          if (NS_SUCCEEDED(rv) && targetContent) {
-            rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                               aFlags | NS_EVENT_FLAG_SYSTEM_EVENT,
-                                               aStatus);
+            nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,
+                                        nsnull, aStatus, &eventCB);
           }
         }
       }
 
-      // 4. Give event to event manager for post event state changes and
+      // 3. Give event to event manager for post event state changes and
       //    generation of synthetic events.
       if (NS_SUCCEEDED (rv) &&
           (GetCurrentEventFrame() || !NS_EVENT_NEEDS_FRAME(aEvent))) {
@@ -6151,7 +6142,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 // Dispatch event to content only (NOT full processing)
 // See also HandleEventWithTarget which does full event processing.
 NS_IMETHODIMP
-PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent, nsEventStatus* aStatus)
+PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
+                                    nsEventStatus* aStatus)
 {
   PushCurrentEventInfo(nsnull, aTargetContent);
 
@@ -6164,8 +6156,8 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
   if (container) {
 
     // Dispatch event to content
-    aTargetContent->HandleDOMEvent(mPresContext, aEvent, nsnull,
-                                   NS_EVENT_FLAG_INIT, aStatus);
+    nsEventDispatcher::Dispatch(aTargetContent, mPresContext, aEvent, nsnull,
+                                aStatus);
   }
 
   PopCurrentEventInfo();

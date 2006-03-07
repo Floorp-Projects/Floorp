@@ -100,6 +100,7 @@
 #include "nsTransform2D.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
+#include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsContentUtils.h"
@@ -2205,19 +2206,15 @@ nsBoxFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   if (content && presContext) {
     // Fire a DOM event
     nsCOMPtr<nsIDOMEvent> event;
-    nsCOMPtr<nsIEventListenerManager> manager;
-    content->GetListenerManager(getter_AddRefs(manager));
-    if (manager && NS_SUCCEEDED(manager->CreateEvent(presContext, nsnull,
-                                                     NS_LITERAL_STRING("Events"),
-                                                     getter_AddRefs(event)))) {
+    if (nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                      NS_LITERAL_STRING("Events"),
+                                      getter_AddRefs(event))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
 
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
-
-      PRBool defaultActionEnabled;
-      presContext->EventStateManager()->
-        DispatchNewEvent(content, event, &defaultActionEnabled);
+      nsEventDispatcher::DispatchDOMEvent(content, nsnull, event, nsnull,
+                                          nsnull);
     }
   }
 }

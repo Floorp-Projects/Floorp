@@ -57,6 +57,9 @@
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsEventDispatcher.h"
+
+#define NS_IN_SUBMIT_CLICK (1 << 0)
 
 class nsHTMLButtonElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLButtonElement,
@@ -102,10 +105,8 @@ public:
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
 protected:
   PRInt8 mType;
@@ -211,8 +212,8 @@ nsHTMLButtonElement::Click()
                            NS_MOUSE_LEFT_CLICK, nsnull,
                            nsMouseEvent::eReal);
         nsEventStatus status = nsEventStatus_eIgnore;
-        HandleDOMEvent(context, &event, nsnull,
-                       NS_EVENT_FLAG_INIT, &status);
+        nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), context,
+                                    &event, nsnull, &status);
       }
     }
   }
@@ -283,15 +284,10 @@ nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
 }
 
 nsresult
-nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
+nsHTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  NS_ENSURE_ARG_POINTER(aEventStatus);
-
   // Do not process any DOM events if the element is disabled
+  aVisitor.mCanHandle = PR_FALSE;
   PRBool bDisabled;
   nsresult rv = GetDisabled(&bDisabled);
   if (NS_FAILED(rv) || bDisabled) {
@@ -313,27 +309,32 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
-  PRBool bInSubmitClick = mType == NS_FORM_BUTTON_SUBMIT && 
-                          !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-                          !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-                          aEvent->message == NS_MOUSE_LEFT_CLICK &&
+  //FIXME Should this use NS_UI_ACTIVATE, not NS_MOUSE_LEFT_CLICK?
+  //      https://bugzilla.mozilla.org/show_bug.cgi?id=309348#c16
+  PRBool bInSubmitClick = mType == NS_FORM_BUTTON_SUBMIT &&
+                          aVisitor.mEvent->message == NS_MOUSE_LEFT_CLICK &&
                           mForm;
 
   if (bInSubmitClick) {
+    aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
     // tell the form that we are about to enter a click handler.
     // that means that if there are scripted submissions, the
-    // latest one will be deferred until after the exit point of the handler. 
+    // latest one will be deferred until after the exit point of the handler.
     mForm->OnSubmitClickBegin();
   }
 
-  // Try script event handlers first
-  nsresult ret;
-  ret = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
-                                                 aDOMEvent, aFlags,
-                                                 aEventStatus);
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
 
+nsresult
+nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  nsresult rv = NS_OK;
+  if (!aVisitor.mPresContext) {
+    return rv;
+  }
   // mForm is null if the event handler removed us from the document (bug 194582).
-  if (bInSubmitClick && mForm) {
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) && mForm) {
     // tell the form that we are about to exit a click handler
     // so the form knows not to defer subsequent submissions
     // the pending ones that were created during the handler
@@ -341,40 +342,41 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
     mForm->OnSubmitClickEnd();
   }
 
-  if (NS_SUCCEEDED(ret) && 
-     !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-    if (nsEventStatus_eIgnore == *aEventStatus) { 
-      switch (aEvent->message) {
-
+  if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+    switch (aVisitor.mEvent->message) {
       case NS_KEY_PRESS:
       case NS_KEY_UP:
         {
           // For backwards compat, trigger buttons with space or enter
           // (bug 25300)
-          nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-          if ((keyEvent->keyCode == NS_VK_RETURN && NS_KEY_PRESS == aEvent->message) ||
-              keyEvent->keyCode == NS_VK_SPACE  && NS_KEY_UP == aEvent->message) {
+          nsKeyEvent * keyEvent = (nsKeyEvent *)aVisitor.mEvent;
+          if ((keyEvent->keyCode == NS_VK_RETURN &&
+               NS_KEY_PRESS == aVisitor.mEvent->message) ||
+              keyEvent->keyCode == NS_VK_SPACE &&
+              NS_KEY_UP == aVisitor.mEvent->message) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
-            nsMouseEvent event(NS_IS_TRUSTED_EVENT(aEvent),
+            nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                NS_MOUSE_LEFT_CLICK, nsnull,
                                nsMouseEvent::eReal);
-            rv = HandleDOMEvent(aPresContext, &event, nsnull,
-                                NS_EVENT_FLAG_INIT, &status);
+            nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
+                                        aVisitor.mPresContext, &event, nsnull,
+                                        &status);
           }
         }
         break;// NS_KEY_PRESS
 
       case NS_MOUSE_LEFT_CLICK:
         {
-          nsIPresShell *presShell = aPresContext->GetPresShell();
+          nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
           if (presShell) {
             // single-click
-            nsUIEvent event(NS_IS_TRUSTED_EVENT(aEvent), NS_UI_ACTIVATE, 1);
+            nsUIEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
+                            NS_UI_ACTIVATE, 1);
             nsEventStatus status = nsEventStatus_eIgnore;
 
             presShell->HandleDOMEventWithTarget(this, &event, &status);
-            *aEventStatus = status;
+            aVisitor.mEventStatus = status;
           }
         }
         break;
@@ -389,11 +391,13 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
             event.originator      = this;
             nsEventStatus status  = nsEventStatus_eIgnore;
 
-            nsIPresShell *presShell = aPresContext->GetPresShell();
+            nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
             // If |nsIPresShell::Destroy| has been called due to
-            // handling the event (base class HandleDOMEvent, above),
-            // the pres context will return a null pres shell.  See
-            // bug 125624.
+            // handling the event, the pres context will return
+            // a null pres shell.  See bug 125624.
+            //
+            // Using presShell to dispatch the event. It makes sure that
+            // event is not handled if the window is being destroyed.
             if (presShell) {
               nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
               presShell->HandleDOMEventWithTarget(form, &event, &status);
@@ -404,15 +408,14 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         {
-          aPresContext->EventStateManager()->
-            SetContentState(this,
-                            NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-
-          *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          aVisitor.mPresContext->EventStateManager()->
+            SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
         break;
 
       // cancel all of these events for buttons
+      //XXXsmaug What to do with these events? Why these should be cancelled?
       case NS_MOUSE_MIDDLE_BUTTON_DOWN:
       case NS_MOUSE_MIDDLE_BUTTON_UP:
       case NS_MOUSE_MIDDLE_DOUBLECLICK:
@@ -422,14 +425,14 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
         {
           nsCOMPtr<nsIDOMNSEvent> nsevent;
 
-          if (aDOMEvent) {
-            nsevent = do_QueryInterface(*aDOMEvent);
+          if (aVisitor.mDOMEvent) {
+            nsevent = do_QueryInterface(aVisitor.mDOMEvent);
           }
 
           if (nsevent) {
             nsevent->PreventBubble();
           } else {
-            ret = NS_ERROR_FAILURE;
+            rv = NS_ERROR_FAILURE;
           }
         }
 
@@ -437,32 +440,30 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
 
       case NS_MOUSE_ENTER_SYNTH:
         {
-          aPresContext->EventStateManager()->
+          aVisitor.mPresContext->EventStateManager()->
             SetContentState(this, NS_EVENT_STATE_HOVER);
-
-          *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
         break;
 
         // XXX this doesn't seem to do anything yet
       case NS_MOUSE_EXIT_SYNTH:
         {
-          aPresContext->EventStateManager()->
+          aVisitor.mPresContext->EventStateManager()->
             SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-
-          *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
         break;
 
       default:
         break;
-      }
-	  } else {
-      switch (aEvent->message) {
-        // Make sure any pending submissions from a call to
-        // form.submit() in a left click handler or an activate
-        // handler gets flushed, even if the event handler prevented
-        // the default action.
+    }
+  } else {
+    switch (aVisitor.mEvent->message) {
+      // Make sure any pending submissions from a call to
+      // form.submit() in a left click handler or an activate
+      // handler gets flushed, even if the event handler prevented
+      // the default action.
       case NS_MOUSE_LEFT_CLICK:
       case NS_UI_ACTIVATE:
         if (mForm && mType == NS_FORM_BUTTON_SUBMIT) {
@@ -473,11 +474,10 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
           mForm->FlushPendingSubmission();
         }
         break;// NS_UI_ACTIVATE
-      } //switch
-    } //if
+    } //switch
   } //if
 
-  return ret;
+  return rv;
 }
 
 nsresult

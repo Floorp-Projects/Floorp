@@ -54,6 +54,7 @@
 #include "nsDOMAttributeMap.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutAtoms.h"
+#include "nsEventDispatcher.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -751,45 +752,27 @@ nsXTFElementWrapper::HandledByInner(nsIAtom *attr) const
 }
 
 nsresult
-nsXTFElementWrapper::HandleDOMEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
+nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  nsresult rv = nsXTFElementWrapperBase::HandleDOMEvent(aPresContext, aEvent,
-                                                        aDOMEvent, aFlags,
-                                                        aEventStatus);
+  nsresult rv = NS_OK;
 
-  if (NS_FAILED(rv) ||
-      (nsEventStatus_eIgnore != *aEventStatus) ||
-      !(mNotificationMask & nsIXTFElement::NOTIFY_HANDLE_DEFAULT) ||
-      (aFlags & (NS_EVENT_FLAG_SYSTEM_EVENT | NS_EVENT_FLAG_CAPTURE)))
-    return rv;
-
-  nsIDOMEvent* domEvent = nsnull;
-  if (!aDOMEvent)
-    aDOMEvent = &domEvent;
-
-  if (!*aDOMEvent) {
+  if (!aVisitor.mDOMEvent) {
     // We haven't made a DOMEvent yet.  Force making one now.
-    nsCOMPtr<nsIEventListenerManager> listenerManager;
-    if (NS_FAILED(rv = GetListenerManager(getter_AddRefs(listenerManager))))
-      return rv;
-
-    if (NS_FAILED(rv = listenerManager->CreateEvent(aPresContext, aEvent,
-                                                    EmptyString(), aDOMEvent)))
+    if (NS_FAILED(rv = nsEventDispatcher::CreateEvent(aVisitor.mPresContext,
+                                                      aVisitor.mEvent,
+                                                      EmptyString(),
+                                                      &aVisitor.mDOMEvent)))
       return rv;
   }
-  if (!*aDOMEvent)
+  if (!aVisitor.mDOMEvent)
     return NS_ERROR_FAILURE;
   
   PRBool defaultHandled = PR_FALSE;
-  nsIXTFElement * xtfElement = GetXTFElement();
+  nsIXTFElement* xtfElement = GetXTFElement();
   if (xtfElement)
-    rv = xtfElement->HandleDefault(*aDOMEvent, &defaultHandled);
+    rv = xtfElement->HandleDefault(aVisitor.mDOMEvent, &defaultHandled);
   if (defaultHandled)
-    *aEventStatus = nsEventStatus_eConsumeNoDefault;
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
   return rv;
 }
 

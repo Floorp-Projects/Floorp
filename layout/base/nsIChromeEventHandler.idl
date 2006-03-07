@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Olli Pettay   <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,14 +41,12 @@
 #include "nsISupports.idl"
 
 %{ C++
-#include "nsEvent.h"  // for nsEventStatus enum
-class nsPresContext;
+class nsEventChainPreVisitor;
+class nsEventChainPostVisitor;
 %}
 
-[ptr] native nsPresContext(nsPresContext);
-native nsEvent(nsEvent);
-[ptr] native nsEventPtr(nsEvent);
-native nsEventStatus(nsEventStatus);
+[ref] native nsEventChainPreVisitorRef(nsEventChainPreVisitor);
+[ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
 
 interface nsIDOMEvent;
 
@@ -55,13 +54,33 @@ interface nsIDOMEvent;
  * The nsIChromeEventHandler
  */
 
-[scriptable, uuid(7BC08970-9E6C-11d3-AFB2-00A024FFC08C)]
+[scriptable, uuid(a54dc626-9648-406b-bc82-b5c51b3767d7)]
 interface nsIChromeEventHandler : nsISupports
 {
-	/**
-	* Handle a chrome DOM event.
-	*/
-	[noscript] void handleChromeEvent(in nsPresContext aPresContext, 
-		in nsEventPtr aEvent, out nsIDOMEvent aDOMEvent, in unsigned long aFlags,
-		inout nsEventStatus aStatus);
+  /**
+   * Called before the capture phase of the event flow.
+   * This is used to create the event target chain and implementations
+   * should set the necessary members of nsEventChainPreVisitor.
+   * At least aVisitor.mCanHandle must be set,
+   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
+   * First one tells that this object can handle the aVisitor.mEvent event and
+   * the latter one is the possible parent object for the event target chain.
+   * @see nsEventDispatcher.h for more documentation about aVisitor.
+   *
+   * @param aVisitor the visitor object which is used to create the
+   *                 event target chain for event dispatching.
+   *
+   * @note Only nsEventDispatcher should call this method.
+   */
+  [noscript] void PreHandleChromeEvent(in nsEventChainPreVisitorRef aVisitor);
+
+  /**
+   * Called after the bubble phase of the system event group.
+   * The default handling of the event should happen here.
+   * @param aVisitor the visitor object which is used during post handling.
+   *
+   * @see nsEventDispatcher.h for documentation about aVisitor.
+   * @note Only nsEventDispatcher should call this method.
+   */
+  [noscript] void PostHandleChromeEvent(in nsEventChainPostVisitorRef aVisitor);
 };

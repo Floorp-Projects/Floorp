@@ -198,7 +198,8 @@ public:
                                    const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                       const nsIID& aIID);
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetListenerManager(PRBool aCreateIfNotFound,
+                                nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
@@ -225,10 +226,14 @@ public:
   virtual NS_HIDDEN_(nsresult) ResumeTimeouts();
 
   virtual NS_HIDDEN_(PRBool) WouldReuseInnerWindow(nsIDocument *aNewDocument);
-  virtual NS_HIDDEN_(nsresult) HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+
+  virtual NS_HIDDEN_(nsresult) PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual NS_HIDDEN_(nsresult) PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  virtual NS_HIDDEN_(nsresult) DispatchDOMEvent(nsEvent* aEvent,
+                                                nsIDOMEvent* aDOMEvent,
+                                                nsPresContext* aPresContext,
+                                                nsEventStatus* aEventStatus);
+
   virtual NS_HIDDEN_(void) SetDocShell(nsIDocShell* aDocShell);
   virtual NS_HIDDEN_(nsresult) SetNewDocument(nsIDocument *aDocument,
                                   nsISupports *aState,

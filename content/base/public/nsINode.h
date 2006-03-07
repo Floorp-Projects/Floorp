@@ -39,6 +39,7 @@
 #define nsINode_h___
 
 #include "nsIDOMGCParticipant.h"
+#include "nsEvent.h"
 #include "nsPropertyTable.h"
 
 #ifdef MOZILLA_INTERNAL_API
@@ -48,13 +49,18 @@
 
 class nsIContent;
 class nsIDocument;
+class nsIDOMEvent;
+class nsPresContext;
+class nsEventChainPreVisitor;
+class nsEventChainPostVisitor;
+class nsIEventListenerManager;
 class nsIPrincipal;
 
 // IID for the nsINode interface
-// 6b7a8e08-f34b-4210-af93-ec7a769498e9
+// ec67d9d2-be1e-41d8-b7d0-92f72a2667db
 #define NS_INODE_IID \
-{ 0x6b7a8e08, 0xf34b, 0x4210, \
- { 0xaf, 0x93, 0xec, 0x7a, 0x76, 0x94, 0x98, 0xe9 } }
+{ 0xec67d9d2, 0xbe1e, 0x41d8, \
+  { 0xb7, 0xd0, 0x92, 0xf7, 0x2a, 0x26, 0x67, 0xdb } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -243,7 +249,66 @@ public:
    * IsNodeOfType()?  Do we need a non-QI way to tell apart documents and
    * content?
    */
-  
+
+  /**
+   * Called before the capture phase of the event flow.
+   * This is used to create the event target chain and implementations
+   * should set the necessary members of nsEventChainPreVisitor.
+   * At least aVisitor.mCanHandle must be set,
+   * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
+   * First one tells that this object can handle the aVisitor.mEvent event and
+   * the latter one is the possible parent object for the event target chain.
+   * @see nsEventDispatcher.h for more documentation about aVisitor.
+   *
+   * @param aVisitor the visitor object which is used to create the
+   *                 event target chain for event dispatching.
+   *
+   * @note Only nsEventDispatcher should call this method.
+   */
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) = 0;
+
+  /**
+   * Called after the bubble phase of the system event group.
+   * The default handling of the event should happen here.
+   * @param aVisitor the visitor object which is used during post handling.
+   *
+   * @see nsEventDispatcher.h for documentation about aVisitor.
+   * @note Only nsEventDispatcher should call this method.
+   */
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) = 0;
+
+  /**
+   * Dispatch an event.
+   * @param aEvent the event that is being dispatched.
+   * @param aDOMEvent the event that is being dispatched, use if you want to
+   *                  dispatch nsIDOMEvent, not only nsEvent.
+   * @param aPresContext the current presentation context, can be nsnull.
+   * @param aEventStatus the status returned from the function, can be nsnull.
+   *
+   * @note If both aEvent and aDOMEvent are used, aEvent must be the internal
+   *       event of the aDOMEvent.
+   *
+   * If aDOMEvent is not nsnull (in which case aEvent can be nsnull) it is used
+   * for dispatching, otherwise aEvent is used.
+   *
+   * @deprecated This method is here just until all the callers outside Gecko
+   *             have been converted to use nsIDOMEventTarget::dispatchEvent.
+   */
+  virtual nsresult DispatchDOMEvent(nsEvent* aEvent,
+                                    nsIDOMEvent* aDOMEvent,
+                                    nsPresContext* aPresContext,
+                                    nsEventStatus* aEventStatus) = 0;
+
+  /**
+   * Get the event listener manager, the guy you talk to to register for events
+   * on this node.
+   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
+   *                          one already exists. [IN]
+   * @param aResult           The event listener manager [OUT]
+   */
+  virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
+                                           nsIEventListenerManager** aResult)
+                                           = 0;
 protected:
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;

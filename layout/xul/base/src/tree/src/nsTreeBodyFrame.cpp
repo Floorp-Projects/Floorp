@@ -99,6 +99,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
+#include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 
 #ifdef IBMBIDI
@@ -829,7 +830,7 @@ nsTreeBodyFrame::CheckOverflow()
     event.orient = nsScrollPortEvent::vertical;
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
   }
 
   PRBool horizontalOverflowChanged = PR_FALSE;
@@ -863,7 +864,7 @@ nsTreeBodyFrame::CheckOverflow()
     event.orient = nsScrollPortEvent::horizontal;
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
   }
 }
 
@@ -3485,10 +3486,12 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
   }
 
   nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
-  event.flags = 0;
+  // scroll events fired at elements don't bubble (although scroll events
+  // fired at documents do, to the window)
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
 
   return NS_OK;
 }
@@ -3538,10 +3541,12 @@ nsTreeBodyFrame::ScrollHorzInternal(PRInt32 aPosition)
 
   // And fire off an event about it all
   nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
-  event.flags = 0;
+  // scroll events fired at elements don't bubble (although scroll events
+  // fired at documents do, to the window)
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  mContent->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsEventDispatcher::Dispatch(mContent, presContext, &event, nsnull, &status);
 
   return NS_OK;
 }

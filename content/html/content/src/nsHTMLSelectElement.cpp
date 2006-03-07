@@ -84,7 +84,7 @@
 
 #include "nsDOMError.h"
 #include "nsRuleData.h"
-
+#include "nsEventDispatcher.h"
 
 class nsHTMLSelectElement;
 
@@ -249,10 +249,8 @@ public:
   NS_DECL_NSIDOMNSXBLFORMCONTROL
 
   // nsIContent
-  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus);
+  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
@@ -1817,13 +1815,11 @@ nsHTMLSelectElement::GetAttributeMappingFunction() const
 
 
 nsresult
-nsHTMLSelectElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
+nsHTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
+  aVisitor.mCanHandle = PR_FALSE;
   // Do not process any DOM events if the element is disabled
+  // XXXsmaug This is not the right thing to do. But what is?
   PRBool disabled;
   nsresult rv = GetDisabled(&disabled);
   if (NS_FAILED(rv) || disabled) {
@@ -1845,20 +1841,24 @@ nsHTMLSelectElement::HandleDOMEvent(nsPresContext* aPresContext,
     }
   }
 
+  return nsGenericHTMLElement::PreHandleEvent(aVisitor);
+}
+
+nsresult
+nsHTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
   // Must notify the frame that the blur event occurred
   // NOTE: At this point EventStateManager has not yet set the
-  /// new content as having focus so this content is still considered
+  // new content as having focus so this content is still considered
   // the focused element. So the ComboboxControlFrame tracks the focus
   // at a class level (Bug 32920)
-  if ((nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
-      (aEvent->message == NS_BLUR_CONTENT) && formControlFrame) {
+  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+  if (nsEventStatus_eIgnore == aVisitor.mEventStatus &&
+      (aVisitor.mEvent->message == NS_BLUR_CONTENT) && formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
   }
 
-  return nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
-                                                  aDOMEvent, aFlags,
-                                                  aEventStatus);
+  return NS_OK;
 }
 
 // nsIFormControl

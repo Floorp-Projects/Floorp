@@ -91,6 +91,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGUIEvent.h"
+#include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 
 #include "nsContentUtils.h"
@@ -98,7 +99,8 @@
 #define ONLOAD_CALLED_TOO_EARLY 1
 
 static void PR_CALLBACK
-HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
+HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage,
+                   PRUint32 aEventFlags)
 {
   if (!aContent) {
     NS_ERROR("null node passed to HandleImagePLEvent!");
@@ -125,7 +127,8 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(PR_TRUE, aMessage);
 
-  aContent->HandleDOMEvent(pres_context, &event, nsnull, aFlags, &status);
+  event.flags |= aEventFlags;
+  nsEventDispatcher::Dispatch(aContent, pres_context, &event, nsnull, &status);
 }
 
 static void* PR_CALLBACK
@@ -134,7 +137,7 @@ HandleImageOnloadPLEvent(PLEvent *aEvent)
   nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
 
   HandleImagePLEvent(content, NS_IMAGE_LOAD,
-                     NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE);
+                     NS_EVENT_FLAG_CANT_BUBBLE);
 
   // XXXldb Why not put this in DestroyImagePLEvent?
   NS_RELEASE(content);
@@ -147,7 +150,7 @@ HandleImageOnerrorPLEvent(PLEvent *aEvent)
 {
   nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
 
-  HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_INIT);
+  HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_CANT_BUBBLE);
 
   // XXXldb Why not put this in DestroyImagePLEvent?
   NS_RELEASE(content);

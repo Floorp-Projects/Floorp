@@ -93,8 +93,9 @@ class nsCSSFrameConstructor;
 class nsISelection;
 
 #define NS_IPRESSHELL_IID     \
-{ 0xcd6d6c1d, 0x4180, 0x432a, \
- { 0x83, 0xbb, 0x1f, 0xc6, 0x50, 0xd2, 0x11, 0xa7 } }
+{ 0x998cde06, 0x5fa4, 0x4c8b, \
+ { 0x94, 0x8d, 0xc7, 0x15, 0x74, 0x75, 0xab, 0x6f } }
+
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -504,18 +505,17 @@ public:
   /**
     * Interface to dispatch events via the presshell
     */
-  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, 
-                                   nsIFrame* aFrame, 
+  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent,
+                                   nsIFrame* aFrame,
                                    nsIContent* aContent,
-                                   PRUint32 aFlags,
                                    nsEventStatus* aStatus) = 0;
 
   /**
    * Dispatch event to content only (NOT full processing)
    */
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                            nsEvent* aEvent,
-                            nsEventStatus* aStatus) = 0;
+                                      nsEvent* aEvent,
+                                      nsEventStatus* aStatus) = 0;
 
   /**
     * Gets the current target event frame from the PresShell

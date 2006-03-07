@@ -107,6 +107,7 @@
 #include "nsIDOMNSFeatureFactory.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsEventDispatcher.h"
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -598,7 +599,8 @@ nsresult
 nsDOMEventRTTearoff::GetEventReceiver(nsIDOMEventReceiver **aReceiver)
 {
   nsCOMPtr<nsIEventListenerManager> listener_manager;
-  nsresult rv = mContent->GetListenerManager(getter_AddRefs(listener_manager));
+  nsresult rv =
+    mContent->GetListenerManager(PR_TRUE, getter_AddRefs(listener_manager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(listener_manager, aReceiver);
@@ -608,7 +610,8 @@ nsresult
 nsDOMEventRTTearoff::GetDOM3EventTarget(nsIDOM3EventTarget **aTarget)
 {
   nsCOMPtr<nsIEventListenerManager> listener_manager;
-  nsresult rv = mContent->GetListenerManager(getter_AddRefs(listener_manager));
+  nsresult rv =
+    mContent->GetListenerManager(PR_TRUE, getter_AddRefs(listener_manager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(listener_manager, aTarget);
@@ -637,9 +640,10 @@ nsDOMEventRTTearoff::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
 }
 
 NS_IMETHODIMP
-nsDOMEventRTTearoff::GetListenerManager(nsIEventListenerManager** aResult)
+nsDOMEventRTTearoff::GetListenerManager(PRBool aCreateIfNotFound,
+                                        nsIEventListenerManager** aResult)
 {
-  return mContent->GetListenerManager(aResult);
+  return mContent->GetListenerManager(aCreateIfNotFound, aResult);
 }
 
 NS_IMETHODIMP
@@ -656,7 +660,7 @@ NS_IMETHODIMP
 nsDOMEventRTTearoff::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
-  GetListenerManager(getter_AddRefs(manager));
+  GetListenerManager(PR_TRUE, getter_AddRefs(manager));
 
   if (!manager) {
     return NS_ERROR_FAILURE;
@@ -747,7 +751,8 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
                                       PRBool aWantsUntrusted)
 {
   nsCOMPtr<nsIEventListenerManager> listener_manager;
-  nsresult rv = mContent->GetListenerManager(getter_AddRefs(listener_manager));
+  nsresult rv =
+    mContent->GetListenerManager(PR_TRUE, getter_AddRefs(listener_manager));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
@@ -826,10 +831,15 @@ nsGenericElement::~nsGenericElement()
 
   if (HasEventListenerManager()) {
 #ifdef DEBUG
-    if (!nsContentUtils::LookupListenerManager(this) &&
-        nsContentUtils::IsInitialized()) {
-      NS_ERROR("Huh, our bit says we have a listener manager list, "
-               "but there's nothing in the hash!?!!");
+    if (nsContentUtils::IsInitialized()) {
+      nsCOMPtr<nsIEventListenerManager> manager;
+      PRBool created;
+      nsContentUtils::GetListenerManager(this, PR_FALSE,
+                                         getter_AddRefs(manager), &created);
+      if (!manager) {
+        NS_ERROR("Huh, our bit says we have a listener manager list, "
+                 "but there's nothing in the hash!?!!");
+      }
     }
 #endif
 
@@ -1870,239 +1880,58 @@ nsGenericElement::SetNativeAnonymous(PRBool aAnonymous)
 }
 
 nsresult
-nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
-                                 nsEvent* aEvent,
-                                 nsIDOMEvent** aDOMEvent,
-                                 PRUint32 aFlags,
-                                 nsEventStatus* aEventStatus)
+nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
-  // Make sure to tell the event that dispatch has started.
-  NS_MARK_EVENT_DISPATCH_STARTED(aEvent);
-
-  nsresult ret = NS_OK;
-  PRBool retarget = PR_FALSE;
-  PRBool externalDOMEvent = PR_FALSE;
-  nsCOMPtr<nsIDOMEventTarget> oldTarget;
-
-  nsIDOMEvent* domEvent = nsnull;
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    if (aDOMEvent) {
-      if (*aDOMEvent) {
-        externalDOMEvent = PR_TRUE;   
-      }
-    } else {
-      aDOMEvent = &domEvent;
-    }
-    aEvent->flags |= aFlags;
-    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
-  }
-
-  // Find out whether we're anonymous.
+  //FIXME! Document how this event retargeting works, Bug 329124.
+  aVisitor.mCanHandle = PR_TRUE;
+  nsCOMPtr<nsIContent> parent = GetParent();
   if (IsNativeAnonymous()) {
-    retarget = PR_TRUE;
-  } else {
-    nsIContent* parent = GetParent();
-    if (parent) {
-      if (*aDOMEvent) {
-        (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-        nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
-        if (content && content->GetBindingParent() == parent)
-          retarget = PR_TRUE;
-      } else if (GetBindingParent() == parent) {
-        retarget = PR_TRUE;
-      }
+    aVisitor.mEventTargetAtParent = parent;
+  } else if (parent) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
+    if (content && content->GetBindingParent() == parent) {
+      aVisitor.mEventTargetAtParent = parent;
     }
   }
 
   // check for an anonymous parent
-  nsCOMPtr<nsIContent> parent;
+  // XXX XBL2/sXBL issue
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
-    ownerDoc->BindingManager()->GetInsertionParent(this,
-                                                   getter_AddRefs(parent));
-  }
-  if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
-    parent = GetParent();
-  }
-
-  if (retarget || (parent.get() != GetParent())) {
-    if (!*aDOMEvent) {
-      // We haven't made a DOMEvent yet.  Force making one now.
-      nsCOMPtr<nsIEventListenerManager> listenerManager;
-      if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-        return ret;
-      }
-      if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent,
-                                                       EmptyString(), aDOMEvent)))
-        return ret;
-    }
-
-    if (!*aDOMEvent) {
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-    if (!privateEvent) {
-      return NS_ERROR_FAILURE;
-    }
-
-    (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
-
-    PRBool hasOriginal;
-    privateEvent->HasOriginalTarget(&hasOriginal);
-
-    if (!hasOriginal)
-      privateEvent->SetOriginalTarget(oldTarget);
-
-    if (retarget) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetParent());
-      privateEvent->SetTarget(target);
+    nsCOMPtr<nsIContent> insertionParent;
+    ownerDoc->BindingManager()->
+      GetInsertionParent(this, getter_AddRefs(insertionParent));
+    NS_ASSERTION(!(aVisitor.mEventTargetAtParent && insertionParent &&
+                   aVisitor.mEventTargetAtParent != insertionParent),
+                 "Retargeting and having insertion parent!");
+    if (insertionParent) {
+      parent.swap(insertionParent);
     }
   }
 
-  //Capturing stage evaluation
-  if (NS_EVENT_FLAG_CAPTURE & aFlags &&
-      aEvent->message != NS_PAGE_LOAD &&
-      aEvent->message != NS_SCRIPT_LOAD &&
-      aEvent->message != NS_IMAGE_LOAD &&
-      aEvent->message != NS_IMAGE_ERROR &&
-      aEvent->message != NS_SCROLL_EVENT) {
-    //Initiate capturing phase.  Special case first call to document
-    if (parent) {
-      parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                             aFlags & NS_EVENT_CAPTURE_MASK,
-                             aEventStatus);
-    } else {
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        ret = document->HandleDOMEvent(aPresContext, aEvent,
-                                       aDOMEvent,
-                                       aFlags & NS_EVENT_CAPTURE_MASK,
-                                       aEventStatus);
-      }
-    }
+  if (parent) {
+    aVisitor.mParentTarget = parent;
+  } else {
+    aVisitor.mParentTarget = GetCurrentDoc();
   }
+  return NS_OK;
+}
 
-  if (retarget) {
-    // The event originated beneath us, and we performed a retargeting.
-    // We need to restore the original target of the event.
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-    if (privateEvent)
-      privateEvent->SetTarget(oldTarget);
-  }
+nsresult
+nsGenericElement::PostHandleEvent(nsEventChainPostVisitor& /*aVisitor*/)
+{
+  return NS_OK;
+}
 
-  // Weak pointer, which is fine since the hash table owns the
-  // listener manager
-  nsIEventListenerManager *lm = nsnull;
-
-  if (HasEventListenerManager()) {
-    lm = nsContentUtils::LookupListenerManager(this);
-    if (!lm) {
-#ifdef DEBUG
-      if (nsContentUtils::IsInitialized()) {
-        NS_ERROR("Huh, our bit says we have an event listener manager, but "
-                 "there's nothing in the hash!?!!");
-      }
-#endif
-
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  //Local handling stage
-  if (lm &&
-      !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags &&
-        NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags)) &&
-      !(aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)) {
-    aEvent->flags |= aFlags;
-
-    nsCOMPtr<nsIDOMEventTarget> curTarg =
-      do_QueryInterface(NS_STATIC_CAST(nsIXMLContent *, this));
-
-    lm->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags,
-                    aEventStatus);
-
-    aEvent->flags &= ~aFlags;
-  }
-
-  if (retarget) {
-    // The event originated beneath us, and we need to perform a
-    // retargeting.
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-    if (privateEvent) {
-      nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(GetParent()));
-      privateEvent->SetTarget(parentTarget);
-    }
-  }
-
-  //Bubbling stage
-  if (NS_EVENT_FLAG_BUBBLE & aFlags && IsInDoc() &&
-      aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_SCRIPT_LOAD &&
-      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD &&
-      // scroll events fired at elements don't bubble (although scroll events
-      // fired at documents do, to the window)
-      aEvent->message != NS_SCROLL_EVENT) {
-    if (parent) {
-      // If there's a parent we pass the event to the parent...
-
-      ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                   aFlags & NS_EVENT_BUBBLE_MASK,
-                                   aEventStatus);
-    } else {
-      // If there's no parent but there is a document (i.e. this is
-      // the root node) we pass the event to the document...
-      nsIDocument* document = GetCurrentDoc();
-      if (document) {
-        ret = document->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                       aFlags & NS_EVENT_BUBBLE_MASK, 
-                                       aEventStatus);
-      }
-    }
-  }
-
-  if (retarget) {
-    // The event originated beneath us, and we performed a
-    // retargeting.  We need to restore the original target of the
-    // event.
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-    if (privateEvent)
-      privateEvent->SetTarget(oldTarget);
-  }
-
-  if (NS_EVENT_FLAG_INIT & aFlags) {
-    // We're leaving the DOM event loop so if we created a DOM event,
-    // release here.  If externalDOMEvent is set the event was passed
-    // in and we don't own it
-
-    if (*aDOMEvent && !externalDOMEvent) {
-      nsrefcnt rc;
-      NS_RELEASE2(*aDOMEvent, rc);
-      if (0 != rc) {
-        // Okay, so someone in the DOM loop (a listener, JS object)
-        // still has a ref to the DOM Event but the internal data
-        // hasn't been malloc'd.  Force a copy of the data here so the
-        // DOM Event is still valid.
-
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-          do_QueryInterface(*aDOMEvent);
-
-        if (privateEvent) {
-          privateEvent->DuplicatePrivateData();
-        }
-      }
-
-      aDOMEvent = nsnull;
-    }
-
-    // Now that we're done with this event, remove the flag that says
-    // we're in the process of dispatching this event.
-    NS_MARK_EVENT_DISPATCH_DONE(aEvent);
-  }
-
-  return ret;
+nsresult
+nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
+                                   nsIDOMEvent* aDOMEvent,
+                                   nsPresContext* aPresContext,
+                                   nsEventStatus* aEventStatus)
+{
+  return nsEventDispatcher::DispatchDOMEvent(NS_STATIC_CAST(nsIContent*, this),
+                                             aEvent, aDOMEvent,
+                                             aPresContext, aEventStatus);
 }
 
 NS_IMETHODIMP
@@ -2397,10 +2226,20 @@ nsGenericElement::IsContentOfType(PRUint32 aFlags) const
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
+nsGenericElement::GetListenerManager(PRBool aCreateIfNotFound,
+                                     nsIEventListenerManager** aResult)
 {
+  // No need to call nsContentUtils::GetListenerManager if we don't have
+  // an event listener manager.
+  if (!aCreateIfNotFound && !HasEventListenerManager()) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
   PRBool created;
-  nsresult rv = nsContentUtils::GetListenerManager(this, aResult, &created);
+  nsresult rv =
+    nsContentUtils::GetListenerManager(this, aCreateIfNotFound, aResult,
+                                       &created);
   if (NS_SUCCEEDED(rv) && created) {
     SetFlags(GENERIC_ELEMENT_HAS_LISTENERMANAGER);
   }
@@ -2495,9 +2334,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
         HasMutationListeners(aParent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
       mutation.mRelatedNode = do_QueryInterface(aParent);
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
   }
 
@@ -2559,10 +2396,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   if (hasListeners) {
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, aKid);
     mutation.mRelatedNode = do_QueryInterface(aParent);
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      aKid->HandleDOMEvent(nsnull, &mutation, nsnull,
-                           NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
   }
 
   // Someone may have removed the kid while that event was processing...
@@ -3354,6 +3188,7 @@ nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMGCParticipant)
+  NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))
@@ -3363,7 +3198,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
-  NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
@@ -3566,7 +3400,7 @@ NodeHasMutationListeners(nsISupports* aNode)
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aNode));
   if (rec) {
     nsCOMPtr<nsIEventListenerManager> manager;
-    rec->GetListenerManager(getter_AddRefs(manager));
+    rec->GetListenerManager(PR_FALSE, getter_AddRefs(manager));
     if (manager) {
       PRBool hasMutationListeners = PR_FALSE;
       manager->HasMutationListeners(&hasMutationListeners);
@@ -3746,9 +3580,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
         mutation.mPrevAttrValue = do_GetAtom(aOldValue);
       }
       mutation.mAttrChange = modType;
-      nsEventStatus status = nsEventStatus_eIgnore;
-      HandleDOMEvent(nsnull, &mutation, nsnull,
-                     NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
 
     if (aNotify) {
@@ -3796,7 +3628,7 @@ nsGenericElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aMana
                                                  nsISupports** aTarget,
                                                  PRBool* aDefer)
 {
-  nsresult rv = GetListenerManager(aManager);
+  nsresult rv = GetListenerManager(PR_TRUE, aManager);
   if (NS_SUCCEEDED(rv)) {
     NS_ADDREF(*aTarget = NS_STATIC_CAST(nsIContent*, this));
   }
@@ -3947,9 +3779,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         mutation.mPrevAttrValue = do_GetAtom(value);
       mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-      nsEventStatus status = nsEventStatus_eIgnore;
-      HandleDOMEvent(nsnull, &mutation, nsnull,
-                     NS_EVENT_FLAG_INIT, &status);
+      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
     }
   }
 

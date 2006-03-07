@@ -979,7 +979,7 @@ nsMenuX::OnCreate()
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
  }
@@ -1061,7 +1061,7 @@ nsMenuX::OnCreated()
   if ( presContext ) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
     if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
       return PR_FALSE;
  }
@@ -1099,7 +1099,7 @@ nsMenuX::OnDestroy()
   if (presContext )  {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
 
     mDestroyHandlerCalled = PR_TRUE;
     
@@ -1130,7 +1130,7 @@ nsMenuX::OnDestroyed()
   if (presContext )  {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
-    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    rv = dispatchTo->DispatchDOMEvent(&event, nsnull, presContext, &status);
 
     mDestroyHandlerCalled = PR_TRUE;
     

@@ -58,6 +58,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScriptEventHandler.h"
 #include "nsIDOMDocument.h"
+#include "nsEventDispatcher.h"
 
 
 //
@@ -208,7 +209,7 @@ nsHTMLScriptEventHandler::Invoke(nsISupports *aTargetObject,
   // Get the script context...
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsCOMPtr<nsIScriptContext> scriptContext;
-  nsIScriptGlobalObject *sgo;
+  nsIScriptGlobalObject *sgo = nsnull;
 
   mOuter->GetOwnerDocument(getter_AddRefs(domdoc));
 
@@ -596,7 +597,8 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
     event.fileName = fileName.get();
 
     nsCOMPtr<nsPresContext> presContext = GetPresContext();
-    HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                                &event, nsnull, &status);
   }
 
   return NS_OK;
@@ -615,11 +617,16 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
   nsresult rv = NS_OK;
   if (!aIsInline) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event(PR_TRUE,
-                  NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR);
+    PRUint32 type = NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR;
+    nsEvent event(PR_TRUE, type);
+    if (type == NS_SCRIPT_LOAD) {
+      // Load event doesn't bubble.
+      event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+    }
+
     nsCOMPtr<nsPresContext> presContext = GetPresContext();
-    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
-                        &status);
+    nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this), presContext,
+                                &event, nsnull, &status);
   }
 
   return rv;

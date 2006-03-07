@@ -70,6 +70,7 @@
 #include "nsContentUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
+#include "nsEventDispatcher.h"
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
@@ -742,7 +743,6 @@ PR_STATIC_CALLBACK(void*)
 HandleImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
-  nsEventStatus estatus = nsEventStatus_eIgnore;
   PRUint32 eventMsg;
 
   if (evt->mMessage.EqualsLiteral("load")) {
@@ -752,8 +752,8 @@ HandleImagePLEvent(PLEvent* aEvent)
   }
 
   nsEvent event(PR_TRUE, eventMsg);
-  evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
-                                NS_EVENT_FLAG_INIT, &estatus);
+  event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  nsEventDispatcher::Dispatch(evt->mContent, evt->mPresContext, &event);
 
   return nsnull;
 }

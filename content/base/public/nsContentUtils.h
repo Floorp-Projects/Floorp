@@ -752,23 +752,18 @@ public:
   static void RemoveRangeList(nsIContent *aContent);
 
   /**
-   * Look up the eventlistener manager for aContent.
-   *
-   * @param aContent The node for which to look up the eventlistener manager.
-   * @return The eventlistener manager if one exists.
-   */
-  static nsIEventListenerManager *LookupListenerManager(nsIContent *aContent);
-
-  /**
-   * Get the eventlistener manager for aContent. This creates a new event-
-   * listener manager if none exist, in that case aCreated is set to PR_TRUE.
+   * Get the eventlistener manager for aContent. If a new eventlistener manager
+   * was created, aCreated is set to PR_TRUE.
    *
    * @param aContent The node for which to get the eventlistener manager.
+   * @param aCreateIfNotFound If PR_FALSE, returns a listener manager only if
+   *                          one already exists.
    * @param aResult [out] Set to the eventlistener manager for aContent.
    * @param aCreated [out] Set to PR_TRUE if a new eventlistener manager was
    *                       created.
    */
   static nsresult GetListenerManager(nsIContent *aContent,
+                                     PRBool aCreateIfNotFound,
                                      nsIEventListenerManager **aResult,
                                      PRBool *aCreated);
 
