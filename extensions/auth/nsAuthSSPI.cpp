@@ -357,6 +357,10 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                                            &ctxAttr,
                                            &ignored);
     if (rc == SEC_I_CONTINUE_NEEDED || rc == SEC_E_OK) {
+        if (!ob.cbBuffer) {
+            nsMemory::Free(ob.pvBuffer);
+            ob.pvBuffer = NULL;
+        }
         *outToken = ob.pvBuffer;
         *outTokenLen = ob.cbBuffer;
 
@@ -501,21 +505,21 @@ nsAuthSSPI::Wrap(const void *inToken,
 
     if (SEC_SUCCESS(rc)) {
         int len  = bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer + bufs.ib[2].cbBuffer;
+        char *p = (char *) nsMemory::Alloc(len);
 
-        *outToken = nsMemory::Alloc(len);
-
-        if (!*outToken)
+        if (!p)
             return NS_ERROR_OUT_OF_MEMORY;
-
-        memcpy(outToken, bufs.ib[0].pvBuffer, bufs.ib[0].cbBuffer);
-
-        memcpy(outToken + bufs.ib[0].cbBuffer,
-               bufs.ib[1].pvBuffer, bufs.ib[1].cbBuffer);
-
-        memcpy(outToken + bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer,
-               bufs.ib[2].pvBuffer, bufs.ib[2].cbBuffer);
-
+				
+        *outToken = (void *) p;
         *outTokenLen = len;
+
+        memcpy(p, bufs.ib[0].pvBuffer, bufs.ib[0].cbBuffer);
+        p += bufs.ib[0].cbBuffer;
+
+        memcpy(p,bufs.ib[1].pvBuffer, bufs.ib[1].cbBuffer);
+        p += bufs.ib[1].cbBuffer;
+
+        memcpy(p,bufs.ib[2].pvBuffer, bufs.ib[2].cbBuffer);
         
         return NS_OK;
     }
