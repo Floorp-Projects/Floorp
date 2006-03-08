@@ -113,7 +113,7 @@ function getRDFProperty(aID, aProperty)
 function fireEventForElement(aElement, aEventType)
 {
   var e = document.createEvent("Events");
-  e.initEvent("download-" + aEventType, false, true);
+  e.initEvent("download-" + aEventType, true, true);
   
   aElement.dispatchEvent(e);
 }
