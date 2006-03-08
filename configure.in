@@ -2048,7 +2048,7 @@ case "$target" in
                            ac_os2_declspec="no")])
         if test "$ac_os2_declspec" = "yes"; then
            FILTER='true'
-           MOZ_OS2_USE_DECLSPEC='1'
+           MOZ_OS2_USE_DECLSPEC=''
         fi
         
     # Visual Age C++ build
