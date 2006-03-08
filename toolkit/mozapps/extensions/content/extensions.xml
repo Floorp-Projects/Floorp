@@ -62,7 +62,7 @@
         <body>
         <![CDATA[
           var e = document.createEvent("Events");
-          e.initEvent(this.eventPrefix + aEventType, false, true);
+          e.initEvent(this.eventPrefix + aEventType, true, true);
           this.dispatchEvent(e);
         ]]>
         </body>
