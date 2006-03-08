@@ -1886,6 +1886,13 @@ nsGenericElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mCanHandle = PR_TRUE;
   nsCOMPtr<nsIContent> parent = GetParent();
   if (IsNativeAnonymous()) {
+    // Don't propagate mutation events which are dispatched somewhere inside
+    // native anonymous content.
+    if (aVisitor.mEvent->eventStructType == NS_MUTATION_EVENT) {
+      aVisitor.mParentTarget = nsnull;
+      return NS_OK;
+    }
+
     aVisitor.mEventTargetAtParent = parent;
   } else if (parent) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mEvent->target));
