@@ -905,13 +905,10 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
-#ifndef MOZ_CAIRO_GFX
   if (aFrame) {
-    // don't support HTML in non-cairo builds
     if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
       return PR_FALSE;
   }
-#endif
 
   if (IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType))
     return PR_FALSE;
