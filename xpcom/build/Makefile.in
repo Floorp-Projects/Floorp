@@ -92,6 +92,12 @@ CPPSRCS		+= dlldeps.cpp
 endif
 endif
 
+ifndef MINIMO
+ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),OS2)
+CPPSRCS		+= dlldeps.cpp
+endif
+endif
+
 ifdef XPCOM_USE_LEA
 CSRCS += malloc.c
 endif

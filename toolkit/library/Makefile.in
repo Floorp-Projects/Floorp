@@ -68,6 +68,10 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += dlldeps-xul.cpp
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += dlldeps-xul.cpp
+endif
+
 # dependent libraries
 STATIC_LIBS = \
 	xulapp_s \

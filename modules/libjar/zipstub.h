@@ -78,6 +78,9 @@
 #elif defined(XP_WIN)
 #define PR_EXTERN(__type)       extern _declspec(dllexport) __type
 #define PR_PUBLIC_API(__type)   _declspec(dllexport) __type
+#elif defined(XP_OS2) && defined(__declspec)
+#define PR_EXTERN(__type)       extern __declspec(dllexport) __type
+#define PR_PUBLIC_API(__type)   __declspec(dllexport) __type
 #else /* XP_UNIX */
 #define PR_EXTERN(__type)       extern __type
 #define PR_PUBLIC_API(__type)   __type 
