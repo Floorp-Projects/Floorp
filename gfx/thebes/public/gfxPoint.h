@@ -63,6 +63,12 @@ struct NS_EXPORT gfxSize {
     gfxSize operator-() const {
         return gfxSize(- width, - height);
     }
+    gfxSize operator*(const gfxFloat v) const {
+        return gfxSize(width * v, height * v);
+    }
+    gfxSize operator/(const gfxFloat v) const {
+        return gfxSize(width / v, height / v);
+    }
 };
 
 struct NS_EXPORT gfxPoint {
@@ -95,7 +101,12 @@ struct NS_EXPORT gfxPoint {
     gfxPoint operator-() const {
         return gfxPoint(- x, - y);
     }
-
+    gfxPoint operator*(const gfxFloat v) const {
+        return gfxPoint(x * v, y * v);
+    }
+    gfxPoint operator/(const gfxFloat v) const {
+        return gfxPoint(x / v, y / v);
+    }
     gfxPoint& round() {
         x = ::floor(x + 0.5);
         y = ::floor(y + 0.5);

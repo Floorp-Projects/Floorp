@@ -78,6 +78,9 @@ public:
     virtual ~gfxPangoFontGroup ();
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
+    virtual gfxTextRun *MakeTextRun(const nsACString& aCString) {
+        return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
+    }
 
     gfxPangoFont *GetFontAt(PRInt32 i) {
         return NS_STATIC_CAST(gfxPangoFont*, 

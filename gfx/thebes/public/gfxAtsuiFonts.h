@@ -79,6 +79,9 @@ public:
     virtual ~gfxAtsuiFontGroup();
 
     virtual gfxTextRun *MakeTextRun(const nsAString& aString);
+    virtual gfxTextRun *MakeTextRun(const nsACString& aCString) {
+        return MakeTextRun(NS_ConvertASCIItoUTF16(aCString));
+    }
 
     ATSUFontFallbacks *GetATSUFontFallbacks() { return &mFallbacks; }
     

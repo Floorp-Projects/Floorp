@@ -68,18 +68,21 @@ gfxContext::~gfxContext()
     cairo_destroy(mCairo);
 }
 
-gfxASurface *gfxContext::CurrentSurface()
+already_AddRefed<gfxASurface> gfxContext::CurrentSurface()
 {
-    return mSurface;
+    NS_ADDREF(mSurface);
+    return mSurface.get();
 }
 
-gfxASurface *gfxContext::CurrentGroupSurface()
+already_AddRefed<gfxASurface> gfxContext::CurrentGroupSurface()
 {
     cairo_surface_t *s = cairo_get_group_target(mCairo);
     if (!s)
         return NULL;
 
-    return new gfxUnknownSurface(s);
+    gfxASurface *wrapper = new gfxUnknownSurface(s);
+    NS_ADDREF(wrapper);
+    return wrapper;
 }
 
 void gfxContext::Save()
@@ -100,6 +103,13 @@ void gfxContext::NewPath()
 void gfxContext::ClosePath()
 {
     cairo_close_path(mCairo);
+}
+
+gfxPoint gfxContext::CurrentPoint() const
+{
+    double x, y;
+    cairo_get_current_point(mCairo, &x, &y);
+    return gfxPoint(x, y);
 }
 
 void gfxContext::Stroke()
@@ -129,6 +139,12 @@ void gfxContext::Arc(gfxPoint center, gfxFloat radius,
                      gfxFloat angle1, gfxFloat angle2)
 {
     cairo_arc(mCairo, center.x, center.y, radius, angle1, angle2);
+}
+
+void gfxContext::NegativeArc(gfxPoint center, gfxFloat radius,
+                             gfxFloat angle1, gfxFloat angle2)
+{
+    cairo_arc_negative(mCairo, center.x, center.y, radius, angle1, angle2);
 }
 
 void gfxContext::Line(gfxPoint start, gfxPoint end)
@@ -520,10 +536,12 @@ void gfxContext::PushGroup(SurfaceContent content)
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
 }
 
-gfxPattern *gfxContext::PopGroup()
+already_AddRefed<gfxPattern> gfxContext::PopGroup()
 {
     cairo_pattern_t *pat = cairo_pop_group(mCairo);
-    return new gfxPattern(pat);
+    gfxPattern *wrapper = new gfxPattern(pat);
+    NS_ADDREF(wrapper);
+    return wrapper;
 }
 
 void gfxContext::PopGroupToSource()

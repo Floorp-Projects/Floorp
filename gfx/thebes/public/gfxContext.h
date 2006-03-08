@@ -78,18 +78,18 @@ public:
     /**
      * Return the current target surface
      */
-    gfxASurface* CurrentSurface();
+    already_AddRefed<gfxASurface> CurrentSurface();
 
     /**
      * Return the current transparency group target, if any
      */
-    gfxASurface* CurrentGroupSurface();
+    already_AddRefed<gfxASurface> CurrentGroupSurface();
 
     /**
      * Return the raw cairo_t object.
      * XXX this should go away at some point.
      */
-    cairo_t* GetCairo() { return mCairo; }
+    cairo_t *GetCairo() { return mCairo; }
 
     /**
      ** State
@@ -133,6 +133,11 @@ public:
      * Moves the pen to a new point without drawing a line.
      */
     void MoveTo(gfxPoint pt);
+
+    /**
+     * Returns the current point in the current path.
+     */
+    gfxPoint CurrentPoint() const;
 
     /**
      * Draws a line from the current point to pt.
@@ -319,7 +324,7 @@ public:
      *
      * @param offset ?
      */
-    void SetSource(gfxASurface* surface, gfxPoint offset = gfxPoint(0.0, 0.0));
+    void SetSource(gfxASurface *surface, gfxPoint offset = gfxPoint(0.0, 0.0));
 
     /**
      ** Painting
@@ -491,7 +496,7 @@ public:
     };
 
     void PushGroup(SurfaceContent content = CONTENT_COLOR_ALPHA);
-    gfxPattern *PopGroup();
+    already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
 
     /**
