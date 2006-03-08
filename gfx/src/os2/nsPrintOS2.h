@@ -48,20 +48,21 @@
 #define INCL_GRE_DEVICE
 #include <os2.h>
 #include <pmddim.h>
+#include "gfxCore.h"
 
 //---------------------------------------------------------------------------
 // OS/2 Printing   - was in libprint
 //---------------------------------------------------------------------------
 // Library init and term; job properties per queue are cached during run.
-BOOL PrnInitialize(HMODULE hmodResources);
-BOOL PrnTerminate(void);
+NS_GFX_(BOOL) PrnInitialize(HMODULE hmodResources);
+NS_GFX_(BOOL) PrnTerminate(void);
 
 // opaque type to describe a print queue (printer)
-class PRTQUEUE;
+class NS_GFX PRTQUEUE;
 
 #define MAX_PRINT_QUEUES  (128)
 
-class PRINTDLG
+class NS_GFX PRINTDLG
 {
 public:
    PRINTDLG();
@@ -83,16 +84,16 @@ private:
 
 
 // Release app. resources associated with a printer
-BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue);
+NS_GFX_(BOOL) PrnClosePrinter( PRTQUEUE *pPrintQueue);
 
 // Get a DC for the selected printer.  Must supply the application name.
-HDC PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int destination, char *file);
+NS_GFX_(HDC) PrnOpenDC( PRTQUEUE *pPrintQueue, PSZ pszApplicationName, int copies, int destination, char *file);
 
 // Get the hardcopy caps for the selected form
-BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
+NS_GFX_(BOOL) PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo);
 
 // Abort the current job started with PrnStartJob().
-BOOL PrnAbortJob( HDC hdc);
+NS_GFX_(BOOL) PrnAbortJob( HDC hdc);
 
 
 
