@@ -50,7 +50,7 @@
 <!ENTITY optionsUnix.tooltip              "Preferences">
 <!ENTITY about.tooltip                    "About">
 <!ENTITY homepage.tooltip                 "Home Page">
-
+<!ENTITY moreInfo.label                   "More Information">
 <!ENTITY installNow.label                 "Update Now">
 
 <!ENTITY getMoreExtensions.label          "Get More Extensions">

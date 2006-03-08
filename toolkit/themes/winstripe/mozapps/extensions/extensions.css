@@ -94,6 +94,7 @@ extension[disabled="true"] {
 }
 
 extension[disabled="true"][compatible="false"] .extension-item-description,
+extension[blocklisted="true"] .extension-item-description,
 extension[satisfiesDependencies="false"] .extension-item-description,
 extension[incompatibleUpdate="true"] .extension-item-description {
   color: #C77173;
@@ -141,8 +142,13 @@ extension[itemType="theme"] .extension-icon {
   -moz-margin-end: 10px;
 }
 
-extension[availableUpdateURL="none"] .extension-badge {
+extension[availableUpdateURL="none"] .extension-badge,
+extension .extension-details-link {
   display: none;
+}
+
+extension[blocklisted="true"][blocklistDetailsURL][availableUpdateURL="none"] .extension-details-link {
+  display: -moz-box;
 }
 
 extension[loading="true"] .extension-badge {

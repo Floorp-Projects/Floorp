@@ -185,6 +185,12 @@
                      predicate="http://www.mozilla.org/2004/em-rdf#compatible"
                      object="?compatible"/>
             <binding subject="?extension"
+                     predicate="http://www.mozilla.org/2004/em-rdf#blocklisted"
+                     object="?blocklisted"/>
+            <binding subject="?extension"
+                     predicate="http://www.mozilla.org/2004/em-rdf#blocklistDetailsURL"
+                     object="?blocklistDetailsURL"/>
+            <binding subject="?extension"
                      predicate="http://www.mozilla.org/2004/em-rdf#homepageURL"
                      object="?homepage-url"/>
             <binding subject="?extension"
@@ -246,6 +252,8 @@
                        state="?state" progress="?progress" status="?status"
                        incompatibleUpdate="?incompatibleUpdate"
                        satisfiesDependencies="?satisfiesDependencies"
+                       blocklisted="?blocklisted"
+                       blocklistDetailsURL="?blocklistDetailsURL"
                        updateable="?updateable"/>
           </action>
         </rule>

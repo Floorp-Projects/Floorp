@@ -372,8 +372,8 @@ interface nsIExtensionManager : nsISupports
  * interfaces for Gecko 1.8.1. After the 1.8.1 release this interface should
  * not be used.
  */
-[scriptable, uuid(8058922f-9367-45d1-878e-7c5ca27eddf4)]
-interface nsIExtensionManager2 : nsIExtensionManager
+[scriptable, uuid(126d544a-5f34-4277-a3bc-2785ee85a046)]
+interface nsIExtensionManager_MOZILLA_1_8_BRANCH : nsIExtensionManager
 {
   /**
    * Cancels a pending uninstall of an item
@@ -398,6 +398,17 @@ interface nsIExtensionManager2 : nsIExtensionManager
                                  in boolean includeDisabled,
                                  out unsigned long itemCount,
                                  [retval, array, size_is(itemCount)] out nsIUpdateItem items);
+
+  /**
+   * Checks for changes to the blocklist using the local blocklist file,
+   * application disables / enables items that have been added / removed from
+   * the blocklist, and if there are additions to the blocklist this will
+   * inform the user by displaying a list of the items added.
+   *
+   * XXXrstrong - this method is not terribly useful and was added so we can
+   * trigger this check from the additional timer used by blocklisting.
+   */
+  void checkForBlocklistChanges();
 };
 
 /**

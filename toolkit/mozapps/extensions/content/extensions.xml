@@ -89,7 +89,9 @@
           </xul:hbox>
           <xul:hbox>
             <xul:image class=""/>
-            <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right" flex="1"/>
+            <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right"/>
+            <xul:label class="text-link extension-details-link"
+                       xbl:inherits="href=blocklistDetailsURL" value="&moreInfo.label;"/>
           </xul:hbox>
         </xul:vbox>
         <xul:vbox class="extension-install-button-box" pack="end">

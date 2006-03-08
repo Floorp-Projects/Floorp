@@ -67,6 +67,12 @@ pref("extensions.ignoreMTimeChanges", false);
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
 
+// Blocklist preferences
+pref("extensions.blocklist.enabled", true);
+pref("extensions.blocklist.interval", 86400);
+pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/1/%APP_ID%/%APP_VERSION%/");
+pref("extensions.blocklist.detailsURL", "http://www.mozilla.com/blocklist/");
+
 // App-specific update preferences
 
 // Whether or not app updates are enabled

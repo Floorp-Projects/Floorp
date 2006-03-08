@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Robert Strong <robert.bugzilla@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,7 @@
 
 <dialog id="addonList" windowtype="Addons:List"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="width: 35em;" 
+        onunload="shutdown();"
         buttons="accept,cancel" onload="init();">
 
   <script type="application/x-javascript" 
@@ -49,18 +50,33 @@
           
   <stringbundle id="extensionsBundle" 
                 src="chrome://mozapps/locale/extensions/extensions.properties"/>
-  
-  <label id="message1" hidden="true"/>
-  <separator class="thin"/>
-  <tree id="addonsTree" rows="10" hidecolumnpicker="true" hidden="true">
-    <treecols>
-      <treecol flex="1" id="nameColumn" hideheader="true"/>
-    </treecols>
-    <treechildren id="addonsChildren"/>
-  </tree>
-  <separator class="thin"/>
-  <label id="message2" hidden="true"/>
-  <separator class="thin"/>
-  <label class="bold" id="message3" hidden="true"/>
-</dialog>
+  <stringbundle id="brandBundle"
+                src="chrome://branding/locale/brand.properties"/>
 
+  <hbox align="start">
+    <vbox>
+      <image id="infoIcon"/>
+    </vbox>
+    <vbox class="spaced" style="width: 30em;">
+      <label id="message1" class="spaced" hidden="true"/>
+      <separator class="thin"/>
+      <tree id="addonsTree" rows="8" hidecolumnpicker="true" hidden="true" class="spaced">
+        <treecols>
+          <treecol flex="1" id="nameColumn" hideheader="true"/>
+        </treecols>
+        <treechildren id="addonsChildren"/>
+      </tree>
+      <label id="message2" class="spaced" hidden="true"/>
+      <label class="bold spaced" id="message3" hidden="true"/>
+      <hbox id="moreInfoBox" hidden="true">
+        <label id="moreInfo" class="text-link spaced"/>
+        <spacer flex="1"/>
+      </hbox>
+    </vbox>
+  </hbox>
+  <hbox id="buttonCenteredBox">
+    <spacer flex="1"/>
+    <button id="centeredButton"/>
+    <spacer flex="1"/>
+  </hbox>
+</dialog>

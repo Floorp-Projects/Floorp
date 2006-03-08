@@ -153,7 +153,7 @@ function Startup()
   gExtensionsView.setAttribute("state", gWindowState);
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
                                 .getService(Components.interfaces.nsIExtensionManager)
-                                .QueryInterface(Components.interfaces.nsIExtensionManager2);
+                                .QueryInterface(Components.interfaces.nsIExtensionManager_MOZILLA_1_8_BRANCH);
   gApp = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
                    .QueryInterface(Components.interfaces.nsIXULRuntime);
 
@@ -218,10 +218,12 @@ function Startup()
   
   // Set Initial Size
   var win = document.documentElement;
-  if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
-    win.setAttribute("width", isExtensions ? (extensionsStrings.getString("extensionsManagerWidth")) : (extensionsStrings.getString("themesManagerWidth")));
-    win.setAttribute("height", isExtensions ? (extensionsStrings.getString("extensionsManagerHeight")) : (extensionsStrings.getString("themesManagerHeight")));
-  }
+  if (!win.hasAttribute("width"))
+    win.setAttribute("width", extensionsStrings.getString(
+        isExtensions ? "extensionsManagerWidth" : "themesManagerWidth"));
+  if (!win.hasAttribute("height"))
+    win.setAttribute("height", extensionsStrings.getString(
+        isExtensions ? "extensionsManagerHeight" : "themesManagerHeight"));
 
   // Now look and see if we're being opened by XPInstall
   gDownloadManager = new XPInstallDownloadManager();
@@ -520,6 +522,7 @@ UpdateCheckListener.prototype = {
                                              [brandName]),
         message2: strings.getString("updatesAvailableMessage2"),
         title: strings.getString("updatesAvailableTitle"),
+        iconClass: "question-icon",
         buttons: {
           accept: { label: strings.getString("updatesAvailableAccept"),
                     focused: true },
@@ -536,8 +539,8 @@ UpdateCheckListener.prototype = {
                                                this._addons[i].version]);
         names.push(name);
       }
-      openDialog("chrome://mozapps/content/extensions/list.xul", "", 
-                 "titlebar,modal", names, params);
+      window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
+                        "titlebar,centerscreen,modal", names, params);
       if (params.result == "accept") 
         gExtensionManager.addDownloads(this._addons, this._addons.length, true);
     }
@@ -672,6 +675,7 @@ function buildContextMenu(aEvent)
     var enableMenu = document.getElementById("menuitem_enable_clone");
     if (gExtensionsView.selectedItem &&
        (gExtensionsView.selectedItem.getAttribute("compatible") == "false" ||
+        gExtensionsView.selectedItem.getAttribute("blocklisted") == "true" ||
         gExtensionsView.selectedItem.disabled))
       // don't let the user activate incompatible themes, but show a (disabled) Enable
       // menuitem to give visual feedback; it's disabled because cmd_enable returns false
@@ -881,7 +885,7 @@ var gExtensionsViewController = {
              canWriteToLocation(selectedItem);
     case "cmd_cancelUninstall":
       return selectedItem &&
-              opType == OP_NEEDS_UNINSTALL;
+             opType == OP_NEEDS_UNINSTALL;
     case "cmd_update":
       return selectedItem &&
              selectedItem.getAttribute("updateable") != "false" &&
@@ -901,10 +905,12 @@ var gExtensionsViewController = {
              (opType == OP_NONE ||
              opType == OP_NEEDS_DISABLE) &&
              selectedItem.getAttribute("satisfiesDependencies") != "false" &&
+             selectedItem.getAttribute("blocklisted") != "true" &&
              selectedItem.getAttribute("compatible") != "false";
     case "cmd_disable":
       return selectedItem &&
             selectedItem.getAttribute("satisfiesDependencies") != "false" &&
+            selectedItem.getAttribute("blocklisted") != "true" &&
             (opType == OP_NONE ||
              opType == OP_NEEDS_ENABLE);
     case "cmd_movetop":
@@ -1144,12 +1150,13 @@ var gExtensionsViewController = {
           return;
       }
       gExtensionManager.disableItem(id);
-      gExtensionsView.selectedItem = document.getElementById(aSelectedItem.id);
+      gExtensionsViewController.onCommandUpdate();
     },
     
     cmd_enable: function (aSelectedItem)
     {
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
+      gExtensionsViewController.onCommandUpdate();
 #ifdef MOZ_PHOENIX
     }
   }
