@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<title>testing :disabled and :enabled</title>
+<style>
+ input{ background:red }
+ #i1:enabled { background:lime }
+ #i2:disabled { background:lime }
+ #i3:enabled { background:lime }
+ #i4:disabled { background:lime }
+ #i5:disabled { background:lime }
+ #i6:enabled { background:lime }
+</style>
+<script>
+ window.addEventListener("load",enabledDisabled,false);
+ function enabledDisabled(){
+  document.getElementById('i3').removeAttribute('disabled');
+  document.getElementById('i4').disabled = true;
+  document.getElementById('i5').setAttribute('disabled','disabled');
+  document.getElementById('i6').disabled = false;
+ }
+</script>
+<p>Note: form styling should be enabled.
+<p>There should be no red:
+<p><input id="i1">
+<p><input disabled="disabled" id="i2">
+<p><input disabled="disabled" id="i3">
+<p><input id="i4">
+<p><input id="i5">
+<p><input disabled="disabled" id="i6">
