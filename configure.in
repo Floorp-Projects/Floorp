@@ -1329,7 +1329,7 @@ case "$host" in
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     HOST_BIN_SUFFIX=.exe
-    MOZ_FIX_LINK_PATHS='-Wl,$(LIBXUL_DIST)/bin'
+    MOZ_FIX_LINK_PATHS=
     ;;
 
 *-osf*)
@@ -2040,6 +2040,17 @@ case "$target" in
         _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
         _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
 
+        AC_CACHE_CHECK(for __declspec(dllexport),
+           ac_os2_declspec,
+           [AC_TRY_COMPILE([__declspec(dllexport) void ac_os2_declspec(void) {}],
+                           [return 0;],
+                           ac_os2_declspec="yes",
+                           ac_os2_declspec="no")])
+        if test "$ac_os2_declspec" = "yes"; then
+           FILTER='true'
+           MOZ_OS2_USE_DECLSPEC='1'
+        fi
+        
     # Visual Age C++ build
     elif test "$VACPP" = "yes"; then
         MOZ_BUILD_ROOT=`pwd -D`
@@ -7262,7 +7273,7 @@ AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)
 AC_SUBST(MOZ_OS2_TOOLS)
-AC_SUBST(MOZ_OS2_EMX_OBJECTFORMAT)
+AC_SUBST(MOZ_OS2_USE_DECLSPEC)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)

@@ -446,7 +446,7 @@ endif
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
 
-ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
+ifeq (,$(filter-out WINNT WINCE OS2, $(OS_ARCH)))
 ifdef BUILD_STATIC_LIBS
 DEFINES += \
         -D_IMPL_NS_GFX \
