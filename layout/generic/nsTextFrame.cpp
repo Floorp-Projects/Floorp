@@ -3453,7 +3453,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
       if (ch == kSZLIG)
         glyphDimensions.width += glyphDimensions.width;
     }
-    else if (ch == ' ') {
+    else if (ch == ' ' || ch == CH_NBSP) {
       glyphDimensions.width = aStyle.mSpaceWidth + aStyle.mLetterSpacing
         + aStyle.mWordSpacing;
     }
@@ -5432,6 +5432,12 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
             // since we didn't add the trailing space width, set this flag so that 
             // we will not trim this non-existing space
             aTextData.mTrailingSpaceTrimmed = PR_TRUE;
+            // Note: word-spacing or letter-spacing can make the "space" really
+            // wide. But since this space is left out from our width, linelayout
+            // may still try to fit something narrower at the end of the line.
+            // So on return (see below), we flag a break-after status to ensure
+            // that linelayout doesn't place something where the "space" should
+            // be.
             break;
           }
         }
@@ -5503,6 +5509,20 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 #endif
             if (aTs.mLetterSpacing) {
               dimensions.width += aTs.mLetterSpacing * wordLen;
+            }
+
+            if (aTs.mWordSpacing) {
+              if (aTx.TransformedTextIsAscii()) {
+                for (char* bp = bp1; bp < bp1 + wordLen; bp++) {
+                  if (*bp == ' ') // || *bp == CH_CJKSP)
+                    dimensions.width += aTs.mWordSpacing;
+                }
+              } else {
+                for (PRUnichar* bp = bp2; bp < bp2 + wordLen; bp++) {
+                  if (*bp == ' ') // || *bp == CH_CJKSP)
+                    dimensions.width += aTs.mWordSpacing;
+                }
+              }
             }
           }
           lastWordDimensions = dimensions;
@@ -5762,6 +5782,13 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
               if (aTs.mLetterSpacing) {
                 lastWordDimensions.width += aTs.mLetterSpacing * lastWordLen;
               }
+              if (aTs.mWordSpacing) {
+                for (PRUnichar* bp = pWordBuf;
+                     bp < pWordBuf + lastWordLen; bp++) {
+                  if (*bp == ' ') // || *bp == CH_CJKSP)
+                    lastWordDimensions.width += aTs.mWordSpacing;
+                }
+              }
             }
           }
           nsTextDimensions wordDimensions = ComputeTotalWordDimensions(aPresContext,
@@ -5845,9 +5872,11 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 #endif // IBMBIDI
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;
-  if (endsInNewline) {
+  if (endsInNewline || aTextData.mTrailingSpaceTrimmed) {
     rs = NS_INLINE_LINE_BREAK_AFTER(rs);
-    lineLayout.SetLineEndsInBR(PR_TRUE);
+    if (endsInNewline) {
+      lineLayout.SetLineEndsInBR(PR_TRUE);
+    }
   }
   else if ((aTextData.mOffset != contentLength) && (aTextData.mOffset == startingOffset)) {
     // Break-before a long-word that doesn't fit here
@@ -6487,6 +6516,12 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
       rc.GetTextDimensions(bp, wordLen, dimensions);
       // NOTE: Don't forget to add letter spacing for the word fragment!
       dimensions.width += wordLen*ts.mLetterSpacing;
+      if (ts.mWordSpacing) {
+        for (PRUnichar* bp2 = bp; bp2 < bp + wordLen; bp2++) {
+          if (*bp2 == CH_NBSP) // || *bp2 == CH_CJKSP)
+            dimensions.width += ts.mWordSpacing;
+        }
+      }
     }
     rc.SetFont(oldfm);
 

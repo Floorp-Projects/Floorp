@@ -52,12 +52,13 @@ class nsILineBreaker;
 class nsIWordBreaker;
 
 // XXX I'm sure there are other special characters
-#define CH_NBSP 160
-#define CH_ENSP 8194		//<!ENTITY ensp    CDATA "&#8194;" -- en space, U+2002 ISOpub -->
-#define CH_EMSP 8195		//<!ENTITY emsp    CDATA "&#8195;" -- em space, U+2003 ISOpub -->
-#define CH_THINSP 8291	//<!ENTITY thinsp  CDATA "&#8201;" -- thin space, U+2009 ISOpub -->
-#define CH_ZWNJ	8204	//<!ENTITY zwnj    CDATA "&#8204;" -- zero width non-joiner, U+200C NEW RFC 2070
-#define CH_SHY  173
+#define CH_NBSP   160
+#define CH_ENSP   8194 //<!ENTITY ensp    CDATA "&#8194;" -- en space, U+2002 ISOpub -->
+#define CH_EMSP   8195 //<!ENTITY emsp    CDATA "&#8195;" -- em space, U+2003 ISOpub -->
+#define CH_THINSP 8291 //<!ENTITY thinsp  CDATA "&#8201;" -- thin space, U+2009 ISOpub -->
+#define CH_ZWNJ   8204 //<!ENTITY zwnj    CDATA "&#8204;" -- zero width non-joiner, U+200C NEW RFC 2070
+#define CH_SHY    173
+#define CH_CJKSP  12288 // U+3000 IDEOGRAPHIC SPACE (CJK Full-Width Space)
 
 #ifdef IBMBIDI
 #define CH_ZWJ  8205  //<!ENTITY zwj     CDATA "&#8205;" -- zero width joiner, U+200D NEW RFC 2070 -->
