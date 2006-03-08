@@ -204,8 +204,8 @@ CreateBidiContinuation(nsPresContext* aPresContext,
  *  The rendering layer requires each text frame to contain text in only one
  *  direction and of only one character type, so we may need to call
  *  EnsureBidiContinuation() to split frames. We may also need to call
- *  RemoveBidiContinuation() to delete frames created by
- *  EnsureBidiContinuation() in previous reflows.
+ *  RemoveBidiContinuation() to convert frames created by
+ *  EnsureBidiContinuation() in previous reflows into fluid continuations.
  */
 nsresult
 nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
@@ -746,33 +746,31 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
                                         PRInt32         aLastIndex,
                                         PRInt32&        aOffset) const
 {
-  nsIFrame*         frame;
-  PRInt32           index;
-      
   aOffset = 0;
 
-  for (index = aLastIndex; index > aFirstIndex; index--) {
-    frame = (nsIFrame*) mLogicalFrames[index];
+  for (PRInt32 index = aFirstIndex + 1; index <= aLastIndex; index++) {
+    nsIFrame* frame = (nsIFrame*) mLogicalFrames[index];
     if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
       frame->Destroy(aPresContext);
       ++aOffset;
     }
     else {
-      if (frame->GetStateBits() & NS_FRAME_IS_BIDI) {
-        // only delete Bidi frames
-        nsIFrame* parent = frame->GetParent();
-        parent->RemoveFrame(nsLayoutAtoms::nextBidi, frame);
-        // Make parent continuations fluid, so they can be
-        // reused or deleted by inline reflow code
-        while (parent) {
-          nsIFrame* parentPrev = parent->GetPrevContinuation();
-          if (parentPrev) {
-            parent->SetPrevInFlow(parentPrev);
-            parentPrev->SetNextInFlow(parent);
-            parent = parent->GetParent();
-          } else {
-            break;
-          }
+      // Make the frame and its continuation ancestors fluid,
+      // so they can be reused or deleted by normal reflow code
+      while (frame) {
+        nsIFrame* prev = frame->GetPrevContinuation();
+        if (prev) {
+          NS_ASSERTION (!frame->GetPrevInFlow() || frame->GetPrevInFlow() == prev, 
+                        "prev-in-flow is not prev continuation!");
+          frame->SetPrevInFlow(prev);
+
+          NS_ASSERTION (!prev->GetNextInFlow() || prev->GetNextInFlow() == frame,
+                        "next-in-flow is not next continuation!");
+          prev->SetNextInFlow(frame);
+
+          frame = frame->GetParent();
+        } else {
+          break;
         }
       }
     }
