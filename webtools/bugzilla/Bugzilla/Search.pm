@@ -766,11 +766,14 @@ sub init {
             push(@supptables,
                     "LEFT JOIN bug_group_map AS bug_group_map_$chartid " .
                     "ON bugs.bug_id = bug_group_map_$chartid.bug_id");
-
+            $ff = $f = "groups_$chartid.name";
+            my $ref = $funcsbykey{",$t"};
+            &$ref;
             push(@supptables,
                     "LEFT JOIN groups AS groups_$chartid " .
-                    "ON groups_$chartid.id = bug_group_map_$chartid.group_id");
-            $f = "groups_$chartid.name";
+                    "ON groups_$chartid.id = bug_group_map_$chartid.group_id " .
+                    "AND $term");
+            $term = "$ff IS NOT NULL";
          },
          "^attach_data\.thedata,changed" => sub {
             # Searches for attachment data's change must search
