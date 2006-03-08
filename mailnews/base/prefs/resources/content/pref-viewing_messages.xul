@@ -6,6 +6,7 @@
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-viewing_messages.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
       onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
       headertitle="&pref.viewing.messages.title;">
 
@@ -15,20 +16,42 @@
                        "mailQuotedSize", "mailCitationColor",
                        "wrapLongLines", "displayGlyph",
                        "reuseMessageWindow", "disableContent",
+                       "useWhiteList", "whiteListAbURI",
                        "markMessagesRead", "markMessagesReadAfter"];
     var gMarkMessagesReadAfter;
 
     function Startup() {
       gMarkMessagesReadAfter = document.getElementById("markMessagesReadAfter");
       enableTextbox(document.getElementById("markMessagesRead"), gMarkMessagesReadAfter, true);
+      enableWhiteList(document.getElementById("disableContent").checked);
     }
 
     function enableTextbox(checkbox, textbox, startingUp) {
-      textbox.disabled = (!checkbox.checked ||
-                          parent.hPrefWindow.getPrefIsLocked(textbox.getAttribute("prefstring")));
-
+      textbox.disabled = isDisabled(checkbox.checked, textbox);
+    
       if (!textbox.disabled && !startingUp)
         textbox.focus();
+    }
+
+    function isDisabled(aChecked, aElement) {
+      return (!aChecked ||
+              parent.hPrefWindow.getPrefIsLocked(aElement.getAttribute("prefstring")));
+    }
+
+    function enableCheckbox(aChecked, aCheckbox) {
+      var disabled = isDisabled(aChecked, aCheckbox);
+      aCheckbox.disabled = disabled;
+      return disabled;
+    }
+
+    function enableWhiteList(aChecked) {
+      var useWhiteList = document.getElementById("useWhiteList");
+      var disabled = enableCheckbox(aChecked, useWhiteList);
+      enableWLPopup(useWhiteList.checked && !disabled);
+    }
+
+    function enableWLPopup(aChecked) {
+      enableCheckbox(aChecked, document.getElementById("whiteListAbURI"));
     }
   ]]>
   </script>
@@ -49,9 +72,38 @@
     <separator class="thin"/>
 
     <checkbox id="disableContent" label="&disableContent.label;"
-              accesskey="&disableContent.accesskey;" reversed="true"
+              accesskey="&disableContent.accesskey;"
               prefstring="mailnews.message_display.disable_remote_image"
-              prefattribute="checked" pref="true" preftype="bool"/>
+              prefattribute="checked" pref="true" preftype="bool"
+              oncommand="enableWhiteList(this.checked);"/>
+    <vbox class="indent">
+      <checkbox id="useWhiteList" label="&useWhiteList.label;"
+                accesskey="&useWhiteList.accesskey;"
+                prefstring="mailnews.message_display.disable_remote_images.useWhitelist"
+                prefattribute="checked" pref="true" preftype="bool"
+                oncommand="enableWLPopup(this.checked);"/>
+      <hbox class="indent">
+        <menulist id="whiteListAbURI" preftype="string"
+                  prefstring="mailnews.message_display.disable_remote_images.whiteListAbURI"
+                  ref="moz-abdirectory://"
+                  datasources="rdf:addressdirectory"
+                  sortActive="true" sortDirection="ascending"
+                  sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+          <template>
+            <rule nc:IsWriteable="false"/>
+            <rule nc:IsMailList="false">
+              <menupopup>
+                <menuitem uri="rdf:*"
+                          label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                          value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+              </menupopup>
+            </rule>
+          </template>
+        </menulist>
+      </hbox>
+    </vbox>
+
+    <separator class="thin"/>
 
     <hbox align="center">
       <checkbox id="markMessagesRead" label="&markMessagesRead.label;"

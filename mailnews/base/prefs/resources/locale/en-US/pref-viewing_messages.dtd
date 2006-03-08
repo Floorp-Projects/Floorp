@@ -76,5 +76,7 @@
 <!ENTITY newWindowRadio.accesskey         "n">
 <!ENTITY existingWindowRadio.label        "An existing message window">
 <!ENTITY existingWindowRadio.accesskey    "e">
-<!ENTITY disableContent.label             "Allow messages to load and display remote images and other content">
-<!ENTITY disableContent.accesskey         "A">
+<!ENTITY disableContent.label             "Block images and other content from remote sources">
+<!ENTITY disableContent.accesskey         "B">
+<!ENTITY useWhiteList.label               "but allow if the sender is in this address book:">
+<!ENTITY useWhiteList.accesskey           "a">
