@@ -59,18 +59,22 @@ else
 PACKAGE_DIR	= $(DIST)/$(MOZ_PKG_APPNAME)
 endif
 
+MAR_BIN	= $(DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
+MBSDIFF_BIN	= $(DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
+
 full-update:: complete-patch
 
 complete-patch::
 	mkdir -p $(STAGE_DIR)
-	MAR=$(DIST)/host/bin/mar \
+	MAR=$(MAR_BIN) \
 	  $(srcdir)/make_full_update.sh \
 	  "$(STAGE_DIR)/$(PKG_BASENAME).complete.mar" \
 	  "$(PACKAGE_DIR)"
 
 partial-patch::
 	mkdir -p $(STAGE_DIR)
-	MAR=$(DIST)/host/bin/mar \
+	MAR=$(MAR_BIN) \
+	MBSDIFF=$(MBSDIFF_BIN) \
 	  $(srcdir)/make_incremental_update.sh \
 	  "$(STAGE_DIR)/$(PKG_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar" \
 	  "$(SRC_BUILD)" \
