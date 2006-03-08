@@ -68,10 +68,9 @@ gfxContext::~gfxContext()
     cairo_destroy(mCairo);
 }
 
-already_AddRefed<gfxASurface> gfxContext::CurrentSurface()
+gfxASurface *gfxContext::CurrentSurface()
 {
-    NS_ADDREF(mSurface);
-    return mSurface.get();
+    return mSurface;
 }
 
 already_AddRefed<gfxASurface> gfxContext::CurrentGroupSurface()
