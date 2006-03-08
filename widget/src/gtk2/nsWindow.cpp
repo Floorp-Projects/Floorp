@@ -1488,29 +1488,35 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     DispatchEvent(&event, status);
 
 #ifdef MOZ_CAIRO_GFX
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    if (!translucent) {
-        ctx->PopGroupToSource();
-        ctx->Paint();
-    } else {
-        nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
-        ctx->SetPattern(pattern);
-        ctx->Paint();
+    if (status != nsEventStatus_eIgnore) {
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        if (!translucent) {
+            ctx->PopGroupToSource();
+            ctx->Paint();
+        } else {
+            nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
+            ctx->SetPattern(pattern);
+            ctx->Paint();
 
-        nsRefPtr<gfxImageSurface> img =
-          new gfxImageSurface(gfxImageSurface::ImageFormatA8, 
-                              collapsedRect.width, collapsedRect.height);
-        img->SetDeviceOffset(-collapsedRect.x, -collapsedRect.y);
+            nsRefPtr<gfxImageSurface> img =
+                new gfxImageSurface(gfxImageSurface::ImageFormatA8, 
+                                    collapsedRect.width, collapsedRect.height);
+            img->SetDeviceOffset(-collapsedRect.x, -collapsedRect.y);
+            
+            nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
+            imgCtx->SetPattern(pattern);
+            imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+            imgCtx->Paint();
         
-        nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
-        imgCtx->SetPattern(pattern);
-        imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        imgCtx->Paint();
-        
-        UpdateTranslucentWindowAlphaInternal(nsRect(collapsedRect.x, collapsedRect.y,
-                                                    collapsedRect.width, collapsedRect.height),
-                                             img->Data(), img->Stride());
+            UpdateTranslucentWindowAlphaInternal(nsRect(collapsedRect.x, collapsedRect.y,
+                                                        collapsedRect.width, collapsedRect.height),
+                                                 img->Data(), img->Stride());
+        }
+    } else {
+        // ignore
+        ctx->PopGroup();
     }
+
     ctx->Restore();
 #endif
 
