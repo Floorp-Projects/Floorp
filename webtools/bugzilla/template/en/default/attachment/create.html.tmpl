@@ -105,6 +105,17 @@
 
     </script>
 [% END %]
+<script type="text/javascript">
+    function updateCommentPrivacy(checkbox) {
+        var text_elem = document.getElementById('comment');
+        if (checkbox.checked) {
+            text_elem.className='bz_private';
+        } else {
+            text_elem.className='';
+        }
+    }
+
+</script>
 
 
 <form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
@@ -190,7 +201,8 @@
         <th>Privacy:</th>
         <td>
           <em>If the attachment is private, check the box below.</em><br>
-          <input type="checkbox" name="isprivate" id="isprivate" value="1">
+          <input type="checkbox" name="isprivate" id="isprivate"
+          value="1" onClick="updateCommentPrivacy(this)">
         <label for="isprivate">Private</label>
         </td>
       </tr>
