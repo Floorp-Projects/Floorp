@@ -78,7 +78,7 @@ public:
     /**
      * Return the current target surface
      */
-    already_AddRefed<gfxASurface> CurrentSurface();
+    gfxASurface *CurrentSurface();
 
     /**
      * Return the current transparency group target, if any
