@@ -1749,6 +1749,8 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
          * finally nodes are unary (just the finally expression)
          */
         pn = NewParseNode(cx, ts, PN_TERNARY, tc);
+        if (!pn)
+            return NULL;
         pn->pn_op = JSOP_NOP;
 
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
