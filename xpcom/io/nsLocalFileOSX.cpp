@@ -2038,7 +2038,9 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
                               kCFStringEncodingUTF8, 0, PR_FALSE, nsnull, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
-    aOutStr.SetLength(charsConverted);
+    aOutStr.SetLength(usedBufLen);
+    if (aOutStr.Length() != usedBufLen)
+      return NS_ERROR_OUT_OF_MEMORY;
     UInt8 *buffer = (UInt8*) aOutStr.BeginWriting();
 
     ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
