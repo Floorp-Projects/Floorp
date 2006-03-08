@@ -42,6 +42,7 @@
 #include <uconv.h>
 #include "nsAutoBuffer.h"
 #include "nsICharsetConverterManager.h"
+#include "gfxCore.h"
 
 
 enum ConverterRequest {
@@ -49,7 +50,7 @@ enum ConverterRequest {
   eConv_Decoder
 };
 
-class OS2Uni {
+class NS_GFX OS2Uni {
 public:
   static nsISupports* GetUconvObject(int CodePage, ConverterRequest aReq);
   static void FreeUconvObjects();
@@ -62,11 +63,11 @@ private:
 typedef nsAutoBuffer<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
 typedef nsAutoBuffer<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
-nsresult WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
-                             PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
-                             PRInt32& aResultLength);
-nsresult MultiByteToWideChar(int aCodePage, const char* aSrc,
-                             PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
-                             PRInt32& aResultLength);
-
+NS_GFX_(nsresult) WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
+                                      PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
+                                      PRInt32& aResultLength);
+NS_GFX_(nsresult) MultiByteToWideChar(int aCodePage, const char* aSrc,
+                                      PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
+                                      PRInt32& aResultLength);
+         
 #endif
