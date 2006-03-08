@@ -1132,7 +1132,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
-    indirectCall = (caller && caller->pc && *caller->pc != JSOP_EVAL);
+    JS_ASSERT(!caller || caller->pc);
+    indirectCall = (caller && *caller->pc != JSOP_EVAL);
 
     if (JS_VERSION_IS_ECMA(cx) &&
         indirectCall &&
