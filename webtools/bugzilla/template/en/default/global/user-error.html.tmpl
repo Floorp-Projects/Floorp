@@ -508,6 +508,14 @@
     The sort key must be an integer between 0 and 32767 inclusive.
     It cannot be <em>[% sortkey FILTER html %]</em>.
 
+  [% ELSIF error == "group_cannot_delete" %]
+    [% title = "Cannot Delete Group" %]
+    The <em>[% name FILTER html %]</em> group cannot be deleted because
+    there are
+    <a href="editgroups.cgi?action=del&amp;group=[% gid FILTER url_quote %]">records</a>
+    in the database which refer to it. All references to this group must
+    be removed before you can remove it.
+
   [% ELSIF error == "group_exists" %]
     [% title = "The group already exists" %]
     The group [% name FILTER html %] already exists.

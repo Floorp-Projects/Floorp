@@ -426,32 +426,31 @@ if ($action eq 'delete') {
         $cantdelete = 1;
     }
 
-    if (!$cantdelete) {
-        $dbh->do('UPDATE flagtypes SET grant_group_id = ?
-                   WHERE grant_group_id = ?',
-                  undef, (undef, $gid));
-        $dbh->do('UPDATE flagtypes SET request_group_id = ?
-                   WHERE request_group_id = ?',
-                  undef, (undef, $gid));
-        $dbh->do('DELETE FROM user_group_map WHERE group_id = ?',
-                  undef, $gid);
-        $dbh->do('DELETE FROM group_group_map 
-                   WHERE grantor_id = ? OR member_id = ?',
-                  undef, ($gid, $gid));
-        $dbh->do('DELETE FROM bug_group_map WHERE group_id = ?',
-                  undef, $gid);
-        $dbh->do('DELETE FROM group_control_map WHERE group_id = ?',
-                  undef, $gid);
-        $dbh->do('DELETE FROM whine_schedules
-                   WHERE mailto_type = ? AND mailto = ?',
-                  undef, (MAILTO_GROUP, $gid));
-        $dbh->do('DELETE FROM groups WHERE id = ?',
-                  undef, $gid);
-    }
-
     $vars->{'gid'}        = $gid;
     $vars->{'name'}       = $name;
-    $vars->{'cantdelete'} = $cantdelete;
+
+    ThrowUserError('group_cannot_delete', $vars) if $cantdelete;
+
+    $dbh->do('UPDATE flagtypes SET grant_group_id = ?
+               WHERE grant_group_id = ?',
+              undef, (undef, $gid));
+    $dbh->do('UPDATE flagtypes SET request_group_id = ?
+               WHERE request_group_id = ?',
+              undef, (undef, $gid));
+    $dbh->do('DELETE FROM user_group_map WHERE group_id = ?',
+              undef, $gid);
+    $dbh->do('DELETE FROM group_group_map 
+               WHERE grantor_id = ? OR member_id = ?',
+              undef, ($gid, $gid));
+    $dbh->do('DELETE FROM bug_group_map WHERE group_id = ?',
+              undef, $gid);
+    $dbh->do('DELETE FROM group_control_map WHERE group_id = ?',
+              undef, $gid);
+    $dbh->do('DELETE FROM whine_schedules
+               WHERE mailto_type = ? AND mailto = ?',
+              undef, (MAILTO_GROUP, $gid));
+    $dbh->do('DELETE FROM groups WHERE id = ?',
+              undef, $gid);
 
     print $cgi->header();
     $template->process("admin/groups/deleted.html.tmpl", $vars)
