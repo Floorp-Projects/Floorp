@@ -474,13 +474,12 @@ txExecutionState::retrieveDocument(const nsAString& aUri)
 
     if (!entry->mDocument) {
         // open URI
-        nsAutoString errMsg, refUri;
-        // XXX we should get the referrer from the actual node
+        nsAutoString errMsg;
+        // XXX we should get the loader from the actual node
         // triggering the load, but this will do for the time being
-        txXPathNodeUtils::getBaseURI(*mLoadedDocuments.mSourceDocument, refUri);
         nsresult rv;
-        rv = txParseDocumentFromURI(aUri, refUri,
-                                    *mLoadedDocuments.mSourceDocument, errMsg,
+        rv = txParseDocumentFromURI(aUri, *mLoadedDocuments.mSourceDocument,
+                                    errMsg,
                                     getter_Transfers(entry->mDocument));
 
         if (NS_FAILED(rv) || !entry->mDocument) {
