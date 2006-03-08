@@ -69,10 +69,10 @@ exit;
 sub queue {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
-    
-    validateStatus($cgi->param('status'));
-    validateGroup($cgi->param('group'));
-    
+
+    my $status = validateStatus($cgi->param('status'));
+    my $form_group = validateGroup($cgi->param('group'));
+
     my $attach_join_clause = "flags.attach_id = attachments.attach_id";
     if (Param("insidergroup") && !UserInGroup(Param("insidergroup"))) {
         $attach_join_clause .= " AND attachments.isprivate < 1";
@@ -132,7 +132,7 @@ sub queue {
     $query .= " AND flags.is_active = 1 ";
     
     # Limit query to pending requests.
-    $query .= " AND flags.status = '?' " unless $cgi->param('status');
+    $query .= " AND flags.status = '?' " unless $status;
 
     # The set of criteria by which we filter records to display in the queue.
     my @criteria = ();
@@ -146,13 +146,13 @@ sub queue {
     
     # Filter requests by status: "pending", "granted", "denied", "all" 
     # (which means any), or "fulfilled" (which means "granted" or "denied").
-    if ($cgi->param('status')) {
-        if ($cgi->param('status') eq "+-") {
+    if ($status) {
+        if ($status eq "+-") {
             push(@criteria, "flags.status IN ('+', '-')");
             push(@excluded_columns, 'status') unless $cgi->param('do_union');
         }
-        elsif ($cgi->param('status') ne "all") {
-            push(@criteria, "flags.status = '" . $cgi->param('status') . "'");
+        elsif ($status ne "all") {
+            push(@criteria, "flags.status = '$status'");
             push(@excluded_columns, 'status') unless $cgi->param('do_union');
         }
     }
@@ -237,7 +237,6 @@ sub queue {
     # so the loop in the display template can break them up into separate
     # tables every time the value in the group column changes.
 
-    my $form_group = $cgi->param('group');
     $form_group ||= "requestee";
     if ($form_group eq "requester") {
         $query .= " ORDER BY requesters.realname, requesters.login_name";
@@ -304,20 +303,24 @@ sub queue {
 ################################################################################
 
 sub validateStatus {
-    my $status = $_[0];
+    my $status = shift;
     return if !defined $status;
-    
+
     grep($status eq $_, qw(? +- + - all))
       || ThrowCodeError("flag_status_invalid",
                         { status => $status });
+    trick_taint($status);
+    return $status;
 }
 
 sub validateGroup {
-    my $group = $_[0];
+    my $group = shift;
     return if !defined $group;
-    
+
     grep($group eq $_, qw(requester requestee category type))
       || ThrowCodeError("request_queue_group_invalid", 
                         { group => $group });
+    trick_taint($group);
+    return $group;
 }
 
