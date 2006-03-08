@@ -201,6 +201,7 @@ nsresult
 nsThebesImage::Optimize(nsIDeviceContext* aContext)
 {
     UpdateFromLockedData();
+    EnsureImageSurface();
 
     if (!mOptSurface) {
         gfxASurface::gfxImageFormat real_format;
