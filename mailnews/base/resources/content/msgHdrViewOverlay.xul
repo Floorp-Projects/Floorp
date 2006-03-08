@@ -79,6 +79,8 @@
 <popup id="attachmentListContext" onpopupshowing="return onShowAttachmentContextMenu();">
   <menuitem id="context-openAttachment" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('openAttachment');"/>
+  <menuitem id="context-viewAttachment" label="&viewAttachmentCmd.label;" accesskey="&viewAttachmentCmd.accesskey;"
+     oncommand="handleAttachmentSelection('viewAttachment');"/>
   <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('saveAttachment');"/>
   <menuseparator/>

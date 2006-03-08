@@ -910,6 +910,15 @@ createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
                              false);
 }
 
+createNewAttachmentInfo.prototype.viewAttachment = function viewAttachment()
+{
+  var url = this.url;
+  if (!this.isExternalAttachment)
+    url += "&filename=" + encodeURIComponent(this.displayName);
+  openDialog("chrome://navigator/content/viewSource.xul",
+             "_blank", "all,dialog=no", url);
+}
+
 createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
 {
   messenger.openAttachment(this.contentType, 
@@ -959,6 +968,7 @@ function onShowAttachmentContextMenu()
   var attachmentList = document.getElementById('attachmentList');
   var selectedAttachments = attachmentList.selectedItems;
   var openMenu = document.getElementById('context-openAttachment');
+  var viewMenu = document.getElementById('context-viewAttachment');
   var saveMenu = document.getElementById('context-saveAttachment');
   var detachMenu = document.getElementById('context-detachAttachment');
   var deleteMenu = document.getElementById('context-deleteAttachment');
@@ -971,10 +981,12 @@ function onShowAttachmentContextMenu()
   if (canOpen && selectedAttachments.length == 1)
   {
     openMenu.removeAttribute('disabled');
+    viewMenu.removeAttribute('disabled');
   }
   else
   {
     openMenu.setAttribute('disabled', true);
+    viewMenu.setAttribute('disabled', true);
   }
   if (canOpen)
   {
@@ -1165,71 +1177,52 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
 
       item.setAttribute('label', formattedDisplayNameString); 
       item.setAttribute('accesskey', attachmentIndex); 
+
+      var openpopup = document.createElement('menupopup');
+      openpopup = item.appendChild(openpopup);
       if (attachment.contentType == "text/x-moz-deleted") {
         item.setAttribute('disabled', 'true');
         return;
       }
+      openpopup.attachment = attachment;
+      openpopup.addEventListener('popupshowing', FillAttachmentItemPopup, false);
       setApplicationIconForAttachment(attachment, item);
-      var canDetach = CanDetachAttachments();
+    }
+  }
+}
 
-      var openpopup = document.createElement('menupopup');
-      openpopup = item.appendChild(openpopup);
+function FillAttachmentItemPopup(event)
+{
+  var canDetach = CanDetachAttachments();
+  var openpopup = event.target;
+  openpopup.removeEventListener('popupshowing', FillAttachmentItemPopup, false);
 
-      var menuitementry = document.createElement('menuitem');     
+  var menuitementry = document.getElementById("context-openAttachment").cloneNode(false);
+  menuitementry.setAttribute('oncommand', 'this.parentNode.attachment.openAttachment();'); 
+  menuitementry = openpopup.appendChild(menuitementry);
 
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.openAttachment()'); 
+  menuitementry = document.getElementById("context-viewAttachment").cloneNode(false);
+  menuitementry.setAttribute('oncommand', 'this.parentNode.attachment.viewAttachment();');
+  menuitementry = openpopup.appendChild(menuitementry);
 
-      if (!gDeleteLabel)
-        gDeleteLabel = gMessengerBundle.getString("deleteLabel");
-      if (!gDeleteLabelAccesskey)
-        gDeleteLabelAccesskey = gMessengerBundle.getString("deleteLabelAccesskey");
-      if (!gDetachLabel)
-        gDetachLabel = gMessengerBundle.getString("detachLabel");
-      if (!gDetachLabelAccesskey)
-        gDetachLabelAccesskey = gMessengerBundle.getString("detachLabelAccesskey");
-      if (!gSaveLabel)
-        gSaveLabel = gMessengerBundle.getString("saveLabel");
-      if (!gSaveLabelAccesskey)
-        gSaveLabelAccesskey = gMessengerBundle.getString("saveLabelAccesskey");
-      if (!gOpenLabel)
-        gOpenLabel = gMessengerBundle.getString("openLabel");
-      if (!gOpenLabelAccesskey)
-        gOpenLabelAccesskey = gMessengerBundle.getString("openLabelAccesskey");
+  menuitementry = document.getElementById("context-saveAttachment").cloneNode(false);
+  menuitementry.setAttribute('oncommand', 'this.parentNode.attachment.saveAttachment()'); 
+  menuitementry = openpopup.appendChild(menuitementry);
 
-      menuitementry.setAttribute('label', gOpenLabel); 
-      menuitementry.setAttribute('accesskey', gOpenLabelAccesskey); 
-      menuitementry = openpopup.appendChild(menuitementry);
+  var menuseparator = document.createElement('menuseparator');
+  openpopup.appendChild(menuseparator);
 
-      menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.saveAttachment()'); 
-      menuitementry.setAttribute('label', gSaveLabel); 
-      menuitementry.setAttribute('accesskey', gSaveLabelAccesskey); 
-      menuitementry = openpopup.appendChild(menuitementry);
+  menuitementry = document.getElementById("context-detachAttachment").cloneNode(false);
+  menuitementry.setAttribute('oncommand', 'this.parentNode.attachment.detachAttachment()'); 
+  if (!canDetach)
+    menuitementry.setAttribute('disabled', 'true');
+  menuitementry = openpopup.appendChild(menuitementry);
 
-      var menuseparator = document.createElement('menuseparator');
-      openpopup.appendChild(menuseparator);
-
-      menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.detachAttachment()'); 
-      menuitementry.setAttribute('label', gDetachLabel); 
-      menuitementry.setAttribute('accesskey', gDetachLabelAccesskey); 
-      if (!canDetach)
-        menuitementry.setAttribute('disabled', 'true');
-      menuitementry = openpopup.appendChild(menuitementry);
-
-      menuitementry = document.createElement('menuitem');
-      menuitementry.attachment = attachment;
-      menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
-      menuitementry.setAttribute('label', gDeleteLabel); 
-      menuitementry.setAttribute('accesskey', gDeleteLabelAccesskey); 
-      if (!canDetach)
-        menuitementry.setAttribute('disabled', 'true');
-      menuitementry = openpopup.appendChild(menuitementry);
-    }  // if we created a menu item for this attachment...
-  } // if we have a popup
+  menuitementry = document.getElementById("context-deleteAttachment").cloneNode(false);
+  menuitementry.setAttribute('oncommand', 'this.attachment.deleteAttachment()'); 
+  if (!canDetach)
+    menuitementry.setAttribute('disabled', 'true');
+  menuitementry = openpopup.appendChild(menuitementry);
 } 
 
 function HandleMultipleAttachments(commandPrefix, selectedAttachments)
@@ -1291,7 +1284,7 @@ function HandleMultipleAttachments(commandPrefix, selectedAttachments)
 function ClearAttachmentList() 
 { 
   // we also have to disable the File/Attachments menuitem
-  node = document.getElementById("fileAttachmentMenu");
+  var node = document.getElementById("fileAttachmentMenu");
   if (node)
     node.setAttribute("disabled", "true");
 

@@ -57,6 +57,8 @@
 <!ENTITY attachmentsTree.label             "Attachments:">
 <!ENTITY openAttachmentCmd.label           "Open">
 <!ENTITY openAttachmentCmd.accesskey       "O">
+<!ENTITY viewAttachmentCmd.label           "View Source">
+<!ENTITY viewAttachmentCmd.accesskey       "V">
 <!ENTITY saveAsAttachmentCmd.label         "Save As...">
 <!ENTITY saveAsAttachmentCmd.accesskey     "A">
 <!ENTITY printAttachmentCmd.label          ".Print">
