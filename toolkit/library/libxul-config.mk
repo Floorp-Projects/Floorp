@@ -60,8 +60,25 @@ endif
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/windows
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 DEFINES	+= -DZLIB_DLL=1
+endif
+
+ifeq ($(OS_ARCH),OS2)
+REQUIRES += libreg widget gfx
+
+CPPSRCS += \
+	dlldeps.cpp \
+	dlldeps-obs.cpp \
+	nsGFXDeps.cpp \
+	$(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+CPPSRCS += dlldeps-zlib.cpp
+DEFINES += -DZLIB_INTERNAL
+endif
+
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
 endif
 
 # dependent libraries

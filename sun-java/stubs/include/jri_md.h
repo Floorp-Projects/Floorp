@@ -68,18 +68,8 @@ extern "C" {
 
 /* DLL Entry modifiers... */
 
-/* PC */
-#if defined(XP_OS2)
-#  ifdef XP_OS2_VACPP
-#	  define JRI_PUBLIC_API(ResultType)	    ResultType _Optlink
-#	  define JRI_PUBLIC_VAR(VarType)        VarType
-#     define JRI_CALLBACK
-#  else
-#	  define JRI_PUBLIC_API(ResultType)	    ResultType
-#	  define JRI_PUBLIC_VAR(VarType)        VarType
-#     define JRI_CALLBACK
-#  endif
-#elif defined(XP_WIN) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
+/* Windows */
+#if defined(XP_WIN) || defined(_WINDOWS) || defined(WIN32) || defined(_WIN32)
 #	include <windows.h>
 #	if defined(_MSC_VER) || defined(__GNUC__)
 #		if defined(WIN32) || defined(_WIN32)
@@ -127,6 +117,25 @@ extern "C" {
 #	endif
 #	ifndef IS_LITTLE_ENDIAN
 #		define IS_LITTLE_ENDIAN
+#	endif
+
+/* OS/2 */
+#elif defined(XP_OS2)
+#	ifdef XP_OS2_VACPP
+#		define JRI_PUBLIC_API(ResultType)	ResultType _Optlink
+#		define JRI_PUBLIC_VAR(VarType)		VarType
+#     		define JRI_CALLBACK
+#	elif defined(__declspec)
+#		define JRI_PUBLIC_API(ResultType)  	__declspec(dllexport) ResultType
+#		define JRI_PUBLIC_VAR(VarType)	   	VarType
+#		define JRI_PUBLIC_VAR_EXP(VarType) 	__declspec(dllexport) VarType
+#		define JRI_PUBLIC_VAR_IMP(VarType) 	__declspec(dllimport) VarType
+#		define JRI_NATIVE_STUB(ResultType) 	__declspec(dllexport) ResultType
+#		define JRI_CALLBACK
+#	else
+#		define JRI_PUBLIC_API(ResultType)	ResultType
+#		define JRI_PUBLIC_VAR(VarType)		VarType
+#		define JRI_CALLBACK
 #	endif
 
 /* Mac */

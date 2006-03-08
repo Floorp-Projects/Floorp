@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 3.9 2005/08/04 19:14:14 tor%cs.brown.edu Exp $ */
+/* @(#) $Id: zconf.h,v 3.10 2006/03/08 19:21:35 mkaply%us.ibm.com Exp $ */
 
 #ifndef ZCONF_H
 #define ZCONF_H
@@ -230,6 +230,18 @@
 #      define ZEXPORTVA WINAPIV
 #    else
 #      define ZEXPORTVA FAR CDECL
+#    endif
+#  endif
+#endif
+
+#if defined(__OS2__) && defined(__declspec)
+#  ifdef ZLIB_DLL
+#    ifdef ZLIB_INTERNAL
+#      define ZEXPORT   __declspec(dllexport)
+#      define ZEXPORTVA __declspec(dllexport)
+#    else
+#      define ZEXPORT   __declspec(dllimport)
+#      define ZEXPORTVA __declspec(dllimport)
 #    endif
 #  endif
 #endif

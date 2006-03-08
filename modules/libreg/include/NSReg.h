@@ -127,6 +127,8 @@ typedef struct _reginfo
   #else
   #define VR_INTERFACE(type)     type _far _pascal _export
   #endif
+#elif defined(XP_OS2) && defined(__declspec)
+  #define VR_INTERFACE(type)     __declspec(dllexport) type
 #elif defined XP_MAC
   #define VR_INTERFACE(__x)  __declspec(export) __x
 #elif defined (HAVE_VISIBILITY_ATTRIBUTE)
