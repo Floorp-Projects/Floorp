@@ -2910,7 +2910,7 @@ nsMsgDBView::PerformActionsOnJunkMsgs()
       mTreeSelection->IsSelected(mJunkIndices[junkIndex], &junkedMsgSelected);
 
     // if a junked msg is selected, tell the FE to call SetNextMessageAfterDelete() because a delete is coming
-    if (junkedMsgSelected)
+    if (junkedMsgSelected && mCommandUpdater)
     {
       rv = mCommandUpdater->UpdateNextMessageAfterDelete();
       NS_ENSURE_SUCCESS(rv,rv);
