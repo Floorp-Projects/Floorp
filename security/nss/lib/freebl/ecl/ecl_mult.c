@@ -57,7 +57,7 @@ ECPoint_mul(const ECGroup *group, const mp_int *k, const mp_int *px,
 	MP_DIGITS(&kt) = 0;
 
 	/* want scalar to be less than or equal to group order */
-	if (mp_cmp(k, &group->order) >= 0) {
+	if (mp_cmp(k, &group->order) > 0) {
 		MP_CHECKOK(mp_init(&kt));
 		MP_CHECKOK(mp_mod(k, &group->order, &kt));
 	} else {
