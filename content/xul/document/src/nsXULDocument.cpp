@@ -1808,7 +1808,7 @@ nsXULDocument::SetTemplateBuilderFor(nsIContent* aContent,
 
     nsISupportsKey key(aContent);
 
-    if (aContent) {
+    if (aBuilder) {
         mTemplateBuilderTable->Put(&key, aBuilder);
     }
     else {
