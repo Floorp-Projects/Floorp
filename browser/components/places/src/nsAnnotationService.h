@@ -64,6 +64,7 @@ protected:
 
   nsCOMPtr<mozIStorageStatement> mDBSetAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotation;
+  nsCOMPtr<mozIStorageStatement> mDBGetAnnotationNames;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationFromURI;
   nsCOMPtr<mozIStorageStatement> mDBAddAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBRemoveAnnotation;
