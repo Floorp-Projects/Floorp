@@ -517,7 +517,7 @@ typedef struct mozce_MAT2 {
 } mozce_MAT2; 
 
 
-#if 0
+#if UNDER_CE<501
 
 // These are already defined the 5.0 SDK.  You will needed
 // these defines if you are using another SDK

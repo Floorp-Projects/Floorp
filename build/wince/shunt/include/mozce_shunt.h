@@ -701,10 +701,10 @@
 #endif
 #define OleSetClipboard          mozce_OleSetClipboard
 
-#ifdef AlphaBlend
-#undef AlphaBlend
-#endif
-#define AlphaBlend mozce_AlphaBlend
+//#ifdef AlphaBlend
+//#undef AlphaBlend
+//#endif
+//#define AlphaBlend mozce_AlphaBlend
 
 // From win32a.cpp
 
@@ -1306,6 +1306,7 @@ extern "C" {
   MOZCE_SHUNT_API time_t mozce_mktime(struct tm* inTM);
   MOZCE_SHUNT_API size_t mozce_strftime(char *strDest, size_t maxsize, const char *format, const struct tm *timeptr);
 
+#if UNDER_CE<501  //already defined in 5.0 sdk
   // from win32.cpp
 
   MOZCE_SHUNT_API BOOL mozce_AlphaBlend(  HDC hdcDest,
@@ -1319,7 +1320,7 @@ extern "C" {
 										  int nWidthSrc,
 										  int nHeightSrc,
                                           BLENDFUNCTION blendFunction);
-
+#endif
 
   MOZCE_SHUNT_API struct lconv * mozce_localeconv(void);
        

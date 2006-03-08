@@ -1,3 +1,4 @@
+mk_add_options MOZ_CO_TAG=MOZILLA_1_8_BRANCH
 mk_add_options NSPR_CO_TAG=NSPRPUB_PRE_4_2_WINCE_BRANCH
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-dir-minimo-8-opt
@@ -21,6 +22,15 @@ ac_add_options --enable-default-toolkit=windows
 WINCE=1
 mk_add_options WINCE=1
 
+# If you are building under Window Mobile 5.0, uncomment this
+#WM50=1
+#mk_add_options WM50=1
+
+# If you are building for smartphones, uncomment this
+#SMARTPHONE=1
+#mk_add_options SMARTPHONE=1
+
+
 TARGET_DEVICE=device
 mk_add_options TARGET_DEVICE=device
 
@@ -34,3 +44,6 @@ ac_add_options --disable-shared
 ac_add_options --enable-static
 
 ac_add_options --disable-crypto
+
+
+#ac_add_options --enable-logging
