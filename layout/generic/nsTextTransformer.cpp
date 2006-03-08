@@ -594,6 +594,7 @@ nsTextTransformer::ScanNormalUnicodeText_F(PRBool   aForLineBreak,
         PRUnichar ch = *cp++;
         if (CH_NBSP == ch) {
           ch = ' ';
+          *aWasTransformed = PR_TRUE;
         }
         else if (IS_DISCARDED(ch) || (ch == 0x0a) || (ch == 0x0d)) {
           // Strip discarded characters from the transformed output
