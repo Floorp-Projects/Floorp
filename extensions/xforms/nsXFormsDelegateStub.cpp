@@ -190,9 +190,20 @@ nsXFormsDelegateStub::ReportError(const nsAString& aErrorMsg)
 NS_IMETHODIMP
 nsXFormsDelegateStub::WidgetAttached()
 {
-  if (UpdateRepeatState() != eType_Template)
-    nsXFormsModelElement::NeedsPostRefresh(this);
+  if (UpdateRepeatState() == eType_Template)
+    return NS_OK;
 
+  if (mBindAttrsCount) {
+    // If control is bounded to instance data then we should ask for refresh
+    // only when model is loaded entirely. The reason is control is refreshed
+    // by model when it get loaded.
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc))
+      return NS_OK;
+  }
+
+  nsXFormsModelElement::NeedsPostRefresh(this);
   return NS_OK;
 }
 
