@@ -70,6 +70,7 @@ To: %to%
 Subject: [Bug %bugid%] %neworchanged%%summary%
 %threadingmarker%
 X-Bugzilla-Reason: %reasonsheader%
+X-Bugzilla-Watch-Reason: %reasonswatchheader%
 X-Bugzilla-Product: %product%
 X-Bugzilla-Component: %component%
 X-Bugzilla-Keywords: %keywords%

@@ -48,6 +48,9 @@ use MIME::QuotedPrint;
 use MIME::Parser;
 use Mail::Address;
 
+use constant BIT_DIRECT    => 1;
+use constant BIT_WATCHING  => 2;
+
 # We need these strings for the X-Bugzilla-Reasons header
 # Note: this hash uses "," rather than "=>" to avoid auto-quoting of the LHS.
 my %rel_names = (REL_ASSIGNEE          , "AssignedTo", 
@@ -338,6 +341,7 @@ sub ProcessOneBug {
     
     # A user_id => roles hash to keep track of people.
     my %recipients;
+    my %watching;
     
     # Now we work out all the people involved with this bug, and note all of
     # the relationships in a hash. The keys are userids, the values are an
@@ -347,24 +351,24 @@ sub ProcessOneBug {
     my $voters = $dbh->selectcol_arrayref(
         "SELECT who FROM votes WHERE bug_id = ?", undef, ($id));
         
-    push(@{$recipients{$_}}, REL_VOTER) foreach (@$voters);
+    $recipients{$_}->{+REL_VOTER} = BIT_DIRECT foreach (@$voters);
 
     # CCs
-    push(@{$recipients{$_}}, REL_CC) foreach (@ccs);
+    $recipients{$_}->{+REL_CC} = BIT_DIRECT foreach (@ccs);
     
     # Reporter (there's only ever one)
-    push(@{$recipients{$reporter}}, REL_REPORTER);
+    $recipients{$reporter}->{+REL_REPORTER} = BIT_DIRECT;
     
     # QA Contact
     if (Param('useqacontact')) {
         foreach (@qa_contacts) {
             # QA Contact can be blank; ignore it if so.
-            push(@{$recipients{$_}}, REL_QA) if $_;
+            $recipients{$_}->{+REL_QA} = BIT_DIRECT if $_;
         }
     }
 
     # Assignee
-    push(@{$recipients{$_}}, REL_ASSIGNEE) foreach (@assignees);
+    $recipients{$_}->{+REL_ASSIGNEE} = BIT_DIRECT foreach (@assignees);
 
     # The last relevant set of people are those who are being removed from 
     # their roles in this change. We get their names out of the diffs.
@@ -377,16 +381,16 @@ sub ProcessOneBug {
             if ($what eq "CC") {
                 foreach my $cc_user (split(/[\s,]+/, $old)) {
                     my $uid = login_to_id($cc_user);
-                    push(@{$recipients{$uid}}, REL_CC) if $uid;
+                    $recipients{$uid}->{+REL_CC} = BIT_DIRECT if $uid;
                 }
             }
             elsif ($what eq "QAContact") {
                 my $uid = login_to_id($old);
-                push(@{$recipients{$uid}}, REL_QA) if $uid;
+                $recipients{$uid}->{+REL_QA} = BIT_DIRECT if $uid;
             }
             elsif ($what eq "AssignedTo") {
                 my $uid = login_to_id($old);
-                push(@{$recipients{$uid}}, REL_ASSIGNEE) if $uid;
+                $recipients{$uid}->{+REL_ASSIGNEE} = BIT_DIRECT if $uid;
             }
         }
     }
@@ -398,12 +402,15 @@ sub ProcessOneBug {
 
         my $userwatchers = 
             $dbh->selectall_arrayref("SELECT watcher, watched FROM watch 
-                                      WHERE watched IN ($involved)
-                                      AND watcher NOT IN ($involved)");
+                                      WHERE watched IN ($involved)");
 
         # Mark these people as having the role of the person they are watching
         foreach my $watch (@$userwatchers) {
-            $recipients{$watch->[0]} = $recipients{$watch->[1]};
+            while (my ($role, $bits) = each %{$recipients{$watch->[1]}}) {
+                $recipients{$watch->[0]}->{$role} |= BIT_WATCHING
+                    if $bits & BIT_DIRECT;
+            }
+            push (@{$watching{$watch->[0]}}, $watch->[1]);
         }
     }
         
@@ -414,7 +421,7 @@ sub ProcessOneBug {
     my @excluded;
 
     foreach my $user_id (keys %recipients) {
-        my @rels_which_want;
+        my %rels_which_want;
         my $sent_mail = 0;
 
         my $user = new Bugzilla::User($user_id);
@@ -425,19 +432,20 @@ sub ProcessOneBug {
         {
             # Go through each role the user has and see if they want mail in
             # that role.
-            foreach my $relationship (@{$recipients{$user_id}}) {
+            foreach my $relationship (keys %{$recipients{$user_id}}) {
                 if ($user->wants_bug_mail($id,
                                           $relationship, 
                                           $diffs, 
                                           $newcomments, 
                                           $changer))
                 {
-                    push(@rels_which_want, $relationship);
+                    $rels_which_want{$relationship} = 
+                        $recipients{$user_id}->{$relationship};
                 }
             }
         }
         
-        if (scalar(@rels_which_want)) {
+        if (scalar(%rels_which_want)) {
             # So the user exists, can see the bug, and wants mail in at least
             # one role. But do we want to send it to them?
 
@@ -469,7 +477,7 @@ sub ProcessOneBug {
                 # OK, OK, if we must. Email the user.
                 $sent_mail = sendMail($user, 
                                       \@headerlist,
-                                      \@rels_which_want, 
+                                      \%rels_which_want, 
                                       \%values,
                                       \%defmailhead, 
                                       \%fielddescription, 
@@ -477,7 +485,9 @@ sub ProcessOneBug {
                                       $newcomments, 
                                       $anyprivate, 
                                       $start, 
-                                      $id);
+                                      $id,
+                                      exists $watching{$user_id} ?
+                                             $watching{$user_id} : undef);
             }
         }
        
@@ -498,7 +508,7 @@ sub ProcessOneBug {
 sub sendMail {
     my ($user, $hlRef, $relRef, $valueRef, $dmhRef, $fdRef,  
         $diffRef, $newcomments, $anyprivate, $start, 
-        $id) = @_;
+        $id, $watchingRef) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
@@ -568,17 +578,22 @@ sub sendMail {
     # the email template and letting it choose the text.
     my $reasonsbody = "------- You are receiving this mail because: -------\n";
 
-    foreach my $relationship (@$relRef) {
+    while (my ($relationship, $bits) = each %{$relRef}) {
         if ($relationship == REL_ASSIGNEE) {
-            $reasonsbody .= "You are the assignee for the bug, or are watching the assignee.\n";
+            $reasonsbody .= "You are the assignee for the bug.\n"  if ($bits & BIT_DIRECT);
+            $reasonsbody .= "You are watching the assignee for the bug.\n" if ($bits & BIT_WATCHING);
         } elsif ($relationship == REL_REPORTER) {
-            $reasonsbody .= "You reported the bug, or are watching the reporter.\n";
+            $reasonsbody .= "You reported the bug.\n" if ($bits & BIT_DIRECT);
+            $reasonsbody .= "You are watching the reporter.\n" if ($bits & BIT_WATCHING);
         } elsif ($relationship == REL_QA) {
-            $reasonsbody .= "You are the QA contact for the bug, or are watching the QA contact.\n";
+            $reasonsbody .= "You are the QA contact for the bug.\n" if ($bits & BIT_DIRECT);
+            $reasonsbody .= "You are watching the QA contact for the bug.\n" if ($bits & BIT_WATCHING);
         } elsif ($relationship == REL_CC) {
-            $reasonsbody .= "You are on the CC list for the bug, or are watching someone who is.\n";
+            $reasonsbody .= "You are on the CC list for the bug.\n" if ($bits & BIT_DIRECT);
+            $reasonsbody .= "You are watching someone on the CC list for the bug.\n" if ($bits & BIT_WATCHING);
         } elsif ($relationship == REL_VOTER) {
-            $reasonsbody .= "You are a voter for the bug, or are watching someone who is.\n";
+            $reasonsbody .= "You are a voter for the bug.\n" if ($bits & BIT_DIRECT);
+            $reasonsbody .= "You are watching a voter for the bug.\n" if ($bits & BIT_WATCHING);
         }
     }
 
@@ -611,7 +626,17 @@ sub sendMail {
     $substs{"keywords"} = $values{'keywords'};
     $substs{"severity"} = $values{'bug_severity'};
     $substs{"summary"} = $values{'short_desc'};
-    $substs{"reasonsheader"} = join(" ", map { $rel_names{$_} } @$relRef);
+    my (@headerrel, @watchingrel);
+    while (my ($rel, $bits) = each %{$relRef}) {
+        push @headerrel, ($rel_names{$rel}) if ($bits & BIT_DIRECT);
+        push @watchingrel, ($rel_names{$rel}) if ($bits & BIT_WATCHING);
+    }
+    push @headerrel, 'None' if !scalar(@headerrel);
+    push @watchingrel, 'None' if !scalar(@watchingrel);
+    push @watchingrel, map { &::DBID_to_name($_) } @$watchingRef;
+    $substs{"reasonsheader"} = join(" ", @headerrel);
+    $substs{"reasonswatchheader"} = join(" ", @watchingrel);
+
     $substs{"reasonsbody"} = $reasonsbody;
     $substs{"space"} = " ";
     $substs{"changer"} = $values{'changer'};
