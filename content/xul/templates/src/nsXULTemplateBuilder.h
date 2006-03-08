@@ -100,6 +100,10 @@ public:
     virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType);
+    virtual void ContentRemoved(nsIDocument* aDocument,
+                                nsIContent* aContainer,
+                                nsIContent* aChild,
+                                PRInt32 aIndexInContainer);
     virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
     /**

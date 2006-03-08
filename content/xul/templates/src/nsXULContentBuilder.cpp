@@ -1582,10 +1582,11 @@ nsresult
 nsXULContentBuilder::GetElementsForResult(nsIXULTemplateResult* aResult,
                                           nsISupportsArray* aElements)
 {
+    // if the root has been removed from the document, just return
+    // since there won't be any generated content any more
     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
-    NS_ASSERTION(xuldoc, "expected a XUL document");
     if (! xuldoc)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     nsAutoString id;
     aResult->GetId(id);
@@ -1697,10 +1698,10 @@ nsXULContentBuilder::HasGeneratedContent(nsIRDFResource* aResource,
 
         NS_ConvertUTF8toUTF16 refID(uri);
 
+        // just return if the node is no longer in a document
         nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mRoot->GetDocument());
-        NS_ASSERTION(xuldoc, "expected a XUL document");
         if (! xuldoc)
-            return NS_ERROR_FAILURE;
+            return NS_OK;
 
         nsCOMPtr<nsISupportsArray> elements;
         rv = NS_NewISupportsArray(getter_AddRefs(elements));
@@ -2004,9 +2005,8 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
         // The tree widget is special, and has to be spanked every
         // time we add content to a container.
         nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-        NS_ASSERTION(doc, "root element has no document");
         if (! doc)
-            return NS_ERROR_UNEXPECTED;
+            return NS_OK;
 
         doc->ContentAppended(container, newIndex);
     }

@@ -881,6 +881,31 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument* aDocument,
 }
 
 void
+nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
+                                     nsIContent* aContainer,
+                                     nsIContent* aChild,
+                                     PRInt32 aIndexInContainer)
+{
+    if (mRoot && nsContentUtils::ContentIsDescendantOf(mRoot, aChild)) {
+        if (mQueryProcessor)
+            mQueryProcessor->Done();
+
+        // use false since content is going away anyway
+        Uninit(PR_FALSE);
+
+        aDocument->RemoveObserver(this);
+
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aDocument);
+        if (xuldoc)
+            xuldoc->SetTemplateBuilderFor(aChild, nsnull);
+
+        mDB = nsnull;
+        mCompDB = nsnull;
+        mRoot = nsnull;
+    }
+}
+
+void
 nsXULTemplateBuilder::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
     // The call to RemoveObserver could release the last reference to
@@ -1376,9 +1401,8 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
 
     if (! templateID.IsEmpty()) {
         nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mRoot->GetDocument());
-        NS_ASSERTION(domDoc, "expected a XUL document");
         if (! domDoc)
-            return NS_ERROR_FAILURE;
+            return NS_OK;
 
         nsCOMPtr<nsIDOMElement> domElement;
         domDoc->GetElementById(templateID, getter_AddRefs(domElement));
@@ -1407,9 +1431,8 @@ nsXULTemplateBuilder::GetTemplateRoot(nsIContent** aResult)
     // If we couldn't find a real child, look through the anonymous
     // kids, too.
     nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-    NS_ASSERTION(doc, "root element has no document");
     if (! doc)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     nsCOMPtr<nsIDOMNodeList> kids;
     doc->BindingManager()->GetXBLChildNodesFor(mRoot, getter_AddRefs(kids));
