@@ -702,7 +702,8 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
      * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
      * on the error report, and exception-aware hosts should ignore it.
      */
-    if (reportp && reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
+    JS_ASSERT(reportp); 
+    if (reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
         reportp->flags |= JSREPORT_EXCEPTION;
 
 #if JS_HAS_ERROR_EXCEPTIONS
