@@ -49,6 +49,7 @@
 #include "nsBidiFrames.h"
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsHTMLContainerFrame.h"
 
 static const PRUnichar kSpace            = 0x0020;
 static const PRUnichar kLineSeparator    = 0x2028;
@@ -122,6 +123,12 @@ SplitInlineAncestors(nsPresContext* aPresContext,
     // The new parent adopts the new frame
     frame->SetNextSibling(nsnull);
     rv = newParent->InsertFrames(nsLayoutAtoms::nextBidi, nsnull, newFrame);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    // Reparent views as necessary
+    rv = nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, newFrame, parent, newParent);
     if (NS_FAILED(rv)) {
       return rv;
     }
