@@ -226,8 +226,8 @@ private:
 
   /**
    * Helper method for Resolve()
-   * Delete one or more bidi continuation frames created in a previous reflow by
-   * EnsureBidiContinuation().
+   * Convert one or more bidi continuation frames created in a previous reflow by
+   * EnsureBidiContinuation() into fluid continuations.
    * @param aPresContext the pres context
    * @param aFrame       the frame whose continuations are to be removed
    * @param aFirstIndex  index of aFrame in mLogicalFrames
