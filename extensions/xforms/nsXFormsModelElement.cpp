@@ -408,7 +408,8 @@ nsXFormsModelElement::InitializeInstances()
     // Parse the whitespace-separated list.
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
     nsRefPtr<nsIURI> baseURI = content->GetBaseURI();
-    nsRefPtr<nsIURI> docURI = content->GetDocumentURI();
+    nsRefPtr<nsIURI> docURI = content->GetOwnerDoc() ?
+      content->GetOwnerDoc()->GetDocumentURI() : nsnull;
 
     nsCStringArray schemas;
     schemas.ParseString(NS_ConvertUTF16toUTF8(schemaList).get(), " \t\r\n");
