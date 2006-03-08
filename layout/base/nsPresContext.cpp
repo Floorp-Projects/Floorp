@@ -761,13 +761,13 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     nsIDocument *doc = mShell->GetDocument();
     NS_ASSERTION(doc, "expect document here");
     if (doc) {
-      nsIURI *baseURI = doc->GetBaseURI();
+      nsIURI *docURI = doc->GetDocumentURI();
 
-      if (mMedium != nsLayoutAtoms::print && baseURI) {
+      if (mMedium != nsLayoutAtoms::print && docURI) {
         PRBool isChrome = PR_FALSE;
         PRBool isRes = PR_FALSE;
-        baseURI->SchemeIs("chrome", &isChrome);
-        baseURI->SchemeIs("resource", &isRes);
+        docURI->SchemeIs("chrome", &isChrome);
+        docURI->SchemeIs("resource", &isRes);
 
         if (!isChrome && !isRes)
           mImageAnimationMode = mImageAnimationModePref;
