@@ -271,7 +271,8 @@ ssl_cov()
           ret=$?
           cat ${TMP}/$HOST.tmp.$$ 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          html_msg $ret 0 "${testname}"
+          html_msg $ret 0 "${testname}" \
+                   "produced a returncode of $ret, expected is 0"
       fi
   done < ${SSLCOV}
 
@@ -343,7 +344,9 @@ ssl_stress()
                    $verbose ${HOSTADDR}
           ret=$?
           echo "strsclnt completed at `date`"
-          html_msg $ret $value "${testname}"
+          html_msg $ret $value \
+                   "${testname}" \
+                   "produced a returncode of $ret, expected is $value. "
           if [ "`uname -n`" = "sjsu" ] ; then
               echo "debugging disapering selfserv... ps -ef | grep selfserv"
               ps -ef | grep selfserv
