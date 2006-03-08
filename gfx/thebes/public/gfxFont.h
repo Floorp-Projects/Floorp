@@ -181,9 +181,7 @@ public:
     /* unicode method */
     virtual gfxTextRun *MakeTextRun(const nsAString& aString) = 0;
     /* ASCII text only, not UTF-8 */
-    virtual gfxTextRun *MakeTextRun(const nsACString& aString) {
-        return MakeTextRun(NS_ConvertASCIItoUTF16(aString));
-    }
+    virtual gfxTextRun *MakeTextRun(const nsACString& aString) = 0;
 
 protected:
     /* helper function for splitting font families on commas and
