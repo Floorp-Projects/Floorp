@@ -168,7 +168,7 @@ public:
         
         // set blockCount
         NS_ASSERTION( (blockCount>=1) && (blockCount<=4),"invalid block count");
-        blockCount = --blockCount;
+        --blockCount;
         mDataLocation |= (blockCount << eExtraBlocksOffset) & eExtraBlocksMask;
         
         mDataLocation |= eLocationInitializedMask;
@@ -236,7 +236,7 @@ public:
         
         // set blockCount
         NS_ASSERTION( (blockCount>=1) && (blockCount<=4),"invalid block count");
-        blockCount = --blockCount;
+        --blockCount;
         mMetaLocation |= (blockCount << eExtraBlocksOffset) & eExtraBlocksMask;
         
         mMetaLocation |= eLocationInitializedMask;
