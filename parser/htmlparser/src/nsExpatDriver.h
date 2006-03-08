@@ -124,7 +124,7 @@ private:
 
   // Whether we're sure that we won't be getting more buffers to parse from
   // Necko
-  PRPackedBool     mEOF;
+  PRPackedBool     mIsFinalChunk;
 
   nsresult         mInternalState;
 

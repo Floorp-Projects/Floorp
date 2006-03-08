@@ -328,7 +328,7 @@ nsExpatDriver::nsExpatDriver()
     mInCData(PR_FALSE),
     mInInternalSubset(PR_FALSE),
     mInExternalDTD(PR_FALSE),
-    mEOF(PR_FALSE),
+    mIsFinalChunk(PR_FALSE),
     mInternalState(NS_OK),
     mExpatBuffered(0),
     mCatalogData(nsnull)
@@ -899,21 +899,30 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
          ("Remaining in expat's buffer: %i, remaining in scanner: %i.",
           mExpatBuffered, Distance(start, end)));
 
-  // We want to call Expat if we have more buffers, or if we're currently
-  // blocked and there's data in Expat's buffer, or if we know there won't be
-  // more buffers and there's data in Expat's buffer.
-  while (start != end ||
-         ((mInternalState == NS_ERROR_HTMLPARSER_BLOCK || mEOF) &&
-          mExpatBuffered > 0)) {
+  PRBool flush = mIsFinalChunk;
+
+  // We want to call Expat if we have more buffers, or if we know there won't
+  // be more buffers (and so we want to flush the remaining data), or if we're
+  // currently blocked and there's data in Expat's buffer.
+  while (start != end || flush ||
+         (mInternalState == NS_ERROR_HTMLPARSER_BLOCK && mExpatBuffered > 0)) {
+    PRBool noMoreBuffers = start == end && mIsFinalChunk;
+    PRBool blocked = mInternalState == NS_ERROR_HTMLPARSER_BLOCK;
+
+    // If we're resuming and we know there won't be more data we want to
+    // flush the remaining data after we resumed the parser (so loop once
+    // more).
+    flush = blocked && noMoreBuffers;
+
     const PRUnichar *buffer;
     PRUint32 length;
-    if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK || mEOF) {
+    if (blocked || noMoreBuffers) {
       // If we're blocked we just resume Expat so we don't need a buffer, if
       // there aren't any more buffers we pass a null buffer to Expat.
       buffer = nsnull;
       length = 0;
 
-      if (mInternalState == NS_ERROR_HTMLPARSER_BLOCK) {
+      if (blocked) {
         PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
                ("Resuming Expat, will parse data remaining in Expat's "
                 "buffer.\nContent of Expat's buffer:\n-----\n%s\n-----\n",
@@ -944,7 +953,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
     }
 
     PRUint32 consumed;
-    ParseBuffer(buffer, length, mEOF, &consumed);
+    ParseBuffer(buffer, length, noMoreBuffers, &consumed);
     if (consumed > 0) {
       nsScannerIterator oldExpatPosition = currentExpatPosition;
       currentExpatPosition.advance(consumed);
@@ -1014,11 +1023,11 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
       return mInternalState;
     }
 
-    if (mEOF) {
-      NS_ASSERTION(mExpatBuffered == 0 && currentExpatPosition == end,
-                   "Unreachable data left in Expat's buffer");
-      break;
-    }
+    // Either we have more buffers, or we were blocked (and we'll flush in the
+    // next iteration), or we should have emptied Expat's buffer.
+    NS_ASSERTION(!noMoreBuffers || blocked ||
+                 (mExpatBuffered == 0 && currentExpatPosition == end),
+                 "Unreachable data left in Expat's buffer");
 
     start.advance(length);
   }
@@ -1026,19 +1035,11 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, PRBool& aFlushTokens)
   aScanner.SetPosition(currentExpatPosition, PR_TRUE);
   aScanner.Mark();
 
-  nsresult rv = NS_SUCCEEDED(mInternalState) ? aScanner.FillBuffer() : NS_OK;
-
-  // Remember that there won't be any more data coming in.
-  mEOF = rv == kEOF && !aScanner.IsIncremental();
-
-  NS_ASSERTION(!mEOF || mExpatBuffered == Distance(currentExpatPosition, end),
-               "Didn't pass all the data to Expat?");
-
   PR_LOG(gExpatDriverLog, PR_LOG_DEBUG,
          ("Remaining in expat's buffer: %i, remaining in scanner: %i.",
           mExpatBuffered, Distance(currentExpatPosition, end)));
 
-  return rv;
+  return NS_SUCCEEDED(mInternalState) ? aScanner.FillBuffer() : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1133,6 +1134,7 @@ NS_IMETHODIMP
 nsExpatDriver::WillTokenize(PRBool aIsFinalChunk,
                             nsTokenAllocator* aTokenAllocator)
 {
+  mIsFinalChunk = aIsFinalChunk;
   return NS_OK;
 }
 
