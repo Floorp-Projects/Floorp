@@ -67,7 +67,7 @@
         <body>
         <![CDATA[
           var e = document.createEvent("Events");
-          e.initEvent("download-" + aEventType, false, true);
+          e.initEvent("download-" + aEventType, true, true);
           
           this.dispatchEvent(e);
         ]]>
