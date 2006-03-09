@@ -233,12 +233,15 @@ nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
   rv = TokenizeQueryString(aQueryString, &tokens);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = TokensToQueries(tokens, aQueries, options);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Unable to parse the query string: ");
-    NS_WARNING(PromiseFlatCString(aQueryString).get());
+  if (tokens.Length() > 0) {
+    rv = TokensToQueries(tokens, aQueries, options);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Unable to parse the query string: ");
+      NS_WARNING(PromiseFlatCString(aQueryString).get());
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  // when there are no tokens, leave the query array empty
 
   NS_ADDREF(*aOptions = options);
   return NS_OK;
