@@ -69,6 +69,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsContentUtils.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
@@ -404,20 +405,6 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
-
-
-
-NS_IMETHODIMP
-nsComboboxControlFrame::Init(
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow)
-{
-  mEventQueueService = do_GetService(kEventQueueServiceCID);
-  
-  return nsAreaFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-}
 
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -1601,12 +1588,13 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
-  if (mDisplayContent && mEventQueueService) {
+  if (mDisplayContent) {
     // Don't call ActuallyDisplayText(PR_TRUE) directly here since that
     // could cause recursive frame construction. See bug 283117 and the comment in
     // HandleRedisplayTextEvent() below.
     nsCOMPtr<nsIEventQueue> eventQueue;
-    rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+    rv = nsContentUtils::EventQueueService()->
+            GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                                                   getter_AddRefs(eventQueue));
     if (eventQueue) {
       RedisplayTextEvent* event = new RedisplayTextEvent(this);
@@ -1954,13 +1942,12 @@ NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 {
   // Revoke queued RedisplayTextEvents
-  if (mEventQueueService) {
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                             getter_AddRefs(eventQueue));
-    if (eventQueue) {
-      eventQueue->RevokeEvents(this);
-    }
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  nsContentUtils::EventQueueService()->
+    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                            getter_AddRefs(eventQueue));
+  if (eventQueue) {
+    eventQueue->RevokeEvents(this);
   }
 
   nsFormControlFrame::RegUnRegAccessKey(GetPresContext(), NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);

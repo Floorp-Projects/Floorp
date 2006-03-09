@@ -106,13 +106,6 @@ public:
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
 
-   // nsIFrame
-  NS_IMETHOD Init(
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -267,8 +260,6 @@ protected:
   // then open or close the combo box.
   nsCOMPtr<nsIDOMMouseListener> mButtonListener;
 
-  nsCOMPtr<nsIEventQueueService> mEventQueueService;
-
   // static class data member for Bug 32920
   // only one control can be focused at a time
   static nsComboboxControlFrame * mFocused;
@@ -283,5 +274,3 @@ private:
 };
 
 #endif
-
-
