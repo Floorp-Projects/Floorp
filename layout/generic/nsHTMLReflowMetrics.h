@@ -47,8 +47,9 @@
 //----------------------------------------------------------------------
 
 // Option flags
+#define NS_REFLOW_CALC_MAX_WIDTH         0x0001
 #ifdef MOZ_MATHML
-#define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
+#define NS_REFLOW_CALC_BOUNDING_METRICS  0x0002
 #endif
 
 /**
