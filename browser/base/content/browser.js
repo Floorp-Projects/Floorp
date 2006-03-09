@@ -6411,10 +6411,10 @@ var PlacesCommandHook = {
     var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
     var bms = PlacesController.bookmarks;
     if (bms.isBookmarked(currentURI)) {
-      this.showBookmarkProperties();
+      PlacesController.showBookmarkProperties(currentURI);
     } else {
       bms.insertItem(bms.bookmarksRoot, currentURI, -1);
-      this._updateControlStates();
+      this.updateTagButton();
     }
   }
 };

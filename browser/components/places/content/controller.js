@@ -832,10 +832,9 @@ var PlacesController = {
     if (!this.bookmarks.isBookmarked(bookmarkURI))
       return;
 
-    var view = this._activeView.browserWindow;
-    view.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
-                    "", "width=600,height=400,chrome,dependent,modal,resizable",
-                    bookmarkURI, this);
+    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
+                      "", "width=600,height=400,chrome,dependent,modal,resizable",
+                      bookmarkURI, this);
   },
 
   /**
