@@ -1295,7 +1295,8 @@ function ComposeStartup(recycled, aParams)
     }
   }
 
-  if (!params.identity) {
+  // " <>" is an empty identity, and most likely not valid
+  if (!params.identity || params.identity.identityName == " <>") {
     // no pre selected identity, so use the default account
     var identities = gAccountManager.defaultAccount.identities;
     if (identities.Count() == 0)
@@ -2972,8 +2973,8 @@ function LoadIdentity(startup)
         gCurrentIdentity = gAccountManager.getIdentity(idKey);
 
         // set the  account name on the menu list value.
-        var accountName = identityElement.selectedItem.getAttribute('accountname');
-        identityElement.setAttribute('accountname', accountName);
+        if (identityElement.selectedItem)
+          identityElement.setAttribute('accountname', identityElement.selectedItem.getAttribute('accountname'));
 
         if (!startup && prevIdentity && idKey != prevIdentity.key)
         {
