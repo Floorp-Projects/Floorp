@@ -344,6 +344,8 @@ nsSVGGradientFrame::AttributeChanged(PRInt32         aNameSpaceID,
     if (mNextGrad)
       mNextGrad->RemoveObserver(this);
     mNextGrad = nsnull;
+    WillModify();
+    DidModify();
     return NS_OK;
   }
 
