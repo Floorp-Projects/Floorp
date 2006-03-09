@@ -563,13 +563,12 @@ nsSVGForeignObjectFrame::GetBBoxInternal(float* aX, float *aY, float* aWidth,
   if (!ctm)
     return;
   
-  float x, y, width, height;
-  mX->GetValue(&x);
-  mY->GetValue(&y);
-  mWidth->GetValue(&width);
-  mHeight->GetValue(&height);
+  mX->GetValue(aX);
+  mY->GetValue(aY);
+  mWidth->GetValue(aWidth);
+  mHeight->GetValue(aHeight);
   
-  TransformRect(&x, &y, &width, &height, ctm);
+  TransformRect(aX, aY, aWidth, aHeight, ctm);
 }
   
 NS_IMETHODIMP
