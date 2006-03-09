@@ -1132,7 +1132,7 @@ NEXT_UNMARKED_GC_THING(jsval *vp, jsval *end, void **thingp, uint8 **flagpp,
 static void
 DeutschSchorrWaite(JSContext *cx, void *thing, uint8 *flagp);
 
-static JSBool
+static void
 MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 {
     JSRuntime *rt;
@@ -1160,18 +1160,10 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
   start:
 #endif
     JS_ASSERT(flagp);
+    JS_ASSERT(!(*flagp & GCF_MARK));
+    *flagp |= GCF_MARK;
     METER(if (++rt->gcStats.depth > rt->gcStats.maxdepth)
               rt->gcStats.maxdepth = rt->gcStats.depth);
-    if (*flagp & GCF_MARK) {
-        /*
-         * This should happen only if recursive MARK_GC_THING marks flags
-         * already stored in the caller's *next_flagp.
-         */
-        goto out;
-    }
-
-    *flagp |= GCF_MARK;
-
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
         gc_dump_thing(thing, *flagp, arg, js_DumpGCHeap);
@@ -1183,13 +1175,13 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
         obj = (JSObject *) thing;
         vp = obj->slots;
         if (!vp)
-            goto out;
+            break;
 
         /* Switch to Deutsch-Schorr-Waite if we exhaust our stack quota. */
         if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
             METER(rt->gcStats.dswmark++);
             DeutschSchorrWaite(cx, thing, flagp);
-            goto out;
+            break;
         }
 
         /* Mark slots if they are small enough to be GC-allocated. */
@@ -1201,9 +1193,10 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
                     ? CALL_GC_THING_MARKER(obj->map->ops->mark, cx, obj, arg)
                     : JS_MIN(obj->map->freeslot, obj->map->nslots));
 
+      search_for_unmarked_slot:
         vp = NEXT_UNMARKED_GC_THING(vp, end, &thing, &flagp, arg);
         if (!vp)
-            goto out;
+            break;
         v = *vp;
 
         /*
@@ -1266,17 +1259,10 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
                                             arg);
                 if (!vp) {
                     /*
-                     * Here thing came from the last unmarked GC-thing slot.
-                     * We can eliminate tail recursion unless GC_MARK_DEBUG
-                     * is defined.
+                     * thing came from the last unmarked GC-thing slot and we
+                     * can optimize tail recursion.
                      */
-#ifdef GC_MARK_DEBUG
-                    GC_MARK(cx, thing, name, arg);
-                    goto out;
-#else
-                    METER(++tailCallNesting);
-                    goto start;
-#endif
+                    goto on_tail_recursion;
                 }
             } while (next_thing == thing);
             v = *vp;
@@ -1288,6 +1274,13 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 #endif
             thing = next_thing;
             flagp = next_flagp;
+            if (*flagp & GCF_MARK) {
+                /*
+                 * This happens when recursive MarkGCThing marks
+                 * flags already stored in caller's *next_flagp.
+                 */
+                goto search_for_unmarked_slot;
+            }
         }
         break;
 
@@ -1300,20 +1293,27 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 
       case GCX_MUTABLE_STRING:
         str = (JSString *)thing;
-        if (JSSTRING_IS_DEPENDENT(str)) {
-            thing = JSSTRDEP_BASE(str);
-            flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
-            if (flagp) {
+        if (!JSSTRING_IS_DEPENDENT(str))
+            break;
+        thing = JSSTRDEP_BASE(str);
+        flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+        if (!flagp)
+            break;
 #ifdef GC_MARK_DEBUG
-                GC_MARK(cx, thing, "base", arg);
-                goto out;
-#else
-                METER(++tailCallNesting);
-                goto start;
+        strcpy(name, "base");
 #endif
-            }
-        }
+
+        /* Fallthrough to code to deal with the tail recursion. */
+      on_tail_recursion:
+#ifdef GC_MARK_DEBUG
+        /* Do not eliminate C recursion to get full GC graph when debugging. */
+        GC_MARK(cx, thing, name, arg);
         break;
+#else
+        /* Eliminate tail recursion for the last unmarked child. */
+        METER(++tailCallNesting);
+        goto start;
+#endif
 
 #if JS_HAS_XML_SUPPORT
       case GCX_NAMESPACE:
@@ -1331,10 +1331,8 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 #endif
     }
 
-out:
     METER(rt->gcStats.depth -= 1 + tailCallNesting);
     METER(rt->gcStats.cdepth--);
-    return JS_TRUE;
 }
 
 /*
