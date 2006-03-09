@@ -4703,8 +4703,15 @@ then
     AC_SUBST(MOZ_PANGO_LIBS)
 fi
 
-if test "$MOZ_ENABLE_PANGO" && test "$MOZ_ENABLE_CAIRO_GFX"
+if test "$MOZ_ENABLE_GTK2" && test "$MOZ_ENABLE_CAIRO_GFX"
 then
+    # For gtk2, we require --enable-pango; gtk2 already implies --enable-xft
+    if test -z "$MOZ_ENABLE_PANGO"
+    then
+        AC_MSG_WARN([Pango is required for cairo gfx builds, assuming --enable-pango])
+        MOZ_ENABLE_PANGO=1
+    fi
+
     AC_DEFINE(MOZ_ENABLE_PANGO)
     dnl PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.10.0 pangocairo >= 1.10.0)
     PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.6.0 pangoft2 >= 1.6.0 pangoxft >= 1.6.0)
