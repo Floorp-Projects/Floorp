@@ -45,10 +45,8 @@ use Bugzilla::Error;
 sub globals_pl_sillyness {
     my $zz;
     $zz = @main::enterable_products;
-    $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_components;
-    $zz = @main::legal_keywords;
     $zz = @main::legal_opsys;
     $zz = @main::legal_platform;
     $zz = @main::legal_priority;
@@ -258,30 +256,12 @@ sub GenerateVersionTable {
                                        '*::milestoneurl']));
     }
 
-    SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
-    while (MoreSQLData()) {
-        my ($id, $name) = FetchSQLData();
-        push(@::legal_keywords, $name);
-        $name = lc($name);
-        $::keywordsbyname{$name} = $id;
-    }
-
-    print $fh (Data::Dumper->Dump([\@::legal_keywords, \%::keywordsbyname],
-                                  ['*::legal_keywords', '*::keywordsbyname']));
-
     print $fh "1;\n";
     close $fh;
 
     rename ($tmpname, "$datadir/versioncache")
         || die "Can't rename $tmpname to versioncache";
     ChmodDataFile("$datadir/versioncache", 0666);
-}
-
-
-sub GetKeywordIdFromName {
-    my ($name) = (@_);
-    $name = lc($name);
-    return $::keywordsbyname{$name};
 }
 
 

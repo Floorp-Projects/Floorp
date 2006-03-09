@@ -30,7 +30,7 @@ package Bugzilla::Bug;
 
 use strict;
 
-use vars qw($legal_keywords @legal_platform
+use vars qw(@legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bug_status
             @settable_resolution %components %target_milestone
             @enterable_products %milestoneurl %prodmaxvotes);
@@ -521,11 +521,6 @@ sub show_attachment_flags {
         ($num_attachment_flag_types || $num_attachment_flags);
 
     return $self->{'show_attachment_flags'};
-}
-
-
-sub use_keywords {
-    return @::legal_keywords;
 }
 
 sub use_votes {
@@ -1337,7 +1332,7 @@ sub _validate_attribute {
            longdescs milestoneurl attachments
            isopened isunconfirmed
            flag_types num_attachment_flag_types
-           show_attachment_flags use_keywords any_flags_requesteeble),
+           show_attachment_flags any_flags_requesteeble),
 
         # Bug fields.
         Bugzilla::Bug->fields

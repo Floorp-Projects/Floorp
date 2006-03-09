@@ -42,6 +42,7 @@ use Bugzilla::Group;
 use Bugzilla::User;
 use Bugzilla::Field;
 use Bugzilla::Bug;
+use Bugzilla::Keyword;
 
 use Date::Format;
 use Date::Parse;
@@ -933,9 +934,9 @@ sub init {
                  if ($value eq '') {
                      next;
                  }
-                 my $id = &::GetKeywordIdFromName($value);
-                 if ($id) {
-                     push(@list, "$table.keywordid = $id");
+                 my $keyword = new Bugzilla::Keyword({name => $value});
+                 if ($keyword) {
+                     push(@list, "$table.keywordid = " . $keyword->id);
                  }
                  else {
                      ThrowUserError("unknown_keyword",

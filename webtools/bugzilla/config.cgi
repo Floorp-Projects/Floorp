@@ -33,6 +33,7 @@ use lib qw(.);
 require "globals.pl";
 use Bugzilla;
 use Bugzilla::Constants;
+use Bugzilla::Keyword;
 use Bugzilla::Bug;
 
 # Suppress "used only once" warnings.
@@ -46,7 +47,6 @@ use vars
 
     @legal_components 
     @legal_target_milestone 
-    @legal_keywords 
   );
 
 # Use the global template variables defined in globals.pl 
@@ -69,7 +69,7 @@ $vars->{'priority'}  = \@::legal_priority;
 $vars->{'severity'}  = \@::legal_severity;
 $vars->{'platform'}   = \@::legal_platform;
 $vars->{'op_sys'}    = \@::legal_opsys;
-$vars->{'keyword'}    = \@::legal_keywords;
+$vars->{'keyword'}    = [map($_->name, Bugzilla::Keyword::get_all_keywords())];
 $vars->{'resolution'} = \@::legal_resolution;
 $vars->{'status'}    = \@::legal_bug_status;
 

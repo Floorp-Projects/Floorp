@@ -41,12 +41,12 @@ use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Bug;
 use Bugzilla::Product;
+use Bugzilla::Keyword;
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
 
 use vars qw(@components
-            @legal_keywords
             @legal_platform
             @legal_priority
             @legal_product
@@ -1042,7 +1042,7 @@ $vars->{'currenttime'} = time();
 # The following variables are used when the user is making changes to multiple bugs.
 if ($dotweak) {
     $vars->{'dotweak'} = 1;
-    $vars->{'use_keywords'} = 1 if @::legal_keywords;
+    $vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
     $vars->{'products'} = Bugzilla->user->get_enterable_products;
     $vars->{'platforms'} = \@::legal_platform;

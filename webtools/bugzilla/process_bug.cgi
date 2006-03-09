@@ -57,6 +57,7 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Field;
 use Bugzilla::Product;
+use Bugzilla::Keyword;
 
 # Use the Flag module to modify flag data if the user set flags.
 use Bugzilla::Flag;
@@ -82,6 +83,7 @@ my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
+$vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
 my $requiremilestone = 0;
 
@@ -1278,14 +1280,14 @@ if (defined $cgi->param('keywords')) {
         if ($keyword eq '') {
             next;
         }
-        my $i = GetKeywordIdFromName($keyword);
-        if (!$i) {
+        my $keyword_obj = new Bugzilla::Keyword({name => $keyword});
+        if (!$keyword_obj) {
             ThrowUserError("unknown_keyword",
                            { keyword => $keyword });
         }
-        if (!$keywordseen{$i}) {
-            push(@keywordlist, $i);
-            $keywordseen{$i} = 1;
+        if (!$keywordseen{$keyword_obj->id}) {
+            push(@keywordlist, $keyword_obj->id);
+            $keywordseen{$keyword_obj->id} = 1;
         }
     }
 }
@@ -1297,7 +1299,8 @@ if (!grep($keywordaction eq $_, qw(add delete makeexact))) {
 
 if ($::comma eq ""
     && (! @groupAdd) && (! @groupDel)
-    && (! @::legal_keywords || (0 == @keywordlist && $keywordaction ne "makeexact"))
+    && (!Bugzilla::Keyword::keyword_count() 
+        || (0 == @keywordlist && $keywordaction ne "makeexact"))
     && defined $cgi->param('masscc') && ! $cgi->param('masscc')
     ) {
     if (!defined $cgi->param('comment') || $cgi->param('comment') =~ /^\s*$/) {
@@ -1651,7 +1654,9 @@ foreach my $id (@idlist) {
         $bug_changed = 1;
     }
 
-    if (@::legal_keywords && defined $cgi->param('keywords')) {
+    if (Bugzilla::Keyword::keyword_count() 
+        && defined $cgi->param('keywords')) 
+    {
         # There are three kinds of "keywordsaction": makeexact, add, delete.
         # For makeexact, we delete everything, and then add our things.
         # For add, we delete things we're adding (to make sure we don't

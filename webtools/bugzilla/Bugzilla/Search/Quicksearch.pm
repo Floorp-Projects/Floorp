@@ -27,6 +27,7 @@ use Bugzilla;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Constants;
+use Bugzilla::Keyword;
 use Bugzilla::Bug;
 
 use base qw(Exporter);
@@ -325,7 +326,7 @@ sub quicksearch {
                                              $word, $negate);
                                 }
                                 if (grep({lc($word) eq $_}
-                                         @::legal_keywords)) {
+                                         map($_->name, Bugzilla::Keyword::get_all_keywords()))) {
                                     addChart('keywords', 'substring',
                                              $word, $negate);
                                     if (length($word)>2) {

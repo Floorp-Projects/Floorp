@@ -25,13 +25,10 @@ use strict;
 
 use lib qw(.);
 
-use vars qw(
-  @legal_keywords
-);
-
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::Keyword;
 require "globals.pl";
 
 Bugzilla->login();
@@ -71,7 +68,7 @@ if (Param("useqacontact")) {
 if (Param("usestatuswhiteboard")) {
     push(@masterlist, "status_whiteboard");
 }
-if (@::legal_keywords) {
+if (Bugzilla::Keyword::keyword_count()) {
     push(@masterlist, "keywords");
 }
 

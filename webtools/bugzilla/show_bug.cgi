@@ -27,6 +27,7 @@ use lib qw(.);
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::Keyword;
 
 require "globals.pl";
 
@@ -94,7 +95,7 @@ eval {
 
 $vars->{'bugs'} = \@bugs;
 $vars->{'marks'} = \%marks;
-$vars->{'use_keywords'} = 1 if (@::legal_keywords);
+$vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
 # Next bug in list (if there is one)
 my @bug_list;

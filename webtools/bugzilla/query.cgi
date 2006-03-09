@@ -36,12 +36,12 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Product;
 use Bugzilla::Version;
+use Bugzilla::Keyword;
 
 use vars qw(
     @legal_resolution
     @legal_bug_status
     @legal_components
-    @legal_keywords
     @legal_opsys
     @legal_platform
     @legal_priority
@@ -275,7 +275,7 @@ if (Param('usetargetmilestone')) {
     $vars->{'target_milestone'} = \@milestones;
 }
 
-$vars->{'have_keywords'} = scalar(@::legal_keywords);
+$vars->{'have_keywords'} = Bugzilla::Keyword::keyword_count();
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 shift @::legal_resolution; 

@@ -34,6 +34,7 @@ use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Field;
 use Bugzilla::Product;
+use Bugzilla::Keyword;
 
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
@@ -273,14 +274,14 @@ if ($cgi->param('keywords') && UserInGroup("editbugs")) {
         if ($keyword eq '') {
            next;
         }
-        my $i = GetKeywordIdFromName($keyword);
-        if (!$i) {
+        my $keyword_obj = new Bugzilla::Keyword({name => $keyword});
+        if (!$keyword_obj) {
             ThrowUserError("unknown_keyword",
                            { keyword => $keyword });
         }
-        if (!$keywordseen{$i}) {
-            push(@keywordlist, $i);
-            $keywordseen{$i} = 1;
+        if (!$keywordseen{$keyword_obj->id}) {
+            push(@keywordlist, $keyword_obj->id);
+            $keywordseen{$keyword_obj->id} = 1;
         }
     }
 }
@@ -518,6 +519,7 @@ if ($cgi->cookie("BUGLIST")) {
     @bug_list = split(/:/, $cgi->cookie("BUGLIST"));
 }
 $vars->{'bug_list'} = \@bug_list;
+$vars->{'use_keywords'} = 1 if Bugzilla::Keyword::keyword_count();
 
 print $cgi->header();
 $template->process("bug/create/created.html.tmpl", $vars)
