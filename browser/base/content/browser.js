@@ -3145,6 +3145,9 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
     // from the bar to the overflow item
     BookmarksToolbar.resizeFunc(null);
   }
+#else
+  var bookmarksBar = document.getElementById("bookmarksBarContent");
+  bookmarksBar.init();
 #endif
 
   // XXX Shouldn't have to do this, but I do
