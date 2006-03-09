@@ -52,8 +52,6 @@
 
 const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend;
 
-#define LOGICAL_SCALE 32
-
 typedef struct {
     cairo_scaled_font_t base;
 
@@ -63,8 +61,8 @@ typedef struct {
 
     /* We do drawing and metrics computation in a "logical space" which
      * is similar to font space, except that it is scaled by a factor
-     * of the (desired font size) * (LOGICAL_SCALE). The multiplication
-     * by LOGICAL_SCALE allows for sub-pixel precision.
+     * of the (desired font size) * (WIN32_FONT_LOGICAL_SCALE). The multiplication
+     * by WIN32_FONT_LOGICAL_SCALE allows for sub-pixel precision.
      */
     double logical_scale;
 
@@ -148,8 +146,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 	if (scaled_font->swap_y)
 	    scaled_font->y_scale = - scaled_font->y_scale;
 	
-	scaled_font->logical_scale = LOGICAL_SCALE * scaled_font->y_scale;
-	scaled_font->logical_size = LOGICAL_SCALE * floor (scaled_font->y_scale + 0.5);
+	scaled_font->logical_scale = WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
+	scaled_font->logical_size = WIN32_FONT_LOGICAL_SCALE * floor (scaled_font->y_scale + 0.5);
     }
 
     /* The font matrix has x and y "scale" components which we extract and
@@ -163,8 +161,8 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 					     &scaled_font->x_scale, &scaled_font->y_scale,
 					     TRUE);	/* XXX: Handle vertical text */
 
-	scaled_font->logical_size = floor (LOGICAL_SCALE * scaled_font->y_scale + 0.5);
-	scaled_font->logical_scale = LOGICAL_SCALE * scaled_font->y_scale;
+	scaled_font->logical_size = floor (WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale + 0.5);
+	scaled_font->logical_scale = WIN32_FONT_LOGICAL_SCALE * scaled_font->y_scale;
     }
 
     cairo_matrix_scale (&scaled_font->logical_to_device,
