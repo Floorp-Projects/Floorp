@@ -4306,6 +4306,7 @@ MOZ_XMLEXTRAS=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
+MOZ_STANDALONE_BUILD=
 MOZ_XTF=1
 MOZ_XUL=1
 NS_PRINTING=1
@@ -4339,6 +4340,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             xulrunner
                             macbrowser (Camino)
                             content/xslt (Standalone Transformiix XSLT)
+                            tools/update-packaging (AUS-related packaging tools)
                             standalone (use this for standalone
                               xpcom/xpconnect or to manually drive a build)],
 [ MOZ_BUILD_APP=$enableval ] )
@@ -4497,6 +4499,7 @@ content/xslt)
   MOZ_EXTENSIONS_DEFAULT=""
   AC_DEFINE(TX_EXE)
   MOZ_XSLT_STANDALONE=1
+  MOZ_STANDALONE_BUILD=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
   ;;
 
@@ -4504,6 +4507,15 @@ standalone)
   MOZ_APP_NAME=mozilla
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
+  ;;
+
+tools/update-packaging)
+  MOZ_APP_NAME=mozilla
+  MOZ_APP_DISPLAYNAME=Mozilla
+  MOZ_APP_VERSION=$MOZILLA_VERSION
+  MOZ_UPDATE_PACKAGING=1
+  MOZ_UPDATER=1
+  MOZ_STANDALONE_BUILD=1
   ;;
 
 *)
@@ -7186,6 +7198,7 @@ AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
 AC_SUBST(MOZ_SVG_RENDERER_LIBART)
 AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
 AC_SUBST(MOZ_XSLT_STANDALONE)
+AC_SUBST(MOZ_STANDALONE_BUILD)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(BUILD_MODULES)
