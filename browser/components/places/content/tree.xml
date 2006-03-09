@@ -22,7 +22,7 @@
         while (item.parent)
           item = item.parent;
         item.QueryInterface(Ci.nsIInterfaceRequestor);
-        this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
+        this._browserWindow = window.opener; //XXX quick hack to make this work again... item.getInterface(Ci.nsIDOMWindowInternal);
       ]]></constructor>
       
       <method name="init">
