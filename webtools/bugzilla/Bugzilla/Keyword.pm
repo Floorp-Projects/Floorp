@@ -92,7 +92,7 @@ sub new_from_list {
         }
         $keywords = $dbh->selectall_arrayref(
             "SELECT $columns FROM keyworddefs WHERE id IN (" 
-            . join(',', @detainted_ids) . ")", {Slice=>{}}) || [];
+            . join(',', @detainted_ids) . ")", {Slice=>{}});
     } else {
         ThrowCodeError('bad_arg',
             {argument => 'id_list',
