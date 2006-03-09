@@ -186,7 +186,7 @@ sub Cancel {
     trick_taint($token);
     my ($issuedate, $tokentype, $eventdata, $loginname, $realname) =
         $dbh->selectrow_array('SELECT ' . $dbh->sql_date_format('issuedate') . ',
-                                      tokentype , eventdata , login_name , realname
+                                      tokentype, eventdata, login_name, realname
                                  FROM tokens
                            INNER JOIN profiles
                                    ON tokens.userid = profiles.userid
