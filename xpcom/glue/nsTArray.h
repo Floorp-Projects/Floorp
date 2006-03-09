@@ -482,22 +482,18 @@ class nsTArray : public nsTArray_base {
     // and destroy" the first element that is equal to the given element.
     // @param item  The item to search for.
     // @param comp  The Comparator used to determine element equality.
-    // @return PR_TRUE if the element was found
     template<class Item, class Comparator>
-    PRBool RemoveElement(const Item& item, const Comparator& comp) {
+    void RemoveElement(const Item& item, const Comparator& comp) {
       index_type i = IndexOf(item, 0, comp);
-      if (i == NoIndex)
-        return PR_FALSE;
-
-      RemoveElementAt(i);
-      return PR_TRUE;
+      if (i != NoIndex)
+        RemoveElementAt(i);
     }
 
     // A variation on the RemoveElement method defined above that assumes
     // that 'operator==' is defined for elem_type.
     template<class Item>
-    PRBool RemoveElement(const Item& item) {
-      return RemoveElement(item, nsDefaultComparator<elem_type, Item>());
+    void RemoveElement(const Item& item) {
+      RemoveElement(item, nsDefaultComparator<elem_type, Item>());
     }
 
     //
