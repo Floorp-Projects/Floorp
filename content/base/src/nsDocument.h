@@ -706,10 +706,6 @@ protected:
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
 
-#ifdef DEBUG
-  void VerifyRootContentState();
-#endif
-
   nsDocument();
   virtual ~nsDocument();
 
