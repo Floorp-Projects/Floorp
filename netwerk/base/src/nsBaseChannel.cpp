@@ -287,6 +287,10 @@ nsBaseChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsBaseChannel::Cancel(nsresult status)
 {
+  // Ignore redundant cancelation
+  if (NS_FAILED(mStatus))
+    return NS_OK;
+
   mStatus = status;
 
   if (mPump)

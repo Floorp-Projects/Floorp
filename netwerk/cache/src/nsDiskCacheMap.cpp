@@ -292,6 +292,7 @@ nsDiskCacheMap::GrowRecords()
 {
     if (mHeader.mRecordCount >= kMaxRecordCount)
         return NS_OK;
+    CACHE_LOG_DEBUG(("CACHE: GrowRecords\n"));
 
     // Resize the record array
     PRUint32 newCount = mHeader.mRecordCount << 1;
@@ -329,6 +330,7 @@ nsDiskCacheMap::ShrinkRecords()
 {
     if (mHeader.mRecordCount <= kMinRecordCount)
         return NS_OK;
+    CACHE_LOG_DEBUG(("CACHE: ShrinkRecords\n"));
 
     // Verify if we can shrink the record array: all buckets must be less than
     // 1/2 filled
@@ -371,6 +373,8 @@ nsresult
 nsDiskCacheMap::AddRecord( nsDiskCacheRecord *  mapRecord,
                            nsDiskCacheRecord *  oldRecord)
 {
+    CACHE_LOG_DEBUG(("CACHE: AddRecord [%x]\n", mapRecord->HashNumber()));
+
     const PRUint32      hashNumber = mapRecord->HashNumber();
     const PRUint32      bucketIndex = GetBucketIndex(hashNumber);
     const PRUint32      count = mHeader.mBucketUsage[bucketIndex];
@@ -416,6 +420,8 @@ nsDiskCacheMap::AddRecord( nsDiskCacheRecord *  mapRecord,
 nsresult
 nsDiskCacheMap::UpdateRecord( nsDiskCacheRecord *  mapRecord)
 {
+    CACHE_LOG_DEBUG(("CACHE: UpdateRecord [%x]\n", mapRecord->HashNumber()));
+
     const PRUint32      hashNumber = mapRecord->HashNumber();
     const PRUint32      bucketIndex = GetBucketIndex(hashNumber);
     nsDiskCacheRecord * records = GetFirstRecordInBucket(bucketIndex);
@@ -438,6 +444,7 @@ NS_ASSERTION(mHeader.mEvictionRank[bucketIndex] == GetBucketRank(bucketIndex, 0)
             return NS_OK;
         }
     }
+    NS_NOTREACHED("record not found");
     return NS_ERROR_UNEXPECTED;
 }
 
@@ -462,6 +469,8 @@ nsDiskCacheMap::FindRecord( PRUint32  hashNumber, nsDiskCacheRecord *  result)
 nsresult
 nsDiskCacheMap::DeleteRecord( nsDiskCacheRecord *  mapRecord)
 {
+    CACHE_LOG_DEBUG(("CACHE: DeleteRecord [%x]\n", mapRecord->HashNumber()));
+
     const PRUint32      hashNumber = mapRecord->HashNumber();
     const PRUint32      bucketIndex = GetBucketIndex(hashNumber);
     nsDiskCacheRecord * records = GetFirstRecordInBucket(bucketIndex);
@@ -646,6 +655,8 @@ nsDiskCacheMap::CacheFilesExist()
 nsresult
 nsDiskCacheMap::ReadDiskCacheEntry(nsDiskCacheRecord * record, nsDiskCacheEntry ** result)
 {
+    CACHE_LOG_DEBUG(("CACHE: ReadDiskCacheEntry [%x]\n", record->HashNumber()));
+
     nsresult            rv         = NS_ERROR_UNEXPECTED;
     nsDiskCacheEntry *  diskEntry  = nsnull;
     PRUint32            metaFile   = record->MetaFile();
@@ -715,6 +726,9 @@ exit:
 nsresult
 nsDiskCacheMap::WriteDiskCacheEntry(nsDiskCacheBinding *  binding)
 {
+    CACHE_LOG_DEBUG(("CACHE: WriteDiskCacheEntry [%x]\n",
+        binding->mRecord.HashNumber()));
+
     nsresult            rv        = NS_OK;
     nsDiskCacheEntry *  diskEntry =  CreateDiskCacheEntry(binding);
     if (!diskEntry)  return NS_ERROR_UNEXPECTED;
@@ -809,6 +823,9 @@ exit:
 nsresult
 nsDiskCacheMap::ReadDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, PRUint32 size)
 {
+    CACHE_LOG_DEBUG(("CACHE: ReadDataCacheBlocks [%x size=%u]\n",
+        binding->mRecord.HashNumber(), size));
+
     nsresult  rv;
     PRUint32  fileIndex = binding->mRecord.DataFile();
     PRUint32  blockSize = GetBlockSizeForIndex(fileIndex);
@@ -830,6 +847,9 @@ nsDiskCacheMap::ReadDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer,
 nsresult
 nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer, PRUint32 size)
 {
+    CACHE_LOG_DEBUG(("CACHE: WriteDataCacheBlocks [%x size=%u]\n",
+        binding->mRecord.HashNumber(), size));
+
     nsresult  rv;
     
     // determine block file & number of blocks
@@ -843,7 +863,7 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
         startBlock = mBlockFile[fileIndex - 1].AllocateBlocks(blockCount);
 
         rv = mBlockFile[fileIndex - 1].WriteBlocks(buffer, startBlock, blockCount);
-        if (NS_FAILED(rv))  return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
         
         IncrementTotalSize(blockCount, blockSize);
     }
@@ -852,8 +872,9 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     // update binding and cache map record
     binding->mRecord.SetDataBlocks(fileIndex, startBlock, blockCount);
     rv = UpdateRecord(&binding->mRecord);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -869,6 +890,9 @@ nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record)
 nsresult
 nsDiskCacheMap::DeleteStorage(nsDiskCacheRecord * record, PRBool metaData)
 {
+    CACHE_LOG_DEBUG(("CACHE: DeleteStorage [%x %u]\n", record->HashNumber(),
+        metaData));
+
     nsresult    rv = NS_ERROR_UNEXPECTED;
     PRUint32    fileIndex = metaData ? record->MetaFile() : record->DataFile();
     nsCOMPtr<nsIFile> file;

@@ -1733,7 +1733,7 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
         // don't doom the cache entry if only reading from it...
         if (NS_FAILED(status)
                 && (mCacheAccess & nsICache::ACCESS_WRITE) && !mCachePump) {
-            LOG(("dooming cache entry!!"));
+            LOG(("  dooming cache entry!!"));
             rv = mCacheEntry->Doom();
         }
 
@@ -1839,7 +1839,11 @@ nsHttpChannel::InitCacheEntry()
     // the meta data.
     nsCAutoString head;
     mResponseHead->Flatten(head, PR_TRUE);
-    return mCacheEntry->SetMetaDataElement("response-head", head.get());
+    rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
+    if (NS_FAILED(rv)) return rv;
+
+    mOpenedCacheForWriting = PR_TRUE;
+    return NS_OK;
 }
 
 nsresult
@@ -1887,8 +1891,6 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     nsCOMPtr<nsIOutputStream> out;
     rv = mCacheEntry->OpenOutputStream(offset, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
-
-    mOpenedCacheForWriting = PR_TRUE;
 
     // XXX disk cache does not support overlapped i/o yet
 #if 0
@@ -3108,6 +3110,10 @@ NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
 {
     LOG(("nsHttpChannel::Cancel [this=%x status=%x]\n", this, status));
+    if (mCanceled) {
+        LOG(("  ignoring; already canceled\n"));
+        return NS_OK;
+    }
     mCanceled = PR_TRUE;
     mStatus = status;
     if (mProxyRequest)
