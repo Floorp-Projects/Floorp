@@ -663,13 +663,14 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   vm->ResizeView(scrollView, nsRect(nsPoint(0, 0), aState.mScrollPortRect.Size()),
                  PR_TRUE);
 
-  // set the origin of childRect to (0,0) even though we might have borders or
-  // a left-hand-side scrollbar. We've accounted for that by positioning the
-  // anonymous mScrollableView.
+  // Set the x,y of the scrolled frame to the correct value: the displacement
+  // from its origin to the origin of this frame
   nsSize childSize = mInner.mScrolledFrame->GetSize();
-  nsRect childRect = nsRect(0, 0,
-                            PR_MAX(childSize.width, aState.mScrollPortRect.width),
-                            PR_MAX(childSize.height, aState.mScrollPortRect.height));
+  nsPoint childOffset =
+    mInner.mScrolledFrame->GetView()->GetOffsetTo(GetView());
+  nsRect childRect = nsRect(childOffset,
+                            nsSize(PR_MAX(childSize.width, aState.mScrollPortRect.width),
+                                   PR_MAX(childSize.height, aState.mScrollPortRect.height)));
   mInner.mScrolledFrame->SetRect(childRect);
   
   nsRect overflowRect = mInner.mScrolledFrame->GetOverflowRect();
@@ -1744,6 +1745,10 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
 {
   NS_ASSERTION(!mViewInitiatedScroll, "Cannot reenter ScrollPositionDidChange");
 
+  // Update frame position to match view offsets
+  nsPoint childOffset = mScrolledFrame->GetView()->GetOffsetTo(mOuter->GetView());
+  mScrolledFrame->SetPosition(childOffset);
+
   mViewInitiatedScroll = PR_TRUE;
   InternalScrollPositionDidChange(aX, aY);
   mViewInitiatedScroll = PR_FALSE;
@@ -2113,10 +2118,9 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
   vm->ResizeView(scrollView, nsRect(nsPoint(0, 0), aRect.Size()), PR_TRUE);
 
   PRUint32 oldflags = aState.LayoutFlags();
-  // set the origin of childRect to (0,0) even though we might have
-  // borders or a left-hand-side scrollbar. We've accounted for that
-  // by positioning the anonymous mScrollableView.
-  nsRect childRect = nsRect(nsPoint(0, 0), aRect.Size());
+  nsPoint childOffset =
+    mInner.mScrolledFrame->GetView()->GetOffsetTo(GetView());
+  nsRect childRect = nsRect(childOffset, aRect.Size());
 
   PRInt32 flags = NS_FRAME_NO_MOVE_VIEW;
 
