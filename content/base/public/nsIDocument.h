@@ -363,10 +363,7 @@ public:
   /**
    * Return the root content object for this document.
    */
-  nsIContent *GetRootContent() const
-  {
-    return mRootContent;
-  }
+  virtual nsIContent *GetRootContent() const = 0;
 
   /**
    * Accessors to the collection of stylesheets owned by this document.
@@ -913,10 +910,6 @@ protected:
 
   // This is just a weak pointer; the parent document owns its children.
   nsIDocument* mParentDocument;
-
-  // A weak reference to the only child element, or null if no
-  // such element exists.
-  nsIContent* mRootContent;
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsNodeInfoManager* mNodeInfoManager; // [STRONG]

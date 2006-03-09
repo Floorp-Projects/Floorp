@@ -234,8 +234,7 @@ protected:
 
   static void DocumentWriteTerminationFunc(nsISupports *aRef);
 
-  PRBool GetBodyContent();
-  void GetBodyElement(nsIDOMHTMLBodyElement** aBody);
+  nsIContent* GetBodyContent();
 
   void GetDomainURI(nsIURI **uri);
 
@@ -320,8 +319,6 @@ protected:
 
   // Load flags of the document's channel
   PRUint32 mLoadFlags;
-
-  nsCOMPtr<nsIDOMNode> mBodyContent;
 
   /*
    * Bug 13871: Frameset spoofing - find out if document.domain was set
