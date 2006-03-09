@@ -50,7 +50,6 @@ function prefillAlertInfo()
   // unwrap all the args....
   // arguments[0] --> array of folders with new mail
   // arguments[1] --> the observer to call back with notifications about the alert
- 
   gAlertListener = window.arguments[1];
 
   // walk the array of folders with new mail.
@@ -120,14 +119,16 @@ function onAlertLoad()
     gSlideTime = prefBranch.getIntPref("alerts.slideIncrementTime");
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
   } catch (ex) {}
+  
+  // we need to still do this so the alert gets 
+  // moved off screen until we are ready for it. 
+  resizeAlert();
 
   // if we aren't waiting to fetch preview text, then go ahead and 
   // start showing the alert.
   if (!gPendingPreviewFetchRequests)
-    showAlert();
-  else
-    resizeAlert(); // we need to still do this so the alert gets 
-                   // moved off screen until we are ready for it
+    setTimeout(showAlert, 0); // let the JS thread unwind, to give layout 
+                              // a chance to recompute the styles and widths for our alert text.
 }
 
 // helper routine which kicks off the animated alert if we have messages
