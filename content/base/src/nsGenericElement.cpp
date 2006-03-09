@@ -2346,7 +2346,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     // documents?
     if (aParent &&
         HasMutationListeners(aParent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(aParent);
       nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
@@ -2410,7 +2410,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
                                            NS_EVENT_BITS_MUTATION_NODEREMOVED);
 
   if (hasListeners) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, aKid);
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
     mutation.mRelatedNode = do_QueryInterface(aParent);
     nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
   }
@@ -3430,9 +3430,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     }
 
     if (aFireMutation) {
-      nsCOMPtr<nsIDOMEventTarget> node =
-        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
       nsAutoString attrName;
       aName->ToString(attrName);
@@ -3631,7 +3629,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
       nsCOMPtr<nsIDOMEventTarget> node =
         do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
       nsAutoString attrName;
       aName->ToString(attrName);

@@ -46,16 +46,8 @@ nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
                                        nsMutationEvent* aEvent)
   : nsDOMEvent(aPresContext, aEvent ? aEvent :
                new nsMutationEvent(PR_FALSE, 0))
-{  
-  if ( aEvent ) {
-    mEventIsInternal = PR_FALSE;
-    nsMutationEvent* mutation = (nsMutationEvent*)aEvent;
-    SetTarget(mutation->mTarget);
-  }
-  else
-  {
-    mEventIsInternal = PR_TRUE;
-  }
+{
+  mEventIsInternal = (aEvent == nsnull);
 }
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMutationEvent)

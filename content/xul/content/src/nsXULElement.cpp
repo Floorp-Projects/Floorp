@@ -1028,7 +1028,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, oldKid);
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
       mutation.mRelatedNode =
           do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
 
@@ -1446,8 +1446,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
 
     if (doc) {
         if (hasMutationListeners) {
-            nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
+            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
             mutation.mRelatedNode = attrNode;
             mutation.mAttrName = aName;
@@ -1456,9 +1455,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
               mutation.mPrevAttrValue = do_GetAtom(oldValue);
             mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-            nsEventStatus status = nsEventStatus_eIgnore;
             nsEventDispatcher::Dispatch(NS_STATIC_CAST(nsIContent*, this),
-                                        nsnull, &mutation, nsnull, &status);
+                                        nsnull, &mutation);
         }
 
         nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
