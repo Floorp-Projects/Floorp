@@ -54,7 +54,7 @@ interface nsIDOMRange;
 interface nsISelection : nsISupports
 {
     /**
-     * The node representing one end of the selection.
+     * Returns the node in which the selection begins.
      */
     readonly attribute nsIDOMNode anchorNode;
 
@@ -64,12 +64,12 @@ interface nsISelection : nsISupports
     readonly attribute long anchorOffset;
 
     /**
-     * The node with keyboard focus.
+     * Returns the node in which the selection ends.
      */
     readonly attribute nsIDOMNode focusNode;
 
     /**
-     * The offset within the (text) node where focus starts.
+     * The offset within the (text) node where the selection ends.
      */
     readonly attribute long focusOffset;
 
@@ -99,11 +99,11 @@ interface nsISelection : nsISupports
 
 
     /**
-     * Extends the selection by moving the focus to the specified node and offset,
-     * preserving the anchor postion.  The new selection end result will always
-     * be from the anchor to the new focus, regardless of direction.
+     * Extends the selection by moving the selection end to the specified node and offset,
+     * preserving the selection begin position. The new selection end result will always
+     * be from the anchorNode to the new focusNode, regardless of direction.
      * @param parentNode      The node where the selection will be extended to
-     * @param offset          Where in node to place the offset in the new focused node
+     * @param offset          Where in node to place the offset in the new selection end
      */
     void extend(in nsIDOMNode parentNode, in long offset);
 
