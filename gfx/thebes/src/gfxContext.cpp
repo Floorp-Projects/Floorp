@@ -264,7 +264,7 @@ void gfxContext::IdentityMatrix()
     cairo_identity_matrix(mCairo);
 }
 
-const gfxMatrix& gfxContext::CurrentMatrix() const
+gfxMatrix gfxContext::CurrentMatrix() const
 {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);
