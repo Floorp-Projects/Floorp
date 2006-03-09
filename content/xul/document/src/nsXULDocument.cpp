@@ -2949,7 +2949,9 @@ nsXULDocument::ResumeWalk()
         mDocumentLoaded = PR_TRUE;
 
         nsAutoString title;
-        GetRootContent()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
+        nsIContent *rootContent = GetRootContent();
+        if (rootContent)
+            rootContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
         SetTitle(title);
 
         StartLayout();
@@ -2964,7 +2966,6 @@ nsXULDocument::ResumeWalk()
 
         DispatchContentLoadedEvents();
 
-        NS_ASSERTION(mPlaceHolderRequest, "Bug 119310, perhaps overlayinfo referenced a overlay that doesn't exist");
         if (mPlaceHolderRequest) {
             // Remove the placeholder channel; if we're the last channel in the
             // load group, this will fire the OnEndDocumentLoad() method in the
