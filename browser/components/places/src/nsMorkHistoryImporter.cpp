@@ -95,7 +95,7 @@ SwapBytes(PRUnichar *buffer)
 {
   for (PRUnichar *b = buffer; *b; ++b) {
     PRUnichar c = *b;
-    *b = (c << 8) | (c >> 8);
+    *b = (c << 8) | ((c >> 8) & 0xff);
   }
 }
 
@@ -157,8 +157,9 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsCSubstring &aRowID,
 
   if (uri) {
     PRBool isTyped = values[kTypedColumn].EqualsLiteral("1");
-    PRInt32 transition = isTyped ? nsINavHistoryService::TRANSITION_TYPED
-      : nsINavHistoryService::TRANSITION_LINK;
+    PRInt32 transition = isTyped ?
+        (PRInt32) nsINavHistoryService::TRANSITION_TYPED
+      : (PRInt32) nsINavHistoryService::TRANSITION_LINK;
     nsNavHistory *history = data->history;
 
     history->AddPageWithVisit(uri,
@@ -214,17 +215,20 @@ nsMorkHistoryImporter::ImportHistory(nsIFile *aFile,
 
   // Determine the byte order from the table's meta-row.
   const nsTArray<nsCString> *metaRow = reader.GetMetaRow();
-  if (metaRow) {
+  if (metaRow && data.byteOrderColumn != -1) {
     const nsCString &byteOrder = (*metaRow)[data.byteOrderColumn];
     if (!byteOrder.IsVoid()) {
       // Note whether the file uses a non-native byte ordering.
       // If it does, we'll have to swap bytes for PRUnichar values.
+      // "BE" and "LE" are the only recognized values, anything
+      // else is garbage and the file will be treated as native-endian
+      // (no swapping).
       nsCAutoString byteOrderValue(byteOrder);
       reader.NormalizeValue(byteOrderValue);
 #ifdef IS_LITTLE_ENDIAN
-      data.swapBytes = !byteOrderValue.EqualsLiteral("LE");
+      data.swapBytes = byteOrderValue.EqualsLiteral("BE");
 #else
-      data.swapBytes = !byteOrderValue.EqualsLiteral("BE");
+      data.swapBytes = byteOrderValue.EqualsLiteral("LE");
 #endif
     }
   }
