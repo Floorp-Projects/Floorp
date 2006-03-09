@@ -1026,17 +1026,13 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
     }
 
-    if (reportp) {
-        filenameStr = JS_NewStringCopyZ(cx, reportp->filename);
-        if (!filenameStr) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        lineno = reportp->lineno;
-    } else {
-        filenameStr = cx->runtime->emptyString;
-        lineno = 0;
+    filenameStr = JS_NewStringCopyZ(cx, reportp->filename);
+    if (!filenameStr) {
+        ok = JS_FALSE;
+        goto out;
     }
+    lineno = reportp->lineno;
+
     ok = InitExceptionObject(cx, errObject, messageStr, filenameStr, lineno);
     if (!ok)
         goto out;
