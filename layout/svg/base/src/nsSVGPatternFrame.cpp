@@ -127,7 +127,7 @@ public:
                                     nsISVGValue::modificationType aModType);
 
   // nsIFrame interface:
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext();
   
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -263,7 +263,7 @@ nsSVGPatternFrame::DidModifySVGObservable(nsISVGValue* observable,
 // nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGPatternFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGPatternFrame::DidSetStyleContext()
 {
   WillModify(mod_other);
   DidModify(mod_other);

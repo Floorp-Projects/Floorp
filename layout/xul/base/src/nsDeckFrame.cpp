@@ -107,15 +107,12 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsDeckFrame::Init(nsPresContext* aPresContext,
-                  nsIContent*     aContent,
+nsDeckFrame::Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
                   nsStyleContext* aStyleContext,
                   nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aPresContext, aContent,
-                                 aParent, aStyleContext,
-                                 aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aStyleContext, aPrevInFlow);
 
   mIndex = GetSelectedIndex();
 

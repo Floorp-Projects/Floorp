@@ -171,13 +171,12 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
-                     nsIFrame*        aPrevInFlow)
+nsMenuFrame::Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuTimerMediator(this);
@@ -193,7 +192,7 @@ nsMenuFrame::Init(nsPresContext*  aPresContext,
   }
 
   // Do the type="checkbox" magic
-  UpdateMenuType(aPresContext);
+  UpdateMenuType(GetPresContext());
 
   //load the display strings for the keyboard accelerators, but only once
   if (gRefCnt++ == 0) {

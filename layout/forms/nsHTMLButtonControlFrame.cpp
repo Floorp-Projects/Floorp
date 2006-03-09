@@ -98,14 +98,14 @@ nsHTMLButtonControlFrame::Destroy(nsPresContext *aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Init(nsPresContext*  aPresContext,
+nsHTMLButtonControlFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  mRenderer.SetFrame(this,aPresContext);
+  nsresult  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  mRenderer.SetFrame(this,GetPresContext());
   return rv;
 }
 

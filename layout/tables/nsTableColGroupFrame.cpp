@@ -564,8 +564,7 @@ NS_NewTableColGroupFrame(nsIPresShell* aPresShell)
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::Init(nsPresContext*  aPresContext,
-                           nsIContent*      aContent,
+nsTableColGroupFrame::Init(nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
@@ -573,8 +572,7 @@ nsTableColGroupFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv;
 
   // Let the base class do its processing
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
+  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;

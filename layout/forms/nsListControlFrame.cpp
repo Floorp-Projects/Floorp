@@ -1433,14 +1433,12 @@ nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
 
 //---------------------------------------------------------
 NS_IMETHODIMP  
-nsListControlFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*     aContent,
+nsListControlFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
 {
-  nsresult result = nsHTMLScrollFrame::Init(aPresContext, aContent, aParent, aContext,
-                                            aPrevInFlow);
+  nsresult result = nsHTMLScrollFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // get the receiver interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));

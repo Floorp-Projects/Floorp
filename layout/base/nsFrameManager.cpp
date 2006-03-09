@@ -911,7 +911,7 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame,
           nsIAtom* childList = nsnull;
           nsIFrame* child;
           
-          aFrame->SetStyleContext(presContext, newContext);
+          aFrame->SetStyleContext(newContext);
 
           do {
             child = aFrame->GetFirstChild(childList);
@@ -1099,7 +1099,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                                    assumeDifferenceHint);
         if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
           // if frame gets regenerated, let it keep old context
-          aFrame->SetStyleContext(aPresContext, newContext);
+          aFrame->SetStyleContext(newContext);
         }
         // if old context had image and new context does not have the same image, 
         // stop the image load for the frame

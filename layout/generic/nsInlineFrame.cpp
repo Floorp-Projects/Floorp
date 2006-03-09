@@ -990,7 +990,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
                                 nsCSSAnonBoxes::mozLineFrame, parentContext);
         if (newSC) {
           // Switch to the new style context.
-          SetStyleContext(aPresContext, newSC);
+          SetStyleContext(newSC);
 
           // Re-resolve all children
           ReParentChildListStyle(aPresContext, mStyleContext, mFrames);

@@ -114,8 +114,7 @@ public:
   friend nsIFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell);
   virtual ~nsTableRowGroupFrame();
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);

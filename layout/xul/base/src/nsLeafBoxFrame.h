@@ -76,7 +76,7 @@ public:
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
-  NS_IMETHOD  Init(nsPresContext*  aPresContext,
+  NS_IMETHOD  Init(
                nsIContent*      aContent,
                nsIFrame*        aParent,
                nsStyleContext*  aContext,

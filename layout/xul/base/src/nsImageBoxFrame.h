@@ -76,8 +76,7 @@ public:
 
   // nsIBox frame interface
 
-  NS_IMETHOD  Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+  NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
@@ -86,7 +85,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD  DidSetStyleContext (nsPresContext* aPresContext);
+  NS_IMETHOD  DidSetStyleContext ();
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 

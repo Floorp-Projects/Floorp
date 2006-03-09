@@ -265,14 +265,12 @@ nsImageFrame::Destroy(nsPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsImageFrame::Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+nsImageFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent,
-                                         aContext, aPrevInFlow);
+  nsresult  rv = nsSplittableFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mListener = new nsImageListener(this);
@@ -282,6 +280,8 @@ nsImageFrame::Init(nsPresContext*  aPresContext,
   NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
   imageLoader->AddObserver(mListener);
 
+  nsPresContext *aPresContext = GetPresContext();
+  
   if (!gIconLoad)
     LoadIcons(aPresContext);
 

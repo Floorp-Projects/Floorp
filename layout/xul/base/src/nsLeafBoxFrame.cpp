@@ -92,13 +92,13 @@ nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
  * Initialize us. This is a good time to get the alignment of the box
  */
 NS_IMETHODIMP
-nsLeafBoxFrame::Init(nsPresContext*  aPresContext,
+nsLeafBoxFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
    // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {

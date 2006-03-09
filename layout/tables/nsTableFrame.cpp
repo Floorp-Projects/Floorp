@@ -246,8 +246,7 @@ nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTableFrame::Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+nsTableFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
@@ -255,8 +254,7 @@ nsTableFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv;
 
   // Let the base class do its processing
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
+  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
@@ -280,7 +278,7 @@ nsTableFrame::Init(nsPresContext*  aPresContext,
     // create the strategy
     mTableLayoutStrategy = (IsAutoLayout()) ?
       new BasicTableLayoutStrategy(this,
-                eCompatibility_NavQuirks == aPresContext->CompatibilityMode())
+                eCompatibility_NavQuirks == GetPresContext()->CompatibilityMode())
       : new FixedTableLayoutStrategy(this);
   }
 
@@ -817,7 +815,7 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
   nsIFrame* newFrame = NS_NewTableColGroupFrame(shell);
   if (newFrame) {
     ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
-    newFrame->Init(presContext, colGroupContent, this, colGroupStyle, nsnull);
+    newFrame->Init(colGroupContent, this, colGroupStyle, nsnull);
   }
   return (nsTableColGroupFrame *)newFrame;
 }
@@ -929,8 +927,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     // create the new col frame
     nsIFrame* colFrame = NS_NewTableColFrame(shell);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
-    colFrame->Init(presContext, iContent, aColGroupFrame,
-                   styleContext, nsnull);
+    colFrame->Init(iContent, aColGroupFrame, styleContext, nsnull);
     colFrame->SetInitialChildList(presContext, nsnull, nsnull);
 
     // Add the col to the sibling chain

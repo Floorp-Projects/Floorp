@@ -244,8 +244,7 @@ NS_NewTableColFrame(nsIPresShell* aPresShell)
 }
 
 NS_IMETHODIMP
-nsTableColFrame::Init(nsPresContext*  aPresContext,
-                      nsIContent*      aContent,
+nsTableColFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
@@ -253,8 +252,7 @@ nsTableColFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv;
 
   // Let the base class do its initialization
-  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext,
-                     aPrevInFlow);
+  rv = nsFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;

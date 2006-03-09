@@ -61,8 +61,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
-  Init(nsPresContext*  aPresContext,
-       nsIContent*      aContent,
+  Init(nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
@@ -108,7 +107,6 @@ protected:
   virtual PRIntn GetSkipSides() const { return 0; }
 
 private:
-  nsPresContext* mPresContext;
   PRInt32         mActionType;
   PRInt32         mChildCount;
   PRInt32         mSelection;

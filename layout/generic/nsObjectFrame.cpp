@@ -464,8 +464,7 @@ static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 // #define DO_DIRTY_INTERSECT 1   // enable dirty rect intersection during paint
 
 NS_IMETHODIMP 
-nsObjectFrame::Init(nsPresContext*   aPresContext,
-                    nsIContent*      aContent,
+nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
@@ -474,8 +473,7 @@ nsObjectFrame::Init(nsPresContext*   aPresContext,
   mInstantiating = PR_FALSE;
 #endif
 
-  nsresult rv = nsObjectFrameSuper::Init(aPresContext, aContent, aParent,
-                                         aContext, aPrevInFlow);
+  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
   nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
   NS_ASSERTION(objContent, "Why not an object loading content?");
   objContent->HasNewFrame(this);

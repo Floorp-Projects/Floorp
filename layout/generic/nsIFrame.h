@@ -418,8 +418,7 @@ public:
    * @param   aPrevInFlow the prev-in-flow frame
    * @see #AppendToFlow()
    */
-  NS_IMETHOD  Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+  NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow) = 0;
@@ -548,7 +547,7 @@ public:
    *
    */
   nsStyleContext* GetStyleContext() const { return mStyleContext; }
-  void SetStyleContext(nsPresContext* aPresContext, nsStyleContext* aContext)
+  void SetStyleContext(nsStyleContext* aContext)
   { 
     if (aContext != mStyleContext) {
       if (mStyleContext)
@@ -556,13 +555,13 @@ public:
       mStyleContext = aContext;
       if (aContext) {
         aContext->AddRef();
-        DidSetStyleContext(aPresContext);
+        DidSetStyleContext();
       }
     }
   }
 
   // Style post processing hook
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext) = 0;
+  NS_IMETHOD DidSetStyleContext() = 0;
 
   /**
    * Get the style data associated with this frame.  This returns a

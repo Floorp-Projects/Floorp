@@ -54,8 +54,7 @@ class nsContainerFrame : public nsSplittableFrame
 {
 public:
   // nsIFrame overrides
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);

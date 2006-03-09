@@ -191,8 +191,7 @@ public:
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 
     */
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);

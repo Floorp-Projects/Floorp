@@ -77,8 +77,7 @@ class nsSVGStopFrame : public nsSVGStopFrameBase,
   }
 #endif
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -97,7 +96,7 @@ protected:
 
 private:
   // nsIFrame interface:
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext();
 
   nsCOMPtr<nsIDOMSVGAnimatedNumber> mOffset;
 };
@@ -117,14 +116,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGStopFrameBase)
 // nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGStopFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGStopFrame::DidSetStyleContext()
 {
 #ifdef DEBUG_scooter
   printf("nsSVGStopFrame::DidSetStyleContext\n");
 #endif
   // Tell our parent
   if (mParent)
-    mParent->DidSetStyleContext(aPresContext);
+    mParent->DidSetStyleContext();
   return NS_OK;
 }
 
@@ -141,15 +140,13 @@ nsSVGStopFrame::IsFrameOfType(PRUint32 aFlags) const
 }
 
 NS_IMETHODIMP
-nsSVGStopFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*     aContent,
+nsSVGStopFrame::Init(nsIContent*     aContent,
                      nsIFrame*       aParent,
                      nsStyleContext* aContext,
                      nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGStopFrameBase::Init(aPresContext, aContent, aParent,
-                                aContext, aPrevInFlow);
+  rv = nsSVGStopFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   nsCOMPtr<nsIDOMSVGStopElement> stop = do_QueryInterface(mContent);
   {

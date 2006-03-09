@@ -300,11 +300,10 @@ nsImageBoxFrame::Destroy(nsPresContext* aPresContext)
 
 
 NS_IMETHODIMP
-nsImageBoxFrame::Init(nsPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIFrame*        aParent,
-                          nsStyleContext*  aContext,
-                          nsIFrame*        aPrevInFlow)
+nsImageBoxFrame::Init(nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsStyleContext*  aContext,
+                      nsIFrame*        aPrevInFlow)
 {
   if (!mListener) {
     nsImageBoxListener *listener;
@@ -316,7 +315,7 @@ nsImageBoxFrame::Init(nsPresContext*  aPresContext,
   }
 
   mSuppressStyleCheck = PR_TRUE;
-  nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   mSuppressStyleCheck = PR_FALSE;
 
   UpdateLoadFlags();
@@ -492,7 +491,7 @@ nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
 // When the style context changes, make sure that all of our image is up to date.
 //
 NS_IMETHODIMP
-nsImageBoxFrame::DidSetStyleContext( nsPresContext* aPresContext )
+nsImageBoxFrame::DidSetStyleContext()
 {
   // Fetch our subrect.
   const nsStyleList* myList = GetStyleList();

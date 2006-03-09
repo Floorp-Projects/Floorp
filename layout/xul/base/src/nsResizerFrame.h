@@ -66,8 +66,7 @@ public:
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
-  NS_IMETHOD  Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+  NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);

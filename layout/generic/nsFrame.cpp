@@ -538,8 +538,7 @@ nsrefcnt nsFrame::Release(void)
 // nsIFrame
 
 NS_IMETHODIMP
-nsFrame::Init(nsPresContext*  aPresContext,
-              nsIContent*      aContent,
+nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
@@ -570,7 +569,7 @@ nsFrame::Init(nsPresContext*  aPresContext,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
-  SetStyleContext(aPresContext, aContext);
+  SetStyleContext(aContext);
 
   if (IsBoxWrapped())
     InitBoxMetrics(PR_FALSE);
@@ -672,7 +671,7 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 }
 
 // Subclass hook for style post processing
-NS_IMETHODIMP nsFrame::DidSetStyleContext(nsPresContext* aPresContext)
+NS_IMETHODIMP nsFrame::DidSetStyleContext()
 {
   return NS_OK;
 }

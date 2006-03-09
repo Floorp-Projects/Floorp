@@ -85,14 +85,14 @@ nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
+nsMathMLmsqrtFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
-                                             aContext, aPrevInFlow);
+  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+                                             
+  nsPresContext *aPresContext = GetPresContext();
 
   // No need to tract the style context given to our MathML char. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep it

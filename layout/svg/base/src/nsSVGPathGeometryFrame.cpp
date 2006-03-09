@@ -117,8 +117,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 // nsIFrame methods
   
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
-                             nsIContent*      aContent,
+nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
@@ -133,7 +132,7 @@ nsSVGPathGeometryFrame::Init(nsPresContext*  aPresContext,
   
   InitSVG();
   
-  SetStyleContext(aPresContext, aContext);
+  SetStyleContext(aContext);
     
   return NS_OK;
 }
@@ -151,7 +150,7 @@ nsSVGPathGeometryFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGPathGeometryFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those

@@ -71,8 +71,10 @@ public:
   }
 #endif
 
-  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
-                    nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
+  NS_IMETHOD Init(nsIContent*     aContent,
+                  nsIFrame*       aParent,
+                  nsStyleContext* aContext,
+                  nsIFrame*       aPrevInFlow);
            
   // nsIFrame overrides
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);

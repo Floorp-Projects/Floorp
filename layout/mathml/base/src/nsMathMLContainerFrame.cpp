@@ -749,16 +749,15 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 // This method is called in a top-down manner, as we descend the frame tree
 // during its construction
 NS_IMETHODIMP
-nsMathMLContainerFrame::Init(nsPresContext*  aPresContext,
-                             nsIContent*      aContent,
+nsMathMLContainerFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
                              nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(aPresContext, aContent);
+  MapAttributesIntoCSS(aContext->GetRuleNode()->GetPresContext(), aContent);
 
   // let the base class do its Init()
-  return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // ...We will build our automatic MathML data once the entire <math>...</math>
   // tree is constructed.

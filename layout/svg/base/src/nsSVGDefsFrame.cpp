@@ -79,15 +79,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGDefsFrame::Init(nsPresContext*  aPresContext,
+nsSVGDefsFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGDefsFrameBase::Init(aPresContext, aContent, aParent,
-                                aContext, aPrevInFlow);
+  rv = nsSVGDefsFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   InitSVG();
   

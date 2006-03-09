@@ -124,13 +124,12 @@ nsMenuBarFrame::~nsMenuBarFrame()
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*      aContent,
+nsMenuBarFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);

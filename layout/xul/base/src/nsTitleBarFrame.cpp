@@ -70,15 +70,15 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
 
 
 
-NS_IMETHODIMP  nsTitleBarFrame::Init(nsPresContext*  aPresContext,
-                nsIContent*      aContent,
-                nsIFrame*        aParent,
-                nsStyleContext*  aContext,
-                nsIFrame*        asPrevInFlow)
+NS_IMETHODIMP
+nsTitleBarFrame::Init(nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsStyleContext*  aContext,
+                      nsIFrame*        asPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, asPrevInFlow);
 
-  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
 
   return rv;
 }

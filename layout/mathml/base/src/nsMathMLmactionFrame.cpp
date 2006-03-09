@@ -96,8 +96,7 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
-                           nsIContent*      aContent,
+nsMathMLmactionFrame::Init(nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
@@ -106,8 +105,6 @@ nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
 
   // Init our local attributes
 
-  mPresContext = aPresContext;
- 
   mWasRestyled = PR_FALSE;
   mChildCount = -1; // these will be updated in GetSelectedFrame()
   mSelection = 0;
@@ -150,8 +147,8 @@ nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
 
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
-        newStyleContext = aPresContext->StyleSet()->
-          ResolveStyleFor(aContent, parentStyleContext);
+        newStyleContext = aContext->GetRuleNode()->GetPresContext()->
+          StyleSet()->ResolveStyleFor(aContent, parentStyleContext);
 
         if (!newStyleContext) 
           mRestyle.Truncate();
@@ -166,7 +163,7 @@ nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
   }
 
   // Let the base class do the rest
-  return nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 nsresult
@@ -379,7 +376,7 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
     // expected statusline prefix (11ch)...
     if (11 < value.Length() && 0 == value.Find("statusline#")) {
       value.Cut(0, 11);
-      ShowStatus(mPresContext, value);
+      ShowStatus(GetPresContext(), value);
     }
   }
   return NS_OK;
@@ -392,7 +389,7 @@ nsMathMLmactionFrame::MouseOut(nsIDOMEvent* aMouseEvent)
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
     value.SetLength(0);
-    ShowStatus(mPresContext, value);
+    ShowStatus(GetPresContext(), value);
   }
   return NS_OK;
 }
@@ -411,7 +408,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
       // Now trigger a content-changed reflow...
-      ReflowDirtyChild(mPresContext->PresShell(), mSelectedFrame);
+      ReflowDirtyChild(GetPresContext()->PresShell(), mSelectedFrame);
     }
   }
   else if (NS_MATHML_ACTION_TYPE_RESTYLE == mActionType) {
@@ -431,7 +428,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
         // Cancel the reflow command that the change of attribute has
         // caused, and post a style changed reflow request that is instead
         // targeted at our selected frame
-        nsIPresShell *presShell = mPresContext->PresShell();
+        nsIPresShell *presShell = GetPresContext()->PresShell();
         presShell->CancelReflowCommand(this, nsnull);
         presShell->AppendReflowCommand(mSelectedFrame,
 				       eReflowType_StyleChanged,

@@ -100,8 +100,10 @@ public:
   NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) { Invalidate(); return NS_OK; };
 
   // Overridden from nsIFrame to cache our pres context.
-  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
-                  nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
+  NS_IMETHOD Init(nsIContent*     aContent,
+                  nsIFrame*       aParent,
+                  nsStyleContext* aContext,
+                  nsIFrame*       aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);

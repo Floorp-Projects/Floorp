@@ -40,15 +40,14 @@
 #include "nsStyleContext.h"
 
 NS_IMETHODIMP
-nsSplittableFrame::Init(nsPresContext*  aPresContext,
-                        nsIContent*      aContent,
+nsSplittableFrame::Init(nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsStyleContext*  aContext,
                         nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;
   
-  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  rv = nsFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Hook the frame into the flow

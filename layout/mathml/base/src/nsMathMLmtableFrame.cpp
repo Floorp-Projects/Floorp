@@ -396,15 +396,14 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 }
 
 NS_IMETHODIMP
-nsMathMLmtableOuterFrame::Init(nsPresContext*  aPresContext,
-                               nsIContent*      aContent,
+nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
                                nsIFrame*        aParent,
                                nsStyleContext*  aContext,
                                nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(aPresContext, aContent);
+  MapAttributesIntoCSS(aContext->GetRuleNode()->GetPresContext(), aContent);
 
-  return nsTableOuterFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsTableOuterFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 nsIFrame*
@@ -656,13 +655,12 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtdInnerFrame::Init(nsPresContext*  aPresContext,
-                            nsIContent*      aContent,
+nsMathMLmtdInnerFrame::Init(nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBlockFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;

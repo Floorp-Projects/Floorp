@@ -71,8 +71,10 @@ public:
                                           nsIBoxLayout* aLayoutManager);
   
   // nsIFrame
-  NS_IMETHOD Init(nsPresContext* aPresContext, nsIContent* aContent,
-                  nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow);
+  NS_IMETHOD Init(nsIContent*     aContent,
+                  nsIFrame*       aParent, 
+                  nsStyleContext* aContext, 
+                  nsIFrame*       aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);
 

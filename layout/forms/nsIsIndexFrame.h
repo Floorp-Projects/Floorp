@@ -61,12 +61,11 @@ public:
   virtual ~nsIsIndexFrame();
 
   // XXX Hack so we can squirrel away the pres context pointer for the KeyPress method
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow) {
-    return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+    return nsAreaFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   }
 
   /**

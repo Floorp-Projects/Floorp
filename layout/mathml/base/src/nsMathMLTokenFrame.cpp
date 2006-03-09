@@ -102,8 +102,7 @@ CompressWhitespace(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
+nsMathMLTokenFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
@@ -114,7 +113,7 @@ nsMathMLTokenFrame::Init(nsPresContext*  aPresContext,
   CompressWhitespace(aContent);
 
   // let the base class do its Init()
-  return nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP

@@ -78,14 +78,13 @@ nsContainerFrame::~nsContainerFrame()
 }
 
 NS_IMETHODIMP
-nsContainerFrame::Init(nsPresContext*  aPresContext,
-                       nsIContent*      aContent,
+nsContainerFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSplittableFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   if (aPrevInFlow) {
     // Make sure we copy bits from our prev-in-flow that will affect
     // us. A continuation for a container frame needs to know if it

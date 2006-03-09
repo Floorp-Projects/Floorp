@@ -124,7 +124,7 @@ nsBulletFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsBulletFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsBulletFrame::DidSetStyleContext()
 {
   imgIRequest *newRequest = GetStyleList()->mListStyleImage;
 

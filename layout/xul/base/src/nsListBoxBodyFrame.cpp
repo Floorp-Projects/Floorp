@@ -230,11 +230,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 ////////// nsIFrame /////////////////
 
 NS_IMETHODIMP
-nsListBoxBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
-                         nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
+nsListBoxBodyFrame::Init(nsIContent*     aContent,
+                         nsIFrame*       aParent, 
+                         nsStyleContext* aContext, 
+                         nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
+  nsPresContext *aPresContext = GetPresContext();
+  
   mOnePixel = aPresContext->IntScaledPixelsToTwips(1);
   
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);

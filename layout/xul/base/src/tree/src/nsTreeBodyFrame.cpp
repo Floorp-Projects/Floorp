@@ -233,11 +233,13 @@ AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::Init(nsPresContext* aPresContext, nsIContent* aContent,
-                      nsIFrame* aParent, nsStyleContext* aContext, nsIFrame* aPrevInFlow)
+nsTreeBodyFrame::Init(nsIContent*     aContent,
+                      nsIFrame*       aParent,
+                      nsStyleContext* aContext,
+                      nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  nsBoxFrame::CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
+  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsBoxFrame::CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
   nsLeafBoxFrame::GetView()->CreateWidget(kWidgetCID);
 
   mIndentation = GetIndentation();

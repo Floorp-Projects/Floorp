@@ -93,13 +93,12 @@ nsTreeColFrame::~nsTreeColFrame()
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*      aContent,
+nsTreeColFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   EnsureColumns();
   if (mColumns)
     mColumns->InvalidateColumns();

@@ -93,8 +93,7 @@ public:
                            nsIFrame*      aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*       aListName,
                           nsIFrame*      aOldFrame);
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*     aContent,
+  NS_IMETHOD Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
                   nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
@@ -248,15 +247,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGInnerSVGFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*     aContent,
+nsSVGInnerSVGFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGInnerSVGFrameBase::Init(aPresContext, aContent, aParent,
-                             aContext, aPrevInFlow);
+  rv = nsSVGInnerSVGFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   Init();
   
