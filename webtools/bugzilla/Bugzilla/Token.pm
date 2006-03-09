@@ -88,36 +88,32 @@ sub IssueEmailChangeToken {
     Bugzilla::BugMail::MessageToMTA($message);
 }
 
+# Generates a random token, adds it to the tokens table, and sends it
+# to the user with instructions for using it to change their password.
 sub IssuePasswordToken {
-    # Generates a random token, adds it to the tokens table, and sends it
-    # to the user with instructions for using it to change their password.
-
-    my ($loginname) = @_;
-
+    my $loginname = shift;
     my $dbh = Bugzilla->dbh;
+    my $template = Bugzilla->template;
+    my $vars = {};
 
     # Retrieve the user's ID from the database.
-    my $quotedloginname = &::SqlQuote($loginname);
-    &::SendSQL("SELECT profiles.userid, tokens.issuedate FROM profiles 
-                    LEFT JOIN tokens
-                    ON tokens.userid = profiles.userid
-                    AND tokens.tokentype = 'password'
-                    AND tokens.issuedate > NOW() - " .
-                    $dbh->sql_interval(10, 'MINUTE') . "
-                 WHERE " . $dbh->sql_istrcmp('login_name', $quotedloginname));
-    my ($userid, $toosoon) = &::FetchSQLData();
+    trick_taint($loginname);
+    my ($userid, $too_soon) =
+        $dbh->selectrow_array('SELECT profiles.userid, tokens.issuedate
+                                 FROM profiles
+                            LEFT JOIN tokens
+                                   ON tokens.userid = profiles.userid
+                                  AND tokens.tokentype = ?
+                                  AND tokens.issuedate > NOW() - ' .
+                                      $dbh->sql_interval(10, 'MINUTE') . '
+                                WHERE ' . $dbh->sql_istrcmp('login_name', '?'),
+                                undef, ('password', $loginname));
 
-    if ($toosoon) {
-        ThrowUserError('too_soon_for_new_token');
-    };
+    ThrowUserError('too_soon_for_new_token') if $too_soon;
 
     my ($token, $token_ts) = _create_token($userid, 'password', $::ENV{'REMOTE_ADDR'});
 
     # Mail the user the token along with instructions for using it.
-    
-    my $template = Bugzilla->template;
-    my $vars = {};
-
     $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
 
@@ -143,9 +139,10 @@ sub IssueSessionToken {
 sub CleanTokenTable {
     my $dbh = Bugzilla->dbh;
     $dbh->bz_lock_tables('tokens WRITE');
-    &::SendSQL("DELETE FROM tokens WHERE " .
-               $dbh->sql_to_days('NOW()') . " - " .
-               $dbh->sql_to_days('issuedate') . " >= " . $maxtokenage);
+    $dbh->do('DELETE FROM tokens
+              WHERE ' . $dbh->sql_to_days('NOW()') . ' - ' .
+                        $dbh->sql_to_days('issuedate') . ' >= ?',
+              undef, $maxtokenage);
     $dbh->bz_unlock_tables();
 }
 
@@ -154,9 +151,8 @@ sub GenerateUniqueToken {
     # for the tokens themselves and checks uniqueness by searching for
     # the token in the "tokens" table.  Gives up if it can't come up
     # with a token after about one hundred tries.
-
     my ($table, $column) = @_;
-    
+
     my $token;
     my $duplicate = 1;
     my $tries = 0;
@@ -175,30 +171,27 @@ sub GenerateUniqueToken {
         $sth->execute($token);
         $duplicate = $sth->fetchrow_array;
     }
-
     return $token;
 }
 
+# Cancels a previously issued token and notifies the system administrator.
+# This should only happen when the user accidentally makes a token request
+# or when a malicious hacker makes a token request on behalf of a user.
 sub Cancel {
-    # Cancels a previously issued token and notifies the system administrator.
-    # This should only happen when the user accidentally makes a token request
-    # or when a malicious hacker makes a token request on behalf of a user.
-    
     my ($token, $cancelaction, $vars) = @_;
-
     my $dbh = Bugzilla->dbh;
     $vars ||= {};
 
-    # Quote the token for inclusion in SQL statements.
-    my $quotedtoken = &::SqlQuote($token);
-    
     # Get information about the token being cancelled.
-    &::SendSQL("SELECT  " . $dbh->sql_date_format('issuedate') . ",
-                        tokentype , eventdata , login_name , realname
-                FROM    tokens, profiles 
-                WHERE   tokens.userid = profiles.userid
-                AND     token = $quotedtoken");
-    my ($issuedate, $tokentype, $eventdata, $loginname, $realname) = &::FetchSQLData();
+    trick_taint($token);
+    my ($issuedate, $tokentype, $eventdata, $loginname, $realname) =
+        $dbh->selectrow_array('SELECT ' . $dbh->sql_date_format('issuedate') . ',
+                                      tokentype , eventdata , login_name , realname
+                                 FROM tokens
+                           INNER JOIN profiles
+                                   ON tokens.userid = profiles.userid
+                                WHERE token = ?',
+                                undef, $token);
 
     # Get the email address of the Bugzilla maintainer.
     my $maintainer = Param('maintainer');
@@ -228,53 +221,53 @@ sub Cancel {
 
 sub DeletePasswordTokens {
     my ($userid, $reason) = @_;
-
     my $dbh = Bugzilla->dbh;
-    my $sth = $dbh->prepare("SELECT token " .
-                            "FROM tokens " .
-                            "WHERE userid=? AND tokentype='password'");
-    $sth->execute($userid);
-    while (my $token = $sth->fetchrow_array) {
+
+    detaint_natural($userid);
+    my $tokens = $dbh->selectcol_arrayref('SELECT token FROM tokens
+                                           WHERE userid = ? AND tokentype = ?',
+                                           undef, ($userid, 'password'));
+
+    foreach my $token (@$tokens) {
         Bugzilla::Token::Cancel($token, $reason);
     }
 }
 
+# Returns an email change token if the user has one. 
 sub HasEmailChangeToken {
-    # Returns an email change token if the user has one. 
-    
-    my ($userid) = @_;
-
+    my $userid = shift;
     my $dbh = Bugzilla->dbh;
-    &::SendSQL("SELECT token FROM tokens WHERE userid = $userid " . 
-               "AND (tokentype = 'emailnew' OR tokentype = 'emailold') " . 
-               $dbh->sql_limit(1));
-    my ($token) = &::FetchSQLData();
-    
+
+    my $token = $dbh->selectrow_array('SELECT token FROM tokens
+                                       WHERE userid = ?
+                                       AND (tokentype = ? OR tokentype = ?) ' .
+                                       $dbh->sql_limit(1),
+                                       undef, ($userid, 'emailnew', 'emailold'));
     return $token;
 }
 
+# Returns the userid, issuedate and eventdata for the specified token
 sub GetTokenData {
-    # Returns the userid, issuedate and eventdata for the specified token
-
     my ($token) = @_;
+    my $dbh = Bugzilla->dbh;
+
     return unless defined $token;
     trick_taint($token);
-    
-    my $dbh = Bugzilla->dbh;
+
     return $dbh->selectrow_array(
         "SELECT userid, " . $dbh->sql_date_format('issuedate') . ", eventdata 
          FROM   tokens 
          WHERE  token = ?", undef, $token);
 }
 
+# Deletes specified token
 sub DeleteToken {
-    # Deletes specified token
-
     my ($token) = @_;
+    my $dbh = Bugzilla->dbh;
+
     return unless defined $token;
     trick_taint($token);
 
-    my $dbh = Bugzilla->dbh;
     $dbh->bz_lock_tables('tokens WRITE');
     $dbh->do("DELETE FROM tokens WHERE token = ?", undef, $token);
     $dbh->bz_unlock_tables();
@@ -284,16 +277,16 @@ sub DeleteToken {
 # Internal Functions
 ################################################################################
 
+# Generates a unique token and inserts it into the database
+# Returns the token and the token timestamp
 sub _create_token {
-    # Generates a unique token and inserts it into the database
-    # Returns the token and the token timestamp
     my ($userid, $tokentype, $eventdata) = @_;
+    my $dbh = Bugzilla->dbh;
 
     detaint_natural($userid);
     trick_taint($tokentype);
     trick_taint($eventdata);
 
-    my $dbh = Bugzilla->dbh;
     $dbh->bz_lock_tables('tokens WRITE');
 
     my $token = GenerateUniqueToken();

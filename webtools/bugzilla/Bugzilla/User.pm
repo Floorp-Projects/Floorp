@@ -129,19 +129,11 @@ sub _create {
 
     my $dbh = Bugzilla->dbh;
 
-    my ($id,
-        $login,
-        $name,
-        $disabledtext,
-        $mybugslink) = $dbh->selectrow_array(qq{SELECT userid,
-                                                       login_name,
-                                                       realname,
-                                                       disabledtext,
-                                                       mybugslink
-                                                 FROM profiles
-                                                 WHERE $cond},
-                                             undef,
-                                             $val);
+    my ($id, $login, $name, $disabledtext, $mybugslink) =
+        $dbh->selectrow_array(qq{SELECT userid, login_name, realname,
+                                        disabledtext, mybugslink
+                                 FROM profiles WHERE $cond},
+                                 undef, $val);
 
     return undef unless defined $id;
 
@@ -675,12 +667,8 @@ sub derive_regexp_groups {
         }
     }
 
-    $dbh->do(q{UPDATE profiles
-                  SET refreshed_when = ?
-                WHERE userid=?},
-             undef,
-             $time,
-             $id);
+    $dbh->do(q{UPDATE profiles SET refreshed_when = ? WHERE userid = ?},
+             undef, ($time, $id));
 }
 
 sub product_responsibilities {
@@ -751,9 +739,10 @@ sub match {
     # $str contains the string to match, while $limit contains the
     # maximum number of records to retrieve.
     my ($str, $limit, $exclude_disabled) = @_;
-    
-    my @users = ();
+    my $user = Bugzilla->user;
+    my $dbh = Bugzilla->dbh;
 
+    my @users = ();
     return \@users if $str =~ /^\s*$/;
 
     # The search order is wildcards, then exact match, then substring search.
@@ -762,97 +751,77 @@ sub match {
     # ones following it will not execute.
 
     # first try wildcards
-
     my $wildstr = $str;
-    my $user = Bugzilla->user;
-    my $dbh = Bugzilla->dbh;
 
     if ($wildstr =~ s/\*/\%/g && # don't do wildcards if no '*' in the string
         Param('usermatchmode') ne 'off') { # or if we only want exact matches
 
         # Build the query.
-        my $sqlstr = &::SqlQuote($wildstr);
-        my $query  = "SELECT DISTINCT userid, realname, login_name, " .
-                     "LENGTH(login_name) AS namelength " .
-                     "FROM profiles ";
-        if (&::Param('usevisibilitygroups')) {
-            $query .= ", user_group_map ";
+        trick_taint($wildstr);
+        my $query  = "SELECT DISTINCT login_name FROM profiles ";
+        if (Param('usevisibilitygroups')) {
+            $query .= "INNER JOIN user_group_map
+                               ON user_group_map.user_id = profiles.userid ";
         }
-        $query .= "WHERE ("  
-            . $dbh->sql_istrcmp('login_name', $sqlstr, "LIKE") . " OR " .
-              $dbh->sql_istrcmp('realname', $sqlstr, "LIKE") . ") ";
-        if (&::Param('usevisibilitygroups')) {
-            $query .= "AND user_group_map.user_id = userid " .
-                      "AND isbless = 0 " .
+        $query .= "WHERE ("
+            . $dbh->sql_istrcmp('login_name', '?', "LIKE") . " OR " .
+              $dbh->sql_istrcmp('realname', '?', "LIKE") . ") ";
+        if (Param('usevisibilitygroups')) {
+            $query .= "AND isbless = 0 " .
                       "AND group_id IN(" .
-                      join(', ', (-1, @{$user->visible_groups_inherited})) . 
-                      ")";
+                      join(', ', (-1, @{$user->visible_groups_inherited})) . ") ";
         }
         $query    .= " AND disabledtext = '' " if $exclude_disabled;
-        $query    .= "ORDER BY namelength ";
+        $query    .= " ORDER BY login_name ";
         $query    .= $dbh->sql_limit($limit) if $limit;
 
         # Execute the query, retrieve the results, and make them into
         # User objects.
-
-        &::PushGlobalSQLState();
-        &::SendSQL($query);
-        push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
-        &::PopGlobalSQLState();
-
+        my $user_logins = $dbh->selectcol_arrayref($query, undef, ($wildstr, $wildstr));
+        foreach my $login_name (@$user_logins) {
+            push(@users, Bugzilla::User->new_from_login($login_name));
+        }
     }
     else {    # try an exact match
-
-        my $sqlstr = &::SqlQuote($str);
-        my $query  = "SELECT userid, realname, login_name " .
-                     "FROM profiles " .
-                     "WHERE " . $dbh->sql_istrcmp('login_name', $sqlstr);
         # Exact matches don't care if a user is disabled.
+        trick_taint($str);
+        my $user_id = $dbh->selectrow_array('SELECT userid FROM profiles
+                                             WHERE ' . $dbh->sql_istrcmp('login_name', '?'),
+                                             undef, $str);
 
-        &::PushGlobalSQLState();
-        &::SendSQL($query);
-        push(@users, new Bugzilla::User(&::FetchSQLData())) if &::MoreSQLData();
-        &::PopGlobalSQLState();
+        push(@users, new Bugzilla::User($user_id)) if $user_id;
     }
 
     # then try substring search
-
     if ((scalar(@users) == 0)
-        && (&::Param('usermatchmode') eq 'search')
+        && (Param('usermatchmode') eq 'search')
         && (length($str) >= 3))
     {
+        $str = lc($str);
+        trick_taint($str);
 
-        my $sqlstr = &::SqlQuote(lc($str));
-
-        my $query   = "SELECT DISTINCT userid, realname, login_name, " .
-                      "LENGTH(login_name) AS namelength " .
-                      "FROM  profiles";
-        if (&::Param('usevisibilitygroups')) {
-            $query .= ", user_group_map";
+        my $query   = "SELECT DISTINCT login_name FROM profiles ";
+        if (Param('usevisibilitygroups')) {
+            $query .= "INNER JOIN user_group_map
+                               ON user_group_map.user_id = profiles.userid ";
         }
         $query     .= " WHERE (" .
-                $dbh->sql_position($sqlstr, 'LOWER(login_name)') . " > 0" .
-                      " OR " .
-                $dbh->sql_position($sqlstr, 'LOWER(realname)') . " > 0)";
-        if (&::Param('usevisibilitygroups')) {
-            $query .= " AND user_group_map.user_id = userid" .
-                      " AND isbless = 0" .
+                $dbh->sql_position('?', 'LOWER(login_name)') . " > 0" . " OR " .
+                $dbh->sql_position('?', 'LOWER(realname)') . " > 0) ";
+        if (Param('usevisibilitygroups')) {
+            $query .= " AND isbless = 0" .
                       " AND group_id IN(" .
-                join(', ', (-1, @{$user->visible_groups_inherited})) . ")";
+                join(', ', (-1, @{$user->visible_groups_inherited})) . ") ";
         }
-        $query     .= " AND disabledtext = ''" if $exclude_disabled;
-        $query     .= " ORDER BY namelength";
-        $query     .= " " . $dbh->sql_limit($limit) if $limit;
-        &::PushGlobalSQLState();
-        &::SendSQL($query);
-        push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
-        &::PopGlobalSQLState();
+        $query     .= " AND disabledtext = '' " if $exclude_disabled;
+        $query    .= " ORDER BY login_name ";
+        $query     .= $dbh->sql_limit($limit) if $limit;
+
+        my $user_logins = $dbh->selectcol_arrayref($query, undef, ($str, $str));
+        foreach my $login_name (@$user_logins) {
+            push(@users, Bugzilla::User->new_from_login($login_name));
+        }
     }
-
-    # order @users by alpha
-
-    @users = sort { uc($a->login) cmp uc($b->login) } @users;
-
     return \@users;
 }
 
@@ -1203,10 +1172,10 @@ sub wants_bug_mail {
         # need one piece of information, and doing so (as of 2004-11-23) slows
         # down bugmail sending by a factor of 2. If Bug creation was more
         # lazy, this might not be so bad.
-        my $bug_status = $dbh->selectrow_array("SELECT bug_status 
-                                                FROM bugs 
-                                                WHERE bug_id = $bug_id"); 
-         
+        my $bug_status = $dbh->selectrow_array('SELECT bug_status
+                                                FROM bugs WHERE bug_id = ?',
+                                                undef, $bug_id);
+
         if ($bug_status eq "UNCONFIRMED") {
             $wants_mail &= $self->wants_mail([EVT_UNCONFIRMED], $relationship);
         }
@@ -1237,13 +1206,14 @@ sub wants_mail {
     }
     
     my $wants_mail = 
-        $dbh->selectrow_array("SELECT 1 
-                              FROM email_setting
-                              WHERE user_id = $self->{'id'}
-                              AND relationship = $relationship 
-                              AND event IN (" . join(",", @$events) . ") 
-                              LIMIT 1");
-                              
+        $dbh->selectrow_array('SELECT 1
+                                 FROM email_setting
+                                WHERE user_id = ?
+                                  AND relationship = ?
+                                  AND event IN (' . join(',', @$events) . ') ' .
+                                      $dbh->sql_limit(1),
+                              undef, ($self->{'id'}, $relationship));
+
     return defined($wants_mail) ? 1 : 0;
 }
 
@@ -1271,7 +1241,7 @@ sub get_userlist {
         $query .= " 1 ";
     }
     $query     .= "FROM profiles ";
-    if (&::Param('usevisibilitygroups')) {
+    if (Param('usevisibilitygroups')) {
         $query .= "LEFT JOIN user_group_map " .
                   "ON user_group_map.user_id = userid AND isbless = 0 " .
                   "AND group_id IN(" .
@@ -1334,16 +1304,14 @@ sub insert_new_user {
             next if ($event == EVT_CHANGED_BY_ME);
             next if (($event == EVT_CC) && ($rel != REL_REPORTER));
 
-            $dbh->do("INSERT INTO email_setting " . 
-                     "(user_id, relationship, event) " . 
-                     "VALUES ($userid, $rel, $event)");
-        }        
+            $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
+                      VALUES (?, ?, ?)', undef, ($userid, $rel, $event));
+        }
     }
 
     foreach my $event (GLOBAL_EVENTS) {
-        $dbh->do("INSERT INTO email_setting " . 
-                 "(user_id, relationship, event) " . 
-                 "VALUES ($userid, " . REL_ANY . ", $event)");
+        $dbh->do('INSERT INTO email_setting (user_id, relationship, event)
+                  VALUES (?, ?, ?)', undef, ($userid, REL_ANY, $event));
     }
 
     my $user = new Bugzilla::User($userid);
