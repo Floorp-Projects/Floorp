@@ -60,6 +60,12 @@ public:
   virtual void MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
   { DoMouseClick(aEvent, PR_FALSE); }
 
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("ButtonBoxFrame"), aResult);
+  }
+#endif
+
   /**
    * Our implementation of MouseClicked. 
    * @param aTrustEvent if PR_TRUE and aEvent as null, then assume the event was trusted
