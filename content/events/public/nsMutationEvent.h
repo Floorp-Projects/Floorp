@@ -54,30 +54,11 @@ public:
     flags |= NS_EVENT_FLAG_CANT_CANCEL;
   }
 
-  nsMutationEvent(PRBool isTrusted, PRUint32 msg, nsIDOMEventTarget *target)
-    : nsEvent(isTrusted, msg, NS_MUTATION_EVENT),
-      mTarget(target),
-      mAttrChange(0)
-  {
-    flags |= NS_EVENT_FLAG_CANT_CANCEL;
-  }
-
-  nsMutationEvent(PRBool isTrusted, PRUint32 msg, nsIContent *target)
-    : nsEvent(isTrusted, msg, NS_MUTATION_EVENT),
-      mTarget(do_QueryInterface(target)),
-      mAttrChange(0)
-  {
-    flags |= NS_EVENT_FLAG_CANT_CANCEL;
-  }
-
   nsCOMPtr<nsIDOMNode> mRelatedNode;
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
-  
-  nsCOMPtr<nsIAtom> mAttrName;
-  nsCOMPtr<nsIAtom> mPrevAttrValue;
-  nsCOMPtr<nsIAtom> mNewAttrValue;
-  
-  unsigned short mAttrChange;
+  nsCOMPtr<nsIAtom>    mAttrName;
+  nsCOMPtr<nsIAtom>    mPrevAttrValue;
+  nsCOMPtr<nsIAtom>    mNewAttrValue;
+  unsigned short       mAttrChange;
 };
 
 #define NS_MUTATION_START           1800

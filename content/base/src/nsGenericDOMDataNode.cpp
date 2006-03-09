@@ -1066,8 +1066,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   SetBidiStatus();
 
   if (haveMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED, node);
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
     mutation.mPrevAttrValue = oldValue;
     if (aLength > 0) {
@@ -1110,8 +1109,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRUint32 aLength,
   mText.SetTo(aBuffer, aLength);
 
   if (haveMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED, node);
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
     mutation.mPrevAttrValue = oldValue;
     if (aLength > 0) {
@@ -1150,8 +1148,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
   SetBidiStatus();
 
   if (haveMutationListeners) {
-    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED, node);
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
     mutation.mPrevAttrValue = oldValue;
     if (!aStr.IsEmpty())
