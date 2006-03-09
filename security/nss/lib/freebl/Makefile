@@ -98,7 +98,7 @@ ifdef NS_USE_GCC
     ASFILES  =
     DEFINES += -DMP_NO_MP_WORD -DMP_USE_UINT_DIGIT
 else
-    ASFILES  = mpi_x86.asm
+    MPI_SRCS += mpi_x86.c
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
     ifdef BUILD_OPT
@@ -110,12 +110,6 @@ endif
 ifeq ($(OS_TARGET),WINCE)
     DEFINES += -DMP_ARGCHK=0	# no assert in WinCE
     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
-endif
-
-ifdef XP_OS2_VACPP
-    ASFILES  = mpi_x86.asm
-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
-    DEFINES += -DMP_ASSEMBLY_DIV_2DX1D -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
 endif
 
 ifeq ($(OS_TARGET),IRIX)
@@ -404,7 +398,6 @@ vpath %.h mpi ecl
 vpath %.c mpi ecl
 vpath %.S mpi ecl
 vpath %.s mpi ecl
-vpath %.asm mpi ecl
 INCLUDES += -Impi -Iecl
 
 
