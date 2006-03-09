@@ -10,6 +10,7 @@
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
+        this.init();
       ]]></constructor>
       
       <destructor><![CDATA[
@@ -17,6 +18,9 @@
             
       <method name="init">
         <body><![CDATA[
+          if (!this.hasAttribute("place"))
+            return;
+
           // This function should only be called for top-level menus like the bookmarks menu.
           // Submenus get their _result and _resultNode from their parents.
           var hist =           

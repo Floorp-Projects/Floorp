@@ -122,10 +122,8 @@ function pageShowEventHandlers(event)
   if (event.originalTarget == content.document) {
     checkForDirectoryListing();
     charsetLoadListener(event);
-#ifdef ALTSS_ICON
-    updatePageStyles();
-#endif
-    FeedHandler.updateFeeds();
+    
+    XULBrowserWindow.asyncUpdateUI();
   }
 
   // some event handlers want to be told what the original browser/listener is
@@ -189,6 +187,7 @@ function UpdateBackForwardButtons()
   }
 }
 
+#ifndef MOZ_PLACES
 function UpdateBookmarkAllTabsMenuitem()
 {
   var tabbrowser = getBrowser();
@@ -232,6 +231,7 @@ function BookmarkThisTab()
 
   addBookmarkAs(tab.linkedBrowser, false);
 }
+#endif
 
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
@@ -726,9 +726,6 @@ function BrowserStartup()
     document.documentElement.setAttribute("height", defaultHeight);
   }
 
-#ifdef MOZ_PLACES
-  PlacesBrowserShim.init();
-#endif
   setTimeout(delayedStartup, 0);
 }
 
@@ -838,11 +835,6 @@ function delayedStartup()
   if (gURLBar)
     gURLBar.addEventListener("dragdrop", URLBarOnDrop, true);
 
-  // loads the services
-#ifndef MOZ_PLACES
-  initServices();
-  initBMService();
-#endif
   gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
   window.addEventListener("keypress", ctrlNumberTabSelection, false);
@@ -855,9 +847,11 @@ function delayedStartup()
 
   gFindBar.initFindBar();
 
+#ifndef MOZ_PLACES
   // add bookmark options to context menu for tabs
   addBookmarkMenuitems();
-#ifndef MOZ_PLACES
+  initServices();
+  initBMService();
   // now load bookmarks
   BMSVC.readBookmarks();
   var bt = document.getElementById("bookmarks-ptf");
@@ -871,11 +865,7 @@ function delayedStartup()
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
 #else
-  // XXXben - move this to the toolbar constructor if there is no performance penalty! (Ts/Txul)
-  var bookmarksBar = document.getElementById("bookmarksBarContent");
-  bookmarksBar.init();
-  var bookmarksMenuPopup = document.getElementById("bookmarksMenuPopup");
-  bookmarksMenuPopup.init();
+  window.controllers.appendController(PlacesController);
 #endif
 
   // called when we go into full screen, even if it is
@@ -1584,8 +1574,7 @@ function updateGoMenu(goMenu)
   if (showSep)
     endSep.hidden = false;
 }
-#endif
-
+ 
 function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
 {
   const browsers = aBrowser.browsers;
@@ -1604,7 +1593,6 @@ function addBookmarkAs(aBrowser, aBookmarkAllTabs, aIsWebPanel)
 
 function addBookmarkForTabBrowser(aTabBrowser, aBookmarkAllTabs, aSelect)
 {
-#ifndef MOZ_PLACES
   var tabsInfo = [];
   var currentTabInfo = { name: "", url: "", charset: null };
 
@@ -1636,14 +1624,10 @@ function addBookmarkForTabBrowser(aTabBrowser, aBookmarkAllTabs, aSelect)
   dialogArgs.objGroup = tabsInfo;
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
              BROWSER_ADD_BM_FEATURES, dialogArgs);
-#else
-      dump("*** IMPLEMENT ME\n");
-#endif
 }
 
 function addBookmarkForBrowser(aDocShell, aIsWebPanel)
 {
-#ifndef MOZ_PLACES
   // Bug 52536: We obtain the URL and title from the nsIWebNavigation
   // associated with a <browser/> rather than from a DOMWindow.
   // This is because when a full page plugin is loaded, there is
@@ -1661,10 +1645,8 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
     title = url;
   }
   BookmarksUtils.addBookmark(url, title, charSet, aIsWebPanel, description);
-#else
-      dump("*** IMPLEMENT ME\n");
-#endif
 }
+#endif
 
 function openLocation()
 {
@@ -3119,7 +3101,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   if (gURLBar) {
     gURLBar.value = url;
     SetPageProxyState("valid");
-    FeedHandler.updateFeeds();
+    XULBrowserWindow.asyncUpdateUI();    
   }
 
   // Re-enable parts of the UI we disabled during the dialog
@@ -3624,9 +3606,17 @@ nsBrowserStatusHandler.prototype =
     if (document.getElementById("highlight").checked)
       document.getElementById("highlight").removeAttribute("checked");
 
-    setTimeout(function () { FeedHandler.updateFeeds(); }, 0);
+    var self = this;
+    setTimeout(function() { self.asyncUpdateUI(); }, 0);
+  },
+  
+  asyncUpdateUI : function () {
+    FeedHandler.updateFeeds();
 #ifdef ALTSS_ICON
-    setTimeout(function () { updatePageStyles(); }, 0);
+    updatePageStyles();
+#endif
+#ifdef MOZ_PLACES
+    PlacesCommandHook.updateTagButton();
 #endif
   },
 
@@ -6119,7 +6109,11 @@ var FeedHandler = {
     // show the feed in the browser rather than displaying a menu. 
     var feeds = harvestFeeds(feeds);
     if (feeds.length == 1) {
+#ifdef MOZ_PLACES
+      PlacesCommandHook.addLiveBookmark(feeds[0].href);
+#else
       this.addLiveBookmark(feeds[0].href);
+#endif
       return false;
     }
 
@@ -6153,6 +6147,7 @@ var FeedHandler = {
     return null;
   },
   
+#ifndef MOZ_PLACES
   /**
    * Adds a Live Bookmark to a feed
    * @param   url
@@ -6161,14 +6156,11 @@ var FeedHandler = {
   addLiveBookmark: function(url) {
     var doc = gBrowser.selectedBrowser.contentDocument;
     var title = doc.title;
-#ifndef MOZ_PLACES
     var description = BookmarksUtils.getDescriptionFromDocument(doc);
     BookmarksUtils.addLivemark(doc.baseURI, url, title, description);
-#else
-      dump("*** IMPLEMENT ME\n");
-#endif
   },
-
+#endif
+  
   /**
    * Update the browser UI to show whether or not feeds are available when
    * a page is loaded or the user switches tabs to a page that has feeds. 
@@ -6257,393 +6249,193 @@ var FeedHandler = {
 };
 
 #ifdef MOZ_PLACES
-var PlacesBrowserShim = {
-  _bms: null,  // Bookmark Service
-  _lms: null,  // Livemark Service
-  _hist: null, // History Service
-  _ios: null,  // IO Service, useful for making nsIURI objects
-  _strings: null, // Localization string bundle
+
+function BookmarkAllTabsCommand() {
+}
+BookmarkAllTabsCommand.prototype = {
+  get enabled() {
+    //LOG("BookmarkAllTabs.enabled: " + getBrowser().tabContainer.childNodes.length > 1);
+    return getBrowser().tabContainer.childNodes.length > 1;
+  },
   
-  // XXXben: these should die
-  _currentURI: null, // URI of the bookmark being modified
+  execute: function BATC_execute() {
+    LOG("BookmarkAllTabs.execute: IMPLEMENT ME");
+  },
+};
+BookmarkAllTabsCommand.NAME = "Browser:BookmarkAllTabs";
 
-  init: function PBS_init() {
-    this._bms =
-      Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-      getService(Ci.nsINavBookmarksService);
-
-    this._lms =
-      Cc["@mozilla.org/browser/livemark-service;1"].
-      getService(Ci.nsILivemarkService);
-
-    this._hist =
-      Cc["@mozilla.org/browser/nav-history-service;1"].
-      getService(Ci.nsINavHistoryService);
-
-    this._ios =
-    Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService);
-
-    this._strings = document.getElementById("placeBundle");
-
-    // Override the old addLivemark function
-    //BookmarksUtils.addLivemark = function(a,b,c,d) {PlacesBrowserShim.addLivemark(a,b,c,d);};
-    
-    // XXXben - wrong
-    var addBookmarkCmd = document.getElementById("Browser:AddBookmarkAs");
-    addBookmarkCmd.setAttribute("oncommand", "PlacesBrowserShim.addBookmark()");
-
-    this._registerEventHandlers();
-
-    window.controllers.appendController(PlacesController);
-
-    PlacesController.topWindow = window;
-    PlacesController.tm = PlacesTransactionManager;
+var BrowserController = {
+  EVENT_TABCHANGE: "tabchange",
+  
+  commands: { },
+  events: { },
+  supportsCommand: function BC_supportsCommand(command) {
+    //LOG("BrowserController.supportsCommand: " + command);
+    return command in this.commands;
   },
 
-  addBookmark: function PBS_addBookmark() {
+  isCommandEnabled: function BC_isCommandEnabled(command) {
+    //LOG("BrowserController.isCommandEnabled: " + command);
+    ASSERT(this.supportsCommand(command), 
+           "Controller does not support: " + command);
+    return this.commands[command].enabled;
+  },
+  
+  doCommand: function BC_doCommand(command) {
+    //LOG("BrowserController.doCommand: " + command);
+    ASSERT(this.supportsCommand(command), 
+           "Controller does not support: " + command);
+    this.commands[command].execute();
+  },
+  
+  onEvent: function BC_onEvent(event) {
+    if (event in this.events) {
+      var commandsForEvent = this.events[event];
+      for (var i = 0; i < commandsForEvent.length; ++i) 
+        CommandUpdater.updateCommand(commandsForEvent[i]);
+    }
+  }
+};
+window.controllers.appendController(BrowserController);
+BrowserController.commands[BookmarkAllTabsCommand.NAME] = 
+  new BookmarkAllTabsCommand();
+BrowserController.events[BrowserController.EVENT_TABCHANGE] = 
+  [BookmarkAllTabsCommand.NAME];
+
+var PlacesCommandHook = {
+  /**
+   * Adds a bookmark to the page loaded in the current tab. 
+   */
+  bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
+    // TODO: add dialog for filing/confirmation
     var selectedBrowser = getBrowser().selectedBrowser;
-    this._bookmarkURI(this._bms.bookmarksRoot, selectedBrowser.currentURI, 
-                      selectedBrowser.contentTitle);
+    var uri = selectedBrowser.currentURI;
+    var bms = PlacesController.bookmarks;
+    bms.insertItem(bms.bookmarksRoot, uri, -1);
+    bms.setItemTitle(uri, selectedBrowser.contentTitle);
   },
-
-  _bookmarkURI: function PBS__bookmarkURI(folder, uri, title) {
-    this._bms.insertItem(folder, uri, -1);
-    this._bms.setItemTitle(uri, title);
-  },
-
-  showHistory: function PBS_showHistory() {
-    this._showPlacesView("chrome://browser/content/places/places.xul?history");
-  },
-
-  showBookmarks: function PBS_showBookmarks() {
-    this._showPlacesView("chrome://browser/content/places/places.xul?bookmarks");
+  
+  /**
+   * Adds a folder with bookmarks to all of the currently open tabs in this 
+   * window.
+   */
+  bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
   },
 
   /**
-   * This method shows the given URI string in whatever form we've decided
-   * is appropriate for the "Places" UI.  (It is intended to be used only for
-   * displaying the Places chrome.)
+   * Get the description associated with a document, as specified in a <META> 
+   * element.
+   * @param   doc
+   *          A DOM Document to get a description for
+   * @returns A description string if a META element was discovered with a 
+   *          "description" or "httpequiv" attribute, empty string otherwise.
    */
-  _showPlacesView: function PBS__showPlacesView(uriString) {
-    var tab = getBrowser().addTab(uriString);
-    getBrowser().selectedTab = tab;
-  },
-
-  addLivemark: function PBS_addLivemark(url, feedURL, title, description) {
-    // XXXas TODO -- put in nice confirmation dialog.
-    this._lms.createLivemark(this._bms.toolbarRoot,
-                             title,
-                             this._makeURI(url),
-                             this._makeURI(feedURL),
-                             -1);
-  },
-
-  /**
-   * Makes an nsIURI object from a string containing a URI.
-   */
-  _makeURI: function PBS__makeURI(urlString) {
-    ASSERT(urlString, "_makeURI called with an empty or undefined string parameter");
-    return this._ios.newURI(urlString, null, null);
-  },
-
-
-  /**
-   * Gets the URI that the visible browser tab is rendering.
-   *
-   * @returns an nsIURI object representing the URI currently being shown
-   */
-  _getCurrentLocation: function PBS__getCurrentLocation() {
-    return getBrowser().selectedBrowser.webNavigation.currentURI;
-  },
-
-  /**
-   * This method updates the state of navigation buttons (i.e. bookmark, feeds)
-   * which depend on the location and contents of the current page.
-   */
-  _updateControlStates: function PBS__updateControlStates() {
-    var bookmarkButton = document.getElementById("places-bookmark");
-    if (bookmarkButton) {
-      if (this._bms.isBookmarked(this._getCurrentLocation())) {
-        bookmarkButton.label = this._strings.getString("locationStatusBookmarked");
-        bookmarkButton.setAttribute("bookmarked", "true");
-      } else {
-        bookmarkButton.label = this._strings.getString("locationStatusNotBookmarked");
-        bookmarkButton.setAttribute("bookmarked", "false");
+  _getDescriptionFromDocument: function PCH_getDescriptionFromDocument(doc) {
+    var metaElements = doc.getElementsByTagName("META");
+    for (var i = 0; i < metaElements.length; ++i) {
+      if (metaElements[i].localName.toLowerCase() == "description" || 
+          metaElements[i].httpEquiv.toLowerCase() == "description") {
+        return metaElements[i].content;
+        break;
       }
     }
+    return "";
+  },
+  
+  /**
+   * Adds a Live Bookmark to a feed associated with the current page. 
+   * @param   url
+   *          The nsIURI of the page the feed was attached to
+   */
+  addLiveBookmark: function PCH_addLiveBookmark(url) {
+    var ios = 
+        Cc["@mozilla.org/network/io-service;1"].
+        getService(Ci.nsIIOService);
+    var feedURI = ios.newURI(url, null, null);
+    
+    var browser = gBrowser.selectedBrowser;
+    
+    // TODO: implement description annotation
+    //var description = this._getDescriptionFromDocument(doc);
+    var title = browser.contentDocument.title;
 
-    var feedButton = document.getElementById("places-subscribe");
-    if (feedButton) {
-      if (gBrowser.selectedBrowser.feeds)
-        feedButton.removeAttribute("disabled");
-      else
-        feedButton.setAttribute("disabled", "true");
-    }
+    // TODO: add dialog for filing/confirmation
+    var bms = PlacesController.bookmarks;
+    var livemarks = PlacesController.livemarks;
+    livemarks.createLivemark(bms.toolbarRoot, title, browser.currentURI, 
+                             feedURI, -1);
   },
 
   /**
-   * Register the event handlers that Places needs to update its state.
+   * Opens the Places Organizer. 
+   * @param   mode
+   *          The mode to display the window with ("bookmarks" or "history").
    */
-  _registerEventHandlers: function PBS_registerEventHandlers() {
-    var self = this;
-
-    function onPageShow(e){
-      self.onPageShow(e);
-    }
-    // XXXben comment out until we figure out what's up with tboxes. 
-    //getBrowser().addEventListener("pageshow", onPageShow, true);
-
-    function onTabSwitch(e) {
-      self.onTabSwitch(e);
-    }
-    getBrowser().mTabBox.addEventListener("select", onTabSwitch, true);
+  showPlacesOrganizer: function PCH_showPlacesOrganizer(mode) {
+    // TODO: check for an existing one and focus it instead. 
+    openDialog("chrome://browser/content/places/places.xul", 
+               "", "resizable", mode);
   },
-
+  
   /**
-   * This method should be called when the location currently being
-   * rendered by a browser changes (loading new page or forward/back).
+   * Update the state of the tagging icon, depending on whether or not the 
+   * current page is bookmarked. 
    */
-  onPageShow: function PBS_onPageShow(e) {
-    if (e.target && e.target.nodeName == "#document") {
-      this._updateControlStates();
+  updateTagButton: function PCH_updateTagButton() {
+    var bookmarkButton = document.getElementById("places-bookmark");
+    if (!bookmarkButton) 
+      return;
+      
+    var strings = document.getElementById("placeBundle");
+    var currentLocation = getBrowser().selectedBrowser.webNavigation.currentURI;
+    if (PlacesController.bookmarks.isBookmarked(currentLocation)) {
+      bookmarkButton.label = strings.getString("locationStatusBookmarked");
+      bookmarkButton.setAttribute("bookmarked", "true");
+    } else {
+      bookmarkButton.label = strings.getString("locationStatusNotBookmarked");
+      bookmarkButton.removeAttribute("bookmarked");
     }
-  },
-
-  /**
-   * This method should be called when the user switches active tabs.
-   */
-  onTabSwitch: function PBS_onTabSwitch(e) {
-    if (e.target == null || e.target.localName != "tabs")
-    return;
-
-    this._updateControlStates();
   },
 
   /**
    * This method should be called when the bookmark button is clicked.
    */
-  onBookmarkButtonClick: function PBS_onBookmarkButtonClick() {
-    this._currentURI = this._getCurrentLocation();
-    if (this._bms.isBookmarked(this._currentURI)) {
+  onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {
+    var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
+    var bms = PlacesController.bookmarks;
+    if (bms.isBookmarked(currentURI)) {
       this.showBookmarkProperties();
     } else {
-      this._bms.insertItem(this._bms.bookmarksRoot, this._currentURI, -1);
+      bms.insertItem(bms.bookmarksRoot, currentURI, -1);
       this._updateControlStates();
     }
-  },
-
-  /**
-   * This method shows the bookmark properties dialog.  If bookmarkURI
-   * is undefined, the dialog with display properties for the URI of the
-   * most recently displayed page; if it is set to an nsIURI object, it
-   * will display properties for the bookmark identified by that URI.
-   * The URI used should already have been bookmarked using _bookmarkURI().
-   */
-  showBookmarkProperties: function PBS_showBookmarkProperties(bookmarkURI) {
-    if (bookmarkURI) {
-      this._currentURI = bookmarkURI;
-    }
-
-    ASSERT(this._bms.isBookmarked(this._currentURI), "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + this._currentURI.spec);
-
-    this._currentTitle = this._bms.getItemTitle(this._currentURI);
-    window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
-                      "bookmarkproperties",
-                      "width=600,height=400,chrome,dependent,modal,resizable",
-                      this._currentURI, PlacesController);
-  }
-};
-
-
-/**
- * This is a custom implementation of nsITransactionManager. We do not chain
- * or aggregate the default implementation because the order in which
- * transactions are performed and undone is important to the user experience.
- * There are two classes of transactions - those done by the browser window
- * that contains this transaction manager, and those done by the embedded
- * Places page. All transactions done in either part of the UI are recorded
- * here, but ones performed by actions taken in the Places page affect the
- * Undo/Redo menu items and keybindings in the browser window only when the
- * Places page is the active tab. This is to prevent the user from accidentally
- * undoing/redoing their changes while the Places page is not selected, and the
- * user not noticing.
- *
- * When the Places page is navigated away from, the undo items registered for
- * it are destroyed and the ability to undo those actions ceases.
- */
-var PlacesTransactionManager = {
-  _undoItems: [],
-  _redoItems: [],
-
-  hidePageTransactions: true,
-
-  _getNextVisibleIndex: function PTM__getNextVisibleItem(list) {
-    if (!this.hidePageTransactions)
-      return list.length - 1;
-
-    for (var i = list.length - 1; i >= 0; --i) {
-      if (!list[i].pageTransaction)
-        return i;
-    }
-    return -1;
-  },
-
-  updateCommands: function PTM__updateCommands() {
-    CommandUpdater.updateCommand("cmd_undo");
-    CommandUpdater.updateCommand("cmd_redo");
-  },
-
-  doTransaction: function PTM_doTransaction(transaction) {
-    transaction.doTransaction();
-    this._undoItems.push(transaction);
-    this._redoItems = [];
-    this.updateCommands();
-  },
-
-  undoTransaction: function PTM_undoTransaction() {
-    var index = this._getNextVisibleIndex(this._undoItems);
-    ASSERT(index >= 0, "Invalid Transaction index");
-    var transaction = this._undoItems.splice(index, 1)[0];
-    transaction.undoTransaction();
-    this._redoItems.push(transaction);
-    this.updateCommands();
-  },
-
-  redoTransaction: function PTM_redoTransaction() {
-    var index = this._getNextVisibleIndex(this._redoItems);
-    ASSERT(index >= 0, "Invalid Transaction index");
-    var transaction = this._redoItems.splice(index, 1)[0];
-    transaction.redoTransaction();
-    this._undoItems.push(transaction);
-    this.updateCommands();
-  },
-
-  clear: function PTM_clear() {
-    this._undoItems = [];
-    this._redoItems = [];
-    this.updateCommands();
-  },
-
-  beginBatch: function PTM_beginBatch() {
-  },
-
-  endBatch: function PTM_endBatch() {
-  },
-
-  get numberOfUndoItems() {
-    return this.getUndoList().numItems;
-  },
-  get numberOfRedoItems() {
-    return this.getRedoList().numItems;
-  },
-
-  maxTransactionCount: -1,
-
-  peekUndoStack: function PTM_peekUndoStack() {
-    var index = this._getNextVisibleIndex(this._undoItems);
-    ASSERT(index >= 0, "Invalid Transaction index");
-    return this._undoItems[index];
-  },
-  peekRedoStack: function PTM_peekRedoStack() {
-    var index = this._getNextVisibleIndex(this._redoItems);
-    ASSERT(index >= 0, "Invalid Transaction index");
-    return this._redoItems[index];
-  },
-
-  _filterList: function PTM__filterList(list) {
-    if (!this.hidePageTransactions)
-      return list;
-
-    var transactions = [];
-    for (var i = 0; i < list.length; ++i) {
-      if (!list[i].pageTransaction)
-        transactions.push(list[i]);
-    }
-    return transactions;
-  },
-
-  getUndoList: function PTM_getUndoList() {
-    return new TransactionList(this._filterList(this._undoItems));
-  },
-  getRedoList: function PTM_getRedoList() {
-    return new TransactionList(this._filterList(this._redoItems));
-  },
-
-  _listeners: [],
-  AddListener: function PTM_AddListener(listener) {
-    this._listeners.push(listener);
-  },
-  RemoveListener: function PTM_RemoveListener(listener) {
-    for (var i = 0; i < this._listeners.length; ++i) {
-      if (this._listeners[i] == listener)
-        this._listeners.splice(i, 1);
-    }
-  },
-
-  QueryInterface: function PTM_QueryInterface(iid) {
-    if (iid.equals(Ci.nsITransactionManager) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NOINTERFACE;
-  }
-};
-
-function TransactionList(transactions) {
-  this._transactions = transactions;
-}
-TransactionList.prototype = {
-  get numItems() {
-    return this._transactions.length;
-  },
-
-  itemIsBatch: function TL_itemIsBatch(index) {
-    return false;
-  },
-
-  getItem: function TL_getItem(index) {
-    return this._transactions[i];
-  },
-
-  getNumChildrenForItem: function TL_getNumChildrenForItem(index) {
-    return 0;
-  },
-
-  getChildListForItem: function TL_getChildListForItem(index) {
-    return null;
-  },
-
-  QueryInterface: function TL_QueryInterface(iid) {
-    if (iid.equals(Ci.nsITransactionList) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NOINTERFACE;
   }
 };
 
 // Functions for the history menu.
 var HistoryMenu = {
 
-  /*
+  /**
    * Updates the history menu with the session history of the current tab.
    * This function is called every time the history menu is shown.
-   * @params menu XULNode for the history menu
+   * @param menu 
+   *        XULNode for the history menu
    */
   update: function PHM_update(menu) {
     FillHistoryMenu(menu, "history", document.getElementById("endTabHistorySeparator"));
   },
 
-  /*
+  /**
    * Shows the places search page.
    * (Will be fully implemented when there is a places search page.)
    */
   showPlacesSearch: function PHM_showPlacesSearch() {
     // XXX The places view needs to be updated before this
     // does something different than show history.
-    PlacesBrowserShim._showPlacesView("chrome://browser/content/places/places.xul?history");
+    PlacesCommandHook.showPlacesOrganizer("history");
   },
   
-  /*
+  /**
    * Clears the browser history.
    * (XXX This might be changed to show the Clear Private Data menu instead)
    */
@@ -6654,11 +6446,11 @@ var HistoryMenu = {
   }
 };
 
-/*
+/**
  * Functions for handling events in the Bookmarks Toolbar and menu.
  */
 var BookmarksEventHandler = {  
-  /*
+  /**
    * Handler for click event for an item in the bookmarks toolbar or menu.
    * Menus and submenus from the folder buttons bubble up to this handler.
    * Only handle middle-click; left-click is handled in the onCommand function.
@@ -6689,21 +6481,23 @@ var BookmarksEventHandler = {
     }
   },
   
-  /*
+  /**
    * Handler for command event for an item in the bookmarks toolbar.
    * Menus and submenus from the folder buttons bubble up to this handler.
    * Opens the item.
-   * @param event DOMEvent for the command
+   * @param event 
+   *        DOMEvent for the command
    */
   onCommand: function BM_onCommand(event) {
     PlacesController.mouseLoadURI(event);
   },
   
-  /*
+  /**
    * Handler for popupshowing event for an item in bookmarks toolbar or menu.
    * If the item isn't the main bookmarks menu, add an "Open in Tabs" menuitem
    * to the bottom of the popup.
-   * @param event DOMEvent for popupshowing
+   * @param event 
+   *        DOMEvent for popupshowing
    */
   onPopupShowing: function BM_onPopupShowing(event) {
     if (event.target.localName == "menupopup" &&
@@ -6716,11 +6510,12 @@ var BookmarksEventHandler = {
     }
   },
   
-  /*
+  /**
    * Handler for dragover event for an item in the bookmarks menu.
    * If this is the top-level bookmarks menu, open the menu so that
    * items can be dropped into it.
-   * @param event DOMEvent for the dragover.
+   * @param event 
+   *        DOMEvent for the dragover.
    */
   onDragOver: function BM_onDragOver(event) {
     if (event.target.id == "bookmarksMenu") {

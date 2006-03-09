@@ -43,9 +43,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/skin/toolbar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
@@ -235,7 +237,11 @@
                     onclick="event.preventBubble();">
               <menupopup position="after_end"
                          onpopupshowing="return FeedHandler.buildFeedList(event);"
+#ifdef MOZ_PLACES
+                         oncommand="PlacesCommandHook.addLiveBookmark(event.target.getAttribute('feed'));" />
+#else
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
+#endif
             </button>
             <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.preventBubble();"/>
           </hbox>
@@ -271,9 +277,9 @@
 
 #ifdef MOZ_PLACES
       <toolbarbutton id="bookmarksBarShowPlaces"
-                     oncommand="PlacesBrowserShim.showHistory()"/>
+                     oncommand="PlacesCommandHook.showPlacesOrganizer('history');"/>
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
-         <hbox id="bookmarksBarContent" flex="1"
+         <hbox id="bookmarksBarContent" flex="1" type="places" 
                place="place:&amp;folder=3&amp;group=3&amp;expandQueries=1"
                context="placesContext"
                onclick="BookmarksEventHandler.onClick(event);"
@@ -283,10 +289,7 @@
       <toolbarbutton id="places-bookmark" 
                      label="&location.status.not_bookmarked;" 
                      tooltiptext="&location.status.bookmark.tooltip;" 
-                     oncommand="PlacesBrowserShim.onBookmarkButtonClick();"/>
-      <toolbarbutton id="places-subscribe" 
-                     label="&feed.subscribe.label;" 
-                     tooltiptext="&feed.subscribe.tooltip;"/>
+                     oncommand="PlacesCommandHook.onBookmarkButtonClick();"/>
 #else
       <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
                    class="chromeclass-directories">
@@ -427,7 +430,7 @@
     <toolbar id="PersonalToolbar"
              class="chromeclass-directories"
              defaultset="bookmarksBarShowPlaces,personal-bookmarks"
-             toolbarname="&places.toolbar.label;"
+             toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"
              customizable="true"/>
 #else
     <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
@@ -456,7 +459,11 @@
                   onnewtab="BrowserOpenTab();"
                   autocompletepopup="PopupAutoComplete"
                   ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-                  onclick="return contentAreaClick(event, false);"/>
+                  onclick="return contentAreaClick(event, false);"
+#ifdef MOZ_PLACES
+                  onselect="BrowserController.onEvent(BrowserController.EVENT_TABCHANGE);"
+#endif
+                  />
     </vbox>
   </hbox>
   

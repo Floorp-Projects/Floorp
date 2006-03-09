@@ -1,7 +1,13 @@
 <!ENTITY places.title
   "Places">
-<!ENTITY places.toolbar.label
-  "Places Toolbar">
+<!ENTITY file.label
+  "File">
+<!ENTITY file.accesskey
+  "F">
+<!ENTITY fileClose.label
+  "Close">
+<!ENTITY fileClose.accesskey
+  "C">
 <!ENTITY cmd.find.label 
   "Find in Bookmarks/History...">
 <!ENTITY cmd.find.accesskey
@@ -198,9 +204,3 @@
   "Feed">
 <!ENTITY feed.subscribe.tooltip
   "Subscribe">
-<!ENTITY location.status.not_bookmarked
-  "Star (Off)">
-<!ENTITY location.status.bookmarked
-  "Star (On)">
-<!ENTITY location.status.bookmark.tooltip
-  "Add a Bookmark to this page">

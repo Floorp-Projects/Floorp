@@ -1,19 +1,13 @@
-.history-calendar {
-  -moz-binding: url("chrome://browser/content/places/places.xml#calendar");
-}
-
-#searchFilter {
-  -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
-}
-
 tree[type="places"] {
   -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
 }
 
-button {
-  -moz-binding: url("chrome://browser/content/places/places.xml#command-button");
+hbox[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/toolbar.xml#places-bar");
+  overflow: hidden;
 }
 
-.filterList {
-  -moz-binding: url("chrome://browser/content/places/places.xml#filter-button");
+menupopup[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }
+

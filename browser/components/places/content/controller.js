@@ -276,27 +276,40 @@ var PlacesController = {
   /**
    * The Bookmarks Service.
    */
-  __bms: null,
-  get _bms() {
-    if (!this.__bms) {
-      this.__bms = 
+  _bookmarks: null,
+  get bookmarks() {
+    if (!this._bookmarks) {
+      this._bookmarks = 
         Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
         getService(Ci.nsINavBookmarksService);
     }
-    return this.__bms;
+    return this._bookmarks;
   },
 
   /**
    * The Nav History Service.
    */
-  __hist: null,
-  get _hist() {
-    if (!this.__hist) {
-      this.__hist =
+  _history: null,
+  get history() {
+    if (!this._history) {
+      this._history =
         Cc["@mozilla.org/browser/nav-history-service;1"].
         getService(Ci.nsINavHistoryService);
     }
-    return this.__hist;
+    return this._history;
+  },
+
+  /**
+   * The Live Bookmark Service.
+   */
+  _livemarks: null,
+  get livemarks() {
+    if (!this._livemarks) {
+      this._livemarks = 
+        Cc["@mozilla.org/browser/livemark-service;1"].
+        getService(Ci.nsILivemarkService);
+    }
+    return this._livemarks;
   },
 
   /** UI Text Strings */
@@ -323,14 +336,14 @@ var PlacesController = {
    * @returns A HistoryResultNode containing the contents of the folder. 
    */
   getFolderContents: function PC_getFolderContents(folderId, excludeItems, expandQueries) {
-    var query = this._hist.getNewQuery();
+    var query = this.history.getNewQuery();
     query.setFolders([folderId], 1);
-    var options = this._hist.getNewQueryOptions();
+    var options = this.history.getNewQueryOptions();
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeItems = excludeItems;
     options.expandQueries = expandQueries;
 
-    var result = this._hist.executeQuery(query, options);
+    var result = this.history.executeQuery(query, options);
     result.root.containerOpen = true;
     return asContainer(result.root);
   },
@@ -344,7 +357,7 @@ var PlacesController = {
    * @returns A place: URI encoding the parameters. 
    */
   getPlaceURI: function PC_getPlaceURI(queries, options) {
-    var queryString = this._hist.queriesToQueryString(queries, queries.length,
+    var queryString = this.history.queriesToQueryString(queries, queries.length,
                                                       options);
     return this._uri(queryString);
   },
@@ -362,14 +375,17 @@ var PlacesController = {
   },
   
   /**
-   * The top window
+   * The Transaction Manager for this instance.
    */
-  topWindow: null,
-  
-  /**
-   * The Transaction Manager for this window.
-   */
-  tm: null,
+  _tm: null,
+  get tm() {
+    if (!this._tm) {
+      this._tm = 
+        Cc["@mozilla.org/transactionmanager;1"].
+        createInstance(Ci.nsITransactionManager);
+    }
+    return this._tm;
+  },
   
   /**
    * The current groupable Places view. This is tracked independently of the 
@@ -564,7 +580,7 @@ var PlacesController = {
   nodeIsReadOnly: function PC_nodeIsReadOnly(node) {
     ASSERT(node, "null node");
     if (this.nodeIsFolder(node))
-      return this._bms.getFolderReadonly(asFolder(node).folderId);
+      return this.bookmarks.getFolderReadonly(asFolder(node).folderId);
     else if (this.nodeIsQuery(node))
       return asQuery(node).childrenReadOnly;
     return false;
@@ -784,11 +800,11 @@ var PlacesController = {
   /**
    * Opens the bookmark properties for the selected URI Node.
    */
-
   showBookmarkPropertiesForSelection: 
   function PC_showBookmarkPropertiesForSelection() {
     var node = this._activeView.selectedURINode;
-    if (!node || !node.uri) return;
+    if (!node || !node.uri) 
+      return;
 
     this.showBookmarkProperties(this._uri(node.uri));
   },
@@ -797,27 +813,28 @@ var PlacesController = {
    * This method can be run on a URI parameter to ensure that it didn't
    * receive a string instead of an nsIURI object.
    */
-
   _assertURINotString: function PC__assertURINotString(value) {
-    ASSERT((typeof(value) == "object") && !(value instanceof String), "This method should be passed a URI as a nsIURI object, not as a string.");
+    ASSERT((typeof(value) == "object") && !(value instanceof String), 
+           "This method should be passed a URI as a nsIURI object, not as a string.");
   },
 
   /**
    * Opens the bookmark properties panel for a given bookmarked URI.
    *
-   * @param bookmarkURI  an nsIURI object representing a bookmarked URI
+   * @param   bookmarkURI  
+   *          A nsIURI object representing a bookmarked URI
    */
-
   showBookmarkProperties: function PC_showBookmarkProperties(bookmarkURI) {
     this._assertURINotString(bookmarkURI);
-    ASSERT(this._bms.isBookmarked(bookmarkURI), "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + bookmarkURI.spec);
+    ASSERT(this.bookmarks.isBookmarked(bookmarkURI), 
+           "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + bookmarkURI.spec);
 
-    if (!this._bms.isBookmarked(bookmarkURI)) return;
+    if (!this.bookmarks.isBookmarked(bookmarkURI))
+      return;
 
     var view = this._activeView.browserWindow;
     view.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
-                    "bookmarkproperties",
-                    "width=600,height=400,chrome,dependent,modal,resizable",
+                    "", "width=600,height=400,chrome,dependent,modal,resizable",
                     bookmarkURI, this);
   },
 
@@ -832,20 +849,21 @@ var PlacesController = {
   changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
     this._assertURINotString(oldURI);
     this._assertURINotString(newURI);
-    ASSERT(this._bms.isBookmarked(oldURI));
+    ASSERT(this.bookmarks.isBookmarked(oldURI));
 
-    if (oldURI.spec == newURI.spec) return;
+    if (oldURI.spec == newURI.spec) 
+      return;
 
-    var folders = this._bms.getBookmarkFolders(oldURI, {});
-    this._bms.beginUpdateBatch();
+    var folders = this.bookmarks.getBookmarkFolders(oldURI, {});
+    this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < folders.length; i++) {
-      this._bms.replaceItem(folders[i], oldURI, newURI);
+      this.bookmarks.replaceItem(folders[i], oldURI, newURI);
     }
-    this._bms.setItemTitle(newURI,
-                           this._bms.getItemTitle(oldURI));
-    this._bms.setKeywordForURI(newURI, 
-                               this._bms.getKeywordForURI(oldURI));
-    this._bms.endUpdateBatch();
+    this.bookmarks.setItemTitle(newURI,
+                                this.bookmarks.getItemTitle(oldURI));
+    this.bookmarks.setKeywordForURI(newURI, 
+                                    this.bookmarks.getKeywordForURI(oldURI));
+    this.bookmarks.endUpdateBatch();
   },
 
   /**
@@ -1009,13 +1027,13 @@ var PlacesController = {
     ASSERT(this._groupableView, "Need a groupable view to load!");
     if (!this._groupableView)
       return;
-    var query = this._hist.getNewQuery();
-    var options = this._hist.getNewQueryOptions();
+    var query = this.history.getNewQuery();
+    var options = this.history.getNewQueryOptions();
     options.setGroupingMode(groupings, groupings.length);
     options.sortingMode = sortingMode;
     query.annotation = annotation;
     this.groupableView.load([query], options);
-    LOG("CS: " + this._hist.queriesToQueryString([query], 1, options));
+    LOG("CS: " + this.history.queriesToQueryString([query], 1, options));
   },
   
   /**
@@ -1111,7 +1129,7 @@ var PlacesController = {
     var nodes = this._activeView.getSelectionNodes();
     for (i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-      var bhist = this._hist.QueryInterface(Ci.nsIBrowserHistory);
+      var bhist = this.history.QueryInterface(Ci.nsIBrowserHistory);
       if (this.nodeIsHost(node))
         bhist.removePagesFromHost(node.title, true);
       else if (this.nodeIsURI(node))
@@ -1255,7 +1273,7 @@ var PlacesController = {
    * @returns A nsITransaction object that performs the copy. 
    */
   _getItemCopyTransaction: function (uri, container, index) {
-    var itemTitle = this._bms.getItemTitle(uri);
+    var itemTitle = this.bookmarks.getItemTitle(uri);
     var createTxn = new PlacesCreateItemTransaction(uri, container, index);
     var editTxn = new PlacesEditItemTransaction(uri, { title: itemTitle });
     return new PlacesAggregateTransaction("ItemCopy", [createTxn, editTxn]);
@@ -1277,7 +1295,7 @@ var PlacesController = {
     var transactions = [];
     var self = this;
     function createTransactions(folderId, container, index) {
-      var folderTitle = self._bms.getFolderTitle(folderId);
+      var folderTitle = self.bookmarks.getFolderTitle(folderId);
     
       var createTxn = 
         new PlacesCreateFolderTransaction(folderTitle, container, index);
@@ -1657,8 +1675,8 @@ var PlacesControllerDragHelper = {
 function PlacesBaseTransaction() {
 }
 PlacesBaseTransaction.prototype = {
-  _bms: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-        getService(Ci.nsINavBookmarksService), 
+  bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+             getService(Ci.nsINavBookmarksService), 
            
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -1690,19 +1708,19 @@ PlacesAggregateTransaction.prototype = {
   
   doTransaction: function() {
     LOG("== " + this._name + " (Aggregate) ==============");
-    this._bms.beginUpdateBatch();
+    this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < this._transactions.length; ++i)
       this._transactions[i].doTransaction();
-    this._bms.endUpdateBatch();
+    this.bookmarks.endUpdateBatch();
     LOG("== " + this._name + " (Aggregate Ends) =========");
   },
   
   undoTransaction: function() {
     LOG("== UN" + this._name + " (UNAggregate) ============");
-    this._bms.beginUpdateBatch();
+    this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < this._transactions.length; ++i)
       this._transactions[i].undoTransaction();
-    this._bms.endUpdateBatch();
+    this.bookmarks.endUpdateBatch();
     LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
 };
@@ -1725,12 +1743,12 @@ PlacesCreateFolderTransaction.prototype = {
 
   doTransaction: function PCFT_doTransaction() {
     LOG("Create Folder: " + this._name + " in: " + this._container + "," + this._index);
-    this._id = this._bms.createFolder(this._container, this._name, this._index);
+    this._id = this.bookmarks.createFolder(this._container, this._name, this._index);
   },
   
   undoTransaction: function PCFT_undoTransaction() {
     LOG("UNCreate Folder: " + this._name + " from: " + this._container + "," + this._index);
-    this._bms.removeFolder(this._id);
+    this.bookmarks.removeFolder(this._id);
   }
 };
 
@@ -1750,12 +1768,12 @@ PlacesCreateItemTransaction.prototype = {
 
   doTransaction: function PCIT_doTransaction() {
     LOG("Create Item: " + this._uri.spec + " in: " + this._container + "," + this._index);
-    this._bms.insertItem(this._container, this._uri, this._index);
+    this.bookmarks.insertItem(this._container, this._uri, this._index);
   },
   
   undoTransaction: function PCIT_undoTransaction() {
     LOG("UNCreate Item: " + this._uri.spec + " from: " + this._container + "," + this._index);
-    this._bms.removeItem(this._container, this._uri);
+    this.bookmarks.removeItem(this._container, this._uri);
   }
 };
 
@@ -1772,12 +1790,12 @@ PlacesInsertSeparatorTransaction.prototype = {
 
   doTransaction: function PIST_doTransaction() {
     LOG("Create separator in: " + this._container + "," + this._index);
-    this._id = this._bms.insertSeparator(this._container, this._index);
+    this._id = this.bookmarks.insertSeparator(this._container, this._index);
   },
   
   undoTransaction: function PIST_undoTransaction() {
     LOG("UNCreate separator from: " + this._container + "," + this._index);
-    this._bms.removeChildAt(this._container, this._index);
+    this.bookmarks.removeChildAt(this._container, this._index);
   }
 };
 
@@ -1800,12 +1818,12 @@ PlacesMoveFolderTransaction.prototype = {
 
   doTransaction: function PMFT_doTransaction() {
     LOG("Move Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this._bms.moveFolder(this._id, this._newContainer, this._newIndex);
+    this.bookmarks.moveFolder(this._id, this._newContainer, this._newIndex);
   },
   
   undoTransaction: function PMFT_undoTransaction() {
     LOG("UNMove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this._bms.moveFolder(this._id, this._oldContainer, this._oldIndex);
+    this.bookmarks.moveFolder(this._id, this._oldContainer, this._oldIndex);
   }
 };
 
@@ -1827,14 +1845,14 @@ PlacesMoveItemTransaction.prototype = {
 
   doTransaction: function PMIT_doTransaction() {
     LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this._bms.removeItem(this._oldContainer, this._uri);
-    this._bms.insertItem(this._newContainer, this._uri, this._newIndex);
+    this.bookmarks.removeItem(this._oldContainer, this._uri);
+    this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
   },
   
   undoTransaction: function PMIT_undoTransaction() {
     LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
-    this._bms.removeItem(this._newContainer, this._uri);
-    this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    this.bookmarks.removeItem(this._newContainer, this._uri);
+    this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
   }
 };
 
@@ -1920,28 +1938,28 @@ PlacesRemoveFolderTransaction.prototype = {
    */
   _restore: function PRFT__restore(parent, item) {
     if (item instanceof PlacesRemoveFolderSaveChildFolder) {
-      var id = this._bms.createFolder(parent, item.name, 0);
+      var id = this.bookmarks.createFolder(parent, item.name, 0);
       this._restore(id, item);
     }
     else {
-      this._bms.insertItem(parent, item.uri, 0);
-      this._bms.setItemTitle(item.uri, item.name);
+      this.bookmarks.insertItem(parent, item.uri, 0);
+      this.bookmarks.setItemTitle(item.uri, item.name);
     }    
   },
 
   doTransaction: function PRFT_doTransaction() {
-    this._oldFolderTitle = this._bms.getFolderTitle(this._id);
+    this._oldFolderTitle = this.bookmarks.getFolderTitle(this._id);
     LOG("Remove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
     
     this._contents = new PlacesRemoveFolderSaveChildFolder(this._oldFolderTitle);
     this._saveFolderContents(this._id, this._contents);
 
-    this._bms.removeFolder(this._id);
+    this.bookmarks.removeFolder(this._id);
   },
   
   undoTransaction: function PRFT_undoTransaction() {
     LOG("UNRemove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._id = this._bms.createFolder(this._oldContainer, this._oldFolderTitle, this._oldIndex);
+    this._id = this.bookmarks.createFolder(this._oldContainer, this._oldFolderTitle, this._oldIndex);
     
     for (var i = 0; i < this._contents.children.length; ++i)
       this._restore(this._id, this._contents.children[i]);
@@ -1964,13 +1982,13 @@ PlacesRemoveItemTransaction.prototype = {
   
   doTransaction: function PRIT_doTransaction() {
     LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._bms.removeItem(this._oldContainer, this._uri);
+    this.bookmarks.removeItem(this._oldContainer, this._uri);
     LOG("DO: PAGETXN: " + this.pageTransaction);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
     LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._bms.insertItem(this._oldContainer, this._uri, this._oldIndex);
+    this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
     LOG("UNDO: PAGETXN: " + this.pageTransaction);
   }
 };
@@ -1987,12 +2005,12 @@ PlacesRemoveSeparatorTransaction.prototype = {
 
   doTransaction: function PRST_doTransaction() {
     LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
-    this._bms.removeChildAt(this._oldContainer, this._oldIndex);
+    this.bookmarks.removeChildAt(this._oldContainer, this._oldIndex);
   },
   
   undoTransaction: function PRST_undoTransaction() {
     LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
-    this._bms.insertSeparator(this._oldContainer, this._oldIndex);
+    this.bookmarks.insertSeparator(this._oldContainer, this._oldIndex);
   }
 };
 
@@ -2039,8 +2057,8 @@ PlacesEditItemTransaction.prototype = {
     LOG("Edit Item: " + this._uri.spec + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
     for (var p in this._newAttributes) {
       if (p == "title") {
-        this._oldAttributes[p] = this._bms.getItemTitle(this._uri);
-        this._bms.setItemTitle(this._uri, this._newAttributes[p]);
+        this._oldAttributes[p] = this.bookmarks.getItemTitle(this._uri);
+        this.bookmarks.setItemTitle(this._uri, this._newAttributes[p]);
       }
       else {
         // Use Annotation Service
@@ -2052,7 +2070,7 @@ PlacesEditItemTransaction.prototype = {
     LOG("UNEdit Item: " + this._uri.spec + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
     for (var p in this._newAttributes) {
       if (p == "title")
-        this._bms.setItemTitle(this._uri, this._oldAttributes[p]);
+        this.bookmarks.setItemTitle(this._uri, this._oldAttributes[p]);
       else {
         // Use Annotation Service
       }
