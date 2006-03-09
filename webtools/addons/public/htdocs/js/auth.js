@@ -9,13 +9,8 @@ function addUsernameToHeader()
     
     if (username && username.length > 0) {
     
-        var authdiv = document.createElement('div');
+        document.writeln('<div id="auth">Logged in as: ' + htmlEntities(username) + '</div>');
 
-        authdiv.setAttribute('id','auth');
-
-        authdiv.innerHTML = 'Logged in as: ' + htmlEntities(username);
-
-        document.getElementById('header').appendChild(authdiv);
     }
 }
 

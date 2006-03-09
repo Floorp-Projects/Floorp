@@ -67,6 +67,14 @@ body {
 	font-size: 85%;
 }
 
+#header div#auth {
+    display:inline;
+    position:absolute;
+    top:11px;
+    right:0px;
+    margin-right: 200px;
+}
+
 #key-menu {
 	background: #B2C1C8 url("../../images/header-bottom.gif") 0 100% no-repeat;
 	padding: 0 0 10px 0;

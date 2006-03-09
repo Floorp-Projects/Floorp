@@ -40,6 +40,12 @@
         <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>
 {/if}
 
+<script type="text/javascript">
+//<![CDATA[
+    addUsernameToHeader();
+//]]>
+</script>
+
 		<form id="search" method="get" action="{$config.webpath}/search.php" title="Search Mozilla Update">
 		<div>
 		<label for="q" title="Search Mozilla Update">search:</label>
@@ -63,13 +69,6 @@
 
 </div>
 <!-- end header -->
-
-<script type="text/javascript">
-//<![CDATA[
-    addUsernameToHeader();
-//]]>
-</script>
-
 
 <hr class="hide">
 
