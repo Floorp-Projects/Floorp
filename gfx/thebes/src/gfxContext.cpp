@@ -249,13 +249,13 @@ void gfxContext::Rotate(gfxFloat angle)
 }
 void gfxContext::Multiply(const gfxMatrix& matrix)
 {
-    cairo_matrix_t mat = matrix.ToCairoMatrix();
+    const cairo_matrix_t& mat = matrix.ToCairoMatrix();
     cairo_transform(mCairo, &mat);
 }
 
 void gfxContext::SetMatrix(const gfxMatrix& matrix)
 {
-    cairo_matrix_t mat = matrix.ToCairoMatrix();
+    const cairo_matrix_t& mat = matrix.ToCairoMatrix();
     cairo_set_matrix(mCairo, &mat);
 }
 
@@ -264,7 +264,7 @@ void gfxContext::IdentityMatrix()
     cairo_identity_matrix(mCairo);
 }
 
-gfxMatrix gfxContext::CurrentMatrix() const
+const gfxMatrix& gfxContext::CurrentMatrix() const
 {
     cairo_matrix_t mat;
     cairo_get_matrix(mCairo, &mat);

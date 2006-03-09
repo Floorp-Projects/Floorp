@@ -87,6 +87,15 @@ public:
         mat = m;
     }
 
+    bool operator==(const gfxMatrix& m) const {
+        return ((mat.xx == m.mat.xx) &&
+                (mat.yx == m.mat.yx) &&
+                (mat.xy == m.mat.xy) &&
+                (mat.yy == m.mat.yy) &&
+                (mat.x0 == m.mat.x0) &&
+                (mat.y0 == m.mat.y0));
+    }
+
     gfxMatrix& operator=(const cairo_matrix_t& m) {
         mat = m;
         return *this;
@@ -107,7 +116,7 @@ public:
     }
 
     // conversion to other types
-    cairo_matrix_t ToCairoMatrix() const {
+    const cairo_matrix_t& ToCairoMatrix() const {
         return mat;
     }
 
