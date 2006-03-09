@@ -3406,7 +3406,7 @@ nsHTMLDocument::GetBodyContent()
   // Loop backwards because any non-elements, such as doctypes and PIs
   // are likly to appear before the root element.
   nsIContent* html = GetRootContent();
-  if (html->Tag() == nsHTMLAtoms::html &&
+  if (html && html->Tag() == nsHTMLAtoms::html &&
       html->IsContentOfType(nsIContent::eHTML)) {
 
     // Look for body inside html
