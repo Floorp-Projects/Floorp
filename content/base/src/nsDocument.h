@@ -385,6 +385,7 @@ public:
                                      nsIDocument* aSubDoc);
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
+  virtual nsIContent* GetRootContent() const;
 
   /**
    * Get the style sheets owned by this document.
@@ -772,8 +773,6 @@ protected:
   nsString mBaseTarget;
 
 private:
-  nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);
-
   void PostUnblockOnloadEvent();
   static EventHandlerFunc HandleOnloadBlockerEvent;
   static EventDestructorFunc DestroyOnloadBlockerEvent;
