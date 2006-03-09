@@ -15,7 +15,7 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
-      <vbox id="places-info-options">
+      <vbox id="places-info-options" flex="1">
 	<grid id="places-info-grid" flex="1">
 	  <columns>
 	    <column flex="1" align="end" />
@@ -54,7 +54,7 @@
 	      </vbox>
 	      <textbox id="places-folder-list" value="" disabled="true"/>
 	    </row>
-	    <row>
+	    <row flex="1">
 	      <vbox align="end">
 		<hbox align="start" flex="1">
 		  <label value="&bookmark.property.folder_list;"/>
