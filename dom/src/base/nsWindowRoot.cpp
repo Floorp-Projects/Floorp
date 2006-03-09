@@ -249,6 +249,7 @@ NS_IMETHODIMP
 nsWindowRoot::PreHandleChromeEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = PR_TRUE;
+  aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
   // To keep mWindow alive
   aVisitor.mItemData = mWindow;
   return NS_OK;
