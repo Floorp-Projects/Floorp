@@ -147,12 +147,17 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
 
 /* ::::: Folder Summary Popup ::::: */
 
+.folderSummary-message-row {
+  /* This max width ends up dictating the overall width of the popup
+     because it controls how large the preview, subject and sender text can be
+     before cropping kicks in */
+  max-width: 450px;
+}
+
 .folderSummary-subject {
   font-weight: bold; 
-  max-width: 25em;
 }
 
 .folderSummary-previewText {
   color: grey; 
-  max-width: 35em;
 }

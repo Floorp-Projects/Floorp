@@ -44,8 +44,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#newMailAlertNotification
-{
+#newMailAlertNotification {
   min-height: 60px;
   border: ridge #5486DA 4px;
   background-color: white;
@@ -55,34 +54,36 @@
   list-style-image: url("chrome://branding/content/icon64.png");
 }
 
-#alertImageBox
-{
+#alertImageBox {
   -moz-margin-start: 4px;
   -moz-margin-end: 6px;
   min-height: 46px;
 }
 
-#alertTitle 
-{
+#alertTitle {
   font-weight: bold;
   text-align: center;
-  max-width: 450px;
 }
 
-#alertTextBox
-{
+#alertTextBox {
   -moz-padding-end: 10px;
   padding-top: 5px;
+}
+
+.folderSummary-message-row 
+{
+  /* This max width ends up dictating the overall width of the alert window
+     because it controls how large the preview, subject and sender text can be
+     before cropping kicks in */
   max-width: 450px;
+  padding-right: 5px;
 }
 
 .folderSummary-subject {
-  max-width: 300px;
   padding-left: 5px;
 }
 
 .folderSummary-previewText {
   color: grey; 
-  max-width: 400px;
   padding-left: 5px;
 }

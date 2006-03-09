@@ -2105,11 +2105,12 @@
   <binding id="folderSummary-message">
     <content>
       <xul:vbox>
-        <xul:hbox>
-          <xul:label class="folderSummary-subject" xbl:inherits="value=subject" crop="right"/>
+        <xul:hbox class="folderSummary-message-row">
+          <xul:label flex="1" class="folderSummary-subject" xbl:inherits="value=subject" crop="right"/>
           <xul:label class="folderSummary-sender" xbl:inherits="value=sender" crop="right"/>
+          <xul:spring flex="100%"/>
         </xul:hbox>
-        <xul:description class="folderSummary-previewText" xbl:inherits="value=previewText" crop="right"></xul:description>
+        <xul:description class="folderSummary-message-row folderSummary-previewText" xbl:inherits="value=previewText" crop="right"></xul:description>
       </xul:vbox>
     </content>
   </binding>
