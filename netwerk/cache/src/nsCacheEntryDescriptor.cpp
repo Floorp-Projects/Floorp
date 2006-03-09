@@ -425,14 +425,14 @@ nsCacheEntryDescriptor::Close()
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
+nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char **result)
 {
+    NS_ENSURE_ARG_POINTER(key);
     *result = nsnull;
 
     nsAutoLock  lock(nsCacheService::ServiceLock());
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
-    if (!key | !result) return NS_ERROR_NULL_POINTER;
     const char *value;
 
     value = mCacheEntry->GetMetaDataElement(key);
@@ -448,10 +448,10 @@ nsCacheEntryDescriptor::GetMetaDataElement(const char *key, char ** result)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
 {
-    nsAutoLock  lock(nsCacheService::ServiceLock());
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    NS_ENSURE_ARG_POINTER(key);
 
-    if (!key) return NS_ERROR_NULL_POINTER;
+    nsAutoLock  lock(nsCacheService::ServiceLock());
+    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
 
     // XXX allow null value, for clearing key?
 

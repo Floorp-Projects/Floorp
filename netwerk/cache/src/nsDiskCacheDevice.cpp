@@ -390,6 +390,8 @@ nsDiskCacheDevice::Shutdown()
 nsresult
 nsDiskCacheDevice::Shutdown_Private(PRBool  flush)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk Shutdown_Private [%u]\n", flush));
+
     if (Initialized()) {
         // check cache limits in case we need to evict.
         EvictDiskCacheEntries(mCacheCapacity);
@@ -476,6 +478,9 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
     NS_ASSERTION(binding, "DeactivateEntry: binding == nsnull");
     if (!binding)  return NS_ERROR_UNEXPECTED;
 
+    CACHE_LOG_DEBUG(("CACHE: disk DeactivateEntry [%p %x]\n",
+        entry, binding->mRecord.HashNumber()));
+
     if (entry->IsDoomed()) {
         // delete data, entry, record from disk for entry
         rv = mCacheMap.DeleteStorage(&binding->mRecord);
@@ -523,6 +528,9 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     record.SetHashNumber(nsDiskCache::Hash(entry->Key()->get()));
     record.SetEvictionRank(ULONG_MAX - SecondsFromPRTime(PR_Now()));
 
+    CACHE_LOG_DEBUG(("CACHE: disk BindEntry [%p %x]\n",
+        entry, record.HashNumber()));
+
     if (!entry->IsDoomed()) {
         // if entry isn't doomed, add it to the cache map
         rv = mCacheMap.AddRecord(&record, &oldRecord); // deletes old record, if any
@@ -565,6 +573,8 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
 void
 nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk DoomEntry [%p]\n", entry));
+
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DoomEntry: binding == nsnull");
     if (!binding)  return;
@@ -587,6 +597,9 @@ nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry *      entry,
                                            PRUint32            offset,
                                            nsIInputStream **   result)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk OpenInputStreamForEntry [%p %x %u]\n",
+        entry, mode, offset));
+
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
@@ -612,6 +625,9 @@ nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry *      entry,
                                             PRUint32            offset,
                                             nsIOutputStream **  result)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk OpenOutputStreamForEntry [%p %x %u]\n",
+        entry, mode, offset));
+ 
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(result);
 
@@ -681,6 +697,13 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk OnDataSizeChange [%p %d]\n",
+        entry, deltaSize));
+
+    // If passed a negative value, then there's nothing to do.
+    if (deltaSize < 0)
+        return NS_OK;
+
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "OnDataSizeChange: binding == nsnull");
     if (!binding)  return NS_ERROR_UNEXPECTED;
@@ -778,6 +801,8 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
 nsresult
 nsDiskCacheDevice::EvictEntries(const char * clientID)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk EvictEntries [%s]\n", clientID));
+
     if (!Initialized())  return NS_ERROR_NOT_INITIALIZED;
     nsresult  rv;
 
@@ -883,6 +908,11 @@ nsDiskCacheDevice::ClearDiskCache()
 nsresult
 nsDiskCacheDevice::EvictDiskCacheEntries(PRUint32  targetCapacity)
 {
+    CACHE_LOG_DEBUG(("CACHE: disk EvictDiskCacheEntries [%u]\n",
+        targetCapacity));
+
+    NS_ASSERTION(targetCapacity > 0, "oops");
+
     if (mCacheMap.TotalSize() < targetCapacity)
         return NS_OK;
 

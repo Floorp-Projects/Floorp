@@ -326,8 +326,6 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
 {
     nsresult rv;
 
-    LOG(("nsHttpHandler::AddStandardRequestHeaders\n"));
-
     // Add the "User-Agent" header
     rv = request->SetHeader(nsHttp::User_Agent, UserAgent());
     if (NS_FAILED(rv)) return rv;

@@ -473,6 +473,8 @@ nsDiskCacheStreamIO::Flush()
 {
     NS_ASSERTION(mBinding, "oops");
 
+    CACHE_LOG_DEBUG(("CACHE: Flush [%x]\n", mBinding->mRecord.HashNumber()));
+
     if (!mBufDirty)
         return NS_OK;
 

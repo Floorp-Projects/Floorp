@@ -218,24 +218,25 @@ nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
                                    PRInt32  numBlocks)
 {
     // presume buffer != nsnull
-    if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
+    NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_AVAILABLE);
+
     nsresult rv = VerifyAllocation(startBlock, numBlocks);
-    if (NS_FAILED(rv))  return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     
     // seek to block position
     PRInt32 blockPos = kBitMapBytes + startBlock * mBlockSize;
     PRInt32 filePos = PR_Seek(mFD, blockPos, PR_SEEK_SET);
-    if (filePos != blockPos)  return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_STATE(filePos == blockPos);
     
     // write the blocks
     PRInt32 bytesToWrite = numBlocks * mBlockSize;
     PRInt32 bytesWritten = PR_Write(mFD, buffer, bytesToWrite);
-    if (bytesWritten < bytesToWrite)  return NS_ERROR_UNEXPECTED;
+    NS_ENSURE_STATE(bytesWritten == bytesToWrite);
     
     // write the bit map and flush the file
     // XXX except we would take a severe performance hit
     // XXX rv = FlushBitMap();
-    return rv;
+    return NS_OK;
 }
 
 
