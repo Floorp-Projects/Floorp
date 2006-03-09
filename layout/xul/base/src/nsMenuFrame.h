@@ -106,8 +106,7 @@ public:
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);

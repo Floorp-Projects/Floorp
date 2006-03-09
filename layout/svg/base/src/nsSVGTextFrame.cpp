@@ -111,7 +111,7 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext();
 
   /**
    * Get the "type" of the frame
@@ -299,7 +299,7 @@ nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsSVGTextFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGTextFrame::DidSetStyleContext()
 {
 #ifdef DEBUG
   printf("** nsSVGTextFrame::DidSetStyleContext\n");

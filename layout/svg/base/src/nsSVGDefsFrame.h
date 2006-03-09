@@ -70,8 +70,7 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);

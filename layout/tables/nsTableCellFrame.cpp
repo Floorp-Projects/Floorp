@@ -107,8 +107,7 @@ nsTableCellFrame::GetNextCell() const
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Init(nsPresContext*  aPresContext,
-                       nsIContent*      aContent,
+nsTableCellFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
@@ -116,8 +115,7 @@ nsTableCellFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv;
   
   // Let the base class do its initialization
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
+  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Set the column index

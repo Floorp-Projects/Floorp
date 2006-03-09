@@ -161,8 +161,7 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
-  NS_IMETHOD  Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+  NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
@@ -486,7 +485,7 @@ protected:
   NS_IMETHOD GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   // Style post processing hook
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext();
 
   //return the line number of the aFrame
   static PRInt32 GetLineNumber(nsIFrame *aFrame);

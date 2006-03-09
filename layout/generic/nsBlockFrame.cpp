@@ -6649,8 +6649,7 @@ nsBlockFrame::VerifyTree() const
 //////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsBlockFrame::Init(nsPresContext*  aPresContext,
-                   nsIContent*      aContent,
+nsBlockFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
@@ -6662,8 +6661,7 @@ nsBlockFrame::Init(nsPresContext*  aPresContext,
     SetFlags(blockFrame->mState & NS_BLOCK_FLAGS_MASK);
   }
 
-  nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
-                                        aContext, aPrevInFlow);
+  nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
 
   if (IsBoxWrapped())
     mState |= NS_BLOCK_SPACE_MGR;
@@ -6735,7 +6733,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
       if (nsnull == bullet) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      bullet->Init(aPresContext, mContent, this, kidSC, nsnull);
+      bullet->Init(mContent, this, kidSC, nsnull);
 
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.

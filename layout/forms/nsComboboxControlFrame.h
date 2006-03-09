@@ -107,7 +107,7 @@ public:
 #endif
 
    // nsIFrame
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
+  NS_IMETHOD Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,

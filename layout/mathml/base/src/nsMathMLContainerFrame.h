@@ -119,8 +119,7 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD
-  Init(nsPresContext*  aPresContext,
-       nsIContent*      aContent,
+  Init(nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
@@ -381,10 +380,10 @@ protected:
   virtual ~nsMathMLmathBlockFrame() {}
 
   NS_IMETHOD
-  DidSetStyleContext(nsPresContext* aPresContext)
+  DidSetStyleContext()
   {
     mScriptStyleChanged = PR_TRUE;
-    return nsBlockFrame::DidSetStyleContext(aPresContext);
+    return nsBlockFrame::DidSetStyleContext();
   }
 
   PRBool mScriptStyleChanged;
@@ -457,10 +456,10 @@ protected:
   virtual ~nsMathMLmathInlineFrame() {}
 
   NS_IMETHOD
-  DidSetStyleContext(nsPresContext* aPresContext)
+  DidSetStyleContext()
   {
     mScriptStyleChanged = PR_TRUE;
-    return nsInlineFrame::DidSetStyleContext(aPresContext);
+    return nsInlineFrame::DidSetStyleContext();
   }
 
   PRBool mScriptStyleChanged;

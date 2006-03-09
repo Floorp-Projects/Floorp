@@ -154,13 +154,14 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
 
 
 NS_IMETHODIMP
-nsMenuPopupFrame::Init(nsPresContext*  aPresContext,
-                       nsIContent*      aContent,
+nsMenuPopupFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  
+  nsPresContext *aPresContext = GetPresContext();
 
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object

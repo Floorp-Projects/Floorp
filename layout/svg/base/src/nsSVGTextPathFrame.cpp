@@ -63,8 +63,7 @@ class nsSVGTextPathFrame : public nsSVGTextPathFrameBase,
 public:
 
   // nsIFrame:
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -156,14 +155,12 @@ nsSVGTextPathFrame::~nsSVGTextPathFrame()
 }
 
 NS_IMETHODIMP
-nsSVGTextPathFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
+nsSVGTextPathFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsSVGTextPathFrameBase::Init(aPresContext, aContent, aParent,
-                               aContext, aPrevInFlow);
+  nsSVGTextPathFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   nsCOMPtr<nsIDOMSVGTextPathElement> tpath = do_QueryInterface(mContent);
 

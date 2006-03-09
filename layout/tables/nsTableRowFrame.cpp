@@ -183,8 +183,7 @@ nsTableRowFrame::~nsTableRowFrame()
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::Init(nsPresContext*  aPresContext,
-                      nsIContent*      aContent,
+nsTableRowFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
@@ -192,8 +191,7 @@ nsTableRowFrame::Init(nsPresContext*  aPresContext,
   nsresult  rv;
 
   // Let the base class do its initialization
-  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
+  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
@@ -973,7 +971,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
             cellToWatch = PR_TRUE;
           }
           if (cellToWatch) {
-            cellFrame->DidSetStyleContext(aPresContext); // XXX check this
+            cellFrame->DidSetStyleContext(); // XXX check this
             if (!tablePrevInFlow && isAutoLayout) {
               // request the maximum width if availWidth is constrained
               // XXX we could just do this always, but blocks have some problems

@@ -145,14 +145,13 @@ nsTableOuterFrame::IsContainingBlock() const
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::Init(nsPresContext*  aPresContext,
+nsTableOuterFrame::Init(
                    nsIContent*           aContent,
                    nsIFrame*             aParent,
                    nsStyleContext*       aContext,
                    nsIFrame*             aPrevInFlow)
 {
-  nsresult rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, 
-                                           aContext, aPrevInFlow);
+  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   if (NS_FAILED(rv) || !mStyleContext) return rv;
   
   // record that children that are ignorable whitespace should be excluded 

@@ -153,15 +153,16 @@ nsTextBoxFrame::~nsTextBoxFrame()
 
 
 NS_IMETHODIMP
-nsTextBoxFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*      aContent,
+nsTextBoxFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-    nsresult rv = nsTextBoxFrameSuper::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+    nsresult rv = nsTextBoxFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
     if (NS_FAILED(rv))
         return rv;
+        
+    nsPresContext *aPresContext = GetPresContext();
 
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;

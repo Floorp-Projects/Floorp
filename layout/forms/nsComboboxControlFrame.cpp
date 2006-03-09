@@ -408,7 +408,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
+nsComboboxControlFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
@@ -416,7 +416,7 @@ nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
 {
   mEventQueueService = do_GetService(kEventQueueServiceCID);
   
-  return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsAreaFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 void 
@@ -1922,8 +1922,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext,
-                                    nsnull);
+  nsresult rv = mDisplayFrame->Init(mContent, this, styleContext, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;
@@ -1937,8 +1936,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   }
 
   // initialize the text frame
-  rv = mTextFrame->Init(aPresContext, aContent, mDisplayFrame,
-                        textStyleContext, nsnull);
+  rv = mTextFrame->Init(aContent, mDisplayFrame, textStyleContext, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;

@@ -1400,8 +1400,7 @@ nsTextFrame::Destroy(nsPresContext* aPresContext)
 
 class nsContinuingTextFrame : public nsTextFrame {
 public:
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -1441,15 +1440,14 @@ protected:
 };
 
 NS_IMETHODIMP
-nsContinuingTextFrame::Init(nsPresContext*  aPresContext,
-                            nsIContent*      aContent,
+nsContinuingTextFrame::Init(nsIContent*      aContent,
                             nsIFrame*        aParent,
                             nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;
   
-  rv = nsTextFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  rv = nsTextFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   if (aPrevInFlow) {
     nsIFrame* nextContinuation = aPrevInFlow->GetNextContinuation();
@@ -1461,7 +1459,7 @@ nsContinuingTextFrame::Init(nsPresContext*  aPresContext,
       PRInt32 start, end;
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
-      nsPropertyTable *propTable = aPresContext->PropertyTable();
+      nsPropertyTable *propTable = GetPresContext()->PropertyTable();
       propTable->SetProperty(this, nsLayoutAtoms::embeddingLevel,
             propTable->GetProperty(aPrevInFlow, nsLayoutAtoms::embeddingLevel),
                              nsnull, nsnull);

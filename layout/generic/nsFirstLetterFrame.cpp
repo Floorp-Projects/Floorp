@@ -52,8 +52,7 @@ class nsFirstLetterFrame : public nsFirstLetterFrameSuper {
 public:
   nsFirstLetterFrame();
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -116,13 +115,11 @@ nsFirstLetterFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
+nsFirstLetterFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv;
   nsRefPtr<nsStyleContext> newSC;
   if (aPrevInFlow) {
     // Get proper style context for ourselves.  We're creating the frame
@@ -130,15 +127,14 @@ nsFirstLetterFrame::Init(nsPresContext*  aPresContext,
     // a style context like we would for a text node.
     nsStyleContext* parentStyleContext = aContext->GetParent();
     if (parentStyleContext) {
-      newSC = aPresContext->StyleSet()->
+      newSC = aContext->GetRuleNode()->GetPresContext()->StyleSet()->
         ResolveStyleForNonElement(parentStyleContext);
       if (newSC)
         aContext = newSC;
     }
   }
-  rv = nsFirstLetterFrameSuper::Init(aPresContext, aContent, aParent,
-                                     aContext, aPrevInFlow);
-  return rv;
+
+  return nsFirstLetterFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP
@@ -340,7 +336,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
                    "should contain only text nodes");
       sc = aPresContext->StyleSet()->ResolveStyleForNonElement(mStyleContext);
       if (sc) {
-        kid->SetStyleContext(aPresContext, sc);
+        kid->SetStyleContext(sc);
       }
     }
   }

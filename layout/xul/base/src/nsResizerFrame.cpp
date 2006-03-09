@@ -74,13 +74,13 @@ nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
   mDirection = topleft; // by default...
 }
 
-NS_IMETHODIMP  nsResizerFrame::Init(nsPresContext*  aPresContext,
-                nsIContent*      aContent,
-                nsIFrame*        aParent,
-                nsStyleContext*  aContext,
-                nsIFrame*        asPrevInFlow)
+NS_IMETHODIMP
+nsResizerFrame::Init(nsIContent*      aContent,
+                     nsIFrame*        aParent,
+                     nsStyleContext*  aContext,
+                     nsIFrame*        asPrevInFlow)
 {
-  nsresult rv = nsTitleBarFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);
+  nsresult rv = nsTitleBarFrame::Init(aContent, aParent, aContext, asPrevInFlow);
 
   GetInitialDirection(mDirection);
 

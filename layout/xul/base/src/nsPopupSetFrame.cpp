@@ -142,13 +142,12 @@ nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 } // cntr
 
 NS_IMETHODIMP
-nsPopupSetFrame::Init(nsPresContext*  aPresContext,
-                     nsIContent*      aContent,
-                     nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
-                     nsIFrame*        aPrevInFlow)
+nsPopupSetFrame::Init(nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsStyleContext*  aContext,
+                      nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   nsIRootBox *rootBox;
   nsresult res = CallQueryInterface(aParent->GetParent(), &rootBox);

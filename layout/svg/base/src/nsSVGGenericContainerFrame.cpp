@@ -79,15 +79,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGenericContainerFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGGenericContainerFrame::Init(nsPresContext*  aPresContext,
+nsSVGGenericContainerFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGGenericContainerFrameBase::Init(aPresContext, aContent, aParent,
-                             aContext, aPrevInFlow);
+  rv = nsSVGGenericContainerFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   Init();
   

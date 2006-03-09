@@ -70,14 +70,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 NS_IMETHODIMP
-nsScrollbarFrame::Init(nsPresContext*  aPresContext,
+nsScrollbarFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
   nsIView* view = GetView();
   view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
 

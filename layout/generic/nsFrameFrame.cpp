@@ -116,8 +116,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -210,8 +209,7 @@ nsSubDocumentFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsSubDocumentFrame::Init(nsPresContext* aPresContext,
-                         nsIContent*     aContent,
+nsSubDocumentFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
@@ -222,10 +220,11 @@ nsSubDocumentFrame::Init(nsPresContext* aPresContext,
     mIsInline = frameElem ? PR_FALSE : PR_TRUE;
   }
 
-  nsresult rv =  nsLeafFrame::Init(aPresContext, aContent, aParent,
-                                   aContext, aPrevInFlow);
+  nsresult rv =  nsLeafFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   if (NS_FAILED(rv))
     return rv;
+    
+  nsPresContext *aPresContext = GetPresContext();
 
   // We are going to create an inner view.  If we need a view for the
   // OuterFrame but we wait for the normal view creation path in

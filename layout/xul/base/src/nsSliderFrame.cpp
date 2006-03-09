@@ -111,14 +111,12 @@ nsSliderFrame::~nsSliderFrame()
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Init(nsPresContext*  aPresContext,
-                    nsIContent*      aContent,
+nsSliderFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext,
-                                  aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   static PRBool gotPrefs = PR_FALSE;
   if (!gotPrefs) {
@@ -128,7 +126,7 @@ nsSliderFrame::Init(nsPresContext*  aPresContext,
     gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 
-  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
   nsIView* view = GetView();
   view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
   return rv;

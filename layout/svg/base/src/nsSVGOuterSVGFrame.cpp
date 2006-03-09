@@ -169,8 +169,7 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+  NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
@@ -344,15 +343,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*     aContent,
+nsSVGOuterSVGFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
                          nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGOuterSVGFrameBase::Init(aPresContext, aContent, aParent,
-                                    aContext, aPrevInFlow);
+  rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   Init();
 

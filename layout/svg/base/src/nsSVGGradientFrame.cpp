@@ -118,7 +118,7 @@ public:
                                     nsISVGValue::modificationType aModType);
 
   // nsIFrame interface:
-  NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD DidSetStyleContext();
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
@@ -302,7 +302,7 @@ nsSVGGradientFrame::DidModifySVGObservable(nsISVGValue* observable,
 // nsIFrame methods:
 
 NS_IMETHODIMP
-nsSVGGradientFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGGradientFrame::DidSetStyleContext()
 {
   WillModify();
   DidModify();

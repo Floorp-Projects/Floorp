@@ -66,13 +66,12 @@ NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell)
 }
 
 NS_IMETHODIMP
-nsMathMLForeignFrameWrapper::Init(nsPresContext*  aPresContext,
-                                  nsIContent*      aContent,
+nsMathMLForeignFrameWrapper::Init(nsIContent*      aContent,
                                   nsIFrame*        aParent,
                                   nsStyleContext*  aContext,
                                   nsIFrame*        aPrevInFlow)
 {
-  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  return nsBlockFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP

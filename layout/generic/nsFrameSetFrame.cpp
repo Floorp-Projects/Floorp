@@ -298,14 +298,12 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 #define BLANK 2
 
 NS_IMETHODIMP
-nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
-                          nsIContent*      aContent,
+nsHTMLFramesetFrame::Init(nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsStyleContext*  aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsHTMLContainerFrame::Init(aPresContext, aContent, aParent,
-                             aContext, aPrevInFlow);
+  nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   // find the highest ancestor that is a frameset
   nsresult rv = NS_OK;
   nsIFrame* parentFrame = GetParent();
@@ -321,6 +319,8 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
       break;
     }
   }
+  
+  nsPresContext* aPresContext = GetPresContext();
 
   // create the view. a view is needed since it needs to be a mouse grabber
   nsIViewManager* viewMan = aPresContext->GetViewManager();
@@ -410,7 +410,7 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
         childFrame->SetParentFrameborder(frameborder);
         childFrame->SetParentBorderWidth(borderWidth);
         childFrame->SetParentBorderColor(borderColor);
-        result = frame->Init(aPresContext, child, this, kidSC, nsnull);
+        result = frame->Init(child, this, kidSC, nsnull);
         if (NS_FAILED(result)) {
           frame->Destroy(aPresContext);
           return result;
@@ -422,7 +422,7 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
         if (NS_UNLIKELY(!frame))
           return NS_ERROR_OUT_OF_MEMORY;
 
-        result = frame->Init(aPresContext, child, this, kidSC, nsnull);
+        result = frame->Init(child, this, kidSC, nsnull);
         if (NS_FAILED(result)) {
           frame->Destroy(aPresContext);
           return result;
@@ -465,7 +465,7 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    result = blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+    result = blankFrame->Init(mContent, this, pseudoStyleContext, nsnull);
     if (NS_FAILED(result)) {
       blankFrame->Destroy(aPresContext);
       return result;
@@ -1061,7 +1061,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
         pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
                                                              nsCSSPseudoElements::horizontalFramesetBorder,
                                                              mStyleContext);
-        borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+        borderFrame->Init(mContent, this, pseudoStyleContext, nsnull);
 
         mChildCount++;
         lastChild->SetNextSibling(borderFrame);
@@ -1090,7 +1090,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
             pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
                                                                  nsCSSPseudoElements::verticalFramesetBorder,
                                                                  mStyleContext);
-            borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
+            borderFrame->Init(mContent, this, pseudoStyleContext, nsnull);
 
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);

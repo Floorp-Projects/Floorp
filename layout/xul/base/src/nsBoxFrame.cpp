@@ -202,13 +202,12 @@ nsBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
  * Initialize us. This is a good time to get the alignment of the box
  */
 NS_IMETHODIMP
-nsBoxFrame::Init(nsPresContext*  aPresContext,
-                 nsIContent*      aContent,
+nsBoxFrame::Init(nsIContent*      aContent,
                  nsIFrame*        aParent,
                  nsStyleContext*  aContext,
                  nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
   // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {
@@ -224,6 +223,8 @@ nsBoxFrame::Init(nsPresContext*  aPresContext,
   }
 
   CacheAttributes();
+  
+  nsPresContext *aPresContext = GetPresContext();
 
 #ifdef DEBUG_LAYOUT
     // if we are root and this

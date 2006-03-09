@@ -120,14 +120,12 @@ nsAreaFrame::RegUnregAccessKey(nsPresContext* aPresContext,
 
 #ifdef MOZ_XUL
 NS_IMETHODIMP
-nsAreaFrame::Init(nsPresContext*  aPresContext,
-                  nsIContent*      aContent,
+nsAreaFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBlockFrame::Init(aPresContext,
-                                   aContent,
+  nsresult rv = nsBlockFrame::Init(aContent,
                                    aParent,
                                    aContext,
                                    aPrevInFlow);
@@ -135,7 +133,7 @@ nsAreaFrame::Init(nsPresContext*  aPresContext,
     return rv;
 
   // register access key
-  return RegUnregAccessKey(aPresContext, PR_TRUE);
+  return RegUnregAccessKey(GetPresContext(), PR_TRUE);
 }
 
 NS_IMETHODIMP

@@ -82,8 +82,7 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  Init(nsPresContext*  aPresContext,
-       nsIContent*      aContent,
+  Init(nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);

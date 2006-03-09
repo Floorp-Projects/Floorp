@@ -92,17 +92,15 @@ public:
 
   // nsIFrame interface:
   NS_IMETHOD
-  Init(nsPresContext*  aPresContext,
-       nsIContent*      aContent,
+  Init(nsIContent*      aContent,
        nsIFrame*        aParent,
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  CharacterDataChanged(nsPresContext* aPresContext,
-                                   nsIContent*     aChild,
+  NS_IMETHOD  CharacterDataChanged(nsIContent*     aChild,
                                    PRBool          aAppend);
 
-  NS_IMETHOD  DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD  DidSetStyleContext();
 
   NS_IMETHOD  SetSelected(nsPresContext* aPresContext,
                           nsIDOMRange*    aRange,
@@ -267,8 +265,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
 // nsIFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
-                      nsIContent*      aContent,
+nsSVGGlyphFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
@@ -288,7 +285,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
-    SetStyleContext(aPresContext, aContext);
+    SetStyleContext(aContext);
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsISVGRenderer> renderer;
@@ -298,7 +295,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
     renderer->CreateGlyphGeometry(this, getter_AddRefs(mGeometry));
   }
   
-  SetStyleContext(aPresContext, aContext);
+  SetStyleContext(aContext);
 
   if (!renderer || !mMetrics || !mGeometry)
     return NS_ERROR_FAILURE;
@@ -307,8 +304,7 @@ nsSVGGlyphFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::CharacterDataChanged(nsPresContext* aPresContext,
-                                      nsIContent*     aChild,
+nsSVGGlyphFrame::CharacterDataChanged(nsIContent*     aChild,
                                       PRBool          aAppend)
 {
 	return Update(nsISVGGeometrySource::UPDATEMASK_ALL);
@@ -336,7 +332,7 @@ nsSVGGlyphFrame::Update(PRUint32 aFlags)
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::DidSetStyleContext(nsPresContext* aPresContext)
+nsSVGGlyphFrame::DidSetStyleContext()
 {
   // One of the styles that might have been changed are the urls that
   // point to gradients, etc.  Drop our cached values to those
@@ -357,7 +353,7 @@ nsSVGGlyphFrame::DidSetStyleContext(nsPresContext* aPresContext)
     mStrokePattern = nsnull;
   }
 
-  return CharacterDataChanged(aPresContext, nsnull, PR_FALSE);
+  return CharacterDataChanged(nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP

@@ -90,11 +90,10 @@ public:
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow);
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
@@ -184,15 +183,14 @@ CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-CanvasFrame::Init(nsPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow)
+CanvasFrame::Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsStyleContext*  aContext,
+                  nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsHTMLContainerFrame::Init(aPresContext,aContent,aParent,aContext,aPrevInFlow);
+  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
 
-  mViewManager = aPresContext->GetViewManager();
+  mViewManager = GetPresContext()->GetViewManager();
 
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);

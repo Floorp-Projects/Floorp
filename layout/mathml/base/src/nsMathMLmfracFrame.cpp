@@ -98,19 +98,20 @@ nsMathMLmfracFrame::IsBevelled()
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
+nsMathMLmfracFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
 
   if (IsBevelled()) {
     // enable the bevelled rendering
     mSlashChar = new nsMathMLChar();
     if (mSlashChar) {
+      nsPresContext *aPresContext = GetPresContext();
+    
       nsAutoString slashChar; slashChar.Assign(kSlashChar);
       mSlashChar->SetData(aPresContext, slashChar);
       ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar, PR_TRUE);

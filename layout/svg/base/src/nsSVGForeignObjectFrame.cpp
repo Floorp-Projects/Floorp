@@ -156,15 +156,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 //----------------------------------------------------------------------
 // nsIFrame methods
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::Init(nsPresContext*  aPresContext,
+nsSVGForeignObjectFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGForeignObjectFrameBase::Init(aPresContext, aContent, aParent,
-                             aContext, aPrevInFlow);
+  rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
 
   Init();
 

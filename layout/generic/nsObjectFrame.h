@@ -56,8 +56,7 @@ public:
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Init(nsPresContext* aPresContext,
-                  nsIContent* aContent,
+  NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame* aParent,
                   nsStyleContext* aContext,
                   nsIFrame* aPrevInFlow);
