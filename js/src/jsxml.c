@@ -853,9 +853,7 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * (see below after this function).
          */
         obj = js_NewObject(cx,
-                           argv
-                           ? JS_ValueToFunction(cx, argv[-2])->clasp
-                           : &js_QNameClass.base,
+                           JS_ValueToFunction(cx, argv[-2])->clasp,
                            NULL, NULL);
         if (!obj)
             return JS_FALSE;
