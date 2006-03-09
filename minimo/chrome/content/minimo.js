@@ -1310,8 +1310,16 @@ function BrowserMenuSpin() {
 }
 
 function MenuEnableEscapeKeys() {
+
+	// we remove the focus from the toolbar button to avoid a command_action (keyboard event) to 
+	// call the menu again. 
+	
+	document.getElementById("menu_MainPopup").focus();
+
 	// When popups are on, <key /> not working...bugs like https://bugzilla.mozilla.org/show_bug.cgi?id=55495 
+
 	document.addEventListener("keypress",MenuHandleMenuEscape,true); 
+	
 }
 
 function MenuDisableEscapeKeys() {
