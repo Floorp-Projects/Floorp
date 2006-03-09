@@ -48,7 +48,7 @@
     
     <implementation>
       <constructor><![CDATA[
-        this.init();
+        // this.init(); -- causes Ts regression on windows
       ]]></constructor>
       
       <destructor><![CDATA[ 
