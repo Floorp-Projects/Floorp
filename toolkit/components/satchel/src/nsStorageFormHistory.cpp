@@ -513,7 +513,8 @@ static const char * const gColumnNames[] = {
 struct FormHistoryImportClosure
 {
   FormHistoryImportClosure(nsMorkReader *aReader, nsIFormHistory *aFormHistory)
-    : reader(aReader), formHistory(aFormHistory)
+    : reader(aReader), formHistory(aFormHistory), byteOrderColumn(-1),
+      swapBytes(PR_FALSE)
   {
     for (PRUint32 i = 0; i < kColumnCount; ++i) {
       columnIndexes[i] = -1;
@@ -526,7 +527,23 @@ struct FormHistoryImportClosure
 
   // Indexes of the columns that we care about
   PRInt32 columnIndexes[kColumnCount];
+  PRInt32 byteOrderColumn;
+
+  // Whether we need to swap bytes (file format is other-endian)
+  PRPackedBool swapBytes;
 };
+
+// Reverses the high and low bytes in a PRUnichar buffer.
+// This is used if the file format has a different endianness from the
+// current architecture.
+static void SwapBytes(PRUnichar* aBuffer)
+{
+  for (PRUnichar *b = aBuffer; *b; b++)
+  {
+    PRUnichar c = *b;
+    *b = (0xff & (c >> 8)) | (c << 8);
+  }
+}
 
 // Enumerator callback to add an entry to the FormHistory
 /* static */ PLDHashOperator PR_CALLBACK
@@ -566,7 +583,10 @@ nsFormHistoryImporter::AddToFormHistoryCB(const nsCSubstring &aRowID,
       // with a complete unicode null character.
       values[i].Append('\0');
 
-      // XXX this should handle byte swapping, but there's no endianness marker
+      // Swap the bytes in the unicode characters if necessary.
+      if (data->swapBytes) {
+        SwapBytes(NS_REINTERPRET_CAST(PRUnichar*, values[i].BeginWriting()));
+      }
       bytes = values[i].get();
     }
     valueStrings[i] = NS_REINTERPRET_CAST(const PRUnichar*, bytes);
@@ -611,7 +631,41 @@ nsFormHistoryImporter::ImportFormHistory(nsIFile *aFile,
         break;
       }
     }
+    if (name.EqualsLiteral("ByteOrder")) {
+      data.byteOrderColumn = i;
+    }
   }
+
+  // Determine the byte order from the table's meta-row.
+  const nsTArray<nsCString> *metaRow = reader.GetMetaRow();
+  if (metaRow && data.byteOrderColumn != -1) {
+    const nsCString &byteOrder = (*metaRow)[data.byteOrderColumn];
+    // Note whether the file uses a non-native byte ordering.
+    // If it does, we'll have to swap bytes for PRUnichar values.
+    // "BBBB" and "llll" are the only recognized values, anything
+    // else is garbage and the file will be treated as native-endian
+    // (no swapping).
+    nsCAutoString byteOrderValue(byteOrder);
+    reader.NormalizeValue(byteOrderValue);
+#ifdef IS_LITTLE_ENDIAN
+    data.swapBytes = byteOrderValue.EqualsLiteral("BBBB");
+#else
+    data.swapBytes = byteOrderValue.EqualsLiteral("llll");
+#endif
+  }
+#if defined(XP_MACOSX) && defined(IS_LITTLE_ENDIAN)
+  // The meta row and its ByteOrder field was introduced in 1.8.0.2.
+  // If it's not present, treat the formhistory db as using native byte
+  // ordering (as was done prior to 1.8.0.2).
+  // Exception: the ByteOrder field was always present since the initial
+  // x86 Mac release, so if we're on one of those, and the file doesn't
+  // have a ByteOrder field, it most likely came from a ppc Mac and needs
+  // its bytes swapped.  nsFormHistory in 1.8.0.2 swapped the bytes, this
+  // importer should behave the same way.
+  else {
+    data.swapBytes = PR_TRUE;
+  }
+#endif
 
   // Add the rows to form history
   nsCOMPtr<nsIFormHistoryPrivate> fhPrivate = do_QueryInterface(aFormHistory);
