@@ -450,10 +450,13 @@
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);">
       <menuitem label="&addCurPageAsCmd.label;" 
                 command="Browser:AddBookmarkAs" key="addBookmarkAsKb"/>
-      <menuseparator builder="start"/>
-      <menuseparator builder="end"/>
+      <menuitem label="&addCurPagesCmd.label;" 
+                command="Browser:BookmarkAllTabs" key="bookmarkAllTabsKb"/>
+      <menuitem label="&searchBookmarksCmd.label;" 
+                command="Browser:ShowBookmarks" key="searchBookmarksKb"/>
       <menuitem label="&manBookmarksCmd.label;" 
                 command="Browser:ShowBookmarks" key="manBookmarkKb"/>
+      <menuseparator builder="start"/>
     </menupopup>
   </menu>
 #endif

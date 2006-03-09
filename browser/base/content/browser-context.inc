@@ -146,7 +146,11 @@
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
+#ifdef MOZ_PLACES
+                command="Browser:AddBookmarkAs"/>
+#else
                 oncommand="addBookmarkAs(document.getElementById('content'));"/>
+#endif
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"

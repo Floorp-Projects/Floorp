@@ -48,6 +48,7 @@
     
     <implementation>
       <constructor><![CDATA[
+        this.init();
       ]]></constructor>
       
       <destructor><![CDATA[ 

@@ -42,169 +42,10 @@ const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
 const INDEX_HISTORY = 0;
 const INDEX_BOOKMARKS = 1;
 
-var PlacesUIHook = {
-  _tabbrowser: null,
-  _topWindow: null,
-  _placesURI: "chrome://browser/content/places/places.xul",
-  _bundle: null,
-  
-  init: function PUIH_init(placesList) {
-    this._bundle = document.getElementById("placeBundle");
-    
-    try {
-      this._topWindow = placesList.browserWindow;
-      PlacesController.topWindow = this._topWindow;
-      PlacesController.tm = PlacesController.topWindow.PlacesTransactionManager;
-      this._tabbrowser = this._topWindow.getBrowser();
-
-      // Hook into the tab strip to get notifications about when the Places Page is
-      // selected so that the browser UI can be modified. 
-      var self = this;
-      function onTabSelect(event) {
-        self.onTabSelect(event);
-      }
-      this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
-
-      this.showPlacesUI();
-    }
-    catch (e) { 
-      LOG("Something bad happened initializing the UI Hook: " + e);
-    }
-    
-    // Stop the browser from handling certain types of events. 
-    function onDragEvent(event) {
-      event.stopPropagation();
-    }
-    window.addEventListener("draggesture", onDragEvent, false);
-    window.addEventListener("dragover", onDragEvent, false);
-    window.addEventListener("dragdrop", onDragEvent, false);
-  },
-
-  _commands: ["Browser:SavePage", "Browser:SaveFrame", "Browser:SendLink", 
-              "cmd_pageSetup", "cmd_print", "cmd_printPreview", 
-              "cmd_findAgain", "cmd_switchTextDirection", "Browser:Stop",
-              "Browser:Reload", "viewTextZoomMenu", "pageStyleMenu", 
-              "charsetMenu", "View:PageSource", "View:FullScreen", 
-              "documentDirection-swap", "Browser:AddBookmarkAs", 
-              "Browser:ShowBookmarks", "Browser:ShowHistory", "View:PageInfo", 
-              "cmd_toggleTaskbar"],
-  
-  /**
-   * Disable commands that are not relevant to the Places page, so that all 
-   * applicable UI becomes inactive. 
-   */
-  _disableCommands: function PUIH__disableCommands() {
-    for (var i = 0; i < this._commands.length; ++i)
-      this._topWindow.document.getElementById(this._commands[i]).
-        setAttribute("disabled", true);
-  },
-  
-  /**
-   * Enable commands that aren't updated automatically by the command updater
-   * when we switch away from the Places page. 
-   */
-  _enableCommands: function PUIH__enableCommands() {
-    for (var i = 0; i < this._commands.length; ++i)
-      this._topWindow.document.getElementById(this._commands[i]).
-        removeAttribute("disabled");
-  },
-  
-  onTabSelect: function PP_onTabSelect(event) {
-    var tabURI = this._tabbrowser.selectedBrowser.currentURI;
-    if (!tabURI)
-      var isPlaces = false;
-    else
-      isPlaces = 
-        tabURI.spec.substr(0, this._placesURI.length) == this._placesURI;
-    isPlaces ? this.showPlacesUI() : this.hidePlacesUI();
-  },
-  
-  _topElement: function PUIH__topElement(id) {
-    return this._topWindow.document.getElementById(id);
-  },
-  
-  onFindActivated: function PUIH_onFindActivated(event) {
-    PlacesSearchBox.focus();
-  },
-
-  _findWasHidden: false,
-  
-  showPlacesUI: function PP_showPlacesUI() {
-/*
-    ASSERT(PlacesController, "PlacesController does not exist anymore?!");
-
-    this._tabbrowser.setAttribute("places", "true");
-    var statusbar = this._topElement("status-bar");
-    statusbar.hidden = true;
-    
-    var findbar = this._topWindow.document.getElementById("FindToolbar");
-    this._findWasHidden = findbar.hidden;
-    findbar.hidden = true;    
-    
-    this._disableCommands();
-    
-    var findItem = this._topWindow.document.getElementById("menu_find");
-    findItem.setAttribute("label", this._bundle.getString("findPlaceLabel"));
-
-    PlacesController.tm.hidePageTransactions = false;
-    PlacesController.tm.updateCommands();
-    
-    // Disable the find bar so that we can capture key presses. 
-    this._topWindow.gFindEnabled = false;
-    this._topWindow.addEventListener("find-activated", this.onFindActivated, false);
-*/    
-  },
-
-  hidePlacesUI: function PP_hidePlacesUI() {
-/*
-    ASSERT(PlacesController, "PlacesController does not exist anymore?!");
-
-    this._tabbrowser.removeAttribute("places");
-    
-    // Approaches that cache the value of the status bar before the Places page
-    // is loaded and the status bar hidden are unreliable. This is because the
-    // cached state can get confused when tabs are opened and switched to. Thus,
-    // always read the user's actual preferred value (held in the checked state
-    // of the menuitem, not what state the status bar was in "last" - because 
-    // "last" may not be a state we want to restore to. See bug 318820. 
-    var statusbarMenu = this._topWindow.document.getElementById("toggle_taskbar");
-    var statusbar = this._topElement("status-bar");
-    statusbar.hidden = statusbarMenu.getAttribute("checked") != "true";
-    
-    if (!this._findWasHidden) {
-      var findbar = this._topWindow.document.getElementById("FindToolbar");
-      findbar.hidden = false;
-    }
-    
-    this._enableCommands();
-
-    var findItem = this._topWindow.document.getElementById("menu_find");
-    findItem.setAttribute("label", this._bundle.getString("findPageLabel"));
-    
-    PlacesController.tm.hidePageTransactions = true;
-    PlacesController.tm.updateCommands();
-
-    // Enable the find bar again
-    this._topWindow.gFindEnabled = true;
-    this._topWindow.removeEventListener("find-activated", this.onFindActivated, false);
-    */
-  }
-};
-
-var PlacesPage = {
+var PlacesOrganizer = {
   _content: null,
   _places: null,
   
-  // the NavHistory service
-  __hist: null,
-  get _hist() {
-    if (!this.__hist) {
-      this.__hist =
-        Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-    }
-    return this.__hist;
-  },
-
   init: function PP_init() {
     // Attach the Command Controller to the Places Views. 
     this._places = document.getElementById("placesList");
@@ -236,18 +77,14 @@ var PlacesPage = {
       new PrefHandler(PREF_PLACES_GROUPING_BOOKMARK,
         [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], GroupingSerializer);
     
-    // Hook the browser UI
-    PlacesUIHook.init(this._content);
-
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
-    var bms = PlacesController._bms;
-    this._places.loadFolder(bms.placesRoot);
+    this._places.loadFolder(PlacesController.bookmarks.placesRoot);
     
     // Now load the appropriate folder in the Content View, and select the 
     // corresponding entry in the Places View. This is a little fragile. 
-    var params = window.location.search;
-    var index = params == "?history" ? INDEX_HISTORY : INDEX_BOOKMARKS;
+    var params = window.arguments[0];
+    var index = params == "history" ? INDEX_HISTORY : INDEX_BOOKMARKS;
     this._places.view.selection.select(index);
     
     // Set up the search UI.
@@ -255,18 +92,6 @@ var PlacesPage = {
     
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
-    
-    // We attach event listeners like this instead of using the more succinct
-    // "onpageshow/hide" inline handlers because they don't work for XUL. See:
-    //   https://bugzilla.mozilla.org/show_bug.cgi?id=326260
-    function onPageShow() {
-      PlacesUIHook.showPlacesUI();
-    }
-    function onPageHide() {
-      PlacesUIHook.hidePlacesUI();
-    }
-    window.addEventListener("pageshow", onPageShow, false);
-    window.addEventListener("pagehide", onPageHide, false);
   },
 
   /**
@@ -658,7 +483,7 @@ var PlacesQueryBuilder = {
       var button = document.getElementById("moreCriteria");
       var placeBundle = document.getElementById("placeBundle");
       button.label = placeBundle.getString("lessCriteria.label");
-      PlacesPage._setHeader("advanced", "");
+      PlacesOrganizer._setHeader("advanced", "");
     }
     else {
       // Need to collapse the advanced search box.
@@ -685,7 +510,7 @@ var PlacesQueryBuilder = {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var matchUI = document.getElementById("titlebarMatch");
     matchUI.hidden = (this._numRows <= 1);
-    PlacesPage._setHeader("advanced", this._numRows <= 1 ? "" : ",");
+    PlacesOrganizer._setHeader("advanced", this._numRows <= 1 ? "" : ",");
     
     // Disable the + buttons if there are max advanced search rows
     // Disable the - button is there is only one advanced search row
@@ -935,7 +760,7 @@ var PlacesQueryBuilder = {
     var queryType = document.getElementById("advancedSearchType").selectedItem.value;
     var queries = [];
     if (queryType == "and")
-      queries.push(PlacesPage._hist.getNewQuery());
+      queries.push(PlacesController.history.getNewQuery());
     for (var i = 1; i <= this._numRows; i++) {
       var prefix = "advancedSearch" + i;
       
@@ -945,7 +770,7 @@ var PlacesQueryBuilder = {
       if (queryType == "and")
         query = queries[0];
       else
-        query = PlacesPage._hist.getNewQuery();
+        query = PlacesController.history.getNewQuery();
       
       var querySubject = document.getElementById(prefix + "Subject").value;
       this._queryBuilders[querySubject](query, prefix);
@@ -955,9 +780,9 @@ var PlacesQueryBuilder = {
     }
     
     // Make sure we're getting uri results, not visits
-    var options = PlacesPage.getCurrentOptions();
+    var options = PlacesOrganizer.getCurrentOptions();
     options.resultType = options.RESULT_TYPE_URI;
 
-    PlacesPage._content.load(queries, options);
+    PlacesOrganizer._content.load(queries, options);
   }
 };

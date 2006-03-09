@@ -1,7 +1,5 @@
 /* Root View */
 #placesView {
-  -moz-appearance: tabpanels;
-  margin: -10px;
   padding: 8px 6px 6px 8px;
   -moz-user-focus: ignore;
 }
