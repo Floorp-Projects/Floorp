@@ -63,7 +63,7 @@ gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFont
     mName = aName;
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
-    mCTM.Reset();
+
     Init();
 }
 
@@ -76,7 +76,7 @@ gfxWindowsFont::gfxWindowsFont(HFONT aFont,
     mFont = aFont;
     mGroup = aFontGroup;
     mStyle = mGroup->GetStyle();
-    mCTM.Reset();
+
     Init();
 }
 
@@ -509,7 +509,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
     cairo_t *cr = aContext->GetCairo();
 
     nsRefPtr<gfxWindowsFont> currentFont = mGroup->GetFontAt(0);
-    //currentFont->UpdateCTM(aContext->CurrentMatrix());
+    currentFont->UpdateCTM(aContext->CurrentMatrix());
     cairo_font_face_t *fontFace = currentFont->CairoFontFace();
     cairo_scaled_font_t *scaledFont = currentFont->CairoScaledFont();
 
@@ -687,7 +687,7 @@ TRY_AGAIN_HOPE_FOR_THE_BEST:
 
         SaveDC(aDC);
 
-        //currentFont->UpdateCTM(aContext->CurrentMatrix());
+        currentFont->UpdateCTM(aContext->CurrentMatrix());
         fontFace = currentFont->CairoFontFace();
         scaledFont = currentFont->CairoScaledFont();
 
