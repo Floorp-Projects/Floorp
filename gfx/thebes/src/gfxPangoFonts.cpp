@@ -691,7 +691,7 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
         PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
 
         offset += DrawCairoGlyphs (aContext, layoutRun->item->analysis.font,
-                                   gfxPoint(offset, 0.0),
+                                   gfxPoint(offset / PANGO_SCALE, 0.0),
                                    layoutRun->glyphs);
     }
 #else
