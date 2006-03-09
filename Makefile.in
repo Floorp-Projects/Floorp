@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/unix/modules.mk
 
-ifeq (,$(filter-out all,$(BUILD_MODULES))$(MOZ_XSLT_STANDALONE))
+ifneq ($(MOZ_STANDALONE_BUILD),1) # {
 #
 # And now for something completely different...
 # Divide the default build into tiers. 
@@ -453,11 +453,11 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-else # BUILD_MODULES
+else # } { MOZ_STANDALONE_BUILD
 
 # Standalone build
 
-ifdef MOZ_XSLT_STANDALONE
+ifeq ($(MOZ_BUILD_APP),content/xslt) # {
 DIRS = \
 	xpcom/typelib \
 	xpcom \
@@ -466,7 +466,21 @@ DIRS = \
 	$(NULL)
 
 SUBMAKEFILES = xpcom/typelib/Makefile
-else
+
+endif # } MOZ_BUILD_APP == content/xslt
+
+ifeq ($(MOZ_BUILD_APP),tools/update-packaging) # {
+DIRS = \
+	config \
+	build \
+	modules/libbz2 \
+	modules/libmar \
+	other-licenses/bsdiff \
+	$(NULL)
+
+endif # } MOZ_BUILD_APP == tools/update-packaging
+
+ifeq ($(MOZ_BUILD_APP),standalone) # {
 DIRS		= $(BUILD_MODULE_DIRS)
 
 # Hack to generate xpidl Makefile
@@ -476,13 +490,13 @@ DIRS		:= xpcom/typelib $(DIRS)
 SUBMAKEFILES	:= xpcom/typelib/Makefile
 endif
 endif
-endif
+endif # } MOZ_BUILD_APP == standalone
 
 default:: $(SUBMAKEFILES)
 	$(MAKE) export
 	$(MAKE) libs
 
-endif # BUILD_MODULES == all or MOZ_XSLT_STANDALONE
+endif # } BUILD_MODULES == all or MOZ_STANDALONE
 
 STATIC_MAKEFILES := nsprpub directory/c-sdk security/nss
 
