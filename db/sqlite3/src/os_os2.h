@@ -23,6 +23,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+/*
+** Macros used to determine whether or not to use threads.  The
+** SQLITE_UNIX_THREADS macro is defined if we are synchronizing for
+** Posix threads and SQLITE_W32_THREADS is defined if we are
+** synchronizing using Win32 threads.
+*/
+/* this mutex implementation only available with EMX */
+#if defined(THREADSAFE) && THREADSAFE
+# include <sys/builtin.h>
+# include <sys/smutex.h>
+# define SQLITE_OS2_THREADS 1
+#endif
 
 /*
 ** The OsFile structure is a operating-system independing representation
@@ -35,13 +47,13 @@
 */
 typedef struct OsFile OsFile;
 struct OsFile {
-     unsigned long h;        /* The file descriptor (LHANDLE) */
+     int h;        /* The file descriptor (LHANDLE) */
      int locked;              /* True if this user holds the lock */
      int delOnClose;          /* True if file is to be deleted on close */
      char *pathToDel;         /* Name of file to delete on close */
      unsigned char locktype;   /* The type of lock held on this fd */
      unsigned char isOpen;   /* True if needs to be closed */
-     unsigned char fullSync; 
+     unsigned char fullSync;
 };
 
 /*
@@ -53,5 +65,9 @@ struct OsFile {
 ** Minimum interval supported by sqlite3OsSleep().
 */
 #define SQLITE_MIN_SLEEP_MS 1
+
+#ifndef SQLITE_DEFAULT_FILE_PERMISSIONS
+# define SQLITE_DEFAULT_FILE_PERMISSIONS 0600
+#endif
 
 #endif /* _SQLITE_OS_OS2_H_ */
