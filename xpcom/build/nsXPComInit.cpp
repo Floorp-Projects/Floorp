@@ -681,9 +681,8 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         nsCOMPtr <nsIEventQueue> currentQ;
         NS_GetCurrentEventQ(getter_AddRefs(currentQ), eqs);
 
-        nsRefPtr<nsObserverService> observerService;
-        CallGetService("@mozilla.org/observer-service;1",
-                       (nsObserverService**) getter_AddRefs(observerService));
+        nsCOMPtr<nsIObserverService> observerService =
+                 do_GetService("@mozilla.org/observer-service;1");
 
         if (observerService)
         {
@@ -722,13 +721,10 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
-        if (observerService) {
+        if (observerService)
             observerService->
                 EnumerateObservers(NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID,
                                    getter_AddRefs(moduleLoaders));
-
-            observerService->Shutdown();
-        }
     }
 
     // XPCOM is officially in shutdown mode NOW

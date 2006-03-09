@@ -41,9 +41,8 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
-#include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIWindowMediator.h"
-#include "nsXPCOMCID.h"
 
 // just to do the reverse-lookup! sheesh.
 #include "nsIInterfaceRequestorUtils.h"
