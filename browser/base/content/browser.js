@@ -865,6 +865,10 @@ function delayedStartup()
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
 #else
+  var bookmarksBar = document.getElementById("bookmarksBarContent");
+  bookmarksBar.init();
+  var bookmarksMenuPopup = document.getElementById("bookmarksMenuPopup");
+  bookmarksMenuPopup.init();
   window.controllers.appendController(PlacesController);
 #endif
 
