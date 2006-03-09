@@ -1029,7 +1029,9 @@ interface nsINavHistoryService : nsISupports
 
   /**
    * Converts a query URI-like string to an array of actual query objects for
-   * use to executeQueries().
+   * use to executeQueries(). The output query array may be empty if there is
+   * no information. However, there will always be an options structure returned
+   * (if nothing is defined, it will just have the default values).
    */
   void queryStringToQueries(in AUTF8String aQueryString,
     [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries, out PRUint32 aResultCount,
