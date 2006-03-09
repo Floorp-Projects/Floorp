@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 #include "cairoint.h"
+#include "cairo-clip-private.h"
 #include "cairo-win32-private.h"
 
 #ifndef SHADEBLENDCAPS
@@ -1000,6 +1001,89 @@ _cairo_win32_surface_flush (void *abstract_surface)
     return _cairo_surface_reset_clip (abstract_surface);
 }
 
+static cairo_int_status_t
+_cairo_win32_surface_show_glyphs (void			*surface,
+				  cairo_operator_t	 op,
+				  cairo_pattern_t	*source,
+				  const cairo_glyph_t	*glyphs,
+				  int			 num_glyphs,
+				  cairo_scaled_font_t	*scaled_font)
+{
+#define STACK_GLYPH_SIZE 256
+
+    cairo_win32_surface_t *dst = surface;
+    cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *)source;
+    WORD glyph_buf_stack[STACK_GLYPH_SIZE];
+    WORD *glyph_buf = glyph_buf_stack;
+    int dx_buf_stack[STACK_GLYPH_SIZE];
+    int *dx_buf = dx_buf_stack;
+    const COLORREF color = RGB(((int)solid_pattern->color.red_short) >> 8,
+			       ((int)solid_pattern->color.green_short) >> 8,
+			       ((int)solid_pattern->color.blue_short) >> 8);
+    BOOL result = 0;
+    int i, last_y_offset = 0;
+    double last_y = glyphs[0].y;
+
+    if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) || 
+	(dst->format != CAIRO_FORMAT_RGB24) ||
+	(!_cairo_pattern_is_opaque_solid(source)) ||
+	(dst->base.clip &&
+	    (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
+	     dst->base.clip->surface != NULL)))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    SaveDC(dst->dc);
+
+    cairo_win32_scaled_font_select_font(scaled_font, dst->dc);
+    SetTextColor(dst->dc, color);
+    SetTextAlign(dst->dc, TA_BASELINE | TA_LEFT);
+    SetBkMode(dst->dc, TRANSPARENT);
+
+    if (num_glyphs > STACK_GLYPH_SIZE) {
+	glyph_buf = (WORD *)malloc(num_glyphs * sizeof(WORD));
+	dx_buf = (int *)malloc(num_glyphs * sizeof(int));
+    }
+
+    for (i = 0; i < num_glyphs; ++i) {
+	glyph_buf[i] = glyphs[i].index;
+	if (i == num_glyphs - 1)
+	    dx_buf[i] = 0;
+	else
+	    dx_buf[i] = (glyphs[i+1].x - glyphs[i].x) * WIN32_FONT_LOGICAL_SCALE;
+
+
+	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
+	    result = ExtTextOutW(dst->dc,
+				 glyphs[last_y_offset].x * WIN32_FONT_LOGICAL_SCALE,
+				 last_y * WIN32_FONT_LOGICAL_SCALE,
+				 ETO_GLYPH_INDEX,
+				 NULL,
+				 glyph_buf + last_y_offset,
+				 (i - last_y_offset) + 1,
+				 dx_buf + last_y_offset);
+	    if (!result) {
+		_cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
+		goto FAIL;
+	    }
+
+	    last_y_offset = i;
+	}
+
+	last_y = glyphs[i].y;
+    }
+
+FAIL:
+    RestoreDC(dst->dc, -1);
+
+    if (glyph_buf != glyph_buf_stack) {
+	free(glyph_buf);
+	free(dx_buf);
+    }
+    return (result) ? CAIRO_STATUS_SUCCESS : CAIRO_INT_STATUS_UNSUPPORTED;
+
+#undef STACK_GLYPH_SIZE
+}  
+
 cairo_surface_t *
 cairo_win32_surface_create (HDC hdc)
 {
@@ -1141,7 +1225,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
-    NULL, /* show_glyphs */
+    _cairo_win32_surface_show_glyphs,
 
     NULL, /* snapshot */
 };
