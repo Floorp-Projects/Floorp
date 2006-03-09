@@ -887,6 +887,8 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
                                      PRInt32 aIndexInContainer)
 {
     if (mRoot && nsContentUtils::ContentIsDescendantOf(mRoot, aChild)) {
+        nsRefPtr<nsXULTemplateBuilder> kungFuDeathGrip(this);
+
         if (mQueryProcessor)
             mQueryProcessor->Done();
 
@@ -897,7 +899,7 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
 
         nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aDocument);
         if (xuldoc)
-            xuldoc->SetTemplateBuilderFor(aChild, nsnull);
+            xuldoc->SetTemplateBuilderFor(mRoot, nsnull);
 
         mDB = nsnull;
         mCompDB = nsnull;
