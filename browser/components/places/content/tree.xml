@@ -12,17 +12,6 @@
         this._places = 
           Cc["@mozilla.org/browser/nav-history-service;1"].
           getService(Ci.nsINavHistoryService);
-        
-        // Let's all do the happy QI/IRQ dance. 
-        // Go from window->docshell->window.
-        window.QueryInterface(Ci.nsIInterfaceRequestor);
-        var shell = window.getInterface(Ci.nsIWebNavigation);
-        shell.QueryInterface(Ci.nsIDocShell);
-        var item = shell.QueryInterface(Ci.nsIDocShellTreeItem);
-        while (item.parent)
-          item = item.parent;
-        item.QueryInterface(Ci.nsIInterfaceRequestor);
-        this._browserWindow = window.opener; //XXX quick hack to make this work again... item.getInterface(Ci.nsIDOMWindowInternal);
       ]]></constructor>
       
       <method name="init">
@@ -382,9 +371,6 @@
           return new InsertionPoint(asFolder(container).folderId, index, orientation);
         ]]></body>
       </method>
-      
-      <!-- AVI Method -->
-      <property name="browserWindow" onget="return this._browserWindow"/>
       
       <!-- AVI Method -->
       <property name="filterTransactions">true</property>

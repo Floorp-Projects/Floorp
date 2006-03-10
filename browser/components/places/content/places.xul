@@ -6,6 +6,8 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
+<?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
 
 <window id="places" title="&places.title;" 
@@ -24,6 +26,7 @@
           src="chrome://global/content/nsDragAndDrop.js"/>
   
   <stringbundleset id="stringbundles">
+    <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
     <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
     <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
@@ -53,30 +56,108 @@
     <menubar id="placesMenubar">
       <menu id="fileMenu" label="&file.label;" accesskey="&file.accesskey;">
         <menupopup>
-          <menuitem label="&fileClose.label;" accesskey="&fileClose.accesskey;" 
-                    oncommand="window.close();"/>
+          <menuitem id="fileNewBookmark" command="placesCmd_new:bookmark"/>
+          <menuitem id="fileNewFolder" command="placesCmd_new:folder"/>
+          <menuitem id="fileNewSeparator" command="placesCmd_new:separator"/>
+          <menuseparator/>
+          <menuitem id="fileImport" command="placesCmd_import"/>
+          <menuitem id="fileExport" command="placesCmd_export"/>
+#ifndef XP_MACOSX
+          <menuseparator/>
+          <menuitem id="properties" command="placesCmd_show:info"/>
+#endif
+          <menuseparator/>
+          <menuitem id="fileClose" 
+                    label="&file.close.label;" accesskey="&file.close.accesskey;" 
+                    oncommand="close();"/>
+        </menupopup>
+      </menu>
+      <menu id="editMenu" label="&edit.label;" accesskey="&edit.accesskey;">
+        <menupopup>
+          <menuitem id="editUndo" command="cmd_undo"
+                    label="&edit.undo.label;" accesskey="&edit.undo.accesskey;"/>
+          <menuitem id="editRedo" command="cmd_redo"
+                    label="&edit.redo.label;" accesskey="&edit.redo.label;"/>
+          <menuseparator/>
+          <menuitem id="editCut" command="placesCmd_edit:cut"/>
+          <menuitem id="editCopy" command="placesCmd_edit:copy"/>
+          <menuitem id="editPaste" command="placesCmd_edit:paste"/>
+          <menuitem id="editDelete" command="placesCmd_edit:delete"/>
+          <menuseparator/>
+          <menuitem id="editSelectAll" command="placesCmd_select:all"/>
+          <menuseparator/>
+          <menuitem id="editFind" command="placesCmd_find"/>
+#ifdef XP_MACOSX
+          <menuseparator/>
+          <menuitem id="properties" command="placesCmd_show:info"/>
+#endif
+        </menupopup>
+      </menu>
+      <menu id="viewMenu" label="&view.label;" accesskey="&view.accesskey;"
+            onpopupshowing="ViewMenu.populate(event);"
+            oncommand="ViewMenu.setSortColumn(event.target, null);">
+        <menupopup>
+          <menuitem id="viewReload" command="placesCmd_reload"/>
+          <menuseparator/>
+          <menuitem id="viewToolbar" type="checkbox"
+                    label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
+          <menu id="viewColumns" 
+                label="&view.columns.label;" accesskey="&view.columns.accesskey;">
+            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox');"
+                       oncommand="ViewMenu.showHideColumn(event.target); event.preventBubble();"/>
+          </menu>
+          <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
+          <menuitem id="viewGroupNone" type="radio" name="group"
+                    observes="placesBC_grouping:off"/>
+          <menuitem id="viewGroupGroup" type="radio" name="group"
+                    observes="placesBC_grouping:on"/>
+          <menuseparator id="columnSeparator"/>
+          <menuitem id="viewUnsorted" type="radio" name="columns" 
+                    label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
+                    oncommand="ViewMenu.setSortColumn(null, null);"/>
+          <menuseparator id="directionSeparator"/>
+          <menuitem id="viewSortAscending" type="radio" name="direction" 
+                    label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
+                    oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.preventBubble();"/>
+          <menuitem id="viewSortDescending" type="radio" name="direction" 
+                    label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
+                    oncommand="ViewMenu.setSortColumn(null, 'descending'); event.preventBubble();"/>
+        </menupopup>
+      </menu>
+      <menu id="helpMenu">
+        <menupopup id="menu_HelpPopup">
+          <menuitem id="helpUsingBookmarks"
+                    label="&help.usingBookmarks.label;" accesskey="&help.usingBookmarks.accesskey;"/>
+          <menuitem id="helpUsingHistory"
+                    label="&help.usingHistory.label;" accesskey="&help.usingHistory.accesskey;"/>
+          <menuitem id="helpAdvancedTips"
+                    label="&help.advancedTips.label;" accesskey="&help.advancedTips.accesskey;"/>
         </menupopup>
       </menu>
     </menubar>
+    <toolbar>
+      <textbox id="searchFilter" flex="1" style="width: 0px;" timeout="500"
+               oncommand="PlacesOrganizer.search(this.value);" 
+               collection="all" persist="collection"
+               onfocus="PlacesSearchBox.onFocus();" onblur="PlacesSearchBox.onBlur();">
+        <button type="menu" class="filterList" id="filterList_history">
+          <menupopup>
+            <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                      type="radio" name="collection" value="all" 
+                      checked="true" default="true"/>
+            <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
+                      type="radio" name="collection" value="collection"/>
+          </menupopup>
+        </button>
+      </textbox>
+      <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder"/>
+      <toolbarbutton id="toolbarDelete" command="placesCmd_edit:delete"/>
+      <spacer flex="1"/>
+      <toolbarbutton id="toolbarGroup" command="placesCmd_groupby:site" type="checkbox"/>
+    </toolbar>
   </toolbox>
   <hbox flex="1" id="placesView">
     <vbox>
-      <hbox align="center" id="searchbar">
-        <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
-                 oncommand="PlacesOrganizer.search(this.value);" 
-                 collection="all" persist="collection"
-                 onfocus="PlacesSearchBox.onFocus();" onblur="PlacesSearchBox.onBlur();">
-          <button type="menu" class="filterList" id="filterList_history">
-            <menupopup>
-              <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
-                        type="radio" name="collection" value="all" 
-                        checked="true" default="true"/>
-              <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
-                        type="radio" name="collection" value="collection"/>
-            </menupopup>
-          </button>
-        </textbox>
-      </hbox>
       <vbox id="placesListContainer" flex="1">
         <tree id="placesList" class="placesTree" flex="1" type="places" 
               hidecolumnpicker="true" context="placesContext"
@@ -91,9 +172,6 @@
       <vbox id="historyCalendar" 
             class="history-calendar"
             onselectionchanged="return PlacesOrganizer.rangeSelected()"/>
-      <hbox class="commands">
-        <button id="newFolder" view="placesList" command="placesCmd_new:folder"/>
-      </hbox>
     </vbox>
     <splitter id="splitter"/>
     <vbox flex="4">
@@ -124,130 +202,12 @@
                       command="placesCmd_search:moreCriteria"/>
             </hbox>
           </hbox>
-          <vbox id="advancedSearch" collapsed="true">
-            <grid flex="1">
-              <columns>
-                <column flex="1"/>
-                <column flex="1"/>
-                <column flex="0"/>
-                <column flex="0"/>
-              </columns>
-              <rows id="advancedSearchRows">
-                <row id="advancedSearch1Row" flex="1">
-                  <menulist id="advancedSearch1Subject" flex="1">
-                    <menupopup>
-                      <menuitem value="keyword"
-                                label="&advancedSearch.subj_keyword.label;"
-                                selected="true"
-                                rowid="1"
-                                id="advancedSearch1SubjectKeyword"
-                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._keywordSearch);"/>
-                      <menuitem value="visited"
-                                label="&advancedSearch.subj_visited.label;"
-                                rowid="1"
-                                id="advancedSearch1SubjectVisited"
-                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
-                      <menuitem value="location"
-                                label="&advancedSearch.subj_location.label;"
-                                rowid="1"
-                                id="advancedSearch1SubjectLocation"
-                                oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._locationSearch);"/>
-                    </menupopup>
-                  </menulist>
-
-                  <hbox flex="1" align="center">
-                    <menulist id="advancedSearch1LocationMenulist"
-                              oncommand="PlacesQueryBuilder.doSearch();"
-                              hidden="true">
-                      <menupopup>
-                        <menuitem id="advancedSearch1LocationMenuSelected"
-                                  value="startswith"
-                                  label="&advancedSearch.location_startswith.label;"
-                                  selected="true"/>
-                        <menuitem value="is"
-                                  label="&advancedSearch.location_is.label;"/>
-                        <menuitem value="onsite"
-                                  label="&advancedSearch.location_onsite.label;"/>
-                      </menupopup>
-                    </menulist>
-
-                    <menulist id="advancedSearch1TimeMenulist" hidden="true">
-                      <menupopup>
-                        <menuitem value="on"
-                                  id="advancedSearch1TimeDefault"
-                                  label="&advancedSearch.time_is.label;"
-                                  selected="true"
-                                  rowid="1"
-                                  oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
-                        <menuitem value="before"
-                                  label="&advancedSearch.time_before.label;"
-                                  rowid="1"
-                                  oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
-                        <menuitem value="after"
-                                  label="&advancedSearch.time_after.label;"
-                                  rowid="1"
-                                  oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
-                        <menuitem value="inLast"
-                                  label="&advancedSearch.time_inlast.label;"
-                                  rowid="1"
-                                  oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeInLastSearch);"/>
-                      </menupopup>
-                    </menulist>
-                    <textbox type="timed"
-                             timeout="50"
-                             id="advancedSearch1Textbox"
-                             flex="1"
-                             oncommand="PlacesQueryBuilder.doSearch();"/>
-
-                    <textbox type="timed"
-                             timeout="50"
-                             id="advancedSearch1TimePicker"
-                             hidden="true" flex="1"
-                             rowid="1"
-                             oncommand="PlacesQueryBuilder.onDateTyped(event, this.getAttribute('rowid'));"
-                             onclick="PlacesQueryBuilder.handleTimePickerClick(event, this.getAttribute('rowid'));"/>
-                    <popup id="advancedSearch1DatePopup"
-                           onpopupshowing="this.setAttribute('showing', true);"
-                           onpopuphidden="this.removeAttribute('showing');">
-                      <vbox id="advancedSearch1Calendar"
-                            class="history-calendar"
-                            rowid="1"
-                            onselectionchanged="return PlacesQueryBuilder.onCalendarChanged(event, event.target.getAttribute('rowid'));"/>
-                    </popup>
-
-                    <menulist id="advancedSearch1TimeMenulist2"
-                              oncommand="PlacesQueryBuilder.doSearch();"
-                              hidden="true">
-                      <menupopup>
-                        <menuitem value="days"
-                                  label="&advancedSearch.last_days.label;"
-                                  selected="true"/>
-                        <menuitem value="weeks"
-                                  label="&advancedSearch.last_weeks.label;"/>
-                        <menuitem value="months"
-                                  label="&advancedSearch.last_months.label;"/>
-                      </menupopup>
-                    </menulist>
-
-                  </hbox>              
-                  <button id="advancedSearch1Plus"
-                          label="&advancedSearch.plus.label;"
-                          class="no-margin-button"
-                          oncommand="PlacesQueryBuilder.addRow();"/>
-                  <button id="advancedSearch1Minus"
-                          disabled="true"
-                          label="&advancedSearch.minus.label;"
-                          class="no-margin-button"
-                          oncommand="PlacesQueryBuilder.removeRow();"/>
-                </row>
-              </rows>
-            </grid>
-          </vbox>
+#include advancedSearch.inc          
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" query="" type="places" 
                 ondblclick="PlacesController.mouseLoadURI(event);"
                 onplacestreereloaded="PlacesOrganizer.onContentChanged();">
-            <treecols>
+            <treecols id="placeContentColumns">
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
@@ -264,35 +224,10 @@
           </tree>
         </vbox>
       </deck>
-      <hbox>
-        <deck id="commandBar" flex="1">
-          <hbox class="commands" id="commands_bookmark" flex="1">
-            <button id="newFolder" view="placeContent" command="placesCmd_new:folder"/>
-            <spacer flex="1"/>
-            <button id="saveSearch_bookmark" command="placesCmd_saveSearch" hidden="true"/>
-          </hbox>
-          <hbox class="commands" id="commands_history" flex="1">
-            <button id="groupBy_site" class="commandGroupButton first" 
-                    view="placeContent" command="placesCmd_groupby:site"/>
-            <spacer class="groupSpacer"/>
-            <button id="groupBy_page" class="commandGroupButton last" 
-                    view="placeContent" command="placesCmd_groupby:page"/>
-            <spacer flex="1"/>
-            <button id="saveSearch_history" command="placesCmd_saveSearch" hidden="true"/>
-          </hbox>
-          <hbox class="commands" id="commands_feed" flex="1">
-            <button id="groupOption0" class="commandGroupButton first" 
-                    view="placeContent" command="placesCmd_groupby:feed"/>
-            <spacer class="groupSpacer"/>
-            <button id="groupOption1" class="commandGroupButton last" 
-                    view="placeContent" command="placesCmd_groupby:post"/>
-            <spacer flex="1"/>
-            <button id="saveSearch_feed" command="placesCmd_saveSearch" hidden="true"/>
-          </hbox>
-        </deck>
-        <resizer dir="bottomright"/>
-      </hbox>
     </vbox>
   </hbox>
+  <statusbar>
+    <statusbarpanel id="status" flex="1"/>
+  </statusbar>
 </window>
 

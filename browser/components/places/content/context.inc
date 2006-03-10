@@ -1,5 +1,8 @@
     <popup id="placesContext" 
            onpopupshowing="return PlacesController.buildContextMenu(this);">
+      <!-- the rules defined in the selection attribute control whether or not 
+           the menu item is _visible_ regardless of whether or not the command
+           is enabled. -->
       <menuitem id="placesContext_open" command="placesCmd_open" default="true"
                 selection="link"/>
       <menuitem id="placesContext_open:tabs" command="placesCmd_open:tabs"

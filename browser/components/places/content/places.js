@@ -38,9 +38,22 @@
 const PREF_PLACES_GROUPING_GENERIC = "browser.places.grouping.generic";
 const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 // Default Search Queries
 const INDEX_HISTORY = 0;
 const INDEX_BOOKMARKS = 1;
+
+function GroupingConfig(substr, onLabel, onAccesskey, offLabel, offAccesskey, 
+                        onOncommand, offOncommand) {
+  this.substr = substr;
+  this.onLabel = onLabel;
+  this.onAccesskey = onAccesskey;
+  this.offLabel = offLabel;
+  this.offAccesskey = offAccesskey;
+  this.onOncommand = onOncommand;
+  this.offOncommand = offOncommand;
+}
 
 var PlacesOrganizer = {
   _content: null,
@@ -61,21 +74,8 @@ var PlacesOrganizer = {
                                       false, false, 0, true));
 
     PlacesController.groupableView = this._content;
-
-    var GroupingSerializer = {
-      serialize: function GS_serialize(raw) {
-        return raw.join(",");
-      },
-      deserialize: function GS_deserialize(str) {
-        return str === "" ? [] : str.split(",");
-      }
-    };
-    PlacesController.groupers.generic = 
-      new PrefHandler(PREF_PLACES_GROUPING_GENERIC, 
-        [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN], GroupingSerializer);
-    PlacesController.groupers.bookmark = 
-      new PrefHandler(PREF_PLACES_GROUPING_BOOKMARK,
-        [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], GroupingSerializer);
+    
+    Groupers.init();
     
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
@@ -83,7 +83,7 @@ var PlacesOrganizer = {
     
     // Now load the appropriate folder in the Content View, and select the 
     // corresponding entry in the Places View. This is a little fragile. 
-    var params = window.arguments[0];
+    var params = "arguments" in window ? window.arguments[0] : "history";
     var index = params == "history" ? INDEX_HISTORY : INDEX_BOOKMARKS;
     this._places.view.selection.select(index);
     
@@ -93,7 +93,7 @@ var PlacesOrganizer = {
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
   },
-
+  
   /**
    * A range has been selected from the calendar picker. Update the view
    * to show only those results within the selected range. 
@@ -187,11 +187,13 @@ var PlacesOrganizer = {
       return;
       
     var sortingMode = node.queryOptions.sortingMode;    
-    var groupings = PlacesController.groupers.generic;
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN];
     if (PlacesController.nodeIsFolder(node)) 
-      groupings = PlacesController.groupers.bookmark;
+      groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
     PlacesController.loadNodeIntoView(this._content, node, groupings, 
                                       sortingMode);
+
+    Groupers.setGroupingOptions(this._content.getResult(), true);
 
     this._setHeader("showing", node.title);
   },
@@ -291,19 +293,7 @@ var PlacesOrganizer = {
    * Update the Places UI when the content of the right tree changes. 
    */
   onContentChanged: function PP_onContentChanged() {
-    var panelID = "commands_history";
-    
     var isBookmarks = this._content.isBookmarks;
-    var node = asQuery(this._content.getResult().root);
-    var queries = node.getQueries({});
-    if (queries[0].annotation.indexOf("livemark/") > -1)
-      panelID = "commands_feed";
-    else if (isBookmarks)
-      panelID = "commands_bookmark";
-
-    var commandBar = document.getElementById("commandBar");
-    commandBar.selectedPanel = document.getElementById(panelID);
-
     // Hide the Calendar for Bookmark queries. 
     document.getElementById("historyCalendar").setAttribute("hidden", isBookmarks);
     
@@ -784,5 +774,315 @@ var PlacesQueryBuilder = {
     options.resultType = options.RESULT_TYPE_URI;
 
     PlacesOrganizer._content.load(queries, options);
+  }
+};
+
+/**
+ * Population and commands for the View Menu. 
+ */
+var ViewMenu = {
+  /**
+   * Removes content generated previously from a menupopup.
+   * @param   popup
+   *          The popup that contains the previously generated content.
+   * @param   startID
+   *          The id attribute of an element that is the start of the 
+   *          dynamically generated region - remove elements after this
+   *          item only. 
+   *          Must be contained by popup. Can be null (in which case the
+   *          contents of popup are removed). 
+   * @param   endID
+   *          The id attribute of an element that is the end of the
+   *          dynamically generated region - remove elements up to this
+   *          item only.
+   *          Must be contained by popup. Can be null (in which case all
+   *          items until the end of the popup will be removed). Ignored
+   *          if startID is null. 
+   * @returns The element for the caller to insert new items before, 
+   *          null if the caller should just append to the popup.
+   */
+  _clean: function VM__clean(popup, startID, endID) {
+    if (endID) 
+      ASSERT(startID, "meaningless to have valid endID and null startID");
+    if (startID) {
+      var startElement = document.getElementById(startID);
+      ASSERT(startElement.parentNode == popup, "startElement is not in popup");
+      ASSERT(startElement, 
+             "startID does not correspond to an existing element");
+      var endElement = null;
+      if (endID) {
+        endElement = document.getElementById(endID);
+        ASSERT(endElement.parentNode == popup, "endElement is not in popup");
+        ASSERT(endElement, 
+               "endID does not correspond to an existing element");
+      }
+      while (startElement.nextSibling != endElement)
+        popup.removeChild(startElement.nextSibling);
+      return endElement;
+    }
+    else {
+      while(popup.hasChildNodes())
+        popup.removeChild(popup.firstChild);  
+    }
+    return null;
+  },
+  
+  /**
+   * Fills a menupopup with a list of columns
+   * @param   event
+   *          The popupshowing event that invoked this function.
+   * @param   startID
+   *          see _clean
+   * @param   endID
+   *          see _clean
+   * @param   type
+   *          the type of the menuitem, e.g. "radio" or "checkbox". 
+   *          Can be null (no-type). 
+   *          Checkboxes are checked if the column is visible.
+   */
+  fillWithColumns: function VM_fillWithColumns(event, startID, endID, type) {
+    var popup = event.target;  
+    var pivot = this._clean(popup, startID, endID);
+    
+    // If no column is "sort-active", the "Unsorted" item needs to be checked, 
+    // so track whether or not we find a column that is sort-active. 
+    var isSorted = false;
+    var content = document.getElementById("placeContent");      
+    var columns = content.columns;
+    for (var i = 0; i < columns.count; ++i) {
+      var column = columns.getColumnAt(i).element;
+      var menuitem = document.createElementNS(XUL_NS, "menuitem");
+      menuitem.id = "menucol_" + column.id;
+      menuitem.setAttribute("label", column.getAttribute("label"));
+      if (type == "radio") {
+        menuitem.setAttribute("type", "radio");
+        menuitem.setAttribute("name", "columns");
+        // This column is the sort key. Its item is checked. 
+        if (column.hasAttribute("sortDirection")) {
+          menuitem.setAttribute("checked", "true");
+          isSorted = true;
+        }
+      }
+      else if (type == "checkbox") {
+        menuitem.setAttribute("type", "checkbox");
+        // Cannot uncheck the primary column. 
+        if (column.getAttribute("primary") == "true")
+          menuitem.setAttribute("disabled", "true");
+        // Items for visible columns are checked. 
+        if (column.getAttribute("hidden") != "true")
+          menuitem.setAttribute("checked", "true");
+      }
+      if (pivot)
+        popup.insertBefore(menuitem, pivot);
+      else
+        popup.appendChild(menuitem);      
+    }
+    event.preventBubble();
+  },
+  
+  /**
+   * Set up the content of the view menu.
+   */
+  populate: function VM_populate(event) {
+    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio");  
+    
+    var sortColumn = this._getSortColumn();
+    var viewSortAscending = document.getElementById("viewSortAscending");
+    var viewSortDescending = document.getElementById("viewSortDescending");
+    // We need to remove an existing checked attribute because the unsorted 
+    // menu item is not rebuilt every time we open the menu like the others.
+    var viewUnsorted = document.getElementById("viewUnsorted");
+    if (!sortColumn) {
+      viewSortAscending.removeAttribute("checked");
+      viewSortDescending.removeAttribute("checked");
+      viewUnsorted.setAttribute("checked", "true");
+    }
+    else if (sortColumn.getAttribute("sortDirection") == "ascending") {
+      viewSortAscending.setAttribute("checked", "true");
+      viewSortDescending.removeAttribute("checked");
+      viewUnsorted.removeAttribute("checked");
+    }
+    else if (sortColumn.getAttribute("sortDirection") == "descending") {
+      viewSortDescending.setAttribute("checked", "true");
+      viewSortAscending.removeAttribute("checked");
+      viewUnsorted.removeAttribute("checked");
+    }
+  },
+  
+  /**
+   * Shows/Hides a tree column.
+   * @param   element
+   *          The menuitem element for the column
+   */
+  showHideColumn: function VM_showHideColumn(element) {
+    const PREFIX = "menucol_";
+    var columnID = element.id.substr(PREFIX.length, element.id.length);
+    var column = document.getElementById(columnID);
+    ASSERT(column, "menu item for column that doesn't exist?! id = " + element.id);
+
+    var splitter = column.nextSibling;
+    if (splitter && splitter.localName != "splitter")
+      splitter = null;
+    
+    if (element.getAttribute("checked") == "true") {
+      column.removeAttribute("hidden");
+      splitter.removeAttribute("hidden");
+    }
+    else {
+      column.setAttribute("hidden", "true");
+      splitter.setAttribute("hidden", "true");
+    }    
+  },
+  
+  /**
+   * Gets the last column that was sorted. 
+   * @returns  the currently sorted column, null if there is no sorted column. 
+   */
+  _getSortColumn: function VM__getSortColumn() {
+    var content = document.getElementById("placeContent");
+    var cols = content.columns;
+    for (var i = 0; i < cols.count; ++i) {
+      var column = cols.getColumnAt(i).element;
+      var sortDirection = column.getAttribute("sortDirection");
+      if (sortDirection == "ascending" || sortDirection == "descending")
+        return column;
+    }
+    return null;
+  },
+  
+  /**
+   * Sorts the view by the specified key.
+   * @param   element
+   *          The menuitem element for the column that is the sort key. 
+   *          Can be null - the primary column will be sorted. 
+   * @param   direction
+   *          The direction to sort - "ascending" or "descending". 
+   *          Can be null - the last direction will be used.
+   *          If both element and direction are null, the view will be
+   *          unsorted. 
+   */
+  setSortColumn: function VM_setSortColumn(element, direction) {
+    const PREFIX = "menucol_";
+    // Validate the click - check to see if it was on a valid sort item.
+    if (element && 
+        (element.id.substring(0, PREFIX.length) != PREFIX &&
+         element.id != "viewSortDescending" && 
+         element.id != "viewSortAscending"))
+      return;
+    
+    // If both element and direction are null, all will be unsorted.
+    var unsorted = !element && !direction;
+    // If only the element is null, the currently sorted column will be sorted 
+    // with the specified direction, if there is no currently sorted column, 
+    // the primary column will be sorted with the specified direction. 
+    if (!element && direction) {
+      element = this._getSortColumn();
+      if (!element)
+        element = document.getElementById("title");
+    }
+    else if (element && !direction) {
+      var elementID = element.id.substr(PREFIX.length, element.id.length);
+      element = document.getElementById(elementID);
+      // If direction is null, use the default (ascending)
+      direction = "ascending";
+    }
+
+    var content = document.getElementById("placeContent");      
+    var columns = content.columns;
+    for (var i = 0; i < columns.count; ++i) {
+      var column = columns.getColumnAt(i).element;
+      if (unsorted) {
+        column.removeAttribute("sortActive");
+        column.removeAttribute("sortDirection");
+        content.getResult().sortAll(Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
+      }
+      else if (column.id == element.id) {
+        // We need to do this to ensure the UI updates properly next time it is built.
+        if (column.getAttribute("sortDirection") != direction) {
+          column.setAttribute("sortActive", "true");
+          column.setAttribute("sortDirection", direction);
+        }
+        var columnObj = content.columns.getColumnFor(column);
+        content.view.cycleHeader(columnObj);
+        break;
+      }
+    }
+  }
+};
+
+var Groupers = {
+  defaultGrouper: null,
+  annotationGroupers: [],
+  
+  init: function G_init() {
+    var placeBundle = document.getElementById("placeBundle");
+    this.defaultGrouper = 
+      new GroupingConfig(null, placeBundle.getString("defaultGroupOnLabel"),
+                         placeBundle.getString("defaultGroupOnAccesskey"),
+                         placeBundle.getString("defaultGroupOffLabel"),
+                         placeBundle.getString("defaultGroupOffAccesskey"),
+                         "PlacesOrganizer.groupBySite()",
+                         "PlacesOrganizer.groupByPage()");
+    var subscriptionConfig = 
+      new GroupingConfig("livemark/", placeBundle.getString("livemarkGroupOnLabel"),
+                         placeBundle.getString("livemarkGroupOnAccesskey"),
+                         placeBundle.getString("livemarkGroupOffLabel"),
+                         placeBundle.getString("livemarkGroupOffAccesskey"),
+                         "PlacesOrganizer.groupByFeed()",
+                         "PlacesOrganizer.groupByPost()");
+    this.annotationGroupers.push(subscriptionConfig);
+  },
+    
+  setGroupingOptions: function G_setGroupingOptions(result, on) {
+    var node = asQuery(result.root);
+    
+    var separator = document.getElementById("placesBC_grouping:separator");
+    var groupOff = document.getElementById("placesBC_grouping:off");
+    var groupOn = document.getElementById("placesBC_grouping:on");
+    separator.removeAttribute("hidden");
+    groupOff.removeAttribute("hidden");
+    groupOn.removeAttribute("hidden");
+    
+    // Walk the list of registered annotationGroupers, determining what are 
+    // available and notifying the broadcaster 
+    var disabled = false;
+    var query = node.getQueries({})[0];
+    var config = null;
+    for (var i = 0; i < this.annotationGroupers.length; ++i) {
+      config = this.annotationGroupers[i];
+      var substr = config.substr;
+      if (query.annotation.substr(0, substr.length) == substr) {
+        if (config.disabled)
+          disabled = true;
+        break;
+      }
+      config = null;
+    }
+    
+    if (disabled || PlacesController.nodeIsFolder(node)) {
+      // Generic Bookmarks Folder or custom container that disables grouping.
+      separator.setAttribute("hidden", "true");
+      groupOff.setAttribute("hidden", "true");
+      groupOn.setAttribute("hidden", "true");
+    }
+    else {
+      if (!config)
+        config = this.defaultGrouper;
+      groupOn.setAttribute("label", config.onLabel);
+      groupOn.setAttribute("accesskey", config.onAccesskey);
+      groupOn.setAttribute("oncommand", config.onOncommand);
+      groupOff.setAttribute("label", config.offLabel);
+      groupOff.setAttribute("accesskey", config.offAccesskey);
+      groupOff.setAttribute("oncommand", config.offOncommand);
+      // Update the checked state of the UI
+      if (on) {
+        groupOn.setAttribute("checked", "true");
+        groupOff.removeAttribute("checked");
+      }
+      else {
+        groupOff.setAttribute("checked", "true");
+        groupOn.removeAttribute("checked");
+      }
+    }
   }
 };
