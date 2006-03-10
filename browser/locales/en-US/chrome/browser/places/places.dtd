@@ -4,10 +4,59 @@
   "File">
 <!ENTITY file.accesskey
   "F">
-<!ENTITY fileClose.label
+<!ENTITY file.close.label
   "Close">
-<!ENTITY fileClose.accesskey
+<!ENTITY file.close.accesskey
   "C">
+<!ENTITY edit.label
+  "Edit">
+<!ENTITY edit.accesskey
+  "E">
+<!ENTITY edit.undo.label
+  "Undo">
+<!ENTITY edit.undo.accesskey
+  "U">
+<!ENTITY edit.redo.label
+  "Redo">
+<!ENTITY edit.redo.accesskey
+  "R">
+<!ENTITY view.label
+  "View">
+<!ENTITY view.accesskey
+  "V">
+<!ENTITY view.toolbar.label
+  "Toolbar">
+<!ENTITY view.toolbar.accesskey
+  "T">
+<!ENTITY view.columns.label
+  "Show Columns">
+<!ENTITY view.columns.accesskey
+  "S">
+<!ENTITY view.unsorted.label
+  "Unsorted">
+<!ENTITY view.unsorted.accesskey
+  "U">
+<!ENTITY view.sortAscending.label
+  "A > Z Sort Order">
+<!ENTITY view.sortAscending.accesskey
+  "A">
+<!ENTITY view.sortDescending.label
+  "Z > A Sort Order">
+<!ENTITY view.sortDescending.accesskey
+  "Z">
+<!ENTITY help.usingBookmarks.label
+  "Using Bookmarks">
+<!ENTITY help.usingBookmarks.accesskey
+  "B">
+<!ENTITY help.usingHistory.label
+  "Using History">
+<!ENTITY help.usingHistory.accesskey
+  "H">
+<!ENTITY help.advancedTips.label
+  "Advanced Tips &amp; Tricks">
+<!ENTITY help.advancedTips.accesskey
+  "T">
+
 <!ENTITY cmd.find.label 
   "Find in Bookmarks/History...">
 <!ENTITY cmd.find.accesskey
@@ -15,7 +64,11 @@
 <!ENTITY cmd.export.label
   "Export...">
 <!ENTITY cmd.export.accesskey
-  "x">
+  "E">
+<!ENTITY cmd.import.label
+  "Import...">
+<!ENTITY cmd.import.accesskey
+  "I">
 <!ENTITY cmd.select_all.label
   "Select All">
 <!ENTITY cmd.select_all.accesskey
@@ -78,6 +131,10 @@
   "Sort By Name">
 <!ENTITY cmd.sortby_name.accesskey
   "S">
+<!ENTITY cmd.new_bookmark.label
+  "New Bookmark...">
+<!ENTITY cmd.new_bookmark.accesskey
+  "B">
 <!ENTITY cmd.new_folder.label
   "New Folder...">
 <!ENTITY cmd.new_folder.accesskey

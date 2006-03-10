@@ -15,7 +15,7 @@
       
       <destructor><![CDATA[
       ]]></destructor>
-            
+      
       <method name="init">
         <body><![CDATA[
           if (!this.hasAttribute("place"))
@@ -328,8 +328,6 @@
           return new InsertionPoint(folderId, index);
         ]]></getter>
       </property>
-      
-      <property name="browserWindow" onget="return window;"/>
       
       <field name="filterTransactions">false</field>
       
@@ -647,6 +645,8 @@
         ]]></body>
       </method>
       
+      <property name="selType" onget="return 'single';"/>
+            
     </implementation>
     <handlers>
       <handler event="popupshowing">

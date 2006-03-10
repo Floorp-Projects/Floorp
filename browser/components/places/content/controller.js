@@ -732,7 +732,7 @@ var PlacesController = {
            node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER)
         metadata["mutable"] = true;
     }
-    if (this._activeView.getAttribute("seltype") != "single")
+    if (this._activeView.selType != "single")
       metadata["multiselect"] = true;
     if (!foundNonLeaf && nodes.length > 1)
       metadata["links"] = true;
@@ -807,7 +807,7 @@ var PlacesController = {
   mouseLoadURI: function PC_mouseLoadURI(event) {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openUILink(node.uri, event, false, false);
+      this.browserWindow.openUILink(node.uri, event, false, false);
   },
 
   /**
@@ -895,6 +895,13 @@ var PlacesController = {
 
     this.bookmarks.endUpdateBatch();
   },
+  
+  get browserWindow() {
+    var wm = 
+        Cc["@mozilla.org/appshell/window-mediator;1"].
+        getService(Ci.nsIWindowMediator);
+    return wm.getMostRecentWindow("navigator:browser");
+  },
 
   /**
    * Loads the selected URL in a new tab. 
@@ -902,7 +909,7 @@ var PlacesController = {
   openLinkInNewTab: function PC_openLinkInNewTab() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewTabWith(node.uri, null, null);
+      this.browserWindow.openNewTabWith(node.uri, null, null);
   },
 
   /**
@@ -911,7 +918,7 @@ var PlacesController = {
   openLinkInNewWindow: function PC_openLinkInNewWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.openNewWindowWith(node.uri, null, null);
+      this.browserWindow.openNewWindowWith(node.uri, null, null);
   },
 
   /**
@@ -920,7 +927,7 @@ var PlacesController = {
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
     var node = this._activeView.selectedURINode;
     if (node)
-      this._activeView.browserWindow.loadURI(node.uri, null, null);
+      this.browserWindow.loadURI(node.uri, null, null);
   },
   
   /**
@@ -936,7 +943,7 @@ var PlacesController = {
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
         if (this.nodeIsURI(childNode))
-          this._activeView.browserWindow.openNewTabWith(childNode.uri,
+          this.browserWindow.openNewTabWith(childNode.uri,
               null, null);
       }
       node.containerOpen = wasOpen;
@@ -945,7 +952,7 @@ var PlacesController = {
       var nodes = this._activeView.getSelectionNodes();
       for (var i = 0; i < nodes.length; ++i) {
         if (this.nodeIsURI(nodes[i]))
-          this._activeView.browserWindow.openNewTabWith(nodes[i].uri,
+          this.browserWindow.openNewTabWith(nodes[i].uri,
               null, null);
       }
     }

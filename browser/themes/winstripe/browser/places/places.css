@@ -1,12 +1,11 @@
 /* Root View */
 #placesView {
-  padding: 8px 6px 6px 8px;
-  -moz-user-focus: ignore;
+  background-color: Window;
 }
 
 #splitter {
   border: 0px;
-  width: 10px;
+  width: 3px;
   background-color: transparent;
 }
 
@@ -24,7 +23,7 @@
 
 #placesListContainer {
   -moz-appearance: listbox;
-  margin: 7px 0px 7px 6px;
+  margin: 6px 0px 7px 6px;
 }
 
 #placeContent {
@@ -33,7 +32,7 @@
 }
 
 #content {
-  margin: 7px 6px 7px 0px;
+  margin: 6px 6px 7px 0px;
   -moz-appearance: listbox;
 }
 

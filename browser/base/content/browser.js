@@ -6377,7 +6377,7 @@ var PlacesCommandHook = {
   showPlacesOrganizer: function PCH_showPlacesOrganizer(mode) {
     // TODO: check for an existing one and focus it instead. 
     openDialog("chrome://browser/content/places/places.xul", 
-               "", "resizable", mode);
+               "", "dialog=no,resizable", mode);
   },
   
   /**
