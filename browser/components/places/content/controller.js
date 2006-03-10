@@ -312,6 +312,19 @@ var PlacesController = {
     return this._livemarks;
   },
 
+  /**
+   * The Annotations Service.
+   */
+  _annotations: null,
+  get annotations() {
+    if (!this._annotations) {
+      this._annotations = 
+        Cc["@mozilla.org/browser/annotation-service;1"].
+        getService(Ci.nsIAnnotationService);
+    }
+    return this._annotations;
+  },
+
   /** UI Text Strings */
 
   __strings: null,
@@ -817,24 +830,38 @@ var PlacesController = {
     ASSERT((typeof(value) == "object") && !(value instanceof String), 
            "This method should be passed a URI as a nsIURI object, not as a string.");
   },
+ 
+  /**
+   * Show an "Add Bookmark" dialog for the specified URI.
+   *
+   * @param uri an nsIURI object for which the "add bookmark" dialog is
+   *            to be shown.
+   */
+  showAddBookmarkUI: function PC_showAddBookmarkUI(uri) {
+    this._showBookmarkDialog(uri, "add");
+  },
 
   /**
-   * Opens the bookmark properties panel for a given bookmarked URI.
+   * Opens the bookmark properties panel for a given URI.
    *
-   * @param   bookmarkURI  
-   *          A nsIURI object representing a bookmarked URI
+   * @param   uri an nsIURI object for which the properties are to be shown
    */
-  showBookmarkProperties: function PC_showBookmarkProperties(bookmarkURI) {
-    this._assertURINotString(bookmarkURI);
-    ASSERT(this.bookmarks.isBookmarked(bookmarkURI), 
-           "showBookmarkProperties() was called on a URI that hadn't been bookmarked: " + bookmarkURI.spec);
+  showBookmarkProperties: function PC_showBookmarkProperties(uri) {
+    this._showBookmarkDialog(uri, "edit");
+  },
 
-    if (!this.bookmarks.isBookmarked(bookmarkURI))
-      return;
-
+  /**
+   * Shows the bookmark dialog corresponding to the specified user action.
+   *
+   * @param uri the URI to show the dialog for
+   * @param action "add" or "edit", see _determineVariant in 
+   *               bookmarkProperties.js
+   */
+  _showBookmarkDialog: function PC__showBookmarkDialog(uri, action) {
+    this._assertURINotString(uri);
     window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
                       "", "width=600,height=400,chrome,dependent,modal,resizable",
-                      bookmarkURI, this);
+                      uri, this, action);
   },
 
   /**
@@ -843,8 +870,6 @@ var PlacesController = {
    * URI with the new URI in each applicable folder, then copies the
    * metadata from the old URI to the new URI.
    */
-  /* NOTE(jhughes): don't use yet; UI doesn't update correctly 2006-03-04
-                    see bug 329524 */
   changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
     this._assertURINotString(oldURI);
     this._assertURINotString(newURI);
@@ -862,6 +887,12 @@ var PlacesController = {
                                 this.bookmarks.getItemTitle(oldURI));
     this.bookmarks.setKeywordForURI(newURI, 
                                     this.bookmarks.getKeywordForURI(oldURI));
+    LOG("TODO: move annotations over\n");
+    /*
+    this.annotations.copyAnnotations(oldURI, newURI, true);
+    this.annotations.removePageAnnotations(oldURI);
+    */
+
     this.bookmarks.endUpdateBatch();
   },
 
