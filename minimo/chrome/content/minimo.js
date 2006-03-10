@@ -783,6 +783,15 @@ function BrowserViewFind() {
   }
 }
 
+/**
+ * Has to go through some other approach like a XML-based rule system. 
+ * Those are constraints conditions and action. 
+ **/
+
+function BrowserViewHomebar() {
+  document.getElementById("browserleftbar").collapsed=!document.getElementById("browserleftbar").collapsed;
+}
+
 /** 
  * urlbar indentity, style, progress indicator.
  **/ 
