@@ -48,6 +48,10 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsX.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxQuartzSurface.h"
+#endif
+
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecX
  *  @update   dc 12/02/98
@@ -199,3 +203,27 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, dou
     *aBottom = pageRect.bottom, *aRight = pageRect.right;
     return NS_OK;
 }
+
+#ifdef MOZ_CAIRO_GFX
+NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
+{
+#if 0
+    // open this when cairo-mac / cairo-cocoa printing is ready
+    double top, left, bottom, right;
+    GetPageRect(&top, &left, &bottom, &right);
+  
+    nsRefPtr<gfxASurface> newSurface = new gfxQuartzSurface(gfxASurface::ImageFormatRGB24, right - left, bottom - top, PR_TRUE);
+
+    if (newSurface) {
+        *surface = newSurface;
+        NS_ADDREF(*surface);
+
+        return NS_OK;
+    }
+    NS_WARNING("GetSurfaceForPrinter failed to create gfxQuartzSurface.");
+#endif
+    *surface = nsnull;
+
+    return NS_ERROR_FAILURE;
+}
+#endif

@@ -55,6 +55,9 @@ public:
     nsDeviceContextSpecX();
 
     NS_DECL_ISUPPORTS
+#ifdef MOZ_CAIRO_GFX
+    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+#endif
 
     /**
      * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
