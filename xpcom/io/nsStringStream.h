@@ -45,10 +45,10 @@
 
 /**
  * Implements:
- *   nsIStringInputStream2
  *   nsIStringInputStream
  *   nsIInputStream
  *   nsISeekableStream
+ *   nsISupportsCString
  */
 #define NS_STRINGINPUTSTREAM_CLASSNAME  "nsStringInputStream"
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"
