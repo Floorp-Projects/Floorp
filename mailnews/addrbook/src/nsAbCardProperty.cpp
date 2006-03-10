@@ -174,10 +174,10 @@ nsresult nsAbCardProperty::GetAttributeName(PRUnichar **aName, nsString& value)
   return (*aName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& arrtibute)
+nsresult nsAbCardProperty::SetAttributeName(const PRUnichar *aName, nsString& attribute)
 {
   if (aName)
-    arrtibute = aName;
+    attribute = aName;
   return NS_OK;
 }
 
@@ -222,9 +222,7 @@ NS_IMETHODIMP nsAbCardProperty::GetMailListURI(char **aMailListURI)
   if (aMailListURI)
   {
     *aMailListURI = ToNewCString(m_MailListURI);
-    if (*aMailListURI)
-      return NS_OK;
-    return NS_ERROR_OUT_OF_MEMORY;
+    return (*aMailListURI) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
   else
     return NS_ERROR_NULL_POINTER;

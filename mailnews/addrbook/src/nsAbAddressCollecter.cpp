@@ -116,7 +116,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
 
   char *curName = names;
   char *curAddress = addresses;
-  char *excludeDomainList = nsnull;
 
   for (PRUint32 i = 0; i < numAddresses; i++)
   {
@@ -201,7 +200,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *aAddress, PRBool 
 
   PR_FREEIF(addresses);
   PR_FREEIF(names);
-  PR_FREEIF(excludeDomainList);
   return NS_OK;
 }
 
@@ -338,7 +336,7 @@ nsresult nsAbAddressCollecter::Init(void)
 
   nsXPIDLCString prefVal;
   pPrefBranchInt->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  return rv = SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
+  return SetAbURI(prefVal.IsEmpty() ? kPersonalAddressbookUri : prefVal.get());
 }
 
 nsresult nsAbAddressCollecter::AddCardToAddressBook(nsIAbCard *card)

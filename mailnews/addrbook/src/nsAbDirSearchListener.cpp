@@ -59,16 +59,13 @@ nsAbDirSearchListener::~nsAbDirSearchListener ()
 /* void onQueryItem (in nsIAbDirectoryQueryResult result); */
 NS_IMETHODIMP nsAbDirSearchListener::OnQueryItem(nsIAbDirectoryQueryResult* result)
 {
-    nsresult rv;
-
     PRInt32 resultType;
-    rv = result->GetType (&resultType);
+    nsresult rv = result->GetType(&resultType);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (resultType != nsIAbDirectoryQueryResult::queryResultMatch)
     {
-        rv = mSearchContext->OnSearchFinished (resultType);
-        return rv;
+        return mSearchContext->OnSearchFinished(resultType);
     }
 
     nsCOMPtr<nsISupportsArray> properties;
@@ -103,8 +100,6 @@ NS_IMETHODIMP nsAbDirSearchListener::OnQueryItem(nsIAbDirectoryQueryResult* resu
     nsCOMPtr<nsIAbCard> card(do_QueryInterface(cardSupports, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchContext->OnSearchFoundCard (card);
-
-    return rv;
+    return mSearchContext->OnSearchFoundCard(card);
 }
 

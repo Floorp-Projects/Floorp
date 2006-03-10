@@ -70,7 +70,7 @@ public:
 protected:
 
 	nsresult GetAttributeName(PRUnichar **aName, nsString& value);
-	nsresult SetAttributeName(const PRUnichar *aName, nsString& arrtibute);
+	nsresult SetAttributeName(const PRUnichar *aName, nsString& attribute);
 
 	nsString m_PhoneticFirstName;
 	nsString m_PhoneticLastName;

@@ -73,12 +73,7 @@ NS_IMETHODIMP nsAbBooleanConditionString::GetName(char** aName)
     if (!aName)
         return NS_ERROR_NULL_POINTER;
 
-    const char* value = mName.get ();
-
-    if (!value)
-        *aName = 0;
-    else
-        *aName = ToNewCString(mName);
+    *aName = mName.IsEmpty() ? 0 : ToNewCString(mName);
 
     return NS_OK;
 

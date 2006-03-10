@@ -50,10 +50,8 @@ nsresult nsAbBoolExprToLDAPFilter::Convert (
     nsCString& filter,
     int flags)
 {
-    nsresult rv;
-
     nsCString f;
-    rv = FilterExpression (map, expression, f, flags);
+    nsresult rv = FilterExpression (map, expression, f, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     filter = f;
@@ -66,22 +64,20 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
     nsCString& filter,
     int flags)
 {
-    nsresult rv;
-
-    nsAbBooleanOperationType operation;
-    rv = expression->GetOperation (&operation);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsISupportsArray> childExpressions;
-    rv = expression->GetExpressions (getter_AddRefs (childExpressions));
+    nsresult rv = expression->GetExpressions(getter_AddRefs(childExpressions));
     NS_ENSURE_SUCCESS(rv, rv);
     
     PRUint32 count;
-    rv = childExpressions->Count (&count);
+    rv = childExpressions->Count(&count);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (count == 0)
         return NS_OK;
+
+    nsAbBooleanOperationType operation;
+    rv = expression->GetOperation(&operation);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     /*
      * 3rd party query integration with Mozilla is achieved 
@@ -132,7 +128,7 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpression (
         default:
             break;
     }
-    filter += NS_LITERAL_CSTRING(")");
+    filter.AppendLiteral(")");
 
     return rv;
 }
@@ -143,10 +139,8 @@ nsresult nsAbBoolExprToLDAPFilter::FilterExpressions (
     nsCString& filter,
     int flags)
 {
-    nsresult rv;
-
     PRUint32 count;
-    rv = expressions->Count (&count);
+    nsresult rv = expressions->Count(&count);
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (PRUint32 i = 0; i < count; i++)
@@ -181,14 +175,8 @@ nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
     nsCString& filter,
     int flags)
 {
-    nsresult rv;
-
-    nsAbBooleanConditionType conditionType;
-    rv = condition->GetCondition (&conditionType);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsXPIDLCString name;
-    rv = condition->GetName (getter_Copies (name));
+    nsresult rv = condition->GetName(getter_Copies (name));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString ldapAttr(name);
@@ -199,6 +187,10 @@ nsresult nsAbBoolExprToLDAPFilter::FilterCondition (
             !ATTRMAP_FOUND_ATTR(rv, ldapAttr))
             return NS_OK;
     }
+
+    nsAbBooleanConditionType conditionType;
+    rv = condition->GetCondition(&conditionType);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLString value;
     rv = condition->GetValue (getter_Copies (value));

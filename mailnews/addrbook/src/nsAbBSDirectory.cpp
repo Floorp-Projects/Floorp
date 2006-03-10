@@ -71,28 +71,6 @@ nsAbBSDirectory::~nsAbBSDirectory()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAbBSDirectory, nsRDFResource, nsIAbDirectory)
 
-nsresult nsAbBSDirectory::NotifyItemAdded(nsISupports *item)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIAddrBookSession> abSession = 
-    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-  if(NS_SUCCEEDED(rv))
-    abSession->NotifyDirectoryItemAdded(this, item);
-  return NS_OK;
-}
-
-nsresult nsAbBSDirectory::NotifyItemDeleted(nsISupports *item)
-{
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIAddrBookSession> abSession = 
-    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
-  
-  if(NS_SUCCEEDED(rv))
-    abSession->NotifyDirectoryDeleted(this, item);
-  
-  return NS_OK;
-}
-
 nsresult nsAbBSDirectory::CreateDirectoriesFromFactory(
                                                        nsIAbDirectoryProperties *aProperties,
                                                        DIR_Server *aServer,
@@ -123,6 +101,9 @@ nsresult nsAbBSDirectory::CreateDirectoriesFromFactory(
   // Enumerate through the directories adding them
   // to the sub directories array
   PRBool hasMore;
+  nsCOMPtr<nsIAddrBookSession> abSession = 
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
+
   while (NS_SUCCEEDED(newDirEnumerator->HasMoreElements(&hasMore)) && hasMore)
   {
     nsCOMPtr<nsISupports> newDirSupports;
@@ -143,8 +124,8 @@ nsresult nsAbBSDirectory::CreateDirectoriesFromFactory(
     
     // Inform the listener, i.e. the RDF directory data
     // source that a new address book has been added
-    if (aNotify)
-      NotifyItemAdded(childDir);
+    if (aNotify && abSession)
+      abSession->NotifyDirectoryItemAdded(this, childDir);
   }
   
   return NS_OK;
@@ -159,13 +140,14 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
       do_GetService(NS_ABDIRFACTORYSERVICE_CONTRACTID,&rv);
     NS_ENSURE_SUCCESS (rv, rv);
     
-    if (!DIR_GetDirectories())
+    nsVoidArray *directories = DIR_GetDirectories();
+    if (!directories)
       return NS_ERROR_FAILURE;
     
-    PRInt32 count = DIR_GetDirectories()->Count();
+    PRInt32 count = directories->Count();
     for (PRInt32 i = 0; i < count; i++)
     {
-      DIR_Server *server = (DIR_Server *)(DIR_GetDirectories()->ElementAt(i));
+      DIR_Server *server = (DIR_Server *)(directories->ElementAt(i));
       
       // if this is a 4.x, local .na2 addressbook (PABDirectory)
       // we must skip it.
@@ -179,8 +161,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsISimpleEnumerator* *aResult)
         (server->dirType == PABDirectory))
         continue;
       
-      nsCOMPtr <nsIAbDirectoryProperties> properties;
-      properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
+      nsCOMPtr<nsIAbDirectoryProperties> properties(do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv,rv);
       
       NS_ConvertUTF8toUTF16 description (server->description);
@@ -376,9 +357,8 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 		NS_ENSURE_SUCCESS(rv, rv);
 	}
 
-	DIR_Server *server = nsnull;
 	nsVoidKey key((void *)directory);
-	server = (DIR_Server* )mServers.Get (&key);
+	DIR_Server *server = (DIR_Server* )mServers.Get (&key);
 
 	if (!server)
 		return NS_ERROR_FAILURE;
@@ -396,6 +376,9 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	rv = getDirectories.directories->Count (&count);
 	NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIAddrBookSession> abSession =
+    do_GetService(NS_ADDRBOOKSESSION_CONTRACTID);
+  
 	for (PRUint32 i = 0; i < count; i++)
 	{
 		nsCOMPtr<nsIAbDirectory> d;
@@ -405,7 +388,9 @@ NS_IMETHODIMP nsAbBSDirectory::DeleteDirectory(nsIAbDirectory *directory)
 		mServers.Remove(&k);
 
 		rv = mSubDirectories.RemoveObject(d);
-		NotifyItemDeleted(d);
+
+    if (abSession)
+      abSession->NotifyDirectoryDeleted(this, d);
 
 		nsCOMPtr<nsIRDFResource> resource (do_QueryInterface (d, &rv));
 		const char* uri;
@@ -437,9 +422,8 @@ NS_IMETHODIMP nsAbBSDirectory::ModifyDirectory(nsIAbDirectory *directory, nsIAbD
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  DIR_Server *server = nsnull;
   nsVoidKey key((void *)directory);
-  server = (DIR_Server* )mServers.Get (&key);
+  DIR_Server *server = (DIR_Server* )mServers.Get(&key);
 
   if (!server)
     return NS_ERROR_FAILURE;
@@ -511,13 +495,8 @@ NS_IMETHODIMP nsAbBSDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
   if (!hasDir)
     return NS_ERROR_NULL_POINTER;
   
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  DIR_Server* dirServer = nsnull;
   nsVoidKey key((void *)dir);
-  dirServer = (DIR_Server* )mServers.Get (&key);
-  rv = DIR_ContainsServer(dirServer, hasDir);
-  
-  return rv;
+  DIR_Server *dirServer = (DIR_Server* )mServers.Get (&key);
+  return DIR_ContainsServer(dirServer, hasDir);
 }
 

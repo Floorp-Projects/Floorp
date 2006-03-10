@@ -62,10 +62,6 @@ public:
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
 
 protected:
-	nsresult AddDirectory(const char *uriName, nsIAbDirectory **childDir);
-
-	nsresult NotifyItemAdded(nsISupports *item);
-	nsresult NotifyItemDeleted(nsISupports *item);
 	nsresult CreateDirectoriesFromFactory(
 		nsIAbDirectoryProperties *aProperties,
 		DIR_Server* aServer, PRBool aNotify);

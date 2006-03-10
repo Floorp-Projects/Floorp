@@ -56,8 +56,7 @@ NS_IMETHODIMP nsAbDirectoryQueryProxy::Initiate(nsIAbDirectory *directory)
     if (mInitiated)
         return NS_OK;
 
-    nsAbDirectoryQuery* _directoryQuery = new nsAbDirectoryQuery (directory);
-    mDirectoryQuery = _directoryQuery;
+    mDirectoryQuery = new nsAbDirectoryQuery(directory);
 
     mInitiated = PR_TRUE;
 
