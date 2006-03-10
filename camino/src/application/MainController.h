@@ -52,13 +52,10 @@
 
 typedef enum EBookmarkOpenBehavior
 {
-  eBookmarkOpenBehaviorDefault,     // follow the prefs
-  eBookmarkOpenBehaviorNewTabDefault,
-  eBookmarkOpenBehaviorNewTabForeground,
-  eBookmarkOpenBehaviorNewTabBackground,
-  eBookmarkOpenBehaviorNewWindowDefault,
-  eBookmarkOpenBehaviorNewWindowForeground,
-  eBookmarkOpenBehaviorNewWindowBackground
+  eBookmarkOpenBehavior_Preferred,        // simply opens the bookmark
+  eBookmarkOpenBehavior_NewWindowOrTab,   // opens the bookmark in a new tab/window, depending on the pref
+  eBookmarkOpenBehavior_NewWindow,
+  eBookmarkOpenBehavior_NewTab
 };
 
 @interface MainController : NSObject 

@@ -531,7 +531,7 @@ const int kReuseWindowOnAE = 2;
 
   switch (behavior)
   {
-    case eBookmarkOpenBehaviorDefault:
+    case eBookmarkOpenBehavior_Preferred:
       {
         BOOL cmdKeyDown = (GetCurrentKeyModifiers() & cmdKey) != 0;
         if (cmdKeyDown)
@@ -547,33 +547,15 @@ const int kReuseWindowOnAE = 2;
       }
       break;
 
-    case eBookmarkOpenBehaviorNewTabDefault:
+    case eBookmarkOpenBehavior_NewTab:
       openInNewTab = YES;
       newTabInBackground = browserWindowController && loadNewTabsInBackgroundPref;
       break;
 
-    case eBookmarkOpenBehaviorNewTabForeground:
-      openInNewTab = YES;
-      break;
-
-    case eBookmarkOpenBehaviorNewTabBackground:
-      openInNewTab = YES;
-      newTabInBackground = YES;
-      break;
-
-    case eBookmarkOpenBehaviorNewWindowDefault:
+    case eBookmarkOpenBehavior_NewWindow:
       openInNewWindow = YES;
       if (loadNewTabsInBackgroundPref)
         behindWindow = [browserWindowController window];
-      break;
-
-    case eBookmarkOpenBehaviorNewWindowForeground:
-      openInNewWindow = YES;
-      break;
-
-    case eBookmarkOpenBehaviorNewWindowBackground:
-      openInNewWindow = YES;
-      behindWindow = [browserWindowController window];
       break;
   }
 
@@ -1186,7 +1168,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 -(IBAction) openMenuBookmark:(id)aSender
 {
   BookmarkItem*  item = [aSender representedObject];
-  [self loadBookmark:item withWindowController:[self getMainWindowBrowserController] openBehavior:eBookmarkOpenBehaviorDefault];
+  [self loadBookmark:item withWindowController:[self getMainWindowBrowserController] openBehavior:eBookmarkOpenBehavior_Preferred];
 }
 
 //

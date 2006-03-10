@@ -500,7 +500,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorDefault];
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_Preferred];
     }
   }
 }
@@ -526,7 +526,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewTab];
     }
   }
 }
@@ -592,7 +592,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
     {
       // otherwise follow the standard bookmark opening behavior
-      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
+      [[NSApp delegate] loadBookmark:curItem withWindowController:mBrowserWindowController openBehavior:eBookmarkOpenBehavior_NewWindow];
     }
   }
 }

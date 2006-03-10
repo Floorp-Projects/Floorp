@@ -166,7 +166,7 @@
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorDefault];
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_Preferred];
 }
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
@@ -174,7 +174,7 @@
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewTabDefault];
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_NewTab];
 }
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
@@ -182,7 +182,7 @@
   BrowserWindowController* brController = [[self window] windowController];
   BookmarkItem *item = [self bookmarkItem];
 
-  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehaviorNewWindowDefault];
+  [[NSApp delegate] loadBookmark:item withWindowController:brController openBehavior:eBookmarkOpenBehavior_NewWindow];
 }
 
 - (IBAction)copyURLs:(id)aSender
