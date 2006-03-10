@@ -1017,12 +1017,11 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     WORD *glyph_buf = glyph_buf_stack;
     int dx_buf_stack[STACK_GLYPH_SIZE];
     int *dx_buf = dx_buf_stack;
-    const COLORREF color = RGB(((int)solid_pattern->color.red_short) >> 8,
-			       ((int)solid_pattern->color.green_short) >> 8,
-			       ((int)solid_pattern->color.blue_short) >> 8);
     BOOL result = 0;
-    int i, last_y_offset = 0;
+    int i;
     double last_y = glyphs[0].y;
+    COLORREF color;
+    int output_count = 0;
 
     if ((op != CAIRO_OPERATOR_SOURCE && op != CAIRO_OPERATOR_OVER) || 
 	(dst->format != CAIRO_FORMAT_RGB24) ||
@@ -1031,6 +1030,10 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	    (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
 	     dst->base.clip->surface != NULL)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    color = RGB(((int)solid_pattern->color.red_short) >> 8,
+		((int)solid_pattern->color.green_short) >> 8,
+		((int)solid_pattern->color.blue_short) >> 8);
 
     SaveDC(dst->dc);
 
@@ -1045,6 +1048,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     }
 
     for (i = 0; i < num_glyphs; ++i) {
+	output_count++;
+
 	glyph_buf[i] = glyphs[i].index;
 	if (i == num_glyphs - 1)
 	    dx_buf[i] = 0;
@@ -1053,20 +1058,21 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 
 
 	if (i == num_glyphs - 1 || glyphs[i].y != glyphs[i+1].y) {
+	    const int offset = (i - output_count)  + 1;
 	    result = ExtTextOutW(dst->dc,
-				 glyphs[last_y_offset].x * WIN32_FONT_LOGICAL_SCALE,
+				 glyphs[offset].x * WIN32_FONT_LOGICAL_SCALE,
 				 last_y * WIN32_FONT_LOGICAL_SCALE,
 				 ETO_GLYPH_INDEX,
 				 NULL,
-				 glyph_buf + last_y_offset,
-				 (i - last_y_offset) + 1,
-				 dx_buf + last_y_offset);
+				 glyph_buf + offset,
+				 output_count,
+				 dx_buf + offset);
 	    if (!result) {
 		_cairo_win32_print_gdi_error("_cairo_win32_surface_show_glyphs(ExtTextOutW failed)");
 		goto FAIL;
 	    }
 
-	    last_y_offset = i;
+	    output_count = 0;
 	}
 
 	last_y = glyphs[i].y;
