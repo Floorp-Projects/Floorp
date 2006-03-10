@@ -108,7 +108,7 @@ nsWindowsRegKey::GlobalInit()
 {
 #ifdef DEBUG
   // In debug builds, allow explicit use of ANSI methods for testing purposes.
-  if (getenv("WINREG_USE_ANSI")) {
+  if (getenv("WINAPI_USE_ANSI")) {
     sUseUnicode = PR_FALSE;
     return;
   }
