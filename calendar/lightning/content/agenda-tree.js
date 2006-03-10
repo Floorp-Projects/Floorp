@@ -385,8 +385,7 @@ function refreshPeriodDates()
     var now = new Date();
     var d = new CalDateTime();
     d.jsDate = now;
-    //XXX use default timezone
-    d = d.getInTimezone("/mozilla.org/20050126_1/America/Los_Angeles");
+    d = d.getInTimezone(calendarDefaultTimezone());
 
     // Today: now until midnight of tonight
     this.today.start = d.clone();
