@@ -349,20 +349,20 @@
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (parent == this._self._bms.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (parent == this._self._bms.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
-          if (folder == this._self._bms.toolbarRoot)
+          if (oldParent == this._self._bms.toolbarRoot ||
+              newParent == this._self._bms.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onFolderChanged: function TB_O_onFolderChanged(folder, property) {
-          if (folder == this._self._bms.toolbarRoot)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
+          this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         doRebuild: function TB_O_doRebuild() {
           function hitch(obj, meth) {
