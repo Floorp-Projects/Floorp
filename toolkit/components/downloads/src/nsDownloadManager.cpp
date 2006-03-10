@@ -218,7 +218,10 @@ nsDownloadManager::Init()
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = NS_STATIC_CAST(nsDownloadsDataSource*, (nsIRDFDataSource*)mDataSource.get())->LoadDataSource();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    mDataSource = nsnull; // so we don't UnregisterDataSource on it
+    return rv;
+  }
 
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
