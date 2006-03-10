@@ -63,6 +63,36 @@ extern nsIWidget         * gRollupWidget;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
+
+/*
+ * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
+ * system with (0,0) in the top-left of the screen. Cocoa rects
+ * (NSRect) contain an origin (x,y) in a coordinate system with
+ * (0,0) in the bottom-left of the screen. Both nsRect and NSRect
+ * contain width/height info, with no difference in their use.
+ */
+static NSRect geckoRectToCocoaRect(nsRect geckoRect)
+{
+  // first we get the highest point on all screens
+  float highestScreenPoint = 0.0;
+  NSArray* allScreens = [NSScreen screens];
+  for (unsigned int i = 0; i < [allScreens count]; i++) {
+    NSRect currScreenFrame = [[allScreens objectAtIndex:i] frame];
+    float currScreenHighestPoint = currScreenFrame.origin.y + currScreenFrame.size.height;
+    if (currScreenHighestPoint > highestScreenPoint)
+      highestScreenPoint = currScreenHighestPoint;
+  }
+
+  // We only need to change the Y coordinate by starting with the screen
+  // height, subtracting the gecko Y coordinate, and subtracting the
+  // height.
+  return NSMakeRect(geckoRect.x,
+                    highestScreenPoint - geckoRect.y - geckoRect.height,
+                    geckoRect.width,
+                    geckoRect.height);
+}
+
+
 //
 // nsCocoaWindow constructor
 //
@@ -137,11 +167,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     if (mWindowType == eWindowType_popup)
       return NS_OK;
 #endif
-    
-    // create the cocoa window
-    NSRect rect;
-    rect.origin.x = rect.origin.y = 1.0;
-    rect.size.width = rect.size.height = 1.0;
     
     // we default to NSBorderlessWindowMask, add features if needed
     unsigned int features = NSBorderlessWindowMask;
@@ -219,6 +244,39 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
         NS_ERROR("Unhandled window type!");
         return NS_ERROR_FAILURE;
     }
+    
+    /* 
+     * We pass a content area rect to initialize the native Cocoa window. The
+     * content rect we give is the same size as the size we're given by gecko.
+     * The origin we're given for non-popup windows is moved down by the height
+     * of the menu bar so that an origin of (0,100) from gecko puts the window
+     * 100 pixels below the top of the available desktop area. We also move the
+     * origin down by the height of a title bar if it exists. This is so the
+     * origin that gecko gives us for the top-left of  the window turns out to
+     * be the top-left of the window we create. This is how it was done in
+     * Carbon. If it ought to be different we'll probably need to look at all
+     * the callers.
+     *
+     * Note: This means that if you put a secondary screen on top of your main
+     * screen and open a window in the top screen, it'll be incorrectly shifted
+     * down by the height of the menu bar. Same thing would happen in Carbon.
+     *
+     * Note: If you pass a rect with 0,0 for an origin, the window ends up in a
+     * weird place for some reason. This stops that without breaking popups.
+     */
+    NSRect rect = geckoRectToCocoaRect(aRect);
+    
+    // compensate for difference between frame and content area height (e.g. title bar)
+    NSRect newWindowFrame = [NSWindow frameRectForContentRect:rect styleMask:features];
+    rect.origin.y -= (newWindowFrame.size.height - rect.size.height);
+    
+    if (mWindowType != eWindowType_popup)
+      rect.origin.y -= ::GetMBarHeight();
+    
+#ifdef DEBUG
+    NSLog(@"Top-level window being created at Cocoa rect: %f, %f, %f, %f\n",
+          rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+#endif
     
     // create the window
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
