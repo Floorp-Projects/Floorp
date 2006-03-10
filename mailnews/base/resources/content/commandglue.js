@@ -213,16 +213,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   }
 
   // If the user clicks on msgfolder, time to display thread pane and message pane.
-  // Hide AccountCentral page
-  if (gAccountCentralLoaded)
-  {
-      HideAccountCentral();
-  }
-
-  if (gFakeAccountPageLoaded)
-  {
-      HideFakeAccountPage();
-  }
+  ShowThreadPane();
 
   gCurrentLoadingFolderURI = uri;
   gNextMessageAfterDelete = null; // forget what message to select, if any

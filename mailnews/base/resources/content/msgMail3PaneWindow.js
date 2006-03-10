@@ -693,7 +693,6 @@ function OnLoadMessenger()
   ShowHideToolBarButtons();
   verifyAccounts(null);
     
-  HideAccountCentral();
   InitMsgWindow();
   messenger.SetWindow(window, msgWindow);
 

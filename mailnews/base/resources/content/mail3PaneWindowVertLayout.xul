@@ -157,12 +157,21 @@
 
       <box id="messagesBox" orient="vertical" flex="1">
         <hbox id="searchBoxHolder"/>
-        <box id="threadPaneBox" orient="horizontal" flex="1" minheight="100" height="100" persist="height">
-          <tree id="threadTree" flex="1" minwidth="100" width="100" persist="width" context="threadPaneContext" class="window-focusborder" focusring="false"/>
-          <vbox id="accountCentralBox" flex="1" collapsed="true">
+        <deck id="displayDeck" flex="1" selectedIndex="0"
+              minheight="100" height="100" persist="height"
+              onselect="ObserveDisplayDeckChange(event)">
+          <!-- first panel in displayDeck is Account Central -->
+          <vbox id="accountCentralBox">
             <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
           </vbox>
-        </box>
+          <!-- second panel is the threadPane -->
+          <hbox id="threadPaneBox">
+            <tree id="threadTree" flex="1" minwidth="100" width="100"
+                  persist="width" context="threadPaneContext"
+                  class="window-focusborder" focusring="false"/>
+          </hbox>
+          <!-- extensions may overlay in additional panels; don't assume that there are only 2! -->
+        </deck>
       </box>
     </box>
 
