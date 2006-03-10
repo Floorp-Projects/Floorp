@@ -425,13 +425,15 @@ function getFileFromDescriptor(descriptor, installLocation) {
 }
 
 /**
- * Determines if a file URL is an item package - either a XPI or a JAR file.
- * @param   fileURL
- *          The file URL to check
- * @returns true if the URL is an item package, false otherwise.
+ * Determines if a file is an item package - either a XPI or a JAR file.
+ * @param   file
+ *          The file to check
+ * @returns true if the file is an item package, false otherwise.
  */
-function fileIsItemPackage(fileURL) {
-  var extension = fileURL.fileExtension.toLowerCase();
+function fileIsItemPackage(file) {
+  var fileURL = getURIFromFile(file);
+  if (fileURL instanceof nsIURL)
+    var extension = fileURL.fileExtension.toLowerCase();
   return extension == "xpi" || extension == "jar";
 }
 
@@ -817,17 +819,14 @@ function getZipReaderForFile(zipFile) {
  * @return  The file created in the temp directory.
  */
 function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
-  var file = null;
+  var file = getFile(KEY_TEMPDIR, [getRandomFileName(fileName)]);
   try {
     var zipReader = getZipReaderForFile(zipFile);
     zipReader.getEntry(fileName);
-    
-    file = getFile(KEY_TEMPDIR, [getRandomFileName(fileName)]);
     zipReader.extract(fileName, file);
     zipReader.close();
   }
   catch (e) {
-    // always close the zip reader even if we throw
     if (!suppressErrors) {
       showMessage("missingFileTitle", [], "missingFileMessage", 
                   [BundleManager.appName, fileName]);
@@ -1199,7 +1198,15 @@ DirectoryInstallLocation.prototype = {
     return stagedFile;
   },
   
+  /**
+   * Returns the most recently staged package (e.g. the last XPI or JAR in a
+   * directory) for an item and removes items that do not qualify.
+   * @param   id
+   *          The ID of the staged package
+   * @returns an nsIFile if the package exists otherwise null.
+   */
   getStageFile: function(id) {
+    var stageFile = null;
     var stageDir = this.location;
     stageDir.append(DIR_STAGE);
     stageDir.append(id);
@@ -1207,12 +1214,25 @@ DirectoryInstallLocation.prototype = {
       return null;
     try {
       var entries = stageDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
-      var stageFile = entries.nextFile;
-      stageFile instanceof nsILocalFile;
-      entries.close();
+      while (entries.hasMoreElements()) {
+        var file = entries.nextFile;
+        if (!(file instanceof nsILocalFile))
+          continue;
+        if (file.isDirectory())
+          removeDirRecursive(file);
+        else if (fileIsItemPackage(file)) {
+          if (stageFile)
+            stageFile.remove(false);
+          stageFile = file;
+        }
+        else
+          file.remove(false);
+      }
     }
     catch (e) {
     }
+    if (entries instanceof nsIDirectoryEnumerator)
+      entries.close();
     return stageFile;
   },
   
@@ -2881,7 +2901,7 @@ ExtensionManager.prototype = {
     if (!file || !file.exists())
       throw new Error("Unable to find the file specified on the command line!");
     var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
-    if (!installManifestFile || !installManifestFile.exists())
+    if (!installManifestFile.exists())
       throw new Error("The package is missing an install manifest!");
     var installManifest = getInstallManifest(installManifestFile);
     installManifestFile.remove(false);
@@ -2908,36 +2928,33 @@ ExtensionManager.prototype = {
    *          XPI/JAR that needs installation, null otherwise.
    */
   _getItemForDroppedFile: function(file, location) {
-    var fileURL = getURIFromFile(file);
-    if (fileURL instanceof nsIURL) {
-      if (fileIsItemPackage(fileURL)) {
-        // We know nothing about this item, it is not something we've
-        // staged in preparation for finalization, so assume it's something
-        // the user dropped in.
-        LOG("A Item Package appeared at: " + file.path + " that we know " + 
-            "nothing about, assuming it was dropped in by the user and " + 
-            "configuring for installation now. Location Key: " + location.name);
+    if (fileIsItemPackage(file)) {
+      // We know nothing about this item, it is not something we've
+      // staged in preparation for finalization, so assume it's something
+      // the user dropped in.
+      LOG("A Item Package appeared at: " + file.path + " that we know " + 
+          "nothing about, assuming it was dropped in by the user and " + 
+          "configuring for installation now. Location Key: " + location.name);
 
-        var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
-        if (!installManifestFile.exists())
-          return null;
-        var installManifest = getInstallManifest(installManifestFile);
-        installManifestFile.remove(false);
-        var ds = this.datasource;
-        var installData = this._getInstallData(installManifest);
-        var targetAppInfo = ds.getTargetApplicationInfo(installData.id, installManifest);
-        return makeItem(installData.id,
-                        installData.version,
-                        location.name,
-                        targetAppInfo ? targetAppInfo.minVersion : "",
-                        targetAppInfo ? targetAppInfo.maxVersion : "",
-                        getManifestProperty(installManifest, "name"),
-                        "", /* XPI Update URL */
-                        "", /* XPI Update Hash */
-                        getManifestProperty(installManifest, "iconURL"),
-                        getManifestProperty(installManifest, "updateURL"),
-                        installData.type);
-      }
+      var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
+      if (!installManifestFile.exists())
+        return null;
+      var installManifest = getInstallManifest(installManifestFile);
+      installManifestFile.remove(false);
+      var ds = this.datasource;
+      var installData = this._getInstallData(installManifest);
+      var targetAppInfo = ds.getTargetApplicationInfo(installData.id, installManifest);
+      return makeItem(installData.id,
+                      installData.version,
+                      location.name,
+                      targetAppInfo ? targetAppInfo.minVersion : "",
+                      targetAppInfo ? targetAppInfo.maxVersion : "",
+                      getManifestProperty(installManifest, "name"),
+                      "", /* XPI Update URL */
+                      "", /* XPI Update Hash */
+                      getManifestProperty(installManifest, "iconURL"),
+                      getManifestProperty(installManifest, "updateURL"),
+                      installData.type);
     }
     return null;
   },
@@ -4737,14 +4754,11 @@ ExtensionManager.prototype = {
     var ds = this.datasource;
     var installLocation = this.getInstallLocation(id);
 
-    var stagedFile;
+    var stagedFile = null;
     if ("getStageFile" in installLocation)
       stagedFile = installLocation.getStageFile(id);
-    else
-      stagedFile = null;
 
-    var stagedFileExists = stagedFile && stagedFile.exists();
-    if (stagedFileExists)
+    if (stagedFile)
       var installRDF = extractRDFFileToTempDir(stagedFile, FILE_INSTALL_MANIFEST, true);
     else
       installRDF = installLocation.getItemFile(id, FILE_INSTALL_MANIFEST);
@@ -4763,7 +4777,7 @@ ExtensionManager.prototype = {
         if (userDisabled)
           ds.setItemProperty(id, EM_R("userDisabled"), EM_L("true"));
       }
-      if (stagedFileExists)
+      if (stagedFile)
         installRDF.remove(false);
     }
     // Clear the op flag from the Pending Operations set. Do NOT clear op flag in 
@@ -4855,7 +4869,8 @@ ExtensionManager.prototype = {
       if (foundStageOp) {
         var location = em.getInstallLocation(id);
         var stageFile = location.getStageFile(id);
-        location.removeFile(stageFile);
+        if (stageFile)
+          location.removeFile(stageFile);
       }
     }
   
