@@ -443,14 +443,8 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
 
         /* Walk the chain of JavaPackage objects to get to the parent of the
            rightmost sub-package in the fully-qualified package name. */
-        for (simple_name = STRTOK_1ST(package_name, ".", nextstr); simple_name /*1*/; simple_name = STRTOK_OTHER(".", nextstr)) {
+        for (simple_name = STRTOK_1ST(package_name, ".", nextstr); simple_name; simple_name = STRTOK_OTHER(".", nextstr)) {
             jsval v;
-
-            if (!simple_name) {
-                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                                        JSJMSG_DOUBLE_SHIPPING, package_name);
-                goto error;
-            }
 
             /* Check to see if the sub-package already exists */
             quiet_resolve_failure = JS_TRUE;
