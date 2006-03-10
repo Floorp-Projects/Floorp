@@ -2348,9 +2348,17 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 NS_IMETHODIMP
 nsNavHistory::RemoveAllPages()
 {
-  // expire everything, compress DB (compression is slow, but since the user
-  // requested it, they either want the disk space or to cover their tracks).
+  // expire everything
   VacuumDB(0);
+
+  // compress DB (compression is slow, but since the user requested it, they
+  // either want the disk space or to cover their tracks). The dummy statement
+  // must be stopped because vacuuming will change everything and invalidate
+  // the cache.
+  StopDummyStatement();
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
+  StartDummyStatement();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // notify observers
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnClearHistory())
