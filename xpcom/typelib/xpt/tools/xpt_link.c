@@ -251,8 +251,7 @@ main(int argc, char **argv)
              * equal to the version specified in the -t cmd line arg.
              */
 
-            if (header &&
-                (header->major_version > major_version ||
+            if ((header->major_version > major_version ||
                 (header->major_version == major_version &&
                  header->minor_version > minor_version))) { 
                 fprintf(stderr, "FAILED: %s's version, %d.%d, is newer than "
