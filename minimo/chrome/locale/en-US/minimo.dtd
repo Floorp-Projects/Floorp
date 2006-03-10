@@ -78,3 +78,6 @@
 <!-- toolbar pan -->
 <!ENTITY panText.label               "Pan scroll enable. Click or Tap to disable." >
 
+<!-- toolbar homebar -->
+<!ENTITY homebarToolbar.label        "Toggle Homebar" >
+
