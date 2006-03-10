@@ -61,6 +61,7 @@
 #include "nsVoidArray.h"
 #include "nsIParserService.h"
 #include "nsReadableUtils.h"
+#include "nsIHTMLContentSink.h"
 
 #define IF_HOLD(_ptr) \
  PR_BEGIN_MACRO       \
@@ -343,7 +344,7 @@ public:
   nsNodeAllocator   *mNodeAllocator;
 
 #ifdef  NS_DEBUG
-  enum { eMaxTags = 100 };
+  enum { eMaxTags = MAX_REFLOW_DEPTH };
   eHTMLTags       mXTags[eMaxTags];
 #endif
 };
