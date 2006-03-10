@@ -154,8 +154,13 @@ browsermessage[type="bottom"] {
   padding-bottom: 1px;
 }
 
+.tabbrowser-tab > .tab-middle {
+  padding-top: 1px;
+}
+
 .tabbrowser-tab[selected="true"] > .tab-middle {
   padding-bottom: 1px;
+  padding-top: 0;
   -moz-padding-start: 1px;
   margin-bottom: 1px;
 }
