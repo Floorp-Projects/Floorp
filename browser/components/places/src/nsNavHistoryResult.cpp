@@ -2637,7 +2637,8 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
 {
   // if any items are excluded, we can not do incremental updates since the
   // indices from the bookmark service will not be valid
-  if (! mOptions->ExcludeItems() && ! mOptions->ExcludeQueries()) {
+  if (! mOptions->ExcludeItems() && ! mOptions->ExcludeQueries() &&
+      ! mOptions->ExcludeReadOnlyFolders()) {
 
     // easy case: we are visible, always do incremental update
     if (mExpanded || AreChildrenVisible())
