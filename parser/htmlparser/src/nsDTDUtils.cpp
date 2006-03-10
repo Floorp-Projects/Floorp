@@ -533,7 +533,9 @@ nsDTDContext::MoveEntries(nsDTDContext& aDest,
     while (aCount) {
       aDest.PushEntry(&mStack.mEntries[--mStack.mCount], PR_FALSE);
 #ifdef  NS_DEBUG
-      mXTags[mStack.mCount] = eHTMLTag_unknown;
+      if (mStack.mCount < eMaxTags) {
+        mXTags[mStack.mCount] = eHTMLTag_unknown;
+      }
 #endif
       --aCount;
     }
