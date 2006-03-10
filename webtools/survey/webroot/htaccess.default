@@ -1,7 +1,7 @@
 # Auto-prepend our init.php script.
 # This allows us to have our web documents anywhere we want
 #   and keep our includes, etc. in a safe directory.
-php_value auto_prepend ../inc/init.php
+php_value auto_prepend_file ../inc/init.php
 
 # Set up rewrites so we can get our app data in.
 RewriteEngine On
