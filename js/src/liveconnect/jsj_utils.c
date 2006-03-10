@@ -456,6 +456,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
     JSJavaThreadState *jsj_env;
     char *err_msg;
 
+    JS_ASSERT(envp);
     *envp = NULL;
     err_msg = NULL;
 
@@ -480,8 +481,7 @@ jsj_EnterJava(JSContext *cx, JNIEnv **envp)
     if (!jsj_env->cx)
         jsj_env->cx = cx;
 
-    if (envp)
-        *envp = jsj_env->jEnv;
+    *envp = jsj_env->jEnv;
     return jsj_env;
 }
 
