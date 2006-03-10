@@ -273,8 +273,9 @@ extern PRInt32 _MD_CloseFile(PROsfd osfd);
 #define _MD_TLOCKFILE                 _PR_MD_TLOCKFILE
 #define _MD_UNLOCKFILE                _PR_MD_UNLOCKFILE
 
-#ifdef MOZ_UNICODE
 /* --- UTF16 IO stuff --- */
+extern PRBool _pr_useUnicode;
+#ifdef MOZ_UNICODE
 #define _MD_OPEN_FILE_UTF16           _PR_MD_OPEN_FILE_UTF16
 #define _MD_OPEN_DIR_UTF16            _PR_MD_OPEN_DIR_UTF16
 #define _MD_READ_DIR_UTF16            _PR_MD_READ_DIR_UTF16
