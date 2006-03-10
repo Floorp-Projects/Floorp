@@ -230,13 +230,13 @@ function findPeriodForItem(item)
     var start = item.startDate || item.dueDate;
     if (!start) 
         return null;
-    if (start.compare(this.today.end) <= 0)
+    if (start.compare(this.today.end) == -1)
         return this.today;
         
-    if (start.compare(this.tomorrow.end) <= 0)
+    if (start.compare(this.tomorrow.end) == -1)
         return this.tomorrow;
     
-    if (start.compare(this.soon.end) <= 0)
+    if (start.compare(this.soon.end) == -1)
         return this.soon;
     
     void(item.title + " @ " + start + " not in range " +
@@ -274,7 +274,8 @@ function agendaDoubleClick(event)
         return;
     }
     if (!this.isContainer(row)) { // Clicked on a task/event, edit it
-        modifyEventWithDialog(calEvent);
+        var eventToEdit = getOccurrenceOrParent(calEvent);
+        modifyEventWithDialog(eventToEdit);
     } else { // Clicked on a container, create an event that day
         if (calEvent == this.today) {
             createEventWithDialog(calendar, today(), today());
