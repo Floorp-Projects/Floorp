@@ -40,6 +40,7 @@ const imgICache                = Components.interfaces.imgICache;
 const nsIBrowserDOMWindow      = Components.interfaces.nsIBrowserDOMWindow;
 const nsIBrowserHistory        = Components.interfaces.nsIBrowserHistory;
 const nsIClipboard             = Components.interfaces.nsIClipboard;
+const nsIDeviceSupport         = Components.interfaces.nsIDeviceSupport;
 const nsIDOMChromeWindow       = Components.interfaces.nsIDOMChromeWindow;
 const nsIDOMDocument           = Components.interfaces.nsIDOMDocument;
 const nsIDOMWindow             = Components.interfaces.nsIDOMWindow;
@@ -1060,12 +1061,19 @@ function DoSNavToggle()
 function DoToggleSoftwareKeyboard()
 {
   try {
-    var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
-    pref.setBoolPref("skey.enabled", !pref.getBoolPref("skey.enabled"));
+
+    var device = Components.classes["@mozilla.org/device/support;1"].getService(nsIDeviceSupport);
+
+    if (device.has("hasSoftwareKeyboard") == "yes") {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
+      pref.setBoolPref("skey.enabled", !pref.getBoolPref("skey.enabled"));
+    }
+    else {
+      document.commandDispatcher.advanceFocus();
+    }
   }
   catch(ex) { alert(ex); }
 }
-
 
 function DoFullScreen()
 {

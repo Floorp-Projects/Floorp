@@ -42,6 +42,7 @@
 #include "nsIGenericFactory.h"
 
 #include "string.h"
+#include "nsMemory.h"
 
 #include "nsIDeviceSupport.h"
 
@@ -82,6 +83,44 @@ NS_IMETHODIMP nsDeviceSupport::RotateScreen(PRBool aLandscapeMode)
 #endif
 
     return NS_OK;
+}
+
+
+static BOOL IsSmartphone() 
+{
+  unsigned short platform[64];
+  
+  if (TRUE == SystemParametersInfo(SPI_GETPLATFORMTYPE,
+                                   sizeof(platform),
+                                   platform,
+                                   0))
+  {
+    if (0 == _wcsicmp(L"Smartphone", platform)) 
+    {
+      return TRUE;
+    }
+  }
+  return FALSE;   
+}
+
+NS_IMETHODIMP nsDeviceSupport::Has(const char* aProperty, char **aValue)
+{
+  *aValue = nsnull;
+
+  if (!strcmp(aProperty, "hasSoftwareKeyboard"))
+  {
+    *aValue = (char*) nsMemory::Alloc(4);
+
+    if (!IsSmartphone())
+      strcpy(*aValue, "yes");
+    else
+      strcpy(*aValue, "no");
+
+    return NS_OK;
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+
 }
 
 
