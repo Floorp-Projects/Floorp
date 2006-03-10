@@ -117,6 +117,7 @@ public:
                                mGroupCount(0), mGroupings(nsnull),
                                mExcludeItems(PR_FALSE),
                                mExcludeQueries(PR_FALSE),
+                               mExcludeReadOnlyFolders(PR_FALSE),
                                mExpandQueries(PR_FALSE),
                                mForceOriginalTitle(PR_FALSE),
                                mIncludeHidden(PR_FALSE),
@@ -139,6 +140,7 @@ public:
   }
   PRBool ExcludeItems() const { return mExcludeItems; }
   PRBool ExcludeQueries() const { return mExcludeQueries; }
+  PRBool ExcludeReadOnlyFolders() const { return mExcludeReadOnlyFolders; }
   PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool ForceOriginalTitle() const { return mForceOriginalTitle; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
@@ -163,6 +165,7 @@ private:
   PRUint32 *mGroupings;
   PRBool mExcludeItems;
   PRBool mExcludeQueries;
+  PRBool mExcludeReadOnlyFolders;
   PRBool mExpandQueries;
   PRBool mForceOriginalTitle;
   PRBool mIncludeHidden;

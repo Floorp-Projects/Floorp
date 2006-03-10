@@ -832,6 +832,16 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean excludeQueries;
 
   /**
+   * Set to true to exclude read-only folders from the query results. This is
+   * designed for cases where you want to give the user the option of filing
+   * something into a list of folders. It only affects cases where the actual
+   * folder result node would appear in its parent folder and filters it out.
+   * It doesn't affect the query at all, and doesn't affect more complex
+   * queries (such as "folders with annotation X").
+   */
+  attribute boolean excludeReadOnlyFolders;
+
+  /**
    * When set, allows items with "place:" URIs to appear as containers,
    * with the container's contents filled in from the stored query.
    * If not set, these will appear as normal items. Doesn't do anything if
