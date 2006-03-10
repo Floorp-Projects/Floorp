@@ -1192,7 +1192,7 @@
           </menupopup>
         </menu>
         <menuseparator/>
-        <menu label="&find.label;" accesskey="&find.accesskey;">
+        <menu label="&findMenu.label;" accesskey="&findMenu.accesskey;">
           <menupopup>
             <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
             <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
