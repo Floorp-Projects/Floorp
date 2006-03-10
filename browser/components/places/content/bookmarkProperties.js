@@ -39,6 +39,16 @@
 
 var BookmarkPropertiesPanel = {
 
+  /** UI Text Strings */
+
+  __strings: null,
+  get _strings() {
+    if (!this.__strings) {
+      this.__strings = document.getElementById("stringBundle");
+    }
+    return this.__strings;
+  },
+
   /**
    * The Bookmarks Service.
    */
@@ -78,7 +88,6 @@ var BookmarkPropertiesPanel = {
     return this.__ios;
   },
 
-
   _bookmarkURI: null,
   _bookmarkTitle: "",
   _dialogWindow: null,
@@ -86,13 +95,136 @@ var BookmarkPropertiesPanel = {
   _controller: null,
   MAX_INDENT_DEPTH: 6, // maximum indentation level of "tag" display
 
+  EDIT_BOOKMARK_VARIANT: 0,
+  ADD_BOOKMARK_VARIANT: 1,
+  EDIT_HISTORY_VARIANT: 2,
+
+  /**
+   * The variant identifier for the current instance of the dialog.
+   * The possibilities are enumerated by the constants above.
+   */
+  _variant: null,
+
+  _isVariant: function BPP__isVariant(variant) {
+    return this._variant == variant;
+  },
+
+  /**
+   * Returns true if the URI title is editable in this dialog variant.
+   */
+  _isTitleEditable: function BPP__isTitleEditable() {
+    switch(this._variant) {
+    case this.EDIT_HISTORY_VARIANT: return false;
+    default: return true;
+    }
+  },
+
+  /**
+   * Returns true if the URI is editable in this variant of the dialog.
+   */
+  _isURIEditable: function BPP__isURIEditable() {
+    switch(this._variant) {
+    case this.EDIT_HISTORY_VARIANT: return false;
+    default: return true;
+    }
+  },
+
+  /**
+   * Returns true if the the shortcut field is visible in this
+   * variant of the dialog.
+   */
+  _isShortcutVisible: function BPP__isShortcutVisible() {
+    switch(this._variant) {
+    case this.EDIT_HISTORY_VARIANT: return false;
+    default: return true;
+    }
+  },
+
+  /**
+   * Returns true if bookmark deletion is possible from the current
+   * variant of the dialog.
+   */
+  _isDeletePossible: function BPP__isDeletePossible() {
+    switch(this._variant) {
+    case this.EDIT_HISTORY_VARIANT: return false;
+    case this.ADD_BOOKMARK_VARIANT: return false;
+    default: return true;
+    }
+  },
+
+  /**
+   * Returns true if the URI's folder is editable in this variant
+   * of the dialog.
+   */
+  _isFolderEditable: function BPP__isFolderVisible() {
+    switch(this._variant) {
+    case this.ADD_BOOKMARK_VARIANT: return true;
+    default: return false;
+    }
+  },
+
+  /**
+   * This method returns the correct label for the dialog's "accept"
+   * button based on the variant of the dialog.
+   */
+  _getAcceptLabel: function BPP__getAcceptLabel() {
+    switch(this._variant) {
+    case this.ADD_BOOKMARK_VARIANT:
+      return this._strings.getString("dialogAcceptLabelAdd");
+    default: return this._strings.getString("dialogAcceptLabelEdit");
+    }
+  },
+
+  /**
+   * This method returns the correct title for the current variant
+   * of this dialog.
+   */
+  _getDialogTitle: function BPP__getDialogTitle() {
+    switch(this._variant) {
+    case this.ADD_BOOKMARK_VARIANT:
+      return this._strings.getString("dialogTitleAdd");
+    case this.EDIT_HISTORY_VARIANT:
+      return this._strings.getString("dialogTitleHistoryEdit");
+    default:
+      return this._strings.getString("dialogTitleBookmarkEdit");
+    }
+  },
+
   /**
    * This method can be run on a URI parameter to ensure that it didn't
    * receive a string instead of an nsIURI object.
    */
-  _assertURINotString: function PC__assertURINotString(value) {
+  _assertURINotString: function BPP__assertURINotString(value) {
     ASSERT((typeof(value) == "object") && !(value instanceof String),
     "This method should be passed a URI as a nsIURI object, not as a string.");
+  },
+
+  /**
+   * Determines the correct variant of the dialog to display depending
+   * on which action is passed in and whether or not the URI passed in
+   * is already bookmarked or not.
+   *
+   * @param uri the URI to display the properties for
+   * @param action -- "add" if this is being triggered from an "add bookmark"
+   *                  UI action; or "edit" if this is being triggered from
+   *                  a "properties" UI action
+   *
+   * @returns one of the *_VARIANT constants
+   */
+  _determineVariant: function BPP__determineVariant(uri, action) {
+    if (action == "add") {
+      if (this._bms.isBookmarked(uri)) {
+        return this.EDIT_BOOKMARK_VARIANT;
+      } else {
+        return this.ADD_BOOKMARK_VARIANT;
+      }
+    } else { /* Assume "edit" */
+      if (this._bms.isBookmarked(uri)) {
+        return this.EDIT_BOOKMARK_VARIANT;
+      } else {
+        return this.EDIT_HISTORY_VARIANT;
+      }
+    }
   },
 
   /**
@@ -105,13 +237,21 @@ var BookmarkPropertiesPanel = {
    * @param controller   a PlacesController object for interacting with the
    *                     Places system
    */
-  init: function BPP_init(dialogWindow, bookmarkURI, controller) {
+  init: function BPP_init(dialogWindow, bookmarkURI, controller, action) {
     this._assertURINotString(bookmarkURI);
+    this._variant = this._determineVariant(bookmarkURI, action);
 
     this._bookmarkURI = bookmarkURI;
     this._bookmarkTitle = this._bms.getItemTitle(this._bookmarkURI);
     this._dialogWindow = dialogWindow;
     this._controller = controller;
+
+    this.folderTree = this._dialogWindow.document.getElementById("folder-tree");
+    this.folderTree.controllers.appendController(this._controller);
+    this.folderTree.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
+                                     ViewConfig.GENERIC_DROP_TYPES,
+                                     true, false, 4, true));
+    this.folderTree.loadFolder(this._bms.placesRoot);
 
     this._initAssignableFolderResult();
     this._populateProperties();
@@ -142,8 +282,15 @@ var BookmarkPropertiesPanel = {
     var title = this._bookmarkTitle;
     var document = this._dialogWindow.document;
 
-    // hide standard dialog button, lest it throw off size calculation later
-    this._dialogWindow.document.documentElement.getButton("accept").hidden=true;
+    this._dialogWindow.title = this._getDialogTitle();
+
+    this._dialogWindow.document.documentElement.getButton("accept").label =
+      this._getAcceptLabel();
+
+    if (!this._isDeletePossible()) {
+      this._dialogWindow.document.documentElement.getButton("extra1").hidden =
+        "true";
+    }
 
     var nurl = document.getElementById("edit-urlbar");
 
@@ -152,35 +299,57 @@ var BookmarkPropertiesPanel = {
     nurl.value = location.spec;
     titlebox.value = title;
 
-    var shortcutbox =
-      this._dialogWindow.document.getElementById("edit-shortcutbox");
-    shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
+    if (!this._isTitleEditable())
+      titlebox.setAttribute("disabled", "true");
 
-    var tagArea = document.getElementById("tagbox");
+    if (!this._isURIEditable())
+      nurl.setAttribute("disabled", "true");
 
-    while (tagArea.hasChildNodes()) {
-      tagArea.removeChild(tagArea.firstChild);
+    if (this._isShortcutVisible()) {
+      var shortcutbox =
+        this._dialogWindow.document.getElementById("edit-shortcutbox");
+      shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
+    } else {
+      var shortcutRow =
+        this._dialogWindow.document.getElementById("shortcut-row");
+      shortcutRow.setAttribute("hidden", "true");
     }
 
-    var elementDict = {};
+    if (this._isFolderEditable()) {
 
-    var root = this._assignableFolderResult.root; //Root is always a container.
-    root.containerOpen = true;
-    this._populateTags(root, 0, tagArea, elementDict);
-    root.containerOpen = false;
+      var tagArea = document.getElementById("tagbox");
 
-    var categories = this._bms.getBookmarkFolders(location, {});
+      while (tagArea.hasChildNodes()) {
+        tagArea.removeChild(tagArea.firstChild);
+      }
 
-    this._updateFolderTextbox(location);
+      var elementDict = {};
 
-    var length = 0;
-    for (key in elementDict) {
-      length++;
-    }
+      var root = this._assignableFolderResult.root; //Root is always a container.
+      root.containerOpen = true;
+      this._populateTags(root, 0, tagArea, elementDict);
+      root.containerOpen = false;
 
-    for (var i=0; i < categories.length; i++) {
-      var elm = elementDict[categories[i]];
+      var categories = this._bms.getBookmarkFolders(location, {});
+
+      this._updateFolderTextbox(location);
+
+      var length = 0;
+      for (key in elementDict) {
+        length++;
+      }
+
+      for (var i=0; i < categories.length; i++) {
+        var elm = elementDict[categories[i]];
       elm.setAttribute("selected", "true");
+      }
+    } else {
+      var folderDispRow =
+        this._dialogWindow.document.getElementById("folder-disp-row");
+      folderDispRow.setAttribute("hidden", "true");
+      var folderRow =
+        this._dialogWindow.document.getElementById("folder-row");
+      folderRow.setAttribute("hidden", "true");
     }
   },
 
@@ -341,16 +510,9 @@ var BookmarkPropertiesPanel = {
    * Size the dialog to fit its contents.
    */
   _updateSize: function BPP__updateSize() {
-    var childDoc = this._dialogWindow.document;
-
-    var tagbox = childDoc.getElementById("tagbox");
-    tagbox.style.overflow="auto";
-
-    var pio = childDoc.getElementById("places-info-options");
-    var pig = childDoc.getElementById("places-info-grid");
-
-    var newHeight = pio.boxObject.y + pio.boxObject.height + 5;
-    this._dialogWindow.resizeTo(this._dialogWindow.innerWidth, newHeight);
+    var width = this._dialogWindow.innerWidth;
+    this._dialogWindow.sizeToContent();
+    this._dialogWindow.resizeTo(width, this._dialogWindow.innerHeight);
   },
 
  /**
@@ -394,6 +556,24 @@ var BookmarkPropertiesPanel = {
    * was open.
    */
   _saveChanges: function PBD_saveChanges() {
+    var urlbox = this._dialogWindow.document.getElementById("edit-urlbar");
+    var newURI = this._uri(urlbox.value);
+
+    if (this._isFolderEditable()) {
+      var selected =  this.folderTree.getSelectionNodes();
+
+      for (var i = 0; i < selected.length; i++) {
+        var node = selected[i];
+        if (node.type == node.RESULT_TYPE_FOLDER) {
+          var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+          if (!folder.childrenReadOnly) {
+            this._bms.insertItem(folder.folderId, newURI, -1);
+          }
+        }
+      }
+    }
+
+
     var titlebox = this._dialogWindow.document.getElementById("edit-titlebox");
     this._bms.setItemTitle(this._bookmarkURI, titlebox.value);
 
@@ -401,11 +581,10 @@ var BookmarkPropertiesPanel = {
       this._dialogWindow.document.getElementById("edit-shortcutbox");
     this._bms.setKeywordForURI(this._bookmarkURI, shortcutbox.value);
 
-    var urlbox = this._dialogWindow.document.getElementById("edit-urlbar");
-    if (urlbox.value != this._bookmarkURI.spec) {
-      /*  this._controller.changeBookmarkURI(this._bookmarkURI,
-          this._uri(urlbox.value));*/
-      LOG("TODO: delete existing bookmark, create new one with same folder & location.");
+    if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
+        (newURI.spec != this._bookmarkURI.spec)) {
+      this._controller.changeBookmarkURI(this._bookmarkURI,
+                                         this._uri(urlbox.value));
     }
   },
 
@@ -414,5 +593,5 @@ var BookmarkPropertiesPanel = {
    */
   _hideBookmarkProperties: function BPP__hideBookmarkProperties() {
     this._dialogWindow.close();
-  },
+  }
 }

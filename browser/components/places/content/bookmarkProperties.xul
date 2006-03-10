@@ -2,81 +2,108 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/bookmarkProperties.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 
-<!DOCTYPE window 
-  SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
+
+<!DOCTYPE window [
+  <!ENTITY % propertiesDTD SYSTEM "chrome://browser/locale/places/bookmarkProperties.dtd">
+  %propertiesDTD;
+  <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
+  %placesDTD;
+]>
 
 <dialog id="bookmarkproperties" title="&bookmark.property.panel.title;"
-        buttons="accept"
+        buttons="accept, cancel, extra1"
+        buttonlabelextra1="&cmd.delete_bookmark.label;"
         ondialogaccept="BookmarkPropertiesPanel.dialogDone();"
+        ondialogextra1="BookmarkPropertiesPanel.dialogDeleteBookmark();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1]);">
+        onload="BookmarkPropertiesPanel.init(window, window.arguments[0], window.arguments[1], window.arguments[2]);">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="stringBundle"
+                  src="chrome://browser/locale/places/bookmarkProperties.properties"/>
+  </stringbundleset>
 
   <script type="application/x-javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
       <vbox id="places-info-options" flex="1">
-	<grid id="places-info-grid" flex="1">
-	  <columns>
-	    <column flex="1" align="end" />
-	    <column flex="100" align="start" />
-	  </columns>
-	  <rows>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.title;" align="middle"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="edit-titlebox" value=""/>
-	    </row>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.location;" align="middle"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="edit-urlbar" size="10"/>
-	    </row>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.shortcut;" align="middle"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="edit-shortcutbox" value=""/>
-	    </row>
-	    <row>
-	      <vbox align="end">
-		<hbox align="center" flex="1">
-		  <label value="&bookmark.property.folders;"/>
-		</hbox>
-	      </vbox>
-	      <textbox id="places-folder-list" value="" disabled="true"/>
-	    </row>
-	    <row flex="1">
-	      <vbox align="end">
-		<hbox align="start" flex="1">
-		  <label value="&bookmark.property.folder_list;"/>
-		</hbox>
-	      </vbox>
-	      <vbox id="tagbox">
-	      </vbox>
-	    </row>
-	    <row>
-	      <vbox></vbox>
-	      <vbox><hbox align="end">
-		<button label="&cmd.delete_bookmark.label;"
-                        oncommand="BookmarkPropertiesPanel.dialogDeleteBookmark();"
-                        align="end"/>
-		<spacer flex="1"/>
-		<button label="&cmd.hide_bookmark_properties.label;" 
-                        oncommand="BookmarkPropertiesPanel.dialogDone();"/>
-	      </hbox>
-	      </vbox>
-	    </row>
-	  </rows>
-	</grid>
+        <grid id="places-info-grid" flex="1">
+          <columns>
+            <column flex="1" align="end" />
+            <column flex="100" align="start" />
+          </columns>
+          <rows>
+            <row>
+              <vbox align="end">
+                <hbox align="center" flex="1">
+                  <label value="&bookmark.property.title;" align="middle"/>
+                </hbox>
+              </vbox>
+              <textbox id="edit-titlebox" value=""/>
+            </row>
+            <row>
+              <vbox align="end">
+                <hbox align="center" flex="1">
+                  <label value="&bookmark.property.location;" align="middle"/>
+                </hbox>
+              </vbox>
+              <textbox id="edit-urlbar" size="10"/>
+            </row>
+            <row id="shortcut-row">
+              <vbox align="end">
+                <hbox align="center" flex="1">
+                  <label value="&bookmark.property.shortcut;" align="middle"/>
+                </hbox>
+              </vbox>
+              <textbox id="edit-shortcutbox" value=""/>
+            </row>
+            <row id="folder-disp-row" hidden="true">
+              <vbox align="end">
+                <hbox align="center" flex="1">
+                  <label value="&bookmark.property.folders;"/>
+                </hbox>
+              </vbox>
+              <textbox id="places-folder-list" value="" disabled="true"/>
+            </row>
+            <row id="folder-row" flex="1" style="min-height: 100px;">
+              <vbox align="end">
+                <hbox align="start" flex="1">
+                  <label value="&bookmark.property.parents;"/>
+                </hbox>
+              </vbox>
+              <vbox>
+                <tree id="folder-tree"
+                      class="placesTree"
+                      flex="1"
+                      type="places" 
+                      hidecolumnpicker="true"
+                      seltype="multiple">
+                  <treecols>
+                    <treecol id="title"
+                             flex="1" 
+                             primary="true"
+                             hideheader="true"/>
+                  </treecols>
+                  <treechildren id="placesListChildren"
+                                view="placesList"
+                                flex="1"/>
+                </tree>
+              </vbox>
+            </row>
+            <row flex="1" hidden="true">
+              <vbox align="end">
+                <hbox align="start" flex="1">
+                  <label value="&bookmark.property.folder_list;"/>
+                </hbox>
+              </vbox>
+              <vbox id="tagbox">
+              </vbox>
+            </row>
+          </rows>
+        </grid>
       </vbox>
 </dialog>
 

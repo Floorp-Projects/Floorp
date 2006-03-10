@@ -6314,12 +6314,8 @@ var PlacesCommandHook = {
    * Adds a bookmark to the page loaded in the current tab. 
    */
   bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
-    // TODO: add dialog for filing/confirmation
     var selectedBrowser = getBrowser().selectedBrowser;
-    var uri = selectedBrowser.currentURI;
-    var bms = PlacesController.bookmarks;
-    bms.insertItem(bms.bookmarksRoot, uri, -1);
-    bms.setItemTitle(uri, selectedBrowser.contentTitle);
+    PlacesController.showAddBookmarkUI(selectedBrowser.currentURI);
   },
   
   /**
@@ -6409,13 +6405,7 @@ var PlacesCommandHook = {
    */
   onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {
     var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
-    var bms = PlacesController.bookmarks;
-    if (bms.isBookmarked(currentURI)) {
-      PlacesController.showBookmarkProperties(currentURI);
-    } else {
-      bms.insertItem(bms.bookmarksRoot, currentURI, -1);
-      this.updateTagButton();
-    }
+    PlacesController.showAddBookmarkUI(currentURI);
   }
 };
 

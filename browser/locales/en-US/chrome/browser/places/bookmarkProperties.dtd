@@ -10,7 +10,12 @@
   "Folders">
 <!ENTITY bookmark.property.folder_list
   "Folder List">
+<!ENTITY bookmark.property.parents
+  "Visible In">
 <!ENTITY cmd.delete_bookmark.label
   "Delete Bookmark">
-<!ENTITY cmd.hide_bookmark_properties.label
-  "Done">
+<!ENTITY cmd.accept.edit
+  "Save Changes">
+<!ENTITY cmd.accept.add
+  "Add Bookmark">
+
