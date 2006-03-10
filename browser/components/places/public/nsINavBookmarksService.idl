@@ -63,6 +63,8 @@ interface nsINavBookmarkObserver : nsISupports
   /**
    * Notify this observer that the bookmark was added.
    * Called after the actual add took place.
+   * If other bookmarks in the folder shift due to the item being added, 
+   * no additional onItemMoved notifications are sent.
    *
    * @param bookmark   The bookmark item that was added.
    * @param folder     The folder that the item was added to.
@@ -73,6 +75,8 @@ interface nsINavBookmarkObserver : nsISupports
   /**
    * Notify this observer that the bookmark was removed.
    * Called after the actual remove took place.
+   * If other bookmarks in the folder shift due to the item being removed, 
+   * no additional onItemMoved notifications are sent.
    *
    * @param bookmark   The bookmark item will be removed.
    * @param folder     The folder that the item was removed from.
@@ -84,6 +88,9 @@ interface nsINavBookmarkObserver : nsISupports
    * Notify this observer that an item has changed position in a folder.
    * Note that items can exist in more than one folder, but may only occur once
    * within a given folder.
+   * If other bookmarks in the folder shift due to the item being moved, 
+   * no additional onItemMoved notifications are sent.
+   * 
    * @param bookmark   The bookmark item that changed position.
    * @param folder     The folder where the item changed position.
    * @param oldIndex   The old index of the item in the folder.
