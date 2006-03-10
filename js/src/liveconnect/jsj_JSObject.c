@@ -281,6 +281,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     if (!java_wrapper_obj) {
         jsj_UnexpectedJavaError(cx, jEnv, "Couldn't create new instance of "
                                           "netscape.javascript.JSObject");
+        JS_free(cx, handle);
         goto done;
     }
  
@@ -397,8 +398,10 @@ capture_js_error_reports_for_java(JSContext *cx, const char *message,
     /* Copy all the error info out of the original report into a private copy */
     if (message) {
         new_error->message = strdup(message);
-        if (!new_error->message)
-            goto out_of_memory;
+        if (!new_error->message) {
+            free(new_error);
+            return;
+        }
     }
     if (report) {
         new_error->report.lineno = report->lineno;
@@ -779,16 +782,15 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
     return jsj_env;
 
 error:
+    JS_ASSERT(!cx);
     /* Invoke callback, presumably used to implement concurrency constraints */
     if (JSJ_callbacks && JSJ_callbacks->exit_js)
         JSJ_callbacks->exit_js(jEnv, cx);
 
 entry_failure:
+    JS_ASSERT(!cx);
     if (err_msg) {
-        if (cx)
-            JS_ReportError(cx, err_msg);
-        else
-            jsj_LogError(err_msg);
+        jsj_LogError(err_msg);
         free(err_msg);
     }
 
