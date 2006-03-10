@@ -527,7 +527,7 @@ nsSVGImageFrame::ConvertFrame(gfxIImageFrame *aNewFrame)
   rgb++;
 #endif
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(MOZ_CAIRO_GFX)
 #define REVERSE_CHANNELS
 #endif
 
