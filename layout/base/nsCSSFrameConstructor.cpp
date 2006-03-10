@@ -3412,7 +3412,8 @@ IsSpecialContent(nsIContent*     aContent,
       aTag == nsHTMLAtoms::iframe ||
       aTag == nsHTMLAtoms::spacer ||
       aTag == nsHTMLAtoms::button ||
-      aTag == nsHTMLAtoms::isindex;
+      aTag == nsHTMLAtoms::isindex ||
+      aTag == nsHTMLAtoms::canvas;
   }
 
 
