@@ -57,9 +57,9 @@ struct MimeEncryptedCMSClass {
 
   /* Callback used to access the SEC_PKCS7ContentInfo of this object. */
   void (*get_content_info) (MimeObject *self,
-							nsICMSMessage **content_info_ret,
-							char **sender_email_addr_return,
-							PRInt32 *decode_error_ret,
+              nsICMSMessage **content_info_ret,
+              char **sender_email_addr_return,
+              PRInt32 *decode_error_ret,
               PRInt32 *verify_error_ret,
               PRBool * ci_is_encrypted);
 };
@@ -67,7 +67,7 @@ struct MimeEncryptedCMSClass {
 extern MimeEncryptedCMSClass mimeEncryptedCMSClass;
 
 struct MimeEncryptedCMS {
-  MimeEncrypted encrypted;		/* superclass variables */
+  MimeEncrypted encrypted;    /* superclass variables */
 };
 
 #endif /* _MIMEPKCS_H_ */

@@ -56,10 +56,10 @@ struct MimeMultipartSignedCMSClass {
 
   /* Callback used to access the SEC_CMSContentInfo of this object. */
   void (*get_content_info) (MimeObject *self,
-							nsICMSMessage **content_info_ret,
-							char **sender_email_addr_return,
-							PRInt32 *decode_error_ret,
-							PRInt32 *verify_error_ret,
+              nsICMSMessage **content_info_ret,
+              char **sender_email_addr_return,
+              PRInt32 *decode_error_ret,
+              PRInt32 *verify_error_ret,
               PRBool * ci_is_encrypted);
 };
 

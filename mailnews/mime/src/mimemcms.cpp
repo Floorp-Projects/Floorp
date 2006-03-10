@@ -56,7 +56,7 @@
 
 #define MIME_SUPERCLASS mimeMultipartSignedClass
 MimeDefClass(MimeMultipartSignedCMS, MimeMultipartSignedCMSClass,
-			 mimeMultipartSignedCMSClass, &MIME_SUPERCLASS);
+       mimeMultipartSignedCMSClass, &MIME_SUPERCLASS);
 
 static int MimeMultipartSignedCMS_initialize (MimeObject *);
 
@@ -69,8 +69,8 @@ static int MimeMultCMS_sig_init (void *, MimeObject *, MimeHeaders *);
 static char * MimeMultCMS_generate (void *);
 static void MimeMultCMS_free (void *);
 static void MimeMultCMS_get_content_info (MimeObject *,
-											nsICMSMessage **,
-											char **, PRInt32 *, PRInt32 *, PRBool *);
+                      nsICMSMessage **,
+                      char **, PRInt32 *, PRInt32 *, PRBool *);
 
 extern int SEC_ERROR_CERT_ADDR_MISMATCH;
 
@@ -91,7 +91,7 @@ MimeMultipartSignedCMSClassInitialize(MimeMultipartSignedCMSClass *clazz)
   sclass->crypto_generate_html  = MimeMultCMS_generate;
   sclass->crypto_free           = MimeMultCMS_free;
 
-  clazz->get_content_info	    = MimeMultCMS_get_content_info;
+  clazz->get_content_info      = MimeMultCMS_get_content_info;
 
   PR_ASSERT(!oclass->class_initialized);
   return 0;
@@ -139,7 +139,7 @@ typedef struct MimeMultCMSdata
     // Do a graceful shutdown of the nsICMSDecoder and release the nsICMSMessage //
     if (sig_decoder_context)
     {
-	    nsCOMPtr<nsICMSMessage> cinfo;
+      nsCOMPtr<nsICMSMessage> cinfo;
       sig_decoder_context->Finish(getter_AddRefs(cinfo));
     }
 
@@ -149,36 +149,36 @@ typedef struct MimeMultCMSdata
 
 static void
 MimeMultCMS_get_content_info(MimeObject *obj,
-							   nsICMSMessage **content_info_ret,
-							   char **sender_email_addr_return,
-							   PRInt32 *decode_error_ret,
-							   PRInt32 *verify_error_ret,
+                 nsICMSMessage **content_info_ret,
+                 char **sender_email_addr_return,
+                 PRInt32 *decode_error_ret,
+                 PRInt32 *verify_error_ret,
                                PRBool *ci_is_encrypted)
 {
   MimeMultipartSigned *msig = (MimeMultipartSigned *) obj;
   if (msig && msig->crypto_closure)
-	{
-	  MimeMultCMSdata *data = (MimeMultCMSdata *) msig->crypto_closure;
+  {
+    MimeMultCMSdata *data = (MimeMultCMSdata *) msig->crypto_closure;
 
-	  *decode_error_ret = data->decode_error;
-	  *verify_error_ret = data->verify_error;
-	  *content_info_ret = data->content_info;
+    *decode_error_ret = data->decode_error;
+    *verify_error_ret = data->verify_error;
+    *content_info_ret = data->content_info;
       *ci_is_encrypted     = PR_FALSE;
 
-	  if (sender_email_addr_return)
-		*sender_email_addr_return = (data->sender_addr
+    if (sender_email_addr_return)
+    *sender_email_addr_return = (data->sender_addr
                    ? nsCRT::strdup(data->sender_addr)
-									 : 0);
-	}
+                   : 0);
+  }
 }
 
 /* #### MimeEncryptedCMS and MimeMultipartSignedCMS have a sleazy,
         incestuous, dysfunctional relationship. */
 extern PRBool MimeEncryptedCMS_encrypted_p (MimeObject *obj);
 extern PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
-											 nsICMSMessage *,
-											 PRBool *signing_cert_without_email_address,
-											 char **);
+                       nsICMSMessage *,
+                       PRBool *signing_cert_without_email_address,
+                       char **);
 extern char *MimeCMS_MakeSAURL(MimeObject *obj);
 extern char *IMAP_CreateReloadAllPartsUrl(const char *url);
 extern int MIMEGetRelativeCryptoNestLevel(MimeObject *obj);
@@ -203,10 +203,10 @@ MimeMultCMS_init (MimeObject *obj)
       !nsCRT::strcasecmp(micalg, PARAM_MICALG_MD5_2))
     hash_type = nsICryptoHash::MD5;
   else if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1) ||
-		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_2) ||
-		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_3) ||
-		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_4) ||
-		   !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_5))
+       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_2) ||
+       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_3) ||
+       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_4) ||
+       !nsCRT::strcasecmp(micalg, PARAM_MICALG_SHA1_5))
     hash_type = nsICryptoHash::SHA1;
   else if (!nsCRT::strcasecmp(micalg, PARAM_MICALG_MD2))
     hash_type = nsICryptoHash::MD2;
@@ -234,30 +234,30 @@ MimeMultCMS_init (MimeObject *obj)
   PR_SetError(0,0);
 
   if (!data->decode_error)
-	{
-	  data->decode_error = PR_GetError();
-	  if (data->decode_error)
-		{
-		  delete data;
-		  return 0;
-		}
-	}
+  {
+    data->decode_error = PR_GetError();
+    if (data->decode_error)
+    {
+      delete data;
+      return 0;
+    }
+  }
 
   data->parent_holds_stamp_p =
-	(obj->parent && mime_crypto_stamped_p(obj->parent));
+  (obj->parent && mime_crypto_stamped_p(obj->parent));
 
   data->parent_is_encrypted_p =
-	(obj->parent && MimeEncryptedCMS_encrypted_p (obj->parent));
+  (obj->parent && MimeEncryptedCMS_encrypted_p (obj->parent));
 
   /* If the parent of this object is a crypto-blob, then it's the grandparent
-	 who would have written out the headers and prepared for a stamp...
-	 (This s##t s$%#s.)
+   who would have written out the headers and prepared for a stamp...
+   (This s##t s$%#s.)
    */
   if (data->parent_is_encrypted_p &&
-	  !data->parent_holds_stamp_p &&
-	  obj->parent && obj->parent->parent)
-	data->parent_holds_stamp_p =
-	  mime_crypto_stamped_p (obj->parent->parent);
+    !data->parent_holds_stamp_p &&
+    obj->parent && obj->parent->parent)
+  data->parent_holds_stamp_p =
+    mime_crypto_stamped_p (obj->parent->parent);
 
   mime_stream_data *msd = (mime_stream_data *) (data->self->options->stream_closure);
   if (msd)
@@ -321,7 +321,7 @@ MimeMultCMS_data_hash (char *buf, PRInt32 size, void *crypto_closure)
   PR_SetError(0, 0);
   data->data_hash_context->Update((unsigned char *) buf, size);
   if (!data->verify_error) {
-  	data->verify_error = PR_GetError();
+    data->verify_error = PR_GetError();
   }
 
   return 0;
@@ -346,15 +346,15 @@ MimeMultCMS_data_eof (void *crypto_closure, PRBool abort_p)
   memcpy(data->item_data, hashString.get(), data->item_len);
 
   if (!data->verify_error) {
-	  data->verify_error = PR_GetError();
+    data->verify_error = PR_GetError();
   }
 
   // Release our reference to nsICryptoHash //
   data->data_hash_context = 0;
 
   /* At this point, data->item.data contains a digest for the first part.
-	 When we process the signature, the security library will compare this
-	 digest to what's in the signature object. */
+   When we process the signature, the security library will compare this
+   digest to what's in the signature object. */
 
   return 0;
 }
@@ -362,8 +362,8 @@ MimeMultCMS_data_eof (void *crypto_closure, PRBool abort_p)
 
 static int
 MimeMultCMS_sig_init (void *crypto_closure,
-						MimeObject *multipart_object,
-						MimeHeaders *signature_hdrs)
+            MimeObject *multipart_object,
+            MimeHeaders *signature_hdrs)
 {
   MimeMultCMSdata *data = (MimeMultCMSdata *) crypto_closure;
   char *ct;
@@ -380,7 +380,7 @@ MimeMultCMS_sig_init (void *crypto_closure,
   if (!ct || /* is not a signature type */
              (nsCRT::strcasecmp(ct, APPLICATION_XPKCS7_SIGNATURE) != 0
               && nsCRT::strcasecmp(ct, APPLICATION_PKCS7_SIGNATURE) != 0)) {
-	  status = -1; /* #### error msg about bogus message */
+    status = -1; /* #### error msg about bogus message */
   }
   PR_FREEIF(ct);
   if (status < 0) return status;
@@ -390,9 +390,9 @@ MimeMultCMS_sig_init (void *crypto_closure,
 
   rv = data->sig_decoder_context->Start(nsnull, nsnull);
   if (NS_FAILED(rv)) {
-	  status = PR_GetError();
-	  if (status >= 0) status = -1;
-	}
+    status = PR_GetError();
+    if (status >= 0) status = -1;
+  }
   return status;
 }
 
@@ -409,11 +409,11 @@ MimeMultCMS_sig_hash (char *buf, PRInt32 size, void *crypto_closure)
 
   rv = data->sig_decoder_context->Update(buf, size);
   if (NS_FAILED(rv)) {
-	  if (!data->verify_error)
-		data->verify_error = PR_GetError();
-	  if (data->verify_error >= 0)
-		data->verify_error = -1;
-	}
+    if (!data->verify_error)
+    data->verify_error = PR_GetError();
+    if (data->verify_error >= 0)
+    data->verify_error = -1;
+  }
 
   return 0;
 }
@@ -429,15 +429,15 @@ MimeMultCMS_sig_eof (void *crypto_closure, PRBool abort_p)
 
   /* Hand an EOF to the crypto library.
 
-	 We save away the value returned and will use it later to emit a
-	 blurb about whether the signature validation was cool.
+   We save away the value returned and will use it later to emit a
+   blurb about whether the signature validation was cool.
    */
 
   if (data->sig_decoder_context) {
-	  data->sig_decoder_context->Finish(getter_AddRefs(data->content_info));
+    data->sig_decoder_context->Finish(getter_AddRefs(data->content_info));
 
     // Release our reference to nsICMSDecoder //
-	  data->sig_decoder_context = 0;
+    data->sig_decoder_context = 0;
 
     if (!data->content_info && !data->verify_error) {
       data->verify_error = PR_GetError();
@@ -482,11 +482,11 @@ MimeMultCMS_generate (void *crypto_closure)
   }
   else
   if (data->content_info)
-	{
-	  rv = data->content_info->VerifyDetachedSignature(data->item_data, data->item_len);
+  {
+    rv = data->content_info->VerifyDetachedSignature(data->item_data, data->item_len);
     data->content_info->GetSignerCert(getter_AddRefs(signerCert));
 
-	  if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {
       if (NS_ERROR_MODULE_SECURITY == NS_ERROR_GET_MODULE(rv)) {
         signature_status = NS_ERROR_GET_CODE(rv);
       }
@@ -498,12 +498,12 @@ MimeMultCMS_generate (void *crypto_closure)
         data->verify_error = -1;
       }
     } else {
-		  PRBool signing_cert_without_email_address;
+      PRBool signing_cert_without_email_address;
 
-		  good_p = MimeCMSHeadersAndCertsMatch(data->self,
-												 data->content_info,
-												 &signing_cert_without_email_address,
-												 &data->sender_addr);
+      good_p = MimeCMSHeadersAndCertsMatch(data->self,
+                         data->content_info,
+                         &signing_cert_without_email_address,
+                         &data->sender_addr);
       if (!good_p) {
         if (signing_cert_without_email_address) {
           signature_status = nsICMSMessageErrors::VERIFY_CERT_WITHOUT_ADDRESS;
@@ -513,7 +513,7 @@ MimeMultCMS_generate (void *crypto_closure)
         }
         if (!data->verify_error) {
           data->verify_error = -1;
-          // XXX Fix this		data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX //
+          // XXX Fix this    data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX //
         }
       }
       else 
@@ -523,28 +523,28 @@ MimeMultCMS_generate (void *crypto_closure)
     }
 
 #if 0 // XXX Fix this. What do we do here? //
-	  if (SEC_CMSContainsCertsOrCrls(data->content_info))
+    if (SEC_CMSContainsCertsOrCrls(data->content_info))
     {
-		  /* #### call libsec telling it to import the certs */
+      /* #### call libsec telling it to import the certs */
     }
 #endif
 
-	  /* Don't free these yet -- keep them around for the lifetime of the
-		 MIME object, so that we can get at the security info of sub-parts
-		 of the currently-displayed message. */
+    /* Don't free these yet -- keep them around for the lifetime of the
+     MIME object, so that we can get at the security info of sub-parts
+     of the currently-displayed message. */
 #if 0
-	  SEC_CMSDestroyContentInfo(data->content_info);
-	  data->content_info = 0;
+    SEC_CMSDestroyContentInfo(data->content_info);
+    data->content_info = 0;
 #endif /* 0 */
-	}
+  }
   else
-	{
-	  /* No content_info at all -- since we're inside a multipart/signed,
-		 that means that we've either gotten a message that was truncated
-		 before the signature part, or we ran out of memory, or something
-		 awful has happened.  Anyway, it sure ain't good_p.
-	   */
-	}
+  {
+    /* No content_info at all -- since we're inside a multipart/signed,
+     that means that we've either gotten a message that was truncated
+     before the signature part, or we ran out of memory, or something
+     awful has happened.  Anyway, it sure ain't good_p.
+     */
+  }
 
   PRInt32 maxNestLevel = 0;
   if (data->smimeHeaderSink) {
@@ -567,14 +567,14 @@ MimeMultCMS_generate (void *crypto_closure)
     if (data->self)
     {
       if (unverified_p && data->self->options) {
-		    // XXX Fix this stamp_url = IMAP_CreateReloadAllPartsUrl(data->self->options->url); XXX //
+        // XXX Fix this stamp_url = IMAP_CreateReloadAllPartsUrl(data->self->options->url); XXX //
       } else {
         stamp_url = MimeCMS_MakeSAURL(data->self);
       }
     }
 
     result =
-	    MimeHeaders_make_crypto_stamp (encrypted_p, signed_p, good_p,
+      MimeHeaders_make_crypto_stamp (encrypted_p, signed_p, good_p,
         unverified_p,
         data->parent_holds_stamp_p,
         stamp_url);
