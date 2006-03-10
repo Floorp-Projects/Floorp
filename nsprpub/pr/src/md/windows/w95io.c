@@ -81,9 +81,7 @@ static const PRTime _pr_filetime_offset = 116444736000000000LL;
 static const PRTime _pr_filetime_offset = 116444736000000000i64;
 #endif
 
-#ifdef MOZ_UNICODE
 static void InitUnicodeSupport(void);
-#endif
 
 static PRBool IsPrevCharSlash(const char *str, const char *current);
 
@@ -124,9 +122,7 @@ _PR_MD_INIT_IO()
 
     _PR_NT_InitSids();
 
-#ifdef MOZ_UNICODE
     InitUnicodeSupport();
-#endif
 }
 
 PRStatus
@@ -1130,6 +1126,10 @@ static GetFullPathNameWFn getFullPathNameW = GetFullPathNameW;
 typedef UINT (WINAPI *GetDriveTypeWFn) (LPCWSTR);
 static GetDriveTypeWFn getDriveTypeW = GetDriveTypeW;
 
+#endif /* MOZ_UNICODE */
+
+PRBool _pr_useUnicode = PR_FALSE;
+
 static void InitUnicodeSupport(void)
 {
     /*
@@ -1137,7 +1137,24 @@ static void InitUnicodeSupport(void)
      * ERROR_CALL_NOT_IMPLEMENTED error.  We plan to emulate the
      * MSLU W functions on Win9x in the future.
      */
+
+    /* Find out if we are running on a Unicode enabled version of Windows */
+    OSVERSIONINFOA osvi = {0};
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    if (GetVersionExA(&osvi)) {
+        _pr_useUnicode = (osvi.dwPlatformId >= VER_PLATFORM_WIN32_NT);
+    } else {
+        _pr_useUnicode = PR_FALSE;
+    }
+#ifdef DEBUG
+    /* In debug builds, allow explicit use of ANSI methods for testing. */
+    if (getenv("WINAPI_USE_ANSI"))
+        _pr_useUnicode = PR_FALSE;
+#endif
 }
+
+#ifdef MOZ_UNICODE
 
 /* ================ UTF16 Interfaces ================================ */
 void FlipSlashesW(PRUnichar *cp, size_t len)

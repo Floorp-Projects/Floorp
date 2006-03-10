@@ -118,15 +118,16 @@ NSPR_API(PRLibrary*) PR_LoadLibrary(const char *name);
 ** in a library, if code fragments are supported by the OS.
 ** A code fragment can be specified by name or by an integer index.
 **
-** Right now PRLibSpec supports three types of library specification:
-** a pathname, a Mac code fragment by name, and a Mac code fragment
-** by index.
+** Right now PRLibSpec supports four types of library specification:
+** a pathname in the native charset, a Mac code fragment by name,
+** a Mac code fragment by index, and a UTF-16 pathname.
 */
 
 typedef enum PRLibSpecType {
     PR_LibSpec_Pathname,
     PR_LibSpec_MacNamedFragment,   /* obsolete (for Mac OS Classic) */
-    PR_LibSpec_MacIndexedFragment  /* obsolete (for Mac OS Classic) */
+    PR_LibSpec_MacIndexedFragment, /* obsolete (for Mac OS Classic) */
+    PR_LibSpec_PathnameU           /* supported only on Win32 */ 
 } PRLibSpecType;
 
 struct FSSpec; /* Mac OS FSSpec */
@@ -148,6 +149,9 @@ typedef struct PRLibSpec {
             const struct FSSpec *fsspec;
             PRUint32 index;
         } mac_indexed_fragment;    /* obsolete (for Mac OS Classic) */
+
+        /* if type is PR_LibSpec_PathnameU */
+        const PRUnichar *pathname_u; /* supported only on Win32 */
     } value;
 } PRLibSpec;
 
@@ -161,6 +165,7 @@ typedef struct PRLibSpec {
 #define PR_LD_NOW    0x2  /* equivalent to RTLD_NOW on Unix */
 #define PR_LD_GLOBAL 0x4  /* equivalent to RTLD_GLOBAL on Unix */
 #define PR_LD_LOCAL  0x8  /* equivalent to RTLD_LOCAL on Unix */
+/*                 0x400     reserved for NSPR internal use */
 
 /*
 ** Load the specified library, in the manner specified by 'flags'.

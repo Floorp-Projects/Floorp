@@ -157,6 +157,10 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
 #define NEED_LEADING_UNDERSCORE
 #endif
 
+#ifdef WIN32
+#define PR_LD_PATHW  0x400  /* for PR_LibSpec_PathnameU */
+#endif
+
 /************************************************************************/
 
 struct PRLibrary {
@@ -204,6 +208,16 @@ static char* _pr_currentLibPath = NULL;
 
 static PRLibrary *pr_LoadLibraryByPathname(const char *name, PRIntn flags);
 
+#ifdef WIN95
+typedef HMODULE (WINAPI *LoadLibraryWFn)(LPCWSTR);
+static HMODULE WINAPI EmulateLoadLibraryW(LPCWSTR);
+static LoadLibraryWFn loadLibraryW = LoadLibraryW;
+#endif
+
+#ifdef WIN32
+static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len);
+#endif
+
 /************************************************************************/
 
 #if !defined(USE_DLFCN) && !defined(HAVE_STRERROR)
@@ -242,6 +256,12 @@ void _PR_InitLinker(void)
     PRLibrary *lm = NULL;
 #if defined(XP_UNIX)
     void *h;
+#endif
+
+#ifdef WIN95
+    if (!_pr_useUnicode) {
+        loadLibraryW = EmulateLoadLibraryW;
+    }
 #endif
 
     if (!pr_linker_lock) {
@@ -556,6 +576,16 @@ PR_LoadLibraryWithFlags(PRLibSpec libSpec, PRIntn flags)
     switch (libSpec.type) {
         case PR_LibSpec_Pathname:
             return pr_LoadLibraryByPathname(libSpec.value.pathname, flags);
+#ifdef WIN32
+        case PR_LibSpec_PathnameU:
+            /*
+             * cast to |char *| and set PR_LD_PATHW flag so that
+             * it can be cast back to PRUnichar* in the callee.
+             */
+            return pr_LoadLibraryByPathname((const char*) 
+                                            libSpec.value.pathname_u, 
+                                            flags | PR_LD_PATHW);
+#endif
         default:
             PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
             return NULL;
@@ -752,6 +782,25 @@ pr_LoadViaDyld(const char *name, PRLibrary *lm)
 
 #endif /* XP_MACOSX */
 
+#ifdef WIN95
+static HMODULE WINAPI
+EmulateLoadLibraryW(LPCWSTR lpLibFileName)
+{
+    HMODULE h;
+    char nameA[MAX_PATH];
+
+    if (!WideCharToMultiByte(CP_ACP, 0, lpLibFileName, -1,
+                             nameA, sizeof nameA, NULL, NULL)) {
+        return NULL;
+    }
+    /* Perhaps it's better to add a check for characters 
+     * not representable in CP_ACP.
+     */
+    h = LoadLibraryA(nameA);
+    return h;
+}
+#endif /* WIN95 */
+
 /*
 ** Dynamically load a library. Only load libraries once, so scan the load
 ** map first.
@@ -762,13 +811,48 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     PRLibrary *lm;
     PRLibrary* result;
     PRInt32 oserr;
+#ifdef WIN32
+    char utf8name_stack[MAX_PATH];
+    PRUnichar wname_stack[MAX_PATH];
+    char *utf8name = utf8name_stack;
+    PRUnichar *wname = wname_stack;
+    int len;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
     /* See if library is already loaded */
     PR_EnterMonitor(pr_linker_lock);
 
+#ifdef WIN32
+    if (flags & PR_LD_PATHW) {
+        /* cast back what's cast to |char *| for the argument passing. */
+        wname = (LPWSTR) name;
+    } else {
+        int wlen = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
+        if (wlen > MAX_PATH)
+            wname = PR_Malloc(wlen);
+        if (wname == NULL ||
+            !MultiByteToWideChar(CP_ACP, 0,  name, -1, wname, wlen)) {
+            oserr = _MD_ERRNO();
+            goto unlock;
+        }
+    }
+    len = pr_ConvertUTF16toUTF8(wname, NULL, 0);
+    if (len > MAX_PATH)
+        utf8name = PR_Malloc(len);
+    if (utf8name == NULL ||
+        !pr_ConvertUTF16toUTF8(wname, utf8name, len)) {
+        oserr = _MD_ERRNO();
+        goto unlock;
+    }
+    /* the list of loaded library names are always kept in UTF-8 
+     * on Win32 platforms */
+    result = pr_UnlockedFindLibrary(utf8name);
+#else
     result = pr_UnlockedFindLibrary(name);
+#endif
+
     if (result != NULL) goto unlock;
 
     lm = PR_NEWZAP(PRLibrary);
@@ -801,13 +885,31 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     {
     HINSTANCE h;
 
+#ifdef WIN32
+#ifdef WIN95
+    if (flags & PR_LD_PATHW)
+        h = loadLibraryW(wname);
+    else
+        h = LoadLibraryA(name);
+#else
+    if (flags & PR_LD_PATHW)
+        h = LoadLibraryW(wname);
+    else
+        h = LoadLibraryA(name);
+#endif /* WIN95 */
+#else 
     h = LoadLibrary(name);
+#endif
     if (h < (HINSTANCE)HINSTANCE_ERROR) {
         oserr = _MD_ERRNO();
         PR_DELETE(lm);
         goto unlock;
     }
+#ifdef WIN32
+    lm->name = strdup(utf8name);
+#else
     lm->name = strdup(name);
+#endif
     lm->dlh = h;
     lm->next = pr_loadmap;
     pr_loadmap = lm;
@@ -1008,9 +1110,131 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         PR_SetError(PR_LOAD_LIBRARY_ERROR, oserr);
         DLLErrorInternal(oserr);  /* sets error text */
     }
+#ifdef WIN32
+    if (utf8name && utf8name != utf8name_stack) 
+        PR_Free(utf8name);
+    if (!(flags & PR_LD_PATHW) && wname && wname != wname_stack)
+        PR_Free(wname);
+#endif
     PR_ExitMonitor(pr_linker_lock);
     return result;
 }
+
+#ifdef WIN32
+#ifdef WIN95
+/*
+ * CP_UTF8 is not supported by WideCharToMultiByte on Windows 95 so that 
+ * we have to emulate it
+ */
+static PRStatus 
+pr_ConvertSingleCharToUTF8(PRUint32 usv, PRUint16 offset, int bufLen,
+                           int *utf8Len, char * *buf)
+{
+    /* XXX No error checking. Add it for debug build */
+    char* p = *buf;
+    /*if (!bufLen || !*buf) { */
+    if (!bufLen) {
+        *utf8Len += offset;
+        return PR_SUCCESS;
+    }
+
+    if (*utf8Len + offset >= bufLen)
+        return PR_FAILURE;
+
+    *utf8Len += offset;
+    if (offset == 1) {
+        *p++ = (char) usv;
+    } else if (offset == 2) {
+        *p++ = (char)0xc0 | (usv >> 6);
+        *p++ = (char)0x80 | (usv & 0x003f);
+    } else if (offset == 3) {
+        *p++ = (char)0xe0 | (usv >> 12);
+        *p++ = (char)0x80 | ((usv >> 6) & 0x003f);
+        *p++ = (char)0x80 | (usv & 0x003f);
+    } else { /* offset = 4 */
+        *p++ = (char)0xf0 | (usv >> 18);
+        *p++ = (char)0x80 | ((usv >> 12) & 0x003f);
+        *p++ = (char)0x80 | ((usv >> 6) & 0x003f);
+        *p++ = (char)0x80 | (usv & 0x003f);
+    }
+
+    *buf = p;
+    return PR_SUCCESS;
+}
+
+static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len)
+{
+    LPCWSTR pw = wname;
+    LPSTR p = name;
+    int utf8Len = 0;
+    PRBool highSurrogate = PR_FALSE;
+
+    /* Windows NT4/2k/XP supports CP_UTF8. So do Win 98/ME, but
+     * we don't bother to optimize for them. */
+    if (_pr_useUnicode) 
+        return WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, 
+                                   NULL, NULL);
+
+    if (!wname || len < 0 || (len > 0 && !name)) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    while (*pw) {
+        PRStatus status = PR_SUCCESS;
+        if (highSurrogate) {
+            if (*pw >= (PRUnichar) 0xDC00 && *pw < (PRUnichar) 0xE000) {
+                /* found a matching low surrogate */
+                /* convert a surrogate pair to UCS4 */
+                PRUint32 usv = ((*(pw-1) - (PRUnichar)0xD800) << 10) + 
+                               (*pw - (PRUnichar)0xDC00) + (PRUint32)0x10000;
+                if (pr_ConvertSingleCharToUTF8(usv, 4, len, &utf8Len, &p) ==
+                    PR_FAILURE)
+                    return 0;
+                highSurrogate = PR_FALSE;
+                ++pw;
+                continue;
+            } else {
+                /*
+                 * silently ignore a lone high surrogate
+                 * as is done by WideCharToMultiByte by default
+                 */
+                highSurrogate = PR_FALSE;
+            }
+        }
+        if (*pw <= 0x7f) 
+            status = pr_ConvertSingleCharToUTF8(*pw, 1, len, &utf8Len, &p);
+        else if (*pw <= 0x07ff)
+            status = pr_ConvertSingleCharToUTF8(*pw, 2, len, &utf8Len, &p);
+        else if (*pw < (PRUnichar) 0xD800 || *pw >= (PRUnichar) 0xE000)
+            status = pr_ConvertSingleCharToUTF8(*pw, 3, len, &utf8Len, &p);
+        else if (*pw < (PRUnichar) 0xDC00)
+            highSurrogate = PR_TRUE;
+        /* else */
+        /* silently ignore a lone low surrogate as is done by 
+         * WideCharToMultiByte by default */
+
+        if (status == PR_FAILURE) {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            return 0;
+        }
+        ++pw;
+    }
+
+    /* if we're concerned with a lone high surrogate,
+     * we have to take care of it here, but we just drop it 
+     */
+    if (len > 0)
+        *p = '\0';
+    return utf8Len + 1;
+}
+#else
+static int pr_ConvertUTF16toUTF8(LPCWSTR wname, LPSTR name, int len)
+{
+    return WideCharToMultiByte(CP_UTF8, 0, wname, -1, name, len, NULL, NULL);
+}
+#endif /* WIN95 */
+#endif /* WIN32 */
 
 /*
 ** Unload a shared library which was loaded via PR_LoadLibrary
