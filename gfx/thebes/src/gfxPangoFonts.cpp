@@ -76,6 +76,8 @@
 
 #endif
 
+#define FLOAT_PANGO_SCALE ((gfxFloat)PANGO_SCALE)
+
 THEBES_IMPL_REFCOUNTING(gfxPangoFont)
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
@@ -364,11 +366,11 @@ gfxPangoFont::GetSize(const char *aCharString, PRUint32 aLength, gfxSize& inkSiz
     PangoRectangle ink_rect, log_rect;
     pango_glyph_string_extents (glstr, item->analysis.font, &ink_rect, &log_rect);
 
-    inkSize.width = ink_rect.width / PANGO_SCALE;
-    inkSize.height = ink_rect.height / PANGO_SCALE;
+    inkSize.width = ink_rect.width / FLOAT_PANGO_SCALE;
+    inkSize.height = ink_rect.height / FLOAT_PANGO_SCALE;
 
-    logSize.width = log_rect.width / PANGO_SCALE;
-    logSize.height = log_rect.height / PANGO_SCALE;
+    logSize.width = log_rect.width / FLOAT_PANGO_SCALE;
+    logSize.height = log_rect.height / FLOAT_PANGO_SCALE;
 
     pango_glyph_string_free(glstr);
     pango_item_free(item);
@@ -492,8 +494,8 @@ gfxPangoFont::GetMetrics()
     // ??
     mMetrics.emHeight = mFontStyle->size;
 
-    mMetrics.maxAscent = pango_font_metrics_get_ascent(pfm) / PANGO_SCALE;
-    mMetrics.maxDescent = pango_font_metrics_get_descent(pfm) / PANGO_SCALE;
+    mMetrics.maxAscent = pango_font_metrics_get_ascent(pfm) / FLOAT_PANGO_SCALE;
+    mMetrics.maxDescent = pango_font_metrics_get_descent(pfm) / FLOAT_PANGO_SCALE;
 
     gfxFloat lineHeight = mMetrics.maxAscent + mMetrics.maxDescent;
     mMetrics.height = lineHeight; // XXX should go away
@@ -509,7 +511,7 @@ gfxPangoFont::GetMetrics()
     mMetrics.emAscent = mMetrics.maxAscent * mMetrics.emHeight / lineHeight;
     mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
-    mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / PANGO_SCALE; // XXX
+    mMetrics.maxAdvance = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE; // XXX
 
     gfxSize isz, lsz;
     GetSize(" ", 1, isz, lsz);
@@ -517,13 +519,13 @@ gfxPangoFont::GetMetrics()
     GetSize("x", 1, isz, lsz);
     mMetrics.xHeight = isz.height;
 
-    mMetrics.aveCharWidth = pango_font_metrics_get_approximate_char_width(pfm) / PANGO_SCALE;
+    mMetrics.aveCharWidth = pango_font_metrics_get_approximate_char_width(pfm) / FLOAT_PANGO_SCALE;
 
-    mMetrics.underlineOffset = pango_font_metrics_get_underline_position(pfm) / PANGO_SCALE;
-    mMetrics.underlineSize = pango_font_metrics_get_underline_thickness(pfm) / PANGO_SCALE;
+    mMetrics.underlineOffset = pango_font_metrics_get_underline_position(pfm) / FLOAT_PANGO_SCALE;
+    mMetrics.underlineSize = pango_font_metrics_get_underline_thickness(pfm) / FLOAT_PANGO_SCALE;
 
-    mMetrics.strikeoutOffset = pango_font_metrics_get_strikethrough_position(pfm) / PANGO_SCALE;
-    mMetrics.strikeoutSize = pango_font_metrics_get_strikethrough_thickness(pfm) / PANGO_SCALE;
+    mMetrics.strikeoutOffset = pango_font_metrics_get_strikethrough_position(pfm) / FLOAT_PANGO_SCALE;
+    mMetrics.strikeoutSize = pango_font_metrics_get_strikethrough_thickness(pfm) / FLOAT_PANGO_SCALE;
 
     // these are specified by the so-called OS2 SFNT info, but
     // pango doesn't expose this to us.  This really sucks,
@@ -590,8 +592,8 @@ DrawCairoGlyphs(gfxContext* ctx,
             num_invalid_glyphs++;
         } else {
             glyphs[i-num_invalid_glyphs].index = info->glyph;
-            glyphs[i-num_invalid_glyphs].x = pt.x + (offset + info->geometry.x_offset)/PANGO_SCALE;
-            glyphs[i-num_invalid_glyphs].y = pt.y + (info->geometry.y_offset)/PANGO_SCALE;
+            glyphs[i-num_invalid_glyphs].x = pt.x + (offset + info->geometry.x_offset)/FLOAT_PANGO_SCALE;
+            glyphs[i-num_invalid_glyphs].y = pt.y + (info->geometry.y_offset)/FLOAT_PANGO_SCALE;
         }
 
         offset += info->geometry.width;
@@ -674,7 +676,7 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
         aContext->Save();
         aContext->SetColor(gfxRGBA(1.0, 0.0, 0.0, 0.5));
         aContext->NewPath();
-        aContext->Rectangle(gfxRect(0.0, -mHeight/PANGO_SCALE, mWidth/PANGO_SCALE, mHeight/PANGO_SCALE));
+        aContext->Rectangle(gfxRect(0.0, -mHeight/FLOAT_PANGO_SCALE, mWidth/FLOAT_PANGO_SCALE, mHeight/FLOAT_PANGO_SCALE));
         aContext->Fill();
         aContext->Restore();
     }
@@ -691,7 +693,7 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
         PangoLayoutRun *layoutRun = (PangoLayoutRun *)tmpList->data;
 
         offset += DrawCairoGlyphs (aContext, layoutRun->item->analysis.font,
-                                   gfxPoint(offset / PANGO_SCALE, 0.0),
+                                   gfxPoint(offset / FLOAT_PANGO_SCALE, 0.0),
                                    layoutRun->glyphs);
     }
 #else
@@ -709,7 +711,7 @@ gfxPangoTextRun::MeasureString (gfxContext *aContext)
         pango_layout_get_size (mPangoLayout, &mWidth, &mHeight);
     }
 
-    return mWidth/PANGO_SCALE;
+    return mWidth/FLOAT_PANGO_SCALE;
 }
 
 
