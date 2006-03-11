@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* -*- Mode: C; tab-width: 8 -*-
- * Copyright © 1996-1999 Netscape Communications Corporation, All Rights Reserved.
+ * Copyright (C) 1996-1999 Netscape Communications Corporation, All Rights Reserved.
  */
 #ifndef jscompat_h___
 #define jscompat_h___
