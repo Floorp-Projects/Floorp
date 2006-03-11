@@ -86,6 +86,16 @@
 #define JS_DLL_CALLBACK
 #define JS_STATIC_DLL_CALLBACK(__x) static __x
 
+#elif defined(XP_OS2) && defined(__declspec)
+
+#define JS_EXTERN_API(__type) extern __declspec(dllexport) __type
+#define JS_EXPORT_API(__type) __declspec(dllexport) __type
+#define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
+#define JS_EXPORT_DATA(__type) __declspec(dllexport) __type
+
+#define JS_DLL_CALLBACK
+#define JS_STATIC_DLL_CALLBACK(__x) static __x
+
 #elif defined(WIN16)
 
 #ifdef _WINDLL
@@ -131,11 +141,15 @@
 #  else
 #    define JS_IMPORT_API(__x)      __declspec(dllimport) __x
 #  endif
+#elif defined(XP_OS2) && defined(__declspec)
+#    define JS_IMPORT_API(__x)      __declspec(dllimport) __x
 #else
 #    define JS_IMPORT_API(__x)      JS_EXPORT_API (__x)
 #endif
 
 #if defined(_WIN32) && !defined(__MWERKS__)
+#    define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
+#elif defined(XP_OS2) && defined(__declspec)
 #    define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
 #else
 #    define JS_IMPORT_DATA(__x)     JS_EXPORT_DATA (__x)
