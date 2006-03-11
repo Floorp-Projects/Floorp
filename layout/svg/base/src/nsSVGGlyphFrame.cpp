@@ -97,7 +97,8 @@ public:
        nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD  CharacterDataChanged(nsIContent*     aChild,
+  NS_IMETHOD  CharacterDataChanged(nsPresContext*  aPresContext,
+                                   nsIContent*     aChild,
                                    PRBool          aAppend);
 
   NS_IMETHOD  DidSetStyleContext();
@@ -304,7 +305,8 @@ nsSVGGlyphFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::CharacterDataChanged(nsIContent*     aChild,
+nsSVGGlyphFrame::CharacterDataChanged(nsPresContext*  aPresContext,
+                                      nsIContent*     aChild,
                                       PRBool          aAppend)
 {
 	return Update(nsISVGGeometrySource::UPDATEMASK_ALL);
@@ -353,7 +355,7 @@ nsSVGGlyphFrame::DidSetStyleContext()
     mStrokePattern = nsnull;
   }
 
-  return CharacterDataChanged(nsnull, PR_FALSE);
+  return CharacterDataChanged(nsnull, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP
