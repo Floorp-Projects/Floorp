@@ -502,7 +502,13 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       imgCache::Put(aURI, request, getter_AddRefs(entry));
     }
 
-    request->Init(newChannel, entry, cacheId, aCX);
+    // Create a loadgroup for this new channel.  This way if the channel
+    // is redirected, we'll have a way to cancel the resulting channel.
+    nsCOMPtr<nsILoadGroup> loadGroup =
+        do_CreateInstance(NS_LOADGROUP_CONTRACTID);
+    newChannel->SetLoadGroup(loadGroup);
+
+    request->Init(aURI, loadGroup, entry, cacheId, aCX);
 
     // create the proxy listener
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
@@ -648,7 +654,12 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     imgCache::Put(uri, request, getter_AddRefs(entry));
 
-    request->Init(channel, entry, activeQ.get(), aCX);
+    // XXX(darin):  I'm not sure that using the original URI is correct here.
+    // Perhaps we should use the same URI that indexes the cache?  Or, perhaps
+    // the cache should use the original URI?  See bug 89419.
+    nsCOMPtr<nsIURI> originalURI;
+    channel->GetOriginalURI(getter_AddRefs(originalURI));
+    request->Init(originalURI, channel, entry, activeQ.get(), aCX);
 
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {
@@ -981,7 +992,12 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 
   imgCache::Put(uri, request, getter_AddRefs(entry));
 
-  request->Init(channel, entry, activeQ.get(), mContext);
+  // XXX(darin):  I'm not sure that using the original URI is correct here.
+  // Perhaps we should use the same URI that indexes the cache?  Or, perhaps
+  // the cache should use the original URI?  See bug 89419.
+  nsCOMPtr<nsIURI> originalURI;
+  channel->GetOriginalURI(getter_AddRefs(originalURI));
+  request->Init(originalURI, channel, entry, activeQ.get(), mContext);
 
   ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
   if (!pl) {

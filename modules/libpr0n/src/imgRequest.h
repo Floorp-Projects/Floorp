@@ -47,7 +47,7 @@
 #include "imgIDecoderObserver.h"
 
 #include "nsICacheEntryDescriptor.h"
-#include "nsIChannel.h"
+#include "nsIRequest.h"
 #include "nsIProperties.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
@@ -80,7 +80,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  nsresult Init(nsIChannel *aChannel,
+  nsresult Init(nsIURI *aURI,
+                nsIRequest *aRequest,
                 nsICacheEntryDescriptor *aCacheEntry,
                 void *aCacheId,
                 void *aLoadId);
@@ -138,7 +139,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
 
 private:
-  nsCOMPtr<nsIChannel> mChannel;
+  nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIDecoder> mDecoder;

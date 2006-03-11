@@ -91,21 +91,24 @@ imgRequest::~imgRequest()
   /* destructor code */
 }
 
-nsresult imgRequest::Init(nsIChannel *aChannel,
+nsresult imgRequest::Init(nsIURI *aURI,
+                          nsIRequest *aRequest,
                           nsICacheEntryDescriptor *aCacheEntry,
                           void *aCacheId,
                           void *aLoadId)
 {
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
-  NS_ASSERTION(!mImage, "imgRequest::Init -- Multiple calls to init");
-  NS_ASSERTION(aChannel, "imgRequest::Init -- No channel");
+  NS_ASSERTION(!mImage, "Multiple calls to init");
+  NS_ASSERTION(aURI, "No uri");
+  NS_ASSERTION(aRequest, "No request");
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
   if (!mProperties)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mChannel = aChannel;
+  mURI = aURI;
+  mRequest = aRequest;
 
   /* set our loading flag to true here.
      Setting it here lets checks to see if the load is in progress
@@ -172,7 +175,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
        This way, if a proxy is destroyed without calling cancel on it, it won't leak
        and won't leave a bad pointer in mObservers.
      */
-    if (mChannel && mLoading && NS_FAILED(aStatus)) {
+    if (mRequest && mLoading && NS_FAILED(aStatus)) {
       LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
 
       mImageStatus |= imgIRequest::STATUS_LOAD_PARTIAL;
@@ -285,16 +288,13 @@ void imgRequest::Cancel(nsresult aStatus)
 
   RemoveFromCache();
 
-  if (mChannel && mLoading)
-    mChannel->Cancel(aStatus);
+  if (mRequest && mLoading)
+    mRequest->Cancel(aStatus);
 }
 
 nsresult imgRequest::GetURI(nsIURI **aURI)
 {
   LOG_FUNC(gImgLog, "imgRequest::GetURI");
-
-  if (mChannel)
-    return mChannel->GetOriginalURI(aURI);
 
   if (mURI) {
     *aURI = mURI;
@@ -334,7 +334,7 @@ PRBool imgRequest::HaveProxyWithObserver(imgRequestProxy* aProxyToIgnore) const
 PRInt32 imgRequest::Priority() const
 {
   PRInt32 priority = nsISupportsPriority::PRIORITY_NORMAL;
-  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
   if (p)
     p->GetPriority(&priority);
   return priority;
@@ -352,7 +352,7 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, PRInt32 delta)
   if (mObservers[0] != proxy)
     return;
 
-  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
   if (p)
     p->AdjustPriority(delta);
 }
@@ -610,21 +610,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
 
-  /* if mChannel isn't set here, use aRequest.
-     Having mChannel set is important for Canceling the load, and since we set
-     mChannel to null in OnStopRequest.  Since with multipart/x-mixed-replace, you
-     can get multiple OnStartRequests, we need to reinstance mChannel so that when/if
-     Cancel() gets called, we have a channel to cancel and we don't leave the channel
-     open forever.
-   */
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
-  if (!mChannel) {
-    if (mpchan)
-      mpchan->GetBaseChannel(getter_AddRefs(mChannel));
-    else
-      mChannel = do_QueryInterface(aRequest);
-  }
-
   if (mpchan)
       mIsMultiPartChannel = PR_TRUE;
 
@@ -722,10 +708,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* set our processing flag to false */
   mProcessing = PR_FALSE;
 
-  if (mChannel) {
-    mChannel->GetOriginalURI(getter_AddRefs(mURI));
-    mChannel = nsnull; // we no longer need the channel
-  }
+  mRequest = nsnull;  // we no longer need the request
 
   // If mImage is still null, we didn't properly load the image.
   if (NS_FAILED(status) || !mImage) {
