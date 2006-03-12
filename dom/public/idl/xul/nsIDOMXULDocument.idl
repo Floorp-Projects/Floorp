@@ -102,5 +102,5 @@ interface nsIDOMXULDocument : nsISupports
   /**
    * Like trustedGetPopupNode, but gets the tooltip node instead.
    */
-  [noscropt] nsIDOMNode     trustedGetTooltipNode();
+  [noscript] nsIDOMNode     trustedGetTooltipNode();
 };
