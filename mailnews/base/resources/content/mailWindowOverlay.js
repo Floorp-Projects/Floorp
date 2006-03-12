@@ -65,8 +65,8 @@ const kAllowRemoteContent = 2;
 const kIsAPhishMessage = 0;
 const kNotAPhishMessage = 1;
 
-const kMsgNotificationJunkBar = 1;
-const kMsgNotificationPhishingBar = 2;
+const kMsgNotificationPhishingBar = 1;
+const kMsgNotificationJunkBar = 2;
 const kMsgNotificationRemoteImages = 3;
 
 var gMessengerBundle;
@@ -2092,8 +2092,8 @@ var gMessageNotificationBar =
   // flag bit values for mBarStatus, indexed by kMsgNotificationXXX
   mBarFlagValues: [
                     0, // for no msgNotificationBar
-                    1, // 1 << (kMsgNotificationJunkBar - 1)
-                    2, // 1 << (kMsgNotificationPhishingBar - 1)
+                    1, // 1 << (kMsgNotificationPhishingBar - 1)
+                    2, // 1 << (kMsgNotificationJunkBar - 1)
                     4  // 1 << (kMsgNotificationRemoteImages - 1)
                   ],
 
@@ -2102,7 +2102,6 @@ var gMessageNotificationBar =
   setJunkMsg: function(aMsgHdr)
   {
     var isJunk = false;
-    var isCurrentlyNotJunk = this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar;
   
     if (aMsgHdr) 
     {
@@ -2147,7 +2146,7 @@ var gMessageNotificationBar =
     var status = aSet ? this.mBarStatus | chunk : this.mBarStatus & ~chunk;
     this.mBarStatus = status;
 
-    // the junk message takes precedence over the phishing message
+    // the phishing message takes precedence over the junk message
     // which takes precedence over the remote content message
     this.mMsgNotificationBar.selectedIndex = this.mBarFlagValues.indexOf(status & -status);
 

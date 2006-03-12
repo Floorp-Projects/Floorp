@@ -23,6 +23,7 @@
 
  Contributor(s):
   Neil Rashbrook <neil@parkwaycc.co.uk>
+  Ian Neal <iann_bugzilla@arlen.demon.co.uk>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1943,19 +1944,19 @@
 <deck id="msgNotificationBar" selectedIndex="0" collapsed="true">
   <hbox id="msgNotificationNoStatus"/>
 
+  <hbox id="phishingBar" class="msgNotificationBar" align="center">
+    <image id="phishingBarImage"/>
+    <description flex="1" class="msgNotificationBarText">&phishingBarMessage.label;</description>
+    <spacer flex="1"/>
+    <button label="&removePhishingBarButton.label;" oncommand="MsgIsNotAScam();"/>
+  </hbox>
+
   <hbox id="junkBar" class="msgNotificationBar" align="center">
     <image id="junkBarImage"/>
     <description flex="1" class="msgNotificationBarText">&junkBarMessage.label;</description>
     <spacer flex="1"/>
     <button label="&junkInfoButton.label;" oncommand="MsgJunkMailInfo(false)"/>
     <button label="&junkBarButton.label;" oncommand="JunkSelectedMessages(false);"/>
-  </hbox>
-
-  <hbox id="phishingBar" class="msgNotificationBar" align="center">
-    <image id="phishingBarImage"/>
-    <description flex="1" class="msgNotificationBarText">&phishingBarMessage.label;</description>
-    <spacer flex="1"/>
-    <button label="&removePhishingBarButton.label;" oncommand="MsgIsNotAScam();"/>
   </hbox>
 
   <hbox id="remoteContentBar" class="msgNotificationBar" align="center">
