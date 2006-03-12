@@ -6101,6 +6101,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 
     nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
 
+    // FIXME. If the event was reused, we need to clear the old target,
+    // bug 329430
+    aEvent->target = nsnull;
+
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
