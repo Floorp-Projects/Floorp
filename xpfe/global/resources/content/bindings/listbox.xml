@@ -99,7 +99,7 @@
         <![CDATA[
           if (!this._suppressOnSelect && this.getAttribute("suppressonselect") != "true") {
             var event = document.createEvent("Events");
-            event.initEvent("select", false, true);
+            event.initEvent("select", true, true);
             this.dispatchEvent(event);
           }
         ]]>
@@ -819,7 +819,7 @@
           else
             this.removeAttribute('checked');
           var event = document.createEvent('Events');
-          event.initEvent('CheckboxStateChange', false, true);
+          event.initEvent('CheckboxStateChange', true, true);
           this.dispatchEvent(event);
           return val;
         ]]></setter>

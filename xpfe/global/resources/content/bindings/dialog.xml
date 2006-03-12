@@ -299,7 +299,7 @@
         <body>
         <![CDATA[
           var event = document.createEvent("Events");
-          event.initEvent("dialog"+aDlgType, false, true);
+          event.initEvent("dialog"+aDlgType, true, true);
           
           // handle dom event handlers
           var noCancel = this.dispatchEvent(event);

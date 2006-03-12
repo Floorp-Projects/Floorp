@@ -277,7 +277,7 @@
             
             // Fire an onselect event for the tabs element.
             var event = document.createEvent('Events');
-            event.initEvent('select', false, true);
+            event.initEvent('select', true, true);
             this.dispatchEvent(event);
           }
           return val;
@@ -468,7 +468,7 @@
           this.setAttribute("selectedIndex", val);
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
-            event.initEvent("select", false, true);
+            event.initEvent("select", true, true);
             this.dispatchEvent(event);
           }
           return val;
