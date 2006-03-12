@@ -101,8 +101,8 @@ public:
    */
   void ReorderFrames(nsPresContext*      aPresContext,
                      nsIRenderingContext* aRendContext,
-                     nsIFrame*            aFirstChild,
-                     nsIFrame*            aNextInFlow);
+                     nsIFrame*            aFirstFrameOnLine,
+                     PRInt32              aNumFramesOnLine);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -160,6 +160,51 @@ public:
                       nsBidiPositionResolve* aPosResolve = nsnull,
                       PRInt32              aPosResolveCount = 0);
 
+  /**
+   * Check if a line is reordered, i.e., if the child frames are not
+   * all laid out left-to-right.
+   * @param aFirstFrameOnLine : first frame of the line to be tested
+   * @param aNumFramesOnLine : number of frames on this line
+   * @param[out] aLeftMost : leftmost frame on this line
+   * @param[out] aRightMost : rightmost frame on this line
+   */
+  PRBool CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
+                        PRInt32    aNumFramesOnLine,
+                        nsIFrame** aLeftmost,
+                        nsIFrame** aRightmost);
+
+  /**
+   * Get the frame to the right of the given frame, on the same line.
+   * @param aFrame : We're looking for the frame to the right of this frame.
+   *                 If null, return the leftmost frame on the line.
+   * @param aFirstFrameOnLine : first frame of the line to be tested
+   * @param aNumFramesOnLine : number of frames on this line
+   */
+  nsIFrame* GetFrameToRightOf(const nsIFrame*  aFrame,
+                              nsIFrame*        aFirstFrameOnLine,
+                              PRInt32          aNumFramesOnLine);
+    
+  /**
+   * Get the frame to the left of the given frame, on the same line.
+   * @param aFrame : We're looking for the frame to the left of this frame.
+   *                 If null, return the rightmost frame on the line.
+   * @param aFirstFrameOnLine : first frame of the line to be tested
+   * @param aNumFramesOnLine : number of frames on this line
+   */
+  nsIFrame* GetFrameToLeftOf(const nsIFrame*  aFrame,
+                             nsIFrame*        aFirstFrameOnLine,
+                             PRInt32          aNumFramesOnLine);
+    
+  /**
+   * Get the bidi embedding level of the given (inline) frame.
+   */
+  static nsBidiLevel GetFrameEmbeddingLevel(nsIFrame* aFrame);
+
+  /**
+   * Get the bidi base level of the given (inline) frame.
+   */
+  static nsBidiLevel GetFrameBaseLevel(nsIFrame* aFrame);
+
 private:
   /**
    *  Create a string containing entire text content of this block.
@@ -177,13 +222,23 @@ private:
                             nsIFrame*       aCurrentFrame,
                             nsIFrame*       aNextInFlow,
                             PRBool          aAddMarkers = PR_FALSE);
+
+  /**
+   * Initialize the logically-ordered array of frames
+   * using the top-level frames of a single line
+   */
+  void InitLogicalArrayFromLine(nsIFrame* aFirstFrameOnLine,
+                                PRInt32   aNumFramesOnLine);
+
   /**
    * Reorder the frame array from logical to visual order
    * 
    * @param aReordered TRUE on return if the visual order is different from
    *                   the logical order
+   * @param aHasRTLFrames TRUE on return if at least one of the frames is RTL
+   *                      (and therefore might have reordered descendents)
    */
-  nsresult Reorder(PRBool& aReordered);
+  nsresult Reorder(PRBool& aReordered, PRBool& aHasRTLFrames);
   
   /**
    *  Adjust frame positions following their visual order

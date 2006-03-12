@@ -4476,12 +4476,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         nsBidiPresUtils* bidiUtils = aState.mPresContext->GetBidiUtils();
 
         if (bidiUtils && bidiUtils->IsSuccessful() ) {
-          nsIFrame* nextInFlow = (aLine.next() != end_lines())
-                                 ? aLine.next()->mFirstChild : nsnull;
-
           bidiUtils->ReorderFrames(aState.mPresContext,
                                    aState.mReflowState.rendContext,
-                                   aLine->mFirstChild, nextInFlow);
+                                   aLine->mFirstChild, aLine->GetChildCount());
         } // bidiUtils
       } // not visual mode
     } // bidi enabled

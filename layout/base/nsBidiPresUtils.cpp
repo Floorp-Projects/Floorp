@@ -572,28 +572,24 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
 }
 
 void
-nsBidiPresUtils::ReorderFrames(nsPresContext*      aPresContext,
+nsBidiPresUtils::ReorderFrames(nsPresContext*       aPresContext,
                                nsIRenderingContext* aRendContext,
-                               nsIFrame*            aFirstChild,
-                               nsIFrame*            aNextInFlow)
+                               nsIFrame*            aFirstFrameOnLine,
+                               PRInt32              aNumFramesOnLine)
 {
-  mLogicalFrames.Clear();
+  InitLogicalArrayFromLine(aFirstFrameOnLine, aNumFramesOnLine);
 
-  for (nsIFrame* frame = aFirstChild;
-       frame && frame != aNextInFlow;
-       frame = frame->GetNextSibling()) {
-    mLogicalFrames.AppendElement(frame);
-  }
-
-  PRBool reordered;
-  Reorder(reordered);
-  RepositionInlineFrames(aPresContext, aRendContext, aFirstChild, reordered);
+  PRBool isReordered;
+  PRBool hasRTLFrames;
+  Reorder(isReordered, hasRTLFrames);
+  RepositionInlineFrames(aPresContext, aRendContext, aFirstFrameOnLine, isReordered);
 }
 
 nsresult
-nsBidiPresUtils::Reorder(PRBool& aReordered)
+nsBidiPresUtils::Reorder(PRBool& aReordered, PRBool& aHasRTLFrames)
 {
   aReordered = PR_FALSE;
+  aHasRTLFrames = PR_FALSE;
   PRInt32 count = mLogicalFrames.Count();
 
   if (mArraySize < count) {
@@ -620,11 +616,10 @@ nsBidiPresUtils::Reorder(PRBool& aReordered)
 
   for (i = 0; i < count; i++) {
     frame = (nsIFrame*) (mLogicalFrames[i]);
-    nsIFrame* firstLeaf = frame;
-    while (!IsBidiLeaf(firstLeaf)) {
-      firstLeaf = firstLeaf->GetFirstChild(nsnull);
-    }
-    mLevels[i] = NS_GET_EMBEDDING_LEVEL(firstLeaf);
+    mLevels[i] = GetFrameEmbeddingLevel(frame);
+    if (mLevels[i] & 1) {
+      aHasRTLFrames = PR_TRUE;
+    }      
   }
   if (!mIndexMap) {
     mIndexMap = new PRInt32[mArraySize];
@@ -653,6 +648,26 @@ nsBidiPresUtils::Reorder(PRBool& aReordered)
     aReordered = PR_FALSE;
   }
   return mSuccess;
+}
+
+nsBidiLevel
+nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame)
+{
+  nsIFrame* firstLeaf = aFrame;
+  while (!IsBidiLeaf(firstLeaf)) {
+    firstLeaf = firstLeaf->GetFirstChild(nsnull);
+  }
+  return NS_GET_EMBEDDING_LEVEL(firstLeaf);
+}
+
+nsBidiLevel
+nsBidiPresUtils::GetFrameBaseLevel(nsIFrame* aFrame)
+{
+  nsIFrame* firstLeaf = aFrame;
+  while (!IsBidiLeaf(firstLeaf)) {
+    firstLeaf = firstLeaf->GetFirstChild(nsnull);
+  }
+  return NS_GET_BASE_LEVEL(firstLeaf);
 }
 
 static void 
@@ -696,6 +711,89 @@ nsBidiPresUtils::RepositionInlineFrames(nsPresContext*       aPresContext,
     if ((mLevels[mIndexMap[i]] & 1) && !IsBidiLeaf(frame))
       ReverseChildFramesPositioning(frame->GetFirstChild(nsnull));
   } // for
+}
+
+void 
+nsBidiPresUtils::InitLogicalArrayFromLine(nsIFrame* aFirstFrameOnLine,
+                                          PRInt32   aNumFramesOnLine) {
+  mLogicalFrames.Clear();
+  for (nsIFrame* frame = aFirstFrameOnLine;
+       frame && aNumFramesOnLine--;
+       frame = frame->GetNextSibling()) {
+    mLogicalFrames.AppendElement(frame);
+  }
+}
+
+PRBool
+nsBidiPresUtils::CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
+                                PRInt32    aNumFramesOnLine,
+                                nsIFrame** aFirstVisual,
+                                nsIFrame** aLastVisual)
+{
+  InitLogicalArrayFromLine(aFirstFrameOnLine, aNumFramesOnLine);
+  
+  PRBool isReordered;
+  PRBool hasRTLFrames;
+  Reorder(isReordered, hasRTLFrames);
+  PRInt32 count = mLogicalFrames.Count();
+  
+  if (aFirstVisual) {
+    *aFirstVisual = (nsIFrame*)mVisualFrames[0];
+  }
+  if (aLastVisual) {
+    *aLastVisual = (nsIFrame*)mVisualFrames[count-1];
+  }
+  
+  // If there's an RTL frame, assume the line is reordered
+  return isReordered || hasRTLFrames;
+}
+
+nsIFrame*
+nsBidiPresUtils::GetFrameToRightOf(const nsIFrame*  aFrame,
+                                   nsIFrame*        aFirstFrameOnLine,
+                                   PRInt32          aNumFramesOnLine)
+{
+  InitLogicalArrayFromLine(aFirstFrameOnLine, aNumFramesOnLine);
+  
+  PRBool isReordered;
+  PRBool hasRTLFrames;
+  Reorder(isReordered, hasRTLFrames);
+  PRInt32 count = mVisualFrames.Count();
+
+  if (aFrame == nsnull)
+    return (nsIFrame*)mVisualFrames[0];
+  
+  for (PRInt32 i = 0; i < count - 1; i++) {
+    if (mVisualFrames[i] == aFrame) {
+      return (nsIFrame*)mVisualFrames[i+1];
+    }
+  }
+  
+  return nsnull;
+}
+
+nsIFrame*
+nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
+                                  nsIFrame*        aFirstFrameOnLine,
+                                  PRInt32          aNumFramesOnLine)
+{
+  InitLogicalArrayFromLine(aFirstFrameOnLine, aNumFramesOnLine);
+  
+  PRBool isReordered;
+  PRBool hasRTLFrames;
+  Reorder(isReordered, hasRTLFrames);
+  PRInt32 count = mVisualFrames.Count();
+  
+  if (aFrame == nsnull)
+    return (nsIFrame*)mVisualFrames[count-1];
+  
+  for (PRInt32 i = 1; i < count; i++) {
+    if (mVisualFrames[i] == aFrame) {
+      return (nsIFrame*)mVisualFrames[i-1];
+    }
+  }
+  
+  return nsnull;
 }
 
 PRBool

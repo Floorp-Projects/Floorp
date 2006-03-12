@@ -45,6 +45,9 @@
 #include "nsITextContent.h"
 #include "nsLayoutAtoms.h"
 #include "nsFrameManager.h"
+#ifdef IBMBIDI
+#include "nsBidiPresUtils.h"
+#endif
 
 #ifdef DEBUG
 static PRInt32 ctorCount;
@@ -682,98 +685,40 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
                                nsIFrame                 **aFirstVisual,
                                nsIFrame                 **aLastVisual)
 {
-  PRInt32   currentLine, saveLine, testLine;
-  nscoord   saveX;
-  nsIFrame  *checkFrame;
-  nsIFrame  *firstFrame;
-  nsIFrame  *leftmostFrame;
-  nsIFrame  *rightmostFrame;
-  nscoord   minX, maxX;
-  PRInt32   lineFrameCount;
-  PRUint32  lineFlags;
+ 
+  nsLineBox* line = mLines[aLine];
+  
+  nsPresContext* presContext = line->mFirstChild->GetPresContext();
+  if (!presContext->BidiEnabled()) {
+    *aIsReordered = PR_FALSE;
+    return NS_OK;
+  }
 
-  nsresult  result = NS_OK;
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+
+  nsIFrame* leftmostFrame;
+  nsIFrame* rightmostFrame;
+  *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), &leftmostFrame, &rightmostFrame);
+
+  // map leftmost/rightmost to first/last according to paragraph direction
+  *aFirstVisual = mRightToLeft ? rightmostFrame : leftmostFrame;
+  *aLastVisual = mRightToLeft ? leftmostFrame : rightmostFrame;
 
   // an RTL paragraph is always considered as reordered
-  // in an LTR paragraph, find out by examining the coordinates of each frame in the line
   if (mRightToLeft)
     *aIsReordered = PR_TRUE;
-  else {
-    *aIsReordered = PR_FALSE;
 
-    // Check the preceding and following line, since we might be moving into them
-    for (currentLine = PR_MAX(0, aLine-1); currentLine < aLine+1; currentLine++) {
-
-      nsLineBox* line = mLines[currentLine];
-      if (!line)
-        break;
-
-      checkFrame = line->mFirstChild;
-
-      result = FindLineContaining(checkFrame, &saveLine);
-      if (NS_FAILED(result))
-        return result;
-      saveX = checkFrame->GetRect().x;
-      lineFrameCount = line->GetChildCount();
-
-      for (; checkFrame; checkFrame = checkFrame->GetNextSibling()) {
-        result = FindLineContaining(checkFrame, &testLine);
-        if (NS_FAILED(result))
-          return result;
-        if (testLine != saveLine) {
-          *aIsReordered = PR_TRUE;
-          break;
-        }
-
-        nsRect checkRect = checkFrame->GetRect();
-        // If the origin of any frame is less than the previous frame, the line is reordered
-        if (checkRect.x < saveX) {
-          *aIsReordered = PR_TRUE;
-          break;
-        }
-        saveX = checkRect.x;
-        lineFrameCount--;
-        if (0 == lineFrameCount)
-          break;
-      }
-      if (*aIsReordered)
-        break;
-    }
+  // Check the preceding and following line, since we might be moving into them  
+  if (!*aIsReordered && aLine > 0) {
+    nsLineBox* line = mLines[aLine - 1];
+    *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), nsnull, nsnull);
+  }
+  if (!*aIsReordered && aLine < mNumLines - 1) {
+    nsLineBox* line = mLines[aLine + 1];
+    *aIsReordered = bidiUtils->CheckLineOrder(line->mFirstChild, line->GetChildCount(), nsnull, nsnull);
   }
 
-  // If the line is reordered, identify the first and last frames on the line
-  if (*aIsReordered) {
-    nsRect nonUsedRect;
-    result = GetLine(aLine, &firstFrame, &lineFrameCount, nonUsedRect, &lineFlags);
-    if (NS_FAILED(result))
-      return result;
-
-    leftmostFrame = rightmostFrame = firstFrame;
-    maxX = minX = firstFrame->GetRect().x;
-
-    for (;lineFrameCount > 1;lineFrameCount--) {
-      firstFrame = firstFrame->GetNextSibling();
-
-      nsRect checkRect = firstFrame->GetRect();
-      if (checkRect.x > maxX) {
-        maxX = checkRect.x;
-        rightmostFrame = firstFrame;
-      }
-      if (checkRect.x < minX) {
-        minX = checkRect.x;
-        leftmostFrame = firstFrame;
-      }
-    }
-    if (mRightToLeft) {
-      *aFirstVisual = rightmostFrame;
-      *aLastVisual = leftmostFrame;
-    }
-    else {
-      *aFirstVisual = leftmostFrame;
-      *aLastVisual = rightmostFrame;
-    }
-  }
-  return result;
+  return NS_OK;
 }
 #endif // IBMBIDI
 
