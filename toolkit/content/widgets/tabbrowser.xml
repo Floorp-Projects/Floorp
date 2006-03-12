@@ -59,7 +59,8 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown">
+      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
+                  onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tab-drop-indicator-bar">
           <xul:hbox class="tab-drop-indicator"/>
         </xul:hbox>
@@ -106,10 +107,7 @@
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
-        <xul:tabpanels flex="1" class="plain" selectedIndex="0"
-                       onselect="if (!('updateCurrentBrowser' in this.parentNode.parentNode) ||
-                                     event.target != this) return;
-                                 this.parentNode.parentNode.updateCurrentBrowser();">
+        <xul:tabpanels flex="1" class="plain" selectedIndex="0">
           <xul:vbox flex="1">
             <xul:browsermessage hidden="true" type="top"/>
             <xul:browser flex="1" type="content-primary" message="true" disablehistory="true" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
@@ -1427,7 +1425,7 @@
                 // Only capture clicks on tabbox.xml's <spacer>
                 aEvent.originalTarget.localName == "spacer") {
               var e = document.createEvent("Events");
-              e.initEvent("NewTab", false, true);
+              e.initEvent("NewTab", true, true);
               this.dispatchEvent(e);
             }
           ]]>

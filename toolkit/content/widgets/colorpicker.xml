@@ -314,7 +314,7 @@
             aCell.setAttribute("hover", "true");
             this.mHoverCell = aCell;
             var event = document.createEvent('Events');
-            event.initEvent('DOMMenuItemActive', false, true);
+            event.initEvent('DOMMenuItemActive', true, true);
             aCell.dispatchEvent(event);
           }
         ]]></body>

@@ -59,7 +59,7 @@
             break;
           case "clear-button":
             var event = document.createEvent("Events");
-            event.initEvent("clear", false, true);
+            event.initEvent("clear", true, true);
             this.dispatchEvent(event);
             break;
           }

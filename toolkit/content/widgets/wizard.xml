@@ -414,7 +414,7 @@
         <body>
         <![CDATA[
           var event = document.createEvent("Events");
-          event.initEvent(aType, false, true);
+          event.initEvent(aType, true, true);
           
           // handle dom event handlers
           var noCancel = aTarget.dispatchEvent(event);
