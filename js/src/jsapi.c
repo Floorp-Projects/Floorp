@@ -789,7 +789,7 @@ JS_BeginRequest(JSContext *cx)
 {
     JSRuntime *rt;
 
-    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->thread == js_CurrentThreadId());
     if (!cx->requestDepth) {
         /* Wait until the GC is finished. */
         rt = cx->runtime;
