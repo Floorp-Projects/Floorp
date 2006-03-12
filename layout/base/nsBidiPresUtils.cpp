@@ -764,7 +764,7 @@ nsBidiPresUtils::GetFrameToRightOf(const nsIFrame*  aFrame,
     return (nsIFrame*)mVisualFrames[0];
   
   for (PRInt32 i = 0; i < count - 1; i++) {
-    if (mVisualFrames[i] == aFrame) {
+    if ((nsIFrame*)mVisualFrames[i] == aFrame) {
       return (nsIFrame*)mVisualFrames[i+1];
     }
   }
@@ -788,7 +788,7 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
     return (nsIFrame*)mVisualFrames[count-1];
   
   for (PRInt32 i = 1; i < count; i++) {
-    if (mVisualFrames[i] == aFrame) {
+    if ((nsIFrame*)mVisualFrames[i] == aFrame) {
       return (nsIFrame*)mVisualFrames[i-1];
     }
   }
