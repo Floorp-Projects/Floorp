@@ -185,12 +185,9 @@ nsHTMLLabelElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 static PRBool
-EventTargetIn(nsPresContext *aPresContext, nsEvent *aEvent,
-              nsIContent *aChild, nsIContent *aStop)
+EventTargetIn(nsEvent *aEvent, nsIContent *aChild, nsIContent *aStop)
 {
-  nsCOMPtr<nsIContent> c;
-  aPresContext->EventStateManager()->GetEventTargetContent(aEvent,
-                                                           getter_AddRefs(c));
+  nsCOMPtr<nsIContent> c = do_QueryInterface(aEvent->target);
   nsIContent *content = c;
   while (content) {
     if (content == aChild) {
@@ -218,8 +215,7 @@ nsHTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   nsCOMPtr<nsIContent> content = GetForContent();
-  if (content && !EventTargetIn(aVisitor.mPresContext, aVisitor.mEvent,
-                                content, this)) {
+  if (content && !EventTargetIn(aVisitor.mEvent, content, this)) {
     mHandlingEvent = PR_TRUE;
     switch (aVisitor.mEvent->message) {
       case NS_MOUSE_LEFT_CLICK:
