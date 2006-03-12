@@ -2307,7 +2307,7 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
     scope = js_GetMutableScope(cx, obj);
     if (scope)
         SCOPE_SET_SEALED(scope);
-    JS_UNLOCK_SCOPE(cx, scope);
+    JS_UNLOCK_OBJ(cx, obj);
     if (!scope)
         return JS_FALSE;
 
