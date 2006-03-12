@@ -853,6 +853,14 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
 {
   aOffset = 0;
 
+  nsresult rv;
+  nsBidiLevel embeddingLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::embeddingLevel, &rv));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "embeddingLevel attribute missing from aFrame");
+  nsBidiLevel baseLevel = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::baseLevel, &rv));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "baseLevel attribute missing from aFrame");
+  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::charType, &rv));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "charType attribute missing from aFrame");
+  
   for (PRInt32 index = aFirstIndex + 1; index <= aLastIndex; index++) {
     nsIFrame* frame = (nsIFrame*) mLogicalFrames[index];
     if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
@@ -862,6 +870,9 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
     else {
       // Make the frame and its continuation ancestors fluid,
       // so they can be reused or deleted by normal reflow code
+      frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
+      frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
+      frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
       while (frame) {
         nsIFrame* prev = frame->GetPrevContinuation();
         if (prev) {
