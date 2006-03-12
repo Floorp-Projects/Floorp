@@ -327,7 +327,7 @@
             return val;
           this.setAttribute("selectedIndex", val);
           var event = document.createEvent('Events');
-          event.initEvent('select', false, true);
+          event.initEvent('select', true, true);
           this.dispatchEvent(event);
           return val;
         ]]>

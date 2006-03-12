@@ -240,7 +240,7 @@
               // Only fire event when current row is expanded or collapsed
               // because that's all the assistive technology really cares about.
               var event = document.createEvent('Events');
-              event.initEvent('OpenStateChange', false, true);
+              event.initEvent('OpenStateChange', true, true);
               this.dispatchEvent(event);
             }
             return true;

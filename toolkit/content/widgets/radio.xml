@@ -279,13 +279,6 @@
     </implementation>
     
     <handlers>
-      <handler event="select">
-        <![CDATA[
-          //XXXblake this should not be necessary
-          //         initEvent was supposed to prevent this from bubbling
-          event.preventBubble();
-        ]]>
-      </handler>
       <handler event="mousedown">
         if (this.disabled)
           event.preventDefault();

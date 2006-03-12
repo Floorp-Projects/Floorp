@@ -48,7 +48,7 @@
           // Value changed, synthesize an event
           try {
             var event = document.createEvent("Events");
-            event.initEvent("change", false, true);
+            event.initEvent("change", true, true);
             aPreference.dispatchEvent(event);
           }
           catch (e) {
@@ -352,7 +352,7 @@
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
-              event.initEvent("syncfrompreference", false, true);
+              event.initEvent("syncfrompreference", true, true);
               var f = new Function ("event", 
                                     aElement.getAttribute("onsyncfrompreference"));
               rv = f(event);
@@ -401,7 +401,7 @@
             // Value changed, synthesize an event
             try {
               var event = document.createEvent("Events");
-              event.initEvent("synctopreference", false, true);
+              event.initEvent("synctopreference", true, true);
               var f = new Function ("event", 
                                     aElement.getAttribute("onsynctopreference"));
               var rv = f(event);
@@ -680,7 +680,7 @@
           // Panel loaded, synthesize a load event. 
           try {
             var event = document.createEvent("Events");
-            event.initEvent(aEventName, false, true);
+            event.initEvent(aEventName, true, true);
             var cancel = !aTarget.dispatchEvent(event);
             if (aTarget.hasAttribute("on" + aEventName)) {
               var fn = new Function ("event", aTarget.getAttribute("on" + aEventName));

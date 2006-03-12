@@ -41,7 +41,7 @@
             this.removeAttribute('checked');
           if (change) {
             var event = document.createEvent('Events');
-            event.initEvent('CheckboxStateChange', false, true);
+            event.initEvent('CheckboxStateChange', true, true);
             this.dispatchEvent(event);
           }
           return aValue;
