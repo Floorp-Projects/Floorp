@@ -376,7 +376,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
-          if (!EnsureBidiContinuation(aPresContext, content, frame,
+          if (!EnsureBidiContinuation(aPresContext, frame,
                                       &nextBidi, frameIndex) ) {
             break;
           }
@@ -798,42 +798,36 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
 
 PRBool
 nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
-                                        nsIContent*     aContent,
                                         nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
                                         PRInt32&        aFrameIndex)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (!aNewFrame) {
-    return PR_FALSE;
-  }
+  NS_PRECONDITION(aFrame, "aFrame is null");
+
   *aNewFrame = nsnull;
-
-  if (!aFrame) {
-    return PR_FALSE;
-  }
-  if (aFrameIndex + 1 < mLogicalFrames.Count() ) {
+  nsBidiLevel embeddingLevel = NS_GET_EMBEDDING_LEVEL(aFrame);
+  nsBidiLevel baseLevel = NS_GET_BASE_LEVEL(aFrame);
+  nsCharType charType = (nsCharType)NS_PTR_TO_INT32(aFrame->GetProperty(nsLayoutAtoms::charType));
+  
+  // Skip fluid continuations
+  while (aFrameIndex + 1 < mLogicalFrames.Count()) {
     nsIFrame* frame = (nsIFrame*)mLogicalFrames[aFrameIndex + 1];
-    if (frame->GetContent() == aContent) {
-      *aNewFrame = frame;
-      ++aFrameIndex;
-      aFrame->SetNextContinuation(frame);
-      frame->SetPrevContinuation(aFrame);
-
-      // Make existing parent continuations non-fluid
-      nsIFrame* parent = frame->GetParent();
-      while (parent && 
-             (nsLayoutAtoms::inlineFrame == parent->GetType() ||
-              nsLayoutAtoms::positionedInlineFrame == parent->GetType())) {
-        nsIFrame* prevContinuation = parent->GetPrevContinuation();
-        if (prevContinuation) {
-          parent->SetPrevContinuation(prevContinuation);
-          prevContinuation->SetNextContinuation(parent);
-        }
-        parent = parent->GetParent();
+    if (frame->GetPrevInFlow() != aFrame) {
+      // If we found a non-fluid continuation, use it
+      if (frame->GetPrevContinuation() == aFrame) {
+        *aNewFrame = frame;
+        aFrameIndex++;
       }
+      break;
     }
+    frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
+    frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
+    frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
+    aFrameIndex++;
+    aFrame = frame;
   }
+  
   if (!*aNewFrame) {
     mSuccess = CreateBidiContinuation(aPresContext, aFrame, aNewFrame);
     if (NS_FAILED(mSuccess) ) {

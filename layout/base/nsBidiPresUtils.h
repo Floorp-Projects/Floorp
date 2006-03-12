@@ -262,7 +262,6 @@ private:
    * remainder of its content.
    *
    * @param aPresContext the pres context
-   * @param aContent     the content of the frame
    * @param aFrame       the original frame
    * @param aNewFrame    [OUT] the new frame that was created
    * @param aFrameIndex  [IN/OUT] index of aFrame in mLogicalFrames
@@ -274,7 +273,6 @@ private:
    * @see RemoveBidiContinuation()
    */
   PRBool EnsureBidiContinuation(nsPresContext* aPresContext,
-                                nsIContent*     aContent,
                                 nsIFrame*       aFrame,
                                 nsIFrame**      aNewFrame,
                                 PRInt32&        aFrameIndex);
