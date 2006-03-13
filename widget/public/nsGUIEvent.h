@@ -277,7 +277,6 @@ class nsIDOMEventTarget;
 #define NS_XUL_COMMAND                (NS_XUL_EVENT_START+4)
 #define NS_XUL_BROADCAST              (NS_XUL_EVENT_START+5)
 #define NS_XUL_COMMAND_UPDATE         (NS_XUL_EVENT_START+6)
-#define NS_XUL_CLICK                  (NS_XUL_EVENT_START+7)
 //@}
 
 // Scroll events

@@ -1726,13 +1726,6 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         }
     }
 
-    // if we are a XUL click, we have the private event set.
-    // now switch to a left mouse click for the duration of the event
-    //FIXME remove NS_XUL_CLICK, Bug 329512.
-    if (aVisitor.mEvent->message == NS_XUL_CLICK) {
-        aVisitor.mEvent->message = NS_MOUSE_LEFT_CLICK;
-    }
-
     return nsGenericElement::PreHandleEvent(aVisitor);
 }
 
@@ -2190,8 +2183,7 @@ nsXULElement::Click()
                                    nsnull, nsMouseEvent::eReal);
             nsMouseEvent eventUp(isCallerChrome, NS_MOUSE_LEFT_BUTTON_UP,
                                  nsnull, nsMouseEvent::eReal);
-            //FIXME remove NS_XUL_CLICK, Bug 329512.
-            nsMouseEvent eventClick(isCallerChrome, NS_XUL_CLICK, nsnull,
+            nsMouseEvent eventClick(isCallerChrome, NS_MOUSE_LEFT_CLICK, nsnull,
                                     nsMouseEvent::eReal);
 
             // send mouse down
