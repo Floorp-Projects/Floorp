@@ -3100,7 +3100,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
         }
         return rv;
     }
-#endif MOZ_SVG
+#endif // MOZ_SVG
 
     nsCOMPtr<nsIDOMHTMLScriptElement> nodeAsScript = do_QueryInterface(aNodeIn);
     if (nodeAsScript)
