@@ -44,7 +44,6 @@ var gViewSearchListener;
 var gSearchBundle;
 var gStatusBar = null;
 var gSearchInProgress = false;
-var gSearchInput = null;
 var gClearButton = null;
 var gDefaultSearchViewTerms = null;
 var gQSViewIsDirty = false;
@@ -472,31 +471,6 @@ function onSearchStop()
   gSearchSession.interruptSearch();
 }
 
-function onSearchKeyPress(event)
-{
-  // 13 == return
-  if (event && event.keyCode == 13)
-    onSearchInput(true);
-}
-
-function onSearchInput(returnKeyHit)
-{
-  if (gSearchTimer) {
-    clearTimeout(gSearchTimer); 
-    gSearchTimer = null;
-  }
-
-  // only select the text when the return key was hit
-  if (returnKeyHit) {
-    GetSearchInput();
-    gSearchInput.select();
-    onEnterInSearchBar();
-  }
-  else {
-    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
-  }
-}
-
 function onClearSearch()
 {
   // Use the last focused element so that focus can be restored
@@ -535,7 +509,7 @@ function Search(str)
   }
 
   gSearchInput.value = str;  //on input does not get fired for some reason
-  onSearchInput(true);
+  onEnterInSearchBar();
 }
 
 function saveViewAsVirtualFolder()
