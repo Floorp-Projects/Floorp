@@ -1172,6 +1172,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         str = js_GetPrinterOutput(jp2);
                         if (str)
                             js_printf(jp, "%s\n", JS_GetStringBytes(str));
+                        else
+                            ok = JS_FALSE;
                     }
                     js_DestroyPrinter(jp2);
                     if (!ok)
@@ -3120,8 +3122,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         }
         if (js_DecompileCode(jp, script, begin, len))
             name = js_GetPrinterOutput(jp);
+        js_DestroyPrinter(jp);
     }
-    js_DestroyPrinter(jp);
     if (tmp)
         JS_free(cx, tmp);
     return name;
