@@ -3112,7 +3112,7 @@ interrupt:
                 VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &sp[-1]);
                 rval = sp[-1];
                 if ((cond = JSVAL_IS_STRING(lval)) || JSVAL_IS_STRING(rval)) {
-                    SAVE_SP(fp);
+                    SAVE_SP_AND_PC(fp);
                     if (cond) {
                         str = JSVAL_TO_STRING(lval);
                         ok = (str2 = js_ValueToString(cx, rval)) != NULL;
