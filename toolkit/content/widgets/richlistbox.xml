@@ -120,29 +120,29 @@
             // when this method is called, we know that either the selectedItem
             // we have is null (ctor) or a reference to an element no longer in
             // the DOM (template).
-  
+
             // fist look for a last-selected attribute
             var lastSelected = this.getAttribute("last-selected");
             if (lastSelected != "") {
               var element = document.getElementById(lastSelected);
-  
+
               if (element) {
                 this.selectedItem = element;
                 this.scrollBoxObject.scrollToElement(this.selectedItem);
                 return;
               }
             }
-  
+
             // cache the selected index
             var selectedIndex = this._selectedIndex;
-  
+
             // refreshes selection.  Called for example when a template rebuild
             // happens.
             if (this.selectedItem) {
               if (this.selectedItem.hasAttribute("id")) {
                 var id = this.selectedItem.getAttribute("id");
                 var item = document.getElementById(id);
-  
+
                 // if we find no item, clear selection so that the code at the bottom
                 // takes over
                 if (item) {
@@ -156,7 +156,7 @@
                  this.clearSelection();
               }
             }
-  
+
             // if we have no previously selected item or the above if check fails to
             // find the previous node (which causes it to clear selection)
             if (!this.selectedItem) {
@@ -166,7 +166,7 @@
                 this.selectedIndex = this.getRowCount() - 1;
               else
                 this.selectedIndex = selectedIndex;
-  
+
               // XXX: downloadmanager needs the following line, else we scroll to
               // the middle on inital load.
               this.ensureSelectedElementIsVisible();
@@ -176,16 +176,16 @@
       </method>
 
       <method name="fireActiveItemEvent">
-      <body>
-        <![CDATA[
-          if (this.selectedItem) {
-            var event = document.createEvent("Events");
-            event.initEvent("DOMMenuItemActive", true, true);
-            this.selectedItem.dispatchEvent(event);
-          }
-          return false;
-        ]]>
-      </body>
+        <body>
+          <![CDATA[
+            if (this.selectedItem) {
+              var event = document.createEvent("Events");
+              event.initEvent("DOMMenuItemActive", true, true);
+              this.selectedItem.dispatchEvent(event);
+            }
+            return false;
+          ]]>
+        </body>
       </method>
 
       <field name="_selectedIndex">0</field>

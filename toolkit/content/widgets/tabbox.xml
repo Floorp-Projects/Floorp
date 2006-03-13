@@ -465,7 +465,6 @@
       </xul:stack>
     </content>
   </binding>
- 
 
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
