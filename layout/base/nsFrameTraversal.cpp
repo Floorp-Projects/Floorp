@@ -153,6 +153,7 @@ class nsVisualIterator: public nsFrameIterator
 {
   public:
     nsVisualIterator(nsPresContext* aPresContext, nsIFrame *start);
+    void   SetLockInScrollView(PRBool aLockScroll){mLockScroll = aLockScroll;}
   private :
 
     NS_IMETHOD Next();
@@ -160,6 +161,7 @@ class nsVisualIterator: public nsFrameIterator
     NS_IMETHOD Prev();
 
     nsPresContext* mPresContext;
+    PRBool mLockScroll;
 };
 
 #endif
@@ -223,6 +225,7 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
     nsVisualIterator *trav = new nsVisualIterator(aPresContext, aStart);
     if (!trav)
       return NS_ERROR_OUT_OF_MEMORY;
+    trav->SetLockInScrollView(aLockInScrollView);
     *aEnumerator = NS_STATIC_CAST(nsIBidirectionalEnumerator*, trav);
     NS_ADDREF(trav);
               }
@@ -668,6 +671,7 @@ nsVisualIterator::nsVisualIterator(nsPresContext* aPresContext, nsIFrame *aStart
   setStart(aStart);
   setCurrent(aStart);
   setLast(aStart);
+  SetLockInScrollView(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -707,6 +711,11 @@ NS_IMETHODIMP
         else 
         {
           parent = result;
+          if (mLockScroll) //lock the traversal when we hit a scroll frame
+          {
+            if ( result->GetType() == nsLayoutAtoms::scrollFrame )
+              return NS_ERROR_FAILURE;
+          }
         }
       } 
       else{
@@ -734,6 +743,11 @@ NS_IMETHODIMP
   while(parent){
     nsIFrame *grandParent = parent->GetParent();
     if (grandParent) {
+      if (mLockScroll) //lock the traversal when we hit a scroll frame
+      {
+        if (grandParent->GetType() == nsLayoutAtoms::scrollFrame)
+          return NS_ERROR_FAILURE;
+      }
       nsFrameList list(grandParent->GetFirstChild(nsnull));
       result = list.GetPrevVisualFor(parent);
       if (result){
