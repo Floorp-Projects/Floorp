@@ -57,7 +57,7 @@ reportCompare(expect, actual, summary + ': XML()');
 
 try
 {
-  var xml = XML('<p>text</p>');
+  var xml = XMLList('<p>text</p>');
 }
 catch(e)
 {
