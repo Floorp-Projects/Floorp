@@ -1976,6 +1976,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     JSClass *protoclasp;
     uint32 nslots, i;
     jsval *newslots;
+    JSTempValueRooter tvr;
 
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {
@@ -2005,6 +2006,14 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
+
+    /*
+     * Root obj to prevent it from being killed.
+     * AllocSlots can trigger a finalizer from a last-ditch GC calling
+     * JS_ClearNewbornRoots. There's also the possibilty of things
+     * happening under the objectHook call-out below.    
+     */
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(obj), &tvr);
 
     /*
      * Share proto's map only if it has the same JSObjectOps, and only if
@@ -2071,11 +2080,14 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
         JS_UNKEEP_ATOMS(cx->runtime);
     }
 
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    cx->newborn[GCX_OBJECT] = (JSGCThing *) obj;
     return obj;
 
 bad:
-    cx->newborn[GCX_OBJECT] = NULL;
-    return NULL;
+    obj = NULL;
+    goto out;
 }
 
 JSBool
