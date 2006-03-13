@@ -1603,8 +1603,8 @@ PR_LoadStaticLibrary(const char *name, const PRStaticLinkTable *slt)
 
     result = lm;    /* success */
     PR_ASSERT(lm->refCount == 1);
-  unlock:
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (static lib)", lm->name));
+  unlock:
     PR_ExitMonitor(pr_linker_lock);
     return result;
 }
