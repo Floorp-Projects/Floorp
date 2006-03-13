@@ -191,7 +191,7 @@ sub makefullsoft {
         unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
   TinderUtils::run_shell_command "cd $srcdir && cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
   if ($Settings::ObjDir ne '') {
-    TinderUtils::run_shell_command "mkdir $builddir/fullsoft && cd $builddir/fullsoft; $srcdir/build/autoconf/make-makefile -d ..";
+    TinderUtils::run_shell_command "mkdir $builddir/fullsoft && cd $builddir/fullsoft && $srcdir/build/autoconf/make-makefile -d ..";
   }
   else {
     TinderUtils::run_shell_command "cd $builddir/fullsoft && $builddir/build/autoconf/make-makefile -d ..";
