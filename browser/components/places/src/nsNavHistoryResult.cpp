@@ -472,7 +472,7 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(PRInt32 aAccessCountChange)
 
       SortComparator comparator = GetSortingComparator(sortMode);
       int ourIndex = mParent->FindChild(this);
-      if (DoesChildNeedResorting(ourIndex, comparator)) {
+      if (mParent->DoesChildNeedResorting(ourIndex, comparator)) {
         // prevent us from being destroyed when removed from the parent
         nsRefPtr<nsNavHistoryContainerResultNode> ourLock = this;
         nsNavHistoryContainerResultNode* ourParent = mParent;
