@@ -85,7 +85,7 @@ NS_IMETHODIMP nsDeviceSupport::RotateScreen(PRBool aLandscapeMode)
     return NS_OK;
 }
 
-
+#ifdef WINCE
 static BOOL IsSmartphone() 
 {
   unsigned short platform[64];
@@ -102,11 +102,13 @@ static BOOL IsSmartphone()
   }
   return FALSE;   
 }
+#endif
 
 NS_IMETHODIMP nsDeviceSupport::Has(const char* aProperty, char **aValue)
 {
   *aValue = nsnull;
 
+#ifdef WINCE
   if (!strcmp(aProperty, "hasSoftwareKeyboard"))
   {
     *aValue = (char*) nsMemory::Alloc(4);
@@ -115,12 +117,10 @@ NS_IMETHODIMP nsDeviceSupport::Has(const char* aProperty, char **aValue)
       strcpy(*aValue, "yes");
     else
       strcpy(*aValue, "no");
-
-    return NS_OK;
   }
+#endif
 
-  return NS_ERROR_NOT_AVAILABLE;
-
+  return NS_OK;
 }
 
 
