@@ -382,7 +382,7 @@
             setValue(aElement, "color", val);
           else if (aElement.localName == "textbox") {
             // XXXmano Bug 303998: Avoid a caret placement issue if either the
-            // preference observer or its setter calls updateElements as a result 
+            // preference observer or its setter calls updateElements as a result
             // of the input event handler.
             if (aElement.value !== val)
               setValue(aElement, "value", val);
