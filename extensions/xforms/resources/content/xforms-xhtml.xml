@@ -140,9 +140,10 @@
           return {
             _labelControl: this,
             _implicitContent: this.ownerDocument.
-              getAnonymousElementByAttribute(this, "anonid", 'implicitcontent'),
+              getAnonymousElementByAttribute(this, 'anonid', 'implicitcontent'),
             _explicitContent: this.ownerDocument.
               getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
+
             _ownerDocument: this.ownerDocument,
 
             set value(val) {
@@ -153,20 +154,28 @@
                 this._explicitContent.style.display = 'none';
                 textnode = this._implicitContent.firstChild;
               } else {
-                this._implicitContent.textContent = '';
-                this._explicitContent.style.display = 'inline';
-
+                // XXX: if label has element node children, we skip accesskey
+                // underlining.
+                var underline = true;
                 for (var node = this._labelControl.firstChild; node; node = node.nextSibling) {
-                  // XXX: if label has element node children, we skip accesskey
-                  // underlining.
-                  if (node.nodeType == Node.ELEMENT_NODE)
-                    return;
+                  if (node.nodeType == Node.ELEMENT_NODE) {
+                    underline = false;
+                    break;
+                  }
                 }
-                textnode = this._labelControl.firstChild;
+                if (!underline) {
+                  this._implicitContent.textContent = '';
+                  this._explicitContent.style.display = 'inline';
+                  return;
+                }
+
+                this._implicitContent.textContent = this._labelControl.textContent;
+                this._explicitContent.style.display = 'none';
+                textnode = this._implicitContent.firstChild;
               }
 
               var accesskey = this._labelControl.parentNode.getAttribute("accesskey");
-              if (accesskey && accesskey.length == 1 && textnode) {
+              if (accesskey.length == 1 && textnode) {
                 this.setAccesskeyOnNode(accesskey, textnode);
               }
             },
@@ -181,7 +190,7 @@
                 var range = this._ownerDocument.createRange();
                 range.setStart(aTextNode, location);
                 range.setEnd(aTextNode, location + 1);
-  
+
                 var u = this._ownerDocument.
                   createElementNS("http://www.w3.org/1999/xhtml", "u");
                 range.surroundContents(u);
