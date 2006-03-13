@@ -128,7 +128,8 @@
 
               if (element) {
                 this.selectedItem = element;
-                this.scrollBoxObject.scrollToElement(this.selectedItem);
+                if (!this._isItemVisible(this.selectedItem))
+                  this.scrollBoxObject.scrollToElement(this.selectedItem);
                 return;
               }
             }
