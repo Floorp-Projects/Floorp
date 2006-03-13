@@ -245,3 +245,7 @@ $LogEncoding = '';
 # Prevent Extension Manager from spawning child processes during tests
 # - processes that tbox scripts cannot kill. 
 $ENV{NO_EM_RESTART} = '1';
+
+# Build Mac OS X universal binaries (must be used with an objdir and
+# universal support from mozilla/build/macosx/universal)
+$MacUniversalBinary = 0;

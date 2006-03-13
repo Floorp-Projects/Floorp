@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.311 $ ';
+$::UtilsVersion = '$Revision: 1.312 $ ';
 
 package TinderUtils;
 
@@ -909,7 +909,11 @@ sub BuildIt {
             # more than one cvs tree so set CVSROOT here to avoid confusion.
             $ENV{CVSROOT} = $Settings::moz_cvsroot;
               
-            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $TreeSpecific::extrafiles");
+            my $extrafiles = $TreeSpecific::extrafiles;
+            if ($Settings::MacUniversalBinary) {
+              $extrafiles .= ' mozilla/build/macosx/universal/mozconfig';
+            }
+            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $extrafiles");
           }
           
           # Create toplevel source directory.
@@ -928,7 +932,19 @@ sub BuildIt {
 
               # Delete dist directory to avoid accumulating cruft there, some commercial
               # build processes also need to do this.
-              if (-e $dist_dir) {
+              if ($Settings::MacUniversalBinary && $Settings::ObjDir) {
+                my ($arch_dir);
+                foreach $arch_dir ($Settings::ObjDir.'/ppc/dist', $Settings::ObjDir.'/i386/dist') {
+                  if (-e $arch_dir) {
+                    print_log "Deleting $arch_dir\n";
+                    File::Path::rmtree($arch_dir, 0, 0);
+                    if (-e "$arch_dir") {
+                      print_log "Error: rmtree('$arch_dir', 0, 0) failed.\n";
+                    }
+                  }
+                }
+              }
+              elsif (-e $dist_dir) {
                 print_log "Deleting $dist_dir\n";
                 File::Path::rmtree($dist_dir, 0, 0);
                 if (-e "$dist_dir") {
@@ -984,6 +1000,25 @@ sub BuildIt {
 
             # Make sure we have an ObjDir if we need one.
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
+
+            if ($Settings::ObjDir && $Settings::MacUniversalBinary) {
+              # Point dist to this architecture's dist for a native build, so
+              # tests and things work.
+
+              my ($native_arch, $uname_p);
+              chop($uname_p = `uname -p`);
+              if ($uname_p =~ /^i.*86/) {
+                $native_arch = 'i386';
+              }
+              else {
+                $native_arch = 'ppc';
+              }
+
+              my ($objdir_dist);
+              $objdir_dist = $Settings::ObjDir.'/dist';
+              unlink($objdir_dist);
+              symlink($native_arch.'/dist', $objdir_dist);
+            }
 
             # Run the clobber target.
             if (!$Settings::BuildDepend && $build_status ne 'busted') {

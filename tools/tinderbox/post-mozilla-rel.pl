@@ -177,6 +177,7 @@ sub stagesymbols {
 
 sub makefullsoft {
   my $builddir = shift;
+  my $srcdir = shift;
   if (is_windows()) {
     # need to convert the path in case we're using activestate perl
     $builddir = `cygpath -u $builddir`;
@@ -188,12 +189,22 @@ sub makefullsoft {
   my $fullsofttag = " ";
   $fullsofttag = " -r $Settings::BuildTag"
         unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
-  TinderUtils::run_shell_command "cd $builddir; cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
-  TinderUtils::run_shell_command "cd $builddir/fullsoft; $builddir/build/autoconf/make-makefile -d ..";
+  TinderUtils::run_shell_command "cd $srcdir && cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
+  if ($Settings::ObjDir ne '') {
+    TinderUtils::run_shell_command "mkdir $builddir/fullsoft && cd $builddir/fullsoft; $srcdir/build/autoconf/make-makefile -d ..";
+  }
+  else {
+    TinderUtils::run_shell_command "cd $builddir/fullsoft && $builddir/build/autoconf/make-makefile -d ..";
+  }
   TinderUtils::run_shell_command "make -C $builddir/fullsoft";
   TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
   if (is_mac()) {
     TinderUtils::run_shell_command "make -C $builddir/$Settings::mac_bundle_path";
+
+    if ($Settings::MacUniversalBinary) {
+      # Regenerate universal binary, now including Talkback
+      TinderUtils::run_shell_command "$Settings::Make -C $Settings::Topsrcdir -f $Settings::moz_client_mk $Settings::MakeOverrides postflight_all";
+    }
   }
 }
 
@@ -201,13 +212,15 @@ sub processtalkback {
   # first argument is whether to make a new talkback build on server
   #                and upload debug symbols
   # second argument is where we're building our tree
+  # third argument is srcdir
   my $makefullsoft      = shift;
   my $builddir      = shift;   
+  my $srcdir = shift;
   # put symbols in builddir/dist/buildid
   stagesymbols($builddir); 
   if ($makefullsoft) {
     $ENV{FC_UPLOADSYMS} = 1;
-    makefullsoft($builddir);
+    makefullsoft($builddir, $srcdir);
   }
   
 }
@@ -1166,6 +1179,9 @@ sub main {
   my $objdir = $srcdir;
   if ($Settings::ObjDir ne '') {
     $objdir .= "/${Settings::ObjDir}";
+    if ($Settings::MacUniversalBinary) {
+      $objdir .= '/ppc';
+    }
   }
   unless ( -e $objdir) {
     TinderUtils::print_log "No $objdir to make packages in.\n";
