@@ -733,7 +733,25 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   OSStatus result = eventNotHandledErr;
 
   UInt32 kind = ::GetEventKind(event);
-  if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
+  if (kind == kEventMenuTargetItem) {
+    // get the position of the menu item we want
+    nsIMenu* targetMenu = reinterpret_cast<nsIMenu*>(userData);
+    PRUint16 aPos;
+    ::GetEventParameter(event, kEventParamMenuItemIndex, typeMenuItemIndex, NULL, sizeof(MenuItemIndex), NULL, &aPos);
+    aPos--; // subtract 1 from aPos because Carbon menu positions start at 1 not 0
+    
+    nsISupports* aTargetMenuItem;
+    targetMenu->GetItemAt((PRUint32)aPos, aTargetMenuItem);
+    
+    // Send DOM event
+    // If the QI fails, we're over a submenu and we shouldn't send the event
+    nsCOMPtr<nsIMenuItem> bTargetMenuItem(do_QueryInterface(aTargetMenuItem));
+    if (bTargetMenuItem) {
+      PRBool handlerCalledPreventDefault; // but we don't actually care
+      bTargetMenuItem->DispatchDOMEvent(NS_LITERAL_STRING("DOMMenuItemActive"), &handlerCalledPreventDefault);
+    }
+  }
+  else if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
     nsISupports* supports = reinterpret_cast<nsISupports*>(userData);
     nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(supports));
     if (listener) {

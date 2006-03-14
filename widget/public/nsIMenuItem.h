@@ -154,6 +154,12 @@ class nsIMenuItem : public nsISupports {
     * @return NS_OK if the command was executed properly, otherwise an error code
     */
     NS_IMETHOD DoCommand() = 0;
+    
+    /**
+     * Sends a DOM event to the menu item's content node 
+     * @return NS_OK if the event was sent properly, otherwise an error code
+     */
+    NS_IMETHOD DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled) = 0;
 
     /**
     *

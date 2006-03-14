@@ -54,6 +54,9 @@
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMDocumentEvent.h"
 
 #include "nsGUIEvent.h"
 
@@ -263,9 +266,64 @@ NS_METHOD nsMenuItemX::DoCommand()
 
     return MenuHelpersX::DispatchCommandTo(mDocShellWeakRef, mContent);
 }
-    
+
+
+NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled)
+{
+  if (!mContent || !mDocShellWeakRef)
+    return NS_ERROR_FAILURE;
+  
+  nsresult rv;
+  
+  // get a pres context
+  nsPresContext* ourPresContext;
+  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
+  if (!docShell) {
+    NS_WARNING("Failed to QI weak docshell ref to nsIDocShell");
+    return NS_ERROR_FAILURE;
+  }
+  rv = MenuHelpersX::DocShellToPresContext(docShell, &ourPresContext);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get pres context from docshell");
+    return NS_ERROR_FAILURE;
+  }
+  
+  // get owner document for content
+  nsCOMPtr<nsIDocument> parentDoc = mContent->GetOwnerDoc();
+  if (!parentDoc) {
+    NS_WARNING("Failed to get owner nsIDocument for menu item content");
+    return NS_ERROR_FAILURE;
+  }
+  
+  // get interface for creating DOM events from content owner document
+  nsCOMPtr<nsIDOMDocumentEvent> DOMEventFactory = do_QueryInterface(parentDoc);
+  if (!DOMEventFactory) {
+    NS_WARNING("Failed to QI parent nsIDocument to nsIDOMDocumentEvent");
+    return NS_ERROR_FAILURE;
+  }
+  
+  // create DOM event
+  nsIDOMEvent* event;
+  DOMEventFactory->CreateEvent(NS_LITERAL_STRING("Events"), &event);
+  event->InitEvent(eventName, PR_TRUE, PR_TRUE);
+  
+  // mark DOM event as trusted
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  privateEvent->SetTrusted(PR_TRUE);
+  
+  // send DOM event
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(mContent);
+  rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to send DOM event via nsIDOMEventTarget");
+    return NS_ERROR_FAILURE;
+  }
+  
+  return NS_OK;
+}
+
    
-   //-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItemX::GetModifiers(PRUint8 * aModifiers) 
 {
     *aModifiers = mModifiers; 
