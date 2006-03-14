@@ -195,26 +195,6 @@ public:
   virtual void RemoveFocus(nsPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
-  /**
-   * Method to create and dispatch a left-click event loosely based on aSourceEvent.  If
-   * aFullDispatch is true, the event will be dispatched in all event groups and so
-   * forth; if it's false it will be dispatched only as a DOM event.
-   */
-  static nsresult DispatchClickEvent(nsPresContext* aPresContext,
-                                     nsInputEvent* aSourceEvent,
-                                     nsIContent* aTarget,
-                                     PRBool aFullDispatch,
-                                     nsEventStatus* aStatus);
-  
-  /**
-   * Method to dispatch aEvent to aTarget without crashing and all.
-   */
-  static nsresult DispatchEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIContent* aTarget,
-                                PRBool aFullDispatch,
-                                nsEventStatus* aStatus);
-
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
 
   // Used by A, AREA, LINK, and STYLE.

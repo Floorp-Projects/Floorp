@@ -716,7 +716,33 @@ public:
                                   nsIContent* aKid, nsIContent* aParent,
                                   nsIDocument* aDocument,
                                   nsAttrAndChildArray& aChildArray);
+
+  /**
+   * Method to create and dispatch a left-click event loosely based on
+   * aSourceEvent. If aFullDispatch is true, the event will be dispatched
+   * through the full dispatching of the presshell of the aPresContext; if it's
+   * false the event will be dispatched only as a DOM event.
+   * If aPresContext is nsnull, this does nothing.
+   */
+  static nsresult DispatchClickEvent(nsPresContext* aPresContext,
+                                     nsInputEvent* aSourceEvent,
+                                     nsIContent* aTarget,
+                                     PRBool aFullDispatch,
+                                     nsEventStatus* aStatus);
   
+  /**
+   * Method to dispatch aEvent to aTarget. If aFullDispatch is true, the event
+   * will be dispatched through the full dispatching of the presshell of the
+   * aPresContext; if it's false the event will be dispatched only as a DOM
+   * event.
+   * If aPresContext is nsnull, this does nothing.
+   */
+  static nsresult DispatchEvent(nsPresContext* aPresContext,
+                                nsEvent* aEvent,
+                                nsIContent* aTarget,
+                                PRBool aFullDispatch,
+                                nsEventStatus* aStatus);
+
   /**
    * Struct that stores info on an attribute.  The name and value must
    * either both be null or both be non-null.

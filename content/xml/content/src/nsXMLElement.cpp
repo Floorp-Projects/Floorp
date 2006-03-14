@@ -316,29 +316,14 @@ nsXMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       break;
 
     case NS_KEY_PRESS:
-      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT &&
-          aVisitor.mPresContext) {
+      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
         nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aVisitor.mEvent);
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
-
-          //fire click
-          nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aVisitor.mEvent);
-          nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
-                             NS_MOUSE_LEFT_CLICK,
-                             guiEvent->widget, nsMouseEvent::eReal);
-          event.refPoint = aVisitor.mEvent->refPoint;
-          event.clickCount = 1;
-          event.isShift = keyEvent->isShift;
-          event.isControl = keyEvent->isControl;
-          event.isAlt = keyEvent->isAlt;
-          event.isMeta = keyEvent->isMeta;
-
-          nsIPresShell *presShell = aVisitor.mPresContext->GetPresShell();
-          if (presShell) {
-            rv = presShell->HandleDOMEventWithTarget(this, &event, &status);
-            // presShell may no longer be alive, don't use it here
-            // unless you keep a reference.
+          rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
+                                  PR_FALSE, &status);
+          if (NS_SUCCEEDED(rv)) {
+            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
         }
       }
