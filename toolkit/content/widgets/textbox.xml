@@ -121,6 +121,8 @@
           this.inputField.value = str;
           this.boxObject.removeProperty("value");
         }
+#ifndef MOZILLA_1_8_BRANCH
+# bug 253481
 
         str = this.getAttribute("newlines");
         if (str) {
@@ -135,7 +137,7 @@
             }
           }
         }
-
+#endif
         str = this.getAttribute("spellcheck");
         if (str == "true") {
           // the problem is that we can't initialize the spell checker in the
