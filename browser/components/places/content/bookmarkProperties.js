@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include controller.js
+#include ../../../../toolkit/content/debug.js
 
 var BookmarkPropertiesPanel = {
 
@@ -195,7 +196,7 @@ var BookmarkPropertiesPanel = {
    * receive a string instead of an nsIURI object.
    */
   _assertURINotString: function BPP__assertURINotString(value) {
-    ASSERT((typeof(value) == "object") && !(value instanceof String),
+    NS_ASSERT((typeof(value) == "object") && !(value instanceof String),
     "This method should be passed a URI as a nsIURI object, not as a string.");
   },
 
@@ -369,7 +370,7 @@ var BookmarkPropertiesPanel = {
    */
   _populateTags:
   function BPP__populateTags (container, depth, parentElement, elementDict) {
-    ASSERT(container.containerOpen, "The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
+    NS_ASSERT(container.containerOpen, "The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
 
     var row = null;
     for (var i = 0; i < container.childCount; i++) {

@@ -1,6 +1,6 @@
 browser.jar:
 *   content/browser/places/places.xul                    (content/places.xul) 
-    content/browser/places/places.js                     (content/places.js)
+*   content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.xml                    (content/places.xml)
     content/browser/places/places.css                    (content/places.css)
     content/browser/places/organizer.css                 (content/organizer.css)

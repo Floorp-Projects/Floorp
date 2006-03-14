@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include ../../../../toolkit/content/debug.js
+
 const PREF_PLACES_GROUPING_GENERIC = "browser.places.grouping.generic";
 const PREF_PLACES_GROUPING_BOOKMARK = "browser.places.grouping.bookmark";
 

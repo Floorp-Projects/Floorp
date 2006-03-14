@@ -6283,14 +6283,14 @@ var BrowserController = {
 
   isCommandEnabled: function BC_isCommandEnabled(command) {
     //LOG("BrowserController.isCommandEnabled: " + command);
-    ASSERT(this.supportsCommand(command), 
+    NS_ASSERT(this.supportsCommand(command), 
            "Controller does not support: " + command);
     return this.commands[command].enabled;
   },
   
   doCommand: function BC_doCommand(command) {
     //LOG("BrowserController.doCommand: " + command);
-    ASSERT(this.supportsCommand(command), 
+    NS_ASSERT(this.supportsCommand(command), 
            "Controller does not support: " + command);
     this.commands[command].execute();
   },

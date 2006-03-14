@@ -46,4 +46,3 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = public src
 
 include $(topsrcdir)/config/rules.mk
-
