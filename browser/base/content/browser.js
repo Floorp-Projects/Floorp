@@ -1937,7 +1937,12 @@ function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType)
   var dataStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
                             .createInstance(Components.interfaces.nsIStringInputStream);
   aStringData = aStringData.replace(/%s/g, aEncKeyword).replace(/%S/g, aKeyword);
+#ifdef MOZILLA_1_8_BRANCH
+# bug 318193
+  dataStream.setData(aStringData, aStringData.length);
+#else
   dataStream.data = aStringData;
+#endif
 
   var mimeStream = Components.classes["@mozilla.org/network/mime-input-stream;1"]
                               .createInstance(Components.interfaces.nsIMIMEInputStream);
