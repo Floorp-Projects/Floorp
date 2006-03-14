@@ -123,6 +123,7 @@ class NS_EXPORT gfxFont {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
+    gfxFont(const nsAString &aName, const gfxFontGroup *aFontGroup);
     virtual ~gfxFont() {}
 
     struct Metrics {

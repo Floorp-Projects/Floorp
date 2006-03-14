@@ -46,6 +46,13 @@
 
 #include "nsCRT.h"
 
+gfxFont::gfxFont(const nsAString &aName, const gfxFontGroup *aFontGroup) :
+    mName(aName), mGroup(aFontGroup), mStyle(aFontGroup->GetStyle())
+{
+
+}
+
+
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
     : mFamilies(aFamilies), mStyle(*aStyle)
 {
@@ -166,6 +173,7 @@ gfxFontGroup::ForEachFont(FontCreationCallback fc,
 
     return PR_TRUE;
 }
+
 
 void
 gfxFontStyle::ComputeWeightAndOffset(PRInt16 *outBaseWeight, PRInt16 *outOffset) const

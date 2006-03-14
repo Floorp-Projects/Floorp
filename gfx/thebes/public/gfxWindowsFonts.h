@@ -63,8 +63,8 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    cairo_font_face_t *CairoFontFace() { return mFontFace; }
-    cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
+    cairo_font_face_t *CairoFontFace();
+    cairo_scaled_font_t *CairoScaledFont();
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
     HFONT GetHFONT() { return mFont; }
     const gfxMatrix& CurrentMatrix() const { return mCTM; }
@@ -76,7 +76,6 @@ protected:
     void FillLogFont(PRInt16 weight);
 
 private:
-    void Init();
     void Destroy();
     void ComputeMetrics();
 
