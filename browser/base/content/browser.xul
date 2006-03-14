@@ -210,7 +210,10 @@
                  tabscrolling="true"
                  showcommentcolumn="true"
                  enablehistory="true"
+#ifndef MOZILLA_1_8_BRANCH
+# bug 23485
                  newlines="stripsurroundingwhitespace"
+#endif
                  oninput="gBrowser.userTypedValue = this.value"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();">
