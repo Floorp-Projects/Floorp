@@ -260,9 +260,15 @@
         <getter>
         <![CDATA[
           if (!this._fastFind) {
+            if (!("@mozilla.org/typeaheadfind;1" in Components.classes))
+              return null;
+
             var tabBrowser = this.getTabBrowser();
             if (tabBrowser && tabBrowser.mCurrentBrowser == this)
               return this._fastFind = tabBrowser.fastFind;
+
+            if (!this.docShell)
+              return null;
 
             this._fastFind = Components.classes["@mozilla.org/typeaheadfind;1"]
                                        .createInstance(Components.interfaces.nsITypeAheadFind);                                
@@ -450,6 +456,8 @@
               this.pageReport = null;
               this.updatePageReport();
             }
+            if (!this.docShell || !this.fastFind)
+              return;
             var tabBrowser = this.getTabBrowser();
             if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
               this.fastFind.setDocShell(this.docShell);
@@ -460,12 +468,10 @@
       <method name="updatePageReport">
         <body>
           <![CDATA[
-            var n = this.parentNode;
-            while (n && n.localName != "tabbrowser")
-              n = n.parentNode;
+            var tabBrowser = this.getTabBrowser();
+            if (!tabBrowser || tabBrowser.mCurrentBrowser != this)
+              return;
 
-            if (!n || n.mCurrentBrowser != this) return;
-           
             var event = document.createEvent("Events");
             event.initEvent("DOMUpdatePageReport", true, true);
             n.dispatchEvent(event);
