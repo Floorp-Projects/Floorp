@@ -53,7 +53,7 @@
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
+    var _elementIDs = ["enableSSL3", "enableTLS", 
         "warnEnteringSecure", "warnEnteringWeak", 
         "warnLeavingSecure", "warnInsecurePost",
         "warnViewMixed" ];
@@ -65,9 +65,6 @@
 
     <!-- Prefs -->
     <vbox flex="1" align="start">
-      <checkbox id="enableSSL2" label="&enable.ssl2;"
-                accesskey="&enable.ssl2.accesskey;"
-                prefstring="security.enable_ssl2"/>
       <checkbox id="enableSSL3" label="&enable.ssl3;"
                 accesskey="&enable.ssl3.accesskey;"
                 prefstring="security.enable_ssl3"/>
