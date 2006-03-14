@@ -44,16 +44,19 @@ var gOpenTime = 3000; // total time the alert should stay up once we are done an
 var gAlertCookie = "";
 var gAlertListener = null;
 var gPendingPreviewFetchRequests = 0;
+var gAnimateOnOpen = true;
 
 function prefillAlertInfo()
 {
   // unwrap all the args....
   // arguments[0] --> array of folders with new mail
   // arguments[1] --> the observer to call back with notifications about the alert
+  // arguments[2] --> animation boolean. Set to true if we should animate the alert, false
+  //                  if we should open the alert and leave it open until the user closes it.
+  var foldersWithNewMail = window.arguments[0];  
   gAlertListener = window.arguments[1];
+  gAnimateOnOpen = window.arguments[2];
 
-  // walk the array of folders with new mail.
-  var foldersWithNewMail = window.arguments[0];
   // for now just grab the first folder which should be a root folder
   // for the account that has new mail. 
   var rootFolder = foldersWithNewMail.GetElementAt(0).QueryInterface(Components.interfaces.nsIWeakReference).QueryReferent(Components.interfaces.nsIMsgFolder);
@@ -137,9 +140,19 @@ function showAlert()
 {
   resizeAlert();
   if (document.getElementById('folderSummaryInfo').hasMessages)
-    setTimeout(animateAlert, gSlideTime);
+  {
+    if (gAnimateOnOpen)
+      setTimeout(animateOpen, gSlideTime);
+    else
+    {
+      // restore the alert to its full height so we can open it right away.
+      window.outerHeight = gFinalHeight;  
+      // now move the alert back to a visible location...
+      window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);    
+    }
+  }
   else
-    closeAlert();
+    animateClose();
 }
 
 function resizeAlert()
@@ -156,7 +169,7 @@ function resizeAlert()
   var windowWidth = Math.max (document.getBoxObjectFor(document.getElementById('alertGroove')).width,
                               document.getBoxObjectFor(document.getElementById('folderSummaryInfo')).width);
   resizeTo(windowWidth + document.getBoxObjectFor(document.getElementById('alertImageBox')).width + 30, 
-           document.getBoxObjectFor(document.getElementById('alertBox')).height + 10);
+           document.getBoxObjectFor(document.getElementById('alertBox')).height + 10);                     
   gFinalHeight = window.outerHeight;
   window.outerHeight = 1;
   
@@ -164,32 +177,35 @@ function resizeAlert()
   window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
 }
 
-function animateAlert()
+function animateOpen()
 {
   if (window.outerHeight < gFinalHeight)
   {
     window.screenY -= gSlideIncrement;
     window.outerHeight += gSlideIncrement;
-    setTimeout(animateAlert, gSlideTime);
+    setTimeout(animateOpen, gSlideTime);
   }
   else
-    setTimeout(closeAlert, gOpenTime);  
+    setTimeout(animateClose, gOpenTime);  
 }
 
-function closeAlert()
+function animateClose()
 {
   if (window.outerHeight > 1)
   {
     window.screenY += gSlideIncrement;
     window.outerHeight -= gSlideIncrement;
-    setTimeout(closeAlert, gSlideTime);
+    setTimeout(animateClose, gSlideTime);
   }
   else
-  {
-    if (gAlertListener)
-      gAlertListener.observe(null, "alertfinished", gAlertCookie); 
-    window.close(); 
-  }
+    closeAlert();
+}
+
+function closeAlert()
+{
+  if (gAlertListener)
+    gAlertListener.observe(null, "alertfinished", gAlertCookie); 
+  window.close(); 
 }
 
 function onAlertClick()

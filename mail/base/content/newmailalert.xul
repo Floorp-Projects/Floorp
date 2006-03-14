@@ -50,19 +50,25 @@
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/newmailalert.js"/>
 
-  <hbox id="alertBox">
-    
-    <hbox id ="alertImageBox" align="center" valign="center">
-      <image id="alertImage"/>
+
+  <stack>
+    <hbox id="alertBox">
+      <hbox id ="alertImageBox" align="center" valign="center">
+        <image id="alertImage"/>
+      </hbox>
+
+      <vbox id="alertTextBox">
+        <label id="alertTitle"/>
+        <separator id="alertGroove" class="groove"/>
+        <folderSummary id="folderSummaryInfo"/>
+      </vbox>
     </hbox>
-
-    <vbox id="alertTextBox">
-      <label id="alertTitle"/>
-      <separator id="alertGroove" class="groove"/>
-      <folderSummary id="folderSummaryInfo"/>
-    </vbox>
-  </hbox>
-
+    
+    <hbox align="top">
+      <spacer flex="1"/>
+      <toolbarbutton id="closeButton" onclick="closeAlert();"/>
+    </hbox>    
+  </stack>
   <!-- This method is called inline because we want to make sure we establish the width
        and height of the alert before we fire the onload handler. -->
   <script type="application/x-javascript">prefillAlertInfo();</script>

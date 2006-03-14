@@ -63,6 +63,11 @@
 #alertTitle {
   font-weight: bold;
   text-align: center;
+  /* this right margin keeps us from overlapping with the
+     close button. It's value should be related to the width
+     of the closeButtonImage 
+  */
+  margin-right: 16px;
 }
 
 #alertTextBox {
@@ -86,4 +91,20 @@
 .folderSummary-previewText {
   color: grey; 
   padding-left: 5px;
+}
+
+#closeButton {
+  list-style-image: url("chrome://messenger/skin/icons/quick-search-clear.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-appearance: none;
+  border: none !important;
+  padding: 2px 2px 0px 0px;
+}
+
+#closeButton:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#closeButton:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
 }
