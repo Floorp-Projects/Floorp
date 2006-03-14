@@ -72,16 +72,39 @@ class nsIMenuParent;
 class nsIMenuFrame;
 class nsIDOMXULDocument;
 
+class nsMenuPopupFrame;
 
-class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent, public nsITimerCallback
+/**
+ * nsMenuPopupTimerMediator is a wrapper around an nsMenuPopupFrame which can be safely
+ * passed to timers. The class is reference counted unlike the underlying
+ * nsMenuPopupFrame, so that it will exist as long as the timer holds a reference
+ * to it. The callback is delegated to the contained nsMenuPopupFrame as long as
+ * the contained nsMenuPopupFrame has not been destroyed.
+ */
+class nsMenuPopupTimerMediator : public nsITimerCallback
+{
+public:
+  nsMenuPopupTimerMediator(nsMenuPopupFrame* aFrame);
+  ~nsMenuPopupTimerMediator();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+  void ClearFrame();
+
+private:
+
+  // Pointer to the wrapped frame.
+  nsMenuPopupFrame* mFrame;
+};
+
+class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
   nsMenuPopupFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
 
-  // The nsITimerCallback interface
-  NS_DECL_NSITIMERCALLBACK
 
   // nsIMenuParentInterface
   virtual nsIMenuFrame* GetCurrentMenuItem();
@@ -182,6 +205,9 @@ public:
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
   
 protected:
+  friend class nsMenuPopupTimerMediator;
+  NS_HIDDEN_(nsresult) Notify(nsITimer* aTimer);
+
   // redefine to tell the box system not to move the
   // views.
   virtual void GetLayoutFlags(PRUint32& aFlags);
@@ -215,6 +241,9 @@ protected:
 
   nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
   nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
+
+  // Reference to the mediator which wraps this frame.
+  nsRefPtr<nsMenuPopupTimerMediator> mTimerMediator;
 
   PRPackedBool mIsContextMenu;  // is this a context menu?
   
