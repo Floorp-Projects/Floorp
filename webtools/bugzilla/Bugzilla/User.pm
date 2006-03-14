@@ -1438,7 +1438,7 @@ confirmation screen.
 
 =item C<new($userid)>
 
-Creates a new C{Bugzilla::User> object for the given user id.  If no user
+Creates a new C<Bugzilla::User> object for the given user id.  If no user
 id was given, a blank object is created with no user attributes.
 
 If an id was given but there was no matching user found, undef is returned.
