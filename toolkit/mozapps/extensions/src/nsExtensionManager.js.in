@@ -2014,8 +2014,8 @@ var PendingOperations = {
       this.clearOpsForItem(entry.id);
     else {
       if (!(opType in this._ops))
-        this._ops[opType] = [];
-      this._ops[opType].push(entry);
+        this._ops[opType] = { };
+      this._ops[opType][entry.id] = entry.locationKey;
     }
   },
   
@@ -2027,12 +2027,8 @@ var PendingOperations = {
    *          The GUID of the item to remove the entry for
    */
   clearItem: function(opType, id) {
-    if (!(opType in this._ops))
-      return;
-    for (var i = 0; i < this._ops[opType].length; ++i) {
-      if (this._ops[opType][i].id == id)
-        this._ops[opType].splice(i, 1);
-    }
+    if (opType in this._ops && id in this._ops[opType])
+      delete this._ops[opType][id];
   },
   
   /**
@@ -2042,10 +2038,8 @@ var PendingOperations = {
    */
   clearOpsForItem: function(id) {
     for (var opType in this._ops) {
-      for (var i = 0; i < this._ops[opType].length; ++i) {
-        if (this._ops[opType][i].id == id)
-          this._ops[opType].splice(i, 1);
-      }
+      if (id in this._ops[opType])
+        delete this._ops[opType][id];
     }
   },
 
@@ -2056,7 +2050,7 @@ var PendingOperations = {
    */
   clearItems: function(opType) {
     if (opType in this._ops)
-      this._ops[opType] = [];
+      delete this._ops[opType];
   },
   
   /**
@@ -2065,7 +2059,12 @@ var PendingOperations = {
    *          The type of Operation to return a list of
    */
   getOperations: function(opType) {
-    return opType in this._ops ? this._ops[opType] : [];
+    if (!(opType in this._ops))
+      return [];
+    var ops = [];
+    for (var id in this._ops[opType])
+      ops.push( {id: id, locationKey: this._ops[opType][id] } );
+    return ops;
   },
   
   /**
@@ -2073,8 +2072,10 @@ var PendingOperations = {
    */
   get size() {
     var size = 0;
-    for (var opType in this._ops)
-      size += this._ops[opType].length;
+    for (var opType in this._ops) {
+      for (var id in this._ops[opType])
+        ++size;
+    }
     return size;
   }
 };
