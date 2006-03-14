@@ -197,6 +197,9 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
   nsINativeKeyBindings *nativeBindings;
   if (isEditor && (nativeBindings = GetEditorKeyBindings())) {
     nsNativeKeyEvent nativeEvent;
+    // Some key events have no useful charCode
+    nativeEvent.charCode = 0;
+    keyEvent->GetKeyCode(&nativeEvent.keyCode);
     keyEvent->GetAltKey(&nativeEvent.altKey);
     keyEvent->GetCtrlKey(&nativeEvent.ctrlKey);
     keyEvent->GetShiftKey(&nativeEvent.shiftKey);
@@ -218,15 +221,12 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType)
       keyEvent->GetCharCode(&nativeEvent.charCode);
       handled = sNativeEditorBindings->KeyPress(nativeEvent,
                                                 DoCommandCallback, controllers);
+    } else if (aEventType == nsXBLAtoms::keyup) {
+      handled = sNativeEditorBindings->KeyUp(nativeEvent,
+                                             DoCommandCallback, controllers);
     } else {
-      keyEvent->GetKeyCode(&nativeEvent.keyCode);
-      if (aEventType == nsXBLAtoms::keyup) {
-        handled = sNativeEditorBindings->KeyUp(nativeEvent,
+      handled = sNativeEditorBindings->KeyDown(nativeEvent,
                                                DoCommandCallback, controllers);
-      } else {
-        handled = sNativeEditorBindings->KeyDown(nativeEvent,
-                                                 DoCommandCallback, controllers);
-      }
     }
 
     if (handled)
