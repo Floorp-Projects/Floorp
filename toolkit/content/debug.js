@@ -70,8 +70,9 @@ function NS_ASSERT(condition, message) {
   var assertionText = "ASSERT: " + message + "\n";
   dump(assertionText);
 
+  var stackText = "";
   if (gTraceOnAssert) {
-    var stackText = "Stack Trace: \n";
+    stackText = "Stack Trace: \n";
     var count = 0;
     while (caller) {
       stackText += count++ + ":" + caller.name + "(";
@@ -87,7 +88,7 @@ function NS_ASSERT(condition, message) {
   }
 
   var environment = Components.classes["@mozilla.org/process/environment;1"].
-                               getService(Components.interfaces.nsIEnvironment);
+                    getService(Components.interfaces.nsIEnvironment);
   if (environment.exists(NS_ASSERT_ENVIRONMENT_VARIABLE_NAME) &&
       !parseInt(environment.get(NS_ASSERT_ENVIRONMENT_VARIABLE_NAME)))
     return;
@@ -96,7 +97,6 @@ function NS_ASSERT(condition, message) {
   if (this.window)
     source = window;
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-                      getService(Components.interfaces.nsIPromptService);
+           getService(Components.interfaces.nsIPromptService);
   ps.alert(source, "Assertion Failed", assertionText + stackText);
-
 }
