@@ -52,6 +52,7 @@
 #include "nsIDOMNSRange.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDocumentEncoder.h"
+#include "nsContentCID.h"
 
 CIEHtmlElement::CIEHtmlElement()
 {
