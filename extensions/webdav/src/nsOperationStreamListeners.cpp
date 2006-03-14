@@ -52,6 +52,7 @@
 
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
+#include "nsContentCID.h"
 
 #include "nsIWebDAVResource.h"
 #include "nsIWebDAVListener.h"

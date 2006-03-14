@@ -62,6 +62,7 @@
 
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
+#include "nsContentCID.h"
 
 #include "nsIDOMParser.h"
 
