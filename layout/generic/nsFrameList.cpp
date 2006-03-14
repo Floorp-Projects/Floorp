@@ -420,26 +420,28 @@ nsFrameList::List(FILE* out) const
 nsIFrame*
 nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 {
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
   nsILineIterator* iter;
 
-  if (aFrame->GetType() == nsLayoutAtoms::blockFrame)
-    return GetPrevSiblingFor(aFrame);
-
-  nsIFrame* blockFrame = aFrame->GetParent();
-  if (!blockFrame)
-    return GetPrevSiblingFor(aFrame);
-
-  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(aFrame);
+  if (!mFirstChild)
+    return nsnull;
   
-  nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  if (aFrame && aFrame->GetType() == nsLayoutAtoms::blockFrame)
+    return GetPrevSiblingFor(aFrame);
+
+  nsIFrame* parent = mFirstChild->GetParent();
+  if (!parent)
+    return aFrame ? GetPrevSiblingFor(aFrame) : LastChild();
+
+  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);
+  
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) { 
     // If the parent is not a block frame, just get the next or prev sibling, depending on block and frame direction.
-    nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(aFrame);
+    nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(mFirstChild);
     if ((frameEmbeddingLevel & 1) == (baseLevel & 1)) {
-      return GetPrevSiblingFor(aFrame);
+      return aFrame ? GetPrevSiblingFor(aFrame) : LastChild();
     } else {
-      return aFrame->GetNextSibling();
+      return aFrame ? aFrame->GetNextSibling() : mFirstChild;
     }    
   }
 
@@ -447,23 +449,30 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   // or the last one on the previous line.
 
   PRInt32 thisLine;
-  result = iter->FindLineContaining(aFrame, &thisLine);
-  if (NS_FAILED(result) || thisLine < 0)
-    return nsnull;
-
-  nsBidiPresUtils* bidiUtils = aFrame->GetPresContext()->GetBidiUtils();
+  if (aFrame) {
+    result = iter->FindLineContaining(aFrame, &thisLine);
+    if (NS_FAILED(result) || thisLine < 0)
+      return nsnull;
+  } else {
+    iter->GetNumLines(&thisLine);
+  }
   
-  nsIFrame* frame;
+  nsBidiPresUtils* bidiUtils = mFirstChild->GetPresContext()->GetBidiUtils();
+  
+  nsIFrame* frame = nsnull;
   nsIFrame* firstFrameOnLine;
   PRInt32 numFramesOnLine;
   nsRect lineBounds;
   PRUint32 lineFlags;
-  iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
 
-  if (baseLevel == NSBIDI_LTR) {
-    frame = bidiUtils->GetFrameToLeftOf(aFrame, firstFrameOnLine, numFramesOnLine);
-  } else { // RTL
-    frame = bidiUtils->GetFrameToRightOf(aFrame, firstFrameOnLine, numFramesOnLine);
+  if (aFrame) {
+    iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
+
+    if (baseLevel == NSBIDI_LTR) {
+      frame = bidiUtils->GetFrameToLeftOf(aFrame, firstFrameOnLine, numFramesOnLine);
+    } else { // RTL
+      frame = bidiUtils->GetFrameToRightOf(aFrame, firstFrameOnLine, numFramesOnLine);
+    }
   }
 
   if (!frame && thisLine > 0) {
@@ -482,27 +491,28 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
 nsIFrame*
 nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
 {
-  NS_PRECONDITION(nsnull != aFrame, "null ptr");
   nsILineIterator* iter;
 
-  if (aFrame->GetType() == nsLayoutAtoms::blockFrame) {
-    return aFrame->GetNextSibling();
-  }
-
-  nsIFrame* blockFrame = aFrame->GetParent();
-  if (!blockFrame)
-    return GetPrevSiblingFor(aFrame);
-
-  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(aFrame);
+  if (!mFirstChild)
+    return nsnull;
   
-  nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
+  if (aFrame && aFrame->GetType() == nsLayoutAtoms::blockFrame)
+    return aFrame->GetNextSibling();
+
+  nsIFrame* parent = mFirstChild->GetParent();
+  if (!parent)
+    return aFrame ? GetPrevSiblingFor(aFrame) : mFirstChild;
+
+  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(mFirstChild);
+  
+  nsresult result = parent->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) {
     // If the parent is not a block frame, just get the next or prev sibling, depending on block and frame direction.
-    nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(aFrame);
+    nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(mFirstChild);
     if ((frameEmbeddingLevel & 1) == (baseLevel & 1)) {
-      return aFrame->GetNextSibling();
+      return aFrame ? aFrame->GetNextSibling() : mFirstChild;
     } else {
-      return GetPrevSiblingFor(aFrame);
+      return aFrame ? GetPrevSiblingFor(aFrame) : LastChild();
     }    
   }
 
@@ -510,23 +520,30 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   // or the first one on the next line.
   
   PRInt32 thisLine;
-  result = iter->FindLineContaining(aFrame, &thisLine);
-  if (NS_FAILED(result) || thisLine < 0)
-    return nsnull;
+  if (aFrame) {
+    result = iter->FindLineContaining(aFrame, &thisLine);
+    if (NS_FAILED(result) || thisLine < 0)
+      return nsnull;
+  } else {
+    thisLine = -1;
+  }
   
-  nsBidiPresUtils* bidiUtils = aFrame->GetPresContext()->GetBidiUtils();
+  nsBidiPresUtils* bidiUtils = mFirstChild->GetPresContext()->GetBidiUtils();
   
-  nsIFrame* frame;
+  nsIFrame* frame = nsnull;
   nsIFrame* firstFrameOnLine;
   PRInt32 numFramesOnLine;
   nsRect lineBounds;
   PRUint32 lineFlags;
-  iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
-  
-  if (baseLevel == NSBIDI_LTR) {
-    frame = bidiUtils->GetFrameToRightOf(aFrame, firstFrameOnLine, numFramesOnLine);
-  } else { // RTL
-    frame = bidiUtils->GetFrameToLeftOf(aFrame, firstFrameOnLine, numFramesOnLine);
+
+  if (aFrame) {
+    iter->GetLine(thisLine, &firstFrameOnLine, &numFramesOnLine, lineBounds, &lineFlags);
+    
+    if (baseLevel == NSBIDI_LTR) {
+      frame = bidiUtils->GetFrameToRightOf(aFrame, firstFrameOnLine, numFramesOnLine);
+    } else { // RTL
+      frame = bidiUtils->GetFrameToLeftOf(aFrame, firstFrameOnLine, numFramesOnLine);
+    }
   }
   
   PRInt32 numLines;

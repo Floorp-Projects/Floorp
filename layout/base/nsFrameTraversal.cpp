@@ -696,10 +696,11 @@ NS_IMETHODIMP
       if (grandParent) {
         nsFrameList list(grandParent->GetFirstChild(nsnull));
         result = list.GetNextVisualFor(parent);
-        if (result){
-          parent = result;
-          while (nsnull != (result = parent->GetFirstChild(nsnull))) {
+        if (result) {
+          while (result) {
             parent = result;
+            nsFrameList list(parent->GetFirstChild(nsnull));
+            result = list.GetNextVisualFor(nsnull);
           }
           result = parent;
           break;
@@ -751,12 +752,10 @@ NS_IMETHODIMP
       nsFrameList list(grandParent->GetFirstChild(nsnull));
       result = list.GetPrevVisualFor(parent);
       if (result){
-        parent = result;
-        while (nsnull != (result = parent->GetFirstChild(nsnull))) {
+        while (result) {
           parent = result;
-          while ((result = parent->GetNextSibling()) != nsnull) {
-            parent = result;
-          }
+          nsFrameList list(parent->GetFirstChild(nsnull));
+          result = list.GetPrevVisualFor(nsnull);
         }
         result = parent;
         break;
