@@ -4165,7 +4165,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
         return rv;
       }
 
-      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
+      if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus) ||
+          (NS_INLINE_IS_BREAK_AFTER(frameReflowStatus) &&
+           !aLineLayout.GetLineEndsInBR())) {
         // Mark next line dirty in case SplitLine didn't end up
         // pushing any frames.
         nsLineList_iterator next = aLine.next();
