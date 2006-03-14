@@ -317,6 +317,9 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 #home-button:hover {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
+#home-button[disabled="true"] {
+  -moz-image-region: rect(48px 120px 72px 96px);
+}
 
 /* download manager button */
 
@@ -534,6 +537,9 @@ toolbar[iconsize="small"] #home-button {
 }
 toolbar[iconsize="small"] #home-button:hover {
   -moz-image-region: rect(16px 80px 32px 64px);
+}
+toolbar[iconsize="small"] #home-button[disabled="true"] {
+  -moz-image-region: rect(32px 80px 48px 64px);
 }
 
 /* download manager button */
