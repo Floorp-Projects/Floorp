@@ -32,8 +32,7 @@
     <caption label="&smartTitle.label;"/>
     <hbox align="center">
       <checkbox id="XPInstallEnabled" label="&enableSU.label;" accesskey="&enableSU.accesskey;"
-                prefstring="xpinstall.enabled"/>
-      <spacer flex="1"/>
+                flex="1" prefstring="xpinstall.enabled"/>
       <button id="allowedSitesButton" label="&allowedSites.label;" permissiontype="install"
               accesskey="&allowedSites.accesskey;" oncommand="viewInstalls('');"/>
     </hbox>
