@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +44,6 @@
 #include "nsIServiceManager.h"
 #include "nsIMultiPartChannel.h"
 
-#include "nsAutoLock.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -56,20 +55,18 @@
 #include "nspr.h"
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(imgRequestProxy, imgIRequest, nsIRequest,
-                              nsISupportsPriority)
+NS_IMPL_ISUPPORTS3(imgRequestProxy, imgIRequest, nsIRequest,
+                   nsISupportsPriority)
 
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
   mListener(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mCanceled(PR_FALSE),
-  mIsInLoadGroup(PR_FALSE),
-  mLock(nsnull)
+  mIsInLoadGroup(PR_FALSE)
 {
   /* member initializers and constructor code */
 
-  mLock = PR_NewLock();
 }
 
 imgRequestProxy::~imgRequestProxy()
@@ -79,8 +76,6 @@ imgRequestProxy::~imgRequestProxy()
 
   if (mOwner) {
     if (!mCanceled) {
-      PR_Lock(mLock);
-
       mCanceled = PR_TRUE;
 
       /* set mListener to null so that we don't forward any callbacks that
@@ -88,7 +83,6 @@ imgRequestProxy::~imgRequestProxy()
        */
       mListener = nsnull;
 
-      PR_Unlock(mLock);
 
       /* Call RemoveProxy with a successful status.  This will keep the
          channel, if still downloading data, from being canceled if 'this' is
@@ -100,8 +94,6 @@ imgRequestProxy::~imgRequestProxy()
 
     NS_RELEASE(mOwner);
   }
-
-  PR_DestroyLock(mLock);
 }
 
 
@@ -114,16 +106,12 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequestProxy::Init", "request", request);
 
-  PR_Lock(mLock);
-
   mOwner = request;
   NS_ADDREF(mOwner);
 
   mListener = aObserver;
 
   mLoadGroup = aLoadGroup;
-
-  PR_Unlock(mLock);
 
   request->AddProxy(this, PR_FALSE); // Pass PR_FALSE here so that AddProxy doesn't send all the On* notifications immediatly
 
@@ -135,8 +123,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   if (mCanceled)
     return NS_OK;
 
-  PR_Lock(mLock);
-
   mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER, PR_FALSE);
   NS_RELEASE(mOwner);
 
@@ -144,8 +130,6 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   NS_ADDREF(mOwner);
 
   mOwner->AddProxy(this, PR_FALSE);
-
-  PR_Unlock(mLock);
 
   return NS_OK;
 }
@@ -217,12 +201,8 @@ NS_IMETHODIMP imgRequestProxy::Cancel(nsresult status)
 
   LOG_SCOPE(gImgLog, "imgRequestProxy::Cancel");
 
-  PR_Lock(mLock);
-
   mCanceled = PR_TRUE;
   mListener = nsnull;
-
-  PR_Unlock(mLock);
 
   mOwner->RemoveProxy(this, status, PR_FALSE);
 
@@ -244,13 +224,11 @@ NS_IMETHODIMP imgRequestProxy::Resume()
 /* attribute nsILoadGroup loadGroup */
 NS_IMETHODIMP imgRequestProxy::GetLoadGroup(nsILoadGroup **loadGroup)
 {
-  nsAutoLock lock(mLock);
   NS_IF_ADDREF(*loadGroup = mLoadGroup.get());
   return NS_OK;
 }
 NS_IMETHODIMP imgRequestProxy::SetLoadGroup(nsILoadGroup *loadGroup)
 {
-  nsAutoLock lock(mLock);
   mLoadGroup = loadGroup;
   return NS_OK;
 }
@@ -275,7 +253,6 @@ NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  nsAutoLock lock(mLock);
   mOwner->GetImage(aImage);
   return NS_OK;
 }
@@ -288,7 +265,6 @@ NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoLock lock(mLock);
   *aStatus = mOwner->GetImageStatus();
   return NS_OK;
 }
@@ -299,7 +275,6 @@ NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  nsAutoLock lock(mLock);
   return mOwner->GetURI(aURI);
 }
 

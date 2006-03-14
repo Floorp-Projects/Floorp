@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,7 +63,6 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 
-#include "nsAutoLock.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "plstr.h" // PL_strcasestr(...)
@@ -72,10 +71,10 @@
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(imgRequest, imgILoad,
-                              imgIDecoderObserver, imgIContainerObserver,
-                              nsIStreamListener, nsIRequestObserver,
-                              nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
+                   imgIDecoderObserver, imgIContainerObserver,
+                   nsIStreamListener, nsIRequestObserver,
+                   nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
   mObservers(0),
