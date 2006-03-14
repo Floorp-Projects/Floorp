@@ -130,7 +130,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLError)
 class nsDisplayMathMLError : public nsDisplayItem {
 public:
   nsDisplayMathMLError(nsIFrame* aFrame)
-    : mFrame(aFrame) {
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayMathMLError);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -139,12 +139,9 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("MathMLError")
-private:
-  nsIFrame* mFrame;
 };
 
 void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,

@@ -1342,7 +1342,7 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 MOZ_DECL_CTOR_COUNTER(nsDisplayTableBorderBackground)
 class nsDisplayTableBorderBackground : public nsDisplayItem {
 public:
-  nsDisplayTableBorderBackground(nsTableFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayTableBorderBackground(nsTableFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableBorderBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1351,26 +1351,25 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   // With collapsed borders, parts of the collapsed border can extend outside
   // the table frame, so allow this display element to blow out to our
   // overflow rect.
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
-    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+    return NS_STATIC_CAST(nsTableFrame*, mFrame)->GetOverflowRect() +
+      aBuilder->ToReferenceFrame(mFrame);
   }
   NS_DISPLAY_DECL_NAME("TableBorderBackground")
-private:
-  nsTableFrame* mFrame;
 };
 
 void
 nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintTableBorderBackground(*aCtx, aDirtyRect, 
-                                     aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsTableFrame*, mFrame)->
+    PaintTableBorderBackground(*aCtx, aDirtyRect,
+                               aBuilder->ToReferenceFrame(mFrame));
 }
 
 /* static */ nsresult

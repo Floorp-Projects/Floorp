@@ -1263,26 +1263,24 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayImage)
 class nsDisplayImage : public nsDisplayItem {
 public:
   nsDisplayImage(nsImageFrame* aFrame, imgIContainer* aImage)
-    : mFrame(aFrame), mImage(aImage) {
+    : nsDisplayItem(aFrame), mImage(aImage) {
     MOZ_COUNT_CTOR(nsDisplayImage);
   }
   virtual ~nsDisplayImage() {
     MOZ_COUNT_DTOR(nsDisplayImage);
   }
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Image")
 private:
-  nsImageFrame*           mFrame;
   nsCOMPtr<imgIContainer> mImage;
 };
 
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  mFrame->PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect,
-                     mImage);
+  NS_STATIC_CAST(nsImageFrame*, mFrame)->
+    PaintImage(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect, mImage);
 }
 
 void

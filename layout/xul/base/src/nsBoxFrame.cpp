@@ -1361,7 +1361,7 @@ nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
 MOZ_DECL_CTOR_COUNTER(nsDisplayXULDebug)
 class nsDisplayXULDebug : public nsDisplayItem {
 public:
-  nsDisplayXULDebug(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayXULDebug(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULDebug);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1370,23 +1370,22 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) {
-    mFrame->DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
+    NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+      DisplayDebugInfoFor(this, aPt - aBuilder->ToReferenceFrame(mFrame));
     return PR_TRUE;
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("ComboboxFocus")
-private:
-  nsBoxFrame* mFrame;
 };
 
 void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsBoxFrame*, mFrame)->
+    PaintXULDebugOverlay(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 static void
@@ -2438,7 +2437,6 @@ public:
                               nsIFrame* aTargetFrame)
     : nsDisplayWrapList(aFrame, aList), mTargetFrame(aTargetFrame) {}
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   NS_DISPLAY_DECL_NAME("XULEventRedirector")
 private:
   nsIFrame* mTargetFrame;

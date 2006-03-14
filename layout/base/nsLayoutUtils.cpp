@@ -643,7 +643,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplaySolidColor)
 class nsDisplaySolidColor : public nsDisplayItem {
 public:
   nsDisplaySolidColor(nsIFrame* aFrame, nscolor aColor)
-    : mFrame(aFrame), mColor(aColor) {
+    : nsDisplayItem(aFrame), mColor(aColor) {
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -652,12 +652,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("SolidColor")
 private:
-  nsIFrame* mFrame;
   nscolor   mColor;
 };
 

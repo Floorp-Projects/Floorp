@@ -71,7 +71,8 @@ class nsDisplayTextDecoration : public nsDisplayItem {
 public:
   nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,
                           nscolor aColor, nsLineBox* aLine)
-    : mFrame(aFrame), mLine(aLine), mColor(aColor), mDecoration(aDecoration) {
+    : nsDisplayItem(aFrame), mLine(aLine), mColor(aColor),
+      mDecoration(aDecoration) {
     MOZ_COUNT_CTOR(nsDisplayTextDecoration);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -80,12 +81,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("TextDecoration")
 private:
-  nsHTMLContainerFrame* mFrame;
   nsLineBox*            mLine;
   nscolor               mColor;
   PRUint8               mDecoration;
@@ -103,7 +102,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
   nsCOMPtr<nsIDeviceContext> deviceContext;
   aCtx->GetDeviceContext(*getter_AddRefs(deviceContext));
   nsCOMPtr<nsIFontMetrics> normalFont;
-  const nsStyleVisibility* visibility = mFrame->GetStyleVisibility();      
+  const nsStyleVisibility* visibility = mFrame->GetStyleVisibility();
   nsCOMPtr<nsIFontMetrics> fm;
   deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup,
       *getter_AddRefs(fm));
@@ -112,17 +111,18 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 
   // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations
   nscoord ascent, offset, size;
+  nsHTMLContainerFrame* f = NS_STATIC_CAST(nsHTMLContainerFrame*, mFrame);
   fm->GetMaxAscent(ascent);
   if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     fm->GetUnderline(offset, size);
     if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
     } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, ascent, ascent, size);
+      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, ascent, ascent, size);
     }
   } else {
     fm->GetStrikeout(offset, size);
-    mFrame->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
   }
 }
 

@@ -167,7 +167,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayFieldSetBorderBackground)
 class nsDisplayFieldSetBorderBackground : public nsDisplayItem {
 public:
   nsDisplayFieldSetBorderBackground(nsFieldSetFrame* aFrame)
-    : mFrame(aFrame) {
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFieldSetBorderBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -176,13 +176,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("FieldSetBorderBackground")
-private:
-  nsFieldSetFrame* mFrame;
 };
 
 nsIFrame* nsDisplayFieldSetBorderBackground::HitTest(nsDisplayListBuilder* aBuilder,
@@ -198,8 +195,8 @@ void
 nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame),
-                                aDirtyRect);
+  NS_STATIC_CAST(nsFieldSetFrame*, mFrame)->
+    PaintBorderBackground(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 
 NS_IMETHODIMP

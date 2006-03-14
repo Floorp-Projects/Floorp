@@ -1927,7 +1927,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLSelectionRect)
 class nsDisplayMathMLSelectionRect : public nsDisplayItem {
 public:
   nsDisplayMathMLSelectionRect(nsIFrame* aFrame, const nsRect& aRect)
-    : mFrame(aFrame), mRect(aRect) {
+    : nsDisplayItem(aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLSelectionRect);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1936,12 +1936,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("MathMLSelectionRect")
 private:
-  nsIFrame* mFrame;
   nsRect    mRect;
 };
 
@@ -1961,7 +1959,7 @@ class nsDisplayMathMLCharBackground : public nsDisplayItem {
 public:
   nsDisplayMathMLCharBackground(nsIFrame* aFrame, const nsRect& aRect,
       nsStyleContext* aStyleContext)
-    : mFrame(aFrame), mStyleContext(aStyleContext), mRect(aRect) {
+    : nsDisplayItem(aFrame), mStyleContext(aStyleContext), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1970,12 +1968,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("MathMLCharBackground")
 private:
-  nsIFrame*       mFrame;
   nsStyleContext* mStyleContext;
   nsRect          mRect;
 };
@@ -1998,7 +1994,7 @@ class nsDisplayMathMLCharForeground : public nsDisplayItem {
 public:
   nsDisplayMathMLCharForeground(nsIFrame* aFrame, nsMathMLChar* aChar,
 				PRBool aIsSelected)
-    : mFrame(aFrame), mChar(aChar), mIsSelected(aIsSelected) {
+    : nsDisplayItem(aFrame), mChar(aChar), mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2007,12 +2003,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("MathMLCharForeground")
 private:
-  nsIFrame*     mFrame;
   nsMathMLChar* mChar;
   PRPackedBool  mIsSelected;
 };
@@ -2029,7 +2023,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLCharDebug)
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
 public:
   nsDisplayMathMLCharDebug(nsIFrame* aFrame, const nsRect& aRect)
-    : mFrame(aFrame), mRect(aRect) {
+    : nsDisplayItem(aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharDebug);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2038,12 +2032,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("MathMLCharDebug")
 private:
-  nsIFrame* mFrame;
   nsRect    mRect;
 };
 

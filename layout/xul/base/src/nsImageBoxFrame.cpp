@@ -390,7 +390,7 @@ nsImageBoxFrame::UpdateLoadFlags()
 MOZ_DECL_CTOR_COUNTER(nsDisplayXULImage)
 class nsDisplayXULImage : public nsDisplayItem {
 public:
-  nsDisplayXULImage(nsImageBoxFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayXULImage(nsImageBoxFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayXULImage);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -399,20 +399,18 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("XULImage")
-private:
-  nsImageBoxFrame* mFrame;
 };
 
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsImageBoxFrame*, mFrame)->
+    PaintImage(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP

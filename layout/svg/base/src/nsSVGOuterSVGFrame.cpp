@@ -602,7 +602,7 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
 MOZ_DECL_CTOR_COUNTER(nsDisplaySVG)
 class nsDisplaySVG : public nsDisplayItem {
 public:
-  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : mFrame(aFrame) {
+  nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplaySVG);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -612,25 +612,24 @@ public:
 #endif
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("SVGEventReceiver")
-private:
-  nsSVGOuterSVGFrame* mFrame;
 };
 
 nsIFrame*
 nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt)
 {
-  return mFrame->GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
+  return NS_STATIC_CAST(nsSVGOuterSVGFrame*, mFrame)->
+    GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
 }
 
 void
 nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect)
 {
-  mFrame->Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsSVGOuterSVGFrame*, mFrame)->
+    Paint(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 nsIFrame*

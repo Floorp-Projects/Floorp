@@ -278,7 +278,7 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
 MOZ_DECL_CTOR_COUNTER(nsDisplayXULTextBox)
 class nsDisplayXULTextBox : public nsDisplayItem {
 public:
-  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : nsDisplayItem(aFrame) {
       MOZ_COUNT_CTOR(nsDisplayXULTextBox);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -287,18 +287,16 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("XULTextBox")
-private:
-  nsTextBoxFrame* mFrame;
 };
 
 void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintTitle(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsTextBoxFrame*, mFrame)->
+    PaintTitle(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP

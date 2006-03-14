@@ -1621,7 +1621,8 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
 MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBorder)
 class nsDisplayFramesetBorder : public nsDisplayItem {
 public:
-  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame)
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1630,21 +1631,19 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   // REVIEW: see old GetFrameForPoint
   // Receives events in its bounds
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("FramesetBorder")
-private:
-  nsHTMLFramesetBorderFrame* mFrame;
 };
 
 void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsHTMLFramesetBorderFrame*, mFrame)->
+    PaintBorder(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP
@@ -1824,7 +1823,7 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
 MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBlank)
 class nsDisplayFramesetBlank : public nsDisplayItem {
 public:
-  nsDisplayFramesetBlank(nsIFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayFramesetBlank(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayFramesetBlank);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1833,14 +1832,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("FramesetBlank")
-private:
-  nsIFrame* mFrame;
 };
-
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
