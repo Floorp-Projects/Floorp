@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org Code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -21,9 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   John Fairhurst <john_fairhurst@iname.com>
- *   Henry Sobotka <sobotka@axess.com> added VAC++ support
- *   and fixed emx asm to work with gcc 2.95.2 (Jan. 2000)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,28 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Implement shared vtbl methods */
+/* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
+#include "xptc_platforms_unixish_x86.h"
+#include "xptc_gcc_x86_unix.h"
 
-#if !defined (__EMX__) && !defined(__IBMCPP__)
-#error "This code is only for OS/2"
-#endif
-
-// Procedure in xptcall_vacpp.asm
-#ifdef XP_OS2_VACPP
-extern nsresult SetEntryFromIndex(int stubidx);
-#endif
-
-#ifdef XP_OS2_VACPP
-nsresult
-PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
-                    PRUint32 *args)
-#else
-static nsresult
-PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
-                    PRUint32 *args)
-#endif
+extern "C" {
+static nsresult ATTRIBUTE_USED
+__attribute__ ((regparm (3)))
+PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
 
@@ -72,9 +56,6 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
     PRUint8 i;
     nsresult result = NS_ERROR_FAILURE;
 
-    // If anything fails before stackBytesToPop can be set then
-    // the failure is completely catastrophic!
-
     NS_ASSERTION(self,"no self");
 
     self->GetInterfaceInfo(&iface_info);
@@ -84,26 +65,6 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
     NS_ASSERTION(info,"no interface info");
 
     paramCount = info->GetParamCount();
-
-#ifdef XP_OS2_VACPP
-    /* If paramCount is > 0, write out the EDX pointer to the
-       space on the stack args[0]. args[-4] is the space on
-       the stack where it was pushed */
-    if (paramCount) {
-        args[0] = args[-4];
-
-        /* If this is the second parameter, or if the first parameter is an
-           8 byte long long, write out the ECX pointer to the space on the
-           stack args[1]. args[-3] is the space on the stack where it was
-           pushed */
-        nsXPTType type = info->GetParam(0).GetType();
-        if( paramCount > 1 ||
-            type == nsXPTType::T_I64 || type == nsXPTType::T_U64 )
-        {
-            args[1] = args[-3];
-        }            
-    }
-#endif
 
     // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
@@ -125,24 +86,12 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
             continue;
         }
         // else
+	    dp->val.p = (void*) *ap;
         switch(type)
         {
-        case nsXPTType::T_I8     : dp->val.i8  = *((PRInt8*)  ap);       break;
-        case nsXPTType::T_I16    : dp->val.i16 = *((PRInt16*) ap);       break;
-        case nsXPTType::T_I32    : dp->val.i32 = *((PRInt32*) ap);       break;
         case nsXPTType::T_I64    : dp->val.i64 = *((PRInt64*) ap); ap++; break;
-        case nsXPTType::T_U8     : dp->val.u8  = *((PRUint8*) ap);       break;
-        case nsXPTType::T_U16    : dp->val.u16 = *((PRUint16*)ap);       break;
-        case nsXPTType::T_U32    : dp->val.u32 = *((PRUint32*)ap);       break;
         case nsXPTType::T_U64    : dp->val.u64 = *((PRUint64*)ap); ap++; break;
-        case nsXPTType::T_FLOAT  : dp->val.f   = *((float*)   ap);       break;
         case nsXPTType::T_DOUBLE : dp->val.d   = *((double*)  ap); ap++; break;
-        case nsXPTType::T_BOOL   : dp->val.b   = *((PRBool*)  ap);       break;
-        case nsXPTType::T_CHAR   : dp->val.c   = *((char*)    ap);       break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = *((wchar_t*) ap);       break;
-        default:
-            NS_ASSERTION(0, "bad type");
-            break;
         }
     }
 
@@ -155,41 +104,67 @@ PrepareAndDispatch( nsXPTCStubBase *self, PRUint32 methodIndex,
 
     return result;
 }
+} // extern "C"
 
-#ifdef XP_OS2_VACPP
-
-#define STUB_ENTRY(n)
-
+#if defined(__declspec)
+#define SYMBOL_EXPORT(sym) \
+    ".stabs \"" sym ",0=" sym ",code\", 0x6c,0,0,-42\n\t"
 #else
+#define SYMBOL_EXPORT(sym)
+#endif 
 
 #define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  register nsresult (*method) (nsXPTCStubBase *, PRUint32, PRUint32 *) = PrepareAndDispatch; \
-  int temp0, temp1; \
-  register nsresult result; \
-  __asm__ __volatile__( \
-    "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
-    "pushl  %%ecx\n\t" \
-    "pushl  $"#n"\n\t"                 /* method index */ \
-    "movl   0x08(%%ebp), %%ecx\n\t"    /* this */ \
-    "pushl  %%ecx\n\t" \
-    "call   *%%edx\n\t"                /* PrepareAndDispatch */ \
-    "addl   $12, %%esp" \
-    : "=a" (result),    /* %0 */ \
-      "=&c" (temp0),    /* %1 */ \
-      "=d" (temp1)      /* %2 */ \
-    : "2" (method)      /* %2 */ \
-    : "memory" ); \
-    return result; \
-}
-#endif
+asm(".text\n\t" \
+    ".align	2\n\t" \
+    ".if	" #n " < 10\n\t" \
+    ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
+    SYMBOL_EXPORT(SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev") \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
+    ".elseif	" #n " < 100\n\t" \
+    ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
+    SYMBOL_EXPORT(SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev") \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
+    ".elseif    " #n " < 1000\n\t" \
+    ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".type      " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
+    SYMBOL_EXPORT(SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev") \
+    SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
+    ".else\n\t" \
+    ".err	\"stub number " #n " >= 1000 not yet supported\"\n\t" \
+    ".endif\n\t" \
+    "movl	$" #n ", %eax\n\t" \
+    "jmp	" SYMBOL_UNDERSCORE "SharedStub\n\t" \
+    ".if	" #n " < 10\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".elseif	" #n " < 100\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".else\n\t" \
+    ".size	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,.-" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".endif");
+
+// static nsresult SharedStub(PRUint32 methodIndex) __attribute__((regparm(1)))
+asm(".text\n\t"
+    ".align	2\n\t"
+    ".type	" SYMBOL_UNDERSCORE "SharedStub,@function\n\t"
+    SYMBOL_UNDERSCORE "SharedStub:\n\t"
+    "leal	0x08(%esp), %ecx\n\t"
+    "movl	0x04(%esp), %edx\n\t"
+    "jmp	" SYMBOL_UNDERSCORE "PrepareAndDispatch\n\t"
+    ".size	" SYMBOL_UNDERSCORE "SharedStub,.-" SYMBOL_UNDERSCORE "SharedStub");
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
 { \
-    NS_ASSERTION(0,"nsXPCWrappedJS::Sentinel called"); \
+    NS_ASSERTION(0,"nsXPTCStubBase::Sentinel called"); \
     return NS_ERROR_NOT_IMPLEMENTED; \
 }
 
 #include "xptcstubsdef.inc"
+
+void
+xptc_dummy()
+{
+}
+
