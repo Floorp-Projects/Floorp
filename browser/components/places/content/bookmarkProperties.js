@@ -283,7 +283,7 @@ var BookmarkPropertiesPanel = {
     var title = this._bookmarkTitle;
     var document = this._dialogWindow.document;
 
-    this._dialogWindow.title = this._getDialogTitle();
+    this._dialogWindow.document.title = this._getDialogTitle();
 
     this._dialogWindow.document.documentElement.getButton("accept").label =
       this._getAcceptLabel();
