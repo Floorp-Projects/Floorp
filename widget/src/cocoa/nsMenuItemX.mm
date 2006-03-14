@@ -277,6 +277,13 @@ NS_METHOD nsMenuItemX::DoCommand()
   return nsEventStatus_eConsumeNoDefault;
 }
     
+
+NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled)
+{
+  // not implemented. see Carbon widget impl.
+  return NS_ERROR_FAILURE;
+}
+
    
 NS_METHOD nsMenuItemX::GetModifiers(PRUint8 * aModifiers) 
 {

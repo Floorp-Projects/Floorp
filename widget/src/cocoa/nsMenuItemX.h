@@ -84,6 +84,7 @@ public:
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
   NS_IMETHOD DoCommand();
+  NS_IMETHOD DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled);
   NS_IMETHOD SetModifiers(PRUint8 aModifiers);
   NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
     
