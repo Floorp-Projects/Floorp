@@ -347,7 +347,7 @@
         <body><![CDATA[ 
           var result = this.getResult();
           var container = result.root;
-          ASSERT(container, "null container");
+          NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
           if (index != -1) {
@@ -505,7 +505,8 @@
             index = 0;
           else if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
             index = folder.childCount - 1;
-          ASSERT(index < folder.childCount, "index out of range: " + index + " > " + folder);
+          NS_ASSERT(index < folder.childCount, 
+                    "index out of range: " + index + " > " + folder);
           return index > -1 ? folder.getChild(index) : null;
         ]]></body>
       </method>
