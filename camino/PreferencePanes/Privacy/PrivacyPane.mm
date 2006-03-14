@@ -46,6 +46,7 @@
 #include "nsNetCID.h"
 #include "nsICookie.h"
 #include "nsICookieManager.h"
+#include "nsICookiePermission.h"
 #include "nsIPermissionManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIPermission.h"
@@ -64,19 +65,9 @@ static NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
 static const char* const gAutoFillEnabledPref = "chimera.keychain_passwords_autofill";
 
-// network.cookie.cookieBehavior settings
-// these are the defaults, overriden by whitelist/blacklist
-const int kAcceptAllCookies = 0;
-const int kAcceptCookiesFromOriginatingServer = 1;
-const int kDenyAllCookies = 2;
-
 // network.cookie.lifetimePolicy settings
 const int kAcceptCookiesNormally = 0;
 const int kWarnAboutCookies = 1;
-
-// popup indices
-const int kAllowIndex = 0;
-const int kDenyIndex = 1;
 
 // sort order indicators
 const int kSortReverse = 1;
@@ -142,6 +133,22 @@ const int kSortReverse = 1;
 #pragma mark -
 
 // callbacks for sorting the permission list
+PR_STATIC_CALLBACK(int) indexForCapability(int aCapability)
+{
+  switch (aCapability)
+  {
+    case nsIPermissionManager::DENY_ACTION:
+      return eDenyIndex;
+	
+    case nsICookiePermission::ACCESS_SESSION:
+      return eSessionOnlyIndex;
+    
+    case nsIPermissionManager::ALLOW_ACTION:
+    default:
+      return eAllowIndex;
+  }
+}
+
 PR_STATIC_CALLBACK(int) comparePermHosts(nsIPermission* aPerm1, nsIPermission* aPerm2, void* aData)
 {
   nsCAutoString host1;
@@ -165,9 +172,9 @@ PR_STATIC_CALLBACK(int) compareCapabilities(nsIPermission* aPerm1, nsIPermission
   if(cap1 == cap2)
     return comparePermHosts(aPerm1, aPerm2, nsnull); //always break ties in alphabetical order
   if ((int)aData == kSortReverse)
-    return (cap2 > cap1) ? -1 : 1;
+    return (indexForCapability(cap2) < indexForCapability(cap1)) ? -1 : 1;
   else 
-    return (cap1 < cap2) ? -1 : 1;
+    return (indexForCapability(cap1) < indexForCapability(cap2)) ? -1 : 1;
 }
 
 PR_STATIC_CALLBACK(int) compareCookieHosts(nsICookie* aCookie1, nsICookie* aCookie2, void* aData)
@@ -286,9 +293,9 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
                               object:nil];
 
   // Hookup cookie prefs.
-  PRInt32 acceptCookies = kAcceptAllCookies;
+  PRInt32 acceptCookies = eAcceptAllCookies;
   mPrefService->GetIntPref("network.cookie.cookieBehavior", &acceptCookies);
-  [self mapCookiePrefToGUI: acceptCookies];
+  [self mapCookiePrefToGUI:acceptCookies];
   // lifetimePolicy now controls asking about cookies, despite being totally unintuitive
   PRInt32 lifetimePolicy = kAcceptCookiesNormally;
   mPrefService->GetIntPref("network.cookie.lifetimePolicy", &lifetimePolicy);
@@ -314,20 +321,23 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
   mPrefService->GetBoolPref(gAutoFillEnabledPref, &autoFillPasswords);
   [mAutoFillPasswords setState:(autoFillPasswords ? NSOnState : NSOffState)];
   
-  // setup allow/deny table popups
+  // set up policy popups
   NSPopUpButtonCell *popupButtonCell = [mPermissionColumn dataCell];
   [popupButtonCell setEditable:YES];
-  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:[self getLocalizedString:@"Allow"], [self getLocalizedString:@"Deny"], nil]];
+  [popupButtonCell addItemsWithTitles:[NSArray arrayWithObjects:[self getLocalizedString:@"Allow"],
+                                                                [self getLocalizedString:@"Allow for Session"],
+																[self getLocalizedString:@"Deny"],
+																nil]];
   
   //remove the popup from the filter input fields
   [[mPermissionFilterField cell] setHasPopUpButton: NO];
   [[mCookiesFilterField cell] setHasPopUpButton: NO];
 }
 
--(void) mapCookiePrefToGUI: (int)pref
+-(void) mapCookiePrefToGUI:(int)pref
 {
   [mCookieBehavior selectCellWithTag:pref];
-  [mAskAboutCookies setEnabled:(pref == kAcceptAllCookies || pref == kAcceptCookiesFromOriginatingServer)];
+  [mAskAboutCookies setEnabled:(pref == eAcceptAllCookies || pref == eAcceptCookiesFromOriginatingServer)];
 }
 
 //
@@ -738,13 +748,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         mCachedPermissions->ObjectAt(rowIndex)->GetHost(host);
         retVal = [NSString stringWithUTF8String:host.get()];
       } else {
-        // allow/deny column
+        // policy column
         PRUint32 capability = PR_FALSE;
         mCachedPermissions->ObjectAt(rowIndex)->GetCapability(&capability);
-        if (capability == nsIPermissionManager::ALLOW_ACTION)
-          return [NSNumber numberWithInt:kAllowIndex];   // special case return
-        else
-          return [NSNumber numberWithInt:kDenyIndex];    // special case return
+        return [NSNumber numberWithInt:indexForCapability(capability)];
       }
     }
   }
@@ -808,11 +815,20 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         // remove the old entry
         mPermissionManager->Remove(host, "cookie"); // XXX necessary?
         // add a new entry with the new permission
-        if ([anObject intValue] == kAllowIndex)
-          mPermissionManager->Add(newURI, "cookie", nsIPermissionManager::ALLOW_ACTION);
-        else if ([anObject intValue] == kDenyIndex)
-          mPermissionManager->Add(newURI, "cookie", nsIPermissionManager::DENY_ACTION);
-        
+        switch ([anObject intValue])
+		{
+		  case eAllowIndex:
+            mPermissionManager->Add(newURI, "cookie", nsIPermissionManager::ALLOW_ACTION);
+			break;
+
+          case eDenyIndex:
+            mPermissionManager->Add(newURI, "cookie", nsIPermissionManager::DENY_ACTION);
+			break;
+
+          case eSessionOnlyIndex:
+            mPermissionManager->Add(newURI, "cookie", nsICookiePermission::ACCESS_SESSION);
+			break;
+        }
         // there really should be a better way to keep the cache up-to-date than rebuilding
         // it, but the nsIPermissionManager interface doesn't have a way to get a pointer
         // to a site's nsIPermission. It's this, use a custom class that duplicates the
