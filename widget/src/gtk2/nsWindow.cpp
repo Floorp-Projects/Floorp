@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -237,9 +238,12 @@ static nsWindow    *gIMEFocusWindow = NULL;
 static GdkEventKey *gKeyEvent = NULL;
 static PRBool       gKeyEventCommitted = PR_FALSE;
 static PRBool       gKeyEventChanged = PR_FALSE;
+static PRBool       gIMESuppressCommit = PR_FALSE;
 
 static void IM_commit_cb              (GtkIMContext *aContext,
                                        const gchar *aString,
+                                       nsWindow *aWindow);
+static void IM_commit_cb_internal     (const gchar *aString,
                                        nsWindow *aWindow);
 static void IM_preedit_changed_cb     (GtkIMContext *aContext,
                                        nsWindow *aWindow);
@@ -249,6 +253,8 @@ static void IM_set_text_range         (const PRInt32 aLen,
                                        const PangoAttrList *aFeedback,
                                        PRUint32 *aTextRangeListLengthResult,
                                        nsTextRangeArray *aTextRangeListResult);
+
+static nsWindow *IM_get_owning_window(MozDrawingarea *aArea);
 
 static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 
@@ -313,8 +319,7 @@ nsWindow::nsWindow()
     mDragMotionTimerID = 0;
 
 #ifdef USE_XIM
-    mIMContext = nsnull;
-    mComposingText = PR_FALSE;
+    mIMEData = nsnull;
 #endif
 
 #ifdef ACCESSIBILITY
@@ -349,8 +354,14 @@ nsWindow::ReleaseGlobals()
   }
 }
 
+#ifndef USE_XIM
 NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsCommonWidget,
                              nsISupportsWeakReference)
+#else
+NS_IMPL_ISUPPORTS_INHERITED2(nsWindow, nsCommonWidget,
+                             nsISupportsWeakReference,
+                             nsIKBStateControl)
+#endif
 
 NS_IMETHODIMP
 nsWindow::Create(nsIWidget        *aParent,
@@ -1690,6 +1701,11 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     PRUint32      eventType;
     nsEventStatus status;
 
+#ifdef USE_XIM
+    if (gIMEFocusWindow)
+        gIMEFocusWindow->ResetInputStateInternal();
+#endif
+
     // If you double click in GDK, it will actually generate a single
     // click event before sending the double click event, and this is
     // different than the DOM spec.  GDK puts this in the queue
@@ -1871,7 +1887,7 @@ nsWindow::OnKeyPressEvent(GtkWidget *aWidget, GdkEventKey *aEvent)
     // if we are in the middle of composing text, XIM gets to see it
     // before mozilla does.
    LOGIM(("key press [%p]: composing %d val %d\n",
-           (void *)this, mComposingText, aEvent->keyval));
+           (void *)this, IMEComposingWindow() != nsnull, aEvent->keyval));
    if (IMEFilterEvent(aEvent))
        return TRUE;
    LOGIM(("sending as regular key press event\n"));
@@ -4570,21 +4586,36 @@ nsChildWindow::~nsChildWindow()
 void
 nsWindow::IMEDestroyContext(void)
 {
+    if (!mIMEData) {
+        // Clear reference to this.
+        if (IMEComposingWindow() == this)
+            CancelIMECompositionInternal();
+        if (gIMEFocusWindow == this)
+            gIMEFocusWindow = nsnull;
+        return;
+    }
+
     // If this is the focus window and we have an IM context we need
     // to unset the focus on this window before we destroy the window.
-    if (gIMEFocusWindow == this) {
+    GtkIMContext *im = IMEGetContext();
+    if (im && gIMEFocusWindow && gIMEFocusWindow->IMEGetContext() == im) {
         gIMEFocusWindow->IMELoseFocus();
         gIMEFocusWindow = nsnull;
     }
 
-    if (!mIMContext)
-        return;
+    if (mIMEData->mContext) {
+        gtk_im_context_set_client_window(mIMEData->mContext, nsnull);
+        g_object_unref(G_OBJECT(mIMEData->mContext));
+    }
 
-    gtk_im_context_set_client_window(mIMContext, NULL);
-    g_object_unref(G_OBJECT(mIMContext));
-    mIMContext = nsnull;
+    if (mIMEData->mDummyContext) {
+        gtk_im_context_set_client_window(mIMEData->mDummyContext, nsnull);
+        g_object_unref(G_OBJECT(mIMEData->mDummyContext));
+    }
+
+    delete mIMEData;
+    mIMEData = nsnull;
 }
-
 
 void
 nsWindow::IMESetFocus(void)
@@ -4596,6 +4627,12 @@ nsWindow::IMESetFocus(void)
 
     gtk_im_context_focus_in(im);
     gIMEFocusWindow = this;
+
+    if (!IMEIsEnabled()) {
+        // We should release IME focus for uim and scim.
+        // These IMs are using snooper that is released at losing focus.
+        IMELoseFocus();
+    }
 }
 
 void
@@ -4614,12 +4651,17 @@ nsWindow::IMEComposeStart(void)
 {
     LOGIM(("IMEComposeStart [%p]\n", (void *)this));
 
-    if (mComposingText) {
+    if (IMEComposingWindow()) {
         NS_WARNING("tried to re-start text composition\n");
         return;
     }
 
-    mComposingText = PR_TRUE;
+    nsWindow *win = IMEGetOwningWindow();
+    if (win) {
+        nsIMEData *data = win->mIMEData;
+        if (data)
+            data->mComposingWindow = this;
+    }
 
     nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_START, this);
 
@@ -4650,7 +4692,7 @@ nsWindow::IMEComposeText (const PRUnichar *aText,
                           const PangoAttrList *aFeedback)
 {
     // Send our start composition event if we need to
-    if (!mComposingText)
+    if (!IMEComposingWindow())
         IMEComposeStart();
 
     LOGIM(("IMEComposeText\n"));
@@ -4694,12 +4736,17 @@ nsWindow::IMEComposeEnd(void)
 {
     LOGIM(("IMEComposeEnd [%p]\n", (void *)this));
 
-    if (!mComposingText) {
+    if (!IMEComposingWindow()) {
         NS_WARNING("tried to end text composition before it was started");
         return;
     }
 
-    mComposingText = PR_FALSE;
+    nsWindow *win = IMEGetOwningWindow();
+    if (win) {
+        nsIMEData *data = win->mIMEData;
+        if (data)
+            data->mComposingWindow = nsnull;
+    }
 
     nsCompositionEvent compEvent(PR_TRUE, NS_COMPOSITION_END, this);
 
@@ -4713,26 +4760,63 @@ nsWindow::IMEGetContext()
     return IM_get_input_context(this->mDrawingarea);
 }
 
+PRBool
+nsWindow::IMEIsEnabled(void)
+{
+    nsWindow *win = IMEGetOwningWindow();
+    if (!win)
+        return PR_FALSE;
+    return win->mIMEData ? win->mIMEData->mEnabled : PR_FALSE;
+}
+
+nsWindow*
+nsWindow::IMEComposingWindow(void)
+{
+    nsWindow *win = IMEGetOwningWindow();
+    if (!win)
+        return nsnull;
+    return win->mIMEData ? win->mIMEData->mComposingWindow : nsnull;
+}
+
+nsWindow*
+nsWindow::IMEGetOwningWindow(void)
+{
+    nsWindow *window = IM_get_owning_window(this->mDrawingarea);
+    return window;
+}
+
 void
 nsWindow::IMECreateContext(void)
 {
-    GtkIMContext *im = gtk_im_multicontext_new();
-    if (!im)
+    mIMEData = new nsIMEData;
+    if (!mIMEData)
         return;
 
-    gtk_im_context_set_client_window(im, GTK_WIDGET(mContainer)->window);
+    mIMEData->mContext = gtk_im_multicontext_new();
+    mIMEData->mDummyContext = gtk_im_multicontext_new();
+    if (!mIMEData->mContext || !mIMEData->mDummyContext) {
+        NS_ERROR("failed to create IM context.");
+        IMEDestroyContext();
+        return;
+    }
 
-    g_signal_connect(G_OBJECT(im), "preedit_changed",
+    gtk_im_context_set_client_window(mIMEData->mContext,
+                                     GTK_WIDGET(mContainer)->window);
+    gtk_im_context_set_client_window(mIMEData->mDummyContext,
+                                     GTK_WIDGET(mContainer)->window);
+
+    g_signal_connect(G_OBJECT(mIMEData->mContext), "preedit_changed",
                      G_CALLBACK(IM_preedit_changed_cb), this);
-    g_signal_connect(G_OBJECT(im), "commit",
+    g_signal_connect(G_OBJECT(mIMEData->mContext), "commit",
                      G_CALLBACK(IM_commit_cb), this);
-
-    mIMContext = im;
 }
 
 PRBool
 nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
 {
+    if (!IMEIsEnabled())
+        return FALSE;
+
     GtkIMContext *im = IMEGetContext();
     if (!im)
         return FALSE;
@@ -4760,6 +4844,124 @@ nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
     gKeyEventChanged = PR_FALSE;
 
     return retval;
+}
+
+/* nsIKBStateControl */
+NS_IMETHODIMP
+nsWindow::ResetInputState()
+{
+    // We should not implement this until bug 327003 is fixed.
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsWindow::ResetInputStateInternal()
+{
+    nsWindow *win = IMEComposingWindow();
+    if (win) {
+        GtkIMContext *im = IMEGetContext();
+        if (!im)
+            return NS_OK;
+
+        gchar *preedit_string;
+        gint cursor_pos;
+        PangoAttrList *feedback_list;
+        gtk_im_context_get_preedit_string(im, &preedit_string,
+                                          &feedback_list, &cursor_pos);
+        if (preedit_string && *preedit_string) {
+            IM_commit_cb_internal(preedit_string, win);
+            g_free(preedit_string);
+        }
+        if (feedback_list)
+            pango_attr_list_unref(feedback_list);
+    }
+
+    CancelIMECompositionInternal();
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::SetIMEOpenState(PRBool aState)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWindow::GetIMEOpenState(PRBool* aState)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsWindow::SetIMEEnabled(PRBool aState)
+{
+    nsWindow *window = IMEGetOwningWindow();
+    if (!window || !window->mIMEData || window->mIMEData->mEnabled == aState)
+        return NS_OK;
+
+    GtkIMContext *focusedIm = nsnull;
+    // XXX Don't we need to check gFocusWindow?
+    nsWindow *focusedWin = gIMEFocusWindow;
+    if (focusedWin) {
+        nsWindow *owningWin = focusedWin->IMEGetOwningWindow();
+        if (owningWin && owningWin->mIMEData)
+            focusedIm = owningWin->mIMEData->mContext;
+    }
+
+    if (focusedIm && focusedIm == window->mIMEData->mContext) {
+        // Release current IME focus if IME is enabled.
+        if (window->mIMEData->mEnabled)
+            focusedWin->IMELoseFocus();
+
+        window->mIMEData->mEnabled = aState;
+
+        // Even when aState is not PR_TRUE, we need to set IME focus.
+        // Because some IMs are updating the status bar of them in this time.
+        focusedWin->IMESetFocus();
+    } else {
+        if (window->mIMEData->mEnabled)
+            ResetInputStateInternal();
+        window->mIMEData->mEnabled = aState;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::GetIMEEnabled(PRBool* aState)
+{
+    NS_ENSURE_ARG_POINTER(aState);
+    *aState = IMEIsEnabled();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::CancelIMEComposition()
+{
+    // We should not implement this until bug 327003 is fixed.
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsWindow::CancelIMECompositionInternal()
+{
+    GtkIMContext *im = IMEGetContext();
+    if (!im)
+        return NS_OK;
+
+    NS_ASSERTION(gIMESuppressCommit, "CancelIMEComposition is already called!");
+    gIMESuppressCommit = PR_TRUE;
+    gtk_im_context_reset(im);
+    gIMESuppressCommit = PR_FALSE;
+
+    nsWindow *win = IMEComposingWindow();
+    if (win) {
+        win->IMEComposeText(nsnull, 0, nsnull, 0, nsnull);
+        win->IMEComposeEnd();
+    }
+
+    return NS_OK;
 }
 
 /* static */
@@ -4826,8 +5028,8 @@ IM_commit_cb (GtkIMContext *aContext,
               const gchar  *aUtf8_str,
               nsWindow     *aWindow)
 {
-    gunichar2 *uniStr;
-    glong uniStrLen;
+    if (gIMESuppressCommit)
+        return;
 
     LOGIM(("IM_commit_cb\n"));
 
@@ -4859,9 +5061,16 @@ IM_commit_cb (GtkIMContext *aContext,
     }
 
     gKeyEventChanged = PR_TRUE;
+    IM_commit_cb_internal(aUtf8_str, window);
+}
 
-    uniStr = NULL;
-    uniStrLen = 0;
+/* static */
+void
+IM_commit_cb_internal (const gchar  *aUtf8_str,
+                       nsWindow     *aWindow)
+{
+    gunichar2 *uniStr = nsnull;
+    glong uniStrLen = 0;
     uniStr = g_utf8_to_utf16(aUtf8_str, -1, NULL, &uniStrLen, NULL);
 
     if (!uniStr) {
@@ -4870,9 +5079,9 @@ IM_commit_cb (GtkIMContext *aContext,
     }
 
     if (uniStrLen) {
-        window->IMEComposeText((const PRUnichar *)uniStr,
-                               (PRInt32)uniStrLen, NULL, 0, NULL);
-        window->IMEComposeEnd();
+        aWindow->IMEComposeText((const PRUnichar *)uniStr,
+                                (PRInt32)uniStrLen, nsnull, 0, nsnull);
+        aWindow->IMEComposeEnd();
     }
 
     g_free(uniStr);
@@ -5001,15 +5210,28 @@ IM_set_text_range(const PRInt32 aLen,
 }
 
 /* static */
+nsWindow *
+IM_get_owning_window(MozDrawingarea *aArea)
+{
+    if (!aArea)
+        return nsnull;
+    GtkWidget *owningWidget =
+        get_gtk_widget_for_gdk_window(aArea->inner_window);
+    if (!owningWidget)
+        return nsnull;
+    return get_window_for_gtk_widget(owningWidget);
+}
+
+/* static */
 GtkIMContext *
 IM_get_input_context(MozDrawingarea *aArea)
 {
-    GtkWidget *owningWidget =
-        get_gtk_widget_for_gdk_window(aArea->inner_window);
-
-    nsWindow *owningWindow = get_window_for_gtk_widget(owningWidget);
-
-    return owningWindow->mIMContext;
+    if (!aArea)
+        return nsnull;
+    nsWindow::nsIMEData *data = IM_get_owning_window(aArea)->mIMEData;
+    if (!data)
+        return nsnull;
+    return data->mEnabled ? data->mContext : data->mDummyContext;
 }
 
 #endif
