@@ -21,6 +21,7 @@
  * are Copyright (C) 2001 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,9 +63,14 @@
 #ifdef USE_XIM
 #include <gtk/gtkimmulticontext.h>
 #include "pldhash.h"
+#include "nsIKBStateControl.h"
 #endif
 
-class nsWindow : public nsCommonWidget, public nsSupportsWeakReference {
+class nsWindow : public nsCommonWidget, public nsSupportsWeakReference
+#ifdef USE_XIM
+                ,public nsIKBStateControl
+#endif
+{
 public:
     nsWindow();
     virtual ~nsWindow();
@@ -271,11 +277,55 @@ public:
                                           const PangoAttrList *aFeedback);
     void               IMEComposeEnd     (void);
     GtkIMContext*      IMEGetContext     (void);
+    nsWindow*          IMEGetOwningWindow(void);
+    PRBool             IMEIsEnabled      (void);
+    nsWindow*          IMEComposingWindow(void);
     void               IMECreateContext  (void);
     PRBool             IMEFilterEvent    (GdkEventKey *aEvent);
 
-    GtkIMContext       *mIMContext;
-    PRBool             mComposingText;
+    /*
+     *  |mIMEData| has all IME data for the window and its children widgets.
+     *  So, this is created only on owner widget. Therefore, when the
+     *  focused widget needs the data, it get from its owning window.
+     *  See |IM_get_input_context|.
+     */
+    struct nsIMEData {
+        // Actual context. This is used for handling the user's input.
+        GtkIMContext       *mContext;
+        // mDummyContext is a dummy context and will be used in IMESetFocus()
+        // when mEnabled is false. This mDummyContext IM state is always
+        // "off", so it works to switch conversion mode to OFF on IM status
+        // window.
+        GtkIMContext       *mDummyContext;
+        // This mComposingWindow is set in IMEComposeStart(), when user starts
+        // composition, then unset in IMEComposeEnd() when user ends the
+        // composition. We will keep the widget where the actual composition is
+        // started. During the composition, we may get some events like
+        // ResetInputStateInternal() and CancelIMECompositionInternal() by
+        // changing input focus, we will use the original widget of
+        // mComposingWindow to commit or reset the composition.
+        nsWindow           *mComposingWindow;
+        // IME enabled state in this window.
+        PRPackedBool       mEnabled;
+        nsIMEData() {
+            mContext         = nsnull;
+            mDummyContext    = nsnull;
+            mComposingWindow = nsnull;
+            mEnabled         = PR_TRUE;
+        }
+    };
+    nsIMEData          *mIMEData;
+
+    // nsIKBStateControl interface
+    NS_IMETHOD ResetInputState();
+    NS_IMETHOD SetIMEOpenState(PRBool aState);
+    NS_IMETHOD GetIMEOpenState(PRBool* aState);
+    NS_IMETHOD SetIMEEnabled(PRBool aState);
+    NS_IMETHOD GetIMEEnabled(PRBool* aState);
+    NS_IMETHOD CancelIMEComposition();
+
+    nsresult ResetInputStateInternal();
+    nsresult CancelIMECompositionInternal();
 
 #endif
 
