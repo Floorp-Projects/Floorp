@@ -235,6 +235,14 @@ EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
 endif
 endif
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+ifndef MOZ_TREE_CAIRO
+# In an in-tree cairo build, cairo is part of libthebes
+# otherwise, we need to link it separately.
+EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
+endif
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
 	$(TK_LIBS) \
