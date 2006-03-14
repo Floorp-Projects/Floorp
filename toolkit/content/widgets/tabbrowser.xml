@@ -58,13 +58,14 @@
     </resources>
 
     <content>
-      <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
+      <xul:stringbundle anonid="tbstringbundle" src="chrome://global/locale/tabbrowser.properties"/>
+      <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tab-drop-indicator-bar">
           <xul:hbox class="tab-drop-indicator"/>
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
+                  anonid="strip"
                   ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
@@ -92,7 +93,9 @@
                                      tabbrowser.removeTab(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
-          <xul:tabs class="tabbrowser-tabs" flex="1" setfocus="false"
+          <xul:tabs class="tabbrowser-tabs" flex="1"
+                    anonid="tabcontainer"
+                    setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     xbl:inherits="onnewtab"
                     ondblclick="this.parentNode.parentNode.parentNode.onTabBarDblClick(event);"
@@ -107,7 +110,7 @@
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
-        <xul:tabpanels flex="1" class="plain" selectedIndex="0">
+        <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:vbox flex="1">
             <xul:browsermessage hidden="true" type="top"/>
             <xul:browser flex="1" type="content-primary" message="true" disablehistory="true" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
@@ -127,26 +130,26 @@
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
       </field>
-      <field name="mTabBox">
-        document.getAnonymousNodes(this)[1]
+      <field name="mTabBox" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
       </field>
       <field name="mTabDropIndicatorBar">
         this.mTabBox.childNodes[0]
       </field>
-      <field name="mStrip">
-        this.mTabBox.childNodes[1]
+      <field name="mStrip" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "strip");
       </field>
-      <field name="mTabContainer">
-        this.mStrip.childNodes[2]
+      <field name="mTabContainer" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "tabcontainer");
       </field>
-      <field name="mPanelContainer">
-        this.mTabBox.childNodes[2]
+      <field name="mPanelContainer" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "panelcontainer");
       </field>
-      <field name="mTabs">
+      <field name="mTabs" readonly="true">
         this.mTabContainer.childNodes
       </field>
       <field name="mStringBundle">
-        document.getAnonymousNodes(this)[0]
+        document.getAnonymousElementByAttribute(this, "anonid", "tbstringbundle");
       </field>
       <field name="mCurrentTab">
         null
@@ -155,7 +158,7 @@
         null
       </field>
       <field name="mProgressListeners">
-        new Array()
+        []
       </field>
       <field name="mTabListeners">
         new Array()
@@ -770,8 +773,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            var tabBrowser = this.parentNode.parentNode;
-            if (!tabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
+            if (!this.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
             if (!event.originalTarget.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
@@ -830,13 +832,13 @@
                                          null) != nsIContentPolicy.ACCEPT)
               return;
 
-            var browserIndex = tabBrowser.getBrowserIndexForDocument(targetDoc);
+            var browserIndex = this.getBrowserIndexForDocument(targetDoc);
             // no browser? no favicon.
             if (browserIndex == -1)
               return;
 
-            var tab = tabBrowser.mTabContainer.childNodes[browserIndex];
-            tabBrowser.setIcon(tab, href);
+            var tab = this.mTabContainer.childNodes[browserIndex];
+            this.setIcon(tab, href);
           ]]>
         </body>
       </method>
@@ -1444,9 +1446,6 @@
               var tabStripHide = !window.toolbar.visible;
               if (!autoHide && !forceHide && !tabStripHide)
                 this.setStripVisibilityTo(true);
-
-              // Hook up a listener for <link>s.
-              this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
             }
 
             if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
@@ -2183,13 +2182,14 @@
             this.mTabListeners[i] = null;
             this.getBrowserAtIndex(i).removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
           }
-          this.mPanelContainer.removeEventListener("DOMLinkAdded", this.onLinkAdded, false);
           document.removeEventListener("keypress", this._keyEventHandler, false);
         ]]>
       </destructor>
     </implementation>
 
     <handlers>
+      <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
+
       <handler event="DOMWindowClose">
         <![CDATA[
           if (!event.isTrusted)
