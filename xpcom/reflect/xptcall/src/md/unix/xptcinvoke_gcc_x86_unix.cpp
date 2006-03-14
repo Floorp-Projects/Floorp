@@ -111,11 +111,11 @@ xptc_invoke_copy_to_stack_keeper (void)
   bug 140412 for details. However, avoid this if you can. It's slower.
 */
 /*
- * Hack for gcc for win32.  Functions used externally must be
+ * Hack for gcc for win32 and os2.  Functions used externally must be
  * explicitly dllexported.
  * Bug 226609
  */
-#ifdef XP_WIN32
+#if defined(XP_WIN32) || defined(XP_OS2)
 extern "C" {
     nsresult _XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                                    PRUint32 paramCount, nsXPTCVariant* params);
@@ -132,7 +132,7 @@ __asm__ (
 /* alignment here seems unimportant here; this was 16, now it's 2 which
    is what xptcstubs uses. */
 	".align 2\n\t"
-#ifdef XP_WIN32
+#if defined(XP_WIN32) || defined(XP_OS2)
 	".globl " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex\n\t"
 	SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex:\n\t"
 #else
@@ -192,7 +192,7 @@ __asm__ (
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-#ifndef XP_WIN32
+#if !defined(XP_WIN32) && !defined(XP_OS2)
 	".size " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 #endif
 );
