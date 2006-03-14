@@ -20,8 +20,11 @@
   #%]
 
 [%# INTERFACE:
-  # proddesc: hash. May be empty. The hash keys are the products, and the values
-  # are their descriptions.
+  # products: array of product objects. The list of products
+  #           the user can enter bugs into.
+  # target:   the script that displays this template.
+  # cloned_bug_id: ID of the bug being cloned.
+  # format:   the desired format to display the target.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -39,18 +42,16 @@
 
 <table>
 
-[% FOREACH p = proddesc.keys.sort %]
+[% FOREACH p = products %]
   <tr>
     <th align="right" valign="top">
-      <a href="[% target %]?product=[% p FILTER url_quote -%]
+      <a href="[% target %]?product=[% p.name FILTER url_quote -%]
             [%- IF cloned_bug_id %]&amp;cloned_bug_id=[% cloned_bug_id FILTER url_quote %][% END -%] 
             [%- IF format %]&amp;format=[% format FILTER url_quote %][% END %]">
-      [% p FILTER html %]</a>:&nbsp;
+      [% p.name FILTER html %]</a>:&nbsp;
     </th>
 
-    [% IF proddesc.$p %]
-      <td valign="top">[% proddesc.$p %]</td>
-    [% END %]
+    <td valign="top">[% p.description FILTER none %]</td>
   </tr>
 [% END %]
 

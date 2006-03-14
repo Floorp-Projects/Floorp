@@ -96,7 +96,6 @@
 
 'reports/components.html.tmpl' => [
   'numcols',
-  'comp.description', 
 ],
 
 'reports/duplicates-table.html.tmpl' => [
@@ -240,7 +239,6 @@
 
 'global/choose-product.html.tmpl' => [
   'target',
-  'proddesc.$p', 
 ],
 
 # You are not permitted to add any values here. Everything in this file should 

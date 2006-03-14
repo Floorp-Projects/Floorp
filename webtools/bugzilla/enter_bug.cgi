@@ -43,11 +43,11 @@ use Bugzilla::Bug;
 use Bugzilla::User;
 use Bugzilla::Hook;
 use Bugzilla::Product;
+use Bugzilla::Classification;
 use Bugzilla::Keyword;
 require "globals.pl";
 
 use vars qw(
-  @enterable_products
   @legal_opsys
   @legal_platform
   @legal_priority
@@ -66,95 +66,74 @@ my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
 
-my $product = $cgi->param('product');
+my $product = trim($cgi->param('product') || '');
 
-if (!defined $product || $product eq "") {
-    GetVersionTable();
-    Bugzilla->login();
+if ($product eq '') {
+    my $user = Bugzilla->login();
 
-    if ( ! Param('useclassification') ) {
-        # Just use a fake value for the Classification.
-        $cgi->param(-name => 'classification', 
-                    -value => '__all');
-    }
+    # If the user cannot enter bugs in any product, stop here.
+    my @enterable_products = @{$user->get_enterable_products};
+    ThrowUserError('no_products') unless scalar(@enterable_products);
 
-    if (!$cgi->param('classification')) {
-        my $classifications = Bugzilla->user->get_selectable_classifications();
-        foreach my $classification (@$classifications) {
-            my $found = 0;
-            foreach my $p (@enterable_products) {
-               if (Bugzilla->user->can_enter_product($p)
-                   && IsInClassification($classification->{name},$p)) {
-                       $found = 1; 
-               }
-            }
-            if ($found == 0) {
-                @$classifications = grep($_->{name} ne $classification->{name},
-                                         @$classifications);
-            }
+    my $classification = Param('useclassification') ?
+        scalar($cgi->param('classification')) : '__all';
+
+    unless ($classification) {
+        my $class;
+        # Get all classifications with at least one enterable product.
+        foreach $product (@enterable_products) {
+            $class->{$product->classification_id} ||=
+                new Bugzilla::Classification($product->classification_id);
         }
+        my @classifications = sort {lc($a->name) cmp lc($b->name)} (values %$class);
 
-        if (scalar(@$classifications) == 0) {
-            ThrowUserError("no_products");
-        } 
-        elsif (scalar(@$classifications) > 1) {
-            $vars->{'classifications'} = $classifications;
+        # We know there is at least one classification available,
+        # else we would have stopped earlier.
+        if (scalar(@classifications) > 1) {
+            $vars->{'classifications'} = \@classifications;
 
             $vars->{'target'} = "enter_bug.cgi";
             $vars->{'format'} = $cgi->param('format');
-           
             $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
 
             print $cgi->header();
             $template->process("global/choose-classification.html.tmpl", $vars)
                || ThrowTemplateError($template->error());
-            exit;        
+            exit;
         }
-        $cgi->param(-name => 'classification', -value => @$classifications[0]->name);
+        # If we come here, then there is only one classification available.
+        $classification = $classifications[0]->name;
     }
 
-    my %products;
-    # XXX - This loop should work in some more sensible, efficient way.
-    foreach my $p (@enterable_products) {
-        if (Bugzilla->user->can_enter_product($p)) {
-            if (IsInClassification(scalar $cgi->param('classification'),$p) ||
-                $cgi->param('classification') eq "__all") {
-                my $product_object = new Bugzilla::Product({name => $p});
-                $products{$p} = $product_object->description;
-            }
+    # Keep only enterable products which are in the specified classification.
+    if ($classification ne "__all") {
+        my $class = new Bugzilla::Classification({'name' => $classification});
+        # If the classification doesn't exist, then there is no product in it.
+        if ($class) {
+            @enterable_products
+              = grep {$_->classification_id == $class->id} @enterable_products;
+        }
+        else {
+            @enterable_products = ();
         }
     }
- 
-    my $prodsize = scalar(keys %products);
-    if ($prodsize == 0) {
-        ThrowUserError("no_products");
-    } 
-    elsif ($prodsize > 1) {
-        my %classifications;
-        if ( ! Param('useclassification') ) {
-            @{$classifications{"all"}} = keys %products;
-        }
-        elsif ($cgi->param('classification') eq "__all") {
-            %classifications = %::classifications;
-        } else {
-            $classifications{$cgi->param('classification')} =
-                $::classifications{$cgi->param('classification')};
-        }
-        $vars->{'proddesc'} = \%products;
-        $vars->{'classifications'} = \%classifications;
 
+    if (scalar(@enterable_products) == 0) {
+        ThrowUserError('no_products');
+    }
+    elsif (scalar(@enterable_products) > 1) {
+        $vars->{'products'} = \@enterable_products;
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $cgi->param('format');
-
         $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
-        
+
         print $cgi->header();
         $template->process("global/choose-product.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
-        exit;        
+        exit;
     } else {
-        # Only one product exists
-        $product = (keys %products)[0];
+        # Only one product exists.
+        $product = $enterable_products[0]->name;
     }
 }
 
