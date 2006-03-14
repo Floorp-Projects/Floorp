@@ -235,7 +235,7 @@ if ($action eq 'new') {
     if (Param("makeproductgroups")) {
         # Next we insert into the groups table
         my $productgroup = $product->name;
-        while (group_name_to_id($productgroup)) {
+        while (new Bugzilla::Group({name => $productgroup})) {
             $productgroup .= '_';
         }
         my $group_description = "Access to bugs in the " .
@@ -250,7 +250,7 @@ if ($action eq 'new') {
 
         # If we created a new group, give the "admin" group priviledges
         # initially.
-        my $admin = group_name_to_id('admin');
+        my $admin = Bugzilla::Group->new({name => 'admin'})->id();
         
         my $sth = $dbh->prepare('INSERT INTO group_group_map
                                  (member_id, grantor_id, grant_type)
