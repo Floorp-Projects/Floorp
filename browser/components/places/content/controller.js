@@ -39,39 +39,6 @@ function LOG(str) {
   dump("*** " + str + "\n");
 }
 
-var gTraceOnAssert = true;
-
-// XXXben - develop this further into a multi-purpose assertion system. 
-function ASSERT(condition, message) {
-  if (!condition) {
-    var caller = arguments.callee.caller;
-    var str = "ASSERT: ";
-    str += message;
-    LOG(str);
-    var assertionText = str + "\n";
-    
-    var stackText = "Stack Trace: \n";
-    if (gTraceOnAssert) {
-      var count = 0;
-      while (caller) {
-        stackText += count++ + ":" + caller.name + "(";
-        for (var i = 0; i < caller.arguments.length; ++i) {
-          var arg = caller.arguments[i];
-          stackText += arg;
-          if (i < caller.arguments.length - 1)
-            stackText += ",";
-        }
-        stackText += ")\n";
-        caller = caller.arguments.callee.caller;
-      }
-    }
-    var ps = 
-        Cc["@mozilla.org/embedcomp/prompt-service;1"].
-        getService(Ci.nsIPromptService);
-    ps.alert(window, "Assertion Failed", assertionText + stackText);
-  }
-}
-
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
@@ -247,7 +214,7 @@ function QI_node(node, iid) {
   }
   catch (e) {
   }
-  ASSERT(result, "Node QI Failed");
+  NS_ASSERT(result, "Node QI Failed");
   return result;
 }
 function asFolder(node)   { return QI_node(node, Ci.nsINavHistoryFolderResultNode);   }
@@ -473,7 +440,7 @@ var PlacesController = {
    *          false otherwise. 
    */
   _hasRemovableSelection: function PC__hasRemovableSelection() {
-    ASSERT(this._activeView, "No active view - cannot paste!");
+    NS_ASSERT(this._activeView, "No active view - cannot paste!");
     if (!this._activeView)
       return false;
     var nodes = this._activeView.getSelectionNodes();
@@ -514,7 +481,7 @@ var PlacesController = {
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
-    ASSERT(this._activeView, "No active view - cannot insert!");
+    NS_ASSERT(this._activeView, "No active view - cannot insert!");
     if (!this._activeView)
       return false;
     var nodes = this._activeView.getSelectionNodes();
@@ -543,7 +510,7 @@ var PlacesController = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PC_nodeIsFolder(node) {
-    ASSERT(node, "null node");
+    NS_ASSERT(node, "null node");
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
   },
   
@@ -554,7 +521,7 @@ var PlacesController = {
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PC_nodeIsSeparator(node) {
-    ASSERT(node, "null node");
+    NS_ASSERT(node, "null node");
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR);
   },
 
@@ -565,7 +532,7 @@ var PlacesController = {
    * @returns true if the node is a URL item, false otherwise
    */
   nodeIsURI: function PC_nodeIsURI(node) {
-    ASSERT(node, "null node");
+    NS_ASSERT(node, "null node");
     const NHRN = Ci.nsINavHistoryResultNode;
     return node.type == NHRN.RESULT_TYPE_URI ||
            node.type == NHRN.RESULT_TYPE_VISIT ||
@@ -579,7 +546,7 @@ var PlacesController = {
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PC_nodeIsQuery(node) {
-    ASSERT(node, "null node");
+    NS_ASSERT(node, "null node");
     return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
   
@@ -591,7 +558,7 @@ var PlacesController = {
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PC_nodeIsReadOnly(node) {
-    ASSERT(node, "null node");
+    NS_ASSERT(node, "null node");
     if (this.nodeIsFolder(node))
       return this.bookmarks.getFolderReadonly(asFolder(node).folderId);
     else if (this.nodeIsQuery(node))
@@ -827,7 +794,7 @@ var PlacesController = {
    * receive a string instead of an nsIURI object.
    */
   _assertURINotString: function PC__assertURINotString(value) {
-    ASSERT((typeof(value) == "object") && !(value instanceof String), 
+    NS_ASSERT((typeof(value) == "object") && !(value instanceof String), 
            "This method should be passed a URI as a nsIURI object, not as a string.");
   },
  
@@ -873,7 +840,7 @@ var PlacesController = {
   changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
     this._assertURINotString(oldURI);
     this._assertURINotString(newURI);
-    ASSERT(this.bookmarks.isBookmarked(oldURI));
+    NS_ASSERT(this.bookmarks.isBookmarked(oldURI));
 
     if (oldURI.spec == newURI.spec) 
       return;
@@ -972,7 +939,7 @@ var PlacesController = {
    *          The sorting mode to be applied to the displayed contents. 
    */
   loadNodeIntoView: function PC_loadQueries(view, node, groupings, sortingMode) {
-    ASSERT(view, "Must have a view to load node contents into!");
+    NS_ASSERT(view, "Must have a view to load node contents into!");
     asQuery(node);
     var queries = node.getQueries({ });
     var newQueries = [];
@@ -1061,7 +1028,7 @@ var PlacesController = {
    */
   groupByAnnotation: 
   function PC_groupByAnnotation(annotation, groupings, sortingMode) {
-    ASSERT(this._groupableView, "Need a groupable view to load!");
+    NS_ASSERT(this._groupableView, "Need a groupable view to load!");
     if (!this._groupableView)
       return;
     var query = this.history.getNewQuery();
@@ -1117,7 +1084,7 @@ var PlacesController = {
    *          An array of transactions.
    */
   _removeRange: function PC__removeRange(range, transactions) {
-    ASSERT(transactions instanceof Array, "Must pass a transactions array");
+    NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
     var index = this.getIndexOfNode(range[0]);
     
     // Walk backwards to preserve insertion order on undo
@@ -1181,7 +1148,7 @@ var PlacesController = {
    *          as part of another operation.
    */
   remove: function PC_remove(txnName) {
-    ASSERT(txnName !== undefined, "Must supply Transaction Name");
+    NS_ASSERT(txnName !== undefined, "Must supply Transaction Name");
     this._activeView.saveSelection(this._activeView.SAVE_SELECTION_REMOVE);
 
     // Delete the selected rows. Do this by walking the selection backward, so
@@ -1738,7 +1705,7 @@ function PlacesAggregateTransaction(name, transactions) {
   this._name = name;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesAggregateTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1773,7 +1740,7 @@ function PlacesCreateFolderTransaction(name, container, index) {
   this._id = null;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1798,7 +1765,7 @@ function PlacesCreateItemTransaction(uri, container, index) {
   this._index = index;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1840,7 +1807,7 @@ PlacesInsertSeparatorTransaction.prototype = {
  * Move a Folder
  */
 function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, newIndex) {
-  ASSERT(!isNaN(id + oldContainer + oldIndex + newContainer + newIndex), "Parameter is NaN!");
+  NS_ASSERT(!isNaN(id + oldContainer + oldIndex + newContainer + newIndex), "Parameter is NaN!");
   this._id = id;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
@@ -1848,7 +1815,7 @@ function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, n
   this._newIndex = newIndex;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1875,7 +1842,7 @@ function PlacesMoveItemTransaction(uri, oldContainer, oldIndex, newContainer, ne
   this._newIndex = newIndex;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1933,7 +1900,7 @@ function PlacesRemoveFolderTransaction(id, oldContainer, oldIndex) {
   this._contents = null; // The encoded contents of this folder
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2012,7 +1979,7 @@ function PlacesRemoveItemTransaction(uri, oldContainer, oldIndex) {
   this._oldIndex = oldIndex;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2060,7 +2027,7 @@ function PlacesEditFolderTransaction(id, oldAttributes, newAttributes) {
   this._newAttributes = newAttributes;
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2085,7 +2052,7 @@ function PlacesEditItemTransaction(uri, newAttributes) {
   this._oldAttributes = { };
   this.redoTransaction = this.doTransaction;
   this.pageTransaction = PlacesController.activeView.filterTransactions;
-  ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
+  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
