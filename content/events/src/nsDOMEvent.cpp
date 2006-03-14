@@ -494,6 +494,11 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
     mEvent->flags |= NS_EVENT_FLAG_CANT_CANCEL;
   }
 
+  // Clearing the old targets, so that the event is targeted correctly when
+  // re-dispatching it.
+  mEvent->target = nsnull;
+  mEvent->originalTarget = nsnull;
+
   // Unset the NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY bit (which is
   // set at the end of event dispatch) so that this event can be
   // dispatched.
