@@ -481,7 +481,7 @@
             var xulNode = this._self.childNodes[i];
             if (PlacesController.nodeIsFolder(xulNode.node) &&
                 !PlacesController.nodeIsReadOnly(xulNode.node)) {
-              ASSERT(xulNode.getAttribute("type") == "menu");
+              NS_ASSERT(xulNode.getAttribute("type") == "menu");
               // This is a folder. If the mouse is in the left 25% of the
               // node, drop to the left of the folder.  If it's in the middle
               // 50%, drop into the folder.  If it's past that, drop to the right.
