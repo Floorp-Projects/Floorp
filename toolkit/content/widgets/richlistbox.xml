@@ -312,7 +312,7 @@
             y.value += this.scrollBoxObject.y;
 
             // Partially visible items are also considered visible
-            return (aItem.boxObject.y + aItem.boxObject.height >= y.value) &&
+            return (aItem.boxObject.y + aItem.boxObject.height > y.value) &&
                    (aItem.boxObject.y < y.value + this.scrollBoxObject.height);
           ]]>
         </body>
@@ -345,12 +345,18 @@
               this.scrollBoxObject.scrollBy(0, this.scrollBoxObject.height * aDirection);
 
             // Figure out, how many items fully fit into the view port
-            // (measuring from the top of the currently selected one), and
-            // determine the index of the first one lying (partially) outside
+            // (including the currently selected one), and determine
+            // the index of the first one lying (partially) outside
             var height = this.scrollBoxObject.height;
-            while (height >= 0 && index >= 0 && index < children.length) {
-              var actualIndex = (index > 0 && aDirection == -1) ? index - 1 : index;
-              height -= children[actualIndex].boxObject.height;
+            var border = currentItem.boxObject.y;
+            if (aDirection == -1)
+              border += currentItem.boxObject.height;
+            while (index >= 0 && index < children.length) {
+              var border2 = children[index].boxObject.y;
+              if (aDirection == -1)
+                border2 += children[index].boxObject.height;
+              if ((border2 - border) * aDirection > height)
+                break;
               index += aDirection;
             }
             index -= aDirection;
