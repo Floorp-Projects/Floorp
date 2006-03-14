@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.312 $ ';
+$::UtilsVersion = '$Revision: 1.313 $ ';
 
 package TinderUtils;
 
@@ -1126,6 +1126,13 @@ sub rebootSystem {
 # Create a profile named $Settings::MozProfileName in the normal $build_dir place.
 sub create_profile {
     my ($build_dir, $binary_dir, $binary) = @_;
+    if ($Settings::ProductName eq 'Camino') {
+        my $profile_dir = get_profile_dir($build_dir);
+        mkdir($profile_dir);
+        open(PREFS, '>>'.$profile_dir.'/prefs.js');
+        close(PREFS);
+        return { exit_value=>0 };
+    }
     my $profile_log = "$build_dir/create-profile.log";
     my $result = run_cmd($build_dir, $binary_dir,
                          [$binary, "-CreateProfile", $Settings::MozProfileName],
@@ -1141,6 +1148,7 @@ sub get_profile_dir {
     my $profile_product_name = $Settings::ProductName;
 
     $profile_product_name = "Mozilla" if ($profile_product_name eq "SeaMonkey");
+    $profile_product_name = "Firefox" if ($profile_product_name eq "DeerPark");
 
     my $profile_dir;
 
@@ -1182,6 +1190,8 @@ sub get_profile_dir {
         } elsif ($profile_product_name eq 'Firefox') {
             $profile_dir = "$ENV{HOME}/Library/Application Support/$profile_product_name/Profiles";
             ($profile_dir) = <"$profile_dir/*$Settings::MozProfileName*">;
+        } elsif ($profile_product_name eq 'Camino') {
+            $profile_dir = "$ENV{HOME}/Library/Application Support/Camino";
         } else { # Mozilla's Profiles/profilename/salt
             $profile_dir = "$ENV{HOME}/Library/$profile_product_name/Profiles/$Settings::MozProfileName/";
         }
@@ -1716,7 +1726,7 @@ sub run_all_tests {
     unlink("$binary_dir/components/compreg.dat") or warn "$binary_dir/components/compreg.dat not removed\n";
     if($Settings::RegxpcomTest) {
         my $args;
-        if ($Settings::ProductName =~ /^(Firefox|Thunderbird)$/) {
+        if ($Settings::ProductName =~ /^(Firefox|Thunderbird|DeerPark)$/) {
             $args = [$binary, "-register"];
         } else {
             $args = ["$binary_dir/regxpcom"];
@@ -1856,6 +1866,9 @@ sub run_all_tests {
                 # Suppress default browser dialog
                 set_pref($pref_file, 'browser.shell.checkDefaultBrowser', 'false');
             }
+            elsif ($Settings::BinaryName eq 'Camino') {
+                set_pref($pref_file, 'camino.check_default_browser', 'false');
+            }
 
             # Suppress security warnings for QA test.
             if ($Settings::QATest) {
@@ -1877,6 +1890,13 @@ sub run_all_tests {
         } else {
             print_log "Modern skin already set.\n";
         }
+    }
+
+    if ($Settings::BinaryName eq 'Camino') {
+      # stdout will be block-buffered and will not be flushed when the test
+      # timeout expires and the process is killed, this would make tests
+      # appear to fail.
+      $ENV{'MOZ_UNBUFFERED_STDIO'} = 1;
     }
 
     # Mozilla alive test
@@ -2015,8 +2035,19 @@ sub run_all_tests {
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
       my $app_args = [$binary];
+      if ($Settings::BinaryName eq 'Camino') {
+        push(@$app_args, '-url');
+      }
+
+      # When I found this, it avoided setting the profile for Firefox.
+      # That didn't work on a tinderbox that had multiple profiles.
+      # Now, it will set the profile if it's not 'default' on the assumption
+      # that existing tinderboxes were all using 'default' anyway.  Why
+      # so careful?  I'm afraid of things like bug 112767, and I assume this
+      # had been done for a reason.  -mm
       unless ($Settings::BinaryName eq "TestGtkEmbed" ||
-              $Settings::BinaryName =~ /^firefox/) {
+              ($Settings::BinaryName =~ /^firefox/ && $Settings::MozProfileName eq 'default') ||
+              $Settings::BinaryName eq 'Camino') {
         push(@$app_args, "-P", $Settings::MozProfileName);
       }
 
@@ -2029,8 +2060,10 @@ sub run_all_tests {
     if ($Settings::DHTMLPerformanceTest and $test_result eq 'success') {
       my @app_args;
       if($Settings::BinaryName eq "TestGtkEmbed" ||
-         $Settings::BinaryName =~ /^firefox/) {
+         ($Settings::BinaryName =~ /^firefox/ && $Settings::MozProfileName eq 'default')) {
         @app_args = [$binary];        
+      } elsif($Settings::BinaryName eq 'Camino') {
+        @app_args = [$binary, '-url'];
       } else {
         @app_args = [$binary, "-P", $Settings::MozProfileName];
       }
@@ -2100,6 +2133,8 @@ sub run_all_tests {
       my $app_args;
       if($Settings::BinaryName eq "TestGtkEmbed") {
         $app_args = [];        
+      } elsif($Settings::BinaryName eq 'Camino') {
+        $app_args = ['-url'];
       } else {
         $app_args = ["-P", $Settings::MozProfileName];
       }
@@ -2381,7 +2416,7 @@ sub DHTMLPerformanceTest {
     $dhtml_time = AliveTestReturnToken($test_name,
                                        $build_dir,
                                        [@$args, $url],
-                                       $Settings::LayoutPerformanceTestTimeout,
+                                       $Settings::DHTMLPerformanceTestTimeout,
                                        "_x_x_mozilla_dhtml",
                                        ",");
 

@@ -197,9 +197,20 @@ sub makefullsoft {
     TinderUtils::run_shell_command "cd $builddir/fullsoft && $builddir/build/autoconf/make-makefile -d ..";
   }
   TinderUtils::run_shell_command "make -C $builddir/fullsoft";
-  TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
+  if ($Settings::BinaryName ne 'Camino') {
+    TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
+  }
+  else {
+    # Something completely different
+    TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'";
+  }
   if (is_mac()) {
-    TinderUtils::run_shell_command "make -C $builddir/$Settings::mac_bundle_path";
+    if ($Settings::BinaryName eq 'Camino') {
+      TinderUtils::run_shell_command "rsync -a --copy-unsafe-links $builddir/dist/bin/components/*qfa* $builddir/dist/bin/components/talkback $builddir/dist/Camino.app/Contents/MacOS/components";
+    }
+    else {
+      TinderUtils::run_shell_command "make -C $builddir/$Settings::mac_bundle_path";
+    }
 
     if ($Settings::MacUniversalBinary) {
       # Regenerate universal binary, now including Talkback
@@ -973,7 +984,11 @@ sub pushit {
   $Settings::ReleaseToLatest = 1 if !defined($Settings::ReleaseToLatest);
 
   if ( $Settings::ReleaseToDated ) {
-    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $remote_path/$short_ud");
+    my $makedirs = "$remote_path/$short_ud";
+    if ($cachebuild && $Settings::ReleaseToLatest) {
+      $makedirs .= " $remote_path/latest-$Settings::milestone";
+    }
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $makedirs");
     push(@cmds,"rsync -av -e \"ssh $ssh_opts\" $upload_directory/ $Settings::ssh_user\@$ssh_server:$remote_path/$short_ud/");
     push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $remote_path/$short_ud");
     if ($Settings::ReleaseGroup ne '') {
@@ -984,7 +999,7 @@ sub pushit {
       push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server  rsync -avz $remote_path/$short_ud/ $remote_path/latest-$Settings::milestone/");
     }
   } elsif ( $Settings::ReleaseToLatest ) {
-    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $remote_path");
+    push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $remote_path/latest-$Settings::milestone");
     push(@cmds,"scp $scp_opts -r $upload_directory/* $Settings::ssh_user\@$ssh_server:$remote_path/latest-$Settings::milestone/");
     push(@cmds,"ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $remote_path/latest-$Settings::milestone/");
     if ($Settings::ReleaseGroup ne '') {
@@ -1085,7 +1100,11 @@ sub PreBuild {
   #    build hour (which may not be today!)
   # (3) subsumes (2), so there's no need to check for (2) explicitly.
 
-  if ( -e "last-built" ) {
+  if (!$Settings::OfficialBuildMachinery) {
+    TinderUtils::print_log "Configured to release hourly builds only\n";
+    $cachebuild = 0;
+  }
+  elsif ( -e "last-built" ) {
     my $last = (stat "last-built")[9];
     TinderUtils::print_log "Most recent nightly build: " .
       localtime($last) . "\n";
@@ -1202,13 +1221,17 @@ sub main {
   my $ftp_path = $Settings::ftp_path;
   my $url_path = $Settings::url_path;
 
-  my ($c_hour,$c_day,$c_month,$c_year,$c_yday) = (localtime(time))[2,3,4,5,7];
-  $c_year       = $c_year + 1900; # ftso perl
-  $c_month      = $c_month + 1; # ftso perl
-  $c_hour       = pad_digit($c_hour);
-  $c_day        = pad_digit($c_day);
-  $c_month      = pad_digit($c_month);
-  my $datestamp = "$c_year-$c_month-$c_day-$c_hour-$Settings::milestone";
+  my $buildid = get_buildid(objdir=>$objdir);
+
+  my $datestamp;
+  if ($buildid ne '0000000000' &&
+      $buildid =~ /^(\d{4})(\d{2})(\d{2})(\d{2})$/) {
+    $datestamp="$1-$2-$3-$4-$Settings::milestone";
+  }
+  else {
+    cleanup();
+    return returnStatus('Could not find build id', ('busted'));
+  }
 
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
@@ -1220,7 +1243,6 @@ sub main {
 
   my($package_dir, $store_name, $local_build_dir);
 
-  my $buildid = get_buildid(objdir=>$objdir);
   my $pretty_build_name = shorthost() . "-" . $Settings::milestone;
 
   if ($cachebuild) {
