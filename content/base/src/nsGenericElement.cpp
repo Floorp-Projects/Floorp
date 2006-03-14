@@ -2435,7 +2435,61 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   return NS_OK;
 }
 
+/* static */
+nsresult
+nsGenericElement::DispatchEvent(nsPresContext* aPresContext,
+                                nsEvent* aEvent,
+                                nsIContent* aTarget,
+                                PRBool aFullDispatch,
+                                nsEventStatus* aStatus)
+{
+  NS_PRECONDITION(aTarget, "Must have target");
+  NS_PRECONDITION(aEvent, "Must have source event");
+  NS_PRECONDITION(aStatus, "Null out param?");
 
+  if (!aPresContext) {
+    return NS_OK;
+  }
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (!shell) {
+    return NS_OK;
+  }
+
+  if (aFullDispatch) {
+    return shell->HandleEventWithTarget(aEvent, nsnull, aTarget, aStatus);
+  }
+
+  return shell->HandleDOMEventWithTarget(aTarget, aEvent, aStatus);
+}
+
+/* static */
+nsresult
+nsGenericElement::DispatchClickEvent(nsPresContext* aPresContext,
+                                     nsInputEvent* aSourceEvent,
+                                     nsIContent* aTarget,
+                                     PRBool aFullDispatch,
+                                     nsEventStatus* aStatus)
+{
+  NS_PRECONDITION(aTarget, "Must have target");
+  NS_PRECONDITION(aSourceEvent, "Must have source event");
+  NS_PRECONDITION(aStatus, "Null out param?");
+
+  nsMouseEvent event(NS_IS_TRUSTED_EVENT(aSourceEvent), NS_MOUSE_LEFT_CLICK,
+                     aSourceEvent->widget, nsMouseEvent::eReal);
+  event.refPoint = aSourceEvent->refPoint;
+  PRUint32 clickCount = 1;
+  if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
+    clickCount = NS_STATIC_CAST(nsMouseEvent*, aSourceEvent)->clickCount;
+  }
+  event.clickCount = clickCount;
+  event.isShift = aSourceEvent->isShift;
+  event.isControl = aSourceEvent->isControl;
+  event.isAlt = aSourceEvent->isAlt;
+  event.isMeta = aSourceEvent->isMeta;
+
+  return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
+}
 
 //----------------------------------------------------------------------
 
