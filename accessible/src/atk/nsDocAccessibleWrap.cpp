@@ -414,18 +414,22 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         break;
 
     case nsIAccessibleEvent::EVENT_ATK_WINDOW_ACTIVATE:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_WINDOW_ACTIVATED\n"));
-        g_signal_emit(accWrap->GetAtkObject(),
-                      g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT), 0);
+        AtkObject *accessible = accWrap->GetAtkObject();
+        guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(accessible, id, 0);
         rv = NS_OK;
-        break;
+      } break;
 
     case nsIAccessibleEvent::EVENT_ATK_WINDOW_DEACTIVATE:
+      {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_ATK_WINDOW_DEACTIVATED\n"));
-        g_signal_emit(accWrap->GetAtkObject(),
-                      g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT), 0);
+        AtkObject *accessible = accWrap->GetAtkObject();
+        guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
+        g_signal_emit(accessible, id, 0);
         rv = NS_OK;
-        break;
+      } break;
 
     default:
         // Don't transfer others
