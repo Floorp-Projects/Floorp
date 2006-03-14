@@ -146,12 +146,14 @@ public:
 
 #ifdef IBMBIDI
   /**
-   * Return the frame before this frame in visual order (after Bidi reordering)
+   * Return the frame before this frame in visual order (after Bidi reordering).
+   * If aFrame is null, return the last frame in visual order.
    */
   nsIFrame* GetPrevVisualFor(nsIFrame* aFrame) const;
 
   /**
-   * Return the frame after this frame in visual order (after Bidi reordering)
+   * Return the frame after this frame in visual order (after Bidi reordering).
+   * If aFrame is null, return the first frame in visual order.
    */
   nsIFrame* GetNextVisualFor(nsIFrame* aFrame) const;
 #endif // IBMBIDI
