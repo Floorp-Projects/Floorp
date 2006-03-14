@@ -123,7 +123,7 @@ ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += uconv
 endif
 
-ifneq (,$(filter gtk gtk2 xlib os2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
         nsRegionImpl.cpp \
         $(NULL)
