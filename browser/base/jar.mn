@@ -12,7 +12,7 @@ browser.jar:
 %  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
-*       content/browser/aboutDialog.css               (content/aboutDialog.css)
+        content/browser/aboutDialog.css               (content/aboutDialog.css)
         content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
@@ -35,7 +35,7 @@ browser.jar:
 *       content/browser/searchDialog.js               (content/searchDialog.js)
 *       content/browser/searchDialog.xul              (content/searchDialog.xul)
 *       content/browser/searchDialog.css              (content/searchDialog.css)
-*       content/browser/searchbarBindings.css         (content/searchbarBindings.css)
+        content/browser/searchbarBindings.css         (content/searchbarBindings.css)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
 *       content/browser/web-panels.xul                (content/web-panels.xul)

@@ -43,4 +43,3 @@ download[state="7"] {
 download:not([selected="true"]) .text-link {
   -moz-user-focus: none;
 }
-
