@@ -67,7 +67,6 @@
 % locale mozapps @AB_CD@ %locale/@AB_CD@/mozapps/
 * locale/@AB_CD@/mozapps/downloads/unknownContentType.properties  (%chrome/mozapps/downloads/unknownContentType.properties)
 * locale/@AB_CD@/mozapps/downloads/unknownContentType.dtd         (%chrome/mozapps/downloads/unknownContentType.dtd)
-  locale/@AB_CD@/mozapps/downloads/editAction.dtd                 (%chrome/mozapps/downloads/editAction.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.dtd                  (%chrome/mozapps/downloads/downloads.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)
   locale/@AB_CD@/mozapps/downloads/downloadProperties.dtd         (%chrome/mozapps/downloads/downloadProperties.dtd)
