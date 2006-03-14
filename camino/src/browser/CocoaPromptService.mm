@@ -136,7 +136,11 @@ CocoaPromptService::AlertCheck(nsIDOMWindow *parent,
     if (checkValue && checkMsg && *checkMsg) {
       NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
       BOOL valueBool = *checkValue ? YES : NO;
-      [controller alertCheck:[browserView getNativeWindow] title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
+      [controller alertCheck:[browserView getNativeWindow]
+                       title:titleStr
+                        text:textStr
+                    checkMsg:msgStr
+                  checkValue:&valueBool];
       *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
     }
     else {
@@ -171,7 +175,9 @@ CocoaPromptService::Confirm(nsIDOMWindow *parent,
 
   nsresult rv = NS_OK;
   NS_DURING
-    *_retval = (PRBool)[controller confirm:[browserView getNativeWindow] title:titleStr text:textStr];
+    *_retval = (PRBool)[controller confirm:[browserView getNativeWindow]
+                                     title:titleStr
+                                      text:textStr];
   NS_HANDLER
     rv = NS_ERROR_FAILURE;
   NS_ENDHANDLER
@@ -206,11 +212,17 @@ CocoaPromptService::ConfirmCheck(nsIDOMWindow *parent,
     if (checkValue && checkMsg && *checkMsg) {
       NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
       BOOL valueBool = *checkValue ? YES : NO;
-      *_retval = (PRBool)[controller confirmCheck:[browserView getNativeWindow] title:titleStr text:textStr checkMsg:msgStr checkValue:&valueBool];
+      *_retval = (PRBool)[controller confirmCheck:[browserView getNativeWindow]
+                                            title:titleStr
+                                             text:textStr
+                                         checkMsg:msgStr
+                                       checkValue:&valueBool];
       *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
     }
     else {
-      *_retval = (PRBool)[controller confirm:[browserView getNativeWindow] title:titleStr text:textStr];
+      *_retval = (PRBool)[controller confirm:[browserView getNativeWindow]
+                                       title:titleStr
+                                        text:textStr];
     }
   NS_HANDLER
     rv = NS_ERROR_FAILURE;
@@ -263,14 +275,23 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
       NSString* msgStr = [NSString stringWithPRUnichars:checkMsg];
       BOOL valueBool = *checkValue ? YES : NO;
 
-      result = [controller confirmCheckEx:[browserView getNativeWindow] title:titleStr text:textStr
-                                          button1: btn1Str button2: btn2Str button3: btn3Str
-                                         checkMsg:msgStr checkValue:&valueBool];
+      result = [controller confirmCheckEx:[browserView getNativeWindow]
+                                    title:titleStr
+                                     text:textStr
+                                  button1:btn1Str
+                                  button2:btn2Str
+                                  button3:btn3Str
+                                 checkMsg:msgStr
+                               checkValue:&valueBool];
       *checkValue = (valueBool == YES) ? PR_TRUE : PR_FALSE;
     }
     else {
-      result = [controller confirmEx:[browserView getNativeWindow] title:titleStr text:textStr
-                                     button1: btn1Str button2: btn2Str button3: btn3Str];
+      result = [controller confirmEx:[browserView getNativeWindow]
+                               title:titleStr
+                                text:textStr
+                             button1:btn1Str
+                             button2:btn2Str
+                             button3:btn3Str];
     }
 
     switch (result)
@@ -287,7 +308,6 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
   [browserView doAfterPromptDismissal];
 
   return rv;
-
 }
 
 
@@ -580,19 +600,35 @@ CocoaPromptService::CookieDialog(nsIDOMWindow *parent, nsICookie *cookie, const 
   PRUnichar* titleStr = [titleText createNewUnicodeBuffer];
   NSString* allowText = NSLocalizedString(@"Allow", @"AllowCookie");
   PRUnichar* allowStr = [allowText createNewUnicodeBuffer];
-  NSString* denyText = NSLocalizedString(@"Deny", @"AllowCookie");
+  NSString* denyText = NSLocalizedString(@"Deny", @"DenyCookie");
   PRUnichar* denyStr = [denyText createNewUnicodeBuffer];
+  NSString* allowForSessionText = NSLocalizedString(@"Allow for Session", @"AllowCookieForSession");
+  PRUnichar* allowForSessionStr = [allowForSessionText createNewUnicodeBuffer];
 
-  long buttonFlags = (BUTTON_TITLE_IS_STRING << kButton0) | (BUTTON_TITLE_IS_STRING << kButton1);
+  long buttonFlags = (BUTTON_TITLE_IS_STRING << kButton0) | (BUTTON_TITLE_IS_STRING << kButton1) | (BUTTON_TITLE_IS_STRING << kButton2);
   PRInt32 buttonPressed = 0;
   *rememberDecision = PR_TRUE;          // "remember this decision" should be checked when we show the dialog
-  ConfirmEx(parent, titleStr, textStr, buttonFlags, allowStr, denyStr, nil, checkboxStr, rememberDecision, &buttonPressed);
-  *_retval = (buttonPressed == 0);      // button 0 is allow, button 1 is deny, so return true if allow is clicked
-
+  ConfirmEx(parent, titleStr, textStr, buttonFlags, allowStr, denyStr, allowForSessionStr, checkboxStr, rememberDecision, &buttonPressed);
+ 
+  // map return values for nsICookiePromptService
+  switch (buttonPressed)
+  {
+    case 0: // allow button
+      *_retval = nsICookiePromptService::ACCEPT_COOKIE;
+      break;
+    case 1: // deny button
+      *_retval = nsICookiePromptService::DENY_COOKIE;
+      break;
+    case 2: // allow for session button
+      *_retval = nsICookiePromptService::ACCEPT_SESSION_COOKIE;
+      break;
+  }
+  
   nsMemory::Free(textStr);
   nsMemory::Free(checkboxStr);
   nsMemory::Free(titleStr);
   nsMemory::Free(allowStr);
+  nsMemory::Free(allowForSessionStr);
   nsMemory::Free(denyStr);
   return NS_OK;
 }
