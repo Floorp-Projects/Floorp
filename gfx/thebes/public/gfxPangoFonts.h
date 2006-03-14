@@ -57,10 +57,6 @@ public:
     PangoContext* GetPangoContext() { RealizeFont(); return mPangoCtx; }
 
 protected:
-    nsString mName;
-    const gfxFontGroup *mFontGroup;
-    const gfxFontStyle *mFontStyle;
-
     PangoFontDescription *mPangoFontDesc;
     PangoContext *mPangoCtx;
 
