@@ -63,7 +63,7 @@
 
 // Misc
 #include "nsEditorUtils.h"
-
+#include "nsContentCID.h"
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {

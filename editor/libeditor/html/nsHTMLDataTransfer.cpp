@@ -1683,7 +1683,7 @@ nsHTMLEditor::PutDragDataInTransferable(nsITransferable **aTransferable)
   if (!bIsPlainTextControl)
   {
     // encode the selection as html with contextual info
-    rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
+    rv = docEncoder->EncodeToStringWithContext(parents, info, buffer);
     if (NS_FAILED(rv)) return rv;
   }
   else

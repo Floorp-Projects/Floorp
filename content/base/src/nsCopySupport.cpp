@@ -67,6 +67,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIImage.h"
 #include "nsContentUtils.h"
+#include "nsContentCID.h"
 
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -151,7 +152,7 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
     NS_ENSURE_SUCCESS(rv, rv);
 
     // encode the selection as html with contextual info
-    rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
+    rv = docEncoder->EncodeToStringWithContext(parents, info, buffer);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
@@ -516,7 +517,7 @@ static nsresult AppendDOMNode(nsITransferable *aTransferable,
 
   // serialize to string
   nsAutoString html, context, info;
-  rv = docEncoder->EncodeToStringWithContext(html, context, info);
+  rv = docEncoder->EncodeToStringWithContext(context, info, html);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // copy them to the transferable

@@ -99,6 +99,7 @@
 #include "nsContentUtils.h"
 #include "nsIMIMEService.h"
 #include "imgIRequest.h"
+#include "nsContentCID.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -1742,6 +1743,6 @@ nsTransferableFactory::SerializeNodeOrSelection(serializationMode inMode,
     return encoder->EncodeToString(outResultString);
   }
 
-  return encoder->EncodeToStringWithContext(outResultString, outContext,
-                                            outInfo);
+  return encoder->EncodeToStringWithContext(outContext, outInfo,
+                                            outResultString);
 }

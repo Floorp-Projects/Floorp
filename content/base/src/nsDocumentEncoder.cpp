@@ -101,9 +101,9 @@ public:
   NS_IMETHOD GetMimeType(nsAString& aMimeType);
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
   NS_IMETHOD EncodeToString(nsAString& aOutputString);
-  NS_IMETHOD EncodeToStringWithContext(nsAString& aEncodedString, 
-                                       nsAString& aContextString,
-                                       nsAString& aInfoString);
+  NS_IMETHOD EncodeToStringWithContext(nsAString& aContextString,
+                                       nsAString& aInfoString,
+                                       nsAString& aEncodedString);
   NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup);
                                        
 protected:
@@ -968,9 +968,9 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::EncodeToStringWithContext(nsAString& aEncodedString, 
-                                             nsAString& aContextString,
-                                             nsAString& aInfoString)
+nsDocumentEncoder::EncodeToStringWithContext(nsAString& aContextString,
+                                             nsAString& aInfoString,
+                                             nsAString& aEncodedString)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1006,9 +1006,9 @@ public:
 
   // overridden methods from nsDocumentEncoder
   NS_IMETHOD SetSelection(nsISelection* aSelection);
-  NS_IMETHOD EncodeToStringWithContext(nsAString& aEncodedString, 
-                                       nsAString& aContextString,
-                                       nsAString& aInfoString);
+  NS_IMETHOD EncodeToStringWithContext(nsAString& aContextString,
+                                       nsAString& aInfoString,
+                                       nsAString& aEncodedString);
 
 protected:
 
@@ -1186,9 +1186,9 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aEncodedString, 
-                                             nsAString& aContextString,
-                                             nsAString& aInfoString)
+nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
+                                             nsAString& aInfoString,
+                                             nsAString& aEncodedString)
 {
   nsresult rv = EncodeToString(aEncodedString);
   NS_ENSURE_SUCCESS(rv, rv);

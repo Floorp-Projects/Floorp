@@ -60,6 +60,7 @@
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
 #include "nsInt64.h"
+#include "nsContentCID.h"
 #include "nsStreamUtils.h"
 
 #include "nsCExternalHandlerService.h"
