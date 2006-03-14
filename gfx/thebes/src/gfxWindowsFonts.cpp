@@ -58,26 +58,22 @@
 THEBES_IMPL_REFCOUNTING(gfxWindowsFont)
 
 gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup)
-    : mFont(nsnull), mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(PR_FALSE)
+    : gfxFont(aName, aFontGroup),
+      mFont(nsnull), mScriptCache(nsnull),
+      mFontFace(nsnull), mScaledFont(nsnull),
+      mMetrics(nsnull), mIsMLangFont(PR_FALSE)
 {
-    mName = aName;
-    mGroup = aFontGroup;
-    mStyle = mGroup->GetStyle();
-
-    Init();
 }
 
 gfxWindowsFont::gfxWindowsFont(HFONT aFont,
                                const gfxFontGroup *aFontGroup,
                                PRBool aIsMLangFont,
                                const gfxMatrix& aMatrix)
-    : mScriptCache(nsnull), mMetrics(nsnull), mIsMLangFont(aIsMLangFont), mCTM(aMatrix)
+    : gfxFont(NS_LITERAL_STRING("NotARealFontName"), aFontGroup),
+      mFont(aFont), mScriptCache(nsnull), mMetrics(nsnull),
+      mFontFace(nsnull), mScaledFont(nsnull),
+      mIsMLangFont(aIsMLangFont), mCTM(aMatrix)
 {
-    mFont = aFont;
-    mGroup = aFontGroup;
-    mStyle = mGroup->GetStyle();
-
-    Init();
 }
 
 gfxWindowsFont::~gfxWindowsFont()
@@ -86,20 +82,13 @@ gfxWindowsFont::~gfxWindowsFont()
 }
 
 void
-gfxWindowsFont::Init()
-{
-    mFontFace = MakeCairoFontFace();
-    NS_ASSERTION(mFontFace, "Failed to make font face");
-
-    mScaledFont = MakeCairoScaledFont();
-    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
-}
-
-void
 gfxWindowsFont::Destroy()
 {
-    cairo_font_face_destroy(mFontFace);
-    cairo_scaled_font_destroy(mScaledFont);
+    if (mFontFace)
+        cairo_font_face_destroy(mFontFace);
+
+    if (mScaledFont)
+        cairo_scaled_font_destroy(mScaledFont);
 
     if (mIsMLangFont) {
         IMultiLanguage *ml = gfxWindowsPlatform::GetPlatform()->GetMLangService();
@@ -135,6 +124,28 @@ gfxWindowsFont::GetMetrics()
     return *mMetrics;
 }
 
+cairo_font_face_t *
+gfxWindowsFont::CairoFontFace()
+{
+    if (!mFontFace)
+        mFontFace = MakeCairoFontFace();
+
+    NS_ASSERTION(mFontFace, "Failed to make font face");
+
+    return mFontFace;
+}
+
+cairo_scaled_font_t *
+gfxWindowsFont::CairoScaledFont()
+{
+    if (!mScaledFont)
+        mScaledFont = MakeCairoScaledFont();
+
+    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
+
+    return mScaledFont;
+}
+
 void
 gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
 {
@@ -144,8 +155,6 @@ gfxWindowsFont::UpdateCTM(const gfxMatrix& aMatrix)
     Destroy();
 
     mCTM = aMatrix;
-
-    Init();
 }
 
 cairo_font_face_t *
@@ -201,7 +210,7 @@ gfxWindowsFont::MakeCairoScaledFont()
     cairo_matrix_init_scale(&sizeMatrix, mStyle->size, mStyle->size);
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
-    font = cairo_scaled_font_create(mFontFace, &sizeMatrix, &mCTM.ToCairoMatrix(), fontOptions);
+    font = cairo_scaled_font_create(CairoFontFace(), &sizeMatrix, &mCTM.ToCairoMatrix(), fontOptions);
     cairo_font_options_destroy(fontOptions);
 
     return font;
@@ -217,9 +226,11 @@ gfxWindowsFont::ComputeMetrics()
 
     SaveDC(dc);
 
-    cairo_win32_scaled_font_select_font(mScaledFont, dc);
+    cairo_scaled_font_t *scaledFont = CairoScaledFont();
 
-    const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(mScaledFont);
+    cairo_win32_scaled_font_select_font(scaledFont, dc);
+
+    const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
     const double multiplier = cairofontfactor * mStyle->size;
 
     // Get font metrics
@@ -281,7 +292,7 @@ gfxWindowsFont::ComputeMetrics()
     //size.cx -= font->mOverhangCorrection;
     mMetrics->spaceWidth = NSToCoordRound(size.cx * multiplier);
 
-    cairo_win32_scaled_font_done_font(mScaledFont);
+    cairo_win32_scaled_font_done_font(scaledFont);
 
     RestoreDC(dc, -1);
 
@@ -576,7 +587,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
             numGlyphs = results.nGlyphs;
         }
-        
+
         cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
         double offset = 0;
         for (PRInt32 k = 0; k < numGlyphs; k++) {
@@ -648,7 +659,7 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
         control->fNeutralOverride = 1;
         state->uBidiLevel = 1;
     }
-  
+
     SCRIPT_ITEM *items = (SCRIPT_ITEM *)malloc(maxItems*sizeof(SCRIPT_ITEM));
     while ((rv = ScriptItemize(aString, aLength, maxItems, control, state,
                                items, &numItems)) == E_OUTOFMEMORY) {
