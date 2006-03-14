@@ -177,7 +177,7 @@ nsBulletFrame::DidSetStyleContext()
 MOZ_DECL_CTOR_COUNTER(nsDisplayBullet)
 class nsDisplayBullet : public nsDisplayItem {
 public:
-  nsDisplayBullet(nsBulletFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayBullet(nsBulletFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -186,18 +186,16 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Bullet")
-private:
-  nsBulletFrame* mFrame;
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsBulletFrame*, mFrame)->
+    PaintBullet(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP

@@ -171,7 +171,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayCheckMark)
 class nsDisplayCheckMark : public nsDisplayItem {
 public:
   nsDisplayCheckMark(nsGfxCheckboxControlFrame* aFrame)
-    : mFrame(aFrame) {
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayCheckMark);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -180,19 +180,16 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("CheckMark")
-private:
-  nsGfxCheckboxControlFrame* mFrame;
 };
 
 void
 nsDisplayCheckMark::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  mFrame->PaintCheckBox(*aCtx, aBuilder->ToReferenceFrame(mFrame),
-                        aDirtyRect);
+  NS_STATIC_CAST(nsGfxCheckboxControlFrame*, mFrame)->
+    PaintCheckBox(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 
 

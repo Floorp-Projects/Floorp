@@ -558,7 +558,7 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
 MOZ_DECL_CTOR_COUNTER(nsDisplayTableRowBackground)
 class nsDisplayTableRowBackground : public nsDisplayItem {
 public:
-  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableRowBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -571,14 +571,12 @@ public:
     // the overflow rect contains any row-spanning cells, so it contains
     // our background. Note that this means we may not be opaque even if
     // the background style is a solid color.
-    return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
+    return NS_STATIC_CAST(nsTableRowFrame*, mFrame)->GetOverflowRect() +
+      aBuilder->ToReferenceFrame(mFrame);
   }
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("TableRowBackground")
-private:
-  nsTableRowFrame* mFrame;
 };
 
 void
@@ -593,7 +591,7 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
                                  TableBackgroundPainter::eOrigin_TableRow,
                                  mFrame->GetPresContext(), *aCtx,
                                  aDirtyRect - pt);
-  painter.PaintRow(mFrame);
+  painter.PaintRow(NS_STATIC_CAST(nsTableRowFrame*, mFrame));
 }
 
 NS_IMETHODIMP

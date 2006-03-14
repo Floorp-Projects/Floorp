@@ -766,7 +766,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplaySelectionOverlay)
 class nsDisplaySelectionOverlay : public nsDisplayItem {
 public:
   nsDisplaySelectionOverlay(nsFrame* aFrame, PRInt16 aSelectionValue)
-    : mFrame(aFrame), mSelectionValue(aSelectionValue) {
+    : nsDisplayItem(aFrame), mSelectionValue(aSelectionValue) {
     MOZ_COUNT_CTOR(nsDisplaySelectionOverlay);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -775,12 +775,10 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("SelectionOverlay")
 private:
-  nsFrame* mFrame;
   PRInt16 mSelectionValue;
 };
 

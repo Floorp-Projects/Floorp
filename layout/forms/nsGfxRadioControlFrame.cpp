@@ -178,7 +178,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayRadioButtonFromStyle)
 class nsDisplayRadioButtonFromStyle : public nsDisplayItem {
 public:
   nsDisplayRadioButtonFromStyle(nsGfxRadioControlFrame* aFrame)
-    : mFrame(aFrame) {
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayRadioButtonFromStyle);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -187,19 +187,16 @@ public:
   }
 #endif
   
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("RadioButton")
-private:
-  nsGfxRadioControlFrame* mFrame;
 };
 
 void
 nsDisplayRadioButtonFromStyle::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  mFrame->PaintRadioButtonFromStyle(*aCtx, aBuilder->ToReferenceFrame(mFrame),
-                                    aDirtyRect);
+  NS_STATIC_CAST(nsGfxRadioControlFrame*, mFrame)->
+    PaintRadioButtonFromStyle(*aCtx, aBuilder->ToReferenceFrame(mFrame), aDirtyRect);
 }
 
 //--------------------------------------------------------------

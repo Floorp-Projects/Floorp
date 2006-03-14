@@ -242,7 +242,7 @@ class nsDisplayItemLink {
   // This is never instantiated directly, so no need to count constructors and
   // destructors.
 protected:
-  nsDisplayItemLink() {}
+  nsDisplayItemLink() : mAbove(nsnull) {}
   nsDisplayItem* mAbove;  
   
   friend class nsDisplayList;
@@ -267,6 +267,7 @@ class nsDisplayItem : public nsDisplayItemLink {
 public:
   // This is never instantiated directly (it has pure virtual methods), so no
   // need to count constructors and destructors.
+  nsDisplayItem(nsIFrame* aFrame) : mFrame(aFrame) {}
   virtual ~nsDisplayItem() {}
   
   void* operator new(size_t aSize,
@@ -306,7 +307,7 @@ public:
    * that wrap item lists, this could return nsnull because there is no single
    * underlying frame; for leaf items it will never return nsnull.
    */
-  virtual nsIFrame* GetUnderlyingFrame() = 0;
+  inline nsIFrame* GetUnderlyingFrame() { return mFrame; }
   /**
    * The default bounds is the frame border rect.
    * @return a rectangle relative to aBuilder->ReferenceFrame() that
@@ -389,6 +390,8 @@ protected:
   
   static PRBool ComputeVisibilityFromBounds(nsIFrame* aFrame,
       const nsRect& aRect, nsRegion& aCovered, PRBool aIsOpaque);
+
+  nsIFrame* mFrame;
 };
 
 /**
@@ -715,7 +718,7 @@ public:
                                  const nsRect& aDirtyRect, nsPoint aFramePt);
 
   nsDisplayGeneric(nsIFrame* aFrame, PaintCallback aPaint, const char* aName)
-    : mFrame(aFrame), mPaint(aPaint)
+    : nsDisplayItem(aFrame), mPaint(aPaint)
 #ifdef DEBUG
       , mName(aName)
 #endif
@@ -728,14 +731,12 @@ public:
   }
 #endif
   
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect) {
     mPaint(mFrame, aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
   }
   NS_DISPLAY_DECL_NAME(mName)
 protected:
-  nsIFrame*     mFrame;
   PaintCallback mPaint;
 #ifdef DEBUG
   const char*   mName;
@@ -748,7 +749,7 @@ protected:
 MOZ_DECL_CTOR_COUNTER(nsDisplayBorder)
 class nsDisplayBorder : public nsDisplayItem {
 public:
-  nsDisplayBorder(nsIFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayBorder(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -757,12 +758,9 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Border")
-private:
-  nsIFrame* mFrame;
 };
 
 /**
@@ -771,7 +769,7 @@ private:
 MOZ_DECL_CTOR_COUNTER(nsDisplayBackground)
 class nsDisplayBackground : public nsDisplayItem {
 public:
-  nsDisplayBackground(nsIFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -781,7 +779,6 @@ public:
 #endif
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToFrame(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aAncestorFrame);
@@ -789,8 +786,6 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Background")
-private:
-  nsIFrame* mFrame;
 };
 
 /**
@@ -799,7 +794,7 @@ private:
 MOZ_DECL_CTOR_COUNTER(nsDisplayOutline)
 class nsDisplayOutline : public nsDisplayItem {
 public:
-  nsDisplayOutline(nsIFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayOutline(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayOutline);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -809,13 +804,10 @@ public:
 #endif
 
   virtual Type GetType() { return TYPE_OUTLINE; }
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Outline")
-private:
-  nsIFrame* mFrame;
 };
 
 /**
@@ -824,7 +816,7 @@ private:
 MOZ_DECL_CTOR_COUNTER(nsDisplayEventReceiver)
 class nsDisplayEventReceiver : public nsDisplayItem {
 public:
-  nsDisplayEventReceiver(nsIFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayEventReceiver(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayEventReceiver);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -834,10 +826,7 @@ public:
 #endif
 
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   NS_DISPLAY_DECL_NAME("EventReceiver")
-private:
-  nsIFrame* mFrame;
 };
 
 /**
@@ -867,7 +856,6 @@ public:
   virtual ~nsDisplayWrapList();
   virtual Type GetType() { return TYPE_WRAPLIST; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt);
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
@@ -901,7 +889,6 @@ protected:
   nsDisplayWrapList() {}
   
   nsDisplayList mList;
-  nsIFrame*     mFrame;
 };
 
 /**

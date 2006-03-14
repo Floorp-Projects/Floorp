@@ -357,7 +357,7 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
 MOZ_DECL_CTOR_COUNTER(nsDisplayTableCellBackground)
 class nsDisplayTableCellBackground : public nsDisplayItem {
 public:
-  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayTableCellBackground);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -366,19 +366,17 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("TableCellBackground")
-private:
-  nsTableCellFrame* mFrame;
 };
 
 void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsTableCellFrame*, mFrame)->
+    PaintBackground(*aCtx, aDirtyRect, aBuilder->ToReferenceFrame(mFrame));
 }
 
 static void

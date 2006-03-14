@@ -69,7 +69,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
-#include "nsContentUtils.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
@@ -405,6 +404,20 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
   return NS_ERROR_FAILURE;
 }
 #endif
+
+
+
+NS_IMETHODIMP
+nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsStyleContext*  aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  mEventQueueService = do_GetService(kEventQueueServiceCID);
+  
+  return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+}
 
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -1588,13 +1601,12 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 
   // Send reflow command because the new text maybe larger
   nsresult rv = NS_OK;
-  if (mDisplayContent) {
+  if (mDisplayContent && mEventQueueService) {
     // Don't call ActuallyDisplayText(PR_TRUE) directly here since that
     // could cause recursive frame construction. See bug 283117 and the comment in
     // HandleRedisplayTextEvent() below.
     nsCOMPtr<nsIEventQueue> eventQueue;
-    rv = nsContentUtils::EventQueueService()->
-            GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+    rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
                                                   getter_AddRefs(eventQueue));
     if (eventQueue) {
       RedisplayTextEvent* event = new RedisplayTextEvent(this);
@@ -1942,12 +1954,13 @@ NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 {
   // Revoke queued RedisplayTextEvents
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  nsContentUtils::EventQueueService()->
-    GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                            getter_AddRefs(eventQueue));
-  if (eventQueue) {
-    eventQueue->RevokeEvents(this);
+  if (mEventQueueService) {
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                             getter_AddRefs(eventQueue));
+    if (eventQueue) {
+      eventQueue->RevokeEvents(this);
+    }
   }
 
   nsFormControlFrame::RegUnRegAccessKey(GetPresContext(), NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
@@ -2059,7 +2072,7 @@ MOZ_DECL_CTOR_COUNTER(nsDisplayComboboxFocus)
 class nsDisplayComboboxFocus : public nsDisplayItem {
 public:
   nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame)
-    : mFrame(aFrame) {
+    : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayComboboxFocus);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2068,18 +2081,16 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("ComboboxFocus")
-private:
-  nsComboboxControlFrame* mFrame;
 };
 
 void nsDisplayComboboxFocus::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-  mFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsComboboxControlFrame*, mFrame)->
+    PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP

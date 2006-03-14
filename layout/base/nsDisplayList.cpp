@@ -459,12 +459,12 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayList* aList)
-  : mFrame(aFrame) {
+  : nsDisplayItem(aFrame) {
   mList.AppendToTop(aList);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsIFrame* aFrame, nsDisplayItem* aItem)
-  : mFrame(aFrame) {
+  : nsDisplayItem(aFrame) {
   mList.AppendToTop(aItem);
 }
 

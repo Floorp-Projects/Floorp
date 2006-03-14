@@ -1957,7 +1957,7 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
 MOZ_DECL_CTOR_COUNTER(nsDisplayText)
 class nsDisplayText : public nsDisplayItem {
 public:
-  nsDisplayText(nsTextFrame* aFrame) : mFrame(aFrame) {
+  nsDisplayText(nsTextFrame* aFrame) : nsDisplayItem(aFrame) {
     MOZ_COUNT_CTOR(nsDisplayText);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1966,19 +1966,17 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetUnderlyingFrame() { return mFrame; }
   virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) { return mFrame; }
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
      const nsRect& aDirtyRect);
   NS_DISPLAY_DECL_NAME("Text")
-private:
-  nsTextFrame* mFrame;
 };
 
 void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  mFrame->PaintText(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  NS_STATIC_CAST(nsTextFrame*, mFrame)->
+    PaintText(*aCtx, aBuilder->ToReferenceFrame(mFrame));
 }
 
 NS_IMETHODIMP
