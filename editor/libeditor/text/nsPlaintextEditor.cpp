@@ -75,7 +75,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
-
+#include "nsContentCID.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
 

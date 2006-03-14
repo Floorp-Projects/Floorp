@@ -54,7 +54,6 @@ nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \
-nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
 nsIDOMGCParticipant.h \
 nsINameSpaceManager.h \
@@ -83,6 +82,7 @@ SDK_XPIDLSRCS   = \
 XPIDLSRCS	= \
 		nsIChromeRegistry.idl       \
 		nsIContentPolicy.idl        \
+		nsIDocumentEncoder.idl      \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
