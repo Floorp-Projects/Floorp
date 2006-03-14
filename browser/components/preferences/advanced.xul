@@ -83,7 +83,6 @@
                   type="bool"/>
       <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
 
-      <preference id="security.enable_ssl2"            name="security.enable_ssl2"            type="bool"/>
       <preference id="security.enable_ssl3"            name="security.enable_ssl3"            type="bool"/>
       <preference id="security.enable_tls"             name="security.enable_tls"             type="bool"/>
       <preference id="security.default_personal_cert"  name="security.default_personal_cert"  type="string"/>
@@ -194,23 +193,15 @@
               <rows>
                 <row>
                   <hbox>
-                    <checkbox id="useSSL2" label="&useSSL2.label;" 
-                              accesskey="&useSSL2.accesskey;" 
-                              preference="security.enable_ssl2"/>
-                  </hbox>
-                  <hbox>
                     <checkbox id="useSSL3" label="&useSSL3.label;"
                               accesskey="&useSSL3.accesskey;"
                               preference="security.enable_ssl3"/>
                   </hbox>
-                </row>
-                <row>
                   <hbox>
                     <checkbox id="useTLS1" label="&useTLS1.label;"
                               accesskey="&useTLS1.accesskey;"
                               preference="security.enable_tls"/>
                   </hbox>
-                  <hbox/>
                 </row>
               </rows>
             </grid>

@@ -17,7 +17,6 @@ pippki.jar:
     content/pippki/pref-ciphers.js           (content/pref-ciphers.js)
     content/pippki/cipherinfo.xul            (content/cipherinfo.xul)
     content/pippki/cipherinfo.js             (content/cipherinfo.js)
-    content/pippki/ssl2ciphers.xul           (content/ssl2ciphers.xul)
     content/pippki/ssl3tlsciphers.xul        (content/ssl3tlsciphers.xul)
     content/pippki/ssl3tlsciphers2.xul       (content/ssl3tlsciphers2.xul)
     content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
