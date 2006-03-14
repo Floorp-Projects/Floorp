@@ -4,6 +4,11 @@
 use strict;
 use Cwd;
 
+# Globals that the signal handlers need access to...
+my $CURRENT_BUILD_PID = 0;
+my $HALT_AFTER_THIS_BUILD = 0;
+my $RELOAD_CONFIG = 0;
+
 sub PrintUsage() {
     die <<END_USAGE
     usage: $0 [options]
@@ -53,6 +58,21 @@ sub LoadConfig() {
     }
 }
 
+sub HandleSigTerm() {
+    if ($CURRENT_BUILD_PID > 0) {
+        kill(15, $CURRENT_BUILD_PID);
+        exit 0;
+    }
+}
+
+sub HandleSigHup() {
+    $HALT_AFTER_THIS_BUILD = 1;
+    $RELOAD_CONFIG = 1;
+}
+
+sub HandleSigInt() {
+    $HALT_AFTER_THIS_BUILD = 1;
+}
 
 sub Run() {
     my $start_time = time();
@@ -61,18 +81,34 @@ sub Run() {
             my $multidir = getcwd();
             chdir($treeentry->{tree}) or
                 die "Tree $treeentry->{tree} does not exist";
-            system("./build-seamonkey.pl --once $treeentry->{args}");
-            chdir($multidir);
+
+
+            my $buildPid = fork();
+
+            if ($buildPid) {
+                if ($buildPid > 0) {
+                    $CURRENT_BUILD_PID = $buildPid;
+                    my $reapedPid = waitpid($buildPid, 0);
+                    if ($reapedPid != $buildPid) {
+                        print STDERR "PID $buildPid died too quickly; " .
+                         "status was: " . ($? >> 8);
+                    }
+                } else {
+                    warn "fork() of build sub-process failed: $!";
+                }
+
+                chdir($multidir);
+
+            } else {
+                exec("./build-seamonkey.pl --once $treeentry->{args}");
+            }
 
             # We sleep 15 seconds to open up a window for stopping a build.
             sleep 15;
 
             # Provide a fall-over technique that stops the multi-tinderbox
             # script once the current build cycle has completed.
-            if ( -e "fall-over" ) {
-                system("mv fall-over fall-over.$$.done");
-                last OUTER;
-            }
+            last OUTER if ( $HALT_AFTER_THIS_BUILD );
         }
 
         # $BuildSleep is the minimum amount of time a build is allowed to take.
@@ -87,6 +123,21 @@ sub Run() {
     }
 }
 
+$SIG{'TERM'} = \&HandleSigTerm;
+$SIG{'HUP'} = \&HandleSigHup;
+$SIG{'INT'} = \&HandleSigInt;
+
 HandleArgs();
-LoadConfig();
-Run();
+
+while (not $HALT_AFTER_THIS_BUILD) {
+    LoadConfig();
+    Run();
+
+    ## Run can exit for two reasons: SIGHUP or SIGTERM; if we got a TERM,
+    ## we won't reload the config, and we'll exit; if we got a HUP, then
+    ## let's reload the config, and retoggle the bit so we continue building 
+    if ($RELOAD_CONFIG) {
+        $HALT_AFTER_THIS_BUILD = 0;
+        $RELOAD_CONFIG = 0;
+    }
+}

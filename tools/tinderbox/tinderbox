@@ -112,7 +112,7 @@ case "$build_action" in
     if test -f $build_type.pid; then
       pid=`cat $build_type.pid`
       echo "Shutting down $build_type tinderbox, PID = $pid"
-      kill $pid
+      kill -TERM $pid
       \rm $build_type.pid
     else
       echo "$build_type is not running."
