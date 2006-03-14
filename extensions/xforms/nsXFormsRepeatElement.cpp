@@ -756,6 +756,9 @@ nsXFormsRepeatElement::Refresh()
                                  getter_AddRefs(riElement));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    riElement->SetAttribute(NS_LITERAL_STRING("class"),
+                            NS_LITERAL_STRING("xf-repeat-item"));
+
     // Set model as attribute
     if (!modelID.IsEmpty()) {
       riElement->SetAttribute(NS_LITERAL_STRING("model"), modelID);
