@@ -1758,7 +1758,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         qn = NULL;
         if (pn->pn_type == TOK_XMLCOMMENT) {
             if (flags & XSF_IGNORE_COMMENTS)
-                return PN2X_SKIP_CHILD;
+                goto skip_child;
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
@@ -1771,7 +1771,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             }
 
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
-                return PN2X_SKIP_CHILD;
+                goto skip_child;
 
             qn = ParseNodeToQName(cx, pn, inScopeNSes, JS_FALSE);
             if (!qn)
@@ -1803,6 +1803,10 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
     if ((flags & XSF_PRECOMPILED_ROOT) && !js_GetXMLObject(cx, xml))
         return NULL;
     return xml;
+
+skip_child:
+    js_LeaveLocalRootScope(cx);
+    return PN2X_SKIP_CHILD;
 
 #undef PN2X_SKIP_CHILD
 
