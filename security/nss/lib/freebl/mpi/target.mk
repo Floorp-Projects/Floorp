@@ -229,3 +229,21 @@ MPICMN += $(MP_CONFIG)
 mpi_amd64_asm.o: mpi_amd64_sun.s
 	$(AS) -xarch=generic64 -P -D_ASM mpi_amd64_sun.s
 endif
+
+ifeq ($(TARGET),WIN32)
+AS_OBJS = mpi_x86.obj
+MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+MPICMN += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_API_COMPATIBLE 
+MPICMN += -DMP_MONT_USE_MP_MUL 
+MPICMN += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+CFLAGS  = -Od -Z7 -MDd -W3 -nologo -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USER)
+CFLAGS += -DWIN32 -D_WINDOWS -D_X86_ -DWIN95 -DXP_PC -DNSS_ENABLE_ECC 
+CFLAGS += $(MPICMN)
+
+$(AS_OBJS): %.obj : %.asm
+	ml -Cp -Sn -Zi -coff -nologo -c $<
+
+$(LIBOBJS): %.obj : %.c 
+	cl $(CFLAGS) -Fo$@ -c $<
+
+endif
