@@ -2763,8 +2763,6 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
     return;
   }
 
-  if (!color)
-    return;
   nsStyleBackground canvasColor(*color);
 
   nsIViewManager* vm = aPresContext->GetViewManager();

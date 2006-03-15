@@ -10354,6 +10354,12 @@ InvalidateCanvasIfNeeded(nsIFrame* aFrame)
     NS_ASSERTION(ancestor, "canvas must paint");
   }
 
+  if (ancestor->GetType() == nsLayoutAtoms::canvasFrame) {
+    // The canvas frame's dimensions are not meaningful; invalidate the
+    // viewport instead.
+    ancestor = ancestor->GetParent();
+  }
+
   if (ancestor != aFrame) {
     ApplyRenderingChangeToTree(presContext, ancestor,
                                nsChangeHint_RepaintFrame);
