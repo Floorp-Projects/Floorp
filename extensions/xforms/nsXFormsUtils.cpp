@@ -614,6 +614,9 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                   contextPosition, contextSize, aDeps,
                                   aIndexesUsed);
             } else {
+                const PRUnichar *strings[] = { expr.get() };
+                nsXFormsUtils::ReportError(NS_LITERAL_STRING("invalidQName"),
+                                           strings, 1, aElement, aElement);
               nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);
             }
           }
