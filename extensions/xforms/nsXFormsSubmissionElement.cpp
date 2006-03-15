@@ -1992,6 +1992,12 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   channel->SetLoadGroup(loadGroup);
 
+  // set LOAD_DOCUMENT_URI so throbber works during submit
+  nsLoadFlags loadFlags = 0;
+  channel->GetLoadFlags(&loadFlags);
+  loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
+  channel->SetLoadFlags(loadFlags);
+
   // create a pipe in which to store the response (yeah, this kind of
   // sucks since we'll use a lot of memory if the response is large).
   //
@@ -2002,7 +2008,7 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
 
   nsCOMPtr<nsIOutputStream> pipeOut;
   rv = NS_NewPipe(getter_AddRefs(mPipeIn), getter_AddRefs(pipeOut),
-                  0, PR_UINT32_MAX, PR_TRUE, PR_TRUE);
+                  4096, PR_UINT32_MAX, PR_TRUE, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // use a simple stream listener to tee our data into the pipe, and
