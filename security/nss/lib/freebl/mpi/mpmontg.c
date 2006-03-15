@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpmontg.c,v 1.17 2005/11/23 01:12:34 nelsonb%netscape.com Exp $ */
+/* $Id: mpmontg.c,v 1.18 2006/03/15 19:13:09 rrelyea%redhat.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
@@ -60,8 +60,8 @@
 /* if MP_CHAR_STORE_SLOW is defined, we  */
 /* need to know endianness of this platform. */
 #ifdef MP_CHAR_STORE_SLOW
-#if !defined(MPI_IS_BIG_ENDIAN) && !defined(MPI_IS_LITTLE_ENDIAN)
-#error "You must define MPI_IS_BIG_ENDIAN or MPI_IS_LITTLE_ENDIAN\n" \
+#if !defined(MP_IS_BIG_ENDIAN) && !defined(MP_IS_LITTLE_ENDIAN)
+#error "You must define MP_IS_BIG_ENDIAN or MP_IS_LITTLE_ENDIAN\n" \
        "  if you define MP_CHAR_STORE_SLOW."
 #endif
 #endif
@@ -703,8 +703,8 @@ mp_err mpi_to_weave(const mp_int *a, unsigned char *b,
   count = count/sizeof(mp_weave_word);
 
   /* this code pretty much depends on this ! */
-#if MP_ARGCHK < 2
-  assert(WEAVE_WORD_SIZE == 4);
+#if MP_ARGCHK == 2
+  assert(WEAVE_WORD_SIZE == 4); 
   assert(sizeof(mp_weave_word) == 4);
 #endif
 
@@ -754,19 +754,19 @@ mp_err mpi_to_weave(const mp_int *a, unsigned char *b,
  * NOTE: This code assumes sizeof(mp_weave_word) and MP_WEAVE_WORD_SIZE
  * is 4.
  */
-#ifdef IS_LITTLE_ENDIAN 
+#ifdef MP_IS_LITTLE_ENDIAN 
 #define MPI_WEAVE_ONE_STEP \
-    acc  = (d0 >> (MP_DIGIT_BITS-8))  & 0x000000ff; d0 <<= 8; /*b0*/ \
-    acc |= (d1 >> (MP_DIGIT_BITS-16)) & 0x0000ff00; d1 <<= 8; /*b1*/ \
-    acc |= (d2 >> (MP_DIGIT_BITS-24)) & 0x00ff0000; d2 <<= 8; /*b2*/ \
-    acc |= (d3 >> (MP_DIGIT_BITS-32)) & 0xff000000; d3 <<= 8; /*b3*/ \
+    acc  = (d0 >> (MP_DIGIT_BIT-8))  & 0x000000ff; d0 <<= 8; /*b0*/ \
+    acc |= (d1 >> (MP_DIGIT_BIT-16)) & 0x0000ff00; d1 <<= 8; /*b1*/ \
+    acc |= (d2 >> (MP_DIGIT_BIT-24)) & 0x00ff0000; d2 <<= 8; /*b2*/ \
+    acc |= (d3 >> (MP_DIGIT_BIT-32)) & 0xff000000; d3 <<= 8; /*b3*/ \
     *weaved = acc; weaved += count;
 #else 
 #define MPI_WEAVE_ONE_STEP \
-    acc  = (d0 >> (MP_DIGIT_BITS-32)) & 0xff000000; d0 <<= 8; /*b0*/ \
-    acc |= (d1 >> (MP_DIGIT_BITS-24)) & 0x00ff0000; d1 <<= 8; /*b1*/ \
-    acc |= (d2 >> (MP_DIGIT_BITS-16)) & 0x0000ff00; d2 <<= 8; /*b2*/ \
-    acc |= (d3 >> (MP_DIGIT_BITS-8))  & 0x000000ff; d3 <<= 8; /*b3*/ \
+    acc  = (d0 >> (MP_DIGIT_BIT-32)) & 0xff000000; d0 <<= 8; /*b0*/ \
+    acc |= (d1 >> (MP_DIGIT_BIT-24)) & 0x00ff0000; d1 <<= 8; /*b1*/ \
+    acc |= (d2 >> (MP_DIGIT_BIT-16)) & 0x0000ff00; d2 <<= 8; /*b2*/ \
+    acc |= (d3 >> (MP_DIGIT_BIT-8))  & 0x000000ff; d3 <<= 8; /*b3*/ \
     *weaved = acc; weaved += count;
 #endif 
    switch (sizeof(mp_digit)) {

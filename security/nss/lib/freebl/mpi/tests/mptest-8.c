@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mptest-8.c,v 1.4 2004/04/27 23:04:37 gerv%gerv.net Exp $ */
+/* $Id: mptest-8.c,v 1.5 2006/03/15 19:13:12 rrelyea%redhat.com Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +47,7 @@
 #include <limits.h>
 #include <time.h>
 
-#define MP_IOFUNC
+#define MP_IOFUNC 1
 #include "mpi.h"
 
 #include "mpprime.h"
