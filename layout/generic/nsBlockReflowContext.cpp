@@ -260,8 +260,8 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
   aAlign.mRightMargin = mMargin.right;
 
   // Get style unit associated with the left and right margins
-  nsStyleUnit leftUnit = mStyleMargin->mMargin.GetLeftUnit();
-  nsStyleUnit rightUnit = mStyleMargin->mMargin.GetRightUnit();
+  PRBool leftIsAuto = mStyleMargin->mMargin.GetLeftUnit() == eStyleUnit_Auto;
+  PRBool rightIsAuto = mStyleMargin->mMargin.GetRightUnit() == eStyleUnit_Auto;
 
   // Apply post-reflow horizontal alignment. When a block element
   // doesn't use it all of the available width then we need to
@@ -275,11 +275,11 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
     // need to recompute auto margins because the reflow state's
     // computations are no longer valid.
     if (aWidth != mComputedWidth) {
-      if (eStyleUnit_Auto == leftUnit) {
+      if (leftIsAuto) {
         aAlign.mXOffset = mSpace.x;
         aAlign.mLeftMargin = 0;
       }
-      if (eStyleUnit_Auto == rightUnit) {
+      if (rightIsAuto) {
         aAlign.mRightMargin = 0;
       }
     }
@@ -289,11 +289,23 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
     // the logic in nsHTMLReflowState).
     nscoord remainingSpace = mSpace.XMost() - (aAlign.mXOffset + aWidth +
                              aAlign.mRightMargin);
-    if (remainingSpace > 0) {
+    if (remainingSpace != 0) {
+      if (remainingSpace < 0) {
+        // CSS2.1, 10.3.3 says:
+        // If 'width' is not 'auto' and 'border-left-width' +
+        // 'padding-left' + 'width' + 'padding-right' +
+        // 'border-right-width' (plus any of 'margin-left' or
+        // 'margin-right' that are not 'auto') is larger than the width
+        // of the containing block, then any 'auto' values for
+        // 'margin-left' or 'margin-right' are, for the following rules,
+        // treated as zero.
+        leftIsAuto = rightIsAuto = PR_FALSE;
+      }
+
       // The block/table frame didn't use all of the available
       // space. Synthesize margins for its horizontal placement.
-      if (eStyleUnit_Auto == leftUnit) {
-        if (eStyleUnit_Auto == rightUnit) {
+      if (leftIsAuto) {
+        if (rightIsAuto) {
           // When both margins are auto, we center the block
           aAlign.mXOffset += remainingSpace / 2;
         }
@@ -302,7 +314,7 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
           aAlign.mXOffset += remainingSpace;
         }
       }
-      else if (eStyleUnit_Auto != rightUnit) {
+      else if (!rightIsAuto) {
         // The block/table doesn't have auto margins.
 
         // For normal (non-table) blocks we don't get here because
@@ -315,12 +327,19 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
         // being a text-align.
         // So, check the text-align value from the parent to see if
         // it has one of these special values.
-        const nsStyleText* styleText = mOuterReflowState.mStyleText;
-        if (styleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
+        // But only use this value when the content is narrower than the
+        // container, not when it is too wide.
+        PRUint8 textAlign;
+        if (remainingSpace > 0)
+          textAlign = mOuterReflowState.mStyleText->mTextAlign;
+        else
+          textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
+
+        if (textAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT) {
           aAlign.mXOffset += remainingSpace;
-        } else if (styleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
+        } else if (textAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) {
           aAlign.mXOffset += remainingSpace / 2;
-        } else if (styleText->mTextAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT) {
+        } else if (textAlign != NS_STYLE_TEXT_ALIGN_MOZ_LEFT) {
           // If we don't have a special text-align value indicating
           // HTML alignment, then use the CSS rules.
 
@@ -577,6 +596,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // Position it and its view (if it has one)
   // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
   // represents where we think the block will be placed
+  // XXXldb That's fine for view positioning, but not for reflow!
   mFrame->SetPosition(nsPoint(x, y));
   nsContainerFrame::PositionFrameView(mFrame);
 
