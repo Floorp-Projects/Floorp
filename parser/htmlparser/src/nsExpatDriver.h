@@ -47,6 +47,7 @@
 #include "nsIInputStream.h"
 
 class nsIExpatSink;
+class nsIExtendedExpatSink;
 struct nsCatalogData;
 
 class nsExpatDriver : public nsIDTD,
@@ -81,6 +82,18 @@ public:
                                   const PRUnichar* aPubid,
                                   PRBool aHasInternalSubset);
   nsresult HandleEndDoctypeDecl();
+  nsresult HandleStartNamespaceDecl(const PRUnichar* aPrefix,
+                                    const PRUnichar* aUri);
+  nsresult HandleEndNamespaceDecl(const PRUnichar* aPrefix);
+  nsresult HandleNotationDecl(const PRUnichar* aNotationName,
+                              const PRUnichar* aBase,
+                              const PRUnichar* aSysid,
+                              const PRUnichar* aPubid);
+  nsresult HandleUnparsedEntityDecl(const PRUnichar* aEntityName,
+                                    const PRUnichar* aBase,
+                                    const PRUnichar* aSysid,
+                                    const PRUnichar* aPubid,
+                                    const PRUnichar* aNotationName);
 
 private:
   // Load up an external stream to get external entity information
@@ -132,6 +145,7 @@ private:
   PRUint32         mExpatBuffered;
 
   nsCOMPtr<nsIExpatSink> mSink;
+  nsCOMPtr<nsIExtendedExpatSink> mExtendedSink;
   const nsCatalogData* mCatalogData; // weak
   nsString         mURISpec;
 };

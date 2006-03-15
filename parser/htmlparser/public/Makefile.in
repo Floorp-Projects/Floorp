@@ -47,6 +47,7 @@ GRE_MODULE	= 1
 
 XPIDLSRCS = \
 	nsIExpatSink.idl \
+	nsIExtendedExpatSink.idl \
 	$(NULL)
 
 EXPORTS = \
