@@ -53,8 +53,6 @@
          The open:tabsEnabled is always enabled, and is shown in bookmarks menus. -->
     <command id="placesCmd_open:tabs" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"
              oncommand="PlacesController.openLinksInTabs();"/>
-    <command id="placesCmd_open:tabsEnabled" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"
-             oncommand="PlacesController.openLinksInTabs();"/>
   </commandset>
   <commandset type="container">
     <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>
