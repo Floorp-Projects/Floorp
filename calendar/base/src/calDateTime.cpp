@@ -45,6 +45,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIClassInfoImpl.h"
 #include "calIICSService.h"
 #include "calIDuration.h"
 #include "calIErrors.h"
@@ -888,4 +889,3 @@ calDateTime::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-

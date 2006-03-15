@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGenericFactory.h"
+#include "nsIClassInfoImpl.h"
 
 #include "calDateTime.h"
 #include "calDuration.h"

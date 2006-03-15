@@ -43,6 +43,7 @@
 #include "nsWebDAVServiceCID.h"
 
 #include "nsServiceManagerUtils.h"
+#include "nsIClassInfoImpl.h"
 
 #include "nsIHttpChannel.h"
 #include "nsIIOService.h"

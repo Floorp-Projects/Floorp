@@ -48,6 +48,7 @@
 #include "nsStringEnumerator.h"
 #include "nsCRT.h"
 #include "nsStringStream.h"
+#include "nsIClassInfoImpl.h"
 
 #include "calIEvent.h"
 #include "calBaseCID.h"

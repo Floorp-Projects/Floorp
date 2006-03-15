@@ -45,6 +45,7 @@
 #include "calIEvent.h"
 
 #include "calICSService.h"
+#include "nsIClassInfoImpl.h"
 
 extern "C" {
     #include "ical.h"
