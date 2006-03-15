@@ -137,6 +137,8 @@ public:
                                 nsEvent* aEvent,
                                 nsIContent** aContent);
 
+  nsRect CanvasArea() const;
+
 protected:
   virtual PRIntn GetSkipSides() const;
 
@@ -341,24 +343,102 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
   return rv;
 }
 
-static void
-PaintCanvasFocus(nsIFrame* aFrame, nsIRenderingContext* aCtx,
-                 const nsRect& aDirtyRect, nsPoint aPt)
+nsRect CanvasFrame::CanvasArea() const
 {
-  NS_STATIC_CAST(CanvasFrame*, aFrame)->PaintFocus(*aCtx, aPt);
+  nsRect result(GetOverflowRect());
+
+  nsIScrollableFrame *scrollableFrame;
+  CallQueryInterface(GetParent(), &scrollableFrame);
+  if (scrollableFrame) {
+    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
+    nsRect vcr = scrollableView->View()->GetBounds();
+    result.UnionRect(result, nsRect(nsPoint(0, 0), vcr.Size()));
+  }
+  return result;
 }
+
+/*
+ * Override nsDisplayBackground methods so that we pass aBGClipRect to
+ * PaintBackground, covering the whole overflow area.
+ */
+class nsDisplayCanvasBackground : public nsDisplayBackground {
+public:
+  nsDisplayCanvasBackground(nsIFrame *aFrame)
+    : nsDisplayBackground(aFrame)
+  {
+  }
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+  }
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+  {
+    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
+    nsRect bgClipRect = frame->CanvasArea() + offset;
+    nsCSSRendering::PaintBackground(mFrame->GetPresContext(), *aCtx, mFrame,
+                                    aDirtyRect,
+                                    nsRect(offset, mFrame->GetSize()),
+                                    *mFrame->GetStyleBorder(),
+                                    *mFrame->GetStylePadding(),
+                                    mFrame->HonorPrintBackgroundSettings(),
+                                    &bgClipRect);
+  }
+
+  NS_DISPLAY_DECL_NAME("CanvasBackground")
+};
+
+/**
+ * A display item to paint the focus ring for the document.
+ *
+ * The only reason this can't use nsDisplayGeneric is overriding GetBounds.
+ */
+class nsDisplayCanvasFocus : public nsDisplayItem {
+public:
+  nsDisplayCanvasFocus(CanvasFrame *aFrame)
+    : nsDisplayItem(aFrame)
+  {
+  }
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder)
+  {
+    // This is an overestimate, but that's not a problem.
+    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    return frame->CanvasArea() + aBuilder->ToReferenceFrame(mFrame);
+  }
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
+  {
+    CanvasFrame* frame = NS_STATIC_CAST(CanvasFrame*, mFrame);
+    frame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(mFrame));
+  }
+
+  NS_DISPLAY_DECL_NAME("CanvasFocus")
+};
 
 NS_IMETHODIMP
 CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists)
 {
+  nsresult rv;
   // Force a background to be shown. We may have a background propagated to us,
   // in which case GetStyleBackground wouldn't have the right background
   // and the code in nsFrame::DisplayBorderBackgroundOutline might not give us
   // a background.
-  nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // We don't have any border or outline, and our background draws over
+  // the overflow area, so just add nsDisplayCanvasBackground instead of
+  // calling DisplayBorderBackgroundOutline.
+  if (IsVisibleForPainting(aBuilder)) { 
+    rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+           nsDisplayCanvasBackground(this));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsIFrame* kid = GetFirstChild(nsnull);
   if (kid) {
@@ -394,24 +474,20 @@ CanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   
   return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, ::PaintCanvasFocus, "CanvasFocus"));
+      nsDisplayCanvasFocus(this));
 }
 
 void
 CanvasFrame::PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt)
 {
-  nsRect focusRect = GetRect();
-  /////////////////////
-  // draw focus
-  // XXX This is only temporary
-  nsIFrame * parentFrame = GetParent();
-  nsIView* parentView = parentFrame->GetView();
+  nsRect focusRect(aPt, GetSize());
 
-  nsIScrollableView* scrollableView = parentView->ToScrollableView();
-  if (scrollableView) {
-    nscoord width, height;
-    scrollableView->GetContainerSize(&width, &height);
-    nsRect vcr = parentView->GetBounds();
+  nsIScrollableFrame *scrollableFrame;
+  CallQueryInterface(GetParent(), &scrollableFrame);
+
+  if (scrollableFrame) {
+    nsIScrollableView* scrollableView = scrollableFrame->GetScrollableView();
+    nsRect vcr = scrollableView->View()->GetBounds();
     focusRect.width = vcr.width;
     focusRect.height = vcr.height;
     nscoord x,y;
@@ -539,30 +615,20 @@ CanvasFrame::Reflow(nsPresContext*          aPresContext,
       Invalidate(GetRect(), PR_FALSE);
     }
 
-    // Return our desired size
-    // First check the combined area
-    if (NS_FRAME_OUTSIDE_CHILDREN & kidFrame->GetStateBits()) {
-      // Size ourselves to the size of the overflow area
-      // XXXbz this ignores overflow up and left
-      aDesiredSize.width = kidReflowState.mComputedMargin.left +
-        PR_MAX(kidDesiredSize.mOverflowArea.XMost(),
-               kidDesiredSize.width + kidReflowState.mComputedMargin.right);
-      aDesiredSize.height = kidReflowState.mComputedMargin.top +
-        PR_MAX(kidDesiredSize.mOverflowArea.YMost(),
-               kidDesiredSize.height + kidReflowState.mComputedMargin.bottom);
-    } else {
-      aDesiredSize.width = kidDesiredSize.width +
-        kidReflowState.mComputedMargin.left +
-        kidReflowState.mComputedMargin.right;
-      aDesiredSize.height = kidDesiredSize.height +
-        kidReflowState.mComputedMargin.top +
-        kidReflowState.mComputedMargin.bottom;
-    }
-    aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+    // Return our desired size (which doesn't matter)
+    aDesiredSize.width = aReflowState.availableWidth;
+    aDesiredSize.height = kidDesiredSize.height +
+                          kidReflowState.mComputedMargin.TopBottom();
+
+    aDesiredSize.mOverflowArea.UnionRect(
+      nsRect(0, 0, aDesiredSize.width, aDesiredSize.height),
+      kidDesiredSize.mOverflowArea +
+        nsPoint(kidReflowState.mComputedMargin.left,
+                kidReflowState.mComputedMargin.top));
+    FinishAndStoreOverflow(&aDesiredSize);
+
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
-    // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames
-    // that stick out on the left or top edges...
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("CanvasFrame::Reflow", aStatus);

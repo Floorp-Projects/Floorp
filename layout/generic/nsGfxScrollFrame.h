@@ -45,9 +45,9 @@
 #include "nsIStatefulFrame.h"
 #include "nsGUIEvent.h"
 #include "nsIEventQueue.h"
+#include "nsIScrollableView.h"
 
 class nsISupportsArray;
-class nsIScrollableView;
 class nsPresContext;
 class nsIPresShell;
 class nsIContent;
@@ -63,7 +63,8 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot);
+  nsGfxScrollFrameInner(nsContainerFrame* aOuter, PRBool aIsRoot,
+                        PRBool aIsXUL);
   ~nsGfxScrollFrameInner();
 
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
@@ -90,7 +91,7 @@ public:
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
   // This gets called when the 'curpos' attribute on one of the scrollbars changes
-  void CurPosAttributeChanged(nsIContent* aChild, PRInt32 aModType);
+  void CurPosAttributeChanged(nsIContent* aChild);
   void PostScrollEvent();
   void FireScrollEvent();
 
@@ -98,11 +99,6 @@ public:
   PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
   PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
 
-  /**
-   * If RTL, then this will scroll to the right during initial layout.
-   */
-  void AdjustHorizontalScrollbar();
- 
   // Like ScrollPositionDidChange, but initiated by this frame rather than from the
   // scrolling view
   void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
@@ -124,10 +120,27 @@ public:
 
   static void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
-  nsSize GetScrolledSize() const;
+  /**
+   * GetScrolledRect is designed to encapsulate deciding which
+   * directions of overflow should be reachable by scrolling and which
+   * should not.  Callers should NOT depend on it having any particular
+   * behavior (although nsXULScrollFrame currently does).
+   *
+   * Currently it allows scrolling down and to the right for
+   * nsHTMLScrollFrames with LTR directionality and for all
+   * nsXULScrollFrames, and allows scrolling down and to the left for
+   * nsHTMLScrollFrames with RTL directionality.
+   */
+  nsRect GetScrolledRect(const nsSize& aScrollPortSize) const;
+  nsSize GetScrollPortSize() const
+  {
+    return mScrollableView->View()->GetBounds().Size();
+  }
+
   nsMargin GetActualScrollbarSizes() const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
-  PRBool IsScrollbarOnRight();
+  PRBool IsLTR() const;
+  PRBool IsScrollbarOnRight() const { return IsLTR(); }
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea,
@@ -145,11 +158,6 @@ public:
   nsRect mRestoreRect;
   nsPoint mLastPos;
 
-  // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
-  // so we can fit all the possible values of a PRUint8 and have a -1
-  // value that indicates "not set")
-  PRInt16     mLastDir;
-  
   PRPackedBool mNeverHasVerticalScrollbar:1;
   PRPackedBool mNeverHasHorizontalScrollbar:1;
   PRPackedBool mHasVerticalScrollbar:1;
@@ -159,6 +167,8 @@ public:
   PRPackedBool mDidHistoryRestore:1;
   // Is this the scrollframe for the document's viewport?
   PRPackedBool mIsRoot:1;
+  // Is mOuter an nsXULScrollFrame?
+  PRPackedBool mIsXUL:1;
   PRPackedBool mSupppressScrollbarUpdate:1;
   // Did we load a hint from global history
   // about whether a vertical scrollbar is required?
@@ -213,7 +223,6 @@ public:
                                PRBool aFirstPass);
   nsresult ReflowContents(ScrollReflowState* aState,
                           const nsHTMLReflowMetrics& aDesiredSize);
-  PRBool IsRTLTextControl();
   void PlaceScrollArea(const ScrollReflowState& aState);
 
    NS_IMETHOD Reflow(nsPresContext*          aPresContext,

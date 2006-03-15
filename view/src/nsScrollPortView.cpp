@@ -223,14 +223,14 @@ static nsresult ClampScrollValues(nscoord& aX, nscoord& aY, nsScrollPortView* aT
   nsView* scrolledView = aThis->GetScrolledView();
   if (!scrolledView) return NS_ERROR_FAILURE;
   
-  nsSize scrolledSize;
-  scrolledView->GetDimensions(scrolledSize);
+  nsRect scrolledRect;
+  scrolledView->GetDimensions(scrolledRect);
   
   nsSize portSize;
   aThis->GetDimensions(portSize);
   
-  nscoord maxX = scrolledSize.width - portSize.width;
-  nscoord maxY = scrolledSize.height - portSize.height;
+  nscoord maxX = scrolledRect.XMost() - portSize.width;
+  nscoord maxY = scrolledRect.YMost() - portSize.height;
   
   if (aX > maxX)
     aX = maxX;
@@ -238,11 +238,11 @@ static nsresult ClampScrollValues(nscoord& aX, nscoord& aY, nsScrollPortView* aT
   if (aY > maxY)
     aY = maxY;
   
-  if (aX < 0)
-    aX = 0;
+  if (aX < scrolledRect.x)
+    aX = scrolledRect.x;
   
-  if (aY < 0)
-    aY = 0;
+  if (aY < scrolledRect.y)
+    aY = scrolledRect.y;
   
   return NS_OK;
 }
@@ -474,20 +474,20 @@ NS_IMETHODIMP nsScrollPortView::CanScroll(PRBool aHorizontal,
 {
   nscoord offset = aHorizontal ? mOffsetX : mOffsetY;
 
-  // Can scroll to Top or to Left?
-  if (!aForward) {
-    aResult = (offset > 0) ? PR_TRUE : PR_FALSE;
-    return NS_OK;
-  }
-
   nsView* scrolledView = GetScrolledView();
   if (!scrolledView) {
     aResult = PR_FALSE;
     return NS_ERROR_FAILURE;
   }
 
-  nsSize scrolledSize;
-  scrolledView->GetDimensions(scrolledSize);
+  nsRect scrolledRect;
+  scrolledView->GetDimensions(scrolledRect);
+
+  // Can scroll to Top or to Left?
+  if (!aForward) {
+    aResult = offset > (aHorizontal ? scrolledRect.x : scrolledRect.y);
+    return NS_OK;
+  }
 
   nsSize portSize;
   GetDimensions(portSize);
@@ -500,12 +500,12 @@ NS_IMETHODIMP nsScrollPortView::CanScroll(PRBool aHorizontal,
 
   nscoord max;
   if (aHorizontal) {
-    max = scrolledSize.width - portSize.width;
+    max = scrolledRect.XMost() - portSize.width;
     // Round by pixel
     nscoord maxPx = NSTwipsToIntPixels(max, t2p);
     max = NSIntPixelsToTwips(maxPx, p2t);
   } else {
-    max = scrolledSize.height - portSize.height;
+    max = scrolledRect.YMost() - portSize.height;
     // Round by pixel
     nscoord maxPx = NSTwipsToIntPixels(max, t2p);
     max = NSIntPixelsToTwips(maxPx, p2t);

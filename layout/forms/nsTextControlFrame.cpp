@@ -643,7 +643,7 @@ nsTextInputSelectionImpl::ScrollSelectionIntoView(PRInt16 aType, PRInt16 aRegion
     const nsRect portRect = scrollableView->View()->GetBounds();
     const nsRect viewRect = view->GetBounds();
     if (viewRect.XMost() < portRect.width) {
-      return scrollableView->ScrollTo(PR_MAX(viewRect.width - portRect.width, 0), viewRect.y, 0);
+      return scrollableView->ScrollTo(PR_MAX(viewRect.width - portRect.width, 0), -viewRect.y, 0);
     }
 
     return rv;
