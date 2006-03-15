@@ -1472,7 +1472,6 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
   // Advance to next X coordinate
   psd->mX = pfd->mBounds.XMost() + pfd->mMargin.right;
-  psd->mRightEdge = PR_MAX(psd->mRightEdge, psd->mX);
 
   // If the frame is a not aware of white-space and it takes up some
   // width, disable leading white-space compression for the next frame
@@ -2802,7 +2801,6 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   nscoord dx = 0;
 #endif
 
-  // XXXldb What if it's less than 0??
   if (remainingWidth > 0)
   {
 #ifndef IBMBIDI
@@ -2856,6 +2854,13 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         break;
     }
 #ifdef IBMBIDI
+  }
+  else if (remainingWidth < 0) {
+    if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
+      dx = remainingWidth;
+      psd->mX += dx;
+      psd->mLeftEdge += dx;
+    }
   }
   PRBool isRTL = ( (NS_STYLE_DIRECTION_RTL == psd->mDirection)
                 && (!psd->mChangedFrameDirection) );
