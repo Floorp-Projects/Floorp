@@ -782,21 +782,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
       if (aPresContext->BidiEnabled()) {
         nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
         if (bidiUtils) {
-          PRBool forceReflow;
-          nsresult rc = bidiUtils->Resolve(aPresContext, this,
-                                           mLines.front()->mFirstChild,
-                                           forceReflow,
-                                           aReflowState.mFlags.mVisualBidiFormControl);
-          if (NS_SUCCEEDED(rc) && forceReflow) {
-            // Mark everything dirty
-            // XXXldb This should be done right.
-            for (line_iterator line = begin_lines(), line_end = end_lines();
-                 line != line_end;
-                 ++line)
-            {
-              line->MarkDirty();
-            }
-          }
+          bidiUtils->Resolve(aPresContext, this,
+                             mLines.front()->mFirstChild,
+                             aReflowState.mFlags.mVisualBidiFormControl);
         }
       }
     }
