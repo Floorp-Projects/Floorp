@@ -270,23 +270,8 @@ NS_METHOD nsMenuItemX::DoCommand()
 
 NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *preventDefaultCalled)
 {
-  if (!mContent || !mDocShellWeakRef)
+  if (!mContent)
     return NS_ERROR_FAILURE;
-  
-  nsresult rv;
-  
-  // get a pres context
-  nsPresContext* ourPresContext;
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell) {
-    NS_WARNING("Failed to QI weak docshell ref to nsIDocShell");
-    return NS_ERROR_FAILURE;
-  }
-  rv = MenuHelpersX::DocShellToPresContext(docShell, &ourPresContext);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get pres context from docshell");
-    return NS_ERROR_FAILURE;
-  }
   
   // get owner document for content
   nsCOMPtr<nsIDocument> parentDoc = mContent->GetOwnerDoc();
@@ -313,7 +298,7 @@ NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *p
   
   // send DOM event
   nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(mContent);
-  rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
+  nsresult rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to send DOM event via nsIDOMEventTarget");
     return NS_ERROR_FAILURE;
