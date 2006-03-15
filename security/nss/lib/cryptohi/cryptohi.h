@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: cryptohi.h,v 1.10 2006/02/08 06:14:07 rrelyea%redhat.com Exp $ */
+/* $Id: cryptohi.h,v 1.11 2006/03/15 21:42:21 rrelyea%redhat.com Exp $ */
 
 #ifndef _CRYPTOHI_H_
 #define _CRYPTOHI_H_
@@ -174,9 +174,9 @@ extern SECStatus SEC_DerSignData(PRArenaPool *arena, SECItem *result,
 extern void SEC_DestroySignedData(CERTSignedData *sd, PRBool freeit);
 
 /*
-** Get the hash algorithm tag number for the given type of the key and
-** algorithm tag. Returns SEC_OID_UNKNOWN if key and algorithm
-** are not match.
+** Get the signature algorithm tag number for the given key type and hash
+** algorithm tag. Returns SEC_OID_UNKNOWN if key type and hash algorithm
+** do not match or are not supported.
 */
 extern SECOidTag SEC_GetSignatureAlgorithmOidTag(KeyType keyType,
                                                  SECOidTag hashAlgTag);
