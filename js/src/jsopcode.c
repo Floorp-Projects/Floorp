@@ -2985,8 +2985,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
          *
          * In the script or scripted function case, the same reasoning
          * applies to fp rather than to fp->down.
+         *
+         * We search from limit to base to find the most recently calculated
+         * value matching v under assumption that it is it that caused
+         * exception, see bug 328664.
          */
-        for (sp = base; sp < limit; sp++) {
+        for (sp = limit; sp > base; ) {
+            --sp;
             if (*sp == v) {
                 depth = (intN)script->depth;
                 pc = (jsbytecode *) sp[-depth];
