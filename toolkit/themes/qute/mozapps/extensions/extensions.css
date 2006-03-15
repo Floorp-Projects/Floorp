@@ -113,6 +113,13 @@ extension[disabled="true"] {
   background-image: none;
 }
 
+extension[disabled="true"][compatible="false"] .extension-item-description,
+extension[blocklisted="true"] .extension-item-description,
+extension[satisfiesDependencies="false"] .extension-item-description,
+extension[incompatibleUpdate="true"] .extension-item-description {
+  color: #C77173;
+}
+
 extension[disabled="true"][selected="true"] {
   background-image: url("chrome://mozapps/skin/shared/itemSelected.png");
 }
@@ -155,3 +162,35 @@ extension[itemType="theme"] .extension-icon {
   -moz-margin-end: 10px;
 }
 
+extension[availableUpdateURL="none"] .extension-badge,
+extension .extension-details-link {
+  display: none;
+}
+
+extension[blocklisted="true"][blocklistDetailsURL][availableUpdateURL="none"] .extension-details-link {
+  display: -moz-box;
+}
+
+.extension-badge {
+  display: -moz-box;
+  width: 16px;
+  height: 16px;
+  margin-bottom: -3px;
+  -moz-margin-end: -2px;
+  list-style-image: url("chrome://mozapps/skin/update/extensionalert.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
+}
+
+extension[loading="true"] .extension-badge {
+  display: -moz-box;
+  width: 20px;
+  height: 20px;
+  margin-bottom: -3px;
+  -moz-margin-end: -2px;
+  list-style-image: url("chrome://messenger/skin/icons/throbber-small.gif");
+  -moz-image-region: auto;
+}
+
+.extension-install-button-box {
+  margin: 0px;
+}
