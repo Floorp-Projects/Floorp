@@ -308,7 +308,7 @@
 
             if (aValue != null && aRefresh) {
               var event = document.createEvent('Events');
-              event.initEvent("change", false, true);
+              event.initEvent("change", true, true);
               this.dispatchEvent(event);;
             }
           ]]>
@@ -1169,7 +1169,7 @@
         <body>
           <![CDATA[
             var event = document.createEvent('Events');
-            event.initEvent(aEventName, false, true);
+            event.initEvent(aEventName, true, true);
             this.dispatchEvent(event);
           ]]>
         </body>

@@ -101,7 +101,7 @@
                 <body><![CDATA[
                     this.mValue = aNumber;
                     var event = document.createEvent('Events');
-                    event.initEvent('move', false, true);
+                    event.initEvent('move', true, true);
                     event.detail = aNumber;
                     this.dispatchEvent(event);
                 ]]></body>

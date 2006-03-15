@@ -113,7 +113,7 @@
             <parameter name="aEventType"/>
             <body><![CDATA[
                 var e = document.createEvent("Events");
-                e.initEvent("todo-" + aEventType, false, true);
+                e.initEvent("todo-" + aEventType, true, true);
                 this.dispatchEvent(e);
             ]]></body>
           </method>

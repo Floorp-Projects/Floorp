@@ -355,7 +355,7 @@
         <body>
           <![CDATA[
             var event = document.createEvent('Events');
-            event.initEvent(aEventName, false, true);
+            event.initEvent(aEventName, true, true);
             this.dispatchEvent(event);
           ]]>
         </body>
