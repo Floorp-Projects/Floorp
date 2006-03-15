@@ -51,6 +51,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsEscape.h"
 #include "nsNetError.h"
+#include "nsIProgrammingLanguage.h"
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
@@ -429,4 +430,3 @@ nsSimpleURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     *aClassIDNoAlloc = kSimpleURICID;
     return NS_OK;
 }
-

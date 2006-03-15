@@ -43,6 +43,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMCID.h"
+#include "nsIClassInfoImpl.h"
 
 NS_DECL_CLASSINFO(nsMetricsService)
 

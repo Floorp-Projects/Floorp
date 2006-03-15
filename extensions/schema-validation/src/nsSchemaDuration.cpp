@@ -47,6 +47,7 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIClassInfoImpl.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -136,4 +137,3 @@ nsSchemaDuration::GetNegative(PRBool *aResult)
   *aResult = negative;
   return NS_OK;
 }
-

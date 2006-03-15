@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIProgrammingLanguage.h"
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"

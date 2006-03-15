@@ -38,6 +38,7 @@
 #include "nsSOAPException.h"
 #include "nsReadableUtils.h"
 #include "nsIXPConnect.h"
+#include "nsIClassInfoImpl.h"
 
 nsSOAPException::nsSOAPException(nsresult aStatus, const nsAString & aName, 
                                  const nsAString & aMessage, nsIException* aInner) :

@@ -75,6 +75,7 @@
 #include "nsAutoPtr.h"
 #include "nsArray.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIProgrammingLanguage.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"

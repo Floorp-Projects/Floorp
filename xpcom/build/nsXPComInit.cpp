@@ -39,6 +39,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nscore.h"
+#include "nsIClassInfoImpl.h"
 #include "nsStaticComponents.h"
 #include "prlink.h"
 #include "nsCOMPtr.h"

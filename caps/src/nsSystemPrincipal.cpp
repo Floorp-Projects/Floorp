@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsIClassInfoImpl.h"
 
 
 NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal,

@@ -43,6 +43,7 @@
 #include "nsISOAPAttachments.h"
 #include "nsISOAPMessage.h"
 #include "nsSOAPException.h"
+#include "nsIClassInfoImpl.h"
 
 nsSOAPHeaderBlock::nsSOAPHeaderBlock()
 {

@@ -56,6 +56,7 @@
 #include "nsIWebScriptsAccessService.h"
 #include "nsMemory.h"
 #include "nsIDocument.h"
+#include "nsIClassInfoImpl.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {

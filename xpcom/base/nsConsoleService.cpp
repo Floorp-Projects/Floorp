@@ -49,6 +49,7 @@
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
+#include "nsIClassInfoImpl.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsConsoleService)
 NS_IMPL_THREADSAFE_RELEASE(nsConsoleService)

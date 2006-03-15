@@ -41,6 +41,7 @@
 #include "nsSOAPUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISOAPAttachments.h"
+#include "nsIClassInfoImpl.h"
 
 nsSOAPParameter::nsSOAPParameter()
 {

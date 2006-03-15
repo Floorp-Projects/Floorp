@@ -45,6 +45,7 @@
 #include "nsIEventStateManager.h"
 #include "nsIContent.h"
 #include "nsIXFormsControl.h"
+#include "nsIProgrammingLanguage.h"
 
 NS_IMPL_ISUPPORTS2(nsXFormsAccessors, nsIXFormsAccessors, nsIClassInfo)
 

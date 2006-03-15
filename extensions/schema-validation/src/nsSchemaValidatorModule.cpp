@@ -39,6 +39,7 @@
 #include "nsIGenericFactory.h"
 #include "nsSchemaValidator.h"
 #include "nsSchemaDuration.h"
+#include "nsIClassInfoImpl.h"
 
 NS_DECL_CLASSINFO(nsSchemaValidator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaValidator)
@@ -64,4 +65,3 @@ SchemaValidatorModuleCtor(nsIModule* aSelf)
 }
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(schemavalidation, components, SchemaValidatorModuleCtor)
-

@@ -44,6 +44,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsSOAPException.h"
+#include "nsIClassInfoImpl.h"
 
 /////////////////////////////////////////////
 //

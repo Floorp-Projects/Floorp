@@ -50,6 +50,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsIClassInfoImpl.h"
 
 #define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
@@ -752,5 +753,3 @@ public:
 "@mozilla.org/xmlextras/schemas/soaparraytype;1"
 
 #endif // __nsSchemaPrivate_h__
-
-

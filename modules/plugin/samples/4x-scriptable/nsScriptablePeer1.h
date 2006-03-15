@@ -47,6 +47,7 @@
 
 #include "nsI4xScriptablePlugin.h"
 #include "nsIClassInfo.h"
+#include "nsIProgrammingLanguage.h"
 
 class CPlugin;
 

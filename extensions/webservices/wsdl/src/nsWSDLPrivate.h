@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h"
+#include "nsIClassInfoImpl.h"
 
 // Typelib includes
 #include "nsIInterfaceInfo.h"

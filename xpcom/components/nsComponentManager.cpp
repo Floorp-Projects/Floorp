@@ -75,6 +75,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIClassInfo.h"
 #include "nsLocalFile.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"

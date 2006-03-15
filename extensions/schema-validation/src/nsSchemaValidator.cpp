@@ -56,6 +56,7 @@
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIClassInfoImpl.h"
 
 #include "nsISchema.h"
 #include "nsISchemaLoader.h"
@@ -3322,4 +3323,3 @@ nsSchemaValidator::DumpBaseType(nsISchemaBuiltinType *aBuiltInType)
   LOG(("  Base Type is %s (%d)", NS_ConvertUTF16toUTF8(typeName).get(),foo));
 }
 #endif
-

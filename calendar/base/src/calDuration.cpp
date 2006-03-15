@@ -43,6 +43,7 @@
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIClassInfoImpl.h"
 
 #define SECONDS_PER_WEEK   604800
 #define SECONDS_PER_DAY     86400
@@ -347,4 +348,3 @@ calDuration::Compare(calIDuration *aOther, PRInt32 *aResult)
 
     return NS_OK;
 }
-

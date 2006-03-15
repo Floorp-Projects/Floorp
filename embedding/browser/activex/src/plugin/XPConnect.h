@@ -49,6 +49,7 @@
 #include "nsID.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
+#include "nsIProgrammingLanguage.h"
 #include "nsIMozAxPlugin.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURI.h"

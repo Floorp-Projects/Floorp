@@ -47,6 +47,7 @@
 #include "nsMemory.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIClassInfoImpl.h"
 
 const PRUint8 sInt8Val = 2;
 const PRInt16 sInt16Val = 0x1234;

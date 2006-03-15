@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIGenericFactory.h"
+#include "nsIClassInfoImpl.h"
 
 #include "nsSample.h"
 

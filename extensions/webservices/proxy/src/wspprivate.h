@@ -48,6 +48,7 @@
 #include "nsIExceptionService.h"
 #include "nsIServiceManager.h"
 #include "nsAString.h"
+#include "nsIClassInfoImpl.h"
 
 // SOAP includes
 #include "nsISOAPCall.h"

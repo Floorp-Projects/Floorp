@@ -47,7 +47,6 @@
 #include "nsServiceManagerUtils.h"
 
 #include "nsIMozAxPlugin.h"
-#include "nsIClassInfo.h"
 #include "nsIVariant.h"
 #include "nsMemory.h"
 
@@ -1133,6 +1132,3 @@ MozAxPlugin::GetValue(NPP instance, NPPVariable variable, void *value)
     }
     return NPERR_GENERIC_ERROR;
 }
-
-
-

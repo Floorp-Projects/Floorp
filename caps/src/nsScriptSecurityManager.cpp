@@ -81,6 +81,7 @@
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
 #include "nsAboutProtocolUtils.h"
+#include "nsIClassInfo.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
@@ -3702,4 +3703,3 @@ nsScriptSecurityManager::PrintPolicyDB()
     printf("############## End Capabilities ###############\n");
 }
 #endif
-

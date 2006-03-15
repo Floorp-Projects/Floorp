@@ -47,6 +47,7 @@
 #include "nsXPCOMCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIClassInfoImpl.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPProxyTest)
 NS_DECL_CLASSINFO(WSPProxyTest)

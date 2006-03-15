@@ -59,6 +59,7 @@
 #include "nsNetError.h"
 #include "nsLDAPOperation.h"
 #include "nsILDAPErrors.h"
+#include "nsIClassInfoImpl.h"
 
 const char kConsoleServiceContractId[] = "@mozilla.org/consoleservice;1";
 const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";

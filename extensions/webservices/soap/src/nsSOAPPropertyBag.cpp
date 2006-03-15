@@ -44,6 +44,7 @@
 #include "nsHashKeys.h"
 #include "jsapi.h"
 #include "nsIXPCScriptable.h"
+#include "nsIClassInfoImpl.h"
 
 class nsSOAPPropertyBagEnumerator;
 class nsSOAPPropertyBag:public nsIPropertyBag, public nsIXPCScriptable {

@@ -52,6 +52,7 @@
 #include "nsIIOService.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
+#include "nsIClassInfo.h"
 
 class nsIBinaryInputStream;
 class nsIBinaryOutputStream;

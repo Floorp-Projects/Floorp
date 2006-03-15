@@ -43,6 +43,7 @@
 #include "nsISOAPParameter.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIClassInfoImpl.h"
 
 nsSOAPResponse::nsSOAPResponse()
 {
