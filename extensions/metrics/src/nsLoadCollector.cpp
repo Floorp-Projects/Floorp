@@ -79,6 +79,11 @@ static void GetMemUsage_Shutdown() {
   }
   sGetMemInfo = NULL;
 }
+#elif defined(XP_MACOSX)
+#include <mach/mach.h>
+#include <mach/task.h>
+static void GetMemUsage_Shutdown() {
+}
 #endif
 
 struct MemUsage {
@@ -137,6 +142,18 @@ static PRBool GetMemUsage(MemUsage *result)
       result->resident = PRInt64(pmc.WorkingSetSize);
       setResult = PR_TRUE;
     }
+  }
+#elif defined(XP_MACOSX)
+  // Use task_info
+
+  task_basic_info_data_t ti;
+  mach_msg_type_number_t count = TASK_BASIC_INFO_COUNT;
+  kern_return_t error = task_info(mach_task_self(), TASK_BASIC_INFO,
+                                  (task_info_t) &ti, &count);
+  if (error == KERN_SUCCESS) {
+    result->total = PRInt64(ti.virtual_size);
+    result->resident = PRInt64(ti.resident_size);
+    setResult = PR_TRUE;
   }
 #endif
   return setResult;
