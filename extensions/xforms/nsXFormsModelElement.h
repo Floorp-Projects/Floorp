@@ -212,7 +212,7 @@ private:
    */
   NS_HIDDEN_(nsresult) SetStatesInternal(nsIXFormsControl *aControl,
                                          nsIDOMNode       *aNode,
-                                         PRBool            aAllStates = PR_FALSE);
+                                         PRBool            aDispatchEvents = PR_TRUE);
 
   /**
    * Sets the state of a specific state.

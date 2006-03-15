@@ -724,7 +724,7 @@ nsXFormsModelElement::SetSingleState(nsIDOMElement *aElement,
 nsresult
 nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
                                         nsIDOMNode       *aNode,
-                                        PRBool            aAllStates)
+                                        PRBool            aDispatchEvents)
 {
   NS_ENSURE_ARG(aControl);
   if (!aNode)
@@ -743,16 +743,19 @@ nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
   nsresult rv = xtfWrap->SetIntrinsicState(ns->GetIntrinsicState());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aAllStates || ns->ShouldDispatchValid()) {
+  if (!aDispatchEvents)
+    return NS_OK;
+
+  if (ns->ShouldDispatchValid()) {
     SetSingleState(element, ns->IsValid(), eEvent_Valid);
   }
-  if (aAllStates || ns->ShouldDispatchReadonly()) {
+  if (ns->ShouldDispatchReadonly()) {
     SetSingleState(element, ns->IsReadonly(), eEvent_Readonly);
   }
-  if (aAllStates || ns->ShouldDispatchRequired()) {
+  if (ns->ShouldDispatchRequired()) {
     SetSingleState(element, ns->IsRequired(), eEvent_Required);
   }
-  if (aAllStates || ns->ShouldDispatchRelevant()) {
+  if (ns->ShouldDispatchRelevant()) {
     SetSingleState(element, ns->IsRelevant(), eEvent_Enabled);
   }
 
@@ -936,8 +939,6 @@ nsXFormsModelElement::OnLoad(nsISchema* aSchema)
     nsresult rv = FinishConstruction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
-
     MaybeNotifyCompletion();
   }
 
@@ -1060,7 +1061,6 @@ nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
   } else if (IsComplete()) {
     nsresult rv = FinishConstruction();
     if (NS_SUCCEEDED(rv)) {
-      nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
       MaybeNotifyCompletion();
     }
   }
@@ -1531,7 +1531,7 @@ nsXFormsModelElement::InitializeControls()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set MIP states on control
-    rv = SetStatesInternal(control, boundNode, PR_TRUE);
+    rv = SetStatesInternal(control, boundNode, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Refresh controls
@@ -1790,7 +1790,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 NS_IMETHODIMP
 nsXFormsModelElement::SetStates(nsIXFormsControl *aControl, nsIDOMNode *aBoundNode)
 {
-  return SetStatesInternal(aControl, aBoundNode, PR_TRUE);
+  return SetStatesInternal(aControl, aBoundNode, PR_FALSE);
 }
 
 nsresult
@@ -1942,7 +1942,6 @@ nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
     if (IsComplete()) {
       rv = FinishConstruction();
       NS_ENSURE_SUCCESS(rv, rv);
-      nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
     }
     mPendingInlineSchemas.Clear();
   }
