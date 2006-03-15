@@ -202,8 +202,6 @@ case "$target" in
     echo Building Windows CE Shunt Library and Tool Chain
     echo -----------------------------------------------------------------------------
 
-    `$srcdir/build/cygwin-wrapper devenv $srcdir/build/wince/shunt/build/vs8/mozce_shunt_static.vcproj /MAKE`
-
     echo -n "#define TOPSRCDIR \"" > $srcdir/build/wince/tools/topsrcdir.h
     `$srcdir/build/cygwin-wrapper echo -n $_topsrcdir >> $srcdir/build/wince/tools/topsrcdir.h`
     echo -n \" >> $srcdir/build/wince/tools/topsrcdir.h
