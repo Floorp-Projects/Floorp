@@ -93,7 +93,7 @@ sub new {
 # pre-id days. Provide this as a helper, but don't document it, and hope
 # that it can go away.
 # The request flag stuff also does this, but it really should be passing
-# in the id its already had to validate (or the User.pm object, of course)
+# in the id it already had to validate (or the User.pm object, of course)
 sub new_from_login {
     my $invocant = shift;
     my $login = shift;
