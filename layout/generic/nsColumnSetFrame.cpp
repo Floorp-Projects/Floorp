@@ -52,7 +52,8 @@ class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
   nsColumnSetFrame();
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
+                                 nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
@@ -166,14 +167,15 @@ nsColumnSetFrame::GetType() const
 }
 
 NS_IMETHODIMP
-nsColumnSetFrame::SetInitialChildList(nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
+nsColumnSetFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
 {
   NS_ASSERTION(!aListName, "Only default child list supported");
   NS_ASSERTION(aChildList && !aChildList->GetNextSibling(),
                "initial child list must have exactly one child");
   // Queue up the frames for the content frame
-  return nsHTMLContainerFrame::SetInitialChildList(nsnull, aChildList);
+  return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 static nscoord GetAvailableContentWidth(const nsHTMLReflowState& aReflowState) {

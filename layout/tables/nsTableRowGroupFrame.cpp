@@ -977,7 +977,7 @@ nsTableRowGroupFrame::UndoContinuedRow(nsPresContext*  aPresContext,
 
   // Destroy the row, its cells, and their cell blocks. Cell blocks that have split
   // will not have reflowed yet to pick up content from any overflow lines.
-  aRow->Destroy();
+  aRow->Destroy(aPresContext);
 }
 
 static nsTableRowFrame* 
@@ -1460,7 +1460,7 @@ nsTableRowGroupFrame::RemoveFrame(nsIAtom*        aListName,
       nsTableFrame::AppendDirtyReflowCommand(this);
     }
   }
-  mFrames.DestroyFrame(aOldFrame);
+  mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   return NS_OK;
 }

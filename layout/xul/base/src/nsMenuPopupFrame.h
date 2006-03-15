@@ -154,7 +154,7 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   virtual nsresult CreateWidgetForView(nsIView* aView);
 

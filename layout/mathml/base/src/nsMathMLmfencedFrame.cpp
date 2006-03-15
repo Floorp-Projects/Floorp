@@ -80,17 +80,18 @@ nsMathMLmfencedFrame::InheritAutomaticData(nsIFrame* aParent)
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::SetInitialChildList(nsIAtom*        aListName,
+nsMathMLmfencedFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                          nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
   // First, let the base class do its work
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (NS_FAILED(rv)) return rv;
 
   // No need to tract the style contexts given to our MathML chars. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep them
   // up-to-date if dynamic changes arise.
-  return CreateFencesAndSeparators(GetPresContext());
+  return CreateFencesAndSeparators(aPresContext);
 }
 
 NS_IMETHODIMP

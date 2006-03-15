@@ -104,8 +104,7 @@ public:
                   nsIFrame*       aParent,
                   nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
-  virtual void Destroy();
-
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
 

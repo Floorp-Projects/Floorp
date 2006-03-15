@@ -267,12 +267,12 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   return rv;
 }
 
-void
-nsListBoxBodyFrame::Destroy()
+NS_IMETHODIMP
+nsListBoxBodyFrame::Destroy(nsPresContext* aPresContext)
 {
   // make sure we cancel any posted callbacks.
   if (mReflowCallbackPosted)
-     GetPresContext()->PresShell()->CancelReflowCallback(this);
+     aPresContext->PresShell()->CancelReflowCallback(this);
 
   // Make sure we tell our listbox's box object we're being destroyed.
   for (nsIFrame *a = mParent; a; a = a->GetParent()) {
@@ -297,7 +297,7 @@ nsListBoxBodyFrame::Destroy()
     }
   }
 
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -1451,7 +1451,7 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
                "Going to destroy a frame we didn't remove.  Prepare to crash");
   if (mLayoutManager)
     mLayoutManager->ChildrenRemoved(this, aState, aFrame);
-  aFrame->Destroy();
+  aFrame->Destroy(presContext);
 }
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////

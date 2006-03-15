@@ -83,9 +83,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual void RemovedAsPrimaryFrame();
+  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext *aPresContext);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -205,7 +205,7 @@ private:
    * We call this when we are being destroyed or removed from the PFM.
    * @param aPresContext the current pres context
    */
-  void PreDestroy();
+  void PreDestroy(nsPresContext* aPresContext);
 
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }

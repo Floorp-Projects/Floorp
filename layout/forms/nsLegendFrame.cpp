@@ -71,11 +71,11 @@ nsLegendFrame::GetType() const
   return nsLayoutAtoms::legendFrame; 
 }
 
-void
-nsLegendFrame::Destroy()
+NS_IMETHODIMP
+nsLegendFrame::Destroy(nsPresContext *aPresContext)
 {
-  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  nsAreaFrame::Destroy();
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -102,7 +102,7 @@ nsLegendFrame::Reflow(nsPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsLegendFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   if (eReflowReason_Initial == aReflowState.reason) {
-    nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   } 
   return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }

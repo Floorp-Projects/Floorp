@@ -779,8 +779,8 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
   return PR_FALSE;
 }
 
-void
-nsMenuBarFrame::Destroy()
+NS_IMETHODIMP
+nsMenuBarFrame::Destroy(nsPresContext* aPresContext)
 {
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
   mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
@@ -791,6 +791,6 @@ nsMenuBarFrame::Destroy()
 
   NS_IF_RELEASE(mMenuBarListener);
 
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 

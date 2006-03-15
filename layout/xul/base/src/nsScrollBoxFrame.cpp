@@ -69,7 +69,7 @@ public:
   nsAutoRepeatBoxFrame(nsIPresShell* aPresShell);
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
@@ -131,11 +131,11 @@ nsAutoRepeatBoxFrame::Notify(nsITimer *timer)
   return NS_OK;
 }
 
-void
-nsAutoRepeatBoxFrame::Destroy()
+NS_IMETHODIMP
+nsAutoRepeatBoxFrame::Destroy(nsPresContext* aPresContext)
 {
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
   nsRepeatService::GetInstance()->Stop();
-  nsButtonBoxFrame::Destroy();
+  return nsButtonBoxFrame::Destroy(aPresContext);
 }

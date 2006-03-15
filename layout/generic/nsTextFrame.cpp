@@ -259,7 +259,7 @@ public:
                               
   void PaintText(nsIRenderingContext& aRenderingContext, nsPoint aPt);
   
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
@@ -1388,14 +1388,14 @@ NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
 
 
 //-----------------------------------------------------------------------------
-void
-nsTextFrame::Destroy()
+NS_IMETHODIMP
+nsTextFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);
   }
   // Let the base class destroy the frame
-  nsFrame::Destroy();
+  return nsFrame::Destroy(aPresContext);
 }
 
 class nsContinuingTextFrame : public nsTextFrame {
@@ -1405,7 +1405,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   virtual nsIFrame* GetPrevContinuation() const {
     return mPrevContinuation;
@@ -1483,14 +1483,14 @@ nsContinuingTextFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-void
-nsContinuingTextFrame::Destroy()
+NS_IMETHODIMP
+nsContinuingTextFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mPrevContinuation || mNextContinuation) {
     nsSplittableFrame::RemoveFromFlow(this);
   }
   // Let the base class destroy the frame
-  nsFrame::Destroy();
+  return nsFrame::Destroy(aPresContext);
 }
 
 nsIFrame*

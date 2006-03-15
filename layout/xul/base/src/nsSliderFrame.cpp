@@ -723,10 +723,11 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 }
 
 NS_IMETHODIMP
-nsSliderFrame::SetInitialChildList(nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
+nsSliderFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
 {
-  nsresult r = nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  nsresult r = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   AddListener();
 
@@ -946,8 +947,8 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void
-nsSliderFrame::Destroy()
+NS_IMETHODIMP
+nsSliderFrame::Destroy(nsPresContext* aPresContext)
 {
   // tell our mediator if we have one we are gone.
   if (mMediator) {
@@ -957,7 +958,7 @@ nsSliderFrame::Destroy()
   }
 
   // call base class Destroy()
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

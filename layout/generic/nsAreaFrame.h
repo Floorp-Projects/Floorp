@@ -63,7 +63,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
@@ -85,7 +85,8 @@ protected:
   nsAreaFrame();
 
 #ifdef MOZ_XUL
-  nsresult RegUnregAccessKey(PRBool aDoReg);
+  nsresult RegUnregAccessKey(nsPresContext* aPresContext,
+                             PRBool aDoReg);
 #endif
 };
 

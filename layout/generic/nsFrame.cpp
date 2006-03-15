@@ -577,7 +577,8 @@ nsFrame::Init(nsIContent*      aContent,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(nsIAtom*        aListName,
+NS_IMETHODIMP nsFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                           nsIAtom*        aListName,
                                            nsIFrame*       aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
@@ -616,15 +617,14 @@ nsFrame::RemoveFrame(nsIAtom*        aListName,
   return NS_ERROR_UNEXPECTED;
 }
 
-void
-nsFrame::Destroy()
+NS_IMETHODIMP
+nsFrame::Destroy(nsPresContext* aPresContext)
 {
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
   nsIView* view = GetView();
-  nsPresContext* presContext = GetPresContext();
 
-  nsIPresShell *shell = presContext->GetPresShell();
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
     NS_ASSERTION(!(mState & NS_FRAME_OUT_OF_FLOW) ||
                  !shell->FrameManager()->GetPlaceholderFrameFor(this),
@@ -640,7 +640,7 @@ nsFrame::Destroy()
 
   //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
-  presContext->StopImagesFor(this);
+  aPresContext->StopImagesFor(this);
 
   if (view) {
     // Break association between view and frame
@@ -658,6 +658,8 @@ nsFrame::Destroy()
   // recycler.
   size_t* sz = (size_t*)this;
   shell->FreeFrame(*sz, (void*)this);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

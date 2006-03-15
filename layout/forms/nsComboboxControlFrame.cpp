@@ -1912,7 +1912,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
 
   nsresult rv = mDisplayFrame->Init(mContent, this, styleContext, nsnull);
   if (NS_FAILED(rv)) {
-    mDisplayFrame->Destroy();
+    mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;
     return rv;
   }
@@ -1926,20 +1926,20 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   // initialize the text frame
   rv = mTextFrame->Init(aContent, mDisplayFrame, textStyleContext, nsnull);
   if (NS_FAILED(rv)) {
-    mDisplayFrame->Destroy();
+    mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;
-    mTextFrame->Destroy();
+    mTextFrame->Destroy(aPresContext);
     mTextFrame = nsnull;
     return rv;
   }
 
-  mDisplayFrame->SetInitialChildList(nsnull, mTextFrame);
+  mDisplayFrame->SetInitialChildList(aPresContext, nsnull, mTextFrame);
   *aFrame = mDisplayFrame;
   return NS_OK;
 }
 
-void
-nsComboboxControlFrame::Destroy()
+NS_IMETHODIMP
+nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 {
   // Revoke queued RedisplayTextEvents
   nsCOMPtr<nsIEventQueue> eventQueue;
@@ -1950,7 +1950,7 @@ nsComboboxControlFrame::Destroy()
     eventQueue->RevokeEvents(this);
   }
 
-  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsFormControlFrame::RegUnRegAccessKey(GetPresContext(), NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   if (mDroppedDown) {
     // Get parent view
@@ -1967,9 +1967,9 @@ nsComboboxControlFrame::Destroy()
   }
 
   // Cleanup frames in popup child list
-  mPopupFrames.DestroyFrames();
+  mPopupFrames.DestroyFrames(aPresContext);
 
-  nsAreaFrame::Destroy();
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 
@@ -1983,14 +1983,15 @@ nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
-                                            nsIFrame*       aChildList)
+nsComboboxControlFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                               nsIAtom*        aListName,
+                                               nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
   if (nsLayoutAtoms::popupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
-    rv = nsAreaFrame::SetInitialChildList(aListName, aChildList);
+    rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
     for (nsIFrame * child = aChildList; child;
          child = child->GetNextSibling()) {

@@ -58,8 +58,9 @@ class nsProgressMeterFrame : public nsBoxFrame
 public:
   friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell);
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,

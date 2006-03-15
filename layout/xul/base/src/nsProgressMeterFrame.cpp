@@ -82,11 +82,12 @@ nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::SetInitialChildList(nsIAtom*        aListName,
-                                          nsIFrame*       aChildList)
+nsProgressMeterFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
 { 
   // Set up our initial flexes.
-  nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   AttributeChanged(kNameSpaceID_None, nsHTMLAtoms::value, 0);
   return rv;
 }

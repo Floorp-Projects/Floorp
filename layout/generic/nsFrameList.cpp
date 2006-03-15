@@ -49,12 +49,12 @@
 #endif // IBMBIDI
 
 void
-nsFrameList::DestroyFrames()
+nsFrameList::DestroyFrames(nsPresContext* aPresContext)
 {
   nsIFrame* next;
   for (nsIFrame* frame = mFirstChild; frame; frame = next) {
     next = frame->GetNextSibling();
-    frame->Destroy();
+    frame->Destroy(aPresContext);
     mFirstChild = next;
   }
 }
@@ -145,11 +145,11 @@ nsFrameList::RemoveFirstChild()
 }
 
 PRBool
-nsFrameList::DestroyFrame(nsIFrame* aFrame)
+nsFrameList::DestroyFrame(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (RemoveFrame(aFrame)) {
-    aFrame->Destroy();
+    aFrame->Destroy(aPresContext);
     return PR_TRUE;
   }
   return PR_FALSE;

@@ -84,10 +84,11 @@ public:
 
 #ifdef NS_DEBUG
   NS_IMETHOD
-  SetInitialChildList(nsIAtom*        aListName,
+  SetInitialChildList(nsPresContext* aPresContext,
+                      nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
-    nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
+    nsresult rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
     nsFrameList frameList(aChildList);
     NS_ASSERTION(frameList.FirstChild() && frameList.GetLength() == 1,

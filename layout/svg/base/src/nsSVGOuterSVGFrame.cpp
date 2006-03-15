@@ -590,7 +590,7 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
   if (SVGFrame)
     dirty_region = SVGFrame->GetCoveredRegion();
 
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   if (dirty_region)
     InvalidateRegion(dirty_region, PR_TRUE);
