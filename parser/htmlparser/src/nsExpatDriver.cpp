@@ -41,6 +41,7 @@
 #include "nsParserCIID.h"
 #include "CParserContext.h"
 #include "nsIExpatSink.h"
+#include "nsIExtendedExpatSink.h"
 #include "nsIContentSink.h"
 #include "nsParserMsgUtils.h"
 #include "nsIURL.h"
@@ -205,6 +206,60 @@ Driver_HandleExternalEntityRef(void *aExternalEntityRefHandler,
   return driver->HandleExternalEntityRef(aOpenEntityNames, aBase, aSystemId,
                                          aPublicId);
 }
+
+PR_STATIC_CALLBACK(void)
+Driver_HandleStartNamespaceDecl(void *aUserData,
+                                const XML_Char *aPrefix,
+                                const XML_Char *aUri)
+{
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+      HandleStartNamespaceDecl(aPrefix, aUri);
+  }
+}
+
+PR_STATIC_CALLBACK(void)
+Driver_HandleEndNamespaceDecl(void *aUserData,
+                              const XML_Char *aPrefix)
+{
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+      HandleEndNamespaceDecl(aPrefix);
+  }
+}
+
+PR_STATIC_CALLBACK(void)
+Driver_HandleNotationDecl(void *aUserData,
+                          const XML_Char *aNotationName,
+                          const XML_Char *aBase,
+                          const XML_Char *aSysid,
+                          const XML_Char *aPubid)
+{
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+      HandleNotationDecl(aNotationName, aBase, aSysid, aPubid);
+  }
+}
+
+PR_STATIC_CALLBACK(void)
+Driver_HandleUnparsedEntityDecl(void *aUserData,
+                                const XML_Char *aEntityName,
+                                const XML_Char *aBase,
+                                const XML_Char *aSysid,
+                                const XML_Char *aPubid,
+                                const XML_Char *aNotationName)
+{
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    NS_STATIC_CAST(nsExpatDriver*, aUserData)->
+      HandleUnparsedEntityDecl(aEntityName, aBase, aSysid, aPubid,
+                               aNotationName);
+  }
+}
+
 
 /***************************** END CALL BACKS ********************************/
 
@@ -507,6 +562,56 @@ nsExpatDriver::HandleEndCdataSection()
 }
 
 nsresult
+nsExpatDriver::HandleStartNamespaceDecl(const PRUnichar* aPrefix,
+                                        const PRUnichar* aUri)
+{
+  if (mExtendedSink) {
+    mInternalState = mExtendedSink->HandleStartNamespaceDecl(aPrefix,
+                                                            aUri);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsExpatDriver::HandleEndNamespaceDecl(const PRUnichar* aPrefix)
+{
+  if (mExtendedSink) {
+    mInternalState = mExtendedSink->HandleEndNamespaceDecl(aPrefix);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsExpatDriver::HandleNotationDecl(const PRUnichar* aNotationName,
+                                  const PRUnichar* aBase,
+                                  const PRUnichar* aSysid,
+                                  const PRUnichar* aPubid)
+{
+  if (mExtendedSink) {
+    mInternalState = mExtendedSink->HandleNotationDecl(aNotationName,
+                                                       aSysid,
+                                                       aPubid);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsExpatDriver::HandleUnparsedEntityDecl(const PRUnichar* aEntityName,
+                                        const PRUnichar* aBase,
+                                        const PRUnichar* aSysid,
+                                        const PRUnichar* aPubid,
+                                        const PRUnichar* aNotationName)
+{
+  if (mExtendedSink) {
+    mInternalState = mExtendedSink->HandleUnparsedEntityDecl(aEntityName,
+                                                             aSysid,
+                                                             aPubid,
+                                                             aNotationName);
+  }
+  return NS_OK;
+}
+
+nsresult
 nsExpatDriver::HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
                                       const PRUnichar* aSysid,
                                       const PRUnichar* aPubid,
@@ -515,6 +620,11 @@ nsExpatDriver::HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
   mDoctypeName = aDoctypeName;
   mSystemID = aSysid;
   mPublicID = aPubid;
+
+  if (mExtendedSink) {
+    mInternalState = mExtendedSink->HandleStartDTD(aDoctypeName,
+                                                   aSysid, aPubid);
+  }
 
   if (aHasInternalSubset) {
     // Consuming a huge internal subset translates to numerous
@@ -1098,6 +1208,19 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   XML_SetDoctypeDeclHandler(mExpatParser, Driver_HandleStartDoctypeDecl,
                             Driver_HandleEndDoctypeDecl);
 
+  // If the sink is an nsIExtendedExpatSink,
+  // register some addtional handlers.
+  mExtendedSink = do_QueryInterface(mSink);
+  if (mExtendedSink) {
+    XML_SetNamespaceDeclHandler(mExpatParser,
+                                Driver_HandleStartNamespaceDecl,
+                                Driver_HandleEndNamespaceDecl);
+    XML_SetUnparsedEntityDeclHandler(mExpatParser,
+                                     Driver_HandleUnparsedEntityDecl);
+    XML_SetNotationDeclHandler(mExpatParser,
+                               Driver_HandleNotationDecl);
+  }
+
   // Set up the user data.
   XML_SetUserData(mExpatParser, this);
 
@@ -1126,6 +1249,8 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode,
     result = aSink->DidBuildModel();
     mSink = nsnull;
   }
+
+  mExtendedSink = nsnull;
 
   return result;
 }
