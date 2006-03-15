@@ -32,15 +32,14 @@
 use AnyDBM_File;
 use strict;
 use IO::Handle;
-use vars @::legal_product;
 
 use lib ".";
 require "globals.pl";
-use Bugzilla::Search;
-use Bugzilla::User;
-
 use Bugzilla;
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Search;
+use Bugzilla::User;
+use Bugzilla::Product;
 
 # Turn off output buffering (probably needed when displaying output feedback
 # in the regenerate mode.)
@@ -64,8 +63,8 @@ if ($#ARGV >= 0 && $ARGV[0] eq "--regenerate") {
     $regenerate = 1;
 }
 
-my @myproducts;
-push( @myproducts, "-All-", @::legal_product );
+my @myproducts = map {$_->name} Bugzilla::Product::get_all_products();
+unshift(@myproducts, "-All-");
 
 my $tstart = time;
 foreach (@myproducts) {

@@ -44,7 +44,6 @@ sub sillyness {
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
-    $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = %::target_milestone;
 }
@@ -219,7 +218,8 @@ if (!Param('letsubmitterchoosepriority')) {
 GetVersionTable();
 
 # Some more sanity checking
-check_field('product',      scalar $cgi->param('product'),      \@::legal_product);
+check_field('product',      scalar $cgi->param('product'),
+            [map($_->name, Bugzilla::Product::get_all_products())]);
 check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
 check_field('bug_severity', scalar $cgi->param('bug_severity'), \@::legal_severity);
 check_field('priority',     scalar $cgi->param('priority'),     \@::legal_priority);

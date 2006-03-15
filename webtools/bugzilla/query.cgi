@@ -35,21 +35,16 @@ use Bugzilla::Search;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Product;
-use Bugzilla::Version;
 use Bugzilla::Keyword;
 
 use vars qw(
     @legal_resolution
     @legal_bug_status
-    @legal_components
     @legal_opsys
     @legal_platform
     @legal_priority
-    @legal_product
     @legal_severity
-    @legal_target_milestone
     @log_columns
-    %components
 );
 
 my $cgi = Bugzilla->cgi;
@@ -215,49 +210,25 @@ if ($default{'chfieldto'}->[0] eq "") {
     $default{'chfieldto'} = ["Now"];
 }
 
-GetVersionTable();
-
 # if using groups for entry, then we don't want people to see products they 
 # don't have access to. Remove them from the list.
-
 my @selectable_products = sort {lc($a->name) cmp lc($b->name)} 
                                @{$user->get_selectable_products};
 
-my %component_set;
-my %version_set;
-my %milestone_set;
-
-foreach my $prod_obj (@selectable_products) {
-    # We build up boolean hashes in the "-set" hashes for each of these things 
-    # before making a list because there may be duplicates names across products.
-    my @component_names = map($_->name, @{$prod_obj->components});
-    my @version_names   = map($_->name, @{$prod_obj->versions});
-    my @milestone_names = map($_->name, @{$prod_obj->milestones});
-    $component_set{$_} = 1 foreach (@component_names);
-    $version_set{$_}   = 1 foreach (@version_names);
-    $milestone_set{$_} = 1 foreach (@milestone_names);
-}
-
 # Create the component, version and milestone lists.
-my @components = ();
-my @versions = ();
-my @milestones = ();
-foreach my $c (@::legal_components) {
-    if ($component_set{$c}) {
-        push @components, $c;
-    }
+my %components;
+my %versions;
+my %milestones;
+
+foreach my $product (@selectable_products) {
+    $components{$_->name} = 1 foreach (@{$product->components});
+    $versions{$_->name}   = 1 foreach (@{$product->versions});
+    $milestones{$_->name} = 1 foreach (@{$product->milestones});
 }
-my @all_versions = Bugzilla::Version::distinct_names();
-foreach my $v (@all_versions) {
-    if ($version_set{$v}) {
-        push @versions, $v;
-    }
-}
-foreach my $m (@::legal_target_milestone) {
-    if ($milestone_set{$m}) {
-        push @milestones, $m;
-    }
-}
+
+my @components = sort(keys %components);
+my @versions = sort(keys %versions);
+my @milestones = sort(keys %milestones);
 
 $vars->{'product'} = \@selectable_products;
 
@@ -276,6 +247,8 @@ if (Param('usetargetmilestone')) {
 }
 
 $vars->{'have_keywords'} = Bugzilla::Keyword::keyword_count();
+
+GetVersionTable();
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 shift @::legal_resolution; 

@@ -44,9 +44,6 @@ use vars
     @legal_platform 
     @legal_opsys 
     @legal_resolution 
-
-    @legal_components 
-    @legal_target_milestone 
   );
 
 # Use the global template variables defined in globals.pl 

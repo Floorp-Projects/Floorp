@@ -38,6 +38,7 @@ use Bugzilla::Util;
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::User;
 use Bugzilla::Error;
+use Bugzilla::Product;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -46,13 +47,10 @@ sub globals_pl_sillyness {
     my $zz;
     $zz = @main::enterable_products;
     $zz = @main::legal_bug_status;
-    $zz = @main::legal_components;
     $zz = @main::legal_opsys;
     $zz = @main::legal_platform;
     $zz = @main::legal_priority;
-    $zz = @main::legal_product;
     $zz = @main::legal_severity;
-    $zz = @main::legal_target_milestone;
     $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
 }
@@ -104,7 +102,7 @@ $::SIG{PIPE} = 'IGNORE';
 sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;
 
-    my (@line, %carray);
+    my @line;
     SendSQL("SELECT components.name, products.name " .
             "FROM components, products " .
             "WHERE products.id = components.product_id " .
@@ -116,7 +114,6 @@ sub GenerateVersionTable {
         }
         my $ref = $::components{$p};
         push @$ref, $c;
-        $carray{$c} = 1;
     }
 
     SendSQL("SELECT products.name, classifications.name " .
@@ -185,8 +182,6 @@ sub GenerateVersionTable {
         splice(@::settable_resolution, $z, 1);
     }
 
-    @::legal_product = map($_->name, Bugzilla::Product::get_all_products());
-
     require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile("versioncache.XXXXX",
                                               DIR => "$datadir");
@@ -202,21 +197,19 @@ sub GenerateVersionTable {
     print $fh (Data::Dumper->Dump([\@::log_columns],
                                   ['*::log_columns']));
 
-    foreach my $i (@::legal_product) {
+    my @legal_products = map($_->name, Bugzilla::Product::get_all_products());
+    foreach my $i (@legal_products) {
         if (!defined $::components{$i}) {
             $::components{$i} = [];
         }
     }
     print $fh (Data::Dumper->Dump([\%::components],
                                   ['*::components']));
-    @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
 
-    print $fh (Data::Dumper->Dump([\@::legal_components, \@::legal_product,
-                                   \@::legal_priority, \@::legal_severity,
+    print $fh (Data::Dumper->Dump([\@::legal_priority, \@::legal_severity,
                                    \@::legal_platform, \@::legal_opsys,
                                    \@::legal_bug_status, \@::legal_resolution],
-                                  ['*::legal_components', '*::legal_product',
-                                   '*::legal_priority', '*::legal_severity',
+                                  ['*::legal_priority', '*::legal_severity',
                                    '*::legal_platform', '*::legal_opsys',
                                    '*::legal_bug_status', '*::legal_resolution']));
 
@@ -234,25 +227,17 @@ sub GenerateVersionTable {
                 "WHERE products.id = milestones.product_id " .
                 "ORDER BY milestones.sortkey, milestones.value");
         my @line;
-        my %tmarray;
-        @::legal_target_milestone = ();
         while(@line = FetchSQLData()) {
             my ($tm, $pr) = (@line);
             if (!defined $::target_milestone{$pr}) {
                 $::target_milestone{$pr} = [];
             }
             push @{$::target_milestone{$pr}}, $tm;
-            if (!exists $tmarray{$tm}) {
-                $tmarray{$tm} = 1;
-                push(@::legal_target_milestone, $tm);
-            }
         }
 
         print $fh (Data::Dumper->Dump([\%::target_milestone,
-                                       \@::legal_target_milestone,
                                        \%::milestoneurl],
                                       ['*::target_milestone',
-                                       '*::legal_target_milestone',
                                        '*::milestoneurl']));
     }
 

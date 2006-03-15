@@ -38,6 +38,7 @@ use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::Group;
 use Bugzilla::Util;
+use Bugzilla::Product;
 
 my $template = Bugzilla->template;
 my $vars = {};
@@ -48,9 +49,6 @@ $user->in_group('editcomponents')
   || ThrowUserError("auth_failure", {group  => "editcomponents",
                                      action => "edit",
                                      object => "flagtypes"});
-
-# Suppress "used only once" warnings.
-use vars qw(@legal_product @legal_components %components);
 
 my $cgi = Bugzilla->cgi;
 my $product_id;
@@ -128,17 +126,18 @@ sub list {
 sub edit {
     $action eq 'enter' ? validateTargetType() : (my $id = validateID());
     my $dbh = Bugzilla->dbh;
-    
-    # Get this installation's products and components.
-    GetVersionTable();
 
-    # products and components and the function used to modify the components
-    # menu when the products menu changes; used by the template to populate
-    # the menus and keep the components menu consistent with the products menu
-    $vars->{'products'} = \@::legal_product;
-    $vars->{'components'} = \@::legal_components;
-    $vars->{'components_by_product'} = \%::components;
-    
+    my @products = Bugzilla::Product::get_all_products();
+    # We require all unique component names.
+    my %components;
+    foreach my $product (@products) {
+        foreach my $component (@{$product->components}) {
+            $components{$component->name} = 1;
+        }
+    }
+    $vars->{'products'} = \@products;
+    $vars->{'components'} = [sort(keys %components)];
+
     $vars->{'last_action'} = $cgi->param('action');
     if ($cgi->param('action') eq 'enter' || $cgi->param('action') eq 'copy') {
         $vars->{'action'} = "insert";
@@ -216,17 +215,21 @@ sub processCategoryChange {
     my %inclusions = clusion_array_to_hash(\@inclusions);
     my %exclusions = clusion_array_to_hash(\@exclusions);
 
-    # Get this installation's products and components.
-    GetVersionTable();
+    my @products = Bugzilla::Product::get_all_products();
+    # We require all unique component names.
+    my %components;
+    foreach my $product (@products) {
+        foreach my $component (@{$product->components}) {
+            $components{$component->name} = 1;
+        }
+    }
+    $vars->{'products'} = \@products;
+    $vars->{'components'} = [sort(keys %components)];
 
-    # products and components; used by the template to populate the menus 
-    # and keep the components menu consistent with the products menu
-    $vars->{'products'} = \@::legal_product;
-    $vars->{'components'} = \@::legal_components;
-    $vars->{'components_by_product'} = \%::components;
     my @groups = Bugzilla::Group::get_all_groups();
     $vars->{'groups'} = \@groups;
     $vars->{'action'} = $cgi->param('action');
+
     my $type = {};
     foreach my $key ($cgi->param()) { $type->{$key} = $cgi->param($key) }
     $type->{'inclusions'} = \%inclusions;

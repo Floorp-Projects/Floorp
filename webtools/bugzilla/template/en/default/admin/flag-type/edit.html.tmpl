@@ -28,9 +28,9 @@
   var first_load = 1; // is this the first time we load the page?
   var last_sel = []; // caches last selection
   var cpts = new Array();
-  [% FOREACH p = products %]
-    cpts['[% p FILTER js %]'] = [
-      [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% FOREACH prod = products %]
+    cpts['[% prod.name FILTER js %]'] = [
+      [%- FOREACH comp = prod.components %]'[% comp.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% END %]
 [% END %]
 
@@ -107,18 +107,18 @@
               <b>Product/Component:</b><br>
               <select name="product" onchange="selectProduct(this.form, 'product', 'component', '__Any__');">
                 <option value="">__Any__</option>
-                [% FOREACH item = products %]
-                  <option value="[% item FILTER html %]" 
-                          [% "selected" IF type.product.name == item %]>
-                          [% item FILTER html %]</option>
+                [% FOREACH prod = products %]
+                  <option value="[% prod.name FILTER html %]" 
+                          [% "selected" IF type.product.name == prod.name %]>
+                          [% prod.name FILTER html %]</option>
                 [% END %]
               </select><br>
               <select name="component">
                 <option value="">__Any__</option>
-                [% FOREACH item = components %]
-                  <option value="[% item FILTER html %]" 
-                          [% "selected" IF type.component.name == item %]>
-                          [% item FILTER html %]</option>
+                [% FOREACH comp = components %]
+                  <option value="[% comp FILTER html %]" 
+                          [% "selected" IF type.component.name == comp %]>
+                          [% comp FILTER html %]</option>
                 [% END %]
               </select><br>
               <input type="submit" name="categoryAction-include" value="Include">
