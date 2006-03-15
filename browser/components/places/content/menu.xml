@@ -154,7 +154,7 @@
           var needsBindingAttachment = false;
           var currentNode = this.parentNode;
           while (currentNode && !needsBindingAttachment) {
-            if (currentNode.id == "bookmarksMenu")
+            if (currentNode.id && currentNode.id == "bookmarksMenu")
               needsBindingAttachment = true;
             currentNode = currentNode.parentNode;
           }
