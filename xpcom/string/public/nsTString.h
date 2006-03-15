@@ -410,6 +410,8 @@ class nsTString_CharT : public nsTSubstring_CharT
          * Append the given float to this string 
          */
 
+      NS_COM void AppendFloat( float aFloat );
+
       NS_COM void AppendFloat( double aFloat );
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
