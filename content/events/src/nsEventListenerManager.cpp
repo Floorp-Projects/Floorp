@@ -97,7 +97,6 @@
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsIScriptObjectOwner.h" // for nsIScriptEventHandlerOwner
-#include "nsIClassInfo.h"
 #include "nsIFocusController.h"
 #include "nsIDOMElement.h"
 #include "nsIBoxObject.h"
@@ -2426,4 +2425,3 @@ NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult)
   
   return CallQueryInterface(l, aInstancePtrResult);
 }
-

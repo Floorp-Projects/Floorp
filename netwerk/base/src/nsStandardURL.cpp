@@ -55,6 +55,7 @@
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "nsAutoPtr.h"
+#include "nsIProgrammingLanguage.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
@@ -2798,4 +2799,3 @@ nsStandardURL::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
     *aClassIDNoAlloc = kStandardURLCID;
     return NS_OK;
 }
-

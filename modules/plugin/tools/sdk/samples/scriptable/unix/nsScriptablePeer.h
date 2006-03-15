@@ -47,6 +47,7 @@
 
 #include "nsIScriptablePluginSample.h"
 #include "nsIClassInfo.h"
+#include "nsIProgrammingLanguage.h"
 
 class nsPluginInstance;
 
@@ -105,4 +106,3 @@ protected:
 };
 
 #endif
-

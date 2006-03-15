@@ -39,7 +39,7 @@
 #ifndef nsIDOMClassInfo_h___
 #define nsIDOMClassInfo_h___
 
-#include "nsIClassInfo.h"
+#include "nsIClassInfoImpl.h"
 #include "nsVoidArray.h"
 
 enum nsDOMClassInfoID {

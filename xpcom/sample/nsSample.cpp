@@ -49,6 +49,7 @@
 #include "nsMemory.h"
 
 #include "nsEmbedString.h"
+#include "nsIClassInfoImpl.h"
 ////////////////////////////////////////////////////////////////////////
 
 nsSampleImpl::nsSampleImpl() : mValue(nsnull)

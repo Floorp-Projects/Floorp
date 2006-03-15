@@ -47,6 +47,7 @@
 
 #include "PyXPCOM_std.h"
 #include "nsIClassInfo.h"
+#include "nsIProgrammingLanguage.h"
 
 static nsIClassInfo *_GetI(PyObject *self) {
 	nsIID iid = NS_GET_IID(nsIClassInfo);

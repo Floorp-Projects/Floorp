@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsPrefsCID.h"
 #include "nsNetCID.h"
+#include "nsIClassInfoImpl.h"
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -488,4 +489,3 @@ CapsModuleDtor(nsIModule* thisModules)
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsSecurityManagerModule, capsComponentInfo,
                               CapsModuleDtor)
-

@@ -52,6 +52,7 @@
 #include "nsISeekableStream.h"
 #include "nsISerializable.h"
 #include "nsIStreamBufferAccess.h"
+#include "nsIClassInfo.h"
 
 #include "nsBinaryStream.h"
 #include "nsFastLoadFile.h"

@@ -60,6 +60,7 @@
 #include "nsStringStream.h"
 #include "nsVariant.h"
 #include "bzlib.h"
+#include "nsIClassInfoImpl.h"
 
 // Make our MIME type inform the server of possible compression.
 #ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA

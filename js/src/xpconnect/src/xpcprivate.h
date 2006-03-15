@@ -55,7 +55,7 @@
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
-#include "nsIClassInfo.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"

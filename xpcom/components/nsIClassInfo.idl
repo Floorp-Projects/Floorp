@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIProgrammingLanguage.idl"
 
 /**
  * Provides information about a specific implementation class

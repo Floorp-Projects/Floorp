@@ -53,6 +53,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIClassInfoImpl.h"
 
 #include "nsPrincipal.h"
 
