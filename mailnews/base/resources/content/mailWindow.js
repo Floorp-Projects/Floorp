@@ -75,7 +75,7 @@ var folderDataSource;
 
 var accountCentralBox = null;
 var gSearchBox = null;
-var gAccountCentralLoaded = false;
+var gAccountCentralLoaded = true;
 var gFakeAccountPageLoaded = false;
 //End progress and Status variables
 
@@ -207,7 +207,8 @@ function CreateMailWindowGlobals()
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");
   if (gSearchBox)
-    gSearchBox.collapsed = false;
+    gSearchBox.collapsed = true;
+  GetMessagePane().collapsed = true;
 }
 
 function InitMsgWindow()
