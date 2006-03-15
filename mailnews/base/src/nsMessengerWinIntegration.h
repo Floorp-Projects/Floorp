@@ -86,7 +86,7 @@ public:
   NS_DECL_NSIOBSERVER
 
 #ifdef MOZ_THUNDERBIRD
-  nsresult ShowNewAlertNotification(PRBool aAnimateAlert);
+  nsresult ShowNewAlertNotification(PRBool aUserInitiated);
 #endif
 
 private:

@@ -187,7 +187,7 @@ static void CALLBACK delayedSingleClick(HWND msgWindow, UINT msg, INT_PTR idEven
     // we know we are dealing with the windows integration object    
     nsMessengerWinIntegration * winIntegrationService = NS_STATIC_CAST(nsMessengerWinIntegration*, 
                                                                        NS_STATIC_CAST(nsIMessengerOSIntegration*, integrationService.get()));
-    winIntegrationService->ShowNewAlertNotification(PR_FALSE);
+    winIntegrationService->ShowNewAlertNotification(PR_TRUE);
   }
 #endif
 }
@@ -513,9 +513,9 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
 }
 #else
 // Opening Thunderbird's new mail alert notification window
-// aUseAnimation --> true if the window should be opened with animation, false if we want to
-// just open the window and leave it open until the user closes it.
-nsresult nsMessengerWinIntegration::ShowNewAlertNotification(PRBool aUseAnimation)
+// aUserInitiated --> true if we are opening the alert notification in response to a user action
+//                    like clicking on the biff icon
+nsresult nsMessengerWinIntegration::ShowNewAlertNotification(PRBool aUserInitiated)
 {
   nsresult rv;
 
@@ -551,10 +551,10 @@ nsresult nsMessengerWinIntegration::ShowNewAlertNotification(PRBool aUseAnimatio
     argsArray->AppendElement(ifptr);
     
     // pass in the animation flag
-    nsCOMPtr<nsISupportsPRBool> scriptableUseAnimation (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv));
+    nsCOMPtr<nsISupportsPRBool> scriptableUserInitiated (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    scriptableUseAnimation->SetData(aUseAnimation);
-    argsArray->AppendElement(scriptableUseAnimation);
+    scriptableUserInitiated->SetData(aUserInitiated);
+    argsArray->AppendElement(scriptableUserInitiated);
 
     nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     nsCOMPtr<nsIDOMWindow> newWindow;
@@ -681,7 +681,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
 #ifndef MOZ_THUNDERBIRD
     ShowAlertMessage(accountName, animatedAlertText.get(), "");
 #else
-    ShowNewAlertNotification(PR_TRUE);
+    ShowNewAlertNotification(PR_FALSE);
 #endif
   }
   else

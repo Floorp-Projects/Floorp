@@ -451,11 +451,9 @@ pref("bidi.numeral", 1);
 
 pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
 
-// pref to control the alert notification 
-pref("alerts.slideIncrement", 1);
-pref("alerts.slideIncrementTime", 10);
-pref("alerts.totalOpenTime", 4000);
-pref("alerts.height", 50);
+// prefs to control the mail alert notification
+pref("alerts.slideIncrementTime", 50);
+pref("alerts.totalOpenTime", 3000);
 
 // 0 opens the download manager
 // 1 opens a progress dialog
