@@ -288,8 +288,12 @@ NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *p
   }
   
   // create DOM event
-  nsIDOMEvent* event;
-  DOMEventFactory->CreateEvent(NS_LITERAL_STRING("Events"), &event);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = DOMEventFactory->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create nsIDOMEvent");
+    return rv;
+  }
   event->InitEvent(eventName, PR_TRUE, PR_TRUE);
   
   // mark DOM event as trusted
@@ -298,10 +302,10 @@ NS_IMETHODIMP nsMenuItemX::DispatchDOMEvent(const nsString &eventName, PRBool *p
   
   // send DOM event
   nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(mContent);
-  nsresult rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
+  rv = eventTarget->DispatchEvent(event, preventDefaultCalled);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to send DOM event via nsIDOMEventTarget");
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   
   return NS_OK;
