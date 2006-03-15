@@ -135,7 +135,7 @@
           // of exceptions and asserts will fire.
           if (this._DNDObserver._overFolder.node)
             this._DNDObserver._clearOverFolder();
-            
+
           this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           if (PlacesController.nodeIsContainer(this._resultNode))
@@ -635,7 +635,7 @@
           // node has a command but no data associated with it, it should
           // act on the entire menu.
           this._selection = event.target.node;
-          if (event.target.node == null && event.target.hasAttribute("command"))
+          if (event.target.node == null)
             this._selection = this._resultNode;
           // Set the active view to this node.
           PlacesController.activeView = this;
@@ -676,6 +676,10 @@
         }
       ]]></handler>
       <handler event="DOMMenuItemActive"><![CDATA[
+        if (this.eventValid(event))
+          this.setSelectionForEvent(event);
+      ]]></handler>
+      <handler event="command"><![CDATA[
         if (this.eventValid(event))
           this.setSelectionForEvent(event);
       ]]></handler>

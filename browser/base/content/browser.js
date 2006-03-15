@@ -6491,7 +6491,12 @@ var BookmarksEventHandler = {
    *        DOMEvent for the command
    */
   onCommand: function BM_onCommand(event) {
-    PlacesController.mouseLoadURI(event);
+    // If this is the special "Open in Tabs" menuitem, load all the menuitems in tabs.
+    if (event.target.hasAttribute("openInTabs"))
+      PlacesController.openLinksInTabs();
+    // If this is a normal bookmark, just load the bookmark's URI.
+    else
+      PlacesController.mouseLoadURI(event);
   },
   
   /**
@@ -6504,11 +6509,25 @@ var BookmarksEventHandler = {
   onPopupShowing: function BM_onPopupShowing(event) {
     if (event.target.localName == "menupopup" &&
         event.target.id != "bookmarksMenuPopup") {
-      var separator = document.createElement("menuseparator");
-      event.target.appendChild(separator);
-      var openInTabs = document.createElement("menuitem");
-      openInTabs.setAttribute("command", "placesCmd_open:tabsEnabled");
-      event.target.appendChild(openInTabs);
+
+      // Show "Open in Tabs" menuitem if there are at least
+      // two menuitems with places result nodes.
+      var numNodes = 0;
+      var currentChild = event.target.firstChild;
+      while (currentChild && numNodes < 2) {
+        if (currentChild.node && currentChild.localName == "menuitem")
+          numNodes++;
+        currentChild = currentChild.nextSibling;
+      }
+      if (numNodes >= 2) {
+        var separator = document.createElement("menuseparator");
+        event.target.appendChild(separator);
+        var openInTabs = document.createElement("menuitem");
+        openInTabs.setAttribute("openInTabs", "true");
+        var strings = document.getElementById("placeBundle");
+        openInTabs.setAttribute("label", strings.getString("menuOpenInTabs.label"));
+        event.target.appendChild(openInTabs);
+      }
     }
   },
   
@@ -6526,5 +6545,7 @@ var BookmarksEventHandler = {
     }
   }
 };
+
+#include ../../../toolkit/content/debug.js
 
 #endif

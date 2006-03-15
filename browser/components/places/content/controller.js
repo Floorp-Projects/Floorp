@@ -643,7 +643,6 @@ var PlacesController = {
       this.nodeIsFolder(this._activeView.selectedNode);
     this._setEnabled("placesCmd_open:tabs", 
       singleFolderSelected || !hasSingleSelection);
-    this._setEnabled("placesCmd_open:tabsEnabled", true); // Always on
     
     // Some views, like menupopups, destroy their result as they hide, but they
     // are still the "last-active" view. Don't barf. 
@@ -903,17 +902,70 @@ var PlacesController = {
   openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
     if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
+      // Check prefs to see whether to open over existing tabs.
+      var doReplace = getBoolPref("browser.tabs.loadFolderAndReplace");
+      var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground");
+      // Get the start index to open tabs at
+      var browser = this.browserWindow.getBrowser();
+      var tabPanels = browser.browsers;
+      var tabCount = tabPanels.length;
+      var firstIndex;
+      // If browser.tabs.loadFolderAndReplace pref is set, load over all the
+      // tabs starting with the first one.
+      if (doReplace)
+        firstIndex = 0;
+      // If the pref is not set, only load over the blank tabs at the end, if any.
+      else {
+        for (firstIndex = tabCount - 1; firstIndex >= 0; --firstIndex)
+          if (browser.browsers[firstIndex].currentURI.spec != "about:blank")
+            break;
+        ++firstIndex;
+      }
+
+      // Open each uri in the folder in a tab.
+      var index = firstIndex;
       asFolder(node);
       var wasOpen = node.containerOpen;
       node.containerOpen = true;
       var cc = node.childCount;
       for (var i = 0; i < cc; ++i) {
         var childNode = node.getChild(i);
-        if (this.nodeIsURI(childNode))
-          this.browserWindow.openNewTabWith(childNode.uri,
-              null, null);
+        if (this.nodeIsURI(childNode)) {
+          // If there are tabs to load over, load the uri into the next tab.
+          if (index < tabCount)
+            tabPanels[index].loadURI(childNode.uri);
+          // Otherwise, create a new tab to load the uri into.
+          else
+            browser.addTab(childNode.uri);
+          ++index;
+        }
       }
       node.containerOpen = wasOpen;
+      
+      // If no bookmarks were loaded, just bail.
+      if (index == firstIndex)
+        return;
+
+      // focus the first tab if prefs say to
+      if (!loadInBackground || doReplace) {
+        // Select the first tab in the group.
+        // Set newly selected tab after quick timeout, otherwise hideous focus problems
+        // can occur because new presshell is not ready to handle events
+        function selectNewForegroundTab(browser, tab) {
+          browser.selectedTab = tab;
+        }
+        var tabs = browser.mTabContainer.childNodes;
+        setTimeout(selectNewForegroundTab, 0, browser, tabs[firstIndex]);
+      }
+
+      // Close any remaining open tabs that are left over.
+      // (Always skipped when we append tabs)
+      for (var i = tabCount - 1; i >= index; --i)
+        browser.removeTab(tabs[i]);
+
+      // and focus the content
+      this.browserWindow.content.focus();
+
     }
     else {
       var nodes = this._activeView.getSelectionNodes();
