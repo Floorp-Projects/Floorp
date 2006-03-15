@@ -323,24 +323,6 @@ sub AnyDefaultGroups {
     return $::CachedAnyDefaultGroups;
 }
 
-sub IsInClassification {
-    my ($classification,$productname) = @_;
-
-    if (! Param('useclassification')) {
-        return 1;
-    } else {
-        my $query = "SELECT classifications.name " .
-          "FROM products,classifications " .
-            "WHERE products.classification_id=classifications.id ";
-        $query .= "AND products.name = " . SqlQuote($productname);
-        PushGlobalSQLState();
-        SendSQL($query);
-        my ($ret) = FetchSQLData();
-        PopGlobalSQLState();
-        return ($ret eq $classification);
-    }
-}
-
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
     # requirements for length and content).    
