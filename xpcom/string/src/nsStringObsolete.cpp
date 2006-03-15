@@ -1261,7 +1261,7 @@ nsString::AppendInt( PRInt64 aInteger, PRInt32 aRadix )
    */
 
 void
-nsCString::AppendFloat( double aFloat )
+nsCString::AppendFloat( float aFloat )
   {
     char buf[40];
     // Use Modified_cnvtf, which is locale-insensitive, instead of the
@@ -1271,12 +1271,32 @@ nsCString::AppendFloat( double aFloat )
   }
 
 void
-nsString::AppendFloat( double aFloat )
+nsString::AppendFloat( float aFloat )
   {
     char buf[40];
     // Use Modified_cnvtf, which is locale-insensitive, instead of the
     // locale-sensitive PR_snprintf or sprintf(3)
     Modified_cnvtf(buf, sizeof(buf), 6, aFloat);
+    AppendWithConversion(buf);
+  }
+
+void
+nsCString::AppendFloat( double aFloat )
+  {
+    char buf[40];
+    // Use Modified_cnvtf, which is locale-insensitive, instead of the
+    // locale-sensitive PR_snprintf or sprintf(3)
+    Modified_cnvtf(buf, sizeof(buf), 15, aFloat);
+    Append(buf);
+  }
+
+void
+nsString::AppendFloat( double aFloat )
+  {
+    char buf[40];
+    // Use Modified_cnvtf, which is locale-insensitive, instead of the
+    // locale-sensitive PR_snprintf or sprintf(3)
+    Modified_cnvtf(buf, sizeof(buf), 15, aFloat);
     AppendWithConversion(buf);
   }
 
