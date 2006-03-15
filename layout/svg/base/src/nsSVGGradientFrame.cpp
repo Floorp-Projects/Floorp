@@ -314,7 +314,7 @@ nsSVGGradientFrame::RemoveFrame(nsIAtom*        aListName,
                                 nsIFrame*       aOldFrame)
 {
   WillModify();
-  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  PRBool result = mFrames.DestroyFrame(aOldFrame);
   DidModify();
   return result ? NS_OK : NS_ERROR_FAILURE;
 }

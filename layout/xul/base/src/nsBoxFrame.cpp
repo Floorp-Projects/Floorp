@@ -180,14 +180,13 @@ nsBoxFrame::GetHAlign(Halignment& aAlign)
 }
 
 NS_IMETHODIMP
-nsBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                nsIAtom*        aListName,
+nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
                                 nsIFrame*       aChildList)
 {
-  nsresult r = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult r = nsContainerFrame::SetInitialChildList(aListName, aChildList);
   if (r == NS_OK) {
     // initialize our list of infos.
-    nsBoxLayoutState state(aPresContext->PresShell());
+    nsBoxLayoutState state(GetPresContext()->PresShell());
     CheckBoxOrder(state);
     if (mLayoutManager)
       mLayoutManager->ChildrenSet(this, state, mFrames.FirstChild());
@@ -229,7 +228,7 @@ nsBoxFrame::Init(nsIContent*      aContent,
 #ifdef DEBUG_LAYOUT
     // if we are root and this
   if (mState & NS_STATE_IS_ROOT) 
-      GetDebugPref(aPresContext);
+      GetDebugPref(GetPresContext());
 #endif
 
   mMouseThrough = unset;
@@ -237,7 +236,7 @@ nsBoxFrame::Init(nsIContent*      aContent,
   UpdateMouseThrough();
 
   // register access key
-  rv = RegUnregAccessKey(aPresContext, PR_TRUE);
+  rv = RegUnregAccessKey(PR_TRUE);
 
   return rv;
 }
@@ -1069,16 +1068,16 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
   return rv;
 }
 
-NS_IMETHODIMP
-nsBoxFrame::Destroy(nsPresContext* aPresContext)
+void
+nsBoxFrame::Destroy()
 {
   // unregister access key
-  RegUnregAccessKey(aPresContext, PR_FALSE);
+  RegUnregAccessKey(PR_FALSE);
 
   // clean up the container box's layout manager and child boxes
   SetLayoutManager(nsnull);
 
-  return nsContainerFrame::Destroy(aPresContext);
+  nsContainerFrame::Destroy();
 } 
 
 #ifdef DEBUG_LAYOUT
@@ -1134,7 +1133,7 @@ nsBoxFrame::RemoveFrame(nsIAtom*        aListName,
     mLayoutManager->ChildrenRemoved(this, state, aOldFrame);
 
   // destroy the child frame
-  aOldFrame->Destroy(presContext);
+  aOldFrame->Destroy();
 
   // mark us dirty and generate a reflow command
   MarkDirtyChildren(state);
@@ -1323,7 +1322,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
   else if (aAttribute == nsXULAtoms::accesskey) {
-    RegUnregAccessKey(GetPresContext(), PR_TRUE);
+    RegUnregAccessKey(PR_TRUE);
   }
 
   return rv;
@@ -2157,7 +2156,7 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
 // If you make changes to this function, check its counterparts
 // in nsTextBoxFrame and nsAreaFrame
 nsresult
-nsBoxFrame::RegUnregAccessKey(nsPresContext* aPresContext, PRBool aDoReg)
+nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)
@@ -2184,7 +2183,7 @@ nsBoxFrame::RegUnregAccessKey(nsPresContext* aPresContext, PRBool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  nsIEventStateManager *esm = GetPresContext()->EventStateManager();
 
   nsresult rv;
 

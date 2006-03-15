@@ -87,7 +87,7 @@ public:
 
   NS_IMETHOD  DidSetStyleContext ();
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG

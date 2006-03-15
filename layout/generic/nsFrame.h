@@ -165,8 +165,7 @@ public:
                    nsIFrame*        aParent,
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
-  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
@@ -175,7 +174,7 @@ public:
                            nsIFrame*       aFrameList);
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
-  NS_IMETHOD  Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,

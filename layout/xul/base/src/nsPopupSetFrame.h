@@ -99,7 +99,7 @@ public:
 #endif
 
   // Used to destroy our popup frames.
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   // Reflow methods
   virtual void RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aState);

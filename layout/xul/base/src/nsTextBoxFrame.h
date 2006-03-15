@@ -63,7 +63,7 @@ public:
                    nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -114,8 +114,7 @@ protected:
                    nsSize&              aSize,
                    nscoord&             aAscent);
 
-  nsresult RegUnregAccessKey(nsPresContext* aPresContext,
-                             PRBool          aDoReg);
+  nsresult RegUnregAccessKey(PRBool aDoReg);
 
 private:
 

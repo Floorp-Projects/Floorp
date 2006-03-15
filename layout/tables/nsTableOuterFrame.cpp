@@ -71,11 +71,11 @@ nsTableCaptionFrame::~nsTableCaptionFrame()
 {
 }
 
-NS_IMETHODIMP
-nsTableOuterFrame::Destroy(nsPresContext* aPresContext)
+void
+nsTableOuterFrame::Destroy()
 {
-  mCaptionFrames.DestroyFrames(aPresContext);
-  return nsHTMLContainerFrame::Destroy(aPresContext);
+  mCaptionFrames.DestroyFrames();
+  nsHTMLContainerFrame::Destroy();
 }
 
 nsIAtom*
@@ -182,8 +182,7 @@ nsTableOuterFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 }
 
 NS_IMETHODIMP 
-nsTableOuterFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                       nsIAtom*        aListName,
+nsTableOuterFrame::SetInitialChildList(nsIAtom*        aListName,
                                        nsIFrame*       aChildList)
 {
   if (nsLayoutAtoms::captionList == aListName) {
@@ -267,7 +266,7 @@ nsTableOuterFrame::RemoveFrame(nsIAtom*        aListName,
   }
 
   // Remove the frame and destroy it
-  mCaptionFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  mCaptionFrames.DestroyFrame(aOldFrame);
   mCaptionFrame = mCaptionFrames.FirstChild();
   
   mMinCaptionWidth = 0;
@@ -2099,7 +2098,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
   }
 
   // Delete the next-in-flow frame and adjust its parent's child count
-  nextInFlow->Destroy(aPresContext);
+  nextInFlow->Destroy();
 
   NS_POSTCONDITION(!aChild->GetNextInFlow(), "non null next-in-flow");
 }

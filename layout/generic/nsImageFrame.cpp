@@ -236,8 +236,8 @@ NS_IMETHODIMP_(nsrefcnt) nsImageFrame::Release(void)
   return 1;
 }
 
-NS_IMETHODIMP
-nsImageFrame::Destroy(nsPresContext* aPresContext)
+void
+nsImageFrame::Destroy()
 {
   // Tell our image map, if there is one, to clean up
   // This causes the nsImageMap to unregister itself as
@@ -259,7 +259,7 @@ nsImageFrame::Destroy(nsPresContext* aPresContext)
   
   mListener = nsnull;
 
-  return nsSplittableFrame::Destroy(aPresContext);
+  nsSplittableFrame::Destroy();
 }
 
 

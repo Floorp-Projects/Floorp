@@ -96,8 +96,7 @@ nsContainerFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                      nsIAtom*        aListName,
+nsContainerFrame::SetInitialChildList(nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
   nsresult  result;
@@ -138,8 +137,8 @@ CleanupGeneratedContentIn(nsIContent* aRealContent, nsIFrame* aRoot) {
   } while (frameList);
 }
 
-NS_IMETHODIMP
-nsContainerFrame::Destroy(nsPresContext* aPresContext)
+void
+nsContainerFrame::Destroy()
 {
   // Prevent event dispatch during destruction
   if (HasView()) {
@@ -155,16 +154,16 @@ nsContainerFrame::Destroy(nsPresContext* aPresContext)
     // our kids are gone by the time that's called.
     ::CleanupGeneratedContentIn(mContent, this);
   }
-  
+
   // Delete the primary child list
-  mFrames.DestroyFrames(aPresContext);
+  mFrames.DestroyFrames();
   
   // Destroy overflow frames now
-  nsFrameList overflowFrames(GetOverflowFrames(aPresContext, PR_TRUE));
-  overflowFrames.DestroyFrames(aPresContext);
+  nsFrameList overflowFrames(GetOverflowFrames(GetPresContext(), PR_TRUE));
+  overflowFrames.DestroyFrames();
 
   // Destroy the frame and remove the flow pointers
-  return nsSplittableFrame::Destroy(aPresContext);
+  nsSplittableFrame::Destroy();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -910,7 +909,7 @@ nsContainerFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   }
 
   // Delete the next-in-flow frame and its descendants.
-  aNextInFlow->Destroy(aPresContext);
+  aNextInFlow->Destroy();
 
   NS_POSTCONDITION(!prevInFlow->GetNextInFlow(), "non null next-in-flow");
 }
@@ -939,7 +938,7 @@ DestroyOverflowFrames(void*           aFrame,
   if (aPropertyValue) {
     nsFrameList frames((nsIFrame*)aPropertyValue);
 
-    frames.DestroyFrames(NS_STATIC_CAST(nsPresContext*, aDtorData));
+    frames.DestroyFrames();
   }
 }
 
@@ -952,7 +951,7 @@ nsContainerFrame::SetOverflowFrames(nsPresContext* aPresContext,
                                                nsLayoutAtoms::overflowProperty,
                                                aOverflowFrames,
                                                DestroyOverflowFrames,
-                                               aPresContext);
+                                               nsnull);
 
   // Verify that we didn't overwrite an existing overflow list
   NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");

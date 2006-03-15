@@ -92,8 +92,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD DidReflow(nsPresContext*           aPresContext,
@@ -109,7 +108,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
-  NS_IMETHOD Destroy(nsPresContext *aPresContext);
+  virtual void Destroy();
 
   // new behavior
 
@@ -146,7 +145,7 @@ public:
                                PRBool& aBailOnWidth,
                                PRBool& aBailOnHeight);
   // AccessKey Helper function
-  static nsresult RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg);
+  static nsresult RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg);
 
   /**
    * Helper routine to that returns the height of the screen

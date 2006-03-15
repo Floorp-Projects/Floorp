@@ -760,20 +760,6 @@ nsMathMLContainerFrame::Init(nsIContent*      aContent,
   // tree is constructed.
 }
 
-// This method is called in a bottom-up manner, as we ascend the frame tree
-// after its construction
-NS_IMETHODIMP
-nsMathMLContainerFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                            nsIAtom*        aListName,
-                                            nsIFrame*       aChildList)
-{
-  // let the base class do its job
-  return nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-
-  // ...We will build our automatic MathML data once the entire <math>...</math>
-  // tree is constructed.
-}
-
 // Note that this method re-builds the automatic data in the children -- not
 // in aParentFrame itself (except for those particular operations that the
 // parent frame may do in its TransmitAutomaticData()).
@@ -930,7 +916,7 @@ nsMathMLContainerFrame::RemoveFrame(nsIAtom*        aListName,
     return NS_ERROR_INVALID_ARG;
   }
   // remove the child frame
-  mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  mFrames.DestroyFrame(aOldFrame);
   return ChildListChanged(nsIDOMMutationEvent::REMOVAL);
 }
 

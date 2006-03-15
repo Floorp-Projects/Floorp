@@ -75,7 +75,8 @@ public:
                   nsIFrame*       aParent, 
                   nsStyleContext* aContext, 
                   nsIFrame*       aPrevInFlow);
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
+
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);
 
   // nsIScrollbarMediator

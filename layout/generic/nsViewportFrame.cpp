@@ -51,16 +51,15 @@ NS_NewViewportFrame(nsIPresShell* aPresShell)
   return new (aPresShell) ViewportFrame;
 }
 
-NS_IMETHODIMP
-ViewportFrame::Destroy(nsPresContext* aPresContext)
+void
+ViewportFrame::Destroy()
 {
-  mFixedContainer.DestroyFrames(this, aPresContext);
-  return nsContainerFrame::Destroy(aPresContext);
+  mFixedContainer.DestroyFrames(this);
+  nsContainerFrame::Destroy();
 }
 
 NS_IMETHODIMP
-ViewportFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                   nsIAtom*        aListName,
+ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
@@ -70,10 +69,10 @@ ViewportFrame::SetInitialChildList(nsPresContext* aPresContext,
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
   if (mFixedContainer.GetChildListName() == aListName) {
-    rv = mFixedContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
+    rv = mFixedContainer.SetInitialChildList(this, aListName, aChildList);
   } 
   else {
-    rv = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsContainerFrame::SetInitialChildList(aListName, aChildList);
   }
 
   return rv;

@@ -56,8 +56,7 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -138,12 +137,11 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsFirstLetterFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                        nsIAtom*        aListName,
+nsFirstLetterFrame::SetInitialChildList(nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
-  nsFrameManager *frameManager = aPresContext->FrameManager();
+  nsFrameManager *frameManager = GetPresContext()->FrameManager();
 
   for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
     frameManager->ReParentStyleContext(frame, mStyleContext);
