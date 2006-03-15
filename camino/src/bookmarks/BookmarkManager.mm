@@ -563,12 +563,12 @@ static BookmarkManager* gBookmarkManager = nil;
          ([[inFolder identifier] length] == 0);   // all our special folders have identifiers
 }
 
-- (unsigned)indexOfContainerItem:(BookmarkItem*)inItem
+- (unsigned)indexOfContainer:(BookmarkFolder*)inFolder
 {
-  return [mRootBookmarks indexOfObject:inItem];
+  return [mRootBookmarks indexOfObject:inFolder];
 }
 
-- (BookmarkItem*)containerItemAtIndex:(unsigned)inIndex
+- (BookmarkFolder*)containerAtIndex:(unsigned)inIndex
 {
   return [mRootBookmarks objectAtIndex:inIndex];
 }
@@ -1101,7 +1101,7 @@ static BookmarkManager* gBookmarkManager = nil;
 {
   // don't write out the bookmark file or metadata for changes in a smart container.
   id item = [inNotification object];
-  if ([[item parent] isSmartFolder])
+  if ([(BookmarkFolder *)[item parent] isSmartFolder])
     return;
 
   unsigned int changeFlags = kBookmarkItemEverythingChangedMask;
@@ -1750,7 +1750,7 @@ static BookmarkManager* gBookmarkManager = nil;
   return NO;
 }
 
--(BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:aFolder
+-(BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
   NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
   // see if it's safari
@@ -1760,7 +1760,7 @@ static BookmarkManager* gBookmarkManager = nil;
   return [aFolder readNativeDictionary:dict];
 }
 
--(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:aFolder
+-(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
   // get file as NSString
   NSString* fileAsString = [self decodedTextFile:pathToFile];

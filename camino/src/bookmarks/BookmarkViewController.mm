@@ -387,7 +387,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   BookmarkFolder *aFolder = [mRootBookmarks addBookmarkFolder];
   [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder",@"New Folder")];
   [self selectContainerFolder:aFolder];
-  int newFolderIndex = [[BookmarkManager sharedBookmarkManager] indexOfContainerItem:aFolder];
+  int newFolderIndex = [[BookmarkManager sharedBookmarkManager] indexOfContainer:aFolder];
   [mContainersTableView editColumn:0 row:newFolderIndex withEvent:nil select:YES];
 }
 
@@ -422,11 +422,11 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
   int index = [mContainersTableView selectedRow];
   
-  BookmarkItem* selectedContainer = [self selectedContainerFolder];
+  BookmarkFolder* selectedContainer = [self selectedContainerFolder];
   if (![manager isUserCollection:selectedContainer])
     return;
 
-  [self selectContainerFolder:[manager containerItemAtIndex:index - 1]];
+  [self selectContainerFolder:[manager containerAtIndex:index - 1]];
   [[manager rootBookmarks] deleteChild:selectedContainer];
 }
 
@@ -768,8 +768,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 // XXX unused
 -(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem
 {
+#if 0
   if (!aBookmarkItem) return;   // avoid recursion
-  BookmarkItem *parent = [aBookmarkItem parent];
+  BookmarkFolder *parent = [aBookmarkItem parent];
   if (parent != mRootBookmarks)
     [self displayBookmarkInOutlineView:parent];
   else {
@@ -777,6 +778,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return;
   }
   [mBookmarksOutlineView expandItem:aBookmarkItem];
+#endif
 }
 
 -(NSView*)bookmarksEditingView
@@ -842,8 +844,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     // if it's a folder, use it
     if ([item isKindOfClass:[BookmarkFolder class]])
     {
-      *outIndex = (int)[(BookmarkFolder*)item count];
-      return item;
+      BookmarkFolder* selectedFolder = (BookmarkFolder*) item;
+      *outIndex = [selectedFolder count];
+      return selectedFolder;
     }
     
     // otherwise use its parent
@@ -1159,7 +1162,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
 
-  unsigned folderIndex = [bmManager indexOfContainerItem:inFolder];
+  unsigned folderIndex = [bmManager indexOfContainer:inFolder];
   if (folderIndex == NSNotFound)
     return;
 
@@ -1196,7 +1199,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     else
       [self setCanEditSelectedContainerContents:YES];
 
-    // if its a smart folder, but not the history folder
+    // if it's a smart folder, but not the history folder
     if ([inFolder isSmartFolder])
       [mBookmarksOutlineView setDeleteAction:nil];
     else
@@ -1228,7 +1231,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (void)selectLastContainer
 {
-  BookmarkItem* lastContainer = [[[[BookmarkManager sharedBookmarkManager] rootBookmarks] childArray] lastObject];
+  BookmarkFolder* lastContainer = [[[[BookmarkManager sharedBookmarkManager] rootBookmarks] childArray] lastObject];
   [self selectContainerFolder:lastContainer];
 }
 
@@ -1334,7 +1337,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     {
       // disallow drops above the first user collection (this assumes that the last smart
       // folder is the address book folder)
-      int firstUserCollectionRow = [manager indexOfContainerItem:[manager addressBookFolder]] + 1;
+      int firstUserCollectionRow = [manager indexOfContainer:[manager addressBookFolder]] + 1;
       if (row >= firstUserCollectionRow)
         dropFolder = mRootBookmarks;
     }
@@ -1553,7 +1556,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItems:(NSArray*)items
 {
-  return [[BookmarkManager sharedBookmarkManager] contextMenuForItems:items fromView:outlineView target:self];
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItems:items fromView:(BookmarkOutlineView*)outlineView target:self];
 }
 
 - (BOOL)outlineView:(NSOutlineView*)inOutlineView columnHasIcon:(NSTableColumn*)inColumn
@@ -1654,7 +1657,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 }
 
 
-/*
+#if 0
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
   int  index = [mBookmarksOutlineView selectedRow];
@@ -1694,7 +1697,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   return YES;
 }
-*/
+#endif
 
 - (void)outlineViewItemDidExpand:(NSNotification *)notification
 {
@@ -2046,7 +2049,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
         theFolder = [bookmarkManager rootBookmarkFolderWithIdentifier:containerId];
       else if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerUUIDKey]))
       {
-        theFolder = [bookmarkManager itemWithUUID:containerId];
+        theFolder = (BookmarkFolder*)[bookmarkManager itemWithUUID:containerId];
         // make sure it's (still) a container
         if ([theFolder parent] != [bookmarkManager rootBookmarks])
           theFolder = nil;

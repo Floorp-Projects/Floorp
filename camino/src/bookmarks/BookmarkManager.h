@@ -108,8 +108,8 @@ const int kBookmarksContextMenuArrangeSeparatorTag = 100;
 - (BOOL)isUserCollection:(BookmarkFolder *)inFolder;
 
 // returns NSNotFound if the folder is not a child of the root
-- (unsigned)indexOfContainerItem:(BookmarkItem*)inItem;
-- (BookmarkItem*)containerItemAtIndex:(unsigned)inIndex;
+- (unsigned)indexOfContainer:(BookmarkFolder*)inFolder;
+- (BookmarkFolder*)containerAtIndex:(unsigned)inIndex;
 - (BookmarkFolder*)rootBookmarkFolderWithIdentifier:(NSString*)inIdentifier;
 
 - (BOOL)itemsShareCommonParent:(NSArray*)inItems;
