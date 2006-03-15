@@ -185,7 +185,7 @@
 
 <!-- XXX places only -->
 <!ENTITY historyMenu.label "History">
-<!ENTITY historyMenu.accesskey "h">
+<!ENTITY historyMenu.accesskey "i">
 <!ENTITY historyHomeCmd.label "Home">
 <!ENTITY historyHomeCmd.accesskey "h">
 <!ENTITY historySearchCmd.label "Search in History...">
