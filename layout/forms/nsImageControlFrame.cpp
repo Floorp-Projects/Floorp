@@ -72,7 +72,7 @@ public:
   nsImageControlFrame();
   ~nsImageControlFrame();
 
-  NS_IMETHOD Destroy(nsPresContext *aPresContext);
+  virtual void Destroy();
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -124,12 +124,11 @@ nsImageControlFrame::~nsImageControlFrame()
 {
 }
 
-NS_IMETHODIMP
-nsImageControlFrame::Destroy(nsPresContext *aPresContext)
+void
+nsImageControlFrame::Destroy()
 {
-  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-
-  return nsImageControlFrameSuper::Destroy(aPresContext);
+  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsImageControlFrameSuper::Destroy();
 }
 
 nsIFrame*
@@ -203,7 +202,7 @@ nsImageControlFrame::Reflow(nsPresContext*         aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   if (aReflowState.reason == eReflowReason_Initial) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   }
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }

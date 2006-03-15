@@ -427,12 +427,12 @@ public:
    * Destroys this frame and each of its child frames (recursively calls
    * Destroy() for each child)
    */
-  NS_IMETHOD  Destroy(nsPresContext* aPresContext) = 0;
+  virtual void Destroy() = 0;
 
   /*
    * Notify the frame that it has been removed as the primary frame for its content
    */
-  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext) {}
+  virtual void RemovedAsPrimaryFrame() {}
 
   /**
    * Called to set the initial list of frames. This happens after the frame
@@ -452,8 +452,7 @@ public:
    *          NS_OK otherwise
    * @see     #Init()
    */
-  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList) = 0;
 
   /**

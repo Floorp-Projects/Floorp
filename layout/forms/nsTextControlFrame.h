@@ -75,9 +75,9 @@ public:
   nsTextControlFrame(nsIPresShell* aShell);
   virtual ~nsTextControlFrame();
 
-  virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext); 
+  virtual void RemovedAsPrimaryFrame(); 
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -113,9 +113,8 @@ public:
 
   // Utility methods to set current widget state
   void SetValue(const nsAString& aValue);
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
-                                  nsIFrame*       aChildList);
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
 //==== BEGIN NSIFORMCONTROLFRAME
   virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
@@ -230,7 +229,7 @@ protected:
    * We call this when we are being destroyed or removed from the PFM.
    * @param aPresContext the current pres context
    */
-  void PreDestroy(nsPresContext* aPresContext);
+  void PreDestroy();
   /**
    * Fire the onChange event.
    */

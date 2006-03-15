@@ -57,7 +57,7 @@ public:
   nsScrollbarButtonFrame(nsIPresShell* aPresShell);
 
   // Overrides
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   friend nsIFrame* NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell);
 

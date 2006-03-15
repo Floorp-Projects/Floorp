@@ -65,10 +65,9 @@ public:
 
   virtual ~ViewportFrame() { } // useful for debugging
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,

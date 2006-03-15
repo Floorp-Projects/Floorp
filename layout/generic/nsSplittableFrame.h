@@ -50,7 +50,7 @@ public:
   
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   /*
    * Frame continuations can be either fluid or not:

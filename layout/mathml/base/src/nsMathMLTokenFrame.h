@@ -58,8 +58,7 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsPresContext* aPresContext,
-                      nsIAtom*        aListName,
+  SetInitialChildList(nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   NS_IMETHOD

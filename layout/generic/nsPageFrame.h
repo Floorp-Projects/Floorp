@@ -50,8 +50,7 @@ public:
   friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell);
 
   // nsIFrame
-  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,

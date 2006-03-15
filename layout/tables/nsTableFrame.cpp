@@ -302,11 +302,11 @@ nsTableFrame::~nsTableFrame()
 #endif
 }
 
-NS_IMETHODIMP
-nsTableFrame::Destroy(nsPresContext* aPresContext)
+void
+nsTableFrame::Destroy()
 {
-  mColGroups.DestroyFrames(aPresContext);
-  return nsHTMLContainerFrame::Destroy(aPresContext);
+  mColGroups.DestroyFrames();
+  nsHTMLContainerFrame::Destroy();
 }
 
 nscoord 
@@ -386,8 +386,7 @@ nsTableFrame::PageBreakAfter(nsIFrame& aSourceFrame,
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list.
 NS_IMETHODIMP
-nsTableFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+nsTableFrame::SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
   nsresult rv=NS_OK;
@@ -713,7 +712,7 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame,
             }
             // remove the col group if it is empty
             if (lastColGroup->GetColCount() <= 0) {
-              mColGroups.DestroyFrame(GetPresContext(), (nsIFrame*)lastColGroup);
+              mColGroups.DestroyFrame((nsIFrame*)lastColGroup);
             }
             removedFromCache = PR_TRUE;
           }
@@ -928,7 +927,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     nsIFrame* colFrame = NS_NewTableColFrame(shell);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(iContent, aColGroupFrame, styleContext, nsnull);
-    colFrame->SetInitialChildList(presContext, nsnull, nsnull);
+    colFrame->SetInitialChildList(nsnull, nsnull);
 
     // Add the col to the sibling chain
     if (lastColFrame) {
@@ -2483,7 +2482,7 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     PRInt32 firstColIndex = colGroup->GetStartColumnIndex();
     PRInt32 lastColIndex  = firstColIndex + colGroup->GetColCount() - 1;
-    mColGroups.DestroyFrame(GetPresContext(), aOldFrame);
+    mColGroups.DestroyFrame(aOldFrame);
     nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
     PRInt32 colX;
@@ -2528,14 +2527,14 @@ nsTableFrame::RemoveFrame(nsIAtom*        aListName,
 
       AdjustRowIndices(startRowIndex, -numRows);
       // remove the row group frame from the sibling chain
-      mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+      mFrames.DestroyFrame(aOldFrame);
 
       // XXX This could probably be optimized with much effort
       SetNeedStrategyInit(PR_TRUE);
       AppendDirtyReflowCommand(this);
     } else {
       // Just remove the frame
-      mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+      mFrames.DestroyFrame(aOldFrame);
       return NS_OK;
     }
   }

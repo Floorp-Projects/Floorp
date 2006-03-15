@@ -105,12 +105,12 @@ nsTreeColFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-NS_IMETHODIMP                                                                   
-nsTreeColFrame::Destroy(nsPresContext* aPresContext)                          
+void                                                                
+nsTreeColFrame::Destroy()                          
 {
   if (mColumns)
     mColumns->InvalidateColumns();
-  return nsBoxFrame::Destroy(aPresContext);
+  nsBoxFrame::Destroy();
 }
 
 MOZ_DECL_CTOR_COUNTER(nsDisplayXULTreeColSplitterTarget)

@@ -55,13 +55,13 @@ nsFormControlFrame::~nsFormControlFrame()
 {
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::Destroy(nsPresContext *aPresContext)
+void
+nsFormControlFrame::Destroy()
 {
   // XXXldb Do we really need to do this?  Shouldn't only those frames
   // that use it do it?
-  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  return nsLeafFrame::Destroy(aPresContext);
+  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsLeafFrame::Destroy();
 }
 
 // Frames are not refcounted, no need to AddRef
@@ -262,8 +262,7 @@ nsFormControlFrame::DidReflow(nsPresContext*           aPresContext,
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                        nsIAtom*        aListName,
+nsFormControlFrame::SetInitialChildList(nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
   return NS_OK;
@@ -279,7 +278,7 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (!mDidInit) {
-    RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     mDidInit = PR_TRUE;
   }
 
@@ -293,17 +292,20 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 nsresult
-nsFormControlFrame::RegUnRegAccessKey(nsPresContext* aPresContext, nsIFrame * aFrame, PRBool aDoReg)
+nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg)
 {
-  NS_ASSERTION(aPresContext, "aPresContext is NULL in RegUnRegAccessKey!");
   NS_ENSURE_ARG_POINTER(aFrame);
+  
+  nsPresContext* presContext = aFrame->GetPresContext();
+  
+  NS_ASSERTION(presContext, "aPresContext is NULL in RegUnRegAccessKey!");
 
   nsAutoString accessKey;
 
   nsIContent* content = aFrame->GetContent();
   content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
-    nsIEventStateManager *stateManager = aPresContext->EventStateManager();
+    nsIEventStateManager *stateManager = presContext->EventStateManager();
     if (aDoReg) {
       return stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
     } else {
