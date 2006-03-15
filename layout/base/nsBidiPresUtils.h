@@ -48,6 +48,7 @@
 #include "nsBidiUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsBlockFrame.h"
 
 /**
  * A structure representing a logical position which should be resolved
@@ -79,8 +80,6 @@ public:
    * @param aPresContext         The presContext
    * @param aBlockFrame          The block frame
    * @param aFirstChild          The first child frame of aBlockFrame
-   * @param aForceReflow         [OUT] Set if we delete frames and will need to
-   *                                   reflow the block frame
    * @param aIsVisualFormControl [IN]  Set if we are in a form control on a
    *                                   visual page.
    *                                   @see nsHTMLReflowState::IsBidiFormControl
@@ -88,9 +87,8 @@ public:
    *  @lina 06/18/2000
    */
   nsresult Resolve(nsPresContext* aPresContext,
-                   nsIFrame*       aBlockFrame,
+                   nsBlockFrame*   aBlockFrame,
                    nsIFrame*       aFirstChild,
-                   PRBool&         aForceReflow,
                    PRBool          aIsVisualFormControl);
 
   /**

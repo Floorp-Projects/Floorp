@@ -216,12 +216,10 @@ CreateBidiContinuation(nsPresContext* aPresContext,
  */
 nsresult
 nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
-                         nsIFrame*       aBlockFrame,
+                         nsBlockFrame*   aBlockFrame,
                          nsIFrame*       aFirstChild,
-                         PRBool&         aForceReflow,
                          PRBool          aIsVisualFormControl)
 {
-  aForceReflow = PR_FALSE;
   mLogicalFrames.Clear();
   mContentToFrameIndex.Clear();
   
@@ -309,6 +307,9 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 
   nsPropertyTable *propTable = aPresContext->PropertyTable();
 
+  nsBlockFrame::line_iterator line = aBlockFrame->begin_lines();
+  nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
+  
   for (; ;) {
     if (fragmentLength <= 0) {
       if (++frameIndex >= frameCount) {
@@ -318,6 +319,20 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       
       frame = (nsIFrame*) (mLogicalFrames[frameIndex]);
       frameType = frame->GetType();
+      if (nsLayoutAtoms::directionalFrame != frameType) {
+        // Advance the line iterator to the line containing frame
+        nsIFrame* child = frame;
+        nsIFrame* parent = child->GetParent();
+        while (parent && parent != aBlockFrame) {
+          child = parent;
+          parent = child->GetParent();
+        }
+        NS_ASSERTION (parent, "frame is not a descendent of aBlockFrame");
+        while (line != endLines && !line->Contains(child)) {
+          ++line;
+        }
+        NS_ASSERTION (line != endLines, "frame not found on any line");
+      }
       if (nsLayoutAtoms::textFrame == frameType) {
         content = frame->GetContent();
         if (!content) {
@@ -380,6 +395,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
                                       &nextBidi, frameIndex) ) {
             break;
           }
+          line->MarkDirty();
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
           frame = nextBidi;
           contentOffset += runLength;
@@ -391,7 +407,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
           if (newIndex > frameIndex) {
             RemoveBidiContinuation(aPresContext, frame,
                                    frameIndex, newIndex, temp);
-            aForceReflow = PR_TRUE;
+            line->MarkDirty();
             runLength -= temp;
             fragmentLength -= temp;
             lineOffset += temp;
