@@ -1169,7 +1169,8 @@ sub init {
             $params->param("value$chart-$row-$col", shift(@$ref));
             if ($debug) {
                 push(@debugdata, "$row-$col = " .
-                               $params->param("field$chart-$row-$col") . ' | ' .                               $params->param("type$chart-$row-$col") . ' | ' .
+                               $params->param("field$chart-$row-$col") . ' | ' .
+                               $params->param("type$chart-$row-$col") . ' | ' .
                                $params->param("value$chart-$row-$col") . ' *');
             }
             $col++;
