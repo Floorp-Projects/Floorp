@@ -110,7 +110,7 @@ nsFileControlFrame::~nsFileControlFrame()
 }
 
 void
-nsFileControlFrame::PreDestroy()
+nsFileControlFrame::PreDestroy(nsPresContext* aPresContext)
 {
   // Toss the value into the control from the anonymous content, which is about
   // to get lost.  Note that if the page is being torn down then the anonymous
@@ -134,21 +134,21 @@ nsFileControlFrame::PreDestroy()
   mDidPreDestroy = PR_TRUE;
 }
 
-void
-nsFileControlFrame::Destroy()
+NS_IMETHODIMP
+nsFileControlFrame::Destroy(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
-    PreDestroy();
+    PreDestroy(aPresContext);
   }
   mTextFrame = nsnull;
-  nsAreaFrame::Destroy();
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 void
-nsFileControlFrame::RemovedAsPrimaryFrame()
+nsFileControlFrame::RemovedAsPrimaryFrame(nsPresContext* aPresContext)
 {
   if (!mDidPreDestroy) {
-    PreDestroy();
+    PreDestroy(aPresContext);
   }
 #ifdef DEBUG
   else {
@@ -457,10 +457,11 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
 
 /*
 NS_IMETHODIMP
-nsFileControlFrame::SetInitialChildList(nsIAtom*        aListName,
-                                        nsIFrame*       aChildList)
+nsFileControlFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
 {
-  nsAreaFrame::SetInitialChildList(aListName, aChildList);
+  nsresult r = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // given that the CSS frame constructor created all our frames. We need to find the text field
   // so we can get info from it.

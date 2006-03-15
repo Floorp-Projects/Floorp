@@ -315,8 +315,8 @@ nsListControlFrame::~nsListControlFrame()
 }
 
 // for Bug 47302 (remove this comment later)
-void
-nsListControlFrame::Destroy()
+NS_IMETHODIMP
+nsListControlFrame::Destroy(nsPresContext *aPresContext)
 {
   // get the receiver interface from the browser button's content node
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
@@ -338,8 +338,8 @@ nsListControlFrame::Destroy()
                                                     mEventListener),
                                      NS_GET_IID(nsIDOMKeyListener));
 
-  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  nsHTMLScrollFrame::Destroy();
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  return nsHTMLScrollFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -751,7 +751,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
 
   // Add the list frame as a child of the form
   if (eReflowReason_Initial == aReflowState.reason) {
-    nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   }
 
   //--Calculate a width just big enough for the scrollframe to shrink around the
@@ -1391,7 +1391,8 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::SetInitialChildList(nsIAtom*       aListName,
+nsListControlFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                        nsIAtom*       aListName,
                                         nsIFrame*      aChildList)
 {
   // First check to see if all the content has been added
@@ -1400,7 +1401,7 @@ nsListControlFrame::SetInitialChildList(nsIAtom*       aListName,
     mIsAllFramesHere    = PR_FALSE;
     mHasBeenInitialized = PR_FALSE;
   }
-  nsresult rv = nsHTMLScrollFrame::SetInitialChildList(aListName, aChildList);
+  nsresult rv = nsHTMLScrollFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // If all the content is here now check
   // to see if all the frames have been created

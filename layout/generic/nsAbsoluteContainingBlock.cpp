@@ -61,6 +61,7 @@ nsAbsoluteContainingBlock::FirstChild(const nsIFrame* aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
+                                               nsPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -112,7 +113,8 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
 {
-  PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
+  PRBool result = mAbsoluteFrames.DestroyFrame(aDelegatingFrame->
+                                               GetPresContext(), aOldFrame);
   NS_ASSERTION(result, "didn't find frame to delete");
   // Because positioned frames aren't part of a flow, there's no additional
   // work to do, e.g. reflowing sibling frames. And because positioned frames
@@ -409,9 +411,10 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 }
 
 void
-nsAbsoluteContainingBlock::DestroyFrames(nsIFrame* aDelegatingFrame)
+nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
+                                         nsPresContext* aPresContext)
 {
-  mAbsoluteFrames.DestroyFrames();
+  mAbsoluteFrames.DestroyFrames(aPresContext);
 }
 
 // XXX Optimize the case where it's a resize reflow and the absolutely

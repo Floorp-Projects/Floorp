@@ -334,12 +334,12 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   return mStringWidth;
 }
 
-void
-nsTreeBodyFrame::Destroy()
+NS_IMETHODIMP
+nsTreeBodyFrame::Destroy(nsPresContext* aPresContext)
 {
   // Make sure we cancel any posted callbacks. 
   if (mReflowCallbackPosted) {
-    GetPresContext()->PresShell()->CancelReflowCallback(this);
+    aPresContext->PresShell()->CancelReflowCallback(this);
     mReflowCallbackPosted = PR_FALSE;
   }
 
@@ -372,7 +372,7 @@ nsTreeBodyFrame::Destroy()
     mView = nsnull;
   }
 
-  nsLeafBoxFrame::Destroy();
+  return nsLeafBoxFrame::Destroy(aPresContext);
 }
 
 void

@@ -112,18 +112,19 @@ nsPageFrame::~nsPageFrame()
 
 
 NS_IMETHODIMP
-nsPageFrame::SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
+nsPageFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aChildList)
 {
   nsIView* view = aChildList->GetView();
   if (view && mDoCreateWidget) {
-    if (GetPresContext()->Type() == nsPresContext::eContext_PrintPreview &&
+    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview &&
         view->GetNearestWidget(nsnull)) {
       view->CreateWidget(kCChildCID);  
     }
   }
 
-  return nsContainerFrame::SetInitialChildList(aListName, aChildList);
+  return nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 }
 
 NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,

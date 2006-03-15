@@ -412,7 +412,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
         childFrame->SetParentBorderColor(borderColor);
         result = frame->Init(child, this, kidSC, nsnull);
         if (NS_FAILED(result)) {
-          frame->Destroy();
+          frame->Destroy(aPresContext);
           return result;
         }
 
@@ -424,7 +424,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
         result = frame->Init(child, this, kidSC, nsnull);
         if (NS_FAILED(result)) {
-          frame->Destroy();
+          frame->Destroy(aPresContext);
           return result;
         }
 
@@ -461,13 +461,13 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
                                                                   nsCSSAnonBoxes::framesetBlank,
                                                                   mStyleContext);
     if (!pseudoStyleContext) {
-      blankFrame->Destroy();
+      blankFrame->Destroy(aPresContext);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     result = blankFrame->Init(mContent, this, pseudoStyleContext, nsnull);
     if (NS_FAILED(result)) {
-      blankFrame->Destroy();
+      blankFrame->Destroy(aPresContext);
       return result;
     }
    

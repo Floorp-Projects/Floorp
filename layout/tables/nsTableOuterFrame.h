@@ -92,11 +92,12 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   
   virtual PRBool IsContainingBlock() const;
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
+                                 nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
  
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;

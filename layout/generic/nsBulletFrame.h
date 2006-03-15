@@ -54,7 +54,7 @@ public:
   virtual ~nsBulletFrame();
 
   // nsIFrame
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

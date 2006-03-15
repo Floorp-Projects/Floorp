@@ -58,8 +58,8 @@ nsSplittableFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-void
-nsSplittableFrame::Destroy()
+NS_IMETHODIMP
+nsSplittableFrame::Destroy(nsPresContext* aPresContext)
 {
   // Disconnect from the flow list
   if (mPrevContinuation || mNextContinuation) {
@@ -67,7 +67,7 @@ nsSplittableFrame::Destroy()
   }
 
   // Let the base class destroy the frame
-  nsFrame::Destroy();
+  return nsFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

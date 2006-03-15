@@ -373,7 +373,7 @@ nsSVGTextFrame::RemoveFrame(nsIAtom*        aListName,
   if (SVGFrame)
     dirty_region = SVGFrame->GetCoveredRegion();
   
-  PRBool result = mFrames.DestroyFrame(aOldFrame);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");

@@ -70,7 +70,8 @@ public:
 
   nsFieldSetFrame();
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*       aListName,
+  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
+                                 nsIAtom*       aListName,
                                  nsIFrame*      aChildList);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
@@ -145,7 +146,8 @@ nsFieldSetFrame::IsContainingBlock() const
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::SetInitialChildList(nsIAtom*       aListName,
+nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                     nsIAtom*       aListName,
                                      nsIFrame*      aChildList)
 {
   // Get the content and legend frames.
@@ -158,7 +160,7 @@ nsFieldSetFrame::SetInitialChildList(nsIAtom*       aListName,
   }
 
   // Queue up the frames for the content frame
-  return nsHTMLContainerFrame::SetInitialChildList(nsnull, aChildList);
+  return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
 MOZ_DECL_CTOR_COUNTER(nsDisplayFieldSetBorderBackground)
@@ -643,12 +645,12 @@ nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
     NS_ASSERTION(!aListName, "Unexpected frame list when removing legend frame");
     NS_ASSERTION(mLegendFrame->GetParent() == this, "Legend Parent has wrong parent");
     NS_ASSERTION(mLegendFrame->GetNextSibling() == mContentFrame, "mContentFrame is not next sibling");
-
-    mFrames.DestroyFrame(mLegendFrame);
+    nsPresContext* presContext = GetPresContext();
+    mFrames.DestroyFrame(presContext, mLegendFrame);
     mLegendFrame = nsnull;
     AddStateBits(NS_FRAME_IS_DIRTY);
     if (GetParent()) {
-      GetParent()->ReflowDirtyChild(GetPresContext()->GetPresShell(), this);
+      GetParent()->ReflowDirtyChild(presContext->GetPresShell(), this);
     }
     return NS_OK;
   }

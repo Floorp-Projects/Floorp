@@ -65,7 +65,7 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // nsIFrame overrides
 #ifdef DEBUG

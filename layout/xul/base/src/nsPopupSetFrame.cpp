@@ -159,8 +159,8 @@ nsPopupSetFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-void
-nsPopupSetFrame::Destroy()
+NS_IMETHODIMP
+nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
 {
   // Remove our frame list.
   if (mPopupList) {
@@ -179,7 +179,7 @@ nsPopupSetFrame::Destroy()
     // keeps things consistent so reentering won't crash us
     while (mPopupList) {
       if (mPopupList->mPopupFrame) {
-        mPopupList->mPopupFrame->Destroy();
+        mPopupList->mPopupFrame->Destroy(aPresContext);
       }
 
       nsPopupFrameList* temp = mPopupList;
@@ -195,7 +195,7 @@ nsPopupSetFrame::Destroy()
     rootBox->SetPopupSetFrame(nsnull);
   }
 
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -724,6 +724,7 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
   // get the popup out of our list, so we don't reflow it later.
   nsPopupFrameList* currEntry = mPopupList;
   nsPopupFrameList* temp = nsnull;
+  nsPresContext* presContext = GetPresContext();
   while (currEntry) {
     if (currEntry->mPopupFrame == aPopup) {
       // Remove this entry.
@@ -733,7 +734,7 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
         mPopupList = currEntry->mNextPopup;
       
       // Destroy the frame.
-      currEntry->mPopupFrame->Destroy();
+      currEntry->mPopupFrame->Destroy(presContext);
 
       // Delete the entry.
       currEntry->mNextPopup = nsnull;

@@ -94,7 +94,7 @@ public:
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
@@ -201,8 +201,8 @@ CanvasFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-void
-CanvasFrame::Destroy()
+NS_IMETHODIMP
+CanvasFrame::Destroy(nsPresContext* aPresContext)
 {
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -210,7 +210,7 @@ CanvasFrame::Destroy()
     scrollingView->RemoveScrollPositionListener(this);
   }
 
-  nsHTMLContainerFrame::Destroy();
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -329,7 +329,7 @@ CanvasFrame::RemoveFrame(nsIAtom*        aListName,
     Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition(), PR_FALSE);
 
     // Remove the frame and destroy it
-    mFrames.DestroyFrame(aOldFrame);
+    mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
     // Generate a reflow command so we get reflowed
     rv = GetPresContext()->PresShell()->

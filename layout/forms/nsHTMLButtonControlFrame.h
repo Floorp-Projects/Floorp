@@ -64,7 +64,7 @@ public:
   ~nsHTMLButtonControlFrame();
 
 
-  virtual void Destroy();
+  NS_IMETHOD  Destroy(nsPresContext *aPresContext);
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

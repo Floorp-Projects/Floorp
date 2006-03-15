@@ -125,6 +125,11 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
+  SetInitialChildList(nsPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
+
+  NS_IMETHOD
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList);
 
@@ -315,12 +320,13 @@ public:
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
   NS_IMETHOD
-  SetInitialChildList(nsIAtom*        aListName,
+  SetInitialChildList(nsPresContext* aPresContext,
+                      nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
-    nsresult rv = nsBlockFrame::SetInitialChildList(aListName, aChildList);
+    nsresult rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
-    nsMathMLContainerFrame::MapAttributesIntoCSS(GetPresContext(), this);
+    nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
     return rv;
   }
@@ -390,12 +396,13 @@ public:
   friend nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
-  SetInitialChildList(nsIAtom*        aListName,
+  SetInitialChildList(nsPresContext* aPresContext,
+                      nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
-    nsresult rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
+    nsresult rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     // re-resolve our subtree to set any mathml-expected data
-    nsMathMLContainerFrame::MapAttributesIntoCSS(GetPresContext(), this);
+    nsMathMLContainerFrame::MapAttributesIntoCSS(aPresContext, this);
     nsMathMLContainerFrame::RebuildAutomaticDataForChildren(this);
     return rv;
   }

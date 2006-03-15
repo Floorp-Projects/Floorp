@@ -89,7 +89,7 @@ public:
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsStyleContext*  aContext,

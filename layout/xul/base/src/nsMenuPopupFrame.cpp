@@ -1985,8 +1985,8 @@ nsMenuPopupFrame::HandleEvent(nsPresContext* aPresContext,
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-void
-nsMenuPopupFrame::Destroy()
+NS_IMETHODIMP
+nsMenuPopupFrame::Destroy(nsPresContext* aPresContext)
 {
   // Null out the pointer to this frame in the mediator wrapper so that it 
   // doesn't try to interact with a deallocated frame.
@@ -1996,7 +1996,7 @@ nsMenuPopupFrame::Destroy()
     mCloseTimer->Cancel();
 
   RemoveKeyboardNavigator();
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 // REVIEW: The override here was doing nothing at all since nsBoxFrame is our

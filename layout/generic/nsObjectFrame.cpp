@@ -480,8 +480,8 @@ nsObjectFrame::Init(nsIContent*      aContent,
   return rv;
 }
 
-void
-nsObjectFrame::Destroy()
+NS_IMETHODIMP
+nsObjectFrame::Destroy(nsPresContext* aPresContext)
 {
   NS_ASSERTION(!mInstantiating, "about to crash due to bug 136927");
 
@@ -489,7 +489,7 @@ nsObjectFrame::Destroy()
   // doing this in the destructor is too late.
   StopPlugin();
   
-  nsObjectFrameSuper::Destroy();
+  return nsObjectFrameSuper::Destroy(aPresContext);
 }
 
 nsIAtom*

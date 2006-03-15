@@ -157,22 +157,24 @@ nsHTMLScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void
-nsHTMLScrollFrame::Destroy()
+NS_IMETHODIMP
+nsHTMLScrollFrame::Destroy(nsPresContext* aPresContext)
 {
   nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
     view->RemoveScrollPositionListener(&mInner);
-  nsHTMLContainerFrame::Destroy();
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLScrollFrame::
-SetInitialChildList(nsIAtom*       aListName,
+SetInitialChildList(nsPresContext* aPresContext,
+                    nsIAtom*       aListName,
                     nsIFrame*      aChildList)
 {
-  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aListName, aChildList);
+  nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
+                                                           aChildList);
   mInner.CreateScrollableView();
   mInner.ReloadChildFrames();
 
@@ -1028,21 +1030,23 @@ nsXULScrollFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-void
-nsXULScrollFrame::Destroy()
+NS_IMETHODIMP
+nsXULScrollFrame::Destroy(nsPresContext* aPresContext)
 {
   nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
     view->RemoveScrollPositionListener(&mInner);
-  nsBoxFrame::Destroy();
+  return nsBoxFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsXULScrollFrame::SetInitialChildList(nsIAtom*        aListName,
-                                      nsIFrame*       aChildList)
+nsXULScrollFrame::SetInitialChildList(nsPresContext* aPresContext,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aChildList)
 {
-  nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
+  nsresult  rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName,
+                                                           aChildList);
 
   mInner.CreateScrollableView();
   mInner.ReloadChildFrames();

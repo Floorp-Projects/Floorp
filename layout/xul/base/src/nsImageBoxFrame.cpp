@@ -285,8 +285,8 @@ nsImageBoxFrame::NeedsRecalc()
   return NS_OK;
 }
 
-void
-nsImageBoxFrame::Destroy()
+NS_METHOD
+nsImageBoxFrame::Destroy(nsPresContext* aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
   if (mImageRequest)
@@ -295,7 +295,7 @@ nsImageBoxFrame::Destroy()
   if (mListener)
     NS_REINTERPRET_CAST(nsImageBoxListener*, mListener.get())->SetFrame(nsnull); // set the frame to null so we don't send messages to a dead object.
 
-  nsLeafBoxFrame::Destroy();
+  return nsLeafBoxFrame::Destroy(aPresContext);
 }
 
 

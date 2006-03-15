@@ -121,7 +121,7 @@ public:
                   nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
-  virtual void Destroy();
+  NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -581,8 +581,8 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell)
   return new (aPresShell) nsSubDocumentFrame;
 }
 
-void
-nsSubDocumentFrame::Destroy()
+NS_IMETHODIMP
+nsSubDocumentFrame::Destroy(nsPresContext* aPresContext)
 {
   if (mFrameLoader && mDidCreateDoc) {
     // Get the content viewer through the docshell, but don't call
@@ -625,7 +625,7 @@ nsSubDocumentFrame::Destroy()
     mFrameLoader->Destroy();
   }
 
-  nsLeafFrame::Destroy();
+  return nsLeafFrame::Destroy(aPresContext);
 }
 
 nsSize nsSubDocumentFrame::GetMargin()
