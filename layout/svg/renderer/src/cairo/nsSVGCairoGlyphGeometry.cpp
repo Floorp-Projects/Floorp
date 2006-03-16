@@ -163,6 +163,7 @@ NS_INTERFACE_MAP_END
       func(ctx, NS_ConvertUTF16toUTF8(text).get()); \
     } else { \
       for (PRUint32 i=0; i<text.Length(); i++) { \
+        /* character actually on the path? */  \
         if (cp[i].draw == PR_FALSE) \
           continue; \
         cairo_matrix_t matrix; \
@@ -553,6 +554,9 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
   } else {
     cairo_matrix_t matrix;
     for (PRUint32 i=0; i<text.Length(); i++) {
+      /* character actually on the path? */
+      if (cp[i].draw == PR_FALSE)
+        continue;
       cairo_get_matrix(ctx, &matrix);
       cairo_move_to(ctx, cp[i].x, cp[i].y);
       cairo_rotate(ctx, cp[i].angle);
@@ -671,6 +675,10 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   cairo_matrix_t matrix;
 
   for (PRUint32 i=0; i<text.Length(); i++) {
+    /* character actually on the path? */
+    if (cp && cp[i].draw == PR_FALSE)
+      continue;
+
     cairo_get_matrix(ctx, &matrix);
 
     if (cp) {
