@@ -1156,9 +1156,21 @@ NS_IMETHODIMP nsImapMailFolder::SetHierarchyDelimiter(PRUnichar aHierarchyDelimi
 
 NS_IMETHODIMP nsImapMailFolder::GetHierarchyDelimiter(PRUnichar *aHierarchyDelimiter)
 {
-  if (!aHierarchyDelimiter)
-    return NS_ERROR_NULL_POINTER;
-   ReadDBFolderInfo(PR_FALSE); // update cache first.
+  NS_ENSURE_ARG_POINTER(aHierarchyDelimiter);
+  if (mIsServer) 
+  {
+    // if it's the root folder, we don't know the delimiter. So look at the
+    // first child.
+    PRUint32 count = 0;
+    (void) mSubFolders->Count(&count);
+    if (count > 0)
+    {
+      nsCOMPtr<nsIMsgImapMailFolder> childFolder = do_QueryElementAt(mSubFolders, 0);
+      if (childFolder)
+        return childFolder->GetHierarchyDelimiter(aHierarchyDelimiter);
+    }
+  }
+  ReadDBFolderInfo(PR_FALSE); // update cache first.
   *aHierarchyDelimiter = m_hierarchyDelimiter;
   return NS_OK;
 }

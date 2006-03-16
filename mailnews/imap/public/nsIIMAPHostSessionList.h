@@ -124,8 +124,6 @@ public:
 
 
 	// Hierarchy Delimiters
-	 NS_IMETHOD		AddHierarchyDelimiter(const char *serverKey, char delimiter) = 0;
-	 NS_IMETHOD		GetHierarchyDelimiterStringForHost(const char *serverKey, nsString &result) = 0;
 	 NS_IMETHOD		SetNamespaceHierarchyDelimiterFromMailboxForHost(const char *serverKey, const char *boxName, char delimiter) = 0;
 
 	// Message Body Shells

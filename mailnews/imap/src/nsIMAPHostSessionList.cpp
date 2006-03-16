@@ -344,36 +344,6 @@ NS_IMETHODIMP nsIMAPHostSessionList::SetGotNamespacesForHost(
   return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
-NS_IMETHODIMP nsIMAPHostSessionList::GetHierarchyDelimiterStringForHost(const char *serverKey, nsString &result)
-{
-  PR_EnterMonitor(gCachedHostInfoMonitor);
-  nsIMAPHostInfo *host = FindHost(serverKey);
-  if (host)
-    result.AssignWithConversion(host->fHierarchyDelimiters);
-  PR_ExitMonitor(gCachedHostInfoMonitor);
-  return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
-
-NS_IMETHODIMP nsIMAPHostSessionList::AddHierarchyDelimiter(const char *serverKey, char delimiter)
-{
-  PR_EnterMonitor(gCachedHostInfoMonitor);
-  nsIMAPHostInfo *host = FindHost(serverKey);
-  if (host)
-  {
-    if (!host->fHierarchyDelimiters)
-    {
-      host->fHierarchyDelimiters = PR_smprintf("%c",delimiter);
-    }
-    else if (!PL_strchr(host->fHierarchyDelimiters, delimiter))
-    {
-      char *tmpDelimiters = PR_smprintf("%s%c",host->fHierarchyDelimiters,delimiter);
-      PR_FREEIF(host->fHierarchyDelimiters);
-      host->fHierarchyDelimiters = tmpDelimiters;
-    }
-  }
-  PR_ExitMonitor(gCachedHostInfoMonitor);
-  return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetHostIsUsingSubscription(const char *serverKey, PRBool &result)
 {

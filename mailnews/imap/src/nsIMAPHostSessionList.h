@@ -152,8 +152,6 @@ public:
 	 NS_IMETHOD		FlushUncommittedNamespacesForHost(const char *serverKey, PRBool &result);
 
 	// Hierarchy Delimiters
-	 NS_IMETHOD		AddHierarchyDelimiter(const char *serverKey, char delimiter);
-	 NS_IMETHOD		GetHierarchyDelimiterStringForHost(const char *serverKey, nsString &result);
 	 NS_IMETHOD		SetNamespaceHierarchyDelimiterFromMailboxForHost(const char *serverKey, const char *boxName, char delimiter);
 
 	// Message Body Shells
