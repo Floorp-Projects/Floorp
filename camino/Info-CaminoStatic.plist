@@ -53,6 +53,8 @@
 				<string>jpg</string>
 				<string>png</string>
 				<string>gif</string>
+				<string>svg</string>
+				<string>svgz</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileBookmark.icns</string>
@@ -63,6 +65,8 @@
 				<string>GIFf</string>
 				<string>JPEG</string>
 				<string>PNGf</string>
+				<string>SVG </string>
+				<string>SVGZ</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>

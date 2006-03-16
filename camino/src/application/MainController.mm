@@ -680,7 +680,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   [openPanel setAllowsMultipleSelection:YES];
   NSArray* fileTypes = [NSArray arrayWithObjects: @"htm",@"html",@"shtml",@"xhtml",@"xml",
                                                   @"txt",@"text",
-                                                  @"gif",@"jpg",@"jpeg",@"png",@"bmp",
+                                                  @"gif",@"jpg",@"jpeg",@"png",@"bmp",@"svg",@"svgz",
                                                   @"webloc",@"url",
                                                   nil];
 
