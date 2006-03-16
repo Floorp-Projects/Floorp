@@ -5249,11 +5249,14 @@ nsWindow::GetThebesSurface()
 
     if (!mThebesSurface) {
         GdkDrawable* d = GDK_DRAWABLE(mDrawingarea->inner_window);
+        gint width, height;
+        gdk_drawable_get_size(d, &width, &height);
         if (!gfxPlatform::UseGlitz()) {
             mThebesSurface = new gfxXlibSurface
                 (GDK_WINDOW_XDISPLAY(d),
                  GDK_WINDOW_XWINDOW(d),
-                 GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)));
+                 GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(d)),
+                 width, height);
             gfxPlatformGtk::GetPlatform()->SetSurfaceGdkWindow(mThebesSurface, GDK_WINDOW(d));
         } else {
 #ifdef MOZ_ENABLE_GLITZ
@@ -5269,16 +5272,6 @@ nsWindow::GetThebesSurface()
             Display* dpy = GDK_WINDOW_XDISPLAY(d);
             Window wnd = GDK_WINDOW_XWINDOW(d);
             
-            Window root_ignore;
-            int x_ignore, y_ignore;
-            unsigned int bwidth_ignore, width, height, depth;
-
-            XGetGeometry(dpy,
-                         wnd,
-                         &root_ignore, &x_ignore, &y_ignore,
-                         &width, &height,
-                         &bwidth_ignore, &depth);
-
             gdraw =
                 glitz_glx_create_drawable_for_window (dpy,
                                                       DefaultScreen(dpy),
