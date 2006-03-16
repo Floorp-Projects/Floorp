@@ -1133,64 +1133,80 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 {
   FlushText();
 
-  nsresult result = NS_OK;
   const nsDependentString target(aTarget);
   const nsDependentString data(aData);
 
   nsCOMPtr<nsIContent> node;
 
-  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
-                                          mNodeInfoManager, target, data);
-  if (NS_OK == result) {
-    nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+  nsresult rv = NS_NewXMLProcessingInstruction(getter_AddRefs(node),
+                                               mNodeInfoManager, target, data);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (ssle) {
-      ssle->InitStyleLinkElement(mParser, PR_FALSE);
-      ssle->SetEnableUpdates(PR_FALSE);
-      mPrettyPrintXML = PR_FALSE;
-    }
+  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+  if (ssle) {
+    ssle->InitStyleLinkElement(mParser, PR_FALSE);
+    ssle->SetEnableUpdates(PR_FALSE);
+    mPrettyPrintXML = PR_FALSE;
+  }
 
-    result = AddContentAsLeaf(node);
+  rv = AddContentAsLeaf(node);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (ssle) {
-      ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull, nsnull);
+  if (ssle) {
+    ssle->SetEnableUpdates(PR_TRUE);
+    rv = ssle->UpdateStyleSheet(nsnull, nsnull);
 
-      if (NS_FAILED(result)) {
-        if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-          mParser->BlockParser();
-        }
-        return result;
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
       }
-    }
-
-    // If it's not a CSS stylesheet PI...
-    nsAutoString type;
-    nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
-    if (mState == eXMLContentSinkState_InProlog && 
-        target.EqualsLiteral("xml-stylesheet") && 
-        !type.LowerCaseEqualsLiteral("text/css")) {
-      nsAutoString href, title, media, alternate;
-
-      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
-      // If there was no href, we can't do anything with this PI
-      if (href.IsEmpty()) {
-        return NS_OK;
-      }
-
-      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
-      title.CompressWhitespace();
-
-      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
-      ToLowerCase(media);
-
-      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
-
-      result = ProcessStyleLink(node, href, alternate.EqualsLiteral("yes"),
-                                title, type, media);
+      return rv;
     }
   }
-  return result;
+
+  // If it's not a CSS stylesheet PI...
+  nsAutoString type;
+  nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::type, type);
+
+  if (mState != eXMLContentSinkState_InProlog ||
+      !target.EqualsLiteral("xml-stylesheet") ||
+      type.LowerCaseEqualsLiteral("text/css")) {
+    return NS_OK;
+  }
+
+  nsAutoString href, title, media;
+  PRBool isAlternate = PR_FALSE;
+  ParsePIData(data, href, title, media, isAlternate);
+
+  // If there was no href, we can't do anything with this PI
+  if (href.IsEmpty()) {
+      return NS_OK;
+  }
+
+  return ProcessStyleLink(node, href, isAlternate, title, type, media);
+}
+
+/* static */
+void
+nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
+                              nsString &aTitle, nsString &aMedia,
+                              PRBool &aIsAlternate)
+{
+  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::href, aHref);
+
+  // If there was no href, we can't do anything with this PI
+  if (aHref.IsEmpty()) {
+    return;
+  }
+
+  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::title, aTitle);
+
+  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::media, aMedia);
+
+  nsAutoString alternate;
+  nsParserUtils::GetQuotedAttributeValue(aData, nsGkAtoms::alternate, alternate);
+
+  aIsAlternate = alternate.EqualsLiteral("yes");
 }
 
 NS_IMETHODIMP

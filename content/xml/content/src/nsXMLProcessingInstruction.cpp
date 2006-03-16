@@ -122,13 +122,12 @@ nsXMLProcessingInstruction::GetData(nsAString& aData)
 }
 
 PRBool
-nsXMLProcessingInstruction::GetAttrValue(const nsAString& aAttr,
-                                         nsAString& aValue)
+nsXMLProcessingInstruction::GetAttrValue(nsIAtom *aName, nsAString& aValue)
 {
   nsAutoString data;
 
   GetData(data);
-  return nsParserUtils::GetQuotedAttributeValue(data, aAttr, aValue);
+  return nsParserUtils::GetQuotedAttributeValue(data, aName, aValue);
 }
 
 PRBool

@@ -39,13 +39,15 @@
 
 #ifdef IS_LITTLE_ENDIAN
 
-#define BYTE_TYPE(p) LITTLE2_BYTE_TYPE(&little2_encoding_ns, p)
+#define PREFIX(ident) little2_ ## ident
+#define BYTE_TYPE(p) LITTLE2_BYTE_TYPE(XmlGetUtf16InternalEncodingNS(), p)
 #define IS_NAME_CHAR_MINBPC(p) LITTLE2_IS_NAME_CHAR_MINBPC(0, p)
 #define IS_NMSTRT_CHAR_MINBPC(p) LITTLE2_IS_NMSTRT_CHAR_MINBPC(0, p)
 
 #else
 
-#define BYTE_TYPE(p) BIG2_BYTE_TYPE(&big2_encoding_ns, p)
+#define PREFIX(ident) big2_ ## ident
+#define BYTE_TYPE(p) BIG2_BYTE_TYPE(XmlGetUtf16InternalEncodingNS(), p)
 #define IS_NAME_CHAR_MINBPC(p) BIG2_IS_NAME_CHAR_MINBPC(0, p)
 #define IS_NMSTRT_CHAR_MINBPC(p) BIG2_IS_NMSTRT_CHAR_MINBPC(0, p)
 
@@ -151,8 +153,43 @@ int MOZ_XMLIsNCNameChar(const char* ptr)
   }
 }
 
+int MOZ_XMLTranslateEntity(const char* ptr, const char* end, const char** next,
+                           XML_Char* result)
+{
+  const ENCODING* enc = XmlGetUtf16InternalEncodingNS();
+  int tok = PREFIX(scanRef)(enc, ptr, end, next);
+  if (tok <= XML_TOK_INVALID) {
+    return 0;
+  }
+
+  if (tok == XML_TOK_CHAR_REF) {
+    int n = XmlCharRefNumber(enc, ptr);
+
+    // We could get away with just < 0, but better safe than sorry.
+    if (n <= 0) {
+      return 0;
+    }
+
+    return XmlUtf16Encode(n, (unsigned short*)result);
+  }
+
+  if (tok == XML_TOK_ENTITY_REF) {
+    // *next points to after the semicolon, so the entity ends at
+    // *next - enc->minBytesPerChar.
+    XML_Char ch =
+      (XML_Char)XmlPredefinedEntityName(enc, ptr, *next - enc->minBytesPerChar);
+    if (!ch) {
+      return 0;
+    }
+
+    *result = ch;
+    return 1;
+  }
+
+  return 0;
+}
+
+#undef PREFIX
 #undef BYTE_TYPE
 #undef IS_NAME_CHAR_MINBPC
 #undef IS_NMSTRT_CHAR_MINBPC
-#undef CHECK_NAME_CASES
-#undef CHECK_NMSTRT_CASES
