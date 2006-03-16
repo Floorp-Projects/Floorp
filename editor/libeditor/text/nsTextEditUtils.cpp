@@ -104,23 +104,19 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
 PRBool 
 nsTextEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
 {
-  if (node)
+  if (!node)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMElement> rootElement;
+  editor->GetRootElement(getter_AddRefs(rootElement));
+
+  nsCOMPtr<nsIDOMNode> tmp;
+  nsCOMPtr<nsIDOMNode> p = node;
+  while (p != rootElement)
   {
-    nsCOMPtr<nsIDOMElement> rootElement;
-    editor->GetRootElement(getter_AddRefs(rootElement));
-
-    nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
-    if (!rootNode)
+    if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
       return PR_FALSE;
-
-    nsCOMPtr<nsIDOMNode> tmp;
-    nsCOMPtr<nsIDOMNode> p = node;
-    while (p && p != rootNode)
-    {
-      if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
-        return PR_FALSE;
-      p = tmp;
-    }
+    p = tmp;
   }
   return PR_TRUE;
 }
