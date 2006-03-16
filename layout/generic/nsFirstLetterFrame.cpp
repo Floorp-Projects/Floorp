@@ -146,7 +146,8 @@ nsFirstLetterFrame::SetInitialChildList(nsPresContext* aPresContext,
   nsFrameManager *frameManager = aPresContext->FrameManager();
 
   for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
-    frameManager->ReParentStyleContext(frame, mStyleContext);
+    NS_ASSERTION(frame->GetParent() == this, "Unexpected parent");
+    frameManager->ReParentStyleContext(frame);
   }
   return NS_OK;
 }

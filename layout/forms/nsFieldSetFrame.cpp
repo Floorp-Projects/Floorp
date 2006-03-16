@@ -690,11 +690,10 @@ nsFieldSetFrame::MaybeSetLegend(nsIFrame* aFrameList, nsIAtom* aListName)
 void
 nsFieldSetFrame::ReParentFrameList(nsIFrame* aFrameList)
 {
-  nsFrameManager* frameManager = mContentFrame->GetPresContext()->FrameManager();
-  nsStyleContext* newParentContext = mContentFrame->GetStyleContext();
+  nsFrameManager* frameManager = GetPresContext()->FrameManager();
   for (nsIFrame* frame = aFrameList; frame; frame = frame->GetNextSibling()) {
     frame->SetParent(mContentFrame);
-    frameManager->ReParentStyleContext(frame, newParentContext);
+    frameManager->ReParentStyleContext(frame);
   }
   mContentFrame->AddStateBits(GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW);
 }

@@ -891,82 +891,98 @@ nsFrameManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 #endif // DEBUG
 
 nsresult
-nsFrameManager::ReParentStyleContext(nsIFrame* aFrame, 
-                                     nsStyleContext* aNewParentContext)
+nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
 {
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (aFrame) {
-    // DO NOT verify the style tree before reparenting.  The frame
-    // tree has already been changed, so this check would just fail.
-    nsStyleContext* oldContext = aFrame->GetStyleContext();
-    if (oldContext) {
-      nsPresContext *presContext = GetPresContext();
-      nsRefPtr<nsStyleContext> newContext;
-      result = NS_OK;
-      newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
-                                                   aNewParentContext);
-      if (newContext) {
-        if (newContext != oldContext) {
-          PRInt32 listIndex = 0;
-          nsIAtom* childList = nsnull;
-          nsIFrame* child;
+  // DO NOT verify the style tree before reparenting.  The frame
+  // tree has already been changed, so this check would just fail.
+  nsStyleContext* oldContext = aFrame->GetStyleContext();
+  // XXXbz can oldContext really ever be null?
+  if (oldContext) {
+    nsPresContext *presContext = GetPresContext();
+    nsRefPtr<nsStyleContext> newContext;
+    nsIFrame* providerFrame = nsnull;
+    PRBool providerIsChild = PR_FALSE;
+    nsIFrame* providerChild = nsnull;
+    aFrame->GetParentStyleContextFrame(presContext, &providerFrame,
+                                       &providerIsChild);
+    nsStyleContext* newParentContext = nsnull;
+    if (providerIsChild) {
+      ReParentStyleContext(providerFrame);
+      newParentContext = providerFrame->GetStyleContext();
+      providerChild = providerFrame;
+    } else if (providerFrame) {
+      newParentContext = providerFrame->GetStyleContext();
+    } else {
+      NS_NOTREACHED("Reparenting something that has no usable parent? "
+                    "Shouldn't happen!");
+    }
+
+    newContext = mStyleSet->ReParentStyleContext(presContext, oldContext,
+                                                 newParentContext);
+    if (newContext) {
+      if (newContext != oldContext) {
+        PRInt32 listIndex = 0;
+        nsIAtom* childList = nsnull;
+        nsIFrame* child;
           
-          aFrame->SetStyleContext(newContext);
+        aFrame->SetStyleContext(newContext);
 
-          do {
-            child = aFrame->GetFirstChild(childList);
-            while (child) {
-              if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-                // only do frames that are in flow
-                if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
-                  // get out of flow frame and recurse there
-                  nsIFrame* outOfFlowFrame =
-                    nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-                  NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+        do {
+          child = aFrame->GetFirstChild(childList);
+          while (child) {
+            // only do frames that are in flow
+            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+              if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
+                // get out of flow frame and recurse there
+                nsIFrame* outOfFlowFrame =
+                  nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
+                NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
 
-                  result = ReParentStyleContext(outOfFlowFrame, newContext);
+                NS_ASSERTION(outOfFlowFrame != providerChild,
+                             "Out of flow provider?");
 
-                  // reparent placeholder's context under out of flow frame
-                  nsStyleContext* outOfFlowContext = outOfFlowFrame->GetStyleContext();
-                  ReParentStyleContext(child, outOfFlowContext);
-                }
-                else { // regular frame
-                  result = ReParentStyleContext(child, newContext);
-                }
+                ReParentStyleContext(outOfFlowFrame);
+
+                // reparent placeholder too
+                ReParentStyleContext(child);
               }
-
-              child = child->GetNextSibling();
-            }
-
-            childList = aFrame->GetAdditionalChildListName(listIndex++);
-          } while (childList);
-
-          // do additional contexts 
-          PRInt32 contextIndex = -1;
-          while (1) {
-            nsStyleContext* oldExtraContext = aFrame->GetAdditionalStyleContext(++contextIndex);
-            if (oldExtraContext) {
-              nsRefPtr<nsStyleContext> newExtraContext;
-              newExtraContext = mStyleSet->ReParentStyleContext(presContext,
-                                                                oldExtraContext,
-                                                                newContext);
-              if (newExtraContext) {
-                aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
+              else if (child != providerChild) {
+                // regular frame, not reparented yet
+                ReParentStyleContext(child);
               }
             }
-            else {
-              result = NS_OK; // ok not to have extras (or run out)
-              break;
+
+            child = child->GetNextSibling();
+          }
+
+          childList = aFrame->GetAdditionalChildListName(listIndex++);
+        } while (childList);
+
+        // do additional contexts 
+        PRInt32 contextIndex = -1;
+        while (1) {
+          nsStyleContext* oldExtraContext =
+            aFrame->GetAdditionalStyleContext(++contextIndex);
+          if (oldExtraContext) {
+            nsRefPtr<nsStyleContext> newExtraContext;
+            newExtraContext = mStyleSet->ReParentStyleContext(presContext,
+                                                              oldExtraContext,
+                                                              newContext);
+            if (newExtraContext) {
+              aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
             }
           }
-#ifdef DEBUG
-          VerifyStyleTree(GetPresContext(), aFrame, aNewParentContext);
-#endif
+          else {
+            break;
+          }
         }
+#ifdef DEBUG
+        VerifyStyleTree(GetPresContext(), aFrame, newParentContext);
+#endif
       }
     }
   }
-  return result;
+  return NS_OK;
 }
 
 static nsChangeHint
