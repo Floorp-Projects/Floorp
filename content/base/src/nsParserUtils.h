@@ -39,23 +39,12 @@
 #define nsParserUtils_h__
 
 #include "nsString.h"
-class nsIAtom;
 
 class nsParserUtils {
 public:
-  /**
-   * This will parse aSource, to extract the value of the pseudo attribute
-   * with the name specified in aName. See
-   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
-   * which is used to parse aSource.
-   *
-   * @param aSource the string to parse
-   * @param aName the name of the attribute to get the value for
-   * @param aValue [out] the value for the attribute with name specified in
-   *                     aAttribute. Empty if the attribute isn't present.
-   */
   static PRBool
-  GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
+  GetQuotedAttributeValue(const nsAString& aSource,
+                          const nsAString& aAttribute,
                           nsAString& aValue);
 
   static PRBool

@@ -903,11 +903,10 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
     tmp = targetStart;
 
-    nsresult rv;
     if (FindInReadable(NS_LITERAL_STRING("xul-overlay"), targetStart, targetEnd)) {
       // Load a XUL overlay.
       nsAutoString href;
-      nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::href, href);
+      nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
 
       // If there was no href, we can't do
       // anything with this PI
@@ -917,7 +916,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
 
       // Add the overlay to our list of overlays that need to be processed.
       nsCOMPtr<nsIURI> url;
-      rv = NS_NewURI(getter_AddRefs(url), href, nsnull, mDocumentURL);
+      nsresult rv = NS_NewURI(getter_AddRefs(url), href, nsnull, mDocumentURL);
       if (NS_FAILED(rv)) {
         // XXX This is wrong, the error message could be out of memory
         //     or something else equally bad, which we should propagate. 
@@ -925,35 +924,50 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
         return NS_OK; // The URL is bad, move along. Don't propagate for now.
       }
 
-      return mPrototype->AddOverlayReference(url);
+      rv = mPrototype->AddOverlayReference(url);
+      if (NS_FAILED(rv)) return rv;
+    }
+    // If it's a stylesheet PI...
+    else {
+      targetStart = tmp;
+      if (FindInReadable(NS_LITERAL_STRING("xml-stylesheet"), targetStart, targetEnd)) {
+        nsAutoString href;
+        nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("href"), href);
+
+        // If there was no href, we can't do
+        // anything with this PI
+        if (href.IsEmpty())
+            return NS_OK;
+
+        nsAutoString type;
+        nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
+
+        nsAutoString title;
+        nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("title"), title);
+
+        title.CompressWhitespace();
+
+        nsAutoString media;
+        nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("media"), media);
+
+        ToLowerCase(media);
+
+        nsAutoString alternate;
+        nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
+
+        nsresult result =  ProcessStyleLink(nsnull /* XXX need a node here */,
+                                            href, alternate.EqualsLiteral("yes"),  /* XXX ignore case? */
+                                            title, type, media);
+        if (NS_FAILED(result)) {
+          if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+            mParser->BlockParser();
+          }
+          return result; // Important! A failure can indicate that the parser should block!
+        }
+      }
     }
 
-    targetStart = tmp;
-    if (!FindInReadable(NS_LITERAL_STRING("xml-stylesheet"), targetStart,
-                        targetEnd)) {
-        return NS_OK;
-    }
-
-    // It's a stylesheet PI...
-    nsAutoString type;
-    nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::type, type);
-
-    nsAutoString href, title, media;
-    PRBool isAlternate = PR_FALSE;
-    nsXMLContentSink::ParsePIData(data, href, title, media, isAlternate);
-
-    // If there was no href, we can't do anything with this PI
-    if (href.IsEmpty()) {
-        return NS_OK;
-    }
-
-    // XXX need a node here
-    rv = ProcessStyleLink(nsnull , href, isAlternate, title, type, media);
-    if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 

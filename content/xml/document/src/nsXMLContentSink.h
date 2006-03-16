@@ -92,10 +92,6 @@ public:
   NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument);
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument);
 
-  static void ParsePIData(const nsString &aData, nsString &aHref,
-                          nsString &aTitle, nsString &aMedia,
-                          PRBool &aIsAlternate);
-
 protected:
   void StartLayout();
 

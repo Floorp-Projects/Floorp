@@ -40,8 +40,6 @@
 #include "jsapi.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-#include "nsContentUtils.h"
-#include "nsIParserService.h"
 
 #define SKIP_WHITESPACE(iter, end_iter)                          \
   while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
@@ -59,14 +57,16 @@
     break
 
 PRBool
-nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
+nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
+                                       const nsAString& aAttribute,
                                        nsAString& aValue)
 {
+  NS_ASSERTION(!aAttribute.IsEmpty(), "Empty attribute name cannot be searched for usefully");
   aValue.Truncate();
-
-  const PRUnichar *start = aSource.get();
-  const PRUnichar *end = start + aSource.Length();
-  const PRUnichar *iter;
+  nsAString::const_iterator start, end;
+  aSource.BeginReading(start);
+  aSource.EndReading(end);
+  nsAString::const_iterator iter;
   
   while (start != end) {
     SKIP_WHITESPACE(start, end);
@@ -74,7 +74,7 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
     SKIP_ATTR_NAME(iter, end);
 
     // Remember the attr name.
-    const nsDependentSubstring & attrName = Substring(start, iter);
+    const nsAString & attrName = Substring(start, iter);
 
     // Now check whether this is a valid name="value" pair.
     start = iter;
@@ -96,60 +96,23 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
     
     ++start;  // Point to the first char of the value.
     iter = start;
-
-    while (iter != end && *iter != q) {
-      ++iter;
-    }
-
-    if (iter == end) {
+    if (!FindCharInReadable(q, iter, end)) {
       // Oops, unterminated quoted string.
       break;
     }
-
+    
     // At this point attrName holds the name of the "attribute" and
     // the value is between start and iter.
     
-    if (aName->Equals(attrName)) {
-      nsAString::iterator dest;
-      aValue.BeginWriting(dest);
-
-      while (start != iter) {
-        if (*start == kLessThan) {
-          return PR_FALSE;
-        }
-
-        if (*start == kAmpersand) {
-          nsIParserService* parserService = nsContentUtils::GetParserService();
-          NS_ENSURE_TRUE(parserService, PR_FALSE);
-
-          const PRUnichar *pos = start;
-
-          // Point to first character after the ampersand.
-          ++start;
-
-          // We rely on the fact that if this is a valid character reference,
-          // dest will be a buffer with at least two PRUnichars (starting with
-          // &#), so enough to contain any UTF-16 character.
-          PRUint32 count =
-            parserService->DecodeEntity(start, iter, &pos, dest.get());
-          NS_ENSURE_TRUE(count > 0, PR_FALSE);
-
-          start = pos;
-          dest.advance(count);
-        }
-        else {
-          *dest = *start;
-          ++start;
-          ++dest;
-        }
-      }
-
-      return PR_TRUE;
+    if (!attrName.Equals(aAttribute)) {
+      // Resume scanning after the end of the attribute value.
+      start = iter;
+      ++start;  // To move past the quote char.
+      continue;
     }
 
-    // Resume scanning after the end of the attribute value.
-    start = iter;
-    ++start;  // To move past the quote char.
+    aValue = Substring(start, iter);
+    return PR_TRUE;
   }
 
   return PR_FALSE;
