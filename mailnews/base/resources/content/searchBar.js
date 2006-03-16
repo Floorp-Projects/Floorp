@@ -183,7 +183,7 @@ function initializeSearchBar()
 
 function onEnterInSearchBar()
 {
-   if (!gSearchInput)
+   if (!gSearchBundle)
      getDocumentElements();
    viewDebug ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
    if (gSearchInput.value == ""  /* || gSearchInput.showingSearchCriteria */) 
