@@ -52,6 +52,7 @@
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsSVGUtils.h"
+#include "nsDOMError.h"
 #include <cairo.h>
 
 extern cairo_surface_t *gSVGCairoDummySurface;
@@ -238,6 +239,11 @@ nsSVGCairoGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint 
   SelectFont(mCT);
 
   if (cp) {
+    if (cp[charnum].draw == PR_FALSE) {
+      delete [] cp;
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+
     point->SetX(cp[charnum].x);
     point->SetY(cp[charnum].y);
 
@@ -289,6 +295,11 @@ nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **
   SelectFont(mCT);
 
   if (cp) {
+    if (cp[charnum].draw == PR_FALSE) {
+      delete [] cp;
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+
     cairo_text_extents_t extent;
 
     cairo_text_extents(mCT, 
@@ -348,6 +359,11 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
                      &extent);
 
   if (cp) {
+    if (cp[charnum].draw == PR_FALSE) {
+      delete [] cp;
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+
     cairo_matrix_t matrix;
     cairo_get_matrix(mCT, &matrix);
     cairo_new_path(mCT);
@@ -416,10 +432,15 @@ nsSVGCairoGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
     return NS_ERROR_FAILURE;
 
   if (cp) {
-      *_retval = cp[charnum].angle / radPerDeg;
+    if (cp[charnum].draw == PR_FALSE) {
       delete [] cp;
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+
+    *_retval = cp[charnum].angle / radPerDeg;
+    delete [] cp;
   } else {
-      *_retval = 0.0;
+    *_retval = 0.0;
   }
   return NS_OK;
 }
@@ -441,6 +462,9 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
     return NS_ERROR_FAILURE;
 
   for (PRUint32 charnum = 0; charnum < text.Length(); charnum++) {
+    /* character actually on the path? */
+    if (cp && cp[charnum].draw == PR_FALSE)
+      continue;
 
     cairo_matrix_t matrix;
     cairo_get_matrix(mCT, &matrix);
