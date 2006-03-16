@@ -118,7 +118,9 @@
 #include "nsSpaceManager.h"
 #include "nsTextTransformer.h"
 #include "nsIFrameTraversal.h"
+#ifndef MOZ_CAIRO_GFX
 #include "nsISelectionImageService.h"
+#endif
 #include "nsCSSLoader.h"
 #include "nsXULAtoms.h"
 #include "nsLayoutCID.h"
@@ -480,7 +482,10 @@ nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult
 #endif
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+
+#ifndef MOZ_CAIRO_GFX
 nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
+#endif
 
 nsresult NS_NewSelection(nsIFrameSelection** aResult);
 nsresult NS_NewDomSelection(nsISelection** aResult);
@@ -548,7 +553,9 @@ MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxO
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 #endif
+#ifndef MOZ_CAIRO_GFX
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
+#endif
 #ifdef MOZ_SVG
 #ifdef MOZ_SVG_RENDERER_GDIPLUS
 MAKE_CTOR(CreateNewSVGRendererGDIPlus,  nsISVGRenderer,         NS_NewSVGRendererGDIPlus)
@@ -885,10 +892,12 @@ static const nsModuleComponentInfo gComponents[] = {
     nsnull,
     CreateNewFrameTraversal },
 
+#ifndef MOZ_CAIRO_GFX
   { "selection image storage",
     NS_SELECTIONIMAGESERVICE_CID,
     nsnull,
     CreateSelectionImageService },
+#endif
 
   { "caret",
     NS_CARET_CID,
