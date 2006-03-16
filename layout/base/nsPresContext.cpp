@@ -83,8 +83,9 @@
 
 //needed for resetting of image service color
 #include "nsLayoutCID.h"
+#ifndef MOZ_CAIRO_GFX
 #include "nsISelectionImageService.h"
-
+#endif
 static nscolor
 MakeColorPref(const char *colstr)
 {
@@ -1234,6 +1235,7 @@ nsPresContext::SysColorChanged()
   // they may be using system colors
   GetDocumentColorPreferences();
 
+#ifndef MOZ_CAIRO_GFX
   // Clear out all of the style data since it may contain RGB values
   // which originated from system colors.
   nsCOMPtr<nsISelectionImageService> imageService;
@@ -1243,6 +1245,7 @@ nsPresContext::SysColorChanged()
   {
     imageService->Reset();
   }
+#endif
 
   // We need to do a full reflow (and view update) here. Clearing the style
   // data without reflowing/updating views will lead to incorrect change hints

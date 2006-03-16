@@ -100,7 +100,9 @@
 
 // For triple-click pref
 #include "nsIServiceManager.h"
+#ifndef MOZ_CAIRO_GFX
 #include "nsISelectionImageService.h"
+#endif
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
@@ -113,6 +115,10 @@
 #include "nsBoxLayoutState.h"
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
+
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
 
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
@@ -273,7 +279,7 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
 #endif
 // end nsIFrameDebug
 
-
+#ifndef MOZ_CAIRO_GFX
 // frame image selection drawing service implementation
 class SelectionImageService : public nsISelectionImageService
 {
@@ -430,7 +436,7 @@ nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-
+#endif /* MOZ_CAIRO_GFX */
 
 //end selection service
 
@@ -785,10 +791,12 @@ private:
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
+#ifndef MOZ_CAIRO_GFX
   nsCOMPtr<nsISelectionImageService> imageService
       = do_GetService(kSelectionImageService);
   if (!imageService)
     return;
+
 
   nsCOMPtr<imgIContainer> container;
   imageService->GetImage(mSelectionValue, getter_AddRefs(container));
@@ -798,6 +806,35 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
   rect.IntersectRect(rect, aDirtyRect);
   aCtx->DrawTile(container, 0, 0, &rect);
+#else
+  nscolor color = NS_RGB(255, 255, 255);
+  
+  nsILookAndFeel::nsColorID lookandFeel;
+  nsresult result;
+  if (mSelectionValue != nsISelectionController::SELECTION_ON)
+    lookandFeel = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
+  else
+    lookandFeel = nsILookAndFeel::eColor_TextSelectBackground;
+
+  nsCOMPtr<nsILookAndFeel> look;
+  look = do_GetService(kLookAndFeelCID,&result);
+  if (NS_SUCCEEDED(result) && look)
+    look->GetColor(lookandFeel, color);
+
+  gfxRGBA c(color);
+  c.a = .5;
+
+  nsRefPtr<gfxContext> ctx = (gfxContext*)aCtx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  ctx->Save();
+  ctx->SetColor(c);
+
+  nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
+  rect.IntersectRect(rect, aDirtyRect);
+  rect.ScaleRoundOut(mFrame->GetPresContext()->TwipsToPixels());
+  ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
+  ctx->Fill();
+  ctx->Restore();
+#endif
 }
 
 /********************************************************
