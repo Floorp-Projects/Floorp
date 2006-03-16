@@ -1675,6 +1675,7 @@ nsresult nsXULWindow::ContentShellRemoved(nsIDocShellTreeItem* aContentShell)
     nsCOMPtr<nsIDocShellTreeItem> curItem = do_QueryReferent(info->child);
     if (!curItem || SameCOMIdentity(curItem, aContentShell)) {
       mContentShells.RemoveElementAt(i);
+      delete info;
     }
   }
 
@@ -2133,10 +2134,12 @@ nsContentShellInfo::nsContentShellInfo(const nsAString& aID,
   : id(aID),
     child(aContentShell)
 {
+  MOZ_COUNT_CTOR(nsContentShellInfo);
 }
 
 nsContentShellInfo::~nsContentShellInfo()
 {
+  MOZ_COUNT_DTOR(nsContentShellInfo);
    //XXX Set Tree Owner to null if the tree owner is nsXULWindow->mContentTreeOwner
 } 
 
