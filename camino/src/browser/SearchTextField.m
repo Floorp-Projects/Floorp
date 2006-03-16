@@ -90,6 +90,8 @@
     [[self cell] popUpButtonClickedWithFrame:cellFrame inView:self];
     // send the notification?
   }
+  else
+    [super mouseDown:theEvent];
 }
 
 // Do not remove.  This method must be empty to setup cursor rects properly
