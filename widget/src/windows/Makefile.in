@@ -67,9 +67,9 @@ REQUIRES	= xpcom \
 			xuldoc \
 			view \
 			imglib2 \
-                        uriloader \
-                        webbrowserpersist \
-                        unicharutil \
+			uriloader \
+			webbrowserpersist \
+			unicharutil \
 			$(NULL)
 
 ifdef MOZ_ENABLE_CAIRO_GFX
@@ -82,6 +82,7 @@ CPPSRCS		= \
 	nsAppShell.cpp       \
 	nsLookAndFeel.cpp    \
 	nsToolkit.cpp        \
+	nsKeyboardLayout.cpp \
 	nsDataObj.cpp  \
 	nsDataObjCollection.cpp  \
 	nsClipboard.cpp      \
