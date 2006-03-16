@@ -169,7 +169,7 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 else
 SHARED_LIBRARY_LIBS += \
-	../ucvnative/$(LIB_PREFIX)ucnative_s.$(LIB_SUFFIX) \
+	../native/$(LIB_PREFIX)ucnative_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
