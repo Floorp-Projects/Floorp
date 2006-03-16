@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,13 @@ const kInspectorNSURI = "http://www.mozilla.org/inspector#";
 const kXULNSURI = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kHTMLNSURI = "http://www.w3.org/1999/xhtml";
 const nsITransactionManager = Components.interfaces.nsITransactionManager;
+var gEntityConverter;
+const kCharTable = {
+  '&': "&amp;",
+  '<': "&lt;",
+  '>': "&gt;",
+  '"': "&quot;"
+};
 
 var InsUtil = {
   /******************************************************************************
@@ -87,6 +95,42 @@ var InsUtil = {
         document.persist(aId, attrs[i]);
       }
     }
+  },
+
+  /******************************************************************************
+  * Convenience function for escaping HTML strings.
+  *******************************************************************************/
+  unicodeToEntity: function(text)
+  {
+    const entityVersion = Components.interfaces.nsIEntityConverter.entityW3C;
+
+    function charTableLookup(letter) {
+      return kCharTable[letter];
+    }
+
+    function convertEntity(letter) {
+      try {
+        return gEntityConverter.ConvertToEntity(letter, entityVersion);
+      } catch (ex) {
+        return letter;
+      }
+    }
+
+    if (!gEntityConverter) {
+      try {
+        gEntityConverter =
+          Components.classes["@mozilla.org/intl/entityconverter;1"]
+                    .createInstance(Components.interfaces.nsIEntityConverter);
+      } catch (ex) { }
+    }
+
+    // replace chars in our charTable
+    text = text.replace(/[<>&"]/g, charTableLookup);
+
+    // replace chars > 0x7f via nsIEntityConverter
+    text = text.replace(/[^\0-\u007f]/g, convertEntity);
+
+    return text;
   }
 };
 

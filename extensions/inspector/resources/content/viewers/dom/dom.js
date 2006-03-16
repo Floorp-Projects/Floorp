@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +44,6 @@
 //////////// global variables /////////////////////
 
 var viewer;
-var gEntityConverter;
 
 //////////// global constants ////////////////////
 
@@ -383,7 +383,7 @@ DOMViewer.prototype =
   
       for (i = 0; i < aNode.attributes.length; ++i) {
         var a = aNode.attributes[i];
-        var attr = " " + a.localName + '="' + unicodeToEntity(a.nodeValue) + '"';
+        var attr = " " + a.localName + '="' + InsUtil.unicodeToEntity(a.nodeValue) + '"';
         if (line.length + attr.length > 80) {
           s += line + (i < aNode.attributes.length-1 ? "\n"+attrIndent : "");
           line = "";
@@ -402,9 +402,9 @@ DOMViewer.prototype =
         s += indent + "</" + aNode.localName + ">\n";
       }
     } else if (aNode.nodeType == Node.TEXT_NODE) {
-      s += unicodeToEntity(aNode.data);
+      s += InsUtil.unicodeToEntity(aNode.data);
     } else if (aNode.nodeType == Node.COMMENT_NODE) {
-      s += line + "<!--" + unicodeToEntity(aNode.data) + "-->\n";
+      s += line + "<!--" + InsUtil.unicodeToEntity(aNode.data) + "-->\n";
     }
     
     return s;
@@ -895,7 +895,6 @@ cmdEditCut.prototype =
   undoTransaction: function()
   {
     this.cmdDelete.undoTransaction();    
-    this.cmdCopy.undoTransaction();
   }
 };
 
@@ -903,8 +902,6 @@ function cmdEditCopy() {}
 cmdEditCopy.prototype =
 {
   copiedNode: null,
-  previousData: null,
-  previousFlavor: null,
   
   // remove this line for bug 179621, Phase Three
   txnType: "standard",
@@ -912,7 +909,7 @@ cmdEditCopy.prototype =
   // required for nsITransaction
   QueryInterface: txnQueryInterface,
   merge: txnMerge,
-  isTransient: false,
+  isTransient: true,
   redoTransaction: txnRedoTransaction,
 
   doTransaction: function()
@@ -922,18 +919,11 @@ cmdEditCopy.prototype =
       copiedNode = viewer.selectedNode;
       if (copiedNode) {
         this.copiedNode = copiedNode;
-        this.previousData = viewer.pane.panelset.getClipboardData();
-        this.previousFlavor = viewer.pane.panelset.clipboardFlavor;
       }
     } else
       copiedNode = this.copiedNode;
       
-    viewer.pane.panelset.setClipboardData(copiedNode, "inspector/dom-node");
-  },
-  
-  undoTransaction: function()
-  {
-    viewer.pane.panelset.setClipboardData(this.previousData, this.previousFlavor);
+    viewer.pane.panelset.setClipboardData(copiedNode, "inspector/dom-node", null);
   }
 };
 
@@ -1033,46 +1023,4 @@ function gColumnRemoveListener(aIndex)
 function dumpDOM2(aNode)
 {
   dump(DOMViewer.prototype.toXML(aNode));
-}
-
-function unicodeToEntity(text)
-{
-  const charTable = {
-    '&': "&amp;",
-    '<': "&lt;",
-    '>': "&gt;",
-    '"': "&quot;"
-  };
-
-  function charTableLookup(letter) {
-    return charTable[letter];
-  }
-
-  function convertEntity(letter) {
-    try {
-      return gEntityConverter.ConvertToEntity(letter, entityVersion);
-    } catch (ex) {
-      return letter;
-    }
-  }
-
-  if (!gEntityConverter) {
-    try {
-      gEntityConverter =
-        Components.classes["@mozilla.org/intl/entityconverter;1"]
-                  .createInstance(Components.interfaces.nsIEntityConverter);
-    } catch (ex) { }
-  }
-
-  const entityVersion = Components.interfaces.nsIEntityConverter.entityW3C;
-
-  var str = text;
-
-  // replace chars in our charTable
-  str = str.replace(/[<>&"]/g, charTableLookup);
-
-  // replace chars > 0x7f via nsIEntityConverter
-  str = str.replace(/[^\0-\u007f]/g, convertEntity);
-
-  return str;
 }

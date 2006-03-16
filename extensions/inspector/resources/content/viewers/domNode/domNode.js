@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Jason Barnabe <jason_barnabe@fastmail.fm>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -227,7 +228,6 @@ cmdEditCut.prototype =
   undoCommand: function()
   {
     this.cmdDelete.undoCommand();    
-    this.cmdCopy.undoCommand();
   }
 };
 
@@ -235,8 +235,6 @@ function cmdEditCopy() {}
 cmdEditCopy.prototype =
 {
   copiedAttr: null,
-  previousData: null,
-  previousFlavor: null,
     
   doCommand: function()
   {
@@ -246,18 +244,12 @@ cmdEditCopy.prototype =
       if (!copiedAttr)
         return true;
       this.copiedAttr = copiedAttr;
-      this.previousData = viewer.pane.panelset.getClipboardData();
-      this.previousFlavor = viewer.pane.panelset.clipboardFlavor;
     } else
       copiedAttr = this.copiedAttr;
       
-    viewer.pane.panelset.setClipboardData(copiedAttr, "inspector/dom-node");
-    return false;
-  },
-  
-  undoCommand: function()
-  {
-    viewer.pane.panelset.setClipboardData(this.previousData, this.previousFlavor);
+    var text = copiedAttr.nodeName + "=\"" + InsUtil.unicodeToEntity(copiedAttr.nodeValue) + "\"";
+    viewer.pane.panelset.setClipboardData(copiedAttr, "inspector/dom-node", text);
+    return true;
   }
 };
 
