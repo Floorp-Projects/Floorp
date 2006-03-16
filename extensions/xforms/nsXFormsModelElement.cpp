@@ -76,6 +76,7 @@
 #include "nsArray.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIProgrammingLanguage.h"
+#include "nsDOMError.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -1630,13 +1631,23 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
   if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
+      // the xpath expression isn't valid xpath
+
+      const nsPromiseFlatString& flat = PromiseFlatString(expr);
+      const PRUnichar *strings[] = { flat.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprParseError"),
+                                 strings, 1, aBindElement, nsnull);
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_ComputeException);
+    } else {
 #ifdef DEBUG
-    printf("xforms-binding-exception: XPath Evaluation failed\n");
+      printf("xforms-binding-exception: XPath Evaluation failed\n");
 #endif
-    const PRUnichar *strings[] = { expr.get() };
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("nodesetEvaluateError"),
-                               strings, 1, aBindElement, aBindElement);
-    nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+      const PRUnichar *strings[] = { expr.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("nodesetEvaluateError"),
+                                 strings, 1, aBindElement, aBindElement);
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+    }
     return rv;
   }
 
