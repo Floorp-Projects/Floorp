@@ -44,8 +44,8 @@
 
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
-extern "C" PRBool MOZ_XMLTranslateEntity(const char* ptr, const char* end,
-                                         const char** next, PRUnichar* result);
+extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
+                                      const char** next, PRUnichar* result);
 
 class nsParserService : public nsIParserService {
 public:
