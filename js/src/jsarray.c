@@ -1015,11 +1015,12 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fp->nvars = len;
 
     /*
-     * By ECMA 262, 15.4.4.11, an undefined property (which we call a "hole")
-     * always bigger than an existing property with value undefined and that
-     * is always bigger then any other property. Thus to sort holes and
-     * undefs we simply count them, sort the rest of elements, append undefs
-     * after them and then make holes after undefs.
+     * By ECMA 262, 15.4.4.11, a property that does not exist (which we
+     * call a "hole") is always greater than an existing property with
+     * value undefined and that is always greater than any other property.
+     * Thus to sort holes and undefs we simply count them, sort the rest
+     * of elements, append undefs after them and then make holes after
+     * undefs.
      */
     undefs = 0;
     newlen = 0;
