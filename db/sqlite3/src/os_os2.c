@@ -919,39 +919,38 @@ int sqlite3_tsd_count = 0;
 ** Return a pointer to the thread specific data or NULL if it is
 ** unallocated or gets deallocated.
 */
-ThreadData *sqlite3Os2ThreadSpecificData( int allocateFlag ){
-  static int keyInit = 0;
-  static APIRET rc = NO_ERROR;
+ThreadData *sqlite3Os2ThreadSpecificData(int allocateFlag){
+  static ThreadData **s_ppTsd = NULL;
   static const ThreadData zeroData = {0};
   ThreadData *pTsd;
-  static int num_dwords = (sizeof(pTsd) + 3)/4;
 
-  if( !keyInit ){
+  if( !s_ppTsd ){
     sqlite3OsEnterMutex();
-    if( !keyInit ){
-      rc = DosAllocThreadLocalMemory( num_dwords, (PULONG*)&pTsd );
+    if( !s_ppTsd ){
+      PULONG pul;
+      APIRET rc = DosAllocThreadLocalMemory(1, &pul);
       if( !rc ){
         sqlite3OsLeaveMutex();
         return 0;
       }
-      keyInit = 1;
+      s_ppTsd = (ThreadData **)pul;
     }
     sqlite3OsLeaveMutex();
   }
-//  pTsd = TlsGetValue(key);
+  pTsd = *s_ppTsd;
   if( allocateFlag>0 ){
     if( !pTsd ){
       pTsd = sqlite3OsMalloc( sizeof(zeroData) );
       if( pTsd ){
         *pTsd = zeroData;
-//        TlsSetValue(key, pTsd);
+        *s_ppTsd = pTsd;
         TSD_COUNTER_INCR;
       }
     }
-  }else if( pTsd!=0 && allocateFlag<0
-              && memcmp( pTsd, &zeroData, sizeof(ThreadData) )==0 ){
+  }else if( pTsd!=0 && allocateFlag<0 
+              && memcmp(pTsd, &zeroData, sizeof(ThreadData))==0 ){
     sqlite3OsFree(pTsd);
-    rc = DosFreeThreadLocalMemory( (PULONG)pTsd );
+    *s_ppTsd = NULL;
     TSD_COUNTER_DECR;
     pTsd = 0;
   }
