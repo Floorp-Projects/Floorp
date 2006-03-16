@@ -407,8 +407,22 @@ errorAnnouncer.prototype.announceError = function(aErrNo, aMessage) {
         // The calendar was already in readOnly mode, but still tell the user
         errMsg = props.formatStringFromName("stillReadOnlyError", [this.calendar.name], 1);
     }
+
+    // When possible, change the error number into its name, to
+    // make it slightly more readable.
+    var errCode = "0x"+aErrNo.toString(16);
+    const calIError = Components.interfaces.calIErrors;
+    // Check if it is worth enumerating all the error codes.
+    if (aErrNo & calIError.ERROR_BASE) {
+        for (var err in calIError) {
+            if (calIError[err] == aErrNo) {
+                errCode = err;
+            }
+        }
+    }
+
     paramBlock.SetString(0, errMsg);
-    paramBlock.SetString(1, "0x"+aErrNo.toString(16));
+    paramBlock.SetString(1, errCode);
     paramBlock.SetString(2, aMessage);
 
     this.storedReadOnly = this.calendar.readOnly;
