@@ -115,7 +115,7 @@
       </xul:vbox>
       <xul:popupset>
         <xul:popup anonid="months-popup" position="after_start"
-                   onpopupshowing="event.preventBubble();"
+                   onpopupshowing="event.stopPropagation();"
                    onpopuphidden="firePopupListHidden();">
           <xul:vbox>
             <xul:text class="minimonth-list"/>
@@ -133,7 +133,7 @@
           </xul:vbox>
         </xul:popup>
         <xul:popup anonid="years-popup" position="after_start"
-                   onpopupshowing="event.preventBubble();"
+                   onpopupshowing="event.stopPropagation();"
                    onpopuphidden="firePopupListHidden();">
           <xul:vbox>
             <xul:text class="minimonth-list"/>
