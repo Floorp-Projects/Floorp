@@ -825,7 +825,6 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   c.a = .5;
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aCtx->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-  ctx->Save();
   ctx->SetColor(c);
 
   nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
@@ -833,7 +832,6 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   rect.ScaleRoundOut(mFrame->GetPresContext()->TwipsToPixels());
   ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
   ctx->Fill();
-  ctx->Restore();
 #endif
 }
 
