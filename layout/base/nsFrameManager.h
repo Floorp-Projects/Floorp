@@ -158,13 +158,14 @@ public:
   NS_HIDDEN_(void)     NotifyDestroyingFrame(nsIFrame* aFrame);
 
   /*
-   * Reparent the style contexts of this frame subtree to live under the new
-   * given parent style context.  The StyleContextParent of aFrame should be
-   * changed _before_ this method is called, so that style tree verification
-   * can take place correctly.
+   * Reparent the style contexts of this frame subtree.  The parent frame of
+   * aFrame must be changed to the new parent before this function is called;
+   * the new parent style context will be automatically computed based on the
+   * new position in the frame tree.
+   *
+   * @param aFrame the root of the subtree to reparent.  Must not be null.
    */
-  NS_HIDDEN_(nsresult) ReParentStyleContext(nsIFrame* aFrame, 
-                                            nsStyleContext* aNewParentContext);
+  NS_HIDDEN_(nsresult) ReParentStyleContext(nsIFrame* aFrame);
 
   /*
    * Re-resolve the style contexts for a frame tree.  Returns the top-level
