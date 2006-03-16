@@ -73,7 +73,17 @@ public:
 #endif
 
 protected:
-  PRBool GetAttrValue(const nsAString& aAttr, nsAString& aValue);
+  /**
+   * This will parse the content of the PI, to extract the value of the pseudo
+   * attribute with the name specified in aName. See
+   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
+   * which is used to parse the content of the PI.
+   *
+   * @param aName the name of the attribute to get the value for
+   * @param aValue [out] the value for the attribute with name specified in
+   *                     aAttribute. Empty if the attribute isn't present.
+   */
+  PRBool GetAttrValue(nsIAtom *aName, nsAString& aValue);
 
   nsAutoString mTarget;
 };
