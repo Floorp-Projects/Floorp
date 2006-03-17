@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 # -*- Mode: HTML -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,8 +21,9 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Pierre Chanial V 2.0 (p_ch@verizon.net)
-#   Gavin Sharp (gavin@gavinsharp.com)
+#   Pierre Chanial (v2) <p_ch@verizon.net>
+#   Gavin Sharp (v3) <gavin@gavinsharp.com>
+#   Ben Goodger <beng@google.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,64 +40,243 @@
 # ***** END LICENSE BLOCK *****
 
 <bindings id="SearchBindings"
-          xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+      xmlns="http://www.mozilla.org/xbl"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="searchbar-base">
     <resources>
-      <stylesheet src="chrome://browser/content/searchbarBindings.css"/>
+      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
   </binding>
 
-  <binding id="searchbar" extends="chrome://browser/content/search.xml#searchbar-base">
+  <binding id="searchbar"
+           extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
-      <xul:stringbundle src="chrome://browser/locale/searchbar.properties"/>
-      <xul:textbox class="searchbar-textbox" type="autocomplete" flex="1"
+      <xul:stringbundle src="chrome://browser/locale/search.properties"/>
+      <xul:textbox class="searchbar-textbox"
+                   type="autocomplete"
+                   flex="1"
                    autocompletepopup="PopupAutoComplete"
                    autocompletesearch="form-history"
                    autocompletesearchparam="searchbar-history"
                    completeselectedindex="true"
                    tabscrolling="true"
                    xbl:inherits="disableautocomplete,searchengine,src">
-        <xul:button class="searchbar-dropmarker" type="menu"
-                    id="searchbar-dropmarker" popup="_child" xbl:inherits="src">
-          <xul:menupopup anonid="searchbar-popup" position="after_start"
-                         datasources="rdf:internetsearch"
-                         ref="NC:SearchEngineRoot" 
-                         oncommand="this.parentNode.parentNode.onEnginePopupCommand(event);"
-                         onpopupshowing="this.parentNode.parentNode.onEnginePopupShowing(event);"
-                         onpopuphidden="this.parentNode.parentNode.onEnginePopupHidden(event);">
-            <xul:template>
-              <xul:menuitem type="checkbox"
-                            uri="rdf:*" value="rdf:*"
-                            src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-            </xul:template>
-          </xul:menupopup>
+        <xul:button class="searchbar-dropmarker"
+                    type="menu"
+                    anonid="searchbar-dropmarker"
+                    popup="_child"
+                    xbl:inherits="src">
+          <xul:menupopup anonid="searchbar-popup"
+                         class="searchbar-popup"
+                         position="after_start"
+                         oncommand="this.parentNode.parentNode
+                                        .parentNode
+                                        .onEnginePopupCommand(event);"/>
         </xul:button>
       </xul:textbox>
     </content>
-    <implementation>
-      <field name="mStringBundle"> document.getAnonymousNodes(this)[0] </field>
-      <field name="mTextbox"> document.getAnonymousNodes(this)[1] </field>
+    <implementation implements="nsIObserver">
+
+      <constructor><![CDATA[
+        // Refresh the display (updating icon, etc)
+        this.updateDisplay();
+        this.populatePopup();
+
+        var os =
+               Components.classes["@mozilla.org/observer-service;1"]
+                         .getService(Components.interfaces.nsIObserverService);
+        os.addObserver(this, "browser-search-engine-modified", false);
+      ]]></constructor>
+
+      <destructor><![CDATA[
+        var os = Components.classes["@mozilla.org/observer-service;1"]
+                   .getService(Components.interfaces.nsIObserverService);
+        os.removeObserver(this, "browser-search-engine-modified");
+      ]]></destructor>
+
+      <field name="_stringBundle">document.getAnonymousNodes(this)[0];</field>
+      <field name="_textbox">document.getAnonymousNodes(this)[1];</field>
+      <field name="_popup">
+        document.getAnonymousElementByAttribute(this,
+                                                "anonid",
+                                                "searchbar-popup");
+      </field>
+      <field name="_ss">null</field>
+
+      <property name="currentEngine" onset="this.searchService.currentEngine = val;"
+                                     onget="return this.searchService.currentEngine;"/>
+
+      <property name="searchService" readonly="true">
+        <getter><![CDATA[
+          if (!this._ss) {
+            const nsIBSS = Components.interfaces.nsIBrowserSearchService;
+            this._ss =
+                 Components.classes["@mozilla.org/browser/search-service;1"]
+                           .getService(nsIBSS);
+          }
+          return this._ss;
+        ]]></getter>
+      </property>
+
+      <property name="value"
+                onget="return this._textbox.value;"
+                onset="this._textbox.value = val; return val;"/>
+
       <method name="focus">
         <body><![CDATA[
-          this.mTextbox.focus();
+          this._textbox.focus();
         ]]></body>
       </method>
+
       <method name="select">
         <body><![CDATA[
-          this.mTextbox.select();
+          this._textbox.select();
         ]]></body>
       </method>
+
+      <method name="observe">
+        <parameter name="aEngine"/>
+        <parameter name="aTopic"/>
+        <parameter name="aVerb"/>
+        <body><![CDATA[
+          switch (aVerb) {
+            case "engine-removed":
+            case "engine-added":
+            case "engine-changed":
+              // An engine was removed (or hidden), added, or an icon was
+              // changed
+              this.populatePopup();
+              // Fall through
+            case "engine-current":
+              // The current engine was changed
+              this.updateDisplay();
+          }
+        ]]></body>
+      </method>
+
+      <method name="updateDisplay">
+        <body><![CDATA[
+          var uri = this.currentEngine.iconURI;
+          if (uri)
+            this.setAttribute("src", uri.spec);
+
+          var name = this.currentEngine.name;
+          var text = this._stringBundle.getFormattedString("searchtip", [name]);
+          this.setAttribute("tooltiptext", text);
+        ]]></body>
+      </method>
+
+      <method name="populatePopup">
+        <body><![CDATA[
+          var popup = this._popup;
+
+          // Clear the popup
+          while (popup.firstChild)
+            popup.removeChild(popup.firstChild);
+
+          var engines = this.searchService.getVisibleEngines({ });
+          const kXULNS =
+               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          for (var i = 0; i < engines.length; ++i) {
+            var menuitem = document.createElementNS(kXULNS, "menuitem");
+            menuitem.setAttribute("label", engines[i].name);
+            menuitem.setAttribute("id", engines[i].name);
+            menuitem.setAttribute("class", "menuitem-iconic");
+            if (engines[i].iconURI)
+              menuitem.setAttribute("src", engines[i].iconURI.spec);
+            popup.appendChild(menuitem);
+            menuitem.engine = engines[i];
+          }
+
+          // Add the "Get more engines" item
+          // XXX this will become "edit this list"
+          var separator = document.createElementNS(kXULNS, "menuseparator");
+          popup.appendChild(separator);
+
+          menuitem = document.createElementNS(kXULNS, "menuitem");
+          /* XXX
+          const label = this._stringBundle.getString("cmd_editList");
+          const accesskey = this._stringBundle.getString("cmd_editListAccesskey");
+          */
+          const label = this._stringBundle.getString("cmd_addEngine");
+          const accesskey = this._stringBundle.getString("cmd_addEngine_accesskey");
+          menuitem.setAttribute("label", label);
+          menuitem.setAttribute("accesskey", accesskey);
+          menuitem.setAttribute("id", "editlist");
+          popup.appendChild(menuitem);
+        ]]></body>
+      </method>
+
+      <method name="onEnginePopupCommand">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.target.id == "editlist") {
+            // XXX
+            /* openDialog("chrome://browser/content/search/edit-engines.xul", "",
+                       "modal,centerscreen"); */
+            var regionBundle = document.getElementById("bundle_browser_region");
+            loadURI(regionBundle.getString("searchEnginesURL"), null, null);
+          } else {
+            this.currentEngine = aEvent.target.engine;
+            this.focus();
+            this.select();
+          }
+        ]]></body>
+      </method>
+
+      <method name="selectEngine">
+        <parameter name="aEvent"/>
+        <parameter name="isNextEngine"/>
+        <body><![CDATA[
+          // XXX this seems suboptimal...
+          var currentEngine = this.currentEngine;
+          if (currentEngine) {
+            var engines = this.searchService.getVisibleEngines({ });
+            for (var i = 0; i < engines.length; ++i) {
+              if (engines[i] == currentEngine) {
+                var nextIndex = i + (isNextEngine ? 1 : -1);
+                if (nextIndex >= 0 && nextIndex < engines.length)
+                  this.currentEngine = engines[nextIndex];
+                break;
+              }
+            }
+          }
+          aEvent.preventDefault();
+          aEvent.stopPropagation();
+        ]]></body>
+      </method>
+
+      <method name="doSearch">
+        <parameter name="aData"/>
+        <parameter name="aInNewTab"/>
+        <body><![CDATA[
+          var postData = { value: null };
+          var submission = this.currentEngine.getSubmission(aData);
+          if (submission) {
+            url = submission.uri.spec;
+            postData.value = submission.postData;
+          }
+
+          if (aInNewTab) {
+            content.focus();
+            getBrowser().loadOneTab(url, null, null, postData.value, false);
+            if (gURLBar)
+              gURLBar.value = url;
+          } else
+            loadURI(url, null, postData.value);
+          content.focus();
+        ]]></body>
+      </method>
+
     </implementation>
   </binding>
 
-  <binding id="searchbar-textbox" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
+  <binding id="searchbar-textbox"
+      extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
     <implementation>
-
       <constructor><![CDATA[
         if (this.parentNode.parentNode.parentNode.localName ==
             "toolbarpaletteitem")
@@ -113,82 +292,49 @@
         } catch (ex) { }
       ]]></destructor>
 
-      <property name="mContextMenu" readonly="true">
-        <getter>
-          var textBox = document.getAnonymousElementByAttribute(this, 
-                        "anonid", "textbox-input-box");
-          return document.getAnonymousElementByAttribute(textBox, 
-                        "anonid", "input-box-contextmenu");
-        </getter>
-      </property>
+      <field name="_stringBundle">this.parentNode._stringBundle</field>
+      <field name="_formHistSvc"/>
+      <field name="_prefBranch"/>
 
       <method name="initialize">
         <body><![CDATA[
-          this.rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                               .getService(Components.interfaces.nsIRDFService);
-          this.internetSearchDS = this.rdfService.GetDataSource("rdf:internetsearch");
-          this.formHistSvc = Components
-                              .classes["@mozilla.org/satchel/form-history;1"]
-                              .getService(Components.interfaces.nsIFormHistory);
-
-          this.prefService = 
+          this._formHistSvc =
+                   Components.classes["@mozilla.org/satchel/form-history;1"]
+                             .getService(Components.interfaces.nsIFormHistory);
+          this._prefBranch =
                     Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefBranch2);
+                              .getService(Components.interfaces.nsIPrefBranch);
 
-          if (this.prefService.getBoolPref("browser.urlbar.clickSelectsAll"))
+          if (this._prefBranch.getBoolPref("browser.urlbar.clickSelectsAll"))
             this.setAttribute("clickSelectsAll", true);
 
-          this._initializeEngine();
+          var textBox = document.getAnonymousElementByAttribute(this,
+                                                "anonid", "textbox-input-box");
+          var cxmenu = document.getAnonymousElementByAttribute(textBox,
+                                            "anonid", "input-box-contextmenu");
 
-          var element;
-          element = document.createElementNS(XUL_NS, "menuseparator");
-          this.mContextMenu.appendChild(element);
+          var element = document.createElementNS(XUL_NS, "menuseparator");
+          cxmenu.appendChild(element);
           element = document.createElementNS(XUL_NS, "menuitem");
-          element.setAttribute("label", this.mStringBundle
-                               .getString("cmd_clearHistory"));
-          element.setAttribute("accesskey", this.mStringBundle
-                               .getString("cmd_clearHistory_accesskey"));
+          const label = this._stringBundle.getString("cmd_clearHistory");
+          const akey = this._stringBundle.getString("cmd_clearHistory_accesskey");
+          element.setAttribute("label", label);
+          element.setAttribute("accesskey", akey);
           element.setAttribute("cmd", "cmd_clearhistory");
-          this.mContextMenu.appendChild(element);
+
+          cxmenu.appendChild(element);
+
           this.controllers.appendController(this.searchbarController);
-
         ]]></body>
       </method>
-
-      <method name="_initializeEngine">
-        <body><![CDATA[
-          var selectedEngineName;
-          try {
-            selectedEngineName = 
-                    this.prefService
-                        .getComplexValue("browser.search.selectedEngine",
-                                         this.nsIPrefLocalizedString).data;
-          } catch (ex) { }
-
-          // try to set the engine by name
-          this.currentEngineName = selectedEngineName;
-
-          // check to see whether it failed
-          var engine = this.currentEngine;
-          if (!engine)
-            this.currentEngine = this.getDefaultEngine();
-        ]]></body>
-      </method>
-
-      <field name="nsIPrefLocalizedString">
-        Components.interfaces.nsIPrefLocalizedString;
-      </field>
-      <field name="mStringBundle"> this.parentNode.mStringBundle </field>
-      <field name="rdfService"/>
-      <field name="internetSearchDS"/>
-      <field name="formHistSvc"/>
 
       <method name="openSearch">
         <body>
           <![CDATA[
-            if (!this.popupOpen) {  // Don't open search popup if history popup is open
+            // Don't open search popup if history popup is open
+            if (!this.popupOpen) {
               document.getAnonymousElementByAttribute(this.parentNode,
-                                                      "id", "searchbar-dropmarker").click();
+                                         "anonid", "searchbar-dropmarker").click();
               return false;
             }
             return true;
@@ -196,217 +342,44 @@
         </body>
       </method>
 
-      <property name="currentEngine"
-                onget="return this.parentNode.getAttribute('searchengine');">
-        <setter><![CDATA[
-
-          if (!val) {
-            if (this.parentNode)
-              this.parentNode.removeAttribute("searchengine");
-            return;
-          }
-
-          this.parentNode.setAttribute("searchengine", val);
-          const kNC_Icon = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Icon");
-          var rEngine = this.rdfService.GetResource(val);
-
-          this.parentNode.setAttribute("src", this.readRDFString(rEngine, kNC_Icon));
-          
-          const kNC_Name = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
-          var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
-                              .createInstance(this.nsIPrefLocalizedString);
-          pls.data = this.readRDFString(rEngine, kNC_Name);
-
-          this.prefService.setComplexValue("browser.search.selectedEngine",
-                                           this.nsIPrefLocalizedString, pls);
-
-          var toolTipText = this.mStringBundle
-                                .getFormattedString("searchtip", [pls]);
-          this.parentNode.setAttribute("tooltiptext", toolTipText);
-        ]]></setter>
-      </property>
-
-      <property name="currentEngineName"
-                onget="return this.parentNode.getAttribute('searchenginename');"
-                onset="this.setEngineByName(val);"/>
-
-      <method name="setEngineByName">
-        <parameter name="aName"/>
-        <body><![CDATA[
-          // XXX this shouldn't be necessary, but it avoids errors
-          // because the searchbar isn't currently destroyed when
-          // removed from the toolbar
-          if (!this.parentNode) {
-            return false;
-          }
-
-          const kNC_Root  = this.rdfService.GetResource("NC:SearchEngineRoot");
-          const kNC_Child = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#child");
-          const kNC_Name  = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
-
-          var arcs = this.internetSearchDS.GetTargets(kNC_Root, kNC_Child, true);
-          while (arcs.hasMoreElements()) {
-            var rEngine = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-            var name = this.readRDFString(rEngine, kNC_Name);
-            if (name == aName) {
-              this.currentEngine = rEngine.Value;
-              this.parentNode.setAttribute('searchenginename', name);
-              return true;
-            }
-          }
-          this.currentEngine = null;
-          this.parentNode.removeAttribute('searchenginename')
-          return false;
-        ]]></body>
-      </method>
-
-      <method name="getDefaultEngine">
-        <body><![CDATA[
-          var defaultName = this.prefService
-                                .getComplexValue("browser.search.defaultenginename",
-                                                 this.nsIPrefLocalizedString).data;
-
-          const kNC_Root  = this.rdfService.GetResource("NC:SearchEngineRoot");
-          const kNC_child = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#child");
-          const kNC_Name  = this.rdfService.GetResource("http://home.netscape.com/NC-rdf#Name");
-          
-          var arcs = this.internetSearchDS.GetTargets(kNC_Root, kNC_child, true);
-          while (arcs.hasMoreElements()) {
-            var rEngine = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-            var name = this.readRDFString(rEngine, kNC_Name);
-            if (name == defaultName)
-              return rEngine.Value;
-          }
-          return null;
-        ]]></body>
-      </method>
-
-      <method name="readRDFString">
-        <parameter name="aRes"/>
-        <parameter name="aProp"/>
-        <body><![CDATA[
-          var n = this.internetSearchDS.GetTarget(aRes, aProp, true);
-          return n ? n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : null;
-        ]]></body>
-      </method>
-
-      // overload |onTextEntered| in autocomplete.xml
+      <!-- overload |onTextEntered| in autocomplete.xml -->
       <method name="onTextEntered">
         <parameter name="aEvent"/>
         <body><![CDATA[
           // Save the current value in the form history
           if (this.value && !this.hasAttribute("disableautocomplete"))
-            this.formHistSvc.addEntry(this.getAttribute(
+            this._formHistSvc.addEntry(this.getAttribute(
                                       "autocompletesearchparam"), this.value);
-
-          var ISEARCHSVC = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                     .getService(Components.interfaces.nsIInternetSearchService);
-          //XXX Bug 269994: Add in dummy search text "ABC" if the field is empty to ensure a result
-          var searchURL = ISEARCHSVC.GetInternetSearchURL(this.currentEngine,
-                                       this.value? encodeURIComponent(this.value):"ABC", 
-                                       0, 0, {value:0});
-
-          // if the search box is empty, let's load the host
-          if (!this.value) {
-            var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(searchURL, null, null);
-
-            try {
-              searchURL = uri.host;
-            } catch (ex) {}
-          }
           var evt = aEvent || this.mEnterEvent;
-          var openInTab = this.prefService.getBoolPref("browser.search.openintab");
-          SearchLoadURL(searchURL, ((evt && evt.altKey) ^ openInTab));
-        ]]></body>
-      </method>
-
-      <method name="onEnginePopupCommand">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var target = aEvent.target
-          if (target.getAttribute("anonid") == "addengine-menuitem") {
-            var regionBundle = document.getElementById("bundle_browser_region");
-            loadURI(regionBundle.getString("searchEnginesURL"), null, null);
-          } else {
-            this.currentEngine = target.id;
-            this.focus();
-            this.select();
-          }
-        ]]></body>
-      </method>
-
-      <method name="onEnginePopupShowing">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var target = aEvent.target;
-          var element = document.getAnonymousElementByAttribute(this.parentNode,
-                           "anonid", "addengine-menuitem");
-          if (element)
-            return;
-
-          element = document.createElementNS(XUL_NS, "menuseparator");
-          target.appendChild(element);
-          element = document.createElementNS(XUL_NS, "menuitem");
-          element.setAttribute("label", this.mStringBundle
-              .getString("cmd_addEngine"));
-          element.setAttribute("accesskey", this.mStringBundle
-              .getString("cmd_addEngine_accesskey"));
-          element.setAttribute("anonid", "addengine-menuitem");
-          target.appendChild(element);
-        ]]></body>
-      </method>
-
-      <method name="onEnginePopupHidden">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          var target = aEvent.target;
-          var element = document.getAnonymousElementByAttribute(this.parentNode,
-                           "anonid", "addengine-menuitem");
-          if (element) {
-            target.removeChild(target.lastChild);
-            target.removeChild(target.lastChild);
-          }
+          var newTab = this._prefBranch.getBoolPref("browser.search.openintab");
+          this.parentNode.doSearch(this.value, ((evt && evt.altKey) ^ newTab));
         ]]></body>
       </method>
 
       <!-- nsIController -->
-      <field name="searchbarController" readonly="true"><![CDATA[
-      ({
-        mOuter: this,
-        
-        supportsCommand: function (aCommand)
-        {
+      <field name="searchbarController" readonly="true"><![CDATA[({
+        _self: this,
+        supportsCommand: function(aCommand) {
           return aCommand == "cmd_clearhistory";
         },
-        
-        isCommandEnabled: function (aCommand)
-        {
-          return this.mOuter.formHistSvc.nameExists(
-                 this.mOuter.getAttribute("autocompletesearchparam"));
+
+        isCommandEnabled: function(aCommand) {
+          return this._self._formHistSvc.nameExists(
+                 this._self.getAttribute("autocompletesearchparam"));
         },
 
-        doCommand: function (aCommand)
-        {
-          // Clear the searchbar and its undo history
-          this.mOuter.value = "";
-          this.mOuter.editor.enableUndo(false);
-          this.mOuter.editor.enableUndo(true);
-
-          this.mOuter.formHistSvc.removeEntriesForName(
-              this.mOuter.getAttribute("autocompletesearchparam"));
+        doCommand: function (aCommand) {
+          this._self._formHistSvc.removeEntriesForName(
+              this._self.getAttribute("autocompletesearchparam"));
+          this._self.value = "";
         }
-      })
-      ]]></field>
+      })]]></field>
 
       <!-- DND Observer -->
-      <field name="searchbarDNDObserver" readonly="true"><![CDATA[
-      ({
+      <field name="searchbarDNDObserver" readonly="true"><![CDATA[({
         mOuter: this,
-
-        onDrop: function (aEvent, aXferData, aDragSession)
-        {
+      
+        onDrop: function (aEvent, aXferData, aDragSession) {
           var data = transferUtils.retrieveURLFromData(aXferData.data, 
                          aXferData.flavour.contentType);
           if (data) {
@@ -414,82 +387,59 @@
             this.mOuter.onTextEntered(aEvent);
           }
         },
-
-        getSupportedFlavours: function ()
-        {
+      
+        getSupportedFlavours: function () {
           var flavourSet = new FlavourSet();
-
+      
           flavourSet.appendFlavour("text/unicode");
           flavourSet.appendFlavour("text/x-moz-url");
           flavourSet.appendFlavour("application/x-moz-file", "nsIFile");     
           return flavourSet;
         }
-      })
-      ]]></field>
-
+      })]]></field>
     </implementation>
 
     <handlers>
+      <handler event="keypress" keycode="vk_up" modifiers="accel"
+               phase="capturing"
+               action="this.parentNode.selectEngine(event, false);"/>
 
-      <handler event="keypress" keycode="vk_up" modifiers="accel" phase="capturing">
-        <![CDATA[
-          var currentEngine = this.currentEngine;
-          if (currentEngine) {
-            var searchEngineMenuitem = document.getAnonymousElementByAttribute(this.parentNode, "id", currentEngine);
-            var newEngine = searchEngineMenuitem.previousSibling;
-            if (newEngine && newEngine.localName == "menuitem")
-              this.currentEngine = newEngine.id;
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        ]]>
-      </handler>
-      
-      <handler event="keypress" keycode="vk_down" modifiers="alt" phase="capturing"
+      <handler event="keypress" keycode="vk_down" modifiers="accel"
+               phase="capturing"
+               action="this.parentNode.selectEngine(event, true);"/>
+
+      <handler event="keypress" keycode="vk_down" modifiers="alt"
+               phase="capturing"
                action="return this.openSearch();"/>
-      
-      <handler event="keypress" keycode="vk_up" modifiers="alt" phase="capturing"
+
+      <handler event="keypress" keycode="vk_up" modifiers="alt"
+               phase="capturing"
                action="return this.openSearch();"/>
 
 #ifndef XP_MACOSX
-      <handler event="keypress" keycode="vk_f4" phase="capturing"
+      <handler event="keypress" keycode="vk_f4"
+               phase="capturing"
                action="return this.openSearch();"/>
 #endif
-
-      <handler event="keypress" keycode="vk_down" modifiers="accel" phase="capturing">
-        <![CDATA[
-          var currentEngine = this.currentEngine;
-          if (currentEngine) {
-            var searchEngineMenuitem = document.getAnonymousElementByAttribute(this.parentNode, "id", currentEngine);
-
-            var newEngine = searchEngineMenuitem.nextSibling;
-          
-            if (newEngine && newEngine.localName == "menuitem")
-              this.currentEngine = newEngine.id;
-          }
-          event.preventDefault();
-          event.stopPropagation();
-        ]]>
-      </handler>
 
       <handler event="dragdrop" phase="capturing">
         nsDragAndDrop.drop(event, this.searchbarDNDObserver);
       </handler>
 
     </handlers>
-
   </binding>
-  
-  <binding id="searchbar-dropmarker" extends="chrome://browser/content/search.xml#searchbar-base">
+
+  <binding id="searchbar-dropmarker"
+           extends="chrome://browser/content/search/search.xml#searchbar-base">
     <content>
       <xul:stack flex="1">
-        <xul:hbox align="center">
+        <xul:hbox align="center" class="searchbar-engine-image-container">
           <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
         </xul:hbox>
         <xul:image class="searchbar-dropmarker-image"/>
       </xul:stack>
       <children/>
-    </content>  
+    </content>
   </binding>
 
 </bindings>

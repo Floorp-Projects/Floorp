@@ -11,15 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is the Browser Search Service.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   Ben Goodger <beng@google.com> (Original author)
+#   Gavin Sharp <gavin@gavinsharp.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,43 +34,20 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK *****
+# ***** END LICENSE BLOCK ***** */
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = browsercomps
-XPIDL_MODULE = browsercompsbase
+MODULE = browsersearch
+XPIDL_MODULE = browsersearch
 
-XPIDLSRCS = \
-	nsIBrowserHandler.idl \
-	nsIBrowserGlue.idl \
-	$(NULL)
+XPIDLSRCS = nsIBrowserSearchService.idl
 
-EXTRA_PP_COMPONENTS = \
-	nsBrowserContentHandler.js \
-	nsBrowserGlue.js \
-	$(NULL)
-
-DIRS = \
-	dirprovider \
-	migration \
-	preferences \
-	search \
-	shell \
-	sidebar \
-	$(NULL)
-
-ifdef MOZ_PLACES
-DIRS += places
-else
-DIRS += history bookmarks
-endif
-
-DIRS += build
+EXTRA_PP_COMPONENTS = nsSearchService.js
 
 include $(topsrcdir)/config/rules.mk

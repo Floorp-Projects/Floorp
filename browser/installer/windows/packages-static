@@ -62,6 +62,7 @@ bin\components\autocomplete.xpt
 bin\components\autoconfig.xpt
 bin\components\bookmarks.xpt
 bin\components\browsercompsbase.xpt
+bin\components\browsersearch.xpt
 bin\components\caps.xpt
 bin\components\chardet.xpt
 bin\components\chrome.xpt
@@ -194,6 +195,7 @@ bin\components\nsCloseAllWindows.js
 bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsProxyAutoConfig.js
+bin\components\nsSearchService.js
 bin\components\nsSidebar.js
 bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js

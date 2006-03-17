@@ -301,7 +301,7 @@
                onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
           <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
                 flex="1" style="min-width:0px; width:0px;padding-left: 3px;" 
-                datasources="rdf:bookmarks rdf:files rdf:localsearch"
+                datasources="rdf:bookmarks rdf:files"
                 template="bookmarks-template" flags="dont-test-empty"
                 infer="forward-proxy"
                 rdf:type="http://home.netscape.com/NC-rdf#Folder"
@@ -320,7 +320,7 @@
               <toolbarbutton id="bookmarks-chevron" type="menu" class="chevron"
                              chromedir="&locale.dir;"
                              mousethrough="never" collapsed="true" 
-                             datasources="rdf:bookmarks rdf:files rdf:localsearch"
+                             datasources="rdf:bookmarks rdf:files"
                              template="bookmarks-template" flags="dont-test-empty"
                              onpopupshowing="BookmarksMenu.onShowMenu(event.target)"
                              onpopuphidden="BookmarksMenu.onHideMenu(event.target)"

@@ -163,7 +163,7 @@
     <command id="cmd_textZoomReset" oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <command id="Browser:OpenLocation" oncommand="openLocation();"/>
 
-    <command id="Tools:Search" oncommand="WebSearch();"/>    
+    <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>    
     <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
                                                                 'chrome://mozapps/content/downloads/downloads.xul',
                                                                 'chrome,dialog=no,resizable');"/>
