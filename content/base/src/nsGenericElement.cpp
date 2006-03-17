@@ -582,7 +582,12 @@ nsDOMEventRTTearoff::LastRelease()
     // this instance in the cache in stead of deleting it.
     mCachedEventTearoff[mCachedEventTearoffCount++] = this;
 
-    mContent = nsnull;
+    // Don't set mContent to null directly since setting mContent to null
+    // could result in code that grabs a tearoff from the cache and we don't
+    // want to get reused while still being torn down.
+    // See bug 330526.
+    nsCOMPtr<nsIContent> kungFuDeathGrip;
+    kungFuDeathGrip.swap(mContent);
 
     // The refcount balancing and destructor re-entrancy protection
     // code in Release() sets mRefCnt to 1 so we have to set it to 0
