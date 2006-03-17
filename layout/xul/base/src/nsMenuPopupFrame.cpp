@@ -1927,10 +1927,19 @@ PRBool
 nsMenuPopupFrame::IsValidItem(nsIContent* aContent)
 {
   nsIAtom *tag = aContent->Tag();
+  
+  PRBool skipNavigatingDisabledMenuItem;
+  GetPresContext()->LookAndFeel()->
+    GetMetric(nsILookAndFeel::eMetric_SkipNavigatingDisabledMenuItem,
+              skipNavigatingDisabledMenuItem);
 
-  return (tag == nsXULAtoms::menu ||
-          tag == nsXULAtoms::menuitem ||
-          tag == nsHTMLAtoms::option);
+  PRBool result = (tag == nsXULAtoms::menu ||
+                   tag == nsXULAtoms::menuitem ||
+                   tag == nsHTMLAtoms::option);
+  if (skipNavigatingDisabledMenuItem)
+    result = result && !IsDisabled(aContent);
+
+  return result;
 }
 
 PRBool 

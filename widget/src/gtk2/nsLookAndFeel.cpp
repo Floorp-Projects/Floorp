@@ -421,6 +421,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // we want XUL popups to be able to overlap the task bar.
         aMetric = 1;
         break;
+    case eMetric_SkipNavigatingDisabledMenuItem:
+        aMetric = 1;
+        break;
     case eMetric_DragFullWindow:
         aMetric = 1;
         break;
