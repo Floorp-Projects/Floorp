@@ -53,7 +53,7 @@
         // do not regress browser window show time (Ts/Txul)
         if (this.hasAttribute("asyncinit")) {
           var self = this;
-          setTimeout(function() { self._init(); }, 0);
+          //setTimeout(function() { self._init(); }, 0);
         }
         else
           this._init();
