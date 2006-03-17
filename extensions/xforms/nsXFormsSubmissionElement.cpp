@@ -535,7 +535,7 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
   // replace the document referenced by this instance element with the info
   // returned back from the submission
   if (NS_SUCCEEDED(rv) && instanceElement) {
-    instanceElement->SetDocument(newDoc);
+    instanceElement->SetInstanceDocument(newDoc);
 
     // refresh everything
     model->Rebuild();

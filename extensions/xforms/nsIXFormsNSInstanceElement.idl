@@ -15,12 +15,12 @@
  * The Original Code is Mozilla XForms support.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Alexander Surkov.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Alexander Surkov <surkov@dc.baikal.ru>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,23 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIXFormsNSInstanceElement.idl" 
+#include "nsISupports.idl"
 
-interface nsIDOMElement;
+interface nsIDOMDocument;
 
 /**
- * Private interface implemented by the \<instance/> element.
- */
-[uuid(e9a975d7-616c-4c4b-9413-3aa8001cdb08)]
-interface nsIInstanceElementPrivate : nsIXFormsNSInstanceElement
+ * Defines additional post-spec. functions for the \<instance\> element.
+ */ 
+[scriptable, uuid(80669b92-8331-4f92-aaf8-06e80e6827b3)]
+interface nsIXFormsNSInstanceElement : nsISupports
 {
   /**
-   * Set instance document.
+   * Return instance document
    */
-  void setInstanceDocument(in nsIDOMDocument document);
-
-  readonly attribute nsIDOMElement element;
-  void backupOriginalDocument();
-  void restoreOriginalDocument();
-  void initialize();
+  nsIDOMDocument getInstanceDocument();
 };

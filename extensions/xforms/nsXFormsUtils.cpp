@@ -595,7 +595,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                                                     getter_AddRefs(instance));
                 NS_ENSURE_SUCCESS(rv, rv);
                 nsCOMPtr<nsIDOMDocument> domdoc;
-                instance->GetDocument(getter_AddRefs(domdoc));
+                instance->GetInstanceDocument(getter_AddRefs(domdoc));
                 nsCOMPtr<nsIDOMElement> instanceDataEle;
                 nsCOMPtr<nsIDOMNode> childReturn;
                 rv = domdoc->CreateElementNS(namespaceURI, expr,

@@ -119,8 +119,9 @@ REQUIRES	= \
 XPIDLSRCS	= \
 		nsIXFormsModelElement.idl \
 		nsIXFormsNSModelElement.idl \
-		nsIInstanceElementPrivate.idl \
 		nsIModelElementPrivate.idl \
+		nsIXFormsNSInstanceElement.idl \
+		nsIInstanceElementPrivate.idl \
 		nsIXFormsControl.idl \
 		nsIXFormsContextControl.idl \
 		nsIXFormsActionElement.idl \

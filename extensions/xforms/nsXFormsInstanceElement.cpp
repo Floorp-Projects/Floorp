@@ -53,8 +53,9 @@
 
 static const char* kLoadAsData = "loadAsData";
 
-NS_IMPL_ISUPPORTS_INHERITED5(nsXFormsInstanceElement,
+NS_IMPL_ISUPPORTS_INHERITED6(nsXFormsInstanceElement,
                              nsXFormsStubElement,
+                             nsIXFormsNSInstanceElement,
                              nsIInstanceElementPrivate,
                              nsIStreamListener,
                              nsIRequestObserver,
@@ -78,7 +79,7 @@ nsXFormsInstanceElement::OnDestroyed()
     mChannel = nsnull;
   }
   mListener = nsnull;
-  SetDocument(nsnull);
+  SetInstanceDocument(nsnull);
   mElement = nsnull;
   return NS_OK;
 }
@@ -246,7 +247,7 @@ nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
 
   PRBool succeeded = NS_SUCCEEDED(status);
   if (!succeeded) {
-    SetDocument(nsnull);
+    SetInstanceDocument(nsnull);
   }
 
   if (mDocument) {
@@ -261,7 +262,7 @@ nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
           namespaceURI.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
         NS_WARNING("resulting instance document could not be parsed");
         succeeded = PR_FALSE;
-        SetDocument(nsnull);
+        SetInstanceDocument(nsnull);
       }
     }
   }
@@ -275,17 +276,19 @@ nsXFormsInstanceElement::OnStopRequest(nsIRequest *request, nsISupports *ctx,
   return NS_OK;
 }
 
-// nsIInstanceElementPrivate
+// nsIXFormsNSInstanceElement
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::GetDocument(nsIDOMDocument **aDocument)
+nsXFormsInstanceElement::GetInstanceDocument(nsIDOMDocument **aDocument)
 {
   NS_IF_ADDREF(*aDocument = mDocument);
   return NS_OK;
 }
 
+// nsIInstanceElementPrivate
+
 NS_IMETHODIMP
-nsXFormsInstanceElement::SetDocument(nsIDOMDocument *aDocument)
+nsXFormsInstanceElement::SetInstanceDocument(nsIDOMDocument *aDocument)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (doc) {
@@ -608,7 +611,7 @@ nsXFormsInstanceElement::CreateInstanceDocument(const nsAString &aQualifiedName)
                                getter_AddRefs(newDoc));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetDocument(newDoc);
+  rv = SetInstanceDocument(newDoc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // I don't know if not being able to create a backup document is worth

@@ -1350,8 +1350,9 @@ nsXFormsModelElement::FindInstanceDocument(const nsAString &aID)
   nsXFormsModelElement::FindInstanceElement(aID, getter_AddRefs(instance));
 
   nsIDOMDocument *doc = nsnull;
-  if (instance)
-    instance->GetDocument(&doc); // addrefs
+  if (instance) {
+    instance->GetInstanceDocument(&doc); // addrefs
+  }
 
   return doc;
 }
@@ -2009,7 +2010,7 @@ nsXFormsModelInstanceDocuments::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsIInstanceElementPrivate* instance = mInstanceList.SafeObjectAt(aIndex);
   if (instance) {
     nsCOMPtr<nsIDOMDocument> doc;
-    if (NS_SUCCEEDED(instance->GetDocument(getter_AddRefs(doc))) && doc) {
+    if (NS_SUCCEEDED(instance->GetInstanceDocument(getter_AddRefs(doc))) && doc) {
       NS_ADDREF(*aReturn = doc);
     }
   }
