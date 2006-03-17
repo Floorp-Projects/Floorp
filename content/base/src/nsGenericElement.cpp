@@ -2788,6 +2788,10 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     return NS_ERROR_NULL_POINTER;
   }
 
+  // Keep a strong reference to the node that we'll return to ensure it
+  // doesn't go away.
+  nsCOMPtr<nsIDOMNode> returnVal = aReplace ? aRefChild : aNewChild;
+
   nsCOMPtr<nsIContent> refContent;
   nsresult res = NS_OK;
   PRInt32 insPos;
@@ -3065,8 +3069,7 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  *aReturn = aReplace ? aRefChild : aNewChild;
-  NS_ADDREF(*aReturn);
+  returnVal.swap(*aReturn);
 
   return res;
 }
