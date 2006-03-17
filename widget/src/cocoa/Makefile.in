@@ -85,10 +85,6 @@ EXPORTS = \
 		mozView.h \
 		$(NULL)
 
-GFX_LCPPSRCS = \
-		nsWatchTask.cpp \
-		$(NULL)
-
 MAC_LCPPSRCS = \
 		nsBidiKeyboard.cpp \
 		nsClipboard.cpp \
@@ -98,8 +94,6 @@ MAC_LCPPSRCS = \
 		nsMacNativeUnicodeConverter.cpp \
 		nsMacResources.cpp \
 		nsMimeMapper.cpp \
-		nsNativeThemeMac.cpp \
-		nsSound.cpp \
 		nsStylClipboardUtils.cpp \
 		nsToolkitBase.cpp \
 		nsTSMStrategy.cpp \
@@ -113,9 +107,14 @@ MAC_LCPPSRCS = \
 		$(NULL)
 
 
+ifndef MOZ_ENABLE_CAIRO_GFX
+MAC_LCPPSRCS +=	nsNativeThemeMac.cpp \
+		nsSound.cpp \
+		$(NULL)
+endif
+
 CPPSRCS =  \
 		$(MAC_LCPPSRCS) \
-		$(GFX_LCPPSRCS) \
 		$(NULL)
 
 CMMSRCS = \
@@ -195,7 +194,6 @@ libs:: $(RES_DEST)
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
-	-I$(topsrcdir)/gfx/src/mac \
 	-I$(srcdir)/../xpwidgets \
 	-I$(srcdir)/../mac \
 	-I/System/Library/Frameworks/Carbon.Framework/Headers \
@@ -212,4 +210,3 @@ CXXFLAGS += \
   -DUSE_COCOA \
   $(NULL)
 
-  

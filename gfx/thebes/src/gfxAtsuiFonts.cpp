@@ -50,7 +50,8 @@ THEBES_IMPL_REFCOUNTING(gfxAtsuiFont)
 
 gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
                            gfxAtsuiFontGroup *fontGroup)
-    : mATSUFontID(fontID), mFontGroup(fontGroup)
+    : gfxFont(EmptyString(), fontGroup),
+      mATSUFontID(fontID), mFontGroup(fontGroup)
 {
     ATSFontRef fontRef = FMGetATSFontRefFromFont(fontID);
 

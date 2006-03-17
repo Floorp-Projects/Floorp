@@ -220,11 +220,13 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
+#ifndef MOZ_CAIRO_GFX
   virtual void            StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
   virtual void            EndDraw();
+  void                    UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+#endif
   NS_IMETHOD              Update();
-  virtual void            UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
-  
+
   virtual void      ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
   void              LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
   void              LocalToWindowCoordinate(nscoord& aX, nscoord& aY)   { ConvertToDeviceCoordinates(aX, aY); }
@@ -296,14 +298,16 @@ protected:
   NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;
   
-  nsIFontMetrics*       mFontMetrics;
-  nsIRenderingContext*  mTempRenderingContext;
+#ifndef MOZ_CAIRO_GFX
+  nsCOMPtr<nsIFontMetrics>      mFontMetrics;
+  nsCOMPtr<nsIRenderingContext> mTempRenderingContext;
+  PRPackedBool          mTempRenderingContextMadeHere;
+#endif
 
   PRPackedBool          mDestructorCalled;
   PRPackedBool          mVisible;
 
   PRPackedBool          mDrawing;
-  PRPackedBool          mTempRenderingContextMadeHere;
     
   PRPackedBool          mAcceptFocusOnClick;
   PRPackedBool          mLiveResizeInProgress;

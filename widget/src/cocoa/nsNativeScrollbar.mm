@@ -40,7 +40,6 @@
 
 #include "nsReadableUtils.h"
 #include "nsWidgetAtoms.h"
-#include "nsWatchTask.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"

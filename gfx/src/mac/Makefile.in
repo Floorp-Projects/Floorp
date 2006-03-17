@@ -83,6 +83,10 @@ CPPSRCS = \
         nsFontUtils.cpp \
         $(NULL)
 
+EXPORTS		= \
+		nsIImageMac.h \
+		$(NULL)
+
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsQDFlushManager.cpp
 CMMSRCS = nsCocoaImageUtils.mm

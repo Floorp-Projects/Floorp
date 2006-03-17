@@ -85,7 +85,6 @@ endif
 
 GFX_LCPPSRCS = \
 		nsRepeater.cpp \
-		nsWatchTask.cpp \
 		$(NULL)
 
 CPPSRCS	= nsAppShell.cpp \

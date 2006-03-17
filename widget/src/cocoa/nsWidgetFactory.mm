@@ -62,6 +62,7 @@
 #include "nsLookAndFeel.h"
 
 #include "nsSound.h"
+
 #include "nsNativeScrollbar.h"
 #include "nsScreenManagerMac.h"
 #include "nsDeviceContextSpecX.h"
@@ -140,10 +141,12 @@ static const nsModuleComponentInfo gComponents[] =
     NS_MENUITEM_CID,
     "@mozilla.org/widget/menuitem/mac;1",
     nsMenuItemXConstructor },
+#ifndef MOZ_CAIRO_GFX
   { "Sound",
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
+#endif
   { "Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

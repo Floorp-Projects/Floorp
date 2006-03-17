@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -46,8 +46,6 @@
 #include "nsIScreen.h"
 #include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
-#include "nsCarbonHelpers.h"
-#include "nsGfxUtils.h"
 #include "nsMacResources.h"
 #include "nsIRollupListener.h"
 #import  "nsChildView.h"
@@ -71,7 +69,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
  * (0,0) in the bottom-left of the screen. Both nsRect and NSRect
  * contain width/height info, with no difference in their use.
  */
-static NSRect geckoRectToCocoaRect(nsRect geckoRect)
+static NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 {
   // first we get the highest point on all screens
   float highestScreenPoint = 0.0;
@@ -174,8 +172,6 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     // Configure the window we will create based on the window type
     switch (mWindowType)
     {
-      case eWindowType_popup:
-        break;
       case eWindowType_child:
         // In Carbon, we made this a window of type kPlainWindowClass.
         // I think that is pretty much equiv to NSBorderlessWindowMask.
@@ -230,6 +226,9 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
           features = NSMiniaturizableWindowMask;
         }
         break;
+      case eWindowType_popup:
+        features |= NSBorderlessWindowMask;
+        break;
       case eWindowType_toplevel:
         features |= NSTitledWindowMask;
         features |= NSMiniaturizableWindowMask;
@@ -268,6 +267,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     
     // compensate for difference between frame and content area height (e.g. title bar)
     NSRect newWindowFrame = [NSWindow frameRectForContentRect:rect styleMask:features];
+
     rect.origin.y -= (newWindowFrame.size.height - rect.size.height);
     
     if (mWindowType != eWindowType_popup)
@@ -282,6 +282,11 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
                                 backing:NSBackingStoreBuffered defer:NO];
     
+    if (mWindowType == eWindowType_popup) {
+        [mWindow setLevel:NSPopUpMenuWindowLevel];
+        [mWindow setHasShadow:YES];
+    }
+
     [mWindow setReleasedWhenClosed:NO];
 
     // register for mouse-moved events. The default is to ignore them for perf reasons.
@@ -371,14 +376,14 @@ nsCocoaWindow::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
-  if (bState)
-    [mWindow orderFront:NULL];
-  else
-    [mWindow orderOut:NULL];
+    if (bState)
+        [mWindow orderFront:NULL];
+    else
+        [mWindow orderOut:NULL];
+    
+    mVisible = bState;
 
-  mVisible = bState;
-
-  return NS_OK;
+    return NS_OK;
 }
 
 
