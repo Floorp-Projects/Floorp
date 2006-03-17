@@ -66,8 +66,11 @@ protected:
 
   PRBool GetAllTextChildren(nsPresContext *aPresContext, nsIFrame *aCurFrame, nsIDOMNode* aNode, PRBool &bSave);
   nsIDOMNode* FindTextNodeByOffset(PRInt32 aOffset, PRInt32& aBeforeLength);
-  nsresult GetTextHelper(EGetTextType aType, nsAccessibleTextBoundary aBoundaryType,
-                         PRInt32 aOffset, PRInt32 *aStartOffset, PRInt32 *aEndOffset, nsAString & aText);
+  nsresult GetTextHelper(EGetTextType aType, 
+                         nsAccessibleTextBoundary aBoundaryType,
+                         PRInt32 aOffset, PRInt32 *aStartOffset,
+                         PRInt32 *aEndOffset, nsAString & aText);
+  nsIDOMNode* GetLinkNode(nsIDOMNode* aNode);
 };
 
 #endif
