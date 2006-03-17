@@ -162,6 +162,8 @@
           var uri = this.currentEngine.iconURI;
           if (uri)
             this.setAttribute("src", uri.spec);
+          else
+            this.setAttribute("src", "");
 
           var name = this.currentEngine.name;
           var text = this._stringBundle.getFormattedString("searchtip", [name]);
