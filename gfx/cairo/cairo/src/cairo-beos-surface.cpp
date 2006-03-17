@@ -431,28 +431,35 @@ _cairo_beos_surface_acquire_source_image (void                   *abstract_surfa
     cairo_beos_surface_t *surface = reinterpret_cast<cairo_beos_surface_t*>(
 							abstract_surface);
     AutoLockView locker(surface->view);
-    if (!locker)
+    if (!locker) {
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY; /// XXX not exactly right, but what can we do?
+    }
 
 
     surface->view->Sync();
 
     if (surface->bitmap) {
 	*image_out = _cairo_beos_bitmap_to_surface(surface->bitmap);
-	if (!*image_out)
+	if (!*image_out) {
+	    _cairo_error(CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
 
 	*image_extra = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
 
     BBitmap* bmp;
-    if (_cairo_beos_view_to_bitmap(surface->view, &bmp) != OK)
+    if (_cairo_beos_view_to_bitmap(surface->view, &bmp) != OK) {
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY; /// XXX incorrect if the error was NOT_VISIBLE
+    }
 
     *image_out = _cairo_beos_bitmap_to_surface(bmp);
     if (!*image_out) {
 	delete bmp;
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
     *image_extra = bmp;
@@ -493,8 +500,10 @@ _cairo_beos_surface_acquire_dest_image (void                   *abstract_surface
     if (surface->bitmap) {
 	surface->view->Sync();
 	*image_out = _cairo_beos_bitmap_to_surface(surface->bitmap);
-	if (!*image_out)
+	if (!*image_out) {
+	    _cairo_error(CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
 
 	image_rect->x = 0;
 	image_rect->y = 0;
@@ -516,8 +525,10 @@ _cairo_beos_surface_acquire_dest_image (void                   *abstract_surface
 	*image_extra = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
-    if (status == ERROR)
+    if (status == ERROR) {
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     *image_rect = _brect_to_cairo_rect(rect);
 
@@ -529,9 +540,10 @@ _cairo_beos_surface_acquire_dest_image (void                   *abstract_surface
 
     *image_out = _cairo_beos_bitmap_to_surface(bitmap);
     delete bitmap;
-    if (!*image_out)
+    if (!*image_out) {
+	_cairo_error(CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
-
+    }
     *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
@@ -598,7 +610,7 @@ _cairo_beos_composite (cairo_operator_t		op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     // XXX should eventually support the others
-    if (src->type != CAIRO_PATTERN_TYPE_SURFACE ||
+    if (src->type != CAIRO_PATTERN_SURFACE ||
 	src->extend != CAIRO_EXTEND_NONE)
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -777,7 +789,6 @@ _cairo_beos_surface_get_extents (void              *abstract_surface,
 }
 
 static const struct _cairo_surface_backend cairo_beos_surface_backend = {
-    CAIRO_SURFACE_TYPE_BEOS,
     NULL, /* create_similar */
     _cairo_beos_surface_finish,
     _cairo_beos_surface_acquire_source_image,

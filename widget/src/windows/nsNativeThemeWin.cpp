@@ -761,12 +761,9 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
-  gfxFloat xoff, yoff;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
-  if (!surf) {
+  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+  if (!surf)
     surf = ctx->CurrentSurface();
-    xoff = yoff = 0.0;
-  }
 
   HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
   SaveDC(hdc);
@@ -778,9 +775,11 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   //ctx->CurrentSurface()->Flush();
 
   /* Set the device offsets as appropriate */
+  gfxFloat xoff, yoff;
   POINT origViewportOrigin;
+  surf->GetDeviceOffset(&xoff, &yoff);
   GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
 
   /* Covert the current transform to a world transform */
   gfxMatrix m = ctx->CurrentMatrix();
@@ -1812,12 +1811,9 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
-  gfxFloat xoff, yoff;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
-  if (!surf) {
+  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+  if (!surf)
     surf = ctx->CurrentSurface();
-    xoff = yoff = 0.0;
-  }
 
   HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
   SaveDC(hdc);
@@ -1827,9 +1823,11 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   ctx->UpdateSurfaceClip();
 
   /* Set the device offsets as appropriate */
+  gfxFloat xoff, yoff;
   POINT origViewportOrigin;
+  surf->GetDeviceOffset(&xoff, &yoff);
   GetViewportOrgEx(hdc, &origViewportOrigin);
-  SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
+  SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
 
   /* Covert the current transform to a world transform */
   gfxMatrix m = ctx->CurrentMatrix();

@@ -83,10 +83,6 @@ ifdef SUNCTL
 REQUIRES	+= ctl
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES	+= thebes cairo
-endif
-
 EXPORTS		= \
 		nsFrameList.h \
 		nsHTMLParts.h \

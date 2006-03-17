@@ -654,10 +654,8 @@ emit_image_rgb_data (cairo_pdf_document_t *document,
 	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					     image->width,
 					     image->height);
-	if (opaque->status) {
-	    free (rgb);
+	if (opaque->status)
 	    return 0;
-	}
     
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
     
@@ -843,7 +841,7 @@ _cairo_pdf_surface_composite (cairo_operator_t	op,
     if (mask_pattern)
  	return CAIRO_STATUS_SUCCESS;
     
-    if (src_pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+    if (src_pattern->type != CAIRO_PATTERN_SURFACE)
 	return CAIRO_STATUS_SUCCESS;
 
     if (src->surface->backend == &cairo_pdf_surface_backend)
@@ -1239,16 +1237,16 @@ static cairo_status_t
 emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *pattern)
 {
     switch (pattern->type) {
-    case CAIRO_PATTERN_TYPE_SOLID:
+    case CAIRO_PATTERN_SOLID:	
 	return emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 
-    case CAIRO_PATTERN_TYPE_SURFACE:
+    case CAIRO_PATTERN_SURFACE:
 	return emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
 
-    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_LINEAR:
 	return emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
 
-    case CAIRO_PATTERN_TYPE_RADIAL:
+    case CAIRO_PATTERN_RADIAL:
 	return emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
     }
 
@@ -1659,7 +1657,6 @@ _cairo_pdf_surface_get_font_options (void                  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
-    CAIRO_SURFACE_TYPE_PDF,
     _cairo_pdf_surface_create_similar,
     _cairo_pdf_surface_finish,
     NULL, /* acquire_source_image */

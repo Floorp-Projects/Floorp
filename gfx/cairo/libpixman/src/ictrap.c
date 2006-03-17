@@ -1,4 +1,6 @@
 /*
+ * $Id: ictrap.c,v 1.10 2006/03/17 07:44:26 vladimir%pobox.com Exp $
+ *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its

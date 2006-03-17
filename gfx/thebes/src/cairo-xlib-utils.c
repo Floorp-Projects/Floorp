@@ -41,20 +41,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#if 0
-#include <stdio.h>
-#define CAIRO_XLIB_DRAWING_NOTE(m) fprintf(stderr, m)
-#else
+/*#include <stdio.h>
+#define CAIRO_XLIB_DRAWING_NOTE(m) fprintf(stderr, m) */
 #define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0)
-#endif
 
-static cairo_surface_t *_get_current_target (cairo_t *cr, double *dx, double *dy)
+static cairo_surface_t *_get_current_target (cairo_t *cr)
 {
-    cairo_surface_t *target = cairo_get_group_target (cr, dx, dy);
+    cairo_surface_t *target = cairo_get_group_target (cr);
     if (target == NULL) {
         target = cairo_get_target (cr);
-        *dx = 0.0;
-        *dy = 0.0;
     }
     return target;
 }
@@ -121,6 +116,7 @@ _intersect_interval (double a_begin, double a_end, double b_begin, double b_end,
 #define MAX_STATIC_CLIP_RECTANGLES 50
 static cairo_bool_t
 _get_rectangular_clip (cairo_t *cr,
+                       double device_offset_x, double device_offset_y,
                        int bounds_x, int bounds_y,
                        int bounds_width, int bounds_height,
                        cairo_bool_t *need_clip,
@@ -140,14 +136,17 @@ _get_rectangular_clip (cairo_t *cr,
         *need_clip = False;
         return True;
     }
-
+    
     if (!cairo_extract_clip_rectangles (cr, MAX_STATIC_CLIP_RECTANGLES, clips, &count))
         return False;
-
+      
     for (i = 0; i < count; ++i) {
         double intersect_x, intersect_y, intersect_x_most, intersect_y_most;
         
-        /* the clip is always in surface backend coordinates (i.e. native backend coords) */
+        /* get the clip rect into surface coordinates */
+        clips[i].x += device_offset_x;
+        clips[i].y += device_offset_y;
+        
         if (b_x >= clips[i].x && b_x_most <= clips[i].x + clips[i].width &&
             b_y >= clips[i].y && b_y_most <= clips[i].y + clips[i].height) {
             /* the bounds are entirely inside the clip region so we don't need to clip. */
@@ -192,8 +191,8 @@ _draw_with_xlib_direct (cairo_t *cr,
                         int bounds_width, int bounds_height,
                         cairo_xlib_drawing_support_t capabilities)
 {
-    cairo_surface_t *target;
-    Drawable d;
+    cairo_surface_t *target = _get_current_target (cr);
+    Drawable d = cairo_xlib_surface_get_drawable (target);
     cairo_matrix_t matrix;
     short offset_x, offset_y;
     cairo_bool_t needs_clip;
@@ -204,10 +203,8 @@ _draw_with_xlib_direct (cairo_t *cr,
     Display *dpy;
     Visual *visual;
 
-    target = _get_current_target (cr, &device_offset_x, &device_offset_y);
-    d = cairo_xlib_surface_get_drawable (target);
-
     cairo_get_matrix (cr, &matrix);
+    cairo_surface_get_device_offset (target, &device_offset_x, &device_offset_y);
     
     /* Check that the matrix is a pure translation */
     /* XXX test some approximation to == 1.0 here? */
@@ -217,8 +214,8 @@ _draw_with_xlib_direct (cairo_t *cr,
     }
     /* Check that the matrix translation offsets (adjusted for
        device offset) are integers */
-    if (!_convert_coord_to_short (matrix.x0 - device_offset_x, &offset_x) ||
-        !_convert_coord_to_short (matrix.y0 - device_offset_y, &offset_y)) {
+    if (!_convert_coord_to_short (matrix.x0 + device_offset_x, &offset_x) ||
+        !_convert_coord_to_short (matrix.y0 + device_offset_y, &offset_y)) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
         return False;
     }
@@ -232,7 +229,7 @@ _draw_with_xlib_direct (cairo_t *cr,
     }
     
     /* Check that the clip is rectangular and aligned on unit boundaries */
-    if (!_get_rectangular_clip (cr,
+    if (!_get_rectangular_clip (cr, device_offset_x, device_offset_y,
                                 offset_x, offset_y, bounds_width, bounds_height,
                                 &needs_clip,
                                 rectangles, max_rectangles, &rect_count)) {
@@ -568,7 +565,7 @@ cairo_draw_with_xlib (cairo_t *cr,
            used for 'cr', which is ideal if it's going to be cached and reused.
            We do not return an image if the result has uniform color and alpha. */
         if (result && (!result->uniform_alpha || !result->uniform_color)) {
-            cairo_surface_t *target = _get_current_target (cr, NULL, NULL);
+            cairo_surface_t *target = _get_current_target (cr);
             cairo_surface_t *similar_surface =
                 cairo_surface_create_similar (target, CAIRO_CONTENT_COLOR_ALPHA,
                                               width, height);

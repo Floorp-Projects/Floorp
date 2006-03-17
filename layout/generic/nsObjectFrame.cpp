@@ -1102,20 +1102,19 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       SaveDC(hdc);
 
       nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-      gfxFloat xoff, yoff;
-      nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
-      if (!surf) {
+      nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface();
+      if (!surf)
         surf = ctx->CurrentSurface();
-        xoff = yoff = 0.0;
-      }
 
       /* Need to force the clip to be set */
       ctx->UpdateSurfaceClip();
 
       /* Set the device offsets as appropriate */
+      gfxFloat xoff, yoff;
       POINT origViewportOrigin;
+      surf->GetDeviceOffset(&xoff, &yoff);
       GetViewportOrgEx(hdc, &origViewportOrigin);
-      SetViewportOrgEx(hdc, origViewportOrigin.x - (int) xoff, origViewportOrigin.y - (int) yoff, NULL);
+      SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
 #endif
 
       if (NS_REINTERPRET_CAST(PRUint32, window->window) != (PRUint32)(HDC)hdc) {

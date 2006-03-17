@@ -51,6 +51,7 @@
 #include "gfxFont.h"
 
 class gfxRegion;
+class gfxFilter;
 class gfxTextRun;
 
 /**
@@ -80,13 +81,9 @@ public:
     gfxASurface *CurrentSurface();
 
     /**
-     * Return the current transparency group target, if any, along
-     * with its device offsets from the top.
+     * Return the current transparency group target, if any
      */
-    already_AddRefed<gfxASurface> CurrentGroupSurface(gfxFloat *dx, gfxFloat *dy);
-    already_AddRefed<gfxASurface> CurrentGroupSurface() {
-        return CurrentGroupSurface(NULL, NULL);
-    }
+    already_AddRefed<gfxASurface> CurrentGroupSurface();
 
     /**
      * Return the raw cairo_t object.
