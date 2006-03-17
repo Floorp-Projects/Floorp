@@ -56,8 +56,6 @@
 #include "nsCarbonHelpers.h"
 
 #include "nsFilePicker.h"
-#include "nsWatchTask.h"
-
 #include "nsIInternetConfigService.h"
 #include "nsIMIMEInfo.h"
 
@@ -419,9 +417,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
                                   &dialog);
   if (anErr == noErr)
   {
-    nsWatchTask::GetTask().Suspend();
     anErr = ::NavDialogRun(dialog);
-    nsWatchTask::GetTask().Resume();
 
     if (anErr == noErr)
     {
@@ -521,9 +517,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 
   if (anErr == noErr)
   {
-    nsWatchTask::GetTask().Suspend();  
     anErr = ::NavDialogRun(dialog);
-    nsWatchTask::GetTask().Resume();  
     if (anErr == noErr)
     {
     	NavReplyRecord reply;
@@ -619,9 +613,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   if (anErr == noErr)
   {
-    nsWatchTask::GetTask().Suspend();  
     anErr = ::NavDialogRun(dialog);
-    nsWatchTask::GetTask().Resume();  
 
     if (anErr == noErr)
     {

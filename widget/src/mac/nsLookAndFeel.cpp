@@ -36,10 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLookAndFeel.h"
-#include "nsCarbonHelpers.h"
 #include "nsIInternetConfigService.h"
 #include "nsIServiceManager.h"
 #include "nsSize.h"
+#include <ControlDefinitions.h>
+#include <MacWindows.h>
 
  
 //-------------------------------------------------------------------------

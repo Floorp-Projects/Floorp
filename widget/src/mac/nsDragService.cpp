@@ -59,7 +59,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsWatchTask.h"
 #include "nsLinebreakConverter.h"
 
 #include "nsIContent.h"
@@ -72,15 +71,17 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsIWidget.h"
+#ifndef MOZ_WIDGET_COCOA
 #include "nsCarbonHelpers.h"
-#include "nsGfxUtils.h"
-
+#endif
 // file save stuff
 #include "nsNetUtil.h"
 #include "nsILocalFileMac.h"
 
 #include "nsIDOMElement.h"
+#ifndef MOZ_CAIRO_GFX
 #include "nsIImageMac.h"
+#endif
 #include "nsIImage.h"
 #include "nsMacNativeUnicodeConverter.h"
 #include "nsICharsetConverterManager.h"
@@ -101,6 +102,15 @@ GetPrimaryFrameFor(nsIContent* aContent)
     }
   }
   return result;
+}
+
+
+static void
+SetPortToKnownGoodPort()
+{
+    WindowPtr firstWindow = GetWindowList();
+    if (firstWindow)
+      ::SetGWorld(::GetWindowPort(firstWindow), ::GetMainDevice());
 }
 
 
@@ -230,7 +240,7 @@ NS_IMETHODIMP
 nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
 #ifdef MOZ_WIDGET_COCOA
-  nsGraphicsUtils::SetPortToKnownGoodPort();
+  SetPortToKnownGoodPort();
   GrafPtr port;
   GDHandle handle;
   ::GetGWorld(&port, &handle);
@@ -333,7 +343,7 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
     inRegion->GetRegion(getter_AddRefs(geckoRegion));
     
 #ifdef MOZ_WIDGET_COCOA
-  nsGraphicsUtils::SetPortToKnownGoodPort();
+  SetPortToKnownGoodPort();
   GrafPtr port;
   GDHandle handle;
   ::GetGWorld(&port, &handle);
@@ -906,6 +916,7 @@ nsDragService::GetDataForFlavor(nsISupportsArray* inDragItems, DragReference inD
     
     nsCOMPtr<nsISupports> primitiveData;
     ptrPrimitive->GetData(getter_AddRefs(primitiveData));
+#ifndef MOZ_CAIRO_GFX
     nsCOMPtr<nsIImageMac> image = do_QueryInterface(primitiveData);
     if (!image) return cantGetFlavorErr; 
       
@@ -927,6 +938,9 @@ nsDragService::GetDataForFlavor(nsISupportsArray* inDragItems, DragReference inD
       retVal = cantGetFlavorErr;
 
     ::KillPicture(picture);
+#else
+    retVal = cantGetFlavorErr;
+#endif
     return retVal;
   }
     
@@ -1115,16 +1129,12 @@ nsDragService::ExtractDataFromOS ( DragReference inDragRef, ItemReference inItem
 nsresult
 nsDragService::StartDragSession ( )
 {
-  nsWatchTask::GetTask().Suspend();
-  
   return nsBaseDragService::StartDragSession();
 }
 
 nsresult
 nsDragService::EndDragSession ( )
 {
-  nsWatchTask::GetTask().Resume();
-  
   return nsBaseDragService::EndDragSession();
 }
 

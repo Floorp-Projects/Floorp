@@ -45,11 +45,76 @@
 
 #include "plbase64.h"
 #include "prmem.h"
-#include "nsGfxUtils.h"
 
 // Constants
 #define PRINTING_PREF_BRANCH            "print."
 #define MAC_OS_X_PAGE_SETUP_PREFNAME    "macosx.pagesetup"
+
+
+
+/** ------------------------------------------------------------
+ *	Utility class stack-based handle ownership
+ */
+
+class StHandleOwner
+{
+public:
+  StHandleOwner(Handle inHandle)
+    : mHandle(inHandle)
+  {
+  }
+
+  ~StHandleOwner()
+  {
+    if (mHandle)
+      ::DisposeHandle(mHandle);
+  }
+
+  Handle GetHandle() { return mHandle; }
+
+  void   ClearHandle(Boolean disposeIt = false)
+  {
+    if (disposeIt)
+      ::DisposeHandle(mHandle);
+
+    mHandle = nsnull;
+  }
+
+protected:
+
+  Handle            mHandle;
+};
+
+/** ------------------------------------------------------------
+ *	Utility class for saving, locking, and restoring handle state
+ *  Ok with null handle
+ */
+
+class StHandleLocker
+{
+public:
+
+  StHandleLocker(Handle theHandle)
+    :	mHandle(theHandle)
+  {
+    if (mHandle)
+      {
+        mOldHandleState = ::HGetState(mHandle);
+        ::HLock(mHandle);
+      }										  
+  }
+
+  ~StHandleLocker()
+  {
+    if (mHandle)
+      ::HSetState(mHandle, mOldHandleState);
+  }
+
+protected:
+
+  Handle          mHandle;
+  SInt8           mOldHandleState;
+};
 
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsX, 

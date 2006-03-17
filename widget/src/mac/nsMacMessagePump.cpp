@@ -77,7 +77,6 @@
 #include <Sound.h>
 #include <Quickdraw.h>
 #include "nsCarbonHelpers.h"
-#include "nsWatchTask.h"
 
 #include "nsIEventSink.h"
 #include "nsPIWidgetMac.h"
@@ -195,9 +194,6 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit)
   //
   mTSMMessagePump = nsMacTSMMessagePump::GetSingleton();
   NS_ASSERTION(mTSMMessagePump!=NULL,"nsMacMessagePump::nsMacMessagePump: Unable to create TSM Message Pump.");
-
-  // startup the watch cursor idle time vbl task
-  nsWatchTask::GetTask().Start();
 
 #if !XP_MACOSX
   // added to support Menu Sharing API.  Initializes the Menu Sharing API.
@@ -383,8 +379,6 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
   ::SetEventMask(everyEvent); // we need keyUp events
   PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
   
-  nsWatchTask::GetTask().EventLoopReached();
-  
   return haveEvent;
 }
 
@@ -537,10 +531,8 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         }
         else
         {
-          nsWatchTask::GetTask().Suspend();       
           long menuResult = ::MenuSelect(anEvent.where);
           handled = PR_TRUE;
-          nsWatchTask::GetTask().Resume();
 #if USE_MENUSELECT
           if (HiWord(menuResult) != 0)
           {
@@ -567,9 +559,7 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
             // it was a click or a drag. If it was a drag, send a drag gesture to the
             // background window. We don't need to rely on the ESM to track the gesture,
             // the OS has just told us.  If it was a click, bring it to the front like normal.
-            nsWatchTask::GetTask().Suspend();
             Boolean initiateDragFromBGWindow = ::WaitMouseMoved(anEvent.where);
-            nsWatchTask::GetTask().Resume();
             if ( initiateDragFromBGWindow ) {
               nsCOMPtr<nsIEventSink> sink ( do_QueryInterface(topWidget) );
               if ( sink ) {
@@ -606,8 +596,6 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         Point   oldTopLeft = {0, 0};
         ::LocalToGlobal(&oldTopLeft);
         
-        nsWatchTask::GetTask().Suspend();
-
         // roll up popups BEFORE we start the drag
         if ( gRollupListener && gRollupWidget )
           gRollupListener->Rollup();
@@ -615,8 +603,6 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         Rect screenRect;
         ::GetRegionBounds(::GetGrayRgn(), &screenRect);
         ::DragWindow(whichWindow, anEvent.where, &screenRect);
-
-        nsWatchTask::GetTask().Resume();
 
         Point   newTopLeft = {0, 0};
         ::LocalToGlobal(&newTopLeft);
@@ -702,9 +688,7 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
           sizeRect.left = kMinWindowWidth;
           sizeRect.bottom = 0x7FFF;
           sizeRect.right = 0x7FFF;
-          nsWatchTask::GetTask().Suspend();
           long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
-          nsWatchTask::GetTask().Resume();        
           if (newSize != 0)
             ::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
           Rect portRect;
@@ -719,19 +703,15 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
       case inGoAway:
       {
-        nsWatchTask::GetTask().Suspend();       
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         if (::TrackGoAway(whichWindow, anEvent.where)) {
-          nsWatchTask::GetTask().Resume();        
           handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         }
-        nsWatchTask::GetTask().Resume();        
         break;
       }
 
       case inZoomIn:
       case inZoomOut:
-        nsWatchTask::GetTask().Suspend();       
         if (::TrackBox(whichWindow, anEvent.where, partCode))
         {
           if (partCode == inZoomOut)
@@ -748,14 +728,11 @@ PRBool nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
           
           handled = DispatchOSEventToRaptor(anEvent, whichWindow);
         }
-        nsWatchTask::GetTask().Resume();
         break;
 
       case inToolbarButton:           // Mac OS X only
-        nsWatchTask::GetTask().Suspend();       
         nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
         handled = DispatchOSEventToRaptor(anEvent, whichWindow);
-        nsWatchTask::GetTask().Resume();        
         break;
 
   }

@@ -55,8 +55,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 
-#include "nsCarbonHelpers.h"
-#include "nsGfxUtils.h"
 #include "nsMacResources.h"
 #include "nsIQDFlushManager.h"
 
@@ -66,6 +64,8 @@
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
+#else
+#include "nsGfxUtils.h" // for StPortSetter
 #endif
 
 #define NSAppKitVersionNumber10_2 663
@@ -302,12 +302,12 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nsnull)
 , mParentView(nsnull)
 , mParentWidget(nsnull)
-, mFontMetrics(nsnull)
-, mTempRenderingContext(nsnull)
+#ifndef MOZ_CAIRO_GFX
+, mTempRenderingContextMadeHere(PR_FALSE)
+#endif
 , mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
 , mDrawing(PR_FALSE)
-, mTempRenderingContextMadeHere(PR_FALSE)
 , mAcceptFocusOnClick(PR_TRUE)
 , mLiveResizeInProgress(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
@@ -333,9 +333,6 @@ nsChildView::~nsChildView()
   }
 
   TearDownView(); // should have already been done from Destroy
-  
-  NS_IF_RELEASE(mTempRenderingContext); 
-  NS_IF_RELEASE(mFontMetrics);
   
   delete mPluginPort;
 
@@ -756,7 +753,11 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 //-------------------------------------------------------------------------
 nsIFontMetrics* nsChildView::GetFont(void)
 {
+#ifdef MOZ_CAIRO_GFX
+  return nsnull;
+#else
   return mFontMetrics;
+#endif
 }
 
     
@@ -767,10 +768,14 @@ nsIFontMetrics* nsChildView::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::SetFont(const nsFont &aFont)
 {
+#ifdef MOZ_CAIRO_GFX
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   NS_IF_RELEASE(mFontMetrics);
   if (mContext)
     mContext->GetMetricsFor(aFont, mFontMetrics);
   return NS_OK;
+#endif
 }
 
 
@@ -1030,6 +1035,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::StartDrawPlugin()
 {
+#ifndef MOZ_CAIRO_GFX
   NS_ASSERTION(mPluginPort, "StartDrawPlugin must only be called on a plugin widget");
   if (!mPluginPort)
     return NS_ERROR_FAILURE;
@@ -1080,6 +1086,7 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
   }
   
   NS_ASSERTION(0, "lockFocusIfCanDraw returned false\n");
+#endif
   return NS_ERROR_FAILURE;
 }
 
@@ -1261,6 +1268,8 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
   return (color8 << 8) | color8;  /* (color8 * 257) == (color8 * 0x0101) */
 }
 
+
+#ifndef MOZ_CAIRO_GFX
 //-------------------------------------------------------------------------
 //  StartDraw
 //
@@ -1274,13 +1283,12 @@ void nsChildView::StartDraw(nsIRenderingContext* aRenderingContext)
   if (aRenderingContext == nsnull)
   {
     // make sure we have a rendering context
-    mTempRenderingContext = GetRenderingContext();
+    mTempRenderingContext = getter_AddRefs(GetRenderingContext());
     mTempRenderingContextMadeHere = PR_TRUE;
   }
   else
   {
     // if we already have a rendering context, save its state
-    NS_IF_ADDREF(aRenderingContext);
     mTempRenderingContext = aRenderingContext;
     mTempRenderingContextMadeHere = PR_FALSE;
     mTempRenderingContext->PushState();
@@ -1326,9 +1334,10 @@ void nsChildView::EndDraw()
 
   if (mTempRenderingContextMadeHere)
     mTempRenderingContext->PopState();
-  NS_RELEASE(mTempRenderingContext);
-}
 
+  mTempRenderingContext = nsnull;
+}
+#endif /* MOZ_CAIRO_GFX */
 
 //-------------------------------------------------------------------------
 //
@@ -1337,7 +1346,7 @@ void nsChildView::EndDraw()
 void
 nsChildView::Flash(nsPaintEvent &aEvent)
 {
-#if DEBUG
+#if 0
   Rect flashRect;
   if (debug_WantPaintFlashing() && aEvent.rect ) {
     ::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
@@ -1381,6 +1390,7 @@ NS_IMETHODIMP nsChildView::Update()
 #pragma mark -
 
 
+#ifndef MOZ_CAIRO_GFX
 //
 // UpdateWidget
 //
@@ -1428,6 +1438,7 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   EndDraw();
 #endif
 }
+#endif
 
 
 //
@@ -2453,16 +2464,14 @@ nsChildView::GetThebesSurface()
   nsRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
   nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(cgContext, geckoBounds.width, geckoBounds.height,
-                         PR_FALSE);
+    new gfxQuartzSurface(cgContext, geckoBounds.width, geckoBounds.height, PR_FALSE);
 
   //fprintf (stderr, "Update[%p] [%f %f %f %f] cgc: %p gecko bounds: [%d %d %d %d]\n", mGeckoChild, aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height, cgContext, geckoBounds.x, geckoBounds.y, geckoBounds.width, geckoBounds.height);
 
   CGAffineTransform xform = CGContextGetCTM(cgContext);
   //fprintf (stderr, "  context xform: t: %f %f xx: %f xy: %f yx: %f yy: %f\n", xform.tx, xform.ty, xform.a, xform.b, xform.c, xform.d);
 
-  nsRefPtr<gfxContext> targetContext =
-    new gfxContext(targetSurface);
+  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
 
 #if 0
   targetContext->Rectangle(gfxRect(aRect.origin.x, aRect.origin.y,
@@ -2504,7 +2513,7 @@ nsChildView::GetThebesSurface()
 
   //fprintf (stderr, "---- update done ----\n");
 
-#else
+#else /* MOZ_CAIRO_GFX */
   // tell gecko to paint.
   // If < 10.3, just paint the rect
   if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_2) {
