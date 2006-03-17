@@ -233,6 +233,50 @@
 
       <listitem>
         <para>
+        <emphasis>*Time Tracking:</emphasis>
+        This form can be used for time tracking.
+        To use this feature, you have to be blessed group membership
+        specified by the <quote>timetrackinggroup</quote> parameter.
+        <simplelist>
+        <member>
+        <emphasis>Orig. Est.:</emphasis>
+        This field shows the original estimated time.</member>
+
+        <member>
+        <emphasis>Current Est.:</emphasis>
+        This field shows the current estimated time.
+        This number is calculated from <quote>Hours Worked</quote>
+        and <quote>Hours Left</quote>.</member>
+
+        <member>
+        <emphasis>Hours Worked:</emphasis>
+        This field shows the number of hours worked.</member>
+
+        <member>
+        <emphasis>Hours Left:</emphasis>
+        This field shows the <quote>Current Est.</quote> -
+        <quote>Hours Worked</quote>.
+        This value + <quote>Hours Worked</quote> will become the
+        new Current Est.</member>
+
+        <member>
+        <emphasis>%Complete:</emphasis>
+        This field shows what percentage of the task is complete.</member>
+
+        <member>
+        <emphasis>Gain:</emphasis>
+        This field shows the number of hours that the bug is ahead of the
+        <quote>Orig. Est.</quote>.</member>
+
+        <member>
+        <emphasis>Deadline:</emphasis>
+        This field shows the deadline for this bug.</member>
+        </simplelist>
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>
         <emphasis>Attachments:</emphasis>
           You can attach files (e.g. testcases or patches) to bugs. If there
           are any attachments, they are listed in this section.  Attachments are
