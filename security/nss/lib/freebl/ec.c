@@ -42,6 +42,7 @@
 #include "secerr.h"
 #include "secmpi.h"
 #include "secitem.h"
+#include "mplogic.h"
 #include "ec.h"
 #include "ecl.h"
 
@@ -636,7 +637,6 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     mp_int n;
     mp_err err = MP_OKAY;
     ECParams *ecParams = NULL;
-    SECItem localDigest;
     SECItem kGpoint = { siBuffer, NULL, 0};
     int flen = 0;    /* length in bytes of the field size */
     unsigned olen;   /* length in bytes of the base point order */
@@ -672,12 +672,6 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
 	goto cleanup;
     }
 
-    /* In the definition of EC signing, digests are truncated
-     * to the length of the EC base point order */
-    localDigest = *digest;
-    if (localDigest.len > olen) {
-	localDigest.len = olen;
-    }
 
     CHECK_MPI_OK( mp_init(&x1) );
     CHECK_MPI_OK( mp_init(&d) );
@@ -744,7 +738,14 @@ ECDSA_SignDigestWithSeed(ECPrivateKey *key, SECItem *signature,
     **
     ** s = (k**-1 * (HASH(M) + d*r)) mod n 
     */
-    SECITEM_TO_MPINT(localDigest, &s);        /* s = HASH(M)     */
+    SECITEM_TO_MPINT(*digest, &s);        /* s = HASH(M)     */
+
+    /* In the definition of EC signing, digests are truncated
+     * to the length of n in bits. 
+     * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
+    if (digest->len*8 > ecParams->fieldID.size) {
+	mpl_rsh(&s,&s,digest->len*8 - ecParams->fieldID.size);
+    }
 
 #if EC_DEBUG
     mp_todecimal(&n, mpstr);
@@ -916,12 +917,6 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     }
     slen = signature->len/2;
 
-    /* truncate digest to the length of the base point order */
-    localDigest = *digest;
-    if (localDigest.len > olen) {
-	localDigest.len = olen;
-    }
-
     SECITEM_AllocItem(NULL, &pointC, 2*flen + 1);
     if (pointC.data == NULL)
 	goto cleanup;
@@ -965,7 +960,14 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     **
     ** u1 = ((HASH(M')) * c) mod n
     */
-    SECITEM_TO_MPINT(localDigest, &u1);         /* u1 = HASH(M')     */
+    SECITEM_TO_MPINT(*digest, &u1);                  /* u1 = HASH(M)     */
+
+    /* In the definition of EC signing, digests are truncated
+     * to the length of n in bits. 
+     * (see SEC 1 "Elliptic Curve Digit Signature Algorithm" section 4.1.*/
+    if (digest->len*8 > ecParams->fieldID.size) {  /* u1 = HASH(M')     */
+	mpl_rsh(&u1,&u1,digest->len*8- ecParams->fieldID.size);
+    }
 
 #if EC_DEBUG
     mp_todecimal(&r_, mpstr);
