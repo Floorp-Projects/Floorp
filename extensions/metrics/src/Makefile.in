@@ -63,10 +63,11 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsMetricsService.cpp \
 		nsLoadCollector.cpp \
-		nsWindowCollector.cpp \
+		nsMetricsConfig.cpp \
 		nsMetricsModule.cpp \
+		nsMetricsService.cpp \
+		nsWindowCollector.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX)

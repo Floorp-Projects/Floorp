@@ -82,7 +82,7 @@ class nsLoadCollector : public nsIWebProgressListener,
   static void Shutdown();
 
  private:
-  ~nsLoadCollector();
+  ~nsLoadCollector() {}
 
   // Object initialization, to be called by Startup()
   nsresult Init();
