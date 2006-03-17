@@ -280,11 +280,11 @@
 
 #ifdef MOZ_PLACES
       <toolbarbutton id="bookmarksBarShowPlaces"
-                     oncommand="PlacesCommandHook.showPlacesOrganizer('history');"/>
+                     oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
       <toolbaritem flex="1" id="personal-bookmarks" title="&bookmarksItem.title;">
          <hbox id="bookmarksBarContent" flex="1" type="places" 
                place="place:&amp;folder=3&amp;group=3&amp;expandQueries=1"
-               context="placesContext"
+               context="placesContext" asyncinit="true" 
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>

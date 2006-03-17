@@ -248,11 +248,9 @@ var BookmarkPropertiesPanel = {
     this._controller = controller;
 
     this.folderTree = this._dialogWindow.document.getElementById("folder-tree");
-    this.folderTree.controllers.appendController(this._controller);
-    this.folderTree.init(new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER],
-                                     ViewConfig.GENERIC_DROP_TYPES,
-                                     true, false, 4, true));
-    this.folderTree.loadFolder(this._bms.placesRoot);
+    this.folderTree.peerDropTypes = [];
+    this.folderTree.childDropTypes = [];
+    this.folderTree.excludeItems = true;
 
     this._initAssignableFolderResult();
     this._populateProperties();

@@ -441,7 +441,7 @@
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
         ondragover="BookmarksEventHandler.onDragOver(event);">
     <menupopup id="bookmarksMenuPopup"
-               type="places"
+               type="places" asyncinit="true"
                place="place:&amp;folder=2&amp;group=3&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"

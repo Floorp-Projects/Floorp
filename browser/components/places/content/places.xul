@@ -11,7 +11,7 @@
 <!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
 
 <window id="places" title="&places.title;" 
-        windowtype="Places" 
+        windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
         width="700" height="500" screenX="10" screenY="10"
@@ -30,10 +30,15 @@
     <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
     <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
-
+  
 #include commands.inc
 
-  <keyset id="placesKeyset">
+  <keyset id="placesOrganizerKeyset">
+    <!-- Instantiation Keys -->
+    <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
+         oncommand="close();"/>
+         
+    <!-- Command Keys -->
     <key id="placesKey_find" command="placesCmd_find" key="&cmd.find.key;" modifiers="accel"/>
     <key id="placesKey_select:all" command="placesCmd_select:all" key="&cmd.select_all.key;" modifiers="accel"/>
     <key id="placesKey_edit:cut" command="placesCmd_edit:cut" key="&cmd.edit_cut.key;" modifiers="accel"/>
@@ -42,10 +47,10 @@
     <key id="placesKey_edit:delete" command="placesCmd_edit:delete" keycode="VK_DELETE"/>
     <key id="placesKey_open" command="placesCmd_open" keycode="VK_ENTER"/>
     <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_ENTER" modifiers="shift"/>
-    <key id="placesKey_open:tab" oncommand="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
-    <key id="placesKey_show:info" oncommand="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
-    <key id="placesKey_rename" oncommand="placesCmd_rename" keycode="VK_F2"/>
-    <key id="placesKey_reload" oncommand="placesCmd_reload" key="&cmd.reload.key;" modifiers="accel"/>
+    <key id="placesKey_open:tab" command="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
+    <key id="placesKey_show:info" command="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
+    <key id="placesKey_rename" command="placesCmd_rename" keycode="VK_F2"/>
+    <key id="placesKey_reload" command="placesCmd_reload" key="&cmd.reload.key;" modifiers="accel"/>
   </keyset>
   
   <popupset id="placesPopupset">
@@ -157,25 +162,19 @@
     </toolbar>
   </toolbox>
   <hbox flex="1" id="placesView">
-    <vbox>
-      <vbox id="placesListContainer" flex="1">
-        <tree id="placesList" class="placesTree" flex="1" type="places" 
-              hidecolumnpicker="true" context="placesContext"
-              onselect="PlacesOrganizer.onPlaceSelected(event);"
-              seltype="single">
-          <treecols>
-            <treecol id="title" flex="1" primary="true" hideheader="true"/>
-          </treecols>
-          <treechildren id="placesListChildren" view="placesList"  flex="1"/>
-        </tree>
-      </vbox>
-      <vbox id="historyCalendar" 
-            class="history-calendar"
-            onselectionchanged="return PlacesOrganizer.rangeSelected()"/>
-    </vbox>
+    <tree id="placesList" class="placesTree" flex="1" type="places" 
+          place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
+          hidecolumnpicker="true" context="placesContext"
+          onselect="PlacesOrganizer.onPlaceSelected(event);"
+          seltype="single">
+      <treecols>
+        <treecol id="title" flex="1" primary="true" hideheader="true"/>
+      </treecols>
+      <treechildren id="placesListChildren" view="placesList"  flex="1"/>
+    </tree>
     <splitter id="splitter"/>
-    <vbox flex="4">
-      <deck id="content" flex="1">
+    <vbox id="contentView" flex="4">
+      <deck id="contentDeck" flex="1">
         <vbox flex="1">
           <hbox id="titlebar" align="center">
             <label id="showingPrefix"/>
@@ -204,9 +203,8 @@
           </hbox>
 #include advancedSearch.inc          
           <tree id="placeContent" class="placesTree" context="placesContext" 
-                flex="1" query="" type="places" 
-                ondblclick="PlacesController.mouseLoadURI(event);"
-                onplacestreereloaded="PlacesOrganizer.onContentChanged();">
+                flex="1" type="places" 
+                ondblclick="PlacesController.mouseLoadURI(event);">
             <treecols id="placeContentColumns">
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>

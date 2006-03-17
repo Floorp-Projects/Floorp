@@ -15,15 +15,9 @@
 }
 
 #placesList {
-  -moz-appearance: none;
-  width: 160px;
-  margin: 0px;
-  border: 0px;
-}
-
-#placesListContainer {
   -moz-appearance: listbox;
   margin: 6px 0px 7px 6px;
+  width: 160px;
 }
 
 #placeContent {
@@ -31,14 +25,17 @@
   border: 0px;
 }
 
-#content {
+#contentView {
   margin: 6px 6px 7px 0px;
   -moz-appearance: listbox;
 }
 
-treechildren::-moz-tree-image(title, container) {
+treechildren::-moz-tree-image {
   padding-right: 2px;
   margin: 0px 2px;
+}
+
+treechildren::-moz-tree-image(title, container) {
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
