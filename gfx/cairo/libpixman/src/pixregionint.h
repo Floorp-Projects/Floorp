@@ -44,8 +44,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixregionint.h,v 1.10 2006/03/17 07:44:26 vladimir%pobox.com Exp $ */
-
 #ifndef _PIXREGIONINT_H_
 #define _PIXREGIONINT_H_
 

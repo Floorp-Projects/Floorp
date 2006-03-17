@@ -73,11 +73,14 @@ gfxASurface *gfxContext::CurrentSurface()
     return mSurface;
 }
 
-already_AddRefed<gfxASurface> gfxContext::CurrentGroupSurface()
+already_AddRefed<gfxASurface> gfxContext::CurrentGroupSurface(gfxFloat *dx, gfxFloat *dy)
 {
-    cairo_surface_t *s = cairo_get_group_target(mCairo);
-    if (!s)
+    cairo_surface_t *s = cairo_get_group_target(mCairo, dx, dy);
+    if (!s) {
+        *dx = 0.0;
+        *dy = 0.0;
         return NULL;
+    }
 
     gfxASurface *wrapper = new gfxUnknownSurface(s);
     NS_ADDREF(wrapper);

@@ -1,6 +1,4 @@
 /*
- * $Id: fbpict.h,v 1.7 2006/03/17 07:44:26 vladimir%pobox.com Exp $
- *
  * Copyright © 2000 Keith Packard
  *             2005 Lars Knoll & Zack Rusin, Trolltech
  *

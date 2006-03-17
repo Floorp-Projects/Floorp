@@ -62,8 +62,8 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long 
     // with CreateCompatibleDC, but from stuff that I've read
     // that's only useful for terminal services clients.
 
-    Init(cairo_win32_surface_create_dib((cairo_format_t)imageFormat,
-                                        width, height));
+    Init(cairo_win32_surface_create_with_dib((cairo_format_t)imageFormat,
+                                             width, height));
 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
 }
