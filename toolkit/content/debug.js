@@ -42,7 +42,8 @@
  * within JavaScript code.
  */
 
-const NS_ASSERT_ENVIRONMENT_VARIABLE_NAME = "XUL_ASSERT_PROMPT";
+// XXXben change to const to fix build
+var NS_ASSERT_ENVIRONMENT_VARIABLE_NAME = "XUL_ASSERT_PROMPT";
 var gTraceOnAssert = true;
 
 /**
