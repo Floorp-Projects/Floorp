@@ -247,15 +247,34 @@ var BookmarkPropertiesPanel = {
     this._dialogWindow = dialogWindow;
     this._controller = controller;
 
-    this.folderTree = this._dialogWindow.document.getElementById("folder-tree");
-    this.folderTree.peerDropTypes = [];
-    this.folderTree.childDropTypes = [];
-    this.folderTree.excludeItems = true;
-
+    this._initFolderTree();
     this._initAssignableFolderResult();
     this._populateProperties();
     this._updateSize();
   },
+
+
+  /**
+   * This method initializes the folder tree.  It currently uses ._load()
+   * because the tree binding doesn't allow for the setting of query options
+   * to suppress non-assignable containers.
+   */
+
+  _initFolderTree: function BPP__initFolderTree() {
+    this._folderTree = this._dialogWindow.document.getElementById("folder-tree");
+    this._folderTree.peerDropTypes = [];
+    this._folderTree.childDropTypes = [];
+    this._folderTree.excludeItems = true;
+
+    var query = this._hist.getNewQuery();
+    query.setFolders([this._bms.placesRoot], 1);
+    var options = this._hist.getNewQueryOptions();
+    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
+    options.excludeReadOnlyFolders = true;
+    options.excludeQueries = true;
+    this._folderTree._load([query], options);
+  },
+
 
   /**
    * This method creates a query for the set of assignable folders.
@@ -559,7 +578,7 @@ var BookmarkPropertiesPanel = {
     var newURI = this._uri(urlbox.value);
 
     if (this._isFolderEditable()) {
-      var selected =  this.folderTree.getSelectionNodes();
+      var selected =  this._folderTree.getSelectionNodes();
 
       for (var i = 0; i < selected.length; i++) {
         var node = selected[i];
