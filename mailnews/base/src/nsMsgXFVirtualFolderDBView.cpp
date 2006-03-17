@@ -73,6 +73,7 @@ NS_IMETHODIMP nsMsgXFVirtualFolderDBView::Close()
   for(PRInt32 i = 0; i < count; i++)
     m_dbToUseList[i]->RemoveListener(this);
 
+  m_dbToUseList.Clear();
   return NS_OK;
 }
 
