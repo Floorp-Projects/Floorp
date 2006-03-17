@@ -79,6 +79,25 @@
 #include <windows.h>
 #include <process.h>
 
+#ifdef WINCE
+#define NS_VK_APP1  0x0201
+#define NS_VK_APP2  0x0202
+#define NS_VK_APP3  0x0203
+#define NS_VK_APP4  0x0204
+#define NS_VK_APP5  0x0205
+#define NS_VK_APP6  0x0206
+#define NS_VK_APP7  0x0207
+#define NS_VK_APP8  0x0208
+#define NS_VK_APP9  0x0209
+#define NS_VK_APP10 0x020A
+#define NS_VK_APP11 0x020B
+
+#include "aygshell.h"
+#include "imm.h"
+#include "tpcshell.h"
+#endif
+
+
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
 
@@ -143,14 +162,6 @@
 #include "prprf.h"
 #include "prmem.h"
 
-#ifdef WINCE
-#include "aygshell.h"
-#include "tpcshell.h"
-
-PRBool gOverrideHWKeys = PR_FALSE;
-PRBool gUseOkayButton  = PR_FALSE;
-#endif
-
 static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 
 #define kWindowPositionSlop 20
@@ -192,6 +203,122 @@ static UpdateLayeredWindowProc* GetUpdateLayeredWindowProc()
 static UpdateLayeredWindowProc* pUpdateLayeredWindow = GetUpdateLayeredWindowProc();
 
 static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindow != nsnull; }
+
+#endif
+
+
+#ifdef WINCE
+static PRBool gSoftKeyMenuBar = PR_FALSE;
+static PRBool gUseOkayButton  = PR_FALSE;
+static PRBool gOverrideHWKeys = PR_TRUE;
+
+typedef BOOL (__stdcall *UnregisterFunc1Proc)( UINT, UINT );
+static UnregisterFunc1Proc gProcUnregisterFunc = NULL;
+static HINSTANCE gCoreDll = NULL;
+
+UINT gHardwareKeys[][2] =
+  {
+    { 0xc1, MOD_WIN },
+    { 0xc2, MOD_WIN },
+    { 0xc3, MOD_WIN },
+    { 0xc4, MOD_WIN },
+    { 0xc5, MOD_WIN },
+    { 0xc6, MOD_WIN },
+
+    { 0x72, 0 },// Answer - 0x72 Modifier - 0  
+    { 0x73, 0 },// Hangup - 0x73 Modifier - 0 
+    { 0x74, 0 },// 
+    { 0x75, 0 },// Volume Up   - 0x75 Modifier - 0
+    { 0x76, 0 },// Volume Down - 0x76 Modifier - 0
+    { 0, 0 },
+  };
+
+static void MapHardwareButtons(HWND window)
+{
+  if (!window)
+    return;
+
+  // handle hardware buttons so that they broadcast into our
+  // application. the following code is based on an article
+  // on the Pocket PC Developer Network:
+  //
+  // http://www.pocketpcdn.com/articles/handle_hardware_keys.html
+  
+  if (gOverrideHWKeys)
+  {
+    if (!gProcUnregisterFunc)
+    {
+      gCoreDll = LoadLibrary(_T("coredll.dll")); // leak
+      
+      if (gCoreDll)
+        gProcUnregisterFunc = (UnregisterFunc1Proc)GetProcAddress( gCoreDll, _T("UnregisterFunc1"));
+    }
+    
+    if (gProcUnregisterFunc)
+    {    
+      for (int i=0; gHardwareKeys[i][0]; i++)
+      {
+        UINT mod = gHardwareKeys[i][1];
+        UINT kc = gHardwareKeys[i][0];
+        
+        gProcUnregisterFunc(mod, kc);
+        RegisterHotKey(window, kc, mod, kc);
+      }
+    }
+  }
+}
+
+static void UnmapHardwareButtons()
+{
+  if (!gProcUnregisterFunc)
+    return;
+
+  for (int i=0; gHardwareKeys[i][0]; i++)
+  {
+    UINT mod = gHardwareKeys[i][1];
+    UINT kc = gHardwareKeys[i][0];
+
+    gProcUnregisterFunc(mod, kc);
+  }
+}
+
+HWND CreateSoftKeyMenuBar(HWND wnd)
+{
+  if (!wnd)
+    return nsnull;
+
+  SHMENUBARINFO mbi;
+  ZeroMemory(&mbi, sizeof(SHMENUBARINFO));
+  mbi.cbSize = sizeof(SHMENUBARINFO);
+  mbi.hwndParent = wnd;
+
+  //  On windows ce smartphone, events never occur if the
+  //  menubar is empty.  This doesn't work: 
+  //  mbi.dwFlags = SHCMBF_EMPTYBAR;
+
+  mbi.nToolBarId = IDC_DUMMY_CE_MENUBAR;
+  mbi.hInstRes   = GetModuleHandle(NULL);
+  
+  if (!SHCreateMenuBar(&mbi))
+    return nsnull;
+
+  SetWindowPos(mbi.hwndMB, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
+
+  SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TBACK,
+              MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY,
+                         SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+  
+  SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TSOFT1, 
+              MAKELPARAM (SHMBOF_NODEFAULT | SHMBOF_NOTIFY, 
+                          SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+  
+  
+  SendMessage(mbi.hwndMB, SHCMBM_OVERRIDEKEY, VK_TSOFT2, 
+              MAKELPARAM (SHMBOF_NODEFAULT | SHMBOF_NOTIFY, 
+                          SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
+
+  return mbi.hwndMB;
+}
 
 #endif
 
@@ -778,6 +905,8 @@ nsWindow::nsWindow() : nsBaseWidget()
       prefBranch->GetBoolPref("config.wince.overrideHWKeys", &gOverrideHWKeys);
     }
   }
+  
+  mSoftKeyMenuBar = nsnull;
 #endif
 }
 
@@ -1456,6 +1585,13 @@ nsWindow::StandardWindowCreate(nsIWidget *aParent,
       }
     }
   }
+#ifdef WINCE
+    if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel )
+      mSoftKeyMenuBar = CreateSoftKeyMenuBar(mWnd);
+
+    MapHardwareButtons(mWnd);
+#endif
+
   return NS_OK;
 }
 
@@ -2107,6 +2243,11 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     if (::IsIconic(toplevelWnd))
       ::OpenIcon(toplevelWnd);
     ::SetFocus(mWnd);
+
+#ifdef WINCE
+    MapHardwareButtons(mWnd);
+#endif
+
   }
   return NS_OK;
 }
@@ -4314,7 +4455,83 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     break;
 #endif
 
-    case WM_SYSCHAR:
+#ifdef WINCE
+    // This needs to move into nsIDOMKeyEvent.idl && nsGUIEvent.h
+  case WM_HOTKEY:
+    {
+      // SmartPhones has a one or two menu buttons at the
+      // bottom of the screen.  They are dispatched via a
+      // menu resource, rather then a hotkey.  To make
+      // this look consistent, we have mapped this menu to
+      // fire hotkey events.  See
+      // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/win_ce/html/pwc_TheBackButtonandOtherInterestingButtons.asp
+      if (VK_TSOFT1 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
+      {
+        keybd_event(VK_F23, 0, 0, 0);
+        keybd_event(VK_F23, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+      }
+      
+      if (VK_TSOFT2 == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
+      {
+        keybd_event(VK_F24, 0, 0, 0);
+        keybd_event(VK_F24, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+      }
+      
+      if (VK_TBACK == HIWORD(lParam) && (0 != (MOD_KEYUP & LOWORD(lParam))))
+      {
+        keybd_event(VK_BACK, 0, 0, 0);
+        keybd_event(VK_BACK, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+      }
+      
+      switch (wParam) 
+      {
+      case VK_APP1:
+        keybd_event(VK_F1, 0, 0, 0);
+        keybd_event(VK_F1, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+        
+      case VK_APP2:
+        keybd_event(VK_F2, 0, 0, 0);
+        keybd_event(VK_F2, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+        
+      case VK_APP3:
+        keybd_event(VK_F3, 0, 0, 0);
+        keybd_event(VK_F3, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+        
+      case VK_APP4:
+        keybd_event(VK_F4, 0, 0, 0);
+        keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+        
+      case VK_APP5:
+        keybd_event(VK_F5, 0, 0, 0);
+        keybd_event(VK_F5, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+        
+      case VK_APP6:
+        keybd_event(VK_F6, 0, 0, 0);
+        keybd_event(VK_F6, 0, KEYEVENTF_KEYUP, 0);
+        result = 0;
+        break;
+      }
+    }
+    break;
+#endif
+
+  case WM_SYSCHAR:
     case WM_CHAR:
     {
 #ifdef KE_DEBUG
