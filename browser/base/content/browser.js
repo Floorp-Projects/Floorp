@@ -2785,7 +2785,7 @@ const BrowserSearch = {
         // If there are no open browser windows, open a new one
         win = window.openDialog("chrome://browser/content/", "_blank",
                                 "chrome,all,dialog=no", "about:blank");
-        win.addEventListener("load", BrowserSearch.WebSearch, false);
+        win.addEventListener("load", BrowserSearch.webSearch, false);
       }
       return;
     }
