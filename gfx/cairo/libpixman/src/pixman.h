@@ -54,8 +54,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $Id: pixman.h,v 1.11 2006/02/03 04:49:30 vladimir%pobox.com Exp $ */
-
 /* libic.h */
 
 /*

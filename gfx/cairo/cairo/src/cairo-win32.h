@@ -48,9 +48,9 @@ cairo_public cairo_surface_t *
 cairo_win32_surface_create (HDC hdc);
 
 cairo_public cairo_surface_t *
-cairo_win32_surface_create_dib (cairo_format_t format,
-				int width,
-				int height);
+cairo_win32_surface_create_with_dib (cairo_format_t format,
+                                     int width,
+                                     int height);
 
 cairo_public HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface);
