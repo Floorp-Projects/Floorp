@@ -467,7 +467,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
     {
         attemptFixup = PR_TRUE;
     }
-#elif XP_UNIX
+#elif defined(XP_UNIX) || defined(XP_BEOS)
     // Check if it starts with / (UNIX)
     if(aIn.First() == '/')
     {
