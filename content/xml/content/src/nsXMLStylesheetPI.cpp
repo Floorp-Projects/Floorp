@@ -148,11 +148,7 @@ nsXMLStylesheetPI::SetNodeValue(const nsAString& aNodeValue)
 NS_IMETHODIMP
 nsXMLStylesheetPI::GetCharset(nsAString& aCharset)
 {
-  if (!GetAttrValue(NS_LITERAL_STRING("charset"), aCharset)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return GetAttrValue(nsGkAtoms::charset, aCharset) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
@@ -163,7 +159,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
   *aURI = nsnull;
 
   nsAutoString href;
-  GetAttrValue(NS_LITERAL_STRING("href"), href);
+  GetAttrValue(nsGkAtoms::href, href);
   if (href.IsEmpty()) {
     return;
   }
@@ -197,31 +193,29 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
     return;
   }
 
-  nsAutoString title, type, media, alternate;
+  nsAutoString data;
+  GetData(data);
 
-  GetAttrValue(NS_LITERAL_STRING("title"), title);
-  title.CompressWhitespace();
-  aTitle.Assign(title);
+  nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::title, aTitle);
 
-  GetAttrValue(NS_LITERAL_STRING("alternate"), alternate);
+  nsAutoString alternate;
+  nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::alternate, alternate);
 
   // if alternate, does it have title?
   if (alternate.EqualsLiteral("yes")) {
     if (aTitle.IsEmpty()) { // alternates must have title
       return;
-    } else {
-      *aIsAlternate = PR_TRUE;
     }
+
+    *aIsAlternate = PR_TRUE;
   }
 
-  GetAttrValue(NS_LITERAL_STRING("media"), media);
-  aMedia.Assign(media);
-  ToLowerCase(aMedia); // case sensitivity?
+  nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::media, aMedia);
 
-  GetAttrValue(NS_LITERAL_STRING("type"), type);
+  nsAutoString type;
+  nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::type, type);
 
-  nsAutoString mimeType;
-  nsAutoString notUsed;
+  nsAutoString mimeType, notUsed;
   nsParserUtils::SplitMimeType(type, mimeType, notUsed);
   if (!mimeType.IsEmpty() && !mimeType.LowerCaseEqualsLiteral("text/css")) {
     aType.Assign(type);

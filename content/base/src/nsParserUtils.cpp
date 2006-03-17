@@ -40,6 +40,8 @@
 #include "jsapi.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsContentUtils.h"
+#include "nsIParserService.h"
 
 #define SKIP_WHITESPACE(iter, end_iter)                          \
   while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
@@ -57,16 +59,14 @@
     break
 
 PRBool
-nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
-                                       const nsAString& aAttribute,
+nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
                                        nsAString& aValue)
 {
-  NS_ASSERTION(!aAttribute.IsEmpty(), "Empty attribute name cannot be searched for usefully");
   aValue.Truncate();
-  nsAString::const_iterator start, end;
-  aSource.BeginReading(start);
-  aSource.EndReading(end);
-  nsAString::const_iterator iter;
+
+  const PRUnichar *start = aSource.get();
+  const PRUnichar *end = start + aSource.Length();
+  const PRUnichar *iter;
   
   while (start != end) {
     SKIP_WHITESPACE(start, end);
@@ -74,7 +74,7 @@ nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
     SKIP_ATTR_NAME(iter, end);
 
     // Remember the attr name.
-    const nsAString & attrName = Substring(start, iter);
+    const nsDependentSubstring & attrName = Substring(start, iter);
 
     // Now check whether this is a valid name="value" pair.
     start = iter;
@@ -96,23 +96,69 @@ nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
     
     ++start;  // Point to the first char of the value.
     iter = start;
-    if (!FindCharInReadable(q, iter, end)) {
+
+    while (iter != end && *iter != q) {
+      ++iter;
+    }
+
+    if (iter == end) {
       // Oops, unterminated quoted string.
       break;
     }
-    
+
     // At this point attrName holds the name of the "attribute" and
     // the value is between start and iter.
     
-    if (!attrName.Equals(aAttribute)) {
-      // Resume scanning after the end of the attribute value.
-      start = iter;
-      ++start;  // To move past the quote char.
-      continue;
+    if (aName->Equals(attrName)) {
+      nsIParserService* parserService = nsContentUtils::GetParserService();
+      NS_ENSURE_TRUE(parserService, PR_FALSE);
+
+      // We'll accumulate as many characters as possible (until we hit either
+      // the end of the string or the beginning of an entity). Chunks will be
+      // delimited by start and chunkEnd.
+      const PRUnichar *chunkEnd = start;
+      while (chunkEnd != iter) {
+        if (*chunkEnd == kLessThan) {
+          aValue.Truncate();
+
+          return PR_FALSE;
+        }
+
+        if (*chunkEnd == kAmpersand) {
+          aValue.Append(start, chunkEnd - start);
+
+          // Point to first character after the ampersand.
+          ++chunkEnd;
+
+          const PRUnichar *afterEntity;
+          PRUnichar result[2];
+          PRUint32 count =
+            parserService->DecodeEntity(chunkEnd, iter, &afterEntity, result);
+          if (count == 0) {
+            aValue.Truncate();
+
+            return PR_FALSE;
+          }
+
+          aValue.Append(result, count);
+
+          // Advance to after the entity and begin a new chunk.
+          start = chunkEnd = afterEntity;
+        }
+        else {
+          ++chunkEnd;
+        }
+      }
+
+      // Append remainder.
+      aValue.Append(start, iter - start);
+
+      return PR_TRUE;
     }
 
-    aValue = Substring(start, iter);
-    return PR_TRUE;
+    // Resume scanning after the end of the attribute value (past the quote
+    // char).
+    start = iter + 1;
   }
 
   return PR_FALSE;
