@@ -197,7 +197,13 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, PRBool aSearchView, nsIAbViewList
   NS_ENSURE_ARG_POINTER(result);
 
   mURI = aURI;
-  mAbViewListener = abViewListener;
+  mAbViewListener = nsnull;
+  if (mTree)
+  {
+    // try and speed deletion of old cards by disconnecting the tree from us
+    mTreeSelection->ClearSelection();
+    mTree->SetView(nsnull);
+  }
 
   // clear out old cards
   PRInt32 i = mCards.Count();
@@ -266,6 +272,7 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, PRBool aSearchView, nsIAbViewList
   rv = abSession->AddAddressBookListener(this, nsIAddrBookSession::all);
   NS_ENSURE_SUCCESS(rv,rv);
   
+  mAbViewListener = abViewListener;
   if (mAbViewListener && !mSuppressCountChange) {
     rv = mAbViewListener->OnCountChanged(mCards.Count());
     NS_ENSURE_SUCCESS(rv,rv);
