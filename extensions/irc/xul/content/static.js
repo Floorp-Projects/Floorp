@@ -1051,8 +1051,7 @@ function insertTalkbackLink(matchText, containerTag, eventData)
                                           "html:a");
 
     anchor.setAttribute("href", "http://talkback-public.mozilla.org/" +
-                        "talkback/fastfind.jsp?search=2&type=iid&id=" + 
-                        matchText);
+                        "search/start.jsp?search=2&type=iid&id=" + matchText);
     anchor.setAttribute("class", "chatzilla-link");
     insertHyphenatedWord(matchText, anchor);
     containerTag.appendChild(anchor);
