@@ -9,6 +9,9 @@ my $CURRENT_BUILD_PID = 0;
 my $HALT_AFTER_THIS_BUILD = 0;
 my $RELOAD_CONFIG = 0;
 
+my $TBOX_CLIENT_CVSUP_CMD = 'cvs update';
+my $TBOX_CLIENT_CVS_TIMEOUT = 300;
+
 sub PrintUsage() {
     die <<END_USAGE
     usage: $0 [options]
@@ -74,15 +77,33 @@ sub HandleSigInt() {
     $HALT_AFTER_THIS_BUILD = 1;
 }
 
+sub HandleSigAlrm() {
+   die 'timeout';
+}
+
+sub UpdateTinderboxScripts() {
+    if (exists($ENV{'TBOX_CLIENT_CVS_DIR'})) {
+        print STDERR "Updating tinderbox scripts in $ENV{'TBOX_CLIENT_CVS_DIR'}\n";
+        eval {
+            alarm($TBOX_CLIENT_CVS_TIMEOUT);
+            system("cd $ENV{'TBOX_CLIENT_CVS_DIR'} && $TBOX_CLIENT_CVSUP_CMD") 
+             == 0 or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
+            alarm(0);
+        };
+
+        if ($@) {
+            print STDERR 'CVS update of client tinderbox scripts ' . 
+              ($@ eq 'timeout' ? "timed out" : "failed: $@") . "\n";
+        }
+    }
+}
+
 sub Run() {
-    my $start_time = time();
     OUTER: while (1) {
+        my $start_time = time();
+        UpdateTinderboxScripts();
+
         foreach my $treeentry (@{$Settings::Tinderboxes}) {
-            my $multidir = getcwd();
-            chdir($treeentry->{tree}) or
-                die "Tree $treeentry->{tree} does not exist";
-
-
             my $buildPid = fork();
 
             if ($buildPid) {
@@ -97,9 +118,9 @@ sub Run() {
                     warn "fork() of build sub-process failed: $!";
                 }
 
-                chdir($multidir);
-
             } else {
+                chdir($treeentry->{tree}) or
+                 die "Tree $treeentry->{tree} does not exist";
                 exec("./build-seamonkey.pl --once $treeentry->{args}");
             }
 
@@ -119,13 +140,13 @@ sub Run() {
             print "\n\nSleeping $sleep_time seconds ...\n";
             sleep $sleep_time;
         }
-        $start_time = time();
     }
 }
 
 $SIG{'TERM'} = \&HandleSigTerm;
 $SIG{'HUP'} = \&HandleSigHup;
 $SIG{'INT'} = \&HandleSigInt;
+$SIG{'ALRM'} = \&HandleSigAlrm;
 
 HandleArgs();
 
