@@ -5453,6 +5453,7 @@ key_and_mac_derive_fail:
 	PRBool   withCofactor = PR_FALSE;
 	unsigned char secret_hash[20];
 	unsigned char *secret;
+	unsigned char *keyData = NULL;
 	int secretlen;
 	CK_ECDH1_DERIVE_PARAMS *mechParams;
 	NSSLOWKEYPrivateKey *privKey;
@@ -5506,26 +5507,58 @@ key_and_mac_derive_fail:
 	    break;
 	}
 
+	/*
+	 * tmp is the raw data created by ECDH_Derive,
+	 * secret and secretlen are the values we will eventually pass as our
+	 * generated key.
+	 */
 	secret = tmp.data;
 	secretlen = tmp.len;
+
+	/*
+	 * apply the kdf function.
+	 */
 	if (mechParams->kdf == CKD_SHA1_KDF) {
 	    /* Compute SHA1 hash */
-	    memset(secret_hash, 0, 20);
+	    PORT_Memset(secret_hash, 0, 20);
 	    rv = SHA1_HashBuf(secret_hash, tmp.data, tmp.len);
 	    if (rv != SECSuccess) {
 		PORT_ZFree(tmp.data, tmp.len);
+		crv = CKR_HOST_MEMORY;
+		break;
+	    } 
+	    secret = secret_hash;
+	    secretlen = 20;
+	}
+	/*
+	 * if keySize is supplied, then we are generating a key of a specific 
+	 * length. This is done by taking the least significant 'keySize' 
+	 * bytes from the unsigned value calculated by ECDH. Note: this may 
+	 * mean padding temp with extra leading zeros from what ECDH_Derive 
+	 * already returned (which itself may contain leading zeros).
+ 	 */
+	if (keySize) {
+	    if (secretlen < keySize) {
+	        keyData = PORT_ZAlloc(keySize);
+		if (!keyData) {
+		    PORT_ZFree(tmp.data, tmp.len);
+		    crv = CKR_HOST_MEMORY;
+		    break;
+		}
+		PORT_Memcpy(&keyData[keySize-secretlen],secret,secretlen);
+		secret = keyData;
 	    } else {
-		secret = secret_hash;
-		secretlen = 20;
+		secret += (secretlen - keySize);
 	    }
+	    secretlen = keySize;
 	}
 
-	if (rv == SECSuccess) {
-	    sftk_forceAttribute(key, CKA_VALUE, secret, secretlen);
-	    PORT_ZFree(tmp.data, tmp.len);
-	    memset(secret_hash, 0, 20);
-	} else
-	    crv = CKR_HOST_MEMORY;
+	sftk_forceAttribute(key, CKA_VALUE, secret, secretlen);
+	PORT_ZFree(tmp.data, tmp.len);
+	if (keyData) {
+	    PORT_ZFree(keyData, keySize);
+	}
+	PORT_Memset(secret_hash, 0, 20);
 	    
 	break;
       }
