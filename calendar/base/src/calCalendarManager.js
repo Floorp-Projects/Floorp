@@ -376,6 +376,7 @@ function errorAnnouncer(calendar) {
     this.storedReadOnly = calendar.readOnly;
     var announcer = this;
     this.observer = {
+        // calIObserver:
         onStartBatch: function() {},
         onEndBatch: function() {},
         onLoad: function() {},

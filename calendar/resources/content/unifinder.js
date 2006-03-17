@@ -146,6 +146,7 @@ var unifinderObserver = {
         return this;
     },
 
+    // calIObserver:
     onStartBatch: function() {
         this.mInBatch = true;
     },
@@ -170,8 +171,9 @@ var unifinderObserver = {
             refreshEventTree();
     },
     onAlarm: function(aAlarmItem) {},
-    onError: function(aMessage) {},
-
+    onError: function(aErrNo, aMessage) {},
+    
+    // calICompositeObserver:
     onCalendarAdded: function(aDeletedItem) {
         if (!this.mInBatch)
             refreshEventTree();

@@ -73,6 +73,7 @@ var unifinderToDoDataSourceObserver =
         return this;
     },
 
+    // calIObserver:
     onStartBatch: function() {
         this.mInBatch = true;
     },
@@ -100,8 +101,9 @@ var unifinderToDoDataSourceObserver =
             toDoUnifinderRefresh();
     },
     onAlarm: function(aAlarmItem) {},
-    onError: function(aMessage) {},
+    onError: function(aErrNo, aMessage) {},
 
+    // calICompositeObserver:
     onCalendarAdded: function(aDeletedItem) {
         if (!this.mInBatch)
             toDoUnifinderRefresh();

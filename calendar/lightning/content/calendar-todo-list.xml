@@ -49,6 +49,14 @@
                 this.todoList.rebuildDisplay();
             },
 
+            onAlarm: function onAlarm(aItem)
+            {
+            },
+
+            onError: function onError(aErrNo, aMessage)
+            {
+            },
+
             onCalendarAdded: function onCalendarAdded(aCalendar)
             {
                 this.todoList.rebuildDisplay();

@@ -772,6 +772,7 @@ calICSObserver.prototype = {
     mCalendar: null,
     mInBatch: false,
 
+    // calIObserver:
     onStartBatch: function() {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onStartBatch();

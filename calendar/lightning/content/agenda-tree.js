@@ -417,6 +417,7 @@ agendaTreeView.calendarObserver = {
     agendaTreeView: agendaTreeView
 };
 
+// calIObserver:
 agendaTreeView.calendarObserver.onStartBatch = function() {};
 agendaTreeView.calendarObserver.onEndBatch = function() {};
 agendaTreeView.calendarObserver.onLoad = function() {};
@@ -446,6 +447,9 @@ function observer_onModifyItem(newItem, oldItem)
     this.onDeleteItem(oldItem, "no-rebuild");
     this.onAddItem(newItem);
 };
+
+agendaTreeView.calendarObserver.onAlarm = function(item) {};
+agendaTreeView.calendarObserver.onError = function(errno, msg) {};
 
 agendaTreeView.setCalendar =
 function setCalendar(calendar)

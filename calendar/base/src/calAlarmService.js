@@ -75,6 +75,7 @@ function calAlarmService() {
     this.calendarObserver = {
         alarmService: this,
 
+        // calIObserver:
         onStartBatch: function() { },
         onEndBatch: function() { },
         onLoad: function() { },

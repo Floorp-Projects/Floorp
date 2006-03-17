@@ -225,7 +225,7 @@ function initCalendarManager()
         composite.addCalendar(homeCalendar);
     }
     calMgr.addObserver(calCalendarManagerObserver);
-    composite.addObserver(calCompositeCalendarObserver, 0);
+    composite.addObserver(calCompositeCalendarObserver);
     setCalendarManagerUI();
     initColors();
 }
