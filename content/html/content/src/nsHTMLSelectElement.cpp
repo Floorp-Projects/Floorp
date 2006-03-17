@@ -2285,7 +2285,8 @@ nsHTMLOptionCollection::SetOption(PRInt32 aIndex,
     rv = mSelect->AppendChild(aOption, getter_AddRefs(ret));
   } else {
     // Find the option they're talking about and replace it
-    nsIDOMHTMLOptionElement *refChild = mElements.SafeObjectAt(aIndex);
+    // hold a strong reference to follow COM rules.
+    nsCOMPtr<nsIDOMHTMLOptionElement> refChild = mElements.SafeObjectAt(aIndex);
     NS_ENSURE_TRUE(refChild, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIDOMNode> parent;
