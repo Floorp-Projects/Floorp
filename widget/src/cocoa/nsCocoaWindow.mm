@@ -735,16 +735,22 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 
+- (BOOL)windowShouldClose:(id)sender
+{
+  // We only want to send NS_XUL_CLOSE and let gecko close the window
+  nsGUIEvent guiEvent(PR_TRUE, NS_XUL_CLOSE, mGeckoWindow);
+  guiEvent.time = PR_IntervalNow();
+  nsEventStatus status = nsEventStatus_eIgnore;
+  mGeckoWindow->DispatchEvent(&guiEvent, status);
+  return NO; // gecko will do it
+}
+
+
 -(void)windowWillClose:(NSNotification *)aNotification
 {
   // roll up any popups
   if (gRollupListener != nsnull && gRollupWidget != nsnull)
     gRollupListener->Rollup();
-  
-  nsGUIEvent guiEvent(PR_TRUE, NS_XUL_CLOSE, mGeckoWindow);
-  guiEvent.time = PR_IntervalNow();
-  nsEventStatus status = nsEventStatus_eIgnore;
-  mGeckoWindow->DispatchEvent(&guiEvent, status);
 }
 
 
