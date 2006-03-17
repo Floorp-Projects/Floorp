@@ -812,6 +812,11 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (anchorElement) {
       nsCOMPtr<nsIAccessibleHyperText> hyperText(do_QueryInterface(accessible));
       if (hyperText) {
+	nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
+        NS_IF_RELEASE(gLastFocusedNode);
+        gLastFocusedNode = focusedNode;
+        NS_IF_ADDREF(gLastFocusedNode);
+
         PRInt32 selectedLink;
         hyperText->GetSelectedLinkIndex(&selectedLink);
         privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_ATK_LINK_SELECTED, accessible, &selectedLink);
