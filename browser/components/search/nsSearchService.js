@@ -1457,7 +1457,7 @@ Engine.prototype = {
 
     if (this._iconURI) {
       var image = doc.createElementNS(kOpenSearchNS_11, "Image");
-      image.appendChild(doc.createTextNode(this.iconURL));
+      image.appendChild(doc.createTextNode(this._iconURL));
       image.setAttribute("width", "16");
       image.setAttribute("height", "16");
       docElem.appendChild(image);
@@ -1558,6 +1558,12 @@ Engine.prototype = {
 
   get iconURI() {
     return this._iconURI;
+  },
+
+  get _iconURL() {
+    if (!this._iconURI)
+      return "";
+    return this._iconURI.spec;
   },
 
   // Where the engine is being loaded from: will return the URI's spec if the
@@ -1798,7 +1804,7 @@ SearchService.prototype = {
 
         aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
         LOG("_importSherlockEngine: Set sherlock iconURI to: \"" +
-            aEngine.iconURL + "\"");
+            aEngine._iconURL + "\"");
 
         // Delete the icon
         icon.remove(false);
@@ -1855,6 +1861,7 @@ SearchService.prototype = {
       if (icon.exists() && icon.isFile())
         return icon;
     }
+    return null;
   },
 
   /**
