@@ -161,7 +161,7 @@ static PRBool GetMemUsage(MemUsage *result)
 
 //-----------------------------------------------------------------------------
 
-static nsLoadCollector *gLoadCollector = nsnull;
+static nsLoadCollector *sLoadCollector = nsnull;
 
 NS_IMPL_ISUPPORTS2(nsLoadCollector,
                    nsIWebProgressListener, nsISupportsWeakReference)
@@ -320,15 +320,16 @@ nsLoadCollector::OnSecurityChange(nsIWebProgress *webProgress,
 /* static */ nsresult
 nsLoadCollector::Startup()
 {
-  NS_ASSERTION(!gLoadCollector, "nsLoadCollector::Startup called twice");
+  if (sLoadCollector)
+    return NS_OK;
 
-  gLoadCollector = new nsLoadCollector();
-  NS_ENSURE_TRUE(gLoadCollector, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(gLoadCollector);
+  sLoadCollector = new nsLoadCollector();
+  NS_ENSURE_TRUE(sLoadCollector, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(sLoadCollector);
 
-  nsresult rv = gLoadCollector->Init();
+  nsresult rv = sLoadCollector->Init();
   if (NS_FAILED(rv)) {
-    NS_RELEASE(gLoadCollector);
+    NS_RELEASE(sLoadCollector);
     return rv;
   }
 
@@ -338,17 +339,9 @@ nsLoadCollector::Startup()
 /* static */ void
 nsLoadCollector::Shutdown()
 {
-  // See comments in nsWindowCollector::Shutdown about why we don't
-  // null out gLoadCollector here.
-  gLoadCollector->Release();
+  NS_RELEASE(sLoadCollector);
 
   GetMemUsage_Shutdown();
-}
-
-nsLoadCollector::~nsLoadCollector()
-{
-  NS_ASSERTION(gLoadCollector == this, "two load collectors created?");
-  gLoadCollector = nsnull;
 }
 
 nsresult

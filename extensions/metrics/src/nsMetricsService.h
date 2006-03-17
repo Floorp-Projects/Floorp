@@ -41,8 +41,10 @@
 
 #include "nsIMetricsService.h"
 #include "nsMetricsModule.h"
+#include "nsMetricsConfig.h"
 #include "nsIAboutModule.h"
 #include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -132,9 +134,20 @@ private:
   nsresult OpenCompleteXMLStream(nsILocalFile *dataFile,
                                  nsIInputStream **result);
 
+  // Hook ourselves up to the timer manager.
+  void RegisterUploadTimer();
+
+  // A reference to the local file containing our current configuration
+  void GetConfigFile(nsIFile **result);
+
 private:
   // Pointer to the metrics service singleton
   static nsMetricsService* sMetricsService;
+
+  nsMetricsConfig mConfig;
+
+  // This output stream is non-null when we are downloading the config file.
+  nsCOMPtr<nsIOutputStream> mConfigOutputStream;
 
   // XML document containing events to be flushed.
   nsCOMPtr<nsIDOMDocument> mDocument;
