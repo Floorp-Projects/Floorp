@@ -49,17 +49,20 @@ define('SCRIPT_NAME',substr($_SERVER['SCRIPT_NAME'], strlen(WEB_PATH.'/'), strle
 $memcacheId = md5(SCRIPT_NAME.$_SERVER['QUERY_STRING']);
 
 /**
- * Instantiate our memcache object.
- */
-$cache = new memcache();
-
-/**
  * Check the cache_config to see if the current page is supposed to be cached.
  * If it is, try to connect.  If connection to the cache server fails, fall back on regular runtime.
  * We also are storing the status of the connection in $memcacheConnected for use in finish.php.
  */
-if (!empty($cache_config[SCRIPT_NAME]) ) {
-    
+if (!empty($cache_config[SCRIPT_NAME]) && class_exists('memcache') ) {
+
+    /**
+     * Instantiate our memcache object.
+     */
+    $cache = new memcache();
+
+    /**
+     * Boolean so we know whether or not we've found a valid memcached server.
+     */
     $memcacheConnected = false;
 
     if (is_array($memcache_config)) {
@@ -85,9 +88,9 @@ if (!empty($cache_config[SCRIPT_NAME]) ) {
         }
     } else {
 
-	/**
+        /**
          * If we get here, it means we were supposed to read from cache, but couldn't connect to memcached.
-	 * Log the message, then continue with runtime.
+         * Log the message, then continue with runtime.
          */
         error_log('Memcache Error: Unable connect to memcache server.  Please check configuration and try again.'); 
     }
