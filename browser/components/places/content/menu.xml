@@ -641,8 +641,8 @@
         
         getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
-          for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
-            flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
+          for (var i = 0; i < this._self.peerDropTypes.length; ++i)
+            flavorSet.appendFlavour(this._self.peerDropTypes[i]);
           return flavorSet;
         }
         
