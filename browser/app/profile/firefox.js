@@ -205,8 +205,10 @@ pref("browser.download.manager.flashCount", 2);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename",      "chrome://browser-region/locale/region.properties");
-// pointer to the Web Search url (content area context menu)
-pref("browser.search.defaulturl",             "chrome://browser-region/locale/region.properties");
+
+// disable logging for the search service by default
+pref("browser.search.log", false);
+
 // Ordering of Search Engines in the Engine list. 
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
@@ -216,10 +218,6 @@ pref("browser.search.param.Google.1.custom",  "chrome://branding/content/searchc
 pref("browser.search.order.Yahoo.1",          "chrome://branding/content/searchconfig.properties");
 pref("browser.search.order.Yahoo.2",          "chrome://branding/content/searchconfig.properties");
 pref("browser.search.order.Yahoo",            "chrome://branding/content/searchconfig.properties");
-
-// basic search popup constraint: minimum sherlock plugin version displayed
-// (note: must be a string representation of a float or it'll default to 0.0)
-pref("browser.search.basic.min_ver", "0.0");
 
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);

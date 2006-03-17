@@ -1,0 +1,288 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Browser Search Service.
+#
+# The Initial Developer of the Original Code is
+# Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <beng@google.com> (Original author)
+#   Gavin Sharp <gavin@gavinsharp.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIInputStream;
+
+[scriptable, uuid(1163b8bf-3446-4a36-a4df-9e870125b076)]
+interface nsISearchSubmission : nsISupports
+{
+  /**
+   * The POST data associated with a search submission, wrapped in a MIME
+   * input stream. May be null.
+   */
+  readonly attribute nsIInputStream postData;
+
+  /**
+   * The URI to submit a search to.
+   */
+  readonly attribute nsIURI uri;
+};
+
+[scriptable, uuid(b64edb5b-4d05-44df-b9bf-2098d9069f88)]
+interface nsISearchEngine : nsISupports
+{
+  /**
+   * Gets a nsISearchSubmission object that contains information about what to
+   * send to the search engine, including the URI and postData, if applicable.
+   *
+   * @param  data
+   *         Data to add to the submission object.
+   *         i.e. the search terms.
+   *
+   * @returns A nsISearchSubmission object that contains information about what
+   *          to send to the search engine.
+   */
+  nsISearchSubmission getSubmission(in AString data);
+
+  /**
+   * Adds a parameter to the search engine's submission data. This should only
+   * be called on engine's created via addEngineWithDetails.
+   *
+   * @param name
+   *        The parameter's name. Must not be null.
+   *
+   * @param value
+   *        The value to pass. If value is "{searchTerms}", it will be
+   *        substituted with the user-entered data when retrieving the
+   *        submission. Must not be null.
+   *
+   * @throws NS_ERROR_FAILURE if the search engine is read-only.
+   * @throws NS_ERROR_INVALID_ARG if name or value are null.
+   */
+  void addParam(in AString name, in AString value);
+
+  /**
+   * Supported search engine types.
+   */
+  const unsigned long TYPE_MOZSEARCH     = 1;
+  const unsigned long TYPE_SHERLOCK      = 2;
+  const unsigned long TYPE_OPENSEARCH    = 3;
+
+  /**
+   * Supported search engine data types.
+   */
+  const unsigned long DATA_XML     = 1;
+  const unsigned long DATA_TEXT    = 2;
+
+  /**
+   * The shortcut alias of the engine. This is a unique identifier.
+   */
+  attribute AString alias;
+
+  /**
+   * Whether the engine should be hidden from the user.
+   */
+  attribute boolean hidden;
+
+  /**
+   * A nsIURI corresponding to the engine's icon, stored locally. May be null.
+   */
+  readonly attribute nsIURI iconURI;
+
+  /**
+   * The display name of the search engine. This is a unique identifier.
+   */
+  readonly attribute AString name;
+
+  /**
+   * The search engine type.
+   */
+  readonly attribute long type;
+
+  /**
+   * A URL string pointing to the engine's search form.
+   */
+  readonly attribute AString searchForm;
+
+};
+
+[scriptable, uuid(eaa8c60f-a0d7-4afe-b629-ab5ac9434298)]
+interface nsIBrowserSearchService : nsISupports
+{
+  /**
+   * Adds a new search engine from the file at the supplied URI.
+   *
+   * @param engineURL
+   *        The URL to the search engine's description file.
+   *
+   * @param type
+   *        An integer representing the plugin file format. Must be one
+   *        of the supported search engine data types defined above.
+   *
+   * @param iconURL the URL to an icon file to be used as the search engine's
+   *        icon.
+   *
+   * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
+   *         file cannot be successfully loaded.
+   */
+  void addEngine(in AString engineURL, in long type, in AString iconURL);
+
+  /**
+   * Adds a new search engine.
+   *
+   * @param name
+   *        The search engine's name. Must be unique. Must not be null.
+   *
+   * @param iconURL
+   *        Optional: A URL string pointing to the icon to be used to represent
+   *        the engine.
+   *
+   * @param alias
+   *        Optional: A unique shortcut that can be used to retrieve the
+   *        search engine.
+   *
+   * @param description
+   *        Optional: a description of the search engine.
+   *
+   * @param method
+   *        The HTTP request method used when submitting a search query.
+   *        Must be a case insensitive value of either "get" or "post".
+   *
+   * @param url
+   *        The URL to which search queries should be sent.
+   *        Must not be null.
+   */
+  void addEngineWithDetails(in AString name,
+                            in AString iconURL,
+                            in AString alias,
+                            in AString description,
+                            in AString method,
+                            in AString url);
+
+  /**
+   * Returns an engine with the specified alias.
+   *
+   * @param   alias
+   *          The search engine's alias.
+   * @returns The corresponding nsISearchEngine object, or null if it doesn't
+   *          exist.
+   */
+  nsISearchEngine getEngineByAlias(in AString alias);
+
+  /**
+   * Returns an engine with the specified name.
+   *
+   * @param   aEngineName
+   *          The name of the engine.
+   * @returns The corresponding nsISearchEngine object, or null if it doesn't
+   *          exist.
+   */
+  nsISearchEngine getEngineByName(in AString aEngineName);
+
+  /**
+   * Returns an array of all installed search engines.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  void getEngines(
+            out unsigned long engineCount, 
+            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+
+  /**
+   * Returns an array of all installed search engines whose hidden attribute is
+   * false.
+   *
+   * @returns an array of nsISearchEngine objects.
+   */
+  void getVisibleEngines(
+            out unsigned long engineCount, 
+            [retval, array, size_is(engineCount)] out nsISearchEngine engines);
+
+  /**
+   * Removes the search engine. If the search engine is installed in a global
+   * location, this will just hide the engine. If the engine is in the user's
+   * profile directory, it will be removed from disk.
+   *
+   * @param  engine
+   *         The engine to remove.
+   */
+  void removeEngine(in nsISearchEngine engine);
+
+  /**
+   * The default search engine.
+   */
+  readonly attribute nsISearchEngine defaultEngine;
+
+  /**
+   * The currently active search engine.
+   */
+  attribute nsISearchEngine currentEngine;  
+
+};
+
+%{ C++
+/**
+ * The observer topic to listen to for actions performed on installed
+ * search engines.
+ */
+#define SEARCH_ENGINE_TOPIC "browser-search-engine-modified"
+
+/**
+ * Sent when an engine is removed from the data store.
+ */
+#define SEARCH_ENGINE_REMOVED      "engine-removed"
+
+/**
+ * Sent when an engine is changed. This includes when the engine's "hidden"
+ * property is changed.
+ */
+#define SEARCH_ENGINE_CHANGED      "engine-changed"
+
+/**
+ * Sent when an engine is added to the list of available engines.
+ */
+#define SEARCH_ENGINE_ADDED        "engine-added"
+
+/**
+ * Sent when a search engine being installed from a remote plugin description
+ * file is completely loaded. This is used internally by the search service as
+ * an indication of when the engine can be added to the internal store, and
+ * therefore should not be used to detect engine availability. It is always
+ * followed by an "added" notification.
+ */
+#define SEARCH_ENGINE_LOADED       "engine-loaded"
+
+/**
+ * Sent when the "current" engine is changed.
+ */
+#define SEARCH_ENGINE_CURRENT      "engine-current";
+
+%}

@@ -1,5 +1,5 @@
 searchbar {
-  -moz-binding: url("chrome://browser/content/search.xml#searchbar");
+  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
 
 /* ::::: print preview toolbar ::::: */

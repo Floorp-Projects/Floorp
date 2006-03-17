@@ -58,6 +58,7 @@ bin/components/autocomplete.xpt
 bin/components/autoconfig.xpt
 bin/components/bookmarks.xpt
 bin/components/browsercompsbase.xpt
+bin/components/browsersearch.xpt
 bin/components/caps.xpt
 bin/components/chardet.xpt
 bin/components/chrome.xpt
@@ -178,6 +179,7 @@ bin/components/shellservice.xpt
 bin/components/nsBrowserContentHandler.js
 bin/components/nsBrowserGlue.js
 bin/components/nsSetDefaultBrowser.js
+bin/components/nsSearchService.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsCloseAllWindows.js
 bin/components/nsDictionary.js

@@ -406,7 +406,7 @@
 
 #ifndef MOZ_PLACES
             <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
-                  datasources="rdf:bookmarks rdf:files rdf:localsearch" 
+                  datasources="rdf:bookmarks rdf:files" 
                   ref="NC:BookmarksRoot" flags="dont-test-empty"
                   template='bookmarks-template'
                   infer="forward-proxy"

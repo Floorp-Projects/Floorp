@@ -916,6 +916,7 @@ browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
 browser/components/preferences/Makefile
+browser/components/search/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/src/Makefile
 browser/components/shell/Makefile

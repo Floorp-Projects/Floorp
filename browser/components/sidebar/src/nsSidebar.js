@@ -128,6 +128,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
           suggestedCategory + ", " + suggestedTitle + ")");
 
+    // XXXBug 312560: Localize me!
     try
     {
         // make sure using HTTP or HTTPS and refering to a .src file
@@ -154,7 +155,6 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
             titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
-            dialogMessage = dialogMessage.replace(/%category%/, suggestedCategory);
             dialogMessage = dialogMessage.replace(/%url%/, engineURL);
             dialogMessage = dialogMessage.replace(/#/g, "\n");
         }
@@ -162,7 +162,6 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     catch (e) {
         titleMessage = "Add Search Engine";
         dialogMessage = "Add the following search engine?\n\nName: " + suggestedTitle;
-        dialogMessage += "\nSearch Category: " + suggestedCategory;
         dialogMessage += "\nSource: " + engineURL;
     }
           
@@ -171,14 +170,11 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     if (!rv)
         return;
 
-    var internetSearch = Components.classes[NETSEARCH_CONTRACTID].getService();
-    if (internetSearch)    
-        internetSearch = internetSearch.QueryInterface(nsIInternetSearchService);
-    if (internetSearch)
-    {
-        internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle,
-                                       suggestedCategory);
-    }
+    var searchService = Components.classes["@mozilla.org/browser/search-service;1"]
+                                  .getService(Components.interfaces.nsIBrowserSearchService);
+    const typeText = Components.interfaces.nsISearchEngine.DATA_TEXT;
+    if (searchService)
+      searchService.addEngine(engineURL, typeText, iconURL);
 }
 
 // property of nsIClassInfo

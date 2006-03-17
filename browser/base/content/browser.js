@@ -1806,27 +1806,6 @@ function BrowserLoadURL(aTriggeringEvent, aPostData)
   content.focus();
 }
 
-function delayedSearchLoadURL(aURL, aInNewTab) {
-  setTimeout(SearchLoadURL, 0, aURL, aInNewTab);
-}
-
-function SearchLoadURL(aURL, aInNewTab)
-{
-  if (!aURL)
-    return;
-
-  if (gBrowser.localName == "tabbrowser" && aInNewTab) {
-    content.focus();
-    // Modal action, remember last viewed tab
-    gBrowser.loadOneTab(aURL, null, null, null, false);
-    if (gURLBar)
-      gURLBar.value = aURL;
-  }
-  else
-    loadURI(aURL, null, null);
-  content.focus();
-}
-
 function getShortcutOrURI(aURL, aPostDataRef)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
@@ -2788,107 +2767,83 @@ var DownloadsButtonDNDObserver = {
   }
 }
 
-function WebSearch()
-{
+const BrowserSearch = {
+  /**
+   * Gives focus to the search bar, if it is present on the toolbar, or loads
+   * the default engine's search form otherwise. For Mac, opens a new window
+   * or focuses an existing window, if necessary.
+   */
+  webSearch: function BrowserSearch_webSearch() {
 #ifdef XP_MACOSX
-  if (window.location.href != getBrowserURL()) {
-    var win = getTopWin();
-    if (win) {
-      // If there's an open browser window, it should handle this command
-      win.focus()
-      win.WebSearch();
-    }
-    else {
-      // If there are no open browser windows, open a new one
-      win = window.openDialog("chrome://browser/content/", "_blank",
-                              "chrome,all,dialog=no", "about:blank");
-      win.addEventListener("load", WebSearchCallback, false);
-    }
-    return;
-  }
-#endif
-  var searchBar = document.getElementById("searchbar");
-  if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
-      !(window.getComputedStyle(searchBar.parentNode, null).display == "none")) {
-    searchBar.select();
-    searchBar.focus();
-  } else {
-    openDialog("chrome://browser/content/searchDialog.xul", "",
-               "chrome,dialog,resizable,modal");
-  }
-}
-
-function WebSearchCallback() {
-  // make sure the DOM is ready
-  setTimeout(function() { this.WebSearch(); }, 0);
-}
-
-function OpenSearch(tabName, searchStr, newTabFlag)
-{
-  //This function needs to be split up someday.
-  //XXXnoririty I don't want any prefs switching open by tabs to window
-  //XXXpch: this routine needs to be cleaned up.
-
-  var defaultSearchURL = null;
-  var navigatorRegionBundle = document.getElementById("bundle_browser_region");
-  var fallbackDefaultSearchURL = navigatorRegionBundle.getString("fallbackDefaultSearchURL");
-
-  //Check to see if search string contains "://" or "ftp." or white space.
-  //If it does treat as url and match for pattern
-
-  var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/
-  var forceAsURL = urlmatch.test(searchStr);
-
-  try {
-    defaultSearchURL = gPrefService.getComplexValue("browser.search.defaulturl",
-                                            Components.interfaces.nsIPrefLocalizedString).data;
-  } catch (ex) {
-  }
-
-  // Fallback to a default url (one that we can get sidebar search results for)
-  if (!defaultSearchURL)
-    defaultSearchURL = fallbackDefaultSearchURL;
-
-  if (!searchStr) {
-    BrowserSearchInternet();
-  } else {
-
-    //Check to see if location bar field is a url
-    //If it is a url go to URL.  A Url is "://" or "." as commented above
-    //Otherwise search on entry
-    if (forceAsURL) {
-       BrowserLoadURL(null, null)
-    } else {
-      if (searchStr) {
-        var escapedSearchStr = encodeURIComponent(searchStr);
-        defaultSearchURL += escapedSearchStr;
-        var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                 .getService(Components.interfaces.nsIInternetSearchService);
-
-        searchDS.RememberLastSearchText(escapedSearchStr);
-        try {
-          var searchEngineURI = gPrefService.getCharPref("browser.search.defaultengine");
-          if (searchEngineURI) {
-            var searchURL = getSearchUrl("actionButton");
-            if (searchURL) {
-              defaultSearchURL = searchURL + escapedSearchStr;
-            } else {
-              searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
-              if (searchURL)
-                defaultSearchURL = searchURL;
-            }
-          }
-        } catch (ex) {
-        }
-
-        if (!newTabFlag) {
-          loadURI(defaultSearchURL, null, null);
-        }
-        else {
-          getBrowser().loadOneTab(defaultSearchURL);
-        }
+    if (window.location.href != getBrowserURL()) {
+      var win = getTopWin();
+      if (win) {
+        // If there's an open browser window, it should handle this command
+        win.focus()
+        win.BrowserSearch.webSearch();
+      } else {
+        // If there are no open browser windows, open a new one
+        win = window.openDialog("chrome://browser/content/", "_blank",
+                                "chrome,all,dialog=no", "about:blank");
+        win.addEventListener("load", BrowserSearch.WebSearch, false);
       }
+      return;
     }
+#endif
+    var searchBar = this.getSearchBar();
+    if (searchBar) {
+      searchBar.select();
+      searchBar.focus();
+    } else {
+      var ss = Cc["@mozilla.org/browser/search-service;1"].
+               getService(Ci.nsIBrowserSearchService);
+      var searchForm = ss.defaultEngine.searchForm;
+      loadURI(searchForm, null, null);
+    }
+  },
+
+  /**
+   * Loads a search results page, given a set of search terms. Uses the current
+   * engine if the search bar is visible, or the default engine otherwise.
+   *
+   * @param searchText
+   *        The search terms to use for the search.
+   *
+   * @param useNewTab
+   *        Boolean indicating whether or not the search should load in a new
+   *        tab.
+   */
+  loadSearch: function BrowserSearch_search(searchText, useNewTab) {
+    var ss = Cc["@mozilla.org/browser/search-service;1"].
+             getService(Ci.nsIBrowserSearchService);
+    var engine;
+  
+    // If the search bar is visible, use the current engine, otherwise, fall back
+    // to the default engine.
+    if (this.getSearchBar())
+      engine = ss.currentEngine;
+    else
+      engine = ss.defaultEngine;
+  
+    var submission = engine.getSubmission(searchText);
+  
+    if (useNewTab) {
+      getBrowser().loadOneTab(submission.uri.spec, null, null,
+                              submission.postData, false);
+    } else
+      loadURI(submission.uri.spec, null, submission.postData);
+  },
+  
+  /**
+   * Returns the search bar element if it is present in the toolbar and not
+   * hidden, null otherwise.
+   */
+  getSearchBar: function BrowserSearch_getSearchBar() {
+    var searchBar = document.getElementById("searchbar");
+    if (searchBar && !searchBar.parentNode.parentNode.collapsed &&
+        !(window.getComputedStyle(searchBar.parentNode, null).display == "none"))
+      return searchBar;
+    return null;
   }
 }
 
@@ -4903,48 +4858,40 @@ nsContextMenu.prototype = {
         return text;
     },
 
-    // Get selected object and convert it to a string to get
-    // selected text.   Only display the first 15 chars.
+    // Get selected text. Only display the first 15 chars.
     isTextSelection : function() {
-        var result = false;
-        var selection = this.searchSelected(16);
+      // Get 16 characters, so that we can trim the selection if it's greater
+      // than 15 chars
+      var selectedText = getBrowserSelection(16);
 
-        var searchSelectText;
-        if (selection) {
-            searchSelectText = selection.toString();
-            if (searchSelectText.length > 15)
-                searchSelectText = searchSelectText.substr(0,15) + "...";
-            result = true;
+      if (!selectedText)
+        return false;
 
-          // format "Search for <selection>" string to show in menu
-          searchSelectText = gNavigatorBundle.getFormattedString("searchText", [searchSelectText]);
-          this.setItemAttr("context-searchselect", "label", searchSelectText);
-        }
-        return result;
+      if (selectedText.length > 15)
+        selectedText = selectedText.substr(0,15) + "...";
+
+      // Use the current engine if the search bar is visible, the default
+      // engine otherwise.
+      var engineName = "";
+      var ss = Cc["@mozilla.org/browser/search-service;1"].
+               getService(Ci.nsIBrowserSearchService);
+      if (BrowserSearch.getSearchBar())
+        engineName = ss.currentEngine.name;
+      else
+        engineName = ss.defaultEngine.name;
+
+      // format "Search <engine> for <selection>" string to show in menu
+      var menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearchText",
+                                                          [engineName,
+                                                           selectedText]);
+      this.setItemAttr("context-searchselect", "label", menuLabel);
+
+      return true;
     },
 
     // Returns true if anything is selected.
     isContentSelection : function() {
         return !document.commandDispatcher.focusedWindow.getSelection().isCollapsed;
-    },
-
-    searchSelected : function( charlen ) {
-        var focusedWindow = document.commandDispatcher.focusedWindow;
-        var searchStr = focusedWindow.getSelection();
-        searchStr = searchStr.toString();
-        // searching for more than 150 chars makes no sense
-        if (!charlen)
-            charlen = 150;
-        if (charlen < searchStr.length) {
-            // only use the first charlen important chars. see bug 221361
-            var pattern = new RegExp("^(?:\\s*.){0," + charlen + "}");
-            pattern.test(searchStr);
-            searchStr = RegExp.lastMatch;
-        }
-        searchStr = searchStr.replace(/^\s+/, "");
-        searchStr = searchStr.replace(/\s+$/, "");
-        searchStr = searchStr.replace(/\s+/g, " ");
-        return searchStr;
     },
 
     toString : function () {
@@ -4955,6 +4902,7 @@ nsContextMenu.prototype = {
                "contextMenu.inFrame    = " + this.inFrame + "\n" +
                "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
     },
+
     isTargetATextBox : function ( node )
     {
       if (node instanceof HTMLInputElement)
@@ -4999,6 +4947,41 @@ nsContextMenu.prototype = {
       }
       return false;
     }
+}
+
+/**
+ * Gets the selected text in the active browser. Leading and trailing
+ * whitespace is removed, and consecutive whitespace is replaced by a single
+ * space. A maximum of 150 characters will be returned, regardless of the value
+ * of aCharLen.
+ *
+ * @param aCharLen
+ *        The maximum number of characters to return.
+ */
+function getBrowserSelection(aCharLen) {
+  // selections of more than 150 characters aren't useful
+  const kMaxSelectionLen = 150;
+  const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);
+
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  var selection = focusedWindow.getSelection().toString();
+
+  if (selection) {
+    if (selection.length > charLen) {
+      // only use the first charLen important chars. see bug 221361
+      var pattern = new RegExp("^(?:\\s*.){0," + charLen + "}");
+      pattern.test(selection);
+      selection = RegExp.lastMatch;
+    }
+
+    selection = selection.replace(/^\s+/, "")
+                         .replace(/\s+$/, "")
+                         .replace(/\s+/g, " ");
+
+    if (selection.length > charLen)
+      selection = selection.substr(0, charLen);
+  }
+  return selection;
 }
 
 var gWebPanelURI;
@@ -6557,3 +6540,4 @@ var BookmarksEventHandler = {
 #include ../../../toolkit/content/debug.js
 
 #endif
+
