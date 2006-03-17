@@ -4950,7 +4950,8 @@ nsWindow::CancelIMECompositionInternal()
     if (!im)
         return NS_OK;
 
-    NS_ASSERTION(gIMESuppressCommit, "CancelIMEComposition is already called!");
+    NS_ASSERTION(!gIMESuppressCommit,
+                 "CancelIMECompositionInternal is already called!");
     gIMESuppressCommit = PR_TRUE;
     gtk_im_context_reset(im);
     gIMESuppressCommit = PR_FALSE;
