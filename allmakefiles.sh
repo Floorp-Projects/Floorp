@@ -938,6 +938,7 @@ browser/themes/winstripe/Makefile
 
 MAKEFILES_suite="
 suite/Makefile
+suite/app/Makefile
 suite/branding/Makefile
 suite/components/Makefile
 suite/components/xulappinfo/Makefile
