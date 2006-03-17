@@ -11,7 +11,7 @@
  * @subpackage pub
  */
 
-startProcessing('update.tpl', $cacheLiteId, $compileId, 'xml');
+startProcessing('update.tpl', $memcacheId, $compileId, 'xml');
 
 /**
  *  VARIABLES
@@ -44,8 +44,6 @@ $sql['os_id'] = get_os_id();
 foreach ($required_vars as $var) {
     if (empty($_GET[$var])) {
         $errors[] = 'Required variable '.$var.' not set.'; // set debug error
-    } else {
-        $sql[$var] = mysql_real_escape_string($_GET[$var]);
     }
 }
 
@@ -56,6 +54,11 @@ if (empty($errors)) {
 
     // We will need our DB in order to perform our query.
     require_once('includes.php');
+
+    // Iterate through required variables, and escape/assign them as necessary.
+    foreach ($required_vars as $var) {
+        $sql[$var] = mysql_real_escape_string($_GET[$var]);
+    }
 
 
 

@@ -1,6 +1,10 @@
 <?php
 /**
  * Finish script.
+ * 
+ * Pushes data to template for output generation.
+ * If the output is set to be cahced, it is stored in memcache.
+ * The timeout value is taken from the central configuration.
  *
  * @package amo
  * @subpackage inc
@@ -69,11 +73,13 @@ if ($pageType != 'xml') {
 
 /**
  * If our config says so, the page should be cached.
+ *
+ * Only set the cache if we have a valid connection to our cache server (see $memcachedConnected in init.php).
  */
-if (!empty($cache_config[SCRIPT_NAME])) {
+if (!empty($cache_config[SCRIPT_NAME]) && !empty($memcacheConnected) && $memcacheConnected) {
 
     // Save our page output to our cache.
-    $cache->save($pageOutput,$cacheLiteId,SCRIPT_NAME);
+    $cache->set($memcacheId, $pageOutput, false, $cache_config[SCRIPT_NAME]);
 }
 
 

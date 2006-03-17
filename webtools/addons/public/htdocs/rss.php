@@ -6,7 +6,7 @@
  * @subpackage docs
  */
 
-startProcessing('rss.tpl',$cacheLiteId,$compileId,'xml');
+startProcessing('rss.tpl',$memcacheId,$compileId,'xml');
 
 /**
  * Pull our input params.
