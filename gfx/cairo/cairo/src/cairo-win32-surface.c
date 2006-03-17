@@ -1000,7 +1000,7 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     int output_count = 0;
 
     /* We can only handle win32 fonts */
-    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_SCALED_FONT_TYPE_WIN32)
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_WIN32)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* We can only handle opaque solid color sources */
