@@ -321,7 +321,7 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 	    masks->blue_mask == 0x000000ff)
 	{
 	    *format = CAIRO_FORMAT_ARGB32;
-	    return TRUE;
+	    return 1;
 	}
 	if (masks->alpha_mask == 0x00000000 &&
 	    masks->red_mask == 0x00ff0000 &&
@@ -329,25 +329,25 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 	    masks->blue_mask == 0x000000ff)
 	{
 	    *format = CAIRO_FORMAT_RGB24;
-	    return TRUE;
+	    return 1;
 	}
 	break;
     case 8:
 	if (masks->alpha_mask == 0xff)
 	{
 	    *format = CAIRO_FORMAT_A8;
-	    return TRUE;
+	    return 1;
 	}
 	break;
     case 1:
 	if (masks->alpha_mask == 0x1)
 	{
 	    *format = CAIRO_FORMAT_A1;
-	    return TRUE;
+	    return 1;
 	}
 	break;
     }
-    return FALSE;
+    return 0;
 }
 
 static cairo_status_t
@@ -1025,7 +1025,6 @@ _cairo_xcb_surface_get_extents (void		  *abstract_surface,
 }
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
-    CAIRO_SURFACE_TYPE_XCB,
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,
     _cairo_xcb_surface_acquire_source_image,

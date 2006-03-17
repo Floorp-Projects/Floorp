@@ -402,19 +402,19 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 // back.
 nsresult
 nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics)
+                                    nsBoundingMetrics &aBoundingMetrics)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 // aCachedOffset will be updated with a new offset.
 nsresult
 nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString,
-                                        PRUint32 aLength,
-                                        nsBoundingMetrics &aBoundingMetrics,
-                                        PRInt32 *aFontID)
+                                    PRUint32 aLength,
+                                    nsBoundingMetrics &aBoundingMetrics,
+                                    PRInt32 *aFontID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 #endif /* MOZ_MATHML */

@@ -71,7 +71,6 @@ CSRCS   = \
 	cairo-hash.c \
         cairo-hull.c \
         cairo-image-surface.c \
-	cairo-lzw.c \
         cairo-matrix.c \
 	cairo-meta-surface.c \
         cairo-output-stream.c \
