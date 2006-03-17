@@ -321,7 +321,7 @@
 
       <method name="openPopup">
         <body><![CDATA[
-          this.popup.openPopup(this, this.boxObject.screenX, this.boxObject.screenY+this.boxObject.height, this.boxObject.width);
+          this.popup.openPopup(this, -1, -1, this.boxObject.width);
         ]]></body>
       </method>
 
@@ -568,7 +568,12 @@
             this.setAttribute("width", aWidth < 100 ? 100 : aWidth);
 
             document.popupNode = null;
-            this.showPopup(document.documentElement, aX, aY, "popup", null, null);
+            if (aY == -1) {
+              this.showPopup(this.mInput, -1, -1, "popup", 'bottomleft', 'topleft');
+            }
+            else {
+              this.showPopup(document.documentElement, aX, aY, "popup", null, null);            
+            }
           }
         ]]></body>
       </method>
