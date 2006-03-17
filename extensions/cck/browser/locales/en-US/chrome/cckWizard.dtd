@@ -33,8 +33,11 @@
 
 
 <!ENTITY  id.label                      "Unique ID:">
+<!ENTITY  id.error                      "Unique ID is required">
 <!ENTITY  name.label                    "Name:">
+<!ENTITY  name.error                    "Name is required">
 <!ENTITY  version.label                 "Version:">
+<!ENTITY  version.error                 "Version is required">
 <!ENTITY  description.label             "Description:">
 <!ENTITY  creator.label                 "Creator:">
 <!ENTITY  homepageURL.label             "Homepage URL:">

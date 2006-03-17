@@ -91,7 +91,7 @@
 
  <wizardpage label="&customizeExt.label;" description="&customizeExt.description;"
              onpageshow="initimage('iconURL','icon');"
-             onpageadvanced="return ValidateFile('iconURL')">
+             onpageadvanced="return (ValidateFile('iconURL') &amp;&amp; Validate('id','&id.error;','name','&name.error;','version','&version.error;'))">
    <grid>
      <columns>
        <column/>

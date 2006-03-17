@@ -1690,10 +1690,12 @@ function CCKReadConfigFile(srcdir)
 
 function Validate(field, message)
 {
-  if (document.getElementById(field).value == '') {
-    var bundle = document.getElementById("bundle_cckwizard");
-    gPromptService.alert(window, bundle.getString("windowTitle"), message);
-    return false;
+  for (var i=0; i < arguments.length; i+=2) {
+    if (document.getElementById(arguments[i]).value == '') {
+      var bundle = document.getElementById("bundle_cckwizard");
+      gPromptService.alert(window, bundle.getString("windowTitle"), arguments[i+1]);
+      return false;
+    }
   }
   return true;
 }
