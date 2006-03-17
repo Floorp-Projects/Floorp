@@ -53,6 +53,11 @@ const SELECTION_IS_CHANGEABLE = 0x10;
 const SELECTION_IS_REMOVABLE = 0x20;
 const SELECTION_IS_MOVABLE = 0x40;
 
+// These need to be kept in sync with the meaning of these roots in 
+// default_places.html!
+const ORGANIZER_ROOT_HISTORY = "place:&beginTime=-2592000000000&beginTimeRef=1&endTime=7200000000&endTimeRef=2&sort=4&type=1";
+const ORGANIZER_ROOT_BOOKMARKS = "place:&folder=2&group=3&excludeItems=1";
+
 // Place entries that are containers, e.g. bookmark folders or queries. 
 const TYPE_X_MOZ_PLACE_CONTAINER = "text/x-moz-place-container";
 // Place entries that are bookmark separators.
@@ -85,8 +90,6 @@ const NEWLINE= "\n";
 const NEWLINE = "\r\n";
 #endif
 
-const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
-
 function STACK(args) {
   var temp = arguments.callee.caller;
   while (temp) {
@@ -114,23 +117,6 @@ function InsertionPoint(folderId, index, orientation) {
   this.index = index;
   this.orientation = orientation;
 }
-
-/**
- * Initialization Configuration for a View
- * @constructor
- */
-function ViewConfig(dropTypes, dropOnTypes, excludeItems, 
-                    expandQueries, firstDropIndex, filterTransactions) {
-  this.dropTypes = dropTypes;
-  this.dropOnTypes = dropOnTypes;
-  this.excludeItems = excludeItems;
-  this.expandQueries = expandQueries;
-  this.firstDropIndex = firstDropIndex;
-  this.filterTransactions = filterTransactions;
-}
-ViewConfig.GENERIC_DROP_TYPES = [TYPE_X_MOZ_PLACE_CONTAINER,
-                                 TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE,
-                                 TYPE_X_MOZ_URL];
 
 /**
  * Manages grouping options for a particular view type. 
@@ -223,6 +209,64 @@ function asFullVisit(node){ return QI_node(node, Ci.nsINavHistoryFullVisitResult
 function asContainer(node){ return QI_node(node, Ci.nsINavHistoryContainerResultNode);}
 function asQuery(node)    { return QI_node(node, Ci.nsINavHistoryQueryResultNode);    }
 
+/** 
+ * A View Configuration
+ */
+function ViewConfig(peerDropTypes, childDropTypes, excludeItems, expandQueries,
+                    peerDropIndex) {
+  this.peerDropTypes = peerDropTypes;
+  this.childDropTypes = childDropTypes;
+  this.excludeItems = excludeItems;
+  this.expandQueries = expandQueries;
+  this.peerDropIndex = peerDropIndex;
+}
+ViewConfig.GENERIC_DROP_TYPES = 
+  [TYPE_X_MOZ_PLACE_CONTAINER,
+   TYPE_X_MOZ_PLACE_SEPARATOR, 
+   TYPE_X_MOZ_PLACE,
+   TYPE_X_MOZ_URL];
+
+/**
+ * Configures Views, applying some meta-model rules. These rules are model-like,
+ * e.g. must apply everwhere a model is instantiated, but are not actually stored
+ *      in the data model itself. For example, you can't drag leaf items onto the
+ *      places root. This needs to be enforced automatically everywhere a view of
+ *      that model is instantiated. 
+ */
+var ViewConfigurator = {
+  rules: { 
+    "folder=1": new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER], 
+                               ViewConfig.GENERIC_DROP_TYPES,
+                               true, false, 4)
+  },
+  
+  /**
+   * Applies rules to a specific view. 
+   */
+  configure: function PC_configure(view) {
+    // Determine what place the view is showing.
+    var place = view.place;
+    
+    // Find a ruleset that matches the current place.
+    var rules = null;
+    for (var test in this.rules) {
+      if (place.indexOf(test) != -1) {
+        rules = this.rules[test];
+        break;
+      }
+    }
+    
+    // If rules are found, apply them. 
+    if (rules) {
+      view.peerDropTypes = rules.peerDropTypes;
+      view.childDropTypes = rules.childDropTypes;
+      view.excludeItems = rules.excludeItems;
+      view.expandQueries = rules.expandQueries;
+      view.peerDropIndex = rules.peerDropIndex;
+    }
+  }
+};
+
 /**
  * The Master Places Controller
  */
@@ -292,16 +336,6 @@ var PlacesController = {
     return this._annotations;
   },
 
-  /** UI Text Strings */
-
-  __strings: null,
-  get _strings() {
-    if (!this.__strings) {
-      this.__strings = document.getElementById("placeBundle");
-    }
-    return this.__strings;
-  },
-
   /**
    * Generates a HistoryResultNode for the contents of a folder. 
    * @param   folderId
@@ -329,20 +363,6 @@ var PlacesController = {
   },
   
   /**
-   * Gets a place: URI for the given queries and options. 
-   * @param   queries
-   *          An array of NavHistoryQueries
-   * @param   options
-   *          A NavHistoryQueryOptions object
-   * @returns A place: URI encoding the parameters. 
-   */
-  getPlaceURI: function PC_getPlaceURI(queries, options) {
-    var queryString = this.history.queriesToQueryString(queries, queries.length,
-                                                      options);
-    return this._uri(queryString);
-  },
-  
-  /**
    * The currently active Places view. 
    */
   _activeView: null,
@@ -365,20 +385,6 @@ var PlacesController = {
         createInstance(Ci.nsITransactionManager);
     }
     return this._tm;
-  },
-  
-  /**
-   * The current groupable Places view. This is tracked independently of the 
-   * |activeView| because the activeView may change to something that isn't
-   * groupable, but clicking the Grouping buttons should still work. 
-   */
-  _groupableView: null,
-  get groupableView() {
-    return this._groupableView;
-  },
-  set groupableView(groupableView) {
-    this._groupableView = groupableView;
-    return this._groupableView;
   },
   
   isCommandEnabled: function PC_isCommandEnabled(command) {
@@ -459,7 +465,7 @@ var PlacesController = {
    *          view, false otherwise. 
    */
   _hasClipboardData: function PC__hasClipboardData() {
-    var types = this._activeView.supportedDropTypes;
+    var types = this._activeView.peerDropTypes;
     var flavors = 
         Cc["@mozilla.org/supports-array;1"].
         createInstance(Ci.nsISupportsArray);
@@ -975,121 +981,6 @@ var PlacesController = {
               null, null);
       }
     }
-  },
-  
-  /**
-   * Loads the contents of a query node into a view with the specified grouping
-   * and sort options.
-   * @param   view
-   *          The tree view to load the contents of the node into
-   * @param   node
-   *          The node to load the contents of
-   * @param   groupings
-   *          Groupings to be applied to the displayed contents, [] for no 
-   *          grouping
-   * @param   sortingMode
-   *          The sorting mode to be applied to the displayed contents. 
-   */
-  loadNodeIntoView: function PC_loadQueries(view, node, groupings, sortingMode) {
-    NS_ASSERT(view, "Must have a view to load node contents into!");
-    asQuery(node);
-    var queries = node.getQueries({ });
-    var newQueries = [];
-    for (var i = 0; i < queries.length; ++i) {
-      var query = queries[i].clone();
-      newQueries.push(query);
-    }
-    var newOptions = node.queryOptions.clone();
-    
-    // Update the grouping mode only after persisting, so that the URI is not 
-    // changed. 
-    var e = new Error();
-    newOptions.setGroupingMode(groupings, groupings.length);
-    
-    // Set the sort order of the results
-    newOptions.sortingMode = sortingMode;
-    
-    // Reload the view 
-    view.load(newQueries, newOptions);
-  },
-  
-  
-  /**
-   * A hash of groupers that supply grouping options for queries of a given 
-   * type. This is an override of grouping options that might be encoded in
-   * a saved place: URI
-   */
-  groupers: { },
-  
-  /**
-   * Rebuilds the view using a new set of grouping options.
-   * @param   groupings
-   *          An array of grouping options, see nsINavHistoryQueryOptions
-   *          for details.
-   * @param   sortingMode
-   *          The type of sort that should be applied to the results.
-   */
-  setGroupingMode: function PC_setGroupingMode(groupings, sortingMode) {
-    if (!this._groupableView)
-      return;
-    var node = this._groupableView.getResult().root;
-    this.loadNodeIntoView(this._groupableView, node, groupings, sortingMode);
-
-    // Persist this selection
-    if (this._groupableView.isBookmarks && "bookmark" in this.groupers)
-      this.groupers.bookmark.value = groupings;
-    else if ("generic" in this.groupers)
-      this.groupers.generic.value = groupings;
-  },
-  
-  /**
-   * Group the current content view by domain
-   */
-  groupBySite: function PC_groupBySite() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN];
-    var sortMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING;
-    this.setGroupingMode(groupings, sortMode);
-  },
-  
-  /**
-   * Group the current content view by folder
-   */
-  groupByFolder: function PC_groupByFolder() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
-    var sortMode = Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
-    this.setGroupingMode(groupings, sortMode);
-  },
-  
-  /**
-   * Ungroup the current content view (i.e. show individual pages)
-   */
-  groupByPage: function PC_groupByPage() {
-    this.setGroupingMode([], 
-      Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
-  },
-  
-  /**
-   * Loads all results matching a certain annotation, grouped and sorted as 
-   * specified.
-   * @param   annotation
-   *          The annotation to match
-   * @param   groupings
-   *          The grouping to apply to the displayed results
-   * @param   sortingMode
-   *          The sorting to apply to the displayed results
-   */
-  groupByAnnotation: 
-  function PC_groupByAnnotation(annotation, groupings, sortingMode) {
-    NS_ASSERT(this._groupableView, "Need a groupable view to load!");
-    if (!this._groupableView)
-      return;
-    var query = this.history.getNewQuery();
-    var options = this.history.getNewQueryOptions();
-    options.setGroupingMode(groupings, groupings.length);
-    options.sortingMode = sortingMode;
-    query.annotation = annotation;
-    this.groupableView.load([query], options);
-    LOG("CS: " + this.history.queriesToQueryString([query], 1, options));
   },
   
   /**
@@ -1647,9 +1538,9 @@ var PlacesControllerDragHelper = {
     var session = this.getSession();
     if (session) {
       if (orientation != NHRVO.DROP_ON)
-        var types = view.supportedDropTypes;
+        var types = view.peerDropTypes;
       else
-        types = view.supportedDropOnTypes;
+        types = view.childDropTypes;
       for (var i = 0; i < types.length; ++i) {
         if (session.isDataFlavorSupported(types[i]))
           return true;
@@ -1674,9 +1565,9 @@ var PlacesControllerDragHelper = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     if (orientation != NHRVO.DROP_ON) 
-      var types = view.supportedDropTypes;
+      var types = view.peerDropTypes;
     else
-      types = view.supportedDropOnTypes;    
+      types = view.childDropTypes;    
     for (var j = 0; j < types.length; ++j)
       xferable.addDataFlavor(types[j]);
     return xferable;
@@ -1738,8 +1629,6 @@ PlacesBaseTransaction.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
   
-  pageTransaction: false,
-  
   get isTransient() {
     return false;
   },
@@ -1756,8 +1645,6 @@ function PlacesAggregateTransaction(name, transactions) {
   this._transactions = transactions;
   this._name = name;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesAggregateTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1791,8 +1678,6 @@ function PlacesCreateFolderTransaction(name, container, index) {
   this._index = index;
   this._id = null;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1816,8 +1701,6 @@ function PlacesCreateItemTransaction(uri, container, index) {
   this._container = container;
   this._index = index;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1866,8 +1749,6 @@ function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, n
   this._newContainer = newContainer;
   this._newIndex = newIndex;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1893,8 +1774,6 @@ function PlacesMoveItemTransaction(uri, oldContainer, oldIndex, newContainer, ne
   this._newContainer = newContainer;
   this._newIndex = newIndex;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesMoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
@@ -1951,8 +1830,6 @@ function PlacesRemoveFolderTransaction(id, oldContainer, oldIndex) {
   this._oldFolderTitle = null;
   this._contents = null; // The encoded contents of this folder
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2030,8 +1907,6 @@ function PlacesRemoveItemTransaction(uri, oldContainer, oldIndex) {
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesRemoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2039,13 +1914,11 @@ PlacesRemoveItemTransaction.prototype = {
   doTransaction: function PRIT_doTransaction() {
     LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.removeItem(this._oldContainer, this._uri);
-    LOG("DO: PAGETXN: " + this.pageTransaction);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
     LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
-    LOG("UNDO: PAGETXN: " + this.pageTransaction);
   }
 };
 
@@ -2078,8 +1951,6 @@ function PlacesEditFolderTransaction(id, oldAttributes, newAttributes) {
   this._oldAttributes = oldAttributes;
   this._newAttributes = newAttributes;
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2103,8 +1974,6 @@ function PlacesEditItemTransaction(uri, newAttributes) {
   this._newAttributes = newAttributes;
   this._oldAttributes = { };
   this.redoTransaction = this.doTransaction;
-  this.pageTransaction = PlacesController.activeView.filterTransactions;
-  NS_ASSERT(this.pageTransaction !== undefined, "Don't know if this transaction must be filtered");
 }
 PlacesEditItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
@@ -2133,31 +2002,4 @@ PlacesEditItemTransaction.prototype = {
     }
   }
 };
-/*
- 
- AVI rules:
- 
- readonly attribute boolean hasSelection;
- readonly attribute boolean hasSingleSelection;
- readonly attribute boolean selectionIsContainer;
- readonly attribute boolean containerIsOpen;
- void getSelectedNodes([retval, array, size_is(nodeCount)] out nodes, out nodeCount);
- 
- selection flags
 
- flags:
-   SELECTION_CONTAINS_URI
-   SELECTION_CONTAINS_CONTAINER_OPEN
-   SELECTION_CONTAINS_CONTAINER_CLOSED
-   SELECTION_CONTAINS_CHANGEABLE
-   SELECTION_CONTAINS_REMOVABLE
-   SELECTION_CONTAINS_MOVABLE 
- 
- Given a:
-   - view, via AVI
-   - query
-   - query options
-   
- Determine the state of commands!
-
-*/

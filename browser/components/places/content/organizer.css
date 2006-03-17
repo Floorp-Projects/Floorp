@@ -14,3 +14,8 @@ button {
 .filterList {
   -moz-binding: url("chrome://browser/content/places/places.xml#filter-button");
 }
+
+#contentTitle {
+  width: 0px;
+}
+

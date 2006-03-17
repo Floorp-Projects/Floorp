@@ -8,6 +8,8 @@
   "Close">
 <!ENTITY file.close.accesskey
   "C">
+<!ENTITY cmd.close.key
+  "w">
 <!ENTITY edit.label
   "Edit">
 <!ENTITY edit.accesskey

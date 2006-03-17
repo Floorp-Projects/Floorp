@@ -172,8 +172,10 @@
     <command id="Tools:Sanitize" oncommand="gBrowserGlue.sanitize(window || null);"/>
 #ifdef MOZ_PLACES
 #include ../../components/places/content/commands.inc
-    <command id="Browser:ShowBookmarks" oncommand="PlacesCommandHook.showPlacesOrganizer('bookmarks');"/>
-    <command id="Browser:ShowHistory" oncommand="PlacesCommandHook.showPlacesOrganizer('history');"/>
+    <command id="Browser:ShowBookmarks" 
+             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_BOOKMARKS);"/>
+    <command id="Browser:ShowHistory" 
+             oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
     <command id="Browser:SearchHistory" oncommand="HistoryMenu.showPlacesSearch();"/>
     <command id="Browser:ClearHistory" oncommand="HistoryMenu.clearHistory();"/>
 #endif

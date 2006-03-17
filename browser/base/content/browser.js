@@ -865,10 +865,6 @@ function delayedStartup()
   document.getElementById("PersonalToolbar")
           .controllers.appendController(BookmarksMenuController);
 #else
-  var bookmarksBar = document.getElementById("bookmarksBarContent");
-  bookmarksBar.init();
-  var bookmarksMenuPopup = document.getElementById("bookmarksMenuPopup");
-  bookmarksMenuPopup.init();
   window.controllers.appendController(PlacesController);
 #endif
 
@@ -6376,13 +6372,24 @@ var PlacesCommandHook = {
 
   /**
    * Opens the Places Organizer. 
-   * @param   mode
-   *          The mode to display the window with ("bookmarks" or "history").
+   * @param   place
+   *          The place to select in the organizer window (a place: URI) 
    */
-  showPlacesOrganizer: function PCH_showPlacesOrganizer(mode) {
-    // TODO: check for an existing one and focus it instead. 
-    openDialog("chrome://browser/content/places/places.xul", 
-               "", "dialog=no,resizable", mode);
+  showPlacesOrganizer: function PCH_showPlacesOrganizer(place) {
+    var wm = 
+        Cc["@mozilla.org/appshell/window-mediator;1"].
+        getService(Ci.nsIWindowMediator);
+    var organizer = wm.getMostRecentWindow("Places:Organizer");
+    if (!organizer) {
+      // No currently open places window, so open one with the specified mode.
+      openDialog("chrome://browser/content/places/places.xul", 
+                 "", "dialog=no,resizable", place);
+    }
+    else {
+      // Set the mode on an existing places window. 
+      organizer.selectPlaceURI(place);
+      organizer.focus();
+    }
   },
   
   /**
@@ -6434,7 +6441,7 @@ var HistoryMenu = {
   showPlacesSearch: function PHM_showPlacesSearch() {
     // XXX The places view needs to be updated before this
     // does something different than show history.
-    PlacesCommandHook.showPlacesOrganizer("history");
+    PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);
   },
   
   /**
@@ -6442,8 +6449,9 @@ var HistoryMenu = {
    * (XXX This might be changed to show the Clear Private Data menu instead)
    */
   clearHistory: function PHM_clearHistory() {
-    var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                  .getService(Components.interfaces.nsIBrowserHistory);
+    var globalHistory = 
+        Cc["@mozilla.org/browser/global-history;2"].
+        getService(Ci.nsIBrowserHistory);
     globalHistory.removeAllPages();
   }
 };

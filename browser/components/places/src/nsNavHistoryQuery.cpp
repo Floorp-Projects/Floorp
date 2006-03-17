@@ -1234,8 +1234,8 @@ AppendInt64KeyValueIfNonzero(nsACString& aString,
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failure getting value");
   if (value) {
     AppendAmpersandIfNonempty(aString);
-    nsCAutoString appendMe(aName);
-    appendMe.Append(aName);
+    aString += aName;
+    nsCAutoString appendMe("=");
     appendMe.AppendInt(value);
     aString.Append(appendMe);
   }

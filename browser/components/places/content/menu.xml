@@ -10,39 +10,42 @@
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
-        // this.init(); -- causes Ts regression on windows
+        // Support an asyncinit attribute that causes the view to populate 
+        // itself only after the window has been shown. This is to ensure we
+        // do not regress browser window show time (Ts/Txul)
+        if (this.hasAttribute("asyncinit")) {
+          var self = this;
+          setTimeout(function() { self._init(); }, 0);
+        }
+        else
+          this._init();
+        
+        this.history = PlacesController.history;
       ]]></constructor>
       
       <destructor><![CDATA[
       ]]></destructor>
       
-      <method name="init">
+      <field name="history">null</field>
+      
+      <method name="_init">
         <body><![CDATA[
           if (!this.hasAttribute("place"))
             return;
 
           // This function should only be called for top-level menus like the bookmarks menu.
           // Submenus get their _result and _resultNode from their parents.
-          var hist =           
-              Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-
-          var queryString = this.getAttribute("place");
-          var queries = { }, options = { };
-          hist.queryStringToQueries(queryString, queries, { }, options);
-          if (!queries.value.length) 
-            queries.value = [hist.getNewQuery()];
-          this._result = hist.executeQueries(queries.value, queries.value.length, options.value);
-          this._result.root.containerOpen = true;
-          this._resultNode = this._result.root;
-          this._rebuild();
+          if (this.hasAttribute("place")) {
+            // Do the initial build. 
+            this.place = this.place;
+          }
         ]]></body>
       </method>
             
       <method name="onPopupShowing">
         <body><![CDATA[
         if (!this._resultNode)
-          this.init();
+          this._init();
         if (PlacesController.nodeIsContainer(this._resultNode)) {
           this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           this._resultNode.containerOpen = true;
@@ -64,6 +67,8 @@
           this._rebuild();
         ]]></body>
       </method>
+
+      <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
           return this._result;
@@ -196,8 +201,10 @@
                 // If this is a child of the bookmarks menubar, we have to manually attach
                 // its xbl binding, because it's not a dom node and the style rules don't
                 // get applied correctly.
-                if (needsBindingAttachment)
+                if (needsBindingAttachment) {
+                  const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
                   document.addBinding(popup, MENU_URI);
+                }
 #endif
               }
               // else if (nodeIsQuery) ... add menu to build kids
@@ -249,42 +256,63 @@
         ]]></body>
       </method>
       
-      <property name="isBookmarks">
-        <getter><![CDATA[ 
-          return PlacesController.nodeIsFolder(this.getResult());
+      <!-- nsIPlacesView -->
+      <property name="place">
+        <getter><![CDATA[
+          return this.getAttribute("place");
         ]]></getter>
+        <setter><![CDATA[ 
+          this.setAttribute("place", val);
+          var queries = { }, options = { };
+          this.history.queryStringToQueries(val, queries, { }, options);
+          if (!queries.value.length) 
+            queries.value = [this.history.getNewQuery()];
+          this._result = 
+            this.history.executeQueries(queries.value, queries.value.length, 
+                                        options.value);
+          this._resultNode = this._result.root;
+          if (this._resultNode.containerOpen)
+            this._rebuild();
+          return val;
+        ]]></setter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[ 
           return this._selection != null;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="hasSingleSelection">
         <getter><![CDATA[ 
           return this.hasSelection;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
           return this.hasSelection ? [this.selectedNode] : [];
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[ 
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getCopyableSelection">
         <body><![CDATA[
           return this.getSelectionNodes();
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
           if (PlacesController.nodeIsReadOnly(this._resultNode))
@@ -293,12 +321,14 @@
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[ 
           return this.hasSelection ? this._selection : null;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
@@ -306,6 +336,7 @@
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[ 
           // By default, the insertion point is at the top level, at the end. 
@@ -329,16 +360,22 @@
         ]]></getter>
       </property>
       
-      <field name="filterTransactions">false</field>
+      <!-- nsIPlacesView -->
+      <field name="peerDropIndex">0</field>
       
-      <field name="supportedDropTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
-      </field>
-
-      <field name="supportedDropOnTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
-      </field>
+      <!-- nsIPlacesView -->
+      <field name="peerDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
+      <!-- nsIPlacesView -->
+      <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="excludeItems">false</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="expandQueries">false</field>
+      
+      <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           // Nothing

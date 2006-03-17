@@ -9,51 +9,17 @@
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <implementation implements="nsINavHistoryResultViewObserver">
       <constructor><![CDATA[
-        this._places = 
-          Cc["@mozilla.org/browser/nav-history-service;1"].
-          getService(Ci.nsINavHistoryService);
+        // Apply meta-model rules to this view. 
+        ViewConfigurator.configure(this);
+
+        this.history = PlacesController.history;
+        this.controllers.appendController(PlacesController);
+
+        // Force an initial build. 
+        this.place = this.place;
       ]]></constructor>
       
-      <method name="init">
-        <parameter name="viewConfig"/>
-        <body><![CDATA[ 
-          this.supportedDropTypes = viewConfig.dropTypes;
-          this.supportedDropOnTypes = viewConfig.dropOnTypes;
-          this.excludeItems = viewConfig.excludeItems;
-          this.firstDropIndex = viewConfig.firstDropIndex;
-          this.filterTransactions = viewConfig.filterTransactions;
-        ]]></body>
-      </method>
-      
-      <method name="_fireEvent">
-        <parameter name="name"/>
-        <body><![CDATA[ 
-          var event = document.createEvent("events");
-          event.initEvent("placestree-" + name, false, true);
-          
-          var canceled = !this.dispatchEvent(event);
-          
-          var handler = this.getAttribute("onplacestree" + name);
-          if (handler != "") {
-            var fn = new Function("event", handler);
-            if (!fn(event))
-              canceled = true;
-          }
-          return !canceled;
-        ]]></body>
-      </method>
-      
-      <!-- AVI Method -->
-      <method name="getResult">
-        <body><![CDATA[
-          try {
-            return this.view.QueryInterface(Ci.nsINavHistoryResult);
-          }
-          catch (e) {
-            return null;
-          }
-        ]]></body>
-      </method>
+      <field name="history">null</field>
       
       <!-- overriding -->
       <property name="view">
@@ -76,7 +42,7 @@
           // existing ones or create new ones. 
           var options = this.getResult().queryOptions;
           if (!options)
-            options = this._places.getNewQueryOptions();
+            options = this.history.getNewQueryOptions();
           return options;
         ]]></body>
       </method>
@@ -89,10 +55,10 @@
           return null;
         ]]></getter>
         <setter><![CDATA[
-          var query = this._places.getNewQuery();
+          var query = this.history.getNewQuery();
           query.searchTerms = val;
           
-          this.load([query], this.getBestOptions());
+          this._load([query], this.getBestOptions());
           return val;
         ]]></setter>
       </property>
@@ -105,90 +71,160 @@
           // preserve grouping
           var options = this.getResult().queryOptions;
           if (!options)
-            options = this._places.getNewQueryOptions();
+            options = this.history.getNewQueryOptions();
           
-          var query = this._places.getNewQuery();
+          var query = this.history.getNewQuery();
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
           //if (onlyBookmarks)
           //  query.setFolders(folderRestrict, folderRestrict.length);
-          this.load([query], this.getBestOptions());
+          this._load([query], this.getBestOptions());
         ]]></body>
       </method>
       
-      <property name="queryString">
-        <getter><![CDATA[
-          var result = this.getResult();
-          var queries = result.root.getQueries({ });
-          var options = result.root.queryOptions;
-
-          const NH = Ci.nsINavHistoryService;
-          return this._places.queriesToQueryString(queries, queries.length,
-                                                   options);
-        ]]></getter>
-        <setter><![CDATA[
-          var queries = { }, options = { };
-          this._places.queryStringToQueries(val, queries, { }, options);
-          if (!queries.value.length) 
-            queries.value = [this._places.getNewQuery()];
-          this.load(queries.value, options.value);
-          return val;
-        ]]></setter>
-      </property>
-      
-      <method name="loadFolder">
-        <parameter name="folderId"/>
-        <body><![CDATA[ 
-          var query = this._places.getNewQuery();
-          query.setFolders([folderId], 1);
-
-          var options = this._places.getNewQueryOptions();
-          options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-          options.excludeItems = this.excludeItems;
-          options.expandQueries = false;
-          var result = this._places.executeQuery(query, options);
-          result.QueryInterface(Ci.nsITreeView);
-          this.view = result;
-          this._fireEvent("reloaded");
-        ]]></body>
-      </method>
-      
-      <method name="load">
+      <!-- XXXben I would like to remove this method from the "public" interface -->
+      <method name="_load">
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[ 
           // override with our local options
           options.excludeItems = this.excludeItems;
-          options.expandQueries = false;
-          var result = this._places.executeQueries(queries, queries.length, 
+          options.expandQueries = this.expandQueries;
+          var result = this.history.executeQueries(queries, queries.length, 
                                                    options);
-          result.QueryInterface(Ci.nsITreeView);
-          this.view = result;
-          this._fireEvent("reloaded");
+          this.view = result.QueryInterface(Ci.nsITreeView);
         ]]></body>
       </method>
       
-      <property name="isBookmarks">
-        <getter><![CDATA[ 
-          return PlacesController.nodeIsFolder(this.getResult().root);
+      <!-- 
+        Causes a particular node represented by the specified placeURI to be
+        selected in the tree. All containers above the node in the hierarchy
+        will be opened, so that the node is visible. 
+        -->
+      <method name="selectPlaceURI">
+        <parameter name="placeURI"/>
+        <body><![CDATA[ 
+          function findNode(container, placeURI) {
+            container.containerOpen = true;
+            for (var i = 0; i < container.childCount; ++i) {
+              var child = container.getChild(i);
+              if (child.uri == placeURI)
+                return child;
+              else if (PlacesController.nodeIsContainer(child)) {
+                var nested = findNode(asContainer(child), placeURI);
+                if (nested)
+                  return nested;
+              }
+            }
+            container.containerOpen = false;
+            return null;
+          }
+          
+          var result = this.getResult();
+          NS_ASSERT(result, "no result, cannot select place URI!");
+          if (!result)
+            return;
+          
+          var container = asContainer(result.root);
+          var child = findNode(container, placeURI);
+          container.containerOpen = true;
+          if (child)
+            this.selectNode(child);
+          else {
+            // If the specified child could not be located, just select the first
+            // item in the list. 
+            if (this.view.rowCount)
+              this.view.selection.select(0);
+          }
+        ]]></body>
+      </method>
+      
+      <!-- 
+        Causes a particular node to be selected in the tree, resulting in all 
+        containers above the node in the hierarchy to be opened, so that the
+        node is visible. 
+        -->
+      <method name="selectNode">
+        <parameter name="node"/>
+        <body><![CDATA[ 
+          var parent = node.parent;
+          
+          // Build a list of all of the nodes that are the parent of this one 
+          // in the result. 
+          var parents = [];
+          var result = this.getResult();
+          while (parent && parent != asContainer(result.root)) {
+            parents.push(parent);
+            parent = parent.parent;
+          }
+          
+          // Walk the list backwards (opening from the root of the hierarchy)
+          // opening each folder as we go.
+          var result = this.getResult();
+          var view = this.view;
+          for (var i = parents.length - 1; i >= 0; --i) {
+            var index = result.treeIndexForNode(parents[i]);
+            if (view.isContainer(index) && !view.isContainerOpen(index)) 
+              view.toggleOpenState(index);
+          }
+          // Select the specified node...
+          index = result.treeIndexForNode(node);
+          view.selection.select(index);
+          // ... and ensure it's visible, not scrolled off somewhere. 
+          this.treeBoxObject.ensureRowIsVisible(index);
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <method name="getResult">
+        <body><![CDATA[
+          try {
+            return this.view.QueryInterface(Ci.nsINavHistoryResult);
+          }
+          catch (e) {
+          }
+          return null;
+        ]]></body>
+      </method>
+      
+      <!-- nsIPlacesView -->
+      <property name="place">
+        <getter><![CDATA[
+          return this.getAttribute("place");
         ]]></getter>
+        <setter><![CDATA[ 
+          this.setAttribute("place", val);
+          
+          var queriesRef = { };
+          var queryCountRef = { };
+          var optionsRef = { };
+          this.history.queryStringToQueries(val, queriesRef, queryCountRef, optionsRef);
+          if (queryCountRef.value == 0)
+            queriesRef.value = [this.history.getNewQuery()];
+          if (!optionsRef.value)
+            optionsRef.value = this.history.getNewQueryOptions();
+
+          this._load(queriesRef.value, optionsRef.value);
+
+          return val;
+        ]]></setter>
       </property>
-    
-      <!-- AVI Method -->
+      
+      <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[
           return this.view.selection.count >= 1;
         ]]></getter>
       </property>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <property name="hasSingleSelection">
         <getter><![CDATA[
           return this.view.selection.count == 1;
         ]]></getter>
       </property>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[ 
           var selection = this.view.selection;
@@ -206,6 +242,7 @@
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[ 
           // This function exists in addition to getSelectionNodes because it
@@ -257,13 +294,15 @@
         ]]></body>
       </method>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <method name="getCopyableSelection">
         <body><![CDATA[ 
           // XXXben implement me!
           return this.getSelectionNodes();
         ]]></body>
       </method>
+
+      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
           var nodes = this.getSelectionNodes();
@@ -275,7 +314,7 @@
         ]]></body>
       </method>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
@@ -290,7 +329,7 @@
         ]]></getter>
       </property>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <property name="selectedURINode">
         <getter><![CDATA[
           var view = this.view;
@@ -309,7 +348,7 @@
         ]]></getter>
       </property>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
           var selection = this.view.selection;
@@ -331,8 +370,8 @@
           var cc = container.childCount;
           for (var i = 0; i < cc; ++i) {
             if (container.getChild(i) == node && 
-                i < this.firstDropIndex) {
-              max.value = this.firstDropIndex;
+                i < this.peerDropIndex) {
+              max.value = this.peerDropIndex;
               orientation = NHRVO.DROP_BEFORE;
               break;
             }
@@ -372,25 +411,22 @@
         ]]></body>
       </method>
       
-      <!-- AVI Method -->
-      <property name="filterTransactions">true</property>
+      <!-- nsIPlacesView -->
+      <field name="peerDropIndex">0</field>
       
-      <!-- AVI Method -->
-      <field name="firstDropIndex">0</field>
+      <!-- nsIPlacesView -->
+      <field name="peerDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
-      <!-- AVI Method -->
-      <field name="supportedDropTypes">null</field>
+      <!-- nsIPlacesView -->
+      <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
-      <!-- AVI Method -->
-      <field name="supportedDropOnTypes">null</field>
+      <!-- nsIPlacesView -->
+      <field name="excludeItems">false</field>
       
-      <!-- AVI Method -->
-      <field name="excludeQueries">null</field>
-
-      <!-- AVI Method -->
-      <field name="dropOnFilterOptions">null</field>
+      <!-- nsIPlacesView -->
+      <field name="expandQueries">false</field>
       
-      <!-- AVI Method -->
+      <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           this.view.selection.selectAll();
@@ -430,7 +466,7 @@
             var treeIndex = this.getResult().treeIndexForNode(nodes[i]);
             if (this.view.getLevel(treeIndex) == 0) {
               var index = PlacesController.getIndexOfNode(nodes[i]);
-              if (index < this.firstDropIndex)
+              if (index < this.peerDropIndex)
                 throw Cr.NS_OK;
             }
           }
@@ -477,8 +513,8 @@
       <method name="getSupportedFlavours">
         <body><![CDATA[
           var flavorSet = new FlavourSet();
-          for (var i = 0; i < this.supportedDropTypes.length; ++i)
-            flavorSet.appendFlavour(this.supportedDropTypes[i]);
+          for (var i = 0; i < this.peerDropTypes.length; ++i)
+            flavorSet.appendFlavour(this.peerDropTypes[i]);
           return flavorSet;
         ]]></body>
       </method>
@@ -544,7 +580,7 @@
           var node = index != -1 ? result.nodeForTreeIndex(index) : result.root;
           // Cannot drop before fixed items in the list. 
           if (node.parent == result.root && 
-              PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
+              PlacesController.getIndexOfNode(node) < this._self.peerDropIndex &&
               orientation != NHRVO.DROP_ON)
             return false;
 

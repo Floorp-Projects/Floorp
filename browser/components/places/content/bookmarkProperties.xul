@@ -79,6 +79,7 @@
                       class="placesTree"
                       flex="1"
                       type="places" 
+                      place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
                       hidecolumnpicker="true"
                       seltype="multiple">
                   <treecols>

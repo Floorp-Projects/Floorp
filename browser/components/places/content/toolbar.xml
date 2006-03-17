@@ -48,14 +48,22 @@
     
     <implementation>
       <constructor><![CDATA[
-        // this.init(); -- causes Ts regression on windows
+        // Support an asyncinit attribute that causes the view to populate 
+        // itself only after the window has been shown. This is to ensure we
+        // do not regress browser window show time (Ts/Txul)
+        if (this.hasAttribute("asyncinit")) {
+          var self = this;
+          setTimeout(function() { self._init(); }, 0);
+        }
+        else
+          this._init();
       ]]></constructor>
       
       <destructor><![CDATA[ 
         this._bms.removeObserver(this._observer);
       ]]></destructor>
       
-      <method name="init">
+      <method name="_init">
         <body><![CDATA[
         this._places = 
           Cc["@mozilla.org/browser/nav-history-service;1"].
@@ -69,15 +77,11 @@
         window.addEventListener("resize",
                                 function f(e) { t.updateChevron(e); },
                                 false);
-
-        var queryString = this.getAttribute("place");
-        var queries = { }, options = { };
-        this._places.queryStringToQueries(queryString, queries, { }, options);
-        if (!queries.value.length) 
-          queries.value = [this._places.getNewQuery()];
-        this._result = this._places.executeQueries(queries.value, queries.value.length, options.value);
-        this._result.root.containerOpen = true;
-        this._rebuild();
+        
+        if (this.hasAttribute("place")) {
+          // Do the initial build. 
+          this.place = this.place;
+        }
         ]]></body>
       </method>
 
@@ -89,6 +93,8 @@
       <field name="_openedMenuButton">null</field>
       
       <field name="_result">null</field>
+
+      <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
           return this._result;
@@ -207,53 +213,63 @@
         ]]></body>
       </method>
       
-      <method name="load">
-        <parameter name="queries"/>
-        <parameter name="options"/>
-        <body><![CDATA[
-          this._result = this._places.executeQueries(queries, queries.length,
-                                                     options);
+      <!-- nsIPlacesView -->
+      <property name="place">
+        <getter><![CDATA[
+          return this.getAttribute("place");
+        ]]></getter>
+        <setter><![CDATA[ 
+          this.setAttribute("place", val);
+          
+          var queries = { }, options = { };
+          this._places.queryStringToQueries(val, queries, { }, options);
+          if (!queries.value.length) 
+            queries.value = [this._places.getNewQuery()];
+          this._result = 
+            this._places.executeQueries(queries.value, queries.value.length, 
+                                        options.value);
           this._result.root.containerOpen = true;
           this._rebuild();
-        ]]></body>
-      </method>
-      
-      <property name="isBookmarks">
-        <getter><![CDATA[ 
-          return PlacesController.nodeIsFolder(this.getResult());
-        ]]></getter>
+          return val;
+        ]]></setter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="hasSelection">
         <getter><![CDATA[ 
           return this._selection != null;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="hasSingleSelection">
         <getter><![CDATA[ 
           return this.hasSelection;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <method name="getSelectionNodes">
         <body><![CDATA[
           return this.hasSelection ? [this.selectedNode] : [];
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
         <body><![CDATA[ 
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getCopyableSelection">
         <body><![CDATA[ 
           return this.getSelectionNodes();
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <method name="getDragableSelection">
         <body><![CDATA[
           if (PlacesController.nodeIsReadOnly(this._result.root))
@@ -262,12 +278,14 @@
         ]]></body>
       </method>
       
+      <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[ 
           return this.hasSelection ? this._selection : null;
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="selectedURINode">
         <getter><![CDATA[
           var node = this.selectedNode;
@@ -275,6 +293,7 @@
         ]]></getter>
       </property>
       
+      <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
           // By default, the insertion point is at the top level, at the end. 
@@ -296,16 +315,22 @@
         ]]></getter>
       </property>
       
-      <field name="filterTransactions">false</field>
+      <!-- nsIPlacesView -->
+      <field name="peerDropIndex">0</field>
       
-      <field name="supportedDropTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
-      </field>
-
-      <field name="supportedDropOnTypes">
-        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE_SEPARATOR, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
-      </field>
+      <!-- nsIPlacesView -->
+      <field name="peerDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
       
+      <!-- nsIPlacesView -->
+      <field name="childDropTypes">ViewConfig.GENERIC_DROP_TYPES</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="excludeItems">false</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="expandQueries">false</field>
+     
+      <!-- nsIPlacesView -->
       <method name="selectAll">
         <body><![CDATA[ 
           // Nothing
@@ -340,7 +365,7 @@
           this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
         onItemVisited: function TB_0_onItemVisited(bookmark, visitId, time) {
-          //this._self.init();
+          //this._self._init();
         },
         onItemReplaced: function TB_0_onItemReplaced(folder, item, newItem) {
           if (folder == this._self._bms.toolbarRoot)
