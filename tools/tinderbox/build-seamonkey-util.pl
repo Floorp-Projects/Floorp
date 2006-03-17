@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.313 $ ';
+$::UtilsVersion = '$Revision: 1.314 $ ';
 
 package TinderUtils;
 
@@ -913,14 +913,25 @@ sub BuildIt {
             if ($Settings::MacUniversalBinary) {
               $extrafiles .= ' mozilla/build/macosx/universal/mozconfig';
             }
-            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $extrafiles");
+            my $status = run_shell_command_with_timeout("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk $extrafiles",
+                                                        $Settings::CVSCheckoutTimeout);
+            if ($status->{exit_value} != 0) {
+              $build_status = 'busted';
+              if ($status->{timed_out}) {
+                print_log "Error: CVS checkout timed out.\n";
+              } else {
+                print_log "Error: CVS checkout failed.\n";
+              }
+            }
           }
           
           # Create toplevel source directory.
-          chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
+          if ($build_status ne 'busted') {
+            chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
+          }
           
           # Build it
-          unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
+          if (!$Settings::TestOnly && $build_status ne 'busted') { # Do not build if testing smoke tests.
             if ($Settings::OS =~ /^WIN/) {
               DeleteBinaryDir($binary_dir);
             } else {
