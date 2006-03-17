@@ -935,6 +935,7 @@ PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot, CERTCertificate *cert,
     CK_OBJECT_HANDLE certh;
     CK_OBJECT_HANDLE keyh;
     CK_ATTRIBUTE *attrs = theTemplate;
+    PRBool needLogin;
     SECStatus rv;
 
     PK11_SETATTRS(attrs, CKA_VALUE, cert->derCert.data, 
@@ -953,10 +954,18 @@ PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot, CERTCertificate *cert,
     if (certh == CK_INVALID_HANDLE) {
 	return NULL;
     }
+    /*
+     * prevent a login race condition. If slot is logged in between
+     * our call to pk11_LoginStillRequired and the 
+     * PK11_MatchItem. The matchItem call will either succeed, or
+     * we will call it one more time after calling PK11_Authenticate 
+     * (which is a noop on an authenticated token).
+     */
+    needLogin = pk11_LoginStillRequired(slot,wincx);
     keyh = PK11_MatchItem(slot,certh,CKO_PRIVATE_KEY);
     if ((keyh == CK_INVALID_HANDLE) && 
 			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			pk11_LoginStillRequired(slot, wincx)) {
+			needLogin) {
 	/* try it again authenticated */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv != SECSuccess) {
@@ -995,10 +1004,18 @@ PK11_KeyForCertExists(CERTCertificate *cert, CK_OBJECT_HANDLE *keyPtr,
 
     /* Look for the slot that holds the Key */
     for (le = list->head ; le; le = le->next) {
+	/*
+	 * prevent a login race condition. If le->slot is logged in between
+	 * our call to pk11_LoginStillRequired and the 
+	 * pk11_FindPrivateKeyFromCertID, the find will either succeed, or
+	 * we will call it one more time after calling PK11_Authenticate 
+	 * (which is a noop on an authenticated token).
+	 */
+	PRBool needLogin = pk11_LoginStillRequired(le->slot,wincx);
 	key = pk11_FindPrivateKeyFromCertID(le->slot,keyID);
 	if ((key == CK_INVALID_HANDLE) && 
 			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			pk11_LoginStillRequired(le->slot,wincx)) {
+			needLogin) {
 	    /* authenticate and try again */
 	    rv = PK11_Authenticate(le->slot, PR_TRUE, wincx);
 	    if (rv != SECSuccess) continue;
@@ -1553,16 +1570,25 @@ PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx)
     CK_OBJECT_HANDLE keyHandle;
     PK11SlotInfo *slot = NULL;
     SECKEYPrivateKey *privKey = NULL;
+    PRBool needLogin;
     SECStatus rv;
 
     certHandle = PK11_FindObjectForCert(cert, wincx, &slot);
     if (certHandle == CK_INVALID_HANDLE) {
 	 return NULL;
     }
+    /*
+     * prevent a login race condition. If slot is logged in between
+     * our call to pk11_LoginStillRequired and the 
+     * PK11_MatchItem. The matchItem call will either succeed, or
+     * we will call it one more time after calling PK11_Authenticate 
+     * (which is a noop on an authenticated token).
+     */
+    needLogin = pk11_LoginStillRequired(slot,wincx);
     keyHandle = PK11_MatchItem(slot,certHandle,CKO_PRIVATE_KEY);
     if ((keyHandle == CK_INVALID_HANDLE) && 
 			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			pk11_LoginStillRequired(slot,wincx)) {
+			needLogin) {
 	/* authenticate and try again */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv == SECSuccess) {
@@ -1947,6 +1973,7 @@ pk11_findKeyObjectByDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
     SECItem *keyID;
     CK_OBJECT_HANDLE key;
     SECStatus rv;
+    PRBool needLogin;
 
     if((slot == NULL) || (cert == NULL)) {
 	return CK_INVALID_HANDLE;
@@ -1957,10 +1984,18 @@ pk11_findKeyObjectByDERCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	return CK_INVALID_HANDLE;
     }
 
+    /*
+     * prevent a login race condition. If slot is logged in between
+     * our call to pk11_LoginStillRequired and the 
+     * pk11_FindPrivateKeyFromCerID. The matchItem call will either succeed, or
+     * we will call it one more time after calling PK11_Authenticate 
+     * (which is a noop on an authenticated token).
+     */
+    needLogin = pk11_LoginStillRequired(slot,wincx);
     key = pk11_FindPrivateKeyFromCertID(slot, keyID);
     if ((key == CK_INVALID_HANDLE) && 
 			(PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) && 
-			pk11_LoginStillRequired(slot,wincx)) {
+			needLogin) {
 	/* authenticate and try again */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
 	if (rv != SECSuccess) goto loser;
