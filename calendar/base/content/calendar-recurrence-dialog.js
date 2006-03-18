@@ -57,6 +57,8 @@ function onLoad()
 
     opener.setCursor("auto");
 
+    checkSelectedException();
+
     self.focus();
 }
 
@@ -357,6 +359,7 @@ function removeSelectedException()
         window.removedExceptions.push(item.date);
     }
     exceptionList.removeItemAt(exceptionList.getIndexOfItem(item));
+    checkSelectedException();
 }
 
 function splitRecurrenceRules(recurrenceInfo)
@@ -374,4 +377,14 @@ function splitRecurrenceRules(recurrenceInfo)
     }
 
     return [rules, exceptions];
+}
+function checkSelectedException()
+{
+    var exceptionList = document.getElementById("recurrence-exceptions-listbox");
+    var item = exceptionList.selectedItem;
+    if (!item) {
+        document.getElementById("remove-exceptions-button").setAttribute("disabled", "true");
+    } else {
+        document.getElementById("remove-exceptions-button").removeAttribute("disabled");
+    }
 }
