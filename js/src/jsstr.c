@@ -2825,6 +2825,9 @@ js_CompareStrings(JSString *str1, JSString *str2)
     const jschar *s1, *s2;
     intN cmp;
 
+    JS_ASSERT(str1);
+    JS_ASSERT(str2);
+
     /* Fast case: pointer equality could be a quick win. */
     if (str1 == str2)
         return 0;
@@ -2845,6 +2848,9 @@ js_EqualStrings(JSString *str1, JSString *str2)
 {
     size_t n;
     const jschar *s1, *s2;
+
+    JS_ASSERT(str1);
+    JS_ASSERT(str2);
 
     /* Fast case: pointer equality could be a quick win. */
     if (str1 == str2)
