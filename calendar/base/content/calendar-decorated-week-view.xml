@@ -77,8 +77,12 @@
                 viewElement.setStartEndMinutes(this.mStartMin,
                                                this.mEndMin);
 
+                try {
+                    this.mWeekStartOffset = pb2.getIntPref("calendar.week.start");
+                } catch (ex) {}
+
                 // add a preference observer to monitor changes
-                pb2.addObserver("calendar.view.", this.mPrefObserver, false);
+                pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
             ]]></constructor>
 
@@ -86,12 +90,13 @@
                 var pb2 = Components.classes
                           ["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
-                pb2.removeObserver("calendar.view.", this.mPrefObserver);
+                pb2.removeObserver("calendar.", this.mPrefObserver);
                 return;
             ]]></destructor>
 
             <field name="mStartMin">8 * 60</field>
             <field name="mEndMin">17 * 60</field>
+            <field name="mWeekStartOffset">0</field>
 
             <field name="mPrefObserver"><![CDATA[
             ({ calView: this,
@@ -117,6 +122,18 @@
                                                    this.calView.mEndMin);
 		       break;
 
+                   case "calendar.week.start":
+                       this.calView.mWeekStartOffset = subj.getIntPref(pref);
+
+                       if (!this.calView.startDay || !this.calView.endDay) {
+                           // Don't refresh if we're not initialized
+                           return;
+                       }
+
+                       // Refresh the view.  goToDay will do the calculation
+                       this.calView.goToDay(this.calView.selectedDay);
+                       break;
+
                    default:
                        break;
                    }
@@ -138,15 +155,10 @@
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
 	            viewElement.tasksInView = this.mTasksInView;
 
-                    // Get the preferences that we'll need
-                    var prefService = Components.classes[
-                                      "@mozilla.org/preferences-service;1"]
-                                      .getService(Components.interfaces.nsIPrefService);
-                    var calBranch = prefService.getBranch("calendar.");
-                    var weekStartOffset = calBranch.getIntPref("week.start");
-
                     var d1 = aDate.startOfWeek.clone();
                     var d2 = aDate.endOfWeek.clone();
+
+                    var weekStartOffset = this.mWeekStartOffset;
 
                     // startOfWeek always returns a Sunday.  Adjust if the user
                     // chose a different day to start weeks on.

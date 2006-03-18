@@ -53,6 +53,60 @@
         </content>
 
         <implementation implements="calIDecoratedView">
+	    <constructor><![CDATA[
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+                // Set the preference for the default start of the week
+                viewElem = document.getAnonymousElementByAttribute(
+                             this, "anonid", "view-element");
+                try {
+                    viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
+                } catch (ex) {}
+
+                // add a preference observer to monitor changes
+                pb2.addObserver("calendar.", this.mPrefObserver, false);
+                return;
+            ]]></constructor>
+
+            <destructor><![CDATA[
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+                pb2.removeObserver("calendar.", this.mPrefObserver);
+                return;
+            ]]></destructor>
+
+            <field name="mPrefObserver"><![CDATA[
+            ({ calView: this,
+               observe: function calDecWeekViewPrefChange(subj, topic, pref) {
+
+                   subj.QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+                   switch (pref) {
+
+                   case "calendar.week.start":
+                       viewElem = document.getAnonymousElementByAttribute(
+                                  this.calView, "anonid", "view-element");
+                       viewElem.weekStartOffset = subj.getIntPref(pref);
+
+                       if (!this.calView.startDay || !this.calView.endDay) {
+                           // Don't refresh if we're not initialized
+                           return;
+                       }
+                       
+                       // Refresh the view so the settings take effect
+                       this.calView.goToDay(this.calView.selectedDay);
+                       break;
+
+                   default:
+                       break;
+                   }
+                   return;
+               }
+            })
+	    ]]></field>
+
             <property name="observerID">
                 <getter><![CDATA[
                     return "month-view-observer";

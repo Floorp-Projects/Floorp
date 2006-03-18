@@ -54,6 +54,60 @@
         </content>
 
         <implementation implements="calIDecoratedView">
+	    <constructor><![CDATA[
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+                // Set the preference for the default start of the week
+                viewElem = document.getAnonymousElementByAttribute(
+                             this, "anonid", "view-element");
+                try {
+                    viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
+                } catch (ex) {}
+
+                // add a preference observer to monitor changes
+                pb2.addObserver("calendar.", this.mPrefObserver, false);
+                return;
+            ]]></constructor>
+
+            <destructor><![CDATA[
+                var pb2 = Components.classes
+                          ["@mozilla.org/preferences-service;1"]
+                          .getService(Components.interfaces.nsIPrefBranch2);
+                pb2.removeObserver("calendar.", this.mPrefObserver);
+                return;
+            ]]></destructor>
+
+            <field name="mPrefObserver"><![CDATA[
+            ({ calView: this,
+               observe: function calDecWeekViewPrefChange(subj, topic, pref) {
+
+                   subj.QueryInterface(Components.interfaces.nsIPrefBranch2);
+
+                   switch (pref) {
+
+                   case "calendar.week.start":
+                       viewElem = document.getAnonymousElementByAttribute(
+                                  this.calView, "anonid", "view-element");
+                       viewElem.weekStartOffset = subj.getIntPref(pref);
+
+                       if (!this.calView.startDay || !this.calView.endDay) {
+                           // Don't refresh if we're not initialized
+                           return;
+                       }
+                       
+                       // Refresh the view so the settings take effect
+                       this.calView.goToDay(this.calView.selectedDay);
+                       break;
+
+                   default:
+                       break;
+                   }
+                   return;
+               }
+            })
+	    ]]></field>
+
             <field name="mWeeksInView">4</field>
 
             <property name="weeksInView">
@@ -85,7 +139,6 @@
                                       "@mozilla.org/preferences-service;1"]
                                       .getService(Components.interfaces.nsIPrefService);
                     var calBranch = prefService.getBranch("calendar.");
-                    var weekStartOffset = calBranch.getIntPref("week.start");
 
                     // Get the first date that should be shown.  This is the
                     // start of the week of the day that we're centering around
@@ -99,23 +152,6 @@
                     var d2 = d1.endOfWeek.clone();
                     d2.day += 7*(this.mWeeksInView-1);
                     d2.normalize();
-
-                    // startOfWeek always returns a Sunday.  If the user is in
-                    // a locale that starts weeks on a different day, adjust
-                    // XXX-this currently has no effect
-                    if (weekStartOffset != 0) {
-                        d1.day += weekStartOffset;
-                        d2.day += weekStartOffset;
-
-                        // In this case, we actually jumped a week ahead
-                        if (aDate.weekday < weekStartOffset) {
-                            d1.day -= 7;
-                            d2.day -= 7;
-                        }
-
-                        d1.normalize();
-                        d2.normalize();
-                    }
 
                     viewElement.setDateRange(d1,d2);
 

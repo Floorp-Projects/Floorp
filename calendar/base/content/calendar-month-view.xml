@@ -464,6 +464,8 @@
       <field name="mShowDaysOutsideMonth">true</field>
       <field name="mTasksInView">true</field>
       <field name="mShowFullMonth">true</field>
+      <field name="mWeekStartOffset">0</field>
+
 
       <field name="mSelectionObserver"><![CDATA[
       ({  calView: this,
@@ -522,6 +524,15 @@
              this.refresh();
            }
            return val;
+        ]]></setter>
+      </property>
+
+      <property name="weekStartOffset">
+        <getter><![CDATA[
+           return this.mWeekStartOffset;
+        ]]></getter>
+        <setter><![CDATA[
+           this.mWeekStartOffset = val;
         ]]></setter>
       </property>
 
@@ -634,9 +645,23 @@
 
 
       <method name="showDate">
-	<parameter name="aDate"/>
-	<body><![CDATA[
-	  this.setDateRange(aDate.startOfMonth, aDate.endOfMonth);
+        <parameter name="aDate"/>
+        <body><![CDATA[
+          // We might need to do some adjusting here to make sure we still
+          // display whole month even with alternative week-start days
+          var startDate = aDate.startOfMonth;
+          var endDate = aDate.endOfMonth;
+          if (startDate.weekday < this.mWeekStartOffset) {
+            // Go back one week to make sure we display this day
+            startDate.day -= 7;
+          }
+
+          if (endDate.weekday < this.mWeekStartOffset) {
+            // Go back one week so we don't display any extra days
+            endDate.day -= 7;
+          }
+
+          this.setDateRange(startDate, endDate);
           this.selectedDay = aDate.getInTimezone(this.mTimezone);
         ]]></body>
       </method>
@@ -652,6 +677,11 @@
 
           this.mStartDate = aStartDate.startOfWeek;
           this.mEndDate = aEndDate.endOfWeek;
+
+          this.mStartDate.day += this.mWeekStartOffset;
+          this.mEndDate.day += this.mWeekStartOffset;
+          this.mStartDate.normalize();
+          this.mEndDate.normalize();
 
           this.refresh();
         ]]></body>
@@ -742,6 +772,17 @@
 	<body><![CDATA[
           function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
+          }
+
+          // Adjust headers based on the starting day of the week, if necessary
+          var headerbox = document.getAnonymousElementByAttribute(this, "anonid", "headerbox");
+
+          if (headerbox.firstChild.index != this.mWeekStartOffset) {
+              var i = 0;
+              for each(header in headerbox.childNodes) {
+                header.index = (i + this.mWeekStartOffset) % 7;
+                i++;
+              }
           }
 
           if (this.mSelectedItem) {
