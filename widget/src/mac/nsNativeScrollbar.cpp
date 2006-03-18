@@ -42,7 +42,6 @@
 #include "nsIDeviceContext.h"
 
 #include "nsWidgetAtoms.h"
-#include "nsWatchTask.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"
@@ -355,9 +354,7 @@ nsNativeScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
             // which lets you pass the action proc to TrackControl
             // for the thumb (this was illegal in previous
             // versions of the defproc).
-            nsWatchTask::GetTask().Suspend();
             ::TrackControl(mControl, thePoint, ScrollbarActionProc());
-            nsWatchTask::GetTask().Resume();
             ::HiliteControl(mControl, 0);
             // We don't dispatch the mouseDown event because mouseUp is eaten
             // by TrackControl anyway and the only messages the app really
