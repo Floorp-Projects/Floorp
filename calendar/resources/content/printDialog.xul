@@ -68,133 +68,57 @@
    persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:nc="http://home.netscape.com/NC-rdf#">
-    
-<!-- Javascript DTD To Variable -->                    
-<script type="application/x-javascript">               
-  var calendarxxxxxx = "&calendar.print.window.title;";
-</script>                                              
    
-<script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
-<script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 
-<!-- required for datepicker (probably until bug 58757 fixed) -->
-<script type="application/x-javascript"
- src="chrome://global/content/strres.js" />
-<script type="application/x-javascript" 
- src="chrome://calendar/content/dateUtils.js"/>
+  <vbox id="standard-dialog-content"  flex="1">
+    <grid>
+      <columns>
+        <column />
+        <column flex="1"/>
+      </columns>
 
+      <rows>
+        <!-- Title -->    
+        <row align="center">
+          <hbox class="field-label-box-class">
+            <label for="title-field" value="&calendar.print.title.label;"/>
+          </hbox>
+          <textbox id="title-field"/>
+        </row>
 
-<!-- Data used in JS from dtd -->
+        <!-- Layout -->    
+        <row align="center">
+          <hbox class="field-label-box-class">
+            <label for="title-field" value="&calendar.print.layout.label;"/>
+          </hbox>
+          <menulist id="layout-field">
+            <!-- menupopup will be filled in printDialog.js -->
+            <menupopup id="layout-menulist-menupopup"/>
+          </menulist>
+        </row>
+      </rows>
+    </grid>
 
-<dataset>
-    <data id="data-event-title-edit"            value="&event.title.edit;" />
-</dataset>
-
-
-   <vbox id="standard-dialog-content"  flex="1">
-   
-               <grid>
-                  <columns>
-                     <column />
-                     <column flex="1"/>
-                  </columns>
-                  
-
-                  <rows>
-                     <!-- announce -->
-                     <row align="center">
-                     <spacer />
-                     <hbox class="field-label-box-class" pack="end">
-                      <label value="&calendar.print.selectoptions.label;" />
-                      </hbox>
-                     </row>
-
-                     <!-- Title -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="title-field" value="&newevent.title.label;"/>
-                        </hbox>
-                        <textbox id="title-field"/>
-                     </row>
-                     
-
-                     <row align="center">
-                        <spacer />
-                        <radiogroup id="view-field" >
-                           <caption label="&calendar.print.selectviews.label;" />
-                           <radio label="&calendar.print.currentview.label;"
-                                  value="currentview"
-                                  selected="true" />
-                           <radio id="list" label="&calendar.print.listselected.label;"
-                                  value="list"/>
-                           <radio id="custom-range" label="&calendar.print.custom.label;" value="custom"/>
-                        </radiogroup>
-                     </row>
-
-                     <!-- Start Date -->
-                     <row align="center">
-                        <spacer />
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.startdate.label;"/>
-                            <datepicker id="start-date-picker" onchange="onDatePick();"/>
-                            <label value="&newevent.enddate.label;"/>
-                            <datepicker id="end-date-picker" onchange="onDatePick();"/>
-                        </hbox>
-                     </row>
-                     
-                     <!-- Private -->
-                     <row align="center" collapsed="true">
-                        <spacer />
-                        <checkbox id="private-checkbox"
-                                  checked="true"
-                                  label="&newevent.private.label;"/>
-                     </row>
-
-                     <!-- Calendar Status -->
-                     <row align="center" collapsed="true">
-                      <spacer />
-                        <checkbox id="status-checkbox"
-                                  checked="false"
-                                  label="&calendar.print.onlyitemsstatus.label;"/>
-                     </row>
-                     <row align="center" collapsed="true">
-                        <spacer />
-                        <menulist id="status-field" label="&newevent.status.label;">
-                            <menupopup id="status-menulist-menupopup">
-                                <menuitem label="&newevent.status.tentative.label;"
-                                          value="ICAL_STATUS_TENTATIVE"/>
-                                <menuitem label="&newevent.status.confirmed.label;"
-                                          value="ICAL_STATUS_CONFIRMED"/>
-                                <menuitem label="&newevent.status.cancelled.label;"
-                                          value="ICAL_STATUS_CANCELLED"/>
-                            </menupopup>
-                        </menulist>
-                     </row>
-                     
-
-                     <!-- Categories -->
-                     <row align="center" collapsed="true">
-                      <spacer />
-                        <checkbox id="category-checkbox"
-                                  checked="false"
-                                  label="&calendar.print.onlyitemscategory.label;"/>
-                     </row>
-
-                     <row align="center" collapsed="true">
-                        <spacer />
-                        <menulist id="categories-field"
-                                  label="&newevent.category.label;">
-                            <menupopup id="categories-menulist-menupopup">
-                                <menuitem label="&priority.level.none;"
-                                          value="0"/>
-                            </menupopup>
-                        </menulist>
-                     </row>
-            
-                  </rows>
-               </grid>
-
-
-   </vbox> <!-- standard-dialog-content -->
+    <groupbox>
+      <caption label="&calendar.print.range.label;"/>
+      <radiogroup id="view-field" >
+        <radio label="&calendar.print.currentview.label;"
+               value="currentview"
+               selected="true" />
+        <radio id="selected" label="&calendar.print.selected.label;"
+               value="selected"/>
+        <radio id="custom-range" label="&calendar.print.custom.label;"
+               value="custom"/>
+        <hbox align="center">
+          <label value="&calendar.print.from.label;"/>
+          <datepicker id="start-date-picker" onchange="onDatePick();"/>
+          <label value="&calendar.print.from.label;"/>
+          <datepicker id="end-date-picker" onchange="onDatePick();"/>
+        </hbox>
+      </radiogroup>
+    </groupbox>
+  </vbox>
 </dialog>

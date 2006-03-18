@@ -179,7 +179,9 @@ function OnLoadPrintEngine(){
   var windowTitle = props.formatStringFromName("PrintPreviewWindowTitle", [args.title], 1);
   document.title = windowTitle;
 
-  var htmlexporter = Components.classes["@mozilla.org/calendar/export;1?type=html"].createInstance(Components.interfaces.calIExporter);
+  var printformatter =
+          Components.classes[args.layoutContractid]
+                    .createInstance(Components.interfaces.calIPrintFormatter);
 
   // Fail-safe check to not init twice, to prevent leaking files
   if (!gTempFile) {
@@ -200,7 +202,8 @@ function OnLoadPrintEngine(){
                          .createInstance(Components.interfaces.nsIFileOutputStream);
   try {
     stream.init(gTempFile, 0x2A, 0600, 0);
-    htmlexporter.exportToStream(stream, args.eventList.length, args.eventList);
+    printformatter.formatToHtml(stream, args.start, args.end,
+                                args.eventList.length, args.eventList);
     stream.close();
   }
   catch(ex) {

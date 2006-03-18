@@ -54,11 +54,19 @@ const componentData =
      service: false},
 
     {cid: Components.ID("{72d9ab35-9b1b-442a-8cd0-ae49f00b159b}"),
-     contractid: "@mozilla.org/calendar/export;1?type=html",
+     contractid: "@mozilla.org/calendar/export;1?type=htmllist",
      script: "calHtmlExport.js",
      constructor: "calHtmlExporter",
      category: "cal-exporters",
-     categoryEntry: "cal-html-exporter",
+     categoryEntry: "cal-html-list-exporter",
+     service: false},
+
+    {cid: Components.ID("{9ae04413-fee3-45b9-8bbb-1eb39a4cbd1b}"),
+     contractid: "@mozilla.org/calendar/printformatter;1?type=list",
+     script: "calListFormatter.js",
+     constructor: "calListFormatter",
+     category: "cal-print-formatters",
+     categoryEntry: "cal-list-printformatter",
      service: false},
 
     {cid: Components.ID("{64a5d17a-0497-48c5-b54f-72b15c9e9a14}"),

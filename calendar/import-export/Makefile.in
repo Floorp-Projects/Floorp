@@ -46,6 +46,7 @@ EXTRA_COMPONENTS = \
 	calOutlookCSVImportExport.js \
 	calHtmlExport.js \
 	calIcsImportExport.js \
+	calListFormatter.js \
 	calImportExportModule.js \
 	$(NULL)
 

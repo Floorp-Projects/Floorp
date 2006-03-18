@@ -25,6 +25,7 @@
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Chris Allen
  *                 Eric Belhaire <belhaire@ief.u-psud.fr>
+ *                 Michiel van Leeuwen <mvl@exedo.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,8 +46,6 @@
 /***** calendar/printDialog.js
 * PRIMARY AUTHOR
 *   Chris Allen
-* REQUIRED INCLUDES 
-*   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 *   
 * NOTES
 *   Code for the calendar's print dialog.
@@ -68,30 +67,52 @@ var gCalendarWindow = window.opener.gCalendarWindow;
 
 function loadCalendarPrintDialog()
 {
-  // set the date to the currently selected date
-  document.getElementById( "start-date-picker" ).value = gCalendarWindow.currentView.selectedDate;
-  document.getElementById( "end-date-picker" ).value = gCalendarWindow.currentView.selectedDate;
+    // set the date to the currently selected date
+    document.getElementById("start-date-picker").value = 
+        window.opener.document.getElementById("view-deck").selectedPanel.startDay.jsDate;
+    document.getElementById("end-date-picker").value = 
+        window.opener.document.getElementById("view-deck").selectedPanel.endDay.jsDate;
 
-  // start focus on title
-  var firstFocus = document.getElementById( "title-field" ).focus();
+    // start focus on title
+    var firstFocus = document.getElementById( "title-field" ).focus();
 
-  if (gCalendarWindow.EventSelection.selectedEvents.length == 0)
-    document.getElementById("list").setAttribute("disabled", true);
+    // Get a list of formatters
+    var contractids = new Array();
+    var catman = Components.classes["@mozilla.org/categorymanager;1"]
+                           .getService(Components.interfaces.nsICategoryManager);
+    var catenum = catman.enumerateCategory('cal-print-formatters');
 
-  opener.setCursor( "auto" );
-  
-  self.focus();
+    // Walk the list, adding item to the layout menupopup
+    var layoutList = document.getElementById("layout-field");
+    while (catenum.hasMoreElements()) {
+        var entry = catenum.getNext();
+        entry = entry.QueryInterface(Components.interfaces.nsISupportsCString);
+        var contractid = catman.getCategoryEntry('cal-print-formatters', entry);
+        var formatter = Components.classes[contractid]
+                                 .getService(Components.interfaces.calIPrintFormatter);
+        // Use the contractid as value
+        layoutList.appendItem(formatter.name, contractid);
+    }
+    layoutList.selectedIndex = 0;
+
+    opener.setCursor( "auto" );
+
+    self.focus();
 }
 
 
 function printCalendar() {
 
   var ccalendar = getDisplayComposite();
+  var start;
+  var end;
+  var eventList;
+
   var listener = {
     mEventArray: new Array(),
 
     onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDateTime) {
-      printInitWindow(listener.mEventArray); 
+      printInitWindow(listener.mEventArray, start, end); 
     },
 
     onGetResult: function (aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
@@ -104,44 +125,47 @@ function printCalendar() {
   var filter = ccalendar.ITEM_FILTER_TYPE_EVENT | 
                ccalendar.ITEM_FILTER_CLASS_OCCURRENCES;
 
-  switch( document.getElementById("view-field").value )
-  {
-    case 'currentview':
-    case '': //just in case
-      var displayStart = gCalendarWindow.currentView.displayStartDate;
-      var displayEnd = gCalendarWindow.currentView.displayEndDate;
-
-      //multiweek and month views call their display range something else
-      if(!displayStart) {
-        displayStart = gCalendarWindow.currentView.firstDateOfView;
-        displayEnd = gCalendarWindow.currentView.endExDateOfView;
-      }
-      ccalendar.getItems(filter, 0, jsDateToDateTime(displayStart), jsDateToDateTime(displayEnd), listener);
-      break;
-    case 'list' :
-      printInitWindow(gCalendarWindow.EventSelection.selectedEvents);
-      break;
-    case 'custom' :
-      var start = document.getElementById("start-date-picker").value;
-      var end = document.getElementById("end-date-picker").value;
-      ccalendar.getItems(filter, 0, jsDateToDateTime(start), jsDateToDateTime(end), listener);
-      break ;
-    default :
-      dump("Error : no case in printDialog.js::printCalendar()");
-  }
+    var start;
+    var end;
+    switch (document.getElementById("view-field").selectedItem.value) {
+        case 'currentview':
+        case '': //just in case
+            start = window.opener.document.getElementById("view-deck").selectedPanel.startDay;
+            end   = window.opener.document.getElementById("view-deck").selectedPanel.endDay;
+            break;
+        case 'selected' :
+            eventList = gCalendarWindow.EventSelection.selectedEvents;
+            break;
+        case 'custom' :
+            start = jsDateToDateTime(document.getElementById("start-date-picker").value);
+            end   = jsDateToDateTime(document.getElementById("end-date-picker").value);
+            break ;
+        default :
+            dump("Error : no case in printDialog.js::printCalendar()");
+    }
+    if (!eventList) {
+        // end isn't exclusive, so we need to add one day
+        end = end.clone();
+        end.day = end.day + 1;
+        end.normalize();
+        ccalendar.getItems(filter, 0, start, end, listener);
+    } else {
+        printInitWindow(eventList, null, null);
+    }
 }
 
-function printInitWindow(eventList)
-{
-  var args = new Object();
-  args.title = document.getElementById("title-field").value;
-  args.showprivate = document.getElementById("private-checkbox");
-  args.eventList = eventList;
+function printInitWindow(aEventList, aStart, aEnd) {
+    var args = new Object();
+    args.title = document.getElementById("title-field").value;
+    args.layoutContractid = document.getElementById("layout-field").value;
+    args.eventList = aEventList;
+    args.start = aStart;
+    args.end = aEnd;
 
-  window.openDialog("chrome://calendar/content/calPrintEngine.xul",
-				"CalendarPrintWindow",
-				"chrome,dialog=no,all,centerscreen",
-				args);
+    window.openDialog("chrome://calendar/content/calPrintEngine.xul",
+                      "CalendarPrintWindow",
+                      "chrome,dialog=no,all,centerscreen",
+                      args);
 }
 
 /*-----------------------------------------------------------------
