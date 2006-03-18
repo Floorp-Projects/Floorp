@@ -647,8 +647,10 @@ function dispatchCommand (command, e, flags)
         }
         else
         {
+            if ("beforeHooks" in client.commandManager)
+                callHooks(client.commandManager, true);
             if ("beforeHooks" in e.command)
-                callHooks (e.command, true);
+                callHooks(e.command, true);
 
             if ("dbgDispatch" in client && client.dbgDispatch)
             {
@@ -677,8 +679,10 @@ function dispatchCommand (command, e, flags)
     else if (typeof e.command.func == "string")
     {
         /* dispatch an alias (semicolon delimited list of subcommands) */
+        if ("beforeHooks" in client.commandManager)
+            callHooks(client.commandManager, true);
         if ("beforeHooks" in e.command)
-            callHooks (e.command, true);
+            callHooks(e.command, true);
 
         var commandList;
         //Don't make use of e.inputData if we have multiple commands in 1 alias
@@ -722,7 +726,9 @@ function dispatchCommand (command, e, flags)
     }
 
     if ("afterHooks" in e.command)
-        callHooks (e.command, false);
+        callHooks(e.command, false);
+    if ("afterHooks" in client.commandManager)
+        callHooks(client.commandManager, false);
 
     return ("returnValue" in e) ? e.returnValue : null;
 }
