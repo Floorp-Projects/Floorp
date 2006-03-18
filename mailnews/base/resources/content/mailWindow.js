@@ -203,12 +203,6 @@ function CreateMailWindowGlobals()
   //Create datasources
   accountManagerDataSource = Components.classes[accountManagerDSContractID].getService();
   folderDataSource         = Components.classes[folderDSContractID].getService();
-
-  accountCentralBox = document.getElementById("accountCentralBox");
-  gSearchBox = document.getElementById("searchBox");
-  if (gSearchBox)
-    gSearchBox.collapsed = true;
-  GetMessagePane().collapsed = true;
 }
 
 function InitMsgWindow()

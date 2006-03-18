@@ -754,6 +754,10 @@ function NotifyObservers(aSubject, aTopic, aData)
 
 function Create3PaneGlobals()
 {
+  accountCentralBox = document.getElementById("accountCentralBox");
+  gSearchBox = document.getElementById("searchBox");
+  gSearchBox.collapsed = true;
+  GetMessagePane().collapsed = true;
 }
  
 // because the "open" state persists, we'll call
