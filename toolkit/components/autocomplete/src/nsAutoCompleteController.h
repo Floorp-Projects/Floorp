@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,9 +50,12 @@
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
+#include "nsIRollupListener.h"
+#include "nsIWidget.h"
 
 class nsAutoCompleteController : public nsIAutoCompleteController,
                                  public nsIAutoCompleteObserver,
+                                 public nsIRollupListener,
                                  public nsITimerCallback,
                                  public nsITreeView
 {
@@ -59,6 +63,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETECONTROLLER
   NS_DECL_NSIAUTOCOMPLETEOBSERVER
+  NS_DECL_NSIROLLUPLISTENER
   NS_DECL_NSITREEVIEW
   NS_DECL_NSITIMERCALLBACK
    
@@ -88,7 +93,9 @@ protected:
   nsresult ClearResults();
   
   nsresult RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIndex, PRInt32 *aItemIndex);
-  
+
+  nsIWidget* GetPopupWidget();
+
   // members //////////////////////////////////////////
   
   nsCOMPtr<nsIAutoCompleteInput> mInput;

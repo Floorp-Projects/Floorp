@@ -47,7 +47,14 @@
 
 #include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIView.h"
+#include "nsIPresShell.h"
 #include "nsIAtomService.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -58,7 +65,11 @@ static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?
 
 // static const char *kCompleteConcatSeparator = " >> ";
 
-NS_IMPL_ISUPPORTS4(nsAutoCompleteController, nsIAutoCompleteController, nsIAutoCompleteObserver, nsITimerCallback, nsITreeView)
+NS_IMPL_ISUPPORTS5(nsAutoCompleteController, nsIAutoCompleteController,
+                                             nsIAutoCompleteObserver,
+                                             nsIRollupListener,
+                                             nsITimerCallback,
+                                             nsITreeView)
 
 nsAutoCompleteController::nsAutoCompleteController() :
   mEnterAfterSearch(PR_FALSE),
@@ -578,6 +589,24 @@ nsAutoCompleteController::SetSearchString(const nsAString &aSearchString)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAutoCompleteController::AttachRollupListener()
+{
+  nsIWidget* widget = GetPopupWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  return widget->CaptureRollupEvents((nsIRollupListener*)this,
+                                     PR_TRUE, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::DetachRollupListener()
+{
+  nsIWidget* widget = GetPopupWidget();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  return widget->CaptureRollupEvents((nsIRollupListener*)this,
+                                     PR_FALSE, PR_FALSE);
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteObserver
 
@@ -595,6 +624,32 @@ nsAutoCompleteController::OnSearchResult(nsIAutoCompleteSearch *aSearch, nsIAuto
     }
   }
   
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsIRollupListener
+
+NS_IMETHODIMP
+nsAutoCompleteController::Rollup()
+{
+  ClearSearchTimer();
+  ClearResults();
+  ClosePopup();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup)
+{
+  *aShouldRollup = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::ShouldRollupOnMouseActivate(PRBool *aShouldRollup)
+{
+  *aShouldRollup = PR_FALSE;
   return NS_OK;
 }
 
@@ -1273,6 +1328,37 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
   }
 
   return NS_OK;
+}
+
+nsIWidget*
+nsAutoCompleteController::GetPopupWidget()
+{
+  NS_ENSURE_TRUE(mInput, nsnull);
+
+  nsCOMPtr<nsIAutoCompletePopup> autoCompletePopup;
+  mInput->GetPopup(getter_AddRefs(autoCompletePopup));
+  NS_ENSURE_TRUE(autoCompletePopup, nsnull);
+
+  nsCOMPtr<nsIDOMNode> popup = do_QueryInterface(autoCompletePopup);
+  NS_ENSURE_TRUE(popup, nsnull);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  popup->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(popup);
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+  while (frame) {
+    nsIView* view = frame->GetViewExternal();
+    if (view && view->HasWidget())
+      return view->GetWidget();
+    frame = frame->GetParent();
+  }
+
+  NS_ERROR("widget wasn't found!");
+
+  return nsnull;
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)

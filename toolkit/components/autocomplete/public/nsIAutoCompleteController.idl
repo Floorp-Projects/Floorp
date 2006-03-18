@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(CF2ACA0C-4FB1-42e4-8A54-23E832CB2A98)]
+[scriptable, uuid(8E62F092-DD82-4748-BAB3-8898C7C881A1)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -152,4 +153,10 @@ interface nsIAutoCompleteController : nsISupports
    * Set the current search string, but don't start searching
    */
   void setSearchString(in AString aSearchString);
+
+  /*
+   * Attach or Detach roolup-listener
+   */
+  void attachRollupListener();
+  void detachRollupListener();
 };
