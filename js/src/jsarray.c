@@ -1061,7 +1061,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ca.fval = fval;
     ca.localroot = argv + argc;       /* local GC root for temporary string */
     pivotroot    = argv + argc + 1;   /* local GC root for pivot val */
-    ok = js_HeapSort(vec, (size_t) len, pivotroot, sizeof(jsval),
+    ok = js_HeapSort(vec, (size_t) newlen, pivotroot, sizeof(jsval),
                      all_strings ? sort_compare_strings : sort_compare,
                      &ca);
 
