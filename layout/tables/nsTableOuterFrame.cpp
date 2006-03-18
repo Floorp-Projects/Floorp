@@ -192,6 +192,8 @@ nsTableOuterFrame::SetInitialChildList(nsPresContext* aPresContext,
     mCaptionFrame  = mCaptionFrames.FirstChild();
   }
   else {
+    NS_ASSERTION(!aListName, "wrong childlist");
+    NS_ASSERTION(mFrames.IsEmpty(), "Frame leak!");
     mFrames.SetFrames(aChildList);
     mInnerTableFrame = nsnull;
     if (aChildList) {
@@ -1326,13 +1328,6 @@ nsTableOuterFrame::IncrementalReflow(nsPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState,
                                      nsReflowStatus&          aStatus)
 {
-  // At this point, we need an inner table frame, and we might have a caption.  
-  // Due to the logic in nsCSSFrameConstructor::ConstructTableFrame, we can 
-  // end here without an inner table frame.
-  if (mFrames.IsEmpty() || !mInnerTableFrame) {
-    NS_ASSERTION(PR_FALSE, "incomplete children");
-    return NS_ERROR_FAILURE;
-  }
   // the outer table is a target if its path has a reflow command
   nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
   if (command)
@@ -1855,6 +1850,12 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS);
 #endif
 
+  // We desperately need an inner table frame, 
+  // if this fails fix the frame constructor
+  if (mFrames.IsEmpty() || !mInnerTableFrame) {
+    NS_ERROR("incomplete children");
+    return NS_ERROR_FAILURE;
+  }
   nsresult rv = NS_OK;
   PRUint8 captionSide = GetCaptionSide();
 
@@ -1909,14 +1910,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
         mMinCaptionWidth = captionMet.mMaxElementWidth;
       }
     }
-    // At this point, we need an inner table frame, and we might have a 
-    // caption. Due to the logic in 
-    // nsCSSFrameConstructor::ConstructTableFrame, we can end here 
-    // without an inner table frame.
-    if (mFrames.IsEmpty() || !mInnerTableFrame) {
-      NS_ASSERTION(PR_FALSE, "incomplete children");
-      return NS_ERROR_FAILURE;
-    }
+    
     nsSize   innerSize;
     nsMargin innerMargin, innerMarginNoAuto, innerPadding;
 
