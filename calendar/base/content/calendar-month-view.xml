@@ -629,6 +629,7 @@
             box.box.selected = true;
             this.mSelectedDayBox = box;
           }
+          this.fireEvent("dayselect");
           return val;
         ]]></setter>
       </property>
@@ -643,6 +644,14 @@
         ]]></setter>
       </property>
 
+      <method name="fireEvent">
+        <parameter name="aEventName"/>
+        <body><![CDATA[
+          var event = document.createEvent('Events'); 
+          event.initEvent(aEventName, true, false); 
+          this.dispatchEvent(event);
+        ]]></body>
+      </method>
 
       <method name="showDate">
         <parameter name="aDate"/>

@@ -139,6 +139,7 @@
                     viewElement.tasksInView = this.mTasksInView;
 
                     viewElement.setDateRange(aDate, aDate);
+                    viewElement.selectedDay = aDate;
 
                     this.setNavLabels(aDate)
                 ]]></body>

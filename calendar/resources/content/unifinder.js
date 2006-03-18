@@ -210,6 +210,10 @@ function prepareCalendarUnifinder( )
 
    kDefaultTimezone = calendarDefaultTimezone();
 
+   // Listen for changes in the selected day, so we can update if need be
+   var viewDeck = document.getElementById("view-deck")
+   viewDeck.addEventListener("dayselect", unifinderOnDaySelect, false);
+
    refreshEventTree(); //Display something upon first load. onLoad doesn't work properly for observers
 }
 
@@ -221,6 +225,13 @@ function finishCalendarUnifinder( )
 {
    var ccalendar = getDisplayComposite();
    ccalendar.removeObserver(unifinderObserver);
+}
+
+function unifinderOnDaySelect() {
+    var filterList = document.getElementById("event-filter-menulist");
+    if (filterList.selectedItem.value == "current") {
+        refreshEventTree();
+    }
 }
 
 /**

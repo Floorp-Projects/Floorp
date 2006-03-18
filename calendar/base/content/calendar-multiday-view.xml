@@ -1797,6 +1797,14 @@
         ]]></setter>
       </property>
 
+     <method name="fireEvent">
+       <parameter name="aEventName"/>
+       <body><![CDATA[
+         var event = document.createEvent('Events'); 
+         event.initEvent(aEventName, true, false); 
+         this.dispatchEvent(event);
+       ]]></body>
+     </method>
 
       <method name="showDate">
         <parameter name="aDate"/>
@@ -1913,8 +1921,10 @@
         <setter><![CDATA[
           // ignore if just 1 visible, it's always selected,
           // but we don't indicate it
-          if (this.numVisibleDates == 1)
+          if (this.numVisibleDates == 1) {
+            this.fireEvent("dayselect");
             return val;
+          }
 
           if (this.mSelectedDayCol) {
             this.mSelectedDayCol.column.selected = false;
@@ -1931,7 +1941,7 @@
               return null;
             }
           }
-
+          this.fireEvent("dayselect");
           return val;
         ]]></setter>
       </property>
