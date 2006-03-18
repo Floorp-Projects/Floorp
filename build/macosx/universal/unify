@@ -178,6 +178,7 @@ L<cmp(1)>, L<ditto(1)>, L<lipo(1)>
 
 use Archive::Zip(':ERROR_CODES');
 use Errno;
+use Fcntl;
 use File::Compare;
 use File::Copy;
 use Getopt::Long;
@@ -189,6 +190,7 @@ sub command(@);
 sub compareZipArchives($$);
 sub complain($$@);
 sub copyIfIdentical($$$);
+sub createUniqueFile($$);
 sub makeUniversal($$$);
 sub makeUniversalDirectory($$$);
 sub makeUniversalInternal($$$$);
@@ -205,9 +207,11 @@ sub readZipCRCs($);
   sub isMachO($);
   sub isZip($);
   sub lIsDir($);
+  sub lIsExecutable($);
   sub lIsRegularFile($);
   sub lIsSymLink($);
   sub lstat($);
+  sub lstatMode($);
   sub lstatType($);
   sub magic($);
   sub path($);
@@ -450,11 +454,49 @@ sub copyIfIdentical($$$) {
     print('cp '.
           join(' ',argumentEscape($source1->path(), $target))."\n");
   }
-  if (!$gDryRun && !copy($source1->path(), $target)) {
-    return complain(1, 'copyIfIdentical: copy: '.$!.' while copying',
-                    $source1->path(),
-                    $target);
+
+  if (!$gDryRun) {
+    my ($isExecutable);
+
+    # Set the execute bits (as allowed by the umask) on the new file if any
+    # execute bit is set on either old file.
+    $isExecutable = $source1->lIsExecutable() ||
+                    (defined($source2) && $source2->lIsExecutable());
+
+    if (!createUniqueFile($target, $isExecutable ? 0777 : 0666)) {
+      # createUniqueFile printed an error.
+      return 0;
+    }
+
+    if (!copy($source1->path(), $target)) {
+      complain(1, 'copyIfIdentical: copy: '.$!.' while copying',
+               $source1->path(),
+               $target);
+      unlink($target);
+      return 0;
+    }
   }
+
+  return 1;
+}
+
+# createUniqueFile($path, $mode)
+#
+# Creates a new plain empty file at pathname $path, provided it does not
+# yet exist.  $mode is used as the file mode.  The actual file's mode will
+# be modified by the effective umask.  Returns false if the file could
+# not be created, setting $! to the error.  An error message is printed
+# in the event of failure.
+sub createUniqueFile($$) {
+  my ($path, $mode);
+  ($path, $mode) = @_;
+
+  my ($fh);
+  if (!sysopen($fh, $path, O_WRONLY | O_CREAT | O_EXCL, $mode)) {
+    return complain(1, 'createUniqueFile: open: '.$!.' for:',
+                    $path);
+  }
+  close($fh);
 
   return 1;
 }
@@ -727,16 +769,46 @@ sub makeUniversalFile($$$) {
     @thinFiles = ($thinPPC->path(), $thinX86->path());
   }
 
+  my ($isExecutable);
+  $isExecutable = $sourcePPC->lIsExecutable() ||
+                  $sourceX86->lIsExecutable();
+
+  if (!$gDryRun) {
+    # Ensure that the file does not yet exist.
+
+    # Set the execute bits (as allowed by the umask) on the new file if any
+    # execute bit is set on either old file.  Yes, it is possible to have
+    # proper Mach-O files without x-bits: think object files (.o) and static
+    # archives (.a).
+    if (!createUniqueFile($targetPath, $isExecutable ? 0777 : 0666)) {
+      # createUniqueFile printed an error.
+      unlink(@tempThinFiles);
+      return 0;
+    }
+  }
+
   # Create the fat file.
   if (command($gConfig{'cmd_lipo'}, '-create', @thinFiles,
               '-output', $targetPath) != 0) {
-    unlink(@tempThinFiles);
+    unlink(@tempThinFiles, $targetPath);
     return complain(1, 'lipo create fat failed for:',
                     @thinFiles,
                     $targetPath);
   }
 
   unlink(@tempThinFiles);
+
+  if (!$gDryRun) {
+    # lipo seems to think that it's free to set its own file modes that
+    # ignore the umask, which is bogus when the rest of this script
+    # respects the umask.
+    if (!chmod(($isExecutable ? 0777 : 0666) & ~umask(), $targetPath)) {
+      complain(1, 'makeUniversalFile: chmod: '.$!.' for',
+               $targetPath);
+      unlink($targetPath);
+      return 0;
+    }
+  }
 
   return 1;
 }
@@ -866,28 +938,6 @@ sub makeUniversalInternal($$$$) {
     return 1;
   }
   elsif($aSourceFile->lIsRegularFile()) {
-    # Unlike mkdir and symlink, neither makeUniversalFile nor copyIfIdentical
-    # care if the target file already exists, and they can't be made to care
-    # without writing lipo and cp equivalents that open files with
-    # O_CREAT|O_EXCL.  Since this script is supposed to be short and sweet,
-    # that's not going to happen.  The next best thing is to check to make
-    # sure the target file doesn't already exist before calling lipo or cp.
-    # It's open to a race, but this script isn't expected to run in hostile
-    # race-prone environments, and since it's expected to be called on
-    # directories and not files, the parent directory's mkdir addresses the
-    # race situation anyway.
-
-    my ($fileTarget);
-    $fileTarget = FileAttrCache->new($fileTargetPath);
-    $! = 0;
-    if ($fileTarget->lstat()) {
-      $! = Errno::EEXIST;
-    }
-    if ($! != Errno::ENOENT) {
-      return complain(1, 'makeUniversal: new file: '.$!.' for:',
-                      $fileTargetPath);
-    }
-
     my ($machPPC, $machX86);
     if (!defined($filePPC) || !defined($fileX86)) {
       # One of the source files isn't present.  The right thing to do is
@@ -912,32 +962,19 @@ sub makeUniversalInternal($$$$) {
                   $fileX86->path());
     }
 
-    my($rv);
-
     if ($machPPC) {
       # makeUniversalFile will print an error if it fails.
-      $rv = makeUniversalFile($filePPC, $fileX86, $fileTargetPath);
-    }
-    else {
-      # Regular file.  copyIfIdentical will print an error if it fails.
-      $rv = copyIfIdentical($filePPC, $fileX86, $fileTargetPath);
+      return makeUniversalFile($filePPC, $fileX86, $fileTargetPath);
     }
 
-    if (!$rv) {
-      unlink($fileTargetPath);
-    }
-
-    return $rv;
-  }
-  else {
-    # Special file, don't know how to handle.
-    return complain(1, 'makeUniversal: cannot handle special file:',
-                    $filePPC->path(),
-                    $fileX86->path());
+    # Regular file.  copyIfIdentical will print an error if it fails.
+    return copyIfIdentical($filePPC, $fileX86, $fileTargetPath);
   }
 
-  # Not reached.
-  return undef;
+  # Special file, don't know how to handle.
+  return complain(1, 'makeUniversal: cannot handle special file:',
+                  $filePPC->path(),
+                  $fileX86->path());
 }
 
 # usage()
@@ -1097,6 +1134,22 @@ sub readZipCRCs($) {
     return 0;
   }
 
+  # $FileAttrCache->lIsExecutable()
+  #
+  # Wraps $FileAttrCache->lstat(), returning true if the file is has any,
+  # execute bit set, false if none are set, or undef if an error occurs.
+  # On error, $! is set to lstat's errno.
+  sub lIsExecutable($) {
+    my ($mode, $this);
+    ($this) = @_;
+
+    if (!defined($mode = $this->lstatMode())) {
+      return undef;
+    }
+
+    return $mode & (S_IXUSR | S_IXGRP | S_IXOTH);
+  }
+
   # $FileAttrCache->lIsDir()
   #
   # Wraps $FileAttrCache->lstat(), returning true if the file is a directory,
@@ -1170,6 +1223,22 @@ sub readZipCRCs($) {
 
     $$this{'lstat'} = [@stat];
     return @stat;
+  }
+
+  # $FileAttrCache->lstatMode()
+  #
+  # Wraps $FileAttrCache->lstat(), returning the mode bits from the st_mode
+  # field, or undef if an error occurs.  On error, $! is set to lstat's
+  # errno.
+  sub lstatMode($) {
+    my (@stat, $this);
+    ($this) = @_;
+
+    if (!(@stat = $this->lstat())) {
+      return undef;
+    }
+
+    return S_IMODE($stat[2]);
   }
 
   # $FileAttrCache->lstatType()
