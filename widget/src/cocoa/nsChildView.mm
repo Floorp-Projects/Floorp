@@ -771,9 +771,8 @@ NS_IMETHODIMP nsChildView::SetFont(const nsFont &aFont)
 #ifdef MOZ_CAIRO_GFX
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  NS_IF_RELEASE(mFontMetrics);
   if (mContext)
-    mContext->GetMetricsFor(aFont, mFontMetrics);
+    mContext->GetMetricsFor(aFont, *getter_AddRefs(mFontMetrics));
   return NS_OK;
 #endif
 }

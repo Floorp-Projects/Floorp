@@ -88,6 +88,7 @@ EXPORTS		= \
 		nsIDrawingSurfaceMac.h \
 		nsGfxUtils.h \
 		nsCarbonHelpers.h \
+		nsRegionPool.h \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
