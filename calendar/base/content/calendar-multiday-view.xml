@@ -149,6 +149,9 @@
           while (topbox.lastChild)
               topbox.removeChild(topbox.lastChild);
 
+          var formatter = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                    .getService(nsIScriptableDateFormat);
+          var timeString;
           var theMin = this.mStartMin;
           var theHour = Math.floor(theMin / 60);
           var durLeft = this.mEndMin - this.mStartMin;
@@ -167,7 +170,10 @@
               if (dur != 60) {
                   box = makeTimeBox("", dur * this.mPixPerMin);
               } else {
-                  box = makeTimeBox(String(theHour) + ":00", dur * this.mPixPerMin);
+                  timeString = formatter.FormatTime("", 
+                                   nsIScriptableDateFormat.timeFormatNoSeconds,
+                                   theHour, 0, 0);
+                  box = makeTimeBox(timeString, dur * this.mPixPerMin);
               }
 
               box.setAttribute("class", "calendar-time-bar-box-" + (theHour % 2 == 0 ? "even" : "odd"));
@@ -1172,8 +1178,17 @@
           var endhr = Math.floor(realendmin / 60);
           var endmin = realendmin % 60;
 
-          this.fgboxes.startlabel.setAttribute("value", starthr + ":" + (startmin < 10 ? "0" : "") + startmin);
-          this.fgboxes.endlabel.setAttribute("value", endhr + ":" + (endmin < 10 ? "0" : "") + endmin);
+          var formatter = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                    .getService(nsIScriptableDateFormat);
+          var startstr = formatter.FormatTime("", 
+                             nsIScriptableDateFormat.timeFormatNoSeconds,
+                             starthr, startmin, 0);
+          var endstr = formatter.FormatTime("", 
+                           nsIScriptableDateFormat.timeFormatNoSeconds,
+                           endhr, endmin, 0);
+
+          this.fgboxes.startlabel.setAttribute("value", startstr);
+          this.fgboxes.endlabel.setAttribute("value", endstr);
    
         ]]></body>
       </method>
