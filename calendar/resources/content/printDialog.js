@@ -102,28 +102,27 @@ function loadCalendarPrintDialog()
 
 
 function printCalendar() {
+    var ccalendar = getDisplayComposite();
+    var start;
+    var end;
+    var eventList;
 
-  var ccalendar = getDisplayComposite();
-  var start;
-  var end;
-  var eventList;
+    var listener = {
+        mEventArray: new Array(),
 
-  var listener = {
-    mEventArray: new Array(),
+        onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDateTime) {
+            printInitWindow(listener.mEventArray, start, end); 
+        },
 
-    onOperationComplete: function (aCalendar, aStatus, aOperationType, aId, aDateTime) {
-      printInitWindow(listener.mEventArray, start, end); 
-    },
+        onGetResult: function (aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+            for (var i = 0; i < aCount; i++) {
+                listener.mEventArray.push(aItems[i]);
+            }
+        }
+    };
 
-    onGetResult: function (aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
-      for (var i = 0; i < aCount; i++) {
-        listener.mEventArray.push(aItems[i]);
-      }
-    }
-  };
-
-  var filter = ccalendar.ITEM_FILTER_TYPE_EVENT | 
-               ccalendar.ITEM_FILTER_CLASS_OCCURRENCES;
+    var filter = ccalendar.ITEM_FILTER_TYPE_EVENT | 
+                 ccalendar.ITEM_FILTER_CLASS_OCCURRENCES;
 
     var start;
     var end;
@@ -172,8 +171,7 @@ function printInitWindow(aEventList, aStart, aEnd) {
  *   Called when a datepicker is finished, and a date was picked.
  */
 
-function onDatePick()
-{
-  radioGroupSelectItem("view-field", "custom-range");
+function onDatePick() {
+    radioGroupSelectItem("view-field", "custom-range");
 }
 
