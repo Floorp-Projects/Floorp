@@ -39,7 +39,6 @@
 #include "nsNativeThemeMac.h"
 #include "nsIRenderingContext.h"
 #include "nsIDrawingSurfaceMac.h"
-#include "nsDeviceContextMac.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"
