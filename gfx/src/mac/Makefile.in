@@ -85,6 +85,7 @@ CPPSRCS = \
 
 EXPORTS		= \
 		nsIImageMac.h \
+		nsIDrawingSurfaceMac.h \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
