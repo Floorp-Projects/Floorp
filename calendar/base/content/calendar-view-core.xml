@@ -234,7 +234,7 @@
       ]]></handler>
       <handler event="mouseover"><![CDATA[
         if (this.calendarView && this.calendarView.controller) {
-            event.preventBubble();
+            event.stopPropagation();
             onMouseOverItem(event);
         }
       ]]></handler>

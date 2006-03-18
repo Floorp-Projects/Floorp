@@ -361,13 +361,13 @@
 
     <handlers>
       <handler event="mousedown"><![CDATA[
-        event.preventBubble();
+        event.stopPropagation();
 
         if (this.mDate)
           this.monthView.selectedDay = this.mDate;
       ]]></handler>
       <handler event="dblclick"><![CDATA[
-        event.preventBubble();
+        event.stopPropagation();
         this.monthView.controller.createNewEvent();
       ]]></handler>
     </handlers>

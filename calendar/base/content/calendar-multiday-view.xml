@@ -230,7 +230,7 @@
 
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
-        event.preventBubble();
+        event.stopPropagation();
         var whichside = this.getAttribute("whichside");
         if (!whichside)
             return;
@@ -238,7 +238,7 @@
         // we make assumptions about our position in the tree here;
         // specifically, this should get us to a <calendar-event-box>
         var evbox = this.parentNode.parentNode;
-        // still select it (since we'll preventBubble())
+        // still select it (since we'll stopPropagation())
         evbox.calendarView.selectedItem = evbox.mOccurrence;
         // then start dragging it
         evbox.parentColumn.startSweepingToModifyEvent(evbox, evbox.mOccurrence, whichside, event.screenX, event.screenY);
@@ -1399,7 +1399,7 @@
 
     <handlers>
       <handler event="mousedown" button="0"><![CDATA[
-        event.preventBubble();
+        event.stopPropagation();
 
         if (this.mEditing)
             return;
@@ -1443,7 +1443,7 @@
 
       <handler event="mouseover"><![CDATA[
         if (this.calendarView && this.calendarView.controller) {
-            event.preventBubble();
+            event.stopPropagation();
             onMouseOverItem(event);
         }
       ]]></handler>
