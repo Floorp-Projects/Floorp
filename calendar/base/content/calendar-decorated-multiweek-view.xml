@@ -134,6 +134,8 @@
                     viewElement.showFullMonth = false;
                     viewElement.tasksInView = this.mTasksInView;
 
+                    aDate = aDate.getInTimezone(viewElement.timezone);
+
                     // Set up the preferences we're going to need to read
                     var prefService = Components.classes[
                                       "@mozilla.org/preferences-service;1"]
@@ -158,7 +160,7 @@
                     if (this.mWorkdaysOnly) {
                         this.removeNonWorkdays();
                     }
-                    viewElement.selectedDay = aDate.getInTimezone(viewElement.timezone);
+                    viewElement.selectedDay = aDate;
                     this.setNavLabels(aDate);
                 ]]></body>
             </method>

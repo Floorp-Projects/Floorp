@@ -155,6 +155,8 @@
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
 	            viewElement.tasksInView = this.mTasksInView;
 
+                    aDate = aDate.getInTimezone(viewElement.timezone);
+
                     var d1 = aDate.startOfWeek.clone();
                     var d2 = aDate.endOfWeek.clone();
 
@@ -175,7 +177,7 @@
 
                     document.getAnonymousElementByAttribute(this, "anonid", "view-element").setDateRange(d1, d2);
 
-                    viewElement.selectedDay = aDate.getInTimezone(viewElement.timezone);
+                    viewElement.selectedDay = aDate;
                     if (this.mWorkdaysOnly) {
                         this.removeNonWorkdays();
                     }

@@ -647,6 +647,8 @@
       <method name="showDate">
         <parameter name="aDate"/>
         <body><![CDATA[
+          aDate = aDate.getInTimezone(this.mTimezone);
+
           // We might need to do some adjusting here to make sure we still
           // display whole month even with alternative week-start days
           var startDate = aDate.startOfMonth;
@@ -662,7 +664,7 @@
           }
 
           this.setDateRange(startDate, endDate);
-          this.selectedDay = aDate.getInTimezone(this.mTimezone);
+          this.selectedDay = aDate;
         ]]></body>
       </method>
 
