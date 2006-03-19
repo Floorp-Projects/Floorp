@@ -44,6 +44,34 @@
         window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
       }
 
+    const biffObserver =
+      {
+        observe: function observe(subject, topic, state)
+          {
+            // sanity check
+            if (topic == "mail:biff-state-changed") {
+              var biffManager = Components.classes["@mozilla.org/messenger/statusBarBiffManager;1"].getService(Components.interfaces.nsIStatusBarBiffManager);
+              document.getElementById("mini-mail").setAttribute("BiffState", ["NewMail", "NoMail", "UnknownMail"][biffManager.biffState]);
+            }
+          }
+      }
+
+    function mailTasksOnUnload(aEvent)
+      {
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+        observerService.removeObserver(biffObserver, "mail:biff-state-changed");
+      }
+
+    function mailTasksOnLoad(aEvent)
+      {
+        if (!document.getElementById('mini-mail')) return;
+
+        var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+        observerService.addObserver(biffObserver, "mail:biff-state-changed", false);
+        addEventListener("unload", mailTasksOnUnload, false);
+      }
+
+    addEventListener("load", mailTasksOnLoad, false);
   ]]>
   </script>         
 

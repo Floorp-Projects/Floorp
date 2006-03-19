@@ -62,12 +62,12 @@
 
 // QueryInterface, AddRef, and Release
 //
-NS_IMPL_ISUPPORTS1(nsStatusBarBiffManager, nsIFolderListener)
+NS_IMPL_ISUPPORTS2(nsStatusBarBiffManager, nsIStatusBarBiffManager, nsIFolderListener)
 
 nsIAtom * nsStatusBarBiffManager::kBiffStateAtom = nsnull;
 
 nsStatusBarBiffManager::nsStatusBarBiffManager()
-: mInitialized(PR_FALSE), mCurrentBiffState(nsIMsgFolder::nsMsgBiffState_NoMail)
+: mInitialized(PR_FALSE), mCurrentBiffState(nsIMsgFolder::nsMsgBiffState_Unknown)
 {
 }
 
@@ -166,64 +166,6 @@ nsresult nsStatusBarBiffManager::PlayBiffSound()
   return rv;
 }
 
-nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
-{
-  // See nsMsgStatusFeedback
-  nsresult rv;
-  
-  // if we got new mail, attempt to play a sound.
-  // if we fail along the way, don't return.
-  // we still need to update the UI.    
-  if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-    // if we fail to play the biff sound, keep going.
-    (void)PlayBiffSound();
-  }
-  
-  nsCOMPtr<nsIWindowMediator> windowMediator = 
-    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-  
-  // why use DOM window enumerator instead of XUL window...????
-  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
-  { 
-    PRBool more;
-    
-    windowEnumerator->HasMoreElements(&more);
-    
-    while(more)
-    {
-      nsCOMPtr<nsISupports> nextWindow = nsnull;
-      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
-      nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(nextWindow));
-      NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-      
-      nsCOMPtr<nsIDOMDocument> domDocument;
-      domWindow->GetDocument(getter_AddRefs(domDocument));
-      
-      if(domDocument)
-      {
-        nsCOMPtr<nsIDOMElement> domElement;
-        domDocument->GetElementById(NS_LITERAL_STRING("mini-mail"), getter_AddRefs(domElement));
-        
-        if (domElement) {
-          if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
-            domElement->SetAttribute(NS_LITERAL_STRING("BiffState"), NS_LITERAL_STRING("NewMail"));
-          }
-          else if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NoMail){
-            domElement->RemoveAttribute(NS_LITERAL_STRING("BiffState"));
-          }
-        }
-      }
-      
-      windowEnumerator->HasMoreElements(&more);
-    }
-  }
-
-  return NS_OK;
-}
-
 // nsIFolderListener methods....
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
@@ -246,12 +188,22 @@ nsStatusBarBiffManager::OnItemPropertyChanged(nsIRDFResource *item, nsIAtom *pro
 NS_IMETHODIMP
 nsStatusBarBiffManager::OnItemIntPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
-  if (kBiffStateAtom == property)
-  {
-    if (mCurrentBiffState != newValue) {
-      PerformStatusBarBiff(newValue);
-      mCurrentBiffState = newValue;
+  if (kBiffStateAtom == property && mCurrentBiffState != newValue) {
+    // if we got new mail, attempt to play a sound.
+    // if we fail along the way, don't return.
+    // we still need to update the UI.    
+    if (newValue == nsIMsgFolder::nsMsgBiffState_NewMail) {
+      // if we fail to play the biff sound, keep going.
+      (void)PlayBiffSound();
     }
+    mCurrentBiffState = newValue;
+
+    // don't care if notification fails
+    nsCOMPtr<nsIObserverService>
+      observerService(do_GetService("@mozilla.org/observer-service;1"));
+      
+    if (observerService)
+      observerService->NotifyObservers(this, "mail:biff-state-changed", nsnull);
   }
   return NS_OK;
 }
@@ -277,6 +229,14 @@ nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *pr
 NS_IMETHODIMP 
 nsStatusBarBiffManager::OnItemEvent(nsIMsgFolder *item, nsIAtom *event)
 {
+  return NS_OK;
+}
+// nsIStatusBarBiffManager method....
+NS_IMETHODIMP
+nsStatusBarBiffManager::GetBiffState(PRInt32 *aBiffState)
+{
+  NS_ENSURE_ARG_POINTER(aBiffState);
+  *aBiffState = mCurrentBiffState;
   return NS_OK;
 }
  

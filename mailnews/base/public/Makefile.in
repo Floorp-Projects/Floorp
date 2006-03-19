@@ -74,7 +74,8 @@ XPIDLSRCS	= \
 		nsIUrlListener.idl \
 		nsIUrlListenerManager.idl \
 		nsIMsgBiffManager.idl \
-    nsIMsgPurgeService.idl \
+		nsIStatusBarBiffManager.idl \
+		nsIMsgPurgeService.idl \
 		nsIMsgCopyService.idl \
 		nsIMsgCopyServiceListener.idl \
 		nsIMsgStatusFeedback.idl \
