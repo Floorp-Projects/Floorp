@@ -39,6 +39,7 @@
 #import "ABAddressBook+Utils.h"
 
 #import "NSString+Utils.h"
+#import "NSSplitView+Utils.h"
 
 #import "BrowserWindowController.h"
 #import "BrowserWindow.h"
@@ -112,13 +113,13 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 
-static NSString* const BrowserToolbarIdentifier	        = @"Browser Window Toolbar";
+static NSString* const BrowserToolbarIdentifier	        = @"Browser Window Toolbar Combined";
 static NSString* const BackToolbarItemIdentifier	      = @"Back Toolbar Item";
 static NSString* const ForwardToolbarItemIdentifier	    = @"Forward Toolbar Item";
 static NSString* const ReloadToolbarItemIdentifier	    = @"Reload Toolbar Item";
 static NSString* const StopToolbarItemIdentifier	      = @"Stop Toolbar Item";
 static NSString* const HomeToolbarItemIdentifier	      = @"Home Toolbar Item";
-static NSString* const LocationToolbarItemIdentifier	  = @"Location Toolbar Item";
+static NSString* const CombinedLocationToolbarItemIdentifier  = @"Combined Location Toolbar Item";
 static NSString* const BookmarksToolbarItemIdentifier	  = @"Sidebar Toolbar Item";    // note legacy name
 static NSString* const PrintToolbarItemIdentifier	      = @"Print Toolbar Item";
 static NSString* const ThrobberToolbarItemIdentifier    = @"Throbber Toolbar Item";
@@ -137,8 +138,10 @@ static NSString* const HistoryToolbarItemIdentifier     = @"History Toolbar Item
 int TabBarVisiblePrefChangedCallback(const char* pref, void* data);
 static const char* const gTabBarVisiblePref = "camino.tab_bar_always_visible";
 
+const float kMininumURLAndSearchBarWidth = 128.0;
 
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
+static NSString* const NavigatorWindowSearchBarWidth = @"SearchBarWidth";
 
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
@@ -570,8 +573,14 @@ enum BWCOpenDest {
 
 -(void)autosaveWindowFrame
 {
-  if (mShouldAutosave)
+  if (mShouldAutosave) {
     [[self window] saveFrameUsingName: NavigatorWindowFrameSaveName];
+    
+    // save the width of the search bar so it's consistent regardless of the
+    // size of the next window we create
+    const float searchBarWidth = [mSearchBar frame].size.width;
+    [[NSUserDefaults standardUserDefaults] setFloat:searchBarWidth forKey:NavigatorWindowSearchBarWidth];
+  }
 }
 
 -(void)disableAutosave
@@ -642,7 +651,7 @@ enum BWCOpenDest {
   mDataOwner = NULL;
 
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
-  if ( pref )
+  if (pref)
     pref->UnregisterCallback(gTabBarVisiblePref, TabBarVisiblePrefChangedCallback, self);
   
   // Tell the BrowserTabView the window is closed
@@ -691,7 +700,6 @@ enum BWCOpenDest {
   
   [mProgress release];
   [mPopupBlocked release];
-  [mSearchBar release];
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
@@ -783,9 +791,6 @@ enum BWCOpenDest {
     [[[mSearchBar cell] popUpButtonCell] selectItemWithTitle:
       [[BrowserWindowController searchURLDictionary] objectForKey:@"PreferredSearchEngine"]];
 
-    [mSearchBar retain];
-    [mSearchBar removeFromSuperview];
-
     // Set the sheet's search text field
     [mSearchSheetTextField addPopUpMenuItemsWithTitles:searchTitles];
     [[[mSearchSheetTextField cell] popUpButtonCell] selectItemWithTitle:
@@ -803,7 +808,7 @@ enum BWCOpenDest {
         windowBounds.size.width = kDefaultWindowWidth;
       [[self window] setFrame:windowBounds display:YES];
     }
-    
+        
     if (NSEqualSizes(oldFrame.size, [[self window] frame].size))
       mustResizeChrome = YES;
     
@@ -812,6 +817,17 @@ enum BWCOpenDest {
     [[self window] setAcceptsMouseMovedEvents: YES];
     
     [self setupToolbar];
+
+    // set the size of the search bar to the width it was last time
+    float searchBarWidth = [[NSUserDefaults standardUserDefaults] floatForKey:NavigatorWindowSearchBarWidth];
+    if (searchBarWidth <= 0)
+      searchBarWidth = kMininumURLAndSearchBarWidth;
+    const float currentWidth = [mLocationToolbarView frame].size.width;
+    float newDividerPosition = currentWidth - searchBarWidth - [mLocationToolbarView dividerThickness];
+    if (newDividerPosition < kMininumURLAndSearchBarWidth)
+      newDividerPosition = kMininumURLAndSearchBarWidth;
+    [mLocationToolbarView setLeftWidth:newDividerPosition];
+    [mLocationToolbarView adjustSubviews];
 
     // set up autohide behavior on tab browser and register for changes on that pref. The
     // default is for it to hide when only 1 tab is visible, so if no pref is found, it will
@@ -1011,10 +1027,9 @@ enum BWCOpenDest {
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
                                         HomeToolbarItemIdentifier,
-                                        LocationToolbarItemIdentifier,
+                                        CombinedLocationToolbarItemIdentifier,
                                         BookmarksToolbarItemIdentifier,
                                         ThrobberToolbarItemIdentifier,
-                                        SearchToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
                                         ViewSourceToolbarItemIdentifier,
                                         BookmarkToolbarItemIdentifier,
@@ -1059,8 +1074,7 @@ enum BWCOpenDest {
                                         ForwardToolbarItemIdentifier,
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
-                                        LocationToolbarItemIdentifier,
-                                        SearchToolbarItemIdentifier,
+                                        CombinedLocationToolbarItemIdentifier,
                                         BookmarksToolbarItemIdentifier,
                                         nil] );
 }
@@ -1207,14 +1221,17 @@ enum BWCOpenDest {
     [toolbarItem setTag:'Thrb'];
     [toolbarItem setAction:@selector(clickThrobber:)];
   }
-  else if ([itemIdent isEqual:LocationToolbarItemIdentifier]) {
+  else if ([itemIdent isEqual:CombinedLocationToolbarItemIdentifier]) {
     NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
 
     [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
     [toolbarItem setView:mLocationToolbarView];
-    [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mLocationToolbarView frame]))];
+    [toolbarItem setMinSize:NSMakeSize(250, NSHeight([mLocationToolbarView frame]))];
     [toolbarItem setMaxSize:NSMakeSize(2560, NSHeight([mLocationToolbarView frame]))];
+
+    [mSearchBar setTarget:self];
+    [mSearchBar setAction:@selector(performSearch:)];
 
     [menuFormRep setTarget:self];
     [menuFormRep setAction:@selector(performAppropriateLocationAction)];
@@ -1369,6 +1386,73 @@ enum BWCOpenDest {
     return ![self bookmarkManagerIsVisible];
   else
     return YES;
+}
+
+//
+// -splitView:canCollapseSubview:
+// NSSplitView delegate
+// 
+// We don't want to allow the user to collapse either the url bar or the search bar
+//
+- (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview
+{
+  if (sender == mLocationToolbarView)
+    return NO;
+  return YES;
+}
+
+//
+// -splitView:constrainMinCoordiante:ofSubviewAt:
+// NSSplitView delegate
+//
+// Called when the combined url/search splitter is being resized to provide a mininum
+// value for the splitter, which in our case is we want to be the min width of the url bar.
+//
+- (float)splitView:(NSSplitView *)sender constrainMinCoordinate:(float)proposedMin ofSubviewAt:(int)offset
+{
+  if (sender == mLocationToolbarView)
+    return kMininumURLAndSearchBarWidth;
+  return proposedMin;
+}
+
+//
+// -splitView:constrainMaxCoordinate:ofSubviewAt:
+//
+// Called when the combined url/search splitter is being resized to provide a max
+// value for the splitter. |proposedMax| is the rightmost extent of the
+// view to the right of the splitter, which in our case is the search bar. We
+// want the splitter to stop at that extent less the minimum search bar width.
+//
+- (float)splitView:(NSSplitView *)sender constrainMaxCoordinate:(float)proposedMax ofSubviewAt:(int)offset
+{
+  if (sender == mLocationToolbarView)
+    return proposedMax - kMininumURLAndSearchBarWidth;
+  return proposedMax;
+}
+
+//
+// -splitView:resizeSubviewsWithOldSize:
+// NSSplitView delegate
+//
+// Called when the split view is being resized. We are now in full control over
+// how our subviews are repositioned. We want to fix the width of the search bar so
+// that no matter how narrow/wide the window gets, the url bar is the one that changes
+// size.
+//
+- (void)splitView:(NSSplitView *)sender resizeSubviewsWithOldSize:(NSSize)oldSize 
+{
+  NSSize newSize = [sender frame].size;
+  NSRect searchFrame = [mSearchBar frame];
+  NSView* urlSuperview = [mURLBar superview];
+  NSRect urlBarFrame = [urlSuperview frame];
+  
+  // keep the search field constant size, expanding the url bar to take up the new slack
+  float deltaX = newSize.width - oldSize.width;     // positive when window grows
+  urlBarFrame.size.width += deltaX;
+  searchFrame.origin.x += deltaX;
+  [urlSuperview setFrame:urlBarFrame];
+  [mSearchBar setFrame:searchFrame];
+  [sender setNeedsDisplay:YES];
 }
 
 #pragma mark -
@@ -1612,7 +1696,7 @@ enum BWCOpenDest {
       
       for (unsigned int i = 0; i < [itemsWeCanSee count]; i++)
       {
-        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:LocationToolbarItemIdentifier])
+        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:CombinedLocationToolbarItemIdentifier])
         {
           [self focusURLBar];
           return;
@@ -1655,6 +1739,18 @@ enum BWCOpenDest {
   [NSApp endSheet:mLocationSheetWindow returnCode:0];
 }
 
+//
+// -performAppropriateSearchAction
+//
+// Called when the user executes the "search the web" action. If the combined
+// url/search bar is visible, focus the text field. If it's not (text only or
+// removed from toolbar), show the search sheet.
+//
+// Note that with the combined url/search bar, the only way to get this sheet
+// is to use the menu item/key combo, as clicking the text-only toolbar item
+// will show the location sheet. I'm not really happy about this, but I couldn't
+// come up with a good unified sheet that made sense. 
+//
 - (void)performAppropriateSearchAction
 {
   NSToolbar *toolbar = [[self window] toolbar];
@@ -1667,7 +1763,7 @@ enum BWCOpenDest {
 
       for (unsigned int i = 0; i < [itemsWeCanSee count]; i++)
       {
-        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:SearchToolbarItemIdentifier])
+        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:CombinedLocationToolbarItemIdentifier])
         {
           [self focusSearchBar];
           return;

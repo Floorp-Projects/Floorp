@@ -108,7 +108,7 @@ typedef enum
 @interface BrowserWindowController : NSWindowController<Find, BrowserUIDelegate>
 {
   IBOutlet BrowserTabView*    mTabBrowser;
-  IBOutlet NSView*            mLocationToolbarView;
+  IBOutlet NSSplitView*       mLocationToolbarView;     // parent splitter of location and search
   IBOutlet AutoCompleteTextField* mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;              // STRONG reference
