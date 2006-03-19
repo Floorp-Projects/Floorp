@@ -126,7 +126,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath
         mSearchPath(aSearchPath)
 {
     const char* statsFilename = PR_GetEnv("MOZILLA_XPTI_STATS");
-    if(statsFilename)
+    if(statsFilename && *statsFilename)
     {
         mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
         if(mStatsLogFile && 
@@ -142,7 +142,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager(nsISupportsArray* aSearchPath
     }
 
     const char* autoRegFilename = PR_GetEnv("MOZILLA_XPTI_REGLOG");
-    if(autoRegFilename)
+    if(autoRegFilename && *autoRegFilename)
     {
         mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
         if(mAutoRegLogFile && 
