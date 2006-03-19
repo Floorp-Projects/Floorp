@@ -66,7 +66,6 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 
 #define __USE_GNU 1
 #include <dlfcn.h>
-#include <setjmp.h>
 #include <string.h>
 #include "jshash.h"
 #include "jsprf.h"
@@ -170,13 +169,10 @@ CallTree(uint32 *bp)
 JSCallsite *
 JS_Backtrace(int skip)
 {
-    jmp_buf jb;
     uint32 *bp, *bpdown;
 
-    setjmp(jb);
-
     /* Stack walking code adapted from Kipp's "leaky". */
-    bp = (uint32*) jb[0].__jmpbuf[JB_BP];
+    bp = (uint32*) __builtin_frame_address(0);
     while (--skip >= 0) {
         bpdown = (uint32*) *bp++;
         if (bpdown < bp)

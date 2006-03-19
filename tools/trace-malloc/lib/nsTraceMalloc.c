@@ -51,7 +51,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
 #ifdef XP_UNIX
 #include <unistd.h>
 #include <sys/stat.h>
@@ -1339,7 +1338,6 @@ backtrace(int skip)
 callsite *
 backtrace(int skip)
 {
-    jmp_buf jb;
     uint32 *bp, *bpdown;
     callsite *site, **key;
     PLHashNumber hash;
@@ -1348,10 +1346,9 @@ backtrace(int skip)
 
     tmstats.backtrace_calls++;
     suppress_tracing++;
-    setjmp(jb);
 
     /* Stack walking code adapted from Kipp's "leaky". */
-    bp = (uint32*) jb[0].__jmpbuf[JB_BP];
+    bp = (uint32*) __builtin_frame_address(0);
     while (--skip >= 0) {
         bpdown = (uint32*) *bp++;
         if (bpdown < bp)
