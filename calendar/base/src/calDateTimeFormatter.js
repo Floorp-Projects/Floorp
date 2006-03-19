@@ -58,6 +58,7 @@ function calDateTimeFormatter() {
                   .createInstance(Components.interfaces.calIDateTime);
     probeDate.jsDate = new Date(2002,3,4);
     try { 
+        var probeString = this.formatDateShort(probeDate);
         var longProbeString = this.formatDateLong(probeDate);
         // On Unix extended/long date format may be created using %Ex instead
         // of %x. Some systems may not support it and return "Ex" or same as
