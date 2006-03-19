@@ -64,6 +64,8 @@ class nsISupportsArray;
 - (void)updateSiteIcons:(NSImage*)icon ignoreTyping:(BOOL)ignoreTyping;
 
 - (void)showPopupBlocked:(BOOL)blocked;
+- (void)configurePopupBlocking;
+- (void)unblockAllPopupSites:(nsISupportsArray*)inSites;
 - (void)showSecurityState:(unsigned long)state;
 
 - (BOOL)userChangedLocationField;
@@ -131,6 +133,8 @@ class nsISupportsArray;
   NSString*                 mLoadingStatusString;
   ToolTip*                  mToolTip;
 
+  IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil
+
   double                    mProgress;
   
   id<BrowserUIDelegate>     mDelegate;      // not retained
@@ -175,6 +179,8 @@ class nsISupportsArray;
 - (NSString*)getCurrentURI;
 
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
+- (IBAction)configurePopupBlocking:(id)sender;
+- (IBAction)unblockPopupSites:(id)sender;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 
@@ -214,4 +220,15 @@ class nsISupportsArray;
 - (void)sizeBrowserTo:(NSSize)dimensions;
 - (CHBrowserView*)createBrowserWindow:(unsigned int)mask;
 
+@end
+
+
+//
+// interface InformationPanel
+//
+// A placard-style view for showing additional information to the user. Drawn
+// with a colored background and bottom shadow.
+//
+
+@interface InformationPanel : NSView
 @end

@@ -711,7 +711,6 @@ enum BWCOpenDest {
   // BrowserWrappers and their child CHBrowserViews.
   
   [mProgress release];
-  [mPopupBlocked release];
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
@@ -748,7 +747,6 @@ enum BWCOpenDest {
       // crash if we give them things that have gone away.
       mProgress = nil;
       mStatus = nil;
-      mPopupBlocked = nil;
     }
     else {
       // Retain with a single extra refcount. This allows us to remove
@@ -767,30 +765,7 @@ enum BWCOpenDest {
       // that both needing updating instead of just the two individual rects
       // (radar 2194819), we need to make the text area opaque.
       [mStatus setBackgroundColor:[NSColor windowBackgroundColor]];
-      [mStatus setDrawsBackground:YES];
-      
-      // create a new cell for our popup blocker item that draws just an image
-      // yet still retains the functionality of a popdown menu. Like the progress
-      // meter above, we retain so we can hide with impunity and grab its superview.
-      // However, unlike the progress meter, this doesn't need to be in a subview from
-      // the status bar because it is in a fixed position on the LHS.
-      [mPopupBlocked retain];
-      NSFont* savedFont = [[mPopupBlocked cell] font];
-      NSMenu* savedMenu = [mPopupBlocked menu];     // must cache this before replacing cell
-      IconPopUpCell* iconCell = [[[IconPopUpCell alloc] initWithImage:[NSImage imageNamed:@"popup-blocked"]] autorelease];
-      [mPopupBlocked setCell:iconCell];
-      [iconCell setFont:savedFont];
-      [mPopupBlocked setToolTip:NSLocalizedString(@"PopupBlockTooltip", @"")]; 
-//      [iconCell setPreferredEdge:NSMaxYEdge];
-      [iconCell setMenu:savedMenu];
-      [iconCell setBordered:NO];
-      mPopupBlockSuperview = [mPopupBlocked superview];
-      [self showPopupBlocked:NO];
-      
-      // register for notifications so we can populate the popup blocker menu
-      // right before it's displayed.
-      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildPopupBlockerMenu:)
-                                              name:NSPopUpButtonCellWillPopUpNotification object:iconCell];
+      [mStatus setDrawsBackground:YES];            
     }
 
     // Set up the toolbar's search text field
@@ -1586,11 +1561,40 @@ enum BWCOpenDest {
 
 - (void)showPopupBlocked:(BOOL)inBlocked
 {
-  if (inBlocked && ![mPopupBlocked window]) {       // told to show, currently hidden
-    [mPopupBlockSuperview addSubview:mPopupBlocked];
-  }
-  else if (!inBlocked && [mPopupBlocked window]) {  // told to hide, currently visible                               
-    [mPopupBlocked removeFromSuperview];
+  // do nothing, everything is now handled by the BrowserWindow.
+}
+
+//
+// -configurePopupBlocking
+//
+// Called to display our popup blocking configuration ui, which is in prefs. 
+// Show the prefs window focused on the "web features" panel.
+//
+- (void)configurePopupBlocking
+{
+  [[MVPreferencesController sharedInstance] showPreferences:nil];
+  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.webfeatures"];
+}
+
+//
+// -unblockAllPopupSites:
+//
+// Called in response to the menu item from the unblock popup. Loop over all
+// the items in the blocked sites array in the browser wrapper and add them
+// to the whitelist.
+//
+- (void)unblockAllPopupSites:(nsISupportsArray*)inSites
+{
+  nsCOMPtr<nsIPermissionManager> pm (do_GetService(NS_PERMISSIONMANAGER_CONTRACTID));
+  if (!pm)
+    return;
+
+  PRUint32 count = 0;
+  inSites->Count(&count);
+  for (PRUint32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsISupports> genUri = dont_AddRef(inSites->ElementAt(i));
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
+    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);   
   }
 }
 
@@ -1617,7 +1621,6 @@ enum BWCOpenDest {
   [[self window] setTitle:  [mBrowserView windowTitle]];
   [self setLoadingActive:   [mBrowserView isBusy]];
   [self setLoadingProgress: [mBrowserView loadingProgress]];
-  [self showPopupBlocked:   [mBrowserView popupsBlocked]];
   [self showSecurityState:  [mBrowserView securityState]];
   [self updateSiteIcons:    [mBrowserView siteIcon] ignoreTyping:NO];
   [self updateStatus:       [mBrowserView statusString]];
@@ -3494,89 +3497,13 @@ enum BWCOpenDest {
 }
 
 //
-// buildPopupBlockerMenu:
-//
-// Called by the notification center right before the menu will be displayed. This
-// allows us the opportunity to populate its contents from the list of sites
-// in the block list.
-//
-- (void)buildPopupBlockerMenu:(NSNotification*)notifier
-{
-  const long kSeparatorTag = -1;
-  NSPopUpButton* popup = [notifier object];
-  
-  // clear out existing menu. loop until we hit our special tag
-  int numItemsToDelete = [popup indexOfItemWithTag:kSeparatorTag];
-  for ( int i = 0; i < numItemsToDelete; ++i ) 
-    [popup removeItemAtIndex:0];
-    
-  // the first item will get swallowed by the popup
-  [popup insertItemWithTitle:@"" atIndex:0];
-  
-  // fill in new menu
-  nsCOMPtr<nsISupportsArray> blockedSites;
-  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
-  PRUint32 siteCount = 0;
-  blockedSites->Count(&siteCount);
-  for ( PRUint32 i = 0, insertAt = 1; i < siteCount; ++i ) {
-    nsCOMPtr<nsISupports> genericURI = dont_AddRef(blockedSites->ElementAt(i));
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(genericURI);
-    if ( uri ) {
-      // extract the host
-      nsCAutoString host;
-      uri->GetHost(host);
-      NSString* hostString = [NSString stringWithCString:host.get()];      
-      NSString* itemTitle = [NSString stringWithFormat:NSLocalizedString(@"Unblock %@", @"Unblock %@"), hostString];
-
-      // ensure that duplicate hosts aren't inserted
-      if ([popup indexOfItemWithTitle:itemTitle] == -1) {
-        // create a new menu item and set its tag to the position in the menu so
-        // the action can know which site we want to unblock. Insert it at |i+1|
-        // because we had to pad with one item above, but set the tag to |i| because
-        // that's the index in the array.
-        [popup insertItemWithTitle:itemTitle atIndex:insertAt];
-        NSMenuItem* currItem = [popup itemAtIndex:insertAt];
-        [currItem setAction:@selector(unblockSite:)];
-        [currItem setTarget:self];
-        [currItem setTag:i];
-        ++insertAt;              // only increment insert pos if we inserted something
-      }
-    }
-  }
-}
-
-//
-// unblockSite:
-//
-// Called in response to an item in the unblock popup menu being selected to
-// add a particular site to the popup whitelist. We assume that the tag of
-// the sender is the index into the blocked sites array stores in the browser 
-// wrapper to get the nsURI.
-//
-- (IBAction)unblockSite:(id)sender
-{
-  nsCOMPtr<nsISupportsArray> blockedSites;
-  [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
-
-  // get the tag from the sender and use that as the index into the list
-  long tag = [sender tag];
-  if ( tag >= 0 ) {
-    nsCOMPtr<nsISupports> genUri = dont_AddRef(blockedSites->ElementAt(tag));
-    nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
-
-    nsCOMPtr<nsIPermissionManager> pm ( do_GetService(NS_PERMISSIONMANAGER_CONTRACTID) );
-    pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);
-  }
-}
-
-//
 // - unblockAllSites:
 //
 // Called in response to the menu item from the unblock popup. Loop over all
 // the items in the blocked sites array in the browser wrapper and add them
 // to the whitelist.
 //
-- (IBAction)unblockAllSites:(id)sender
+- (void)unblockAllSites:(nsISupportsArray*)sender
 {
   nsCOMPtr<nsISupportsArray> blockedSites;
   [[self getBrowserWrapper] getBlockedSites:getter_AddRefs(blockedSites)];
@@ -3589,16 +3516,6 @@ enum BWCOpenDest {
     nsCOMPtr<nsIURI> uri = do_QueryInterface(genUri);
     pm->Add(uri, "popup", nsIPermissionManager::ALLOW_ACTION);   
   }
-}
-
-// -configurePopupBlocking
-//
-// Show the web features pref panel where the user can do things to configure
-// popup blocking
-- (IBAction)configurePopupBlocking:(id)sender
-{
-  [[MVPreferencesController sharedInstance] showPreferences:nil];
-  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.webfeatures"];
 }
 
 // updateLock:

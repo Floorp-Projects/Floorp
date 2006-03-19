@@ -4708,6 +4708,7 @@
 				0FEA7E650926BFC600B06154,
 				0F8FC52F092ED71C0042429E,
 				0E6A9883097DFF9A007962C1,
+				E4575BBC09CE163A0060A9E7,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8639,6 +8640,7 @@
 				0FEA7E660926BFC600B06154,
 				0F8FC52E092ED71C0042429E,
 				4DD988E708EB7D3700AD0788,
+				E4575BBD09CE163A0060A9E7,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13003,11 +13005,6 @@
 			settings = {
 			};
 		};
-//4D0
-//4D1
-//4D2
-//4D3
-//4D4
 		4DD0EFF709918B3200B6BBFD = {
 			fileRef = 0E6A9886097DFFD4007962C1;
 			isa = PBXBuildFile;
@@ -13105,6 +13102,11 @@
 			settings = {
 			};
 		};
+//4D0
+//4D1
+//4D2
+//4D3
+//4D4
 //790
 //791
 //792
@@ -14390,6 +14392,46 @@
 //E02
 //E03
 //E04
+//E40
+//E41
+//E42
+//E43
+//E44
+		E4575BBA09CE163A0060A9E7 = {
+			children = (
+				E4575BBB09CE163A0060A9E7,
+			);
+			isa = PBXVariantGroup;
+			name = PopupBlockView.nib;
+			path = "";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		E4575BBB09CE163A0060A9E7 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = resources/localized/English.lproj/PopupBlockView.nib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		E4575BBC09CE163A0060A9E7 = {
+			fileRef = E4575BBA09CE163A0060A9E7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		E4575BBD09CE163A0060A9E7 = {
+			fileRef = E4575BBA09CE163A0060A9E7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//E40
+//E41
+//E42
+//E43
+//E44
 //F50
 //F51
 //F52
@@ -16608,6 +16650,7 @@
 				0F0AD72C08CA3682002782ED,
 				0FD8181E08CB8E8900D8F88C,
 				0FDEEB5408CC06BC00754D9B,
+				E4575BBA09CE163A0060A9E7,
 			);
 			isa = PBXGroup;
 			name = Nibs;

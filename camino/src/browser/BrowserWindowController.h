@@ -112,7 +112,6 @@ typedef enum
   IBOutlet AutoCompleteTextField* mURLBar;
   IBOutlet NSTextField*       mStatus;
   IBOutlet NSProgressIndicator* mProgress;              // STRONG reference
-  IBOutlet NSButton*          mPopupBlocked;
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
@@ -178,7 +177,6 @@ typedef enum
   // could be an outlet, but i figure it's easier to get it at runtime thereby saving
   // someone from messing up in the nib when making changes.
   NSView* mProgressSuperview;                // WEAK ptr
-  NSView* mPopupBlockSuperview;              // WEAK ptr
 }
 
 - (BrowserTabView*)getTabBrowser;
@@ -188,13 +186,7 @@ typedef enum
 
 - (void)focusURLBar;
 
-    // call to update (show/hide) the image of the blocked-popup indicator and handle
-    // the items of the popup un-blocker menu
-- (void)showPopupBlocked:(BOOL)inBlocked;
-- (void)buildPopupBlockerMenu:(NSNotification*)notifer;
-- (IBAction)unblockSite:(id)sender;
-- (IBAction)unblockAllSites:(id)sender;
-- (IBAction)configurePopupBlocking:(id)sender;
+- (void)unblockAllPopupSites:(nsISupportsArray*)inSites;
 
 - (void)performAppropriateLocationAction;
 - (IBAction)goToLocationFromToolbarURLField:(id)sender;

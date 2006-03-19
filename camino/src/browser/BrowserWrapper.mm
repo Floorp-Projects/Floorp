@@ -92,6 +92,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)checkForCustomViewOnLoad:(NSString*)inURL;
 
+- (void)removeBlockedPopupViewAndDisplay;
+
 @end
 
 #pragma mark -
@@ -243,7 +245,24 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if ([self window] || inResizeBrowser)
   {
     NSRect bounds = [self bounds];
-    [mBrowserView setFrame:bounds];
+    if (mBlockedPopupView) {
+      // resize the browser view and move it down by the height of the block popup
+      // view. Recall we're flipped, so the origin is the top left. Also make sure
+      // to apply changes for our new frame.
+      NSRect popupBlockFrame = [mBlockedPopupView frame];
+      NSRect browserFrame = [mBrowserView frame];
+      browserFrame.origin.y = popupBlockFrame.size.height;
+      browserFrame.size.width = bounds.size.width;
+      browserFrame.size.height = bounds.size.height;
+      
+      popupBlockFrame.origin = NSZeroPoint;
+      popupBlockFrame.size.width = bounds.size.width;
+      
+      [mBrowserView setFrame:browserFrame];
+      [mBlockedPopupView setFrame:popupBlockFrame];
+    }
+    else
+      [mBrowserView setFrame:bounds];
   }
 }
 
@@ -425,9 +444,6 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   [(BrowserTabViewItem*)mTabItem startLoadAnimation];
 
-  NS_IF_RELEASE(mBlockedSites);
-  [mDelegate showPopupBlocked:NO];
-  
   [mTabTitle autorelease];
   mTabTitle = [mLoadingStatusString retain];
   [mTabItem setLabel:mTabTitle];
@@ -468,6 +484,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     NSNotification* note     = [NSNotification notificationWithName:URLLoadNotification object:urlString userInfo:userInfo];
     [[NSNotificationQueue defaultQueue] enqueueNotification:note postingStyle:NSPostWhenIdle];
   }
+
+  // We've defered display of the blocked popup view until the page has finished loading in 
+  // order to avoid jumping around during the page load. Even if we're hidden, we ensure that
+  // the new view is in the view hierarchy and it will be resized when the
+  // current tab is eventually displayed.
+  if ([self popupsBlocked] && !mBlockedPopupView) {
+    [NSBundle loadNibNamed:@"PopupBlockView" owner:self];
+    [self addSubview:mBlockedPopupView];
+    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
+    [self display];
+  }
 }
 
 - (void)onProgressChange64:(long long)currentBytes outOf:(long long)maxBytes 
@@ -492,6 +519,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 {
   if (newPage)
   {
+    // defer hiding of blocked popup view until we've loaded the new page
+    [self removeBlockedPopupViewAndDisplay];
+    NS_IF_RELEASE(mBlockedSites);
+    [mDelegate showPopupBlocked:NO];
+  
     NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
     if (requestOK && [faviconURI length] > 0)
     {
@@ -671,15 +703,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 //
 // - onPopupBlocked:fromSite:
 //
-// Called when gecko blocks a popup, telling us who it came from. Currently, we
-// don't do anything with the blocked URI, but we have it just in case.
+// Called when gecko blocks a popup, telling us who it came from. Keep track
+// of the blocked URI so we can allow the user to unblock the site later. This
+// doesn't show the blocked popup view, we wait until the page finishes loading
+// to do that.
 //
 - (void)onPopupBlocked:(nsIURI*)inURIBlocked fromSite:(nsIURI*)inSite
 {
   // lazily instantiate.
-  if ( !mBlockedSites )
+  if (!mBlockedSites)
     NS_NewISupportsArray(&mBlockedSites);
-  if ( mBlockedSites ) {
+  if (mBlockedSites) {
     mBlockedSites->AppendElement(inSite);
     [mDelegate showPopupBlocked:YES];
   }
@@ -975,6 +1009,76 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     return;
   *outSites = mBlockedSites;
   NS_IF_ADDREF(*outSites);
+}
+
+//
+// -configurePopupBlocking:
+//
+// Called when the user clicks on the "configure" button in the blocked popup view.
+// Sends the msg along to our UI delegate so they can handle it
+//
+- (IBAction)configurePopupBlocking:(id)sender
+{
+  [mDelegate configurePopupBlocking];
+}
+
+//
+// -unblockPopupSites:
+//
+// Called when the user clicks on the "unblock" button in the blocked popup view.
+// Sends the msg along with the list of sites whose popups we just blocked to our UI
+// delegate so they can handle it. This also removes the blocked popup UI from
+// the current window.
+//
+- (IBAction)unblockPopupSites:(id)sender
+{
+  NS_ASSERTION([self popupsBlocked], "no popups to unblock!");
+  if ([self popupsBlocked]) {
+    [mDelegate unblockAllPopupSites:mBlockedSites];
+    [self removeBlockedPopupViewAndDisplay];
+  }
+}
+
+//
+// -removeBlockedPopupViewAndDisplay
+//
+// If we're showing the blocked popup view, this removes it and resizes the
+// browser view to again take up all the space. Causes a full redraw of our
+// view.
+//
+- (void)removeBlockedPopupViewAndDisplay
+{
+  if (mBlockedPopupView) {
+    [mBlockedPopupView removeFromSuperview];
+    mBlockedPopupView = nil;
+    [self setFrame:[self frame] resizingBrowserViewIfHidden:YES];
+    [self display];
+  }
+}
+
+@end
+
+#pragma mark -
+
+@implementation InformationPanel
+
+//
+// -drawRect:
+//
+// Draw a background color and shadowed border in addition to the contents.
+//
+- (void)drawRect:(NSRect)aRect
+{
+  // draw background color
+  [[NSColor orangeColor] set];
+  NSRectFill([self frame]);
+  
+  // draw shadowed border
+  [[NSColor controlShadowColor] set];
+  NSRectFill(NSMakeRect(aRect.origin.x, 0.0, aRect.size.width, 1.0));
+
+  // Call our base class method to paint contents
+  [super drawRect: aRect];
 }
 
 @end

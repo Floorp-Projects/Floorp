@@ -105,7 +105,6 @@
                 closeCurrentTab = id; 
                 closeOtherTabs = id; 
                 closeSendersTab = id; 
-                configurePopupBlocking = id; 
                 copyAddressToClipboard = id; 
                 copyImage = id; 
                 copyImageLocation = id; 
@@ -145,8 +144,6 @@
                 showSiteCertificate = id; 
                 smallerTextSize = id; 
                 stop = id; 
-                unblockAllSites = id; 
-                unblockSite = id; 
                 viewOnlyThisImage = id; 
                 viewPageSource = id; 
                 viewSource = id; 
@@ -171,7 +168,6 @@
                 mMailToLinkMenu = NSMenu; 
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarkToolbar; 
-                mPopupBlocked = NSButton; 
                 mProgress = NSProgressIndicator; 
                 mProxyIcon = PageProxyIcon; 
                 mSearchBar = SearchTextField; 
