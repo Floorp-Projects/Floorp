@@ -1727,7 +1727,6 @@ SearchService.prototype = {
       try {
         switch (fileExtension) {
           case XML_FILE_EXT:
-            continue;
             // Create a new engine object, readonly if it's not in the profile
             addedEngine = new Engine(file, Ci.nsISearchEngine.DATA_XML,
                                      !isWritable);
