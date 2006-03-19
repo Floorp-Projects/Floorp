@@ -427,20 +427,10 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
   mp_int        trial;
   mp_int        q;
   mp_size       num_tests;
-  /*
-   * Always make sieve the last variabale allocated so that 
-   * Mac builds don't break by adding an extra variable
-   * on the stack. -javi
-   */
-#if defined(macintosh) || defined (XP_OS2) \
-    || (defined(HPUX) && defined(__ia64))
   unsigned char *sieve;
   
   sieve = malloc(SIEVE_SIZE);
   ARGCHK(sieve != NULL, MP_MEM);
-#else
-  unsigned char sieve[SIEVE_SIZE];
-#endif  
 
   ARGCHK(start != 0, MP_BADARG);
   ARGCHK(nBits > 16, MP_RANGE);
@@ -575,13 +565,10 @@ CLEANUP:
   mp_clear(&q);
   if (nTries)
     *nTries += i;
-#if defined(macintosh) || defined(XP_OS2) \
-    || (defined(HPUX) && defined(__ia64))
   if (sieve != NULL) {
   	memset(sieve, 0, SIEVE_SIZE);
   	free (sieve);
   }
-#endif    
   return res;
 }
 
