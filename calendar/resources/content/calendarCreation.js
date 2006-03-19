@@ -136,3 +136,7 @@ function checkURL() {
     }
     return true;
 }
+
+function setCanRewindFalse() {
+   document.getElementById('calendar-wizard').canRewind = false;
+}

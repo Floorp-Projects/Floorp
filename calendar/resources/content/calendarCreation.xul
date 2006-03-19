@@ -142,7 +142,8 @@
 
    <wizardpage pageid="finishPage" 
                description="&finishpage.shortdescription;"
-               label="&wizard.label;">
+               label="&wizard.label;"
+               onpageshow="setCanRewindFalse();">
         <description>&finishpage.longdescription;</description>
    </wizardpage>
 </wizard>
