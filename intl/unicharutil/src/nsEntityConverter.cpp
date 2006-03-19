@@ -236,7 +236,8 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
     if (IS_HIGH_SURROGATE(inString[i]) &&
         i + 2 < len &&
         IS_LOW_SURROGATE(inString[i + 1])) {
-      key.AppendInt(SURROGATE_TO_UCS4(inString[i], inString[++i]), 10);
+      key.AppendInt(SURROGATE_TO_UCS4(inString[i], inString[i+1]), 10);
+      ++i;
     }
     else {
       key.AppendInt(inString[i],10);
