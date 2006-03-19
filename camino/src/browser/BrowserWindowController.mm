@@ -269,6 +269,13 @@ public:
   return nil;
 }
 
+// Opt-return and opt-enter should download the URL in the location bar
+- (void)insertNewlineIgnoringFieldEditor:(id)sender
+{
+  BrowserWindowController* bwc = (BrowserWindowController *)[[[self delegate] window] delegate];
+  [bwc saveURL:nil url:[self string] suggestedFilename:nil];
+}
+
 @end
 //////////////////////////////////////
 
