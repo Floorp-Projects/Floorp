@@ -1663,7 +1663,7 @@ Submission.prototype = {
 
 // nsIBrowserSearchService
 function SearchService() {
-  //this._init();
+  this._init();
 }
 SearchService.prototype = {
   _engines: { },
