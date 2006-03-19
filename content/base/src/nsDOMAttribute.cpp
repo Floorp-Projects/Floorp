@@ -155,14 +155,14 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::GetName(nsAString& aName)
 {
   mNodeInfo->GetQualifiedName(aName);
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::GetValue(nsAString& aValue)
 {
   nsIContent* content = GetContentInternal();
@@ -176,7 +176,7 @@ nsDOMAttribute::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::SetValue(const nsAString& aValue)
 {
   nsresult rv = NS_OK;
@@ -195,7 +195,7 @@ nsDOMAttribute::SetValue(const nsAString& aValue)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDOMAttribute::GetSpecified(PRBool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
