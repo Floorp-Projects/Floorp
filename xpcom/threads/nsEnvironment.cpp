@@ -98,8 +98,7 @@ nsEnvironment::Exists(const nsAString& aName, PRBool *aOutValue)
      * An environment variable does not exist when |getenv()| returns NULL.
      */
     const char *value = PR_GetEnv(nativeName.get());
-    
-    *aOutValue = (value)?(PR_TRUE):(PR_FALSE);
+    *aOutValue = value && *value;
 #else
     /* For non-Unix/Linux platforms we have to fall back to a 
      * "portable" definition (which is incorrect for Unix/Linux!!!!)
@@ -108,7 +107,7 @@ nsEnvironment::Exists(const nsAString& aName, PRBool *aOutValue)
      */
     nsAutoString value;
     Get(aName, value);
-    *aOutValue = (value.IsEmpty())?(PR_FALSE):(PR_TRUE);
+    *aOutValue = !value.IsEmpty();
 #endif /* XP_UNIX */
 
     return NS_OK;
@@ -123,7 +122,7 @@ nsEnvironment::Get(const nsAString& aName, nsAString& aOutValue)
 
     nsCAutoString nativeVal;
     const char *value = PR_GetEnv(nativeName.get());
-    if (value) {
+    if (value && *value) {
         rv = NS_CopyNativeToUnicode(nsDependentCString(value), aOutValue);
     } else {
         aOutValue.Truncate();

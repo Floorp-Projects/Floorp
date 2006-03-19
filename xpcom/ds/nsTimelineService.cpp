@@ -226,6 +226,7 @@ PRStatus TimelineInit(void)
 {
     char *timeStr;
     char *fileName;
+    const char *timelineEnable;
     PRInt32 secs, msecs;
     PRFileDesc *fd;
     PRInt64 tmp1, tmp2;
@@ -234,19 +235,19 @@ PRStatus TimelineInit(void)
     NS_WARN_IF_FALSE(status==0, "TimelineService could not allocate TLS storage.");
 
     timeStr = PR_GetEnv("NS_TIMELINE_INIT_TIME");
-
     // NS_TIMELINE_INIT_TIME only makes sense for the main thread, so if it
     // exists, set it there.  If not, let normal thread management code take
     // care of setting the init time.
-    if (timeStr != NULL && 2 == PR_sscanf(timeStr, "%d.%d", &secs, &msecs)) {
+    if (timeStr && *timeStr && (2 == PR_sscanf(timeStr, "%d.%d", &secs, &msecs))) {
         PRTime &initTime = GetThisThreadData()->initTime;
         LL_MUL(tmp1, (PRInt64)secs, 1000000);
         LL_MUL(tmp2, (PRInt64)msecs, 1000);
         LL_ADD(initTime, tmp1, tmp2);
     }
+
     // Get the log file.
     fileName = PR_GetEnv("NS_TIMELINE_LOG_FILE");
-    if (fileName != NULL
+    if (fileName && *fileName
         && (fd = PR_Open(fileName, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                          0666)) != NULL) {
         timelineFD = fd;
@@ -256,7 +257,8 @@ PRStatus TimelineInit(void)
     }
 
     // Runtime disable of timeline
-    if (PR_GetEnv("NS_TIMELINE_ENABLE"))
+    timelineEnable = PR_GetEnv("NS_TIMELINE_ENABLE");
+    if (timelineEnable && *timelineEnable)
         gTimelineDisabled = PR_FALSE;
     return PR_SUCCESS;
 }

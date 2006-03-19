@@ -255,7 +255,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile
         NS_ERROR("Don't use nsAppFileLocationProvider::GetFile(NS_ENV_PLUGINS_DIR, ...). "
                  "Use nsAppFileLocationProvider::GetFiles(...).");
         const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
-        if (pathVar)
+        if (pathVar && *pathVar)
             rv = NS_NewNativeLocalFile(nsDependentCString(pathVar), PR_TRUE, getter_AddRefs(localFile));
     }
     else if (nsCRT::strcmp(prop, NS_USER_PLUGINS_DIR) == 0)

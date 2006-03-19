@@ -246,18 +246,18 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     // regardless of the environment.  This makes it easier to write apps that
     // embed mozilla without having to worry about setting up the environment 
     //
-    // We do this py putenv()ing the default value into the environment.  Note that
+    // We do this by putenv()ing the default value into the environment.  Note that
     // we only do this if it is not already set.
 #ifdef MOZ_DEFAULT_MOZILLA_FIVE_HOME
-    if (PR_GetEnv("MOZILLA_FIVE_HOME") == nsnull)
+    const char *home = PR_GetEnv("MOZILLA_FIVE_HOME");
+    if (!home || !*home)
     {
         putenv("MOZILLA_FIVE_HOME=" MOZ_DEFAULT_MOZILLA_FIVE_HOME);
     }
 #endif
 
     char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
-
-    if (moz5)
+    if (moz5 && *moz5)
     {
         if (realpath(moz5, buf)) {
             localFile->InitWithNativePath(nsDependentCString(buf));
@@ -268,7 +268,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 #if defined(DEBUG)
     static PRBool firstWarning = PR_TRUE;
 
-    if(!moz5 && firstWarning) {
+    if((!moz5 || !*moz5) && firstWarning) {
         // Warn that MOZILLA_FIVE_HOME not set, once.
         printf("Warning: MOZILLA_FIVE_HOME not set.\n");
         firstWarning = PR_FALSE;
