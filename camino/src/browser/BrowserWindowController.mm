@@ -143,6 +143,11 @@ const float kMininumURLAndSearchBarWidth = 128.0;
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 static NSString* const NavigatorWindowSearchBarWidth = @"SearchBarWidth";
 
+static NSString* const kViewSourceProtocolString = @"view-source:";
+const unsigned long kNoToolbarsChromeMask = (nsIWebBrowserChrome::CHROME_ALL & ~(nsIWebBrowserChrome::CHROME_TOOLBAR |
+                                                                                 nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR |
+                                                                                 nsIWebBrowserChrome::CHROME_LOCATIONBAR)); 
+
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
@@ -440,7 +445,7 @@ enum BWCOpenDest {
 - (void)setGeckoActive:(BOOL)inActive;
 - (BOOL)isResponderGeckoView:(NSResponder*) responder;
 - (NSString*)getContextMenuNodeDocumentURL;
-- (void)loadSourceOfURL:(NSString*)urlStr;
+- (void)loadSourceOfURL:(NSString*)urlStr inBackground:(BOOL)loadInBackground;
 - (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
 - (void)openNewWindowWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
 - (void)openNewTabWithDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType loadInBackground:(BOOL)aLoadInBG;
@@ -815,14 +820,14 @@ enum BWCOpenDest {
         windowBounds.size.width = kDefaultWindowWidth;
       [[self window] setFrame:windowBounds display:YES];
     }
-        
+
     if (NSEqualSizes(oldFrame.size, [[self window] frame].size))
       mustResizeChrome = YES;
     
     mInitialized = YES;
-        
-    [[self window] setAcceptsMouseMovedEvents: YES];
-    
+
+    [[self window] setAcceptsMouseMovedEvents:YES];
+
     [self setupToolbar];
 
     // set the size of the search bar to the width it was last time
@@ -842,7 +847,7 @@ enum BWCOpenDest {
     // to let the tab bar show so leave it off and don't register for the pref updates.
     BOOL allowTabBar = YES;
     if (mChromeMask && (!(mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) ||
-                          !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR)))
+                        !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR)))
       allowTabBar = NO;
     if (allowTabBar) {
       BOOL tabBarAlwaysVisible = [[PreferenceManager sharedInstance] getBooleanPref:gTabBarVisiblePref withSuccess:nil];
@@ -1915,16 +1920,18 @@ enum BWCOpenDest {
   [[mBrowserView getBrowserView] saveDocument:focusedFrame filterView:aFilterView];
 }
 
-- (void)saveURL: (NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
+- (void)saveURL:(NSView*)aFilterView url:(NSString*)aURLSpec suggestedFilename:(NSString*)aFilename
 {
-  [[mBrowserView getBrowserView] saveURL: aFilterView url: aURLSpec suggestedFilename: aFilename];
+  [[mBrowserView getBrowserView] saveURL:aFilterView url:aURLSpec suggestedFilename:aFilename];
 }
 
-- (void)loadSourceOfURL:(NSString*)urlStr
+- (void)loadSourceOfURL:(NSString*)urlStr inBackground:(BOOL)loadInBackground
 {
+  BOOL shouldUseTab = [[PreferenceManager sharedInstance] getBooleanPref:"camino.viewsource_in_tab" withSuccess:NULL];
+  NSString* viewSource = [kViewSourceProtocolString stringByAppendingString:urlStr];
+  
   // first attempt to get the source that's already loaded
-  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
-
+  BOOL canUseCache = NO;
   nsCOMPtr<nsISupports> desc = [[mBrowserView getBrowserView] getPageDescriptor];
   if (desc) {
     // make sure we're not trying to load a subframe by checking |urlStr| against the url in
@@ -1935,28 +1942,45 @@ enum BWCOpenDest {
       entry->GetURI(getter_AddRefs(uri));
       nsCAutoString spec;
       uri->GetSpec(spec);
-      if ([urlStr isEqualToString:[NSString stringWithUTF8String:spec.get()]]) {
-        [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
-        return;
-      }
+      if ([urlStr isEqualToString:[NSString stringWithUTF8String:spec.get()]])
+        canUseCache = YES;
     }
   }
 
-  //otherwise reload it from the server
-  NSString* viewSource = [@"view-source:" stringByAppendingString: urlStr];
-  [self openNewTabWithURL: viewSource referrer:nil loadInBackground: loadInBackground allowPopups:NO];
+  if (shouldUseTab) {
+    if (canUseCache)
+      [self openNewTabWithDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE loadInBackground:loadInBackground];
+    else
+      [self openNewTabWithURL:viewSource referrer:nil loadInBackground:loadInBackground allowPopups:NO];
+  }      
+  else {
+    // open a new window and hide the toolbars for prettyness
+    BrowserWindowController* controller = [[BrowserWindowController alloc] initWithWindowNibName:@"BrowserWindow"];
+    [controller setChromeMask:kNoToolbarsChromeMask];
+    if (loadInBackground)
+      [[controller window] orderWindow:NSWindowBelow relativeTo:[[self window] windowNumber]];
+    else
+      [controller showWindow:nil];
+
+    if (canUseCache)
+      [[[controller getBrowserWrapper] getBrowserView] setPageDescriptor:desc displayType:nsIWebPageDescriptor::DISPLAY_AS_SOURCE];
+    else
+      [controller loadURL:viewSource referrer:nil activate:!loadInBackground allowPopups:NO];
+  }
 }
 
 - (IBAction)viewSource:(id)aSender
 {
+  BOOL loadInBackground = ((GetCurrentKeyModifiers() & shiftKey) != 0);
   NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
-  [self loadSourceOfURL:urlStr];
+  [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
 
 - (IBAction)viewPageSource:(id)aSender
 {
+  BOOL loadInBackground = ((GetCurrentKeyModifiers() & shiftKey) != 0);
   NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURI];
-  [self loadSourceOfURL:urlStr];
+  [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
 
 - (IBAction)printDocument:(id)aSender
