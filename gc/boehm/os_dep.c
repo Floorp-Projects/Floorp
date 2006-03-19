@@ -2429,8 +2429,6 @@ void GC_save_callers(struct callinfo info[NFRAMES])
 
 #if defined(SAVE_CALL_CHAIN) && defined(LINUX)
 
-#include <setjmp.h>
-
 #include "call_tree.h"
 
 typedef struct stack_frame stack_frame;
@@ -2443,10 +2441,8 @@ struct stack_frame {
 
 static stack_frame* getStackFrame()
 {
-  jmp_buf jb;
   stack_frame* currentFrame;
-  setjmp(jb);
-  currentFrame = (stack_frame*)(jb[0].__jmpbuf[JB_BP]);
+  currentFrame = (stack_frame*)__builtin_frame_address(0);
   currentFrame = currentFrame->next;
   return currentFrame;
 }
