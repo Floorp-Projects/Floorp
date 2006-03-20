@@ -177,27 +177,8 @@ SHARED_LIBRARY_LIBS += \
                 ../svg/base/src/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
-                $(NULL)
-
-ifdef MOZ_SVG_RENDERER_GDIPLUS
-SHARED_LIBRARY_LIBS += \
-                ../svg/renderer/src/gdiplusshim/$(LIB_PREFIX)gksvgrenderergdiplus_s.$(LIB_SUFFIX) \
-                $(NULL)
-
-OS_LIBS += \
-	Gdiplus.lib \
-	$(NULL)
-endif
-ifdef MOZ_SVG_RENDERER_LIBART
-SHARED_LIBRARY_LIBS += \
-                ../svg/renderer/src/libart/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
-                $(NULL)
-endif
-ifdef MOZ_SVG_RENDERER_CAIRO
-SHARED_LIBRARY_LIBS += \
                 ../svg/renderer/src/cairo/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
                 $(NULL)
-endif
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -218,18 +199,13 @@ ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
 endif
 
-ifdef MOZ_SVG_RENDERER_LIBART
-EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS) \
-		    $(NULL)
-endif
-
 ifdef MOZ_ENABLE_GTK2
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    $(NULL)
 endif
 
 ifndef MOZ_ENABLE_CAIRO_GFX
-ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
+ifdef MOZ_SVG
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
                    $(NULL)
 endif
