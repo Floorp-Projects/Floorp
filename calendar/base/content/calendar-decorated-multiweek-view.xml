@@ -65,6 +65,10 @@
                     viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
                 } catch (ex) {}
 
+                try {
+                    this.mWeeksInView = pb2.getIntPref("calendar.weeks.inview");
+                } catch (ex) {}
+
                 // add a preference observer to monitor changes
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
@@ -97,6 +101,15 @@
                        }
                        
                        // Refresh the view so the settings take effect
+                       this.calView.goToDay(this.calView.selectedDay);
+                       break;
+
+                   case "calendar.weeks.inview":
+                       this.calView.weeksInView = subj.getIntPref(pref);
+                       break;
+
+                   case "calendar.previousweeks.inview":
+                       // Just refresh, the goToDay function will notice
                        this.calView.goToDay(this.calView.selectedDay);
                        break;
 

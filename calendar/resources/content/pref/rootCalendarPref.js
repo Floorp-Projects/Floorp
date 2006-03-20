@@ -72,15 +72,6 @@ calendarPrefObserver.prototype =
                   this.CalendarPreferences.calendarWindow.currentView.refresh();
                 }
                 break;
-            case "calendar.weeks.inview":
-                if (this.CalendarPreferences.calendarWindow.multiweekView != null) {
-                  //changeNumberOfWeeks expects an element with attribute 'value'
-                  var newWeeks = document.createElement( "textbox" );
-                  newWeeks.setAttribute("value", subject.getIntPref( prefName ) );
-                  this.CalendarPreferences.calendarWindow.multiweekView
-                         .changeNumberOfWeeks(newWeeks);
-                }
-                break;
             case "calendar.week.start":
                 if (this.CalendarPreferences.calendarWindow.currentView != null) {
                   this.CalendarPreferences.calendarWindow.currentView.refresh();
