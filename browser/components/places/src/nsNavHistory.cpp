@@ -98,7 +98,6 @@
 #define PREF_BRANCH_BASE                        "browser."
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
-#define PREF_AUTOCOMPLETE_MAX_COUNT             "urlbar.autocomplete.maxCount"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
 
 // the value of mLastNow expires every 3 seconds
@@ -253,13 +252,8 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  // commonly used prefixes that should be chopped off all history and input
-  // urls before comparison
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("http://"));
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("https://"));
-  mIgnoreSchemes.AppendString(NS_LITERAL_STRING("ftp://"));
-  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("www."));
-  mIgnoreHostnames.AppendString(NS_LITERAL_STRING("ftp."));
+  rv = InitAutoComplete();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // extract the last session ID so we know where to pick up. There is no index
   // over sessions so the naive statement "SELECT MAX(session) FROM
@@ -345,7 +339,6 @@ nsNavHistory::Init()
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
-    pbi->AddObserver(PREF_AUTOCOMPLETE_MAX_COUNT, this, PR_FALSE);
   }
 
   observerService->AddObserver(this, gQuitApplicationMessage, PR_FALSE);
@@ -1091,10 +1084,13 @@ nsNavHistory::LoadPrefs()
     return NS_OK;
 
   mPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  PRBool oldCompleteOnlyTyped = mAutoCompleteOnlyTyped;
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
-  if (NS_FAILED(mPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_MAX_COUNT, &mAutoCompleteMaxCount))) {
-    mAutoCompleteMaxCount = 2000; // FIXME: add this to default prefs.js
+  if (oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
+    // update the autocomplete statement if the option has changed.
+    nsresult rv = CreateAutoCompleteQuery();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
