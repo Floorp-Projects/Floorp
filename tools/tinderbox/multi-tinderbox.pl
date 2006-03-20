@@ -85,6 +85,7 @@ sub UpdateTinderboxScripts() {
     if (exists($ENV{'TBOX_CLIENT_CVS_DIR'})) {
         print STDERR "Updating tinderbox scripts in $ENV{'TBOX_CLIENT_CVS_DIR'}\n";
         eval {
+            local $SIG{'ALRM'} = \&HandleSigAlrm;
             alarm($TBOX_CLIENT_CVS_TIMEOUT);
             system("cd $ENV{'TBOX_CLIENT_CVS_DIR'} && $TBOX_CLIENT_CVSUP_CMD") 
              == 0 or print STDERR "$TBOX_CLIENT_CVSUP_CMD failed: $!\n";
@@ -106,22 +107,20 @@ sub Run() {
         foreach my $treeentry (@{$Settings::Tinderboxes}) {
             my $buildPid = fork();
 
-            if ($buildPid) {
-                if ($buildPid > 0) {
-                    $CURRENT_BUILD_PID = $buildPid;
-                    my $reapedPid = waitpid($buildPid, 0);
-                    if ($reapedPid != $buildPid) {
-                        print STDERR "PID $buildPid died too quickly; " .
-                         "status was: " . ($? >> 8);
-                    }
-                } else {
-                    warn "fork() of build sub-process failed: $!";
-                }
-
-            } else {
+            if (0 == $buildPid) {
                 chdir($treeentry->{tree}) or
                  die "Tree $treeentry->{tree} does not exist";
                 exec("./build-seamonkey.pl --once $treeentry->{args}");
+                die("exec() failed: $!");
+            } elsif ($buildPid > 0) {
+                $CURRENT_BUILD_PID = $buildPid;
+                my $reapedPid = waitpid($buildPid, 0);
+                $CURRENT_BUILD_PID = 0;
+                if ($reapedPid != $buildPid) {
+                    warn "waitpid() returned bogosity: $!";
+                }
+            } else {
+                warn "fork() of build sub-process failed: $!";
             }
 
             # We sleep 15 seconds to open up a window for stopping a build.
@@ -146,7 +145,6 @@ sub Run() {
 $SIG{'TERM'} = \&HandleSigTerm;
 $SIG{'HUP'} = \&HandleSigHup;
 $SIG{'INT'} = \&HandleSigInt;
-$SIG{'ALRM'} = \&HandleSigAlrm;
 
 HandleArgs();
 
