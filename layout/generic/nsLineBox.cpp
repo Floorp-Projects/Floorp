@@ -685,8 +685,13 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
                                nsIFrame                 **aFirstVisual,
                                nsIFrame                 **aLastVisual)
 {
- 
+  NS_ASSERTION (aLine >= 0 && aLine < mNumLines, "aLine out of range!");
   nsLineBox* line = mLines[aLine];
+
+  if (!line->mFirstChild) { // empty line
+    *aIsReordered = PR_FALSE;
+    return NS_OK;
+  }
   
   nsPresContext* presContext = line->mFirstChild->GetPresContext();
   if (!presContext->BidiEnabled()) {

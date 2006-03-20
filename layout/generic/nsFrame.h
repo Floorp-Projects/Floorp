@@ -487,8 +487,8 @@ protected:
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext();
 
-  //return the line number of the aFrame
-  static PRInt32 GetLineNumber(nsIFrame *aFrame);
+  // return the line number of the aFrame, and (optionally) the containing block frame.
+  static PRInt32 GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock = nsnull);
 
 public:
   //given a frame five me the first/last leaf available

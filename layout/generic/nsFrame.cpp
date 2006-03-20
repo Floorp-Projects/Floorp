@@ -4281,48 +4281,13 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       nsCOMPtr<nsILineIteratorNavigator> iter; 
       nsIFrame *blockFrame = this;
-      nsIFrame *thisBlock = this;
-      PRInt32   thisLine;
 
       while (NS_FAILED(result)){
-        thisBlock = blockFrame;
-        blockFrame = blockFrame->GetParent();
-        if (!blockFrame) //if at line 0 then nothing to do
-          return NS_OK;
-        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(iter));
-        while (NS_FAILED(result) && blockFrame)
-        {
-          thisBlock = blockFrame;
-          blockFrame = blockFrame->GetParent();
-          result = NS_OK;
-          if (blockFrame) {
-            result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(iter));
-          }
-        }
-        //this block is now one child down from blockframe
-        if (NS_FAILED(result) || !iter || !blockFrame || !thisBlock)
-        {
-          return ((result) ? result : NS_ERROR_FAILURE);
-        }
-
-        if (thisBlock->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
-        {
-          //if we are searching for a frame that is not in flow we will not find it. 
-          //we must instead look for its placeholder
-          thisBlock =
-            aPresContext->FrameManager()->GetPlaceholderFrameFor(thisBlock);
-
-          if (!thisBlock)
-            return NS_ERROR_FAILURE;
-        }
-
-        result = iter->FindLineContaining(thisBlock, &thisLine);
-
-        if (NS_FAILED(result))
-           return result;
-
+        PRInt32 thisLine = GetLineNumber(blockFrame, &blockFrame);
         if (thisLine < 0) 
           return  NS_ERROR_FAILURE;
+        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(iter));
+        NS_ASSERTION(NS_SUCCEEDED(result) && iter, "GetLineNumber() succeeded but no block frame?");
 
         int edgeCase = 0;//no edge case. this should look at thisLine
         PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
@@ -4410,23 +4375,12 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     {
       nsCOMPtr<nsILineIteratorNavigator> it;
       // Adjusted so that the caret can't get confused when content changes
-      nsIFrame* thisBlock;
       nsIFrame* blockFrame = AdjustFrameForSelectionStyles(this);
-      do {
-        thisBlock = blockFrame;
-        blockFrame = blockFrame->GetParent();
-        if (blockFrame) {
-          result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
-        }
-      } while (NS_FAILED(result) && blockFrame);
-      if (NS_FAILED(result))
-        return result;
-      //thisBlock is now one child down from blockFrame
-
-      PRInt32 thisLine;
-      result = it->FindLineContaining(thisBlock, &thisLine);
-      if (NS_FAILED(result) || thisLine < 0 )
+      PRInt32 thisLine = GetLineNumber(blockFrame, &blockFrame);
+      if (thisLine < 0)
         return NS_ERROR_FAILURE;
+      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+      NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
 
       PRInt32 lineFrameCount;
       nsIFrame *firstFrame;
@@ -4477,8 +4431,10 @@ nsFrame::CheckVisibility(nsPresContext* , PRInt32 , PRInt32 , PRBool , PRBool *,
 
 
 PRInt32
-nsFrame::GetLineNumber(nsIFrame *aFrame)
+nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
 {
+  NS_ASSERTION(aFrame, "null aFrame");
+  nsFrameManager* frameManager = aFrame->GetPresContext()->FrameManager();
   nsIFrame *blockFrame = aFrame;
   nsIFrame *thisBlock;
   PRInt32   thisLine;
@@ -4487,14 +4443,24 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
   while (NS_FAILED(result) && blockFrame)
   {
     thisBlock = blockFrame;
-    blockFrame = blockFrame->GetParent();
+    if (thisBlock->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      //if we are searching for a frame that is not in flow we will not find it. 
+      //we must instead look for its placeholder
+      thisBlock = frameManager->GetPlaceholderFrameFor(thisBlock);
+      if (!thisBlock)
+        return -1;
+    }  
+    blockFrame = thisBlock->GetParent();
     result = NS_OK;
     if (blockFrame) {
       result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     }
   }
   if (!blockFrame || !it)
-    return NS_ERROR_FAILURE;
+    return -1;
+
+  if (aContainingBlock)
+    *aContainingBlock = blockFrame;
   result = it->FindLineContaining(thisBlock, &thisLine);
   if (NS_FAILED(result))
     return -1;
@@ -4508,27 +4474,16 @@ nsFrame::GetLineNumber(nsIFrame *aFrame)
 NS_IMETHODIMP
 nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  nsIFrame *blockFrame = this;
-  nsIFrame *thisBlock;
-  PRInt32   thisLine;
+  nsIFrame *blockFrame;
   nsCOMPtr<nsILineIteratorNavigator> it; 
   PRBool preferLeft = aPos->mPreferLeft;
-  nsresult result = NS_ERROR_FAILURE;
-  while (NS_FAILED(result) && blockFrame)
-  {
-    thisBlock = blockFrame;
-    blockFrame = blockFrame->GetParent();
-    result = NS_OK;
-    if (blockFrame) {
-      result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
-    }
-  }
-  if (!blockFrame || !it)
+  nsresult result;
+  PRInt32 thisLine = GetLineNumber(this, &blockFrame);
+  if (thisLine < 0)
     return NS_ERROR_FAILURE;
-  result = it->FindLineContaining(thisBlock, &thisLine);
-  if (NS_FAILED(result))
-    return result;
-
+  result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+  NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
+  
   nsIFrame *traversedFrame = this;
 
   nsIFrame *firstFrame;
@@ -4687,22 +4642,12 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   }
   PRBool newLineIsRTL = PR_FALSE;
   if (lineJump) {
-    blockFrame = newFrame;
-    nsresult result = NS_ERROR_FAILURE;
-    while (NS_FAILED(result) && blockFrame)
-    {
-      thisBlock = blockFrame;
-      blockFrame = blockFrame->GetParent();
-      result = NS_OK;
-      if (blockFrame) {
-        result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator), getter_AddRefs(it));
-      }
-    }
-    if (!blockFrame || !it)
+    thisLine = GetLineNumber(newFrame, &blockFrame);
+    if (thisLine < 0)
       return NS_ERROR_FAILURE;
-    result = it->FindLineContaining(thisBlock, &thisLine);
-    if (NS_FAILED(result))
-      return result;
+    result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
+
     it->GetDirection(&newLineIsRTL);
 
     result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
