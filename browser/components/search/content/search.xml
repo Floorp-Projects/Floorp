@@ -81,15 +81,21 @@
     <implementation implements="nsIObserver">
 
       <constructor><![CDATA[
-        // Refresh the display (updating icon, etc)
-        this.updateDisplay();
-        this.populatePopup();
-
-        var os =
-               Components.classes["@mozilla.org/observer-service;1"]
-                         .getService(Components.interfaces.nsIObserverService);
-        os.addObserver(this, "browser-search-engine-modified", false);
+        setTimeout(function (a) { a.init(); }, 0, this);
       ]]></constructor>
+
+      <method name="init">
+        <body><![CDATA[
+          // Refresh the display (updating icon, etc)
+          this.updateDisplay();
+          this.populatePopup();
+  
+          var os =
+                 Components.classes["@mozilla.org/observer-service;1"]
+                           .getService(Components.interfaces.nsIObserverService);
+          os.addObserver(this, "browser-search-engine-modified", false);
+        ]]></body>
+      </method>
 
       <destructor><![CDATA[
         var os = Components.classes["@mozilla.org/observer-service;1"]
