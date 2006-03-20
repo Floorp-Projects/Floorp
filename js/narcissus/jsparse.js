@@ -264,6 +264,11 @@ Np.push = function (kid) {
 
 Node.indentLevel = 0;
 
+function tokenstr(tt) {
+    var t = tokens[tt];
+    return /^\W/.test(t) ? opTypeNames[t] : t.toUpperCase();
+}
+
 Np.toString = function () {
     var a = [];
     for (var i in this) {
@@ -274,8 +279,7 @@ Np.toString = function () {
     const INDENTATION = "    ";
     var n = ++Node.indentLevel;
     var t = tokens[this.type];
-    var s = "{\n" + INDENTATION.repeat(n) +
-            "type: " + (/^\W/.test(t) ? opTypeNames[t] : t.toUpperCase());
+    var s = "{\n" + INDENTATION.repeat(n) + "type: " + tokenstr(t);
     for (i = 0; i < a.length; i++)
         s += ",\n" + INDENTATION.repeat(n) + a[i].id + ": " + a[i].value;
     n = --Node.indentLevel;
@@ -967,6 +971,10 @@ loop:
 
     if (x.hookLevel != hl)
         throw t.newSyntaxError("Missing : after ?");
+    if (x.parenLevel != pl)
+        throw t.newSyntaxError("Missing ) in parenthetical");
+    if (x.bracketLevel != bl)
+        throw t.newSyntaxError("Missing ] in index expression");
     if (t.scanOperand)
         throw t.newSyntaxError("Missing operand");
 
