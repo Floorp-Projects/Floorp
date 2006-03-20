@@ -288,19 +288,7 @@ nsresult nsSVGOuterSVGFrame::Init()
 {
   nsresult rv;
 
-#if (defined(MOZ_SVG_RENDERER_GDIPLUS) + \
-     defined(MOZ_SVG_RENDERER_LIBART) + \
-     defined(MOZ_SVG_RENDERER_CAIRO) > 1)
-#error "Multiple SVG renderers. Please choose one manually."
-#elif defined(MOZ_SVG_RENDERER_GDIPLUS)  
-  mRenderer = do_CreateInstance(NS_SVG_RENDERER_GDIPLUS_CONTRACTID, &rv);
-#elif defined(MOZ_SVG_RENDERER_LIBART)
-  mRenderer = do_CreateInstance(NS_SVG_RENDERER_LIBART_CONTRACTID, &rv);
-#elif defined(MOZ_SVG_RENDERER_CAIRO)
   mRenderer = do_CreateInstance(NS_SVG_RENDERER_CAIRO_CONTRACTID, &rv);
-#else
-#error "No SVG renderer."
-#endif
   NS_ASSERTION(mRenderer, "could not get SVG renderer");
   if (NS_FAILED(rv))
     return rv;

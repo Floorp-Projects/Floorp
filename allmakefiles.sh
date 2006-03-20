@@ -1315,11 +1315,6 @@ if [ "$MOZ_MATHML" ]; then
 "
 fi
 
-#libart
-if [ "$MOZ_SVG_RENDERER_LIBART" ]; then
-    MAKEFILES_libart="other-licenses/libart_lgpl/Makefile"
-fi
-
 # svg
 if [ "$MOZ_SVG" ]; then
     MAKEFILES_content="$MAKEFILES_content
@@ -1339,9 +1334,6 @@ if [ "$MOZ_SVG" ]; then
 	layout/svg/renderer/Makefile
 	layout/svg/renderer/public/Makefile
 	layout/svg/renderer/src/Makefile
-	layout/svg/renderer/src/gdiplus/Makefile
-	layout/svg/renderer/src/gdiplusshim/Makefile
-	layout/svg/renderer/src/libart/Makefile
 	layout/svg/renderer/src/cairo/Makefile
 "
 fi

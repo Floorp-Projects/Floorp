@@ -71,10 +71,6 @@
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "nsSVGMatrix.h"
 
-#if defined(MOZ_SVG_RENDERER_GDIPLUS)
-#include <windows.h>
-#endif
-
 static PRBool gSVGEnabled;
 static PRBool gSVGRendererAvailable = PR_FALSE;
 static const char SVG_PREF_STR[] = "svg.enabled";
@@ -104,13 +100,6 @@ nsSVGUtils::SVGEnabled()
   
   if (!sInitialized) {
     gSVGRendererAvailable = PR_TRUE;
-
-#if defined(MOZ_SVG_RENDERER_GDIPLUS)
-    HMODULE gdiplus, gkgdiplus;
-
-    if ((gdiplus = LoadLibrary("gdiplus.dll")) == NULL)
-      gSVGRendererAvailable = PR_FALSE;
-#endif
 
     /* check and register ourselves with the pref */
     gSVGEnabled = nsContentUtils::GetBoolPref(SVG_PREF_STR);
