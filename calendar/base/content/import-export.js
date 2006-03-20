@@ -193,10 +193,13 @@ function putItemsIntoCal(destCal) {
  * saveEventsToFile
  *
  * Save data to a file. Create the file or overwrite an existing file.
- * Input an array of calendar events, or no parameter for selected events.
+ *
+ * @param calendarEventArray (required) Array of calendar events that should
+ *                                      be saved to file.
+ * @param aDefaultFileName   (optional) Initial filename shown in SaveAs dialog.
  */
 
-function saveEventsToFile(calendarEventArray)
+function saveEventsToFile(calendarEventArray, aDefaultFileName)
 {
    if (!calendarEventArray)
        return;
@@ -216,10 +219,13 @@ function saveEventsToFile(calendarEventArray)
    fp.init(window,  getCalStringBundle().GetStringFromName("SaveAs"),
            nsIFilePicker.modeSave);
 
-   if(calendarEventArray.length == 1 && calendarEventArray[0].title)
+   if (aDefaultFileName && aDefaultFileName.length && aDefaultFileName.length > 0) {
+      fp.defaultString = aDefaultFileName;
+   } else if (calendarEventArray.length == 1 && calendarEventArray[0].title) {
       fp.defaultString = calendarEventArray[0].title;
-   else
+   } else {
       fp.defaultString = getCalStringBundle().GetStringFromName("defaultFileName");
+   }
 
    fp.defaultExtension = "ics";
 
@@ -296,7 +302,7 @@ function exportEntireCalendar(aCalendar) {
     var getListener = {
         onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
         {
-            saveEventsToFile(itemArray);
+            saveEventsToFile(itemArray, aCalendar.name);
         },
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
         {
