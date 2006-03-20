@@ -58,10 +58,49 @@ new TestCase( SECTION,
 	      "[object String]",
 	      eval("String.prototype.getClass = Object.prototype.toString; String.prototype.getClass()") );
 
-new TestCase( SECTION, "typeof String.prototype",   "object",   typeof String.prototype );
-new TestCase( SECTION, "String.prototype.valueOf()", "",        String.prototype.valueOf() );
-new TestCase( SECTION, "String.prototype +''",       "",        String.prototype + '' );
-new TestCase( SECTION, "String.prototype.length",    0,         String.prototype.length );
-//    new TestCase( SECTION, "String.prototype.__proto__",    Object.prototype,   String.prototype.__proto__ );
+delete String.prototype.getClass;
+
+new TestCase( SECTION, 
+              "typeof String.prototype",   
+              "object",   
+              typeof String.prototype );
+
+new TestCase( SECTION, 
+              "String.prototype.valueOf()", 
+              "",        
+              String.prototype.valueOf() );
+
+new TestCase( SECTION, 
+              "String.prototype +''",       
+              "",        
+              String.prototype + '' );
+
+new TestCase( SECTION, 
+              "String.prototype.length",    
+              0,         
+              String.prototype.length );
+
+var prop;
+var value;
+
+value = '';
+for (prop in "")
+{
+  value += prop;
+}
+new TestCase( SECTION,
+              'String "" has no enumerable properties',
+              '',
+              value );
+
+value = '';
+for (prop in String.prototype)
+{
+  value += prop;
+}
+new TestCase( SECTION,
+              'String.prototype has no enumerable properties',
+              '',
+              value );
 
 test();
