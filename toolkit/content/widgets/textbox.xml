@@ -61,10 +61,10 @@
                                          else this.removeAttribute('tabindex'); return val;"/>
       <property name="size"       onset="this.inputField.size = val; return val;"
                                   onget="return this.inputField.size;"/>
-      <property name="readonly"   onset="this.inputField.readonly = val;
+      <property name="readOnly"   onset="this.inputField.readOnly = val;
                                          if (val) this.setAttribute('readonly', 'true');
                                          else this.removeAttribute('readonly'); return val;"
-                                  onget="return this.inputField.readonly;"/>
+                                  onget="return this.inputField.readOnly;"/>
       <property name="clickSelectsAll"
                 onget="return this.getAttribute('clickSelectsAll') == 'true';"
                 onset="if (val) this.setAttribute('clickSelectsAll', 'true');
