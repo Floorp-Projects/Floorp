@@ -705,7 +705,10 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
 
   //XXX Add support for xforms-link-error.
   nsCOMPtr<nsIDOMWindow> messageWindow;
-  internal->OpenDialog(src, aLevel, options, arg, getter_AddRefs(messageWindow));
+  // The 2nd argument is the window name, and if a window with the name exists,
+  // it gets reused.  Using "_blank" makes sure we get a new window each time.
+  internal->OpenDialog(src, NS_LITERAL_STRING("_blank"), options, arg,
+                       getter_AddRefs(messageWindow));
   if (!isModal) {
     nsCOMPtr<nsIDOMWindowInternal> msgWinInternal =
       do_QueryInterface(messageWindow);
