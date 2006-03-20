@@ -1,0 +1,362 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Doron Rosenberg <doronr@us.ibm.com>
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE bindings [
+<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
+  %xformsDTD;
+]>
+
+
+<bindings id="widgetsBindingsForXHTML"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+
+ <!-- CALENDAR WIDGETS -->
+
+<!-- COMPACT CALENDAR -->
+  <binding id="calendar-compact"
+           extends="chrome://xforms/content/widgets.xml#calendar-base">
+
+    <content>
+      <html:table>
+        <html:tbody anonid="dayContainer"/>
+      </html:table>
+    </content>
+
+    <implementation>
+
+    <!-- successors interface -->
+      <method name="refresh">
+        <parameter name="aFocusedDay"/>
+        <body>
+          this.refreshCompactCalendar(aFocusedDay);
+        </body>
+      </method>
+
+      <method name="refreshCurrentDate">
+        <parameter name="aCurrentDay"/>
+        <parameter name="aFocusedDay"/>
+        <body>
+        <![CDATA[
+          var currentIndex = this.dayOffset + aCurrentDay - 1;
+          var focusedIndex = null;
+          if (aFocusedDay)
+            focusedIndex = this.dayOffset + parseInt(aFocusedDay) - 1;
+
+          this.setCurrentDayByIndex(currentIndex, focusedIndex);
+        ]]>
+        </body>
+      </method>
+
+    <!-- private -->
+      <method name="setCurrentDayByIndex">
+        <parameter name="aCurrentIndex"/>
+        <parameter name="aFocusedIndex"/>
+        <body>
+        <![CDATA[
+          if (!aFocusedIndex)
+            aFocusedIndex = aCurrentIndex;
+
+          var dayElm = null;
+
+          if (this._currentDayIndex != -1) {
+            dayElm = this._dayElements[this._currentDayIndex];
+            dayElm.removeAttribute("current");
+          }
+
+          if (this.isCurrentDate()) {
+            dayElm = this._dayElements[aCurrentIndex];
+            dayElm.setAttribute("current", "true");
+            this._currentDayIndex = aCurrentIndex;
+          } else {
+            this._currentDayIndex = -1;
+          }
+
+          if (aFocusedIndex != this._focusedDayIndex)
+            this.setFocusedDayByIndex(aFocusedIndex);
+        ]]>
+        </body>
+      </method>
+
+      <method name="setFocusedDayByIndex">
+        <parameter name="aIndex"/>
+        <body>
+          var dayElm = null;
+          if (this._focusedDayIndex != -1) {
+            dayElm = this._dayElements[this._focusedDayIndex];
+            dayElm.setAttribute("tabindex", "-1");
+          }
+
+          dayElm = this._dayElements[aIndex];
+          dayElm.setAttribute("tabindex", "0");
+          dayElm.focus();
+
+          this._focusedDayIndex = aIndex;
+        </body>
+      </method>
+
+      <property name="focusedDayIndex"
+                onget="return this._focusedDayIndex;"
+                onset="this.setFocusedDayByIndex(val);"/>
+
+      <method name="refreshCompactCalendar">
+        <parameter name="aFocusedDay"/>
+        <body>
+        <![CDATA[
+          if (!this._isUIBuilt) {
+            this.buildUI();
+            this._isUIBuilt = true;
+          }
+
+          // set days for previous month
+          var dayOffset = this.dayOffset;
+          var prevDayCount = this.prevDaysCount;
+          for (var i = 0; i < dayOffset; i++) {
+            this._dayElements[i].textContent = prevDayCount + i - dayOffset + 1;
+            this._dayElements[i].setAttribute("class", "prevMonth");
+          }
+
+          // set days for current month
+          var count = this.daysCount + dayOffset;
+          for (; i < count; i++) {
+            this._dayElements[i].textContent = i - dayOffset + 1;
+            this._dayElements[i].setAttribute("class", "currentMonth");
+          }
+
+          // set days for next month
+          for (var day = 1; i < this._dayElements.length; i++, day++) {
+            this._dayElements[i].textContent = day;
+            this._dayElements[i].setAttribute("class", "nextMonth");
+          }
+
+          this.refreshCurrentDate(this.currentDate.getDate(), aFocusedDay);
+        ]]>
+        </body>
+      </method>
+
+      <method name="buildUI">
+        <body>
+        <![CDATA[
+          var dayOfWeekNames = this.getDaysOfWeekNames();
+          var row = this.ownerDocument.createElementNS(this.XHTML_NS, "tr");
+
+          // create days of a week names
+          var header;
+          for (var i = 0; i < 7; i++) {
+            header = this.ownerDocument.createElementNS(this.XHTML_NS, "th");
+            header.textContent = dayOfWeekNames[i];
+            row.appendChild(header);
+          }
+          this.dayContainer.appendChild(row);
+
+          // create days
+          var cell;
+          for (var i = 0; i < 6; i++) {
+            row = document.createElementNS(this.XHTML_NS, "tr");
+
+            for (var y = 0; y < 7; y++) {
+              cell = this.ownerDocument.createElementNS(this.XHTML_NS, "td");
+              cell.setAttribute("tabindex", "-1");
+              this._dayElements.push(cell);
+              row.appendChild(cell);
+            }
+            this.dayContainer.appendChild(row);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="processAction">
+        <parameter name="aActionType"/>
+        <parameter name="aDay"/>
+        <body>
+        <![CDATA[
+          if (!aDay)
+            aDay = this.focusedDayIndex - this.dayOffset + 1;
+
+          aDay = parseInt(aDay);
+          switch (aActionType) {
+          case "prevMonth":
+            this.setDate(this.year, this.month - 1, aDay);
+            break;
+
+          case "nextMonth":
+            this.setDate(this.year, this.month + 1, aDay);
+            break;
+
+          case "currentMonth":
+            if (!this.readonly) {
+              this.currentDate = new Date(this.year, this.month - 1, aDay);
+              this.fireChangeEvent();
+            } else {
+              this.focusedDayIndex = this.dayOffset + aDay - 1;
+            }
+            break;
+          }
+        ]]>
+        </body>
+      </method>
+
+      <property name="XHTML_NS" readonly="true"
+                onget="return 'http://www.w3.org/1999/xhtml';"/>
+
+      <field name="_currentDayIndex">-1</field>
+      <field name="_focusedDayIndex">-1</field>
+      <field name="_dayElements">new Array()</field>
+      <field name="_isUIBuilt">false</field>
+
+      <property name="dayContainer" readonly="true">
+        <getter>
+          if (!this._dayContainer)
+            this._dayContainer = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "dayContainer");
+          return this._dayContainer;
+        </getter>
+      </property>
+      <field name="_dayContainer">null</field>
+
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_LEFT">
+      <![CDATA[
+        if (this.focusedDayIndex - 1 >= 0) {
+          this.focusedDayIndex--;
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_RIGHT">
+      <![CDATA[
+        if (this.focusedDayIndex + 1 < this._dayElements.length) {
+          this.focusedDayIndex++;
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_UP">
+      <![CDATA[
+        if (this.focusedDayIndex - 7 >= 0) {
+          this.focusedDayIndex -= 7;
+        }
+      ]]>
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN">
+      <![CDATA[
+        if (this.focusedDayIndex + 7 < this._dayElements.length) {
+          this.focusedDayIndex += 7;
+        }
+      ]]>
+      </handler>
+
+      <handler event="keydown" keycode="VK_SPACE">
+        var target = event.originalTarget;
+        if (target.localName != "td" || target.namespaceURI != this.XHTML_NS)
+            return;
+
+        this.processAction(target.getAttribute("class"), target.textContent);
+      </handler>
+      <handler event="mousedown" button="0">
+        var target = event.originalTarget;
+        if (target.localName != "td" || target.namespaceURI != this.XHTML_NS)
+            return;
+
+        this.processAction(target.getAttribute("class"), target.textContent);
+      </handler>
+    </handlers>
+  </binding>
+
+
+  <!-- FULL CALENDAR -->
+  <binding id="calendar-full" extends="#calendar-compact">
+    <content>
+      <html:table>
+        <html:tbody anonid="dayContainer">
+        <html:tr>
+          <html:td colspan="1">
+            <html:input type="button" anonid="back-button"
+                        class="-moz-date-back-button" title="&xforms.datepicker.prevMonth.title;"/>
+          </html:td>
+          <html:td colspan="5" align="center">
+            <html:span anonid="date-label"/>
+          </html:td>
+          <html:td colspan="1">
+            <html:input type="button" anonid="fwd-button"
+                        class="-moz-date-fwd-button" title="&xforms.datepicker.nextMonth.title;"/>
+          </html:td>
+        </html:tr>
+        </html:tbody>
+      </html:table>
+    </content>
+
+    <implementation>
+      <method name="refresh">
+        <parameter name="aFocusedDay"/>
+        <body>
+          this.refreshCompactCalendar(aFocusedDay);
+          var dateLabel = new Date(this.year, this.month - 1).toLocaleFormat("%B %Y");
+          this.dateLabel.textContent = dateLabel;
+        </body>
+      </method>
+
+      <property name="dateLabel" readonly="true">
+        <getter>
+          if (!this._dateLabel) {
+            this._dateLabel = this.ownerDocument.
+              getAnonymousElementByAttribute(this, "anonid", "date-label");
+          }
+          return this._dateLabel;
+        </getter>
+      </property>
+      <field name="_dateLabel">null</field>
+    </implementation>
+
+    <handlers>
+      <handler event="click">
+        switch (event.originalTarget.getAttribute("anonid")) {
+        case "back-button":
+          this.processAction("prevMonth", null);
+          break;
+        case "fwd-button":
+          this.processAction("nextMonth", null);
+          break;
+        }
+      </handler>
+    </handlers>
+  </binding>
+</bindings>

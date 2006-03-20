@@ -54,7 +54,8 @@
 <bindings id="xformsInputBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
   <!-- INPUT: <DEFAULT> -->
@@ -183,7 +184,37 @@
   </binding>
 
 
-<!-- INPUT: Month -->
+  <!-- INPUT: <DATE, APPEARANCE='FULL' -->
+  <binding id="xformswidget-input-date-full"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+    <content>
+      <children includes="label"/>
+      <html:span mozType:calendar="true" anonid="control"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return this.ownerDocument.
+            getAnonymousElementByAttribute(this, "anonid", "control");
+        </body>
+      </method>
+
+      <constructor>
+        var changeHandler = {
+          inputControl: this,
+          handleEvent: function() {
+            this.inputControl.updateInstanceData(false);
+          }
+        };
+        this.addEventListener("change", changeHandler, false);
+      </constructor>
+    </implementation>
+  </binding>
+
+
+  <!-- INPUT: Month -->
   <binding id="xformswidget-input-month"
            extends="chrome://xforms/content/input.xml#xformswidget-input-month-base">
     <content>

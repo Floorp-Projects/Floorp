@@ -7,6 +7,8 @@ xforms.jar:
 * content/xforms/xforms-prefs.xul              (resources/content/xforms-prefs.xul)
 * content/xforms/xforms-prefs-ui.xul           (resources/content/xforms-prefs-ui.xul)
 * content/xforms/xforms-prefs.js               (resources/content/xforms-prefs.js)
+  content/xforms/widgets.xml                   (resources/content/widgets.xml)
+  content/xforms/widgets-xhtml.xml             (resources/content/widgets-xhtml.xml)
   content/xforms/xforms.xml                    (resources/content/xforms.xml)
   content/xforms/xforms-xhtml.xml              (resources/content/xforms-xhtml.xml)
   content/xforms/xforms-xul.xml                (resources/content/xforms-xul.xml)

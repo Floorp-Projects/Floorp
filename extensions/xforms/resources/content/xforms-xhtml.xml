@@ -53,7 +53,8 @@
 <bindings id="xformsBindingsForXHTML"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
-          xmlns:xbl="http://www.mozilla.org/xbl">
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:mozType="http://www.mozilla.org/projects/xforms/2005/type">
 
 
   <!-- OUTPUT: <DEFAULT> -->
@@ -87,6 +88,25 @@
         </body>
       </method>
 
+    </implementation>
+  </binding>
+
+
+  <!-- OUTPUT: <DATE, APPEARANCE='FULL'> -->
+  <binding id="xformswidget-output-date-full"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-output-base">
+    <content>
+      <children includes="label"/>
+      <html:span mozType:calendar="true" anonid="control" readonly="true"/>
+      <children/>
+    </content>
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return this.ownerDocument.
+            getAnonymousElementByAttribute(this, "anonid", "control");
+        </body>
+      </method>
     </implementation>
   </binding>
 
