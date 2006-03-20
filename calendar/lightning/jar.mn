@@ -20,6 +20,7 @@ lightning.jar:
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
+  locale/en-US/lightning/lightning.properties		(locale/lightning.properties)
 
 calendar.jar:
   content/calendar/calendarProperties.xul		(/calendar/resources/content/calendarProperties.xul) 

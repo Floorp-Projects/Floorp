@@ -30,7 +30,6 @@
 // refresh testing UI) the event buckets are emptied, and we add items as they
 // arrive.
 //
-// This is currently a localization disaster.  Quel dommage!
 
 function Synthetic(title, open)
 {
@@ -39,24 +38,26 @@ function Synthetic(title, open)
     this.events = [];
 }
 
-Synthetic.prototype.toString =
-function toString()
-{
-    return "[Synthetic: " + this.title + "/" + (this.open ? "open" : "closed") + "]";
-};
-
 var agendaTreeView = {
-    // This is the first time I've used sharp variables in earnest!
-    today: #1=(new Synthetic("Today", true)),
-    tomorrow: #2=(new Synthetic("Tomorrow", false)),
-    soon: #3=(new Synthetic("Soon", false)),
-    periods: [#1#, #2#, #3#],
     events: [],
     todayCount: 0,
     tomorrowCount: 0,
     soonCount: 0,
     prevRowCount: 0
 };
+
+agendaTreeView.init =
+function initAgendaTree()
+{
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://lightning/locale/lightning.properties");
+
+    this.today = new Synthetic(props.GetStringFromName("agendaToday"), true);
+    this.tomorrow = new Synthetic(props.GetStringFromName("agendaTomorrow"), false);
+    this.soon = new Synthetic(props.GetStringFromName("agendaSoon"), false);
+    this.periods = [this.today, this.tomorrow, this.soon];
+}
 
 agendaTreeView.addEvents =
 function addEvents(master)
@@ -79,7 +80,6 @@ agendaTreeView.forceTreeRebuild =
 function forceTreeRebuild()
 {
     if (this.tree) {
-        // dump("forcing tree rebuild\n");
         this.tree.view = this;
     }
 };
@@ -88,29 +88,18 @@ agendaTreeView.rebuildAgendaView =
 function rebuildAgendaView(invalidate)
 {
     this.rebuildEventsArray();
-/*
-    dump("events:\n");
-    this.events.forEach(function (e) {
-        if (e instanceof Synthetic)
-            dump("  " + e.title + "\n");
-        else
-            dump("    " + e.title + " @ " + e.occurrenceStartDate + "\n");
-    });
-*/
     this.forceTreeRebuild();
 };
 
 agendaTreeView.__defineGetter__("rowCount",
 function get_rowCount()
 {
-    //dump("row count: " + this.events.length + "\n");
     return this.events.length;
 });
 
 agendaTreeView.isContainer =
 function isContainer(row)
 {
-    // dump("row " + row + " is " + this.events[row] + "\n")
     return (this.events[row] instanceof Synthetic);
 };
 
@@ -118,7 +107,6 @@ agendaTreeView.isContainerOpen =
 function isContainerOpen(row)
 {
     var open = this.events[row].open;
-    // dump("row " + row + " (" + this.events[row].title + ") is " + (open ? "open" : "closed") + "\n");
     return open;
 };
 
@@ -447,6 +435,8 @@ function setCalendar(calendar)
         this.calendar.removeObserver(this.calendarObserver);
     this.calendar = calendar;
     calendar.addObserver(this.calendarObserver);
+
+    this.init();
 
     // Update everything
     this.refreshPeriodDates();

@@ -383,18 +383,20 @@ function saveDialog(item)
 
 function updateTitle()
 {
-    // XXX make this use string bundles
     var isNew = window.calendarItem.isMutable;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     if (isEvent(window.calendarItem)) {
         if (isNew)
-            document.title = "New Event";
+            document.title = props.GetStringFromName("newEventDialog");
         else
-            document.title = "Edit Event";
+            document.title = props.GetStringFromName("editEventDialog");
     } else if (isToDo(window.calendarItem)) {
         if (isNew)
-            document.title = "New Task";
+            document.title = props.GetStringFromName("newTaskDialog");
         else
-            document.title = "Edit Task";        
+            document.title = props.GetStringFromName("editTaskDialog");
     }
 }
 

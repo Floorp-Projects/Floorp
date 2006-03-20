@@ -190,7 +190,10 @@ var ltnCalendarViewController = {
             var event = createEvent();
             event.startDate = aStartTime;
             event.endDate = aEndTime;
-            event.title = "New Event";
+            var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                .getService(Components.interfaces.nsIStringBundleService);
+            var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+            event.title = props.GetStringFromName("newEvent");
             aCalendar.addItem(event, null);
         } else if (aStartTime && aStartTime.isDate) {
             var event = createEvent();
