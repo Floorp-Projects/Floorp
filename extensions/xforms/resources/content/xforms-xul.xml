@@ -150,12 +150,12 @@
     </implementation>
 
     <handlers>
-      <handle event="command">
+      <handler event="command">
         // XXX: we need to fire 'DOMActivate' event to get xforms:submit to
         // work, since xul:button do not do it (see a bug 323005
         // https://bugzilla.mozilla.org/show_bug.cgi?id=323005).
         this.dispatchDOMUIEvent("DOMActivate");
-      </handle>
+      </handler>
     </handlers>
   </binding>
 
