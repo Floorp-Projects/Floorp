@@ -76,10 +76,6 @@
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
 
-// Number of prefixes used in the autocomplete sort comparison function
-#define AUTOCOMPLETE_PREFIX_LIST_COUNT 6
-// Size of visit count boost to give to urls which are sites or paths
-#define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
 // set to use more optimized (in-memory database) link coloring
 //#define IN_MEMORY_LINKS
 
@@ -88,7 +84,8 @@
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 
-class AutoCompleteIntermediateResultSet;
+class AutoCompleteIntermediateResult;
+class AutoCompleteResultComparator;
 class mozIAnnotationService;
 class nsNavHistory;
 class nsNavBookmarks;
@@ -104,6 +101,7 @@ class nsNavHistory : public nsSupportsWeakReference,
                      public nsIAutoCompleteSearch
 {
   friend class AutoCompleteIntermediateResultSet;
+  friend class AutoCompleteResultComparator;
 public:
   nsNavHistory();
 
@@ -442,9 +440,26 @@ protected:
   //
   // AutoComplete stuff
   //
-  nsStringArray mIgnoreSchemes;
-  nsStringArray mIgnoreHostnames;
+  struct AutoCompletePrefix
+  {
+    AutoCompletePrefix(const nsAString& aPrefix, PRBool aSecondLevel) :
+      prefix(aPrefix), secondLevel(aSecondLevel) {}
 
+    // The prefix, for example, "http://" or "https://www."
+    nsString prefix;
+
+    // Set when this prefix contains a spec AND a host. For example,
+    // "http://www." is a second level prefix, but "http://" is not. This
+    // flag is used to exclude matches. For example, if I type "http://w"
+    // I probably want it to autocomplete to sites beginning with w and
+    // NOT every "www" site I've ever visited.
+    PRBool secondLevel;
+  };
+  nsTArray<AutoCompletePrefix> mAutoCompletePrefixes;
+
+  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery;
+  nsresult InitAutoComplete();
+  nsresult CreateAutoCompleteQuery();
   PRInt32 mAutoCompleteMaxCount;
   PRInt32 mExpireDays;
   PRBool mAutoCompleteOnlyTyped;
@@ -463,20 +478,11 @@ protected:
   nsresult AutoCompleteTypedSearch(nsIAutoCompleteSimpleResult* result);
   nsresult AutoCompleteFullHistorySearch(const nsAString& aSearchString,
                                          nsIAutoCompleteSimpleResult* result);
-  nsresult AutoCompleteRefineHistorySearch(const nsAString& aSearchString,
-                                   nsIAutoCompleteResult* aPreviousResult,
-                                   nsIAutoCompleteSimpleResult* aNewResult);
-  void AutoCompleteCutPrefix(nsString* aURL,
-                             const AutoCompleteExclude* aExclude);
-  void AutoCompleteGetExcludeInfo(const nsAString& aURL,
-                                  AutoCompleteExclude* aExclude);
-  PRBool AutoCompleteCompare(const nsAString& aHistoryURL,
-                             const nsAString& aUserURL,
-                             const AutoCompleteExclude& aExclude);
-  PR_STATIC_CALLBACK(int) AutoCompleteSortComparison(
-                             const void* match1Void,
-                             const void* match2Void,
-                             void *navHistoryVoid);
+  nsresult AutoCompleteQueryOnePrefix(const nsString& aSearchString,
+                                      const nsTArray<PRInt32>& aExcludePrefixes,
+                                      PRInt32 aPriorityDelta,
+                                      nsTArray<AutoCompleteIntermediateResult>* aResult);
+  PRInt32 AutoCompleteGetPrefixLength(const nsString& aSpec);
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
