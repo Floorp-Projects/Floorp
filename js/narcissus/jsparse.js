@@ -290,12 +290,16 @@ Np.getSource = function () {
 Np.__defineGetter__('filename',
                     function () { return this.tokenizer.filename; });
 
-String.prototype.repeat = function (n) {
-    var s = "", t = this + s;
-    while (--n >= 0)
-        s += t;
-    return s;
-}
+String.prototype.__defineProperty__(
+    'repeat',
+    function (n) {
+        var s = "", t = this + s;
+        while (--n >= 0)
+            s += t;
+        return s;
+    },
+    false, false, true
+);
 
 // Statement stack and nested statement handler.
 function nest(t, x, node, func, end) {
