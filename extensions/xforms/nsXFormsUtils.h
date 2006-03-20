@@ -67,6 +67,13 @@ class nsIDOMEvent;
 #define NS_NAMESPACE_MOZ_XFORMS_LAZY     "http://www.mozilla.org/projects/xforms/2005/lazy"
 
 /**
+ * Error codes
+ */
+
+#define NS_OK_XFORMS_NOREFRESH \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+
+/**
  * XForms event types
  *
  * @see http://www.w3.org/TR/xforms/slice4.html#rpm-events

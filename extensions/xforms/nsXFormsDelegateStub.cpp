@@ -102,19 +102,19 @@ NS_IMETHODIMP
 nsXFormsDelegateStub::Refresh()
 {
   if (mRepeatState == eType_Template)
-    return NS_OK;
+    return NS_OK_XFORMS_NOREFRESH;
 
   const nsVoidArray* list = nsPostRefresh::PostRefreshList();
   if (list && list->IndexOf(this) >= 0) {
     // This control will be refreshed later.
-    return NS_OK;
+    return NS_OK_XFORMS_NOREFRESH;
   }
 
   SetMozTypeAttribute();
 
   nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
   if (!widget)
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   return widget->Refresh();
 }
@@ -221,6 +221,10 @@ nsXFormsDelegateStub::UpdateRepeatState()
       break;
     }
     if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("repeat"))) {
+      mRepeatState = eType_Template;
+      break;
+    }
+    if (nsXFormsUtils::IsXFormsElement(parent, NS_LITERAL_STRING("itemset"))) {
       mRepeatState = eType_Template;
       break;
     }

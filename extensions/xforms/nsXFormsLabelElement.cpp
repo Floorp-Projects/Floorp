@@ -259,7 +259,10 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
 NS_IMETHODIMP
 nsXFormsLabelElement::Refresh()
 {
-  nsXFormsDelegateStub::Refresh();
+  nsresult rv = nsXFormsDelegateStub::Refresh();
+  if (NS_FAILED(rv) || rv == NS_OK_XFORMS_NOREFRESH)
+    return rv;
+
   nsCOMPtr<nsIDOMNode> parent;
   mElement->GetParentNode(getter_AddRefs(parent));
 

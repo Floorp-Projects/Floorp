@@ -85,6 +85,7 @@ public:
 private:
   PRBool   mHasBinding;
   nsString mValue;
+  PRBool   mValueIsDirty;
 };
 
 // nsIXFormsControl
@@ -142,43 +143,35 @@ nsXFormsOutputElement::Bind()
 NS_IMETHODIMP
 nsXFormsOutputElement::Refresh()
 {
-  if (mRepeatState == eType_Template)
-    return NS_OK;
-
-  nsresult rv = NS_OK;
-  SetDOMStringToNull(mValue);
-
-  if (mModel) {
-    if (mHasBinding) {
-      if (mBoundNode) {
-        nsXFormsUtils::GetNodeValue(mBoundNode, mValue);
-      }
-    } else {
-      nsCOMPtr<nsIDOMXPathResult> result;
-      rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
-                              nsIDOMXPathResult::STRING_TYPE,
-                              getter_AddRefs(result));
-      NS_ENSURE_SUCCESS(rv, rv);
-  
-      if (result) {
-        rv = result->GetStringValue(mValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-  }
-
-  SetMozTypeAttribute();
-
-  nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
-  if (widget)
-    widget->Refresh();
-
-  return rv;
+  mValueIsDirty = PR_TRUE;
+  return nsXFormsDelegateStub::Refresh();
 }
 
 NS_IMETHODIMP
 nsXFormsOutputElement::GetValue(nsAString& aValue)
 {
+  NS_ENSURE_STATE(mModel);
+
+  if (mValueIsDirty) {
+    if (mHasBinding) {
+      NS_ENSURE_STATE(mBoundNode);
+      nsXFormsUtils::GetNodeValue(mBoundNode, mValue);
+    } else {
+      nsCOMPtr<nsIDOMXPathResult> result;
+      nsresult rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
+                                       nsIDOMXPathResult::STRING_TYPE,
+                                       getter_AddRefs(result));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (result) {
+        SetDOMStringToNull(mValue);
+        rv = result->GetStringValue(mValue);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+    mValueIsDirty = PR_FALSE;
+  }
+
   aValue = mValue;
   return NS_OK;
 }

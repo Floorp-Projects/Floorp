@@ -121,7 +121,8 @@ nsXFormsUploadElement::Refresh()
   // type 'anyURI', 'base64Binary', or 'hexBinary'.
 
   nsresult rv = nsXFormsDelegateStub::Refresh();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) || rv == NS_OK_XFORMS_NOREFRESH)
+    return rv;
 
   if (!mBoundNode)
     return NS_OK;
