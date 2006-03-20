@@ -235,6 +235,8 @@ nsIFrame*
 NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 nsIFrame*
 NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGLeafFrame(nsIPresShell* aPresShell);
 #endif
 
 #include "nsIDocument.h"
@@ -3458,34 +3460,10 @@ IsSpecialContent(nsIContent*     aContent,
 
 #ifdef MOZ_SVG
   if (aNameSpaceID == kNameSpaceID_SVG &&
-      nsSVGUtils::SVGEnabled())
-    return
-      aTag == nsSVGAtoms::svg ||
-      aTag == nsSVGAtoms::g ||
-      aTag == nsSVGAtoms::polygon ||
-      aTag == nsSVGAtoms::polyline ||
-      aTag == nsSVGAtoms::circle ||
-      aTag == nsSVGAtoms::defs ||
-      aTag == nsSVGAtoms::ellipse ||
-      aTag == nsSVGAtoms::line ||
-      aTag == nsSVGAtoms::rect ||
-#ifdef MOZ_SVG_FOREIGNOBJECT
-      aTag == nsSVGAtoms::foreignObject ||
-#endif
-      aTag == nsSVGAtoms::path ||
-      aTag == nsSVGAtoms::text ||
-      aTag == nsSVGAtoms::tspan ||
-      aTag == nsSVGAtoms::linearGradient ||
-      aTag == nsSVGAtoms::radialGradient ||
-      aTag == nsSVGAtoms::stop ||
-      aTag == nsSVGAtoms::use ||
-      aTag == nsSVGAtoms::marker ||
-      aTag == nsSVGAtoms::image  ||
-      aTag == nsSVGAtoms::clipPath  ||
-      aTag == nsSVGAtoms::textPath  ||
-      aTag == nsSVGAtoms::filter  ||
-      aTag == nsSVGAtoms::pattern ||
-      aTag == nsSVGAtoms::mask;
+      nsSVGUtils::SVGEnabled()) {
+    // All SVG content is special...
+    return PR_TRUE;
+  }
 #endif
 
 #ifdef MOZ_MATHML
@@ -7840,6 +7818,30 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
   }
   else if (aTag == nsSVGAtoms::mask) {
     newFrame = NS_NewSVGMaskFrame(mPresShell, aContent);
+  }
+  else if (aTag == nsGkAtoms::feDistantLight ||
+           aTag == nsGkAtoms::fePointLight ||
+           aTag == nsGkAtoms::feSpotLight ||
+           aTag == nsGkAtoms::feBlend ||
+           aTag == nsGkAtoms::feColorMatrix ||
+           aTag == nsGkAtoms::feFuncR ||
+           aTag == nsGkAtoms::feFuncG ||
+           aTag == nsGkAtoms::feFuncB ||
+           aTag == nsGkAtoms::feFuncA ||
+           aTag == nsGkAtoms::feComposite ||
+           aTag == nsGkAtoms::feConvolveMatrix ||
+           aTag == nsGkAtoms::feDisplacementMap ||
+           aTag == nsGkAtoms::feFlood ||
+           aTag == nsGkAtoms::feGaussianBlur ||
+           aTag == nsGkAtoms::feImage ||
+           aTag == nsGkAtoms::feMergeNode ||
+           aTag == nsGkAtoms::feMorphology ||
+           aTag == nsGkAtoms::feOffset ||
+           aTag == nsGkAtoms::feTile ||
+           aTag == nsGkAtoms::feTurbulence) {
+    // We don't really use the frame, just need it for the style
+    // information, so create the simplest possible frame.
+    newFrame = NS_NewSVGLeafFrame(mPresShell);
   }
   
   if (newFrame == nsnull) {
