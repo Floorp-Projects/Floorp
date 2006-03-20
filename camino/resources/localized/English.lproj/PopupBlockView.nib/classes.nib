@@ -3,6 +3,7 @@
         {
             ACTIONS = {
                 configurePopupBlocking = id; 
+                hideBlockedPopupView = id; 
                 reloadWithNewCharset = id; 
                 unblockPopupSites = id; 
             }; 

@@ -177,6 +177,10 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   [mBrowserView release];
   [mContentViewProviders release];
 
+  // |mBlockedPopupView| has a retain count of 1 when it comes out of the nib,
+  // we have to release it manually.
+  [mBlockedPopupView release];
+  
   [super dealloc];
 }
 
@@ -1056,6 +1060,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   }
 }
 
+- (IBAction)hideBlockedPopupView:(id)sender
+{
+  [self removeBlockedPopupViewAndDisplay];
+}
+
 @end
 
 #pragma mark -
@@ -1070,7 +1079,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 - (void)drawRect:(NSRect)aRect
 {
   // draw background color
-  [[NSColor orangeColor] set];
+  [[NSColor colorWithCalibratedRed:1.0 green:0.9 blue:0.58 alpha:1.0] set];
   NSRectFill([self frame]);
   
   // draw shadowed border

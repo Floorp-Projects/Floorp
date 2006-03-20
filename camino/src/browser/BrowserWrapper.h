@@ -133,7 +133,7 @@ class nsISupportsArray;
   NSString*                 mLoadingStatusString;
   ToolTip*                  mToolTip;
 
-  IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil
+  IBOutlet NSView*          mBlockedPopupView;   // loaded on demand, can be nil, STRONG
 
   double                    mProgress;
   
@@ -181,6 +181,7 @@ class nsISupportsArray;
 - (void)getBlockedSites:(nsISupportsArray**)outSites;
 - (IBAction)configurePopupBlocking:(id)sender;
 - (IBAction)unblockPopupSites:(id)sender;
+- (IBAction)hideBlockedPopupView:(id)sender;
 
 - (void)loadURI:(NSString *)urlSpec referrer:(NSString*)referrer flags:(unsigned int)flags activate:(BOOL)activate allowPopups:(BOOL)inAllowPopups;
 
