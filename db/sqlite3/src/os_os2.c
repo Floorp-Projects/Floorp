@@ -40,7 +40,7 @@ struct os2File {
   int delOnClose;           /* True if file is to be deleted on close */
   char* pathToDel;          /* Name of file to delete on close */
   unsigned char locktype;   /* Type of lock currently held on this file */
-//  unsigned char isOpen;     /* True if needs to be closed */
+/*  unsigned char isOpen; */    /* True if needs to be closed */
 };
 
 /*
@@ -50,7 +50,7 @@ struct os2File {
 */
 #ifndef SQLITE_OMIT_DISKIO
 
-//#define SQLITE_MIN_SLEEP_MS 1
+/*#define SQLITE_MIN_SLEEP_MS 1 */
 
 /*
 ** Delete the named file
@@ -65,7 +65,8 @@ int sqlite3Os2Delete( const char *zFilename ){
 ** Return TRUE if the named file exists.
 */
 int sqlite3Os2FileExists( const char *zFilename ){
-  FILESTATUS3 fsts3ConfigInfo = {{0}};
+  FILESTATUS3 fsts3ConfigInfo;
+  memset(&fsts3ConfigInfo, 0, sizeof(fsts3ConfigInfo));
   return DosQueryPathInfo( (PSZ)zFilename, FIL_STANDARD,
         &fsts3ConfigInfo, sizeof(FILESTATUS3) ) == NO_ERROR;
 }
@@ -119,7 +120,7 @@ int sqlite3Os2OpenReadWrite(
   f.h = hf;
   f.locktype = NO_LOCK;
   f.delOnClose = 0;
-//  f.isOpen = 1;
+/*  f.isOpen = 1; */
   OpenCounter(+1);
   TRACE3( "OPEN R/W %d \"%s\"\n", hf, zFilename );
   return allocateOs2File( &f, pId );
@@ -156,7 +157,7 @@ int sqlite3Os2OpenExclusive( const char *zFilename, OsFile **pId, int delFlag ){
   }
   f.h = hf;
   f.locktype = NO_LOCK;
-//  f.isOpen = 1;
+/*  f.isOpen = 1; */
   f.delOnClose = delFlag;
   if( delFlag ) f.pathToDel = sqlite3OsFullPathname( zFilename );
   OpenCounter( +1 );
@@ -187,7 +188,7 @@ int sqlite3Os2OpenReadOnly( const char *zFilename, OsFile **pld ){
   }
   f.h = hf;
   f.locktype = NO_LOCK;
-//  f.isOpen = 1;
+/*  f.isOpen = 1; */
   f.delOnClose = 0;
   OpenCounter( +1 );
   TRACE3( "OPEN RO %d \"%s\"\n", hf, zFilename );
@@ -229,7 +230,7 @@ char *sqlite3_temp_directory = 0;
 ** hold at least SQLITE_TEMPNAME_SIZE characters.
 */
 int sqlite3Os2TempFileName( char *zBuf ){
-  const static unsigned char zChars[] =
+  static const unsigned char zChars[] =
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "0123456789";
@@ -240,7 +241,7 @@ int sqlite3Os2TempFileName( char *zBuf ){
       if( DosScanEnv( "TMPDIR", &zTempPath ) ){
            ULONG ulDriveNum = 0, ulDriveMap = 0;
            DosQueryCurrentDisk( &ulDriveNum, &ulDriveMap );
-           sprintf( zTempPath, "%c:", ( 'A' + ulDriveNum - 1 ) );
+           sprintf( zTempPath, "%c:", (char)( 'A' + ulDriveNum - 1 ) );
       }
     }
   }
@@ -266,7 +267,7 @@ int os2Close( OsFile **pld ){
   if( pld && (pFile = (os2File*)*pld)!=0 ){
     TRACE2( "CLOSE %d\n", pFile->hf );
     DosClose( pFile->h );
-//    pFile->isOpen = 0;
+/*    pFile->isOpen = 0; */
     pFile->locktype = NO_LOCK;
     OpenCounter( -1 );
     if( pFile->delOnClose ){
@@ -298,7 +299,7 @@ int os2Read( OsFile *id, void *pBuf, int amt ){
 ** or some other error code on failure.
 */
 int os2Write( OsFile *id, const void *pBuf, int amt ){
-  APIRET rc;
+  APIRET rc=NO_ERROR;
   ULONG wrote;
   assert( id!=0 );
   SimulateIOError( SQLITE_IOERR );
@@ -310,7 +311,7 @@ int os2Write( OsFile *id, const void *pBuf, int amt ){
       pBuf = &((char*)pBuf)[wrote];
   }
 
-  return ( rc != NO_ERROR || amt > wrote ) ? SQLITE_FULL : SQLITE_OK;
+  return ( rc != NO_ERROR || amt > (int)wrote ) ? SQLITE_FULL : SQLITE_OK;
 }
 
 /*
@@ -365,7 +366,8 @@ int os2Truncate( OsFile *id, i64 nByte ){
 */
 int os2FileSize( OsFile *id, i64 *pSize ){
   APIRET rc;
-  FILESTATUS3 fsts3FileInfo   = {{0}};
+  FILESTATUS3 fsts3FileInfo;
+  memset(&fsts3FileInfo, 0, sizeof(fsts3FileInfo));
   assert( id!=0 );
   SimulateIOError( SQLITE_IOERR );
   rc = DosQueryFileInfo( ((os2File*)id)->h, FIL_STANDARD, &fsts3FileInfo, sizeof(FILESTATUS3) );
@@ -382,8 +384,10 @@ int os2FileSize( OsFile *id, i64 *pSize ){
 ** Acquire a reader lock.
 */
 static int getReadLock( os2File *id ){
-  FILELOCK  LockArea     = {0},
-            UnlockArea   = {0};
+  FILELOCK  LockArea,
+            UnlockArea;
+  memset(&LockArea, 0, sizeof(LockArea));
+  memset(&UnlockArea, 0, sizeof(UnlockArea));
   LockArea.lOffset = SHARED_FIRST;
   LockArea.lRange = SHARED_SIZE;
   UnlockArea.lOffset = 0L;
@@ -395,8 +399,10 @@ static int getReadLock( os2File *id ){
 ** Undo a readlock
 */
 static int unlockReadLock( os2File *id ){
-  FILELOCK  LockArea     = {0},
-            UnlockArea   = {0};
+  FILELOCK  LockArea,
+            UnlockArea;
+  memset(&LockArea, 0, sizeof(LockArea));
+  memset(&UnlockArea, 0, sizeof(UnlockArea));
   LockArea.lOffset = 0L;
   LockArea.lRange = 0L;
   UnlockArea.lOffset = SHARED_FIRST;
@@ -410,9 +416,9 @@ static int unlockReadLock( os2File *id ){
 **
 */
 int sqlite3Os2IsDirWritable( char *zDirname ){
-  FILESTATUS3 fsts3ConfigInfo = {{0}};
+  FILESTATUS3 fsts3ConfigInfo;
   APIRET rc = NO_ERROR;
-
+  memset(&fsts3ConfigInfo, 0, sizeof(fsts3ConfigInfo));
   if( zDirname==0 ) return 0;
   if( strlen(zDirname)>CCHMAXPATH ) return 0;
   rc = DosQueryPathInfo( (PSZ)zDirname, FIL_STANDARD, &fsts3ConfigInfo, sizeof(FILESTATUS3) );
@@ -454,10 +460,11 @@ int os2Lock( OsFile *id, int locktype ){
   APIRET res = 1;           /* Result of a windows lock call */
   int newLocktype;       /* Set id->locktype to this value before exiting */
   int gotPendingLock = 0;/* True if we acquired a PENDING lock this time */
-  FILELOCK  LockArea     = {0},
-            UnlockArea   = {0};
+  FILELOCK  LockArea,
+            UnlockArea;
   os2File *pFile = (os2File*)id;
-
+  memset(&LockArea, 0, sizeof(LockArea));
+  memset(&UnlockArea, 0, sizeof(UnlockArea));
   assert( pFile!=0 );
   TRACE4( "LOCK %d %d was %d\n", pFile->h, locktype, pFile->locktype );
 
@@ -587,8 +594,10 @@ int os2CheckReservedLock( OsFile *id ){
     rc = 1;
     TRACE3( "TEST WR-LOCK %d %d (local)\n", pFile->hf, rc );
   }else{
-    FILELOCK  LockArea     = {0},
-              UnlockArea   = {0};
+    FILELOCK  LockArea,
+              UnlockArea;
+    memset(&LockArea, 0, sizeof(LockArea));
+    memset(&UnlockArea, 0, sizeof(UnlockArea));
     LockArea.lOffset = RESERVED_BYTE;
     LockArea.lRange = 1L;
     UnlockArea.lOffset = 0L;
@@ -621,8 +630,10 @@ int os2Unlock( OsFile *id, int locktype ){
   int type;
   APIRET rc = SQLITE_OK;
   os2File *pFile = (os2File*)id;
-  FILELOCK  LockArea     = {0},
-            UnlockArea   = {0};
+  FILELOCK  LockArea,
+            UnlockArea;
+  memset(&LockArea, 0, sizeof(LockArea));
+  memset(&UnlockArea, 0, sizeof(UnlockArea));
   assert( pFile!=0 );
   assert( locktype<=SHARED_LOCK );
   TRACE4( "UNLOCK %d to %d was %d\n", pFile->h, locktype, pFile->locktype );
@@ -679,7 +690,7 @@ char *sqlite3Os2FullPathname( const char *zRelative ){
     DosQueryCurrentDisk( &ulDriveNum, &ulDriveMap );
     DosQueryCurrentDir( 0L, zBuff, &cbzFullLen );
     zFull = sqliteMalloc( cbzFullLen );
-    sprintf( zDrive, "%c", 'A' + ulDriveNum - 1 );
+    sprintf( zDrive, "%c", (int)('A' + ulDriveNum - 1) );
     sqlite3SetString( &zFull, zDrive, ":\\", zBuff, "\\", zRelative, (char*)0 );
   }
   return zFull;
@@ -921,7 +932,7 @@ int sqlite3_tsd_count = 0;
 */
 ThreadData *sqlite3Os2ThreadSpecificData(int allocateFlag){
   static ThreadData **s_ppTsd = NULL;
-  static const ThreadData zeroData = {0};
+  static const ThreadData zeroData = {0, 0, 0};
   ThreadData *pTsd;
 
   if( !s_ppTsd ){
@@ -929,7 +940,7 @@ ThreadData *sqlite3Os2ThreadSpecificData(int allocateFlag){
     if( !s_ppTsd ){
       PULONG pul;
       APIRET rc = DosAllocThreadLocalMemory(1, &pul);
-      if( !rc ){
+      if( rc != NO_ERROR ){
         sqlite3OsLeaveMutex();
         return 0;
       }
