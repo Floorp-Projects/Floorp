@@ -103,8 +103,17 @@ function setLabelForNode(aNode, aLabel, aIsLabelFlag)
 
 function commonDialogOnLoad()
 {
-  // set the document title
-  document.title = gCommonDialogParam.GetString(12);
+  // Set the document title. On Mac, we only care about URI's.
+  if (/Mac/.test(navigator.platform)) {
+    var titleString = gCommonDialogParam.GetString(12);
+    if (/^\w+:\/\/\w/.test(titleString)) {
+      setElementText("info.title", titleString, true);
+      unHideElementById("info.title"); // Show URI inside dialog.
+    }
+  }
+  else {
+    document.title = gCommonDialogParam.GetString(12);
+  }
 
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);

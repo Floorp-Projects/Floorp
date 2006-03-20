@@ -21,6 +21,8 @@
     </hbox>
     
     <vbox flex="1" style="max-width: 45em;">
+      <!-- title -->
+      <description id="info.title" class="header" hidden="true"/>
       <!-- text -->
       <description id="info.header" class="header"/>
       <vbox id="info.box"/>
