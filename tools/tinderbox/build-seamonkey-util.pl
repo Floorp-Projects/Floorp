@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.315 $ ';
+$::UtilsVersion = '$Revision: 1.316 $ ';
 
 package TinderUtils;
 
@@ -1186,7 +1186,10 @@ sub get_profile_dir {
     my $profile_product_name = $Settings::ProductName;
 
     $profile_product_name = "Mozilla" if ($profile_product_name eq "SeaMonkey");
-    $profile_product_name = "Firefox" if ($profile_product_name eq "DeerPark");
+
+    # $ProductName must be set to the codename for the Mac, so check
+    # $BinaryName and use the correct profile for browser.
+    $profile_product_name = 'Firefox' if ($Settings::BinaryName =~ /^firefox/);
 
     my $profile_dir;
 
@@ -1764,7 +1767,7 @@ sub run_all_tests {
     unlink("$binary_dir/components/compreg.dat") or warn "$binary_dir/components/compreg.dat not removed\n";
     if($Settings::RegxpcomTest) {
         my $args;
-        if ($Settings::ProductName =~ /^(Firefox|Thunderbird|DeerPark)$/) {
+        if ($Settings::BinaryName =~ /^(firefox|thunderbird)/) {
             $args = [$binary, "-register"];
         } else {
             $args = ["$binary_dir/regxpcom"];
