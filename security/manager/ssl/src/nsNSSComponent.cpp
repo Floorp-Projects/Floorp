@@ -1422,6 +1422,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       PRBool enabled;
       mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+      SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, enabled);
       mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
       mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
@@ -1897,6 +1898,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     if (prefName.Equals("security.enable_ssl2")) {
       mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+      SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, enabled);
     } else if (prefName.Equals("security.enable_ssl3")) {
       mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
