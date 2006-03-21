@@ -48,9 +48,10 @@ public:
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell);
 
-  NS_DECL_ISUPPORTS_INHERITED
+  // Override addref/release to not assert
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 
-  // nsIBox frame interface
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize);
