@@ -30,7 +30,7 @@ CREATE TABLE "product" (
   PRIMARY KEY  ("product_id"),
   KEY "product_family" ("product_family"),
   KEY "product_value" ("product_value")
-) AUTO_INCREMENT=3 ;
+) AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -96,7 +96,7 @@ CREATE TABLE "sysid" (
 CREATE TABLE "user" (
   "user_id" int(11) NOT NULL auto_increment,
   "user_username" varchar(50) collate utf8_unicode_ci NOT NULL default '',
-  "user_password" varchar(16) collate utf8_unicode_ci NOT NULL default '',
+  "user_password" varchar(41) collate utf8_unicode_ci NOT NULL default '',
   "user_realname" varchar(40) collate utf8_unicode_ci NOT NULL default '',
   "user_email" varchar(255) collate utf8_unicode_ci NOT NULL default '',
   "user_added_by" tinytext collate utf8_unicode_ci NOT NULL,
@@ -106,4 +106,4 @@ CREATE TABLE "user" (
   "user_status" int(11) NOT NULL default '0',
   PRIMARY KEY  ("user_id"),
   KEY "user_username" ("user_username")
-) AUTO_INCREMENT=2 ;
+) AUTO_INCREMENT=1 ;
