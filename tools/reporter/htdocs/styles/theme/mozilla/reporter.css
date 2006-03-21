@@ -101,12 +101,12 @@ body {
 }
 
 #reporter-content #reporterReport div {
-	margin-bottom: 3px;
+	margin-bottom: 8px;
 }
 #reporter-content #reporterReport .title {
 	float: left;
 	width: 9em;
-	padding: 0 .5em;
+	padding: 0 0.75em 0 .5em;
 	text-align: right;
 	font-weight: bold;
 }
