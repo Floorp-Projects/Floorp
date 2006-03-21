@@ -635,23 +635,10 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint)
     return nsnull;
   }
 
-  nsIFrame* frame = this;
-  nsIFrame* hit = nsnull;
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &hit);
-      if (NS_SUCCEEDED(rv) && hit) {
-        frame = hit;
-        // return NS_OK; can't return. we need reverse order but only
-        // have a singly linked list...
-      }
-    }
-  }
+  nsIFrame* hit;
+  nsSVGUtils::HitTestChildren(this, x, y, &hit);
 
-  return frame;
+  return hit;
 }
 
 //----------------------------------------------------------------------
@@ -737,10 +724,7 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   // paint children:
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRect, PR_FALSE);
+    nsSVGUtils::PaintChildWithEffects(canvas, kid);
   }
   
   canvas->Flush();

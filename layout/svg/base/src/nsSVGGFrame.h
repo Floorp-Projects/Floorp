@@ -52,9 +52,7 @@ class nsSVGGFrame : public nsSVGGFrameBase,
                     public nsSupportsWeakReference
 {
 public:
-  nsSVGGFrame() : mFilter(nsnull), mPropagateTransform(PR_TRUE) {}
-  virtual ~nsSVGGFrame();
-
+  nsSVGGFrame() : mPropagateTransform(PR_TRUE) {}
 
   /**
    * Get the "type" of the frame
@@ -79,20 +77,16 @@ protected:
   friend nsIFrame*
   NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
+  // nsIFrame interface:
+  NS_IMETHOD DidSetStyleContext();
+
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = mFilterRegion;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
-  }
 
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -104,9 +98,6 @@ protected:
                                      nsISVGValue::modificationType aModType);
 
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
-
-  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
-  nsISVGFilterFrame *mFilter;
 
   PRPackedBool mPropagateTransform;
 };

@@ -60,12 +60,12 @@
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "nsIURI.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGPoint.h"
 #include "nsSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsISVGRendererSurface.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -85,17 +85,10 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 }
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame()
-  : mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE), mFilter(nsnull)
+  : mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE)
 {
   AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT |
                NS_FRAME_REFLOW_ROOT);
-}
-
-nsSVGForeignObjectFrame::~nsSVGForeignObjectFrame()
-{
-  if (mFilter) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
-  }
 }
 
 nsresult nsSVGForeignObjectFrame::Init()
@@ -271,6 +264,13 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32         aNameSpaceID,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSVGForeignObjectFrame::DidSetStyleContext()
+{
+  nsSVGUtils::StyleEffects(this);
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // nsISVGValueObserver methods:
 
@@ -278,20 +278,8 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::WillModifySVGObservable(nsISVGValue* observable,
                                                  nsISVGValue::modificationType aModType)
 {
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
- 
-  // need to handle filters because we might be the topmost filtered frame and
-  // the filter region could be changing.
-  if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (!outerSVGFrame)
-      return NS_ERROR_FAILURE;
- 
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
-    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-  }
+  nsSVGUtils::WillModifyEffects(this, observable, aModType);
+
   return NS_OK;
 }
 
@@ -301,29 +289,7 @@ nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                  nsISVGValue::modificationType aModType)
 {
   Update();
-  
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
- 
-  if (filter) {
-    if (aModType == nsISVGValue::mod_die) {
-      mFilter = nsnull;
-      mFilterRegion = nsnull;
-    }
- 
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (!outerSVGFrame)
-      return NS_ERROR_FAILURE;
-    
-    if (mFilter)
-      mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-       
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
-     
-    if (region)
-       outerSVGFrame->InvalidateRegion(region, PR_TRUE);  
-  }
+  nsSVGUtils::DidModifyEffects(this, observable, aModType);
    
   return NS_OK;
 }
@@ -377,33 +343,14 @@ TransformRect(float* aX, float *aY, float* aWidth, float *aHeight,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                                  const nsRect& dirtyRectTwips,
-                                  PRBool ignoreFilter)
+nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
+  nsresult rv = NS_OK;
+
   if (mIsDirty) {
     nsCOMPtr<nsISVGRendererRegion> region = DoReflow();
   }
 
-  /* check for filter */
-  
-  if (!ignoreFilter) {
-    if (!mFilter) {
-      nsCOMPtr<nsIURI> aURI = GetStyleSVGReset()->mFilter;
-      if (aURI)
-        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
-      if (mFilter)
-        NS_ADD_SVGVALUE_OBSERVER(mFilter);
-    }
- 
-    if (mFilter) {
-      if (!mFilterRegion)
-        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-      mFilter->FilterPaint(canvas, this);
-      return NS_OK;
-    }
-  }
- 
   nsRect dirtyRect = nsRect(nsPoint(0, 0), GetSize());
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsCOMPtr<nsIDOMSVGMatrix> inverse;

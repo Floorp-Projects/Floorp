@@ -70,9 +70,7 @@
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-  : mFilter(nsnull), mUpdateFlags(0), mPropagateTransform(PR_TRUE),
-    mFillGradient(nsnull), mStrokeGradient(nsnull),
-    mFillPattern(nsnull), mStrokePattern(nsnull)
+  : mUpdateFlags(0), mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -90,9 +88,6 @@ nsSVGPathGeometryFrame::~nsSVGPathGeometryFrame()
   }
   if (mStrokeGradient) {
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
-  }
-  if (mFilter) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
   }
   if (mFillPattern) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
@@ -162,10 +157,6 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokeGradient);
     mStrokeGradient = nsnull;
   }
-  if (mFilter) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
-    mFilter = nsnull;
-  }
   if (mFillPattern) {
     NS_REMOVE_SVGVALUE_OBSERVER(mFillPattern);
     mFillPattern = nsnull;
@@ -174,6 +165,7 @@ nsSVGPathGeometryFrame::DidSetStyleContext()
     NS_REMOVE_SVGVALUE_OBSERVER(mStrokePattern);
     mStrokePattern = nsnull;
   }
+  nsSVGUtils::StyleEffects(this);
 
   // XXX: we'd like to use the style_hint mechanism and the
   // ContentStateChanged/AttributeChanged functions for style changes
@@ -225,155 +217,45 @@ nsSVGPathGeometryFrame::GetMarkerFrames(nsISVGMarkerFrame **markerStart,
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas, 
-                                 const nsRect& dirtyRectTwips,
-                                 PRBool ignoreFilter)
+nsSVGPathGeometryFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
-  nsIURI *aURI;
-
-  /* check for filter */
-  
-  if (!ignoreFilter) {
-    if (!mFilter) {
-      aURI = GetStyleSVGReset()->mFilter;
-      if (aURI)
-        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
-      if (mFilter)
-        NS_ADD_SVGVALUE_OBSERVER(mFilter);
-    }
-
-    if (mFilter) {
-      if (!mFilterRegion)
-        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-      mFilter->FilterPaint(canvas, this);
-      return NS_OK;
-    }
-  }
-
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-
-  /* check for a clip path */
-
-  PRBool trivialClip = PR_TRUE;
-  nsISVGClipPathFrame *clip = NULL;
-  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface;
-
-  aURI = GetStyleSVGReset()->mClipPath;
-  if (aURI) {
-    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
-
-    if (clip) {
-      clip->IsTrivial(&trivialClip);
-
-      if (trivialClip) {
-        canvas->PushClip();
-      } else {
-        nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                               getter_AddRefs(clipMaskSurface));
-        if (!clipMaskSurface)
-          clip = nsnull;
-      }
-
-      if (clip) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        GetCanvasTM(getter_AddRefs(matrix));
-        clip->ClipPaint(canvas, clipMaskSurface, this, matrix);
-      }
-    }
-  }
-
-  /* check for mask */
-
-  nsISVGMaskFrame *mask = nsnull;
-  nsCOMPtr<nsISVGRendererSurface> maskSurface, maskedSurface;
-
-  aURI = GetStyleSVGReset()->mMask;
-  if (aURI) {
-    NS_GetSVGMaskFrame(&mask, aURI, mContent);
-
-    if (mask) {
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(maskSurface));
-
-      if (maskSurface) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        GetCanvasTM(getter_AddRefs(matrix));
-        if (NS_FAILED(mask->MaskPaint(canvas, maskSurface, this, matrix)))
-          maskSurface = nsnull;
-      }
-    }
-  }
-
-  if (maskSurface || clipMaskSurface) {
-    nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                           getter_AddRefs(maskedSurface));
-    if (maskedSurface) {
-      canvas->PushSurface(maskedSurface);
-    } else
-      maskSurface = nsnull;
-  }
-
   /* render */
   GetGeometry()->Render(canvas);
-  
+
   nsISVGMarkable *markable;
   CallQueryInterface(this, &markable);
 
   if (markable) {
     nsISVGMarkerFrame *markerEnd, *markerMid, *markerStart;
     GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
-
+      
     if (markerEnd || markerMid || markerStart) {
       // need to set this up with the first draw
       if (!mMarkerRegion)
         mMarkerRegion = GetCoveredRegion();
-
+        
       float strokeWidth;
       GetStrokeWidth(&strokeWidth);
-      
+        
       nsVoidArray marks;
       markable->GetMarkPoints(&marks);
-    
+        
       PRUint32 num = marks.Count();
-      
+        
       if (num && markerStart)
         markerStart->PaintMark(canvas, this, (nsSVGMark *)marks[0], strokeWidth);
-      
+        
       if (num && markerMid)
         for (PRUint32 i = 1; i < num - 1; i++)
           markerMid->PaintMark(canvas, this, (nsSVGMark *)marks[i], strokeWidth);
-
+        
       if (num && markerEnd)
         markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
     }
   }
-
-  if (maskedSurface)
-    canvas->PopSurface();
-
-  if (clipMaskSurface) {
-    if (!maskSurface) {
-      maskSurface = clipMaskSurface;
-    } else {
-      nsCOMPtr<nsISVGRendererSurface> clipped;
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(clipped));
-      
-      canvas->PushSurface(clipped);
-      canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, clipMaskSurface);
-      canvas->PopSurface();
-      maskedSurface = clipped;
-    }
-  }
-
-  if (maskSurface)
-    canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, maskSurface);
-
-  if (clip && trivialClip)
-    canvas->PopClip();
 
   return NS_OK;
 }
@@ -390,24 +272,8 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   PRBool isHit;
   GetGeometry()->ContainsPoint(x, y, &isHit);
 
-  if (isHit) {
-    PRBool clipHit = PR_TRUE;;
-
-    nsIURI *aURI;
-    nsISVGClipPathFrame *clip = NULL;
-    aURI = GetStyleSVGReset()->mClipPath;
-    if (aURI)
-      NS_GetSVGClipPathFrame(&clip, aURI, mContent);
-
-    if (clip) {
-      nsCOMPtr<nsIDOMSVGMatrix> matrix;
-      GetCanvasTM(getter_AddRefs(matrix));
-      clip->ClipHitTest(this, matrix, x, y, &clipHit);
-    }
-
-    if (clipHit)
-      *hit = this;
-  }
+  if (isHit && nsSVGUtils::HitTestClip(this, x, y))
+    *hit = this;
   
   return NS_OK;
 }
@@ -536,20 +402,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  // need to handle filters because we might be the topmost filtered frame and
-  // the filter region could be changing.
-  if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (!outerSVGFrame)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
-    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-  }
+  nsSVGUtils::WillModifyEffects(this, observable, aModType);
 
   return NS_OK;
 }
@@ -565,6 +418,8 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
 
   nsISVGFilterFrame *filter;
   CallQueryInterface(observable, &filter);
+
+  nsSVGUtils::DidModifyEffects(this, observable, aModType);
 
   if (gradient) {
     // Yes, we need to handle this differently
@@ -582,10 +437,6 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
       UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
   } else if (filter) {
-    if (aModType == nsISVGValue::mod_die) {
-      mFilter = nsnull;
-      mFilterRegion = nsnull;
-    }
     UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT |
                   nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
   } else if (pval) {
@@ -674,8 +525,7 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeOpacity(float *aStrokeOpacity)
 {
-  *aStrokeOpacity =
-    GetStyleSVG()->mStrokeOpacity * GetStyleDisplay()->mOpacity;
+  *aStrokeOpacity = GetStyleSVG()->mStrokeOpacity;
   return NS_OK;
 }
 
@@ -766,8 +616,7 @@ nsSVGPathGeometryFrame::GetStrokeMiterlimit(float *aStrokeMiterlimit)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillOpacity(float *aFillOpacity)
 {
-  *aFillOpacity =
-    GetStyleSVG()->mFillOpacity * GetStyleDisplay()->mOpacity;
+  *aFillOpacity = GetStyleSVG()->mFillOpacity;
   return NS_OK;
 }
 

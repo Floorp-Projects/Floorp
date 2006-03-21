@@ -237,7 +237,7 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
 {
   nsRect dirty;
 
-  if (NS_FAILED(aCanvas->PushSurface(aSurface)))
+  if (NS_FAILED(aCanvas->PushSurface(aSurface, PR_TRUE)))
     return NS_ERROR_FAILURE;
 
   {
@@ -300,11 +300,7 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->PaintSVG(aCanvas, dirty, PR_TRUE);
-    }
+    nsSVGUtils::PaintChildWithEffects(aCanvas, kid);
   }
 
   aCanvas->PopSurface();

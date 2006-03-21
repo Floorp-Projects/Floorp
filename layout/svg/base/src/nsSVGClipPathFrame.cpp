@@ -197,7 +197,7 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
   else {
     rv = canvas->SetRenderMode(nsISVGRendererCanvas::SVG_RENDER_MODE_CLIP_MASK);
 
-    canvas->PushSurface(aClipSurface);
+    canvas->PushSurface(aClipSurface, PR_TRUE);
   }
 
   if (NS_FAILED(rv))
@@ -208,7 +208,7 @@ nsSVGClipPathFrame::ClipPaint(nsISVGRendererCanvas* canvas,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
-      SVGFrame->PaintSVG(canvas, dirty, PR_TRUE);
+      SVGFrame->PaintSVG(canvas);
     }
   }
 

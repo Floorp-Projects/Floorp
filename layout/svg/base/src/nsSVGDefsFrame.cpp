@@ -194,9 +194,7 @@ nsSVGDefsFrame::AttributeChanged(PRInt32         aNameSpaceID,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGDefsFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                         const nsRect& dirtyRectTwips,
-                         PRBool ignoreFilter)
+nsSVGDefsFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
   // defs don't paint
 

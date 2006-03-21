@@ -51,22 +51,14 @@ class nsIDOMSVGMatrix;
 struct nsRect;
 
 #define NS_ISVGCHILDFRAME_IID \
-{ 0xe3280ee5, 0x0980, 0x45f4, { 0xb4, 0x84, 0xc4, 0x11, 0xbc, 0x36, 0xcd, 0xda } }
+{ 0x2a5b5908, 0x8b2a, 0x4991, { 0x97, 0x2e, 0xe4, 0x5f, 0x0a, 0xb2, 0x14, 0x9a } }
 
 class nsISVGChildFrame : public nsISupports {
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
 
-  // XXX Ideally we don't want to pass the dirtyRect along but extract
-  // it from nsIRenderingContext where needed (only in foreign
-  // objects) dirtyRectTwips is the unmodified region passed to the
-  // outer svg frame's ::Paint.  ignoreFilter tells the frame if it
-  // should ignore any filter attribute set, as filters need to call
-  // back to the frame to render source image(s).
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter)=0;
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas)=0;
 
   // Check if this frame or children contain the given point,
   // specified in device pixels relative to the origin of the outer
@@ -96,10 +88,6 @@ public:
 
   // XXX move this function into interface nsISVGLocatableMetrics
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval)=0; // bbox in local coords
-
-  // Get the filtered invalidation area for this frame.  Null return
-  // if frame is not directly filtered.
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGChildFrame, NS_ISVGCHILDFRAME_IID)

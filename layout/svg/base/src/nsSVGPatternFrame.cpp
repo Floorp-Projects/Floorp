@@ -488,7 +488,7 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
                           getter_AddRefs(patternSurface));
 
   // Push the surface
-  if (NS_FAILED(canvas->PushSurface(patternSurface)))
+  if (NS_FAILED(canvas->PushSurface(patternSurface, PR_FALSE)))
     return NS_ERROR_FAILURE; //?
 
   if (NS_FAILED(GetPatternMatrix(patternMatrix, bbox, viewRect)))
@@ -520,11 +520,7 @@ nsSVGPatternFrame::PaintPattern(nsISVGRendererCanvas* canvas,
   nsRect dummyRect;
   for (nsIFrame* kid = firstKid; kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      SVGFrame->PaintSVG(canvas, dummyRect, PR_FALSE);
-    }
+    nsSVGUtils::PaintChildWithEffects(canvas, kid);
   }
   mSource = nsnull;
 

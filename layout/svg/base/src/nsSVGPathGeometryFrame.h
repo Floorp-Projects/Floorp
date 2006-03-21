@@ -111,9 +111,7 @@ protected:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas, 
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -123,11 +121,6 @@ protected:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = mFilterRegion;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
-  }
   
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -146,9 +139,7 @@ protected:
   void UpdateGraphic(PRUint32 flags, PRBool suppressInvalidation = PR_FALSE);
   nsISVGRendererPathGeometry *GetGeometry();
 
-  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
   nsCOMPtr<nsISVGRendererRegion> mMarkerRegion;
-  nsISVGFilterFrame *mFilter;
 
 private:
   void GetMarkerFrames(nsISVGMarkerFrame **markerStart,
