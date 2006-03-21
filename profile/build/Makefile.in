@@ -62,8 +62,8 @@ CPPSRCS		= \
 			nsProfileFactory.cpp	\
 			$(NULL)
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)profdirserviceprovider_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX) \
+		../dirserviceprovider/src/$(LIB_PREFIX)profdirserviceprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
