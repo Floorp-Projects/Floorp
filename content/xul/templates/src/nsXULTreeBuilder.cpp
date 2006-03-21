@@ -201,7 +201,7 @@ protected:
     nsresult
     SortSubtree(nsTreeRows::Subtree* aSubtree);
 
-    NS_IMETHODIMP
+    NS_IMETHOD
     HasGeneratedContent(nsIRDFResource* aResource,
                         nsIAtom* aTag,
                         PRBool* aGenerated);
@@ -287,6 +287,8 @@ nsIRDFResource* nsXULTreeBuilder::kNC_BookmarkSeparator;
 NS_IMETHODIMP
 NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
+    *aResult = nsnull;
+
     NS_PRECONDITION(aOuter == nsnull, "no aggregation");
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
@@ -382,6 +384,7 @@ nsXULTreeBuilder::GetResourceAtIndex(PRInt32 aRowIndex, nsIRDFResource** aResult
 NS_IMETHODIMP
 nsXULTreeBuilder::GetIndexOfResource(nsIRDFResource* aResource, PRInt32* aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResource);
     nsTreeRows::iterator iter = mRows.FindByResource(aResource);
     if (iter == mRows.Last())
         *aResult = -1;
@@ -487,6 +490,7 @@ nsXULTreeBuilder::SetSelection(nsITreeSelection* aSelection)
 NS_IMETHODIMP
 nsXULTreeBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties)
 {
+    NS_ENSURE_ARG_POINTER(aProperties);
     NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad row");
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -511,6 +515,8 @@ nsXULTreeBuilder::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties
 NS_IMETHODIMP
 nsXULTreeBuilder::GetCellProperties(PRInt32 aRow, nsITreeColumn* aCol, nsISupportsArray* aProperties)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
+    NS_ENSURE_ARG_POINTER(aProperties);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -536,6 +542,8 @@ NS_IMETHODIMP
 nsXULTreeBuilder::GetColumnProperties(nsITreeColumn* aCol,
                                       nsISupportsArray* aProperties)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
+    NS_ENSURE_ARG_POINTER(aProperties);
     // XXX sortactive fu
     return NS_OK;
 }
@@ -670,7 +678,7 @@ nsXULTreeBuilder::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, PRBool*
 
     // We have a next sibling if the child is not the last in the
     // subtree.
-    *aResult = PRBool(iter.GetChildIndex() != parent->Count() - 1);
+    *aResult = iter.GetChildIndex() != parent->Count() - 1;
     return NS_OK;
 }
 
@@ -691,6 +699,7 @@ nsXULTreeBuilder::GetLevel(PRInt32 aRowIndex, PRInt32* aResult)
 NS_IMETHODIMP
 nsXULTreeBuilder::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aResult)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -705,7 +714,7 @@ nsXULTreeBuilder::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRes
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, aResult);
     }
     else
-        aResult.SetCapacity(0);
+        aResult.Truncate();
 
     return NS_OK;
 }
@@ -714,6 +723,7 @@ nsXULTreeBuilder::GetImageSrc(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRes
 NS_IMETHODIMP
 nsXULTreeBuilder::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aResult)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -742,6 +752,7 @@ nsXULTreeBuilder::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aR
 NS_IMETHODIMP
 nsXULTreeBuilder::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aResult)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -756,7 +767,7 @@ nsXULTreeBuilder::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRe
         SubstituteText(mRows[aRow]->mMatch->mResult, raw, aResult);
     }
     else
-        aResult.SetCapacity(0);
+        aResult.Truncate();
 
     return NS_OK;
 }
@@ -764,6 +775,7 @@ nsXULTreeBuilder::GetCellValue(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRe
 NS_IMETHODIMP
 nsXULTreeBuilder::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aResult)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
@@ -779,17 +791,17 @@ nsXULTreeBuilder::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aRes
 
     }
     else
-        aResult.SetCapacity(0);
+        aResult.Truncate();
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
+nsXULTreeBuilder::SetTree(nsITreeBoxObject* aTree)
 {
     NS_PRECONDITION(mRoot, "not initialized");
 
-    mBoxObject = tree;
+    mBoxObject = aTree;
 
     // If this is teardown time, then we're done.
     if (! mBoxObject)
@@ -869,8 +881,7 @@ nsXULTreeBuilder::ToggleOpenState(PRInt32 aIndex)
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
                 observer->OnToggleOpenState(aIndex);
         }
@@ -915,6 +926,7 @@ nsXULTreeBuilder::ToggleOpenState(PRInt32 aIndex)
 NS_IMETHODIMP
 nsXULTreeBuilder::CycleHeader(nsITreeColumn* aCol)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     nsCOMPtr<nsIDOMElement> element;
     aCol->GetElement(getter_AddRefs(element));
 
@@ -925,8 +937,7 @@ nsXULTreeBuilder::CycleHeader(nsITreeColumn* aCol)
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
                 observer->OnCycleHeader(id.get(), element);
         }
@@ -942,8 +953,7 @@ nsXULTreeBuilder::SelectionChanged()
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
                 observer->OnSelectionChanged();
         }
@@ -953,19 +963,19 @@ nsXULTreeBuilder::SelectionChanged()
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::CycleCell(PRInt32 row, nsITreeColumn* col)
+nsXULTreeBuilder::CycleCell(PRInt32 aRow, nsITreeColumn* aCol)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     if (mObservers) {
         nsAutoString id;
-        col->GetId(id);
+        aCol->GetId(id);
 
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
-                observer->OnCycleCell(row, id.get());
+                observer->OnCycleCell(aRow, id.get());
         }
     }
 
@@ -975,11 +985,11 @@ nsXULTreeBuilder::CycleCell(PRInt32 row, nsITreeColumn* col)
 NS_IMETHODIMP
 nsXULTreeBuilder::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
 {
+    *_retval = PR_TRUE;
+    NS_ENSURE_ARG_POINTER(aCol);
     NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad index");
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
-
-    *_retval = PR_TRUE;
 
     // Find the <cell> that corresponds to the column we want.
     nsCOMPtr<nsIContent> cell;
@@ -999,28 +1009,29 @@ nsXULTreeBuilder::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+nsXULTreeBuilder::SetCellValue(PRInt32 aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::SetCellText(PRInt32 row, nsITreeColumn* col, const nsAString& value)
+nsXULTreeBuilder::SetCellText(PRInt32 aRow, nsITreeColumn* aCol, const nsAString& aValue)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::PerformAction(const PRUnichar* action)
+nsXULTreeBuilder::PerformAction(const PRUnichar* aAction)
 {
     if (mObservers) {  
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
-                observer->OnPerformAction(action);
+                observer->OnPerformAction(aAction);
         }
     }
 
@@ -1028,16 +1039,15 @@ nsXULTreeBuilder::PerformAction(const PRUnichar* action)
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::PerformActionOnRow(const PRUnichar* action, PRInt32 row)
+nsXULTreeBuilder::PerformActionOnRow(const PRUnichar* aAction, PRInt32 aRow)
 {
     if (mObservers) {  
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
-                observer->OnPerformActionOnRow(action, row);
+                observer->OnPerformActionOnRow(aAction, aRow);
         }
     }
 
@@ -1045,19 +1055,19 @@ nsXULTreeBuilder::PerformActionOnRow(const PRUnichar* action, PRInt32 row)
 }
 
 NS_IMETHODIMP
-nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* action, PRInt32 row, nsITreeColumn* col)
+nsXULTreeBuilder::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRow, nsITreeColumn* aCol)
 {
+    NS_ENSURE_ARG_POINTER(aCol);
     if (mObservers) {  
         nsAutoString id;
-        col->GetId(id);
+        aCol->GetId(id);
 
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer)
-                observer->OnPerformActionOnCell(action, row, id.get());
+                observer->OnPerformActionOnCell(aAction, aRow, id.get());
         }
     }
 
@@ -1080,6 +1090,7 @@ nsXULTreeBuilder::HasGeneratedContent(nsIRDFResource* aResource,
                                       PRBool* aGenerated)
 {
     *aGenerated = PR_FALSE;
+    NS_ENSURE_ARG_POINTER(aResource);
 
     if (!mRootResult)
         return NS_OK;
@@ -1909,8 +1920,7 @@ nsXULTreeBuilder::CanDrop(PRInt32 index, PRInt32 orientation, PRBool *_retval)
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer) {
                 observer->CanDrop(index, orientation, _retval);
                 if (*_retval)
@@ -1929,8 +1939,7 @@ nsXULTreeBuilder::Drop(PRInt32 row, PRInt32 orient)
         PRUint32 count;
         mObservers->Count(&count);
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
-            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer = do_QueryElementAt(mObservers, i);
             if (observer) {
                 PRBool canDrop = PR_FALSE;
                 observer->CanDrop(row, orient, &canDrop);
