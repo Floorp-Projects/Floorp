@@ -352,8 +352,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
   }
 
   nsRect dirtyRect = nsRect(nsPoint(0, 0), GetSize());
-#if 0  /// XX - broken by PaintSVG API change (bug 330498)
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
+#if 0  /// XX - broken by PaintSVG API change (bug 330498)
   nsCOMPtr<nsIDOMSVGMatrix> inverse;
   rv = tm->Inverse(getter_AddRefs(inverse));
   float pxPerTwips = GetPxPerTwips();
