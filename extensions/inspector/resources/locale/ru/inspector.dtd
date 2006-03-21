@@ -31,6 +31,8 @@
 <!ENTITY cmdShowOpenURLDialog.accesskey "с">
 <!ENTITY cmdShowOpenURLDialog.label "Исследовать URL...">
 <!ENTITY cmdToggleBrowser.label "Браузер">
+<!ENTITY cmdToggleChrome.label "Chrome">
+<!ENTITY cmdToggleChrome.accesskey "C">
 <!ENTITY cmdToggleSearch.label "Результаты поиска">
 <!ENTITY cmdUndo.accesskey "О">
 <!ENTITY cmdUndo.label "Отменить">
@@ -40,12 +42,12 @@
 <!ENTITY mnEdit.label "Правка">
 <!ENTITY mnFile.accesskey "Ф">
 <!ENTITY mnFile.label "Файл">
+<!ENTITY mnInspectDocument.label "Исследовать документ">
+<!ENTITY mnInspectDocument.accesskey "Д">
 <!ENTITY mnSearch.accesskey "П">
 <!ENTITY mnSearch.label "Поиск">
 <!ENTITY mnSearchPlugins.accesskey "Р">
 <!ENTITY mnSearchPlugins.label "Расширения">
 <!ENTITY mnView.accesskey "В">
 <!ENTITY mnView.label "Вид">
-<!ENTITY mnWindows.accesskey "И">
-<!ENTITY mnWindows.label "Исследовать окно">
 <!ENTITY thDOMNodes.label "Узлы DOM">

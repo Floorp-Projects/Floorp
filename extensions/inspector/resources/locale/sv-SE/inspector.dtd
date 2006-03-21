@@ -11,9 +11,9 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Arkiv">
-<!ENTITY mnWindows.label "Inspektera ett fönster">
-<!ENTITY mnWindows.accesskey "f">
 <!ENTITY mnFile.accesskey "A">
+<!ENTITY mnInspectDocument.label "Inspektera ett dokument">
+<!ENTITY mnInspectDocument.accesskey "d">
 <!ENTITY cmdShowOpenURLDialog.label "Inspektera en URL...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "u">
 <!ENTITY cmdClose.label "Stäng">
@@ -47,6 +47,8 @@
 <!ENTITY mnView.accesskey "v">
 <!ENTITY cmdToggleBrowser.label "Webbläsare">
 <!ENTITY cmdToggleSearch.label "Sökresultat">
+<!ENTITY cmdToggleChrome.label "Chrome">
+<!ENTITY cmdToggleChrome.accesskey "C">
 
 <!ENTITY cmdViewSearchItem.label "Visa...">
 <!ENTITY cmdEditSearchItem.label "Redigera...">

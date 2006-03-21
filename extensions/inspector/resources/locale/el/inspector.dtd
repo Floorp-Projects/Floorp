@@ -11,8 +11,6 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Αρχείο">
-<!ENTITY mnWindows.label "Επιθεώρηση ενός παραθύρου">
-<!ENTITY mnWindows.accesskey "ι">
 <!ENTITY mnFile.accesskey "Α">
   <!ENTITY cmdShowOpenURLDialog.label "Επιθεώρηση ενός URL...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "u">
@@ -60,3 +58,8 @@
 <!ENTITY inspectNewWindow.label "Επιθεώρηση σε νέο παράθυρο">
 
 <!ENTITY closeCmd.key "W">
+
+<!ENTITY  mnInspectDocument.label "Επιθεώρηση εγγράφου">
+<!ENTITY  mnInspectDocument.accesskey "θ">
+<!ENTITY  cmdToggleChrome.label "Chrome">
+<!ENTITY  cmdToggleChrome.accesskey "C">
