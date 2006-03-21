@@ -118,22 +118,22 @@ EXTRA_DSO_LIBS += rdfutil_s
 CPPSRCS		= nsMailModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-	        $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
-	        $(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
-                $(DIST)/lib/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
-                $(DIST)/lib/$(LIB_PREFIX)vcard_s.$(LIB_SUFFIX) \
-                $(DIST)/lib/$(LIB_PREFIX)mimecthglue_s.$(LIB_SUFFIX) \
+	        ../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
+		../base/src/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
+		../base/search/src/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
+		../local/src//$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
+	        ../compose/src/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
+	        ../db/msgdb/src/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
+	        ../imap/src/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
+	        ../addrbook/src/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
+	        ../news/src/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX) \
+	        ../mime/src/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
+	        ../mime/emitters/src/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
+	        ../extensions/bayesian-spam-filter/src/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
+	        ../extensions/mailviews/src/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
+                ../extensions/mdn/src/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
+                ../mime/cthandlers/vcard/$(LIB_PREFIX)vcard_s.$(LIB_SUFFIX) \
+                ../mime/cthandlers/glue/$(LIB_PREFIX)mimecthglue_s.$(LIB_SUFFIX) \
                 $(NULL)
 
 EXTRA_DSO_LDOPTS = \
