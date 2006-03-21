@@ -148,11 +148,11 @@ private:
 
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
-  nsCOMPtr<nsISVGGradient>     mFillGradient;
-  nsCOMPtr<nsISVGGradient>     mStrokeGradient;
+  nsISVGGradient*     mFillGradient;
+  nsISVGGradient*     mStrokeGradient;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
-  nsCOMPtr<nsISVGPattern>      mFillPattern;
-  nsCOMPtr<nsISVGPattern>      mStrokePattern;
+  nsISVGPattern*      mFillPattern;
+  nsISVGPattern*      mStrokePattern;
 
   PRPackedBool mPropagateTransform;
 };
