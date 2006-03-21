@@ -70,7 +70,10 @@
 // nsSVGPathGeometryFrame
 
 nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-  : mUpdateFlags(0), mPropagateTransform(PR_TRUE)
+  : mUpdateFlags(0),
+    mFillGradient(nsnull), mStrokeGradient(nsnull),
+    mFillPattern(nsnull), mStrokePattern(nsnull),
+    mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
 //  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
@@ -412,19 +415,14 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
                                                 nsISVGValue::modificationType aModType)
 {
-  // Is this a gradient?
-  nsCOMPtr<nsISVGGradient> gradient = do_QueryInterface(observable);
-  nsCOMPtr<nsISVGPattern> pval = do_QueryInterface(observable);
-
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
   nsSVGUtils::DidModifyEffects(this, observable, aModType);
+
+  nsISVGGradient *gradient;
+  CallQueryInterface(observable, &gradient);
 
   if (gradient) {
     // Yes, we need to handle this differently
-    nsCOMPtr<nsISVGGradient>fill = do_QueryInterface(mFillGradient);
-    if (fill == gradient) {
+    if (mFillGradient == gradient) {
       if (aModType == nsISVGValue::mod_die) {
         mFillGradient = nsnull;
       }
@@ -436,13 +434,25 @@ nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable,
       }
       UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
-  } else if (filter) {
+
+    return NS_OK;
+  }
+
+  nsISVGFilterFrame *filter;
+  CallQueryInterface(observable, &filter);
+
+  if (filter) {
     UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT |
                   nsISVGGeometrySource::UPDATEMASK_FILL_PAINT);
-  } else if (pval) {
+    return NS_OK;
+  }
+
+  nsISVGPattern *pval;
+  CallQueryInterface(observable, &pval);
+
+  if (pval) {
     // Handle Patterns
-    nsCOMPtr<nsISVGPattern>fill = do_QueryInterface(mFillPattern);
-    if (fill == pval) {
+    if (mFillPattern == pval) {
       if (aModType == nsISVGValue::mod_die) {
         mFillPattern = nsnull;
       }
@@ -677,7 +687,7 @@ nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGGradient(getter_AddRefs(mStrokeGradient), aServer, mContent, 
+    rv = NS_GetSVGGradient(&mStrokeGradient, aServer, mContent, 
                            nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
     NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
   }
@@ -697,7 +707,7 @@ nsSVGPathGeometryFrame::GetStrokePattern(nsISVGPattern **aPat)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
+    rv = NS_GetSVGPattern(&mStrokePattern, aServer, mContent, 
                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
     if (mStrokePattern)
       NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
@@ -742,7 +752,7 @@ nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGGradient(getter_AddRefs(mFillGradient), aServer, mContent, 
+    rv = NS_GetSVGGradient(&mFillGradient, aServer, mContent, 
                            nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
     NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
   }
@@ -762,7 +772,7 @@ nsSVGPathGeometryFrame::GetFillPattern(nsISVGPattern **aPat)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the pattern 
-    rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
+    rv = NS_GetSVGPattern(&mFillPattern, aServer, mContent, 
                           nsSVGPathGeometryFrameBase::GetPresContext()->PresShell());
     if (mFillPattern)
       NS_ADD_SVGVALUE_OBSERVER(mFillPattern);

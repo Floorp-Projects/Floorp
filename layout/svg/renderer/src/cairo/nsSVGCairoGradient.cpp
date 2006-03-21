@@ -97,7 +97,8 @@ CairoLinearGradient(cairo_t *ctx, nsISVGGradient *aGrad)
 {
   float fX1, fY1, fX2, fY2;
     
-  nsCOMPtr<nsISVGLinearGradient>aLgrad = do_QueryInterface(aGrad);
+  nsISVGLinearGradient *aLgrad;
+  CallQueryInterface(aGrad, &aLgrad);
   NS_ASSERTION(aLgrad, "error gradient did not provide a Linear Gradient interface");
   
   aLgrad->GetX1(&fX1);
@@ -115,7 +116,8 @@ CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
   float fCx, fCy, fR, fFx, fFy;
 
   // Get the Radial Gradient interface
-  nsCOMPtr<nsISVGRadialGradient>aRgrad = do_QueryInterface(aGrad);
+  nsISVGRadialGradient *aRgrad;
+  CallQueryInterface(aGrad, &aRgrad);
   NS_ASSERTION(aRgrad, "error gradient did not provide a Linear Gradient interface");
 
   aRgrad->GetCx(&fCx);

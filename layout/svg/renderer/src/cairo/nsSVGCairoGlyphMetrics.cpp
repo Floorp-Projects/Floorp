@@ -89,7 +89,7 @@ public:
 private:
   cairo_t *mCT;
   cairo_text_extents_t mExtents;
-  nsCOMPtr<nsISVGGlyphMetricsSource> mSource;
+  nsISVGGlyphMetricsSource *mSource;
 };
 
 /** @} */

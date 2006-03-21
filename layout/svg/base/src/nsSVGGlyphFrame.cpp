@@ -193,10 +193,10 @@ protected:
   PRUint32 mMetricsUpdateFlags;
   PRUint32 mCharOffset;
   nsString mCharacterData;
-  nsCOMPtr<nsISVGGradient> mFillGradient;
-  nsCOMPtr<nsISVGGradient> mStrokeGradient;
-  nsCOMPtr<nsISVGPattern> mFillPattern;
-  nsCOMPtr<nsISVGPattern> mStrokePattern;
+  nsISVGGradient* mFillGradient;
+  nsISVGGradient* mStrokeGradient;
+  nsISVGPattern* mFillPattern;
+  nsISVGPattern* mStrokePattern;
   PRPackedBool mFragmentTreeDirty;
 };
 
@@ -221,7 +221,10 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
 
 nsSVGGlyphFrame::nsSVGGlyphFrame()
     : mGeometryUpdateFlags(0), mMetricsUpdateFlags(0),
-      mCharOffset(0), mFragmentTreeDirty(PR_FALSE)
+      mCharOffset(0),
+      mFillGradient(nsnull), mStrokeGradient(nsnull),
+      mFillPattern(nsnull), mStrokePattern(nsnull),
+      mFragmentTreeDirty(PR_FALSE)
 {
 }
 
@@ -431,11 +434,12 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
                                          nsISVGValue::modificationType aModType)
 {
   // Is this a gradient?
-  nsCOMPtr<nsISVGGradient>val = do_QueryInterface(observable);
+  nsISVGGradient *val;
+  CallQueryInterface(observable, &val);
+
   if (val) {
     // Yes, we need to handle this differently
-    nsCOMPtr<nsISVGGradient>fill = do_QueryInterface(mFillGradient);
-    if (fill == val) {
+    if (mFillGradient == val) {
       if (aModType == nsISVGValue::mod_die) {
         mFillGradient = nsnull;
       }
@@ -448,11 +452,11 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
       return Update(nsISVGGeometrySource::UPDATEMASK_STROKE_PAINT);
     }
   } else {
-    nsCOMPtr<nsISVGPattern>pval = do_QueryInterface(observable);
+    nsISVGPattern *pval;
+    CallQueryInterface(observable, &pval);
     if (pval) {
       // Handle Patterns
-      nsCOMPtr<nsISVGPattern>fill = do_QueryInterface(mFillPattern);
-      if (fill == pval) {
+      if (mFillPattern == pval) {
         if (aModType == nsISVGValue::mod_die) {
           mFillPattern = nsnull;
         }
@@ -789,7 +793,7 @@ nsSVGGlyphFrame::GetStrokeGradient(nsISVGGradient **aGrad)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGGradient(getter_AddRefs(mStrokeGradient), aServer, mContent, 
+    rv = NS_GetSVGGradient(&mStrokeGradient, aServer, mContent, 
                            nsSVGGlyphFrameBase::GetPresContext()->PresShell());
     NS_ADD_SVGVALUE_OBSERVER(mStrokeGradient);
   }
@@ -809,7 +813,7 @@ nsSVGGlyphFrame::GetStrokePattern(nsISVGPattern **aPat)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGPattern(getter_AddRefs(mStrokePattern), aServer, mContent, 
+    rv = NS_GetSVGPattern(&mStrokePattern, aServer, mContent, 
                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
     if (mStrokePattern)
       NS_ADD_SVGVALUE_OBSERVER(mStrokePattern);
@@ -854,7 +858,7 @@ nsSVGGlyphFrame::GetFillGradient(nsISVGGradient **aGrad)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGGradient(getter_AddRefs(mFillGradient), aServer, mContent, 
+    rv = NS_GetSVGGradient(&mFillGradient, aServer, mContent, 
                            nsSVGGlyphFrameBase::GetPresContext()->PresShell());
     NS_ADD_SVGVALUE_OBSERVER(mFillGradient);
   }
@@ -874,7 +878,7 @@ nsSVGGlyphFrame::GetFillPattern(nsISVGPattern **aPat)
     if (aServer == nsnull)
       return NS_ERROR_FAILURE;
     // Now have the URI.  Get the gradient 
-    rv = NS_GetSVGPattern(getter_AddRefs(mFillPattern), aServer, mContent, 
+    rv = NS_GetSVGPattern(&mFillPattern, aServer, mContent, 
                           nsSVGGlyphFrameBase::GetPresContext()->PresShell());
     if (mFillPattern)
       NS_ADD_SVGVALUE_OBSERVER(mFillPattern);

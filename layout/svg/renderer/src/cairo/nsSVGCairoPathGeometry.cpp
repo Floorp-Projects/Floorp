@@ -83,9 +83,8 @@ protected:
   friend nsresult NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result,
                                              nsISVGPathGeometrySource *src);
 
-  nsSVGCairoPathGeometry();
+  nsSVGCairoPathGeometry(nsISVGPathGeometrySource* src);
   ~nsSVGCairoPathGeometry();
-  nsresult Init(nsISVGPathGeometrySource* src);
 
 public:
   // nsISupports interface:
@@ -95,7 +94,7 @@ public:
   NS_DECL_NSISVGRENDERERPATHGEOMETRY
   
 private:
-  nsCOMPtr<nsISVGPathGeometrySource> mSource;
+  nsISVGPathGeometrySource *mSource;
   nsCOMPtr<nsISVGRendererRegion> mCoveredRegion;
 
   void GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
@@ -107,7 +106,8 @@ private:
 //----------------------------------------------------------------------
 // implementation:
 
-nsSVGCairoPathGeometry::nsSVGCairoPathGeometry()
+nsSVGCairoPathGeometry::nsSVGCairoPathGeometry(nsISVGPathGeometrySource* src)
+  : mSource(src)
 {
 }
 
@@ -115,31 +115,15 @@ nsSVGCairoPathGeometry::~nsSVGCairoPathGeometry()
 {
 }
 
-nsresult nsSVGCairoPathGeometry::Init(nsISVGPathGeometrySource* src)
-{
-  mSource = src;
-  return NS_OK;
-}
-
-
 nsresult
 NS_NewSVGCairoPathGeometry(nsISVGRendererPathGeometry **result,
                            nsISVGPathGeometrySource *src)
 {
-  nsSVGCairoPathGeometry* pg = new nsSVGCairoPathGeometry();
-  if (!pg) return NS_ERROR_OUT_OF_MEMORY;
+  *result = new nsSVGCairoPathGeometry(src);
+  if (!*result) return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(pg);
-
-  nsresult rv = pg->Init(src);
-
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(pg);
-    return rv;
-  }
-  
-  *result = pg;
-  return rv;
+  NS_ADDREF(*result);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -359,8 +343,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       cairo_fill_preserve(ctx);
     } else if (fillType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
       if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
-        nsCOMPtr<nsISVGGradient> aGrad;
-        mSource->GetFillGradient(getter_AddRefs(aGrad));
+        nsISVGGradient *aGrad;
+        mSource->GetFillGradient(&aGrad);
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
         if (gradient) {
@@ -369,8 +353,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
           cairo_pattern_destroy(gradient);
         }
       } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
-        nsCOMPtr<nsISVGPattern> aPat;
-        mSource->GetFillPattern(getter_AddRefs(aPat));
+        nsISVGPattern *aPat;
+        mSource->GetFillPattern(&aPat);
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
         nsCOMPtr<nsISVGRendererSurface> patSurface;
@@ -404,8 +388,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       cairo_stroke(ctx);
     } else if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
       if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_GRADIENT) {
-        nsCOMPtr<nsISVGGradient> aGrad;
-        mSource->GetStrokeGradient(getter_AddRefs(aGrad));
+        nsISVGGradient *aGrad;
+        mSource->GetStrokeGradient(&aGrad);
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
         if (gradient) {
@@ -414,8 +398,8 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
           cairo_pattern_destroy(gradient);
         }
       } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
-        nsCOMPtr<nsISVGPattern> aPat;
-        mSource->GetStrokePattern(getter_AddRefs(aPat));
+        nsISVGPattern *aPat;
+        mSource->GetStrokePattern(&aPat);
         // Paint the pattern -- note that because we will call back into the
         // layout layer to paint, we need to pass the canvas, not just the context
         nsCOMPtr<nsISVGRendererSurface> patSurface;
