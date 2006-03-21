@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.41 2006/03/21 02:28:48 rrelyea%redhat.com Exp $ */
+/* $Id: keydb.c,v 1.42 2006/03/21 19:30:10 rrelyea%redhat.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -52,8 +52,12 @@
 #include "nsslocks.h"
 
 #include "keydbi.h"
-#include "softoken.h"
 
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_FillParams(PRArenaPool *arena, 
+			       const SECItem *encodedParams, 
+			       ECParams *params);
+#endif
 
 /*
  * Record keys for keydb
@@ -2041,9 +2045,6 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 		/* Fill out the rest of EC params */
 		rv = EC_FillParams(permarena, &pk->u.ec.ecParams.DEREncoding,
 				   &pk->u.ec.ecParams);
-
-		if (rv != SECSuccess)
-		    goto loser;
 
 		/* 
 		 * NOTE: Encoding of the publicValue is optional

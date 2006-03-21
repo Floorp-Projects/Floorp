@@ -38,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.21 2006/03/21 19:23:30 rrelyea%redhat.com Exp $
+ * $Id: lowcert.c,v 1.22 2006/03/21 19:30:10 rrelyea%redhat.com Exp $
  */
 
 #include "seccomon.h"
@@ -51,8 +51,12 @@
 #include "secasn1.h"
 #include "secoid.h"
 #include "secerr.h"
-#include "softoken.h"
 
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_FillParams(PRArenaPool *arena, 
+			       const SECItem *encodedParams,
+			       ECParams *params);
+#endif
 
 static const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(NSSLOWCERTSubjectPublicKeyInfo) },
