@@ -40,7 +40,6 @@ function show(aItem){
 {else}
 <div id="reporterReport">
 	<div class="header">Report RMO11301752363661</div>
-<!-- {$screenshot} -->
 	<div id="report_data">
 		<div>
 			<div class="title">URL:</div>
@@ -104,6 +103,7 @@ function show(aItem){
 	{if $screenshot == true}
 	<div id="report_screenshot" style="display:none;"></div>
 	{/if}
+	{if $is_admin == true}
 	<div id="report_tabs">
 		<ul>
 			<li><a href="javascript:show('data');">Report Data</a></li>
@@ -112,6 +112,7 @@ function show(aItem){
 			{/if}
 		</ul>
 	</div>
+        {/if}
 </div>
 <div id="reportNavigation">
     <p>
