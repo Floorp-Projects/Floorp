@@ -66,6 +66,7 @@ public:
 
 private:
   nsresult GetPlugins();
+  PRBool AllowPlugins();
 
 public:
   void SetDocShell(nsIDocShell* aDocShell);
