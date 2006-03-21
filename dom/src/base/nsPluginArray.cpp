@@ -88,25 +88,38 @@ NS_IMPL_RELEASE(nsPluginArray)
 NS_IMETHODIMP
 nsPluginArray::GetLength(PRUint32* aLength)
 {
-  if (mPluginHost)
+  if (AllowPlugins() && mPluginHost)
     return mPluginHost->GetPluginCount(aLength);
   
   *aLength = 0;
   return NS_OK;
 }
 
+PRBool
+nsPluginArray::AllowPlugins()
+{
+  PRBool allowPlugins = PR_FALSE;
+  if (mDocShell)
+    if (NS_FAILED(mDocShell->GetAllowPlugins(&allowPlugins)))
+      allowPlugins = PR_FALSE;
+
+  return allowPlugins;
+}
+
 NS_IMETHODIMP
 nsPluginArray::Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)
 {
   NS_PRECONDITION(nsnull != aReturn, "null arg");
+  *aReturn = nsnull;
+
+  if (!AllowPlugins())
+    return NS_OK;
 
   if (mPluginArray == nsnull) {
     nsresult rv = GetPlugins();
     if (rv != NS_OK)
       return rv;
   }
-
-  *aReturn = nsnull;
 
   if (aIndex < mPluginCount) {
     *aReturn = mPluginArray[aIndex];
@@ -120,14 +133,16 @@ NS_IMETHODIMP
 nsPluginArray::NamedItem(const nsAString& aName, nsIDOMPlugin** aReturn)
 {
   NS_PRECONDITION(nsnull != aReturn, "null arg");
+  *aReturn = nsnull;
+
+  if (!AllowPlugins())
+    return NS_OK;
 
   if (mPluginArray == nsnull) {
     nsresult rv = GetPlugins();
     if (rv != NS_OK)
       return rv;
   }
-
-  *aReturn = nsnull;
 
   for (PRUint32 i = 0; i < mPluginCount; i++) {
     nsAutoString pluginName;
@@ -175,6 +190,8 @@ NS_IMETHODIMP
 nsPluginArray::Refresh(PRBool aReloadDocuments)
 {
   nsresult res = NS_OK;
+  if (!AllowPlugins())
+    return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
 
   // refresh the component registry first, see bug 87913
   nsCOMPtr<nsIServiceManager> servManager;
