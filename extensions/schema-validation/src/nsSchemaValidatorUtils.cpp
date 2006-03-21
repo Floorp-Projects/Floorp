@@ -54,7 +54,6 @@
 #include <limits.h>
 #include "prlog.h"
 #include "prprf.h"
-#include "prtime.h"
 #include "prdtoa.h"
 
 #ifdef PR_LOGGING
@@ -68,16 +67,21 @@ PRLogModuleInfo *gSchemaValidationUtilsLog = PR_NewLogModule("schemaValidation")
 
 PRBool
 nsSchemaValidatorUtils::IsValidSchemaInteger(const nsAString & aNodeValue,
-                                             long *aResult)
+                                             long *aResult, PRBool aOverFlowCheck)
 {
   return !aNodeValue.IsEmpty() &&
-         IsValidSchemaInteger(NS_ConvertUTF16toUTF8(aNodeValue).get(), aResult);
+         IsValidSchemaInteger(NS_ConvertUTF16toUTF8(aNodeValue).get(),
+                              aResult, aOverFlowCheck);
 }
 
 // overloaded, for char* rather than nsAString
 PRBool
-nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
+nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString,
+                                             long *aResult,
+                                             PRBool aOverFlowCheck)
 {
+  PRBool isValid = PR_FALSE;
+
   if (*aString == 0)
     return PR_FALSE;
 
@@ -87,7 +91,14 @@ nsSchemaValidatorUtils::IsValidSchemaInteger(const char* aString, long *aResult)
   if (aResult)
     *aResult = intValue;
 
-  return (*pEnd == '\0');
+  if (aOverFlowCheck) {
+    isValid = (!((intValue == LONG_MAX || intValue == LONG_MIN) && errno == ERANGE))
+              && *pEnd == '\0';
+  } else {
+    isValid = (*pEnd == '\0');
+  }
+
+  return isValid;
 }
 
 PRBool
@@ -116,31 +127,14 @@ nsSchemaValidatorUtils::IsValidSchemaDouble(const char* aString,
 }
 
 PRBool
-nsSchemaValidatorUtils::GetPRTimeFromDateTime(const nsAString & aNodeValue,
-                                              PRTime *aResult)
+nsSchemaValidatorUtils::ParseDateTime(const nsAString & aNodeValue,
+                                      nsSchemaDateTime *aResult)
 {
   PRBool isValid = PR_FALSE;
-  PRBool isNegativeYear = PR_FALSE;
 
-  int run = 0;
-  PRBool doneParsing = PR_FALSE;
-
-  char year[80] = "";
-  char month[3] = "";
-  char day[3] = "";
-  char hour[3] = "";
-  char minute[3] = "";
-  char second[3] = "";
-  char fraction_seconds[80] = "";
-  PRTime dateTime;
-
-  char fulldate[100] = "";
   nsAutoString datetimeString(aNodeValue);
 
-  if (datetimeString.First() == '-') {
-    isNegativeYear = PR_TRUE;
-    run = 1;
-  }
+  aResult->date.isNegative = (datetimeString.First() == '-');
 
   /*
     http://www.w3.org/TR/xmlschema-2/#dateTime
@@ -152,45 +146,19 @@ nsSchemaValidatorUtils::GetPRTimeFromDateTime(const nsAString & aNodeValue,
   // first handle the date part
   // search for 'T'
 
-  LOG(("\n  Validating DateTime:"));
+  LOG(("  Validating DateTime:"));
 
   int findString = datetimeString.FindChar('T');
 
+  // if no T, invalid
   if (findString >= 0) {
-    isValid = ParseSchemaDate(Substring(aNodeValue, 0, findString+1), year,
-                              month, day);
+    isValid = ParseSchemaDate(Substring(aNodeValue, 0, findString+1), &aResult->date);
 
     if (isValid) {
       isValid = ParseSchemaTime(
                   Substring(aNodeValue, findString + 1, aNodeValue.Length()),
-                  hour, minute, second, fraction_seconds);
+                  &aResult->time);
     }
-  } else {
-    // no T, invalid
-    doneParsing = PR_TRUE;
-  }
-
-  if (isValid && aResult) {
-    nsCAutoString monthShorthand;
-    GetMonthShorthand(month, monthShorthand);
-
-    // 22-AUG-1993 10:59:12.82
-    sprintf(fulldate, "%s-%s-%s %s:%s:%s.%s",
-      day,
-      monthShorthand.get(),
-      year,
-      hour,
-      minute,
-      second,
-      fraction_seconds);
-
-    LOG(("\n    new date is %s", fulldate));
-    PRStatus status = PR_ParseTimeString(fulldate, PR_TRUE, &dateTime);
-
-    if (status == -1)
-      isValid = PR_FALSE;
-    else
-      *aResult = dateTime;
   }
 
   return isValid;
@@ -198,8 +166,7 @@ nsSchemaValidatorUtils::GetPRTimeFromDateTime(const nsAString & aNodeValue,
 
 PRBool
 nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
-                                        char *rv_year, char *rv_month,
-                                        char *rv_day)
+                                        nsSchemaDate *aDate)
 {
   PRBool isValid = PR_FALSE;
 
@@ -207,8 +174,6 @@ nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
     http://www.w3.org/TR/xmlschema-2/#date
     (-)CCYY-MM-DDT
   */
-
-  PRTime dateTime;
 
   nsAString::const_iterator start, end, buffStart;
   aStrValue.BeginReading(start);
@@ -295,45 +260,30 @@ nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
   }
 
   if (isValid) {
-    nsCAutoString monthShorthand;
-    nsSchemaValidatorUtils::GetMonthShorthand(month, monthShorthand);
+    char * pEnd;
 
-    // 22-AUG-1993
-    nsAutoString fullDate;
-    fullDate.AppendLiteral(day);
-    fullDate.AppendLiteral("-");
-    AppendASCIItoUTF16(monthShorthand, fullDate);
-    fullDate.AppendLiteral("-");
-    fullDate.Append(year);
-
-    LOG(("      Parsed date is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
-
-    PRStatus status = PR_ParseTimeString(NS_ConvertUTF16toUTF8(fullDate).get(),
-                                         PR_TRUE, &dateTime);
-    if (status == -1) {
+    PRUint32 yearval = strtoul(NS_ConvertUTF16toUTF8(year).get(), &pEnd, 10);
+    if (yearval == 0 || yearval == ULONG_MAX) {
       isValid = PR_FALSE;
     } else {
-      // PRStatus will be 0 for feb 30th, but the returned day will be
-      // different
-      char * pEnd;
-      long val = strtol(day, &pEnd, 10);
+      PRUint8 monthval = strtol(month, &pEnd, 10);
+      PRUint8 dayval = strtol(day, &pEnd, 10);
 
-      PRExplodedTime explodedDateTime;
-      PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedDateTime);
+      // check for leap years
+      PRUint8 maxDay = GetMaximumDayInMonthFor(yearval, monthval);
+      if (maxDay >= dayval) {
+        aDate->year = yearval;
 
-      if (val != explodedDateTime.tm_mday) {
+        // month/day are validated in the parsing code above
+        aDate->month = monthval;
+        aDate->day = dayval;
+      } else {
         isValid = PR_FALSE;
       }
     }
-
-    if (isValid) {
-      strcpy(rv_day, day);
-      strcpy(rv_month, month);
-      strcpy(rv_year, NS_ConvertUTF16toUTF8(year).get());
-    }
   }
 
-  LOG(("      Date is %s", ((isValid) ? "Valid" : "Not Valid")));
+  LOG(("     Date is %s", ((isValid) ? "Valid" : "Not Valid")));
 
   return isValid;
 }
@@ -344,12 +294,15 @@ nsSchemaValidatorUtils::ParseSchemaDate(const nsAString & aStrValue,
 // schema time type.
 PRBool
 nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
-                                        char *rv_hour, char *rv_minute,
-                                        char *rv_second, char *rv_fraction_second)
+                                        nsSchemaTime* aTime)
 {
   PRBool isValid = PR_FALSE;
 
   // time looks like this: HH:MM:SS(.[S]+)(+/-HH:MM)
+
+  char hour[3] = "";
+  char minute[3] = "";
+  char second[3] = "";
 
   char timezoneHour[3] = "";
   char timezoneMinute[3] = "";
@@ -376,17 +329,19 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
           done = PR_TRUE;
         } else if (currentChar == ':') {
           // validate hour
-          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "24") == 1) {
+          if (strcmp(hour, "24") == 1) {
             done = PR_TRUE;
           } else {
             state = 1;
             buffLength = 0;
-            buffStart = ++start;
+            buffStart = start;
           }
         } else {
           // has to be a numerical character or else abort
           if ((currentChar > '9') || (currentChar < '0'))
             done = PR_TRUE;
+          else
+            hour[buffLength] = currentChar;
           buffLength++;
         }
         break;
@@ -398,17 +353,19 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
           done = PR_TRUE;
         } else if (currentChar == ':') {
           // validate minute
-          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+          if (strcmp(minute, "59") == 1) {
             done = PR_TRUE;
           } else {
             state = 2;
             buffLength = 0;
-            buffStart = ++start;
+            buffStart = start;
           }
         } else {
           // has to be a numerical character or else abort
           if ((currentChar > '9') || (currentChar < '0'))
             done = PR_TRUE;
+          else
+            minute[buffLength] = currentChar;
           buffLength++;
         }
         break;
@@ -420,8 +377,7 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
           done = PR_TRUE;
         } else if (currentChar == 'Z') {
           // if its Z, has to be the last character
-          if ((start == end) &&
-            (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") != 1)) {
+          if ((start == end) && (strcmp(second, "59") != 1)) {
 
             isValid = PR_TRUE;
             //sprintf(rv_second, "%s", NS_ConvertUTF16toUTF8(Substring(buffStart, start)).get());
@@ -430,27 +386,29 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
           tzSign = currentChar;
         } else if ((currentChar == '+') || (currentChar == '-')) {
           // timezone exists
-          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+          if (strcmp(second, "59") == 1) {
             done = PR_TRUE;
           } else {
             state = 4;
             buffLength = 0;
-            buffStart = ++start;
+            buffStart = start;
             tzSign = currentChar;
           }
         } else if (currentChar == '.') {
           // fractional seconds exist
-          if (strcmp(NS_ConvertUTF16toUTF8(Substring(buffStart, --start)).get(), "59") == 1) {
+          if (strcmp(second, "59") == 1) {
             done = PR_TRUE;
           } else {
             state = 3;
             buffLength = 0;
-            buffStart = ++start;
+            buffStart = start;
           }
         } else {
           // has to be a numerical character or else abort
           if ((currentChar > '9') || (currentChar < '0'))
             done = PR_TRUE;
+          else
+            second[buffLength] = currentChar;
           buffLength++;
         }
 
@@ -495,33 +453,30 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
       }
     }
   }
-
   if (isValid) {
-    // 10:59:12.82
-    // use a dummy year to make nspr do the work for us
-    PRTime dateTime;
-    nsAutoString fullDate;
-    fullDate.AppendLiteral("1-1-90 ");
-    fullDate.Append(aStrValue);
+    char * pEnd;
 
-    LOG(("\n     new time is %s", NS_ConvertUTF16toUTF8(fullDate).get()));
-
-    PRStatus status = PR_ParseTimeString(NS_ConvertUTF16toUTF8(fullDate).get(),
-                                         PR_TRUE, &dateTime);
-    if (status == -1) {
+    PRUint32 usecval = strtoul(NS_ConvertUTF16toUTF8(usec).get(), &pEnd, 10);
+    // be carefull, empty usec returns 0
+    if (!usec.IsEmpty() > 0 && (usecval == 0 || usecval == ULONG_MAX)) {
       isValid = PR_FALSE;
     } else {
-      PRExplodedTime explodedDateTime;
-      PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedDateTime);
+      aTime->hour = strtol(hour, &pEnd, 10);
+      aTime->minute = strtol(minute, &pEnd, 10);
+      aTime->second = strtol(second, &pEnd, 10);
+      aTime->milisecond = usecval;
 
-      sprintf(rv_hour, "%d", explodedDateTime.tm_hour);
-      sprintf(rv_minute, "%d", explodedDateTime.tm_min);
-      sprintf(rv_second, "%d", explodedDateTime.tm_sec);
-      sprintf(rv_fraction_second, "%s", NS_ConvertUTF16toUTF8(usec).get());
+      if (tzSign == '+')
+        aTime->tzIsNegative = PR_FALSE;
+      else
+        aTime->tzIsNegative = PR_TRUE;
+
+      aTime->tzhour = strtol(timezoneHour, &pEnd, 10);
+      aTime->tzminute = strtol(timezoneMinute, &pEnd, 10);
     }
   }
 
-  LOG(("\n     Time is %s \n", ((isValid) ? "Valid" : "Not Valid")));
+  LOG(("     Time is %s", ((isValid) ? "Valid" : "Not Valid")));
 
   return isValid;
 }
@@ -576,15 +531,21 @@ nsSchemaValidatorUtils::ParseSchemaTimeZone(const nsAString & aStrValue,
 
       case 1: {
         // minute
-        if (buffLength > 1) {
+        if (buffLength > 2) {
           done = PR_TRUE;
         } else if (start == end) {
           if (buffLength == 1) {
-            timezoneMinute[2] = '\0';
-            if (strcmp(timezoneMinute, "59") == 1) {
+            if ((currentChar > '9') || (currentChar < '0')) {
               done = PR_TRUE;
             } else {
-              isValid = PR_TRUE;
+              timezoneMinute[buffLength] = currentChar;
+
+              timezoneMinute[2] = '\0';
+              if (strcmp(timezoneMinute, "59") == 1) {
+                done = PR_TRUE;
+              } else {
+                isValid = PR_TRUE;
+              }
             }
           } else {
             done = PR_FALSE;
@@ -618,25 +579,27 @@ nsSchemaValidatorUtils::ParseSchemaTimeZone(const nsAString & aStrValue,
   1 - aDateTime1 > aDateTime2
 */
 int
-nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1,
-                                                PRBool aDateTime1IsNegative,
-                                                PRExplodedTime aDateTime2,
-                                                PRBool aDateTime2IsNegative)
+nsSchemaValidatorUtils::CompareDateTime(nsSchemaDateTime aDateTime1,
+                                        nsSchemaDateTime aDateTime2)
 {
   int result;
 
-  if (!aDateTime1IsNegative && aDateTime2IsNegative) {
+  nsSchemaDateTime dateTime1, dateTime2;
+  AddTimeZoneToDateTime(aDateTime1, &dateTime1);
+  AddTimeZoneToDateTime(aDateTime2, &dateTime2);
+
+  if (!dateTime1.date.isNegative && dateTime2.date.isNegative) {
     // positive year is always bigger than negative year
     result = 1;
-  } else if (aDateTime1IsNegative && !aDateTime2IsNegative) {
+  } else if (dateTime1.date.isNegative && !dateTime2.date.isNegative) {
     result = -1;
   } else {
-    result = CompareExplodedDate(aDateTime1, aDateTime2);
+    result = CompareDate(dateTime1.date, dateTime2.date);
 
     if (result == 0)
-      result = CompareExplodedTime(aDateTime1, aDateTime2);
+      result = CompareTime(dateTime1.time, dateTime2.time);
 
-    if (aDateTime1IsNegative && aDateTime2IsNegative) {
+    if (dateTime1.date.isNegative && dateTime2.date.isNegative) {
       // -20 is smaller than -21
       if (result == -1)
         result = 1;
@@ -644,6 +607,7 @@ nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1,
         result = -1;
     }
   }
+
   return result;
 }
 
@@ -653,23 +617,23 @@ nsSchemaValidatorUtils::CompareExplodedDateTime(PRExplodedTime aDateTime1,
   1 - aDateTime1 > aDateTime2
 */
 int
-nsSchemaValidatorUtils::CompareExplodedDate(PRExplodedTime aDateTime1,
-                                            PRExplodedTime aDateTime2)
+nsSchemaValidatorUtils::CompareDate(nsSchemaDate aDate1, nsSchemaDate aDate2)
 {
   int result;
-  if (aDateTime1.tm_year < aDateTime2.tm_year) {
+
+  if (aDate1.year < aDate2.year) {
     result = -1;
-  } else if (aDateTime1.tm_year > aDateTime2.tm_year) {
+  } else if (aDate1.year > aDate2.year) {
     result = 1;
   } else {
-    if (aDateTime1.tm_month < aDateTime2.tm_month) {
+    if (aDate1.month < aDate2.month) {
       result = -1;
-    } else if (aDateTime1.tm_month > aDateTime2.tm_month) {
+    } else if (aDate1.month > aDate2.month) {
       result = 1;
     } else {
-      if (aDateTime1.tm_mday < aDateTime2.tm_mday) {
+      if (aDate1.day < aDate2.day) {
         result = -1;
-      } else if (aDateTime1.tm_mday > aDateTime2.tm_mday) {
+      } else if (aDate1.day > aDate2.day) {
         result = 1;
       } else {
         result = 0;
@@ -686,29 +650,28 @@ nsSchemaValidatorUtils::CompareExplodedDate(PRExplodedTime aDateTime1,
   1 - aDateTime1 > aDateTime2
 */
 int
-nsSchemaValidatorUtils::CompareExplodedTime(PRExplodedTime aDateTime1,
-                                            PRExplodedTime aDateTime2)
+nsSchemaValidatorUtils::CompareTime(nsSchemaTime aTime1, nsSchemaTime aTime2)
 {
   int result;
 
-  if (aDateTime1.tm_hour < aDateTime2.tm_hour) {
+  if (aTime1.hour < aTime2.hour) {
     result = -1;
-  } else if (aDateTime1.tm_hour > aDateTime2.tm_hour) {
+  } else if (aTime1.hour > aTime2.hour) {
     result = 1;
   } else {
-    if (aDateTime1.tm_min < aDateTime2.tm_min) {
+    if (aTime1.minute < aTime2.minute) {
       result = -1;
-    } else if (aDateTime1.tm_min > aDateTime2.tm_min) {
+    } else if (aTime1.minute > aTime2.minute) {
       result = 1;
     } else {
-      if (aDateTime1.tm_sec < aDateTime2.tm_sec) {
+      if (aTime1.second < aTime2.second) {
         result = -1;
-      } else if (aDateTime1.tm_sec > aDateTime2.tm_sec) {
+      } else if (aTime1.second > aTime2.second) {
         result = 1;
       } else {
-        if (aDateTime1.tm_usec < aDateTime2.tm_usec) {
+        if (aTime1.milisecond < aTime2.milisecond) {
           result = -1;
-        } else if (aDateTime1.tm_usec > aDateTime2.tm_usec) {
+        } else if (aTime1.milisecond > aTime2.milisecond) {
           result = 1;
         } else {
           result = 0;
@@ -721,14 +684,96 @@ nsSchemaValidatorUtils::CompareExplodedTime(PRExplodedTime aDateTime1,
 }
 
 void
-nsSchemaValidatorUtils::GetMonthShorthand(char* aMonth, nsACString & aReturn)
+nsSchemaValidatorUtils::AddTimeZoneToDateTime(nsSchemaDateTime aDateTime,
+                                              nsSchemaDateTime* aDestDateTime)
 {
-  PRInt32 i, length = NS_ARRAY_LENGTH(monthShortHand);
-  for (i = 0; i < length; ++i) {
-    if (strcmp(aMonth, monthShortHand[i].number) == 0) {
-      aReturn.AssignASCII(monthShortHand[i].shortHand);
+  // With timezones, you subtract the timezone difference. So for example,
+  // 2002-10-10T12:00:00+05:00 is 2002-10-10T07:00:00Z
+  PRUint32 year = aDateTime.date.year;
+  PRUint8 month = aDateTime.date.month;
+  PRUint8 day = aDateTime.date.day;
+  int hour = aDateTime.time.hour;
+  int minute = aDateTime.time.minute;
+  PRUint8 second = aDateTime.time.second;
+  PRUint32 milisecond = aDateTime.time.milisecond;
+
+  if (aDateTime.time.tzIsNegative) {
+    hour = hour + aDateTime.time.tzhour;
+    minute = minute + aDateTime.time.tzminute;
+  } else {
+    hour = hour - aDateTime.time.tzhour;
+    minute = minute - aDateTime.time.tzminute;
+  }
+
+  div_t divresult;
+
+  if (minute > 59) {
+    divresult = div(minute, 60);
+    hour += divresult.quot;
+    minute = divresult.rem;
+  } else if (minute < 0) {
+    minute = 60 + minute;
+    hour--;
+  }
+
+  // hour
+  if (hour == 24 && (minute > 0 || second > 0)) {
+    // can only be 24:0:0 - need to increment day
+    day++;
+    hour = 0;
+  } else if (hour > 23) {
+    divresult = div(hour, 24);
+    day += divresult.quot;
+    hour = divresult.rem;
+  } else if (hour < 0) {
+    hour = 24 + hour;
+    day--;
+  }
+
+  // day
+
+  if (day == 0) {
+    // if day is 0, go back a month and make sure we handle month 0 (ie back a year).
+    month--;
+
+    if (month == 0) {
+      month = 12;
+      year--;
+    }
+
+    day = GetMaximumDayInMonthFor(month, year);
+  } else {
+    int maxDay = GetMaximumDayInMonthFor(month, year);
+    while (day > maxDay) {
+      day -= maxDay;
+      month++;
+
+      // since we are a valid datetime, month has to be 12 before the ++, so will
+      // be 13
+      if (month == 13) {
+        month = 1;
+        year++;
+      }
+
+      maxDay = GetMaximumDayInMonthFor(month, year);
     }
   }
+
+  aDestDateTime->date.year = year;
+  aDestDateTime->date.month = month;
+  aDestDateTime->date.day = day;
+  aDestDateTime->date.isNegative = aDateTime.date.isNegative;
+  aDestDateTime->time.hour = hour;
+  aDestDateTime->time.minute = minute;
+  aDestDateTime->time.second = second;
+  aDestDateTime->time.milisecond = milisecond;
+  aDestDateTime->time.tzIsNegative = aDateTime.time.tzIsNegative;
+}
+
+void
+nsSchemaValidatorUtils::GetMonthShorthand(PRUint8 aMonth, nsACString & aReturn)
+{
+  aReturn.AssignASCII(monthShortHand[aMonth - 1].shortHand);
 }
 
 /*
@@ -945,7 +990,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
         switch (state) {
           case 0: {
             // years
-            if (!IsValidSchemaInteger(parseBuffer, &temp))
+            if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
               done = PR_TRUE;
             else
               year = temp;
@@ -954,7 +999,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
 
           case 1: {
             // months
-            if (!IsValidSchemaInteger(parseBuffer, &temp))
+            if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
               done = PR_TRUE;
             else
               month = temp;
@@ -963,7 +1008,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
 
           case 2: {
             // days
-            if (!IsValidSchemaInteger(parseBuffer, &temp))
+            if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
               done = PR_TRUE;
             else
               day = temp;
@@ -972,7 +1017,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
 
           case 3: {
             // hours
-            if (!IsValidSchemaInteger(parseBuffer, &temp))
+            if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
               done = PR_TRUE;
             else
               hour = temp;
@@ -981,7 +1026,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
 
           case 4: {
             // minutes
-            if (!IsValidSchemaInteger(parseBuffer, &temp))
+            if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
               done = PR_TRUE;
             else
               minute = temp;
@@ -1000,7 +1045,7 @@ nsSchemaValidatorUtils::ParseSchemaDuration(const nsAString & aStrValue,
                 second = NS_STATIC_CAST(PRUint32, intpart);
               }
             } else {
-              if (!IsValidSchemaInteger(parseBuffer, &temp))
+              if (!IsValidSchemaInteger(parseBuffer, &temp, PR_TRUE))
                 done = PR_TRUE;
               else
                 second = temp;
@@ -1104,7 +1149,6 @@ nsSchemaValidatorUtils::CompareStrings(const nsAString & aString1,
   compareString2.Assign(Substring(start2, end2));
 
   // after removing leading 0s, check if they are the same
-
   if (compareString1.Equals(compareString2)) {
     return 0;
   }
@@ -1130,11 +1174,11 @@ nsSchemaValidatorUtils::CompareStrings(const nsAString & aString1,
 // For xsd:duration support, the the maximum day for a month/year combo as
 // defined in http://w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes.
 int
-nsSchemaValidatorUtils::GetMaximumDayInMonthFor(int aYearValue, int aMonthValue)
+nsSchemaValidatorUtils::GetMaximumDayInMonthFor(PRUint32 aYearValue, PRUint8 aMonthValue)
 {
-  int maxDay = 28;
-  int month = ((aMonthValue - 1) % 12) + 1;
-  int year = aYearValue + ((aMonthValue - 1) / 12);
+  PRUint8 maxDay = 28;
+  PRUint8 month = ((aMonthValue - 1) % 12) + 1;
+  PRUint32 year = aYearValue + ((aMonthValue - 1) / 12);
 
   /*
     Return Value      Condition
@@ -1173,22 +1217,19 @@ nsSchemaValidatorUtils::CompareDurations(nsISchemaDuration *aDuration1,
 {
   int cmp = 0, tmpcmp, i = 0;
 
-  PRTime foo;
-  PRExplodedTime explodedTime, newTime1, newTime2;
+  nsSchemaDateTime dateTime, newDateTime1, newDateTime2;
 
-  // XXX: nspr doesn't handle pre-1900 dates and will return an error!
   char* datetimeArray[] = { "1696-09-01T00:00:00Z", "1697-02-01T00:00:00Z",
                             "1903-03-01T00:00:00Z", "1903-07-01T00:00:00Z" };
   PRBool indeterminate = PR_FALSE;
 
   while (!indeterminate && (i < 4)) {
-    GetPRTimeFromDateTime(NS_ConvertASCIItoUTF16(datetimeArray[i]), &foo);
-    PR_ExplodeTime(foo, PR_GMTParameters, &explodedTime);
+    ParseDateTime(NS_ConvertASCIItoUTF16(datetimeArray[i]), &dateTime);
 
-    newTime1 = AddDurationToDatetime(explodedTime, aDuration1);
-    newTime2 = AddDurationToDatetime(explodedTime, aDuration2);
+    AddDurationToDatetime(dateTime, aDuration1, &newDateTime1);
+    AddDurationToDatetime(dateTime, aDuration2, &newDateTime2);
 
-    tmpcmp = CompareExplodedDateTime(newTime1, PR_FALSE, newTime2, PR_FALSE);
+    tmpcmp = CompareDateTime(newDateTime1, newDateTime2);
 
     if (i > 0) {
       if (tmpcmp != cmp || tmpcmp > -1) {
@@ -1207,21 +1248,24 @@ nsSchemaValidatorUtils::CompareDurations(nsISchemaDuration *aDuration1,
  * This method implements the algorithm described at:
  *    http://w3.org/TR/xmlschema-2/#adding-durations-to-dateTimes
  */
-PRExplodedTime
-nsSchemaValidatorUtils::AddDurationToDatetime(PRExplodedTime aDatetime,
-                                              nsISchemaDuration *aDuration)
+void
+nsSchemaValidatorUtils::AddDurationToDatetime(nsSchemaDateTime aDatetime,
+                                              nsISchemaDuration *aDuration,
+                                              nsSchemaDateTime* aResultDateTime)
 {
-  PRExplodedTime resultDatetime;
   // first handle months
-  PRUint32 temp;
+  PRUint32 temp = 0;
   aDuration->GetMonths(&temp);
-  temp += aDatetime.tm_month + 1;
-  resultDatetime.tm_month = ((temp - 1) % 12) + 1;
+  temp += aDatetime.date.month;
+  aResultDateTime->date.month = ((temp - 1) % 12) + 1;
   PRInt32 carry = (temp - 1) / 12;
 
   // years
   aDuration->GetYears(&temp);
-  resultDatetime.tm_year = aDatetime.tm_year + carry + temp;
+  aResultDateTime->date.year = aDatetime.date.year + carry + temp;
+
+  // reset the carry
+  carry = 0;
 
   /* fraction seconds
    * XXX: Since the 4 datetimes we add durations to don't have fraction seconds
@@ -1230,68 +1274,74 @@ nsSchemaValidatorUtils::AddDurationToDatetime(PRExplodedTime aDatetime,
    */
   double dblValue;
   aDuration->GetFractionSeconds(&dblValue);
-  resultDatetime.tm_usec = (int) dblValue * 1000000;
+  aResultDateTime->time.milisecond = (int) dblValue * 1000000;
 
   // seconds
   aDuration->GetSeconds(&temp);
-  temp += aDatetime.tm_sec + carry;
-  resultDatetime.tm_sec = temp % 60;
+  temp += aDatetime.time.second + carry;
+  aResultDateTime->time.second = temp % 60;
   carry = temp / 60;
 
   // minutes
   aDuration->GetMinutes(&temp);
-  temp += aDatetime.tm_min + carry;
-  resultDatetime.tm_min = temp % 60;
+  temp += aDatetime.time.minute + carry;
+  aResultDateTime->time.minute = temp % 60;
   carry = temp / 60;
 
   // hours
   aDuration->GetHours(&temp);
-  temp += aDatetime.tm_hour + carry;
-  resultDatetime.tm_hour = temp % 24;
+  temp += aDatetime.time.hour + carry;
+  aResultDateTime->time.hour = temp % 24;
   carry = temp / 24;
 
   // days
-  int maxDay = GetMaximumDayInMonthFor(resultDatetime.tm_year,
-                                       resultDatetime.tm_month);
+  int maxDay = GetMaximumDayInMonthFor(aResultDateTime->date.year,
+                                       aResultDateTime->date.month);
   int tempDays = 0;
-  if (aDatetime.tm_mday > maxDay)
+  if (aDatetime.date.day > maxDay)
     tempDays = maxDay;
-  else if (aDatetime.tm_mday < 1)
+  else if (aDatetime.date.day < 1)
     tempDays = 1;
   else
-    tempDays = aDatetime.tm_mday;
+    tempDays = aDatetime.date.day;
 
   aDuration->GetDays(&temp);
-  resultDatetime.tm_mday = tempDays + carry + temp;
+  aResultDateTime->date.day = tempDays + carry + temp;
 
   PRBool done = PR_FALSE;
   while (!done) {
-    maxDay = GetMaximumDayInMonthFor(resultDatetime.tm_year,
-                                         resultDatetime.tm_month);
-    if (resultDatetime.tm_mday < 1) {
-      resultDatetime.tm_mday +=
-        GetMaximumDayInMonthFor(resultDatetime.tm_year,
-                                resultDatetime.tm_month - 1);
+    maxDay = GetMaximumDayInMonthFor(aResultDateTime->date.year,
+                                     aResultDateTime->date.month);
+    if (aResultDateTime->date.day < 1) {
+      aResultDateTime->date.day +=
+        GetMaximumDayInMonthFor(aResultDateTime->date.year,
+                                aResultDateTime->date.month - 1);
       carry = -1;
-    } else if (resultDatetime.tm_mday > maxDay) {
-      resultDatetime.tm_mday -= maxDay;
+    } else if (aResultDateTime->date.day > maxDay) {
+      aResultDateTime->date.day -= maxDay;
       carry = 1;
     } else {
       done = PR_TRUE;
     }
 
     if (!done) {
-      temp = resultDatetime.tm_month + carry;
-      resultDatetime.tm_month = ((temp - 1) % 12) + 1;
-      resultDatetime.tm_year += (temp - 1) / 12;
+      temp = aResultDateTime->date.month + carry;
+      aResultDateTime->date.month = ((temp - 1) % 12) + 1;
+      aResultDateTime->date.year += (temp - 1) / 12;
     }
   }
 
-  LOG(("\n  New datetime is %d-%d-%d %d:%d:%d\n", resultDatetime.tm_mday,
-    resultDatetime.tm_month, resultDatetime.tm_year, resultDatetime.tm_hour,
-    resultDatetime.tm_min, resultDatetime.tm_sec));
+  // copy over negative and tz data
+  aResultDateTime->date.isNegative = aDatetime.date.isNegative;
 
-  return resultDatetime;
+  aResultDateTime->time.tzIsNegative = aDatetime.time.tzIsNegative;
+  aResultDateTime->time.tzhour = aDatetime.time.tzhour;
+  aResultDateTime->time.tzminute = aDatetime.time.tzminute;
+
+  LOG(("\n  New datetime is %d-%d-%d %d:%d:%d\n", aResultDateTime->date.day,
+    aResultDateTime->date.month, aResultDateTime->date.year,
+    aResultDateTime->time.hour, aResultDateTime->time.minute,
+    aResultDateTime->time.second));
 }
 
 // http://www.w3.org/TR/xmlschema-2/#normalizedString

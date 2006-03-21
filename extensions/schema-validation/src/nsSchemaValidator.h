@@ -158,9 +158,9 @@ private:
                                        const nsAString & aMaxInclusive,
                                        const nsAString & aMinInclusive,
                                        PRBool *aResult);
-  int CompareSchemaDateTime(PRExplodedTime datetime1, PRBool isDateTime1Negative,
-                            PRTime datetime2, PRBool isDateTime2Negative);
-  PRBool IsValidSchemaDateTime(const nsAString & aNodeValue, PRTime *aResult);
+  int CompareSchemaDateTime(nsSchemaDateTime datetime1,
+                            nsSchemaDateTime datetime2);
+  PRBool IsValidSchemaDateTime(const nsAString & aNodeValue, nsSchemaDateTime *aResult);
 
   nsresult ValidateBuiltinTypeDate(const nsAString & aNodeValue,
                                    const nsAString & aMaxExclusive,
@@ -168,7 +168,7 @@ private:
                                    const nsAString & aMaxInclusive,
                                    const nsAString & aMinInclusive,
                                    PRBool *aResult);
-  PRBool IsValidSchemaDate(const nsAString & aNodeValue, PRTime *aResult);
+  PRBool IsValidSchemaDate(const nsAString & aNodeValue, nsSchemaDate *aResult);
 
   nsresult ValidateBuiltinTypeTime(const nsAString & aNodeValue,
                                    const nsAString & aMaxExclusive,
@@ -176,7 +176,7 @@ private:
                                    const nsAString & aMaxInclusive,
                                    const nsAString & aMinInclusive,
                                    PRBool *aResult);
-  PRBool IsValidSchemaTime(const nsAString & aNodeValue, PRTime *aResult);
+  PRBool IsValidSchemaTime(const nsAString & aNodeValue, nsSchemaTime *aResult);
 
   nsresult ValidateBuiltinTypeDuration(const nsAString & aNodeValue,
                                        const nsAString & aMaxExclusive,
@@ -190,9 +190,9 @@ private:
   nsresult ValidateBuiltinTypeInteger(const nsAString & aNodeValue,
                                       PRUint32 aTotalDigits,
                                       const nsAString & aMaxExclusive,
+                                      const nsAString & aMinExclusive,
                                       const nsAString & aMaxInclusive,
                                       const nsAString & aMinInclusive,
-                                      const nsAString & aMinExclusive,
                                       nsStringArray *aEnumerationList,
                                       PRBool *aResult);
 

@@ -1008,17 +1008,20 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DATE: {
-      isValid = IsValidSchemaDate(aNodeValue, nsnull);
+      nsSchemaDate tmp;
+      isValid = IsValidSchemaDate(aNodeValue, &tmp);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_TIME: {
-      isValid = IsValidSchemaTime(aNodeValue, nsnull);
+      nsSchemaTime tmp;
+      isValid = IsValidSchemaTime(aNodeValue, &tmp);
       break;
     }
 
     case nsISchemaBuiltinType::BUILTIN_TYPE_DATETIME: {
-      isValid = IsValidSchemaDateTime(aNodeValue, nsnull);
+      nsSchemaDateTime tmp;
+      isValid = IsValidSchemaDateTime(aNodeValue, &tmp);
       break;
     }
 
@@ -1552,7 +1555,7 @@ nsSchemaValidator::IsValidSchemaGType(const nsAString & aNodeValue,
 {
   long intValue;
   PRBool isValid =
-    nsSchemaValidatorUtils::IsValidSchemaInteger(aNodeValue, &intValue);
+    nsSchemaValidatorUtils::IsValidSchemaInteger(aNodeValue, &intValue, PR_TRUE);
 
   *aResult = intValue;
   return isValid && (intValue >= aMinValue) && (intValue <= aMaxValue);
@@ -1777,7 +1780,7 @@ nsSchemaValidator::IsValidSchemaGYear(const nsAString & aNodeValue,
       // need a minimum of 4 digits for year
       if (yearLength >= 4) {
         isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(
-                    Substring(buffStart, start), &yearNum);
+                    Substring(buffStart, start), &yearNum, PR_TRUE);
       }
 
       // 0 is an invalid year per the spec
@@ -2081,27 +2084,17 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aNodeValue,
                                            const nsAString & aMinInclusive,
                                            PRBool *aResult)
 {
-  PRBool isValid = PR_FALSE;
-  PRTime dateTime;
-  PRExplodedTime explodedTime;
+  nsSchemaTime time;
   int timeCompare;
 
-  isValid = IsValidSchemaTime(aNodeValue, &dateTime);
-
-  if (isValid) {  
-    // convert it to a PRExplodedTime 
-    PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedTime);
-  }
+  PRBool isValid = IsValidSchemaTime(aNodeValue, &time);
 
   if (isValid && !aMinExclusive.IsEmpty()) {
-    PRTime minExclusive;
-    PRExplodedTime minExclusiveExploded;
+    nsSchemaTime minExclusive;
 
     if (IsValidSchemaTime(aMinExclusive, &minExclusive)) {
-      PR_ExplodeTime(minExclusive, PR_GMTParameters, &minExclusiveExploded);
-
       timeCompare =
-        nsSchemaValidatorUtils::CompareExplodedTime(explodedTime, minExclusiveExploded);
+        nsSchemaValidatorUtils::CompareTime(time, minExclusive);
 
       if (timeCompare < 1) {
         isValid = PR_FALSE;
@@ -2111,14 +2104,11 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMaxExclusive.IsEmpty()) {
-    PRTime maxExclusive;
-    PRExplodedTime maxExclusiveExploded;
+    nsSchemaTime maxExclusive;
 
     if (IsValidSchemaTime(aMaxExclusive, &maxExclusive)) {
-      PR_ExplodeTime(maxExclusive, PR_GMTParameters, &maxExclusiveExploded);
-
       timeCompare =
-        nsSchemaValidatorUtils::CompareExplodedTime(explodedTime, maxExclusiveExploded);
+        nsSchemaValidatorUtils::CompareTime(time, maxExclusive);
 
       if (timeCompare > -1) {
         isValid = PR_FALSE;
@@ -2128,14 +2118,11 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMaxInclusive.IsEmpty()) {
-    PRTime maxInclusive;
-    PRExplodedTime maxInclusiveExploded;
+    nsSchemaTime maxInclusive;
 
     if (IsValidSchemaTime(aMaxInclusive, &maxInclusive)) {
-      PR_ExplodeTime(maxInclusive, PR_GMTParameters, &maxInclusiveExploded);
-
       timeCompare =
-        nsSchemaValidatorUtils::CompareExplodedTime(explodedTime, maxInclusiveExploded);
+        nsSchemaValidatorUtils::CompareTime(time, maxInclusive);
 
       if (timeCompare > 0) {
         isValid = PR_FALSE;
@@ -2145,14 +2132,11 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMinInclusive.IsEmpty()) {
-    PRTime minInclusive;
-    PRExplodedTime minInclusiveExploded;
+    nsSchemaTime minInclusive;
 
     if (IsValidSchemaTime(aMinInclusive, &minInclusive)) {
-      PR_ExplodeTime(minInclusive, PR_GMTParameters, &minInclusiveExploded);
-
       timeCompare =
-        nsSchemaValidatorUtils::CompareExplodedTime(explodedTime, minInclusiveExploded);
+        nsSchemaValidatorUtils::CompareTime(time, minInclusive);
 
       if (timeCompare < 0) {
         isValid = PR_FALSE;
@@ -2170,10 +2154,17 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aValue,
                                            PRTime *aResult)
 {
   nsresult rv = NS_OK;
-  PRTime time;
+  nsSchemaTime time;
+  PRBool isValid = IsValidSchemaTime(aValue, &time);
 
-  if (IsValidSchemaTime(aValue, &time)) {
-    *aResult = time;
+  if (isValid) {
+    char fulldate[100] = "";
+
+    // 22-AUG-1993 10:59:12.82
+    sprintf(fulldate, "22-AUG-1993 %d:%d:%d.%u", time.hour, time.minute,
+            time.second, time.milisecond);
+
+    PR_ParseTimeString(fulldate, PR_TRUE, aResult);
   } else {
     *aResult = nsnull;
     rv = NS_ERROR_ILLEGAL_VALUE;
@@ -2184,17 +2175,9 @@ nsSchemaValidator::ValidateBuiltinTypeTime(const nsAString & aValue,
 
 PRBool
 nsSchemaValidator::IsValidSchemaTime(const nsAString & aNodeValue,
-                                     PRTime *aResult)
+                                     nsSchemaTime *aResult)
 {
   PRBool isValid = PR_FALSE;
-
-  char hour[3] = "";
-  char minute[3] = "";
-  char second[3] = "";
-  char fraction_seconds[80] = "";
-  PRTime dateTime;
-
-  char fulldate[100] = "";
 
   nsAutoString timeString(aNodeValue);
 
@@ -2208,27 +2191,7 @@ nsSchemaValidator::IsValidSchemaTime(const nsAString & aNodeValue,
 
   LOG(("  Validating Time: "));
 
-  isValid = nsSchemaValidatorUtils::ParseSchemaTime(timeString, hour, minute,
-                                                    second, fraction_seconds);
-
-  if (isValid && aResult) {
-    // generate a string nspr can handle
-    // for example: 22-AUG-1993 10:59:12.82
-    sprintf(fulldate, "22-AUG-1993 %s:%s:%s", hour, minute, second);
-
-    if (strlen(fraction_seconds) > 0) {
-      strcat(fulldate, ".");
-      strcat(fulldate, fraction_seconds);
-    }
-
-    LOG(("    new date is %s", fulldate));
-
-    PRStatus status = PR_ParseTimeString(fulldate, PR_TRUE, &dateTime);
-    if (status == -1)
-      isValid = PR_FALSE;
-    else
-      *aResult = dateTime;
-  }
+  isValid = nsSchemaValidatorUtils::ParseSchemaTime(timeString, aResult);
 
   return isValid;
 }
@@ -2243,27 +2206,16 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aNodeValue,
                                            PRBool *aResult)
 {
   PRBool isValid = PR_FALSE;
-  PRTime dateTime;
-  PRExplodedTime explodedDate;
+  nsSchemaDate date;
   int dateCompare;
 
-  isValid = IsValidSchemaDate(aNodeValue, &dateTime);
-
-  if (isValid) {  
-    // convert it to a PRExplodedTime 
-    PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedDate);
-  }
+  isValid = IsValidSchemaDate(aNodeValue, &date);
 
   if (isValid && !aMaxExclusive.IsEmpty()) {
-    PRTime maxExclusive;
-    PRExplodedTime maxExclusiveExploded;
+    nsSchemaDate maxExclusive;
 
     if (IsValidSchemaDate(aMaxExclusive, &maxExclusive)) {
-      PR_ExplodeTime(maxExclusive, PR_GMTParameters, &maxExclusiveExploded);
-
-      dateCompare =
-        nsSchemaValidatorUtils::CompareExplodedDate(explodedDate,
-                                                    maxExclusiveExploded);
+      dateCompare = nsSchemaValidatorUtils::CompareDate(date, maxExclusive);
 
       if (dateCompare > -1) {
         isValid = PR_FALSE;
@@ -2273,15 +2225,10 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMinExclusive.IsEmpty()) {
-    PRTime minExclusive;
-    PRExplodedTime minExclusiveExploded;
+    nsSchemaDate minExclusive;
 
     if (IsValidSchemaDate(aMinExclusive, &minExclusive)) {
-      PR_ExplodeTime(minExclusive, PR_GMTParameters, &minExclusiveExploded);
-
-      dateCompare =
-        nsSchemaValidatorUtils ::CompareExplodedDate(explodedDate,
-                                                     minExclusiveExploded);
+      dateCompare = nsSchemaValidatorUtils::CompareDate(date, minExclusive);
 
       if (dateCompare < 1) {
         isValid = PR_FALSE;
@@ -2291,15 +2238,10 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMaxInclusive.IsEmpty()) {
-    PRTime maxInclusive;
-    PRExplodedTime maxInclusiveExploded;
+    nsSchemaDate maxInclusive;
 
     if (IsValidSchemaDate(aMaxInclusive, &maxInclusive)) {
-      PR_ExplodeTime(maxInclusive, PR_GMTParameters, &maxInclusiveExploded);
-
-      dateCompare =
-        nsSchemaValidatorUtils::CompareExplodedDate(explodedDate,
-                                                    maxInclusiveExploded);
+      dateCompare = nsSchemaValidatorUtils::CompareDate(date, maxInclusive);
 
       if (dateCompare > 0) {
         isValid = PR_FALSE;
@@ -2309,15 +2251,10 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aNodeValue,
   }
 
   if (isValid && !aMinInclusive.IsEmpty()) {
-    PRTime minInclusive;
-    PRExplodedTime minInclusiveExploded;
+    nsSchemaDate minInclusive;
 
     if (IsValidSchemaDate(aMinInclusive, &minInclusive)) {
-      PR_ExplodeTime(minInclusive, PR_GMTParameters, &minInclusiveExploded);
-
-      dateCompare =
-        nsSchemaValidatorUtils::CompareExplodedDate(explodedDate,
-                                                    minInclusiveExploded);
+      dateCompare = nsSchemaValidatorUtils::CompareDate(date, minInclusive);
 
       if (dateCompare < 0) {
         isValid = PR_FALSE;
@@ -2335,10 +2272,19 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aValue,
                                            PRTime *aResult)
 {
   nsresult rv = NS_OK;
-  PRTime time;
+  nsSchemaDate date;
+  PRBool isValid = IsValidSchemaDate(aValue, &date);
 
-  if (IsValidSchemaDate(aValue, &time)) {
-    *aResult = time;
+  if (isValid) {
+    char fulldate[100] = "";
+    nsCAutoString monthShorthand;
+    nsSchemaValidatorUtils::GetMonthShorthand(date.month, monthShorthand);
+
+    // 22-AUG-1993 10:59:12.82
+    sprintf(fulldate, "%d-%s-%u 00:00:00", date.day,
+            monthShorthand.get(), date.year);
+
+    PR_ParseTimeString(fulldate, PR_TRUE, aResult);
   } else {
     *aResult = nsnull;
     rv = NS_ERROR_ILLEGAL_VALUE;
@@ -2346,7 +2292,6 @@ nsSchemaValidator::ValidateBuiltinTypeDate(const nsAString & aValue,
 
   return rv;
 }
-
 
 /* http://www.w3.org/TR/xmlschema-2/#dateTime */
 nsresult
@@ -2357,60 +2302,44 @@ nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aNodeValue,
                                            const nsAString & aMinInclusive,
                                            PRBool *aResult)
 {
-  PRBool isValid = PR_FALSE;
-  PRTime dateTime;
-  PRExplodedTime explodedDateTime;
-  PRBool isDateTimeNegative = PR_FALSE;
-
-  isValid = IsValidSchemaDateTime(aNodeValue, &dateTime);
-
-  if (isValid) {  
-    // convert it to a PRExplodedTime 
-    PR_ExplodeTime(dateTime, PR_GMTParameters, &explodedDateTime);
-
-    if (aNodeValue.First() == PRUnichar('-'))
-      isDateTimeNegative = PR_TRUE;
-  }
+  nsSchemaDateTime dateTime;
+  PRBool isValid = IsValidSchemaDateTime(aNodeValue, &dateTime);
 
   if (isValid && !aMaxExclusive.IsEmpty()) {
-    PRTime maxExclusive;
+    nsSchemaDateTime maxExclusive;
 
     if (IsValidSchemaDateTime(aMaxExclusive, &maxExclusive) &&
-        (CompareSchemaDateTime(explodedDateTime, isDateTimeNegative, maxExclusive,
-                               (aMaxExclusive.First() == PRUnichar('-')) ? PR_TRUE : PR_FALSE) > -1)) {
+        CompareSchemaDateTime(dateTime, maxExclusive) > -1) {
       isValid = PR_FALSE;
       LOG(("  Not valid: Value is too large"));
     }
   }
 
   if (isValid && !aMinExclusive.IsEmpty()) {
-    PRTime minExclusive;
+    nsSchemaDateTime minExclusive;
 
     if (IsValidSchemaDateTime(aMinExclusive, &minExclusive) &&
-        (CompareSchemaDateTime(explodedDateTime, isDateTimeNegative, minExclusive,
-                               (aMinExclusive.First() == PRUnichar('-')) ? PR_TRUE : PR_FALSE) < 1)) {
+        CompareSchemaDateTime(dateTime, minExclusive) < 1) {
       isValid = PR_FALSE;
       LOG(("  Not valid: Value is too small"));
     }
   }
 
   if (isValid && !aMaxInclusive.IsEmpty()) {
-    PRTime maxInclusive;
+    nsSchemaDateTime maxInclusive;
 
     if (IsValidSchemaDateTime(aMaxInclusive, &maxInclusive) &&
-        (CompareSchemaDateTime(explodedDateTime, isDateTimeNegative, maxInclusive,
-                               (aMaxInclusive.First() == PRUnichar('-')) ? PR_TRUE : PR_FALSE) > 0)) {
+        CompareSchemaDateTime(dateTime, maxInclusive) > 0) {
       isValid = PR_FALSE;
       LOG(("  Not valid: Value is too large"));
     }
   }
 
   if (isValid && !aMinInclusive.IsEmpty()) {
-    PRTime minInclusive;
+    nsSchemaDateTime minInclusive;
 
     if (IsValidSchemaDateTime(aMinInclusive, &minInclusive) &&
-        (CompareSchemaDateTime(explodedDateTime, isDateTimeNegative, minInclusive,
-                               (aMinInclusive.First() == PRUnichar('-')) ? PR_TRUE : PR_FALSE) < 0)) {
+        CompareSchemaDateTime(dateTime, minInclusive) < 0) {
       isValid = PR_FALSE;
       LOG(("  Not valid: Value is too small"));
     }
@@ -2425,10 +2354,25 @@ nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aValue,
                                                PRTime *aResult)
 {
   nsresult rv = NS_OK;
-  PRTime time;
+  nsSchemaDateTime dateTime;
+  PRBool isValid = IsValidSchemaDateTime(aValue, &dateTime);
 
-  if (IsValidSchemaDateTime(aValue, &time)) {
-    *aResult = time;
+  if (isValid) {
+    char fulldate[100] = "";
+    nsCAutoString monthShorthand;
+    nsSchemaValidatorUtils::GetMonthShorthand(dateTime.date.month, monthShorthand);
+
+    // 22-AUG-1993 10:59:12.82
+    sprintf(fulldate, "%d-%s-%u %d:%d:%d.%u",
+      dateTime.date.day,
+      monthShorthand.get(),
+      dateTime.date.year,
+      dateTime.time.hour,
+      dateTime.time.minute,
+      dateTime.time.second,
+      dateTime.time.milisecond);
+
+    PR_ParseTimeString(fulldate, PR_TRUE, aResult);
   } else {
     *aResult = nsnull;
     rv = NS_ERROR_ILLEGAL_VALUE;
@@ -2438,43 +2382,24 @@ nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aValue,
 }
 
 int
-nsSchemaValidator::CompareSchemaDateTime(PRExplodedTime datetime1,
-                                         PRBool isDateTime1Negative,
-                                         PRTime datetime2,
-                                         PRBool isDateTime2Negative)
+nsSchemaValidator::CompareSchemaDateTime(nsSchemaDateTime datetime1,
+                                         nsSchemaDateTime datetime2)
 {
-  PRExplodedTime datetime2Exploded;
-  PR_ExplodeTime(datetime2, PR_GMTParameters, &datetime2Exploded);
-
-  return nsSchemaValidatorUtils::CompareExplodedDateTime(datetime1,
-                                                         isDateTime1Negative,
-                                                         datetime2Exploded,
-                                                         isDateTime2Negative);
+  return nsSchemaValidatorUtils::CompareDateTime(datetime1, datetime2);
 }
 
 PRBool
 nsSchemaValidator::IsValidSchemaDate(const nsAString & aNodeValue,
-                                     PRTime *aResult)
+                                     nsSchemaDate *aResult)
 {
   PRBool isValid = PR_FALSE;
-  PRBool isNegativeYear = PR_FALSE;
-
-  int run = 0;
-
-  char year[80] = "";
-  char month[3] = "";
-  char day[3] = "";
-  PRTime dateTime;
-
-  char fulldate[100] = "";
 
   LOG(("  Validating Date:"));
 
   nsAutoString dateString(aNodeValue); 
   if (dateString.First() == '-') {
     /* nspr can't handle negative years it seems */
-    isNegativeYear = PR_TRUE;
-    run = 1;
+    aResult->isNegative = PR_TRUE;
  }
 
  /*
@@ -2487,30 +2412,16 @@ nsSchemaValidator::IsValidSchemaDate(const nsAString & aNodeValue,
   // append 'T' to end to make ParseSchemaDate happy.
   dateString.Append('T');
 
-  isValid = nsSchemaValidatorUtils::ParseSchemaDate(dateString, year, month, day);
-
-  if (isValid && aResult) {
-    // create something like 22-AUG-1993 for nspr to parse
-    nsCAutoString monthShorthand;
-    nsSchemaValidatorUtils::GetMonthShorthand(month, monthShorthand);
-
-    sprintf(fulldate, "%s-%s-%s", day, monthShorthand.get(), year);
-
-    PRStatus status = PR_ParseTimeString(fulldate, PR_TRUE, &dateTime);  
-    if (status == -1)
-      isValid = PR_FALSE;
-    else
-      *aResult = dateTime;
-  }
+  isValid = nsSchemaValidatorUtils::ParseSchemaDate(dateString, aResult);
 
   return isValid;
 }
 
 PRBool
 nsSchemaValidator::IsValidSchemaDateTime(const nsAString & aNodeValue,
-                                         PRTime *aResult)
+                                         nsSchemaDateTime *aResult)
 {
-  return nsSchemaValidatorUtils::GetPRTimeFromDateTime(aNodeValue, aResult);
+  return nsSchemaValidatorUtils::ParseDateTime(aNodeValue, aResult);
 }
 
 /* http://w3.org/TR/xmlschema-2/#duration */
@@ -2635,6 +2546,7 @@ nsSchemaValidator::ValidateBuiltinTypeInteger(const nsAString & aNodeValue,
     if (nsSchemaValidatorUtils::IsValidSchemaInteger(aMaxExclusive, &maxExclusive)
         && (nsSchemaValidatorUtils::CompareStrings(aNodeValue, aMaxExclusive) >= 0)) {
       isValid = PR_FALSE;
+      LOG(("  Not valid: Value is too large"));
     }
   }
 
@@ -2644,6 +2556,7 @@ nsSchemaValidator::ValidateBuiltinTypeInteger(const nsAString & aNodeValue,
     if (nsSchemaValidatorUtils::IsValidSchemaInteger(aMinExclusive, &minExclusive)
         && (nsSchemaValidatorUtils::CompareStrings(aNodeValue, aMinExclusive) <= 0)) {
       isValid = PR_FALSE;
+      LOG(("  Not valid: Value is too small"));
     }
   }
 
@@ -2653,6 +2566,7 @@ nsSchemaValidator::ValidateBuiltinTypeInteger(const nsAString & aNodeValue,
     if (nsSchemaValidatorUtils::IsValidSchemaInteger(aMaxInclusive, &maxInclusive)
         && (nsSchemaValidatorUtils::CompareStrings(aNodeValue, aMaxInclusive) > 0)) {
       isValid = PR_FALSE;
+      LOG(("  Not valid: Value is too large"));
     }
   }
 
@@ -2662,6 +2576,7 @@ nsSchemaValidator::ValidateBuiltinTypeInteger(const nsAString & aNodeValue,
     if (nsSchemaValidatorUtils::IsValidSchemaInteger(aMinInclusive, &minInclusive)
         && (nsSchemaValidatorUtils::CompareStrings(aNodeValue, aMinInclusive) < 0)) {
       isValid = PR_FALSE;
+      LOG(("  Not valid: Value is too small"));
     }
   }
 
@@ -2755,7 +2670,8 @@ nsSchemaValidator::IsValidSchemaByte(const nsAString & aNodeValue, long *aResult
   PRBool isValid = PR_FALSE;
   long byteValue;
 
-  isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aNodeValue, &byteValue);
+  isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aNodeValue, &byteValue,
+                                                         PR_TRUE);
 
   if (isValid && ((byteValue > 127) || (byteValue < -128)))
     isValid = PR_FALSE;
@@ -2842,8 +2758,13 @@ nsSchemaValidator::IsValidSchemaFloat(const nsAString & aNodeValue,
 
   PRInt32 errorCode;
   float floatValue = temp.ToFloat(&errorCode);
-  if (NS_FAILED(errorCode))
-    isValid = PR_FALSE;
+  if (NS_FAILED(errorCode)) {
+    // floats may be INF, -INF and NaN
+    if (!aNodeValue.EqualsLiteral("INF") && !aNodeValue.EqualsLiteral("-INF") &&
+        !aNodeValue.EqualsLiteral("NaN")) {
+      isValid = PR_FALSE;
+    }
+  }
 
   if (aResult)
     *aResult = floatValue;
@@ -2996,13 +2917,14 @@ nsSchemaValidator::IsValidSchemaDecimal(const nsAString & aNodeValue,
   isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aWholePart, &temp);
 
   if (isValid && (findString != kNotFound)) {
-    // XX: assuming "2." is not valid
+    // XXX: assuming "2." is not valid
     if (aFractionPart.IsEmpty())
       isValid = PR_FALSE;
     else if ((aFractionPart.First() == '-') || (aFractionPart.First() == '+'))
       isValid = PR_FALSE;
     else
-      isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aFractionPart, &temp);
+      isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aFractionPart,
+                                                             &temp);
   }
 
   return isValid;
@@ -3019,7 +2941,7 @@ int
 nsSchemaValidator::CompareFractionStrings(const nsAString & aString1,
                                           const nsAString & aString2)
 {
-  int cmpresult;
+  int cmpresult = 0;
 
   // are the equal?
   if (aString1.Equals(aString2))

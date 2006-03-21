@@ -82,7 +82,7 @@ struct nsSchemaGMonthDay {
 struct nsMonthShortHand {
   const char *number;
   const char *shortHand;
-};
+} ;
 
 const nsMonthShortHand monthShortHand[] = {
   { "01", "Jan" },
@@ -97,7 +97,7 @@ const nsMonthShortHand monthShortHand[] = {
   { "10", "Oct" },
   { "11", "Nov" },
   { "12", "Dec" }
-};
+} ;
 
 #define kREGEXP_CID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
 
@@ -109,7 +109,7 @@ public:
   nsSchemaStringFacet() {
     isDefined = PR_FALSE;
   }
-};
+} ;
 
 class nsSchemaIntFacet
 {
@@ -120,7 +120,7 @@ public:
     isDefined = PR_FALSE;
     value = 0;
   }
-};
+} ;
 
 struct nsSchemaDerivedSimpleType {
   nsISchemaSimpleType* mBaseType;
@@ -143,36 +143,59 @@ struct nsSchemaDerivedSimpleType {
   nsSchemaIntFacet fractionDigits;
 
   nsStringArray enumerationList;
-};
+} ;
+
+struct nsSchemaDate {
+  PRBool isNegative;
+  PRUint32 year;
+  PRUint8 month;
+  PRUint8 day;
+} ;
+
+struct nsSchemaTime {
+  PRUint8 hour;
+  PRUint8 minute;
+  PRUint8 second;
+  PRUint32 milisecond;
+  PRBool tzIsNegative;
+  PRUint8 tzhour;
+  PRUint8 tzminute;
+} ;
+
+struct nsSchemaDateTime {
+  nsSchemaDate date;
+  nsSchemaTime time;
+} ;
+
 
 class nsSchemaValidatorUtils
 {
 public:
-  static PRBool IsValidSchemaInteger(const nsAString & aNodeValue, long *aResult);
-  static PRBool IsValidSchemaInteger(const char* aString, long *aResult);
+  static PRBool IsValidSchemaInteger(const nsAString & aNodeValue, long *aResult,
+                                     PRBool aOverFlowCheck = PR_FALSE);
+  static PRBool IsValidSchemaInteger(const char* aString, long *aResult,
+                                     PRBool aOverFlowCheck);
 
   static PRBool IsValidSchemaDouble(const nsAString & aNodeValue, double *aResult);
   static PRBool IsValidSchemaDouble(const char* aString, double *aResult);
 
-  static PRBool ParseSchemaDate(const nsAString & aStrValue, char *rv_year,
-                                char *rv_month, char *rv_day);
-  static PRBool ParseSchemaTime(const nsAString & aStrValue, char *rv_hour,
-                                char *rv_minute, char *rv_second,
-                                char *rv_fraction_second);
+  static PRBool ParseDateTime(const nsAString & aNodeValue,
+                              nsSchemaDateTime *aResult);
+  static PRBool ParseSchemaDate(const nsAString & aStrValue, nsSchemaDate *aDate);
+  static PRBool ParseSchemaTime(const nsAString & aStrValue, nsSchemaTime *aTime);
 
   static PRBool ParseSchemaTimeZone(const nsAString & aStrValue, 
                                     char *rv_tzhour, char *rv_tzminute);
 
-  static void GetMonthShorthand(char* aMonth, nsACString & aReturn);
+  static void GetMonthShorthand(PRUint8 aMonth, nsACString & aReturn);
 
-  static PRBool GetPRTimeFromDateTime(const nsAString & aNodeValue, PRTime *aResult);
+  static int CompareDateTime(nsSchemaDateTime aDateTime1,
+                             nsSchemaDateTime aDateTime2);
+  static int CompareDate(nsSchemaDate aDate1, nsSchemaDate aDate2);
+  static int CompareTime(nsSchemaTime aTime1, nsSchemaTime aTime2);
 
-  static int CompareExplodedDateTime(PRExplodedTime aDateTime1,
-                                     PRBool aDateTime1IsNegative,
-                                     PRExplodedTime aDateTime2,
-                                     PRBool aDateTime2IsNegative);
-  static int CompareExplodedDate(PRExplodedTime aDateTime1, PRExplodedTime aDateTime2);
-  static int CompareExplodedTime(PRExplodedTime aDateTime1, PRExplodedTime aDateTime2);
+  static void AddTimeZoneToDateTime(nsSchemaDateTime aDateTime,
+                                    nsSchemaDateTime* aDestDateTime2);
 
   static int CompareGYearMonth(nsSchemaGYearMonth aYearMonth1, nsSchemaGYearMonth aYearMonth2);
   static int CompareGMonthDay(nsSchemaGMonthDay aMonthDay1, nsSchemaGMonthDay aMonthDay2);
@@ -184,11 +207,12 @@ public:
 
   static int CompareStrings(const nsAString & aString1, const nsAString & aString2);
 
-  static int GetMaximumDayInMonthFor(int aYearValue, int aMonthValue);
+  static int GetMaximumDayInMonthFor(PRUint32 aYearValue, PRUint8 aMonthValue);
   static int CompareDurations(nsISchemaDuration *aDuration1,
                               nsISchemaDuration *aDuration2);
-  static PRExplodedTime AddDurationToDatetime(PRExplodedTime aDatetime,
-                                              nsISchemaDuration *aDuration);
+  static void AddDurationToDatetime(nsSchemaDateTime aDatetime,
+                                    nsISchemaDuration *aDuration,
+                                    nsSchemaDateTime* aResultDateTime);
 
   static PRBool IsValidSchemaNormalizedString(const nsAString & aStrValue);
   static PRBool IsValidSchemaToken(const nsAString & aStrValue);
