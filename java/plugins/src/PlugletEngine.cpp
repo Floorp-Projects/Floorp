@@ -21,6 +21,7 @@
 #include "PlugletEngine.h"
 #include "Pluglet.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "prenv.h"
 #include "PlugletManager.h"
 #include "nsIGenericFactory.h"
@@ -142,7 +143,7 @@ jobject PlugletEngine::plugletManager = NULL;
 
 #define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
-NS_IMPL_ISUPPORTS(PlugletEngine,kIPluginIID);
+NS_IMPL_ISUPPORTS1(PlugletEngine,nsIPlugin);
 NS_METHOD PlugletEngine::Initialize(void) {
     //nb ???
     return NS_OK;
@@ -217,7 +218,6 @@ char *ToString(jobject obj,JNIEnv *env) {
 }
 
 PlugletEngine::PlugletEngine() {
-    NS_INIT_REFCNT();
     PlugletLog::log = PR_NewLogModule("pluglets");
     dir = new PlugletsDir();
     engine = this;
@@ -309,13 +309,19 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
 
 jobject PlugletEngine::GetPlugletManager(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletEngine::GetPlugletManager\n"));
-    if (!pluginManager) {
-        nsresult  res;
-        NS_WITH_SERVICE(nsIPluginManager,_pluginManager,kPluginManagerCID,&res);
-        if (NS_SUCCEEDED(res)) { 
-            pluginManager = _pluginManager;
-        }
+           ("PlugletEngine::GetPlugletManager\n"));
+    //Changed by John Sublet NS_WITH_SERVICE deprecated currently is
+    //problematic: lxr.mozilla.org indicates version of
+    //do_GetService that allows the res to be included in the
+    //do_GetService call but that wouldn't work: FIXME
+    
+    //NS_WITH_SERVICE(nsIPluginManager,_pluginManager,kPluginManagerCID,&res);
+    nsCOMPtr<nsIPluginManager> _pluginManager (do_GetService(kPluginManagerCID));
+    
+    
+    // Changed by John Sublet : FIXME this assumes _pluginManager will be properly set to NULL
+    if (_pluginManager) {
+        pluginManager = _pluginManager;
     }
     if (!pluginManager) {
         return NULL;

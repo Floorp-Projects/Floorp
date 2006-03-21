@@ -36,10 +36,9 @@ jmethodID Pluglet::printMID = NULL;
 
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 
-NS_IMPL_ISUPPORTS(Pluglet, kIPluginInstanceIID);
+NS_IMPL_ISUPPORTS1(Pluglet,nsIPluginInstance);
 
 Pluglet::Pluglet(jobject object) {
-    NS_INIT_REFCNT();
     jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
     //nb check for null
     peer = NULL;

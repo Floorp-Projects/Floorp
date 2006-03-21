@@ -32,30 +32,22 @@ LIBRARY_NAME = pluglet
 MODULE          = pluglet
 IS_COMPONENT    = 1
 
-JDKINCLUDE= -I$(JDKHOME)/include
-
-ifeq ($(OS_ARCH), Linux)
-	JDKINCLUDE += -I$(JDKHOME)/include/linux
-	archExpr = case "`uname -m`" in  \
-                i[3-6]86) \
-                    echo i386 \
-                    ;; \
-                sparc*)  \
-                    echo sparc \
-                    ;; \
-                *) \
-                    uname -m  \
-                    ;; \
-               esac
-
-
+ifeq ($(OS_ARCH),Linux)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/linux $(INCLUDES) \
+       -I$(DEPTH)/widget/src/gtk -I../src_share
+else
+ifeq ($(OS_ARCH),WINNT)
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/win32 $(INCLUDES) \
+       -I../src_share -I.
+else
+ifeq ($(OS_ARCH),Darwin)
+INCLUDES := -I$(MOZ_JDKHOME)/include $(INCLUDES) -I../src_share -I.
+else
+INCLUDES := -I$(MOZ_JDKHOME)/include -I$(MOZ_JDKHOME)/include/solaris $(INCLUDES) \
+	-I$(DEPTH)/widget/src/gtk -I../src_share
 endif
-ifeq ($(OS_ARCH), SunOS)
-	JDKINCLUDE += -I$(JDKHOME)/include/solaris
-	archExpr = uname -p
 endif
-
-HOSTTYPE = $(shell $(archExpr))
+endif
 
 CPPSRCS =  \
 	List.cpp \
@@ -70,21 +62,53 @@ CPPSRCS =  \
 	PlugletStreamListener.cpp \
 	PlugletsDir.cpp \
 	Registry.cpp \
-	PlugletViewMotif.cpp \
 	PlugletViewFactory.cpp \
 	$(NULL)
 
-CXXFLAGS := $(JDKINCLUDE) $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
+# edburns: 20060320
+#	PlugletViewMotif.cpp \
 
-DSO_LDOPTS += \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/client \
-      -ljava -ljvm -lawt -lXt\
-      -lgdk
-						      
-ifneq ($(OS_ARCH), Linux)
-DSO_LDOPTS      += \
-                  -lthread
+
+CXXFLAGS := $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -DMOZILLA_INTERNAL_API -D_REENTRANT  -DOJI_DISABLE $(CXXFLAGS) 
+
+ifeq ($(OS_ARCH),Darwin)
+ INCLUDES += -I$(MOZ_JDKHOME)/include -I.
+ DSO_LDOPTS += -L/System/Library/Frameworks/JavaVM.Framework/Libraries -ljvm_compat
+ DLL_SUFFIX = .jnilib
+endif #DARWIN
+
+INCLUDES += -I$(MOZILLA_FIVE_HOME)/../include/xpcom \
+	-I$(MOZILLA_FIVE_HOME)/../include/plugin \
+	-I$(MOZILLA_FIVE_HOME)/../include/string \
+	-I$(MOZILLA_FIVE_HOME)/../include/xpcom_obsolete \
+
+ifeq ($(OS_ARCH),Linux)
+DSO_LDOPTS	+= \
+	-L$(JAVAHOME)/jre/lib/i386 \
+	-L$(JAVAHOME)/jre/lib/i386/client \
+	-L$(JAVAHOME)/jre/lib/i386/native_threads \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386 \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/client \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/native_threads \
+	-ljvm -lhpi -ljava -lawt -lXt -lgdk -lgtkxtbin -lgtksuperwin
+DEFINES	+= -DDISABLE_JIT
+endif # LINUX
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_LIBS     += \
+		$(JAVAHOME)/lib/jvm.lib \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+endif # WINNT
+ifeq (($OS_ARCH),SunOS)
+DSO_LDOPTS	+= \
+	-L$(JAVAHOME)/jre/lib/sparc \
+	-L$(JAVAHOME)/jre/lib/sparc/classic \
+	-L$(JAVAHOME)/jre/lib/sparc/native_threads \
+	-R$(JAVAHOME)/jre/lib/sparc \
+	-R$(JAVAHOME)/jre/lib/sparc/classic \
+	-R$(JAVAHOME)/jre/lib/sparc/native_threads \
+	-ljvm -lhpi -lthread
 endif
 
 include $(topsrcdir)/config/rules.mk

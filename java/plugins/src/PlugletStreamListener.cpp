@@ -43,7 +43,6 @@ void PlugletStreamListener::Initialize(void) {
 }
 
 PlugletStreamListener::PlugletStreamListener(jobject object) {
-    NS_INIT_REFCNT();
     jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
     if (!onStopBindingMID) {
 	Initialize();
@@ -118,7 +117,7 @@ NS_METHOD PlugletStreamListener::GetStreamType(nsPluginStreamType *result) {
 
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-NS_IMPL_ISUPPORTS(PlugletStreamListener, kIPluginStreamListenerIID);
+NS_IMPL_ISUPPORTS1(PlugletStreamListener, nsIPluginStreamListener);
 
 
 
