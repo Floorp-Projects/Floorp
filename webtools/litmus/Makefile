@@ -47,6 +47,10 @@ tags: ctags
 test: 
 	$(PERL) runtests.pl
 
+cache: 
+	$(PERL) -MLitmus -MLitmus::Cache -e "Litmus::Cache::rebuildCache();"
+	@echo "Done";
+
 clean: 
 	rm -rf data
 	make install
