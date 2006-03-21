@@ -476,11 +476,3 @@ nsLeafBoxFrame::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas)
 {
     nsBox::SetWasCollapsed(aState, aWas);
 }
-
-NS_INTERFACE_MAP_BEGIN(nsLeafBoxFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIBox)
-#ifdef NS_DEBUG
-  NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
-#endif
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
-NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)

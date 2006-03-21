@@ -1614,14 +1614,6 @@ nsBoxFrame::Release(void)
     return NS_OK;
 }
 
-NS_INTERFACE_MAP_BEGIN(nsBoxFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIBox)
-#ifdef NS_DEBUG
-  NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
-#endif
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
-NS_INTERFACE_MAP_END_INHERITING(nsContainerFrame)
-
 #ifdef DEBUG_LAYOUT
 void
 nsBoxFrame::GetBoxName(nsAutoString& aName)

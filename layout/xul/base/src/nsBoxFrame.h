@@ -88,9 +88,9 @@ public:
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
-  // ------ nsISupports --------
-
-  NS_DECL_ISUPPORTS_INHERITED
+  // Override addref/release to not assert
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 
   // ------ nsIBox -------------
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
