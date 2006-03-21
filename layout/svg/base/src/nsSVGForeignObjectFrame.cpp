@@ -352,9 +352,10 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
   }
 
   nsRect dirtyRect = nsRect(nsPoint(0, 0), GetSize());
+#if 0  /// XX - broken by PaintSVG API change (bug 330498)
   nsCOMPtr<nsIDOMSVGMatrix> tm = GetTMIncludingOffset();
   nsCOMPtr<nsIDOMSVGMatrix> inverse;
-  nsresult rv = tm->Inverse(getter_AddRefs(inverse));
+  rv = tm->Inverse(getter_AddRefs(inverse));
   float pxPerTwips = GetPxPerTwips();
   float twipsPerPx = GetTwipsPerPx();
   if (NS_SUCCEEDED(rv)) {
@@ -371,7 +372,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsISVGRendererCanvas* canvas)
     r.height = NSToCoordCeil((y + h)*twipsPerPx) - r.y;
     dirtyRect.IntersectRect(dirtyRect, r);
   }
-    
+#endif
+
   if (dirtyRect.IsEmpty())
     return NS_OK;
  
