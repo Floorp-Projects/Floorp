@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.314 $ ';
+$::UtilsVersion = '$Revision: 1.315 $ ';
 
 package TinderUtils;
 
@@ -54,11 +54,12 @@ require "gettime.pl";
 #
 
 my $co_time_str = 0;  # Global, let tests send cvs co time to graph server.
-
+my $co_default_timeout = 300;
 
 sub Setup {
     InitVars();
     my $args = ParseArgs();
+    UpdateBuildConfigs($args);
     LoadConfig();
     ApplyArgs($args); # Apply command-line arguments after the config file.
     GetSystemInfo();
@@ -67,6 +68,28 @@ sub Setup {
     ValidateSettings(); # Perform some basic validation on settings
 }
 
+sub UpdateBuildConfigs() {
+    my $args = shift;
+    die 'Assert: $args must be a HASH ref' if (ref($args) ne 'HASH');
+
+    if (exists($args->{'TboxBuildConfigDir'})) {
+        if (not -d "$args->{'TboxBuildConfigDir'}/CVS") {
+            die "--config-cvsup-dir must be a CVS checkout directory\n";
+        } 
+
+        my $cwd = get_system_cwd();
+
+        chdir($args->{'TboxBuildConfigDir'}) or 
+         die "Couldn't chdir() into $args->{'TboxBuildConfigDir'}: $!";
+
+        my $status = run_shell_command_with_timeout('cvs update -CPd',
+         $co_default_timeout);
+        if ($status->{'exit_value'} != 0) {
+           die "cvs update in $args->{'TboxBuildConfigDir'} failed";
+        }
+        chdir($cwd) or die "Couldn't return to $cwd";
+    }
+}
 
 sub Build {
     #my () = @_;
@@ -92,6 +115,9 @@ Options:
    -tag TREETAG          Pull by tag (-r TREETAG).
    -t TREENAME           The name of the tree
   --mozconfig FILENAME   Provide a mozconfig file for $Settings::moz_client_mk
+  --config-cvsup-dir DIR Provide a directory of configuration files 
+                          (mozconfig, etc.) to run a "cvs update" in before 
+                          a build begins.
   --version              Print the version number (same as cvs revision).
   --help
 More details:
@@ -126,6 +152,7 @@ sub ParseArgs {
             -tag BuildTag
             -t BuildTree
             --mozconfig MozConfigFileName
+            --config-cvsup-dir TboxBuildConfigDir 
         );
         if (defined $args_with_options{$arg}) {
             my $arg_arg = shift @ARGV;
