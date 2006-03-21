@@ -71,11 +71,6 @@
 #include "cdbhdl.h"
 #endif
 
-#ifdef NSS_ENABLE_ECC
-extern SECStatus EC_FillParams(PRArenaPool *arena, 
-    const SECItem *encodedParams, ECParams *params);
-#endif
-
 /*
  * ******************** Static data *******************************
  */
