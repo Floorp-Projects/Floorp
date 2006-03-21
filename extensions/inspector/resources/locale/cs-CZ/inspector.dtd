@@ -7,9 +7,9 @@
 <!ENTITY btnFind.tooltip "Pomocí id, tagu nebo atributu najde uzel ">
 <!-- MAIN MENU ITEMS -->
 <!ENTITY mnFile.label "Soubor">
-<!ENTITY mnWindows.label "Prozkoumat okno">
-<!ENTITY mnWindows.accesskey "o">
 <!ENTITY mnFile.accesskey "S">
+<!ENTITY mnInspectDocument.label "Prozkoumat dokument">
+<!ENTITY mnInspectDocument.accesskey "d">
 <!ENTITY cmdShowOpenURLDialog.label "Prozkoumat URL">
 <!ENTITY cmdShowOpenURLDialog.accesskey "U">
 <!ENTITY cmdClose.label "Zavřít">
@@ -40,6 +40,8 @@
 <!ENTITY mnView.accesskey "Z">
 <!ENTITY cmdToggleBrowser.label "Prohlížeč">
 <!ENTITY cmdToggleSearch.label "Výsledky hledání">
+<!ENTITY cmdToggleChrome.label "Chrome">
+<!ENTITY cmdToggleChrome.accesskey "C">
 <!ENTITY cmdViewSearchItem.label "Zobrazit...">
 <!ENTITY cmdEditSearchItem.label "Úpravy">
 <!ENTITY cmdCopySearchItemLine.label "Kopírovat řádku">
