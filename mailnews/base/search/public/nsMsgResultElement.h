@@ -61,16 +61,7 @@ public:
     nsresult AddValue (nsMsgSearchValue*);
 
 	nsresult GetPrettyName (nsMsgSearchValue**);
-
-
-	nsresult GetValueRef (nsMsgSearchAttribValue, nsIMsgSearchValue**) const;
 	nsresult Open (void *window);
-
-	// added as part of the search as view capabilities...
-	static int CompareByFolderInfoPtrs (const void *, const void *);  
-
-	static int Compare (const void *, const void *);
-	static nsresult DestroyValue (nsIMsgSearchValue *value);
 
     nsCOMPtr<nsISupportsArray> m_valueList;
 	nsIMsgSearchAdapter *m_adapter;

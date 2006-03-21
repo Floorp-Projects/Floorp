@@ -1670,168 +1670,16 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribValue attrib,
         err = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-#ifdef HAVE_SEARCH_PORT
-  // No need to store the folderInfo separately; we can always get it if/when
-  // we need it. This code is to support "view thread context" in the search dialog
-  if (SearchError_ScopeAgreement == err && attrib == nsMsgSearchAttrib::FolderInfo)
-  {
-    nsMsgFolderInfo *targetFolder = m_adapter->FindTargetFolder (this);
-    if (targetFolder)
-    {
-      *outValue = new nsMsgSearchValue;
-      if (*outValue)
-      {
-        (*outValue)->u.folder = targetFolder;
-        (*outValue)->attribute = nsMsgSearchAttrib::FolderInfo;
-        err = NS_OK;
-      }
-    }
-  }
-#endif
   return err;
 }
-
-
-nsresult
-nsMsgResultElement::GetValueRef (nsMsgSearchAttribValue attrib,
-                                 nsIMsgSearchValue* *aResult) const 
-{
-  nsCOMPtr<nsIMsgSearchValue> value;
-  PRUint32 count;
-  m_valueList->Count(&count);
-  nsresult rv;
-  for (PRUint32 i = 0; i < count; i++)
-  {
-    rv = m_valueList->QueryElementAt(i, NS_GET_IID(nsIMsgSearchValue),
-      getter_AddRefs(value));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "bad element of array");
-    if (NS_FAILED(rv)) continue;
-    
-    nsMsgSearchAttribValue valueAttribute;
-    value->GetAttrib(&valueAttribute);
-    if (attrib == valueAttribute) {
-      *aResult = value;
-      NS_ADDREF(*aResult);
-    }
-  }
-  return NS_ERROR_FAILURE;
-}
-
 
 nsresult nsMsgResultElement::GetPrettyName (nsMsgSearchValue **value)
 {
-  nsresult err = GetValue (nsMsgSearchAttrib::Location, value);
-#ifdef HAVE_SEARCH_PORT
-  if (NS_OK == err)
-  {
-    nsMsgFolderInfo *folder = m_adapter->m_scope->m_folder;
-    nsMsgNewsHost *host = NULL;
-    if (folder)
-    {
-      // Find the news host because only the host knows whether pretty
-      // names are supported. 
-      if (FOLDER_CONTAINERONLY == folder->GetType())
-        host = ((nsMsgNewsFolderInfoContainer*) folder)->GetHost();
-      else if (folder->IsNews())
-        host = folder->GetNewsFolderInfo()->GetHost();
-      
-      // Ask the host whether it knows pretty names. It isn't strictly
-      // necessary to avoid calling folder->GetPrettiestName() since it
-      // does the right thing. But we do have to find the folder from the host.
-      if (host && host->QueryExtension ("LISTPNAMES"))
-      {
-        folder = host->FindGroup ((*value)->u.string);
-        if (folder)
-        {
-          char *tmp = nsCRT::strdup (folder->GetPrettiestName());
-          if (tmp)
-          {
-            XP_FREE ((*value)->u.string);
-            (*value)->u.utf8SstringZ = tmp;
-          }
-        }
-      }
-    }
-  }
-#endif // HAVE_SEARCH_PORT
-  return err;
+  return GetValue (nsMsgSearchAttrib::Location, value);
 }
 
-int nsMsgResultElement::CompareByFolderInfoPtrs (const void *e1, const void *e2)
-{
-#ifdef HAVE_SEARCH_PORT
-  nsMsgResultElement * re1 = *(nsMsgResultElement **) e1;
-  nsMsgResultElement * re2 = *(nsMsgResultElement **) e2;
-  
-  // get the src folder for each one
-  
-  const nsMsgSearchValue * v1 = re1->GetValueRef(attribFolderInfo);
-  const nsMsgSearchValue * v2 = re2->GetValueRef(attribFolderInfo);
-  
-  if (!v1 || !v2)
-    return 0;
-  
-  return (v1->u.folder - v2->u.folder);
-#else
-  return -1;
-#endif // HAVE_SEARCH_PORT
-}
-
-
-
-int nsMsgResultElement::Compare (const void *e1, const void *e2)
-{
-  int ret = 0;
-    return ret;
-}
-
-#ifdef HAVE_SEARCH_PORT
-MWContextType nsMsgResultElement::GetContextType ()
-{
-  MWContextType type=(MWContextType)0;
-  switch (m_adapter->m_scope->m_attribute)
-  {
-  case nsMsgSearchScopeMailFolder:
-    type = MWContextMailMsg;
-    break;
-  case nsMsgSearchScopeOfflineNewsgroup:    // added by mscott could be bug fix...
-  case nsMsgSearchScopeNewsgroup:
-  case nsMsgSearchScopeAllSearchableGroups:
-    type = MWContextNewsMsg;
-    break;
-  case nsMsgSearchScopeLdapDirectory:
-    type = MWContextBrowser;
-    break;
-  default:
-    NS_ASSERTION(PR_FALSE, "invalid scope"); // should never happen
-  }
-  return type;
-}
-
-#endif
 nsresult nsMsgResultElement::Open (void *window)
 {
-#ifdef HAVE_SEARCH_PORT
-  // ###phil this is a little ugly, but I'm not inclined to invest more in it
-  // until the libnet rework is done and I know what kind of context we'll end up with
-  
-  if (window)
-  {
-    if (m_adapter->m_scope->m_attribute != nsMsgSearchScopeLdapDirectory)
-    {
-      msgPane = (MSG_MessagePane *) window; 
-      PR_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());
-      return m_adapter->OpenResultElement (msgPane, this);
-    }
-    else
-    {
-      context = (MWContext*) window;
-      PR_ASSERT (MWContextBrowser == context->type);
-      msg_SearchLdap *thisAdapter = (msg_SearchLdap*) m_adapter;
-      return thisAdapter->OpenResultElement (context, this);
-    }
-  }
-#endif
   return NS_ERROR_NULL_POINTER;
 }
 
