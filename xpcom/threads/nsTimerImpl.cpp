@@ -391,7 +391,8 @@ void nsTimerImpl::Fire()
     // calling Fire().
     timeout -= PR_MillisecondsToInterval(mDelay);
   }
-  gThread->UpdateFilter(mDelay, timeout, now);
+  if (gThread)
+    gThread->UpdateFilter(mDelay, timeout, now);
 
   mFiring = PR_TRUE;
 
