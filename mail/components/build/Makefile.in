@@ -72,11 +72,11 @@ LOCAL_INCLUDES = \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)profilemigration_s.$(LIB_SUFFIX) \
+	../migration/src/$(LIB_PREFIX)profilemigration_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(filter mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../shell/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS += \
