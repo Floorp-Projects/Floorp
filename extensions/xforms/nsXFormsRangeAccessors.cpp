@@ -95,8 +95,7 @@ nsXFormsRangeAccessors::GetRangeStep(nsAString &aStep)
 
 static const nsIID sScriptingIIDs[] = {
   NS_IXFORMSACCESSORS_IID,
-  NS_IXFORMSRANGEACCESSORS_IID,
-  
+  NS_IXFORMSRANGEACCESSORS_IID
 };
 
 NS_IMETHODIMP

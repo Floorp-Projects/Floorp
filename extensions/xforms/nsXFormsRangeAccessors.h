@@ -45,8 +45,8 @@
  *
  * @todo Support out-of/in-range events (XXX)
  */
-class nsXFormsRangeAccessors : public nsIXFormsRangeAccessors,
-                               public nsXFormsAccessors
+class nsXFormsRangeAccessors : public nsXFormsAccessors,
+                               public nsIXFormsRangeAccessors
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
