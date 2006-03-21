@@ -43,7 +43,7 @@ function show(aItem){
 	<div id="report_data">
 		<div>
 			<div class="title">URL:</div>
-			<div class="data"><a href="{$report_url}" rel="nofollow external" title="Visit Page">{$report_url|truncate:60}</a></div>
+			<div class="data"><a href="{$report_url}" rel="nofollow external" target="_blank" title="Visit Page">{$report_url|truncate:60}</a></div>
 		</div>
 		<div>
 			<div class="title">Host:</div>
