@@ -58,7 +58,6 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGUtils.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsSVGMaskFrame.h"
 #include "nsISVGRendererSurface.h"
 #include "nsGkAtoms.h"
 
@@ -75,7 +74,6 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
   NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGInnerSVGFrame();
-  virtual ~nsSVGInnerSVGFrame();
   nsresult Init();
   
    // nsISupports interface:
@@ -97,6 +95,7 @@ public:
                   nsIFrame*       aParent,
                   nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
+  NS_IMETHOD DidSetStyleContext();
 
   // We don't define an AttributeChanged method since changes to the
   // 'x', 'y', 'width' and 'height' attributes of our content object
@@ -118,9 +117,7 @@ public:
 #endif
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -130,11 +127,6 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = mFilterRegion;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
-  }
   
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -162,9 +154,6 @@ protected:
 
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 
-  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
-  nsISVGFilterFrame *mFilter;
-
   PRPackedBool mPropagateTransform;
 };
 
@@ -177,22 +166,11 @@ NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
   return new (aPresShell) nsSVGInnerSVGFrame;
 }
 
-nsSVGInnerSVGFrame::nsSVGInnerSVGFrame() : mFilter(nsnull), 
-                                           mPropagateTransform(PR_TRUE)
+nsSVGInnerSVGFrame::nsSVGInnerSVGFrame() : mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVGFrame CTOR\n");
 #endif
-}
-
-nsSVGInnerSVGFrame::~nsSVGInnerSVGFrame()
-{
-#ifdef DEBUG
-//  printf("~nsSVGInnerSVGFrame\n");
-#endif
-  if (mFilter) {
-    NS_REMOVE_SVGVALUE_OBSERVER(mFilter);
-  }
 }
 
 nsresult nsSVGInnerSVGFrame::Init()
@@ -338,36 +316,11 @@ nsSVGInnerSVGFrame::IsFrameOfType(PRUint32 aFlags) const
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                             const nsRect& dirtyRectTwips,
-                             PRBool ignoreFilter)
+nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVG(%p)::Paint\n", this);
 #endif
-
-  const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
-
-  nsIURI *aURI;
-
-  /* check for filter */
-  
-  if (!ignoreFilter) {
-    if (!mFilter) {
-      aURI = GetStyleSVGReset()->mFilter;
-      if (aURI)
-        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
-      if (mFilter)
-        NS_ADD_SVGVALUE_OBSERVER(mFilter);
-    }
-
-    if (mFilter) {
-      if (!mFilterRegion)
-        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-      mFilter->FilterPaint(canvas, this);
-      return NS_OK;
-    }
-  }
 
   canvas->PushClip();
 
@@ -400,96 +353,10 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
       canvas->SetClipRect(clipTransform, x, y, width, height);
   }
 
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-
-  /* check for a clip path */
-
-  PRBool trivialClip = PR_TRUE;
-  nsISVGClipPathFrame *clip = NULL;
-  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface;
-
-  aURI = GetStyleSVGReset()->mClipPath;
-  if (aURI) {
-    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
-
-    if (clip) {
-      clip->IsTrivial(&trivialClip);
-
-      if (!trivialClip) {
-        nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                               getter_AddRefs(clipMaskSurface));
-        if (!clipMaskSurface)
-          clip = nsnull;
-      }
-
-      if (clip) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
-        clip->ClipPaint(canvas, clipMaskSurface, this, matrix);
-      }
-    }
-  }
-
-  /* check for mask */
-
-  nsISVGMaskFrame *mask = nsnull;
-  nsCOMPtr<nsISVGRendererSurface> maskSurface, maskedSurface;
-
-  aURI = GetStyleSVGReset()->mMask;
-  if (aURI) {
-    NS_GetSVGMaskFrame(&mask, aURI, mContent);
-
-    if (mask) {
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(maskSurface));
-
-      if (maskSurface) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix = GetCanvasTM();
-        if (NS_FAILED(mask->MaskPaint(canvas, maskSurface, this, matrix,
-                                      display->mOpacity)))
-          maskSurface = nsnull;
-      }
-    }
-  }
-
-  if (maskSurface || clipMaskSurface || display->mOpacity != 1.0) {
-    nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                           getter_AddRefs(maskedSurface));
-    if (maskedSurface) {
-      canvas->PushSurface(maskedSurface);
-    } else
-      maskSurface = nsnull;
-  }
-
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
+    nsSVGUtils::PaintChildWithEffects(canvas, kid);
   }
-
-  if (maskedSurface)
-    canvas->PopSurface();
-
-  if (clipMaskSurface) {
-    if (!maskSurface && display->mOpacity == 1.0) {
-      maskSurface = clipMaskSurface;
-    } else {
-      nsCOMPtr<nsISVGRendererSurface> clipped;
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(clipped));
-      
-      canvas->PushSurface(clipped);
-      canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, clipMaskSurface);
-      canvas->PopSurface();
-      maskedSurface = clipped;
-    }
-  }
-
-  if (maskSurface)
-    canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, maskSurface);
-  else if (display->mOpacity != 1.0)
-    canvas->CompositeSurface(maskedSurface, 0, 0, display->mOpacity);
 
   canvas->PopClip();
 
@@ -499,26 +366,9 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
-#ifdef DEBUG
-//  printf("nsSVGInnerSVGFrame(%p)::GetFrameForPoint\n", this);
-#endif
-  *hit = nsnull;
-  for (nsIFrame* kid = mFrames.FirstChild(); kid;
-       kid = kid->GetNextSibling()) {
-    nsISVGChildFrame* SVGFrame=nsnull;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
-      if (NS_SUCCEEDED(rv) && temp) {
-        *hit = temp;
-        // return NS_OK; can't return. we need reverse order but only
-        // have a singly linked list...
-      }
-    }
-  }
-  
-  return *hit ? NS_OK : NS_ERROR_FAILURE;
+  nsSVGUtils::HitTestChildren(this, x, y, hit);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
@@ -791,21 +641,7 @@ NS_IMETHODIMP
 nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
                                             nsISVGValue::modificationType aModType)
 {
-  nsISVGFilterFrame *filter;
-  CallQueryInterface(observable, &filter);
-
-  // need to handle filters because we might be the topmost filtered frame and
-  // the filter region could be changing.
-  if (filter && mFilterRegion) {
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (!outerSVGFrame)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
-    outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-  }
-
+  nsSVGUtils::WillModifyEffects(this, observable, aModType);
   return NS_OK;
 }
 	
@@ -816,27 +652,18 @@ nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable,
   nsISVGFilterFrame *filter;
   CallQueryInterface(observable, &filter);
 
-  if (filter) {
-    if (aModType == nsISVGValue::mod_die) {
-      mFilter = nsnull;
-      mFilterRegion = nsnull;
-    }
+  nsSVGUtils::DidModifyEffects(this, observable, aModType);
 
-    nsISVGOuterSVGFrame *outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-    if (!outerSVGFrame)
-      return NS_ERROR_FAILURE;
-
-    if (mFilter)
-      mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-      
-    nsCOMPtr<nsISVGRendererRegion> region;
-    nsSVGUtils::FindFilterInvalidation(this, getter_AddRefs(region));
-    
-    if (region)
-      outerSVGFrame->InvalidateRegion(region, PR_TRUE);
-  } else {
+  if (!filter) {
     NotifyViewportChange();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGInnerSVGFrame::DidSetStyleContext()
+{
+  nsSVGUtils::StyleEffects(this);
   return NS_OK;
 }

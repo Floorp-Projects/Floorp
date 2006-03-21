@@ -43,6 +43,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsISVGValue.h"
 
 class nsPresContext;
 class nsIContent;
@@ -64,13 +65,22 @@ class nsIPresShell;
 class nsISVGRendererCanvas;
 class nsISVGOuterSVGFrame;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
+class nsISVGValueObserver;
+class nsIAtom;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
 // SVG Frame state bits
-#define NS_STATE_IS_OUTER_SVG 0x00100000
+#define NS_STATE_IS_OUTER_SVG         0x00100000
+
+#define NS_STATE_SVG_CLIPPED_TRIVIAL  0x00200000
+#define NS_STATE_SVG_CLIPPED_COMPLEX  0x00400000
+#define NS_STATE_SVG_CLIPPED_MASK     0x00600000
+
+#define NS_STATE_SVG_FILTERED         0x00800000
+#define NS_STATE_SVG_MASKED           0x01000000
 
 class nsSVGUtils
 {
@@ -215,6 +225,43 @@ public:
                       float aViewboxWidth, float aViewboxHeight,
                       nsIDOMSVGAnimatedPreserveAspectRatio *aPreserveAspectRatio,
                       PRBool aIgnoreAlign = PR_FALSE);
+
+  /* Paint frame with SVG effects */
+  static void
+  PaintChildWithEffects(nsISVGRendererCanvas *aCanvas, nsIFrame *aFrame);
+
+  /* Style change for effects (filter/clip/mask/opacity) - call when
+   * the frame's style has changed to make sure the effects properties
+   * stay in sync. */
+  static void
+  StyleEffects(nsIFrame *aFrame);
+
+  /* Modification events for effects (filter/clip/mask/opacity) - call
+   * when observers on effects get called to make sure properties stay
+   * in sync. */
+  static void
+  WillModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
+                    nsISVGValue::modificationType aModType);
+  static void
+  DidModifyEffects(nsIFrame *aFrame, nsISVGValue *observable,
+                   nsISVGValue::modificationType aModType);
+
+  /* Hit testing - check if point hits the clipPath of indicated
+   * frame.  Returns true of no clipPath set. */
+
+  static PRBool
+  HitTestClip(nsIFrame *aFrame, float x, float y);
+
+  /* Hit testing - check if point hits any children of frame. */
+  
+  static void
+  HitTestChildren(nsIFrame *aFrame, float x, float y, nsIFrame **aResult);
+
+  /*
+   * Returns the CanvasTM of the indicated frame, whether it's a
+   * child or container SVG frame.
+   */
+  static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
 
 private:
   /*

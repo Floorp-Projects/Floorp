@@ -127,9 +127,7 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -139,10 +137,6 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = nsnull;
-    return NS_OK;
-  }
   
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();

@@ -135,9 +135,7 @@ public:
 
   // nsISVGChildFrame interface:
   // Override PaintSVG (our frames don't directly render)
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter) {return NS_OK;}
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas) {return NS_OK;}
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

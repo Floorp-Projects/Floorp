@@ -278,9 +278,7 @@ nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_retval)
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                          const nsRect& dirtyRectTwips,
-                          PRBool ignoreFilter)
+nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
 #ifdef DEBUG
 //  printf("nsSVGTSpanFrame(%p)::Paint\n", this);
@@ -291,7 +289,7 @@ nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     nsISVGChildFrame* SVGFrame=0;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
-      SVGFrame->PaintSVG(canvas, dirtyRectTwips, PR_FALSE);
+      SVGFrame->PaintSVG(canvas);
     kid = kid->GetNextSibling();
   }
 
@@ -301,27 +299,9 @@ nsSVGTSpanFrame::PaintSVG(nsISVGRendererCanvas* canvas,
 NS_IMETHODIMP
 nsSVGTSpanFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
 {
-#ifdef DEBUG
-//  printf("nsSVGTSpanFrame(%p)::GetFrameForPoint\n", this);
-#endif
-  *hit = nsnull;
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame) {
-      nsIFrame* temp=nsnull;
-      nsresult rv = SVGFrame->GetFrameForPointSVG(x, y, &temp);
-      if (NS_SUCCEEDED(rv) && temp) {
-        *hit = temp;
-        // return NS_OK; can't return. we need reverse order but only
-        // have a singly linked list...
-      }
-    }
-    kid = kid->GetNextSibling();
-  }
-  
-  return *hit ? NS_OK : NS_ERROR_FAILURE;
+  nsSVGUtils::HitTestChildren(this, x, y, hit);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)

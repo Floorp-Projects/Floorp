@@ -150,6 +150,7 @@ private:
   nsCOMPtr<imgIContainer> mContainer;
   nsCOMPtr<gfxIImageFrame> mBuffer;
   PRUint8 *mData;
+  PRInt32 mSubSurfaceDepth;
 
   PRUint16 mRenderMode;
   PRPackedBool mOwnsCR;
@@ -162,7 +163,7 @@ private:
 //----------------------------------------------------------------------
 // implementation:
 
-nsSVGCairoCanvas::nsSVGCairoCanvas() : mData(nsnull)
+nsSVGCairoCanvas::nsSVGCairoCanvas() : mData(nsnull), mSubSurfaceDepth(0)
 {
   mOwnsCR = PR_FALSE;
 }
@@ -184,7 +185,7 @@ nsSVGCairoCanvas::~nsSVGCairoCanvas()
 nsresult
 nsSVGCairoCanvas::AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix)
 {
-  if (mContextStack.Count() == 0)
+  if (mSubSurfaceDepth == mContextStack.Count())
     cairo_matrix_multiply(aMatrix, aMatrix, &mInitialTransform);
   return NS_OK;
 }
@@ -714,7 +715,8 @@ struct ctxEntry {
 
 /** Implements pushSurface(in nsISVGRendererSurface surface); */
 NS_IMETHODIMP
-nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
+nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface,
+                              PRBool isSubSurface)
 {
   nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
   if (!cairoSurface)
@@ -727,6 +729,10 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
   ctx->mCR = mCR;
   ctx->mWidth = mWidth;
   ctx->mHeight = mHeight;
+
+  // Once we go non-subsurface, all further pushes are forced absolute
+  if (isSubSurface && mSubSurfaceDepth == mContextStack.Count())
+    mSubSurfaceDepth++;
 
   mContextStack.AppendElement(NS_STATIC_CAST(void*, ctx));
 
@@ -741,7 +747,7 @@ nsSVGCairoCanvas::PushSurface(nsISVGRendererSurface *aSurface)
 NS_IMETHODIMP
 nsSVGCairoCanvas::PopSurface()
 {
-  PRUint32 count = mContextStack.Count();
+  PRInt32 count = mContextStack.Count();
   if (count != 0) {
     cairo_destroy(mCR);
     ctxEntry *ctx = NS_STATIC_CAST(ctxEntry*, mContextStack[count - 1]);
@@ -750,6 +756,9 @@ nsSVGCairoCanvas::PopSurface()
     mHeight = ctx->mHeight;
     delete ctx;
     mContextStack.RemoveElementAt(count - 1);
+
+    if (mSubSurfaceDepth == count)
+      mSubSurfaceDepth--;
   }
 
   return NS_OK;
@@ -764,18 +773,18 @@ nsSVGCairoCanvas::GetSurfaceSize(PRUint32 *aWidth, PRUint32 *aHeight)
 }
 
 /** Implements  void compositeSurface(in nsISVGRendererSurface surface,
-                                      in unsigned long x, in unsigned long y,
                                       in float opacity); */
 NS_IMETHODIMP
 nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
-                                   PRUint32 aX, PRUint32 aY, float aOpacity)
+                                   float aOpacity)
 {
   nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
   if (!cairoSurface)
     return NS_ERROR_FAILURE;
 
   cairo_save(mCR);
-  cairo_translate(mCR, aX, aY);
+  if (mSubSurfaceDepth == mContextStack.Count())
+    cairo_translate(mCR, -mInitialTransform.x0, -mInitialTransform.y0);
 
   cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
   cairo_paint_with_alpha(mCR, aOpacity);
@@ -785,12 +794,9 @@ nsSVGCairoCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
 }
 
 /** Implements void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
-                                             in unsigned long x,
-                                             in unsigned long y,
                                              in nsISVGRendererSurface mask); */
 NS_IMETHODIMP
 nsSVGCairoCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
-                                           PRUint32 aX, PRUint32 aY,
                                            nsISVGRendererSurface *aMask)
 {
   nsCOMPtr<nsISVGCairoSurface> cairoSurface = do_QueryInterface(aSurface);
@@ -799,7 +805,8 @@ nsSVGCairoCanvas::CompositeSurfaceWithMask(nsISVGRendererSurface *aSurface,
     return NS_ERROR_FAILURE;
 
   cairo_save(mCR);
-  cairo_translate(mCR, aX, aY);
+  if (mSubSurfaceDepth == mContextStack.Count())
+    cairo_translate(mCR, -mInitialTransform.x0, -mInitialTransform.y0);
 
   cairo_set_source_surface(mCR, cairoSurface->GetSurface(), 0.0, 0.0);
   cairo_mask_surface(mCR, maskSurface->GetSurface(), 0.0, 0.0);

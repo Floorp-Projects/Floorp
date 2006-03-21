@@ -53,12 +53,9 @@
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
 #include "imgIRequest.h"
-#include "nsSVGClipPathFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsISVGValueUtils.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
-#include "nsSVGMaskFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 
@@ -102,9 +99,7 @@ public:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
 
   // nsISVGGeometrySource interface:
   NS_IMETHOD GetStrokePaintType(PRUint16 *aStrokePaintType);
@@ -286,32 +281,10 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 NS_IMETHODIMP
-nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                          const nsRect& dirtyRectTwips,
-                          PRBool ignoreFilter)
+nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
-
-  nsIURI *aURI;
-
-  /* check for filter */
-  if (!ignoreFilter) {
-    if (!mFilter) {
-      aURI = GetStyleSVGReset()->mFilter;
-      if (aURI)
-        NS_GetSVGFilterFrame(&mFilter, aURI, mContent);
-      if (mFilter)
-        NS_ADD_SVGVALUE_OBSERVER(mFilter);
-    }
-
-    if (mFilter) {
-      if (!mFilterRegion)
-        mFilter->GetInvalidationRegion(this, getter_AddRefs(mFilterRegion));
-      mFilter->FilterPaint(canvas, this);
-      return NS_OK;
-    }
-  }
 
   if (mSurfaceInvalid) {
     nsCOMPtr<imgIRequest> currentRequest;
@@ -334,71 +307,6 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
     } else {
       return NS_OK;
     }
-  }
-
-  canvas->PushClip();
-
-  nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
-
-  /* check for a clip path */
-
-  PRBool trivialClip = PR_TRUE;
-  nsISVGClipPathFrame *clip = NULL;
-  nsCOMPtr<nsISVGRendererSurface> clipMaskSurface;
-
-  aURI = GetStyleSVGReset()->mClipPath;
-  if (aURI) {
-    NS_GetSVGClipPathFrame(&clip, aURI, mContent);
-
-    if (clip) {
-      clip->IsTrivial(&trivialClip);
-
-      if (trivialClip) {
-        canvas->PushClip();
-      } else {
-        nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                               getter_AddRefs(clipMaskSurface));
-        if (!clipMaskSurface)
-          clip = nsnull;
-      }
-
-      if (clip) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        GetCanvasTM(getter_AddRefs(matrix));
-        clip->ClipPaint(canvas, clipMaskSurface, this, matrix);
-      }
-    }
-  }
-
-  /* check for mask */
-
-  nsISVGMaskFrame *mask = nsnull;
-  nsCOMPtr<nsISVGRendererSurface> maskSurface, maskedSurface;
-
-  aURI = GetStyleSVGReset()->mMask;
-  if (aURI) {
-    NS_GetSVGMaskFrame(&mask, aURI, mContent);
-
-    if (mask) {
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(maskSurface));
-
-      if (maskSurface) {
-        nsCOMPtr<nsIDOMSVGMatrix> matrix;
-        GetCanvasTM(getter_AddRefs(matrix));
-        if (NS_FAILED(mask->MaskPaint(canvas, maskSurface, this, matrix)))
-          maskSurface = nsnull;
-      }
-    }
-  }
-
-  if (maskSurface || clipMaskSurface) {
-    nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                           getter_AddRefs(maskedSurface));
-    if (maskedSurface) {
-      canvas->PushSurface(maskedSurface);
-    } else
-      maskSurface = nsnull;
   }
 
   if (mSurface) {
@@ -434,29 +342,6 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas,
                                    fini,
                                    mStyleContext->GetStyleDisplay()->mOpacity);
   }
-
-  if (maskedSurface)
-    canvas->PopSurface();
-
-  if (clipMaskSurface) {
-    if (!maskSurface) {
-      maskSurface = clipMaskSurface;
-    } else {
-      nsCOMPtr<nsISVGRendererSurface> clipped;
-      nsSVGUtils::GetSurface(outerSVGFrame, canvas,
-                             getter_AddRefs(clipped));
-      
-      canvas->PushSurface(clipped);
-      canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, clipMaskSurface);
-      canvas->PopSurface();
-      maskedSurface = clipped;
-    }
-  }
-
-  if (maskSurface)
-    canvas->CompositeSurfaceWithMask(maskedSurface, 0, 0, maskSurface);
-
-  canvas->PopClip();
 
   return NS_OK;
 }

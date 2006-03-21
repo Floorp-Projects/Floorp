@@ -377,14 +377,13 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
     }
   }
 
-  nsRect dirtyRectTwips;
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
       SVGFrame->NotifyCanvasTMChanged(PR_TRUE);
-      SVGFrame->PaintSVG(aCanvas, dirtyRectTwips, PR_FALSE);
+      nsSVGUtils::PaintChildWithEffects(aCanvas, kid);
     }
   }
 

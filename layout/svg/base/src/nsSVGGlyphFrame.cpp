@@ -132,9 +132,7 @@ public:
                                      nsISVGValue::modificationType aModType);
 
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -144,10 +142,6 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_OK; }
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM) { return NS_ERROR_FAILURE; }
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = nsnull;
-    return NS_OK;
-  }
   
   // nsISVGGeometrySource interface: 
   NS_DECL_NSISVGGEOMETRYSOURCE
@@ -482,9 +476,7 @@ nsSVGGlyphFrame::DidModifySVGObservable (nsISVGValue* observable,
 // nsISVGChildFrame methods
 
 NS_IMETHODIMP
-nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas,
-                          const nsRect& dirtyRectTwips,
-                          PRBool ignoreFilter)
+nsSVGGlyphFrame::PaintSVG(nsISVGRendererCanvas* canvas)
 {
 #ifdef DEBUG
   //printf("nsSVGGlyphFrame(%p)::Paint\n", this);

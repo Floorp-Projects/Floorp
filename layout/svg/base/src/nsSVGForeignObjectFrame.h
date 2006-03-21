@@ -62,7 +62,6 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGForeignObjectFrame();
-  virtual ~nsSVGForeignObjectFrame();
   nsresult Init();
   
   // nsISupports interface:
@@ -96,6 +95,8 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
+  NS_IMETHOD DidSetStyleContext();
+
   /**
    * Get the "type" of the frame
    *
@@ -124,9 +125,7 @@ public:
   // implementation inherited from nsSupportsWeakReference
   
   // nsISVGChildFrame interface:
-  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
-                      const nsRect& dirtyRectTwips,
-                      PRBool ignoreFilter);
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas);
   NS_IMETHOD GetFrameForPointSVG(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
@@ -136,11 +135,6 @@ public:
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
-  NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval) {
-    *_retval = mFilterRegion;
-    NS_IF_ADDREF(*_retval);
-    return NS_OK;
-  }  
 
   // nsISVGContainerFrame interface:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -170,9 +164,6 @@ protected:
   nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
   nsCOMPtr<nsIDOMSVGMatrix>    mOverrideCTM;
-
-  nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
-  nsISVGFilterFrame *mFilter;
 
   PRPackedBool mPropagateTransform;
   PRPackedBool mIsDirty;

@@ -67,7 +67,11 @@ nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f,
                             modificationType aModType)
 {
   PRInt32 count = mObservers.Count();
-  for (PRInt32 i = 0; i < count; ++i) {
+
+  // Since notification might cause the listeners to remove themselves
+  // from the observer list (mod_die), walk backwards through the list
+  // to catch everyone.
+  for (PRInt32 i = count - 1; i >= 0; i--) {
     nsIWeakReference* wr = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
     nsCOMPtr<nsISVGValueObserver> observer = do_QueryReferent(wr);
     if (observer)

@@ -129,8 +129,13 @@ interface nsISVGRendererCanvas : nsISupports
 
   /**
    * Push/Pop surface as primary drawing surface.
+   *
+   * surface: surface to push
+   * isSubSurface: boolean to tell whether this should be treated like
+   *               the "root" surface in terms of transformation correction
+   *               or as an absolute surface.
    */
-  void pushSurface(in nsISVGRendererSurface surface);
+  void pushSurface(in nsISVGRendererSurface surface, in boolean isSubSurface);
   void popSurface();
 
   /**
@@ -142,11 +147,9 @@ interface nsISVGRendererCanvas : nsISupports
    * Surface composition.
    */
   void compositeSurface(in nsISVGRendererSurface surface,
-                        in unsigned long x, in unsigned long y,
                         in float opacity);
 
   void compositeSurfaceWithMask(in nsISVGRendererSurface surface,
-                                in unsigned long x, in unsigned long y,
                                 in nsISVGRendererSurface mask);
 
   void compositeSurfaceMatrix(in nsISVGRendererSurface surface,
