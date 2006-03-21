@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.57 2006/03/09 23:38:57 nelson%bolyard.com Exp $
+ * $Id: pcertdb.c,v 1.58 2006/03/21 02:28:48 rrelyea%redhat.com Exp $
  */
 #include "prtime.h"
 
@@ -91,6 +91,9 @@ static int entryListCount = 0;
  * a global lock to make the database thread safe.
  */
 static PZLock *dbLock = NULL;
+static PZLock *certRefCountLock = NULL;
+static PZLock *certTrustLock = NULL;
+static PZLock *freeListLock = NULL;
 
 void
 certdb_InitDBLock(NSSLOWCERTCertDBHandle *handle)
@@ -99,8 +102,31 @@ certdb_InitDBLock(NSSLOWCERTCertDBHandle *handle)
 	nss_InitLock(&dbLock, nssILockCertDB);
 	PORT_Assert(dbLock != NULL);
     }
+}
 
-    return;
+SECStatus
+nsslowcert_InitLocks(void)
+{
+    if (freeListLock == NULL) {
+	nss_InitLock(&freeListLock, nssILockRefLock);
+	if (freeListLock == NULL) {
+	    return SECFailure;
+	}
+    }
+    if (certRefCountLock == NULL) {
+	nss_InitLock(&certRefCountLock, nssILockRefLock);
+	if (certRefCountLock == NULL) {
+	    return SECFailure;
+	}
+    }
+    if (certTrustLock == NULL ) {
+	nss_InitLock(&certTrustLock, nssILockCertDB);
+	if (certTrustLock == NULL) {
+	    return SECFailure;
+	}
+    }
+    
+    return SECSuccess;
 }
 
 /*
@@ -133,7 +159,6 @@ nsslowcert_UnlockDB(NSSLOWCERTCertDBHandle *handle)
     return;
 }
 
-static PZLock *certRefCountLock = NULL;
 
 /*
  * Acquire the cert reference count lock
@@ -144,10 +169,7 @@ static PZLock *certRefCountLock = NULL;
 static void
 nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
 {
-    if ( certRefCountLock == NULL ) {
-	nss_InitLock(&certRefCountLock, nssILockRefLock);
-	PORT_Assert(certRefCountLock != NULL);
-    }
+    PORT_Assert(certRefCountLock != NULL);
     
     PZ_Lock(certRefCountLock);
     return;
@@ -170,8 +192,6 @@ nsslowcert_UnlockCertRefCount(NSSLOWCERTCertificate *cert)
     return;
 }
 
-static PZLock *certTrustLock = NULL;
-
 /*
  * Acquire the cert trust lock
  * There is currently one global lock for all certs, but I'm putting a cert
@@ -181,11 +201,8 @@ static PZLock *certTrustLock = NULL;
 void
 nsslowcert_LockCertTrust(NSSLOWCERTCertificate *cert)
 {
-    if ( certTrustLock == NULL ) {
-	nss_InitLock(&certTrustLock, nssILockCertDB);
-	PORT_Assert(certTrustLock != NULL);
-    }
-    
+    PORT_Assert(certTrustLock != NULL);
+
     PZ_Lock(certTrustLock);
     return;
 }
@@ -207,7 +224,6 @@ nsslowcert_UnlockCertTrust(NSSLOWCERTCertificate *cert)
     return;
 }
 
-static PZLock *freeListLock = NULL;
 
 /*
  * Acquire the cert reference count lock
@@ -218,10 +234,7 @@ static PZLock *freeListLock = NULL;
 static void
 nsslowcert_LockFreeList(void)
 {
-    if ( freeListLock == NULL ) {
-	nss_InitLock(&freeListLock, nssILockRefLock);
-	PORT_Assert(freeListLock != NULL);
-    }
+    PORT_Assert(freeListLock != NULL);
     
     PZ_Lock(freeListLock);
     return;
@@ -5316,9 +5329,6 @@ nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr,
     return(rv);
 }
 
-/* If the freeListLock doesn't exist when this function is called,
-** this function will create it, use it 3 times, and delete it.
-*/
 void
 nsslowcert_DestroyFreeLists(void)
 {
