@@ -45,25 +45,36 @@ require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.ph
 printheaders();
 
 $content = initializeTemplate();
-if(isset($_GET['report_description'])){
-    $content->assign('report_description',          $_GET['report_description']);
-}
-if(isset($_GET['report_useragent'])){
-    $content->assign('report_useragent',            $_GET['report_useragent']);
-}
-if(isset($_GET['report_gecko'])){
-    $content->assign('report_gecko',                $_GET['report_gecko']);
-}
-if(isset($_GET['report_language'])){
-    $content->assign('report_language',             $_GET['report_language']);
-}
-if(isset($_GET['report_platform'])){
-    $content->assign('report_platform',             $_GET['report_platform']);
-}
-if(isset($_GET['report_oscpu'])){
-    $content->assign('report_oscpu',                $_GET['report_oscpu']);
+
+// These are fields we will populate based on their values
+$fields = array('report_description',
+                'report_useragent',
+                'report_gecko',
+                'report_language',
+                'report_platform',
+                'report_oscpu',
+                'report_product',
+                'report_file_date_start',
+                'report_file_date_end',
+                'show',
+                'count',
+                'host_hostname',
+                'report_problem_type',
+                'report_behind_login',
+);
+
+foreach($fields as $field){
+    if(isset($_GET[$field])){
+        $content->assign($field,          htmlspecialchars($_GET[$field]));
+    }
 }
 
+// Problem Types
+if(isset($problemTypes)){
+    $content->assign('problem_types',               $problemTypes);
+}
+
+// Get the list of products from the database
 $db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
@@ -81,36 +92,18 @@ if(isset($products) && sizeof($products) > 0){
     $content->assign('product_options',             $products);
 }
 $db->Close();
-if(isset($_GET['report_product'])){
-    $content->assign('report_product',              $_GET['report_product']);
-}
-if(isset($_GET['report_file_date_start'])){
-    $content->assign('report_file_date_start',      $_GET['report_file_date_start']);
-}
-if(isset($_GET['report_file_date_end'])){
-    $content->assign('report_file_date_end',        $_GET['report_file_date_end']);
-}
-if(isset($_GET['show'])){
-    $content->assign('show',                        $_GET['show']);
-}
-if(isset($_GET['count'])){
-    $content->assign('count',                       $_GET['count']);
-}
-if(isset($_GET['host_hostname'])){
-    $content->assign('host_hostname',               $_GET['host_hostname']);
-}
-if(isset($_GET['report_problem_type'])){
-    $content->assign('report_problem_type',         $_GET['report_problem_type']);
-}
-if(isset($_GET['report_behind_login'])){
-    $content->assign('report_behind_login',         $_GET['report_behind_login']);
-}
+
 if(isset($products)){
     $content->assign('products',                    $products);
 }
-if(isset($problemTypes)){
-    $content->assign('problem_types',               $problemTypes);
+
+// View
+// Remove fields that you can't manually select
+foreach ($config['unselectablefields'] as $unselectableChild){
+    unset($config['fields'][$unselectableChild]);
 }
+
+$content->assign('selected_options',            $config['fields']);
 
 // Remove fields that you can't manually select
 foreach ($config['unselectablefields'] as $unselectableChild){
@@ -118,12 +111,15 @@ foreach ($config['unselectablefields'] as $unselectableChild){
 }
 
 $content->assign('selected_options',            $config['fields']);
+
+// Selected is a special case
 if (isset($_GET['selected'])){
-    $content->assign('selected',               	$_GET['selected']);
+    $content->assign('selected',               	htmlspecialchars($_GET['selected']));
 }
 else {
     $content->assign('selected',                array('host_hostname', 'report_file_date'));
 }
 
+// Output page
 displayPage($content, 'index', 'index.tpl');
 ?>
