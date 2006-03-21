@@ -4,9 +4,8 @@ Desc: Installation script
 const displayName      = "Mozilla Calendar";
 const name             = "MozillaCalendar";
 const version          = "0.8";
-const addLocales       = new Array("ca-AD", "cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "it-IT", "ja-JP", "lt-LT", 
+const addLocales       = new Array("ca-AD", "cs-CZ", "cy-GB", "de-AT", "en-US", "es-ES", "fr-FR", "hu-HU", "it-IT", "ja-JP", "lt-LT", 
                                    "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "tr-TR", "wen-DE");
-const default_lang     =  "en-US";
 
 var err = initInstall(displayName, name, version);
 
@@ -40,7 +39,6 @@ if ( err == SUCCESS ) {
    registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "content/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/classic/calendar/");
    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "skin/modern/calendar/");
-   registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","calendar.jar"), "locale/"+default_lang+"/calendar/");
 
    for (var i = 0; i < addLocales.length; i++) {
 
