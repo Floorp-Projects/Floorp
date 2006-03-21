@@ -115,3 +115,6 @@ pref("browser.xul.error_pages.enabled", true);
 
 // map delete key to back button
 pref("browser.backspace_action", 0);
+
+// bring download window to the front when each download starts
+pref("browser.download.progressDnldDialog.bringToFront", true);

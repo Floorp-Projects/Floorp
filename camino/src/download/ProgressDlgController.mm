@@ -529,6 +529,15 @@ static id gSharedProgressController = nil;
     [self showWindow:nil]; // make sure the window is visible
   }
   
+  // a common cause of user confusion is the window being visible but behind other windows. They
+  // have no idea the download was successful, and click the link two or three times before
+  // looking around to see what happened. We always want the download window to come to the
+  // front on a new download (unless they set a user_pref);
+  BOOL gotPref = NO;
+  BOOL bringToFront = [[PreferenceManager sharedInstance] getBooleanPref:"browser.download.progressDnldDialog.bringToFront" withSuccess:&gotPref];
+  if (gotPref && bringToFront)
+    [[self window] makeKeyAndOrderFront:self];
+  
   [self rebuildViews];
   [self setupDownloadTimer];
   
