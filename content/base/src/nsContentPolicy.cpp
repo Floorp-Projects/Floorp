@@ -144,7 +144,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
      * their permissions.
      */
     nsresult rv;
-    const nsCOMArray<nsIContentPolicy>& entries(mPolicies.GetEntries());
+    const nsCOMArray<nsIContentPolicy>& entries = mPolicies.GetEntries();
     PRInt32 count = entries.Count();
     for (PRInt32 i = 0; i < count; i++) {
         /* check the appropriate policy */
