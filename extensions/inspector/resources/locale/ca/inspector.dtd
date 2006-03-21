@@ -7,9 +7,9 @@
 <!ENTITY btnFind.tooltip "Cerqueu un node per inspeccionar per identificador, etiqueta o atribut">
 <!-- MAIN MENU ITEMS -->
 <!ENTITY mnFile.label "Fitxer">
-<!ENTITY mnWindows.label "Inspecciona una finestra">
-<!ENTITY mnWindows.accesskey "n">
 <!ENTITY mnFile.accesskey "F">
+<!ENTITY mnInspectDocument.label "Inspect Document">
+<!ENTITY mnInspectDocument.accesskey "D">
 <!ENTITY cmdShowOpenURLDialog.label "Inspecciona un URL">
 <!ENTITY cmdShowOpenURLDialog.accesskey "U">
 <!ENTITY cmdClose.label "Tanca">
@@ -38,6 +38,8 @@
 <!ENTITY cmdRunSearch.accesskey "a">
 <!ENTITY mnView.label "Visualitza">
 <!ENTITY mnView.accesskey "V">
+<!ENTITY cmdToggleChrome.label "Chrome">
+<!ENTITY cmdToggleChrome.accesskey "C">
 <!ENTITY cmdToggleBrowser.label "Navegador">
 <!ENTITY cmdToggleSearch.label "Cerca els resultats">
 <!ENTITY cmdViewSearchItem.label "Visualitza...">

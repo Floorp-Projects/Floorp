@@ -7,9 +7,9 @@
 <!ENTITY btnFind.tooltip "Cuardaigh nód le scrúdú de réir aitheantais, clibe, nó aitreabúide">
 <!-- MAIN MENU ITEMS -->
 <!ENTITY mnFile.label "Comhad">
-<!ENTITY mnWindows.label "Scrúdaigh Fuinneog">
-<!ENTITY mnWindows.accesskey "F">
 <!ENTITY mnFile.accesskey "C">
+<!ENTITY mnInspectDocument.label "Scrúdaigh Cáipéis">
+<!ENTITY mnInspectDocument.accesskey "p">
 <!ENTITY cmdShowOpenURLDialog.label "Scrúdaigh URL...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "U">
 <!ENTITY cmdClose.label "Dún">
@@ -40,6 +40,8 @@
 <!ENTITY mnView.accesskey "A">
 <!ENTITY cmdToggleBrowser.label "Brabhsálaí">
 <!ENTITY cmdToggleSearch.label "Torthaí Cuardaigh">
+<!ENTITY cmdToggleChrome.label "Snas">
+<!ENTITY cmdToggleChrome.accesskey "S">
 <!ENTITY cmdViewSearchItem.label "Amharc...">
 <!ENTITY cmdEditSearchItem.label "Eagar...">
 <!ENTITY cmdCopySearchItemLine.label "Cóipeáil Líne">

@@ -11,9 +11,11 @@
 <!-- MAIN MENU ITEMS -->
 
 <!ENTITY mnFile.label "Fil">
-<!ENTITY mnWindows.label "Inspiser et vindu">
-<!ENTITY mnWindows.accesskey "v">
 <!ENTITY mnFile.accesskey "f">
+<!ENTITY mnInspectDocument.label "Inspiser dokument ...">
+<!ENTITY mnInspectDocument.accesskey "d">
+<!ENTITY cmdToggleChrome.label "Chrome">
+<!ENTITY cmdToggleChrome.accesskey "C">
   <!ENTITY cmdShowOpenURLDialog.label "Inspiser en adresse ...">
   <!ENTITY cmdShowOpenURLDialog.accesskey "I">
   <!ENTITY cmdClose.label "Lukk">
