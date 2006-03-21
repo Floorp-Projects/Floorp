@@ -93,7 +93,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIWritablePropertyBag2.h"
-#include "nsObserverService.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
