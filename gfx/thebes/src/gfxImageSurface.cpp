@@ -73,7 +73,7 @@ gfxImageSurface::Stride() const
     if (mFormat == ImageFormatARGB32)
         stride = mWidth * 4;
     else if (mFormat == ImageFormatRGB24)
-        stride = mWidth * 3;
+        stride = mWidth * 4;
     else if (mFormat == ImageFormatA8)
         stride = mWidth;
     else if (mFormat == ImageFormatA1) {
