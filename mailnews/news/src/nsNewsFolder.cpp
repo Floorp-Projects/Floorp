@@ -1764,13 +1764,15 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
 NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey keyOfArticle)
 {
   nsresult rv = NS_OK;
-  if (m_downloadMessageForOfflineUse && !m_offlineHeader)
+  if (m_downloadMessageForOfflineUse)
   {
-    GetMessageHeader(keyOfArticle, getter_AddRefs(m_offlineHeader));
-    rv = StartNewOfflineMessage();
+    if (!m_offlineHeader)
+    {
+      GetMessageHeader(keyOfArticle, getter_AddRefs(m_offlineHeader));
+      rv = StartNewOfflineMessage();
+    }
+    m_numOfflineMsgLines++;
   }
-
-  m_numOfflineMsgLines++;
 
   if (m_tempMessageStream)
   {
