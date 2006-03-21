@@ -40,15 +40,13 @@
 
 #include "nsISupports.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentPolicy.h"
-#include "nsICategoryManager.h"
 #include "nsIURI.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIContent.h"
+#include "nsCOMArray.h"
 
 NS_IMPL_ISUPPORTS1(nsContentPolicy, nsIContentPolicy)
 
@@ -66,70 +64,14 @@ NS_NewContentPolicy(nsIContentPolicy **aResult)
   return NS_OK;
 }
 
-/*
- * This constructor does far too much.  I wish there was a way to get
- * an Init method called by the service manager after the factory
- * returned the new object, so that errors could be propagated back to
- * the caller correctly.
- */
 nsContentPolicy::nsContentPolicy()
+    : mPolicies(NS_CONTENTPOLICY_CATEGORY)
 {
 #ifdef PR_LOGGING
     if (! gConPolLog) {
         gConPolLog = PR_NewLogModule("nsContentPolicy");
     }
 #endif
-    nsresult rv;
-    nsCOMPtr<nsICategoryManager> catman = 
-             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return; /* log an error? */
-
-    /*
-     * I'd like to use GetCategoryContents, so that I can size the array
-     * correctly on the first go and avoid the enumerator overhead, but it's
-     * not yet implemented (see nsCategoryManager.cpp).  No biggie, I guess.
-     */
-    nsCOMPtr<nsISimpleEnumerator> catEnum;
-    rv = catman->EnumerateCategory(NS_CONTENTPOLICY_CATEGORY,
-                                   getter_AddRefs(catEnum));
-    if (NS_FAILED(rv))
-        return; /* no category, no problem */
-
-    PRBool hasMore;
-    if (NS_FAILED(catEnum->HasMoreElements(&hasMore)) || !hasMore)
-       return;
-    
-    /* 
-     * Populate mPolicies with policy services named by contractids in the
-     * "content-policy" category.
-     */
-    nsCOMPtr<nsISupports> item;
-    while (NS_SUCCEEDED(catEnum->GetNext(getter_AddRefs(item)))) {
-        nsCOMPtr<nsISupportsCString> string = do_QueryInterface(item, &rv);
-        if (NS_FAILED(rv))
-            continue;
-
-        nsCAutoString contractid;
-        if (NS_FAILED(string->GetData(contractid)))
-            continue;
-
-        PR_LOG(gConPolLog, PR_LOG_DEBUG,
-                ("POLICY: loading %s\n", contractid.get()));
-
-        /*
-         * Create this policy service and add to mPolicies.
-         *
-         * Should we try to parse as a CID, in case the component prefers to be
-         * registered that way?
-         */
-        nsCOMPtr<nsIContentPolicy> policy = do_GetService(contractid.get(),
-                                                          &rv);
-        if (NS_SUCCEEDED(rv) && policy) {
-            mPolicies.AppendObject(policy);
-        }
-    }
-	
 }
 
 nsContentPolicy::~nsContentPolicy()
@@ -197,24 +139,18 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
         }
     }
 
-    PRInt32 count = mPolicies.Count();
-    nsresult rv = NS_OK;
-
     /* 
      * Enumerate mPolicies and ask each of them, taking the logical AND of
      * their permissions.
      */
+    nsresult rv;
+    const nsCOMArray<nsIContentPolicy>& entries(mPolicies.GetEntries());
+    PRInt32 count = entries.Count();
     for (PRInt32 i = 0; i < count; i++) {
-        nsIContentPolicy *policy = mPolicies[i];
-        if (!policy) { //shouldn't happen
-            NS_ERROR("Somehow a null policy got into the list");
-            continue;
-        }
-
         /* check the appropriate policy */
-        rv = (policy->*policyMethod)(contentType, contentLocation,
-                                     requestingLocation, requestingContext,
-                                     mimeType, extra, decision);
+        rv = (entries[i]->*policyMethod)(contentType, contentLocation,
+                                         requestingLocation, requestingContext,
+                                         mimeType, extra, decision);
 
         if (NS_SUCCEEDED(rv) && NS_CP_REJECTED(*decision)) {
             /* policy says no, no point continuing to check */
