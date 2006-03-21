@@ -46,22 +46,16 @@ include $(DEPTH)/config/autoconf.mk
 
 ALL_LOCALES = \
 	ca \
-	cs-CZ \
-	da \
 	de \
 	el \
 	en-US \
-	fr \
 	ga-IE \
 	hu \
 	nb-NO \
 	pl \
-	pt-BR \
 	ru \
-	sk \
 	sv-SE \
 	zh-CN \
-	zh-TW \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
