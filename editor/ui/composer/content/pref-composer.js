@@ -37,11 +37,11 @@
 // This is mostly a modified version of code in EdColorProps.xul
 
 // Initialize in case we can't get them from prefs???
-const defaultTextColor="#000000";
-const defaultLinkColor="#000099";
-const defaultActiveColor="#000099";
-const defaultVisitedColor="#990099";
-const defaultBackgroundColor="#FFFFFF";
+var defaultTextColor = "#000000";
+var defaultLinkColor = "#000099";
+var defaultActiveColor = "#000099";
+var defaultVisitedColor = "#990099";
+var defaultBackgroundColor = "#FFFFFF";
 
 var customTextColor;
 var customLinkColor;
@@ -111,7 +111,7 @@ function Startup()
     UseDefaultColors();
 
   return true;
-}                   
+}
 
 function GetColorAndUpdate(ColorWellID)
 {
