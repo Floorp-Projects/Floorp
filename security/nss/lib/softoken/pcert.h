@@ -46,6 +46,11 @@
 SEC_BEGIN_PROTOS
 
 /*
+ * initialize any global certificate locks
+ */
+SECStatus nsslowcert_InitLocks(void);
+
+/*
 ** Add a DER encoded certificate to the permanent database.
 **	"derCert" is the DER encoded certificate.
 **	"nickname" is the nickname to use for the cert
