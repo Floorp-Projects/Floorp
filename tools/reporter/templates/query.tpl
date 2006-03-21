@@ -1,14 +1,19 @@
 {if $error != ''}
-    <div class="error">
-        <h3>Error</h3>
-        <p>{$error}.  <a href="javascript:history.go(-1);">Back</a></p>
-    </div>
+<div class="error">
+	<h3>Error</h3>
+	<p>{$error}.  <a href="javascript:history.go(-1);">Back</a></p>
+</div>
+{elseif $alert != ''}
+<div class="alert">
+	<h3>Sorry</h3>
+	<p>{$alert}.  <a href="javascript:history.go(-1);">Back</a></p>
+</div>
 {else}
 {if $notice != ''}
-    <div class="notice">
-         <h3>Notice:</h3>
-         <p>{$notice}</p>
-    </div>
+<div class="notice">
+	<h3>Notice:</h3>
+	<p>{$notice}</p>
+</div>
 {/if}
 <table id="reporterQuery" class="fixedTable" cellspacing="0" cellpadding="0" style="width:100%">
 	<tr class="header">

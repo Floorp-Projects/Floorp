@@ -65,7 +65,7 @@ $query->doQuery();
 $db->Close();
 
 if ($query->totalResults == 0){
-    $content->assign('error', 'No Results found');
+    $content->assign('alert', 'No Results found');
     displayPage($content, 'query', 'query.tpl');
     exit;
 }
