@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.7 2005/03/29 18:21:18 nelsonb%netscape.com Exp $ */
+/* $Id: softoken.h,v 1.8 2006/03/21 19:23:30 rrelyea%redhat.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -131,6 +131,14 @@ SECStatus RSA_DecryptRaw(NSSLOWKEYPrivateKey *key, unsigned char *output,
 			     unsigned int *output_len,
     			     unsigned int max_output_len,
 			     unsigned char *input, unsigned int input_len);
+#ifdef NSS_ENABLE_ECC
+/*
+** pepare an ECParam structure from DEREncoded params
+ */
+extern SECStatus EC_FillParams(PRArenaPool *arena,
+                               const SECItem *encodedParams, ECParams *params);
+#endif
+
 
 /*
 ** Prepare a buffer for DES encryption, growing to the appropriate boundary,
