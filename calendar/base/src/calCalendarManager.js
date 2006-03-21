@@ -412,19 +412,31 @@ errorAnnouncer.prototype.announceError = function(aErrNo, aMessage) {
     // When possible, change the error number into its name, to
     // make it slightly more readable.
     var errCode = "0x"+aErrNo.toString(16);
-    const calIError = Components.interfaces.calIErrors;
+    const calIErrors = Components.interfaces.calIErrors;
     // Check if it is worth enumerating all the error codes.
-    if (aErrNo & calIError.ERROR_BASE) {
-        for (var err in calIError) {
-            if (calIError[err] == aErrNo) {
+    if (aErrNo & calIErrors.ERROR_BASE) {
+        for (var err in calIErrors) {
+            if (calIErrors[err] == aErrNo) {
                 errCode = err;
             }
         }
     }
 
+    var message;    
+    switch (aErrNo) {
+        case calIErrors.CAL_UTF8_DECODING_FAILED:
+            message = props.GetStringFromName("utf8DecodeError");
+            break;
+        case calIErrors.ICS_MALFORMEDDATA:
+            message = props.GetStringFromName("icsMalformedError");
+            break;
+        default:
+            message = aMessage
+    }
+
     paramBlock.SetString(0, errMsg);
     paramBlock.SetString(1, errCode);
-    paramBlock.SetString(2, aMessage);
+    paramBlock.SetString(2, message);
 
     this.storedReadOnly = this.calendar.readOnly;
 

@@ -52,6 +52,7 @@ const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 const calCalendarManagerContractID = "@mozilla.org/calendar/manager;1";
 const calICalendarManager = Components.interfaces.calICalendarManager;
+const calIErrors = Components.interfaces.calIErrors;
 
 var activeCalendarManager = null;
 function getCalendarManager()
@@ -190,15 +191,6 @@ calICSCalendar.prototype = {
             return;
         }
 
-        // Create a new calendar, to get rid of all the old events
-        this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
-                                         .createInstance(Components.interfaces.calICalendar);
-        this.mMemoryCalendar.uri = this.mUri;
-        this.mMemoryCalendar.wrappedJSObject.calendarToReturn = this;
-        this.mMemoryCalendar.addObserver(this.mObserver);
-
-        this.mObserver.onStartBatch();
-
         // This conversion is needed, because the stream only knows about
         // byte arrays, not about strings or encodings. The array of bytes
         // need to be interpreted as utf8 and put into a javascript string.
@@ -210,8 +202,19 @@ calICSCalendar.prototype = {
         try {
             str = unicodeConverter.convertFromByteArray(result, result.length);
         } catch(e) {
-            this.mObserver.onError(e.result, e.toString());
+            this.mObserver.onError(calIErrors.CAL_UTF8_DECODING_FAILED, e.toString());
+            this.unlock();
+            return;
         }
+
+        // Create a new calendar, to get rid of all the old events
+        this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
+                                         .createInstance(Components.interfaces.calICalendar);
+        this.mMemoryCalendar.uri = this.mUri;
+        this.mMemoryCalendar.wrappedJSObject.calendarToReturn = this;
+        this.mMemoryCalendar.addObserver(this.mObserver);
+
+        this.mObserver.onStartBatch();
 
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
         // for non-existing or empty files, but not good for invalid files.
