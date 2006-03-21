@@ -76,9 +76,7 @@ CPPSRCS		= nsMsgNewsFactory.cpp
 
 LOCAL_INCLUDES += -I$(srcdir)/../src
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX)
-
-EXTRA_DSO_LIBS = rdfutil_s
+SHARED_LIBRARY_LIBS = ../src/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS += msgbsutl
@@ -89,6 +87,7 @@ endif
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		$(DEPTH)/rdf/util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \

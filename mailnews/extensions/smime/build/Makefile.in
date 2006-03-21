@@ -78,11 +78,11 @@ CPPSRCS		= nsMsgSMIMEFactory.cpp
 LOCAL_INCLUDES += -I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgsmime_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)msgsmime_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifndef MOZ_STATIC_MAIL_BUILD
-SHARED_LIBRARY_LIBS + = $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS + = ../../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS = \

@@ -72,7 +72,7 @@ endif
 CPPSRCS		= nsEmitterFactory.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

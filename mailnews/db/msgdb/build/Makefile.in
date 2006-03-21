@@ -72,7 +72,7 @@ endif
 
 CPPSRCS		= nsMsgDBFactory.cpp
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = ../src/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

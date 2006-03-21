@@ -87,23 +87,21 @@ endif
 CPPSRCS		=  nsImportModule.cpp  
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)import_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)imptext_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)imp4mail_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)import_s.$(LIB_SUFFIX) \
+		../text/src/$(LIB_PREFIX)imptext_s.$(LIB_SUFFIX) \
+		../comm4x/src/$(LIB_PREFIX)imp4mail_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-EXTRA_DSO_LIBS +=  msgbsutl_s
-
 ifneq (,$(filter mac cocoa, $(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS += ../eudora/src/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX) 
+SHARED_LIBRARY_LIBS += ../eudora/src/$(LIB_PREFIX)impEudra_s.$(LIB_SUFFIX) 
 
 ifndef GNU_CC
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)importOE_s.$(LIB_SUFFIX) 
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)impOutlk_s.$(LIB_SUFFIX) 
+SHARED_LIBRARY_LIBS += ../oexpress/$(LIB_PREFIX)importOE_s.$(LIB_SUFFIX) 
+SHARED_LIBRARY_LIBS += ../outlook/src/$(LIB_PREFIX)impOutlk_s.$(LIB_SUFFIX) 
 endif
 
 endif
@@ -128,7 +126,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
+	../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \

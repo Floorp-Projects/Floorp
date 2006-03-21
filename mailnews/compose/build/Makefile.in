@@ -88,7 +88,7 @@ endif
 CPPSRCS		= nsMsgCompFactory.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

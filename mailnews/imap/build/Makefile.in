@@ -78,16 +78,15 @@ else
 EXTRA_DSO_LIBS	= msgbaseutil
 endif
 
-EXTRA_DSO_LIBS	+= rdfutil_s
-
 CPPSRCS		= nsImapFactory.cpp
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
+		../src/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
+		$(DEPTH)/rdf/util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \

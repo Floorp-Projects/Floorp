@@ -89,22 +89,21 @@ ifeq ($(OS_ARCH),WINNT)
 REQUIRES	+= appcomps
 endif
 
+CPPSRCS		= nsMsgFactory.cpp
+
+SHARED_LIBRARY_LIBS = \
+		../src/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
+		../search/src/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
+		$(NULL)
+
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif
-EXTRA_DSO_LIBS += rdfutil_s
-
-CPPSRCS		= nsMsgFactory.cpp
-
-SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
-		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR)	\
+		$(DEPTH)/rdf/util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
