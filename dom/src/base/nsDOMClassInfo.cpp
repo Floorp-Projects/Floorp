@@ -5508,7 +5508,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     v = OBJECT_TO_JSVAL(dot_prototype);
 
-    if (!::JS_SetProperty(cx, class_obj, "prototype", &v)) {
+    if (!::JS_DefineProperty(cx, class_obj, "prototype", v, NULL, NULL,
+                             JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
 
