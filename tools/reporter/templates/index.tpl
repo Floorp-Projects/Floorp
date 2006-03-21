@@ -37,16 +37,16 @@
 							<table>
 								<tr>
 									<td>
-										<input type="radio" name="report_platform" id="AllPlatforms" value=""><label for="AllPlatforms">All</label><br>
-										<input type="radio" name="report_platform" id="Win32" value="Win32"><label for="Win32">Windows (32)</label><br>
-										<input type="radio" name="report_platform" id="Windows" value="Windows"><label for="Windows">Windows (64 Bit)</label><br>
-										<input type="radio" name="report_platform" id="MacPPC" value="MacPPC"><label for="MacPPC">MacOS X</label><br>
-										<input type="radio" name="report_platform" id="X11" value="X11"><label for="X11">X11</label><br>
+										<input type="radio" name="report_platform" id="AllPlatforms" value="" {if $report_platform == '' || $report_platform == null}checked="checked"{/if}><label for="AllPlatforms">All</label><br>
+										<input type="radio" name="report_platform" id="Win32" value="Win32" {if $report_platform == 'Win32'}checked="checked"{/if}><label for="Win32">Windows (32)</label><br>
+										<input type="radio" name="report_platform" id="Windows" value="Windows" {if $report_platform == 'Windows'}checked="checked"{/if}><label for="Windows">Windows (64 Bit)</label><br>
+										<input type="radio" name="report_platform" id="MacPPC" value="MacPPC" {if $report_platform == 'MacPPC'}checked="checked"{/if}><label for="MacPPC">MacOS X</label><br>
+										<input type="radio" name="report_platform" id="X11" value="X11" {if $report_platform == 'X11'}checked="checked"{/if}><label for="X11">X11</label><br>
 									</td><td>
-										<input type="radio" name="report_platform" id="OS2" value="OS/2"><label for="OS2">OS/2</label><br>
-										<input type="radio" name="report_platform" id="Photon" value="Photon"><label for="Photon">Photon</label><br>
-										<input type="radio" name="report_platform" id="BeOS" value="BeOS"><label for="BeOS">BeOS</label><br>
-										<input type="radio" name="report_platform" id="unknown" value="?"><label for="unknown">unknown</label><br>
+										<input type="radio" name="report_platform" id="OS2" value="OS/2" {if $report_platform == 'OS/2'}checked="checked"{/if}><label for="OS2">OS/2</label><br>
+										<input type="radio" name="report_platform" id="Photon" value="Photon" {if $report_platform == 'Photon'}checked="checked"{/if}><label for="Photon">Photon</label><br>
+										<input type="radio" name="report_platform" id="BeOS" value="BeOS" {if $report_platform == 'BeOS'}checked="checked"{/if}><label for="BeOS">BeOS</label><br>
+										<input type="radio" name="report_platform" id="unknown" value="?" {if $report_platform == '?'}checked="checked"{/if}><label for="unknown">unknown</label><br>
 									</td>
 								</tr>
 							</table>
