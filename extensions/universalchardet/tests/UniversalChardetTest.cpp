@@ -62,7 +62,7 @@ class nsUniversalChardetTest : public nsUniversalDetector
    nsUniversalChardetTest() { };
    virtual ~nsUniversalChardetTest() { };
 
-  bool done() const { return mDone; }
+  PRBool done() const { return mDone; }
 
  private:
    virtual void Report(const char* aCharset)
