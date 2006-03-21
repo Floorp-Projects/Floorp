@@ -155,7 +155,7 @@ interface nsIAutoCompleteController : nsISupports
   void setSearchString(in AString aSearchString);
 
   /*
-   * Attach or Detach roolup-listener
+   * Attach or Detach rollup-listener
    */
   void attachRollupListener();
   void detachRollupListener();
