@@ -37,53 +37,29 @@
 
 #include "nsObserverList.h"
 
-#include "pratom.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIObserver.h"
+#include "nsCOMArray.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIWeakReference.h"
-
-nsObserverList::nsObserverList(nsresult &rv)
-{
-    MOZ_COUNT_CTOR(nsObserverList);
-    mLock = PR_NewLock();
-    if (!mLock)
-        rv = NS_ERROR_OUT_OF_MEMORY;
-}
-
-nsObserverList::~nsObserverList(void)
-{
-    MOZ_COUNT_DTOR(nsObserverList);
-    if (mLock)
-        PR_DestroyLock(mLock);
-}
 
 nsresult
 nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
 {
-    NS_ENSURE_ARG(anObserver);
+    NS_ASSERTION(anObserver, "Null input");
 
-    nsAutoLock lock(mLock);
+    if (!ownsWeak) {
+        ObserverRef* o = mObservers.AppendElement(anObserver);
+        if (!o)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsISupports> observerRef;
-    if (ownsWeak) {
-        nsCOMPtr<nsISupportsWeakReference>
-            weakRefFactory(do_QueryInterface(anObserver));
-        NS_ASSERTION(weakRefFactory,
-                     "Doesn't implement nsISupportsWeakReference");
-        if (weakRefFactory)
-            weakRefFactory->
-                GetWeakReference((nsIWeakReference**)(nsISupports**)
-                                 getter_AddRefs(observerRef));
-    } else {
-        observerRef = anObserver;
+        return NS_OK;
     }
-    if (!observerRef)
-        return NS_ERROR_FAILURE;
+        
+    nsCOMPtr<nsIWeakReference> weak = do_GetWeakReference(anObserver);
+    if (!weak)
+        return NS_NOINTERFACE;
 
-    if (!mObservers.AppendObject(observerRef))
+    ObserverRef *o = mObservers.AppendElement(weak);
+    if (!o)
         return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
@@ -92,51 +68,25 @@ nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
 nsresult
 nsObserverList::RemoveObserver(nsIObserver* anObserver)
 {
-    NS_ENSURE_ARG(anObserver);
+    NS_ASSERTION(anObserver, "Null input");
 
-    nsAutoLock lock(mLock);
-
-    if (mObservers.RemoveObject(anObserver))
+    if (mObservers.RemoveElement(NS_STATIC_CAST(nsISupports*, anObserver)))
         return NS_OK;
 
-    nsCOMPtr<nsISupportsWeakReference>
-        weakRefFactory(do_QueryInterface(anObserver));
-    if (!weakRefFactory)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIWeakReference> observerRef;
-    weakRefFactory->GetWeakReference(getter_AddRefs(observerRef));
-
+    nsCOMPtr<nsIWeakReference> observerRef = do_GetWeakReference(anObserver);
     if (!observerRef)
         return NS_ERROR_FAILURE;
 
-    if (!mObservers.RemoveObject(observerRef))
+    if (!mObservers.RemoveElement(observerRef))
         return NS_ERROR_FAILURE;
 
     return NS_OK;
 }
 
-class nsObserverEnumerator : public nsISimpleEnumerator
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-    nsObserverEnumerator(nsCOMArray<nsISupports> &aObservers);
-
-private:
-    ~nsObserverEnumerator() { }
-
-    PRUint32 mIndex; // Counts down, ends at 0
-    nsCOMArray<nsISupports> mObservers;
-};
-
 nsresult
 nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 {
-    nsAutoLock lock(mLock);
-
-    nsRefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(mObservers));
+    nsRefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(this));
     if (!e)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -144,41 +94,65 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
     return NS_OK;
 }
 
-nsObserverEnumerator::nsObserverEnumerator(nsCOMArray<nsISupports> &aObservers)
+void
+nsObserverList::FillObserverArray(nsCOMArray<nsIObserver> &aArray)
 {
-    for (PRInt32 i = 0; i < aObservers.Count(); ++i) {
-        nsCOMPtr<nsIWeakReference> weak(do_QueryInterface(aObservers[i]));
-        if (weak) {
-            nsCOMPtr<nsISupports> strong(do_QueryReferent(weak));
-            if (strong)
-                mObservers.AppendObject(strong);
+    aArray.SetCapacity(mObservers.Length());
+
+    for (PRInt32 i = mObservers.Length() - 1; i >= 0; --i) {
+        if (mObservers[i].isWeakRef) {
+            nsCOMPtr<nsIObserver> o(do_QueryReferent(mObservers[i].asWeak()));
+            if (o) {
+                aArray.AppendObject(o);
+            }
+            else {
+                // the object has gone away, remove the weakref
+                mObservers.RemoveElementAt(i);
+            }
         }
         else {
-            mObservers.AppendObject(aObservers[i]);
+            aArray.AppendObject(mObservers[i].asObserver());
         }
     }
+}
 
-    mIndex = mObservers.Count();
+void
+nsObserverList::NotifyObservers(nsISupports *aSubject,
+                                const char *aTopic,
+                                const PRUnichar *someData)
+{
+    nsCOMArray<nsIObserver> observers;
+    FillObserverArray(observers);
+
+    for (PRInt32 i = 0; i < observers.Count(); ++i) {
+        observers[i]->Observe(aSubject, aTopic, someData);
+    }
 }
 
 NS_IMPL_ISUPPORTS1(nsObserverEnumerator, nsISimpleEnumerator)
 
+nsObserverEnumerator::nsObserverEnumerator(nsObserverList* aObserverList)
+    : mIndex(0)
+{
+    aObserverList->FillObserverArray(mObservers);
+}
+
 NS_IMETHODIMP
 nsObserverEnumerator::HasMoreElements(PRBool *aResult)
 {
-    *aResult = (mIndex > 0);
+    *aResult = (mIndex < mObservers.Count());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsObserverEnumerator::GetNext(nsISupports* *aResult)
 {
-    if (!mIndex) {
+    if (mIndex == mObservers.Count()) {
         NS_ERROR("Enumerating after HasMoreElements returned false.");
         return NS_ERROR_UNEXPECTED;
     }
 
-    --mIndex;
     NS_ADDREF(*aResult = mObservers[mIndex]);
+    ++mIndex;
     return NS_OK;
 }

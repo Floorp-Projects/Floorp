@@ -39,12 +39,11 @@
 #define nsObserverService_h___
 
 #include "nsIObserverService.h"
+#include "nsObserverList.h"
+#include "nsTHashtable.h"
 
 #define NS_OBSERVERSERVICE_CONTRACTID "@mozilla.org/observer-service;1"
 #define NS_OBSERVERSERVICE_CLASSNAME "Observer Service"
-
-class nsObserverList;
-class nsObjectHashtable;
 
 // {D07F5195-E3D1-11d2-8ACD-00105A1B8860}
 #define NS_OBSERVERSERVICE_CID \
@@ -52,24 +51,25 @@ class nsObjectHashtable;
 
 class nsObserverService : public nsIObserverService {
 public:
-  NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVERSERVICE_CID )
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_OBSERVERSERVICE_CID)
 
   nsObserverService();
-     
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVERSERVICE
   
+  void Shutdown();
+
   static NS_METHOD
   Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 private:
   ~nsObserverService(void);
 
-  nsObjectHashtable* mObserverTopicTable;
-
-  nsresult GetObserverList(const char* aTopic, nsObserverList** anObserverList);
-
-
+  PRBool mShuttingDown;
+  nsTHashtable<nsObserverList> mObserverTopicTable;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsObserverService, NS_OBSERVERSERVICE_CID)
 
 #endif /* nsObserverService_h___ */
