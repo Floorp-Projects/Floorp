@@ -755,7 +755,7 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
 
   // {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
   static const PRUint32 kGUIDLength = 38;
-  NS_ASSERTION(idstr.Length() == kGUIDLength);
+  NS_ASSERTION(strlen(idstr) == kGUIDLength, "Invalid GUID string");
   
   // Strip off the enclosing curly brackets
   clientID.Assign(idstr + 1, kGUIDLength - 2);
