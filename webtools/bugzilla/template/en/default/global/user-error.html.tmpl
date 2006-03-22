@@ -771,7 +771,8 @@
 
   [% ELSIF error == "login_required_for_pronoun" %]
     [% title = "Login Name Required" %]
-    You must enter a login name when using your login as a pronoun.
+    You can't use %user% without being logged in, because %user% refers
+    to your login name, which we don't know.
 
   [% ELSIF error == "milestone_already_exists" %]
     [% title = "Milestone Already Exists" %]
