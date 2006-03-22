@@ -638,9 +638,8 @@ nsXFormsSubmissionElement::Submit()
   // 3. revalidate selected instance data (only for namespaces considered for
   //    serialization)
 
-  // XXX call nsISchemaValidator::validate on each node
-
-
+  // This is handled by the SerializeData() method
+  
   // 4. serialize instance data
   // Checking the format only before starting the submission.
   mFormat = GetSubmissionFormat(mElement);
@@ -755,6 +754,11 @@ nsXFormsSubmissionElement::SerializeData(nsIDOMNode *data,
 
   if (mFormat & ENCODING_XML)
     return SerializeDataXML(data, stream, contentType, nsnull);
+
+  // Ensure the data is valid and required nodes are non-empty
+  // This is handled directly within SerializeDataXML()
+  nsresult rv = CanSubmit(data);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFormat & ENCODING_URL)
     return SerializeDataURLEncoded(data, uri, stream, contentType);
@@ -1328,6 +1332,53 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
     currentNode->GetNextSibling(getter_AddRefs(node));
     currentNode.swap(node);
   }
+  return NS_OK;
+}
+
+nsresult
+nsXFormsSubmissionElement::CanSubmit(nsIDOMNode *aTopNode)
+{
+  nsCOMPtr<nsIDOMNode> currentNode(aTopNode), node;
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_STATE(model);
+
+  while (currentNode) {
+    PRUint16 handleNodeResult;
+    model->HandleInstanceDataNode(currentNode, &handleNodeResult);
+
+    /*
+     *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
+     *  SUBMIT_SKIP_NODE        - node is not to be serialized
+     *  SUBMIT_ABORT_SUBMISSION - abort submission
+     *                            (invalid node or empty required node)
+     */
+    if (handleNodeResult == nsIModelElementPrivate::SUBMIT_SKIP_NODE) {
+      // skip node and subtree
+      currentNode->GetNextSibling(getter_AddRefs(node));
+      currentNode.swap(node);
+      continue;
+    } else if (
+      handleNodeResult ==
+      nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
+
+      // abort
+      return NS_ERROR_ABORT;
+    }
+    NS_ASSERTION(
+      handleNodeResult == nsIModelElementPrivate::SUBMIT_SERIALIZE_NODE,
+      "unexpected node type");
+
+    // recurse
+    nsCOMPtr<nsIDOMNode> firstChild;
+    currentNode->GetFirstChild(getter_AddRefs(firstChild));
+
+    nsresult rv = CanSubmit(firstChild);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    currentNode->GetNextSibling(getter_AddRefs(node));
+    currentNode.swap(node);
+  }
+
   return NS_OK;
 }
 

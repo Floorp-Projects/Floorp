@@ -138,6 +138,18 @@ private:
   nsresult GetIncludeNSPrefixesAttr(nsStringHashSet** aHash);
 
   /**
+   * This walks the DOM tree, starting at aTopNode and invokes
+   * model->HandleInstanceDataNode()that ensures that the instance is valid,
+   * required conditions met...if so, then can submit.
+   *
+   * @param   aTopNode Root instance node of tree to be evaluated
+   * @return  NS_ERROR_ABORT if instance is not valid and empty
+   *          required nodes, otherwise return NS_OK.
+   *
+   */
+  nsresult CanSubmit(nsIDOMNode *aTopNode);
+
+  /**
    * Send xforms-submit-done/-error, depending on |aSucceeded|
    *
    * @param aSucceeded        Did submit succeed?
