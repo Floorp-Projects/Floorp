@@ -546,7 +546,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   // mDBUpdatePageVisitStats (see InternalAdd)
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_history "
-      "SET visit_count = ?2, hidden = ?3 "
+      "SET visit_count = ?2, hidden = ?3, typed = ?4 "
       "WHERE id = ?1"),
     getter_AddRefs(mDBUpdatePageVisitStats));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1598,6 +1598,7 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
 
   PRInt64 pageID = 0;
   PRBool hidden;
+  PRBool typed;
   PRBool newItem = PR_FALSE; // used to send out notifications at the end
   if (alreadyVisited) {
     // Update the existing entry...
@@ -1634,6 +1635,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
         aTransitionType != nsINavHistoryService::TRANSITION_EMBED)
       hidden = PR_FALSE; // unhide
 
+    typed = oldTypedState || (aTransitionType == TRANSITION_TYPED);
+
     // some items may have a visit count of 0 which will not count for link
     // visiting, so be sure to note this transition
     if (oldVisitCount == 0)
@@ -1646,6 +1649,8 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     rv = mDBUpdatePageVisitStats->BindInt32Parameter(1, oldVisitCount + 1);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBUpdatePageVisitStats->BindInt32Parameter(2, hidden);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBUpdatePageVisitStats->BindInt32Parameter(3, typed);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mDBUpdatePageVisitStats->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1661,10 +1666,12 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     // See the hidden computation code above for a little more explanation.
     hidden = (aTransitionType == TRANSITION_EMBED || aIsRedirect);
 
-    // set as not typed, visited once, no title
+    typed = (aTransitionType == TRANSITION_TYPED);
+
+    // set as visited once, no title
     nsString voidString;
     voidString.SetIsVoid(PR_TRUE);
-    rv = InternalAddNewPage(aURI, voidString, hidden, PR_FALSE, 1, &pageID);
+    rv = InternalAddNewPage(aURI, voidString, hidden, typed, 1, &pageID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
