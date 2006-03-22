@@ -2460,7 +2460,6 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 buf = JS_malloc(cx, len + 1);
                 if (buf) {
                     cc = fread(buf, 1, len, file);
-                    fprintf(stderr, "Read %d things\n", cc);
                     if (cc != len) {
                         JS_free(cx, buf);
                         JS_ReportError(cx, "can't read %s: %s", pathname,
