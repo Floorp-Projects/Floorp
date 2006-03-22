@@ -54,6 +54,15 @@
 /**
  * thread-safe conversion routines that do not depend on uconv libraries.
  */
+#if defined(XP_WIN)
+#include "prtypes.h"
+
+NS_COM PRInt32 NS_ConvertAtoW(const char *aStrInA, int aBufferSize, 
+                              PRUnichar *aStrOutW);
+// For path names, the default char cannot be '?', so we use '_' instead.
+NS_COM PRInt32 NS_ConvertWtoA(const PRUnichar *aStrInW, int aBufferSizeOut,
+                              char *aStrOutA, const char *aDefault="_");
+#endif
 NS_COM nsresult NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output);
 NS_COM nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output);
 

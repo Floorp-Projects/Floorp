@@ -61,7 +61,7 @@ void NS_ShutdownLocalFile()
     nsLocalFile::GlobalShutdown();
 }
 
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#if !defined(XP_MAC) && !defined(XP_MACOSX) && !defined(XP_WIN)
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsILocalFile *aFile)
 {

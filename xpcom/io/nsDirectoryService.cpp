@@ -57,6 +57,7 @@
 #include <Processes.h>
 #include <Gestalt.h>
 #elif defined(XP_WIN)
+#include "nsWinAPIs.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <stdlib.h>
@@ -156,14 +157,15 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 #ifdef XP_WIN
-    char buf[MAX_PATH];
-    if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
-        // chop of the executable name by finding the rightmost backslash
-        char* lastSlash = PL_strrchr(buf, '\\');
+    PRUnichar buf[MAX_PATH];
+    if ( nsWinAPIs::mGetModuleFileName(0, buf, sizeof(buf)) )
+    {
+        // chop off the executable name by finding the rightmost backslash
+        PRUnichar* lastSlash = wcsrchr(buf, L'\\');
         if (lastSlash)
-            *(lastSlash + 1) = '\0';
-        
-        localFile->InitWithNativePath(nsDependentCString(buf));
+            *(lastSlash + 1) = L'\0';
+
+        localFile->InitWithPath(nsDependentString(buf));
         *aFile = localFile;
         return NS_OK;
     }
