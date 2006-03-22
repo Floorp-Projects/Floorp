@@ -61,8 +61,10 @@
 #include "nsStreamUtils.h"
 #include "nsVariant.h"
 #include "prtime.h"
+#include "prmem.h"
 #include "bzlib.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIUUIDGenerator.h"
 
 // Make our MIME type inform the server of possible compression.
 #ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA
@@ -515,10 +517,8 @@ nsMetricsService::OpenDataFile(PRUint32 flags, PRFileDesc **fd)
 nsresult
 nsMetricsService::UploadData()
 {
-  // TODO: 1) Submit a request to the server to figure out how much data to
-  //          upload.  For now, we just submit all of the data.
-  //       2) Prepare a data stream for upload that is prefixed with a PROFILE
-  //          event.
+  // TODO: Prepare a data stream for upload that is prefixed with a PROFILE
+  //       event.
  
   PRBool enable = PR_FALSE;
   nsXPIDLCString spec;
@@ -571,6 +571,22 @@ nsMetricsService::UploadData()
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  static const char kClientIDPref[] = "metrics.client-id";
+  
+  // Get the client id and set it in an HTTP header
+  nsXPIDLCString clientID;
+  rv = prefs->GetCharPref(kClientIDPref, getter_Copies(clientID));
+  if (NS_FAILED(rv) || clientID.IsEmpty()) {
+    rv = GenerateClientID(clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = prefs->SetCharPref(kClientIDPref, clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz-Client-ID"),
+                                     clientID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   rv = channel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -719,6 +735,30 @@ nsMetricsService::GetConfigFile(nsIFile **result)
 
   *result = nsnull;
   file.swap(*result);
+}
+
+nsresult
+nsMetricsService::GenerateClientID(nsCString &clientID)
+{
+  nsCOMPtr<nsIUUIDGenerator> idgen =
+    do_GetService("@mozilla.org/uuid-generator;1");
+  NS_ENSURE_STATE(idgen);
+
+  nsID id;
+  nsresult rv = idgen->GenerateUUIDInPlace(&id);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  char *idstr = id.ToString();
+  NS_ENSURE_STATE(idstr);
+
+  // {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+  static const PRUint32 kGUIDLength = 38;
+  NS_ASSERTION(idstr.Length() == kGUIDLength);
+  
+  // Strip off the enclosing curly brackets
+  clientID.Assign(idstr + 1, kGUIDLength - 2);
+  PR_Free(idstr);
+  return NS_OK;
 }
 
 /* static */ nsresult

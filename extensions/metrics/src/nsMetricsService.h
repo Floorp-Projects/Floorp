@@ -140,6 +140,9 @@ private:
   // A reference to the local file containing our current configuration
   void GetConfigFile(nsIFile **result);
 
+  // Generate a new random client id string
+  nsresult GenerateClientID(nsCString &clientID);
+  
 private:
   // Pointer to the metrics service singleton
   static nsMetricsService* sMetricsService;
