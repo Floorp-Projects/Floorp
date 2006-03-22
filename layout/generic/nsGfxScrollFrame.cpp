@@ -2494,16 +2494,19 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
 
   // only set the attribute if it changed.
 
-  PRInt32 current = GetIntegerAttribute(aBox, aAtom, -1);
-  if (current != aSize)
-  {
-      nsAutoString newValue;
-      newValue.AppendInt(aSize);
-      aBox->GetContent()->SetAttr(kNameSpaceID_None, aAtom, newValue, aReflow);
-      return PR_TRUE;
-  }
+  nsIContent *content = aBox->GetContent();
 
-  return PR_FALSE;
+  nsAutoString oldValue;
+  content->GetAttr(kNameSpaceID_None, aAtom, oldValue);
+
+  nsAutoString newValue;
+  newValue.AppendInt(aSize);
+
+  if (oldValue == newValue)
+    return PR_FALSE;
+
+  content->SetAttr(kNameSpaceID_None, aAtom, newValue, aReflow);
+  return PR_TRUE;
 }
 
 nsRect
