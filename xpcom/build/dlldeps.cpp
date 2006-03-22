@@ -118,6 +118,7 @@ void XXXNeverCalled()
     nsValueArray(0);
     nsSupportsArray();
     NS_GetNumberOfAtoms();
+    NS_NewPipe(nsnull, nsnull, 0, 0, PR_FALSE, PR_FALSE, nsnull);
     NS_NewPipe2(nsnull, nsnull, PR_FALSE, PR_FALSE, 0, 0, nsnull);
     NS_NewInputStreamReadyEvent(nsnull, nsnull, nsnull);
     NS_NewOutputStreamReadyEvent(nsnull, nsnull, nsnull);

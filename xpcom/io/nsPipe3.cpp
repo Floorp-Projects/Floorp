@@ -1241,6 +1241,36 @@ nsPipeOutputStream::SetEOF()
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM nsresult
+NS_NewPipe(nsIInputStream **pipeIn,
+           nsIOutputStream **pipeOut,
+           PRUint32 segmentSize,
+           PRUint32 maxSize,
+           PRBool nonBlockingInput,
+           PRBool nonBlockingOutput,
+           nsIMemory *segmentAlloc)
+{
+    if (segmentSize == 0)
+        segmentSize = DEFAULT_SEGMENT_SIZE;
+
+    // Handle maxSize of PR_UINT32_MAX as a special case
+    PRUint32 segmentCount;
+    if (maxSize == PR_UINT32_MAX)
+        segmentCount = PR_UINT32_MAX;
+    else
+        segmentCount = maxSize / segmentSize;
+
+    nsIAsyncInputStream *in;
+    nsIAsyncOutputStream *out;
+    nsresult rv = NS_NewPipe2(&in, &out, nonBlockingInput, nonBlockingOutput,
+                              segmentSize, segmentCount, segmentAlloc);
+    if (NS_FAILED(rv)) return rv;
+
+    *pipeIn = in;
+    *pipeOut = out;
+    return NS_OK;
+}
+
+NS_COM nsresult
 NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             nsIAsyncOutputStream **pipeOut,
             PRBool nonBlockingInput,

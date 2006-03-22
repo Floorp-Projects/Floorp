@@ -182,30 +182,13 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
  *        pass reference to nsIMemory to have all pipe allocations use this
  *        allocator (pass null to use the default allocator)
  */
-inline nsresult
+extern NS_COM nsresult
 NS_NewPipe(nsIInputStream **pipeIn,
            nsIOutputStream **pipeOut,
            PRUint32 segmentSize = 0,
            PRUint32 maxSize = 0,
            PRBool nonBlockingInput = PR_FALSE,
            PRBool nonBlockingOutput = PR_FALSE,
-           nsIMemory *segmentAlloc = nsnull)
-{
-    PRUint32 segmentCount;
-    if (segmentSize == 0)
-        segmentCount = 0; // use default
-    else
-        segmentCount = maxSize / segmentSize;
-
-    nsIAsyncInputStream *in;
-    nsIAsyncOutputStream *out;
-    nsresult rv = NS_NewPipe2(&in, &out, nonBlockingInput, nonBlockingOutput,
-                              segmentSize, segmentCount, segmentAlloc);
-    if (NS_FAILED(rv)) return rv;
-
-    *pipeIn = in;
-    *pipeOut = out;
-    return NS_OK;
-}
+           nsIMemory *segmentAlloc = nsnull);
 
 %}
