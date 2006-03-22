@@ -879,7 +879,6 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     mp_int n;
     mp_err err = MP_OKAY;
     ECParams *ecParams = NULL;
-    SECItem localDigest;
     SECItem pointC = { siBuffer, NULL, 0 };
     int slen;       /* length in bytes of a half signature (r or s) */
     int flen;       /* length in bytes of the field size */
