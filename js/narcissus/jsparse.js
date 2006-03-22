@@ -638,8 +638,8 @@ function ParenExpression(t, x) {
 var opPrecedence = {
     SEMICOLON: 0,
     COMMA: 1,
-    ASSIGN: 2,
-    HOOK: 3, COLON: 3, CONDITIONAL: 3,
+    ASSIGN: 2, HOOK: 2, COLON: 2, CONDITIONAL: 2,
+    // The above all have to have the same precedence, see bug 330975.
     OR: 4,
     AND: 5,
     BITWISE_OR: 6,
@@ -739,8 +739,10 @@ loop:
             if (t.scanOperand)
                 break loop;
             // Use >, not >=, for right-associative ASSIGN and HOOK/COLON.
-            while (opPrecedence[operators.top().type] > opPrecedence[tt])
+            while (opPrecedence[operators.top().type] > opPrecedence[tt] ||
+                   (tt == COLON && operators.top().type == ASSIGN)) {
                 reduce();
+            }
             if (tt == COLON) {
                 n = operators.top();
                 if (n.type != HOOK)
