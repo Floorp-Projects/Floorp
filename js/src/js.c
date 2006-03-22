@@ -2459,7 +2459,7 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         buf = JS_malloc(cx, len + 1);
         if (!buf) {
             ok = JS_FALSE;
-        } else if ((cc = read(fd, buf, len)) != len) {
+        } else if ((size_t)(cc = read(fd, buf, len)) != len) {
             JS_free(cx, buf);
             JS_ReportError(cx, "can't read %s: %s", pathname,
                            (cc < 0) ? strerror(errno) : "short read");
