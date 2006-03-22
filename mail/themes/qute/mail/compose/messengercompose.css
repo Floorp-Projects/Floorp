@@ -1,3 +1,4 @@
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -406,6 +407,10 @@ treechildren::-moz-tree-image(remote-err) {
 .person-icon {
   margin: 0 3px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
+}
+
+.aw-menulist > dropmarker {
+  height: 11px; 
 }
 
 #MsgHeadersToolbar {
