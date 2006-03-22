@@ -609,7 +609,7 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   nsresult rv = mMDG.Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSchemas = do_GetService(NS_SCHEMALOADER_CONTRACTID);
+  mSchemas = do_CreateInstance(NS_SCHEMALOADER_CONTRACTID);
 
   mInstanceDocuments = new nsXFormsModelInstanceDocuments();
   NS_ASSERTION(mInstanceDocuments, "could not create mInstanceDocuments?!");

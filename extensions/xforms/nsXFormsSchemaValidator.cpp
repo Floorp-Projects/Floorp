@@ -51,7 +51,7 @@
 
 nsXFormsSchemaValidator::nsXFormsSchemaValidator()
 {
-  mSchemaValidator = do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+  mSchemaValidator = do_CreateInstance(NS_SCHEMAVALIDATOR_CONTRACTID);
 }
 
 nsresult
