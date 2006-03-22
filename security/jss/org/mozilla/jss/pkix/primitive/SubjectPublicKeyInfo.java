@@ -134,13 +134,11 @@ public class SubjectPublicKeyInfo extends java.security.spec.X509EncodedKeySpec
     public PublicKey toPublicKey() throws NoSuchAlgorithmException,
             InvalidKeyFormatException
     {
-        PrivateKey.Type type = PrivateKey.Type.fromOID( algorithm.getOID() );
-
         if( subjectPublicKey.getPadCount() != 0 ) {
             throw new InvalidKeyFormatException();
         }
 
-        return PK11PubKey.fromRaw(type, subjectPublicKey.getBits() );
+        return PK11PubKey.fromSPKI(getEncoded());
     }
 
     public static class Template implements ASN1Template {
