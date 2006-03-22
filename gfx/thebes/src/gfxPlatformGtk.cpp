@@ -105,20 +105,50 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
     // we should try to match
     Display* display = GDK_DISPLAY();
     if (!UseGlitz()) {
+        GdkPixmap* pixmap = nsnull;
         XRenderPictFormat* xrenderFormat =
             XRenderFindStandardFormat(display, xrenderFormatID);
-        GdkPixmap* pixmap = ::gdk_pixmap_new(nsnull, width, height,
-                                             xrenderFormat->depth);
-        gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
+        if (!xrenderFormat) {
+            // We don't have Render; see if we can just create a pixmap
+            // of the requested depth.  Otherwise, create an Image surface.
+            GdkVisual* vis;
 
-        newSurface = new gfxXlibSurface(display, xrenderFormat, width, height);
+            if (imageFormat == gfxASurface::ImageFormatRGB24) {
+                vis = gdk_rgb_get_visual();
+                if (vis->type == GDK_VISUAL_TRUE_COLOR)
+                    pixmap = gdk_pixmap_new(nsnull, width, height, vis->depth);
+            }
 
-        // set up the surface to auto-unref the gdk pixmap when the surface
-        // is released
-        cairo_surface_set_user_data(newSurface->CairoSurface(),
-                                    &cairo_gdk_pixmap_key,
-                                    pixmap,
-                                    do_gdk_pixmap_unref);
+            if (pixmap) {
+                gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
+                newSurface = new gfxXlibSurface(display,
+                                                GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
+                                                GDK_VISUAL_XVISUAL(vis),
+                                                width,
+                                                height);
+            } else {
+                // we couldn't create a Gdk Pixmap; fall back to image surface for the data
+                newSurface = new gfxImageSurface(imageFormat, width, height);
+            }
+        } else {
+            pixmap = gdk_pixmap_new(nsnull, width, height,
+                                    xrenderFormat->depth);
+            gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), nsnull);
+
+            newSurface = new gfxXlibSurface(display,
+                                            GDK_PIXMAP_XID(GDK_DRAWABLE(pixmap)),
+                                            xrenderFormat,
+                                            width, height);
+        }
+
+        if (pixmap && newSurface) {
+            // set up the surface to auto-unref the gdk pixmap when the surface
+            // is released
+            newSurface->SetData(&cairo_gdk_pixmap_key,
+                                pixmap,
+                                do_gdk_pixmap_unref);
+        }
+
     } else {
 #ifdef MOZ_ENABLE_GLITZ
         glitz_drawable_format_t *gdformat = glitz_glx_find_pbuffer_format
@@ -198,7 +228,7 @@ gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
     if (!pat)
         goto end;
 
-    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0);
+    os = FcObjectSetBuild(FC_FAMILY, FC_FOUNDRY, 0, NULL);
     if (!os)
         goto end;
 
