@@ -295,8 +295,8 @@
 
   [% ELSIF error == "component_not_valid" %]
     [% title = "Specified Component Does Not Exist" %]
-    The component '[% name FILTER html %]' for product 
-    '[% product FILTER html %]' does not exist.
+    Product [% product FILTER html %] does not have a component
+    named [% name FILTER html %].
 
   [% ELSIF error == "product_doesnt_exist" %]
     [% title = "Specified Product Does Not Exist" %]
