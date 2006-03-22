@@ -47,6 +47,7 @@
 #include "nsCRT.h"
 #include "nsCOMArray.h"
 #include "nsContentUtils.h"
+#include "nsIDOMClassInfo.h"
 
 nsresult
 nsSVGTransformList::Create(nsIDOMSVGTransformList** aResult)

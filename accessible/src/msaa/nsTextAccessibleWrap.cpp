@@ -50,6 +50,7 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIWidget.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 

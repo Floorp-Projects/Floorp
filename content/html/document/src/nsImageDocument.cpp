@@ -66,6 +66,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsContentErrors.h"
 
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 

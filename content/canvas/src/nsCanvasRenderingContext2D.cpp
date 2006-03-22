@@ -76,6 +76,8 @@
 #include "nsIPresShell.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIXPConnect.h"
+#include "jsapi.h"
 
 #include "cairo.h"
 #include "imgIEncoder.h"

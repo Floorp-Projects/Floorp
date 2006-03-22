@@ -38,10 +38,6 @@
 #ifndef nsContentCID_h__
 #define nsContentCID_h__
 
-#include "nsISupports.h"
-#include "nsIFactory.h"
-#include "nsIComponentManager.h"
-
 #define NS_DOC_ENCODER_CONTRACTID_BASE \
 "@mozilla.org/layout/documentEncoder;1?type="
 

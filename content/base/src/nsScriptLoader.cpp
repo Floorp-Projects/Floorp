@@ -60,6 +60,8 @@
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
+#include "nsIXPConnect.h"
+#include "nsContentErrors.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 

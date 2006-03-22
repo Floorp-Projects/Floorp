@@ -53,6 +53,7 @@
 
 #include "nsContentUtils.h"
 #include "nsMemory.h"
+#include "nsCOMArray.h"
 
 /*
  * Factories, constructors and destructors

@@ -94,6 +94,7 @@
 #include "rdf.h"
 #include "pldhash.h"
 #include "plhash.h"
+#include "nsIDOMClassInfo.h"
 
 #include "nsNetUtil.h"
 #include "nsXULTemplateBuilder.h"

@@ -49,6 +49,7 @@
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIXPConnect.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
 

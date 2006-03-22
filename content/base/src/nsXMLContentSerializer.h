@@ -44,6 +44,7 @@
 #include "nsVoidArray.h"
 
 class nsIDOMNode;
+class nsIAtom;
 
 class nsXMLContentSerializer : public nsIContentSerializer {
  public:

@@ -115,6 +115,7 @@
 #include "nsIBoxLayout.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsContentErrors.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
@@ -250,6 +251,7 @@ NS_NewSVGLeafFrame(nsIPresShell* aPresShell);
 #include "nsWidgetsCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIServiceManager.h"
 
 // Global object maintenance
 nsIXBLService * nsCSSFrameConstructor::gXBLService = nsnull;

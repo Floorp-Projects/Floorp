@@ -95,6 +95,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"

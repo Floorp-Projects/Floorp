@@ -57,6 +57,7 @@
 #include "nsIDOMUserDataHandler.h"
 #include "nsChangeHint.h"
 #include "nsEventDispatcher.h"
+#include "nsCOMArray.h"
 
 #include "pldhash.h"
 #include "prprf.h"

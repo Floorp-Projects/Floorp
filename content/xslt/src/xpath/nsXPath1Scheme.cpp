@@ -55,6 +55,7 @@
 #include "nsIModifyableXPointer.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "nsIComponentManager.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);

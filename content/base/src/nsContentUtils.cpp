@@ -2246,6 +2246,19 @@ nsContentUtils::GetEventArgName(PRInt32 aNameSpaceID)
   return gEventName;
 }
 
+nsCxPusher::nsCxPusher(nsISupports *aCurrentTarget)
+    : mScriptIsRunning(PR_FALSE)
+{
+  if (aCurrentTarget) {
+    Push(aCurrentTarget);
+  }
+}
+
+nsCxPusher::~nsCxPusher()
+{
+  Pop();
+}
+
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {

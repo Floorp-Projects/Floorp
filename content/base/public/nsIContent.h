@@ -37,12 +37,8 @@
 #ifndef nsIContent_h___
 #define nsIContent_h___
 
-#include <stdio.h>
-#include "nsCOMPtr.h"
-#include "nsISupports.h"
-#include "nsEvent.h"
+#include "nsCOMPtr.h" // for already_AddRefed
 #include "nsStringGlue.h"
-#include "nsContentErrors.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsINode.h"

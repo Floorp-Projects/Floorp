@@ -99,7 +99,8 @@
 #define _mozISanitizingSerializer_h__
 
 #include "nsISupports.h"
-#include "nsAString.h"
+
+class nsAString;
 
 #define MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID "@mozilla.org/layout/htmlsanitizer;1"
 

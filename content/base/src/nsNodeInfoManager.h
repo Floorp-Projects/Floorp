@@ -38,8 +38,7 @@
 #ifndef nsNodeInfoManager_h___
 #define nsNodeInfoManager_h___
 
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
+#include "nsCOMPtr.h" // for already_AddRefed
 #include "plhash.h"
 
 class nsIAtom;

@@ -118,6 +118,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIScriptError.h"
 #include "nsEventDispatcher.h"
+#include "nsContentErrors.h"
 
 //----------------------------------------------------------------------
 //
