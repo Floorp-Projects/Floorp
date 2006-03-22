@@ -1565,7 +1565,7 @@ nsNavHistoryContainerResultNode::ClearContents()
   PRUint32 oldAccessCount = mAccessCount;
   mAccessCount = 0;
   mTime = 0;
-  ReverseUpdateStats(-oldAccessCount);
+  ReverseUpdateStats(-PRInt32(oldAccessCount));
   return NS_OK;
 }
 
