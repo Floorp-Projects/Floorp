@@ -736,6 +736,10 @@ treechildren::-moz-tree-image(remote-err) {
    list-style-image: url("chrome://global/skin/icons/Close.gif");
 }
 
+.ab-closebutton > .toolbarbutton-icon {
+  -moz-margin-end: 0px; /* override toolkit's default value */
+}
+
 #sidebar {
   background-color: Window;
 }

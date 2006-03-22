@@ -79,6 +79,10 @@
   border: none !important;
 }
 
+.quick-search-clearbutton > .toolbarbutton-icon {
+  -moz-margin-end: 0px; /* override toolkit's default value */
+}
+
 .quick-search-clearbutton:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
   padding: 0px !important;

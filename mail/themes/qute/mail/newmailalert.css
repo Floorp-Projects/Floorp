@@ -98,7 +98,11 @@
   -moz-image-region: rect(0px, 16px, 16px, 0px);
   -moz-appearance: none;
   border: none !important;
-  padding: 2px 2px 0px 0px;
+  padding: 0px;
+}
+
+#closeButton > .toolbarbutton-icon {
+  -moz-margin-end: 0px; /* override toolkit's default value */
 }
 
 #closeButton:hover {
