@@ -72,6 +72,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsCWebBrowserPersist.h"
 #include "nsIServiceManager.h"
+#include "nsAutoPtr.h"
 
 // for painting the background window
 #include "nsIRenderingContext.h"

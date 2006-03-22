@@ -39,8 +39,6 @@
 #define _nsIContentSerializer_h__
 
 #include "nsISupports.h"
-#include "nsAString.h"
-#include "nsIAtom.h"
 
 class nsIDOMText; /* forward declaration */
 class nsIDOMCDATASection; /* forward declaration */
@@ -49,6 +47,7 @@ class nsIDOMComment; /* forward declaration */
 class nsIDOMDocumentType; /* forward declaration */
 class nsIDOMElement; /* forward declaration */
 class nsIDOMDocument; /* forward declaration */
+class nsAString;
 
 /* starting interface:    nsIContentSerializer */
 

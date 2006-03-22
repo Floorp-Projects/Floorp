@@ -63,6 +63,7 @@ extern "C" {
 #include "gfxIImageFrame.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsVoidArray.h"
 
 #ifdef XP_MACOSX
 #include "nsIDrawingSurfaceMac.h"
@@ -836,4 +837,3 @@ nsSVGCairoCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
 
   return NS_OK;
 }
-

@@ -55,6 +55,8 @@
 #include "nsUnicharUtils.h"
 #include "nsLayoutAtoms.h"
 #include "nsEventDispatcher.h"
+#include "nsIProgrammingLanguage.h"
+#include "nsIXPConnect.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),

@@ -183,6 +183,7 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
 #include "plevent.h"
 #include "nsGUIEvent.h"
 #include "nsEventQueueUtils.h"
+#include "nsContentErrors.h"
 
 // Number of documents currently loading
 static PRInt32 gNumberOfDocumentsLoading = 0;

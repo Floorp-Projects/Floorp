@@ -62,6 +62,7 @@
 #include "nsRegion.h"
 #include "nsLayoutErrors.h"
 #include "nsDisplayList.h"
+#include "nsContentErrors.h"
 
 #ifdef NS_DEBUG
 #undef NOISY

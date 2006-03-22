@@ -41,6 +41,7 @@
 #include "nsSVGAnimatedString.h"
 #include "nsSVGAtoms.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsIDOMClassInfo.h"
 
 static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 

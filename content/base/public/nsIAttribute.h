@@ -40,14 +40,10 @@
 #ifndef nsIAttribute_h___
 #define nsIAttribute_h___
 
-#include "nsISupports.h"
-#include "nsINodeInfo.h"
-#include "nsIContent.h"
 #include "nsINode.h"
-#include "nsIDOMGCParticipant.h"
 
-class nsIAtom;
 class nsDOMAttributeMap;
+class nsIContent;
 
 #define NS_IATTRIBUTE_IID  \
 { 0xba2a0ee1, 0x2484, 0x49d7, \

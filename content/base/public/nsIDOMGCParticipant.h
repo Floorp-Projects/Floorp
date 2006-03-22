@@ -38,9 +38,9 @@
 #ifndef nsIDOMGCParticipant_h_
 #define nsIDOMGCParticipant_h_
 
-#include "nscore.h"
 #include "nsISupports.h"
-#include "nsCOMArray.h"
+
+template<class E> class nsCOMArray;
 
 // 0e2a5a8d-28fd-4a5c-8bf1-5b0067ff3286
 #define NS_IDOMGCPARTICIPANT_IID \

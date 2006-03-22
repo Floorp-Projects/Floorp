@@ -38,10 +38,8 @@
 #define nsIDocument_h___
 
 #include "nsINode.h"
-#include "nsEvent.h"
 #include "nsStringGlue.h"
-#include "nsCOMArray.h"
-#include "nsIDocumentObserver.h"
+#include "nsIDocumentObserver.h" // for nsUpdateType
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIBindingManager.h"
@@ -50,7 +48,6 @@
 #include "nsILoadGroup.h"
 #include "nsCRT.h"
 #include "mozFlushType.h"
-#include "nsAutoPtr.h"
 #include "nsIAtom.h"
 
 class nsIContent;
@@ -89,6 +86,8 @@ class nsIHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
 class nsIVariant;
 class nsIDOMUserDataHandler;
+template<class E> class nsCOMArray;
+class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \

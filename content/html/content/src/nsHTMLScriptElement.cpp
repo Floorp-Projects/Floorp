@@ -59,6 +59,7 @@
 #include "nsIScriptEventHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsEventDispatcher.h"
+#include "nsContentErrors.h"
 
 
 //

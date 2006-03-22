@@ -47,15 +47,15 @@
 // for PR_LOGGING
 #include "prlog.h"
 
-#include "nsString.h"
 #include "nsIContentPolicy.h"
-#include "nsIMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
 
 //XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
+
+class nsACString;
 
 #define NS_CONTENTPOLICY_CONTRACTID   "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"

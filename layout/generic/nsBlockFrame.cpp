@@ -82,6 +82,7 @@
 #include "nsLayoutUtils.h"
 #include "nsBoxLayoutState.h"
 #include "nsDisplayList.h"
+#include "nsContentErrors.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"

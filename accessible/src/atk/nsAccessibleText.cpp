@@ -64,6 +64,7 @@
 #include "nsStyleStruct.h"
 #include "nsTextFragment.h"
 #include "nsArray.h"
+#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 

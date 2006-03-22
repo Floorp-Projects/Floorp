@@ -87,6 +87,7 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSImportRule.h"
+#include "nsContentErrors.h"
 
 #ifdef MOZ_LOGGING
 // #define FORCE_PR_LOG /* Allow logging in the release build */

@@ -44,17 +44,15 @@
 
 #include "jspubtd.h"
 #include "nsAString.h"
-#include "nsIDOMScriptObjectFactory.h"
-#include "nsIJSContextStack.h"
-#include "nsIScriptContext.h"
-#include "nsCOMArray.h"
 #include "nsIStatefulFrame.h"
 #include "nsIPref.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentList.h"
-#include "nsVoidArray.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
 
+class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
 class nsIContent;
 class nsIDOMNode;
@@ -62,6 +60,7 @@ class nsIDocument;
 class nsIDocShell;
 class nsINameSpaceManager;
 class nsIScriptSecurityManager;
+class nsIJSContextStack;
 class nsIThreadJSContextStack;
 class nsIParserService;
 class nsIIOService;
@@ -83,6 +82,10 @@ class nsIWordBreaker;
 class nsIEventQueueService;
 class nsIJSRuntimeService;
 class nsIEventListenerManager;
+class nsIScriptContext;
+template<class E> class nsCOMArray;
+class nsIPref;
+class nsVoidArray;
 struct JSRuntime;
 #ifdef MOZ_XTF
 class nsIXTFService;
@@ -840,18 +843,8 @@ private:
 class nsCxPusher
 {
 public:
-  nsCxPusher(nsISupports *aCurrentTarget)
-    : mScriptIsRunning(PR_FALSE)
-  {
-    if (aCurrentTarget) {
-      Push(aCurrentTarget);
-    }
-  }
-
-  ~nsCxPusher()
-  {
-    Pop();
-  }
+  nsCxPusher(nsISupports *aCurrentTarget);
+  ~nsCxPusher();
 
   void Push(nsISupports *aCurrentTarget);
   void Pop();

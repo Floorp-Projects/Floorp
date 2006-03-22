@@ -68,6 +68,7 @@
 #include "nsIBindingManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsEventDispatcher.h"
+#include "nsContentErrors.h"
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -384,4 +385,3 @@ nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
 
 
 NS_IMPL_DOM_CLONENODE(nsXMLElement)
-

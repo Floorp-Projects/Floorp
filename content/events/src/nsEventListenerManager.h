@@ -49,6 +49,7 @@
 
 class nsIDOMEvent;
 class nsIAtom;
+class nsVoidArray;
 
 typedef struct {
   // The nsMarkedJSFunctionHolder does magic to avoid holding strong

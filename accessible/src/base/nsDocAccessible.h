@@ -51,6 +51,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsITimer.h"
 #include "nsIWeakReference.h"
+#include "nsCOMArray.h"
 
 class nsIScrollableView;
 

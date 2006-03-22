@@ -138,6 +138,8 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsEventDispatcher.h"
+#include "nsIDOMXPathEvaluator.h"
+#include "nsDOMCID.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
