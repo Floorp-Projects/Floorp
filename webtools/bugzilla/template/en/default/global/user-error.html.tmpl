@@ -77,7 +77,7 @@
     The alias you entered, <em>[% alias FILTER html %]</em>,
     contains one or more commas or spaces.  Aliases cannot contain
     commas or spaces because those characters are used to separate
-    aliases from each other in lists.  Please choose another alias
+    aliases from each other in lists.  Please choose an alias
     that does not contain commas and spaces.
 
   [% ELSIF error == "alias_in_use" %]
@@ -94,7 +94,7 @@
     [% title = "Alias Is Numeric" %]
     You tried to give this [% terms.bug %] the alias <em>[% alias FILTER html %]</em>,
     but aliases cannot be merely numbers, since they could
-    then be confused with [% terms.bug %] IDs.  Please choose another
+    then be confused with [% terms.bug %] IDs.  Please choose an
     alias containing at least one letter.
 
   [% ELSIF error == "alias_too_long" %]
