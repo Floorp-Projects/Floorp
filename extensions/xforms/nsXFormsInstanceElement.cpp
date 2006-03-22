@@ -187,7 +187,9 @@ nsXFormsInstanceElement::OnChannelRedirect(nsIChannel *OldChannel,
   NS_ENSURE_STATE(doc);
 
   if (!nsXFormsUtils::CheckSameOrigin(doc, newURI)) {
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"), domDoc);
+    const PRUnichar *strings[] = { NS_LITERAL_STRING("instance").get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
+                               strings, 1, mElement, mElement);
     return NS_ERROR_ABORT;
   }
 

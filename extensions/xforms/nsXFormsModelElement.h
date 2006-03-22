@@ -276,7 +276,7 @@ private:
   PRBool mInstancesInitialized;
 
   /**
-   * Indicates whether the model's handled the xforms-ready event already
+   * Indicates whether the model has handled the xforms-ready event
    */
   PRBool mReadyHandled;
 
@@ -303,6 +303,12 @@ private:
    * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-p3ptype
    */
   nsClassHashtable<nsISupportsHashKey, nsString> mNodeToP3PType;
+
+  /**
+   * Indicates whether the model has handled the xforms-model-construct-done
+   * event
+   */
+  PRBool mConstructDoneHandled;
 };
 
 /**

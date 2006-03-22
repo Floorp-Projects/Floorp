@@ -75,7 +75,7 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
 
   /**
    * Notification that an instance element has started or finished loading
-   * its instance data.  Model contstruction cannot complete until all of
+   * its instance data.  Model construction cannot complete until all of
    * the instances have loaded their data.
    */
   void instanceLoadStarted();
@@ -163,4 +163,11 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    */
   void GetTypeFromNode(in nsIDOMNode aInstanceData, out AString aType,
                        out AString aNSUri);
+
+  /**
+   * Notification that all of the external message loads have finished loading.
+   * Model contstruction cannot complete until all of the external messages
+   * have loaded their data.
+   */
+  void messageLoadFinished();
 };

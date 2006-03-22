@@ -78,6 +78,9 @@
 #include "nsIDOMSerializer.h"
 #include "nsIServiceManager.h"
 #include "nsIDelegateInternal.h"
+#include "nsNetUtil.h"
+#include "nsIDOMDocumentEvent.h"
+#include "nsIChannelEventSink.h"
 
 #define EPHEMERAL_STYLE \
   "position:absolute;z-index:2147483647; \
@@ -121,7 +124,10 @@ class nsXFormsEventListener;
  */
 class nsXFormsMessageElement : public nsXFormsXMLVisualStub,
                                public nsIDOMEventListener,
-                               public nsIXFormsActionModuleElement
+                               public nsIXFormsActionModuleElement,
+                               public nsIStreamListener,
+                               public nsIInterfaceRequestor,
+                               public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -138,7 +144,13 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
+  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aSrc);
+  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
 
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIXFORMSACTIONMODULEELEMENT
 
@@ -161,8 +173,16 @@ public:
     eType_Alert
   };
 
+  enum StopType {
+    eStopType_None,
+    eStopType_Security,
+    eStopType_LinkError
+  };
+
+
   nsXFormsMessageElement(MessageType aType) :
-    mType(aType), mElement(nsnull), mPosX(-1), mPosY(-1) {}
+    mType(aType), mElement(nsnull), mPosX(-1), mPosY(-1),
+    mStopType(eStopType_None) {}
 private:
   nsresult HandleEphemeralMessage(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent);
   nsresult HandleModalAndModelessMessage(nsIDOMDocument* aDoc, nsAString& aLevel);
@@ -172,6 +192,22 @@ private:
   nsresult ConstructMessageWindowURL(nsAString& aData,
                                      PRBool aIsLink,
                                      /*out*/ nsAString& aURL);
+
+  /**
+   * Begin the process of testing to see if this message element could get held
+   * up later by linking to an external resource.  Run this when the element is
+   * set up and it will try to access any external resource that this message
+   * may later try to access.  If we can't get to it by the time the message
+   * is triggered, then throw a xforms-link-error.
+   */
+  nsresult TestExternalFile();
+
+  /**
+   * Either add or subtract from the number of messages with external resources
+   * currently loading in this document.  aAdd == PR_TRUE will add to the total
+   * otherwise we will subtract from the total (as long as it isn't already 0).
+   */
+  void AddRemoveExternalResource(PRBool aAdd);
 
   MessageType mType;
 
@@ -184,12 +220,17 @@ private:
 
   nsCOMPtr<nsITimer> mEphemeralTimer;
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMPtr<nsIChannel> mChannel;
+  StopType mStopType;
 };
 
 NS_IMPL_ADDREF_INHERITED(nsXFormsMessageElement, nsXFormsXMLVisualStub)
 NS_IMPL_RELEASE_INHERITED(nsXFormsMessageElement, nsXFormsXMLVisualStub)
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsMessageElement)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionModuleElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
@@ -203,7 +244,9 @@ nsXFormsMessageElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   NS_ENSURE_SUCCESS(rv, rv);
   
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
-                                nsIXTFElement::NOTIFY_PARENT_CHANGED);
+                                nsIXTFElement::NOTIFY_PARENT_CHANGED |
+                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED);
 
   nsCOMPtr<nsIDOMElement> node;
   rv = aWrapper->GetElementNode(getter_AddRefs(node));
@@ -261,6 +304,12 @@ nsXFormsMessageElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
       if (msg == this)
         doc->UnsetProperty(nsXFormsAtoms::messageProperty);
     }
+
+    // If we are currently trying to load an external message, cancel the
+    // request.
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+    }
   }
 
   mDocument = aNewDocument;
@@ -272,6 +321,7 @@ nsXFormsMessageElement::OnDestroyed()
 {
   mElement = nsnull;
   mVisualElement = nsnull;
+  mChannel = nsnull;
   return NS_OK;
 }
 
@@ -392,11 +442,73 @@ nsXFormsMessageElement::ParentChanged(nsIDOMElement *aNewParent)
 }
 
 NS_IMETHODIMP
+nsXFormsMessageElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
+{
+  if (aName == nsXFormsAtoms::src) {
+    // If we are currently trying to load an external message, cancel the
+    // request.
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+    }
+
+    mStopType = eStopType_None;
+    TestExternalFile();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsMessageElement::AttributeRemoved(nsIAtom *aName)
+{
+  if (aName == nsXFormsAtoms::src) {
+    // If we are currently trying to test an external resource, cancel the
+    // request.
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+    }
+
+    mStopType = eStopType_None;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsMessageElement::HandleAction(nsIDOMEvent* aEvent, 
                                      nsIXFormsActionElement *aParentAction)
 {
   if (!mElement)
     return NS_OK;
+
+  // If TestExternalFile fails, then there is an external link that we need
+  // to use that we can't reach right now.  If it won't load, then might as
+  // well stop here.  We don't want to be popping up empty windows
+  // or windows that will just end up showing 404 messages.
+  if (mStopType == eStopType_LinkError) {
+    // we couldn't successfully link to our external resource.  Better throw
+    // the xforms-link-error event
+    nsCOMPtr<nsIModelElementPrivate> modelPriv =
+      nsXFormsUtils::GetModel(mElement);
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+    nsXFormsUtils::DispatchEvent(model, eEvent_LinkError);
+    return NS_OK;
+  }
+
+  // If we couldn't test the external link due to it not living in an
+  // acceptable domain, then no sense going any further down this path.
+  if (mStopType == eStopType_Security) {
+    return NS_OK;
+  }
+
+  // If there is still a channel, then someone must have changed the value of
+  // the src attribute since the document finished loading and we haven't yet
+  // determined whether the new link is valid or not.  For now we'll assume
+  // that the value is good rather than returning a link error.  Also
+  // canceling the channel since it is too late now.
+  if (mChannel) {
+    mChannel->Cancel(NS_BINDING_ABORTED);
+  }
 
   if (mType != eType_Normal) {
     nsCOMPtr<nsIDOMEventTarget> target;
@@ -703,7 +815,6 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     arg = nsXFormsAtoms::messageProperty;
   }
 
-  //XXX Add support for xforms-link-error.
   nsCOMPtr<nsIDOMWindow> messageWindow;
   // The 2nd argument is the window name, and if a window with the name exists,
   // it gets reused.  Using "_blank" makes sure we get a new window each time.
@@ -924,6 +1035,274 @@ nsXFormsMessageElement::HideEphemeral()
                                           this, 
                                           EPHEMERAL_POSITION_RESET_TIMEOUT,
                                           nsITimer::TYPE_ONE_SHOT);
+}
+
+nsresult
+nsXFormsMessageElement::TestExternalFile()
+{
+  // Let's see if checking for any external resources is even necessary.  Single
+  // node binding trumps linking attributes in order of precendence.  If we
+  // find single node binding in evidence, then return NS_OK to show that
+  // this message element has access to the info that it needs.
+  nsAutoString snb;
+  mElement->GetAttribute(NS_LITERAL_STRING("bind"), snb);
+  if (!snb.IsEmpty()) {
+    return NS_OK;
+  }
+  mElement->GetAttribute(NS_LITERAL_STRING("ref"), snb);
+  if (!snb.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // if no linking attribute, no need to go on
+  nsAutoString src;
+  mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+  if (src.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), src, doc->GetDocumentCharacterSet().get(),
+            doc->GetDocumentURI());
+  NS_ENSURE_STATE(uri);
+
+  if (!nsXFormsUtils::CheckSameOrigin(doc, uri)) {
+    nsAutoString tagName;
+    mElement->GetLocalName(tagName);
+    const PRUnichar *strings[] = { tagName.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
+                               strings, 1, mElement, mElement);
+    // Keep the the dialog from popping up.  Won't be able to reach the
+    // resource anyhow.
+    mStopType = eStopType_Security;
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
+  NS_WARN_IF_FALSE(loadGroup, "No load group!");
+
+  // Using the same load group as the main document and creating
+  // the channel with LOAD_NORMAL flag delays the dispatching of
+  // the 'load' event until message data document has been loaded.
+  nsresult rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
+                              this, nsIRequest::LOAD_NORMAL);
+  NS_ENSURE_TRUE(mChannel, rv);
+  
+  // See if it's an http channel.  We'll look at the http status code more
+  // closely and only request the "HEAD" to keep the response small.
+  // Especially since we are requesting this for every message in the document
+  // and in most cases we pass off the URL to another browser service to
+  // get and display the message so no good to try to look at the contents
+  // anyway.
+
+  // XXX ephemeral messages should probably get their full contents here once
+  // they are set up to handle external resources.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel) {
+    PRBool isReallyHTTP = PR_FALSE;
+    uri->SchemeIs("http", &isReallyHTTP);
+    if (!isReallyHTTP) {
+      uri->SchemeIs("https", &isReallyHTTP);
+    }
+    if (isReallyHTTP) {
+      httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
+    }
+  }
+
+  rv = mChannel->AsyncOpen(this, nsnull);
+  if (NS_FAILED(rv)) {
+    mChannel = nsnull;
+  
+    // URI doesn't exist; report error.
+    // set up the error strings
+    nsAutoString tagName;
+    mElement->GetLocalName(tagName);
+    const PRUnichar *strings[] = { src.get(), tagName.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLink1Error"),
+                               strings, 2, mElement, mElement);
+    mStopType = eStopType_LinkError;
+    return NS_ERROR_FAILURE;
+  }
+
+  // channel should be running along smoothly, increment the count
+  AddRemoveExternalResource(PR_TRUE);
+  return NS_OK;
+}
+
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsXFormsMessageElement::GetInterface(const nsIID &aIID, void **aResult)
+{
+  *aResult = nsnull;
+  return QueryInterface(aIID, aResult);
+}
+
+// nsIChannelEventSink
+
+NS_IMETHODIMP
+nsXFormsMessageElement::OnChannelRedirect(nsIChannel *OldChannel,
+                                          nsIChannel *aNewChannel,
+                                          PRUint32    aFlags)
+{
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
+
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  NS_ENSURE_STATE(mElement);
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  NS_ENSURE_STATE(doc);
+
+  if (!nsXFormsUtils::CheckSameOrigin(doc, newURI)) {
+    nsAutoString tagName;
+    mElement->GetLocalName(tagName);
+    const PRUnichar *strings[] = { tagName.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
+                               strings, 1, mElement, mElement);
+    return NS_ERROR_ABORT;
+  }
+
+  return NS_OK;
+}
+
+// nsIStreamListener
+
+NS_IMETHODIMP
+nsXFormsMessageElement::OnStartRequest(nsIRequest *aRequest,
+                                       nsISupports *aContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsMessageElement::OnDataAvailable(nsIRequest *aRequest,
+                                        nsISupports *aContext,
+                                        nsIInputStream *aInputStream,
+                                        PRUint32 aOffset,
+                                        PRUint32 aCount)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsMessageElement::OnStopRequest(nsIRequest *aRequest,
+                                      nsISupports *aContext,
+                                      nsresult aStatusCode)
+{
+
+  // We are done with the load request, whatever the result, so make sure to
+  // null out mChannel before we return.  Keep in mind that if this is the last
+  // message channel to be loaded for the xforms document then when
+  // AddRemoveExternalResource is called, it may result in xforms-ready firing.
+  // Should there be a message acting as a handler for xforms-ready, it will
+  // start the logic to display itself (HandleAction()).  So we can't call
+  // AddRemoveExternalResource to remove this channel from the count until we've
+  // set the mStopType to be the proper value.  Entering this function,
+  // mStopType will be eStopType_None, so if we need mStopType to be any other
+  // value (like in an error condition), please make sure it is set before
+  // AddRemoveExternalResource is called.
+
+  if (NS_FAILED(aStatusCode)) {
+    // NS_BINDING_ABORTED means that we have been cancelled by a later
+    // AttributeSet() call (which will also reset mStopType).  So don't treat
+    // like an error.
+    if (aStatusCode != NS_BINDING_ABORTED) {
+      nsAutoString src, tagName;
+      mElement->GetLocalName(tagName);
+      mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+      const PRUnichar *strings[] = { tagName.get(), src.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLink2Error"),
+                                 strings, 2, mElement, mElement);
+      mStopType = eStopType_LinkError;
+      AddRemoveExternalResource(PR_FALSE);
+      mChannel = nsnull;
+    
+      return NS_OK;
+    }
+  }
+
+  PRUint32 responseStatus;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (NS_SUCCEEDED(aStatusCode) && httpChannel) {
+    nsresult rv = httpChannel->GetResponseStatus(&responseStatus);
+    
+    // If responseStatus is 4xx or 5xx, it is an error.  2xx is success.
+    // 3xx (various flavors of redirection) COULD be successful.  Can't really
+    //  follow those to conclusion so we'll assume they were successful.
+    if (NS_FAILED(rv) || (responseStatus >= 400)) {
+      nsAutoString src, tagName;
+      mElement->GetLocalName(tagName);
+      mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+      const PRUnichar *strings[] = { tagName.get(), src.get() };
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLink2Error"),
+                                 strings, 2, mElement, mElement);
+      mStopType = eStopType_LinkError;
+    }
+  }
+
+  AddRemoveExternalResource(PR_FALSE);
+  mChannel = nsnull;
+
+  return NS_OK;
+}
+
+void
+nsXFormsMessageElement::AddRemoveExternalResource(PRBool aAdd)
+{
+  // if this message doesn't have a channel established already or it has
+  // already returned, then no sense bumping the counter.
+  if (!mChannel) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (!domDoc) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  PRUint32 loadingMessages = NS_REINTERPRET_CAST(PRUint32,
+    doc->GetProperty(nsXFormsAtoms::externalMessagesProperty));
+  if (aAdd) {
+    loadingMessages++;
+  } else {
+    if (loadingMessages) {
+      loadingMessages--;
+    }
+  }
+  doc->SetProperty(nsXFormsAtoms::externalMessagesProperty,
+                   NS_REINTERPRET_CAST(void *, loadingMessages), nsnull);
+
+  if (!loadingMessages) {
+    // no outstanding loads left, let the model in the document know in case
+    // the models are waiting to send out the xforms-ready event
+
+    nsCOMPtr<nsIModelElementPrivate> modelPriv =
+      nsXFormsUtils::GetModel(mElement);
+    if (modelPriv) {
+      // if there are no more messages loading then it is probably the case
+      // that my mChannel is going to get nulled out as soon as this function
+      // returns.  If the model is waiting for this notification, then it may
+      // kick off the message right away and we should probably ensure that
+      // mChannel is gone before HandleAction is called.  So...if the channel
+      // isn't pending, let's null it out right here.
+      PRBool isPending = PR_TRUE;
+      mChannel->IsPending(&isPending);
+      if (!isPending) {
+        mChannel = nsnull;
+      }
+      modelPriv->MessageLoadFinished();
+    }
+  }
 }
 
 NS_HIDDEN_(nsresult)

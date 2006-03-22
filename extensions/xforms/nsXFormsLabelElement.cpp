@@ -233,12 +233,11 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
             // URI doesn't exist; report error.
             mChannel = nsnull;
 
-            // XXX Passing |mElement| as |aContext| param to ReportError leads
-            //     to an infinite loop.  Avoid for now.
             const nsPromiseFlatString& flat = PromiseFlatString(aSrc);
-            const PRUnichar *strings[] = { flat.get() };
-            nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLink1Error"),
-                                       strings, 1, mElement, nsnull);
+            const PRUnichar *strings[] = { flat.get(),
+                                           NS_LITERAL_STRING("label").get() };
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLink1Error"),
+                                       strings, 2, mElement, mElement);
 
             nsCOMPtr<nsIModelElementPrivate> modelPriv =
                                               nsXFormsUtils::GetModel(mElement);
@@ -247,8 +246,9 @@ nsXFormsLabelElement::LoadExternalLabel(const nsAString& aSrc)
           }
         }
       } else {
-        nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLinkLoadOrigin"),
-                                   domDoc);
+        const PRUnichar *strings[] = { NS_LITERAL_STRING("label").get() };
+        nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
+                                   strings, 1, mElement, mElement);
       }
     }
   }
@@ -378,13 +378,12 @@ nsXFormsLabelElement::OnStopRequest(nsIRequest *aRequest,
     if (aStatusCode == NS_BINDING_ABORTED)
       return NS_OK;
 
-    // XXX Passing |mElement| as |aContext| param to ReportError leads
-    //     to an infinite loop.  Avoid for now.
     nsAutoString src;
     mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
-    const PRUnichar *strings[] = { src.get() };
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("labelLink2Error"),
-                               strings, 1, mElement, nsnull);
+    const PRUnichar *strings[] = { NS_LITERAL_STRING("label").get(), 
+                                   src.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLink2Error"),
+                               strings, 2, mElement, mElement);
 
     nsCOMPtr<nsIModelElementPrivate> modelPriv =
       nsXFormsUtils::GetModel(mElement);

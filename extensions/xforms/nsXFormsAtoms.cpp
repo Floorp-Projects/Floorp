@@ -64,6 +64,7 @@ nsIAtom *nsXFormsAtoms::readyForBindProperty;
 nsIAtom *nsXFormsAtoms::fatalError;
 nsIAtom *nsXFormsAtoms::isInstanceDocument;
 nsIAtom *nsXFormsAtoms::instanceDocumentOwner;
+nsIAtom *nsXFormsAtoms::externalMessagesProperty;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -90,7 +91,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "ReadyForBindProperty",     &nsXFormsAtoms::readyForBindProperty },
   { "fatalError",               &nsXFormsAtoms::fatalError },
   { "isInstanceDocument",       &nsXFormsAtoms::isInstanceDocument },
-  { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner }
+  { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner },
+  { "ExternalMessagesProperty", &nsXFormsAtoms::externalMessagesProperty }
 };
 
 void
