@@ -58,6 +58,14 @@ const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 const kXULNS =
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+#ifndef MOZ_PLACES
+// For Places-enabled builds, this is in
+// chrome://browser/content/places/controller.js
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cr = Components.results;
+#endif
+
 const nsCI               = Components.interfaces;
 const nsIWebNavigation   = nsCI.nsIWebNavigation;
 
