@@ -2075,7 +2075,7 @@
               msgPopup.setAttribute('subject', msgHdr.mime2DecodedSubject);
               
               // TO DO: worry about character set conversions
-              var previewText = msgHdr.getStringProperty('preview'); // replace tabs, line returns, etc. with a space
+              var previewText = msgHdr.getStringProperty('preview');
               if (previewText)
                 msgPopup.setAttribute('previewText',  previewText);
 

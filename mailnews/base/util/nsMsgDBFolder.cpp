@@ -5216,6 +5216,9 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
     rv = parser->Parse(msgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
     CopyUTF16toUTF8(bodyText, msgBody);
   }
+
+  // replaces all tabs and line returns with a space, then trims off leading and trailing white space
+  msgBody.CompressWhitespace(PR_TRUE, PR_TRUE);
   msgHdr->SetStringProperty("preview", msgBody.get());
   return rv;
 }
