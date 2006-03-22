@@ -785,7 +785,8 @@ JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
     JSBool ok, deep;
-    uint8 *flagp, flags, lock, type;
+    uint8 *flagp;
+    uintN flags, lock, type;
     JSGCLockHashEntry *lhe;
 
     ok = JS_TRUE;
