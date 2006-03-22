@@ -1767,8 +1767,8 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     // the widget, otherwise there is nothing more
     // to do for the view and its descendants
     nsIWidget* widget = aView->GetWidget();
-    nsCOMPtr<nsIWidget> parentWidget = getter_AddRefs(widget->GetParent());
-    if (parentWidget.get() != aNewWidget) {
+    nsIWidget* parentWidget = widget->GetParent();
+    if (parentWidget != aNewWidget) {
 #ifdef DEBUG
       nsresult rv =
 #endif

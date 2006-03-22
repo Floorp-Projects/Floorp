@@ -798,7 +798,6 @@ nsIWidget* nsWindow::GetParent(void)
 	if (mIsDestroying || mOnDestroyCalled)
 		return nsnull;
 	widget = (nsIWidget *)mParent;
-	NS_IF_ADDREF(widget);
 	return  widget;
 }
 

@@ -1166,7 +1166,6 @@ nsIWidget* nsWindow::GetParent(void)
    nsWindow *widget = nsnull;
    if ((nsnull != mParent) && (!mParent->mIsDestroying))
    {
-      NS_ADDREF(mParent);
       widget = mParent;
    }
 

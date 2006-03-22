@@ -1740,6 +1740,7 @@ nsIWidget* nsWindow::GetParent(void)
   return GetParent(PR_TRUE);
 }
 
+// XXX does anyone pass false for aStopOnFirstTopLevel?
 nsWindow* nsWindow::GetParent(PRBool aStopOnFirstTopLevel)
 {
   if (mIsTopWidgetWindow && aStopOnFirstTopLevel) {
@@ -1764,8 +1765,6 @@ nsWindow* nsWindow::GetParent(PRBool aStopOnFirstTopLevel)
         // do NOT return it
         if (widget->mIsDestroying) {
           widget = nsnull;
-        } else {
-          NS_ADDREF(widget);
         }
       }
     }
@@ -2085,8 +2084,6 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
       VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0,
                             SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
     }
-
-    NS_IF_RELEASE(par);
   }
   return NS_OK;
 }
@@ -2132,8 +2129,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
     else {
       VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
     }
-
-    NS_IF_RELEASE(par);
   }
 
   if (aRepaint)
@@ -2185,8 +2180,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
     else {
       VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), flags));
     }
-
-    NS_IF_RELEASE(par);
   }
 
   if (aRepaint)
@@ -7521,9 +7514,7 @@ nsWindow::ResolveIMECaretPos(nsWindow* aClient,
                              nsRect&   aResult)
 {
   // RootView coordinates -> Screen coordinates
-  nsWindow* topWindow = GetTopLevelWindow();
-  topWindow->WidgetToScreen(aEventResult, aResult);
-  NS_RELEASE(topWindow);
+  GetTopLevelWindow()->WidgetToScreen(aEventResult, aResult);
   // if aClient is nsnull, returns screen coordinates
   if (!aClient)
     return;
@@ -8325,17 +8316,14 @@ STDMETHODIMP_(LRESULT) nsWindow::LresultFromObject(REFIID riid, WPARAM wParam, L
 nsWindow* nsWindow::GetTopLevelWindow()
 {
   nsWindow* curWindow = this;
-  NS_ADDREF(curWindow);
 
   while (PR_TRUE)
   {
     nsWindow* parentWindow = curWindow->GetParent(PR_TRUE);
 
     if (parentWindow)
-    {
-      NS_RELEASE(curWindow);
       curWindow = parentWindow;
-    } else
+    else
       return curWindow;
   }
 }
@@ -8448,27 +8436,21 @@ void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PR
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
 {
-  nsWindow* topWindow = GetTopLevelWindow();
-  aTranslucent = topWindow->GetWindowTranslucencyInner();
-  NS_RELEASE(topWindow);
+  aTranslucent = GetTopLevelWindow()->GetWindowTranslucencyInner();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
 {
-  nsWindow* topWindow = GetTopLevelWindow();
-  nsresult rv = topWindow->SetWindowTranslucencyInner(aTranslucent);
-  NS_RELEASE(topWindow);
+  nsresult rv = GetTopLevelWindow()->SetWindowTranslucencyInner(aTranslucent);
 
   return rv;
 }
 
 NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
 {
-  nsWindow* topWindow = GetTopLevelWindow();
-  topWindow->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
-  NS_RELEASE(topWindow);
+  GetTopLevelWindow()->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
 
   return NS_OK;
 }

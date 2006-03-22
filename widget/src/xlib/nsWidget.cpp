@@ -756,9 +756,6 @@ NS_IMETHODIMP nsWidget::PreCreateWidget(nsWidgetInitData *aInitData)
 
 nsIWidget *nsWidget::GetParent(void)
 {
-  if (nsnull != mParentWidget) {
-    NS_ADDREF(mParentWidget);
-  }
   return mParentWidget;
 }
 

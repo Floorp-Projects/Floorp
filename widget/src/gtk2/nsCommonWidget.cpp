@@ -63,10 +63,7 @@ nsCommonWidget::~nsCommonWidget()
 nsIWidget *
 nsCommonWidget::GetParent(void)
 {
-    nsIWidget *retval;
-    retval = mParent;
-    NS_IF_ADDREF(retval);
-    return retval;
+    return mParent;
 }
 
 void
