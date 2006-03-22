@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.82 2006/03/03 18:48:09 wtchang%redhat.com Exp $ */
+/* $Id: ssl3con.c,v 1.83 2006/03/22 19:18:30 rrelyea%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -417,6 +417,29 @@ const char * const ssl3_cipherName[] = {
     "missing"
 };
 
+#ifdef NSS_ENABLE_ECC
+/* The ECCWrappedKeyInfo structure defines how various pieces of 
+ * information are laid out within wrappedSymmetricWrappingkey 
+ * for ECDH key exchange. Since wrappedSymmetricWrappingkey is 
+ * a 512-byte buffer (see sslimpl.h), the variable length field 
+ * in ECCWrappedKeyInfo can be at most (512 - 8) = 504 bytes.
+ *
+ * XXX For now, NSS only supports named elliptic curves of size 571 bits 
+ * or smaller. The public value will fit within 145 bytes and EC params
+ * will fit within 12 bytes. We'll need to revisit this when NSS
+ * supports arbitrary curves.
+ */
+#define MAX_EC_WRAPPED_KEY_BUFLEN  504
+
+typedef struct ECCWrappedKeyInfoStr {
+    PRUint16 size;            /* EC public key size in bits */
+    PRUint16 encodedParamLen; /* length (in bytes) of DER encoded EC params */
+    PRUint16 pubValueLen;     /* length (in bytes) of EC public value */
+    PRUint16 wrappedKeyLen;   /* length (in bytes) of the wrapped key */
+    PRUint8 var[MAX_EC_WRAPPED_KEY_BUFLEN]; /* this buffer contains the */
+    /* EC public-key params, the EC public value and the wrapped key  */
+} ECCWrappedKeyInfo;
+#endif /* NSS_ENABLE_ECC */
 
 #if defined(TRACE)
 
@@ -3520,6 +3543,7 @@ static const CK_MECHANISM_TYPE wrapMechanismList[SSL_NUM_WRAP_MECHS] = {
     CKM_CDMF_ECB,
     CKM_SKIPJACK_WRAP,
     CKM_SKIPJACK_CBC64,
+    CKM_AES_ECB,
     UNKNOWN_WRAP_MECHANISM
 };
 
@@ -3545,6 +3569,11 @@ ssl_UnwrapSymWrappingKey(
 {
     PK11SymKey *             unwrappedWrappingKey  = NULL;
     SECItem                  wrappedKey;
+#ifdef NSS_ENABLE_ECC
+    PK11SymKey *             Ks;
+    SECKEYPublicKey          pubWrapKey;
+    ECCWrappedKeyInfo        *ecWrapped;
+#endif /* NSS_ENABLE_ECC */
 
     /* found the wrapping key on disk. */
     PORT_Assert(pWswk->symWrapMechanism == masterWrapMech);
@@ -3565,6 +3594,60 @@ ssl_UnwrapSymWrappingKey(
 	    PK11_PubUnwrapSymKey(svrPrivKey, &wrappedKey,
 				 masterWrapMech, CKA_UNWRAP, 0);
 	break;
+
+#ifdef NSS_ENABLE_ECC
+    case kt_ecdh:
+        /* 
+         * For kt_ecdh, we first create an EC public key based on
+         * data stored with the wrappedSymmetricWrappingkey. Next,
+         * we do an ECDH computation involving this public key and
+         * the SSL server's (long-term) EC private key. The resulting
+         * shared secret is treated the same way as Fortezza's Ks, i.e.,
+         * it is used to recover the symmetric wrapping key.
+         *
+         * The data in wrappedSymmetricWrappingkey is laid out as defined
+         * in the ECCWrappedKeyInfo structure.
+         */
+        ecWrapped = (ECCWrappedKeyInfo *) pWswk->wrappedSymmetricWrappingkey;
+
+        PORT_Assert(ecWrapped->encodedParamLen + ecWrapped->pubValueLen + 
+            ecWrapped->wrappedKeyLen <= MAX_EC_WRAPPED_KEY_BUFLEN);
+
+        if (ecWrapped->encodedParamLen + ecWrapped->pubValueLen + 
+            ecWrapped->wrappedKeyLen > MAX_EC_WRAPPED_KEY_BUFLEN) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            goto loser;
+        }
+
+        pubWrapKey.keyType = ecKey;
+        pubWrapKey.u.ec.size = ecWrapped->size;
+        pubWrapKey.u.ec.DEREncodedParams.len = ecWrapped->encodedParamLen;
+        pubWrapKey.u.ec.DEREncodedParams.data = ecWrapped->var;
+        pubWrapKey.u.ec.publicValue.len = ecWrapped->pubValueLen;
+        pubWrapKey.u.ec.publicValue.data = ecWrapped->var + 
+            ecWrapped->encodedParamLen;
+
+        wrappedKey.len  = ecWrapped->wrappedKeyLen;
+        wrappedKey.data = ecWrapped->var + ecWrapped->encodedParamLen + 
+            ecWrapped->pubValueLen;
+        
+        /* Derive Ks using ECDH */
+        Ks = PK11_PubDeriveWithKDF(svrPrivKey, &pubWrapKey, PR_FALSE, NULL,
+				   NULL, CKM_ECDH1_DERIVE, masterWrapMech, 
+				   CKA_DERIVE, 0, CKD_NULL, NULL, NULL);
+        if (Ks == NULL) {
+            goto loser;
+        }
+
+        /*  Use Ks to unwrap the wrapping key */
+        unwrappedWrappingKey = PK11_UnwrapSymKey(Ks, masterWrapMech, NULL, 
+						 &wrappedKey, masterWrapMech, 
+						 CKA_UNWRAP, 0);
+        PK11_FreeSymKey(Ks);
+        
+        break;
+#endif
+
     default:
 	/* Assert? */
 	SET_ERROR_CODE
@@ -3630,7 +3713,6 @@ getWrappingKey( sslSocket *       ss,
                 CK_MECHANISM_TYPE masterWrapMech,
 	        void *            pwArg)
 {
-    CERTCertificate *        svrCert;
     SECKEYPrivateKey *       svrPrivKey;
     SECKEYPublicKey *        svrPubKey             = NULL;
     PK11SymKey *             unwrappedWrappingKey  = NULL;
@@ -3700,12 +3782,12 @@ getWrappingKey( sslSocket *       ss,
      */
     PORT_Memset(&wswk, 0, sizeof wswk);	/* eliminate UMRs. */
 
-    svrCert         = ss->serverCerts[exchKeyType].serverCert;
-    svrPubKey       = CERT_ExtractPublicKey(svrCert);
+    if (ss->serverCerts[exchKeyType].serverKeyPair) {
+	svrPubKey = ss->serverCerts[exchKeyType].serverKeyPair->pubKey;
+    }
     if (svrPubKey == NULL) {
-	/* CERT_ExtractPublicKey doesn't set error code */
-	PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
-    	goto loser;
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	goto loser;
     }
     wrappedKey.type = siBuffer;
     wrappedKey.len  = SECKEY_PublicKeyStrength(svrPubKey);
@@ -3717,12 +3799,106 @@ getWrappingKey( sslSocket *       ss,
 
     /* wrap symmetric wrapping key in server's public key. */
     switch (exchKeyType) {
+#ifdef NSS_ENABLE_ECC
+    PK11SymKey *      Ks;
+    SECKEYPublicKey   *pubWrapKey = NULL;
+    SECKEYPrivateKey  *privWrapKey = NULL;
+    ECCWrappedKeyInfo *ecWrapped;
+#endif /* NSS_ENABLE_ECC */
 
     case kt_rsa:
 	asymWrapMechanism = CKM_RSA_PKCS;
 	rv = PK11_PubWrapSymKey(asymWrapMechanism, svrPubKey,
 	                        unwrappedWrappingKey, &wrappedKey);
 	break;
+
+#ifdef NSS_ENABLE_ECC
+    case kt_ecdh:
+	/*
+	 * We generate an ephemeral EC key pair. Perform an ECDH
+	 * computation involving this ephemeral EC public key and
+	 * the SSL server's (long-term) EC private key. The resulting
+	 * shared secret is treated in the same way as Fortezza's Ks, 
+	 * i.e., it is used to wrap the wrapping key. To facilitate
+	 * unwrapping in ssl_UnwrapWrappingKey, we also store all
+	 * relevant info about the ephemeral EC public key in
+	 * wswk.wrappedSymmetricWrappingkey and lay it out as 
+	 * described in the ECCWrappedKeyInfo structure.
+	 */
+	PORT_Assert(svrPubKey->keyType == ecKey);
+	if (svrPubKey->keyType != ecKey) {
+	    /* something is wrong in sslsecur.c if this isn't an ecKey */
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    rv = SECFailure;
+	    goto ec_cleanup;
+	}
+
+	privWrapKey = SECKEY_CreateECPrivateKey(
+	    &svrPubKey->u.ec.DEREncodedParams, &pubWrapKey, NULL);
+	if ((privWrapKey == NULL) || (pubWrapKey == NULL)) {
+	    rv = SECFailure;
+	    goto ec_cleanup;
+	}
+	
+	/* Set the key size in bits */
+	if (pubWrapKey->u.ec.size == 0) {
+	    pubWrapKey->u.ec.size = SECKEY_PublicKeyStrengthInBits(svrPubKey);
+	}
+
+	PORT_Assert(pubWrapKey->u.ec.DEREncodedParams.len + 
+	    pubWrapKey->u.ec.publicValue.len < MAX_EC_WRAPPED_KEY_BUFLEN);
+	if (pubWrapKey->u.ec.DEREncodedParams.len + 
+	    pubWrapKey->u.ec.publicValue.len >= MAX_EC_WRAPPED_KEY_BUFLEN) {
+	    PORT_SetError(SEC_ERROR_INVALID_KEY);
+	    rv = SECFailure;
+	    goto ec_cleanup;
+	}
+
+	/* Derive Ks using ECDH */
+	Ks = PK11_PubDeriveWithKDF(svrPrivKey, pubWrapKey, PR_FALSE, NULL,
+				   NULL, CKM_ECDH1_DERIVE, masterWrapMech, 
+				   CKA_DERIVE, 0, CKD_NULL, NULL, NULL);
+	if (Ks == NULL) {
+	    rv = SECFailure;
+	    goto ec_cleanup;
+	}
+
+	ecWrapped = (ECCWrappedKeyInfo *) (wswk.wrappedSymmetricWrappingkey);
+	ecWrapped->size = pubWrapKey->u.ec.size;
+	ecWrapped->encodedParamLen = pubWrapKey->u.ec.DEREncodedParams.len;
+	PORT_Memcpy(ecWrapped->var, pubWrapKey->u.ec.DEREncodedParams.data, 
+	    pubWrapKey->u.ec.DEREncodedParams.len);
+
+	ecWrapped->pubValueLen = pubWrapKey->u.ec.publicValue.len;
+	PORT_Memcpy(ecWrapped->var + ecWrapped->encodedParamLen, 
+		    pubWrapKey->u.ec.publicValue.data, 
+		    pubWrapKey->u.ec.publicValue.len);
+
+	wrappedKey.len = MAX_EC_WRAPPED_KEY_BUFLEN - 
+	    (ecWrapped->encodedParamLen + ecWrapped->pubValueLen);
+	wrappedKey.data = ecWrapped->var + ecWrapped->encodedParamLen +
+	    ecWrapped->pubValueLen;
+
+	/* wrap symmetricWrapping key with the local Ks */
+	rv = PK11_WrapSymKey(masterWrapMech, NULL, Ks,
+			     unwrappedWrappingKey, &wrappedKey);
+
+	if (rv != SECSuccess) {
+	    goto ec_cleanup;
+	}
+
+	/* Write down the length of wrapped key in the buffer
+	 * wswk.wrappedSymmetricWrappingkey at the appropriate offset
+	 */
+	ecWrapped->wrappedKeyLen = wrappedKey.len;
+
+ec_cleanup:
+	if (privWrapKey) SECKEY_DestroyPrivateKey(privWrapKey);
+	if (pubWrapKey) SECKEY_DestroyPublicKey(pubWrapKey);
+	if (Ks) PK11_FreeSymKey(Ks);
+	asymWrapMechanism = masterWrapMech;
+	break;
+#endif /* NSS_ENABLE_ECC */
 
     default:
 	rv = SECFailure;
@@ -3766,10 +3942,6 @@ install:
 
 loser:
 done:
-    if (svrPubKey) {
-    	SECKEY_DestroyPublicKey(svrPubKey);
-	svrPubKey = NULL;
-    }
     PZ_Unlock(symWrapKeysLock);
     return unwrappedWrappingKey;
 }
@@ -6143,6 +6315,7 @@ ssl3_HandleClientKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECKEYPrivateKey *serverKey         = NULL;
     SECStatus         rv;
 const ssl3KEADef *    kea_def;
+    ssl3KeyPair     *serverKeyPair      = NULL;
 #ifdef NSS_ENABLE_ECC
     SECKEYPublicKey *serverPubKey       = NULL;
 #endif /* NSS_ENABLE_ECC */
@@ -6161,6 +6334,20 @@ const ssl3KEADef *    kea_def;
 
     kea_def   = ss->ssl3.hs.kea_def;
 
+    if (ss->ssl3.hs.usedStepDownKey) {
+	 PORT_Assert(kea_def->is_limited /* XXX OR cert is signing only */
+		 && kea_def->exchKeyType == kt_rsa 
+		 && ss->stepDownKeyPair != NULL);
+	 if (!kea_def->is_limited  ||
+	      kea_def->exchKeyType != kt_rsa ||
+	      ss->stepDownKeyPair == NULL) {
+	 	/* shouldn't happen, don't use step down if it does */
+		goto skip;
+	 }
+    	serverKeyPair = ss->stepDownKeyPair;
+	ss->sec.keaKeyBits = EXPORT_RSA_KEY_LENGTH * BPB;
+    } else 
+skip:
 #ifdef NSS_ENABLE_ECC
     /* XXX Using SSLKEAType to index server certifiates
      * does not work for (EC)DHE ciphers. Until we have
@@ -6169,42 +6356,25 @@ const ssl3KEADef *    kea_def;
      * one seprately.
      */
     if ((kea_def->kea == kea_ecdhe_rsa) ||
-	(kea_def->kea == kea_ecdhe_ecdsa)) {
-	    if (ss->ephemeralECDHKeyPair != NULL) {
-		    serverKey = ss->ephemeralECDHKeyPair->privKey;
-		    ss->sec.keaKeyBits = 
-			SECKEY_PublicKeyStrengthInBits(ss->ephemeralECDHKeyPair->pubKey);
-	    }
-    } else {
-#endif /* NSS_ENABLE_ECC */
-
-    serverKey =  (ss->ssl3.hs.usedStepDownKey
-#ifdef DEBUG
-		 && kea_def->is_limited /* XXX OR cert is signing only */
-		 && kea_def->exchKeyType == kt_rsa 
-		 && ss->stepDownKeyPair != NULL
+               (kea_def->kea == kea_ecdhe_ecdsa)) {
+	if (ss->ephemeralECDHKeyPair != NULL) {
+	   serverKeyPair = ss->ephemeralECDHKeyPair;
+	   if (serverKeyPair->pubKey) {
+		ss->sec.keaKeyBits = 
+		    SECKEY_PublicKeyStrengthInBits(serverKeyPair->pubKey);
+	   }
+	}
+    } else 
 #endif
-		 ) ? ss->stepDownKeyPair->privKey
-		   : ss->serverCerts[kea_def->exchKeyType].SERVERKEY;
-
-    if (ss->ssl3.hs.usedStepDownKey
-#ifdef DEBUG
-	 && kea_def->is_limited /* XXX OR cert is signing only */
-	 && kea_def->exchKeyType == kt_rsa 
-	 && ss->stepDownKeyPair != NULL
-#endif
-	 ) { 
-    	serverKey = ss->stepDownKeyPair->privKey;
-	ss->sec.keaKeyBits = EXPORT_RSA_KEY_LENGTH * BPB;
-    } else {
+    {
 	sslServerCerts * sc = ss->serverCerts + kea_def->exchKeyType;
-	serverKey           = sc->SERVERKEY;
+	serverKeyPair = sc->serverKeyPair;
 	ss->sec.keaKeyBits = sc->serverKeyBits;
     }
 
-#ifdef NSS_ENABLE_ECC
+    if (serverKeyPair) {
+	serverKey = serverKeyPair->privKey;
     }
-#endif /* NSS_ENABLE_ECC */
 
     if (serverKey == NULL) {
     	SEND_ALERT
@@ -6226,19 +6396,14 @@ const ssl3KEADef *    kea_def;
 
 #ifdef NSS_ENABLE_ECC
     case kt_ecdh:
-        /* XXX We really ought to be able to store multiple
+	/* XXX We really ought to be able to store multiple
 	 * EC certs (a requirement if we wish to support both
 	 * ECDH-RSA and ECDH-ECDSA key exchanges concurrently).
 	 * When we make that change, we'll need an index other
 	 * than kt_ecdh to pick the right EC certificate.
 	 */
-        if (((kea_def->kea == kea_ecdhe_ecdsa) ||
-	     (kea_def->kea == kea_ecdhe_rsa)) &&
-	    (ss->ephemeralECDHKeyPair != NULL)) {
-	    serverPubKey = ss->ephemeralECDHKeyPair->pubKey;
-	} else {
-	    serverPubKey = CERT_ExtractPublicKey(
-			   ss->serverCerts[kt_ecdh].serverCert);
+	if (serverKeyPair) {
+	    serverPubKey = serverKeyPair->pubKey;
         }
 	if (serverPubKey == NULL) {
 	    /* XXX Is this the right error code? */
