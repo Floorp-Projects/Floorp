@@ -2167,7 +2167,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
         return NS_OK;
       }
-      caNames[i] = JS_GetStringBytes(caName);
+      caNames[i - 2] = JS_GetStringBytes(caName);
     }
 
     if (certList &&
