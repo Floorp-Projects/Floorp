@@ -278,8 +278,7 @@ Np.toString = function () {
     a.sort(function (a,b) { return (a.id < b.id) ? -1 : 1; });
     const INDENTATION = "    ";
     var n = ++Node.indentLevel;
-    var t = tokens[this.type];
-    var s = "{\n" + INDENTATION.repeat(n) + "type: " + tokenstr(t);
+    var s = "{\n" + INDENTATION.repeat(n) + "type: " + tokenstr(this.type);
     for (i = 0; i < a.length; i++)
         s += ",\n" + INDENTATION.repeat(n) + a[i].id + ": " + a[i].value;
     n = --Node.indentLevel;
