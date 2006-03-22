@@ -2114,9 +2114,16 @@ interrupt:
           BEGIN_CASE(JSOP_ENTERWITH)
             FETCH_OBJECT(cx, -1, rval, obj);
             SAVE_SP_AND_PC(fp);
-            withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
-            if (!withobj)
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj) {
+                ok = JS_FALSE;
                 goto out;
+            }
+            withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
+            if (!withobj) {
+                ok = JS_FALSE;
+                goto out;
+            }
             rval = INT_TO_JSVAL(sp - fp->spbase);
             OBJ_SET_SLOT(cx, withobj, JSSLOT_PRIVATE, rval);
             fp->scopeChain = withobj;
