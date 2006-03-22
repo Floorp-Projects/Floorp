@@ -2841,7 +2841,7 @@ const BrowserSearch = {
   
     if (useNewTab) {
       getBrowser().loadOneTab(submission.uri.spec, null, null,
-                              submission.postData, false);
+                              submission.postData);
     } else
       loadURI(submission.uri.spec, null, submission.postData);
   },
