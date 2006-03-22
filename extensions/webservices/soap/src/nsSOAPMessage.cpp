@@ -464,7 +464,7 @@ NS_IMETHODIMP
       nsCOMPtr<nsIDOMNode> node1;
       node1 = element;
       nsCOMPtr<nsIDOMNode> node2;
-      rv = mMessage->ImportNode(node1, PR_TRUE, getter_AddRefs(node1));
+      rv = mMessage->ImportNode(node1, PR_TRUE, getter_AddRefs(node2));
       if (NS_FAILED(rv))
         return rv;
       rv = body->AppendChild(node2, getter_AddRefs(node1));
