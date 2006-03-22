@@ -604,14 +604,9 @@ var PlacesController = {
    */
   nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
     const NHRN = Ci.nsINavHistoryResultNode;
-    if (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
-      return true;
-    if (node.type == NHRN.RESULT_TYPE_FOLDER)
-      return asFolder(node).folderType != "";
-    
-    return false;
+    return (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER);
   },
-  
+
   /**
    * Updates commands on focus/selection change to reflect the enabled/
    * disabledness of commands in relation to the state of the selection. 
@@ -787,11 +782,14 @@ var PlacesController = {
    */
   showBookmarkPropertiesForSelection: 
   function PC_showBookmarkPropertiesForSelection() {
-    var node = this._activeView.selectedURINode;
-    if (!node || !node.uri) 
+    var node = this._activeView.selectedNode;
+    if (!node)
       return;
 
-    this.showBookmarkProperties(this._uri(node.uri));
+    if (this.nodeIsFolder(node))
+      this.showFolderProperties(asFolder(node).folderId);
+    else if (node.uri)
+      this.showBookmarkProperties(this._uri(node.uri));
   },
 
   /**
@@ -823,17 +821,36 @@ var PlacesController = {
   },
 
   /**
-   * Shows the bookmark dialog corresponding to the specified user action.
+   * Opens the folder properties panel for a given folder ID.
    *
-   * @param uri the URI to show the dialog for
+   * @param folderid   an integer representing the ID of the folder to edit
+   * @returns none
+   */
+  showFolderProperties: function PC_showFolderProperties(folderId) {
+    NS_ASSERT(typeof(folderId)=="number",
+              "showFolderProperties received a non-numerical value for its folderId parameter");
+    this._showBookmarkDialog(folderId, "edit");
+  },
+
+  /**
+   * Shows the bookmark dialog corresponding to the specified user action.
+   * This is an implementation function, and shouldn't be called directly;
+   * rather, use the specific variant above that corresponds to your situation.
+   *
+   * @param identifier   the URI or folder ID to show the dialog for
    * @param action "add" or "edit", see _determineVariant in 
    *               bookmarkProperties.js
    */
-  _showBookmarkDialog: function PC__showBookmarkDialog(uri, action) {
-    this._assertURINotString(uri);
+  _showBookmarkDialog: function PC__showBookmarkDialog(identifier, action) {
+    // The identifier parameter can be either an integer (for folders) or
+    // a nsIURI object (for bookmarks/history items); if it isn't a number
+    // here, we're going to make sure it's a URI object rather than a string.
+    if (typeof(identifier) != "number")
+      this._assertURINotString(identifier);
+
     window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
                       "", "width=600,height=400,chrome,dependent,modal,resizable",
-                      uri, this, action);
+                      identifier, this, action);
   },
 
   /**
@@ -2002,4 +2019,3 @@ PlacesEditItemTransaction.prototype = {
     }
   }
 };
-

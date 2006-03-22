@@ -120,12 +120,11 @@
             return null;
           }
           
-          var result = this.getResult();
-          NS_ASSERT(result, "no result, cannot select place URI!");
-          if (!result)
+          var container = this._getRootNode();
+          NS_ASSERT(container, "No result, cannot select place URI!");
+          if (!container)
             return;
-          
-          var container = asContainer(result.root);
+
           var child = findNode(container, placeURI);
           container.containerOpen = true;
           if (child)
@@ -152,8 +151,8 @@
           // Build a list of all of the nodes that are the parent of this one 
           // in the result. 
           var parents = [];
-          var result = this.getResult();
-          while (parent && parent != asContainer(result.root)) {
+          var root = this._getRootNode();
+          while (parent && parent != root) {
             parents.push(parent);
             parent = parent.parent;
           }
@@ -430,6 +429,116 @@
       <method name="selectAll">
         <body><![CDATA[ 
           this.view.selection.selectAll();
+        ]]></body>
+      </method>
+
+      <!-- This method returns the root node of the query results as
+           a container query result node.  If it is unable to do this
+           (for instance, if we have no query results), it will
+           return null.
+      -->
+      <method name="_getRootNode">
+        <body><![CDATA[
+          var result = this.getResult();
+          if (!result)
+            return null;
+          return asContainer(result.root);
+        ]]></body>
+      </method>
+
+      <!-- This method, when given a list of folder IDs, will select all
+           the nodes that match those IDs in the current tree.
+           It will open any parent nodes that it needs to in order to
+           show the selected folders.
+      -->
+      <method name="selectFolders">
+        <parameter name="ids"/>
+        <body><![CDATA[
+          /**
+           * Returns the number of properties on the object "obj", since
+           * we're using objects as sets and dictionaries in the
+           * code below.
+           */
+          function len(obj) {
+            var count = 0;
+            for (property in obj)
+              ++count;
+            return count;
+          }
+
+          /**
+           * Recursively search through a node's children for folders
+           * with IDs in the set "indexes".  When a matching folder
+           * is found, remove its ID from "indexes" and store the
+           * node in the dictionary "nodes".
+           *
+           * NOTE: This method will leave open any node that had
+           *       matching folders in its subtree.
+           *
+           * @param node  The root of the subtree to search for the folders.
+           *              "node" itself will not be examined for a match.
+           * @param indexes  A set of folder IDs, expressed as an object
+           * @param nodes  A dictionary mapping folder IDs to folder
+           *               result nodes, expressed as an object.  This is
+           *               empty at the initial start of the recursion and
+           *               gets filled in as the recursion progresses.
+           */
+          function findNodes(node, indexes, nodes) {
+            // Remember the beginning state so that we can re-close
+            // this node if we don't find any additional results here.
+            var previousOpenness = node.containerOpen;
+            var previousMatches = len(nodes);
+            node.containerOpen = true;
+
+            for (var child = 0; 
+                 (child < node.childCount) && (len(indexes) > 0);
+                 child++) {
+              var childNode = node.getChild(child);
+              if (!PlacesController.nodeIsFolder(childNode))
+                continue;
+
+              var childFolder = asFolder(childNode);
+              
+              // See if child matches an ID we wanted; add to results.
+              if (childFolder.folderId in indexes) {
+                nodes[childFolder.folderId] = childFolder;
+                delete indexes[childFolder.folderId];
+              }
+
+              // Search down that child's subtree.
+              findNodes(childFolder, indexes, nodes);
+            }
+
+            // If we didn't find any additional matches in this node's
+            // subtree, revert the node to its previous openness.
+            if (len(nodes) == previousMatches)
+              node.containerOpen = previousOpenness;
+          }
+
+          var indexes = {};  // Set of folder IDs to search for.
+          var nodes = {};    // Dictionary of found IDs to found nodes.
+
+          // Initialize input set
+          for (var i = 0; i < ids.length; i++)
+            indexes[ids[i]] = true;
+
+          var root = this._getRootNode();
+          if (!root) {
+            NS_ASSERT(root, "Couldn't select folders because no root node was available.");
+            return;
+          }
+
+          findNodes(root, indexes, nodes);
+          
+          // For all the nodes we've found, highlight the corresponding
+          // index in the tree.
+          var result = this.getResult();
+          var selection = this.view.selection;
+          selection.clearSelection();
+          for(idx in nodes) {
+            var index = result.treeIndexForNode(nodes[idx]);
+            selection.rangedSelect(index, index, true);
+          }
         ]]></body>
       </method>
       
