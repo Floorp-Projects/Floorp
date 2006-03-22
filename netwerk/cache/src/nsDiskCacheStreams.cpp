@@ -473,10 +473,18 @@ nsDiskCacheStreamIO::Flush()
 {
     NS_ASSERTION(mBinding, "oops");
 
-    CACHE_LOG_DEBUG(("CACHE: Flush [%x]\n", mBinding->mRecord.HashNumber()));
+    CACHE_LOG_DEBUG(("CACHE: Flush [%x doomed=%u]\n",
+        mBinding->mRecord.HashNumber(), mBinding->mDoomed));
 
     if (!mBufDirty)
         return NS_OK;
+
+    // If entry is doomed, then there is no point in flushing.  Just set the
+    // mBufDirty flag to simulate a successful flush.
+    if (mBinding->mDoomed) {
+        mBufDirty = PR_FALSE;
+        return NS_OK;
+    }
 
     // write data to cache blocks, or flush mBuffer to file
     nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
