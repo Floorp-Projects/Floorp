@@ -63,7 +63,9 @@
 #include "prtime.h"
 #include "prmem.h"
 #include "bzlib.h"
+#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
+#endif
 #include "nsIUUIDGenerator.h"
 
 // Make our MIME type inform the server of possible compression.
