@@ -41,7 +41,7 @@
 #define __nsContentPolicy_h__
 
 #include "nsIContentPolicy.h"
-#include "nsCOMArray.h"
+#include "nsCategoryCache.h"
 
 class nsContentPolicy : public nsIContentPolicy
 {
@@ -52,8 +52,8 @@ class nsContentPolicy : public nsIContentPolicy
     nsContentPolicy();
     virtual ~nsContentPolicy();
  private:
-    //Array of policies (retrieved from the category manager in the ctor)
-    nsCOMArray<nsIContentPolicy> mPolicies;
+    //Array of policies
+    nsCategoryCache<nsIContentPolicy> mPolicies;
 
     //Helper type for CheckPolicy
     typedef
