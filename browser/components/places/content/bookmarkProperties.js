@@ -99,6 +99,7 @@ var BookmarkPropertiesPanel = {
   EDIT_BOOKMARK_VARIANT: 0,
   ADD_BOOKMARK_VARIANT: 1,
   EDIT_HISTORY_VARIANT: 2,
+  EDIT_FOLDER_VARIANT:  3,
 
   /**
    * The variant identifier for the current instance of the dialog.
@@ -108,6 +109,18 @@ var BookmarkPropertiesPanel = {
 
   _isVariant: function BPP__isVariant(variant) {
     return this._variant == variant;
+  },
+
+  /**
+   * Returns true if this variant of the dialog uses a URI as a primary
+   * identifier for the item being edited.
+   */
+
+  _identifierIsURI: function BPP__identifierIsURI() {
+    switch(this._variant) {
+    case this.EDIT_FOLDER_VARIANT: return false;
+    default: return true;
+    }
   },
 
   /**
@@ -126,6 +139,17 @@ var BookmarkPropertiesPanel = {
   _isURIEditable: function BPP__isURIEditable() {
     switch(this._variant) {
     case this.EDIT_HISTORY_VARIANT: return false;
+    case this.EDIT_FOLDER_VARIANT:  return false;
+    default: return true;
+    }
+  },
+
+  /**
+   * Returns true if the URI is visible in this variant of the dialog.
+   */
+  _isURIVisible: function BPP__isURIVisible() {
+    switch(this._variant) {
+    case this.EDIT_FOLDER_VARIANT: return false;
     default: return true;
     }
   },
@@ -137,6 +161,7 @@ var BookmarkPropertiesPanel = {
   _isShortcutVisible: function BPP__isShortcutVisible() {
     switch(this._variant) {
     case this.EDIT_HISTORY_VARIANT: return false;
+    case this.EDIT_FOLDER_VARIANT:  return false;
     default: return true;
     }
   },
@@ -149,6 +174,7 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.EDIT_HISTORY_VARIANT: return false;
     case this.ADD_BOOKMARK_VARIANT: return false;
+    case this.EDIT_FOLDER_VARIANT:  return false;
     default: return true;
     }
   },
@@ -186,6 +212,8 @@ var BookmarkPropertiesPanel = {
       return this._strings.getString("dialogTitleAdd");
     case this.EDIT_HISTORY_VARIANT:
       return this._strings.getString("dialogTitleHistoryEdit");
+    case this.EDIT_FOLDER_VARIANT:
+      return this._strings.getString("dialogTitleFolderEdit");
     default:
       return this._strings.getString("dialogTitleBookmarkEdit");
     }
@@ -202,27 +230,37 @@ var BookmarkPropertiesPanel = {
 
   /**
    * Determines the correct variant of the dialog to display depending
-   * on which action is passed in and whether or not the URI passed in
-   * is already bookmarked or not.
+   * on which action is passed in and the properties of the identifier value
+   * (generally either a URI or a folder ID).
    *
-   * @param uri the URI to display the properties for
+   * NOTE: It's currently not possible to create the dialog with a folder
+   *       id and "add" mode.
+   *
+   * @param identifier the URI or folder ID to display the properties for
    * @param action -- "add" if this is being triggered from an "add bookmark"
    *                  UI action; or "edit" if this is being triggered from
    *                  a "properties" UI action
    *
    * @returns one of the *_VARIANT constants
    */
-  _determineVariant: function BPP__determineVariant(uri, action) {
+  _determineVariant: function BPP__determineVariant(identifier, action) {
     if (action == "add") {
-      if (this._bms.isBookmarked(uri)) {
+      this._assertURINotString(identifier);
+      if (this._bms.isBookmarked(identifier)) {
         return this.EDIT_BOOKMARK_VARIANT;
-      } else {
+      }
+      else {
         return this.ADD_BOOKMARK_VARIANT;
       }
-    } else { /* Assume "edit" */
-      if (this._bms.isBookmarked(uri)) {
+    }
+    else { /* Assume "edit" */
+      if (typeof(identifier) == "number")
+        return this.EDIT_FOLDER_VARIANT;
+
+      if (this._bms.isBookmarked(identifier)) {
         return this.EDIT_BOOKMARK_VARIANT;
-      } else {
+      }
+      else {
         return this.EDIT_HISTORY_VARIANT;
       }
     }
@@ -232,23 +270,27 @@ var BookmarkPropertiesPanel = {
    * This method should be called by the onload of the Bookmark Properties
    * dialog to initialize the state of the panel.
    *
-   * @param bookmarkURI  a nsIURI object representing the bookmarked URI that
+   * @param identifier   a nsIURI object representing the bookmarked URI or
+   *                     integer folder ID of the item that
    *                     we want to view the properties of
    * @param dialogWindow the window object of the Bookmark Properties dialog
    * @param controller   a PlacesController object for interacting with the
    *                     Places system
    */
-  init: function BPP_init(dialogWindow, bookmarkURI, controller, action) {
-    this._assertURINotString(bookmarkURI);
-    this._variant = this._determineVariant(bookmarkURI, action);
+  init: function BPP_init(dialogWindow, identifier, controller, action) {
+    this._variant = this._determineVariant(identifier, action);
 
-    this._bookmarkURI = bookmarkURI;
-    this._bookmarkTitle = this._bms.getItemTitle(this._bookmarkURI);
+    if (this._identifierIsURI()) {
+      this._assertURINotString(identifier);
+      this._bookmarkURI = identifier;
+    }
+    else {
+      this._folderId = identifier;
+    }
     this._dialogWindow = dialogWindow;
     this._controller = controller;
 
     this._initFolderTree();
-    this._initAssignableFolderResult();
     this._populateProperties();
     this._updateSize();
   },
@@ -275,30 +317,18 @@ var BookmarkPropertiesPanel = {
     this._folderTree._load([query], options);
   },
 
-
-  /**
-   * This method creates a query for the set of assignable folders.
-   * This only needs to be created once; when closed (using
-   * root.containerOpen = false) and reopened, the results will be regenerated
-   * if the data has changed since the close.
-   */
-  _initAssignableFolderResult: function BPP__initAssignableFolderRoot() {
-    var query = this._hist.getNewQuery();
-    query.setFolders([this._bms.placesRoot], 1);
-    var options = this._hist.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
-    options.excludeItems = true;
-
-    this._assignableFolderResult = this._hist.executeQuery(query, options);
-  },
-
   /**
    * This method fills in the data values for the fields in the dialog.
    */
   _populateProperties: function BPP__populateProperties() {
-    var location = this._bookmarkURI;
-    var title = this._bookmarkTitle;
     var document = this._dialogWindow.document;
+
+    if (this._identifierIsURI()) {
+      this._bookmarkTitle = this._bms.getItemTitle(this._bookmarkURI);
+    }
+    else {
+      this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
+    }
 
     this._dialogWindow.document.title = this._getDialogTitle();
 
@@ -314,204 +344,41 @@ var BookmarkPropertiesPanel = {
 
     var titlebox = document.getElementById("edit-titlebox");
 
-    nurl.value = location.spec;
-    titlebox.value = title;
+    titlebox.value = this._bookmarkTitle;
 
     if (!this._isTitleEditable())
       titlebox.setAttribute("disabled", "true");
 
-    if (!this._isURIEditable())
-      nurl.setAttribute("disabled", "true");
+    if (this._isURIVisible()) {
+      nurl.value = this._bookmarkURI.spec;
+
+      if (!this._isURIEditable())
+        nurl.setAttribute("disabled", "true");
+    }
+    else {
+      var locationRow = document.getElementById("locationRow");
+      locationRow.setAttribute("hidden", "true");
+    }
 
     if (this._isShortcutVisible()) {
       var shortcutbox =
         this._dialogWindow.document.getElementById("edit-shortcutbox");
       shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
-    } else {
+    }
+    else {
       var shortcutRow =
         this._dialogWindow.document.getElementById("shortcut-row");
       shortcutRow.setAttribute("hidden", "true");
     }
 
     if (this._isFolderEditable()) {
-
-      var tagArea = document.getElementById("tagbox");
-
-      while (tagArea.hasChildNodes()) {
-        tagArea.removeChild(tagArea.firstChild);
-      }
-
-      var elementDict = {};
-
-      var root = this._assignableFolderResult.root; //Root is always a container.
-      root.containerOpen = true;
-      this._populateTags(root, 0, tagArea, elementDict);
-      root.containerOpen = false;
-
-      var categories = this._bms.getBookmarkFolders(location, {});
-
-      this._updateFolderTextbox(location);
-
-      var length = 0;
-      for (key in elementDict) {
-        length++;
-      }
-
-      for (var i=0; i < categories.length; i++) {
-        var elm = elementDict[categories[i]];
-      elm.setAttribute("selected", "true");
-      }
-    } else {
-      var folderDispRow =
-        this._dialogWindow.document.getElementById("folder-disp-row");
-      folderDispRow.setAttribute("hidden", "true");
+      this._folderTree.selectFolders([this._bms.bookmarksRoot]);
+    }
+    else {
       var folderRow =
         this._dialogWindow.document.getElementById("folder-row");
       folderRow.setAttribute("hidden", "true");
     }
-  },
-
-  /**
-   * Recursively populates the tag-like set of clickable folders.
-   *
-   * @param aContainer a reference to an nsINavHistoryContainerResultNode
-   *        (whose) containerOpen property is set to true) representing
-   *        the roote of the bookmark folder tree
-   * @param aDepth the current iteration depth -- pass this 0 at the top level.
-   *        This only affects the visual indentation level of the tag display.
-   * @param aParentElement a vbox element into which the tags will be populated
-   * @param aElementDict a dictionary mapping folder IDs to element references
-   *        to be populated in this method
-   *
-   * @returns none
-   */
-  _populateTags:
-  function BPP__populateTags (container, depth, parentElement, elementDict) {
-    NS_ASSERT(container.containerOpen, "The containerOpen property of the container parameter should be set to true before calling populateTags(), and then set to false again afterwards.");
-
-    var row = null;
-    for (var i = 0; i < container.childCount; i++) {
-      var childNode = container.getChild(i);
-
-      if (childNode.type != childNode.RESULT_TYPE_FOLDER)
-        continue;
-
-      var childFolder =
-        childNode.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-      childFolder.containerOpen = true;
-
-      // If we can't alter it, no use showing it as an option.
-
-      if (childFolder.childrenReadOnly) {
-        childFolder.containerOpen = false;
-        continue;
-      }
-
-      if (childFolder.hasChildren) {
-        row = document.createElement("hbox");
-        row.setAttribute("class", "l" + depth);
-        var tag = this._createTagElement(childFolder, false);
-        elementDict[childFolder.folderId] = tag;
-        tag.setAttribute("isparent", "true");
-        row.appendChild(tag);
-        parentElement.appendChild(row);
-        row = null;
-        var nextDepth = depth + 1;
-        // We're limiting max indentation level here.
-        if (nextDepth > this.MAX_INDENT_DEPTH)
-          nextDepth = this.MAX_INDENT_DEPTH;
-        this._populateTags(childFolder, nextDepth, parentElement, elementDict);
-      } else {
-        if (row == null) {
-          row = document.createElement("description");
-          row.setAttribute("class", "l" + depth);
-          parentElement.appendChild(row);
-        } else {
-          // we now know that there must"ve been a tag before us on the same row
-          var separator = document.createElement("label");
-          separator.setAttribute("value", eval("\"\\u2022\"")); // bullet
-          separator.setAttribute("class", "tag-separator");
-          row.appendChild(separator);
-        }
-        var tag = this._createTagElement(childFolder, false);
-        elementDict[childFolder.folderId] = tag;
-        row.appendChild(tag);
-      }
-      childFolder.containerOpen = false;
-    }
-  },
-
-  /**
-   * This method creates a XUL element to represent a given Bookmark
-   * folder node.
-   *
-   * @param aNode an nsINavHistoryFolderResultNode object
-   * @param aIsSelected boolean, true if the given folder is currently selected
-   *
-   * @return a new XUL element corresponding to aNode
-   */
-  _createTagElement: function BPP_createTagElement(node, isSelected) {
-    var tag = this._dialogWindow.document.createElement("label");
-    tag.setAttribute("value", node.title);
-    tag.setAttribute("folderid", node.folderId);
-    tag.setAttribute("selected", "" + isSelected);
-    var self = this;
-    function onClick(e) {
-      self.tagClicked(e);
-    }
-    tag.addEventListener("command", onClick, false);
-    // We need the click event handler until we change the element from labels
-    // to something like checkboxes.
-    tag.addEventListener("click", onClick, false);
-    tag.setAttribute("class", "tag");
-    return tag;
-  },
-
-  /**
-   * This method should be called when a tag element generated by
-   * _createTagElement is clicked by the user.
-   */
-  tagClicked: function BPP_tagClicked(event) {
-    var tagElement = event.target;
-
-    var folderId = parseInt(tagElement.getAttribute("folderid"));
-
-    if (tagElement.getAttribute("selected") == "true") {
-      this._bms.removeItem(folderId, this._bookmarkURI);
-      tagElement.setAttribute("selected", "false");
-    } else {
-      this._bms.insertItem(folderId, this._bookmarkURI, -1);
-      tagElement.setAttribute("selected", "true");
-    }
-
-    this._updateFolderTextbox(this._bookmarkURI);
-  },
-
-  /**
-   * This method sets the contents of the "Folders" textbox in the
-   * Bookmark Properties panel.
-   *
-   * @param uri an nsIURI object representing the current bookmark's URI
-   */
-  _updateFolderTextbox: function BPP__updateFolderTextbox(uri) {
-    var folderTextbox = document.getElementById("places-folder-list");
-    folderTextbox.value = this._getFolderNameListForURI(uri);
-  },
-
-  /**
-   * This method gets the list of folders that contain the current bookmark.
-   *
-   * @param aURI a nsIURI object representing the URI of the current bookmark
-   *
-   * @returns a comma-separated list of folder names in string form
-   */
-  _getFolderNameListForURI: function BPP__getFolderNameListForURI(uri) {
-    var folders = this._bms.getBookmarkFolders(uri, {});
-    var results = [];
-    for (var i = 0; i < folders.length; i++) {
-      results.push(this._bms.getFolderTitle(folders[i]));
-    }
-    return results.join(", ");
   },
 
   /**
@@ -575,7 +442,9 @@ var BookmarkPropertiesPanel = {
    */
   _saveChanges: function PBD_saveChanges() {
     var urlbox = this._dialogWindow.document.getElementById("edit-urlbar");
-    var newURI = this._uri(urlbox.value);
+    var newURI = this._bookmarkURI;
+    if (this._identifierIsURI() && this._isURIEditable())
+      newURI = this._uri(urlbox.value);
 
     if (this._isFolderEditable()) {
       var selected =  this._folderTree.getSelectionNodes();
@@ -593,11 +462,16 @@ var BookmarkPropertiesPanel = {
 
 
     var titlebox = this._dialogWindow.document.getElementById("edit-titlebox");
-    this._bms.setItemTitle(this._bookmarkURI, titlebox.value);
+    if (this._identifierIsURI())
+      this._bms.setItemTitle(this._bookmarkURI, titlebox.value);
+    else
+      this._bms.setFolderTitle(this._folderId, titlebox.value);
 
-    var shortcutbox =
-      this._dialogWindow.document.getElementById("edit-shortcutbox");
-    this._bms.setKeywordForURI(this._bookmarkURI, shortcutbox.value);
+    if (this._isShortcutVisible()) {
+      var shortcutbox =
+        this._dialogWindow.document.getElementById("edit-shortcutbox");
+      this._bms.setKeywordForURI(this._bookmarkURI, shortcutbox.value);
+    }
 
     if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
         (newURI.spec != this._bookmarkURI.spec)) {

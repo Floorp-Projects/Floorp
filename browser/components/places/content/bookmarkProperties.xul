@@ -44,7 +44,7 @@
               </vbox>
               <textbox id="edit-titlebox" value=""/>
             </row>
-            <row>
+            <row id="locationRow">
               <vbox align="end">
                 <hbox align="center" flex="1">
                   <label value="&bookmark.property.location;" align="middle"/>
@@ -59,14 +59,6 @@
                 </hbox>
               </vbox>
               <textbox id="edit-shortcutbox" value=""/>
-            </row>
-            <row id="folder-disp-row" hidden="true">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&bookmark.property.folders;"/>
-                </hbox>
-              </vbox>
-              <textbox id="places-folder-list" value="" disabled="true"/>
             </row>
             <row id="folder-row" flex="1" style="min-height: 100px;">
               <vbox align="end">
@@ -92,15 +84,6 @@
                                 view="placesList"
                                 flex="1"/>
                 </tree>
-              </vbox>
-            </row>
-            <row flex="1" hidden="true">
-              <vbox align="end">
-                <hbox align="start" flex="1">
-                  <label value="&bookmark.property.folder_list;"/>
-                </hbox>
-              </vbox>
-              <vbox id="tagbox">
               </vbox>
             </row>
           </rows>
