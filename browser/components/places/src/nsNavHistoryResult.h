@@ -614,6 +614,7 @@ public:
 
   nsresult FillChildren();
   void ClearChildren(PRBool aUnregister);
+  nsresult Refresh();
 
   PRBool StartIncrementalUpdate();
 };

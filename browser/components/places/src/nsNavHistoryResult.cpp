@@ -2626,6 +2626,31 @@ nsNavHistoryFolderResultNode::ClearChildren(PRBool unregister)
 }
 
 
+// nsNavHistoryFolderResultNode::Refresh
+//
+//    This is called to update the result when something has changed that we
+//    can not incrementally update.
+
+nsresult
+nsNavHistoryFolderResultNode::Refresh()
+{
+  if (! mExpanded) {
+    // when we are not expanded, we don't update, just invalidate and unhook
+    ClearChildren(PR_TRUE);
+    return NS_OK; // no updates in tree state
+  }
+
+  // ignore errors from FillChildren, since we will still want to refresh
+  // the tree (there just might not be anything in it on error)
+  ClearChildren(PR_FALSE);
+  FillChildren();
+
+  nsNavHistoryResult* result = GetResult();
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  return result->RefreshVisibleSection(this);
+}
+
+
 // nsNavHistoryFolderResultNode::StartIncrementalUpdate
 //
 //    This implements the logic described above the constructor. This sees if
@@ -2654,7 +2679,7 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
   }
 
   // otherwise, we don't do incremental updates, invalidate and unregister
-  ClearChildren(PR_TRUE);
+  Refresh();
   return PR_FALSE;
 }
 
