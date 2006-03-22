@@ -203,7 +203,7 @@ struct JSScope {
     JSObject        *object;            /* object that owns this scope */
     uint8           flags;              /* flags, see below */
     int8            hashShift;          /* multiplicative hash shift */
-    uint16          dswIndex;           /* Deutsch-Schorr-Waite scaled index */
+    uint16          spare;              /* reserved */
     uint32          entryCount;         /* number of entries in table */
     uint32          removedCount;       /* removed entry sentinels in table */
     JSScopeProperty **table;            /* table of ptrs to shared tree nodes */

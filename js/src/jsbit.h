@@ -147,5 +147,41 @@ extern JS_PUBLIC_API(JSIntn) JS_FloorLog2(JSUint32 i);
     JS_END_MACRO
 #endif
 
+/*
+ * Internal function.
+ * Compute the log of the greatest power of 2 less than or equal to n.
+ * This is a version of JS_FloorLog2 that operates on jsuword with
+ * CPU-dependant size and requires that n != 0.
+ */
+#define JS_FLOOR_LOG2W(n) (JS_ASSERT((n) != 0), js_FloorLog2wImpl(n))
+
+#ifdef JS_HAS_GCC_BUILTIN_CLZ
+
+# if JS_BYTES_PER_WORD == 4
+JS_STATIC_ASSERT(sizeof(unsigned) == sizeof(JSUword));
+#  define js_FloorLog2wImpl(n)                                                \
+    ((JSUword)(JS_BITS_PER_WORD - 1 - __builtin_clz(n)))
+# elif JS_BYTES_PER_WORD == 8
+JS_STATIC_ASSERT(sizeof(unsigned long long) == sizeof(JSUword));
+#  define js_FloorLog2wImpl(n)                                                \
+    ((JSUword)(JS_BITS_PER_WORD - 1 - __builtin_clzll(n)))
+# else
+#  error "NOT SUPPORTED"
+# endif
+
+#else
+
+# if JS_BYTES_PER_WORD == 4
+#  define js_FloorLog2wImpl(n) ((JSUword)JS_FloorLog2(n))
+# elif JS_BYTES_PER_WORD == 8
+extern JSUword
+js_FloorLog2wImpl(JSUword n);
+# else
+#  error "NOT SUPPORTED"
+# endif
+
+#endif
+
+
 JS_END_EXTERN_C
 #endif /* jsbit_h___ */

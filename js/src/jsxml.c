@@ -7237,13 +7237,22 @@ js_NewXML(JSContext *cx, JSXMLClass xml_class)
     return xml;
 }
 
-/*
- * Code factored from js_MarkXML for use by xml_DeutschScorrWaite, see below.
- * All things marked here cannot lead to overlong lists (mark stack overflow).
- */
-static void
-xml_mark_tail(JSContext *cx, JSXML *xml, void *arg)
+void
+js_MarkXML(JSContext *cx, JSXML *xml, void *arg)
 {
+    JS_MarkGCThing(cx, xml->object, js_object_str, arg);
+    JS_MarkGCThing(cx, xml->name, js_name_str, arg);
+    JS_MarkGCThing(cx, xml->parent, js_xml_parent_str, arg);
+
+    if (JSXML_HAS_VALUE(xml)) {
+        JS_MarkGCThing(cx, xml->xml_value, "value", arg);
+        return;
+    }
+
+    xml_mark_vector(cx,
+                    (JSXML **) xml->xml_kids.vector,
+                    xml->xml_kids.length,
+                    arg);
     XMLArrayTrim(&xml->xml_kids);
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
@@ -7263,118 +7272,6 @@ xml_mark_tail(JSContext *cx, JSXML *xml, void *arg)
                         xml->xml_attrs.length,
                         arg);
         XMLArrayTrim(&xml->xml_attrs);
-    }
-}
-
-static void
-xml_DeutschSchorrWaite(JSContext *cx, JSXML *xml, void *arg)
-{
-    JSXML *top, *kid;
-    uint8 *flagp;
-    uint32 i, n;
-#ifdef JS_GCMETER
-    JSRuntime *rt = cx->runtime;
-# define GCMETER(x)     x
-#else
-# define GCMETER(x)     /* nothing */
-#endif
-
-    top = NULL;
-    flagp = js_GetGCThingFlags(xml);
-
-down:
-    GCMETER(if (++rt->gcStats.dswdepth > rt->gcStats.maxdswdepth)
-                rt->gcStats.maxdswdepth = rt->gcStats.dswdepth);
-
-    *flagp |= GCF_MARK;
-
-    i = 0;
-    for (;;) {
-        /*
-         * Let (i == n) index xml->parent, not any child in xml->xml_kids.
-         * Use JSXML_LENGTH here and below in case xml is a leaf node whose
-         * parent we are marking non-recursively.  In the case where parent
-         * is being marked, the "kid/down" sense is backwards -- humor me.
-         */
-        for (n = JSXML_LENGTH(xml); i <= n; i++) {
-            if (i < n) {
-                kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
-            } else {
-                kid = xml->parent;
-                if (!kid)
-                    continue;
-            }
-
-            flagp = js_GetGCThingFlags(kid);
-            if (*flagp & GCF_MARK)
-                continue;
-
-            /*
-             * Don't descend if a for..in loop is enumerating xml's kids, i.e.
-             * if xml has kids and its xml_kids.cursors member is non-null.
-             */
-            if (JSXML_HAS_KIDS(kid) &&
-                (JSXML_HAS_VALUE(xml) || !xml->xml_kids.cursors)) {
-                if (i < n)
-                    XMLARRAY_SET_MEMBER(&xml->xml_kids, i, top);
-                else
-                    xml->parent = top;
-                if (JSXML_HAS_KIDS(xml))
-                    xml->xml_kids.cursors = JS_UINT32_TO_PTR(i);
-                top = xml;
-                xml = kid;
-                goto down;
-            }
-
-            js_MarkXML(cx, kid, arg);
-        }
-
-        /* If we are back at the root (or we never left it), we're done. */
-        GCMETER(rt->gcStats.dswdepth--);
-        xml->xml_kids.cursors = NULL;
-        if (!top)
-            return;
-
-        /* Time to go back up the spanning tree. */
-        GCMETER(rt->gcStats.dswup++);
-        i = JSXML_HAS_KIDS(top) ? JS_PTR_TO_UINT32(top->xml_kids.cursors) : 0;
-        if (i < JSXML_LENGTH(top)) {
-            kid = XMLARRAY_MEMBER(&top->xml_kids, i, JSXML);
-            XMLARRAY_SET_MEMBER(&top->xml_kids, i, xml);
-        } else {
-            JS_ASSERT(i == JSXML_LENGTH(top));
-            kid = top->parent;
-            top->parent = xml;
-        }
-        xml = top;
-        top = kid;
-        i++;
-    }
-#undef GCMETER
-}
-
-void
-js_MarkXML(JSContext *cx, JSXML *xml, void *arg)
-{
-    int stackDummy;
-
-    JS_MarkGCThing(cx, xml->object, js_object_str, arg);
-    JS_MarkGCThing(cx, xml->name, js_name_str, arg);
-    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-        xml_DeutschSchorrWaite(cx, xml, arg);
-    } else {
-        JS_MarkGCThing(cx, xml->parent, js_xml_parent_str, arg);
-
-        if (JSXML_HAS_VALUE(xml)) {
-            JS_MarkGCThing(cx, xml->xml_value, "value", arg);
-        } else {
-            xml_mark_vector(cx,
-                            (JSXML **) xml->xml_kids.vector,
-                            xml->xml_kids.length,
-                            arg);
-
-            xml_mark_tail(cx, xml, arg);
-        }
     }
 }
 

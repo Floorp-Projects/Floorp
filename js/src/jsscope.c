@@ -150,7 +150,6 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
     js_InitObjectMap(&scope->map, nrefs, ops, clasp);
     scope->object = obj;
     scope->flags = 0;
-    scope->dswIndex = 0;
     InitMinimalScope(scope);
 
 #ifdef JS_THREADSAFE

@@ -162,6 +162,10 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg);
             js_MarkAtom(cx, atom, arg);                                       \
     JS_END_MACRO
 
+/*
+ * FIXME: We should remove "arg" argument when GC_MARK_DEBUG is not defined.
+ * See bug 330692.
+ */
 extern void
 js_MarkGCThing(JSContext *cx, void *thing, void *arg);
 
@@ -234,11 +238,11 @@ typedef struct JSGCStats {
     uint32  maxdepth;   /* maximum mark tail recursion depth */
     uint32  cdepth;     /* mark recursion depth of C functions */
     uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
-    uint32  dswmark;    /* mark C stack overflows => Deutsch-Schorr-Waite */
-    uint32  dswdepth;   /* DSW mark depth */
-    uint32  maxdswdepth;/* maximum DSW mark depth */
-    uint32  dswup;      /* DSW moves up the mark spanning tree */
-    uint32  dswupstep;  /* steps in obj->slots to find DSW-reversed pointer */
+    uint32  unscanned;  /* mark C stack overflows or number of times
+                           GC things were put in unscanned bag */
+#ifdef DEBUG
+    uint32  maxunscanned;       /* maximum size of unscanned bag */
+#endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
     uint32  nopoke;     /* useless GC calls where js_PokeGC was not set */
@@ -269,9 +273,11 @@ struct JSGCArenaStats {
 #endif
 
 struct JSGCArenaList {
-    JSGCArena   *last;      /* last allocated GC arena */
-    size_t      lastLimit;  /* end offset of allocated so far things in last */
-    JSGCThing   *freeList;
+    JSGCArena   *last;          /* last allocated GC arena */
+    uint16      lastLimit;      /* end offset of allocated so far things in
+                                   the last arena */
+    uint16      thingSize;      /* size of things to allocate on this list */
+    JSGCThing   *freeList;      /* list of free GC things */
 #ifdef JS_GCMETER
     JSGCArenaStats stats;
 #endif

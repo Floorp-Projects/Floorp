@@ -55,6 +55,7 @@
 #include "jshash.h" /* Added by JSIFY */
 #include "jsapi.h"
 #include "jsatom.h"
+#include "jsbit.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
@@ -88,34 +89,57 @@
 #endif
 #define GC_THINGS_SIZE  JS_BIT(GC_THINGS_SHIFT)
 #define GC_FLAGS_SIZE   (GC_THINGS_SIZE / sizeof(JSGCThing))
-#define GC_ARENA_SIZE   (GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
 /*
  * A GC arena contains one flag byte for each thing in its heap, and supports
  * O(1) lookup of a flag given its thing's address.
  *
  * To implement this, we take advantage of the thing/flags numerology: given
- * the 8K bytes worth of GC-things, there are 1K flag bytes.  We mask a thing's
- * address with ~1023 to find a JSGCPageInfo record at the front of a mythical
- * "GC page" within the larger 8K thing arena.  That JSGCPageInfo contains a
- * pointer to the 128 flag bytes corresponding to the things in the page, so we
- * index into this flags array using the thing's index within its page.
+ * the 8K bytes worth of GC-things, there are 1K flag bytes. Within each 9K
+ * allocation for things+flags there are always 8 consecutive 1K-pages each
+ * aligned on 1K boundary. We use these pages to allocate things and the
+ * remaining 1K of space before and after the aligned pages to store flags.
+ * If we are really lucky and things+flags starts on a 1K boundary, then
+ * flags would consist of a single 1K chunk that comes after 8K of things.
+ * Otherwise there are 2 chunks of flags, one before and one after things.
  *
- * To align thing pages on 1024-byte boundaries, we must allocate the 9KB of
- * flags+things arena payload, then find the first 0 mod 1024 boundary after
- * the first payload address.  That's where things start, with a JSGCPageInfo
- * taking up the first thing-slot, as usual for 0 mod 1024 byte boundaries.
- * The effect of this alignment trick is to split the flags into at most 2
- * discontiguous spans, one before the things and one after (if we're really
- * lucky, and the arena payload starts on a 0 mod 1024 byte boundary, no need
- * to split).
+ * To be able to find the flag byte for a particular thing, we put a
+ * JSGCPageInfo record at the beginning of each 1K-aligned page to hold that
+ * page's offset from the beginning of things+flags allocation and we allocate
+ * things after this record. Thus for each thing |thing_address & ~1023|
+ * gives the address of a JSGCPageInfo record from which we read page_offset.
+ * Due to page alignment
+ *  (page_offset & ~1023) + (thing_address & 1023)
+ * gives thing_offset from the beginning of 8K paged things. We then divide
+ * thing_offset by sizeof(JSGCThing) to get thing_index.
  *
- * The overhead of this scheme for most platforms is (4+8*(8+1))/(4+9K) or
- * 0.82% (assuming 4 byte JSGCArena header size, and 8 byte JSGCThing size).
+ * Now |page_address - page_offset| is things+flags arena_address and
+ * (page_offset & 1023) is the offset of the first page from the start of
+ * things+flags area. Thus if
+ *  thing_index < (page_offset & 1023)
+ * then
+ *  allocation_start_address + thing_index < address_of_the_first_page
+ * and we use
+ *  allocation_start_address + thing_index
+ * as the address to store thing's flags. If
+ *  thing_index >= (page_offset & 1023),
+ * then we use the chunk of flags that comes after the pages with things
+ * and calculate the address for the flag byte as
+ *  address_of_the_first_page + 8K + (thing_index - (page_offset & 1023))
+ * which is just
+ *  allocation_start_address + thing_index + 8K.
+ *
+ * When we allocate things with size equal to sizeof(JSGCThing), the overhead
+ * of this scheme for 32 bit platforms is (8+8*(8+1))/(8+9K) or 0.87%
+ * (assuming 4 bytes for each JSGCArena header, and 8 bytes for each
+ * JSGCThing and JSGCPageInfo). When thing_size > 8, the scheme wastes the
+ * flag byte for each extra 8 bytes beyond sizeof(JSGCThing) in thing_size
+ * and the overhead is close to 1/8 or 12.5%.
+ * FIXME: How can we avoid this overhead?
  *
  * Here's some ASCII art showing an arena:
  *
- *   split
+ *   split or the first 1-K aligned address.
  *     |
  *     V
  *  +--+-------+-------+-------+-------+-------+-------+-------+-------+-----+
@@ -132,49 +156,47 @@
  *
  * In general, one of the thing pages will have some of its things' flags on
  * the low side of the split, and the rest of its things' flags on the high
- * side.  All the other pages have flags only below or only above.  Therefore
- * we'll have to test something to decide whether the split divides flags in
- * a given thing's page.  So we store the split pointer (the pointer to tp0)
- * in each JSGCPageInfo, along with the flags pointer for the 128 flag bytes
- * ideally starting, for tp0 things, at the beginning of the arena's payload
- * (at the start of fB).
- *
- * That is, each JSGCPageInfo's flags pointer is 128 bytes from the previous,
- * or at the start of the arena if there is no previous page in this arena.
- * Thus these ideal 128-byte flag pages run contiguously from the start of the
- * arena (right over the split!), and the JSGCPageInfo flags pointers contain
- * no discontinuities over the split created by the thing pages.  So if, for a
- * given JSGCPageInfo *pi, we find that
- *
- *  pi->flags + ((jsuword)thing % 1024) / sizeof(JSGCThing) >= pi->split
- *
- * then we must add GC_THINGS_SIZE to the nominal flags pointer to jump over
- * all the thing pages that split the flags into two discontiguous spans.
+ * side.  All the other pages have flags only below or only above.
  *
  * (If we need to implement card-marking for an incremental GC write barrier,
- * we can use the low byte of the pi->split pointer as the card-mark, for an
- * extremely efficient write barrier: when mutating an object obj, just store
- * a 1 byte at (uint8 *) ((jsuword)obj & ~1023) for little-endian platforms.
- * When finding flags, we'll of course have to mask split with ~255, but it is
- * guaranteed to be 1024-byte aligned, so no information is lost by overlaying
- * the card-mark byte on split's low byte.)
+ * we can replace word-sized offsetInArena in JSGCPageInfo by pair of
+ * uint8 card_mark and uint16 offsetInArena fields as the offset can not exceed
+ * GC_THINGS_SIZE. This would gives an extremely efficient write barrier:
+ * when mutating an object obj, just store a 1 byte at
+ * (uint8 *) ((jsuword)obj & ~1023) on 32-bit platforms.)
  */
 #define GC_PAGE_SHIFT   10
 #define GC_PAGE_MASK    ((jsuword) JS_BITMASK(GC_PAGE_SHIFT))
 #define GC_PAGE_SIZE    JS_BIT(GC_PAGE_SHIFT)
+#define GC_PAGE_COUNT   (1 << (GC_THINGS_SHIFT - GC_PAGE_SHIFT))
 
 typedef struct JSGCPageInfo {
-    uint8       *split;
-    uint8       *flags;
+    jsuword     offsetInArena;          /* offset from the arena start */
+    jsuword     unscannedBitmap;        /* bitset for fast search of marked
+                                           but not yet scanned GC things */
 } JSGCPageInfo;
 
 struct JSGCArena {
-    JSGCArena   *prev;
-    uint8       base[1];
+    JSGCArenaList       *list;          /* allocation list for the arena */
+    JSGCArena           *prev;          /* link field for allocation list */
+    JSGCArena           *prevUnscanned; /* link field for the list of arenas
+                                           with marked but not yet scanned
+                                           things */
+    jsuword             unscannedPages; /* bitset for fast search of pages
+                                           with marked but not yet scanned
+                                           things */
+    uint8               base[1];        /* things+flags allocation area */
 };
 
-#define FIRST_THING_PAGE(a) \
-    (((jsuword)(a)->base + GC_FLAGS_SIZE) & ~GC_PAGE_MASK)
+#define FIRST_THING_PAGE(a)                                                   \
+    (((jsuword)(a)->base + GC_FLAGS_SIZE - 1) & ~GC_PAGE_MASK)
+
+#define PAGE_TO_ARENA(pi)                                                     \
+    ((JSGCArena *)((jsuword)(pi) - (pi)->offsetInArena                        \
+                   - offsetof(JSGCArena, base)))
+
+#define PAGE_INDEX(pi)                                                        \
+    ((size_t)((pi)->offsetInArena >> GC_PAGE_SHIFT))
 
 /*
  * Given a thing size n, return the size of the gap from the page start before
@@ -205,31 +227,31 @@ static JSBool
 NewGCArena(JSGCArenaList *arenaList, size_t nbytes)
 {
     JSGCArena *a;
-    uint8 *flagp, *split, *pagep, *limit;
+    jsuword offset;
     JSGCPageInfo *pi;
 
-    a = malloc(offsetof(JSGCArena, base) + GC_ARENA_SIZE);
+    a = malloc(offsetof(JSGCArena, base) + GC_THINGS_SIZE + GC_FLAGS_SIZE);
     if (!a)
         return JS_FALSE;
 
     /* Initialize the JSGCPageInfo records at the start of every thing page. */
-    pagep = (uint8 *) FIRST_THING_PAGE(a);
-    split = pagep;
-    limit = pagep + GC_THINGS_SIZE;
-    flagp = a->base;
+    offset = (GC_PAGE_SIZE - ((jsuword)a->base & GC_PAGE_MASK)) & GC_PAGE_MASK;
+    JS_ASSERT((jsuword)a->base + offset == FIRST_THING_PAGE(a));
     do {
-        pi = (JSGCPageInfo *) pagep;
-        pi->split = split;
-        pi->flags = flagp;
-        flagp += GC_PAGE_SIZE >> (GC_THINGS_SHIFT -  GC_PAGE_SHIFT);
-        pagep += GC_PAGE_SIZE;
-    } while (pagep < limit);
+        pi = (JSGCPageInfo *) (a->base + offset);
+        pi->offsetInArena = offset;
+        pi->unscannedBitmap = 0;
+        offset += GC_PAGE_SIZE;
+    } while (offset < GC_THINGS_SIZE);
 
     METER(++arenaList->stats.narenas);
     METER(arenaList->stats.maxarenas
           = JS_MAX(arenaList->stats.maxarenas, arenaList->stats.narenas));
 
+    a->list = arenaList;
     a->prev = arenaList->last;
+    a->prevUnscanned = NULL;
+    a->unscannedPages = 0;
     arenaList->last = a;
     arenaList->lastLimit = 0;
 
@@ -249,16 +271,19 @@ DestroyGCArena(JSGCArenaList *arenaList, JSGCArena **ap)
     *ap = a->prev;
 
 #ifdef DEBUG
-    memset(a, JS_FREE_PATTERN, offsetof(JSGCArena, base) + GC_ARENA_SIZE);
+    memset(a, JS_FREE_PATTERN,
+           offsetof(JSGCArena, base) + GC_THINGS_SIZE + GC_FLAGS_SIZE);
 #endif
     free(a);
 }
 
 static void
-InitGCArenaList(JSGCArenaList *arenaList)
+InitGCArenaList(JSGCArenaList *arenaList, size_t thingSize)
 {
+    JS_ASSERT((size_t)(uint16)thingSize == thingSize);
     arenaList->last = NULL;
     arenaList->lastLimit = 0;
+    arenaList->thingSize = (uint16)thingSize;
     arenaList->freeList = NULL;
     METER(memset(&arenaList->stats, 0, sizeof arenaList->stats));
 }
@@ -274,14 +299,17 @@ FinishGCArenaList(JSGCArenaList *arenaList)
 uint8 *
 js_GetGCThingFlags(void *thing)
 {
-    JSGCPageInfo *pi;
-    uint8 *flagp;
+    jsuword pageAddress, offsetInArena, thingIndex;
 
-    pi = (JSGCPageInfo *) ((jsuword)thing & ~GC_PAGE_MASK);
-    flagp = pi->flags + ((jsuword)thing & GC_PAGE_MASK) / sizeof(JSGCThing);
-    if (flagp >= pi->split)
-        flagp += GC_THINGS_SIZE;
-    return flagp;
+    pageAddress = (jsuword)thing & ~GC_PAGE_MASK;
+    offsetInArena = ((JSGCPageInfo *)pageAddress)->offsetInArena;
+    JS_ASSERT(offsetInArena < GC_THINGS_SIZE);
+    thingIndex = ((offsetInArena & ~GC_PAGE_MASK) |
+                  ((jsuword)thing & GC_PAGE_MASK)) / sizeof(JSGCThing);
+    JS_ASSERT(thingIndex < GC_PAGE_SIZE);
+    if (thingIndex >= (offsetInArena & GC_PAGE_MASK))
+        thingIndex += GC_THINGS_SIZE;
+    return (uint8 *)(pageAddress - offsetInArena + thingIndex);
 }
 
 JSBool
@@ -371,7 +399,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     uintN i;
 
     for (i = 0; i < GC_NUM_FREELISTS; i++)
-        InitGCArenaList(&rt->gcArenaList[i]);
+        InitGCArenaList(&rt->gcArenaList[i], GC_FREELIST_NBYTES(i));
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
         rt->gcRootsHash.ops = NULL;
@@ -431,11 +459,10 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "     maximum mark recursion: %lu\n", ULSTAT(maxdepth));
     fprintf(fp, "     mark C recursion depth: %lu\n", ULSTAT(cdepth));
     fprintf(fp, "   maximum mark C recursion: %lu\n", ULSTAT(maxcdepth));
-    fprintf(fp, "     mark C stack overflows: %lu\n", ULSTAT(dswmark));
-    fprintf(fp, "   mark DSW recursion depth: %lu\n", ULSTAT(dswdepth));
-    fprintf(fp, " maximum mark DSW recursion: %lu\n", ULSTAT(maxdswdepth));
-    fprintf(fp, "  mark DSW up-tree movement: %lu\n", ULSTAT(dswup));
-    fprintf(fp, "DSW up-tree obj->slot steps: %lu\n", ULSTAT(dswupstep));
+    fprintf(fp, "      delayed scan bag adds: %lu\n", ULSTAT(unscanned));
+#ifdef DEBUG
+    fprintf(fp, "  max delayed scan bag size: %lu\n", ULSTAT(maxunscanned));
+#endif
     fprintf(fp, "   maximum GC nesting level: %lu\n", ULSTAT(maxlevel));
     fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
     fprintf(fp, "           useless GC calls: %lu\n", ULSTAT(nopoke));
@@ -671,7 +698,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 
             /* Assert that at this point space for things should exist.  */
             JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
-            arenaList->lastLimit = offset + nbytes;
+            arenaList->lastLimit = (uint16)(offset + nbytes);
             thing = (JSGCThing *)(FIRST_THING_PAGE(arenaList->last) + offset);
             flagp = js_GetGCThingFlags(thing);
             METER(++arenaList->stats.nthings);
@@ -1069,8 +1096,8 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
     UnmarkedGCThingFlags(thing, arg)
 # define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
     NextUnmarkedGCThing(vp, end, thingp, flagpp, arg)
-# define MARK_GC_THING(cx, thing, flagp, arg)                                 \
-    MarkGCThing(cx, thing, flagp, arg)
+# define MARK_GC_THING_CHILDREN(cx, thing, flagp, shouldCheckRecursion, arg)  \
+    MarkGCThingChildren(cx, thing, flagp, shouldCheckRecursion, arg)
 # define CALL_GC_THING_MARKER(marker, cx, thing, arg)                         \
     marker(cx, thing, arg)
 #else
@@ -1078,8 +1105,8 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
     UnmarkedGCThingFlags(thing)
 # define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
     NextUnmarkedGCThing(vp, end, thingp, flagpp)
-# define MARK_GC_THING(cx, thing, flagp, arg)                                 \
-    MarkGCThing(cx, thing, flagp)
+# define MARK_GC_THING_CHILDREN(cx, thing, flagp, shouldCheckRecursion, arg)  \
+    MarkGCThingChildren(cx, thing, flagp, shouldCheckRecursion)
 # define CALL_GC_THING_MARKER(marker, cx, thing, arg)                         \
     marker(cx, thing, NULL)
 #endif
@@ -1130,11 +1157,23 @@ NEXT_UNMARKED_GC_THING(jsval *vp, jsval *end, void **thingp, uint8 **flagpp,
     return NULL;
 }
 
-static void
-DeutschSchorrWaite(JSContext *cx, void *thing, uint8 *flagp);
+/*
+ * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always uses
+ * non-recursive code that otherwise would be called only on low C stack
+ * condition.
+ */
+#ifdef JS_GC_ASSUME_LOW_C_STACK
+# define GC_CAN_RECURSE JS_FALSE
+#else
+# define GC_CAN_RECURSE JS_TRUE
+#endif
 
 static void
-MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
+AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp);
+
+static void
+MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
+                       JSBool shouldCheckRecursion, void *arg)
 {
     JSRuntime *rt;
     JSObject *obj;
@@ -1161,8 +1200,7 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
   start:
 #endif
     JS_ASSERT(flagp);
-    JS_ASSERT(!(*flagp & GCF_MARK));
-    *flagp |= GCF_MARK;
+    JS_ASSERT(*flagp & GCF_MARK); /* the caller must already mark the thing */
     METER(if (++rt->gcStats.depth > rt->gcStats.maxdepth)
               rt->gcStats.maxdepth = rt->gcStats.depth);
 #ifdef GC_MARK_DEBUG
@@ -1170,20 +1208,19 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
         gc_dump_thing(thing, *flagp, arg, js_DumpGCHeap);
 #endif
 
+#define RECURSION_TOO_DEEP()                                                  \
+    (shouldCheckRecursion &&                                                  \
+     (!GC_CAN_RECURSE || !JS_CHECK_STACK_SIZE(cx, stackDummy)))
+
     switch (*flagp & GCF_TYPEMASK) {
       case GCX_OBJECT:
+        if (RECURSION_TOO_DEEP())
+            goto add_to_unscanned_bag;
         /* If obj->slots is null, obj must be a newborn. */
         obj = (JSObject *) thing;
         vp = obj->slots;
         if (!vp)
             break;
-
-        /* Switch to Deutsch-Schorr-Waite if we exhaust our stack quota. */
-        if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
-            METER(rt->gcStats.dswmark++);
-            DeutschSchorrWaite(cx, thing, flagp);
-            break;
-        }
 
         /* Mark slots if they are small enough to be GC-allocated. */
         if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
@@ -1262,7 +1299,11 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
                     /*
                      * thing came from the last unmarked GC-thing slot and we
                      * can optimize tail recursion.
+                     * Since we already know that there is enough C stack
+                     * space, we clear shouldCheckRecursion to avoid extra
+                     * checking in RECURSION_TOO_DEEP.
                      */
+                    shouldCheckRecursion = JS_FALSE;
                     goto on_tail_recursion;
                 }
             } while (next_thing == thing);
@@ -1271,7 +1312,8 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 #ifdef GC_MARK_DEBUG
             GC_MARK(cx, thing, name, arg);
 #else
-            MARK_GC_THING(cx, thing, flagp, arg);
+            *flagp |= GCF_MARK;
+            MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_TRUE, arg);
 #endif
             thing = next_thing;
             flagp = next_flagp;
@@ -1313,192 +1355,311 @@ MARK_GC_THING(JSContext *cx, void *thing, uint8 *flagp, void *arg)
 #else
         /* Eliminate tail recursion for the last unmarked child. */
         METER(++tailCallNesting);
+        *flagp |= GCF_MARK;
         goto start;
 #endif
 
 #if JS_HAS_XML_SUPPORT
       case GCX_NAMESPACE:
+        if (RECURSION_TOO_DEEP())
+            goto add_to_unscanned_bag;
         CALL_GC_THING_MARKER(js_MarkXMLNamespace, cx, (JSXMLNamespace *)thing,
                              arg);
         break;
 
       case GCX_QNAME:
+        if (RECURSION_TOO_DEEP())
+            goto add_to_unscanned_bag;
         CALL_GC_THING_MARKER(js_MarkXMLQName, cx, (JSXMLQName *)thing, arg);
         break;
 
       case GCX_XML:
+        if (RECURSION_TOO_DEEP())
+            goto add_to_unscanned_bag;
         CALL_GC_THING_MARKER(js_MarkXML, cx, (JSXML *)thing, arg);
         break;
 #endif
+      add_to_unscanned_bag:
+        AddThingToUnscannedBag(cx->runtime, thing, flagp);
+        break;
     }
+
+#undef RECURSION_TOO_DEEP
 
     METER(rt->gcStats.depth -= 1 + tailCallNesting);
     METER(rt->gcStats.cdepth--);
 }
 
 /*
- * An invalid object reference that's distinct from JSVAL_TRUE and JSVAL_FALSE
- * when tagged as a boolean.  Used to indicate empty DSW mark stack.
- *
- * Reversed pointers that link the DSW mark stack through obj->slots entries
- * are also tagged as booleans so we can find each pointer and unreverse it.
- * Because no object pointer is <= 16, these values can be distinguished from
- * JSVAL_EMPTY, JSVAL_TRUE, and JSVAL_FALSE.
+ * Not using PAGE_THING_GAP inside this macro to optimize
+ * thingsPerUnscannedChunk calculation when thingSize == 2^power.
  */
-#define JSVAL_EMPTY (2 << JSVAL_TAGBITS)
+#define GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap)   \
+    JS_BEGIN_MACRO                                                            \
+        if (0 == ((thingSize) & ((thingSize) - 1))) {                         \
+            pageGap = (thingSize);                                            \
+            thingsPerUnscannedChunk = ((GC_PAGE_SIZE / (thingSize))           \
+                                       + JS_BITS_PER_WORD - 1)                \
+                                      >> JS_BITS_PER_WORD_LOG2;               \
+        } else {                                                              \
+            pageGap = GC_PAGE_SIZE % (thingSize);                             \
+            thingsPerUnscannedChunk = JS_HOWMANY(GC_PAGE_SIZE / (thingSize),  \
+                                                 JS_BITS_PER_WORD);           \
+        }                                                                     \
+    JS_END_MACRO
 
-/*
- * To optimize native objects to avoid O(n^2) explosion in pathological cases,
- * we use a dswIndex member of JSScope to tell where in obj->slots to find the
- * reversed pointer.  Scrounging space in JSScope by packing existing members
- * tighter yielded 16 bits of index, which we use directly if obj->slots has
- * 64K or fewer slots.  Otherwise we make scope->dswIndex a fixed-point 16-bit
- * fraction of the number of slots.
- */
-static JS_INLINE uint16
-EncodeDSWIndex(jsval *vp, jsval *slots)
+static void
+AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp)
 {
-    uint32 nslots, limit, index;
-    jsdouble d;
+    JSGCPageInfo *pi;
+    JSGCArena *arena;
+    size_t thingSize;
+    size_t thingsPerUnscannedChunk;
+    size_t pageGap;
+    size_t chunkIndex;
+    jsuword bit;
 
-    nslots = slots[-1];
-    limit = JS_BIT(16);
-    index = PTRDIFF(vp, slots, jsval);
-    JS_ASSERT(index < nslots);
-    if (nslots > limit) {
-        d = ((jsdouble)index / nslots) * limit;
-        JS_ASSERT(0 <= d && d < limit);
-        return (uint16) d;
-    }
-    return (uint16) index;
-}
+    /* Things from delayed scanning bag are marked as GCF_MARK | GCF_FINAL. */
+    JS_ASSERT((*flagp & (GCF_MARK | GCF_FINAL)) == GCF_MARK);
+    *flagp |= GCF_FINAL;
 
-static JS_INLINE uint32
-DecodeDSWIndex(uint16 dswIndex, jsval *slots)
-{
-    uint32 nslots, limit;
-    jsdouble d;
+    METER(rt->gcStats.unscanned++);
+#ifdef DEBUG
+    ++rt->gcUnscannedBagSize;
+    METER(if (rt->gcUnscannedBagSize > rt->gcStats.maxunscanned)
+              rt->gcStats.maxunscanned = rt->gcUnscannedBagSize);
+#endif
 
-    nslots = slots[-1];
-    limit = JS_BIT(16);
-    JS_ASSERT(dswIndex < nslots);
-    if (nslots > limit) {
-        d = ((jsdouble)dswIndex * nslots) / limit;
-        JS_ASSERT(0 <= d && d < nslots);
-        return (uint32) d;
-    }
-    return dswIndex;
+    pi = (JSGCPageInfo *) ((jsuword)thing & ~GC_PAGE_MASK);
+    arena = PAGE_TO_ARENA(pi);
+    thingSize = arena->list->thingSize;
+    GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap);
+    chunkIndex = (((jsuword)thing & GC_PAGE_MASK) - pageGap) /
+                 (thingSize * thingsPerUnscannedChunk);
+    JS_ASSERT(chunkIndex < JS_BITS_PER_WORD);
+    bit = (jsuword)1 << chunkIndex;
+    if (pi->unscannedBitmap != 0) {
+        JS_ASSERT(rt->gcUnscannedArenaStackTop);
+        if (thingsPerUnscannedChunk != 1) {
+            if (pi->unscannedBitmap & bit) {
+                /* Chunk already contains things to scan later. */
+                return;
+            }
+        } else {
+            /*
+             * The chunk must not contain things to scan later if there is
+             * only one thing per chunk.
+             */
+            JS_ASSERT(!(pi->unscannedBitmap & bit));
+        }
+        pi->unscannedBitmap |= bit;
+        JS_ASSERT(arena->unscannedPages & ((size_t)1 << PAGE_INDEX(pi)));
+    } else {
+        /*
+         * The thing is the first unscanned thing in the page, set the bit
+         * corresponding to this page arena->unscannedPages.
+         */
+        pi->unscannedBitmap = bit;
+        JS_ASSERT(PAGE_INDEX(pi) < JS_BITS_PER_WORD);
+        bit = (jsuword)1 << PAGE_INDEX(pi);
+        JS_ASSERT(!(arena->unscannedPages & bit));
+        if (arena->unscannedPages != 0) {
+            arena->unscannedPages |= bit;
+            JS_ASSERT(arena->prevUnscanned);
+            JS_ASSERT(rt->gcUnscannedArenaStackTop);
+        } else {
+            /*
+             * The thing is the first unscanned thing in the whole arena, push
+             * the arena on the stack of unscanned arenas unless the arena
+             * has already been pushed. We detect that through prevUnscanned
+             * field which is NULL only for not yet pushed arenas. To ensure
+             * that prevUnscanned != NULL even when the stack contains one
+             * element, we make prevUnscanned for the arena at the bottom
+             * to point to itself.
+             *
+             * See comments in ScanDelayedChildren.
+             */
+            arena->unscannedPages = bit;
+            if (!arena->prevUnscanned) {
+                if (!rt->gcUnscannedArenaStackTop) {
+                    /* Stack was empty, mark the arena as bottom element. */
+                    arena->prevUnscanned = arena;
+                } else {
+                    JS_ASSERT(rt->gcUnscannedArenaStackTop->prevUnscanned);
+                    arena->prevUnscanned = rt->gcUnscannedArenaStackTop;
+                }
+                rt->gcUnscannedArenaStackTop = arena;
+            }
+         }
+     }
+    JS_ASSERT(rt->gcUnscannedArenaStackTop);
 }
 
 static void
-DeutschSchorrWaite(JSContext *cx, void *thing, uint8 *flagp)
+ScanDelayedChildren(JSContext *cx)
 {
-    jsval top, parent, v, *vp, *end;
-    JSObject *obj;
-    JSScope *scope;
-#ifdef JS_GCMETER
-    JSRuntime *rt = cx->runtime;
-#endif
+    JSRuntime *rt;
+    JSGCArena *arena;
+    size_t thingSize;
+    size_t thingsPerUnscannedChunk;
+    size_t pageGap;
+    size_t pageIndex;
+    JSGCPageInfo *pi;
+    size_t chunkIndex;
+    size_t thingOffset, thingLimit;
+    JSGCThing *thing;
+    uint8 *flagp;
+    JSGCArena *prevArena;
 
-    top = JSVAL_EMPTY;
-
-down:
-    METER(if (++rt->gcStats.dswdepth > rt->gcStats.maxdswdepth)
-              rt->gcStats.maxdswdepth = rt->gcStats.dswdepth);
-    obj = (JSObject *) thing;
-    parent = OBJECT_TO_JSVAL(obj);
-
-    /* Precompute for quick testing to set and get scope->dswIndex. */
-    scope = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->object == obj)
-            ? OBJ_SCOPE(obj)
-            : NULL;
-
-    /* Mark slots if they are small enough to be GC-allocated. */
-    vp = obj->slots;
-    if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
-        GC_MARK(cx, vp - 1, "slots", NULL);
-
-    end = vp + ((obj->map->ops->mark)
-                ? obj->map->ops->mark(cx, obj, NULL)
-                : JS_MIN(obj->map->freeslot, obj->map->nslots));
-
-    *flagp |= GCF_MARK;
-
-    for (;;) {
-        while ((vp = NEXT_UNMARKED_GC_THING(vp, end, &thing, &flagp, NULL))
-               != NULL) {
-            v = *vp;
-            JS_ASSERT(JSVAL_TO_GCTHING(v) == thing);
-
-            if (JSVAL_IS_OBJECT(v)) {
-                *vp = JSVAL_SETTAG(top, JSVAL_BOOLEAN);
-                top = parent;
-                if (scope)
-                    scope->dswIndex = EncodeDSWIndex(vp, obj->slots);
-                goto down;
-            }
-
-            /* Handle string and double GC-things. */
-            MARK_GC_THING(cx, thing, flagp, NULL);
-        }
-
-        /* If we are back at the root (or we never left it), we're done. */
-        METER(rt->gcStats.dswdepth--);
-        if (scope)
-            scope->dswIndex = 0;
-        if (top == JSVAL_EMPTY)
-            return;
-
-        /* Time to go back up the spanning tree. */
-        METER(rt->gcStats.dswup++);
-        obj = JSVAL_TO_OBJECT(top);
-        vp = obj->slots;
-        end = vp + vp[-1];
-
-        /*
-         * If obj is native and owns its own scope, we can minimize the cost
-         * of searching for the reversed pointer.
-         */
-        scope = (OBJ_IS_NATIVE(obj) && OBJ_SCOPE(obj)->object == obj)
-                ? OBJ_SCOPE(obj)
-                : NULL;
-        if (scope)
-            vp += DecodeDSWIndex(scope->dswIndex, vp);
-
-        /*
-         * Alas, we must search for the reversed pointer.  If we used the
-         * scope->dswIndex hint, we'll step over a few slots for objects with
-         * a few times 64K slots, etc.  For more typical (that is, far fewer
-         * than 64K slots) native objects that own their own scopes, this loop
-         * won't iterate at all.  The order of complexity for host objects and
-         * unmutated native objects is O(n^2), but n (4 or 5 in most cases) is
-         * low enough that we don't care.
-         *
-         * We cannot use a reversed pointer into obj->slots, because there
-         * is no way to find an object from an address within its slots.
-         */
-        v = *vp;
-        while (v <= JSVAL_TRUE || !JSVAL_IS_BOOLEAN(v)) {
-            METER(rt->gcStats.dswupstep++);
-            JS_ASSERT(vp + 1 < end);
-            v = *++vp;
-        }
-
-        *vp++ = parent;
-        parent = top;
-        top = JSVAL_CLRTAG(v);
+    rt = cx->runtime;
+    arena = rt->gcUnscannedArenaStackTop;
+    if (!arena) {
+        JS_ASSERT(rt->gcUnscannedBagSize == 0);
+        return;
     }
+
+  init_size:
+    thingSize = arena->list->thingSize;
+    GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap);
+    for (;;) {
+        /*
+         * The following assert verifies that the current arena belongs to
+         * the unscan stack since AddThingToUnscannedBag ensures that even
+         * for stack's bottom prevUnscanned != NULL but rather points to self.
+         */
+        JS_ASSERT(arena->prevUnscanned);
+        JS_ASSERT(rt->gcUnscannedArenaStackTop->prevUnscanned);
+        while (arena->unscannedPages != 0) {
+            pageIndex = JS_FLOOR_LOG2W(arena->unscannedPages);
+            JS_ASSERT(pageIndex < GC_PAGE_COUNT);
+            pi = (JSGCPageInfo *)(FIRST_THING_PAGE(arena) +
+                                  pageIndex * GC_PAGE_SIZE);
+            JS_ASSERT(pi->unscannedBitmap);
+            chunkIndex = JS_FLOOR_LOG2W(pi->unscannedBitmap);
+            pi->unscannedBitmap &= ~((jsuword)1 << chunkIndex);
+            if (pi->unscannedBitmap == 0)
+                arena->unscannedPages &= ~((jsuword)1 << pageIndex);
+            thingOffset = (pageGap
+                           + chunkIndex * thingsPerUnscannedChunk * thingSize);
+            JS_ASSERT(thingOffset >= sizeof(JSGCPageInfo));
+            thingLimit = thingOffset + thingsPerUnscannedChunk * thingSize;
+            if (thingsPerUnscannedChunk != 1) {
+                /*
+                 * thingLimit can go beyond the last allocated thing for the
+                 * last chunk as the real limit can be inside the chunk.
+                 */
+                if (arena->list->last == arena &&
+                    arena->list->lastLimit < (pageIndex * GC_PAGE_SIZE +
+                                              thingLimit)) {
+                    thingLimit = (arena->list->lastLimit -
+                                  pageIndex * GC_PAGE_SIZE);
+                } else if (thingLimit > GC_PAGE_SIZE) {
+                    thingLimit = GC_PAGE_SIZE;
+                }
+                JS_ASSERT(thingLimit > thingOffset);
+            }
+            JS_ASSERT(arena->list->last != arena ||
+                      arena->list->lastLimit >= (pageIndex * GC_PAGE_SIZE +
+                                                 thingLimit));
+            JS_ASSERT(thingLimit <= GC_PAGE_SIZE);
+
+            for (; thingOffset != thingLimit; thingOffset += thingSize) {
+                /*
+                 * XXX: inline js_GetGCThingFlags() to use already available
+                 * pi.
+                 */
+                thing = (void *)((jsuword)pi + thingOffset);
+                flagp = js_GetGCThingFlags(thing);
+                if (thingsPerUnscannedChunk != 1) {
+                    /*
+                     * Skip free or already scanned things that share the chunk
+                     * with unscanned ones.
+                     */
+                    if ((*flagp & (GCF_MARK|GCF_FINAL)) != (GCF_MARK|GCF_FINAL))
+                        continue;
+                }
+                JS_ASSERT((*flagp & (GCF_MARK|GCF_FINAL))
+                              == (GCF_MARK|GCF_FINAL));
+                *flagp &= ~GCF_FINAL;
+#ifdef DEBUG
+                JS_ASSERT(rt->gcUnscannedBagSize != 0);
+                --rt->gcUnscannedBagSize;
+
+                /*
+                 * Check that GC thing type is consistent with the type of
+                 * things that can be put to the unscanned bag.
+                 */
+                switch (*flagp & GCF_TYPEMASK) {
+                  case GCX_OBJECT:
+# if JS_HAS_XML_SUPPORT
+                  case GCX_NAMESPACE:
+                  case GCX_QNAME:
+                  case GCX_XML:
+# endif
+                    break;
+                  default:
+                    JS_ASSERT(0);
+                }
+#endif
+                MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_FALSE, NULL);
+            }
+        }
+        /*
+         * We finished scanning of the arena but we can only pop it from
+         * the stack if the arena is the stack's top.
+         *
+         * When MARK_GC_THING_CHILDREN from the above calls
+         * AddThingToUnscannedBag and the latter pushes new arenas to the
+         * stack, we have to skip popping of this arena until it becomes
+         * the top of the stack again.
+         */
+        if (arena == rt->gcUnscannedArenaStackTop) {
+            prevArena = arena->prevUnscanned;
+            arena->prevUnscanned = NULL;
+            if (arena == prevArena) {
+                /*
+                 * prevUnscanned points to itself and we reached the bottom
+                 * of the stack.
+                 */
+                break;
+            }
+            rt->gcUnscannedArenaStackTop = arena = prevArena;
+        } else {
+            arena = rt->gcUnscannedArenaStackTop;
+        }
+        if (arena->list->thingSize != thingSize)
+            goto init_size;
+    }
+    JS_ASSERT(rt->gcUnscannedArenaStackTop);
+    JS_ASSERT(!rt->gcUnscannedArenaStackTop->prevUnscanned);
+    rt->gcUnscannedArenaStackTop = NULL;
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 }
 
 void
 js_MarkGCThing(JSContext *cx, void *thing, void *arg)
 {
     uint8 *flagp;
+    JSBool fromCallback;
 
     flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
     if (!flagp)
         return;
-    MARK_GC_THING(cx, thing, flagp, arg);
+    *flagp |= GCF_MARK;
+
+    fromCallback = cx->insideGCMarkCallback;
+    if (fromCallback)
+        cx->insideGCMarkCallback = JS_FALSE;
+    MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_TRUE, arg);
+    if (fromCallback) {
+        /*
+         * Make sure that JSGC_MARK_END callback can assume that all
+         * reachable things are marked when the callback finishes its own
+         * marking so it can start finalization.
+         */
+        ScanDelayedChildren(cx);
+        cx->insideGCMarkCallback = JS_TRUE;
+    }
 }
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
@@ -1754,6 +1915,8 @@ js_GC(JSContext *cx, uintN gcflags)
 
 restart:
     rt->gcNumber++;
+    JS_ASSERT(!rt->gcUnscannedArenaStackTop);
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 
     /*
      * Mark phase.
@@ -1871,12 +2034,25 @@ restart:
             }
         }
     }
+
 #ifdef DUMP_CALL_TABLE
     js_DumpCallTable(cx);
 #endif
 
-    if (rt->gcCallback)
+    /*
+     * Mark children of things that caused too deep recursion during above
+     * marking phase.
+     */
+    ScanDelayedChildren(cx);
+
+    JS_ASSERT(!cx->insideGCMarkCallback);
+    if (rt->gcCallback) {
+        cx->insideGCMarkCallback = JS_TRUE;
         (void) rt->gcCallback(cx, JSGC_MARK_END);
+        JS_ASSERT(cx->insideGCMarkCallback);
+        cx->insideGCMarkCallback = JS_FALSE;
+    }
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 
     /*
      * Sweep phase.
@@ -1897,10 +2073,15 @@ restart:
 
         limit = arenaList->lastLimit;
         for (a = arenaList->last; a; a = a->prev) {
+            JS_ASSERT(!a->prevUnscanned);
+            JS_ASSERT(a->unscannedPages == 0);
             firstPage = (uint8 *) FIRST_THING_PAGE(a);
             for (offset = 0; offset != limit; offset += nbytes) {
-                if ((offset & GC_PAGE_MASK) == 0)
+                if ((offset & GC_PAGE_MASK) == 0) {
+                    JS_ASSERT(((JSGCPageInfo *)(firstPage + offset))->
+                              unscannedBitmap == 0);
                     offset += PAGE_THING_GAP(nbytes);
+                }
                 JS_ASSERT(offset < limit);
                 flagp = a->base + offset / sizeof(JSGCThing);
                 if (flagp >= firstPage)
