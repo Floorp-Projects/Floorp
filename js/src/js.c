@@ -2426,11 +2426,10 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     char *pathname;
     JSStackFrame *fp;
-    int fd, cc;
     JSBool ok;
-    size_t len;
+    off_t cc, len;
     char *buf;
-    struct stat sb;
+    FILE *file;
 
     str = JS_ValueToString(cx, argv[0]);
     if (!str)
@@ -2444,32 +2443,44 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!pathname)
         return JS_FALSE;
 
-    fd = open(pathname, O_RDONLY);
-    ok = JS_TRUE;
+    ok = JS_FALSE;
     len = 0;
     buf = NULL;
-    if (fd < 0) {
+    file = fopen(pathname, "rb");
+    if (!file) {
         JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
-        ok = JS_FALSE;
-    } else if (fstat(fd, &sb) < 0) {
-        JS_ReportError(cx, "can't stat %s", pathname);
-        ok = JS_FALSE;
     } else {
-        len = sb.st_size;
-        buf = JS_malloc(cx, len + 1);
-        if (!buf) {
-            ok = JS_FALSE;
-        } else if ((size_t)(cc = read(fd, buf, len)) != len) {
-            JS_free(cx, buf);
-            JS_ReportError(cx, "can't read %s: %s", pathname,
-                           (cc < 0) ? strerror(errno) : "short read");
-            ok = JS_FALSE;
+        if (fseek(file, 0, SEEK_END) == EOF) {
+            JS_ReportError(cx, "can't seek end of %s", pathname);
+        } else {
+            len = ftell(file);
+            if (fseek(file, 0, SEEK_SET) == EOF) {
+                JS_ReportError(cx, "can't seek start of %s", pathname);
+            } else {
+                buf = JS_malloc(cx, len + 1);
+                if (buf) {
+                    cc = fread(buf, 1, len, file);
+                    fprintf(stderr, "Read %d things\n", cc);
+                    if (cc != len) {
+                        JS_free(cx, buf);
+                        JS_ReportError(cx, "can't read %s: %s", pathname,
+                                       (cc < 0) ? strerror(errno)
+                                                : "short read");
+                    } else {
+                        len = (size_t)cc;
+                        ok = JS_TRUE;
+                    }
+                }
+            }
         }
+        fclose(file);
     }
-    close(fd);
     JS_free(cx, pathname);
-    if (!ok)
+    if (!ok) {
+        JS_free(cx, buf);
         return ok;
+    }
+
     buf[len] = '\0';
     str = JS_NewString(cx, buf, len);
     if (!str) {
