@@ -244,7 +244,6 @@ NS_METHOD nsBaseWidget::Destroy()
   nsIWidget *parent = GetParent();
   if (parent) {
     parent->RemoveChild(this);
-    NS_RELEASE(parent);
   }
   // disconnect listeners.
   NS_IF_RELEASE(mMouseListener);
@@ -306,9 +305,7 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
-  NS_ASSERTION(nsCOMPtr<nsIWidget>(dont_AddRef(aChild->GetParent())) ==
-                 NS_STATIC_CAST(nsIWidget*, this),
-               "Not one of our kids!");
+  NS_ASSERTION(aChild->GetParent() == this, "Not one of our kids!");
   
   if (mLastChild == aChild) {
     mLastChild = mLastChild->GetPrevSibling();
@@ -340,6 +337,10 @@ void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
 {
+  // Hold a ref to ourselves just in case, since we're going to remove
+  // from our parent.
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+  
   mZIndex = aZIndex;
 
   // reorder this child in its parent's list.
@@ -374,8 +375,6 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
     if (!sib) {
       parent->AddChild(this);
     }
-    
-    NS_RELEASE(parent);
   }
   return NS_OK;
 }

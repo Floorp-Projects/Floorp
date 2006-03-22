@@ -479,7 +479,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // "on top" window.
     {
       nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, aEvent);
-      nsCOMPtr<nsIWidget> parentWidget = getter_AddRefs(mouseEvent->widget->GetParent());
+      nsIWidget* parentWidget = mouseEvent->widget->GetParent();
       nsPoint eventPoint;
       eventPoint = nsLayoutUtils::TranslateWidgetToView(aPresContext,
                                                         mouseEvent->widget,

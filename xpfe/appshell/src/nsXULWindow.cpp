@@ -707,7 +707,7 @@ NS_IMETHODIMP nsXULWindow::GetParentWidget(nsIWidget** aParentWidget)
    NS_ENSURE_ARG_POINTER(aParentWidget);
    NS_ENSURE_STATE(mWindow);
 
-   *aParentWidget = mWindow->GetParent();
+   NS_IF_ADDREF(*aParentWidget = mWindow->GetParent());
    return NS_OK;
 }
 

@@ -700,7 +700,6 @@ NS_IMETHODIMP nsChildView::Show(PRBool bState)
 nsIWidget*
 nsChildView::GetParent(void)
 {
-  NS_IF_ADDREF(mParentWidget);
   return mParentWidget;
 }
     

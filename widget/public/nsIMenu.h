@@ -73,7 +73,7 @@ class nsIMenu : public nsISupports {
                           nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
 
    /**
-    * Get the Menu's Parent
+    * Get the Menu's Parent.  This addrefs.
     *
     */
     NS_IMETHOD GetParent(nsISupports *&aParent) = 0;

@@ -164,7 +164,7 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
   if (mOnDestroyCalled)
     return;
 
-  nsCOMPtr<nsIWidget> parent ( dont_AddRef(GetParent()) );
+  nsCOMPtr<nsIWidget> parent ( GetParent() );
   if (!parent)
   {
     // parent disappeared while scrolling was in progress.  Handling Destroy

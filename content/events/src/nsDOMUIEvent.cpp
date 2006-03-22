@@ -170,17 +170,17 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
   // anyway... actually what we want is for all users of this and refPoint to agree
   // gracefully on what coordinate system to use, but that's a more involved change.
   
-  nsCOMPtr<nsIWidget> eventParent = eventWidget;
+  nsIWidget* eventParent = eventWidget;
   for (;;) {
-    nsCOMPtr<nsIWidget> t = dont_AddRef(eventParent->GetParent());
+    nsIWidget* t = eventParent->GetParent();
     if (!t)
       break;
     eventParent = t;
   }
 
-  nsCOMPtr<nsIWidget> docParent = docWidget;
+  nsIWidget* docParent = docWidget;
   for (;;) {
-    nsCOMPtr<nsIWidget> t = dont_AddRef(docParent->GetParent());
+    nsIWidget* t = docParent->GetParent();
     if (!t)
       break;
     docParent = t;
@@ -198,7 +198,7 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
     nsRect bounds;
     eventWidget->GetBounds(bounds);
     pt += bounds.TopLeft();
-    eventWidget = dont_AddRef(eventWidget->GetParent());
+    eventWidget = eventWidget->GetParent();
   }
   
   if (eventWidget != docWidget) {
@@ -219,7 +219,7 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
       nsRect bounds;
       docWidget->GetBounds(bounds);
       pt -= bounds.TopLeft();
-      docWidget = dont_AddRef(docWidget->GetParent());
+      docWidget = docWidget->GetParent();
     }
   }
   

@@ -172,10 +172,10 @@ nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
   // walk up the widget tree and find the toplevel window in the
   // hierarchy
 
-  nsCOMPtr<nsIWidget> tempWidget (dont_AddRef(mainWidget->GetParent()));
+  nsIWidget* tempWidget = mainWidget->GetParent();
 
   while (tempWidget) {
-    tempWidget = dont_AddRef(tempWidget->GetParent());
+    tempWidget = tempWidget->GetParent();
     if (tempWidget)
       mainWidget = tempWidget;
   }
