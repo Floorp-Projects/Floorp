@@ -188,6 +188,15 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_OBJECT(*vp))
         return JS_TRUE;
     pobj = JSVAL_TO_OBJECT(*vp);
+
+    /*
+     * Innerize pobj here to avoid sticking unwanted properties on the outer
+     * object. This ensures that any with statements only grant access to the
+     * inner object.
+     */
+    OBJ_TO_INNER_OBJECT(cx, pobj);
+    if (!pobj)
+        return JS_FALSE;
     slot = (uint32) JSVAL_TO_INT(id);
     if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
         return JS_FALSE;
@@ -1176,6 +1185,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
         if (indirectCall) {
             callerScopeChain = caller->scopeChain;
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj)
+                return JS_FALSE;
             if (obj != callerScopeChain) {
                 if (!js_CheckPrincipalsAccess(cx, obj,
                                               caller->script->principals,
