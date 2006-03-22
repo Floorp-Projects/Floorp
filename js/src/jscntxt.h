@@ -90,6 +90,10 @@ struct JSRuntime {
     JSPackedBool        gcRunning;
     JSGCCallback        gcCallback;
     uint32              gcMallocBytes;
+    JSGCArena           *gcUnscannedArenaStackTop;
+#ifdef DEBUG
+    size_t              gcUnscannedBagSize;
+#endif
 
     /*
      * API compatibility requires keeping GCX_PRIVATE bytes separate from the
@@ -543,6 +547,9 @@ struct JSContext {
 
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
+
+    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
+    JSBool              insideGCMarkCallback;
 };
 
 /*
