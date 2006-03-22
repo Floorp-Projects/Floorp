@@ -582,12 +582,14 @@ ifndef SUPPRESS_DEFAULT_RULES
 all:: 
 	$(MAKE) export
 	$(MAKE) libs
+	$(MAKE) tools
 
 # Do depend as well
 alldep:: 
 	$(MAKE) export
 	$(MAKE) depend
 	$(MAKE) libs
+	$(MAKE) tools
 
 endif # SUPPRESS_DEFAULT_RULES
 
