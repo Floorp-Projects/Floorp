@@ -85,6 +85,7 @@
 #include "prprf.h"
 #include "nsIContent.h"
 #include "nsIObserverService.h"
+#include "nsVoidArray.h"
 
 //#include "nsIWalletService.h"
 
