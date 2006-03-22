@@ -2129,7 +2129,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               BEGIN_LITOPX_CASE(JSOP_STRING)
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   inXML ? 0 : (jschar)'"');
+                                   (jschar)(inXML ? 0 : '"'));
                 if (!rval)
                     return JS_FALSE;
                 todo = STR2OFF(&ss->sprinter, rval);
