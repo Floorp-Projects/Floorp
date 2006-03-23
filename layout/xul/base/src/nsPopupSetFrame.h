@@ -132,7 +132,6 @@ public:
 protected:
 
   void MarkAsGenerated(nsIContent* aPopupContent);
-  void UpdateDismissalListener(nsIMenuParent* aMenuParent);
 
 protected:
 #ifdef DEBUG_LAYOUT

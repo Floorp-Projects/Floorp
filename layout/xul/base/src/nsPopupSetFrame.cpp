@@ -165,13 +165,14 @@ nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
   // Remove our frame list.
   if (mPopupList) {
     // Try to hide any active popups
-    if (nsMenuFrame::sDismissalListener) {
-      nsIMenuParent *menuParent = nsMenuFrame::sDismissalListener->GetCurrentMenuParent();
+    if (nsMenuDismissalListener::sInstance) {
+      nsIMenuParent *menuParent =
+        nsMenuDismissalListener::sInstance->GetCurrentMenuParent();
       nsIFrame* frame;
       CallQueryInterface(menuParent, &frame);
       // Rollup popups, but only if they're ours
       if (frame && mPopupList->GetEntryByFrame(frame)) {
-        nsMenuFrame::sDismissalListener->Rollup();
+        nsMenuDismissalListener::sInstance->Rollup();
       }
     }
 
@@ -487,7 +488,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
         CallQueryInterface(activeChild, &childPopup);
 
       // Tooltips don't get keyboard navigation
-      if (childPopup && !nsMenuFrame::sDismissalListener) {
+      if (childPopup && !nsMenuDismissalListener::sInstance) {
         // First check and make sure this popup wants keyboard navigation
         nsAutoString property;    
         aEntry->mPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
@@ -495,7 +496,9 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
           childPopup->InstallKeyboardNavigator();
       }
 
-      UpdateDismissalListener(childPopup);
+      nsMenuDismissalListener* listener = nsMenuDismissalListener::GetInstance();
+      if (listener)
+        listener->SetCurrentMenuParent(childPopup);
     }
   }
   else {
@@ -504,8 +507,7 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
 
     // Unregister, but not if we're a tooltip
     if (!aEntry->mPopupType.EqualsLiteral("tooltip") ) {
-      if (nsMenuFrame::sDismissalListener)
-        nsMenuFrame::sDismissalListener->Unregister();
+      nsMenuDismissalListener::Shutdown();
     }
     
     // Remove any keyboard navigators
@@ -700,21 +702,6 @@ nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
     }
   }
   return PR_TRUE;
-}
-
-void
-nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
-{
-  if (!nsMenuFrame::sDismissalListener) {
-    if (!aMenuParent)
-       return;
-    // Create the listener and attach it to the outermost window.
-    aMenuParent->CreateDismissalListener();
-  }
-  
-  // Make sure the menu dismissal listener knows what the current
-  // innermost menu popup frame is.
-  nsMenuFrame::sDismissalListener->SetCurrentMenuParent(aMenuParent);
 }
 
 NS_IMETHODIMP

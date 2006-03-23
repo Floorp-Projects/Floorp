@@ -93,8 +93,6 @@
 
 static PRInt32 gEatMouseMove = PR_FALSE;
 
-nsMenuDismissalListener* nsMenuFrame::sDismissalListener = nsnull;
-
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsrefcnt nsMenuFrame::gRefCnt = 0;
@@ -759,8 +757,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     mCreateHandlerSucceeded = PR_TRUE;
   
     // Set the focus back to our view's widget.
-    if (nsMenuFrame::sDismissalListener)
-      nsMenuFrame::sDismissalListener->EnableListener(PR_FALSE);
+    if (nsMenuDismissalListener::sInstance)
+      nsMenuDismissalListener::sInstance->EnableListener(PR_FALSE);
     
     // XXX Only have this here because of RDF-generated content.
     MarkAsGenerated();
@@ -849,15 +847,18 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       nsIMenuParent *childPopup = nsnull;
       CallQueryInterface(frame, &childPopup);
-      UpdateDismissalListener(childPopup);
+
+      nsMenuDismissalListener* listener = nsMenuDismissalListener::GetInstance();
+      if (listener)
+        listener->SetCurrentMenuParent(childPopup);
 
       OnCreated();
     }
 
     // Set the focus back to our view's widget.
-    if (nsMenuFrame::sDismissalListener)
-      nsMenuFrame::sDismissalListener->EnableListener(PR_TRUE);
-    
+    if (nsMenuDismissalListener::sInstance)
+      nsMenuDismissalListener::sInstance->EnableListener(PR_TRUE);
+
   }
   else {
 
@@ -867,9 +868,9 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       return;
 
     // Set the focus back to our view's widget.
-    if (nsMenuFrame::sDismissalListener) {
-      nsMenuFrame::sDismissalListener->EnableListener(PR_FALSE);
-      nsMenuFrame::sDismissalListener->SetCurrentMenuParent(mMenuParent);
+    if (nsMenuDismissalListener::sInstance) {
+      nsMenuDismissalListener::sInstance->EnableListener(PR_FALSE);
+      nsMenuDismissalListener::sInstance->SetCurrentMenuParent(mMenuParent);
     }
 
     nsIFrame* frame = mPopupFrames.FirstChild();
@@ -914,8 +915,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
     OnDestroyed();
 
-    if (nsMenuFrame::sDismissalListener)
-      nsMenuFrame::sDismissalListener->EnableListener(PR_TRUE);
+    if (nsMenuDismissalListener::sInstance)
+      nsMenuDismissalListener::sInstance->EnableListener(PR_TRUE);
 
     mCreateHandlerSucceeded = PR_FALSE;
   }
@@ -1600,8 +1601,8 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // Temporarily disable rollup events on this menu.  This is
   // to suppress this menu getting removed in the case where
   // the oncommand handler opens a dialog, etc.
-  if ( nsMenuFrame::sDismissalListener ) {
-    nsMenuFrame::sDismissalListener->EnableListener(PR_FALSE);
+  if ( nsMenuDismissalListener::sInstance ) {
+    nsMenuDismissalListener::sInstance->EnableListener(PR_FALSE);
   }
 
   // Get our own content node and hold on to it to keep it from going away.
@@ -1665,8 +1666,8 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   // END HACK
 
   // Re-enable rollup events on this menu.
-  if ( nsMenuFrame::sDismissalListener ) {
-	nsMenuFrame::sDismissalListener->EnableListener(PR_TRUE);
+  if ( nsMenuDismissalListener::sInstance ) {
+    nsMenuDismissalListener::sInstance->EnableListener(PR_TRUE);
   }
 }
 
@@ -1895,21 +1896,6 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
   return rv;
 }
 
-void
-nsMenuFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
-{
-  if (!nsMenuFrame::sDismissalListener) {
-    if (!aMenuParent)
-       return;
-    // Create the listener and attach it to the outermost window.
-    aMenuParent->CreateDismissalListener();
-  }
-  
-  // Make sure the menu dismissal listener knows what the current
-  // innermost menu popup frame is.
-  nsMenuFrame::sDismissalListener->SetCurrentMenuParent(aMenuParent);
-}
-
 PRBool
 nsMenuFrame::SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize)
 {
@@ -2063,10 +2049,11 @@ nsMenuFrame::GetBoxInfo(nsPresContext* aPresContext, const nsHTMLReflowState& aR
 nsIMenuParent*
 nsMenuFrame::GetContextMenu()
 {
-  if (!nsMenuFrame::sDismissalListener)
+  if (!nsMenuDismissalListener::sInstance)
     return nsnull;
 
-  nsIMenuParent *menuParent = nsMenuFrame::sDismissalListener->GetCurrentMenuParent();
+  nsIMenuParent *menuParent =
+    nsMenuDismissalListener::sInstance->GetCurrentMenuParent();
   if (!menuParent)
     return nsnull;
 
