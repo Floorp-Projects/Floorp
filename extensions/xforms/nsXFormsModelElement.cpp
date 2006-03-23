@@ -1581,7 +1581,7 @@ nsXFormsModelElement::MaybeNotifyCompletion()
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (doc) {
-    PRUint32 loadingMessages = NS_REINTERPRET_CAST(PRUint32,
+    PRUint32 loadingMessages = NS_PTR_TO_UINT32(
       doc->GetProperty(nsXFormsAtoms::externalMessagesProperty));
     if (loadingMessages) {
       // if we are still waiting for external messages to load, then put off

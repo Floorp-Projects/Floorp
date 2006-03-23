@@ -1270,7 +1270,7 @@ nsXFormsMessageElement::AddRemoveExternalResource(PRBool aAdd)
   }
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  PRUint32 loadingMessages = NS_REINTERPRET_CAST(PRUint32,
+  PRUint32 loadingMessages = NS_PTR_TO_UINT32(
     doc->GetProperty(nsXFormsAtoms::externalMessagesProperty));
   if (aAdd) {
     loadingMessages++;
