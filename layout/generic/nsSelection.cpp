@@ -245,10 +245,12 @@ public:
   nsresult     StartAutoScrollTimer(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay);
   nsresult     StopAutoScrollTimer();
   nsresult     DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews);
+private:
   nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
   nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
 
+public:
   SelectionType GetType(){return mType;}
   void          SetType(SelectionType aType){mType = aType;}
 
@@ -5186,66 +5188,30 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
   }
 
   //
-  // Now clip the scroll amounts so that we don't scroll
-  // beyond the ends of the document.
+  // Now scroll the view if necessary.
   //
 
-  nscoord scrollX = 0, scrollY = 0;
-  nscoord docWidth = 0, docHeight = 0;
-
-  result = scrollableView->GetScrollPosition(scrollX, scrollY);
-
-  if (NS_SUCCEEDED(result))
-    result = scrollableView->GetContainerSize(&docWidth, &docHeight);
-
-  if (NS_SUCCEEDED(result))
+  if (dx != 0 || dy != 0)
   {
-    if (dx < 0 && scrollX == 0)
-      dx = 0;
-    else if (dx > 0)
-    {
-      nscoord x1 = scrollX + dx + bounds.width;
+    // Make sure latest bits are available before we scroll them.
+    aPresContext->GetViewManager()->Composite();
 
-      if (x1 > docWidth)
-        dx -= x1 - docWidth;
-    }
+    // Now scroll the view!
 
+    result = scrollableView->ScrollTo(bounds.x + dx, bounds.y + dy,
+                                      NS_VMREFRESH_NO_SYNC);
 
-    if (dy < 0 && scrollY == 0)
-      dy = 0;
-    else if (dy > 0)
-    {
-      nscoord y1 = scrollY + dy + bounds.height;
+    if (NS_FAILED(result))
+      return result;
 
-      if (y1 > docHeight)
-        dy -= y1 - docHeight;
-    }
+    nsPoint newPos;
 
-    //
-    // Now scroll the view if necessary.
-    //
+    result = scrollableView->GetScrollPosition(newPos.x, newPos.y);
 
-    if (dx != 0 || dy != 0)
-    {
-      // Make sure latest bits are available before we scroll them.
-      aPresContext->GetViewManager()->Composite();
+    if (NS_FAILED(result))
+      return result;
 
-      // Now scroll the view!
-
-      result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
-
-      if (NS_FAILED(result))
-        return result;
-
-      nsPoint newPos;
-
-      result = scrollableView->GetScrollPosition(newPos.x, newPos.y);
-
-      if (NS_FAILED(result))
-        return result;
-
-      *aDidScroll = (bounds.x != newPos.x || bounds.y != newPos.y);
-    }
+    *aDidScroll = (bounds.x != newPos.x || bounds.y != newPos.y);
   }
 
   return result;
@@ -6861,37 +6827,6 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     }
     else
       aRect->width = 60; // Arbitrary
-
-    //
-    // Clip the x dimensions of aRect so that they are
-    // completely within the bounds of the scrolledView.
-    // This helps avoid unnecessary scrolling of parent
-    // scrolled views.
-    //
-    // Note that aRect is in the coordinate system
-    // of the scrolledView, so there is no need to take
-    // into account scrolledView's x and y position.
-    // We can just assume that (0,0) corresponds to the
-    // upper left corner, and (svRect.width, svRect.height)
-    // the lower right corner of the scrolledView.
-    //
-
-    nsIView* scrolledView = 0;
-
-    result = (*aScrollableView)->GetScrolledView(scrolledView);
-
-    if (NS_FAILED(result))
-      return result;
-
-    nsRect svRect = scrolledView->GetBounds();
-
-    if (aRect->x < 0)
-      aRect->x = 0;
-    else if (aRect->x >= svRect.width)
-      aRect->x = svRect.width - 1;
-
-    if (aRect->XMost() > svRect.width)
-      aRect->width = svRect.width - aRect->x;
   }
   else
   {
@@ -6905,6 +6840,19 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
   }
 
   return result;
+}
+
+static void
+ClampPointInsideRect(nsPoint& aPoint, const nsRect& aRect)
+{
+  if (aPoint.x < aRect.x)
+    aPoint.x = aRect.x;
+  if (aPoint.x > aRect.XMost())
+    aPoint.x = aRect.XMost();
+  if (aPoint.y < aRect.y)
+    aPoint.y = aRect.y;
+  if (aPoint.y > aRect.YMost())
+    aPoint.y = aRect.YMost();
 }
 
 nsresult
@@ -7011,12 +6959,24 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
 
       if (parentSV)
       {
+        // 
+        // Clip the x dimensions of aRect so that they are
+        // completely within the bounds of the scrolledView.
+        // This helps avoid unnecessary scrolling of parent
+        // scrolled views.
+        //
+        nsRect svRect = scrolledView->GetBounds() - scrolledView->GetPosition();
+        nsPoint topLeft = aRect.TopLeft();
+        nsPoint bottomRight = aRect.BottomRight();
+        ClampPointInsideRect(topLeft, svRect);
+        ClampPointInsideRect(bottomRight, svRect);
+        nsRect newRect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x,
+                       bottomRight.y - topLeft.y);
+
         //
         // We have a parent scrollable view, so now map aRect
         // into it's scrolled view's coordinate space.
         //
-        
-        nsRect newRect;
 
         rv = parentSV->GetScrolledView(view);
 
@@ -7026,15 +6986,14 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
         if (!view)
           return NS_ERROR_FAILURE;
 
-        rv = GetViewAncestorOffset(scrolledView, view, &newRect.x, &newRect.y);
+        nscoord offsetX, offsetY;
+        rv = GetViewAncestorOffset(scrolledView, view, &offsetX, &offsetY);
 
         if (NS_FAILED(rv))
           return rv;
 
-        newRect.x     += aRect.x;
-        newRect.y     += aRect.y;
-        newRect.width  = aRect.width;
-        newRect.height = aRect.height;
+        newRect.x     += offsetX;
+        newRect.y     += offsetY;
 
         //
         // Now scroll the rect into the parent's view.
