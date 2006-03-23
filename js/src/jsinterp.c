@@ -2481,7 +2481,7 @@ interrupt:
                  * Now that we've resolved the object, use the PARENT slot to
                  * store the object that we're iterating over.
                  */
-                propobj->slots[JSSLOT_PARENT] = obj;
+                propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
                 propobj->slots[JSSLOT_ITER_STATE] = JSVAL_NULL;
 
                 /*
