@@ -210,7 +210,6 @@ protected:
   
   virtual void RePositionPopup(nsBoxLayoutState& aState);
 
-  static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
   void UpdateMenuType(nsPresContext* aPresContext);
   void UpdateMenuSpecialState(nsPresContext* aPresContext);
 
@@ -273,8 +272,6 @@ protected:
   static nsString *gAltText;
   static nsString *gModifierSeparator;
 
-public:
-  static nsMenuDismissalListener* sDismissalListener; // The listener that dismisses menus.
 }; // class nsMenuFrame
 
 #endif

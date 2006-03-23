@@ -63,7 +63,8 @@ interface nsIPopupBoxObject : nsISupports
   void enableKeyboardNavigator(in boolean enableKeyboardNavigator);
 
   /** 
-   * Enable automatic popup dismissal
+   * Enable automatic popup dismissal. This only has effect when called
+   * on an open popup.
    */
   void enableRollup(in boolean enableRollup);
 

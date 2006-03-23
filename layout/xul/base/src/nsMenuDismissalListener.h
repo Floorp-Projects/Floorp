@@ -45,43 +45,55 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsCOMPtr.h"
 
-class nsMenuPopupFrame;
-class nsPresContext;
 class nsIMenuParent;
 
-/** editor Implementation of the DragListener interface
+/**
+ * The object responsible for rolling up the open menu popups in cases when
+ * it's not done by menu code (for example, when clicking outside a popup
+ * on Windows).
+ *
+ * It is a singleton, which exists as long as there is a menu popup open.
  */
-class nsMenuDismissalListener : public nsIDOMMouseListener, public nsIMenuRollup, public nsIRollupListener
+class nsMenuDismissalListener : public nsIDOMMouseListener,
+                                public nsIMenuRollup,
+                                public nsIRollupListener
 {
+
 public:
-  /** default constructor
-   */
-  nsMenuDismissalListener();
-  
-  /** default destructor
-   */
-  virtual ~nsMenuDismissalListener();
-   
+  friend class nsMenuPopupFrame;
+
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  
-  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIROLLUPLISTENER
   NS_DECL_NSIMENUROLLUP
 
-  NS_IMETHOD EnableListener(PRBool aEnabled);
+  void EnableListener(PRBool aEnabled);
   void SetCurrentMenuParent(nsIMenuParent* aMenuParent);
   nsIMenuParent* GetCurrentMenuParent();
 
-  NS_IMETHOD Unregister();
-  
+  static nsMenuDismissalListener* GetInstance();
+  static nsMenuDismissalListener* sInstance;
+  static void Shutdown();
+
 protected:
+  nsMenuDismissalListener();
+  ~nsMenuDismissalListener();
+
+  /**
+   * Registers itself as a rollup event listener for current mMenuParent's
+   * widget. mMenuParent must be non-null.
+   */
+  void Register();
+  
+  void Unregister();
+
   nsIMenuParent* mMenuParent;
   nsCOMPtr<nsIWidget> mWidget;
   PRBool mEnabled;

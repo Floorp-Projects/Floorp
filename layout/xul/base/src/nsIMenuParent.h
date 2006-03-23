@@ -158,7 +158,6 @@ public:
   NS_IMETHOD KillPendingTimers() = 0;
   NS_IMETHOD CancelPendingTimers() = 0;
 
-  NS_IMETHOD CreateDismissalListener() = 0;
   NS_IMETHOD AttachedDismissalListener() = 0;
 
   NS_IMETHOD InstallKeyboardNavigator() = 0;
