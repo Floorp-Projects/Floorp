@@ -240,8 +240,7 @@ enum nsSelectionAmount {
   eSelectBeginLine = 3,
   eSelectEndLine   = 4,
   eSelectNoAmount  = 5,   //just bounce back current offset.
-  eSelectDir       = 6,   //select next/previous frame based on direction
-  eSelectParagraph = 7    //select a "paragraph"
+  eSelectParagraph = 6    //select a "paragraph"
 };
 
 enum nsDirection {

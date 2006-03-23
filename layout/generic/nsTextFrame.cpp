@@ -4630,7 +4630,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       }
       else
       {
-        aPos->mAmount = eSelectDir;//go to "next" or previous frame based on direction not THIS frame
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
           return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
@@ -4992,17 +4991,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       }
     }
     break;
-
-#ifdef IBMBIDI
-    case eSelectDir:
-      result = GetFrameFromDirection(aPresContext, aPos);
-      if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
-        return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
-      else {
-        return result;
-      }
-      break;
-#endif
 
     default:
       result = NS_ERROR_FAILURE; break;

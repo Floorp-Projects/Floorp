@@ -1448,7 +1448,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
         default:
           // If the current position is not a frame boundary, it's enough just to take the Bidi level of the current frame
           if ((pos.mContentOffset != frameStart && pos.mContentOffset != frameEnd)
-              || (eSelectDir == aAmount)
               || (eSelectLine == aAmount))
           {
             mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
