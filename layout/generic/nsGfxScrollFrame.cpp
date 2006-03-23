@@ -1695,12 +1695,12 @@ void
 nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
 {
   if (mVScrollbarBox)
-    SetAttribute(mVScrollbarBox, nsXULAtoms::curpos,
-                 aY - GetScrolledRect(GetScrollPortSize()).y);
+    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos,
+                      aY - GetScrolledRect(GetScrollPortSize()).y);
   
   if (mHScrollbarBox)
-    SetAttribute(mHScrollbarBox, nsXULAtoms::curpos,
-                 aX - GetScrolledRect(GetScrollPortSize()).x);
+    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+                      aX - GetScrolledRect(GetScrollPortSize()).x);
 }
 
 /**
@@ -1761,11 +1761,11 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent)
 
   nsRect scrolledRect = GetScrolledRect(GetScrollPortSize());
 
-  nscoord x = GetIntegerAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0) *
-                mOnePixel +
+  nscoord x = GetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos,
+                                -scrolledRect.x) +
               scrolledRect.x;
-  nscoord y = GetIntegerAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0) *
-                mOnePixel +
+  nscoord y = GetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos,
+                                -scrolledRect.y) +
               scrolledRect.y;
 
   // Make sure the scrollbars indeed moved before firing the event.
@@ -2367,11 +2367,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     // Scrollbars assume zero is the minimum position, so translate for them.
-    SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, curPosY - minY);
+    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::curpos, curPosY - minY);
     SetScrollbarEnabled(mVScrollbarBox, maxY - minY);
-    SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY - minY);
-    SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(aScrollArea.height - fontHeight));
-    SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
+    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY - minY);
+    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(aScrollArea.height - fontHeight));
+    SetCoordAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
 
     nsRect vRect(aScrollArea);
     vRect.width = aContentArea.width - aScrollArea.width;
@@ -2387,11 +2387,11 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
     // Scrollbars assume zero is the minimum position, so translate for them.
-    SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, curPosX - minX);
+    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::curpos, curPosX - minX);
     SetScrollbarEnabled(mHScrollbarBox, maxX - minX);
-    SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX - minX);
-    SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
-    SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
+    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX - minX);
+    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(aScrollArea.width)*0.8));
+    SetCoordAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
 
     nsRect hRect(aScrollArea);
     hRect.height = aContentArea.height - aScrollArea.height;
@@ -2490,7 +2490,7 @@ nsGfxScrollFrameInner::SetScrollbarEnabled(nsIBox* aBox, nscoord aMaxPos, PRBool
  * Returns whether it actually needed to change the attribute
  */
 PRBool
-nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow)
+nsGfxScrollFrameInner::SetCoordAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow)
 {
   // convert to pixels
   aSize /= mOnePixel;
@@ -2563,7 +2563,7 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
 }
 
 PRInt32
-nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 defaultValue)
+nsGfxScrollFrameInner::GetCoordAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 defaultValue)
 {
   if (aBox) {
     nsIContent* content = aBox->GetContent();
@@ -2575,7 +2575,7 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
       PRInt32 error;
 
       // convert it to an integer
-      defaultValue = value.ToInteger(&error);
+      defaultValue = value.ToInteger(&error) * mOnePixel;
     }
   }
 
