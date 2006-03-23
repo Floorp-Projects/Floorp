@@ -1186,6 +1186,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     JSContext *cx;
     JSFunction *fun;
     uint32 nullAtom;            /* flag to indicate if fun->atom is NULL */
+    JSTempValueRooter tvr;
     uint32 flagsword;           /* originally only flags was JS_XDRUint8'd */
     uint16 extraUnused;         /* variable for no longer used field */
     JSAtom *propAtom;
@@ -1193,6 +1194,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     uint32 userid;              /* NB: holds a signed int-tagged jsval */
     uintN i, n, dupflag;
     uint32 type;
+    JSBool ok;
 #ifdef DEBUG
     uintN nvars = 0, nargs = 0;
 #endif
@@ -1222,16 +1224,20 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
             return JS_FALSE;
     }
 
+    /* From here on, control flow must flow through label cleanup. */
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(fun->object), &tvr);
+    ok = JS_TRUE;
+
     if (!JS_XDRUint32(xdr, &nullAtom))
-        return JS_FALSE;
+        goto bad;
     if (!nullAtom && !js_XDRStringAtom(xdr, &fun->atom))
-        return JS_FALSE;
+        goto bad;
 
     if (!JS_XDRUint16(xdr, &fun->nargs) ||
         !JS_XDRUint16(xdr, &extraUnused) ||
         !JS_XDRUint16(xdr, &fun->u.i.nvars) ||
         !JS_XDRUint32(xdr, &flagsword)) {
-        return JS_FALSE;
+        goto bad;
     }
 
     /* Assert that all previous writes of extraUnused were writes of 0. */
@@ -1254,7 +1260,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                                        n * sizeof(JSScopeProperty *));
                 if (!spvec) {
                     JS_ReportOutOfMemory(cx);
-                    return JS_FALSE;
+                    goto bad;
                 }
             }
             scope = OBJ_SCOPE(fun->object);
@@ -1283,7 +1289,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                     !js_XDRCStringAtom(xdr, &propAtom)) {
                     if (mark)
                         JS_ARENA_RELEASE(&cx->tempPool, mark);
-                    return JS_FALSE;
+                    goto bad;
                 }
             }
             if (mark)
@@ -1297,7 +1303,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
                     !js_XDRCStringAtom(xdr, &propAtom)) {
-                    return JS_FALSE;
+                    goto bad;
                 }
                 JS_ASSERT(type == JSXDR_FUNARG || type == JSXDR_FUNVAR ||
                           type == JSXDR_FUNCONST);
@@ -1328,14 +1334,14 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                                           attrs | JSPROP_SHARED,
                                           dupflag | SPROP_HAS_SHORTID,
                                           JSVAL_TO_INT(userid))) {
-                    return JS_FALSE;
+                    goto bad;
                 }
             }
         }
     }
 
     if (!js_XDRScript(xdr, &fun->u.i.script, NULL))
-        return JS_FALSE;
+        goto bad;
 
     if (xdr->mode == JSXDR_DECODE) {
         fun->interpreted = JS_TRUE;
@@ -1346,7 +1352,13 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         js_CallNewScriptHook(cx, fun->u.i.script, fun);
     }
 
-    return JS_TRUE;
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
+
+bad:
+    ok = JS_FALSE;
+    goto out;
 }
 
 #else  /* !JS_HAS_XDR */
