@@ -869,7 +869,10 @@ nsXFormsModelElement::Refresh()
 
         nsCOMPtr<nsIDOM3Node> curChanged;
 
-        for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
+        // Checking for rebind, too.  If it ever becomes true due to some
+        // condition below, we can stop this testing since any control that
+        // needs to rebind will also refresh.
+        for (PRInt32 j = 0; j < mChangedNodes.Count() && !rebind; ++j) {
           curChanged = do_QueryInterface(mChangedNodes[j]);
 
           // Check whether the bound node is dirty. If so, we need to refresh the

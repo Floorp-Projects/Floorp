@@ -61,6 +61,7 @@
 #include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
 #include "nsIXFormsUIWidget.h"
+#include "nsXFormsModelElement.h"
 
 
 /**
@@ -106,18 +107,31 @@ nsXFormsOutputElement::Bind()
   if (!mHasBinding) {
     rv = mElement->HasAttribute(NS_LITERAL_STRING("bind"), &mHasBinding);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mHasBinding) {
+      // If output only has a value attribute, it can't have a bound node.
+      // In an effort to streamline this a bit, we'll just get mModel here and
+      // add output to the deferred bind list if necessary.  This should be all
+      // that we need from the services that ProcessNodeBinding provides.
+      // ProcessNodeBinding is called during ::Refresh (via GetValue) so we just
+      // need a few things set up before ::Refresh gets called (usually right
+      // after ::Bind)
+  
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+      if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
+        nsXFormsModelElement::DeferElementBind(domDoc, this);
+      }
+  
+      mModel = nsXFormsUtils::GetModel(mElement);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIDOMXPathResult> result;
-  if (mHasBinding) {
-    rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
-                            nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                            getter_AddRefs(result));
-  } else {
-    rv = ProcessNodeBinding(NS_LITERAL_STRING("value"),
-                            nsIDOMXPathResult::STRING_TYPE,
-                            getter_AddRefs(result));
-  }
+  rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                          nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                          getter_AddRefs(result));
   
   if (NS_FAILED(rv)) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("controlBindError"), mElement);
