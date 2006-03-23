@@ -699,21 +699,28 @@ var ViewMenu = {
    *          the type of the menuitem, e.g. "radio" or "checkbox". 
    *          Can be null (no-type). 
    *          Checkboxes are checked if the column is visible.
+   * @param   labelFormat
+   *          A format string to be applied to item labels. If null, no format
+   *          is used. 
    */
-  fillWithColumns: function VM_fillWithColumns(event, startID, endID, type) {
+  fillWithColumns: function VM_fillWithColumns(event, startID, endID, type, labelFormat) {
     var popup = event.target;  
     var pivot = this._clean(popup, startID, endID);
     
     // If no column is "sort-active", the "Unsorted" item needs to be checked, 
     // so track whether or not we find a column that is sort-active. 
     var isSorted = false;
-    var content = document.getElementById("placeContent");      
+    var content = document.getElementById("placeContent");
+    var strings = document.getElementById("placeBundle");
     var columns = content.columns;
     for (var i = 0; i < columns.count; ++i) {
       var column = columns.getColumnAt(i).element;
       var menuitem = document.createElementNS(XUL_NS, "menuitem");
       menuitem.id = "menucol_" + column.id;
-      menuitem.setAttribute("label", column.getAttribute("label"));
+      var label = column.getAttribute("label");
+      if (labelFormat)
+        label = strings.getFormattedString(labelFormat, [label]);
+      menuitem.setAttribute("label", label);
       if (type == "radio") {
         menuitem.setAttribute("type", "radio");
         menuitem.setAttribute("name", "columns");
@@ -744,7 +751,7 @@ var ViewMenu = {
    * Set up the content of the view menu.
    */
   populate: function VM_populate(event) {
-    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio");  
+    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "sortByPrefix");
     
     var sortColumn = this._getSortColumn();
     var viewSortAscending = document.getElementById("viewSortAscending");

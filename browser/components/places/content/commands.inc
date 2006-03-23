@@ -66,7 +66,9 @@
              oncommand="PlacesController.newSeparator()"/>
   </commandset>
   <commandset type="container|feed" readonly="true">
-    <command id="placesCmd_reload" label="&cmd.reload.label;" accesskey="&cmd.reload.accesskey;"/>
+    <command id="placesCmd_reload" 
+             label="&cmd.reload.label;" accesskey="&cmd.reload.accesskey;"
+             disabled="true"/>
   </commandset>
 </commandset>
 

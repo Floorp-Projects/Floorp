@@ -31,6 +31,14 @@
     <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
   
+  <commandset id="TMCommandSet"
+              commandupdater="true" events="*" 
+              oncommandupdate="PlacesController.updateTMCommands()">
+    <command id="cmd_undo" label="&cmd.edit_undo.label;" accesskey="&cmd.edit_undo.accesskey;"
+             oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
+    <command id="cmd_redo" label="&cmd.edit_redo.label;" accesskey="&cmd.edit_redo.accesskey;"
+             oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
+  </commandset>
 #include commands.inc
 
   <keyset id="placesOrganizerKeyset">
@@ -46,8 +54,11 @@
     <key id="placesKey_edit:paste" command="placesCmd_edit:paste" key="&cmd.edit_paste.key;" modifiers="accel"/>
     <key id="placesKey_edit:delete" command="placesCmd_edit:delete" keycode="VK_DELETE"/>
     <key id="placesKey_open" command="placesCmd_open" keycode="VK_ENTER"/>
+    <key id="placesKey_open" command="placesCmd_open" keycode="VK_RETURN"/>
     <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_ENTER" modifiers="shift"/>
+    <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_RETURN" modifiers="shift"/>
     <key id="placesKey_open:tab" command="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
+    <key id="placesKey_open:tab" command="placesCmd_open:tab" keycode="VK_RETURN" modifiers="accel"/>
     <key id="placesKey_show:info" command="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
     <key id="placesKey_rename" command="placesCmd_rename" keycode="VK_F2"/>
     <key id="placesKey_reload" command="placesCmd_reload" key="&cmd.reload.key;" modifiers="accel"/>
@@ -79,10 +90,8 @@
       </menu>
       <menu id="editMenu" label="&edit.label;" accesskey="&edit.accesskey;">
         <menupopup>
-          <menuitem id="editUndo" command="cmd_undo"
-                    label="&edit.undo.label;" accesskey="&edit.undo.accesskey;"/>
-          <menuitem id="editRedo" command="cmd_redo"
-                    label="&edit.redo.label;" accesskey="&edit.redo.label;"/>
+          <menuitem id="editUndo" command="cmd_undo"/>
+          <menuitem id="editRedo" command="cmd_redo"/>
           <menuseparator/>
           <menuitem id="editCut" command="placesCmd_edit:cut"/>
           <menuitem id="editCopy" command="placesCmd_edit:copy"/>
@@ -90,6 +99,8 @@
           <menuitem id="editDelete" command="placesCmd_edit:delete"/>
           <menuseparator/>
           <menuitem id="editSelectAll" command="placesCmd_select:all"/>
+          <menuseparator/>
+          <menuitem id="editSortByName" command="placesCmd_sortby:name"/>
           <menuseparator/>
           <menuitem id="editFind" command="placesCmd_find"/>
 #ifdef XP_MACOSX
@@ -108,7 +119,7 @@
                     label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
           <menu id="viewColumns" 
                 label="&view.columns.label;" accesskey="&view.columns.accesskey;">
-            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox');"
+            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
                        oncommand="ViewMenu.showHideColumn(event.target); event.preventBubble();"/>
           </menu>
           <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
