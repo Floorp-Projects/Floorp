@@ -4545,8 +4545,6 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         }
       }
     }
-    if (aPos->mAmount == eSelectDir)
-      aPos->mAmount = eSelectNoAmount;//just get to next frame.
     nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
     result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
 #ifdef IBMBIDI
