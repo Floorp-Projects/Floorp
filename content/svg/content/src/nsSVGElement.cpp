@@ -618,13 +618,6 @@ nsSVGElement::UpdateContentStyleRule()
 {
   NS_ASSERTION(!mContentStyleRule, "we already have a content style rule");
   
-  // Bail early if there are no child attributes.
-  // If this code were moved into the for-loop we could
-  // avoid creating an mDeclaration even when there 
-  // are non-style related attributes. See bug 270251.
-  if (mAttrsAndChildren.AttrCount() == 0)
-    return;
-
   nsIDocument* doc = GetOwnerDoc();
   if (!doc) {
     NS_ERROR("SVG element without owner document");
@@ -633,47 +626,50 @@ nsSVGElement::UpdateContentStyleRule()
   
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsIURI *docURI = doc->GetDocumentURI();
-  
-  // Create the nsCSSDeclaration.
-  nsCSSDeclaration* declaration = new nsCSSDeclaration();
-  if (!declaration) {
-    NS_WARNING("Failed to allocate nsCSSDeclaration");
-    return;
-  }
-  if(!declaration->InitializeEmpty()) {
-    NS_WARNING("could not initialize nsCSSDeclaration");
-    declaration->RuleAbort();
-    return;
-  }
-
-  // Try to fetch the CSS Parser from the document.
   nsICSSLoader* cssLoader = doc->CSSLoader();
-  
-  nsCOMPtr<nsICSSParser> parser;
-  nsresult rv = NS_OK; 
-  rv = cssLoader->GetParserFor(nsnull, getter_AddRefs(parser));
-  
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to get a css parser");
-    declaration->RuleAbort();
-    return;
-  }
 
-  // SVG and CSS differ slightly in their interpretation of some of
-  // the attributes.  SVG allows attributes of the form: font-size="5" 
-  // (style="font-size: 5" if using a style attribute)
-  // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
-  // Set a flag to pass information to the parser so that we can use
-  // the CSS parser to parse the font-size attribute.  Note that this
-  // does *not* effect the use of CSS stylesheets, which will still
-  // require units
-  parser->SetSVGMode(PR_TRUE);
+  nsCSSDeclaration* declaration = nsnull;
+  nsCOMPtr<nsICSSParser> parser;
+
+  nsresult rv = NS_OK; 
 
   PRUint32 attrCount = mAttrsAndChildren.AttrCount();
   for (PRUint32 i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
+
+    if (!declaration) {
+      // Create the nsCSSDeclaration.
+      declaration = new nsCSSDeclaration();
+      if (!declaration) {
+        NS_WARNING("Failed to allocate nsCSSDeclaration");
+        return;
+      }
+      if (!declaration->InitializeEmpty()) {
+        NS_WARNING("could not initialize nsCSSDeclaration");
+        declaration->RuleAbort();  // deletes declaration
+        return;
+      }
+
+      // Try to fetch the CSS Parser from the document.
+      rv = cssLoader->GetParserFor(nsnull, getter_AddRefs(parser));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("failed to get a css parser");
+        declaration->RuleAbort();  // deletes declaration
+        return;
+      }
+
+      // SVG and CSS differ slightly in their interpretation of some of
+      // the attributes.  SVG allows attributes of the form: font-size="5" 
+      // (style="font-size: 5" if using a style attribute)
+      // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
+      // Set a flag to pass information to the parser so that we can use
+      // the CSS parser to parse the font-size attribute.  Note that this
+      // does *not* effect the use of CSS stylesheets, which will still
+      // require units
+      parser->SetSVGMode(PR_TRUE);
+    }
 
     nsAutoString name;
     attrName->Atom()->ToString(name);
@@ -686,16 +682,18 @@ nsSVGElement::UpdateContentStyleRule()
                           docURI, baseURI,
                           declaration, &changed);
   }
-  
-  rv = NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule), nsnull, declaration);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("could not create contentstylerule");
-    declaration->RuleAbort();
+
+  if (declaration) {
+    rv = NS_NewCSSStyleRule(getter_AddRefs(mContentStyleRule), nsnull, declaration);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("could not create contentstylerule");
+      declaration->RuleAbort();  // deletes declaration
+    }
+
+    // Recycle the parser
+    parser->SetSVGMode(PR_FALSE);
+    cssLoader->RecycleParser(parser);
   }
-  
-  // Recycle the parser
-  parser->SetSVGMode(PR_FALSE);
-  cssLoader->RecycleParser(parser);
 }
 
 nsISVGValue*
