@@ -168,9 +168,7 @@ function resizeAlert(aMoveOffScreen)
   // leftover hack to get the window properly hidden when we first open it
   if (aMoveOffScreen)
     window.outerHeight = 1;
-  
-  // be sure to offset the alert by 10 pixels from the far right edge of the screen
-  window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
+  window.moveTo(screen.availLeft + screen.availWidth - window.outerWidth, screen.availTop + screen.availHeight - window.outerHeight);
 }
 
 function fadeOpen()
