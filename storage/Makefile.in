@@ -51,7 +51,7 @@ DIRS		= ../db/sqlite3/src \
 		  $(NULL)
 
 ifdef ENABLE_TESTS
-DIRS		+= test
+TOOL_DIRS += test
 endif
 
 include $(topsrcdir)/config/rules.mk
