@@ -14,14 +14,6 @@
   "Edit">
 <!ENTITY edit.accesskey
   "E">
-<!ENTITY edit.undo.label
-  "Undo">
-<!ENTITY edit.undo.accesskey
-  "U">
-<!ENTITY edit.redo.label
-  "Redo">
-<!ENTITY edit.redo.accesskey
-  "R">
 <!ENTITY view.label
   "View">
 <!ENTITY view.accesskey
@@ -99,6 +91,14 @@
   "Delete">
 <!ENTITY cmd.edit_delete.accesskey
   "D">
+<!ENTITY cmd.edit_undo.label
+  "Undo">
+<!ENTITY cmd.edit_undo.accesskey
+  "U">
+<!ENTITY cmd.edit_redo.label
+  "Redo">
+<!ENTITY cmd.edit_redo.accesskey
+  "R">
 <!ENTITY cmd.open.label
   "Open">
 <!ENTITY cmd.open.accesskey

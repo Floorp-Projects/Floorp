@@ -45,14 +45,6 @@ const Cr = Components.results;
 
 const NHRVO = Ci.nsINavHistoryResultViewObserver;
 
-const SELECTION_CONTAINS_URI = 0x01;
-const SELECTION_CONTAINS_CONTAINER = 0x02;
-const SELECTION_IS_OPEN_CONTAINER = 0x04;
-const SELECTION_IS_CLOSED_CONTAINER = 0x08;
-const SELECTION_IS_CHANGEABLE = 0x10;
-const SELECTION_IS_REMOVABLE = 0x20;
-const SELECTION_IS_MOVABLE = 0x40;
-
 // These need to be kept in sync with the meaning of these roots in 
 // default_places.html!
 const ORGANIZER_ROOT_HISTORY = "place:&beginTime=-2592000000000&beginTimeRef=1&endTime=7200000000&endTimeRef=2&sort=4&type=1";
@@ -389,11 +381,7 @@ var PlacesController = {
   
   isCommandEnabled: function PC_isCommandEnabled(command) {
     //LOG("isCommandEnabled: " + command);
-    if (command == "cmd_undo")
-      return this.tm.numberOfUndoItems > 0;
-    if (command == "cmd_redo")
-      return this.tm.numberOfRedoItems > 0;
-    return document.getElementById(command).getAttribute("disabled") == "true";
+    return document.getElementById(command).getAttribute("disabled") != "true";
   },
 
   supportsCommand: function PC_supportsCommand(command) {
@@ -452,8 +440,20 @@ var PlacesController = {
     var nodes = this._activeView.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
       var parent = nodes[i].parent || this._activeView.getResult().root;
-      if (this.nodeIsReadOnly(parent))
-        return false;
+      // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
+      // a node has children that cannot be edited, reordered or removed. Here,
+      // we don't care if a node's children can't be reordered or edited, just
+      // that they're removable. All history results have removable children
+      // (based on the principle that any URL in the history table should be
+      // removable), but some special bookmark folders may have non-removable
+      // children, e.g. live bookmark folder children. It doesn't make sense
+      // to delete a child of a live bookmark folder, since when the folder
+      // refreshes, the child will return. 
+      if (this.nodeIsFolder(parent)) {
+        var readOnly = this.bookmarks.getFolderReadonly(asFolder(parent).folderId);
+        if (readOnly)
+          return !readOnly;
+      }
     }
     return true;
   },
@@ -497,16 +497,6 @@ var PlacesController = {
         return false;
     }
     return true;
-  },
-  
-  /**
-   * Determines whether or not the paste command is enabled, based on the 
-   * content of the clipboard and the selection within the active view.
-   */
-  _canPaste: function PC__canPaste() {
-    if (this._canInsert()) 
-      return this._hasClipboardData();
-    return false;
   },
   
   /**
@@ -571,7 +561,7 @@ var PlacesController = {
       return asQuery(node).childrenReadOnly;
     return false;
   },
-
+  
   /**
    * Determines whether or not a ResultNode is a host folder or not
    * @param   node
@@ -604,7 +594,30 @@ var PlacesController = {
    */
   nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
     const NHRN = Ci.nsINavHistoryResultNode;
-    return (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER);
+    return node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+  },
+  
+  /**
+   * Updates undo/redo commands. 
+   */
+  updateTMCommands: function PC_updateTMCommands() {
+    this._setEnabled("cmd_undo", this.tm.numberOfUndoItems > 0);
+    this._setEnabled("cmd_redo", this.tm.numberOfRedoItems > 0);
+  },
+  
+  /**
+   * Determines whether or not the selection intersects the read only "system"
+   * portion of the display. 
+   * @returns true if the selection intersects, false otherwise. 
+   */
+  _selectionOverlapsSystemArea: function PC__selectionOverlapsSystemArea() {
+    var v = this.activeView;
+    var nodes = v.getSelectionNodes();
+    for (var i = 0; i < nodes.length; ++i) {
+      if (this.getIndexOfNode(nodes[i]) >= v.peerDropIndex)
+        return false;
+    }
+    return true;
   },
 
   /**
@@ -612,53 +625,248 @@ var PlacesController = {
    * disabledness of commands in relation to the state of the selection. 
    */
   onCommandUpdate: function PC_onCommandUpdate() {
-    if (!this._activeView) {
+    var v = this._activeView;
+    if (!v) {
       // Initial update, no view is set yet
       return;
     }
 
-    // Select All
-    this._setEnabled("placesCmd_select:all", 
-      this._activeView.getAttribute("seltype") != "single");
-    // Show Info
-    var hasSingleSelection = this._activeView.hasSingleSelection;
-    this._setEnabled("placesCmd_show:info", hasSingleSelection);
-    // Cut
-    var removableSelection = this._hasRemovableSelection();
-    this._setEnabled("placesCmd_edit:cut", removableSelection);
-    this._setEnabled("placesCmd_edit:delete", removableSelection);
-    // Copy
-    this._setEnabled("placesCmd_edit:copy", this._activeView.hasSelection);
-    // Paste
-    this._setEnabled("placesCmd_edit:paste", this._canPaste());
-    // Open
-    var hasSelectedURI = this._activeView.selectedURINode != null;
-    this._setEnabled("placesCmd_open", hasSelectedURI);
-    this._setEnabled("placesCmd_open:window", hasSelectedURI);
-    this._setEnabled("placesCmd_open:tab", hasSelectedURI);
+    var inSysArea = this._selectionOverlapsSystemArea();
+    var selectedNode = v.selectedNode;
+    var canInsert = this._canInsert();
     
+    // Select All
+    this._setEnabled("placesCmd_select:all", v.selType != "single");
+    // Show Info
+    var hasSingleSelection = v.hasSingleSelection;
+    this._setEnabled("placesCmd_show:info", !inSysArea && hasSingleSelection);
+    this._updateEditCommands(inSysArea, canInsert);
+    this._updateOpenCommands(inSysArea, hasSingleSelection, selectedNode);
+    this._updateSortCommands(inSysArea, hasSingleSelection, selectedNode, canInsert);
+    this._updateCreateCommands(inSysArea, canInsert);
+    this._updateLivemarkCommands(hasSingleSelection, selectedNode);
+  },
+  
+  /**
+   * Updates commands for persistent sorting
+   * @param   inSysArea
+   *          true if the selection intersects the read only "system" area.
+   * @param   hasSingleSelection
+   *          true if only one item is selected in the view
+   * @param   selectedNode
+   *          The selected nsINavHistoryResultNode
+   * @param   canInsert
+   *          true if the item is a writable container that can be inserted 
+   *          into
+   */
+  _updateSortCommands: 
+  function PC__updateSortCommands(inSysArea, hasSingleSelection, selectedNode, 
+                                  canInsert) {
+    // Some views, like menupopups, destroy their result as they hide, but they
+    // are still the "last-active" view. Don't barf. 
+    var result = this.activeView.getResult();
+    var viewIsFolder = result ? this.nodeIsFolder(result.root) : false;
+
+    // Depending on the selection, the persistent sort command sorts the 
+    // contents of the current folder (when the selection is mixed or leaf 
+    // items like individual bookmarks are selected) or the contents of the
+    // selected folder (if a single folder is selected).     
+    var sortingChildren = false;
+    var name = result.root.title;
+    if (selectedNode) 
+      name = selectedNode.parent.title;
+    if (hasSingleSelection && this.nodeIsFolder(selectedNode)) {
+      name = selectedNode.title;
+      sortingChildren = true;
+    }
+
+    var metadata = this._buildSelectionMetadata();
+    this._setEnabled("placesCmd_sortby:name", 
+      (!inSysArea || sortingChildren) && canInsert && viewIsFolder && 
+      !("mixed" in metadata));
+    
+    var strings = document.getElementById("placeBundle");
+    var command = document.getElementById("placesCmd_sortby:name");
+    
+    if (name) {
+      command.setAttribute("label", 
+        strings.getFormattedString("sortByName", [name]));
+    }
+    else
+      command.setAttribute("label", strings.getString("sortByNameGeneric"));
+  },
+  
+  /**
+   * Updates commands for opening links
+   * @param   inSysArea
+   *          true if the selection intersects the read only "system" area.
+   * @param   hasSingleSelection
+   *          true if only one item is selected in the view
+   * @param   selectedNode
+   *          The selected nsINavHistoryResultNode
+   */
+  _updateOpenCommands: 
+  function PC__updateOpenCommands(inSysArea, hasSingleSelection, selectedNode) {
+    // Open
+    var hasSelectedURI = this.activeView.selectedURINode != null;
+    this._setEnabled("placesCmd_open", !inSysArea && hasSelectedURI);
+    this._setEnabled("placesCmd_open:window", !inSysArea && hasSelectedURI);
+    this._setEnabled("placesCmd_open:tab", !inSysArea && hasSelectedURI);
+  
     // We can open multiple links in tabs if there is either: 
     //  a) a single folder selected
     //  b) many links or folders selected
     var singleFolderSelected = hasSingleSelection && 
-      this.nodeIsFolder(this._activeView.selectedNode);
+                               this.nodeIsFolder(selectedNode);
     this._setEnabled("placesCmd_open:tabs", 
-      singleFolderSelected || !hasSingleSelection);
+                     !inSysArea && (singleFolderSelected || 
+                                    !hasSingleSelection));
+  },
+  
+  /**
+   * Determines if the active view can support inserting items of a certain type.
+   */
+  _viewSupportsInsertingType: function PC__viewSupportsInsertingType(type) {
+    var types = this.activeView.peerDropTypes;
+    for (var i = 0; i < types.length; ++i) {
+      if (types[i] == type.value) 
+        return true;
+    }
+    return true;
+  },
+  
+  /**
+   * Looks at the data on the clipboard to see if it is paste-able. 
+   * @returns true if the data is paste-able, false if the clipboard data
+   *          cannot be pasted
+   */
+  _canPaste: function PC__canPaste() {
+    var xferable = 
+        Cc["@mozilla.org/widget/transferable;1"].
+        createInstance(Ci.nsITransferable);
+    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
+    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_SEPARATOR);
+    xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
+    xferable.addDataFlavor(TYPE_X_MOZ_URL);
     
-    // Some views, like menupopups, destroy their result as they hide, but they
-    // are still the "last-active" view. Don't barf. 
-    var result = this._activeView.getResult();
-    var viewIsFolder = result ? this.nodeIsFolder(result.root) : false;
-    var canInsert = this._canInsert();
-
-    // Persistent Sort
-    this._setEnabled("placesCmd_sortby:name", viewIsFolder && canInsert);
+    var clipboard = 
+        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
+    
+    var data = { }, type = { };
+    xferable.getAnyTransferData(type, data, { });
+    data = data.value.QueryInterface(Ci.nsISupportsString).data;
+    if (!this._viewSupportsInsertingType(type.value))
+      return false;
+    try {
+      this.unwrapNodes(data, type.value);
+    }
+    catch (e) {
+      // Unwrap nodes failed, possibly because a field that should have 
+      // contained a URI did not actually contain something that is 
+      // parse-able as a URI. 
+      return false;
+    }
+    return true;
+  },
+  
+  /**
+   * Updates commands for edit operations (cut, copy, paste, delete)
+   * @param   inSysArea
+   *          true if the selection intersects the read only "system" area.
+   * @param   canInsert
+   *          true if the item is a writable container that can be inserted 
+   *          into
+   */
+  _updateEditCommands: function PC__updateEditCommands(inSysArea, canInsert) {
+    // Cut: only if there's a removable selection. cannot remove system items. 
+    var removableSelection = this._hasRemovableSelection();
+    this._setEnabled("placesCmd_edit:cut", !inSysArea && removableSelection);
+    this._setEnabled("placesCmd_edit:delete", 
+                     !inSysArea && removableSelection);
+    // Copy: only if there's a selection. cannot copy system items. 
+    this._setEnabled("placesCmd_edit:copy", 
+                     !inSysArea && this.activeView.hasSelection);
+    // Paste: cannot paste adjacent to system items. only if the containing 
+    //        folder is not read only. only if there is clipboard data. only
+    //        if that data is a valid place format.    
+    this._setEnabled("placesCmd_edit:paste", !inSysArea && canInsert && 
+                     this._hasClipboardData() && this._canPaste());
+  },
+  
+  /**
+   * Updates commands for creating new bookmarks, folders and separators. 
+   * @param   inSysArea
+   *          true if the selection intersects the read only "system" area.
+   * @param   canInsert
+   *          true if the item is a writable container that can be inserted 
+   *          into
+   */
+  _updateCreateCommands: 
+  function PC__updateCreateCommands(inSysArea, canInsert) {
+    var canInsertFolders = canInsertSeparators = canInsertURLs = false;
+    var peerTypes = this.activeView.peerDropTypes;
+    for (var i = 0; i < peerTypes.length; ++i) {
+      switch(peerTypes[i]) {
+      case TYPE_X_MOZ_PLACE_CONTAINER:
+        canInsertFolders = true;
+        break;
+      case TYPE_X_MOZ_PLACE_SEPARATOR:
+        canInsertSeparators = true;
+        break;
+      case TYPE_X_MOZ_URL:
+        canInsertURLs = true;
+        break;
+      }
+    }
+    
     // New Folder
-    this._setEnabled("placesCmd_new:folder", viewIsFolder && canInsert);
+    this._setEnabled("placesCmd_new:folder", !inSysArea && canInsertFolders && canInsert);
+    
+    // New Bookmark
+    this._setEnabled("placesCmd_new:bookmark", !inSysArea && canInsertURLs && canInsert);
     // New Separator
-    this._setEnabled("placesCmd_new:separator", viewIsFolder && canInsert);
-    // Feed Reload
-    this._setEnabled("placesCmd_reload", false);
+    this._setEnabled("placesCmd_new:separator", 
+                     !inSysArea && canInsertSeparators && canInsert);
+  },
+  
+  /**
+   * Updates Livemark Commands: Reload
+   * @param   hasSingleSelection
+   *          true if only one item is selected in the view
+   * @param   selectedNode
+   *          The selected nsINavHistoryResultNode
+   */
+  _updateLivemarkCommands: 
+  function PC__updateLivemarkCommands(hasSingleSelection, selectedNode) {
+    var isLivemarkItem = false;
+    var strings = document.getElementById("placeBundle");
+    var command = document.getElementById("placesCmd_reload");
+    if (hasSingleSelection) {
+      if (selectedNode.uri.indexOf("livemark%2F") != -1) {
+        isLivemarkItem = true;
+        command.setAttribute("label", strings.getString("livemarkReloadAll"));
+      }
+      else {
+        var uri = this._uri(selectedNode.uri);
+        isLivemarkItem = 
+          this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
+        if (isLivemarkItem)
+          var name = selectedNode.parent.title;
+        if (!isLivemarkItem && this.nodeIsFolder(selectedNode)) {
+          var folderId = asFolder(selectedNode).folderId;
+          uri = this.bookmarks.getFolderURI(folderId);
+          isLivemarkItem = this.annotations.hasAnnotation(uri, "livemark/feedURI");
+          name = selectedNode.title;
+        }
+        command.setAttribute("label", 
+          strings.getFormattedString("livemarkReloadOne", [name]));
+      }
+    }
+    if (!isLivemarkItem)
+      command.setAttribute("label", strings.getString("livemarkReload"));
+      
+    this._setEnabled("placesCmd_reload", isLivemarkItem);
   },
   
   /** 
@@ -669,14 +877,17 @@ var PlacesController = {
    *    is-links      "links"
    *    is-folder     "folder"
    *    is-mutable    "mutable"
+   *    is-mixed      "mixed"
    *    is-removable  "removable"
    *    is-multiselect"multiselect"
    *    is-container  "remotecontainer"
+   *    is-query      "query"
    * @returns an object with each of the properties above set if the selection
    *          matches that rule. 
+   * Note: This can be slow, so don't call it anywhere performance critical!
    */
   _buildSelectionMetadata: function PC__buildSelectionMetadata() {
-    var metadata = { mixed: true };
+    var metadata = { };
     
     var hasSingleSelection = this._activeView.hasSingleSelection;
     if (this._activeView.selectedURINode && hasSingleSelection)
@@ -685,24 +896,39 @@ var PlacesController = {
       var selectedNode = this._activeView.selectedNode;
       if (this.nodeIsFolder(selectedNode))
         metadata["folder"] = true;
+      if (this.nodeIsQuery(selectedNode))
+        metadata["query"] = true;
       if (this.nodeIsRemoteContainer(selectedNode))
         metadata["remotecontainer"] = true;
     }
     
     var foundNonLeaf = false;
     var nodes = this._activeView.getSelectionNodes();
+    if (nodes.length) 
+      var lastParent = nodes[0].parent, lastType = nodes[0].type;
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
-      if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URI)
+      if (!this.nodeIsURI(node))
         foundNonLeaf = true;
-      if (!node.readonly && 
-           node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER)
+      if (!this.nodeIsReadOnly(node) && !this.nodeIsReadOnly(node.parent))
         metadata["mutable"] = true;
+        
+      var uri = this._uri(node.uri);
+      if (this.nodeIsFolder(node))
+        uri = this.bookmarks.getFolderURI(asFolder(node).folderId);
+      var names = this.annotations.getPageAnnotationNames(uri, { });
+      for (var j = 0; j < names.length; ++j)
+        metadata[names[i]] = true;
+      
+      if (nodes[i].parent != lastParent || nodes[i].type != lastType)
+        metadata["mixed"] = true;
     }
+    
     if (this._activeView.selType != "single")
       metadata["multiselect"] = true;
     if (!foundNonLeaf && nodes.length > 1)
       metadata["links"] = true;
+    
     return metadata;
   },
   
@@ -742,7 +968,7 @@ var PlacesController = {
     var lastVisible = null;
     for (var i = 0; i < popup.childNodes.length; ++i) {
       var item = popup.childNodes[i];
-      var rules = item.getAttribute("selection")
+      var rules = item.getAttribute("selection");
       item.hidden = !this._shouldShowMenuItem(metadata, rules.split("|"));
       if (!item.hidden)
         lastVisible = item;
@@ -914,6 +1140,7 @@ var PlacesController = {
    * Loads the selected URL in the current window, replacing the Places page.
    */
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
+    LOG("openLinkInCurrentWindow");
     var node = this._activeView.selectedURINode;
     if (node)
       this.browserWindow.loadURI(node.uri, null, null);
@@ -1114,8 +1341,7 @@ var PlacesController = {
     // Delete the selected rows. Do this by walking the selection backward, so
     // that when undo is performed they are re-inserted in the correct order.
     var type = this._activeView.getResult().root.type; 
-    LOG("TYPE: " + type);
-    if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER)
+    if (this.nodeIsFolder(this._activeView.getResult().root))
       this._removeRowsFromBookmarks(txnName);
     else
       this._removeRowsFromHistory();
@@ -1274,7 +1500,7 @@ var PlacesController = {
         var node = kids.getChild(i);
         if (self.nodeIsFolder(node))
           createTransactions(node.folderId, folderId, i);
-        else if (this.nodeIsURI(node)) {
+        else if (self.nodeIsURI(node)) {
           var uri = self._uri(node.uri);
           transactions.push(self._getItemCopyTransaction(uri, container, 
                                                          index));
