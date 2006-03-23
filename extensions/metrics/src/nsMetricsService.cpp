@@ -62,6 +62,7 @@
 #include "nsVariant.h"
 #include "prtime.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "bzlib.h"
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
@@ -573,22 +574,6 @@ nsMetricsService::UploadData()
   rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static const char kClientIDPref[] = "metrics.client-id";
-  
-  // Get the client id and set it in an HTTP header
-  nsXPIDLCString clientID;
-  rv = prefs->GetCharPref(kClientIDPref, getter_Copies(clientID));
-  if (NS_FAILED(rv) || clientID.IsEmpty()) {
-    rv = GenerateClientID(clientID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = prefs->SetCharPref(kClientIDPref, clientID);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz-Client-ID"),
-                                     clientID, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   rv = channel->AsyncOpen(this, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -681,10 +666,25 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
                                        nsIInputStream **result)
 {
   // Construct a full XML document using the header, file contents, and
-  // footer.
+  // footer.  We need to generate a client id now if one doesn't exist.
+  static const char kClientIDPref[] = "metrics.client-id";
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+  
+  nsXPIDLCString clientID;
+  nsresult rv = prefs->GetCharPref(kClientIDPref, getter_Copies(clientID));
+  if (NS_FAILED(rv) || clientID.IsEmpty()) {
+    rv = GenerateClientID(clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = prefs->SetCharPref(kClientIDPref, clientID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   static const char METRICS_XML_HEAD[] =
       "<?xml version=\"1.0\"?>\n"
-      "<log xmlns=\"" NS_METRICS_NAMESPACE "\">\n";
+      "<log xmlns=\"" NS_METRICS_NAMESPACE "\" clientid=\"%s\">\n";
   static const char METRICS_XML_TAIL[] = "</log>";
 
   nsCOMPtr<nsIInputStream> fileStream;
@@ -695,12 +695,15 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
     do_CreateInstance(NS_MULTIPLEXINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(miStream);
 
+  char *head = PR_smprintf(METRICS_XML_HEAD, clientID.get());
+  
   nsCOMPtr<nsIInputStream> stringStream;
-  NS_NewByteInputStream(getter_AddRefs(stringStream), METRICS_XML_HEAD,
-                        sizeof(METRICS_XML_HEAD)-1);
+  NS_NewByteInputStream(getter_AddRefs(stringStream), head, -1,
+                        NS_ASSIGNMENT_COPY);
+  PR_smprintf_free(head);
   NS_ENSURE_STATE(stringStream);
 
-  nsresult rv = miStream->AppendStream(stringStream);
+  rv = miStream->AppendStream(stringStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = miStream->AppendStream(fileStream);
