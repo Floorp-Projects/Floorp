@@ -843,7 +843,7 @@ script_mark(JSContext *cx, JSObject *obj, void *arg)
 
     script = (JSScript *) JS_GetPrivate(cx, obj);
     if (script)
-        js_MarkScript(cx, script, arg);
+        js_MarkScript(cx, script);
     return 0;
 }
 
@@ -1345,7 +1345,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 }
 
 void
-js_MarkScript(JSContext *cx, JSScript *script, void *arg)
+js_MarkScript(JSContext *cx, JSScript *script)
 {
     JSAtomMap *map;
     uintN i, length;
@@ -1355,7 +1355,7 @@ js_MarkScript(JSContext *cx, JSScript *script, void *arg)
     length = map->length;
     vector = map->vector;
     for (i = 0; i < length; i++)
-        GC_MARK_ATOM(cx, vector[i], arg);
+        GC_MARK_ATOM(cx, vector[i]);
 
     if (script->filename)
         js_MarkScriptFilename(script->filename);

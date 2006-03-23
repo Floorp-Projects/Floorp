@@ -916,6 +916,15 @@ out:
 #include <stdio.h>
 #include "jsprf.h"
 
+typedef struct GCMarkNode GCMarkNode;
+
+struct GCMarkNode {
+    void        *thing;
+    const char  *name;
+    GCMarkNode  *next;
+    GCMarkNode  *prev;
+};
+
 JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 JS_EXPORT_DATA(void *) js_LiveThingToFind;
 
@@ -974,8 +983,9 @@ gc_object_class_name(void* thing)
 }
 
 static void
-gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
+gc_dump_thing(JSContext *cx, JSGCThing *thing, uint8 flags, FILE *fp)
 {
+    GCMarkNode *prev = (GCMarkNode *)cx->gcCurrentMarkNode;
     GCMarkNode *next = NULL;
     char *path = NULL;
 
@@ -1051,6 +1061,26 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
     free(path);
 }
 
+void
+js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name)
+{
+    GCMarkNode markNode;
+
+    markNode.thing = thing;
+    markNode.name  = name;
+    markNode.next  = NULL;
+    markNode.prev  = (GCMarkNode *)cx->gcCurrentMarkNode;
+    if (markNode.prev)
+        markNode.prev->next = &markNode;
+    cx->gcCurrentMarkNode = &markNode;
+
+    js_MarkGCThing(cx, thing);
+
+    if (markNode.prev)
+        markNode.prev->next = NULL;
+    cx->gcCurrentMarkNode = markNode.prev;
+}
+
 #endif /* !GC_MARK_DEBUG */
 
 static void
@@ -1058,11 +1088,11 @@ gc_mark_atom_key_thing(void *thing, void *arg)
 {
     JSContext *cx = (JSContext *) arg;
 
-    GC_MARK(cx, thing, "atom", NULL);
+    GC_MARK(cx, thing, "atom");
 }
 
 void
-js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
+js_MarkAtom(JSContext *cx, JSAtom *atom)
 {
     jsval key;
 
@@ -1081,38 +1111,24 @@ js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg)
             JS_snprintf(name, sizeof name, "<%x>", key);
         }
 #endif
-        GC_MARK(cx, JSVAL_TO_GCTHING(key), name, arg);
+        GC_MARK(cx, JSVAL_TO_GCTHING(key), name);
     }
     if (atom->flags & ATOM_HIDDEN)
-        js_MarkAtom(cx, atom->entry.value, arg);
+        js_MarkAtom(cx, atom->entry.value);
 }
 
 /*
- * These macros help avoid passing the GC_MARK_DEBUG-only |arg| parameter
- * during recursive calls when GC_MARK_DEBUG is not defined.
+ * Macro to avoid passing the GC_MARK_DEBUG-only cx parameter.
  */
+
 #ifdef GC_MARK_DEBUG
-# define UNMARKED_GC_THING_FLAGS(thing, arg)                                  \
-    UnmarkedGCThingFlags(thing, arg)
-# define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
-    NextUnmarkedGCThing(vp, end, thingp, flagpp, arg)
-# define MARK_GC_THING_CHILDREN(cx, thing, flagp, shouldCheckRecursion, arg)  \
-    MarkGCThingChildren(cx, thing, flagp, shouldCheckRecursion, arg)
-# define CALL_GC_THING_MARKER(marker, cx, thing, arg)                         \
-    marker(cx, thing, arg)
+# define GC_MARK_DEBUG_CX(cx, arg) cx, arg
 #else
-# define UNMARKED_GC_THING_FLAGS(thing, arg)                                  \
-    UnmarkedGCThingFlags(thing)
-# define NEXT_UNMARKED_GC_THING(vp, end, thingp, flagpp, arg)                 \
-    NextUnmarkedGCThing(vp, end, thingp, flagpp)
-# define MARK_GC_THING_CHILDREN(cx, thing, flagp, shouldCheckRecursion, arg)  \
-    MarkGCThingChildren(cx, thing, flagp, shouldCheckRecursion)
-# define CALL_GC_THING_MARKER(marker, cx, thing, arg)                         \
-    marker(cx, thing, NULL)
+# define GC_MARK_DEBUG_CX(cx, arg) arg
 #endif
 
 static uint8 *
-UNMARKED_GC_THING_FLAGS(void *thing, void *arg)
+UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(JSContext *cx, void *thing))
 {
     uint8 flags, *flagp;
 
@@ -1124,7 +1140,7 @@ UNMARKED_GC_THING_FLAGS(void *thing, void *arg)
     JS_ASSERT(flags != GCF_FINAL);
 #ifdef GC_MARK_DEBUG
     if (js_LiveThingToFind == thing)
-        gc_dump_thing(thing, flags, arg, stderr);
+        gc_dump_thing(cx, thing, flags, stderr);
 #endif
 
     if (flags & GCF_MARK)
@@ -1134,8 +1150,8 @@ UNMARKED_GC_THING_FLAGS(void *thing, void *arg)
 }
 
 static jsval *
-NEXT_UNMARKED_GC_THING(jsval *vp, jsval *end, void **thingp, uint8 **flagpp,
-                       void *arg)
+NextUnmarkedGCThing(GC_MARK_DEBUG_CX(JSContext *cx, jsval *vp), jsval *end,
+                    void **thingp, uint8 **flagpp)
 {
     jsval v;
     void *thing;
@@ -1145,7 +1161,7 @@ NEXT_UNMARKED_GC_THING(jsval *vp, jsval *end, void **thingp, uint8 **flagpp,
         v = *vp;
         if (JSVAL_IS_GCTHING(v)) {
             thing = JSVAL_TO_GCTHING(v);
-            flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+            flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
             if (flagp) {
                 *thingp = thing;
                 *flagpp = flagp;
@@ -1172,8 +1188,8 @@ static void
 AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp);
 
 static void
-MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
-                       JSBool shouldCheckRecursion, void *arg)
+MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
+                    JSBool shouldCheckRecursion)
 {
     JSRuntime *rt;
     JSObject *obj;
@@ -1205,7 +1221,7 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
               rt->gcStats.maxdepth = rt->gcStats.depth);
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-        gc_dump_thing(thing, *flagp, arg, js_DumpGCHeap);
+        gc_dump_thing(cx, thing, *flagp, js_DumpGCHeap);
 #endif
 
 #define RECURSION_TOO_DEEP()                                                  \
@@ -1224,15 +1240,16 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
 
         /* Mark slots if they are small enough to be GC-allocated. */
         if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
-            GC_MARK(cx, vp - 1, "slots", arg);
+            GC_MARK(cx, vp - 1, "slots");
 
         /* Set up local variables to loop over unmarked things. */
         end = vp + ((obj->map->ops->mark)
-                    ? CALL_GC_THING_MARKER(obj->map->ops->mark, cx, obj, arg)
+                    ? obj->map->ops->mark(cx, obj, NULL)
                     : JS_MIN(obj->map->freeslot, obj->map->nslots));
 
       search_for_unmarked_slot:
-        vp = NEXT_UNMARKED_GC_THING(vp, end, &thing, &flagp, arg);
+        vp = NextUnmarkedGCThing(GC_MARK_DEBUG_CX(cx, vp),
+                                 end, &thing, &flagp);
         if (!vp)
             break;
         v = *vp;
@@ -1293,8 +1310,8 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
 #endif
 
             do {
-                vp = NEXT_UNMARKED_GC_THING(vp+1, end, &next_thing, &next_flagp,
-                                            arg);
+                vp = NextUnmarkedGCThing(GC_MARK_DEBUG_CX(cx, vp + 1),
+                                         end, &next_thing, &next_flagp);
                 if (!vp) {
                     /*
                      * thing came from the last unmarked GC-thing slot and we
@@ -1310,16 +1327,16 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
             v = *vp;
 
 #ifdef GC_MARK_DEBUG
-            GC_MARK(cx, thing, name, arg);
+            GC_MARK(cx, thing, name);
 #else
             *flagp |= GCF_MARK;
-            MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_TRUE, arg);
+            MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
 #endif
             thing = next_thing;
             flagp = next_flagp;
             if (*flagp & GCF_MARK) {
                 /*
-                 * This happens when recursive MarkGCThing marks
+                 * This happens when recursive MarkGCThingChildren marks
                  * flags already stored in caller's *next_flagp.
                  */
                 goto search_for_unmarked_slot;
@@ -1339,7 +1356,7 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
         if (!JSSTRING_IS_DEPENDENT(str))
             break;
         thing = JSSTRDEP_BASE(str);
-        flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+        flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
         if (!flagp)
             break;
 #ifdef GC_MARK_DEBUG
@@ -1350,7 +1367,7 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
       on_tail_recursion:
 #ifdef GC_MARK_DEBUG
         /* Do not eliminate C recursion to get full GC graph when debugging. */
-        GC_MARK(cx, thing, name, arg);
+        GC_MARK(cx, thing, name);
         break;
 #else
         /* Eliminate tail recursion for the last unmarked child. */
@@ -1363,20 +1380,19 @@ MARK_GC_THING_CHILDREN(JSContext *cx, void *thing, uint8 *flagp,
       case GCX_NAMESPACE:
         if (RECURSION_TOO_DEEP())
             goto add_to_unscanned_bag;
-        CALL_GC_THING_MARKER(js_MarkXMLNamespace, cx, (JSXMLNamespace *)thing,
-                             arg);
+        js_MarkXMLNamespace(cx, (JSXMLNamespace *)thing);
         break;
 
       case GCX_QNAME:
         if (RECURSION_TOO_DEEP())
             goto add_to_unscanned_bag;
-        CALL_GC_THING_MARKER(js_MarkXMLQName, cx, (JSXMLQName *)thing, arg);
+        js_MarkXMLQName(cx, (JSXMLQName *)thing);
         break;
 
       case GCX_XML:
         if (RECURSION_TOO_DEEP())
             goto add_to_unscanned_bag;
-        CALL_GC_THING_MARKER(js_MarkXML, cx, (JSXML *)thing, arg);
+        js_MarkXML(cx, (JSXML *)thing);
         break;
 #endif
       add_to_unscanned_bag:
@@ -1601,14 +1617,14 @@ ScanDelayedChildren(JSContext *cx)
                     JS_ASSERT(0);
                 }
 #endif
-                MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_FALSE, NULL);
+                MarkGCThingChildren(cx, thing, flagp, JS_FALSE);
             }
         }
         /*
          * We finished scanning of the arena but we can only pop it from
          * the stack if the arena is the stack's top.
          *
-         * When MARK_GC_THING_CHILDREN from the above calls
+         * When MarkGCThingChildren from the above calls
          * AddThingToUnscannedBag and the latter pushes new arenas to the
          * stack, we have to skip popping of this arena until it becomes
          * the top of the stack again.
@@ -1637,12 +1653,12 @@ ScanDelayedChildren(JSContext *cx)
 }
 
 void
-js_MarkGCThing(JSContext *cx, void *thing, void *arg)
+js_MarkGCThing(JSContext *cx, void *thing)
 {
     uint8 *flagp;
     JSBool fromCallback;
 
-    flagp = UNMARKED_GC_THING_FLAGS(thing, arg);
+    flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
     if (!flagp)
         return;
     *flagp |= GCF_MARK;
@@ -1650,7 +1666,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
     fromCallback = cx->insideGCMarkCallback;
     if (fromCallback)
         cx->insideGCMarkCallback = JS_FALSE;
-    MARK_GC_THING_CHILDREN(cx, thing, flagp, JS_TRUE, arg);
+    MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
     if (fromCallback) {
         /*
          * Make sure that JSGC_MARK_END callback can assume that all
@@ -1661,6 +1677,9 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
         cx->insideGCMarkCallback = JS_TRUE;
     }
 }
+
+#ifdef GC_MARK_DEBUG
+#endif
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
@@ -1701,7 +1720,7 @@ gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
         JS_ASSERT(root_points_to_gcArenaList);
 #endif
 
-        GC_MARK(cx, JSVAL_TO_GCTHING(v), rhe->name ? rhe->name : "root", NULL);
+        GC_MARK(cx, JSVAL_TO_GCTHING(v), rhe->name ? rhe->name : "root");
     }
     return JS_DHASH_NEXT;
 }
@@ -1713,7 +1732,7 @@ gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
     void *thing = (void *)lhe->thing;
     JSContext *cx = (JSContext *)arg;
 
-    GC_MARK(cx, thing, "locked object", NULL);
+    GC_MARK(cx, thing, "locked object");
     return JS_DHASH_NEXT;
 }
 
@@ -1737,7 +1756,7 @@ js_ForceGC(JSContext *cx, uintN gcflags)
         for (_vp = vec, _end = _vp + len; _vp < _end; _vp++) {                \
             _v = *_vp;                                                        \
             if (JSVAL_IS_GCTHING(_v))                                         \
-                GC_MARK(cx, JSVAL_TO_GCTHING(_v), name, NULL);                \
+                GC_MARK(cx, JSVAL_TO_GCTHING(_v), name);                      \
         }                                                                     \
     JS_END_MACRO
 
@@ -1947,13 +1966,13 @@ restart:
         for (fp = chain; fp; fp = chain = chain->dormantNext) {
             do {
                 if (fp->callobj)
-                    GC_MARK(cx, fp->callobj, "call object", NULL);
+                    GC_MARK(cx, fp->callobj, "call object");
                 if (fp->argsobj)
-                    GC_MARK(cx, fp->argsobj, "arguments object", NULL);
+                    GC_MARK(cx, fp->argsobj, "arguments object");
                 if (fp->varobj)
-                    GC_MARK(cx, fp->varobj, "variables object", NULL);
+                    GC_MARK(cx, fp->varobj, "variables object");
                 if (fp->script) {
-                    js_MarkScript(cx, fp->script, NULL);
+                    js_MarkScript(cx, fp->script);
                     if (fp->spbase) {
                         /*
                          * Don't mark what has not been pushed yet, or what
@@ -1967,7 +1986,7 @@ restart:
                         GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
                     }
                 }
-                GC_MARK(cx, fp->thisp, "this", NULL);
+                GC_MARK(cx, fp->thisp, "this");
                 if (fp->argv) {
                     nslots = fp->argc;
                     if (fp->fun) {
@@ -1979,15 +1998,15 @@ restart:
                     GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
                 }
                 if (JSVAL_IS_GCTHING(fp->rval))
-                    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
+                    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval");
                 if (fp->vars)
                     GC_MARK_JSVALS(cx, fp->nvars, fp->vars, "var");
-                GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
+                GC_MARK(cx, fp->scopeChain, "scope chain");
                 if (fp->sharpArray)
-                    GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
+                    GC_MARK(cx, fp->sharpArray, "sharp array");
 
                 if (fp->xmlNamespace)
-                    GC_MARK(cx, fp->xmlNamespace, "xmlNamespace", NULL);
+                    GC_MARK(cx, fp->xmlNamespace, "xmlNamespace");
             } while ((fp = fp->down) != NULL);
         }
 
@@ -1996,23 +2015,23 @@ restart:
             acx->fp->dormantNext = NULL;
 
         /* Mark other roots-by-definition in acx. */
-        GC_MARK(cx, acx->globalObject, "global object", NULL);
+        GC_MARK(cx, acx->globalObject, "global object");
         for (i = 0; i < GCX_NTYPES; i++)
-            GC_MARK(cx, acx->newborn[i], gc_typenames[i], NULL);
+            GC_MARK(cx, acx->newborn[i], gc_typenames[i]);
         if (acx->lastAtom)
-            GC_MARK_ATOM(cx, acx->lastAtom, NULL);
+            GC_MARK_ATOM(cx, acx->lastAtom);
         if (JSVAL_IS_GCTHING(acx->lastInternalResult)) {
             thing = JSVAL_TO_GCTHING(acx->lastInternalResult);
             if (thing)
-                GC_MARK(cx, thing, "lastInternalResult", NULL);
+                GC_MARK(cx, thing, "lastInternalResult");
         }
 #if JS_HAS_EXCEPTIONS
         if (acx->throwing && JSVAL_IS_GCTHING(acx->exception))
-            GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception", NULL);
+            GC_MARK(cx, JSVAL_TO_GCTHING(acx->exception), "exception");
 #endif
 #if JS_HAS_LVALUE_RETURN
         if (acx->rval2set && JSVAL_IS_GCTHING(acx->rval2))
-            GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2", NULL);
+            GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2");
 #endif
 
         for (sh = acx->stackHeaders; sh; sh = sh->down) {
@@ -2026,8 +2045,8 @@ restart:
         for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
             if (tvr->count < 0) {
                 if (JSVAL_IS_GCTHING(tvr->u.value)) {
-                    GC_MARK(cx, JSVAL_TO_GCTHING(tvr->u.value), "tvr->u.value",
-                            NULL);
+                    GC_MARK(cx, JSVAL_TO_GCTHING(tvr->u.value),
+                            "tvr->u.value");
                 }
             } else {
                 GC_MARK_JSVALS(cx, tvr->count, tvr->u.array, "tvr->u.array");

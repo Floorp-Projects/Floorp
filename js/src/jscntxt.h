@@ -524,6 +524,8 @@ struct JSContext {
      */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exception */
+    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
+    JSPackedBool        insideGCMarkCallback;
 
     /* Per-context options. */
     uint32              options;            /* see jsapi.h for JSOPTION_* */
@@ -548,8 +550,10 @@ struct JSContext {
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
 
-    /* Flag to indicate that we run inside gcCallback(cx, JSGC_MARK_END). */
-    JSBool              insideGCMarkCallback;
+#ifdef GC_MARK_DEBUG
+    /* Top of the GC mark stack. */
+    void                *gcCurrentMarkNode;
+ #endif
 };
 
 /*

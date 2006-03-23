@@ -4274,9 +4274,9 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
             continue;
         MARK_SCOPE_PROPERTY(sprop);
         if (JSID_IS_ATOM(sprop->id))
-            GC_MARK_ATOM(cx, JSID_TO_ATOM(sprop->id), arg);
+            GC_MARK_ATOM(cx, JSID_TO_ATOM(sprop->id));
         else if (JSID_IS_OBJECT(sprop->id))
-            GC_MARK(cx, JSID_TO_OBJECT(sprop->id), "id", arg);
+            GC_MARK(cx, JSID_TO_OBJECT(sprop->id), "id");
 
 #if JS_HAS_GETTER_SETTER
         if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
@@ -4293,20 +4293,14 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
                 JS_snprintf(buf, sizeof buf, "%s %s",
                             id, js_getter_str);
 #endif
-                GC_MARK(cx,
-                        JSVAL_TO_GCTHING((jsval) sprop->getter),
-                        buf,
-                        arg);
+                GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->getter), buf);
             }
             if (sprop->attrs & JSPROP_SETTER) {
 #ifdef GC_MARK_DEBUG
                 JS_snprintf(buf, sizeof buf, "%s %s",
                             id, js_setter_str);
 #endif
-                GC_MARK(cx,
-                        JSVAL_TO_GCTHING((jsval) sprop->setter),
-                        buf,
-                        arg);
+                GC_MARK(cx, JSVAL_TO_GCTHING((jsval) sprop->setter), buf);
             }
         }
 #endif /* JS_HAS_GETTER_SETTER */
@@ -4315,7 +4309,7 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
     /* No one runs while the GC is running, so we can use LOCKED_... here. */
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (clasp->mark)
-        (void) clasp->mark(cx, obj, arg);
+        (void) clasp->mark(cx, obj, NULL);
 
     if (scope->object != obj) {
         /*

@@ -3757,7 +3757,7 @@ regexp_mark(JSContext *cx, JSObject *obj, void *arg)
 {
     JSRegExp *re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (re)
-        JS_MarkGCThing(cx, re->source, "source", arg);
+        GC_MARK(cx, re->source, "source");
     return 0;
 }
 
