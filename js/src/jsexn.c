@@ -348,16 +348,9 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
      * the backtrace procedure, not result in a failure of this constructor.
      */
     checkAccess = cx->runtime->checkObjectAccess;
-    if (checkAccess) {
-        older = JS_SetErrorReporter(cx, NULL);
-        state = JS_SaveExceptionState(cx);
-    }
-#ifdef __GNUC__         /* suppress bogus gcc warnings */
-    else {
-        older = NULL;
-        state = NULL;
-    }
-#endif
+    older = JS_SetErrorReporter(cx, NULL);
+    state = JS_SaveExceptionState(cx);
+
     callerid = ATOM_KEY(cx->runtime->atomState.callerAtom);
 
     /*
@@ -432,8 +425,18 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
                 } else if (JSVAL_IS_FUNCTION(cx, v)) {
                     /* XXX Avoid function decompilation bloat for now. */
                     argsrc = JS_GetFunctionId(JS_ValueToFunction(cx, v));
-                    if (!argsrc)
-                        argsrc = js_ValueToSource(cx, v);
+                    if (!argsrc && !(argsrc = js_ValueToSource(cx, v))) {
+                        /*
+                         * Continue to soldier on if the function couldn't be
+                         * converted into a string.
+                         */
+                        JS_ClearPendingException(cx);
+                        argsrc = JS_NewStringCopyZ(cx, "[unknown function]");
+                        if (!argsrc) {
+                            ok = JS_FALSE;
+                            break;
+                        }
+                    }
                 } else {
                     /* XXX Avoid toString on objects, it takes too long and
                            uses too much memory, for too many classes (see
@@ -475,13 +478,12 @@ InitExceptionObject(JSContext *cx, JSObject *obj, JSString *message,
 #undef APPEND_STRING_TO_STACK
 
 done:
-    if (checkAccess) {
-        if (ok)
-            JS_RestoreExceptionState(cx, state);
-        else
-            JS_DropExceptionState(cx, state);
-        JS_SetErrorReporter(cx, older);
-    }
+    if (ok)
+        JS_RestoreExceptionState(cx, state);
+    else
+        JS_DropExceptionState(cx, state);
+    JS_SetErrorReporter(cx, older);
+
     if (!ok) {
         JS_free(cx, stackbuf);
         return JS_FALSE;
