@@ -415,7 +415,7 @@ typedef enum JSSrcNoteType {
                                    gets and sets */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
-    SRC_RESERVED0   = 10,       /* reserved for future use */
+    SRC_UNQUOTE     = 10,       /* don't quote a JSOP_STRING */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* distance back from annotated get- or setprop
                                    op to first obj.prop.subprop bytecode */
