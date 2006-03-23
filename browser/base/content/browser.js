@@ -3414,14 +3414,9 @@ nsBrowserStatusHandler.prototype =
       // and progress bars and such
       if (aRequest) {
         var msg = "";
-        // Get the channel if the request is a channel
-        var channel;
-        try {
-          channel = aRequest.QueryInterface(nsIChannel);
-        }
-        catch(e) { };
-          if (channel) {
-            var location = channel.URI;
+          // Get the URI either from a channel or a pseudo-object
+          if (aRequest instanceof nsIChannel || "URI" in aRequest) {
+            var location = aRequest.URI;
 
             // For keyword URIs clear the user typed value since they will be changed into real URIs
             if (location.scheme == "keyword" && aWebProgress.DOMWindow == content)
@@ -3643,6 +3638,27 @@ nsBrowserStatusHandler.prototype =
     var lockIcon = document.getElementById("lock-icon");
     if (lockIcon)
       lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
+  },
+
+  // simulate all change notifications after switching tabs
+  onUpdateCurrentBrowser : function(aStateFlags, aStatus, aMessage, aTotalProgress)
+  {
+    var nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+    var loadingDone = aStateFlags & nsIWebProgressListener.STATE_STOP;
+    // use a pseudo-object instead of a (potentially non-existing) channel for getting
+    // a correct error message - and make sure that the UI is always either in
+    // loading (STATE_START) or done (STATE_STOP) mode
+    this.onStateChange(
+      gBrowser.webProgress,
+      { URI: gBrowser.currentURI },
+      loadingDone ? nsIWebProgressListener.STATE_STOP : nsIWebProgressListener.STATE_START,
+      aStatus
+    );
+    // status message and progress value are undefined if we're done with loading
+    if (loadingDone)
+      return;
+    this.onStatusChange(gBrowser.webProgress, null, 0, aMessage);
+    this.onProgressChange(gBrowser.webProgress, 0, 0, aTotalProgress, 1);
   },
 
   startDocumentLoad : function(aRequest)

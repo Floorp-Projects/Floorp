@@ -295,6 +295,12 @@
             mBlank: aStartsBlank,
             mLastURI: null,
 
+            // cache flags for correct status bar update after tab switching
+            mStateFlags: 0,
+            mStatus: 0,
+            mMessage: "",
+            mTotalProgress: 0,
+
             onProgressChange : function (aWebProgress, aRequest,
                                          aCurSelfProgress, aMaxSelfProgress,
                                          aCurTotalProgress, aMaxTotalProgress)
@@ -308,6 +314,8 @@
                                        aCurTotalProgress, aMaxTotalProgress);
                 }
               }
+
+              this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
             },
 
             onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
@@ -377,6 +385,15 @@
                     p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
                 }
               }
+
+              if (aStateFlags & (nsIWebProgressListener.STATE_START |
+                                 nsIWebProgressListener.STATE_STOP)) {
+                // reset cached temporary values at beginning and end
+                this.mMessage = "";
+                this.mTotalProgress = 0;
+              }
+              this.mStateFlags = aStateFlags;
+              this.mStatus = aStatus;
             },
 
             onLocationChange : function(aWebProgress, aRequest, aLocation)
@@ -410,6 +427,8 @@
                     p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
                 }
               }
+
+              this.mMessage = aMessage;
             },
 
             onSecurityChange : function(aWebProgress, aRequest, aState)
@@ -690,6 +709,14 @@
                 p.onLocationChange(webProgress, null, loc);
                 if (securityUI)
                   p.onSecurityChange(webProgress, null, securityUI.state);
+
+                // make sure that all status indicators are properly updated
+                if ("onUpdateCurrentBrowser" in p) {
+                  var listener = this.mTabListeners[this.mTabContainer.selectedIndex] || null;
+                  if (listener && listener.mStateFlags)
+                    p.onUpdateCurrentBrowser(listener.mStateFlags, listener.mStatus,
+                                             listener.mMessage, listener.mTotalProgress);
+                }
               }
             }
 
