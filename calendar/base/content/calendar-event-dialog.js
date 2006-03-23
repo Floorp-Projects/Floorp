@@ -42,6 +42,8 @@ var gReadOnlyMode = false;
 // load/check the stuff in this area, because it hasn't changed.
 var gDetailsShown = false;
 
+var gItemDuration;
+
 /* dialog stuff */
 function onLoad()
 {
@@ -131,6 +133,7 @@ function loadDialog(item)
     if (isEvent(item)) {
         var startDate = item.startDate.getInTimezone(kDefaultTimezone);
         var endDate = item.endDate.getInTimezone(kDefaultTimezone);
+        gItemDuration = endDate.subtractDate(startDate);
         
         // Check if an all-day event has been passed in (to adapt endDate).
         if (startDate.isDate) {
@@ -162,6 +165,9 @@ function loadDialog(item)
         setElementValue("todo-has-duedate", hasDueDate, "checked");
         if (hasDueDate)
             setElementValue("todo-duedate", item.dueDate.jsDate);
+        if (hasEntryDate && hasDueDate) {
+            gItemDuration = item.dueDate.subtractDate(item.entryDate);
+        }
         document.getElementById("component-type").selectedIndex = 1;
     }
 
@@ -420,6 +426,51 @@ function updateStyle()
     }
 }
 
+function onStartTimeChange()
+{
+    if (!gItemDuration) {
+        return;
+    }
+    var startWidgetId;
+    var endWidgetId;
+    if (isEvent(window.calendarItem)) {
+        startWidgetId = "event-starttime";
+        endWidgetId = "event-endtime";
+    } else {
+        if (!getElementValue("todo-has-entrydate", "checked") || !getElementValue("todo-has-duedate", "checked")) {
+            gItemDuration = null;
+            return;
+        }
+        startWidgetId = "todo-entrydate";
+        endWidgetId = "todo-duedate";
+    }
+    var start = jsDateToDateTime(getElementValue(startWidgetId));
+    start.addDuration(gItemDuration);
+    setElementValue(endWidgetId, start.getInTimezone(calendarDefaultTimezone()).jsDate);
+    updateAccept();
+}
+
+function onEndTimeChange()
+{
+    var startWidgetId;
+    var endWidgetId;
+    if (isEvent(window.calendarItem)) {
+        startWidgetId = "event-starttime";
+        endWidgetId = "event-endtime";
+    } else {
+        if (!getElementValue("todo-has-entrydate", "checked") || 
+            !getElementValue("todo-has-duedate", "checked")) {
+            gItemDuration = null;
+            return;
+        }
+        startWidgetId = "todo-entrydate";
+        endWidgetId = "todo-duedate";
+    }
+    var start = jsDateToDateTime(getElementValue(startWidgetId));
+    var end = jsDateToDateTime(getElementValue(endWidgetId));
+    gItemDuration = end.subtractDate(start);
+    updateAccept();
+}
 function updateAccept()
 {
     var kDefaultTimezone = calendarDefaultTimezone();
@@ -495,6 +546,13 @@ function updateDueDate()
     setElementValue("todo-duedate", getElementValue("todo-duedate"));
 
     setElementValue("todo-duedate", !getElementValue("todo-has-duedate", "checked"), "disabled");
+    if (getElementValue("todo-has-entrydate", "checked") && getElementValue("todo-has-duedate", "checked")) {
+        var start = jsDateToDateTime(getElementValue("todo-entrydate"));
+        var end = jsDateToDateTime(getElementValue("todo-duedate"));
+        gItemDuration = end.subtractDate(start);
+    } else {
+        gItemDuration = null;
+    }
 
     updateAccept();
 }
@@ -508,6 +566,14 @@ function updateEntryDate()
     setElementValue("todo-entrydate", getElementValue("todo-entrydate"));
 
     setElementValue("todo-entrydate", !getElementValue("todo-has-entrydate", "checked"), "disabled");
+
+    if (getElementValue("todo-has-entrydate", "checked") && getElementValue("todo-has-duedate", "checked")) {
+        var start = jsDateToDateTime(getElementValue("todo-entrydate"));
+        var end = jsDateToDateTime(getElementValue("todo-duedate"));
+        gItemDuration = end.subtractDate(start);
+    } else {
+        gItemDuration = null;
+    }
 
     updateAccept();
 }

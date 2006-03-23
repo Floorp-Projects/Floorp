@@ -108,13 +108,13 @@
             <label value="&newevent.date.label;" class="todo-only"/>
           </hbox>
           <hbox>
-            <datetimepicker id="event-starttime" onchange="updateAccept();" 
+            <datetimepicker id="event-starttime" onchange="onStartTimeChange();" 
                             class="event-only"/>
             <checkbox id="event-all-day" oncommand="updateAllDay();" 
                       class="event-only" label="&newevent.alldayevent.label;"/>
             <checkbox id="todo-has-entrydate" oncommand="updateEntryDate();" 
                       class="todo-only"/>
-            <datetimepicker id="todo-entrydate" onchange="updateAccept();" 
+            <datetimepicker id="todo-entrydate" onchange="onStartTimeChange();" 
                             class="todo-only"/>
             <spacer flex="1"/>
           </hbox>
@@ -127,9 +127,9 @@
           </hbox>
           <vbox>
             <hbox align="center">
-              <datetimepicker id="event-endtime" onchange="updateAccept();" class="event-only"/>
+              <datetimepicker id="event-endtime" onchange="onEndTimeChange();" class="event-only"/>
               <checkbox id="todo-has-duedate" oncommand="updateDueDate();" class="todo-only"/>
-              <datetimepicker id="todo-duedate" onchange="updateAccept();" class="todo-only"/>
+              <datetimepicker id="todo-duedate" onchange="onEndTimeChange();" class="todo-only"/>
               <checkbox id="item-recurrence" oncommand="updateRecurrence();"
                         label="&newevent.repeat.label2;"/>
               <button id="set-recurrence" label="&newevent.set.label;" oncommand="editRecurrence();"/>
