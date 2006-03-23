@@ -1005,10 +1005,10 @@ static callsite *calltree(int skip)
 
 #else /*XP_UNIX*/
 
-static callsite *calltree(uint32 *bp)
+static callsite *calltree(void **bp)
 {
     logfile *fp = logfp;
-    uint32 *bpup, *bpdown, pc;
+    void **bpup, **bpdown, *pc;
     uint32 depth, nkids;
     callsite *parent, *site, **csp, *tmp;
     Dl_info info;
@@ -1026,9 +1026,9 @@ static callsite *calltree(uint32 *bp)
     /* Reverse the stack frame list to avoid recursion. */
     bpup = NULL;
     for (depth = 0; ; depth++) {
-        bpdown = (uint32*) bp[0];
-        bp[0] = (uint32) bpup;
-        if ((uint32*) bpdown[0] < bpdown)
+        bpdown = (void**) bp[0];
+        bp[0] = (void*) bpup;
+        if ((void**) bpdown[0] < bpdown)
             break;
         bpup = bp;
         bp = bpdown;
@@ -1040,8 +1040,8 @@ static callsite *calltree(uint32 *bp)
     /* Reverse the stack again, finding and building a path in the tree. */
     parent = &calltree_root;
     do {
-        bpup = (uint32*) bp[0];
-        bp[0] = (uint32) bpdown;
+        bpup = (void**) bp[0];
+        bp[0] = (void*) bpdown;
         pc = bp[1];
 
         csp = &parent->kids;
@@ -1338,7 +1338,7 @@ backtrace(int skip)
 callsite *
 backtrace(int skip)
 {
-    uint32 *bp, *bpdown;
+    void **bp, **bpdown;
     callsite *site, **key;
     PLHashNumber hash;
     PLHashEntry **hep, *he;
@@ -1348,9 +1348,18 @@ backtrace(int skip)
     suppress_tracing++;
 
     /* Stack walking code adapted from Kipp's "leaky". */
-    bp = (uint32*) __builtin_frame_address(0);
+#if defined(__i386) 
+    __asm__( "movl %%ebp, %0" : "=g"(bp));
+#elif defined(__x86_64__)
+    __asm__( "movq %%rbp, %0" : "=g"(bp));
+#else
+    // It would be nice if this worked uniformly, but at least on i386 and
+    // x86_64, it stopped working with gcc 4.1, because it points to the
+    // end of the saved registers instead of the start.
+    bp = (void**) __builtin_frame_address(0);
+#endif
     while (--skip >= 0) {
-        bpdown = (uint32*) *bp++;
+        bpdown = (void**) *bp++;
         if (bpdown < bp)
             break;
         bp = bpdown;

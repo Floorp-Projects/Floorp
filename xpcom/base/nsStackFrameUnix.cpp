@@ -91,7 +91,17 @@ void DumpStackToFile(FILE* aStream)
   // Stack walking code courtesy Kipp's "leaky".
 
   // Get the frame pointer
-  void **bp = (void**) __builtin_frame_address(0);
+  void **bp;
+#if defined(__i386) 
+  __asm__( "movl %%ebp, %0" : "=g"(bp));
+#elif defined(__x86_64__)
+  __asm__( "movq %%rbp, %0" : "=g"(bp));
+#else
+  // It would be nice if this worked uniformly, but at least on i386 and
+  // x86_64, it stopped working with gcc 4.1, because it points to the
+  // end of the saved registers instead of the start.
+  bp = (void**) __builtin_frame_address(0);
+#endif
 
   int skip = 2;
   for ( ; (void**)*bp > bp; bp = (void**)*bp) {
