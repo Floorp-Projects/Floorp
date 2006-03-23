@@ -121,6 +121,12 @@ private:
 
   nsresult Init();
 
+  // Post-profile-initialization startup code
+  nsresult ProfileStartup();
+
+  // Starts and stops collectors based on the current configuration
+  nsresult EnableCollectors();
+  
   // Creates a new root element to hold event nodes
   nsresult CreateRoot();
 
@@ -160,6 +166,7 @@ private:
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;
   PRBool mUploading;
+  nsString mSessionID;
 };
 
 // Helper functions

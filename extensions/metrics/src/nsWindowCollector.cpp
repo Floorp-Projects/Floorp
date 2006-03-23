@@ -76,7 +76,9 @@ nsWindowCollector::Shutdown()
   // access gWindowCollector to log those correctly.  So, this releases the
   // reference but keeps gWindowCollector around until the destructor runs.
 
-  gWindowCollector->Release();
+  if (gWindowCollector) {
+    gWindowCollector->Release();
+  }
 }
 
 NS_IMPL_ISUPPORTS1(nsWindowCollector, nsIObserver)

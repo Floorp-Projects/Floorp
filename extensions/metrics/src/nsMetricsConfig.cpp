@@ -74,16 +74,17 @@ ReadIntegerAttr(nsIDOMElement *elem, const nsAString &attrName, PRInt32 *result)
 //-----------------------------------------------------------------------------
 
 nsMetricsConfig::nsMetricsConfig()
-  : mEventLimit(0),
-    mUploadInterval(NS_DEFAULT_UPLOAD_INTERVAL)
 {
+  Reset();
 }
 
 void
 nsMetricsConfig::Reset()
 {
+  // By default, we have no event limit, but all collectors are disabled
+  // until we're told by the server to enable them.
   mEventSet.Clear();
-  mEventLimit = 0;
+  mEventLimit = PR_INT32_MAX;
   mUploadInterval = NS_DEFAULT_UPLOAD_INTERVAL;
 }
 
