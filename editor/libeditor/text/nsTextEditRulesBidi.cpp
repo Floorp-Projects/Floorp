@@ -42,10 +42,13 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
+#include "nsISelectionPrivate.h"
+#include "nsIFrameSelection.h"
 
 // Test for distance between caret and text that will be deleted
 nsresult
-nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode, 
+nsTextEditRules::CheckBidiLevelForDeletion(nsISelection         *aSelection,
+                                           nsIDOMNode           *aSelNode, 
                                            PRInt32               aSelOffset, 
                                            nsIEditor::EDirection aAction,
                                            PRBool               *aCancel)
@@ -70,67 +73,24 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);
   if (!content)
     return NS_ERROR_NULL_POINTER;
-
-  if (content->IsContentOfType(nsIContent::eELEMENT))
-  {
-    content = content->GetChildAt(aSelOffset);    
-    if (!content)
-      return NS_ERROR_FAILURE;
-    aSelOffset = 0;
-  }    
-  
-  nsIFrame *primaryFrame = shell->GetPrimaryFrameFor(content);
-  if (!primaryFrame)
-    return NS_ERROR_NULL_POINTER;
   
   nsIFrame *frameBefore;
   nsIFrame *frameAfter;
-  PRInt32 frameOffset;
+  PRUint8 levelBefore;
+  PRUint8 levelAfter;
 
-  res = primaryFrame->GetChildFrameContainingOffset(aSelOffset, PR_FALSE, &frameOffset, &frameBefore);
-  if (NS_FAILED(res))
-    return res;
-  if (!frameBefore)
+  nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryInterface(aSelection));
+  if (!privateSelection)
     return NS_ERROR_NULL_POINTER;
   
-  PRUint8 levelAfter;
-  nsCOMPtr<nsIAtom> embeddingLevel = do_GetAtom("EmbeddingLevel");
-
-  // Get the bidi level of the frame before the caret
-  PRUint8 levelBefore =
-    NS_PTR_TO_INT32(frameBefore->GetPropertyExternal(embeddingLevel, nsnull));
-
-  // If the caret is at the end of the frame, get the bidi level of the
-  // frame after the caret
-  PRInt32 start, end;
-  frameBefore->GetOffsets(start, end);
-  if (aSelOffset == end
-     || aSelOffset == -1)
-  {
-    res = primaryFrame->GetChildFrameContainingOffset(aSelOffset, PR_TRUE, &frameOffset, &frameAfter);
-    if (NS_FAILED(res))
-      return res;
-    if (!frameAfter)
-      return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIFrameSelection> frameSelection;
+  privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
+  if (!frameSelection)
+    return NS_ERROR_NULL_POINTER;
+  
+  frameSelection->GetPrevNextBidiLevels(context, content, aSelOffset, PR_TRUE,
+                                        &frameBefore, &frameAfter, &levelBefore, &levelAfter);
     
-    if (frameBefore == frameAfter)
-    {
-      // there was no frameAfter, i.e. the caret is at the end of the
-      // document -- use the base paragraph level
-      nsCOMPtr<nsIAtom> baseLevel = do_GetAtom("BaseLevel");
-      levelAfter =
-        NS_PTR_TO_INT32(frameBefore->GetPropertyExternal(baseLevel, nsnull));
-    }
-    else
-    {
-      levelAfter =
-        NS_PTR_TO_INT32(frameAfter->GetPropertyExternal(embeddingLevel, nsnull));
-    }
-  }
-  else
-  {
-    levelAfter = levelBefore;
-  }
   PRUint8 currentCursorLevel;
   res = shell->GetCaretBidiLevel(&currentCursorLevel);
   if (NS_FAILED(res))

@@ -55,9 +55,10 @@
 class nsIPresShell;
 
 // IID for the nsIFrameSelection interface
+// cdfa6280-eba6-4938-9406-427818da8ce3
 #define NS_IFRAMESELECTION_IID      \
-{ 0xe5d9fe4f, 0xf430, 0x41ab, \
-  { 0x95, 0xab, 0x1e, 0x7c, 0x86, 0x80, 0x2d, 0xd7 } }
+{ 0xcdfa6280, 0xeba6, 0x4938, \
+  { 0x94, 0x06, 0x42, 0x78, 0x18, 0xda, 0x8c, 0xe3 } }
 
 //----------------------------------------------------------------------
 
@@ -425,6 +426,8 @@ public:
    *  @param aPresContext is the context to use
    *  @param aNode is the node containing the selection
    *  @param aContentOffset is the offset of the selection in the node
+   *  @param aJumpLines If PR_TRUE, look across line boundaries.
+   *                    If PR_FALSE, behave as if there were base-level frames at line edges.  
    *  @param aPrevFrame will hold the frame of the character before the selection
    *  @param aNextFrame will hold the frame of the character after the selection
    *  @param aPrevLevel will hold the Bidi level of the character before the selection
@@ -433,7 +436,7 @@ public:
    *  At the beginning and end of each line there is assumed to be a frame with Bidi level equal to the
    *   paragraph embedding level. In these cases aPrevFrame and aNextFrame respectively will return nsnull.
    */
-  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext, nsIContent *aNode, PRUint32 aContentOffset,
+  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext, nsIContent *aNode, PRUint32 aContentOffset, PRBool aJumpLines,
                                    nsIFrame **aPrevFrame, nsIFrame **aNextFrame, PRUint8 *aPrevLevel, PRUint8 *aNextLevel)=0;
 
   /** GetFrameFromLevel will scan in a given direction

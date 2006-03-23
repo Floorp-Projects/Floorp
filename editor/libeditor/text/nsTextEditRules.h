@@ -191,7 +191,8 @@ protected:
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
-  nsresult CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode, 
+  nsresult CheckBidiLevelForDeletion(nsISelection         *aSelection,
+                                     nsIDOMNode           *aSelNode, 
                                      PRInt32               aSelOffset, 
                                      nsIEditor::EDirection aAction,
                                      PRBool               *aCancel);

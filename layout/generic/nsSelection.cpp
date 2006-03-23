@@ -361,6 +361,7 @@ public:
   NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
+                                   PRBool aJumpLines,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
@@ -399,6 +400,7 @@ private:
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
                                    HINT aHint,
+                                   PRBool aJumpLines,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
@@ -2006,12 +2008,13 @@ NS_IMETHODIMP
 nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
+                                   PRBool aJumpLines,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
                                    PRUint8 *aNextLevel)
 {
-  return GetPrevNextBidiLevels(aPresContext, aNode, aContentOffset, mHint,
+  return GetPrevNextBidiLevels(aPresContext, aNode, aContentOffset, mHint, aJumpLines,
                                aPrevFrame, aNextFrame, aPrevLevel, aNextLevel);
 }
 
@@ -2020,6 +2023,7 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
                                    HINT aHint,
+                                   PRBool aJumpLines,
                                    nsIFrame **aPrevFrame,
                                    nsIFrame **aNextFrame,
                                    PRUint8 *aPrevLevel,
@@ -2063,111 +2067,109 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
   XXX is there a simpler way to do this? 
   */
 
-  nsIFrame *blockFrame = currentFrame;
-  nsIFrame *thisBlock = nsnull;
-  PRInt32   thisLine;
-  nsILineIteratorNavigator* it;  // This is qi'd off a frame, and those aren't
-                                 // refcounted
-  result = NS_ERROR_FAILURE;
-  while (NS_FAILED(result) && blockFrame)
-  {
-    thisBlock = blockFrame;
-    blockFrame = blockFrame->GetParent();
-    if (blockFrame) {
-      result = CallQueryInterface(blockFrame, &it);
+  if (!aJumpLines) {
+    nsIFrame *blockFrame = currentFrame;
+    nsIFrame *thisBlock = nsnull;
+    PRInt32   thisLine;
+    nsILineIteratorNavigator* it;  // This is qi'd off a frame, and those aren't
+                                   // refcounted
+    result = NS_ERROR_FAILURE;
+    while (NS_FAILED(result) && blockFrame)
+    {
+      thisBlock = blockFrame;
+      blockFrame = blockFrame->GetParent();
+      if (blockFrame) {
+        result = CallQueryInterface(blockFrame, &it);
+      }
     }
-  }
-  if (!blockFrame || !it)
-    return NS_ERROR_FAILURE;
-  result = it->FindLineContaining(thisBlock, &thisLine);
-  if (NS_FAILED(result))
-    return result;
+    if (!blockFrame || !it)
+      return NS_ERROR_FAILURE;
+    result = it->FindLineContaining(thisBlock, &thisLine);
+    if (NS_FAILED(result))
+      return result;
 
-  if (thisLine < 0) 
-    return NS_ERROR_FAILURE;
+    if (thisLine < 0) 
+      return NS_ERROR_FAILURE;
 
-  nsIFrame *firstFrame;
-  nsIFrame *lastFrame;
-  nsRect    nonUsedRect;
-  PRInt32   lineFrameCount;
-  PRUint32  lineFlags;
+    nsIFrame *firstFrame;
+    nsIFrame *lastFrame;
+    nsRect    nonUsedRect;
+    PRInt32   lineFrameCount;
+    PRUint32  lineFlags;
 
-  result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
-                       &lineFlags);
-  if (NS_FAILED(result))
-    return result;
+    result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                         &lineFlags);
+    if (NS_FAILED(result))
+      return result;
 
-  lastFrame = firstFrame;
+    lastFrame = firstFrame;
 
-  for (;lineFrameCount > 1;lineFrameCount --) {
-    lastFrame = lastFrame->GetNextSibling();
-  }
+    for (;lineFrameCount > 1;lineFrameCount --) {
+      lastFrame = lastFrame->GetNextSibling();
+    }
 
-  // GetFirstLeaf
-  nsIFrame *lookahead;
-  while (1) {
-    lookahead = firstFrame->GetFirstChild(nsnull);
-    if (!lookahead)
-      break; //nothing to do
-    firstFrame = lookahead;
-  }
+    // GetFirstLeaf
+    nsIFrame *lookahead;
+    while (1) {
+      lookahead = firstFrame->GetFirstChild(nsnull);
+      if (!lookahead)
+        break; //nothing to do
+      firstFrame = lookahead;
+    }
 
-  // GetLastLeaf
-  while (1) {
-    lookahead = lastFrame->GetFirstChild(nsnull);
-    if (!lookahead)
-      break; //nothing to do
-    lastFrame = lookahead;
-    while ((lookahead = lastFrame->GetNextSibling()) != nsnull)
+    // GetLastLeaf
+    while (1) {
+      lookahead = lastFrame->GetFirstChild(nsnull);
+      if (!lookahead)
+        break; //nothing to do
       lastFrame = lookahead;
-  }
-  //END LINE DATA CODE
+      while ((lookahead = lastFrame->GetNextSibling()) != nsnull)
+        lastFrame = lookahead;
+    }
+    //END LINE DATA CODE
 
-  if (direction == eDirNext && lastFrame == currentFrame) { // End of line: set aPrevFrame to the current frame
-                                                            //              set aPrevLevel to the embedding level of the current frame
-                                                            //              set aNextFrame to null
-                                                            //              set aNextLevel to the paragraph embedding level
-    *aPrevFrame = currentFrame;
-    *aPrevLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
-    *aNextLevel = NS_GET_BASE_LEVEL(currentFrame);
-    *aNextFrame = nsnull;
-    return NS_OK;
-  }
+    if (direction == eDirNext && lastFrame == currentFrame) { // End of line: set aPrevFrame to the current frame
+                                                              //              set aPrevLevel to the embedding level of the current frame
+                                                              //              set aNextFrame to null
+                                                              //              set aNextLevel to the paragraph embedding level
+      *aPrevFrame = currentFrame;
+      *aPrevLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
+      *aNextLevel = NS_GET_BASE_LEVEL(currentFrame);
+      *aNextFrame = nsnull;
+      return NS_OK;
+    }
 
-  if (direction == eDirPrevious && firstFrame == currentFrame) { // Beginning of line: set aPrevFrame to null
-                                                                 //                    set aPrevLevel to the paragraph embedding level
-                                                                 //                    set aNextFrame to the current frame
-                                                                 //                    set aNextLevel to the embedding level of the current frame
-    *aNextFrame = currentFrame;
-    *aNextLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
-    *aPrevLevel = NS_GET_BASE_LEVEL(currentFrame);
-    *aPrevFrame = nsnull;
-    return NS_OK;
-  }
+    if (direction == eDirPrevious && firstFrame == currentFrame) { // Beginning of line: set aPrevFrame to null
+                                                                   //                    set aPrevLevel to the paragraph embedding level
+                                                                   //                    set aNextFrame to the current frame
+                                                                   //                    set aNextLevel to the embedding level of the current frame
+      *aNextFrame = currentFrame;
+      *aNextLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
+      *aPrevLevel = NS_GET_BASE_LEVEL(currentFrame);
+      *aPrevFrame = nsnull;
+      return NS_OK;
+    }
+  } //if (!aJumpLines)
 
   // Find the adjacent frame
 
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-  nsCOMPtr<nsIFrameTraversal> trav(do_CreateInstance(kFrameTraversalCID,&result));
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, currentFrame, PR_TRUE);
   if (NS_FAILED(result))
     return result;
-
-  result = trav->NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF, aPresContext, currentFrame);
-  if (NS_FAILED(result))
-    return result;
+  
   nsISupports *isupports = nsnull;
   if (direction == eDirNext)
     result = frameTraversal->Next();
   else 
     result = frameTraversal->Prev();
 
-  if (NS_FAILED(result))
-    return result;
-  result = frameTraversal->CurrentItem(&isupports);
-  if (NS_FAILED(result))
-    return result;
-  if (!isupports)
-    return NS_ERROR_NULL_POINTER;
+  if (NS_SUCCEEDED(result)) {
+    result = frameTraversal->CurrentItem(&isupports);
+    if (NS_FAILED(result))
+      return result;
+  }
+
   //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
@@ -2176,13 +2178,13 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
     *aPrevFrame = currentFrame;
     *aPrevLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
     *aNextFrame = newFrame;
-    *aNextLevel = NS_GET_EMBEDDING_LEVEL(newFrame);
+    *aNextLevel = newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : NS_GET_BASE_LEVEL(currentFrame);
   }
   else {
     *aNextFrame = currentFrame;
     *aNextLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
     *aPrevFrame = newFrame;
-    *aPrevLevel = NS_GET_EMBEDDING_LEVEL(newFrame);
+    *aPrevLevel = newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : NS_GET_BASE_LEVEL(currentFrame);
   }
 
   return NS_OK;
@@ -2301,7 +2303,7 @@ void nsSelection::BidiLevelFromMove(nsPresContext* aContext,
     // Right and Left: the new cursor Bidi level is the level of the character moved over
     case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_LEFT:
-      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, aHint, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
+      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, aHint, PR_FALSE, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
       if (HINTLEFT == aHint)
         aPresShell->SetCaretBidiLevel(firstLevel);
       else
@@ -7272,7 +7274,7 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     }
     mFrameSelection->SetHint(hint);
     */
-    mFrameSelection->GetPrevNextBidiLevels(context, focusContent, focusOffset, &frameBefore, &frameAfter, &levelBefore, &levelAfter);
+    mFrameSelection->GetPrevNextBidiLevels(context, focusContent, focusOffset, PR_FALSE, &frameBefore, &frameAfter, &levelBefore, &levelAfter);
   }
 
   nsIPresShell* shell = context->GetPresShell();
