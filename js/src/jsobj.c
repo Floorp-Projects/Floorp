@@ -189,14 +189,16 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
     pobj = JSVAL_TO_OBJECT(*vp);
 
-    /*
-     * Innerize pobj here to avoid sticking unwanted properties on the outer
-     * object. This ensures that any with statements only grant access to the
-     * inner object.
-     */
-    OBJ_TO_INNER_OBJECT(cx, pobj);
-    if (!pobj)
-        return JS_FALSE;
+    if (pobj) {
+        /*
+         * Innerize pobj here to avoid sticking unwanted properties on the outer
+         * object. This ensures that any with statements only grant access to the
+         * inner object.
+         */
+        OBJ_TO_INNER_OBJECT(cx, pobj);
+        if (!pobj)
+            return JS_FALSE;
+    }
     slot = (uint32) JSVAL_TO_INT(id);
     if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
         return JS_FALSE;
