@@ -28,12 +28,13 @@
         ]]></getter>
         <setter><![CDATA[ 
           // Make sure the last result doesn't hold a reference to us anymore
-          var result = this.getResult();
-          if (result)
-            result.removeObserver(this._viewObserver);
+          var resultview = this.getResultView();
+          if (resultview)
+            resultview.removeViewObserver(this._viewObserver);
           this.treeBoxObject.view = val;
-          this.getResult().addObserver(this._viewObserver, false);
-        ]]></setter>        
+          val.QueryInterface(Ci.nsINavHistoryResultViewer).addViewObserver(
+            this._viewObserver, false);
+        ]]></setter>
       </property>
       
       <method name="getBestOptions">
@@ -92,7 +93,13 @@
           options.expandQueries = this.expandQueries;
           var result = this.history.executeQueries(queries, queries.length, 
                                                    options);
-          this.view = result.QueryInterface(Ci.nsITreeView);
+
+          var treeviewer = Cc["@mozilla.org/browser/nav-history/result-tree-viewer;1"].
+            createInstance(Ci.nsINavHistoryResultViewer);
+          result.viewer = treeviewer;
+
+          treeviewer.QueryInterface(Ci.nsITreeView);
+          this.view = treeviewer;
         ]]></body>
       </method>
       
@@ -159,15 +166,15 @@
           
           // Walk the list backwards (opening from the root of the hierarchy)
           // opening each folder as we go.
-          var result = this.getResult();
+          var resultview = this.getResultView();
           var view = this.view;
           for (var i = parents.length - 1; i >= 0; --i) {
-            var index = result.treeIndexForNode(parents[i]);
+            var index = resultview.treeIndexForNode(parents[i]);
             if (view.isContainer(index) && !view.isContainerOpen(index)) 
               view.toggleOpenState(index);
           }
           // Select the specified node...
-          index = result.treeIndexForNode(node);
+          index = resultview.treeIndexForNode(node);
           view.selection.select(index);
           // ... and ensure it's visible, not scrolled off somewhere. 
           this.treeBoxObject.ensureRowIsVisible(index);
@@ -178,7 +185,17 @@
       <method name="getResult">
         <body><![CDATA[
           try {
-            return this.view.QueryInterface(Ci.nsINavHistoryResult);
+            return this.view.QueryInterface(Ci.nsINavHistoryResultViewer).result;
+          }
+          catch (e) {
+            return null;
+          }
+        ]]></body>
+      </method>
+      <method name="getResultView">
+        <body><![CDATA[
+          try {
+            return this.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
           }
           catch (e) {
           }
@@ -229,13 +246,13 @@
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
-          var result = this.getResult();
+          var resultview = this.getResultView();
           for (var i = 0; i < rc; ++i) {
             var min = { }, max = { };
             selection.getRangeAt(i, min, max);
             
             for (var j = min.value; j <= max.value; ++j)
-              nodes.push(result.nodeForTreeIndex(j));
+              nodes.push(resultview.nodeForTreeIndex(j));
           }
           return nodes;
         ]]></body>
@@ -270,7 +287,7 @@
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
-          var result = this.getResult();
+          var resultview = this.getResultView();
           // This list is kept independently of the range selected (i.e. OUTSIDE
           // the for loop) since the row index of a container is unique for the
           // entire view, and we could have some really wacky selection and we
@@ -285,7 +302,7 @@
               if (this.view.isContainer(j))
                 containers[j] = true;
               if (!(this.view.getParentIndex(j) in containers))
-                range.push(result.nodeForTreeIndex(j));
+                range.push(resultview.nodeForTreeIndex(j));
             }
             nodes.push(range);
           }
@@ -324,7 +341,7 @@
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
           
-          return this.getResult().nodeForTreeIndex(min.value);
+          return this.getResultView().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
       
@@ -340,7 +357,7 @@
           selection.getRangeAt(0, min, max);
 
           // only URI nodes should be returned
-          var node = this.getResult().nodeForTreeIndex(min.value);
+          var node = this.getResultView().nodeForTreeIndex(min.value);
           if (PlacesController.nodeIsURI(node))
             return node;
           return null;
@@ -364,7 +381,7 @@
           
           // If an item in the static region is selected, insert the new item 
           // before the first drop index. 
-          var node = this.getResult().nodeForTreeIndex(max.value);
+          var node = this.getResultView().nodeForTreeIndex(max.value);
           var container = asContainer(this.getResult().root);
           var cc = container.childCount;
           for (var i = 0; i < cc; ++i) {
@@ -384,14 +401,15 @@
         <parameter name="orientation"/>
         <body><![CDATA[ 
           var result = this.getResult();
+          var resultview = this.getResultView();
           var container = result.root;
           NS_ASSERT(container, "null container");
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
           if (index != -1) {
-            var lastSelected = result.nodeForTreeIndex(index);
-            if (this.view.isContainer(index) && 
-                (this.view.isContainerOpen(index) || orientation == NHRVO.DROP_ON)) {
+            var lastSelected = resultview.nodeForTreeIndex(index);
+            if (resultview.isContainer(index) && 
+                (resultview.isContainerOpen(index) || orientation == NHRVO.DROP_ON)) {
               // If the last selected item is an open container, append _into_
               // it, rather than insert adjacent to it. 
               container = lastSelected;
@@ -532,11 +550,11 @@
           
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
-          var result = this.getResult();
+          var resultview = this.getResult();
           var selection = this.view.selection;
           selection.clearSelection();
           for(idx in nodes) {
-            var index = result.treeIndexForNode(nodes[idx]);
+            var index = resultview.treeIndexForNode(nodes[idx]);
             selection.rangedSelect(index, index, true);
           }
         ]]></body>
@@ -572,7 +590,7 @@
             // "static" top level "special" items cannot be dragged. They are 
             // at the root level of the view and are at a lower index in the 
             // root container than user-configurable items. 
-            var treeIndex = this.getResult().treeIndexForNode(nodes[i]);
+            var treeIndex = this.getResultView().treeIndexForNode(nodes[i]);
             if (this.view.getLevel(treeIndex) == 0) {
               var index = PlacesController.getIndexOfNode(nodes[i]);
               if (index < this.peerDropIndex)
@@ -674,7 +692,7 @@
           var node = this._getInsertionNode(insertionPoint, excludeItems);
           // This is the insertion index of the pivot. 
           if (node)
-            return this.getResult().treeIndexForNode(node);
+            return this.getResultView().treeIndexForNode(node);
           else if (insertionPoint.orientation == NHRVO.DROP_ON)
             return Ci.nsINavHistoryResult.INDEX_INVISIBLE;
           return -1;
@@ -686,7 +704,8 @@
         
         canDrop: function VO_canDrop(index, orientation) {
           var result = this._self.getResult();
-          var node = index != -1 ? result.nodeForTreeIndex(index) : result.root;
+          var resultview = this._self.getResultView();
+          var node = index != -1 ? resultview.nodeForTreeIndex(index) : result.root;
           // Cannot drop before fixed items in the list. 
           if (node.parent == result.root && 
               PlacesController.getIndexOfNode(node) < this._self.peerDropIndex &&
