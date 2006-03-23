@@ -194,10 +194,12 @@ var ltnCalendarViewController = {
                                 .getService(Components.interfaces.nsIStringBundleService);
             var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
             event.title = props.GetStringFromName("newEvent");
+            setDefaultAlarmValues(event);
             aCalendar.addItem(event, null);
         } else if (aStartTime && aStartTime.isDate) {
             var event = createEvent();
             event.startDate = aStartTime;
+            setDefaultAlarmValues(event);
             aCalendar.addItem(event, null);
         } else {
             // default pop up the dialog

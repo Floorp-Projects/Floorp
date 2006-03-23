@@ -373,3 +373,59 @@ function getContrastingTextColor(bgColor)
     
     return "black";
 }
+
+/**
+ * Read default alarm settings from user preferences and apply them to
+ * the event/todo passed in.
+ *
+ * @param aItem   The event or todo the settings should be applied to.
+ */
+function setDefaultAlarmValues(aItem)
+{
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                .getService(Components.interfaces.nsIPrefService);
+    var alarmsBranch = prefService.getBranch("calendar.alarms.");
+
+    if (isEvent(aItem)) {
+        try {
+            if (alarmsBranch.getIntPref("onforevents") == 1) {
+                var alarmOffset = Components.classes["@mozilla.org/calendar/duration;1"]
+                                            .createInstance(Components.interfaces.calIDuration);
+                try {
+                    var units = alarmsBranch.getCharPref("eventalarmunit");
+                    alarmOffset[units] = alarmsBranch.getIntPref("eventalarmlen");
+                } catch(ex) {
+                    alarmOffset.minutes = 15;
+                }
+                aItem.alarmOffset  = alarmOffset;
+                aItem.alarmRelated = aItem.ALARM_RELATED_START;
+            }
+        } catch (ex) {
+            Components.utils.reportError(
+                "Failed to apply default alarm settings to event: " + ex);
+        }
+    } else if (isToDo(aItem)) {
+        try {
+            if (alarmsBranch.getIntPref("onfortodos") == 1) {
+                // You can't have an alarm if the entryDate doesn't exist.
+                if (!aItem.entryDate) {
+                    // XXX We should use the selected day from view instead
+                    aItem.entryDate = now();
+                }
+                var alarmOffset = Components.classes["@mozilla.org/calendar/duration;1"]
+                                            .createInstance(Components.interfaces.calIDuration);
+                try {
+                    var units = alarmsBranch.getCharPref("todoalarmunit");
+                    alarmOffset[units] = alarmsBranch.getIntPref("todoalarmlen");
+                } catch(ex) {
+                    alarmOffset.minutes = 15;
+                }
+                aItem.alarmOffset  = alarmOffset;
+                aItem.alarmRelated = aItem.ALARM_RELATED_START;
+            }
+        } catch (ex) {
+            Components.utils.reportError(
+                "Failed to apply default alarm settings to task: " + ex);
+        }
+    }
+}

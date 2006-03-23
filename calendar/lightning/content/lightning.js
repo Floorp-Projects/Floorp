@@ -36,9 +36,22 @@
 
 // This file contains all of the default preference values for Lightning
 
+// alarm settings
 pref("calendar.alarms.playsound", false);
 pref("calendar.alarms.soundURL", "");
 pref("calendar.alarms.defaultsnoozelength", 5);
+
+// default alarm settings for new event
+pref("calendar.alarms.onforevents", 0);
+pref("calendar.alarms.eventalarmlen", 15);
+pref("calendar.alarms.eventalarmunit", "minutes");
+
+// default alarm settings for new task
+pref("calendar.alarms.onfortodos", 0);
+pref("calendar.alarms.todoalarmlen", 15);
+pref("calendar.alarms.todoalarmunit", "minutes");
+
+// start and end hour for day and week view
 pref("calendar.view.defaultstarthour", 8);
 pref("calendar.view.defaultendhour", 17);
 

@@ -95,6 +95,8 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
     if (summary)
         event.title = summary;
 
+    setDefaultAlarmValues(event);
+
     openEventDialog(event, calendar, "new", onNewEvent);
 }
 
@@ -126,6 +128,8 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
     var onNewItem = function(item, calendar, originalItem) {
         calendar.addItem(item, null);
     }
+
+    setDefaultAlarmValues(todo);
 
     openEventDialog(todo, calendar, "new", onNewItem);
 }
