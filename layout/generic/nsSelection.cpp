@@ -76,6 +76,7 @@
 #include "nsIFrameTraversal.h"
 #include "nsLayoutUtils.h"
 #include "nsLayoutCID.h"
+#include "nsBidiPresUtils.h"
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsIDOMText.h"
@@ -1380,17 +1381,20 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
   pos.SetData(mShell, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,
               PR_TRUE, PR_TRUE, mLimiter != nsnull, PR_TRUE);
 
+  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
+  
   HINT tHint(mHint); //temporary variable so we dont set mHint until it is necessary
   switch (aKeycode){
     case nsIDOMKeyEvent::DOM_VK_RIGHT : 
         InvalidateDesiredX();
-        pos.mDirection = eDirNext;
-        tHint = HINTLEFT;//stick to this line
+        pos.mDirection = (baseLevel & 1) ? eDirPrevious : eDirNext;
+        tHint = (baseLevel & 1) ? HINTRIGHT : HINTLEFT; //stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
-        tHint = HINTRIGHT;//stick to opposite of movement
+        pos.mDirection = (baseLevel & 1) ? eDirNext : eDirPrevious;
+        tHint = (baseLevel & 1) ? HINTLEFT : HINTRIGHT; //stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 

@@ -4467,206 +4467,51 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
   return thisLine;
 }
 
-
-//this will use the nsFrameTraversal as the default peek method.
-//this should change to use geometry and also look to ALL the child lists
-//we need to set up line information to make sure we dont jump across line boundaries
 NS_IMETHODIMP
 nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  nsIFrame *blockFrame;
-  nsCOMPtr<nsILineIteratorNavigator> it; 
   PRBool preferLeft = aPos->mPreferLeft;
-  nsresult result;
-  PRInt32 thisLine = GetLineNumber(this, &blockFrame);
-  if (thisLine < 0)
-    return NS_ERROR_FAILURE;
-  result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
-  NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
-  
+
+  // Find the prev/next selectable frame
+  PRBool selectable = PR_FALSE;
   nsIFrame *traversedFrame = this;
-
-  nsIFrame *firstFrame;
-  nsIFrame *lastFrame;
-  nsRect  nonUsedRect;
-  PRInt32 lineFrameCount;
-  PRUint32 lineFlags;
-
-#ifdef IBMBIDI
-  /* Check whether the visual and logical order of the frames are different */
-  PRBool lineIsReordered = PR_FALSE;
-  nsIFrame *firstVisual;
-  nsIFrame *lastVisual;
-  PRBool lineIsRTL;
-  PRBool lineJump = PR_FALSE;
-
-  it->GetDirection(&lineIsRTL);
-  result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
-  if (NS_FAILED(result))
-    return result;
-
-  if (lineIsReordered) {
-    firstFrame = firstVisual;
-    lastFrame = lastVisual;
-  }
-  else
-#endif
-  {
-    result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
-                         &lineFlags);
-    if (NS_FAILED(result))
-      return result;
-
-    lastFrame = firstFrame;
-    for (;lineFrameCount > 1;lineFrameCount --){
-      result = it->GetNextSiblingOnLine(lastFrame, thisLine);
-      if (NS_FAILED(result) || !lastFrame){
-        NS_ASSERTION(0,"should not be reached nsFrame\n");
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-
-  GetFirstLeaf(aPresContext, &firstFrame);
-  GetLastLeaf(aPresContext, &lastFrame);
-  //END LINE DATA CODE
-  if 
-#ifndef IBMBIDI  // jumping lines in RTL paragraphs
-      ((aPos->mDirection == eDirNext && lastFrame == this)
-       ||(aPos->mDirection == eDirPrevious && firstFrame == this))
-#else
-      (((lineIsRTL) &&
-        ((aPos->mDirection == eDirNext && firstFrame == this)
-         ||(aPos->mDirection == eDirPrevious && lastFrame == this)))
-       ||
-       ((!lineIsRTL) &&
-        ((aPos->mDirection == eDirNext && lastFrame == this)
-         ||(aPos->mDirection == eDirPrevious && firstFrame == this))))
-#endif
-  {
-    if (aPos->mJumpLines != PR_TRUE)
-      return NS_ERROR_FAILURE;//we are done. cannot jump lines
-#ifdef IBMBIDI
-    lineJump = PR_TRUE;
-#endif
-    if (aPos->mAmount != eSelectWord)
-    {
-      preferLeft = (PRBool)!preferLeft;//drift to other side
-      aPos->mAmount = eSelectNoAmount;
-    }
-    else{
-      if (aPos->mEatingWS)//done finding what we wanted
-        return NS_ERROR_FAILURE;
-      if (aPos->mDirection == eDirNext)
-      {
-        preferLeft = (PRBool)!preferLeft;//drift to other side
-      }
-#ifdef IBMBIDI
-      if (lineIsRTL)
-        aPos->mAmount = eSelectNoAmount;
-#endif
-    }
-
-  }
-  if (aPos->mAmount == eSelectDir)
-    aPos->mAmount = eSelectNoAmount;//just get to next frame.
-  nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-#ifdef IBMBIDI
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
-                                lineIsReordered ? VISUAL : LEAF,
-                                aPresContext, 
-                                traversedFrame, aPos->mScrollViewStop);
-#else
-  //if we are a container frame we MUST init with last leaf for eDirNext
-  //
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF, aPresContext, traversedFrame, aPos->mScrollViewStop);
-#endif
-  if (NS_FAILED(result))
-    return result;
-  nsISupports *isupports = nsnull;
-#ifdef IBMBIDI
-  nsIFrame *newFrame;
-
-  for (;;) {
-    if (lineIsRTL) 
-      if (aPos->mDirection == eDirPrevious)
-        result = frameTraversal->Next();
-      else 
-        result = frameTraversal->Prev();
-    else
-#endif
-      if (aPos->mDirection == eDirNext)
-        result = frameTraversal->Next();
-      else 
-        result = frameTraversal->Prev();
+  while (!selectable) {
+    nsIFrame *blockFrame;
+    nsCOMPtr<nsILineIteratorNavigator> it; 
     
-  if (NS_FAILED(result))
-    return result;
-  result = frameTraversal->CurrentItem(&isupports);
-  if (NS_FAILED(result))
-    return result;
-  if (!isupports)
-    return NS_ERROR_NULL_POINTER;
-  //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
-  //for speed reasons
-#ifndef IBMBIDI
-  nsIFrame *newFrame = (nsIFrame *)isupports;
-#else
-  
-  newFrame = (nsIFrame *)isupports;
-  nsIContent *content = newFrame->GetContent();
-  if (!lineJump && (content == mContent))
-  {
-    //we will continue if this is NOT a text node. 
-    //in the case of a text node since that does not mean we are stuck. it could mean a change in style for
-    //the text node.  in the case of a hruleframe with generated before and after content, we do not
-    //want the splittable generated frame to get us stuck on an HR
-    if (nsLayoutAtoms::textFrame != newFrame->GetType())
-      continue;  //we should NOT be getting stuck on the same piece of content on the same line. skip to next line.
-  }
-  PRBool isBidiGhostFrame = (newFrame->GetRect().IsEmpty() &&
-                             (newFrame->GetStateBits() & NS_FRAME_IS_BIDI));
-  if (isBidiGhostFrame)
-  {
-    // If the rectangle is empty and the NS_FRAME_IS_BIDI flag is set, this is most likely 
-    // a non-renderable frame created at the end of the line by Bidi reordering.
-    lineJump = PR_TRUE;
-    aPos->mAmount = eSelectNoAmount;
-  }
-  else
-  {
-    PRBool selectable =  PR_TRUE; //usually fine
-    newFrame->IsSelectable(&selectable, nsnull);
-    if (selectable)
-      break; // for (;;)
-  }
-  PRBool newLineIsRTL = PR_FALSE;
-  if (lineJump) {
-    thisLine = GetLineNumber(newFrame, &blockFrame);
+    PRInt32 thisLine = GetLineNumber(traversedFrame, &blockFrame);
     if (thisLine < 0)
       return NS_ERROR_FAILURE;
-    result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
+    nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),getter_AddRefs(it));
     NS_ASSERTION(NS_SUCCEEDED(result) && it, "GetLineNumber() succeeded but no block frame?");
 
-    it->GetDirection(&newLineIsRTL);
+    nsIFrame *firstFrame;
+    nsIFrame *lastFrame;
+    nsRect  nonUsedRect;
+    PRInt32 lineFrameCount;
+    PRUint32 lineFlags;
+
+#ifdef IBMBIDI
+    /* Check whether the visual and logical order of the frames are different */
+    PRBool lineIsReordered = PR_FALSE;
+    nsIFrame *firstVisual;
+    nsIFrame *lastVisual;
 
     result = it->CheckLineOrder(thisLine, &lineIsReordered, &firstVisual, &lastVisual);
     if (NS_FAILED(result))
       return result;
 
-    if (lineIsReordered)
-    {
+    if (lineIsReordered) {
       firstFrame = firstVisual;
       lastFrame = lastVisual;
     }
     else
+#endif
     {
-      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount, nonUsedRect,
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
                            &lineFlags);
       if (NS_FAILED(result))
         return result;
-      if (!firstFrame)
-        return NS_ERROR_FAILURE;
 
       lastFrame = firstFrame;
       for (;lineFrameCount > 1;lineFrameCount --){
@@ -4678,43 +4523,77 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
       }
     }
 
-    GetFirstLeaf(aPresContext, &firstFrame);
-    GetLastLeaf(aPresContext, &lastFrame);
-
-    if (newLineIsRTL) {
-      if (aPos->mDirection == eDirPrevious)
-        newFrame = firstFrame;
-      else
-        newFrame = lastFrame;
-    }
-    else {
-      if (aPos->mDirection == eDirNext)
-        newFrame = firstFrame;
-      else
-        newFrame = lastFrame;
+    GetFirstLeaf(aPresContext, &firstFrame); // XXX Should be GetFirstVisualLeaf
+    GetLastLeaf(aPresContext, &lastFrame);   // XXX Should be GetLastVisualLeaf
+    //END LINE DATA CODE
+    if ((aPos->mDirection == eDirNext && lastFrame == traversedFrame)
+         || (aPos->mDirection == eDirPrevious && firstFrame == traversedFrame))
+    {
+      if (aPos->mJumpLines != PR_TRUE)
+        return NS_ERROR_FAILURE;//we are done. cannot jump lines
+      if (aPos->mAmount != eSelectWord)
+      {
+        preferLeft = (PRBool)!preferLeft;//drift to other side
+        aPos->mAmount = eSelectNoAmount;
+      }
+      else{
+        if (aPos->mEatingWS)//done finding what we wanted
+          return NS_ERROR_FAILURE;
+        if (aPos->mDirection == eDirNext)
+        {
+          preferLeft = (PRBool)!preferLeft;//drift to other side
+        }
       }
     }
-    PRBool selectable =  PR_TRUE; //usually fine
-    newFrame->IsSelectable(&selectable, nsnull);
-    if (!selectable)
-      lineJump = PR_FALSE;
-  } // for (;;) we will break from inside
-#endif // IBMBIDI
+    if (aPos->mAmount == eSelectDir)
+      aPos->mAmount = eSelectNoAmount;//just get to next frame.
+    nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
+    result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
+#ifdef IBMBIDI
+                                  lineIsReordered ? VISUAL : 
+#endif
+                                  LEAF,
+                                  aPresContext, 
+                                  traversedFrame, aPos->mScrollViewStop);
+
+    if (NS_FAILED(result))
+      return result;
+
+    nsISupports *isupports = nsnull;
+    if (aPos->mDirection == eDirNext)
+      result = frameTraversal->Next();
+    else 
+      result = frameTraversal->Prev();
+  
+    if (NS_FAILED(result))
+      return result;
+    result = frameTraversal->CurrentItem(&isupports);
+    if (NS_FAILED(result))
+      return result;
+    if (!isupports)
+      return NS_ERROR_NULL_POINTER;
+    //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
+    //for speed reasons
+    traversedFrame = (nsIFrame *)isupports;
+    traversedFrame->IsSelectable(&selectable, nsnull);
+  } // while (!selectable)
+  
   if (aPos->mDirection == eDirNext)
     aPos->mStartOffset = 0;
   else
     aPos->mStartOffset = -1;
 #ifdef IBMBIDI
   PRUint8 oldLevel = NS_GET_EMBEDDING_LEVEL(this);
-  PRUint8 newLevel = NS_GET_EMBEDDING_LEVEL(newFrame);
-  if (newLevel & 1) // The new frame is RTL, go to the other end
+  PRUint8 newLevel = NS_GET_EMBEDDING_LEVEL(traversedFrame);
+  PRUint8 newBaseLevel = NS_GET_BASE_LEVEL(traversedFrame);
+  if ((newLevel & 1) != (newBaseLevel & 1)) // The new frame is reverse-direction, go to the other end
     aPos->mStartOffset = -1 - aPos->mStartOffset;
 
   if ((aPos->mAmount == eSelectNoAmount) && ((newLevel & 1) != (oldLevel & 1)))  {
     preferLeft = (PRBool)!preferLeft;
   }
 #endif
-  aPos->mResultFrame = newFrame;
+  aPos->mResultFrame = traversedFrame;
   aPos->mPreferLeft = preferLeft;
   return NS_OK;
 }

@@ -4526,17 +4526,21 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // line as well as on different lines.
   //
   // Note:
-  // eDirPrevious actually means 'in the visual left-then-down direction'
-  // eDirNext actually means 'in the visual right-then-down direction'
-  // (this is again due to the LTRish bias of the nomenclature)
+  // eDirPrevious means 'left-then-up' if the containing block is LTR, 
+  // 'right-then-up' if it is RTL.
+  // eDirNext means 'right-then-down' if the containing block is LTR, 
+  // 'left-then-down' if it is RTL.
+  // Between paragraphs, eDirPrevious means "go to the visual end of the 
+  // previous paragraph", and eDirNext means "go to the visual beginning of 
+  // the next paragraph"
 
-  PRBool isOddLevel = NS_GET_EMBEDDING_LEVEL(this) & 1;
+  PRBool isReverseDirection = (NS_GET_EMBEDDING_LEVEL(this) & 1) != (NS_GET_BASE_LEVEL(this) & 1);
 
   if ((eSelectCharacter == aPos->mAmount)
       || (eSelectWord == aPos->mAmount))
     // this 'flip' will be in effect only for this frame, not
     // for recursive calls to PeekOffset()
-    aPos->mPreferLeft ^= isOddLevel;
+    aPos->mPreferLeft ^= isReverseDirection;
 #endif
 
   if (!aPos || !mContent)
@@ -4580,7 +4584,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     // to the next frame
     if ((eSelectCharacter == aPos->mAmount)
         || (eSelectWord == aPos->mAmount))
-      aPos->mPreferLeft ^= isOddLevel;
+      aPos->mPreferLeft ^= isReverseDirection;
     return nextContinuation->PeekOffset(aPresContext, aPos);
   }
  
@@ -4662,8 +4666,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   #ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
         // so that right arrow always moves to the right on screen
         // and left arrow always moves left
-        if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
-             ((aPos->mDirection == eDirNext) && isOddLevel) ){
+        if ( ((aPos->mDirection == eDirPrevious) && !isReverseDirection) ||
+             ((aPos->mDirection == eDirNext) && isReverseDirection) ){
   #else
         if (aPos->mDirection == eDirPrevious){
   #endif
@@ -4720,8 +4724,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           }
         }
   #ifdef IBMBIDI // Simon, as above 
-        else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
-                  ((aPos->mDirection == eDirPrevious) && isOddLevel) ){
+        else if ( ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
+                  ((aPos->mDirection == eDirPrevious) && isReverseDirection) ){
   #else
         else if (aPos->mDirection == eDirNext){
   #endif
@@ -4796,7 +4800,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           // note that mAmount, as well as mPreferLeft might have been modified
           // by the call to GetFrameFromDirection (if we are moving to another line)
           if (eSelectCharacter == aPos->mAmount)
-            aPos->mPreferLeft ^= isOddLevel;
+            aPos->mPreferLeft ^= isReverseDirection;
           result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
           if (NS_FAILED(result))
             return result;
@@ -4837,8 +4841,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 #ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
         // so that right arrow always moves to the right on screen
         // and left arrow always moves left
-        if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
-             ((aPos->mDirection == eDirNext) && isOddLevel) ) {
+        if ( ((aPos->mDirection == eDirPrevious) && !isReverseDirection) ||
+             ((aPos->mDirection == eDirNext) && isReverseDirection) ) {
 #else
         if (aPos->mDirection == eDirPrevious){
 #endif
@@ -4890,8 +4894,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           }
         }
 #ifdef IBMBIDI // Simon, as above 
-        else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
-                  ((aPos->mDirection == eDirPrevious) && isOddLevel) ) {
+        else if ( ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
+                  ((aPos->mDirection == eDirPrevious) && isReverseDirection) ) {
 #else
         else if (aPos->mDirection == eDirNext) {
 #endif
@@ -4971,7 +4975,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           // note that mAmount, as well as mPreferLeft might have been modified
           // by the call to GetFrameFromDirection (if we are moving to another line)
           if (eSelectWord == aPos->mAmount)
-            aPos->mPreferLeft ^= isOddLevel;
+            aPos->mPreferLeft ^= isReverseDirection;
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
           else if (aPos->mDirection == eDirNext)
