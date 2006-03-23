@@ -313,129 +313,47 @@
 
 
   <!-- UPLOAD: <DEFAULT>
-    XXX: The widget doesn't support interface based on getElementControl()
-    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
+    The upload widget assumes successors bindings implement getElementControl()
+    method what returns the object:
+    {
+      set value(); // set "string" value
+      set readonly(); // set readonly state
+      focus(); // set focus
+    }
   -->
-  <binding id="xformswidget-upload"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children includes="label"/>
-      <html:input anonid="upload_text_control"
-                  class="xf-value"
-                  readonly="readonly"/>
-      <html:button anonid="upload_browse_button"
-                   type="button"
-                   onclick="this.parentNode.uploadElem.pickFile();"
-                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                   xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
-      <html:button anonid="upload_clear_button"
-                   type="button"
-                   onclick="this.parentNode.uploadElem.clearFile();"
-                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                   > &xforms.upload.cleartext; </html:button>
-      <children/>
-    </content>
+  <binding id="xformswidget-upload-base" extends="#xformswidget-base">
 
     <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
       <method name="refresh">
         <body>
-          if (this.accessors.isReadonly()) {
-            this.browseButton.setAttribute("disabled", "disabled");
-            this.clearButton.setAttribute("disabled", "disabled");
-          } else {
-            this.browseButton.removeAttribute("disabled");
-            this.clearButton.removeAttribute("disabled");
-          }
+          this.control.readonly = this.accessors.isReadonly();
+        </body>
+      </method>
 
+      <method name="focus">
+        <body>
+          this.control.focus();
           return true;
         </body>
       </method>
 
-      <destructor>
-        this._uploadElem = null;
-        this._textControl = null;
-        this._browseButton = null;
-        this._clearButton = null;
-      </destructor>
-
-      <field name="_uploadElem">null</field>
-
-      <property name="uploadElem" readonly="true">
+      <property name="uploadElement" readonly="true">
         <getter>
-          if (!this._uploadElem) {
-            this._uploadElem =
+          if (!this._uploadElement) {
+            this._uploadElement =
               this.QueryInterface(Components.interfaces.nsIXFormsUploadElement);
           }
-          return this._uploadElem;
+          return this._uploadElement;
         </getter>
       </property>
-
-      <field name="_textControl">null</field>
-
-      <property name="textControl" readonly="true">
-        <getter>
-          if (!this._textControl) {
-            this._textControl =
-              document.getAnonymousElementByAttribute(this, "anonid",
-                                                      "upload_text_control");
-          }
-          return this._textControl;
-        </getter>
-      </property>
-
-      <field name="_browseButton">null</field>
-
-      <property name="browseButton" readonly="true">
-        <getter>
-          if (!this._browseButton) {
-            this._browseButton =
-              document.getAnonymousElementByAttribute(this, "anonid",
-                                                      "upload_browse_button");
-          }
-          return this._browseButton;
-        </getter>
-      </property>
-
-      <field name="_clearButton">null</field>
-
-      <property name="clearButton" readonly="true">
-        <getter>
-          if (!this._clearButton) {
-            this._clearButton =
-              document.getAnonymousElementByAttribute(this, "anonid",
-                                                      "upload_clear_button");
-          }
-          return this._clearButton;
-        </getter>
-      </property>
+      <field name="_uploadElement">null</field>
 
       <method name="setFieldText">
         <parameter name="aString"/>
         <body>
-          this.textControl.value = aString;
+          this.control.value = aString;
         </body>
       </method>
     </implementation>
-  </binding>
-
-  <!-- UPLOAD: DISABLED
-    XXX: The widget doesn't support interface based on getElementControl()
-    method (see a bug https://bugzilla.mozilla.org/show_bug.cgi?id=323845).
-  -->
-  <binding id="xformswidget-upload-disabled"
-           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
-    <content>
-      <children includes="label"/>
-      <html:input readonly="readonly"
-                  class="xf-value"
-                  xbl:inherits="accesskey"/>
-      <html:button type="button"
-                   disabled="disabled"
-                   xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
-      <html:button type="button"
-                   disabled="disabled"
-                   xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
-      <children/>
-    </content>
   </binding>
 </bindings>

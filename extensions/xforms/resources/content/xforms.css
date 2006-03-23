@@ -482,14 +482,14 @@ select html|div.select-choice-content {
 }
 
 /* upload widgets */
-upload {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload-disabled');
+html|*:root upload {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload-disabled');
 }
 
-upload[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"],
-upload[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"],
-upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload');
+html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"],
+html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"],
+html|*:root upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
+  -moz-binding: url('chrome://xforms/content/xforms-xhtml.xml#xformswidget-upload');
 }
 
 /* default MIP styling */
