@@ -162,19 +162,18 @@ void nsImapServerResponseParser::IncrementNumberOfTaggedResponsesExpected(const 
   if (!fCurrentCommandTag)
     HandleMemoryFailure();
 }
-/* 
- response        ::= *response_data response_done
-*/
-
 
 void nsImapServerResponseParser::InitializeState()
 {
-  fProcessingTaggedResponse = PR_FALSE;
   fCurrentCommandFailed = PR_FALSE;
   fNumberOfRecentMessages = 0;
   fReceivedHeaderOrSizeForUID = nsMsgKey_None;
 }
 
+// RFC3501:  response = *(continue-req / response-data) response-done
+//           response-data = "*" SP (resp-cond-state / resp-cond-bye /
+//                           mailbox-data / message-data / capability-data) CRLF
+//           continue-req    = "+" SP (resp-text / base64) CRLF
 void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses)
 {
   
@@ -232,6 +231,8 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
       
       do {
         AdvanceToNextToken();
+
+        // untagged responses [RFC3501, Sec. 2.2.2]
         while (ContinueParse() && !PL_strcmp(fNextToken, "*") )
         {
           response_data();
@@ -243,7 +244,8 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
               AdvanceToNextToken();
           }
         }
-        
+
+        // command continuation request [RFC3501, Sec. 7.5]
         if (ContinueParse() && *fNextToken == '+')	// never pipeline APPEND or AUTHENTICATE
         {
           NS_ASSERTION((fNumberOfTaggedResponsesExpected - numberOfTaggedResponsesReceived) == 1, 
@@ -263,10 +265,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
           numberOfTaggedResponsesReceived++;
         
         if (numberOfTaggedResponsesReceived < fNumberOfTaggedResponsesExpected)
-        {
           response_tagged();
-          fProcessingTaggedResponse = PR_FALSE;
-        }
         
       } while (ContinueParse() && !inIdle && (numberOfTaggedResponsesReceived < fNumberOfTaggedResponsesExpected));
       
@@ -522,25 +521,21 @@ void nsImapServerResponseParser::ProcessBadCommand(const char *commandToken)
 }
 
 
+
+// RFC3501:  response-data = "*" SP (resp-cond-state / resp-cond-bye /
+//                           mailbox-data / message-data / capability-data) CRLF
+// These are ``untagged'' responses [RFC3501, Sec. 2.2.2]
 /*
- response_data   ::= "*" SPACE (resp_cond_state / resp_cond_bye /
-                              mailbox_data / message_data / capability_data)
-                              CRLF
- 
  The RFC1730 grammar spec did not allow one symbol look ahead to determine
  between mailbox_data / message_data so I combined the numeric possibilities
  of mailbox_data and all of message_data into numeric_mailbox_data.
  
- The production implemented here is 
-
- response_data   ::= "*" SPACE (resp_cond_state / resp_cond_bye /
+ It is assumed that the initial "*" is already consumed before calling this
+ method. The production implemented here is 
+         response_data   ::= (resp_cond_state / resp_cond_bye /
                               mailbox_data / numeric_mailbox_data / 
                               capability_data)
                               CRLF
-
-Instead of comparing lots of strings and make function calls, try to pre-flight
-the possibilities based on the first letter of the token.
-
 */
 void nsImapServerResponseParser::response_data()
 {
@@ -548,23 +543,25 @@ void nsImapServerResponseParser::response_data()
   
   if (ContinueParse())
   {
+    // Instead of comparing lots of strings and make function calls, try to
+    // pre-flight the possibilities based on the first letter of the token.
     switch (toupper(fNextToken[0]))
     {
     case 'O':			// OK
       if (toupper(fNextToken[1]) == 'K')
-        resp_cond_state();
+        resp_cond_state(PR_FALSE);
       else SetSyntaxError(PR_TRUE);
       break;
     case 'N':			// NO
       if (toupper(fNextToken[1]) == 'O')
-        resp_cond_state();
+        resp_cond_state(PR_FALSE);
       else if (!PL_strcasecmp(fNextToken, "NAMESPACE"))
         namespace_data();
       else SetSyntaxError(PR_TRUE);
       break;
     case 'B':			// BAD
       if (!PL_strcasecmp(fNextToken, "BAD"))
-        resp_cond_state();
+        resp_cond_state(PR_FALSE);
       else if (!PL_strcasecmp(fNextToken, "BYE"))
         resp_cond_bye();
       else SetSyntaxError(PR_TRUE);
@@ -1712,15 +1709,18 @@ void nsImapServerResponseParser::flags()
     fSavedFlagInfo = messageFlags;
 }
 
-/* 
- resp_cond_state ::= ("OK" / "NO" / "BAD") SPACE resp_text
-*/
-void nsImapServerResponseParser::resp_cond_state()
+// RFC3501:  resp-cond-state = ("OK" / "NO" / "BAD") SP resp-text
+//                             ; Status condition
+void nsImapServerResponseParser::resp_cond_state(PRBool isTagged)
 {
-  if ((!PL_strcasecmp(fNextToken, "NO") ||
-    !PL_strcasecmp(fNextToken, "BAD") ) &&
-    fProcessingTaggedResponse)
-    
+  // According to RFC3501, Sec. 7.1, the untagged NO response "indicates a
+  // warning; the command can still complete successfully."
+  // However, the untagged BAD response "indicates a protocol-level error for
+  // which the associated command can not be determined; it can also indicate an
+  // internal server failure." 
+  // Thus, we flag an error for a tagged NO response and for any BAD response.
+  if (isTagged && !PL_strcasecmp(fNextToken, "NO") ||
+    !PL_strcasecmp(fNextToken, "BAD"))
     fCurrentCommandFailed = PR_TRUE;
   
   AdvanceToNextToken();
@@ -1969,9 +1969,7 @@ void nsImapServerResponseParser::resp_text_code()
   }
 }
 
-/*
- response_done   ::= response_tagged / response_fatal
- */
+// RFC3501:  response-done = response-tagged / response-fatal
  void nsImapServerResponseParser::response_done()
  {
    if (ContinueParse())
@@ -1983,16 +1981,14 @@ void nsImapServerResponseParser::resp_text_code()
    }
  }
  
- /*  response_tagged ::= tag SPACE resp_cond_state CRLF
- */
+// RFC3501:  response-tagged = tag SP resp-cond-state CRLF
  void nsImapServerResponseParser::response_tagged()
  {
    // eat the tag
    AdvanceToNextToken();
    if (ContinueParse())
    {
-     fProcessingTaggedResponse = PR_TRUE;
-     resp_cond_state();
+     resp_cond_state(PR_TRUE);
      if (ContinueParse())
      {
        if (!fAtEndOfLine)
@@ -2003,8 +1999,8 @@ void nsImapServerResponseParser::resp_text_code()
    }
  }
  
- /* response_fatal  ::= "*" SPACE resp_cond_bye CRLF
- */
+// RFC3501:  response-fatal = "*" SP resp-cond-bye CRLF
+//                              ; Server closes connection immediately
  void nsImapServerResponseParser::response_fatal()
  {
    // eat the "*"
@@ -2012,10 +2008,8 @@ void nsImapServerResponseParser::resp_text_code()
    if (ContinueParse())
      resp_cond_bye();
  }
-/*
-resp_cond_bye   ::= "BYE" SPACE resp_text
-                              ;; Server will disconnect condition
-                    */
+
+// RFC3501:  resp-cond-bye = "BYE" SP resp-text
 void nsImapServerResponseParser::resp_cond_bye()
 {
   SetConnected(PR_FALSE);
@@ -2840,18 +2834,19 @@ nsImapServerResponseParser::bodystructure_multipart(char *partNum, nsIMAPBodypar
 }
 
 
+// RFC2087:  quotaroot_response = "QUOTAROOT" SP astring *(SP astring)
+//           quota_response = "QUOTA" SP astring SP quota_list
+//           quota_list     = "(" [quota_resource *(SP quota_resource)] ")"
+//           quota_resource = atom SP number SP number
+// Only the STORAGE resource is considered.  The current implementation is
+// slightly broken because it assumes that STORAGE is the first resource;
+// a reponse   QUOTA (MESSAGE 5 100 STORAGE 10 512)   would be ignored.
 void nsImapServerResponseParser::quota_data()
 {
-  nsCString quotaroot;
   if (!PL_strcasecmp(fNextToken, "QUOTAROOT"))
   {
-    do
-    {
-      AdvanceToNextToken();
-      if (!fAtEndOfLine)
-        quotaroot.Adopt(CreateAstring());
-    }
-    while (ContinueParse() && !fAtEndOfLine);
+    // ignore QUOTAROOT response
+    skip_to_CRLF();
   }
   else if(!PL_strcasecmp(fNextToken, "QUOTA"))
   {
@@ -2859,10 +2854,9 @@ void nsImapServerResponseParser::quota_data()
     char *parengroup;
 
     AdvanceToNextToken();
-    if (! fNextToken)
-      SetSyntaxError(PR_TRUE);
-    else
+    if (ContinueParse())
     {
+      nsCString quotaroot;
       quotaroot.Adopt(CreateAstring());
 
       if(ContinueParse() && !fAtEndOfLine)

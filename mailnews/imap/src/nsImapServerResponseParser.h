@@ -164,7 +164,7 @@ protected:
 
   virtual void    response_data();
   virtual void    resp_text();
-  virtual void    resp_cond_state();
+  virtual void    resp_cond_state(PRBool isTagged);
   virtual void    text_mime2();
   virtual void    text();
   virtual void    parse_folder_flags();
