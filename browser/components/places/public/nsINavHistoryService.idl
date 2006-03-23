@@ -46,6 +46,7 @@ interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryFolderResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
+interface nsINavHistoryResult;
 interface nsITreeColumn;
 interface nsIWritablePropertyBag;
 
@@ -132,6 +133,13 @@ interface nsINavHistoryResultNode : nsISupports
    * children have indentLevel = 1, etc.
    */
   readonly attribute PRUint32 indentLevel;
+
+  /**
+   * Value with undefined meaning for use by the view. Its initial value will
+   * be -1. The tree view uses this value to indicate the row in the tree that
+   * this node is at. Other views may use this value however they choose.
+   */
+  attribute PRInt32 viewIndex;
 
   /**
    * You can use this to associate temporary information with the result node.
@@ -374,6 +382,8 @@ interface nsINavHistoryFolderResultNode : nsINavHistoryQueryResultNode
 /**
  *  Allows clients of the HistoryResult to define domain specific handling 
  *  of specific nsITreeView methods that the HistoryResult does not implement.
+ *
+ *  @see nsINavHistoryResult for where this fits in
  */
 [scriptable, uuid(b34d5ca4-ce8e-49a6-9201-a59ae2128d2c)]
 interface nsINavHistoryResultViewObserver : nsISupports
@@ -438,22 +448,127 @@ interface nsINavHistoryResultViewObserver : nsISupports
 
 
 /**
- * The result of a history/bookmark query.
+ * Allows clients to observe what is happening to a result as it updates itself
+ * according to history and bookmark system events. Register this observer on a
+ * result using registerView
  *
- * Use the "root" element to access the children of this query.
+ * @see nsINavHistoryResult for where this fits in
  */
-
-[scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
-interface nsINavHistoryResult : nsISupports
+[scriptable, uuid(11032c23-a9fd-4918-bc8f-004726a748da)]
+interface nsINavHistoryResultViewer : nsISupports
 {
   /**
-   * Sorts all nodes recursively by the given parameter, one of
-   * nsINavHistory.SORT_BY_*  This will update the corresponding options for
-   * this result, so that re-using the current options/queries will always give
-   * you the current view.
+   * Called when 'item' is inserted into 'parent' at index 'newIndex'. The item
+   * previously at index (if any) and everything below it will have been
+   * shifted down by one. The item may be a container or a leaf.
    */
-  void sortAll(in PRUint32 aSortingMode);
+  void itemInserted(in nsINavHistoryContainerResultNode parent,
+                    in nsINavHistoryResultNode item,
+                    in PRUint32 newIndex);
 
+  /**
+   * Called whan 'item' is removed from 'parent' at 'oldIndex'. The item may be
+   * a container or a leaf. This function will be called after the item has
+   * been removed from its parent list, but before anything else (including
+   * NULLing out the item's parent) has happened.
+   */
+  void itemRemoved(in nsINavHistoryContainerResultNode parent,
+                   in nsINavHistoryResultNode item,
+                   in PRUint32 oldIndex);
+
+  /**
+   * Called when an item has been changed and should be repainted. This only
+   * refers to the specific item. If it is a container, getting this message
+   * does not imply anything happened to the children. You'll get separate
+   * messages for those. Also, this may be called for container nodes at times
+   * when the result thinks it's possible that a twisty mey need to bw redrawn.
+   */
+  void itemChanged(in nsINavHistoryResultNode item);
+
+  /**
+   * Called when an item is being replaced with another item at the exact
+   * same position.
+   */
+  void itemReplaced(in nsINavHistoryContainerResultNode parent,
+                    in nsINavHistoryResultNode oldItem,
+                    in nsINavHistoryResultNode newItem,
+                    in PRUint32 index);
+
+  /**
+   * Called after a container node went from closed to opened.
+   */
+  void containerOpened(in nsINavHistoryContainerResultNode item);
+
+  /**
+   * Called after a container node went from opened to closed. This will be
+   * called for the topmost container that is closing, and implies that any
+   * child containers have closed as well.
+   */
+  void containerClosed(in nsINavHistoryContainerResultNode item);
+
+  /**
+   * Called when something significant has happened within the container. The
+   * contents of the container should be re-built.
+   */
+  void invalidateContainer(in nsINavHistoryContainerResultNode item);
+
+  /**
+   * Called when something significant is changing that requires everything
+   * to be recomputed. For example, changing sorting or changing collapse
+   * duplicates can affect every row.
+   */
+  void invalidateAll();
+
+  /**
+   * This is called to indicate to the UI that the sort has changed to the
+   * given mode. For trees, for example, this would update the column headers
+   * to reflect the sorting. For many other types of views, this won't be
+   * applicable.
+   *
+   * @param sortingMode  One of nsINavHistoryQueryOptions.SORT_BY_* that
+   *                     indicates the new sorting mode.
+   *
+   * This only is expected to update the sorting UI. invalidateAll() will also
+   * get called if the sorting changes to update everything.
+   */
+  void sortingChanged(in PRUint32 sortingMode);
+
+  /**
+   * Called by the result when this object is set using
+   * nsINavHistoryResult.viewer. This will be set to NULL when the result
+   * is being deallocated. This should not be set by other code.
+   */
+  attribute nsINavHistoryResult result;
+
+  /**
+   * Adds the specified view observer to the view. In ownsWeak is false, then
+   * the result will hold a strong reference to the observer. If ownsWeak is
+   * true, then the observer must implement nsISupportsWeakReference, and the
+   * result will hold a weak reference to the observer.
+   */
+  void addViewObserver(in nsINavHistoryResultViewObserver observer,
+                       in boolean ownsWeak);
+
+  /**
+   * Removes the specified view observer from this view. This observer must
+   * have been previously registered using addViewObserver.
+   */
+  void removeViewObserver(in nsINavHistoryResultViewObserver observer);
+};
+
+
+/**
+ * A predefined view adaptor for interfacing results with an nsITree. This
+ * object will remove itself from its associated result when the tree has been
+ * detached. This prevents circular references. Users should be aware of this,
+ * if you want to re-use the same viewer, you will need to keep your own
+ * reference to it and re-initialize it when the tree changes. If you use this
+ * object, attach it to a result, never attach it to a tree, and forget about
+ * it, it will leak!
+ */
+[scriptable, uuid(ecd6ad22-8eb0-4824-8a57-5edad9a08ae6)]
+interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
+{
   /**
    * Controls whether duplicate adjacent elements are collapsed into a single
    * item in the tree. This prevents you from seeing multiple entries for
@@ -463,36 +578,82 @@ interface nsINavHistoryResult : nsISupports
    * ever want one entry per site, you should ask for URIs back instead of
    * visits so it will be more efficient.
    * Default = true
+   *
+   * Changing this value is somewhat heavyweight since it will force a tree
+   * refresh.
    */
   attribute boolean collapseDuplicates;
 
   /**
-   * This allows you to get at the real node for a given row index in the tree.
+   * This tells you how many items are in the flattened list of results, i.e.
+   * how many rows are in this tree right now. The tree adaptor will also
+   * QI to nsITreeView, and this will be the same as nsITreeView.rowCount.
+   * This is only valid when a tree is attached, the result will be 0 otherwise.
+   */
+  readonly attribute PRUint32 flatItemCount;
+
+  /**
+   * This allows you to get at the real node for a given row index. This is
+   * only valid when a tree is attached.
    */
   nsINavHistoryResultNode nodeForTreeIndex(in PRUint32 aIndex);
 
   /**
-   * Reverse of nodeForTreeIndex, returns the row index for a given result node.
+   * Reverse of nodeForFlatIndex, returns the row index for a given result node.
    * Returns INDEX_INVISIBLE if the item is not visible (for example, its
-   * parent is collapsed).
+   * parent is collapsed). This is only valid when a tree is attached. The
+   * the result will always be INDEX_INVISIBLE if not.
    */
   const PRUint32 INDEX_INVISIBLE = 0xffffffff;
   PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);
+};
+
+
+/**
+ * The result of a history/bookmark query.
+ *
+ * Use the "root" element to access the children of this query.
+ *
+ * The basic design of the system is a model-view-controller. This result object
+ * represents the model where the data is stored. External components
+ * provide the view and controller which define how the data looks and how
+ * interaction happens.
+ *                           +-- nsINavHistoryResultViewObserver
+ *                           |
+ *   [RESULT]----->[viewer]----->[controller]
+ *             |
+ *             +-- nsINavHistoryResultViewer
+ *
+ * The result indicates to the view when something changes through the
+ * nsINavHistoryResultViewer interface. Viewers register themselves through
+ * the nsINavHistoryResult.RegisterViewer. The viewer interface would then tell
+ * the actual view object what to do. A nsINavHistoryResultTreeViewer is
+ * provided which provides pre-packaged interaction with a nsITreeBoxObject.
+ * Other views will need to provide their own viewer interfaces.
+ *
+ * The viewer provides notifications to the controller when view events occur
+ * through the nsINavHistoryResultViewObserver interface.
+ */
+
+[scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
+interface nsINavHistoryResult : nsISupports
+{
+  /**
+   * Sorts all nodes recursively by the given parameter, one of
+   * nsINavHistoryQueryOptions.SORT_BY_*  This will update the corresponding
+   * options for this result, so that re-using the current options/queries will
+   * always give you the current view.
+   */
+  void sortAll(in PRUint32 aSortingMode);
 
   /**
-   * Add a Tree Builder Observer to handle Tree View methods that the 
-   * HistoryResult object does not implement. If ownsWeak is false, then
-   * the result will hold a strong reference to the observer.  If ownsWeak
-   * is true, then the observer must implement nsISupportsWeakReference, and
-   * the result will hold a weak reference to the observer.
+   * The viewer for this result (see comment for the class for how these
+   * objects are related). This may be null, in which case you can still
+   * manually walk the tree using the root node. When this is non-null, you
+   * can access the flattened list of items (flatItemCount, nodeForFlatIndex,
+   * flatIndexForNode).
    */
-  void addObserver(in nsINavHistoryResultViewObserver observer,
-                   in boolean ownsWeak);
-
-  /**
-   * Remove a tree builder observer.
-   */
-  void removeObserver(in nsINavHistoryResultViewObserver observer);
+  attribute nsINavHistoryResultViewer viewer;
 
   /**
    * This is the root of the results.  It will either be a
@@ -503,6 +664,7 @@ interface nsINavHistoryResult : nsISupports
    */
   readonly attribute nsINavHistoryQueryResultNode root;
 };
+
 
 /**
  * Similar to nsIRDFObserver for history. Note that we don't pass the data
