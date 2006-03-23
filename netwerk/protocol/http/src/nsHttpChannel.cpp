@@ -166,7 +166,7 @@ nsHttpChannel::nsHttpChannel()
     , mAuthRetryPending(PR_FALSE)
     , mSuppressDefensiveAuth(PR_FALSE)
     , mResuming(PR_FALSE)
-    , mInitedCacheEntry(PR_FALSE)
+    , mOpenedCacheForWriting(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -472,13 +472,9 @@ nsHttpChannel::HandleAsyncRedirect()
         }
     }
 
-    // close the cache entry.  Blow it away if we couldn't process the redirect
-    // for some reason (the cache entry might be corrupt).
-    if (mCacheEntry) {
-        if (NS_FAILED(rv))
-            mCacheEntry->Doom();
-        CloseCacheEntry();
-    }
+    // close the cache entry... blow it away if we couldn't process
+    // the redirect for some reason.
+    CloseCacheEntry(rv);
 
     mIsPending = PR_FALSE;
 
@@ -498,7 +494,7 @@ nsHttpChannel::HandleAsyncNotModified()
         mListenerContext = 0;
     }
 
-    CloseCacheEntry();
+    CloseCacheEntry(NS_OK);
 
     mIsPending = PR_FALSE;
 
@@ -861,10 +857,8 @@ nsHttpChannel::ProcessResponse()
 #endif
         // don't store the response body for redirects
         rv = ProcessRedirection(httpStatus);
-        if (NS_SUCCEEDED(rv)) {
-            InitCacheEntry();
-            CloseCacheEntry();
-        }    
+        if (NS_SUCCEEDED(rv))
+            CloseCacheEntry(InitCacheEntry());
         else {
             LOG(("ProcessRedirection failed [rv=%x]\n", rv));
             rv = ProcessNormal();
@@ -1729,31 +1723,31 @@ nsHttpChannel::ReadFromCache()
     return mCachePump->AsyncRead(this, mListenerContext);
 }
 
-void
-nsHttpChannel::CloseCacheEntry()
+nsresult
+nsHttpChannel::CloseCacheEntry(nsresult status)
 {
-    if (!mCacheEntry)
-        return;
+    nsresult rv = NS_OK;
+    if (mCacheEntry) {
+        LOG(("nsHttpChannel::CloseCacheEntry [this=%x status=%x]", this, status));
 
-    LOG(("nsHttpChannel::CloseCacheEntry [this=%x]", this));
+        // don't doom the cache entry if only reading from it...
+        if (NS_FAILED(status)
+                && (mCacheAccess & nsICache::ACCESS_WRITE) && !mCachePump) {
+            LOG(("  dooming cache entry!!"));
+            rv = mCacheEntry->Doom();
+        }
 
-    // Doom the cache entry if it was newly created and never initialized.
-    // Else, we keep it around in the hope of being able to make use of it
-    // again (see CheckCache).
-    if (mCacheAccess == nsICache::ACCESS_WRITE && !mInitedCacheEntry) {
-        LOG(("  dooming cache entry!!"));
-        mCacheEntry->Doom();
+        if (mCachedResponseHead) {
+            delete mCachedResponseHead;
+            mCachedResponseHead = 0;
+        }
+
+        mCachePump = 0;
+        mCacheEntry = 0;
+        mCacheAccess = 0;
+        mOpenedCacheForWriting = PR_FALSE;
     }
-
-    if (mCachedResponseHead) {
-        delete mCachedResponseHead;
-        mCachedResponseHead = 0;
-    }
-
-    mCachePump = 0;
-    mCacheEntry = 0;
-    mCacheAccess = 0;
-    mInitedCacheEntry = PR_FALSE;
+    return rv;
 }
 
 // Initialize the cache entry for writing.
@@ -1848,7 +1842,7 @@ nsHttpChannel::InitCacheEntry()
     rv = mCacheEntry->SetMetaDataElement("response-head", head.get());
     if (NS_FAILED(rv)) return rv;
 
-    mInitedCacheEntry = PR_TRUE;
+    mOpenedCacheForWriting = PR_TRUE;
     return NS_OK;
 }
 
@@ -3416,7 +3410,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     rv = Connect();
     if (NS_FAILED(rv)) {
         LOG(("Connect failed [rv=%x]\n", rv));
-        CloseCacheEntry();
+        CloseCacheEntry(rv);
         AsyncAbort(rv);
     }
     return NS_OK;
@@ -4095,7 +4089,12 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             gHttpHandler->CancelTransaction(mTransaction, status); 
     }
 
+    PRBool isPartial = PR_FALSE;
     if (mTransaction) {
+        // find out if the transaction ran to completion...
+        if (mCacheEntry)
+            isPartial = !mTransaction->ResponseIsComplete();
+
         // determine if we should call DoAuthRetry
         PRBool authRetry = mAuthRetryPending && NS_SUCCEEDED(status);
 
@@ -4144,8 +4143,21 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mListenerContext = 0;
     }
 
-    if (mCacheEntry)
-        CloseCacheEntry();
+    if (mCacheEntry) {
+        nsresult closeStatus = status;
+        // we don't want to discard the cache entry if we're only reading from
+        // the cache.
+        if (!mOpenedCacheForWriting || request == mCachePump)
+            closeStatus = NS_OK;
+        // we also don't want to discard the cache entry if the server supports
+        // byte range requests, because we could always complete the download
+        // at a later time.
+        else if (isPartial && mResponseHead && mResponseHead->IsResumable()) {
+            LOG(("keeping partial response that is resumable!\n"));
+            closeStatus = NS_OK; 
+        }
+        CloseCacheEntry(closeStatus);
+    }
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
@@ -4459,7 +4471,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 
     // a failure from Connect means that we have to abort the channel.
     if (NS_FAILED(rv)) {
-        CloseCacheEntry();
+        CloseCacheEntry(rv);
         AsyncAbort(rv);
     }
 
