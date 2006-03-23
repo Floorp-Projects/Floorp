@@ -677,6 +677,9 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   scrolledArea.UnionRect(mInner.GetScrolledRect(aState.mScrollPortRect.Size()),
                          nsRect(nsPoint(0,0), aState.mScrollPortRect.Size()));
 
+  // Note that making the view *exactly* the size of the scrolled area
+  // is critical, since the view scrolling code uses the size of the
+  // scrolled view to clamp scroll requests.
   nsContainerFrame::SyncFrameViewAfterReflow(scrolledFrame->GetPresContext(),
                                              scrolledFrame,
                                              scrolledView,
