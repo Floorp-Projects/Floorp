@@ -718,8 +718,18 @@ calDavCalendar.prototype = {
         if (aRangeStart && aRangeStart.isValid && 
             aRangeEnd && aRangeEnd.isValid) {
 
-            var rangeXml = <time-range start={aRangeStart.icalString}
-                                       end={aRangeEnd.icalString}/>;
+            var queryRangeStart = aRangeStart.clone();
+            var queryRangeEnd = aRangeEnd.clone();
+            queryRangeStart.isDate = false;
+            if (queryRangeEnd.isDate) {
+                // add a day to rangeEnd since we want to match events all that day
+                // and isDate=false is converting the date to midnight
+                queryRangeEnd.day++;
+                queryRangeEnd.normalize();
+                queryRangeEnd.isDate = false;
+            }
+            var rangeXml = <time-range start={queryRangeStart.getInTimezone("UTC").icalString}
+                                       end={queryRangeEnd.getInTimezone("UTC").icalString}/>;
 
             // append the time-range as a child of our innermost comp-filter
             queryXml[0].C::filter.C::["comp-filter"]
