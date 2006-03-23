@@ -86,6 +86,8 @@ nsMetricsService* nsMetricsService::sMetricsService = nsnull;
 PRLogModuleInfo *gMetricsLog;
 #endif
 
+static const char kQuitApplicationTopic[] = "quit-application";
+
 //-----------------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS6_CI(nsMetricsService, nsIMetricsService, nsIAboutModule,
@@ -179,6 +181,10 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
   rv = eventElement->SetAttribute(NS_LITERAL_STRING("time"), timeString);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Add the session id
+  rv = eventElement->SetAttribute(NS_LITERAL_STRING("session"), mSessionID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsCOMPtr<nsIDOMNode> outChild;
   rv = mRoot->AppendChild(eventElement, getter_AddRefs(outChild));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -343,21 +349,30 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
   // Apply possibly new upload interval:
   RegisterUploadTimer();
 
-  // Shutdown collectors that are no longer enabled.  For now, this only
+  EnableCollectors();
+
+  mUploading = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsMetricsService::EnableCollectors()
+{
+  // Start and stop collectors based on the current config. For now, this only
   // applies to the load collector since the window collector may be needed by
   // other collectors.
   //
   // TODO(darin): Come up with a better solution for this.  A broadcast
   //              notification to the collectors might be ideal.
   //
+  nsresult rv;
   if (mConfig.IsEventEnabled(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
                              NS_LITERAL_STRING("load"))) {
-    nsLoadCollector::Startup();
+    rv = nsLoadCollector::Startup();
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     nsLoadCollector::Shutdown();
   }
-
-  mUploading = PR_FALSE;
   return NS_OK;
 }
 
@@ -375,13 +390,71 @@ NS_IMETHODIMP
 nsMetricsService::Observe(nsISupports *subject, const char *topic,
                           const PRUnichar *data)
 {
-  if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+  if (strcmp(topic, kQuitApplicationTopic) == 0) {
     Flush();
     nsLoadCollector::Shutdown();
     nsWindowCollector::Shutdown();
   } else if (strcmp(topic, "profile-after-change") == 0) {
-    RegisterUploadTimer();
+    nsresult rv = ProfileStartup();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+  return NS_OK;
+}
+
+nsresult
+nsMetricsService::ProfileStartup()
+{
+  // Initialize configuration by reading our old config file if one exists.
+  NS_ENSURE_STATE(mConfig.Init());
+  nsCOMPtr<nsIFile> file;
+  GetConfigFile(getter_AddRefs(file));
+
+  PRBool loaded = PR_FALSE;
+  if (file) {
+    PRBool exists;
+    if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
+      loaded = NS_SUCCEEDED(mConfig.Load(file));
+    }
+  }
+  
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_STATE(prefs);
+  nsresult rv = prefs->GetIntPref("metrics.event-count", &mEventCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Update the session id pref for the new session
+  static const char kSessionIDPref[] = "metrics.last-session-id";
+  PRInt32 sessionID = -1;
+  prefs->GetIntPref(kSessionIDPref, &sessionID);
+  mSessionID.Truncate();
+  mSessionID.AppendInt(++sessionID);
+  rv = prefs->SetIntPref(kSessionIDPref, sessionID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // Create an XML document to serve as the owner document for elements.
+  mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
+  // Create a root log element.
+  rv = CreateRoot();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Start up the collectors
+  rv = nsWindowCollector::Startup();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = EnableCollectors();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  RegisterUploadTimer();
+
+  // If we didn't load a config, immediately upload our empty log.
+  // This will allow us to receive a config file from the server.
+  // If we fail to get a config, we'll try again later, see OnStopRequest().
+  if (!loaded) {
+    Upload();
+  }
+  
   return NS_OK;
 }
 
@@ -427,41 +500,16 @@ nsMetricsService::Create(nsISupports *outer, const nsIID &iid, void **result)
 nsresult
 nsMetricsService::Init()
 {
+  // We defer most of our initialization until the profile-after-change
+  // notification, because profile prefs aren't available until then.
+  
 #ifdef PR_LOGGING
   gMetricsLog = PR_NewLogModule("nsMetricsService");
 #endif
 
+  MS_LOG(("nsMetricsService::Init"));
+
   nsresult rv;
-
-  // Initialize configuration.
-  NS_ENSURE_STATE(mConfig.Init());
-  nsCOMPtr<nsIFile> file;
-  GetConfigFile(getter_AddRefs(file));
-  if (file)
-    mConfig.Load(file);
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(prefs);
-  rv = prefs->GetIntPref("metrics.event-count", &mEventCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Create an XML document to serve as the owner document for elements.
-  mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
-
-  // Create a root log element.
-  rv = CreateRoot();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Start up the collectors
-  rv = nsWindowCollector::Startup();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = nsLoadCollector::Startup();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Hook ourselves up to observe notifications last.  This ensures that
-  // we don't end up with an extra reference to the metrics service if
-  // any of the above initialization fails.
 
   // Hook ourselves up to receive the xpcom shutdown event so we can properly
   // flush our data to disk.
@@ -469,7 +517,7 @@ nsMetricsService::Init()
       do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = obsSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  rv = obsSvc->AddObserver(this, kQuitApplicationTopic, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = obsSvc->AddObserver(this, "profile-after-change", PR_FALSE);

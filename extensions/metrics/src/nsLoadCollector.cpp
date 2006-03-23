@@ -339,7 +339,7 @@ nsLoadCollector::Startup()
 /* static */ void
 nsLoadCollector::Shutdown()
 {
-  NS_RELEASE(sLoadCollector);
+  NS_IF_RELEASE(sLoadCollector);
 
   GetMemUsage_Shutdown();
 }
