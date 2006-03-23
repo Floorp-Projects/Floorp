@@ -246,29 +246,17 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 
 	/* determine which optimizations (if any) to use */
 	if (params->field == ECField_GFp) {
-		if ((name == ECCurve_SECG_PRIME_160R1)) {
+	    switch (name) {
 #ifdef ECL_USE_FP
+		case ECCurve_SECG_PRIME_160R1:
 			group =
 				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
 								&order, params->cofactor);
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
 			MP_CHECKOK(ec_group_set_secp160r1_fp(group));
-#else
-			group =
-				ECGroup_consGFp_mont(&irr, &curvea, &curveb, &genx, &geny,
-									 &order, params->cofactor);
-			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-			/* no optimized version of secp160r1 arithmetic for non-floating 
-			 * point systems
-			 */
+			break;
 #endif
-		} else if ((name == ECCurve_SECG_PRIME_192K1)) {
-			group =
-				ECGroup_consGFp_mont(&irr, &curvea, &curveb, &genx, &geny,
-									 &order, params->cofactor);
-			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-			MP_CHECKOK(ec_group_set_gfp192(group, name));
-		} else if ((name == ECCurve_SECG_PRIME_192R1)) {
+		case ECCurve_SECG_PRIME_192R1:
 #ifdef ECL_USE_FP
 			group =
 				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
@@ -282,13 +270,8 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
 			MP_CHECKOK(ec_group_set_gfp192(group, name));
 #endif
-		} else if ((name == ECCurve_SECG_PRIME_224K1)) {
-			group =
-				ECGroup_consGFp_mont(&irr, &curvea, &curveb, &genx, &geny,
-									 &order, params->cofactor);
-			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-			MP_CHECKOK(ec_group_set_gfp224(group, name));
-		} else if ((name == ECCurve_SECG_PRIME_224R1)) {
+			break;
+		case ECCurve_SECG_PRIME_224R1:
 #ifdef ECL_USE_FP
 			group =
 				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
@@ -302,16 +285,27 @@ ecgroup_fromNameAndHex(const ECCurveName name,
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
 			MP_CHECKOK(ec_group_set_gfp224(group, name));
 #endif
-		} else {
+			break;
+		case ECCurve_SECG_PRIME_256R1:
+			group =
+				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
+								&order, params->cofactor);
+			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
+			MP_CHECKOK(ec_group_set_gfp256(group, name));
+			break;
+		case ECCurve_SECG_PRIME_521R1:
+			group =
+				ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
+								&order, params->cofactor);
+			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
+			MP_CHECKOK(ec_group_set_gfp521(group, name));
+			break;
+		default:
 			/* use generic arithmetic */
 			group =
 				ECGroup_consGFp_mont(&irr, &curvea, &curveb, &genx, &geny,
 									 &order, params->cofactor);
 			if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-		}
-		/* XXX secp521r1 fails ecp_test with &ec_GFp_pts_mul_jac */
-		if (name == ECCurve_SECG_PRIME_521R1) {
-			group->points_mul = &ec_pts_mul_simul_w2;
 		}
 	} else if (params->field == ECField_GF2m) {
 		group = ECGroup_consGF2m(&irr, NULL, &curvea, &curveb, &genx, &geny, &order, params->cofactor);
