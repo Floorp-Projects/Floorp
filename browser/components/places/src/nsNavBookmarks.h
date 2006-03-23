@@ -116,6 +116,7 @@ private:
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
   PRInt64 mToolbarRoot;
+  PRInt64 mTagRoot;
 
   // the level of nesting of batches, 0 when no batches are open
   PRInt32 mBatchLevel;

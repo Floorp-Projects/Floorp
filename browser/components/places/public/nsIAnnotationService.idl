@@ -65,7 +65,7 @@ interface nsIAnnotationObserver : nsISupports
     void onAnnotationRemoved(in nsIURI aURI, in AUTF8String aName);
 };
 
-[scriptable, uuid(6c170b7c-b4d4-4068-8c5b-53827b10557c)]
+[scriptable, uuid(a857c97f-7705-4376-b374-bd8799f69d51)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -264,6 +264,17 @@ interface nsIAnnotationService : nsISupports
      */
     void removePageAnnotations(in nsIURI aURI);
 
+    /**
+     * Copies all annotations from the source to the destination URI. If the
+     * destination already has an annotation with the same name as one on the
+     * source, it will be overwritten if aOverwriteDest is set. Otherwise,
+     * the destination URIs will be preferred.
+     *
+     * All the source annotations will stay as-is. If you don't want them
+     * any more, use removePageAnnotations on that URI.
+     */
+    void copyAnnotations(in nsIURI aSourceURI, in nsIURI aDestURI,
+                         in boolean aOverwriteDest);
 
     /**
      * Adds an annotation observer. The annotation service will keep an owning

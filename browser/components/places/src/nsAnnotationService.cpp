@@ -60,6 +60,8 @@ const PRInt32 nsAnnotationService::kAnnoIndex_Expiration = 6;
 static NS_DEFINE_CID(kmozStorageServiceCID, MOZ_STORAGE_SERVICE_CID);
 static NS_DEFINE_CID(kmozStorageConnectionCID, MOZ_STORAGE_CONNECTION_CID);
 
+nsAnnotationService* nsAnnotationService::gAnnotationService;
+
 NS_IMPL_ISUPPORTS1(nsAnnotationService,
                    nsIAnnotationService)
 
@@ -67,7 +69,9 @@ NS_IMPL_ISUPPORTS1(nsAnnotationService,
 
 nsAnnotationService::nsAnnotationService()
 {
-
+  NS_ASSERTION(!gAnnotationService,
+               "ATTEMPTING TO CREATE TWO INSTANCES OF THE ANNOTATION SERVICE!");
+  gAnnotationService = this;
 }
 
 
@@ -75,7 +79,10 @@ nsAnnotationService::nsAnnotationService()
 
 nsAnnotationService::~nsAnnotationService()
 {
-
+  NS_ASSERTION(gAnnotationService == this, 
+               "Deleting a non-singleton annotation service");
+  if (gAnnotationService == this)
+    gAnnotationService = nsnull;
 }
 
 
@@ -643,6 +650,101 @@ nsAnnotationService::RemovePageAnnotations(nsIURI* aURI)
   // Update observers
   for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnAnnotationRemoved(aURI, EmptyCString());
+  return NS_OK;
+}
+
+
+// nsAnnotationService::CopyAnnotations
+//
+//    This function currently assumes there are very few annotations per
+//    URI and that brute-force is therefore a good strategy for intersecting
+//    the two sets. If this ends up not being the case, this function should
+//    be changed to do this more efficiently.
+//
+//    XXX: If we use annotations for some standard items like GeckoFlags, it
+//    might be a good idea to blacklist these standard annotations from this
+//    copy function.
+
+NS_IMETHODIMP
+nsAnnotationService::CopyAnnotations(nsIURI* aSourceURI, nsIURI* aDestURI,
+                                     PRBool aOverwriteDest)
+{
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
+  // source
+  nsTArray<nsCString> sourceNames;
+  nsresult rv = GetPageAnnotationNamesTArray(aSourceURI, &sourceNames);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (sourceNames.Length() == 0)
+    return NS_OK; // nothing to copy
+
+  // dest
+  nsTArray<nsCString> destNames;
+  rv = GetPageAnnotationNamesTArray(aDestURI, &destNames);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we assume you will only have a couple annotations max per URI
+#ifdef DEBUG
+  if (sourceNames.Length() > 10 || destNames.Length() > 10) {
+    NS_WARNING("There are a lot of annotations, copying them may be inefficient.");
+  }
+#endif
+
+  if (aOverwriteDest) {
+    // overwrite existing ones, remove dest dupes from DB and our list
+    for (PRUint32 i = 0; i < sourceNames.Length(); i ++) {
+      PRUint32 destIndex = destNames.IndexOf(sourceNames[i]);
+      if (destIndex != destNames.NoIndex) {
+        destNames.RemoveElementAt(destIndex);
+        RemoveAnnotation(aDestURI, sourceNames[i]);
+      }
+    }
+  } else {
+    // don't overwrite existing ones, remove dupes from the list of source names
+    for (PRUint32 i = 0; i < destNames.Length(); i ++) {
+      PRUint32 sourceIndex = sourceNames.IndexOf(destNames[i]);
+      if (sourceIndex != sourceNames.NoIndex)
+        sourceNames.RemoveElementAt(sourceIndex);
+    }
+  }
+
+  // given (sourceID, destID, name) this will insert a new annotation on
+  // source with the same values of the annotation on dest.
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO moz_anno (page, name, mime_type, content, flags, expiration) "
+      "SELECT ?1, ?3, mime_type, content, flags, expiration "
+      "FROM moz_anno WHERE page = ?2 AND name = ?3"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the IDs of the pages in quesion.  PERFORMANCE: This is the second time
+  // we do this for each page, since GetPageAnnotationNamesTArray does it when
+  // it gets the names. If this function requires optimization, we should only
+  // do this once and get the names ourselves using the IDs.
+  PRInt64 sourceID, destID;
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
+
+  rv = history->GetUrlIdFor(aSourceURI, &sourceID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(sourceID, NS_ERROR_UNEXPECTED); // we should have caught this above
+
+  rv = history->GetUrlIdFor(aSourceURI, &destID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(destID, NS_ERROR_UNEXPECTED); // we should have caught this above
+
+  // now we know to create annotations from all sources names and there won't
+  // be any collisions
+  for (PRUint32 i = 0; i < sourceNames.Length(); i ++) {
+    statement->BindInt64Parameter(0, sourceID);
+    statement->BindInt64Parameter(1, destID);
+    statement->BindUTF8StringParameter(2, sourceNames[i]);
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  transaction.Commit();
   return NS_OK;
 }
 

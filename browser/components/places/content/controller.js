@@ -1086,31 +1086,9 @@ var PlacesController = {
    * metadata from the old URI to the new URI.
    */
   changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
-    this._assertURINotString(oldURI);
-    this._assertURINotString(newURI);
-    NS_ASSERT(this.bookmarks.isBookmarked(oldURI));
-
-    if (oldURI.spec == newURI.spec) 
-      return;
-
-    var folders = this.bookmarks.getBookmarkFolders(oldURI, {});
-    this.bookmarks.beginUpdateBatch();
-    for (var i = 0; i < folders.length; i++) {
-      this.bookmarks.replaceItem(folders[i], oldURI, newURI);
-    }
-    this.bookmarks.setItemTitle(newURI,
-                                this.bookmarks.getItemTitle(oldURI));
-    this.bookmarks.setKeywordForURI(newURI, 
-                                    this.bookmarks.getKeywordForURI(oldURI));
-    LOG("TODO: move annotations over\n");
-    /*
-    this.annotations.copyAnnotations(oldURI, newURI, true);
-    this.annotations.removePageAnnotations(oldURI);
-    */
-
-    this.bookmarks.endUpdateBatch();
+    this.bookmarks.changeBookmarkURI(oldURI, newURI);
   },
-  
+
   get browserWindow() {
     var wm = 
         Cc["@mozilla.org/appshell/window-mediator;1"].

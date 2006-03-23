@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
+#include "nsServiceManagerUtils.h"
 
 class nsAnnotationService : public nsIAnnotationService
 {
@@ -53,6 +54,28 @@ public:
   nsresult Init();
 
   static nsresult InitTables(mozIStorageConnection* aDBConn);
+
+  /**
+   * Returns a cached pointer to the annotation service for consumers in the
+   * places directory.
+   */
+  static nsAnnotationService* GetAnnotationService()
+  {
+    if (! gAnnotationService) {
+      // note that we actually have to set the service to a variable here
+      // because the work in do_GetService actually happens during assignment >:(
+      nsresult rv;
+      nsCOMPtr<nsIAnnotationService> serv(do_GetService("@mozilla.org/browser/annotation-service;1", &rv));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      // our constructor should have set the static variable. If it didn't,
+      // something is wrong.
+      NS_ASSERTION(gAnnotationService, "Annotation service creation failed");
+    }
+    // the service manager will keep the pointer to our service around, so
+    // this should always be valid even if nobody currently has a reference.
+    return gAnnotationService;
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIANNOTATIONSERVICE
@@ -72,6 +95,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBRemoveAnnotation;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
+
+  static nsAnnotationService* gAnnotationService;
 
   static const int kAnnoIndex_ID;
   static const int kAnnoIndex_Page;

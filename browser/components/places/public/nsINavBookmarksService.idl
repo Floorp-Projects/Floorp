@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
+ *   Joe Hughes <joe@retrovirus.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,14 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArray.h"
+#include "prtypes.h"
+%}
+
 interface nsIURI;
+
+[ptr] native PRInt64Array(nsTArray<PRInt64>);
 
 /**
  * Observer for bookmark changes.
@@ -191,7 +199,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(5feca204-b735-40e8-921f-8b057eedffe2)]
+[scriptable, uuid(6979da92-25d4-4553-8450-bfec2b3772db)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -208,6 +216,14 @@ interface nsINavBookmarksService : nsISupports
    * The folder ID of the personal toolbar root.
    */
   readonly attribute PRInt64 toolbarRoot;
+
+  /**
+   * The folder ID of the top-level folders that contain the tag "folders".
+   *
+   * NOTE: This isn't wired up yet, so don't try to use it for anything until
+   *       bug 329961 is marked resolved.
+   */
+  readonly attribute PRInt64 tagRoot;
 
   /**
    * Inserts a child item into the given folder. If this item already exists in
@@ -367,10 +383,30 @@ interface nsINavBookmarksService : nsISupports
   nsIURI getBookmarkedURIFor(in nsIURI uri);
 
   /**
+   * "Changes" the URI of a bookmark.  Since URIs are the unique
+   * identifiers of bookmarks in this system, what this really means is
+   * that all the metadata attached to oldURI will be copied onto newURI,
+   * and oldURI will be deleted from the bookmark system.  If newURI
+   * is already bookmarked, the metadata from oldURI will overwrite
+   * the corresponding metadata on newURI.  Any annotations on oldURI
+   * will be copied to newURI (a copy will remain on oldURI).
+   */
+
+  void changeBookmarkURI(in nsIURI oldURI, in nsIURI newURI);
+
+  /**
    * Returns the list of folder ids that contain the given URI.
    */
   void getBookmarkFolders(in nsIURI uri, out PRUint32 count,
                           [array, retval, size_is(count)] out PRInt64 folders);
+
+  /**
+   * TArray version of getBookmarkFolders for ease of use in C++ code.
+   * Pass in a reference to a TArray; it will get cleared and filled with
+   * the resulting list of folder IDs.
+   */
+  [noscript] void getBookmarkFoldersTArray(in nsIURI aURI,
+                                           in PRInt64Array aResult);
 
   /**
    * Returns the index of the given item in the given folder.

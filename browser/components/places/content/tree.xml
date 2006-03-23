@@ -550,7 +550,7 @@
           
           // For all the nodes we've found, highlight the corresponding
           // index in the tree.
-          var resultview = this.getResult();
+          var resultview = this.getResultView();
           var selection = this.view.selection;
           selection.clearSelection();
           for(idx in nodes) {
