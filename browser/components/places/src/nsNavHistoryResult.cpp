@@ -2990,11 +2990,19 @@ NS_IMETHODIMP
 nsNavHistoryFolderResultNode::OnFolderChanged(PRInt64 aFolder,
                                               const nsACString& property)
 {
-  if (! StartIncrementalUpdate())
-    return NS_OK;
+  // Do NOT call StartIncrementalUpdate here. That call is not appropriate
+  // because it assumes a child has changed. Here, our folder itself is
+  // changing. Updating a folder is very easy and isn't affected by filtering,
+  // so we can always do incremental updates.
 
   if (property.EqualsLiteral("title")) {
-    mTitle = property;
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+    nsAutoString title;
+    bookmarks->GetFolderTitle(mFolderId, title);
+    mTitle = NS_ConvertUTF16toUTF8(title);
+
     PRInt32 sortType = GetSortType();
     if ((sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING ||
          sortType == nsINavHistoryQueryOptions::SORT_BY_TITLE_DESCENDING) &&
@@ -3023,6 +3031,7 @@ nsNavHistoryFolderResultNode::OnFolderChanged(PRInt64 aFolder,
         NS_STATIC_CAST(nsNavHistoryResultNode*, this));
   return NS_OK;
 }
+
 
 // nsNavHistoryFolderResultNode::OnSeparatorAdded (nsINavBookmarkObserver)
 
