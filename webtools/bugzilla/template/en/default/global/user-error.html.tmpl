@@ -314,7 +314,7 @@
 
   [% ELSIF error == "dependency_loop_single" %]
     [% title = "Dependency Loop Detected" %]
-    You can't make [% terms.abug %] blocked or dependent on itself.
+    You can't make [% terms.abug %] block itself or depend on itself.
 
   [% ELSIF error == "description_required" %]
     [% title = "Description Required" %]
