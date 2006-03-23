@@ -385,7 +385,6 @@ public:
                                      nsIDocument* aSubDoc);
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
-  virtual nsIContent* GetRootContent() const;
 
   /**
    * Get the style sheets owned by this document.
@@ -706,6 +705,10 @@ protected:
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
 
+#ifdef DEBUG
+  void VerifyRootContentState();
+#endif
+
   nsDocument();
   virtual ~nsDocument();
 
@@ -769,6 +772,8 @@ protected:
   nsString mBaseTarget;
 
 private:
+  nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);
+
   void PostUnblockOnloadEvent();
   static EventHandlerFunc HandleOnloadBlockerEvent;
   static EventDestructorFunc DestroyOnloadBlockerEvent;

@@ -52,7 +52,7 @@
 #include "nsIDOMUserDataHandler.h"
 
 class nsDocumentFragment : public nsGenericElement,
-                           public nsIDOMDocumentFragment,
+                           public nsIDocumentFragment,
                            public nsIDOM3Node
 {
 public:
@@ -61,6 +61,11 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+
+  // interface nsIDocumentFragment
+  NS_IMETHOD DisconnectChildren();
+  NS_IMETHOD ReconnectChildren();
+  NS_IMETHOD DropChildReferences();
 
   // interface nsIDOMDocumentFragment
   NS_IMETHOD    GetNodeName(nsAString& aNodeName)
@@ -189,6 +194,7 @@ nsDocumentFragment::~nsDocumentFragment()
 
 // QueryInterface implementation for nsDocumentFragment
 NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
@@ -201,6 +207,71 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDocumentFragment)
 NS_IMPL_RELEASE(nsDocumentFragment)
+
+NS_IMETHODIMP
+nsDocumentFragment::DisconnectChildren()
+{
+  PRUint32 i, count = GetChildCount();
+
+  for (i = 0; i < count; i++) {
+    NS_ASSERTION(GetChildAt(i)->GetCurrentDoc() == nsnull,
+                 "How did we get a child with a current doc?");
+    // Safe to unbind PR_FALSE, since kids should never have a current document
+    // or a binding parent
+    GetChildAt(i)->UnbindFromTree(PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::ReconnectChildren()
+{
+  PRUint32 i, count = GetChildCount();
+  NS_PRECONDITION(GetCurrentDoc() == nsnull,
+                  "We really shouldn't have a current doc!");
+
+  for (i = 0; i < count; i++) {
+    nsIContent *child = GetChildAt(i);
+    nsIContent *parent = child->GetParent();
+
+    if (parent) {
+      // This is potentially a O(n**2) operation, but it should only
+      // happen in error cases (such as out of memory or something
+      // similar) so we don't care for now.
+      // XXXbz I don't think this is O(n**2) with our IndexOf cache, is it?
+
+      PRInt32 indx = parent->IndexOf(child);
+
+      if (indx >= 0) {
+        parent->RemoveChildAt(indx, PR_TRUE);
+      }
+    }
+
+    nsresult rv = child->BindToTree(nsnull, this, nsnull, PR_FALSE);
+    if (NS_FAILED(rv)) {
+      // It's all bad now...  Just  forget about this kid, I guess
+      child->UnbindFromTree();
+      mAttrsAndChildren.RemoveChildAt(i);
+      // Adjust count and iterator accordingly
+      --count;
+      --i;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentFragment::DropChildReferences()
+{
+  PRUint32 count = mAttrsAndChildren.ChildCount();
+  while (count > 0) {
+    mAttrsAndChildren.RemoveChildAt(--count);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP    
 nsDocumentFragment::GetNodeType(PRUint16* aNodeType)

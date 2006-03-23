@@ -411,8 +411,6 @@ nsXFormsModelElement::InitializeInstances()
     // Parse the whitespace-separated list.
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
     nsRefPtr<nsIURI> baseURI = content->GetBaseURI();
-    nsRefPtr<nsIURI> docURI = content->GetOwnerDoc() ?
-      content->GetOwnerDoc()->GetDocumentURI() : nsnull;
 
     nsCStringArray schemas;
     schemas.ParseString(NS_ConvertUTF16toUTF8(schemaList).get(), " \t\r\n");
@@ -434,7 +432,7 @@ nsXFormsModelElement::InitializeInstances()
         newURL->GetRef(ref);
         newURL->SetRef(EmptyCString());
         PRBool equals = PR_FALSE;
-        newURL->Equals(docURI, &equals);
+        newURL->Equals(baseURI, &equals);
         if (equals) {
           // We will not be able to locate the <xsd:schema> element using the
           // getElementById function defined on our document when <xsd:schema>

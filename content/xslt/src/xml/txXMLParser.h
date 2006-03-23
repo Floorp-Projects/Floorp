@@ -57,8 +57,9 @@ class txXPathNode;
  * of the document aLoader.
  */
 extern "C" nsresult
-txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
-                       nsAString& aErrMsg, txXPathNode** aResult);
+txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
+                       const txXPathNode& aLoader, nsAString& aErrMsg,
+                       txXPathNode** aResult);
 
 #ifdef TX_EXE
 /**
