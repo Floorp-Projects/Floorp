@@ -48,6 +48,7 @@
 #include "nsILocalFile.h"
 #include "nsDirPrefs.h"
 #include "nsIAbLDAPAttributeMap.h"
+#include "nsIAbLDAPDirectory.h"
 #include "nsString.h"
 
 class nsAbLDAPProcessReplicationData : public nsIAbLDAPProcessReplicationData
@@ -77,7 +78,7 @@ protected :
   PRBool          mDBOpen;
   PRBool          mInitialized;
   
-  DIR_Server *    mDirServerInfo;
+  nsCOMPtr<nsIAbLDAPDirectory> mDirectory;
   nsCString       mAuthDN;      // authDN of the user
   nsCString       mAuthPswd;    // pswd of the authDN user
   nsCOMPtr<nsIAbLDAPAttributeMap> mAttrMap; // maps ab properties to ldap attrs

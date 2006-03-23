@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -173,7 +175,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchEntry(nsILDAPMessage *aMessag
 nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 {
     NS_ENSURE_ARG_POINTER(aMessage);
-    if(!mInitialized) 
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     PRInt32 errorCode;
@@ -192,20 +194,25 @@ nsresult nsAbLDAPProcessChangeLogData::OnLDAPSearchResult(nsILDAPMessage *aMessa
                 // before starting the changeLog check the DB file, if its not there or bogus
                 // we need to create a new one and set to all.
                 nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
-                if(NS_FAILED(rv)) 
+                if (NS_FAILED(rv)) 
                     break;
                 nsCOMPtr<nsILocalFile> dbPath;
                 rv = abSession->GetUserProfileDirectory(getter_AddRefs(dbPath));
-                if(NS_FAILED(rv)) 
+                if (NS_FAILED(rv)) 
                     break;
 
-                rv = dbPath->AppendNative(nsDependentCString(mDirServerInfo->fileName));
-                if(NS_FAILED(rv)) 
+                nsXPIDLCString fileName;
+                rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+                if (NS_FAILED(rv))
+                  break;
+
+                rv = dbPath->AppendNative(fileName);
+                if (NS_FAILED(rv)) 
                     break;
 
                 PRBool fileExists;
                 rv = dbPath->Exists(&fileExists);
-                if(NS_FAILED(rv)) 
+                if (NS_FAILED(rv)) 
                     break;
 
                 PRInt64 fileSize;
@@ -310,8 +317,6 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
     if(NS_SUCCEEDED(rv) && btnResult) {
         CopyUTF16toUTF8(username, mAuthUserID);
         CopyUTF16toUTF8(password, mAuthPswd);
-        mDirServerInfo->enableAuth=PR_TRUE;
-        mDirServerInfo->savePassword=PR_TRUE;
     }
     else
         rv = NS_ERROR_FAILURE;
@@ -321,8 +326,8 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
 
 nsresult nsAbLDAPProcessChangeLogData::OnSearchAuthDNDone()
 {
-    if(!mInitialized) 
-        return NS_ERROR_NOT_INITIALIZED;
+  if (!mInitialized)
+    return NS_ERROR_NOT_INITIALIZED;
 
     nsCOMPtr<nsILDAPURL> url;
     nsresult rv = mQuery->GetReplicationURL(getter_AddRefs(url));
@@ -330,8 +335,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchAuthDNDone()
         rv = mQuery->ConnectToLDAPServer(url, mAuthDN);
     if(NS_SUCCEEDED(rv)) {
         mState = kAuthenticatedBinding;
-        PR_FREEIF(mDirServerInfo->authDn);
-        mDirServerInfo->authDn=ToNewCString(mAuthDN);
+        rv = mDirectory->SetAuthDn(mAuthDN.get());
     }
 
     return rv;
@@ -340,7 +344,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchAuthDNDone()
 nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessage)
 {
     NS_ENSURE_ARG_POINTER(aMessage);
-    if(!mInitialized) 
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     // populate the RootDSEChangeLogEntry
@@ -367,13 +371,16 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
         }
     }
 
-    if((mRootDSEEntry.lastChangeNumber > 0) 
-        && (mDirServerInfo->replInfo->lastChangeNumber < mRootDSEEntry.lastChangeNumber)
-        && (mDirServerInfo->replInfo->lastChangeNumber > mRootDSEEntry.firstChangeNumber) 
-      )
+    PRInt32 lastChangeNumber;
+    mDirectory->GetLastChangeNumber(&lastChangeNumber);
+
+    if ((mRootDSEEntry.lastChangeNumber > 0) &&
+        (lastChangeNumber < mRootDSEEntry.lastChangeNumber) &&
+        (lastChangeNumber > mRootDSEEntry.firstChangeNumber))
         mUseChangeLog = PR_TRUE;
 
-    if(mRootDSEEntry.lastChangeNumber && (mDirServerInfo->replInfo->lastChangeNumber == mRootDSEEntry.lastChangeNumber)) {
+    if (mRootDSEEntry.lastChangeNumber &&
+        (lastChangeNumber == mRootDSEEntry.lastChangeNumber)) {
         Done(PR_TRUE); // we are up to date no need to replicate, db not open yet so call Done
         return NS_OK;
     }
@@ -383,7 +390,7 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
 
 nsresult nsAbLDAPProcessChangeLogData::OnSearchRootDSEDone()
 {
-    if(!mInitialized) 
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_OK;
@@ -405,9 +412,10 @@ nsresult nsAbLDAPProcessChangeLogData::OnSearchRootDSEDone()
             mListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, PR_TRUE);
     }
 
-    mDirServerInfo->replInfo->lastChangeNumber = mRootDSEEntry.lastChangeNumber;
-    PR_FREEIF(mDirServerInfo->replInfo->dataVersion);
-    mDirServerInfo->replInfo->dataVersion = ToNewCString(mRootDSEEntry.dataVersion);
+    rv = mDirectory->SetLastChangeNumber(mRootDSEEntry.lastChangeNumber);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDirectory->SetDataVersion(mRootDSEEntry.dataVersion.get());
 
     return rv;
 }

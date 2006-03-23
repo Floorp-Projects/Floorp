@@ -37,27 +37,23 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsDirPrefs.h"
-%}
-[ptr] native DIR_Server(DIR_Server);
-
 interface nsIWebProgressListener;
 interface nsILDAPURL;
 interface nsILDAPConnection;
 interface nsILDAPOperation;
+interface nsIAbLDAPDirectory;
 
 /**
  * this interface provides methods to perform LDAP Replication Queries
  */
-[scriptable, uuid(00D568A1-3C3B-11d6-B7B9-00B0D06E5F27)]
+[scriptable, uuid(91c213f7-a381-4b1d-adf3-af58a2bb95d2)]
 interface nsIAbLDAPReplicationQuery : nsISupports {
 
    readonly attribute nsILDAPURL replicationURL;
    readonly attribute nsILDAPConnection connection;
    readonly attribute nsILDAPOperation operation;
 
-   [noscript] readonly attribute DIR_Server replicationServerInfo;
+   readonly attribute nsIAbLDAPDirectory lDAPDirectory;
 
    /**
      * initialize for the query

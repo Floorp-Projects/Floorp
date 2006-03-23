@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -118,8 +118,8 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::DoReplicationQuery()
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedToFindDn)
 {
-    if(!mInitialized) 
-        return NS_ERROR_NOT_INITIALIZED;
+  if (!mInitialized)
+    return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_OK;
 
@@ -127,9 +127,16 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryAuthDN(const nsACString & aValueUsedT
       do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
-    rv = mapSvc->GetMapForPrefBranch(nsDependentCString(mDirServer->prefName), getter_AddRefs(attrMap));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString prefBaseName;
+  rv = abDirectory->GetDirPrefId(prefBaseName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
+  rv = mapSvc->GetMapForPrefBranch(prefBaseName, getter_AddRefs(attrMap));
+  NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString filter;
     rv = attrMap->GetFirstAttribute(NS_LITERAL_CSTRING("PrimaryEmail"), filter);
@@ -168,23 +175,27 @@ NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryRootDSE()
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangeLog(const nsACString & aChangeLogDN, PRInt32 aLastChangeNo)
 {
-    if(!mInitialized) 
-        return NS_ERROR_NOT_INITIALIZED;
-    if(aChangeLogDN.IsEmpty()) 
-        return NS_ERROR_UNEXPECTED;
+  if (!mInitialized)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (aChangeLogDN.IsEmpty()) 
+    return NS_ERROR_UNEXPECTED;
 
-    // make sure that the filter here just have one condition 
-    // and should not be enclosed in enclosing brackets.
-    // also condition '>' doesnot work, it should be '>='/
-    nsCAutoString filter (NS_LITERAL_CSTRING("changenumber>="));
-    filter.AppendInt(mDirServer->replInfo->lastChangeNumber+1);
+  PRInt32 lastChangeNumber;
+  nsresult rv = mDirectory->GetLastChangeNumber(&lastChangeNumber);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    nsresult rv = CreateNewLDAPOperation();
-    NS_ENSURE_SUCCESS(rv, rv);
+  // make sure that the filter here just have one condition 
+  // and should not be enclosed in enclosing brackets.
+  // also condition '>' doesnot work, it should be '>='/
+  nsCAutoString filter (NS_LITERAL_CSTRING("changenumber>="));
+  filter.AppendInt(lastChangeNumber + 1);
 
-    return mOperation->SearchExt(aChangeLogDN, nsILDAPURL::SCOPE_ONELEVEL, filter, 
-                                 sizeof(sChangeLogEntryAttribs),
-                                 sChangeLogEntryAttribs, 0, 0);
+  rv = CreateNewLDAPOperation();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mOperation->SearchExt(aChangeLogDN, nsILDAPURL::SCOPE_ONELEVEL, filter, 
+                               sizeof(sChangeLogEntryAttribs),
+                               sChangeLogEntryAttribs, 0, 0);
 }
 
 NS_IMETHODIMP nsAbLDAPChangeLogQuery::QueryChangedEntries(const nsACString & aChangedEntryDN)

@@ -49,14 +49,39 @@ interface nsIMutableArray;
  * XXX This should really inherit from nsIAbDirectory, and some day it will.
  * But for now, doing that complicates implementation.
  */
-[scriptable, uuid(27ef9414-6959-4085-b5e3-bc491c0e6554)]
+[scriptable, uuid(0780ec5e-0e45-4a42-af26-ab927faace4f)]
 interface nsIAbLDAPDirectory : nsISupports
 {
-    /**
-     * If set, these arrays of nsILDAPControls are passed through to the
-     * nsILDAPOperation that searchExt is called on.
-     */
-    attribute nsIMutableArray searchServerControls;
-    attribute nsIMutableArray searchClientControls;
+  /**
+   * If set, these arrays of nsILDAPControls are passed through to the
+   * nsILDAPOperation that searchExt is called on.
+   */
+  attribute nsIMutableArray searchServerControls;
+  attribute nsIMutableArray searchClientControls;
+
+  /**
+   * The Replication File Name to use.
+   */
+  attribute string replicationFileName;
+
+  /**
+   * The version of LDAP protocol in use.
+   */
+  attribute unsigned long protocolVersion;
+
+  /**
+   * The AuthDN to use to access the server.
+   */
+  attribute string authDn;
+
+  /**
+   * The Last Change Number used for replication.
+   */
+  attribute long lastChangeNumber;
+
+  /**
+   * The LDAP server's scoping of the lastChangeNumber.
+   */
+  attribute string dataVersion;
 };
 

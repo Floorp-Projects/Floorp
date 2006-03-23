@@ -72,7 +72,7 @@ interface nsIAbDirectoryProperties : nsISupports {
   attribute long position;
 };
 
-[scriptable, uuid(2edfc712-e6c5-11d8-9a39-000a95dc234c)]
+[scriptable, uuid(d6d55de3-261d-4149-987d-3a88ceb5f2a9)]
 interface nsIAbDirectory : nsISupports {
 
 	// Types of operation
@@ -214,6 +214,51 @@ interface nsIAbDirectory : nsISupports {
 	wstring getValueForCard(in nsIAbCard card, in string name);
 	void setValueForCard(in nsIAbCard card, in string name, in wstring value);
 
-  // the id of the directory used in prefs
-	attribute ACString dirPrefId;
+  /**
+   * The id of the directory used in prefs e.g. "ldap_2.servers.pab"
+   * Setting this will cause directoryPrefs to be updated.
+   */
+  attribute ACString dirPrefId;
+
+  /**
+   * @name  getXXXValue
+   *
+   * Helper functions to get different types of pref, but return a default
+   * value if a pref value was not obtained.
+   *
+   * @param aName         The name of the pref within the branch dirPrefId to
+   *                      get a value from.
+   *
+   * @param aDefaultValue The default value to return if getting the pref fails
+   *                      or the pref is not present.
+   *
+   * @return              The value of the pref or the default value.
+   *
+   * @exception           NS_ERROR_NOT_INITIALIZED if the pref branch couldn't
+   *                      be obtained (e.g. dirPrefId isn't set).
+   */
+  //@{
+  long getIntValue(in string aName, in long aDefaultValue);
+  boolean getBoolValue(in string aName, in boolean aDefaultValue);
+  string getStringValue(in string aName, in string aDefaultValue);
+  //@}
+
+  /**
+   * @name  setXXXValue
+   *
+   * Helper functions to set different types of pref values.
+   *
+   * @param aName         The name of the pref within the branch dirPrefId to
+   *                      get a value from.
+   *
+   * @param aValue        The value to set the pref to.
+   *
+   * @exception           NS_ERROR_NOT_INITIALIZED if the pref branch couldn't
+   *                      be obtained (e.g. dirPrefId isn't set).
+   */
+  //@{
+  void setIntValue(in string aName, in long aValue);
+  void setBoolValue(in string aName, in boolean aValue);
+  void setStringValue(in string aName, in string aValue);
+  //@}
 };

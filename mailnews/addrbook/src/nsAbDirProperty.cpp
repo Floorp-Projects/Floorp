@@ -38,20 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAbDirProperty.h"	 
-#include "nsIRDFService.h"
-#include "nsIRDFResource.h"
-#include "nsIServiceManager.h"
-#include "nsRDFCID.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsDirPrefs.h"
+#include "nsIPrefService.h"
+#include "nsServiceManagerUtils.h"
 #include "prmem.h"
+#include "nsCRT.h"
 #include "rdf.h"
-
-#include "mdb.h"
 
 nsAbDirProperty::nsAbDirProperty(void)
   : m_LastModifiedDate(0)
@@ -309,7 +303,13 @@ NS_IMETHODIMP nsAbDirProperty::GetDirPrefId(nsACString &aDirPrefId)
 
 NS_IMETHODIMP nsAbDirProperty::SetDirPrefId(const nsACString &aDirPrefId)
 {
-  m_DirPrefId.Assign(aDirPrefId);
+  if (!m_DirPrefId.Equals(aDirPrefId))
+  {
+    m_DirPrefId.Assign(aDirPrefId);
+    // Clear the directory pref branch so that it is re-initialized next
+    // time its required.
+    m_DirectoryPrefs = nsnull;
+  }
   return NS_OK;
 }
 
@@ -373,6 +373,101 @@ NS_IMETHODIMP nsAbDirProperty::GetDirectoryProperties(nsIAbDirectoryProperties *
   DIR_DeleteServer(server);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsAbDirProperty::GetDirPrefId failed!");
   return rv;
+}
+
+nsresult nsAbDirProperty::InitDirectoryPrefs()
+{
+  if (m_DirPrefId.IsEmpty())
+    return NS_ERROR_NOT_INITIALIZED;
+    
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString realPrefId(m_DirPrefId);
+  realPrefId.Append('.');
+
+  return prefService->GetBranch(realPrefId.get(), getter_AddRefs(m_DirectoryPrefs));
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetIntValue(const char *aName,
+                                          PRInt32 aDefaultValue,
+                                          PRInt32 *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (NS_FAILED(m_DirectoryPrefs->GetIntPref(aName, aResult)))
+    *aResult = aDefaultValue;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetBoolValue(const char *aName,
+                                           PRBool aDefaultValue,
+                                           PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (NS_FAILED(m_DirectoryPrefs->GetBoolPref(aName, aResult)))
+    *aResult = aDefaultValue;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::GetStringValue(const char *aName,
+                                             const char *aDefaultValue, 
+                                             char * *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsXPIDLCString value;
+
+  if (NS_SUCCEEDED(m_DirectoryPrefs->GetCharPref(aName, getter_Copies(value))))
+  {
+    /* unfortunately, there may be some prefs out there which look like this */
+    *aResult = value.EqualsLiteral("(null)") ?
+      nsCRT::strdup(aDefaultValue) : ToNewCString(value);
+  }
+  else
+    *aResult = nsCRT::strdup(aDefaultValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetIntValue(const char *aName,
+                                          PRInt32 aValue)
+{
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return m_DirectoryPrefs->SetIntPref(aName, aValue);
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetBoolValue(const char *aName,
+                                           PRBool aValue)
+{
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return m_DirectoryPrefs->SetBoolPref(aName, aValue);
+}
+
+NS_IMETHODIMP nsAbDirProperty::SetStringValue(const char *aName,
+                                             const char *aValue)
+{
+  if (!m_DirectoryPrefs && NS_FAILED(InitDirectoryPrefs()))
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return m_DirectoryPrefs->SetCharPref(aName, aValue);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

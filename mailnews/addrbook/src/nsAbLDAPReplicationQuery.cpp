@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,59 +50,85 @@
 #include "nsDirPrefs.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "nsIRDFService.h"
 
 NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationQuery, nsIAbLDAPReplicationQuery)
 
 nsAbLDAPReplicationQuery::nsAbLDAPReplicationQuery()
-    :  mInitialized(PR_FALSE),
-       mDirServer(nsnull)
+    :  mInitialized(PR_FALSE)
 {
-}
-
-nsAbLDAPReplicationQuery::~nsAbLDAPReplicationQuery()
-{
-    DIR_DeleteServer(mDirServer);
 }
 
 nsresult nsAbLDAPReplicationQuery::InitLDAPData()
 {
-    mDirServer = (DIR_Server *) PR_Calloc(1, sizeof(DIR_Server));
-    if (!mDirServer) return NS_ERROR_NULL_POINTER;
+  nsresult rv;
 
-    DIR_InitServerWithType(mDirServer, LDAPDirectory);
-    // since DeleteServer frees the prefName make a copy of prefName string
-    mDirServer->prefName = nsCRT::strdup(mDirPrefName.get());
-    DIR_GetPrefsForOneServer(mDirServer, PR_FALSE, PR_FALSE);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  nsCAutoString resourceURI(kLDAPDirectoryRoot);
+  resourceURI.Append(mDirPrefName);
+ 
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdfService->GetResource(resourceURI, getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  mDirectory = do_QueryInterface(resource, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  nsXPIDLCString fileName;
+  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // this is done here to take care of the problem related to bug # 99124.
-    // earlier versions of Mozilla could have the fileName associated with the directory
-    // to be abook.mab which is the profile's personal addressbook. If the pref points to
-    // it, calls nsDirPrefs to generate a new server filename.
-    if (!nsCRT::strcasecmp(mDirServer->fileName,kPersonalAddressbook) 
-        || !mDirServer->fileName || !(*mDirServer->fileName)) {
-        // initialize mDirServer->filename is null or else DIR_SetServerFileName doesnot work
-        PR_FREEIF(mDirServer->fileName);
-        mDirServer->fileName=nsnull;
-        DIR_SetServerFileName(mDirServer);
+  // this is done here to take care of the problem related to bug # 99124.
+  // earlier versions of Mozilla could have the fileName associated with the directory
+  // to be abook.mab which is the profile's personal addressbook. If the pref points to
+  // it, calls nsDirPrefs to generate a new server filename.
+  if (fileName.IsEmpty() || fileName.Equals(NS_LITERAL_CSTRING(kPersonalAddressbook)))
+  {
+    // Ensure fileName is empty for DIR_GenerateAbFileName to work
+    // correctly.
+    fileName.Truncate();
+    // XXX This should be replaced by a local function at some stage.
+    // For now we'll continue using the nsDirPrefs version.
+    DIR_Server* server = DIR_GetServerFromList(mDirPrefName.get());
+    if (server)
+    {
+      DIR_SetServerFileName(server);
+      // Now ensure the prefs are saved
+      DIR_SavePrefsForOneServer(server);
     }
-
-    nsresult rv = NS_OK;
-
-    mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    rv = mURL->SetSpec(nsDependentCString(mDirServer->uri));
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    mOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
-
+  }
+ 
+  rv = mDirectory->SetReplicationFileName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  mURL = do_CreateInstance(NS_LDAPURL_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) 
     return rv;
+
+  nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAbDirectoryProperties> dirProperties;
+  rv = abDirectory->GetDirectoryProperties(getter_AddRefs(dirProperties));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString uri;
+  rv = dirProperties->GetURI(getter_Copies(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mURL->SetSpec(uri);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  mOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
+
+  return rv;
 }
 
 nsresult nsAbLDAPReplicationQuery::CreateNewLDAPOperation()
@@ -171,11 +197,8 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
     }
 
     PRUint32 protocolVersion;
-    if (DIR_TestFlag(mDirServer, DIR_LDAP_VERSION3)) {
-        protocolVersion = nsILDAPConnection::VERSION3;
-    } else {
-        protocolVersion = nsILDAPConnection::VERSION2;
-    }
+    rv = mDirectory->GetProtocolVersion(&protocolVersion);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // initialize the LDAP connection
     return mConnection->Init(host.get(), port, 
@@ -264,9 +287,6 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::Done(PRBool aSuccess)
    if (NS_SUCCEEDED(rv))
       replicationService->Done(aSuccess);
 
-   if (aSuccess)
-       DIR_SavePrefsForOneServer(mDirServer);
-
    return rv;
 }
 
@@ -304,14 +324,11 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::GetReplicationURL(nsILDAPURL * *aReplica
    return NS_OK;
 }
 
-NS_IMETHODIMP nsAbLDAPReplicationQuery::GetReplicationServerInfo(DIR_Server * *aReplicationServerInfo)
+NS_IMETHODIMP nsAbLDAPReplicationQuery::GetLDAPDirectory(nsIAbLDAPDirectory * *aDirectory)
 {
-   NS_ENSURE_ARG_POINTER(aReplicationServerInfo);
-   if (!mInitialized) 
-       return NS_ERROR_NOT_INITIALIZED;
+  NS_ENSURE_ARG_POINTER(aDirectory);
 
-   *aReplicationServerInfo = mDirServer;
+  NS_IF_ADDREF(*aDirectory = mDirectory);
 
-   return NS_OK;
+  return NS_OK;
 }
-

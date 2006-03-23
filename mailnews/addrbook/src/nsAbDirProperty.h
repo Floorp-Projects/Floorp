@@ -53,6 +53,7 @@
 #include "nsDirPrefs.h"
 #include "nsIAddrDatabase.h"
 #include "nsString.h"
+#include "nsIPrefBranch.h"
 
  /* 
   * Address Book Directory
@@ -68,10 +69,13 @@ public:
 	NS_DECL_NSIABDIRECTORY
 
 protected:
+  /**
+   * Initialise the directory prefs for this branch
+   */
+  nsresult InitDirectoryPrefs();
 
 	nsresult GetAttributeName(PRUnichar **aName, nsString& value);
 	nsresult SetAttributeName(const PRUnichar *aName, nsString& arrtibute);
-
 
 	nsString m_DirName;
 	PRUint32 m_LastModifiedDate;
@@ -81,10 +85,8 @@ protected:
 	nsString m_Description;
 	PRBool   m_IsMailList;
   nsCString m_DirPrefId;  // ie,"ldap_2.servers.pab"
-
-
-	nsCOMPtr<nsISupportsArray> m_AddressList;
-
+  nsCOMPtr<nsIPrefBranch> m_DirectoryPrefs;
+  nsCOMPtr<nsISupportsArray> m_AddressList;
 };
 
 class nsAbDirectoryProperties: public nsIAbDirectoryProperties

@@ -236,6 +236,31 @@ nsresult DIR_GetDirServers()
   return rv;
 }
 
+DIR_Server* DIR_GetServerFromList(const char* prefName)
+{
+  DIR_Server* result = nsnull;
+
+  if (!dir_ServerList)
+    DIR_GetDirServers();
+
+  if (dir_ServerList)
+  {
+    PRInt32 count = dir_ServerList->Count();
+    PRInt32 i;
+    for (i = 0; i < count; ++i)
+    {
+      DIR_Server *server = (DIR_Server *)dir_ServerList->ElementAt(i);
+
+      if (server && strcmp(server->prefName, prefName) == 0)
+      {
+        result = server;
+        break;
+      }
+    }
+  }
+  return result;
+}
+
 static nsresult dir_ConvertToMabFileName()
 {
   if (dir_ServerList)

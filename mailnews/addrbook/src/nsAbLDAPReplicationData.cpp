@@ -61,8 +61,7 @@ nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
    mProtocol(-1),
    mCount(0),
    mDBOpen(PR_FALSE),
-   mInitialized(PR_FALSE),
-   mDirServerInfo(nsnull)
+   mInitialized(PR_FALSE)
 {
 }
 
@@ -79,24 +78,38 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Init(nsIAbLDAPReplicationQuery *qu
 
    mQuery = query;
 
-   nsresult rv = mQuery->GetReplicationServerInfo(&mDirServerInfo);
+   nsresult rv = mQuery->GetLDAPDirectory(getter_AddRefs(mDirectory));
    if(NS_FAILED(rv)) {
        mQuery = nsnull;
        return rv;   
-   }
-   if(!mDirServerInfo) {
-       mQuery = nsnull;
-       return NS_ERROR_FAILURE;   
    }
 
    nsCOMPtr<nsIAbLDAPAttributeMapService> mapSvc = 
        do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1",
                      &rv);
-   NS_ENSURE_SUCCESS(rv, rv);
+   if (NS_FAILED(rv)) {
+     mQuery = nsnull;
+     return rv;
+   }
 
-   rv = mapSvc->GetMapForPrefBranch(
-       nsDependentCString(mDirServerInfo->prefName), getter_AddRefs(mAttrMap));
-   NS_ENSURE_SUCCESS(rv, rv);
+   nsCOMPtr<nsIAbDirectory> abDirectory(do_QueryInterface(mDirectory, &rv));
+   if (NS_FAILED(rv)) {
+     mQuery = nsnull;
+     return rv;
+   }
+
+   nsXPIDLCString prefBaseName;
+   rv = abDirectory->GetDirPrefId(prefBaseName);
+   if (NS_FAILED(rv)) {
+     mQuery = nsnull;
+     return rv;
+   }
+
+   rv = mapSvc->GetMapForPrefBranch(prefBaseName, getter_AddRefs(mAttrMap));
+   if (NS_FAILED(rv)) {
+     mQuery = nsnull;
+     return rv;
+   }
 
    mListener = progressListener;
 
@@ -234,10 +247,12 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
         // delete the unsaved replication file
         if(mReplicationFile) {
             rv = mReplicationFile->Remove(PR_FALSE);
-            if(NS_SUCCEEDED(rv)) {
+            if(NS_SUCCEEDED(rv) && mDirectory) {
+                nsXPIDLCString fileName;
+                rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
                 // now put back the backed up replicated file if aborted
-                if(mBackupReplicationFile && mDirServerInfo->replInfo) 
-                    rv = mBackupReplicationFile->MoveToNative(nsnull, nsDependentCString(mDirServerInfo->fileName));
+                if(NS_SUCCEEDED(rv) && mBackupReplicationFile) 
+                    rv = mBackupReplicationFile->MoveToNative(nsnull, fileName);
             }
         }
     }
@@ -251,9 +266,15 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
 // this should get the authDN from prefs and password from PswdMgr
 NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
 {
-    mAuthDN.Assign(mDirServerInfo->authDn);
+  if (!mDirectory)
+    return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
+  nsXPIDLCString authDn;
+  nsresult rv = mDirectory->GetAuthDn(getter_Copies(authDn));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mAuthDN.Assign(authDn);
+
     nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv) && passwordMgrInt) {
         // Get the current server URI
@@ -460,10 +481,15 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
             NS_ASSERTION(NS_SUCCEEDED(rv), "Replication File Remove on Failure failed");
             if(NS_SUCCEEDED(rv)) {
                 // now put back the backed up replicated file
-                if(mBackupReplicationFile && mDirServerInfo->replInfo) 
+                if(mBackupReplicationFile && mDirectory) 
                 {
-                    rv = mBackupReplicationFile->MoveToNative(nsnull, nsDependentCString(mDirServerInfo->fileName));
+                  nsXPIDLCString fileName;
+                  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+                  if (NS_SUCCEEDED(rv) && !fileName.IsEmpty())
+                  {
+                    rv = mBackupReplicationFile->MoveToNative(nsnull, fileName);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "Replication Backup File Move back on Failure failed");
+                  }
                 }
             }
         }
@@ -475,7 +501,7 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
 
 nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
 {
-    if(!mInitialized) 
+    if (!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv = NS_OK;
@@ -486,10 +512,13 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         return rv;
     }
 
-    if(!mDirServerInfo->fileName) {
-        Done(PR_FALSE);
-        return NS_ERROR_FAILURE;
-    }
+  nsXPIDLCString fileName;
+  rv = mDirectory->GetReplicationFileName(getter_Copies(fileName));
+  if (NS_FAILED(rv) || fileName.IsEmpty())
+  {
+     Done(PR_FALSE);
+     return NS_ERROR_FAILURE;
+  }
 
     rv = abSession->GetUserProfileDirectory(getter_AddRefs(mReplicationFile));
     if(NS_FAILED(rv)) {
@@ -497,7 +526,7 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         return rv;
     }
 
-    rv = mReplicationFile->AppendNative(nsDependentCString(mDirServerInfo->fileName));
+    rv = mReplicationFile->AppendNative(fileName);
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
         return rv;
@@ -545,7 +574,8 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
 
         if(aCreate) {
             // set backup file to existing replication file for move
-            mBackupReplicationFile->SetNativeLeafName(nsDependentCString(mDirServerInfo->fileName));
+            mBackupReplicationFile->SetNativeLeafName(fileName);
+
             rv = mBackupReplicationFile->MoveTo(nsnull, backupFileLeafName);
             // set the backup file leaf name now
             if (NS_SUCCEEDED(rv))
@@ -553,7 +583,8 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         }
         else {
             // set backup file to existing replication file for copy
-            mBackupReplicationFile->SetNativeLeafName(nsDependentCString(mDirServerInfo->fileName));
+            mBackupReplicationFile->SetNativeLeafName(fileName);
+
             // specify the parent here specifically, 
             // passing nsnull to copy to the same dir actually renames existing file
             // instead of making another copy of the existing file.
