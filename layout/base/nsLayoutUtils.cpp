@@ -462,11 +462,11 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
       // something to scroll to in that direction.
       if (aDirection != eHorizontal &&
           ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalHeight > visibleSize.height || margin.right))
+          (aDirection == eEither || totalHeight > visibleSize.height || margin.LeftRight()))
         break;
       if (aDirection != eVertical &&
           ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN &&
-          (aDirection == eEither || totalWidth > visibleSize.width || margin.bottom))
+          (aDirection == eEither || totalWidth > visibleSize.width || margin.TopBottom()))
         break;
     }
   }
@@ -609,9 +609,9 @@ nsLayoutUtils::IsInitialContainingBlock(nsIFrame* aFrame)
 #ifdef DEBUG
 #include <stdio.h>
 
-static PRBool gDumpPaintList = 0;
-static PRBool gDumpEventList = 0;
-static PRBool gDumpRepaintRegionForCopy = 0;
+static PRBool gDumpPaintList = PR_FALSE;
+static PRBool gDumpEventList = PR_FALSE;
+static PRBool gDumpRepaintRegionForCopy = PR_FALSE;
 #endif
 
 nsIFrame*
