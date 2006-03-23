@@ -799,43 +799,23 @@ void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 nsresult
 TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
 {
-    // If we move GetBaseURI to nsINode this can be simplified.
-    nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIDocument> doc;
-    nsCOMPtr<nsIContent> cont = do_QueryInterface(aNode);
-    if (cont) {
-        doc = cont->GetOwnerDoc();
-        NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-        uri = cont->GetBaseURI();
-    }
-    else {
-        doc = do_QueryInterface(aNode);
-        NS_ASSERTION(doc, "aNode should be a doc or an element by now");
-
-        uri = doc->GetBaseURI();
+    nsCOMPtr<nsIDOMDocument> document;
+    aNode->GetOwnerDocument(getter_AddRefs(document));
+    if (!document) {
+        document = do_QueryInterface(aNode);
     }
 
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-    
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-    NS_ConvertUTF8toUTF16 baseURI(spec);
-
-    uri = doc->GetDocumentURI();
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-
-    uri->GetSpec(spec);
-    NS_ConvertUTF8toUTF16 stylesheetURI(spec);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
+    nsIURI *uri = doc->GetBaseURI();
+    nsCAutoString baseURI;
+    uri->GetSpec(baseURI);
 
     nsRefPtr<txSyncCompileObserver> obs = new txSyncCompileObserver();
     NS_ENSURE_TRUE(obs, NS_ERROR_OUT_OF_MEMORY);
-
+    NS_ConvertUTF8toUTF16 base(baseURI);
     nsRefPtr<txStylesheetCompiler> compiler =
-        new txStylesheetCompiler(stylesheetURI, obs);
+        new txStylesheetCompiler(base, obs);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
-
-    compiler->setBaseURI(baseURI);
 
     nsresult rv = handleNode(aNode, compiler);
     if (NS_FAILED(rv)) {

@@ -50,20 +50,20 @@
 #include "txStringUtils.h"
 #include "txXSLTFunctions.h"
 
-txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
+txStylesheetCompiler::txStylesheetCompiler(const nsAString& aBaseURI,
                                            txACompileObserver* aObserver)
     : txStylesheetCompilerState(aObserver)
 {
-    mStatus = init(aStylesheetURI, nsnull, nsnull);
+    mStatus = init(aBaseURI, nsnull, nsnull);
 }
 
-txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
+txStylesheetCompiler::txStylesheetCompiler(const nsAString& aBaseURI,
                                            txStylesheet* aStylesheet,
                                            txListIterator* aInsertPosition,
                                            txACompileObserver* aObserver)
     : txStylesheetCompilerState(aObserver)
 {
-    mStatus = init(aStylesheetURI, aStylesheet, aInsertPosition);
+    mStatus = init(aBaseURI, aStylesheet, aInsertPosition);
 }
 
 nsrefcnt
@@ -81,19 +81,6 @@ txStylesheetCompiler::Release()
         return 0;
     }
     return mRefCnt;
-}
-
-void
-txStylesheetCompiler::setBaseURI(const nsString& aBaseURI)
-{
-    NS_ASSERTION(mObjectStack.size() == 1 && !mObjectStack.peek(),
-                 "Execution already started");
-
-    if (NS_FAILED(mStatus)) {
-        return;
-    }
-
-    mElementContext->mBaseURI = aBaseURI;
 }
 
 nsresult
@@ -407,7 +394,7 @@ txStylesheetCompiler::doneLoading()
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::doneLoading: %s\n",
-            NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
+            NS_LossyConvertUTF16toASCII(mURI).get()));
     if (NS_FAILED(mStatus)) {
         return mStatus;
     }
@@ -423,7 +410,7 @@ txStylesheetCompiler::cancel(nsresult aError, const PRUnichar *aErrorText,
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::cancel: %s, module: %d, code %d\n",
-            NS_LossyConvertUTF16toASCII(mStylesheetURI).get(),
+            NS_LossyConvertUTF16toASCII(mURI).get(),
             NS_ERROR_GET_MODULE(aError),
             NS_ERROR_GET_CODE(aError)));
     if (NS_SUCCEEDED(mStatus)) {
@@ -452,8 +439,8 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::loadURI forwards %s thru %s\n",
             NS_LossyConvertUTF16toASCII(aUri).get(),
-            NS_LossyConvertUTF16toASCII(mStylesheetURI).get()));
-    if (mStylesheetURI.Equals(aUri)) {
+            NS_LossyConvertUTF16toASCII(mURI).get()));
+    if (mURI.Equals(aUri)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
     return mObserver ? mObserver->loadURI(aUri, aReferrerUri, aCompiler) :
@@ -567,21 +554,21 @@ txStylesheetCompilerState::txStylesheetCompilerState(txACompileObserver* aObserv
 }
 
 nsresult
-txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
+txStylesheetCompilerState::init(const nsAString& aBaseURI,
                                 txStylesheet* aStylesheet,
                                 txListIterator* aInsertPosition)
 {
     NS_ASSERTION(!aStylesheet || aInsertPosition,
                  "must provide insertposition if loading subsheet");
-    mStylesheetURI = aStylesheetURI;
+    mURI = aBaseURI;
     // Check for fragment identifier of an embedded stylesheet.
-    PRInt32 fragment = aStylesheetURI.FindChar('#') + 1;
+    PRInt32 fragment = aBaseURI.FindChar('#') + 1;
     if (fragment > 0) {
-        PRInt32 fragmentLength = aStylesheetURI.Length() - fragment;
+        PRInt32 fragmentLength = aBaseURI.Length() - fragment;
         if (fragmentLength > 0) {
             // This is really an embedded stylesheet, not just a
             // "url#". We may want to unescape the fragment.
-            mTarget = Substring(aStylesheetURI, (PRUint32)fragment,
+            mTarget = Substring(aBaseURI, (PRUint32)fragment,
                                 fragmentLength);
             mEmbedStatus = eNeedEmbed;
             mHandlerTable = gTxEmbedHandler;
@@ -606,7 +593,7 @@ txStylesheetCompilerState::init(const nsAString& aStylesheetURI,
         mIsTopCompiler = PR_TRUE;
     }
    
-    mElementContext = new txElementContext(aStylesheetURI);
+    mElementContext = new txElementContext(aBaseURI);
     NS_ENSURE_TRUE(mElementContext && mElementContext->mMappings,
                    NS_ERROR_OUT_OF_MEMORY);
 
@@ -763,7 +750,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("CompilerState::loadIncludedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
-    if (mStylesheetURI.Equals(aURI)) {
+    if (mURI.Equals(aURI)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
     NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
@@ -793,7 +780,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rv = mObserver->loadURI(aURI, mStylesheetURI, compiler);
+    rv = mObserver->loadURI(aURI, mURI, compiler);
     if (NS_FAILED(rv)) {
         mChildCompilerList.RemoveElement(compiler);
     }
@@ -808,7 +795,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("CompilerState::loadImportedStylesheet: %s\n",
             NS_LossyConvertUTF16toASCII(aURI).get()));
-    if (mStylesheetURI.Equals(aURI)) {
+    if (mURI.Equals(aURI)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
     NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
@@ -826,7 +813,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = mObserver->loadURI(aURI, mStylesheetURI, compiler);
+    nsresult rv = mObserver->loadURI(aURI, mURI, compiler);
     if (NS_FAILED(rv)) {
         mChildCompilerList.RemoveElement(compiler);
     }

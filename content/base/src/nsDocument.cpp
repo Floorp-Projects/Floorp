@@ -748,15 +748,26 @@ nsDocument::~nsDocument()
     mSubDocuments = nsnull;
   }
 
-  // Destroy link map now so we don't waste time removing
-  // links one by one
-  DestroyLinkMap();
+  if (mRootContent) {
+    if (mRootContent->GetCurrentDoc()) {
+      NS_ASSERTION(mRootContent->GetCurrentDoc() == this,
+                   "Unexpected current doc in root content");
+      // The root content still has a pointer back to the document,
+      // clear the document pointer in all children.
+      
+      // Destroy link map now so we don't waste time removing
+      // links one by one
+      DestroyLinkMap();
 
-  PRUint32 count = mChildren.ChildCount();
-  for (indx = PRInt32(count) - 1; indx >= 0; --indx) {
-    mChildren.ChildAt(indx)->UnbindFromTree();
-    mChildren.RemoveChildAt(indx);
+      PRUint32 count = mChildren.ChildCount();
+      for (indx = PRInt32(count) - 1; indx >= 0; --indx) {
+        mChildren.ChildAt(indx)->UnbindFromTree();
+        mChildren.RemoveChildAt(indx);
+      }
+    }
   }
+
+  mRootContent = nsnull;
 
   // Let the stylesheets know we're going away
   indx = mStyleSheets.Count();
@@ -972,6 +983,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   // links one by one
   DestroyLinkMap();
 
+  mRootContent = nsnull;
   PRUint32 count = mChildren.ChildCount();
   for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
     nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
@@ -1679,22 +1691,6 @@ nsDocument::FindContentForSubDocument(nsIDocument *aDocument) const
   return data.mResult;
 }
 
-nsIContent*
-nsDocument::GetRootContent() const
-{
-  // Loop backwards because any non-elements, such as doctypes and PIs
-  // are likely to appear before the root element.
-  PRUint32 i;
-  for (i = mChildren.ChildCount(); i > 0; --i) {
-    nsIContent* child = mChildren.ChildAt(i - 1);
-    if (child->IsContentOfType(nsIContent::eELEMENT)) {
-      return child;
-    }
-  }
-  
-  return nsnull;
-}
-
 nsIContent *
 nsDocument::GetChildAt(PRUint32 aIndex) const
 {
@@ -1717,13 +1713,37 @@ nsresult
 nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                           PRBool aNotify)
 {
-  if (aKid->IsContentOfType(nsIContent::eELEMENT) && GetRootContent()) {
-    NS_ERROR("Inserting element child when we already have one");
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  if (aKid->IsContentOfType(nsIContent::eELEMENT)) {
+    if (mRootContent) {
+      NS_ERROR("Inserting element child when we already have one");
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
+    mRootContent = aKid;
   }
   
-  return nsGenericElement::doInsertChildAt(aKid, aIndex, aNotify,
-                                           nsnull, this, mChildren);
+  nsresult rv = nsGenericElement::doInsertChildAt(aKid, aIndex, aNotify,
+                                                  nsnull, this, mChildren);
+
+  if (NS_FAILED(rv) && mRootContent == aKid) {
+    PRInt32 kidIndex = mChildren.IndexOfChild(aKid);
+    NS_ASSERTION(kidIndex == -1,
+                 "Error result and still have same root content but it's in "
+                 "our child list?");
+    // Check to make sure that we're keeping mRootContent in sync with our
+    // child list... but really, if kidIndex != -1 we have major problems
+    // coming up; hence the assert above.  This check is just a feeble attempt
+    // to not die due to mRootContent being bogus.
+    if (kidIndex == -1) {
+      mRootContent = nsnull;
+    }
+  }
+
+#ifdef DEBUG
+  VerifyRootContentState();
+#endif
+
+  return rv;
 }
 
 nsresult
@@ -1741,18 +1761,57 @@ nsresult
 nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
-  if (!oldKid) {
-    return NS_OK;
-  }
-
-  if (oldKid->IsContentOfType(nsIContent::eELEMENT)) {
-    // Destroy the link map up front before we mess with the child list.
-    DestroyLinkMap();
-  }
-
-  return nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
+  nsresult rv = NS_OK;
+  if (oldKid) {
+    if (oldKid == mRootContent) {
+      NS_ASSERTION(oldKid->IsContentOfType(nsIContent::eELEMENT),
+                   "Non-element root content?");
+      // Destroy the link map up front and null out mRootContent before we mess
+      // with the child list.  Hopefully no one in doRemoveChildAt will compare
+      // the content being removed to GetRootContent()....  Need to do this
+      // before calling doRemoveChildAt because DOM events might fire while
+      // we're inside the doInsertChildAt call and want to set a new
+      // mRootContent; if they do that, setting mRootContent after the
+      // doRemoveChildAt call would clobber state.  If we ever fix the issue of
+      // DOM events firing at inconvenient times, consider changing the order
+      // here.  Just make sure we DestroyLinkMap() before unbinding the
+      // content.
+      DestroyLinkMap();
+      mRootContent = nsnull;
+    }
+    
+    rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
                                            nsnull, this, mChildren);
+    if (NS_FAILED(rv) && mChildren.IndexOfChild(oldKid) != -1) {
+      mRootContent = oldKid;
+    }
+  }
+
+#ifdef DEBUG
+  VerifyRootContentState();
+#endif
+
+  return rv;
 }
+
+#ifdef DEBUG
+void
+nsDocument::VerifyRootContentState()
+{
+  nsIContent* elementChild = nsnull;
+  for (PRUint32 i = 0; i < GetChildCount(); ++i) {
+    nsIContent* kid = GetChildAt(i);
+    NS_ASSERTION(kid, "Must have kid here");
+
+    if (kid->IsContentOfType(nsIContent::eELEMENT)) {
+      NS_ASSERTION(!elementChild, "Multiple element kids?");
+      elementChild = kid;
+    }
+  }
+
+  NS_ASSERTION(mRootContent == elementChild, "Incorrect mRootContent");
+}
+#endif // DEBUG
 
 PRInt32
 nsDocument::GetNumberOfStyleSheets() const
@@ -2489,11 +2548,28 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
   *aDoctype = nsnull;
   PRInt32 i, count;
   count = mChildren.ChildCount();
-  for (i = 0; i < count; i++) {
-    CallQueryInterface(mChildren.ChildAt(i), aDoctype);
+  nsCOMPtr<nsIDOMNode> rootContentNode(do_QueryInterface(mRootContent) );
+  nsCOMPtr<nsIDOMNode> node;
 
-    if (*aDoctype) {
+  for (i = 0; i < count; i++) {
+    node = do_QueryInterface(mChildren.ChildAt(i));
+
+    NS_ASSERTION(node, "null element of mChildren");
+
+    // doctype can't be after the root
+    // XXX Do we really want to enforce this when we don't enforce
+    // anything else?
+    if (node == rootContentNode)
       return NS_OK;
+
+    if (node) {
+      PRUint16 nodeType;
+
+      node->GetNodeType(&nodeType);
+
+      if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+        return CallQueryInterface(node, aDoctype);
+      }
     }
   }
 
@@ -2524,14 +2600,16 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
   NS_ENSURE_ARG_POINTER(aDocumentElement);
 
-  nsIContent* root = GetRootContent();
-  if (root) {
-    return CallQueryInterface(root, aDocumentElement);
+  nsresult rv = NS_OK;
+
+  if (mRootContent) {
+    rv = CallQueryInterface(mRootContent, aDocumentElement);
+    NS_ASSERTION(NS_OK == rv, "Must be a DOM Element");
+  } else {
+    *aDocumentElement = nsnull;
   }
 
-  *aDocumentElement = nsnull;
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3545,11 +3623,43 @@ nsDocument::GetLocalName(nsAString& aLocalName)
   return NS_OK;
 }
 
+nsresult
+nsDocument::IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent)
+{
+  if (aNodeType != nsIDOMNode::COMMENT_NODE &&
+      aNodeType != nsIDOMNode::ELEMENT_NODE &&
+      aNodeType != nsIDOMNode::PROCESSING_INSTRUCTION_NODE &&
+      aNodeType != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (aNodeType == nsIDOMNode::ELEMENT_NODE && mRootContent &&
+      mRootContent != aRefContent) {
+    // We already have a child Element, and we're not trying to
+    // replace it, so throw an error.
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    nsCOMPtr<nsIDOMDocumentType> docType;
+    GetDoctype(getter_AddRefs(docType));
+
+    nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
+    if (docTypeContent && docTypeContent != aRefContent) {
+      // We already have a doctype, and we're not trying to
+      // replace it, so throw an error.
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, nsnull, this,
+  return nsGenericElement::doInsertBefore(aNewChild, aRefChild, nsnull, this,
                                           aReturn);
 }
 
@@ -3557,7 +3667,7 @@ NS_IMETHODIMP
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, nsnull, this,
+  return nsGenericElement::doReplaceChild(aNewChild, aOldChild, nsnull, this,
                                           aReturn);
 }
 
@@ -3945,7 +4055,7 @@ NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
                          nsAString& aPrefix)
 {
-  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(GetRootContent()));
+  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(mRootContent));
   if (root) {
     return root->LookupPrefix(aNamespaceURI, aPrefix);
   }
@@ -3958,7 +4068,7 @@ NS_IMETHODIMP
 nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                nsAString& aNamespaceURI)
 {
-  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(GetRootContent(),
+  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(mRootContent,
                                                    aNamespacePrefix,
                                                    aNamespaceURI))) {
     SetDOMStringToNull(aNamespaceURI);
@@ -5033,13 +5143,12 @@ nsDocument::Destroy()
   if (mIsGoingAway)
     return;
 
+  PRInt32 count = mChildren.ChildCount();
+
   mIsGoingAway = PR_TRUE;
   DestroyLinkMap();
-
-  PRInt32 count = mChildren.ChildCount();
-  for (PRInt32 indx = count; indx > 0; --indx) {
-    mChildren.ChildAt(indx - 1)->UnbindFromTree();
-    mChildren.RemoveChildAt(indx - 1);
+  for (PRInt32 indx = 0; indx < count; ++indx) {
+    mChildren.ChildAt(indx)->UnbindFromTree();
   }
 
   // Propagate the out-of-band notification to each PresShell's anonymous
@@ -5201,13 +5310,12 @@ nsDocument::OnPageShow(PRBool aPersisted)
   mVisible = PR_TRUE;
   UpdateLinkMap();
   
-  nsIContent* root = GetRootContent();
-  if (aPersisted && root) {
+  if (aPersisted) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(this,
                                                       nsHTMLAtoms::link,
                                                       kNameSpaceID_Unknown,
-                                                      root);
+                                                      mRootContent);
 
     if (links) {
       PRUint32 linkCount = links->Length(PR_TRUE);
@@ -5229,12 +5337,11 @@ nsDocument::OnPageHide(PRBool aPersisted)
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
-  nsIContent* root = GetRootContent();
-  if (aPersisted && root) {
+  if (aPersisted) {
     nsRefPtr<nsContentList> links = NS_GetContentList(this,
                                                       nsHTMLAtoms::link,
                                                       kNameSpaceID_Unknown,
-                                                      root);
+                                                      mRootContent);
 
     if (links) {
       PRUint32 linkCount = links->Length(PR_TRUE);

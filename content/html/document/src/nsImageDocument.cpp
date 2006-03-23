@@ -347,7 +347,7 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
   nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
-    if (!GetRootContent()) {
+    if (!mRootContent) {
       // Create synthetic document
       nsresult rv = CreateSyntheticDocument();
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
@@ -606,7 +606,7 @@ nsImageDocument::CreateSyntheticDocument()
   nsresult rv = nsMediaDocument::CreateSyntheticDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIContent* body = GetBodyContent();
+  nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
   if (!body) {
     NS_WARNING("no body on image document!");
     return NS_ERROR_FAILURE;
@@ -651,10 +651,7 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
   nsPresContext *context = shell->GetPresContext();
   nsRect visibleArea = context->GetVisibleArea();
 
-  nsIContent* content = GetBodyContent();
-  if (!content) {
-    return NS_OK;
-  }
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
   nsRefPtr<nsStyleContext> styleContext =
     context->StyleSet()->ResolveStyleFor(content, nsnull);
 
