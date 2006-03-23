@@ -66,6 +66,7 @@
 #import "DraggableImageAndTextCell.h"
 #import "MVPreferencesController.h"
 #import "ViewCertificateDialogController.h"
+#import "ExtendedSplitView.h"
 #import "wallet.h"
 
 #include "nsString.h"
@@ -142,6 +143,7 @@ const float kMininumURLAndSearchBarWidth = 128.0;
 
 static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 static NSString* const NavigatorWindowSearchBarWidth = @"SearchBarWidth";
+static NSString* const NavigatorWindowSearchBarHidden = @"SearchBarHidden";
 
 static NSString* const kViewSourceProtocolString = @"view-source:";
 const unsigned long kNoToolbarsChromeMask = (nsIWebBrowserChrome::CHROME_ALL & ~(nsIWebBrowserChrome::CHROME_TOOLBAR |
@@ -588,10 +590,12 @@ enum BWCOpenDest {
   if (mShouldAutosave) {
     [[self window] saveFrameUsingName: NavigatorWindowFrameSaveName];
     
-    // save the width of the search bar so it's consistent regardless of the
+    // save the width and visibility of the search bar so it's consistent regardless of the
     // size of the next window we create
     const float searchBarWidth = [mSearchBar frame].size.width;
     [[NSUserDefaults standardUserDefaults] setFloat:searchBarWidth forKey:NavigatorWindowSearchBarWidth];
+    BOOL isCollapsed = [mLocationToolbarView isSubviewCollapsed:mSearchBar];
+    [[NSUserDefaults standardUserDefaults] setBool:isCollapsed forKey:NavigatorWindowSearchBarHidden];
   }
 }
 
@@ -714,6 +718,7 @@ enum BWCOpenDest {
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
+  [mLocationToolbarView release];
 
   delete mDataOwner;    // paranoia; should have been deleted in -windowWillClose
 
@@ -730,6 +735,15 @@ enum BWCOpenDest {
 {
     [super windowDidLoad];
 
+    // we shouldn't have to do this, yet for some reason removing it from
+    // the toolbar destroys the view. However, this also helps us by ensuring
+    // that we always have a search bar alive to do things with, like redirect
+    // context menu searches to.
+    [mLocationToolbarView retain];
+    // explicitly don't save the splitter position, we want to save it oursevles
+    // since we want a different behavior.
+    [mLocationToolbarView setAutosaveSplitterPosition:NO];
+    
     BOOL mustResizeChrome = NO;
     
     // hide the resize control if specified by the chrome mask
@@ -805,17 +819,23 @@ enum BWCOpenDest {
 
     [self setupToolbar];
 
-    // set the size of the search bar to the width it was last time
-    float searchBarWidth = [[NSUserDefaults standardUserDefaults] floatForKey:NavigatorWindowSearchBarWidth];
-    if (searchBarWidth <= 0)
-      searchBarWidth = kMininumURLAndSearchBarWidth;
-    const float currentWidth = [mLocationToolbarView frame].size.width;
-    float newDividerPosition = currentWidth - searchBarWidth - [mLocationToolbarView dividerThickness];
-    if (newDividerPosition < kMininumURLAndSearchBarWidth)
-      newDividerPosition = kMininumURLAndSearchBarWidth;
-    [mLocationToolbarView setLeftWidth:newDividerPosition];
-    [mLocationToolbarView adjustSubviews];
-
+    // set the size of the search bar to the width it was last time and hide it
+    // programmatically if it wasn't visible
+    BOOL searchBarHidden = [[NSUserDefaults standardUserDefaults] boolForKey:NavigatorWindowSearchBarHidden];
+    if (searchBarHidden)
+      [mLocationToolbarView collapseSubviewAtIndex:1];
+    else {
+      float searchBarWidth = [[NSUserDefaults standardUserDefaults] floatForKey:NavigatorWindowSearchBarWidth];
+      if (searchBarWidth <= 0)
+        searchBarWidth = kMininumURLAndSearchBarWidth;
+      const float currentWidth = [mLocationToolbarView frame].size.width;
+      float newDividerPosition = currentWidth - searchBarWidth - [mLocationToolbarView dividerThickness];
+      if (newDividerPosition < kMininumURLAndSearchBarWidth)
+        newDividerPosition = kMininumURLAndSearchBarWidth;
+      [mLocationToolbarView setLeftWidth:newDividerPosition];
+      [mLocationToolbarView adjustSubviews];
+    }
+    
     // set up autohide behavior on tab browser and register for changes on that pref. The
     // default is for it to hide when only 1 tab is visible, so if no pref is found, it will
     // be NO, and that works. However, if any of the JS chrome flags are set, we don't want
@@ -1379,12 +1399,12 @@ enum BWCOpenDest {
 // -splitView:canCollapseSubview:
 // NSSplitView delegate
 // 
-// We don't want to allow the user to collapse either the url bar or the search bar
+// Allow the user (read: smokey) to collapse the search bar but not the url bar.
 //
 - (BOOL)splitView:(NSSplitView *)sender canCollapseSubview:(NSView *)subview
 {
   if (sender == mLocationToolbarView)
-    return NO;
+    return (subview == mSearchBar);
   return YES;
 }
 
@@ -1768,26 +1788,10 @@ enum BWCOpenDest {
 //
 - (void)performAppropriateSearchAction
 {
-  NSToolbar *toolbar = [[self window] toolbar];
-  if ( [toolbar isVisible] )
-  {
-    if ( ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconAndLabel) ||
-         ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) )
-    {
-      NSArray *itemsWeCanSee = [toolbar visibleItems];
-
-      for (unsigned int i = 0; i < [itemsWeCanSee count]; i++)
-      {
-        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:CombinedLocationToolbarItemIdentifier])
-        {
-          [self focusSearchBar];
-          return;
-        }
-      }
-    }
-  }
-
-  [self beginSearchSheet];
+  if ([mSearchBar window] && ![mLocationToolbarView isSubviewCollapsed:mSearchBar])
+    [self focusSearchBar];
+  else 
+    [self beginSearchSheet];
 }
 
 - (void)focusSearchBar
@@ -2001,6 +2005,22 @@ enum BWCOpenDest {
   // If we have a valid SearchTextField, perform a search using its contents
   if ([aSender isKindOfClass:[SearchTextField class]]) 
     [self performSearch:(SearchTextField *)aSender inView:kDestinationCurrentView inBackground:NO];
+}
+
+//
+// -searchForSelection:
+//
+// Get the selection, stick it into the search bar, and do a search with the
+// currently selected search engine in the search bar. If there is no search
+// bar in the toolbar, that's still ok because we've guaranteed that we always
+// have a search bar even if it's not on a toolbar.
+//
+- (IBAction)searchForSelection:(id)aSender
+{
+  NSString* selection = [[mBrowserView getBrowserView] getSelection];
+  [mSearchBar becomeFirstResponder];
+  [mSearchBar setStringValue:selection];
+  [self performSearch:mSearchBar];
 }
 
 //
@@ -3259,7 +3279,9 @@ enum BWCOpenDest {
   
   NSMenu* menuPrototype = nil;
   int contextMenuFlags = mDataOwner->mContextMenuFlags;
-  
+
+  BOOL hasSelection = [[mBrowserView getBrowserView] canCopy];
+
   if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
   {
     NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
@@ -3295,9 +3317,9 @@ enum BWCOpenDest {
     menuPrototype = mPageMenu;
     [mBackItem 		setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
-    [mCopyItem		setEnabled: [[mBrowserView getBrowserView] canCopy]];
+    [mCopyItem		setEnabled:hasSelection];
   }
-  
+    
   if (mDataOwner->mContextMenuNode) {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     mDataOwner->mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
@@ -3315,8 +3337,17 @@ enum BWCOpenDest {
   // our only copy of the menu
   NSMenu* result = [[menuPrototype copy] autorelease];
 
-  const int kFrameRelatedItemsTag 			= 100;
+  const int kFrameRelatedItemsTag = 100;
   const int kFrameInapplicableItemsTag 	= 101;
+  const int kSelectionRelatedItemsTag = 102;
+  
+  // if there's no selection or no search bar in the toolbar, hide the search item.
+  // We need a search item to know what the user's preferred search is.
+  if (!hasSelection) {
+    NSMenuItem* selectionItem;
+    while ((selectionItem = [result itemWithTag:kSelectionRelatedItemsTag]) != nil)
+      [result removeItem:selectionItem];
+  }
   
   if (showFrameItems) {
     NSMenuItem* frameItem;

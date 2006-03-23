@@ -41,8 +41,9 @@
 
 @interface ExtendedSplitView : NSSplitView
 {
-  NSString*       mAutosaveName;    // owned
+  NSString*       mAutosaveName;             // owned
   BOOL            mAutosaveSplitterPosition;
+  NSMutableDictionary* mCollapsedSubviews;   // owned
 }
 
 - (void)setAutosaveName:(NSString *)name;
@@ -50,5 +51,7 @@
 
 - (BOOL)autosaveSplitterPosition;
 - (void)setAutosaveSplitterPosition:(BOOL)inAutosave;
+
+- (void)collapseSubviewAtIndex:(int)inIndex;
 
 @end

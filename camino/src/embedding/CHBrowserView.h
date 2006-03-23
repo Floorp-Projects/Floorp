@@ -225,6 +225,9 @@ typedef enum {
 -(BOOL)canDelete;
 -(IBAction)selectAll:(id)aSender;
 
+// Returns the currently selected text as a NSString. 
+- (NSString*)getSelection;
+
 -(IBAction)undo:(id)aSender;
 -(IBAction)redo:(id)aSender;
 

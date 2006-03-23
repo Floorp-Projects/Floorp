@@ -60,6 +60,7 @@
   {
     // we'll default to saving (if we have an autosaveName)
     mAutosaveSplitterPosition = YES;
+    mCollapsedSubviews = [[NSMutableDictionary alloc] init];
   }
   return self;
 }
@@ -67,6 +68,7 @@
 - (void)dealloc
 {
   [mAutosaveName release];
+  [mCollapsedSubviews release];
   [super dealloc];
 }
 
@@ -191,5 +193,81 @@
   }
 }
 
+//
+// -collapseSubviewAtIndex:
+//
+// Called to programmatically collapse the given subview. Removes it from the
+// view and we will manage it ourselves when it comes time to re-insert it into
+// the split view. Replaces it with a temporary view so we know what to look for.
+//
+- (void)collapseSubviewAtIndex:(int)inIndex
+{
+  // be lazy with the allocation, we generally will never need it
+  if (!mCollapsedSubviews)
+    mCollapsedSubviews = [[NSMutableDictionary alloc] init];
+
+  NSView* viewToCollapse = [[self subviews] objectAtIndex:inIndex];
+  NSView* placeholder = [[[NSView alloc] initWithFrame:NSZeroRect] autorelease];
+  [mCollapsedSubviews setObject:viewToCollapse forKey:[NSValue valueWithPointer:placeholder]];
+  [self replaceSubview:viewToCollapse with:placeholder];
+  [self adjustSubviews];
+}
+
+//
+// -drawDividerInRect:
+//
+// Watches for changes to the size of one of our temporary views that have
+// been hidden programmatically. When we notice one changing size, swap the
+// associated real view back in in its place.
+//
+- (void)drawDividerInRect:(NSRect)inRect
+{
+  if ([mCollapsedSubviews count]) {
+    // loop over all the the keys (the placeholder views) to see if they've changed size.
+    // if they have, swap back in the object at that key (the real view).
+    NSEnumerator* e = [mCollapsedSubviews keyEnumerator];
+    NSValue* key = nil;
+    while ((key = (NSValue*)[e nextObject])) {
+      NSView* placeholderView = (NSView*)[key pointerValue];
+      NSSize viewSize = [placeholderView frame].size;
+      BOOL isVertical = [self isVertical];
+      if ((isVertical && viewSize.width > 0) || (!isVertical && viewSize.height > 0)) {
+        // swap out the temp view if size changed with the view we cached
+        // in the collapse function
+        NSView* realView = [mCollapsedSubviews objectForKey:key];
+        [realView setFrameSize:viewSize];
+        [self replaceSubview:placeholderView with:realView];
+        [self adjustSubviews];
+        [mCollapsedSubviews removeObjectForKey:key];
+      }
+    }
+  }
+  [super drawDividerInRect:inRect];
+}
+
+//
+// -isSubviewCollapsed:
+//
+// Overridden to check our list of programmatically collapsed subviews if the base
+// class didn't find it as hidden already.
+//
+- (BOOL)isSubviewCollapsed:(NSView*)inView
+{
+  BOOL isCollapsed = [super isSubviewCollapsed:inView];
+  if (!isCollapsed) {
+    // check our list of hidden views to see if it's in that list
+    if ([mCollapsedSubviews count]) {
+      NSEnumerator* e = [mCollapsedSubviews objectEnumerator];
+      NSView* view = nil;
+      while ((view = (NSView*)[e nextObject])) {
+        if (view == inView) {
+          isCollapsed = YES;
+          break;
+        }
+      }
+    }
+  }
+  return isCollapsed;
+}
 
 @end // ExtendedSplitView

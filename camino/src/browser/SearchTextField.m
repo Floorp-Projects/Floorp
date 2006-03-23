@@ -153,6 +153,22 @@
   [super textDidChange: aNotification];
 }
 
+//
+// -setStringValue:
+//
+// Override to display the clear (x) when setting the search bar's text
+// programmatically.
+//
+- (void)setStringValue:(NSString*)inValue
+{
+  [super setStringValue:inValue];
+  
+  // force the (x) to display when string changed programmatically. This
+  // has to come after our call to super otherwise the cell won't have the
+  // new value yet.
+  [[self cell] searchSubmittedFromView:self];
+}
+
 - (NSString *)titleOfSelectedPopUpItem
 {
   return [[[self cell] popUpButtonCell]  titleOfSelectedItem];

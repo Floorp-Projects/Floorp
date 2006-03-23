@@ -137,6 +137,7 @@
                 saveImageAs = id; 
                 saveLinkAs = id; 
                 savePageAs = id; 
+                searchForSelection = id; 
                 sendURL = id; 
                 sendURLFromLink = id; 
                 showBookmarksInfo = id; 
@@ -164,7 +165,7 @@
                 mLinkMenu = NSMenu; 
                 mLocationSheetURLField = NSTextField; 
                 mLocationSheetWindow = NSWindow; 
-                mLocationToolbarView = NSSplitView; 
+                mLocationToolbarView = ExtendedSplitView; 
                 mMailToLinkMenu = NSMenu; 
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = BookmarkToolbar; 
@@ -188,6 +189,7 @@
             SUPERCLASS = NSView; 
         }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
+        {CLASS = ExtendedSplitView; LANGUAGE = ObjC; SUPERCLASS = NSSplitView; }, 
         {CLASS = ExtendedTableView; LANGUAGE = ObjC; SUPERCLASS = NSTableView; }, 
         {
             ACTIONS = {addBookmark = id; addBookmarkFolder = id; addBookmarkSeparator = id; }; 
