@@ -229,6 +229,11 @@ nsresult
 nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                         PRBool aNotify)
 {
+  // If this is an svg presentation attribute, remove rule to force an update
+  if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
+    mContentStyleRule = nsnull;
+  }
+
   if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
     nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(PR_FALSE, getter_AddRefs(manager));
