@@ -676,12 +676,10 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
 #ifdef GC_MARK_DEBUG
             char name[22];
             JS_snprintf(name, sizeof name, "<local root %u>", n);
-#else
-            const char *name = NULL;
 #endif
             m = n & JSLRS_CHUNK_MASK;
             JS_ASSERT(JSVAL_IS_GCTHING(lrc->roots[m]));
-            JS_MarkGCThing(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name, NULL);
+            GC_MARK(cx, JSVAL_TO_GCTHING(lrc->roots[m]), name);
             if (m == 0)
                 lrc = lrc->down;
         }

@@ -1416,11 +1416,11 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     if (fun) {
-        JS_MarkGCThing(cx, fun, js_private_str, arg);
+        GC_MARK(cx, fun, "private");
         if (fun->atom)
-            GC_MARK_ATOM(cx, fun->atom, arg);
+            GC_MARK_ATOM(cx, fun->atom);
         if (fun->interpreted && fun->u.i.script)
-            js_MarkScript(cx, fun->u.i.script, arg);
+            js_MarkScript(cx, fun->u.i.script);
     }
     return 0;
 }

@@ -177,7 +177,7 @@ extern void
 js_DestroyScript(JSContext *cx, JSScript *script);
 
 extern void
-js_MarkScript(JSContext *cx, JSScript *script, void *arg);
+js_MarkScript(JSContext *cx, JSScript *script);
 
 extern jssrcnote *
 js_GetSrcNote(JSScript *script, jsbytecode *pc);

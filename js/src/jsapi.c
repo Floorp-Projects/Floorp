@@ -1828,7 +1828,7 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
     JS_ASSERT(cx->runtime->gcThread == js_CurrentThreadId());
 #endif
 
-    GC_MARK(cx, thing, name, arg);
+    GC_MARK(cx, thing, name);
 }
 
 JS_PUBLIC_API(void)
@@ -3187,9 +3187,9 @@ prop_iter_mark(JSContext *cx, JSObject *obj, void *arg)
         for (i = 0, n = ida->length; i < n; i++) {
             id = ida->vector[i];
             if (JSID_IS_ATOM(id))
-                GC_MARK_ATOM(cx, JSID_TO_ATOM(id), arg);
+                GC_MARK_ATOM(cx, JSID_TO_ATOM(id));
             else if (JSID_IS_OBJECT(id))
-                GC_MARK(cx, JSID_TO_OBJECT(id), "id", arg);
+                GC_MARK(cx, JSID_TO_OBJECT(id), "id");
         }
     }
     return 0;
