@@ -40,6 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsISVGGlyphMetricsSource.h"
 #include "nsPromiseFlatString.h"
 #include "nsFont.h"
@@ -231,23 +232,20 @@ nsSVGCairoGlyphMetrics::GetStartPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint 
   if (!point)
     return NS_ERROR_FAILURE;
 
-  nsSVGCharacterPosition *cp;
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   SelectFont(mCT);
 
   if (cp) {
-    if (cp[charnum].draw == PR_FALSE) {
-      delete [] cp;
+    if (cp[charnum].draw == PR_FALSE)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
 
     point->SetX(cp[charnum].x);
     point->SetY(cp[charnum].y);
 
-    delete [] cp;
   } else {
     if (charnum > 0) {
       cairo_text_extents_t extent;
@@ -287,18 +285,16 @@ nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **
   if (!point)
     return NS_ERROR_FAILURE;
 
-  nsSVGCharacterPosition *cp;
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
   
-  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   SelectFont(mCT);
 
   if (cp) {
-    if (cp[charnum].draw == PR_FALSE) {
-      delete [] cp;
+    if (cp[charnum].draw == PR_FALSE)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
 
     cairo_text_extents_t extent;
 
@@ -311,8 +307,6 @@ nsSVGCairoGlyphMetrics::GetEndPositionOfChar(PRUint32 charnum, nsIDOMSVGPoint **
 
     point->SetX(cp[charnum].x + extent.x_advance * c - extent.y_advance * s);
     point->SetY(cp[charnum].y + extent.y_advance * c + extent.x_advance * s);
-
-    delete [] cp;
   } else {
     cairo_text_extents_t extent;
 
@@ -346,9 +340,9 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
     return NS_ERROR_FAILURE;
   }
 
-  nsSVGCharacterPosition *cp;
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   SelectFont(mCT);
@@ -359,18 +353,14 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
                      &extent);
 
   if (cp) {
-    if (cp[charnum].draw == PR_FALSE) {
-      delete [] cp;
+    if (cp[charnum].draw == PR_FALSE)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
 
     cairo_matrix_t matrix;
     cairo_get_matrix(mCT, &matrix);
     cairo_new_path(mCT);
     cairo_move_to(mCT, cp[charnum].x, cp[charnum].y);
     cairo_rotate(mCT, cp[charnum].angle);
-
-    delete [] cp;
 
     cairo_rel_move_to(mCT, extent.x_bearing, extent.y_bearing);
     cairo_rel_line_to(mCT, extent.width, 0);
@@ -426,19 +416,16 @@ nsSVGCairoGlyphMetrics::GetRotationOfChar(PRUint32 charnum, float *_retval)
   nsAutoString text;
   mSource->GetCharacterData(text);
 
-  nsSVGCharacterPosition *cp;
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   if (cp) {
-    if (cp[charnum].draw == PR_FALSE) {
-      delete [] cp;
+    if (cp[charnum].draw == PR_FALSE)
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
-    }
 
     *_retval = cp[charnum].angle / radPerDeg;
-    delete [] cp;
   } else {
     *_retval = 0.0;
   }
@@ -456,9 +443,9 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
   nsAutoString text;
   mSource->GetCharacterData(text);
 
-  nsSVGCharacterPosition *cp;
+  nsAutoArrayPtr<nsSVGCharacterPosition> cp;
 
-  if (NS_FAILED(mSource->GetCharacterPosition(&cp)))
+  if (NS_FAILED(mSource->GetCharacterPosition(getter_Transfers(cp))))
     return NS_ERROR_FAILURE;
 
   for (PRUint32 charnum = 0; charnum < text.Length(); charnum++) {
@@ -504,7 +491,6 @@ nsSVGCairoGlyphMetrics::GetCharNumAtPosition(nsIDOMSVGPoint *point, PRInt32 *_re
 
     cairo_set_matrix(mCT, &matrix);
   }
-  delete [] cp;
   return NS_OK;
 }
 
