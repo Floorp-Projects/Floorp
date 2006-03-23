@@ -587,14 +587,27 @@ var PlacesController = {
   },
 
   /**
-   * Determines whether or not a ResultNode is a remotecontainer item or not
+   * Determines whether or not a ResultNode is a remotecontainer item.
+   * ResultNote may be either a remote container result type or a bookmark folder
+   * with a nonempty remoteContainerType.  The remote container result node
+   * type is for dynamically created remote containers (i.e., for the file
+   * browser service where you get your folders in bookmark menus).  Bookmark
+   * folders are marked as remote containers when some other component is
+   * registered as interested in them and providing some operations, in which
+   * case their remoteContainerType indicates which component is thus registered. 
+   * For exmaple, the livemark service uses this mechanism.
    * @param   node
    *          A NavHistoryResultNode
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
-    const NHRN = Ci.nsINavHistoryResultNode;
-    return node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+      const NHRN = Ci.nsINavHistoryResultNode;
+      if (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
+        return true;
+      if (node.type == NHRN.RESULT_TYPE_FOLDER)
+        return asContainer(node).remoteContainerType != "";
+      
+      return false;
   },
   
   /**

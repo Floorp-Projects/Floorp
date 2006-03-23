@@ -151,6 +151,8 @@ toolbarbutton.bookmark-item .toolbarbutton-text {
   padding-top: 1px;
 }
 
+/* Image locations for these toolbar icons are overridden in places/browser-places.css in Places-enabled builds.
+   Those styles can be merged into these once the pre-Places bookmark system is no longer needed. */
 .bookmark-item > .toolbarbutton-menu-dropmarker {
 list-style-image: url("chrome://browser/skin/bookmarks/folderarrow.png");
 height: 16px !important;

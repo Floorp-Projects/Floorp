@@ -36,7 +36,7 @@
 #ifndef XP_MACOSX
                              context="placesContext"
 #endif
-							 />
+               />
             </xul:toolbarbutton>
           </xul:hbox>
           <xul:toolbarbutton class="bookmark-item bookmarks-toolbar-customize"
@@ -125,6 +125,11 @@
               button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
+              if (PlacesController.nodeIsRemoteContainer(child)) {
+                if (asContainer(child).remoteContainerType == "@mozilla.org/browser/livemark-service;1") {
+                  button.setAttribute("livemark", "true");
+                }
+              }
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");
               // This is set here and not in the XBL constructor for the menu because

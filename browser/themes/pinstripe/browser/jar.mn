@@ -31,6 +31,7 @@ classic.jar:
   skin/classic/browser/Toolbar.png
 #ifdef MOZ_PLACES
   skin/classic/browser/places/places.css                    (places/places.css)
+  skin/classic/browser/places/browser-places.css            (places/browser-places.css)
   skin/classic/browser/places/defaultFavicon.png            (places/defaultFavicon.png)
   skin/classic/browser/places/query.png                     (places/query.png)
   skin/classic/browser/places/bookmarksMenu.png             (places/bookmarksMenu.png)
@@ -39,6 +40,10 @@ classic.jar:
   skin/classic/browser/places/placesIcon.png                (places/placesIcon.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/folderDragOver.png            (places/folderDragOver.png)
+  skin/classic/browser/places/folderDropArrow.png           (places/folderDropArrow.png)
+  skin/classic/browser/places/folderDropHoverArrow.png      (places/folderDropHoverArrow.png)
+  skin/classic/browser/places/livemarkFolder.png            (places/livemarkFolder.png)
+  skin/classic/browser/places/livemarkFolderHover.png       (places/livemarkFolderHover.png)
   skin/classic/browser/places/bookmarkProperties.css        (places/bookmarkProperties.css)
 #else
   skin/classic/browser/bookmarks/addBookmark.css            (bookmarks/addBookmark.css)
