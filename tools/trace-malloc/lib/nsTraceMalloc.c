@@ -1353,9 +1353,11 @@ backtrace(int skip)
 #elif defined(__x86_64__)
     __asm__( "movq %%rbp, %0" : "=g"(bp));
 #else
-    // It would be nice if this worked uniformly, but at least on i386 and
-    // x86_64, it stopped working with gcc 4.1, because it points to the
-    // end of the saved registers instead of the start.
+    /*
+     * It would be nice if this worked uniformly, but at least on i386 and
+     * x86_64, it stopped working with gcc 4.1, because it points to the
+     * end of the saved registers instead of the start.
+     */
     bp = (void**) __builtin_frame_address(0);
 #endif
     while (--skip >= 0) {
