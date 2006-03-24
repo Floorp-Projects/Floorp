@@ -2285,9 +2285,6 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(aKid, "null ptr");
 
-  nsresult rv = WillAddOrRemoveChild(aKid, aIndex, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return doInsertChildAt(aKid, aIndex, aNotify, this, GetCurrentDoc(),
                          mAttrsAndChildren);
 }
@@ -2376,9 +2373,6 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
   if (oldKid) {
-    nsresult rv = WillAddOrRemoveChild(oldKid, aIndex, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     return doRemoveChildAt(aIndex, aNotify, oldKid, this, GetCurrentDoc(),
                            mAttrsAndChildren);
   }
@@ -3235,14 +3229,6 @@ nsGenericElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) co
 {
   return mAttrsAndChildren.GetExistingAttrNameFromQName(
     NS_ConvertUTF16toUTF8(aStr));
-}
-
-nsresult 
-nsGenericElement::WillAddOrRemoveChild(nsIContent* /*aKid*/,
-                                       PRUint32 /*aIndex*/,
-                                       PRBool /*aRemove*/)
-{
-  return NS_OK;
 }
 
 nsresult

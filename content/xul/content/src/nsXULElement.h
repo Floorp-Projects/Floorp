@@ -472,6 +472,8 @@ public:
                                              nsIEventListenerManager** aRes) {
       return GetListenerManager(aCreateIfNotFound, aRes);
     }
+    virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                   PRBool aNotify);
 
     // nsIContent
     virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -570,10 +572,6 @@ protected:
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
-
-    virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
-                                          PRUint32 aIndex,
-                                          PRBool aRemove);
 
     nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAString& attrName);
 
