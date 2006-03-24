@@ -303,7 +303,7 @@ var BookmarkPropertiesPanel = {
    */
 
   _initFolderTree: function BPP__initFolderTree() {
-    this._folderTree = this._dialogWindow.document.getElementById("folder-tree");
+    this._folderTree = this._dialogWindow.document.getElementById("folderTree");
     this._folderTree.peerDropTypes = [];
     this._folderTree.childDropTypes = [];
     this._folderTree.excludeItems = true;
@@ -340,9 +340,9 @@ var BookmarkPropertiesPanel = {
         "true";
     }
 
-    var nurl = document.getElementById("edit-urlbar");
+    var nurl = document.getElementById("editURLBar");
 
-    var titlebox = document.getElementById("edit-titlebox");
+    var titlebox = document.getElementById("editTitleBox");
 
     titlebox.value = this._bookmarkTitle;
 
@@ -362,12 +362,12 @@ var BookmarkPropertiesPanel = {
 
     if (this._isShortcutVisible()) {
       var shortcutbox =
-        this._dialogWindow.document.getElementById("edit-shortcutbox");
+        this._dialogWindow.document.getElementById("editShortcutBox");
       shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
     }
     else {
       var shortcutRow =
-        this._dialogWindow.document.getElementById("shortcut-row");
+        this._dialogWindow.document.getElementById("shortcutRow");
       shortcutRow.setAttribute("hidden", "true");
     }
 
@@ -376,7 +376,7 @@ var BookmarkPropertiesPanel = {
     }
     else {
       var folderRow =
-        this._dialogWindow.document.getElementById("folder-row");
+        this._dialogWindow.document.getElementById("folderRow");
       folderRow.setAttribute("hidden", "true");
     }
   },
@@ -441,7 +441,7 @@ var BookmarkPropertiesPanel = {
    * was open.
    */
   _saveChanges: function PBD_saveChanges() {
-    var urlbox = this._dialogWindow.document.getElementById("edit-urlbar");
+    var urlbox = this._dialogWindow.document.getElementById("editURLBar");
     var newURI = this._bookmarkURI;
     if (this._identifierIsURI() && this._isURIEditable())
       newURI = this._uri(urlbox.value);
@@ -461,7 +461,7 @@ var BookmarkPropertiesPanel = {
     }
 
 
-    var titlebox = this._dialogWindow.document.getElementById("edit-titlebox");
+    var titlebox = this._dialogWindow.document.getElementById("editTitleBox");
     if (this._identifierIsURI())
       this._bms.setItemTitle(this._bookmarkURI, titlebox.value);
     else
@@ -469,7 +469,7 @@ var BookmarkPropertiesPanel = {
 
     if (this._isShortcutVisible()) {
       var shortcutbox =
-        this._dialogWindow.document.getElementById("edit-shortcutbox");
+        this._dialogWindow.document.getElementById("editShortcutBox");
       this._bms.setKeywordForURI(this._bookmarkURI, shortcutbox.value);
     }
 
