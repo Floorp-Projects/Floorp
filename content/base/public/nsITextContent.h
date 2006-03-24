@@ -43,10 +43,10 @@ class nsString;
 class nsTextFragment;
 
 // IID for the nsITextContent interface
-// e5334e75-ac53-4447-b7fa-830e55cf5ac6
+// e4ef843f-1061-45e6-9c81-30eac2673f41
 #define NS_ITEXT_CONTENT_IID \
-{ 0xe5334e75, 0xac53, 0x4447, \
-  { 0xb7, 0xfa, 0x83, 0x0e, 0x55, 0xcf, 0x5a, 0xc6 } }
+{ 0xe4ef843f, 0x1061, 0x45e6, \
+ { 0x9c, 0x81, 0x30, 0xea, 0xc2, 0x67, 0x3f, 0x41 } }
 
 /**
  * Interface for textual content. This interface is used to provide
@@ -84,7 +84,7 @@ public:
    */
   void SetText(const nsAString& aStr, PRBool aNotify)
   {
-    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+    SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
 
   /**
