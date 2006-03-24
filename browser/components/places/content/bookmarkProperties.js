@@ -395,9 +395,9 @@ var BookmarkPropertiesPanel = {
    * Size the dialog to fit its contents.
    */
   _updateSize: function BPP__updateSize() {
-    var width = this._dialogWindow.innerWidth;
+    var width = this._dialogWindow.outerWidth;
     this._dialogWindow.sizeToContent();
-    this._dialogWindow.resizeTo(width, this._dialogWindow.innerHeight);
+    this._dialogWindow.resizeTo(width, this._dialogWindow.outerHeight);
   },
 
  /**
