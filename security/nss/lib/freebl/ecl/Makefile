@@ -113,7 +113,7 @@ LIBOBJS = ecl.o ecl_curve.o ecl_mult.o ecl_gf.o \
 	ec2_163.o ec2_193.o ec2_233.o \
 	ecp_aff.o ecp_jac.o ecp_mont.o \
 	ec_naf.o ecp_jm.o \
-	ecp_192.o ecp_224.o ecp_256.o ecp_384.o ecp_521.o
+	ecp_192.o ecp_224.o
 ifeq ($(ECL_USE_FP),1)
 LIBOBJS+= ecp_fp160.o ecp_fp192.o ecp_fp224.o ecp_fp.o
 endif
@@ -162,9 +162,6 @@ ecp_jm.o: ecp_jm.c $(LIBHDRS)
 ecp_mont.o: ecp_mont.c $(LIBHDRS)
 ecp_192.o: ecp_192.c $(LIBHDRS)
 ecp_224.o: ecp_224.c $(LIBHDRS)
-ecp_256.o: ecp_256.c $(LIBHDRS)
-ecp_384.o: ecp_384.c $(LIBHDRS)
-ecp_521.o: ecp_521.c $(LIBHDRS)
 ecp_fp.o: ecp_fp.c $(LIBHDRS)
 ifeq ($(ECL_USE_FP),1)
 ecp_fp160.o: ecp_fp160.c ecp_fpinc.c $(LIBHDRS)
