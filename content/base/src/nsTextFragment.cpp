@@ -263,7 +263,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
       const char *cp = m1b + aOffset;
       const char *end = cp + aCount;
       while (cp < end) {
-        *aDest++ = unsigned char(*cp++);
+        *aDest++ = (unsigned char)(*cp++);
       }
     }
   }
