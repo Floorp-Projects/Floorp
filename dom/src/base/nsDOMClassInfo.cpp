@@ -3400,9 +3400,8 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
     // return the Object constructor.
 
     JSString *str = JSVAL_TO_STRING(sConstructor_id);
-    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                               ::JS_GetStringLength(str), val, NULL, NULL,
-                               JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!::JS_SetUCProperty(cx, obj, ::JS_GetStringChars(str),
+                            ::JS_GetStringLength(str), &val)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -5510,7 +5509,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     v = OBJECT_TO_JSVAL(dot_prototype);
 
     if (!::JS_DefineProperty(cx, class_obj, "prototype", v, NULL, NULL,
-                             JSPROP_PERMANENT | JSPROP_READONLY)) {
+                             JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -7947,10 +7946,7 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
 
     if (helper) {
       jsval v = JSVAL_VOID;
-      if (!::JS_DefineProperty(cx, helper, "all", v, NULL, NULL,
-                               JSPROP_READONLY)) {
-        return JS_FALSE;
-      }
+      ::JS_SetProperty(cx, helper, "all", &v);
 
       *objp = helper;
     }
