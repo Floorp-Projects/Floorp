@@ -192,6 +192,7 @@
     <command id="Browser:Home"    oncommand="BrowserHome(event);"/>
     <command id="Browser:Back"    oncommand="BrowserBack();"    observes="canGoBack"/>
     <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
+    <command id="Browser:Up"      oncommand="BrowserUp();"      observes="canGoUp"/>
     <commandset id="viewZoomCommands"/>
     <commandset id="tasksCommands"/>
 
@@ -203,6 +204,7 @@
   <broadcasterset id="navBroadcasters">
     <broadcaster id="canGoBack"    disabled="true"/>
     <broadcaster id="canGoForward" disabled="true"/>
+    <broadcaster id="canGoUp"      disabled="true"/>
     <broadcaster id="Communicator:WorkMode"/>
     <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
     <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
@@ -449,6 +451,7 @@
       <menupopup id="goPopup" onpopupshowing="updateGoMenu(event);">
         <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
         <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
+        <menuitem label="&goUpCmd.label;"      accesskey="&goUpCmd.accesskey;"      key="goUpKb"      command="Browser:Up"/>
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
         <menuseparator/>
         <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
