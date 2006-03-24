@@ -3623,43 +3623,11 @@ nsDocument::GetLocalName(nsAString& aLocalName)
   return NS_OK;
 }
 
-nsresult
-nsDocument::IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent)
-{
-  if (aNodeType != nsIDOMNode::COMMENT_NODE &&
-      aNodeType != nsIDOMNode::ELEMENT_NODE &&
-      aNodeType != nsIDOMNode::PROCESSING_INSTRUCTION_NODE &&
-      aNodeType != nsIDOMNode::DOCUMENT_TYPE_NODE) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  if (aNodeType == nsIDOMNode::ELEMENT_NODE && mRootContent &&
-      mRootContent != aRefContent) {
-    // We already have a child Element, and we're not trying to
-    // replace it, so throw an error.
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  if (aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
-    nsCOMPtr<nsIDOMDocumentType> docType;
-    GetDoctype(getter_AddRefs(docType));
-
-    nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
-    if (docTypeContent && docTypeContent != aRefContent) {
-      // We already have a doctype, and we're not trying to
-      // replace it, so throw an error.
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doInsertBefore(aNewChild, aRefChild, nsnull, this,
+  return nsGenericElement::doReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, nsnull, this,
                                           aReturn);
 }
 
@@ -3667,7 +3635,7 @@ NS_IMETHODIMP
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                          nsIDOMNode** aReturn)
 {
-  return nsGenericElement::doReplaceChild(aNewChild, aOldChild, nsnull, this,
+  return nsGenericElement::doReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, nsnull, this,
                                           aReturn);
 }
 

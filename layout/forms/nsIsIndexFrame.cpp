@@ -371,8 +371,8 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
 
   // Resolve url to an absolute url
-  nsIURI *docURL = document->GetBaseURI();
-  if (!docURL) {
+  nsIURI *baseURI = document->GetBaseURI();
+  if (!baseURI) {
     NS_ERROR("No Base URL found in Form Submit!\n");
     return NS_OK; // No base URL -> exit early, see Bug 30721
   }
@@ -396,7 +396,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
   // passed a zero length rel path.
   nsCAutoString relPath;
-  docURL->GetSpec(relPath);
+  baseURI->GetSpec(relPath);
   if (!relPath.IsEmpty()) {
     CopyUTF8toUTF16(relPath, href);
 
@@ -420,7 +420,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
 
   if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
                                       flatDocCharset.get(),
-                                      docURL))) {
+                                      baseURI))) {
     result = actionURL->SchemeIs("javascript", &isJSURL);
   }
   // Append the URI encoded variable/value pairs for GET's
@@ -436,7 +436,7 @@ nsIsIndexFrame::OnSubmit(nsPresContext* aPresContext)
   }
   nsCOMPtr<nsIURI> uri;
   result = NS_NewURI(getter_AddRefs(uri), href,
-                     flatDocCharset.get(), docURL);
+                     flatDocCharset.get(), baseURI);
   if (NS_FAILED(result)) return result;
 
   // Now pass on absolute url to the click handler

@@ -283,6 +283,77 @@ private:
   nsCOMPtr<nsIContent> mContent;
 };
 
+/**
+ * Class used to detect unexpected mutations. To use the class create an
+ * nsMutationGuard on the stack before unexpected mutations could occur.
+ * You can then at any time call Mutated to check if any unexpected mutations
+ * have occured.
+ *
+ * When a guard is instantiated sMutationCount is set to 300. It is then
+ * decremented by every mutation (capped at 0). This means that we can only
+ * detect 300 mutations during the lifetime of a single guard, however that
+ * should be more then we ever care about as we usually only care if more then
+ * one mutation has occured.
+ *
+ * When the guard goes out of scope it will adjust sMutationCount so that over
+ * the lifetime of the guard the guard itself has not affected sMutationCount,
+ * while mutations that happened while the guard was alive still will. This
+ * allows a guard to be instantiated even if there is another guard higher up
+ * on the callstack watching for mutations.
+ *
+ * The only thing that has to be avoided is for an outer guard to be used
+ * while an inner guard is alive. This can be avoided by only ever
+ * instantiating a single guard per scope and only using the guard in the
+ * current scope.
+ */
+class nsMutationGuard {
+public:
+  nsMutationGuard()
+  {
+    mDelta = eMaxMutations - sMutationCount;
+    sMutationCount = eMaxMutations;
+  }
+  ~nsMutationGuard()
+  {
+    sMutationCount =
+      mDelta > sMutationCount ? 0 : sMutationCount - mDelta;
+  }
+
+  /**
+   * Returns true if any unexpected mutations have occured. You can pass in
+   * an 8-bit ignore count to ignore a number of expected mutations.
+   */
+  PRBool Mutated(PRUint8 aIgnoreCount)
+  {
+    return sMutationCount < NS_STATIC_CAST(PRUint32, eMaxMutations - aIgnoreCount);
+  }
+
+  // This function should be called whenever a mutation that we want to keep
+  // track of happen. For now this is only done when children are added or
+  // removed, but we might do it for attribute changes too in the future.
+  static void DidMutate()
+  {
+    if (sMutationCount) {
+      --sMutationCount;
+    }
+  }
+
+private:
+  // mDelta is the amount sMutationCount was adjusted when the guard was
+  // initialized. It is needed so that we can undo that adjustment once
+  // the guard dies.
+  PRUint32 mDelta;
+
+  // The value 300 is not important, as long as it is bigger then anything
+  // ever passed to Mutated().
+  enum { eMaxMutations = 300 };
+
+  
+  // sMutationCount is a global mutation counter which is decreased by one at
+  // every mutation. It is capped at 0 to avoid wrapping.
+  // It's value is always between 0 and 300, inclusive.
+  static PRUint32 sMutationCount;
+};
 
 /**
  * A generic base class for DOM elements, implementing many nsIContent,
@@ -576,43 +647,22 @@ public:
   static PRBool ShouldFocus(nsIContent *aContent);
 
   /**
-   * Checks if a node is the ancestor of another.
-   */
-  static PRBool isSelfOrAncestor(nsIContent *aNode,
-                                 nsIContent *aPossibleAncestor);
-
-  /**
-   * Actual implementation of the DOM InsertBefore method.  Shared by
-   * nsDocument.  When called from nsDocument, aParent will be null.
+   * Actual implementation of the DOM InsertBefore and ReplaceChild methods.
+   * Shared by nsDocument. When called from nsDocument, aParent will be null.
    *
+   * @param aReplace  True if aNewChild should replace aRefChild. False if
+   *                  aNewChild should be inserted before aRefChild.
    * @param aNewChild The child to insert
-   * @param aRefChild The child to insert before
+   * @param aRefChild The child to insert before or replace
    * @param aParent The parent to use for the new child
    * @param aDocument The document to use for the new child.
    *                  Must be non-null, if aParent is null and must match
    *                  aParent->GetCurrentDoc() if aParent is not null.
    * @param aReturn [out] the child we insert
    */
-  static nsresult doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                                 nsIContent* aParent, nsIDocument* aDocument,
-                                 nsIDOMNode** aReturn);
-
-  /**
-   * Actual implementation of the DOM ReplaceChild method.  Shared by
-   * nsDocument.  When called from nsDocument, aParent will be null.
-   *
-   * @param aNewChild The child to replace with
-   * @param aOldChild The child to replace
-   * @param aParent The parent to use for the new child
-   * @param aDocument The document to use for the new child.
-   *                  Must be non-null if aParent is null and must match
-   *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aChildArray The child array to work with
-   * @param aReturn [out] the child we insert
-   */
-  static nsresult doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                                 nsIContent* aParent, nsIDocument* aDocument,
-                                 nsIDOMNode** aReturn);
+  static nsresult doReplaceOrInsertBefore(PRBool aReplace, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                                          nsIContent* aParent, nsIDocument* aDocument,
+                                          nsIDOMNode** aReturn);
 
   /**
    * Actual implementation of the DOM RemoveChild method.  Shared by
@@ -706,7 +756,7 @@ public:
     const nsAttrName* mName;
     const nsAttrValue* mValue;
   };
-  
+
 protected:
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
@@ -1010,41 +1060,6 @@ protected:
    */
   nsAttrAndChildArray mAttrsAndChildren;
 };
-
-// Internal non-public interface
-
-// IID for the nsIDocumentFragment interface
-#define NS_IDOCUMENTFRAGMENT_IID      \
-{ 0xd8fb2853, 0xf6d6, 0x4499, \
-  {0x9c, 0x60, 0x6c, 0xa2, 0x75, 0x35, 0x09, 0xeb} }
-
-// nsIDocumentFragment interface
-/**
- * These methods are supposed to be used when *all* children of a
- * document fragment are moved at once into a new parent w/o
- * changing the relationship between the children. If the moving
- * operation fails and some children were moved to a new parent and
- * some weren't, ReconnectChildren() should be called to remove the
- * children from their possible new parent and re-insert the
- * children into the document fragment. Once the operation is
- * complete and all children are successfully moved into their new
- * parent DropChildReferences() should be called so that the
- * document fragment will loose its references to the children.
- */
-class nsIDocumentFragment : public nsIDOMDocumentFragment
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTFRAGMENT_IID)
-
-  /** Tell the children their parent is gone */
-  NS_IMETHOD DisconnectChildren() = 0;
-  /** Put all children back in the fragment */
-  NS_IMETHOD ReconnectChildren() = 0;
-  /** Drop references to children */
-  NS_IMETHOD DropChildReferences() = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentFragment, NS_IDOCUMENTFRAGMENT_IID)
 
 #define NS_FORWARD_NSIDOMNODE_NO_CLONENODE(_to)                               \
   NS_IMETHOD GetNodeName(nsAString& aNodeName) {                              \

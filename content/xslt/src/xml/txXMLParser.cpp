@@ -85,9 +85,8 @@ class txXMLParser
 #endif
 
 nsresult
-txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
-                       const txXPathNode& aLoader, nsAString& aErrMsg,
-                       txXPathNode** aResult)
+txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
+                       nsAString& aErrMsg, txXPathNode** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nsnull;
@@ -109,11 +108,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
 
     nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
     if (http) {
-        nsCOMPtr<nsIURI> refUri;
-        NS_NewURI(getter_AddRefs(refUri), aReferrer);
-        if (refUri) {
-            http->SetReferrer(refUri);
-        }
+        http->SetReferrer(loaderUri);
         http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),     
                                NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
                                PR_FALSE);
