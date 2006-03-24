@@ -54,8 +54,8 @@ use IPC::Open2;
 
 # addr2line wants offsets relative to the base address for shared
 # libraries, but it wants addresses including the base address offset
-# for executables.  The job of this function is to do the appropriate
-# fixup.  See bug 230336.
+# for executables.  This function returns the appropriate address
+# adjustment to add to an offset within file.  See bug 230336.
 my %address_adjustments;
 sub address_adjustment($) {
     my ($file) = @_;
@@ -71,23 +71,23 @@ sub address_adjustment($) {
         }
         close(ELFHDR);
 
-        # If it's an executable, make offset the base address.  Otherwise,
-        # leave it zero.
-        my $offset = 0;
+        # If it's an executable, make adjustment the base address.
+        # Otherwise, leave it zero.
+        my $adjustment = 0;
         if ($elftype eq 'EXEC') {
             open(ELFSECS, '-|', 'readelf', '-S', $file);
             while (<ELFSECS>) {
                 if (/^\s*\[\s*\d+\]\s+\.text\s+\w+\s+(\w+)\s+(\w+)\s+/) {
                     # Subtract the .text section's offset within the
                     # file from its base address.
-                    $offset = hex($1) - hex($2);
+                    $adjustment = hex($1) - hex($2);
                     last;
                 }
             }
             close(ELFSECS);
         }
 
-        $address_adjustments{$file} = $offset;
+        $address_adjustments{$file} = $adjustment;
     }
     return $address_adjustments{$file};
 }
