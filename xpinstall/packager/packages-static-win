@@ -181,6 +181,7 @@ bin\components\embed_base.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\windowwatcher.xpt
+bin\components\xpautocomplete.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_components.xpt
 bin\components\xpcom_ds.xpt

@@ -234,6 +234,7 @@ bin/components/windowwatcher.xpt
 bin/components/windowds.xpt
 bin/components/wlltvwrs.dll
 ;bin/components/xpc3250.dll
+bin/components/xpautocomplete.xpt
 bin/components/xpconect.dll
 bin/components/xpcom_base.xpt
 bin/components/xpcom_components.xpt

@@ -231,6 +231,7 @@ bin/components/prefmigr.xpt
 bin/components/profile.xpt
 bin/components/uconv.xpt
 bin/components/util.xpt
+bin/components/xpautocomplete.xpt
 bin/components/xpcom_components.xpt
 bin/components/xpcom_threads.xpt
 bin/components/xml-rpc.xpt
