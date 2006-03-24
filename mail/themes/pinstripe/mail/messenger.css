@@ -89,11 +89,11 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 /* ::::: online/offline icons ::::: */
 
 #offline-status[offline="true"] {
-  list-style-image: url("chrome://communicator/skin/icons/offline.png");
+  list-style-image: url("chrome://messenger/skin/icons/offline.png");
 }
 
 #offline-status {
-  list-style-image: url("chrome://communicator/skin/icons/online.png");
+  list-style-image: url("chrome://messenger/skin/icons/online.png");
 }
 
 /* ::::: directional button icons ::::: */

@@ -189,6 +189,8 @@ classic.jar:
      skin/classic/messenger/icons/unreadmail-selected.png           (icons/unreadmail-selected.png)
      skin/classic/messenger/icons/unreadmail.png                    (icons/unreadmail.png)
      skin/classic/messenger/icons/unthreadcol.png                   (icons/unthreadcol.png)
+     skin/classic/messenger/icons/online.png                        (icons/online.png)
+     skin/classic/messenger/icons/offline.png                       (icons/offline.png)     
      skin/classic/messenger/accountcentral/accountsettings.png      (accountcentral/accountsettings.png)
      skin/classic/messenger/accountcentral/folder.png               (accountcentral/folder.png)
      skin/classic/messenger/accountcentral/getmail.png              (accountcentral/getmail.png)
@@ -201,8 +203,6 @@ classic.jar:
      skin/classic/messenger/accountcentral/manage-subscriptions.png (accountcentral/manage-subscriptions.png)
      skin/classic/messenger/accountcentral/manage-rss.png           (accountcentral/manage-rss.png)
      skin/classic/messenger/accountcentral/writemail.png            (accountcentral/writemail.png)
-     skin/classic/communicator/icons/online.png                     (icons/online.png)
-     skin/classic/communicator/icons/offline.png                    (icons/offline.png)
      skin/classic/communicator/smileys.css
      skin/classic/communicator/button.css
      skin/classic/communicator/icons/smileys/smiley-smile.png       (icons/smiley-smile.png)

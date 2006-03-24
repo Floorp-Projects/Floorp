@@ -129,6 +129,8 @@ classic.jar:
     skin/classic/messenger/icons/remote-blocked.png             (icons/remote-blocked.png)    
     skin/classic/messenger/icons/check.gif                      (icons/check.gif)
     skin/classic/messenger/icons/notchecked.gif                 (icons/notchecked.gif)
+    skin/classic/messenger/icons/online.png                     (icons/online.png)
+    skin/classic/messenger/icons/offline.png                    (icons/offline.png)
     skin/classic/communicator/icons/smileys/smiley-smile.png    (icons/smiley-smile.png)
     skin/classic/communicator/icons/smileys/smiley-frown.png    (icons/smiley-frown.png)
     skin/classic/communicator/icons/smileys/smiley-wink.png     (icons/smiley-wink.png)
