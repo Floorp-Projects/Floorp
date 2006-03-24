@@ -116,7 +116,7 @@
                     <checkbox id="dontAskForLaunch" tabindex="53"
 	                              label="&dontAskForLaunch.label;"
 	                              preference="browser.download.progressDnlgDialog.dontAskForLaunch" 
-	                              onclick="syncPref(this)" />
+	                              onclick="syncPref(this);" />
 
                     <hbox flex="1">
 
@@ -130,10 +130,11 @@
                                tabindex="54"
                                flex="1" />                                          
 
-                      <button id="chooseFolderButton" tabindex="55"
+                   <!--   <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
 			                        label="&setSaveDirectory.label;"
 			                        oncommand="syncPref(document.getElementById('downloadDir'));downloadChooseFolder();"/>
+			-->
 
                     </hbox>		
                   </vbox>
