@@ -2564,7 +2564,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_DEFXMLNS:
                 rval = POP_STR();
-                js_printf(jp, "\t%s %s %s %s;\n",
+                js_printf(jp, "\t%s %s %s = %s;\n",
                           js_default_str, js_xml_str, js_namespace_str, rval);
                 todo = -2;
                 break;
