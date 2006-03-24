@@ -1449,7 +1449,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   /*
    * Get all of the parameters.
    */
-  if (((argc-5) % 3) != 0) {
+  if (argc < 5 || ((argc-5) % 3) != 0) {
     JS_ReportError(cx, "%s", "%s%s\n", JS_ERROR,
                   "incorrect number of parameters");
     return NS_ERROR_FAILURE;
