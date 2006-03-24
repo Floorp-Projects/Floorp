@@ -99,7 +99,7 @@ public:
     txStylesheetCompilerState(txACompileObserver* aObserver);
     ~txStylesheetCompilerState();
     
-    nsresult init(const nsAString& aBaseURI, txStylesheet* aStylesheet,
+    nsresult init(const nsAString& aStylesheetURI, txStylesheet* aStylesheet,
                   txListIterator* aInsertPosition);
 
     // Embedded stylesheets state
@@ -175,13 +175,13 @@ protected:
         eInEmbed,
         eHasEmbed
     } mEmbedStatus;
-    nsString mURI;
+    nsString mStylesheetURI;
     PRPackedBool mIsTopCompiler;
     PRPackedBool mDoneWithThisStylesheet;
-
-private:
     txStack mObjectStack;
     txStack mOtherStack;
+
+private:
     txInstruction** mNextInstrPtr;
     txListIterator mToplevelIterator;
     nsVoidArray mGotoTargetPointers;
@@ -200,14 +200,16 @@ class txStylesheetCompiler : private txStylesheetCompilerState,
 {
 public:
     friend class txStylesheetCompilerState;
-    txStylesheetCompiler(const nsAString& aBaseURI,
+    txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txACompileObserver* aObserver);
-    txStylesheetCompiler(const nsAString& aBaseURI,
+    txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txStylesheet* aStylesheet,
                          txListIterator* aInsertPosition,
                          txACompileObserver* aObserver);
     virtual nsrefcnt AddRef();
     virtual nsrefcnt Release();
+
+    void setBaseURI(const nsString& aBaseURI);
 
     nsresult startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
                           nsIAtom* aPrefix, txStylesheetAttr* aAttributes,

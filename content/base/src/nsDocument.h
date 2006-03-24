@@ -772,8 +772,6 @@ protected:
   nsString mBaseTarget;
 
 private:
-  nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);
-
   void PostUnblockOnloadEvent();
   static EventHandlerFunc HandleOnloadBlockerEvent;
   static EventDestructorFunc DestroyOnloadBlockerEvent;
