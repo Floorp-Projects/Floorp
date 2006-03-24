@@ -125,10 +125,12 @@
                                  preference="browser.download.dir"
                                  />          
 
+<!--
 			    <textbox id="downloadDirDisplay" disabled="true"
-                               style="margin:3px ! important;"
+                               style="margin:3px ! important; visibility:hidden"
                                tabindex="54"
                                flex="1" />                                          
+-->
 
                    <!--   <button id="chooseFolderButton" tabindex="55"
 			                        class='box-prefgroupitem'
