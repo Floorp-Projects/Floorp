@@ -462,7 +462,8 @@
       <field name="mTasksInView">true</field>
       <field name="mShowFullMonth">true</field>
       <field name="mWeekStartOffset">0</field>
-
+      <field name="mDaysOffArray">[0,6]</field>
+      <field name="mDisplayDaysOff">true</field>
 
       <field name="mSelectionObserver"><![CDATA[
       ({  calView: this,
@@ -530,6 +531,26 @@
         ]]></getter>
         <setter><![CDATA[
            this.mWeekStartOffset = val;
+        ]]></setter>
+      </property>
+
+      <property name="displayDaysOff">
+        <getter><![CDATA[
+           return this.mDisplayDaysOff;
+        ]]></getter>
+        <setter><![CDATA[
+           this.mDisplayDaysOff = val;
+           return val;
+        ]]></setter>
+      </property>
+
+      <property name="daysOffArray">
+        <getter><![CDATA[
+           return this.mDaysOffArray;
+        ]]></getter>
+        <setter><![CDATA[
+           this.mDaysOffArray = val;
+           return val;
         ]]></setter>
       </property>
 
@@ -920,9 +941,12 @@
             } else {
                 boxClass = "calendar-month-day-box-even";
             }
-            // XXX isWeekend?
-            if (date.weekday == 0 || date.weekday == 6)
+
+            function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
+            if (this.mDaysOffArray.some(matchesDayOff)) {
               boxClass = "calendar-month-day-box-weekend " + boxClass;
+            }
+
             box.setAttribute("class", boxClass);
             curRow.appendChild(box);
 
@@ -951,6 +975,7 @@
 
           // Store these, so that we can access them later
           this.mDateBoxes = dateBoxes;
+          this.hideDaysOff();
         ]]></body>
       </method>
 
@@ -1004,8 +1029,11 @@
             var boxClass = "calendar-month-day-box-" + 
                            ((mainMonth == date.month) ? "even" : "odd");
 
-            if (date.weekday == 0 || date.weekday == 6)
+            function matchesDayOff(dayOffNum) { return dayOffNum == date.weekday; }
+            if (this.mDaysOffArray.some(matchesDayOff)) {
               boxClass = "calendar-month-day-box-weekend " + boxClass;
+            }
+
             box.setAttribute("class", boxClass);
 
             box.setDate(date);
@@ -1023,6 +1051,20 @@
           if (!this.mShowFullMonth) {
             this.mDateBoxes[0].showMonthLabel = true;
             this.mDateBoxes[this.mDateBoxes.length-1].showMonthLabel = true;
+          }
+          this.hideDaysOff();
+        ]]></body>
+      </method>
+
+      <method name="hideDaysOff">
+        <body><![CDATA[
+          var columns = document.getAnonymousElementByAttribute(this, "anonid", "monthgridcolumns").childNodes;
+          var headerkids = document.getAnonymousElementByAttribute(this, "anonid", "headerbox").childNodes;
+          for (var i in columns) {
+            var dayForColumn = (Number(i) + this.mWeekStartOffset) % 7;
+            var dayOff = (this.mDaysOffArray.indexOf(dayForColumn) != -1);
+            columns[i].collapsed = dayOff && !this.mDisplayDaysOff;
+            headerkids[i].collapsed = dayOff && !this.mDisplayDaysOff;
           }
         ]]></body>
       </method>

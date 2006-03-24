@@ -64,6 +64,8 @@
                     viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
                 } catch (ex) {}
 
+                this.updateDaysOffPrefs();
+
                 // add a preference observer to monitor changes
                 pb2.addObserver("calendar.", this.mPrefObserver, false);
                 return;
@@ -84,6 +86,20 @@
                    subj.QueryInterface(Components.interfaces.nsIPrefBranch2);
 
                    switch (pref) {
+
+                   case "calendar.previousweeks.inview":
+                   case "calendar.week.d0sundaysoff":
+                   case "calendar.week.d1mondaysoff":
+                   case "calendar.week.d2tuesdaysoff":
+                   case "calendar.week.d3wednesdaysoff":
+                   case "calendar.week.d4thursdaysoff":
+                   case "calendar.week.d5fridaysoff":
+                   case "calendar.week.d6saturdaysoff":
+                       this.calView.updateDaysOffPrefs();
+                       if (this.calView.selectedDay) {
+                           this.calView.goToDay(this.calView.selectedDay);
+                       }
+                       break;
 
                    case "calendar.week.start":
                        viewElem = document.getAnonymousElementByAttribute(
@@ -119,6 +135,7 @@
                 <body><![CDATA[
                     var viewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
 	            viewElement.tasksInView = this.mTasksInView;
+                    viewElement.displayDaysOff = !this.mWorkdaysOnly;
 
                     aDate = aDate.getInTimezone(viewElement.timezone);
 
@@ -136,6 +153,7 @@
                 <body><![CDATA[
 		    var monthViewElement = document.getAnonymousElementByAttribute(this, "anonid", "view-element");
                     var dates = monthViewElement.getDateList({});
+                    monthViewElement.displayDaysOff = !this.mWorkdaysOnly;
 		    
 		    // The first few dates in this list are likely in the month
 		    // prior to the one actually being shown (since the month
@@ -190,6 +208,30 @@
                 <body><![CDATA[
                     // Not supported yet
                     return;
+                ]]></body>
+            </method>
+
+            <method name="updateDaysOffPrefs">
+                <body><![CDATA[
+                    try {
+                        var prefService = Components.classes[
+                                          "@mozilla.org/preferences-service;1"]
+                                          .getService(Components.interfaces.nsIPrefService);
+                        var weekBranch = prefService.getBranch("calendar.week.");
+                        var prefNames = ["d0sundaysoff", "d1mondaysoff", "d2tuesdaysoff",
+                                         "d3wednesdaysoff", "d4thursdaysoff",
+                                         "d5fridaysoff", "d6saturdaysoff"];
+                        var daysOff = new Array();
+                        for (var i in prefNames) {
+                            if (weekBranch.getBoolPref(prefNames[i])) {
+                                daysOff.push(Number(i));
+                            }
+                        }
+                        viewElem = document.getAnonymousElementByAttribute(
+                                            this, "anonid", "view-element");
+
+                        viewElem.daysOffArray = daysOff;
+                    } catch (ex) {}
                 ]]></body>
             </method>
         </implementation>
