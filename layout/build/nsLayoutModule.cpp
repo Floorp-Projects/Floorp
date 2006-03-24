@@ -300,6 +300,15 @@ Initialize(nsIModule* aSelf)
     return rv;
   }
 
+  rv = nsTextFragment::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsAttrValue");
+
+    Shutdown();
+
+    return rv;
+  }
+
   // Register all of our atoms once
   nsCSSAnonBoxes::AddRefAtoms();
   nsCSSPseudoClasses::AddRefAtoms();
@@ -423,6 +432,7 @@ Shutdown()
   NS_IF_RELEASE(nsRuleNode::gLangService);
   nsGenericHTMLElement::Shutdown();
 
+  nsTextFragment::Shutdown();
   nsAttrValue::Shutdown();
   nsContentUtils::Shutdown();
   nsLayoutStylesheetCache::Shutdown();

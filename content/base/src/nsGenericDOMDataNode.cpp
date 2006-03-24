@@ -439,30 +439,37 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
 nsresult
 nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
-  PRInt32 length = 0;
+  // Apparently this is called often enough that we don't want to just simply
+  // call SetText like ReplaceData does. See bug 77585 and comment in
+  // ReplaceData.
+  nsIDocument *document = GetCurrentDoc();
+  
+  // FIXME, but 330872: We can't call BeginUpdate here because it confuses the
+  // poor little nsHTMLContentSink.
+  // mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, PR_TRUE);
 
-  // See bugzilla bug 77585.
-  if (mText.Is2b() || (!IsASCII(aData))) {
-    nsAutoString old_data;
-    mText.AppendTo(old_data);
-    length = old_data.Length();
-    // XXXjag We'd like to just say |old_data + aData|, but due
-    // to issues with dependent concatenation and sliding (sub)strings
-    // we'll just have to copy for now. See bug 121841 for details.
-    old_data.Append(aData);
-    SetText(old_data, PR_FALSE);
-  } else {
-    // We know aData and the current data is ASCII, so use a
-    // nsC*String, no need for any fancy unicode stuff here.
-    nsCAutoString old_data;
-    mText.AppendTo(old_data);
-    length = old_data.Length();
-    LossyAppendUTF16toASCII(aData, old_data);
-    SetText(old_data.get(), old_data.Length(), PR_FALSE);
+  PRBool haveMutationListeners =
+    document && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
+
+  nsCOMPtr<nsIAtom> oldValue;
+  if (haveMutationListeners) {
+    oldValue = GetCurrentValueAtom();
+  }
+    
+  mText.Append(aData);
+
+  SetBidiStatus();
+
+  if (haveMutationListeners) {
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
+
+    mutation.mPrevAttrValue = oldValue;
+    mutation.mNewAttrValue = GetCurrentValueAtom();
+
+    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
   }
 
   // Trigger a reflow
-  nsIDocument *document = GetCurrentDoc();
   if (document) {
     document->CharacterDataChanged(this, PR_TRUE);
   }
@@ -1086,110 +1093,26 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   }
 }
 
-void
-nsGenericDOMDataNode::SetText(const char* aBuffer, PRUint32 aLength,
-                              PRBool aNotify)
-{
-  if (!aBuffer) {
-    NS_ERROR("Null buffer passed to SetText()!");
-
-    return;
-  }
-
-  nsIDocument *document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-
-  PRBool haveMutationListeners =
-    document && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
-
-  nsCOMPtr<nsIAtom> oldValue;
-  if (haveMutationListeners) {
-    oldValue = GetCurrentValueAtom();
-  }
-    
-  mText.SetTo(aBuffer, aLength);
-
-  if (haveMutationListeners) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
-
-    mutation.mPrevAttrValue = oldValue;
-    if (aLength > 0) {
-      // Must use Substring() since nsDependentCString() requires null
-      // terminated strings.
-      mutation.mNewAttrValue =
-        do_GetAtom(Substring(aBuffer, aBuffer + aLength));
-    }
-
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
-  }
-
-  // Trigger a reflow
-  if (aNotify && document) {
-    document->CharacterDataChanged(this, PR_FALSE);
-  }
-}
-
-void
-nsGenericDOMDataNode::SetText(const nsAString& aStr,
-                              PRBool aNotify)
-{
-  nsIDocument *document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-
-  PRBool haveMutationListeners =
-    document && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
-
-  nsCOMPtr<nsIAtom> oldValue;
-  if (haveMutationListeners) {
-    oldValue = GetCurrentValueAtom();
-  }
-
-  mText = aStr;
-
-  SetBidiStatus();
-
-  if (haveMutationListeners) {
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
-
-    mutation.mPrevAttrValue = oldValue;
-    if (!aStr.IsEmpty())
-      mutation.mNewAttrValue = do_GetAtom(aStr);
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
-  }
-
-  // Trigger a reflow
-  if (aNotify && document) {
-    document->CharacterDataChanged(this, PR_FALSE);
-  }
-}
-
 PRBool
 nsGenericDOMDataNode::IsOnlyWhitespace()
 {
-  nsTextFragment& frag = mText;
-  if (frag.Is2b()) {
-    const PRUnichar* cp = frag.Get2b();
-    const PRUnichar* end = cp + frag.GetLength();
+  if (mText.Is2b()) {
+    // The fragment contains non-8bit characters and such characters
+    // are never considered whitespace.
+    return PR_FALSE;
+  }
 
-    while (cp < end) {
-      PRUnichar ch = *cp++;
+  const char* cp = mText.Get1b();
+  const char* end = cp + mText.GetLength();
 
-      if (!XP_IS_SPACE(ch)) {
-        return PR_FALSE;
-      }
+  while (cp < end) {
+    char ch = *cp;
+
+    if (!XP_IS_SPACE(ch)) {
+      return PR_FALSE;
     }
-  } else {
-    const char* cp = frag.Get1b();
-    const char* end = cp + frag.GetLength();
 
-    while (cp < end) {
-      PRUnichar ch = PRUnichar(*(unsigned char*)cp);
-      ++cp;
-
-      if (!XP_IS_SPACE(ch)) {
-        return PR_FALSE;
-      }
-    }
+    ++cp;
   }
 
   return PR_TRUE;

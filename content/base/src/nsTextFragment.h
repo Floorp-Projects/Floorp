@@ -72,6 +72,9 @@ class nsCString;
  */
 class nsTextFragment {
 public:
+  static nsresult Init();
+  static void Shutdown();
+
   /**
    * Default constructor. Initialize the fragment to be empty.
    */
@@ -83,52 +86,10 @@ public:
   ~nsTextFragment();
 
   /**
-   * Initialize the contents of this fragment to be a copy of
-   * the argument fragment.
-   */
-  nsTextFragment(const nsTextFragment& aOther);
-
-  /**
-   * Initialize the contents of this fragment to be a copy of
-   * the argument 7bit ascii string.
-   */
-  nsTextFragment(const char *aString);
-
-  /**
-   * Initialize the contents of this fragment to be a copy of
-   * the argument ucs2 string.
-   */
-  nsTextFragment(const PRUnichar *aString);
-
-  /**
-   * Initialize the contents of this fragment to be a copy of
-   * the argument string.
-   */
-  nsTextFragment(const nsString& aString);
-
-  /**
    * Change the contents of this fragment to be a copy of the
    * the argument fragment.
    */
   nsTextFragment& operator=(const nsTextFragment& aOther);
-
-  /**
-   * Change the contents of this fragment to be a copy of the
-   * the argument 7bit ascii string.
-   */
-  nsTextFragment& operator=(const char *aString);
-
-  /**
-   * Change the contents of this fragment to be a copy of the
-   * the argument ucs2 string.
-   */
-  nsTextFragment& operator=(const PRUnichar *aString);
-
-  /**
-   * Change the contents of this fragment to be a copy of the
-   * the argument string.
-   */
-  nsTextFragment& operator=(const nsAString& aString);
 
   /**
    * Return PR_TRUE if this fragment is represented by PRUnichar data
@@ -176,14 +137,6 @@ public:
   }
 
   /**
-   * Change the contents of this fragment to be the given buffer and
-   * length. The memory becomes owned by the fragment. In addition,
-   * the memory for aBuffer must have been allocated using the 
-   * nsIMemory interface.
-   */
-  void SetTo(PRUnichar *aBuffer, PRInt32 aLength, PRBool aRelease);
-
-  /**
    * Change the contents of this fragment to be a copy of the given
    * buffer. Like operator= except a length is specified instead of
    * assuming 0 termination.
@@ -191,22 +144,14 @@ public:
   void SetTo(const PRUnichar* aBuffer, PRInt32 aLength);
 
   /**
-   * Change the contents of this fragment to be a copy of the given
-   * buffer. Like operator= except a length is specified instead of
-   * assuming 0 termination.
+   * Append aData to the end of this fragment.
    */
-  void SetTo(const char *aBuffer, PRInt32 aLength);
+  void Append(const nsAString& aData);
 
   /**
    * Append the contents of this string fragment to aString
    */
   void AppendTo(nsAString& aString) const;
-
-  /**
-   * Append the contents of this string fragment to aCString. This
-   * method will do a lossy conversion from UTF-16 to ASCII.
-   */
-  void AppendTo(nsACString& aCString) const;
 
   /**
    * Make a copy of the fragments contents starting at offset for
@@ -217,21 +162,13 @@ public:
   void CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount);
 
   /**
-   * Make a copy of the fragments contents starting at offset for
-   * count characters. The offset and count will be adjusted to
-   * lie within the fragments data. The fragments data is converted if
-   * necessary.
-   */
-  void CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount);
-
-  /**
    * Return the character in the text-fragment at the given
    * index. This always returns a PRUnichar.
    */
   PRUnichar CharAt(PRInt32 aIndex) const
   {
     NS_ASSERTION(PRUint32(aIndex) < mState.mLength, "bad index");
-    return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
+    return mState.mIs2b ? m2b[aIndex] : NS_STATIC_CAST(unsigned char, m1b[aIndex]);
   }
 
   /**
@@ -247,12 +184,12 @@ public:
     PRUint32 mLength : 29;
   };
 
-protected:
+private:
   void ReleaseText();
 
   union {
-    const PRUnichar *m2b;
-    const unsigned char *m1b;
+    PRUnichar *m2b;
+    const char *m1b; // This is const since it can point to shared data
   };
 
   union {
