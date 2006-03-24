@@ -754,6 +754,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // <xul:text value="..."> is replaced by text of the
             // actual value of the 'rdf:resource' attribute for the
             // given node.
+            // SynchronizeUsingTemplate contains code used to update textnodes,
+            // so make sure to modify both when changing this
             PRUnichar attrbuf[128];
             nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
             tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
@@ -1063,6 +1065,23 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
             if (! realKid)
                 break;
+
+            // check for text nodes and update them accordingly.
+            // This code is similar to that in BuildContentFromTemplate
+            if (tmplKid->NodeInfo()->Equals(nsXULAtoms::textnode,
+                                            kNameSpaceID_XUL)) {
+                PRUnichar attrbuf[128];
+                nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
+                tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
+                if (!attrValue.IsEmpty()) {
+                    nsAutoString value;
+                    rv = SubstituteText(aResult, attrValue, value);
+                    if (NS_FAILED(rv)) return rv;
+                    nsCOMPtr<nsITextContent> textcontent = do_QueryInterface(realKid);
+                    if (textcontent)
+                        textcontent->SetText(value, PR_TRUE);
+                }
+            }
 
             rv = SynchronizeUsingTemplate(tmplKid, realKid, aResult);
             if (NS_FAILED(rv)) return rv;
