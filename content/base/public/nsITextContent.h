@@ -82,14 +82,10 @@ public:
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
-  virtual void SetText(const nsAString& aStr, PRBool aNotify) = 0;
-
-  /**
-   * Set the text to the given value. If aNotify is PR_TRUE then
-   * the document is notified of the content change.
-   */
-  virtual void SetText(const char* aBuffer, PRUint32 aLength,
-                       PRBool aNotify) = 0;
+  void SetText(const nsAString& aStr, PRBool aNotify)
+  {
+    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+  }
 
   /**
    * Query method to see if the frame is nothing but whitespace

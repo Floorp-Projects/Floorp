@@ -270,9 +270,11 @@ public:
   virtual PRUint32 TextLength();
   virtual void SetText(const PRUnichar* aBuffer, PRUint32 aLength,
                        PRBool aNotify);
-  virtual void SetText(const nsAString& aStr, PRBool aNotify);
-  virtual void SetText(const char* aBuffer, PRUint32 aLength,
-                       PRBool aNotify);
+  // Need to implement this here too to avoid hiding.
+  void SetText(const nsAString& aStr, PRBool aNotify)
+  {
+    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
+  }
   virtual PRBool IsOnlyWhitespace();
   virtual void AppendTextTo(nsAString& aResult);
 

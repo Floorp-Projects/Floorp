@@ -1723,7 +1723,8 @@ nsTextTransformer::SelfTest(nsPresContext* aPresContext)
       cp++;
     }
 
-    nsTextFragment frag(st->text);
+    nsTextFragment frag;
+    frag.SetTo(st->text, nsCRT::strlen(st->text));
     nsTextTransformer tx(aPresContext);
 
     for (PRInt32 preMode = 0; preMode < NUM_MODES; preMode++) {
