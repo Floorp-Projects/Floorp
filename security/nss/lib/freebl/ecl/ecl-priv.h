@@ -45,61 +45,21 @@
 #include "mplogic.h"
 
 /* MAX_FIELD_SIZE_DIGITS is the maximum size of field element supported */
-/* the following needs to go away... */
 #if defined(MP_USE_LONG_LONG_DIGIT) || defined(MP_USE_LONG_DIGIT)
 #define ECL_SIXTY_FOUR_BIT
+#define ECL_BITS 64
+#define ECL_MAX_FIELD_SIZE_DIGITS 10
 #else
 #define ECL_THIRTY_TWO_BIT
+#define ECL_BITS 32
+#define ECL_MAX_FIELD_SIZE_DIGITS 20
 #endif
-
-#define ECL_CURVE_DIGITS(curve_size_in_bits) \
-	(((curve_size_in_bits)+(sizeof(mp_digit)*8-1))/(sizeof(mp_digit)*8))
-#define ECL_BITS (sizeof(mp_digit)*8)
-#define ECL_MAX_FIELD_SIZE_DIGITS (80/sizeof(mp_digit))
 
 /* Gets the i'th bit in the binary representation of a. If i >= length(a), 
  * then return 0. (The above behaviour differs from mpl_get_bit, which
  * causes an error if i >= length(a).) */
 #define MP_GET_BIT(a, i) \
 	((i) >= mpl_significant_bits((a))) ? 0 : mpl_get_bit((a), (i))
-
-#if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
-#define MP_ADD_CARRY(a1, a2, s, cin, cout)   \
-    { mp_word w; \
-    w = ((mp_word)(cin)) + (a1) + (a2) \
-    s = ACCUM(w); \
-    cout = CARRYOUT(w); }
-
-#define MP_SUB_BORROW(a1, a2, s, bin, bout)   \
-    { mp_word w; \
-    w = ((mp_word)(a1)) - (a2) - (bin); \
-    s = ACCUM(w); \
-    bout = (w >> MP_DIGIT_BIT) & 1; }
-
-#else
-/* NOTE, 
- * cin and cout could be the same variable.
- * bin and bout could be the same variable.
- * a1 or a2 and s could be the same variable.
- * don't trash those outputs until their respective inputs have
- * been read. */
-#define MP_ADD_CARRY(a1, a2, s, cin, cout)   \
-    { mp_digit tmp,sum; \
-    tmp = (a1); \
-    sum = tmp + (a2); \
-    tmp = (sum < tmp);                     /* detect overflow */ \
-    s = sum += (cin); \
-    cout = tmp + (sum < (cin)); }
-
-#define MP_SUB_BORROW(a1, a2, s, bin, bout)   \
-    { mp_digit tmp; \
-    tmp = (a1); \
-    s = tmp - (a2); \
-    tmp = (s > tmp);                    /* detect borrow */ \
-    if ((bin) && !s--) tmp++;	\
-    bout = tmp; }
-#endif
-
 
 struct GFMethodStr;
 typedef struct GFMethodStr GFMethod;
@@ -198,25 +158,6 @@ mp_err ec_GFp_add(const mp_int *a, const mp_int *b, mp_int *r,
 mp_err ec_GFp_neg(const mp_int *a, mp_int *r, const GFMethod *meth);
 mp_err ec_GFp_sub(const mp_int *a, const mp_int *b, mp_int *r,
 				  const GFMethod *meth);
-
-/* fixed length in-line adds. Count is in words */
-mp_err ec_GFp_add_3(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_add_4(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_add_5(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_add_6(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_sub_3(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_sub_4(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_sub_5(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-mp_err ec_GFp_sub_6(const mp_int *a, const mp_int *b, mp_int *r,
-				  const GFMethod *meth);
-
 mp_err ec_GFp_mod(const mp_int *a, mp_int *r, const GFMethod *meth);
 mp_err ec_GFp_mul(const mp_int *a, const mp_int *b, mp_int *r,
 				  const GFMethod *meth);
@@ -264,9 +205,6 @@ mp_err ec_compute_wNAF(signed char *out, int bitsize, const mp_int *in,
 /* Optimized field arithmetic */
 mp_err ec_group_set_gfp192(ECGroup *group, ECCurveName);
 mp_err ec_group_set_gfp224(ECGroup *group, ECCurveName);
-mp_err ec_group_set_gfp256(ECGroup *group, ECCurveName);
-mp_err ec_group_set_gfp384(ECGroup *group, ECCurveName);
-mp_err ec_group_set_gfp521(ECGroup *group, ECCurveName);
 mp_err ec_group_set_gf2m163(ECGroup *group, ECCurveName name);
 mp_err ec_group_set_gf2m193(ECGroup *group, ECCurveName name);
 mp_err ec_group_set_gf2m233(ECGroup *group, ECCurveName name);
