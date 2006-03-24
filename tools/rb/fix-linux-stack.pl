@@ -92,7 +92,36 @@ sub address_adjustment($) {
     return $address_adjustments{$file};
 }
 
+# The behavior of this should probably be configurable.  It's correct
+# for Fedora Core 5's *-debuginfo packages (glibc-debuginfo, etc.).
+sub debuginfo_file_for($) {
+    my ($file) = @_;
+    return '/usr/lib/debug/' . $file . '.debug';
+}
+
+# Return a reference to a hash whose {read} and {write} entries are a
+# bidirectional pipe to an addr2line process that gives symbol
+# information for a file.
 my %pipes;
+sub addr2line_pipe($) {
+    my ($file) = @_;
+    my $pipe;
+    unless (exists $pipes{$file}) {
+        # If it's a system library, see if we have separate debuginfo.
+        if ($file =~ /^\//) {
+            my $debuginfo_file = debuginfo_file_for($file);
+            $file = $debuginfo_file if (-f $debuginfo_file);
+        }
+
+        my $pid = open2($pipe->{read}, $pipe->{write},
+                        '/usr/bin/addr2line', '-C', '-f', '-e', $file);
+        $pipes{$file} = $pipe;
+    } else {
+        $pipe = $pipes{$file};
+    }
+    return $pipe;
+}
+
 while (<>) {
     my $line = $_;
     if ($line =~ /^([ \|0-9-]*)(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$/) {
@@ -102,15 +131,7 @@ while (<>) {
         my $address = hex($4);
         my $after = $5; # allow preservation of counts
 
-        my $pipe;
-        unless (exists $pipes{$file}) {
-            my $pid = open2($pipe->{read}, $pipe->{write},
-                            '/usr/bin/addr2line', '-C', '-f', '-e', $file);
-            $pipes{$file} = $pipe;
-        } else {
-            $pipe = $pipes{$file};
-        }
-
+        my $pipe = addr2line_pipe($file);
         $address += address_adjustment($file);
 
         my $out = $pipe->{write};
