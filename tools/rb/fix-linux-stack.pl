@@ -94,6 +94,8 @@ sub address_adjustment($) {
 
 # The behavior of this should probably be configurable.  It's correct
 # for Fedora Core 5's *-debuginfo packages (glibc-debuginfo, etc.).
+# See http://sources.redhat.com/gdb/current/onlinedocs/gdb_16.html#SEC152
+# for how it ought to work.
 sub debuginfo_file_for($) {
     my ($file) = @_;
     return '/usr/lib/debug/' . $file . '.debug';
