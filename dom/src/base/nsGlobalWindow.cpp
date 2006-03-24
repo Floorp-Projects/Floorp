@@ -5866,14 +5866,36 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 
   timeout->mVersion = ::JS_VersionToString(::JS_GetVersion(cx));
 
-  // Get principal of currently executing code, save for execution of timeout
+  // Get principal of currently executing code, save for execution of timeout.
+  // If either our principals subsume the subject principal, or we're from the
+  // same origin, then use the subject principal. Otherwise, use our principal
+  // to avoid running script in elevated principals.
 
-  rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(timeout->mPrincipal));
-
+  nsCOMPtr<nsIPrincipal> subjectPrincipal;
+  rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
   if (NS_FAILED(rv)) {
     timeout->Release(scx);
 
     return NS_ERROR_FAILURE;
+  }
+
+  PRBool subsumes = PR_FALSE;
+  nsCOMPtr<nsIPrincipal> ourPrincipal = GetPrincipal();
+
+  // Note the direction of this test: We don't allow chrome setTimeouts on
+  // content windows, but we do allow content setTimeouts on chrome windows.
+  rv = ourPrincipal->Subsumes(subjectPrincipal, &subsumes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (subsumes) {
+    timeout->mPrincipal = subjectPrincipal;
+  } else {
+    // Subsumes does a very strict equality test. Allow sites of the same origin
+    // to set timeouts on each other.
+
+    rv = sSecMan->CheckSameOriginPrincipal(subjectPrincipal, ourPrincipal);
+    timeout->mPrincipal = NS_SUCCEEDED(rv) ? subjectPrincipal : ourPrincipal;
+    rv = NS_OK;
   }
 
   PRTime delta = (PRTime)interval * PR_USEC_PER_MSEC;
