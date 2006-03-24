@@ -200,6 +200,29 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    // see bug 217886 for details
    if (name.LowerCaseEqualsLiteral("_content") ||
        name.EqualsLiteral("_main")) {
+     // If we're being called with an aRequestor and it's targetable, just
+     // return it -- _main and _content from inside targetable content shells
+     // should just be that content shell.  Note that we don't have to worry
+     // about the case when it's not targetable because it's primary -- that
+     // will Just Work when we call GetPrimaryContentShell.
+     if (aRequestor) {
+       // This better be the root item!
+#ifdef DEBUG
+       nsCOMPtr<nsIDocShellTreeItem> debugRoot;
+       aRequestor->GetSameTypeRootTreeItem(getter_AddRefs(debugRoot));
+       NS_ASSERTION(SameCOMIdentity(debugRoot, aRequestor),
+                    "Bogus aRequestor");
+#endif
+       PRInt32 count = mXULWindow->mTargetableShells.Count();
+       for (PRInt32 i = 0; i < count; ++i) {
+         nsCOMPtr<nsIDocShellTreeItem> item =
+           do_QueryReferent(mXULWindow->mTargetableShells[i]);
+         if (SameCOMIdentity(item, aRequestor)) {
+           NS_ADDREF(*aFoundItem = aRequestor);
+           return NS_OK;
+         }
+       }
+     }
      mXULWindow->GetPrimaryContentShell(aFoundItem);
      if(*aFoundItem)
        return NS_OK;
