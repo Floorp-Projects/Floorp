@@ -125,7 +125,7 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
     else {
       m2b = NS_STATIC_CAST(PRUnichar*,
         nsMemory::Clone(aOther.m2b, aOther.mState.mLength *
-                                    (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char)));
+                                    (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char))));
 
       if (aOther.mState.mIs2b) {
       }
