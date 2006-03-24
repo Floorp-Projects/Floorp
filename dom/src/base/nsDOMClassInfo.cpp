@@ -3400,8 +3400,9 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
     // return the Object constructor.
 
     JSString *str = JSVAL_TO_STRING(sConstructor_id);
-    if (!::JS_SetUCProperty(cx, obj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), &val)) {
+    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                               ::JS_GetStringLength(str), val, NULL, NULL,
+                               JSPROP_PERMANENT | JSPROP_READONLY)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -5509,7 +5510,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     v = OBJECT_TO_JSVAL(dot_prototype);
 
     if (!::JS_DefineProperty(cx, class_obj, "prototype", v, NULL, NULL,
-                             JSPROP_ENUMERATE)) {
+                             JSPROP_PERMANENT | JSPROP_READONLY)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -5714,8 +5715,13 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // A numeric property accessed and the numeric property is a
         // child frame. Define a property for this index.
 
+        PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
+        sDoSecurityCheckInAddProperty = PR_FALSE;
+
         *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
                                       nsnull, nsnull, 0);
+
+        sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
 
         if (*_retval) {
           *objp = obj;
@@ -7941,7 +7947,10 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
 
     if (helper) {
       jsval v = JSVAL_VOID;
-      ::JS_SetProperty(cx, helper, "all", &v);
+      if (!::JS_DefineProperty(cx, helper, "all", v, NULL, NULL,
+                               JSPROP_READONLY)) {
+        return JS_FALSE;
+      }
 
       *objp = helper;
     }
