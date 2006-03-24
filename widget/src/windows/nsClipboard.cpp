@@ -275,13 +275,13 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData ( PRInt32 aWhichClipboard )
     return NS_ERROR_FAILURE;
   }
 
-  // Clear the native clipboard
-  ::OleSetClipboard(NULL);
-
   IDataObject * dataObj;
   if ( NS_SUCCEEDED(CreateNativeDataObject(mTransferable, &dataObj, NULL)) ) { // this add refs dataObj
     ::OleSetClipboard(dataObj);
     dataObj->Release();
+  } else {
+    // Clear the native clipboard
+    ::OleSetClipboard(NULL);
   }
 
   mIgnoreEmptyNotification = PR_FALSE;
