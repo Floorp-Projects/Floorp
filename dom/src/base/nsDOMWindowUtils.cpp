@@ -48,6 +48,10 @@
 
 #include "nsIFrame.h"
 
+#ifdef MOZ_ENABLE_GTK2
+#include <gdk/gdkx.h>
+#endif
+
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
@@ -142,6 +146,9 @@ nsDOMWindowUtils::Redraw()
         nsRect r(nsPoint(0, 0), rootFrame->GetSize());
         rootFrame->Invalidate(r, PR_TRUE);
 
+#ifdef MOZ_ENABLE_GTK2
+        XSync(GDK_DISPLAY(), False);
+#endif
         return NS_OK;
       }
     }
