@@ -688,30 +688,24 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                     nsXULAtoms::_true, eCaseMatters))
     return NS_OK;
 
+  mOuter->GetParentBox(&mParentBox);
+  if (!mParentBox)
+    return NS_OK;
+  
+  // get our index
   nsPresContext* outerPresContext = mOuter->GetPresContext();
+  nscoord childIndex = nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
+  PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
+
+  // if it's 0 or the last index then stop right here.
+  if (childIndex == 0 || childIndex == childCount - 1)
+    return NS_OK;
+
   nsBoxLayoutState state(outerPresContext);
   mCurrentPos = 0;
   mPressed = PR_TRUE;
 
   mDidDrag = PR_FALSE;
-
-  mOuter->GetParentBox(&mParentBox);
-
-
-  PRInt32 childIndex, childCount;
-  if (mParentBox) {
-    // get our index
-    childIndex =
-      nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
-    childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
-  }
-
-  // if we have no parent box or the index is 0 or the last index then
-  // stop right here.
-  if (!mParentBox || childIndex == 0 || childIndex == childCount-1) {
-    mPressed = PR_FALSE;
-    return NS_OK;
-  }
 
   EnsureOrient();
   PRBool isHorizontal = !mOuter->IsHorizontal();
