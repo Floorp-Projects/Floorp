@@ -1964,16 +1964,22 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         else if (name.LowerCaseEqualsLiteral("_top"))
         {
             GetSameTypeRootTreeItem(getter_AddRefs(foundItem));
-            if(!foundItem)
-                foundItem = this;
+            NS_ASSERTION(foundItem, "Must have this; worst case it's us!");
         }
         // _main is an IE target which should be case-insensitive but isn't
         // see bug 217886 for details
         else if (name.LowerCaseEqualsLiteral("_content") ||
                  name.EqualsLiteral("_main"))
         {
-            if (mTreeOwner)
-                mTreeOwner->GetPrimaryContentShell(getter_AddRefs(foundItem));
+            // Must pass our same type root as requestor to the
+            // treeowner to make sure things work right.
+            nsCOMPtr<nsIDocShellTreeItem> root;
+            GetSameTypeRootTreeItem(getter_AddRefs(root));
+            if (mTreeOwner) {
+                NS_ASSERTION(root, "Must have this; worst case it's us!");
+                mTreeOwner->FindItemWithName(aName, root, aOriginalRequestor,
+                                             getter_AddRefs(foundItem));
+            }
 #ifdef DEBUG
             else {
                 NS_ERROR("Someone isn't setting up the tree owner.  "
@@ -1983,6 +1989,8 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
                 // hanging off the treeowner, just create a named window....
                 // so don't return here, in case we did that and can now find
                 // it.                
+                // XXXbz should we be using |root| instead of creating
+                // a new window?
             }
 #endif
         }
@@ -2058,11 +2066,7 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
 
     if (mTreeOwner && mTreeOwner != reqAsTreeOwner) {
         return mTreeOwner->
-            FindItemWithName(aName,
-                             NS_STATIC_CAST(nsIDocShellTreeItem*,
-                                            this),
-                             aOriginalRequestor,
-                             _retval);
+            FindItemWithName(aName, this, aOriginalRequestor, _retval);
     }
 
     return NS_OK;
