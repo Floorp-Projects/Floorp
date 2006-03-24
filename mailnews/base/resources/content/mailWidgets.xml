@@ -2065,7 +2065,10 @@
             // we'll have to do this all over again when the fetch for the preview text completes.
             if (aOutAsync.value && aUrlListener)
               return false; 
-
+            var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                  .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+            unicodeConverter.charset = "UTF-8";                                  
+            
             var index = 0;
             var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
             while (document.getAnonymousNodes(this)[0].childNodes.length < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
@@ -2074,10 +2077,10 @@
               var msgHdr = msgDatabase.GetMsgHdrForKey(msgKeys.value[index++]);
               msgPopup.setAttribute('subject', msgHdr.mime2DecodedSubject);
               
-              // TO DO: worry about character set conversions
               var previewText = msgHdr.getStringProperty('preview');
-              if (previewText)
-                msgPopup.setAttribute('previewText',  previewText);
+              // convert the preview text from utf-8 to unicode          
+              if (previewText)            
+                msgPopup.setAttribute('previewText', unicodeConverter.ConvertToUnicode(previewText));
 
               var names = {};
               var emails = {};

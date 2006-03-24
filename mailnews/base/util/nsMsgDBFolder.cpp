@@ -84,6 +84,8 @@
 #include "nsLayoutCID.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h" 
+#include "nsMsgI18N.h"
+#include "nsIMIMEHeaderParam.h"
 #include <time.h>
 
 #define oneHour 3600000000U
@@ -5102,6 +5104,12 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
      so look for content transfer encoding.
   */
 
+  // If we've got a header charset, we'll use that, otherwise we'll look for one in
+  // the mime parts.
+  nsXPIDLCString strCharset;
+  msgHdr->GetCharset(getter_Copies(strCharset));
+  nsAutoString charset (NS_ConvertUTF8toUTF16(strCharset.get()));
+
   PRUint32 len;
   msgHdr->GetMessageSize(&len);
   nsLineBuffer<char> *lineBuffer;
@@ -5168,11 +5176,15 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
       if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Type:"),
                           nsCaseInsensitiveCStringComparator()))
       {
+        // look for a charset in the Content-Type header line, we'll take the first one we find.
+        nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv) && charset.IsEmpty())
+           mimehdrpar->GetParameter(curLine, "charset", EmptyCString(), false, nsnull, charset);
         if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine,
           nsCaseInsensitiveCStringComparator()))
         {
           msgBodyIsHtml = PR_TRUE;
-//           bodyFollowsHeaders = PR_TRUE;
+//        bodyFollowsHeaders = PR_TRUE;
         }
         else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine,
                                 nsCaseInsensitiveCStringComparator()))
@@ -5185,6 +5197,11 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
       }
     }
   }
+
+  // Note: in order to convert from a specific charset to UTF-8 we have to go through unicode first.
+  nsAutoString unicodeMsgBodyStr;
+  ConvertToUnicode(NS_ConvertUTF16toUTF8(charset).get(), msgBody, unicodeMsgBodyStr);
+
   // now we've got a msg body. If it's html, convert it to plain text.
   // Then, set the previewProperty on the msg hdr to the plain text.
   if (msgBodyIsHtml)
@@ -5211,11 +5228,13 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
     parser->SetContentSink(sink);
 
     nsAutoString msgBodyStr;
-    // need to do an appropriate conversion here.
-    msgBodyStr.AssignWithConversion(msgBody);
-    rv = parser->Parse(msgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
-    CopyUTF16toUTF8(bodyText, msgBody);
+    rv = parser->Parse(unicodeMsgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_TRUE);
+    // push bodyText back into unicodeMsgBodyStr
+    unicodeMsgBodyStr.Assign(bodyText);
   }
+
+  // now convert back to utf-8 for storage
+  CopyUTF16toUTF8(unicodeMsgBodyStr, msgBody);
 
   // replaces all tabs and line returns with a space, then trims off leading and trailing white space
   msgBody.CompressWhitespace(PR_TRUE, PR_TRUE);
