@@ -29,20 +29,20 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/bookmarkProperties.js"/>
 
-      <vbox id="places-info-options" flex="1">
-        <grid id="places-info-grid" flex="1">
+      <vbox id="placesInfoOptions" flex="1">
+        <grid id="placesInfoGrid" flex="1">
           <columns>
             <column flex="1" align="end" />
             <column flex="100" align="start" />
           </columns>
-          <rows>
-            <row>
+          <rows id="placesInfoRows">
+            <row id="titleRow">
               <vbox align="end">
                 <hbox align="center" flex="1">
                   <label value="&bookmark.property.title;" align="middle"/>
                 </hbox>
               </vbox>
-              <textbox id="edit-titlebox" value=""/>
+              <textbox id="editTitleBox" value=""/>
             </row>
             <row id="locationRow">
               <vbox align="end">
@@ -50,24 +50,24 @@
                   <label value="&bookmark.property.location;" align="middle"/>
                 </hbox>
               </vbox>
-              <textbox id="edit-urlbar" size="10"/>
+              <textbox id="editURLBar" size="10"/>
             </row>
-            <row id="shortcut-row">
+            <row id="shortcutRow">
               <vbox align="end">
                 <hbox align="center" flex="1">
                   <label value="&bookmark.property.shortcut;" align="middle"/>
                 </hbox>
               </vbox>
-              <textbox id="edit-shortcutbox" value=""/>
+              <textbox id="editShortcutBox" value=""/>
             </row>
-            <row id="folder-row" flex="1" style="min-height: 100px;">
+            <row id="folderRow" flex="1" style="min-height: 100px;">
               <vbox align="end">
                 <hbox align="start" flex="1">
                   <label value="&bookmark.property.parents;"/>
                 </hbox>
               </vbox>
               <vbox>
-                <tree id="folder-tree"
+                <tree id="folderTree"
                       class="placesTree"
                       flex="1"
                       type="places" 
