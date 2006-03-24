@@ -5885,7 +5885,11 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   // Note the direction of this test: We don't allow chrome setTimeouts on
   // content windows, but we do allow content setTimeouts on chrome windows.
   rv = ourPrincipal->Subsumes(subjectPrincipal, &subsumes);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    timeout->Release(scx);
+
+    return NS_ERROR_FAILURE;
+  }
 
   if (subsumes) {
     timeout->mPrincipal = subjectPrincipal;
