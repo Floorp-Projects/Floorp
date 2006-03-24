@@ -77,26 +77,5 @@ protected:
 	static const char *m_kUrlPrefix;
 };
 
-
-
-class nsMsgSearchNewsEx : public nsMsgSearchNews
-{
-public:
-	nsMsgSearchNewsEx (nsMsgSearchScopeTerm *scope, nsISupportsArray *termList);
-	virtual ~nsMsgSearchNewsEx ();
-
-	NS_IMETHOD ValidateTerms ();
-	NS_IMETHOD Search (PRBool *aDone);
-	virtual nsresult Encode (nsCString *pEncoding /*out*/);
-
-	nsresult SaveProfile (const char *profileName);
-
-protected:
-	static const char *m_kSearchTemplate;
-	static const char *m_kProfileTemplate;
-};
-
-
-
 #endif
 

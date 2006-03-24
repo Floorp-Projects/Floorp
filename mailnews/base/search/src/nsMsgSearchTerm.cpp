@@ -1518,21 +1518,12 @@ nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsISupportsArray *termList)
         m_adapter = new nsMsgSearchOfflineMail (this, termList);
       break;
     case nsMsgSearchScope::newsEx:
-#ifdef DOING_EXNEWSSEARCH
-        if (m_folder->KnowsSearchNntpExtension())
-          m_adapter = new nsMsgSearchNewsEx (this, termList);
-        else
-          m_adapter = new nsMsgSearchNews(this, termList);
-#endif
       NS_ASSERTION(PR_FALSE, "not supporting newsEx yet");
       break;
     case nsMsgSearchScope::news:
           m_adapter = new nsMsgSearchNews (this, termList);
         break;
     case nsMsgSearchScope::allSearchableGroups:
-#ifdef DOING_EXNEWSSEARCH
-      m_adapter = new msMsgSearchNewsEx (this, termList);
-#endif
       NS_ASSERTION(PR_FALSE, "not supporting allSearchableGroups yet");
       break;
     case nsMsgSearchScope::LDAP:

@@ -1103,13 +1103,6 @@ NS_IMETHODIMP nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearch
       rv = SetOtherHeadersInTable(m_localNewsTable, customHeaders.get());
     *ppOutTable = m_localNewsTable;
     break;
-#ifdef DOING_EXNEWSSEARCH
-  case nsMsgSearchScope::newsEx:
-    if (!m_newsExTable)
-      rv = InitNewsExTable ();
-    *ppOutTable = m_newsExTable;
-    break;
-#endif
   case nsMsgSearchScope::LDAP:
     if (!m_ldapTable)
       rv = InitLdapTable ();
