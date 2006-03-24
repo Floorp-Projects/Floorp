@@ -62,7 +62,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletOutputStream_nati
 	    ("PlugletOutputStream.nativeWrite: stream = %p, off = %i, len = %i\n", output, off, len));
     env->GetByteArrayRegion(b,off,len,buf);
     PRUint32 tmp;
-    output->Write(buf,len,&tmp);
+    output->Write((const char *)buf,len,&tmp);
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletOutputStream.nativeWrite: %i bytes written\n", tmp));
     free(buf);

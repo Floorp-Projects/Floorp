@@ -45,6 +45,16 @@ CPPSRCS =  \
 	org_mozilla_util_DebugPluglet.cpp \
 	$(NULL)
 
+INCLUDES += -I$(MOZILLA_FIVE_HOME)/../include/xpcom \
+	-I$(MOZILLA_FIVE_HOME)/../include/plugin \
+	-I$(MOZILLA_FIVE_HOME)/../include/string \
+	-I$(MOZILLA_FIVE_HOME)/../include/xpcom_obsolete \
+
+EXTRA_LIBS     += \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+
 include $(topsrcdir)/config/rules.mk
 
 
