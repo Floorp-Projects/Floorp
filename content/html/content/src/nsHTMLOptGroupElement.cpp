@@ -75,9 +75,10 @@ public:
   NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
   // nsGenericElement
-  virtual nsresult WillAddOrRemoveChild(nsIContent* aKid,
-                                        PRUint32 aIndex,
-                                        PRBool aRemove);
+  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                                 PRBool aNotify);
+  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
 
   // nsIContent
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
@@ -197,21 +198,35 @@ nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
  
 nsresult
-nsHTMLOptGroupElement::WillAddOrRemoveChild(nsIContent* aKid,
-                                            PRUint32 aIndex,
-                                            PRBool aRemove)
+nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
+                                     PRUint32 aIndex,
+                                     PRBool aNotify)
 {
   nsCOMPtr<nsISelectElement> sel;
   GetSelect(getter_AddRefs(sel));
   if (sel) {
-    if (aRemove) {
-      sel->WillRemoveOptions(this, aIndex);
-    } else {
-      sel->WillAddOptions(aKid, this, aIndex);
-    }
+    sel->WillAddOptions(aKid, this, aIndex);
   }
 
-  return nsGenericHTMLElement::WillAddOrRemoveChild(aKid, aIndex, aRemove);
+  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
+}
+
+nsresult
+nsHTMLOptGroupElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
+{
+  return nsHTMLOptGroupElement::InsertChildAt(aKid, GetChildCount(), aNotify);
+}
+
+nsresult
+nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
+{
+  nsCOMPtr<nsISelectElement> sel;
+  GetSelect(getter_AddRefs(sel));
+  if (sel) {
+    sel->WillRemoveOptions(this, aIndex);
+  }
+
+  return nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
 }
 
 PRInt32

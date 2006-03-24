@@ -1850,15 +1850,17 @@ nsXULElement::EnsureContentsGenerated(void) const
     return NS_OK;
 }
 
-nsresult 
-nsXULElement::WillAddOrRemoveChild(nsIContent* aKid,
-                                   PRUint32 aIndex,
-                                   PRBool aRemove)
+// No need to implement AppendChildTo. The default implementation will call
+// GetChildCount which will call EnsureContentsGenerated
+nsresult
+nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
 {
-  // nsXULElement has its own RemoveChildAt, so no need to do
-  // anything here when removing a child.
-  return aRemove ? NS_OK : EnsureContentsGenerated();
+  nsresult rv = EnsureContentsGenerated();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsGenericElement::InsertChildAt(aKid, aIndex, aNotify);
 }
+
 
 /// XXX GetID must be defined here because we have proto attrs.
 nsIAtom*
