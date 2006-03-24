@@ -1760,7 +1760,7 @@ nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-    return CopyMove(newParentDir, newName, PR_TRUE, PR_TRUE);
+    return CopyMove(newParentDir, newName, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP
