@@ -125,48 +125,7 @@
                                  preference="browser.download.dir"
                                  />          
 
-
-
-
-
-<!--
-			    <textbox id="downloadDirDisplay" disabled="true"
-                               style="margin:3px ! important; visibility:hidden"
-                               tabindex="54"
-                               flex="1" />                                          
--->
-
-                   <!--   <button id="chooseFolderButton" tabindex="55"
-			                        class='box-prefgroupitem'
-			                        label="&setSaveDirectory.label;"
-			                        oncommand="syncPref(document.getElementById('downloadDir'));downloadChooseFolder();"/>
-			-->
-
                     </hbox>		
-                  </vbox>
-              </groupbox>
-
-
-              <groupbox class='box-prefgroupitem' >
-
-                <caption label="&useDiskCache.label;"/>
-
-                  <vbox class="box-prefpadding">
-
-                    <checkbox id="useDiskCache" tabindex="53"
-	                              label="&storeCacheStorageCard.label;"
-	                              preference="browser.cache.disk.enable" 
-	                              onclick="syncPref(this);" />
-
-                    <hbox flex="1">
-
-                      <box onchange="syncPref(this)"  
-                                 id="storeCacheStorageCard" 
-                                 preference="browser.cache.disk.parent_directory"
-                                 />          
-
-                    </hbox>	
-	
                   </vbox>
               </groupbox>
 
