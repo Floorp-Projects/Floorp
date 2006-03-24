@@ -387,7 +387,8 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
                                  streamEndParent, streamEndOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  NS_ASSERTION(nodeList.Count() > 0, "We should have at least one node here.");
+  if (nodeList.Count() == 0)
+    return NS_OK;
 
   // walk list of nodes; perform surgery on nodes (relativize) with _mozattr
   res = RelativizeURIInFragmentList(nodeList, aFlavor, aSourceDoc, targetNode);
