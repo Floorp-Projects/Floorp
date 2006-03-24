@@ -42,6 +42,10 @@ HelperAppDlg.prototype = {
 
         const kDownloadDirPref = "dir";
 
+        var dontAsk=branch.getBoolPref("progressDnlgDialog.dontAskForLaunch");
+
+	  if(dontAsk) {
+
         // Try and pull in download directory pref
         try {
 
@@ -62,6 +66,8 @@ HelperAppDlg.prototype = {
             return dir;
 
         }
+
+	  }
 
         // Use file picker to show dialog.
         var picker = Components.classes[ "@mozilla.org/filepicker;1" ]
