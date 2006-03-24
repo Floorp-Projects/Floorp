@@ -51,7 +51,7 @@ if (!empty($sql['issue_id']) && count($sql['issue_id']) > 0) {
 }
 
 // Redirect to thank you page, and we're done.
-header('Location: http://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/thanks.php');
+require_once('./thanks.php');
 exit;
 
 
