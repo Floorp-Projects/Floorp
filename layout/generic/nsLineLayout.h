@@ -160,7 +160,13 @@ protected:
 #define LL_LASTFLOATWASLETTERFRAME     0x00000080
 #define LL_CANPLACEFLOAT               0x00000100
 #define LL_LINEENDSINBR                0x00000200
-#define LL_LASTFLAG                    LL_LINEENDSINBR
+// The "soft-break" flag differs from the "hard-break" flag of <br>. The
+// "soft-break" means that a whitespace has been trimmed at the end of the line,
+// and therefore its width has not been accounted for (this width can actually be
+// large, e.g., if a large word-spacing is set). LL should not be misled into 
+// placing something where the whitespace was trimmed. See bug 329987.
+#define LL_LINEENDSINSOFTBR            0x00000400
+#define LL_LASTFLAG                    LL_LINEENDSINSOFTBR
 
   PRUint16 mFlags;
 
@@ -237,6 +243,16 @@ public:
   void SetLineEndsInBR(PRBool aOn) 
   { 
     SetFlag(LL_LINEENDSINBR, aOn); 
+  }
+
+  PRBool GetLineEndsInSoftBR() const 
+  { 
+    return GetFlag(LL_LINEENDSINSOFTBR); 
+  }
+
+  void SetLineEndsInSoftBR(PRBool aOn) 
+  { 
+    SetFlag(LL_LINEENDSINSOFTBR, aOn); 
   }
 
   PRBool InStrictMode() const
