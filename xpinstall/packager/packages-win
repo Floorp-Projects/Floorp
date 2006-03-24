@@ -145,6 +145,7 @@ bin\components\embed_base.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
 bin\components\windowds.xpt
+bin\components\xpautocomplete.xpt
 bin\components\wlltvwrs.dll
 bin\components\autoconfig.dll
 bin\components\autoconfig.xpt

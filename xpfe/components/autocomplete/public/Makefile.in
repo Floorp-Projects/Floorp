@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
-XPIDL_MODULE	= autocomplete
+XPIDL_MODULE	= xpautocomplete
 
 XPIDLSRCS	= \
 		nsIAutoCompleteListener.idl \
