@@ -5423,7 +5423,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
             // Note: word-spacing or letter-spacing can make the "space" really
             // wide. But since this space is left out from our width, linelayout
             // may still try to fit something narrower at the end of the line.
-            // So on return (see below), we flag a break-after status to ensure
+            // So on return (see below), we flag a soft-break status to ensure
             // that linelayout doesn't place something where the "space" should
             // be.
             break;
@@ -5860,11 +5860,17 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
 #endif // IBMBIDI
     ? NS_FRAME_COMPLETE
     : NS_FRAME_NOT_COMPLETE;
-  if (endsInNewline || aTextData.mTrailingSpaceTrimmed) {
+  if (endsInNewline) {
     rs = NS_INLINE_LINE_BREAK_AFTER(rs);
-    if (endsInNewline) {
-      lineLayout.SetLineEndsInBR(PR_TRUE);
-    }
+    lineLayout.SetLineEndsInBR(PR_TRUE);
+  }
+  else if (aTextData.mTrailingSpaceTrimmed && rs == NS_FRAME_COMPLETE) {
+    // Flag a soft-break that we can check (below) if we come back here
+    lineLayout.SetLineEndsInSoftBR(PR_TRUE);
+  }
+  else if (lineLayout.GetLineEndsInSoftBR() && !lineLayout.GetEndsInWhiteSpace()) {
+    // Break-before a word that follows the soft-break flagged earlier
+    rs = NS_INLINE_LINE_BREAK_BEFORE();
   }
   else if ((aTextData.mOffset != contentLength) && (aTextData.mOffset == startingOffset)) {
     // Break-before a long-word that doesn't fit here
