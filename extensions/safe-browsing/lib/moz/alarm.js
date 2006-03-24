@@ -75,14 +75,16 @@ function G_Alarm(callback, delayMS, opt_repeating, opt_maxTimes) {
   this.debugZone = "alarm";
   this.callback_ = callback;
   this.repeating_ = !!opt_repeating;
-  var Cc = Components.classes;
-  var Ci = Components.interfaces;
   this.timer_ = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   var type = opt_repeating ? 
              this.timer_.TYPE_REPEATING_SLACK : 
              this.timer_.TYPE_ONE_SHOT;
   this.maxTimes_ = opt_maxTimes ? opt_maxTimes : null;
   this.nTimes_ = 0;
+
+  this.observerServiceObserver_ = new G_ObserverServiceObserver(
+                                        'xpcom-shutdown',
+                                        BindToObject(this.cancel, this));
 
   // Ask the timer to use nsITimerCallback (.notify()) when ready
   this.timer_.initWithCallback(this, delayMS, type);
@@ -92,7 +94,18 @@ function G_Alarm(callback, delayMS, opt_repeating, opt_maxTimes) {
  * Cancel this timer 
  */
 G_Alarm.prototype.cancel = function() {
+  if (!this.timer_) {
+    return;
+  }
+
   this.timer_.cancel();
+  // Break circular reference created between this.timer_ and the G_Alarm
+  // instance (this)
+  this.timer_ = null;
+  this.callback_ = null;
+
+  // We don't need the shutdown observer anymore
+  this.observerServiceObserver_.unregister();
 }
 
 /**
@@ -102,14 +115,23 @@ G_Alarm.prototype.cancel = function() {
  *              passed along)
  */
 G_Alarm.prototype.notify = function(timer) {
+  // fire callback and save results
+  var ret = this.callback_();
+  
   // If they've given us a max number of times to fire, enforce it
   this.nTimes_++;
   if (this.repeating_ && 
       typeof this.maxTimes_ == "number" 
-      && this.nTimes_ >= this.maxTimes_)
+      && this.nTimes_ >= this.maxTimes_) {
     this.cancel();
+  } else if (!this.repeating_) {
+    // Clear out the callback closure for TYPE_ONE_SHOT timers
+    this.cancel();
+  }
+  // We don't cancel/cleanup timers that repeat forever until either
+  // xpcom-shutdown occurs or cancel() is called explicitly.
 
-  return this.callback_();
+  return ret;
 }
 
 /**
