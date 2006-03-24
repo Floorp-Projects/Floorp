@@ -47,6 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 ALL_LOCALES = \
 	ca \
 	cs-CZ \
+	da \
 	de \
 	el \
 	en-US \
