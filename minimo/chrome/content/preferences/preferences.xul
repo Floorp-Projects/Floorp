@@ -81,9 +81,7 @@
       <preferenceitem preftype="string"  id="network.proxy.http" name="networkProxyHTTP" />
       <preferenceitem preftype="int"     id="network.proxy.http_port" name="networkProxyHTTP_Port" />
       <preferenceitem preftype="bool"    id="browser.cache.disk.enable" name="useDiskCache" />
-      <!--
       <preferenceitem preftype="string"  id="browser.cache.disk.parent_directory" name="storeCacheStorageCard" />
-      -->
       <preferenceitem preftype="bool"    id="network.prefetch-next" name="enablePreFetching" />
       <preferenceitem preftype="int"     id="browser.cache.disk.capacity" name="cacheSizeField" />
       <preferenceitem preftype="file"    id="browser.download.dir" name="downloadDir" />
