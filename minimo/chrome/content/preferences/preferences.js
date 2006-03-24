@@ -87,9 +87,9 @@ function UIdependencyCheck() {
   }
 
   if(!document.getElementById("dontAskForLaunch").checked) {
-	document.getElementById("downloadDirDisplay").disabled=true;
+//	document.getElementById("downloadDirDisplay").disabled=true;
   } else {
-	document.getElementById("downloadDirDisplay").disabled=false;
+//	document.getElementById("downloadDirDisplay").disabled=false;
   }
 
 }
@@ -102,9 +102,9 @@ function UIdependencyCheck() {
 function downloadSetTextbox() {
       if(document.getElementById("downloadDir")&&document.getElementById("downloadDir").value) {
         var dirLocation=document.getElementById("downloadDir").value;
-        document.getElementById("downloadDirDisplay").value=dirLocation.path;
+//        document.getElementById("downloadDirDisplay").value=dirLocation.path;
       } else {
-        document.getElementById("downloadDirDisplay").value="";
+//        document.getElementById("downloadDirDisplay").value="";
       }
 }
 
@@ -171,37 +171,24 @@ function sanitizeBookmarks() {
 
 function downloadChooseFolder() {
 
-  const nsIFilePicker = Components.interfaces.nsIFilePicker;
-  const nsIFile = Components.interfaces.nsIFile;
-  var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-  var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsIFile );
-  fp.init(window, null, nsIFilePicker.modeSave);
-
-  fp.defaultString="save_file_here";
-
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
-  var customDirPref = document.getElementById("downloadDir");
+  var refLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsILocalFile );
 
-  if (customDirPref.value) {
-   var fileCustomDirFile=customDirPref.value;
-   fp.displayDirectory = fileCustomDirFile;
-  }
-  fp.appendFilters(nsIFilePicker.filterAll);
+    try {
+	refLocalFile.initWithPath("\\Storage Card");
 
-  var returnFilePickerValue=fp.show();
-
-  if (returnFilePickerValue == nsIFilePicker.returnOK) {
-    var file = fp.file.QueryInterface(nsILocalFile);
+    } catch(e) { alert(e) }
 
     var currentDirPref = document.getElementById("downloadDir");
-    customDirPref.value = currentDirPref.value = file.parent;
+    var customDirPref = document.getElementById("downloadDir");
 
-    document.getElementById("downloadDirDisplay").value=file.parent.path;
+    customDirPref.value = currentDirPref.value = refLocalFile;
 
-  }
+    document.getElementById("downloadDirDisplay").value=refLocalFile.path;
 
 }
+
 
 /*
  * New Mini Pref Implementation 
@@ -453,6 +440,8 @@ function syncPrefSaveDOM() {
 
 }
 function syncPrefLoadDOM(elementList) {
+
+
 
 
 	for(var strCurKey in elementList) {
