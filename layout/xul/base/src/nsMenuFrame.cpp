@@ -278,12 +278,16 @@ nsMenuFrame::SetInitialChildList(nsPresContext* aPresContext,
       nsIMenuParent *menuPar;
       CallQueryInterface(frame, &menuPar);
       if (menuPar) {
-        // Remove this frame from the list and place it in the other list.
-        frames.RemoveFrame(frame);
-        mPopupFrames.AppendFrame(this, frame);
-        nsIFrame* first = frames.FirstChild();
-        rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
-        return rv;
+        PRBool isMenuBar;
+        menuPar->IsMenuBar(isMenuBar);
+        if (!isMenuBar) {
+          // Remove this frame from the list and place it in the other list.
+          frames.RemoveFrame(frame);
+          mPopupFrames.AppendFrame(this, frame);
+          nsIFrame* first = frames.FirstChild();
+          rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
+          return rv;
+        }
       }
       frame = frame->GetNextSibling();
     }
