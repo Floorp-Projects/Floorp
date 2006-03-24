@@ -1,4 +1,4 @@
-pref("general.useragent.extra.minimo", "Minimo/0.013");
+pref("general.useragent.extra.minimo", "Minimo/0.014");
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
@@ -13,6 +13,8 @@ pref("browser.cache.disk_cache_ssl",        false);
 
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
+
+pref("browser.sessionhistory.max_entries", 10);
 
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
@@ -72,9 +74,13 @@ pref("browser.tabs.loadGroup", 1);
 pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
 
+
 pref("browser.link.open_newwindow", 3);
 pref("browser.link.open_external", 3);
 pref("browser.link.open_newwindow.restriction", 0);
+
+// size of scrollbar snapping region
+pref("slider.snapMultiplier", 6);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
@@ -87,12 +93,6 @@ pref("slider.snapMultiplier", 6);
 
 // option to choose plug-in finder
 pref("application.use_ns_plugin_finder", false);
-
-// URI fixup prefs
-pref("browser.fixup.alternate.enabled", true);
-pref("browser.fixup.alternate.prefix", "www.");
-pref("browser.fixup.alternate.suffix", ".com");
-pref("browser.fixup.hide_user_pass", true);
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
@@ -127,22 +127,29 @@ pref("capability.policy.default.Navigator.preferenceinternal.set", "UniversalPre
 
 pref("capability.policy.default.Window.blur.get", "allAccess");
 pref("capability.policy.default.Window.close.get", "allAccess");
-pref("capability.policy.default.Window.closed", "allAccess");
+pref("capability.policy.default.Window.closed.get", "allAccess");
 pref("capability.policy.default.Window.Components", "allAccess");
-pref("capability.policy.default.Window.document", "allAccess");
+pref("capability.policy.default.Window.document.get", "allAccess");
 pref("capability.policy.default.Window.focus.get", "allAccess");
-pref("capability.policy.default.Window.frames", "allAccess");
-pref("capability.policy.default.Window.history", "allAccess");
-pref("capability.policy.default.Window.length", "allAccess");
+pref("capability.policy.default.Window.frames.get", "allAccess");
+pref("capability.policy.default.Window.history.get", "allAccess");
+pref("capability.policy.default.Window.length.get", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");
-pref("capability.policy.default.Window.opener", "allAccess");
-pref("capability.policy.default.Window.parent", "allAccess");
-pref("capability.policy.default.Window.self", "allAccess");
-pref("capability.policy.default.Window.top", "allAccess");
-pref("capability.policy.default.Window.window", "allAccess");
+pref("capability.policy.default.Window.opener.get", "allAccess");
+pref("capability.policy.default.Window.parent.get", "allAccess");
+pref("capability.policy.default.Window.self.get", "allAccess");
+pref("capability.policy.default.Window.top.get", "allAccess");
+pref("capability.policy.default.Window.window.get", "allAccess");
+
+// Restrictions on the DOM for mail/news - see bugs 66938 and 84545
+pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
+
+pref("capability.policy.mailnews.*.attributes.get", "noAccess");
+pref("capability.policy.mailnews.*.baseURI.get", "noAccess");
 
 // XMLExtras
 pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
+pref("capability.policy.default.XMLHttpRequest.getInterface", "noAccess");
 pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
 
 // Clipboard
@@ -169,7 +176,7 @@ pref("dom.disable_window_open_feature.status",      true);
 
 pref("dom.allow_scripts_to_close_windows",          false);
 
-pref("dom.disable_open_during_load",                true);
+pref("dom.disable_open_during_load",                false);
 pref("dom.popup_maximum",                           20);
 pref("dom.popup_allowed_events", "change click dblclick mouseup reset submit");
 pref("dom.disable_open_click_delay", 5000);
@@ -183,6 +190,7 @@ pref("privacy.popups.disable_from_plugins", 2);
 pref("dom.event.contextmenu.enabled",       true);
 
 pref("javascript.enabled",                  true);
+pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 
 
@@ -250,22 +258,22 @@ pref("network.http.proxy.keep-alive", true);
 pref("network.http.keep-alive.timeout", 600);
 
 // limit the absolute number of http connections.
-pref("network.http.max-connections", 4);
+pref("network.http.max-connections", 24);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
 // server.  Otherwise, "server" is the http origin server.
-pref("network.http.max-connections-per-server", 4);
+pref("network.http.max-connections-per-server", 8);
 
 // if network.http.keep-alive is true, and if NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent
 // connections to the server is less then max-persistent-connections-per-server.
-pref("network.http.max-persistent-connections-per-server", 1);
+pref("network.http.max-persistent-connections-per-server", 2);
 
 // if network.http.keep-alive is true, and if connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
-pref("network.http.max-persistent-connections-per-proxy", 1);
+pref("network.http.max-persistent-connections-per-proxy", 4);
 
 // amount of time (in seconds) to suspend pending requests, before spawning a
 // new connection, once the limit on the number of persistent connections per
@@ -288,11 +296,11 @@ pref("network.http.redirection-limit", 20);
 // NOTE: support for "compress" has been disabled per bug 196406.
 pref("network.http.accept-encoding" ,"gzip,deflate");
 
-pref("network.http.pipelining"      , true);
+pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
 
 // Max number of requests in the pipeline
-pref("network.http.pipelining.maxrequests" , 12);
+pref("network.http.pipelining.maxrequests" , 4);
 
 // </http>
 
@@ -388,6 +396,7 @@ pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
+pref("network.cookie.disableCookieForMailNews", true); // disable all cookies for mail
 pref("network.cookie.lifetimePolicy",       0); // accept normally, 1-askBeforeAccepting, 2-acceptForSession,3-acceptForNDays
 pref("network.cookie.alwaysAcceptSessionCookies", false);
 pref("network.cookie.prefsMigrated",        false);
@@ -484,7 +493,7 @@ pref("bidi.characterset", 1);
 
 
 // used for double-click word selection behavior. Win will override.
-pref("layout.word_select.eat_space_to_next_word", false);
+pref("layout.word_select.eat_space_to_next_word", true);
 pref("layout.word_select.stop_at_punctuation", true);
 
 // pref to control whether or not to replace backslashes with Yen signs
@@ -516,34 +525,11 @@ pref("config.use_system_prefs", false);
 // if the system has enabled accessibility
 pref("config.use_system_prefs.accessibility", false);
 
-/*
- * What are the entities that you want Mozilla to save using mnemonic
- * names rather than numeric codes? E.g. If set, we'll output &nbsp;
- * otherwise, we may output 0xa0 depending on the charset.
- *
- * "none"   : don't use any entity names; only use numeric codes.
- * "basic"  : use entity names just for &nbsp; &amp; &lt; &gt; &quot; for 
- *            interoperability/exchange with products that don't support more
- *            than that.
- * "latin1" : use entity names for 8bit accented letters and other special
- *            symbols between 128 and 255.
- * "html"   : use entity names for 8bit accented letters, greek letters, and
- *            other special markup symbols as defined in HTML4.
- */
-//pref("editor.encode_entity",                 "html");
-
-pref("editor.resizing.preserve_ratio",       true);
-pref("editor.positioning.offset",            0);
-
 pref("svg.enabled", false);
-
-// override double-click word selection behavior.
-pref("layout.word_select.eat_space_to_next_word", true);
 
 // Help Windows NT, 2000, and XP dialup a RAS connection
 // when a network address is unreachable.
 pref("network.autodial-helper.enabled", true);
-
 
 pref("font.name-list.cursive.he", "Tahoma");
 pref("font.name-list.cursive.ko", "Tahoma"); 
@@ -657,10 +643,18 @@ pref("browser.formfill.enable", true);
 
 /* These are opts. for slower devices */
 
+
+/* slow computer, slow connection */
 pref("content.max.tokenizing.time", 2250000);
 pref("content.notify.interval", 750000);
+pref("content.notify.ontimer", true);
 pref("content.switch.threshold", 750000);
 pref("nglayout.initialpaint.delay", 750);
+pref("network.http.max-connections", 32);
+pref("network.http.max-connections-per-server", 8);
+pref("network.http.max-persistent-connections-per-proxy", 8);
+pref("network.http.max-persistent-connections-per-server", 4);
+pref("dom.disable_window_status_change", true);
 
 pref("browser.chrome.favicons",true);
 pref("browser.chrome.site_icons",true);
@@ -671,3 +665,11 @@ pref("dom.max_script_run_time", 60);
 
 pref("browser.bookmark.store","<bm></bm>");
 pref("browser.bookmark.homebar","<bm><li iconsrc='chrome://minimo/skin/extensions/icon-star.png'>chrome://minimo/content/rssview/rssload.xhtml?url=http://del.icio.us/rss/tag/mobile-sites</li><li iconsrc='chrome://minimo/skin/extensions/icon-google.png'>http://www.google.com/xhtml</li><li iconsrc='chrome://minimo/skin/extensions/icon-shopping.png'>http://www.yokel.com</li><li iconsrc='http://m.technorati.com/favicon.ico'>http://m.technorati.com/</li><li iconsrc='http://mobile.wunderground.com/favicon.ico'>http://mobile.wunderground.com/</li><li iconsrc='http://www.yelp.com/favicon.ico'>http://www.yelp.com</li></bm>");
+
+pref("browser.download.dir", "\\Storage Card");
+pref("browser.download.progressDnlgDialog.dontAskForLaunch", false);
+pref("browser.cache.disk.parent_directory","\\Storage Card");
+pref("browser.cache.disk.enable",false);
+
+
+
