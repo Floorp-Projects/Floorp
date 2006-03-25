@@ -34,10 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsICSSNameSpaceRule_h___
-#define nsICSSNameSpaceRule_h___
 
 /* internal interface for CSS @namespace rules */
+
+#ifndef nsICSSNameSpaceRule_h___
+#define nsICSSNameSpaceRule_h___
 
 #include "nsICSSRule.h"
 //#include "nsString.h"
