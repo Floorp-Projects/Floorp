@@ -678,7 +678,7 @@ sub trim {
 sub ConstructMailTo {
      my ($name, $subject) = @_;
 
-     return "<a href=\"mailto:$name?subject=$subject\">Send mail to $name</a>";
+     return "<a href=\"mailto:$name?subject=" . url_quote($subject) . "\">Send mail to $name</a>";
 }
 
 sub MyFmtClock {
