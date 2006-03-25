@@ -381,7 +381,7 @@ function OnReturnHit(event)
     var focusedElement = document.commandDispatcher.focusedElement;
     if (focusedElement && (focusedElement.id == "addressBucket"))
       return;
-    event.preventBubble();
+    event.stopPropagation();
     if (focusedElement && (focusedElement.id == "abResultsTree"))
       gActivatedButton.doCommand();
   }

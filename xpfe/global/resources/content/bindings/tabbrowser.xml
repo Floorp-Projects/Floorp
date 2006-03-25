@@ -65,7 +65,7 @@
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragexit="nsDragAndDrop.dragExit(event, this.parentNode.parentNode); event.stopPropagation();">
-          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
+          <xul:tooltip onpopupshowing="event.stopPropagation(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.updatePopupMenu(this);">
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           tbattr="tabbrowser-multiple"

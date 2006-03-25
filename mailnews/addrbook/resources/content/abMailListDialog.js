@@ -59,8 +59,10 @@ catch (e)
 function handleKeyPress(element, event)
 {
   // allow dialog to close on enter if focused textbox has no value
-  if (element.value != "" && event.keyCode == 13)
-    event.preventBubble();
+  if (element.value != "" && event.keyCode == 13) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 }
 
 function mailingListExists(listname)
@@ -365,7 +367,7 @@ function awNotAnEmptyArea(event)
   if ( lastInput && lastInput.value )
     awAppendNewRow(false);
 
-  event.preventBubble();
+  event.stopPropagation();
 }
 
 function awClickEmptySpace(target, setFocus)

@@ -172,7 +172,7 @@
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
-                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
+                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.stopPropagation();"
                     checked="true"/>
           <menu id="descending" label="&menuitem.view.show_columns.label;"
                 accesskey="&menuitem.view.show_columns.accesskey;">

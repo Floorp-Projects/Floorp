@@ -213,12 +213,12 @@
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
-                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
+                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.stopPropagation();"
                     checked="true"/>
           <menuitem id="viewCommandSearchbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.searchbar.label;"
                     accesskey="&menuitem.view.command.searchbar.accesskey;"
-                    oncommand="goToggleToolbar('bookmarks-search', 'viewCommandSearchbar'); event.preventBubble();"
+                    oncommand="goToggleToolbar('bookmarks-search', 'viewCommandSearchbar'); event.stopPropagation();"
                     checked="true"/>
           <menu label="&menuitem.view.show_columns.label;"
                 accesskey="&menuitem.view.show_columns.accesskey;">

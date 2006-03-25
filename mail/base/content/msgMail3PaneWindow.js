@@ -1358,7 +1358,7 @@ function ChangeSelectionWithoutContentLoad(event, tree)
         if(tree.id == "threadTree")
           gThreadPaneCurrentSelectedIndex = row;
     }
-    event.preventBubble();
+    event.stopPropagation();
 }
 
 function TreeOnMouseDown(event)
@@ -1389,7 +1389,7 @@ function FolderPaneOnClick(event)
     if (row.value == -1) {
       if (event.originalTarget.localName == "treecol") {
         // clicking on the name column in the folder pane should not sort
-        event.preventBubble();
+        event.stopPropagation();
         CycleFolderView(); // needed to cycle the folder view for the old school tree col users
       }
       return;
@@ -1420,7 +1420,7 @@ function FolderPaneOnClick(event)
     }
     else if ((event.originalTarget.localName == "slider") ||
              (event.originalTarget.localName == "scrollbarbutton")) {
-      event.preventBubble();
+      event.stopPropagation();
     }
     else if (event.detail == 2) {
       FolderPaneDoubleClick(row.value, event);
@@ -1452,7 +1452,7 @@ function FolderPaneDoubleClick(folderIndex, event)
       // double clicking should not toggle the open / close state of the
       // folder.  this will happen if we don't prevent the event from
       // bubbling to the default handler in tree.xml
-      event.preventBubble();
+      event.stopPropagation();
     }
 }
 

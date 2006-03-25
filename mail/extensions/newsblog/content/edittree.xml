@@ -103,7 +103,7 @@
           if (aEvent.keyCode == 27){
             tree._assignValueToCell(tree._editOriginalValue,false);
           }
-          aEvent.preventBubble();
+          aEvent.stopPropagation();
         ]]>
         </body>
       </method>
@@ -165,7 +165,7 @@
         var col = {};
         var obj = {};
         if(row.value != -1) {
-          event.preventBubble();
+          event.stopPropagation();
           treeBox.getCellAt(event.clientX,event.clientY,row,col,obj);
           this.setEditMode(row.value,col.value,true);
         }

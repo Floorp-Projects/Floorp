@@ -184,7 +184,7 @@
              oncommand="addBookmarkAs();"/>
     <command id="Browser:AddGroupmarkAs" label="&addCurTabsAsCmd.label;"
              accesskey="&addCurTabsAsCmd.accesskey;"
-             oncommand="addGroupmarkAs(); event.preventBubble();"/>
+             oncommand="addGroupmarkAs(); event.stopPropagation();"/>
     <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
              oncommand="BrowserEditBookmarks();" />
   
@@ -415,7 +415,7 @@
         <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false" observes="isImage">
           <menupopup onpopupshowing="stylesheetFillPopup(this);"
                      oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data')); setStyleDisabled(false);" type="radio">
-            <menuitem label="&useStyleSheetNone.label;" accesskey="&useStyleSheetNone.accesskey;" oncommand="setStyleDisabled(true); event.preventBubble();" type="radio"/>
+            <menuitem label="&useStyleSheetNone.label;" accesskey="&useStyleSheetNone.accesskey;" oncommand="setStyleDisabled(true); event.stopPropagation();" type="radio"/>
             <menuitem label="&useStyleSheetPersistentOnly.label;" accesskey="&useStyleSheetPersistentOnly.accesskey;" type="radio"/>
           </menupopup>
         </menu>
@@ -466,10 +466,10 @@
           oncommand="BookmarksMenu.loadBookmark(event, this.database)"
           onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
           ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-          ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
-          ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
-          ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
-          ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
+          ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+          ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+          ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+          ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
       <menupopup id="menu_BookmarksPopup"
                  onpopupshowing="updateGroupmarkCommand();">
         <menuitem key="addBookmarkKb"   command="Browser:AddBookmark"/>

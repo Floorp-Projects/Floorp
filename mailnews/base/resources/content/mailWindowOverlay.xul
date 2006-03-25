@@ -268,7 +268,7 @@
             oncommandupdate="goUpdateMailMenuItems(this)">
 
     <command id="cmd_getMsgsForAuthAccounts" 
-             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
+             oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.stopPropagation()" 
              disabled="true"/>
 </commandset>
 
@@ -277,16 +277,16 @@
               events="create-menu-mark"
               oncommandupdate="goUpdateMailMenuItems(this)">
 
-    <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
-    <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
-    <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.stopPropagation()" disabled="true"/>
+    <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.stopPropagation()" disabled="true"/>
+    <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.stopPropagation()" disabled="true"/>
     <command id="cmd_markReadByDate" oncommand="goDoCommand('cmd_markReadByDate');" disabled="true"/>
-    <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
-    <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.preventBubble()" disabled="true"/>
-    <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.stopPropagation()" disabled="true"/>
+    <command id="cmd_markAsJunk" oncommand="goDoCommand('cmd_markAsJunk'); event.stopPropagation()" disabled="true"/>
+    <command id="cmd_markAsNotJunk" oncommand="goDoCommand('cmd_markAsNotJunk'); event.stopPropagation()" disabled="true"/>
     <command id="cmd_recalculateJunkScore" oncommand="goDoCommand('cmd_recalculateJunkScore');" disabled="true"/>
-    <command id="cmd_markAsShowRemote" oncommand="goDoCommand('cmd_markAsShowRemote'); event.preventBubble()" disabled="true"/>
-    <command id="cmd_markAsNotPhish" oncommand="goDoCommand('cmd_markAsNotPhish'); event.preventBubble()" disabled="true"/>
+    <command id="cmd_markAsShowRemote" oncommand="goDoCommand('cmd_markAsShowRemote'); event.stopPropagation()" disabled="true"/>
+    <command id="cmd_markAsNotPhish" oncommand="goDoCommand('cmd_markAsNotPhish'); event.stopPropagation()" disabled="true"/>
 </commandset>
 
 <commandset id="mailLabelMenuItems"

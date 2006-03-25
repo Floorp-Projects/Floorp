@@ -160,7 +160,7 @@
               }
             }
           }
-          aEvent.preventBubble();
+          aEvent.stopPropagation();
         ]]>
         </body>
       </method>

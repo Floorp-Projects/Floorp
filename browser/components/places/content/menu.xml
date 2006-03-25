@@ -709,7 +709,7 @@
         if (this.eventValid(event)) {
           this.setSelectionForEvent(event);
           // Don't let the event bubble up to a parent toolbar.
-          event.preventBubble();
+          event.stopPropagation();
         }
       ]]></handler>
       <handler event="DOMMenuItemActive"><![CDATA[

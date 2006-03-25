@@ -724,8 +724,8 @@
       <!-- context menu -->
       <menupopup onpopupshowing="this.parentNode.createTreeContextMenu(event);"
                  onpopuphidden="if (content) content.focus()"
-                 onclick="event.preventBubble();"
-                 onkeypress="event.preventBubble();"/>
+                 onclick="event.stopPropagation();"
+                 onkeypress="event.stopPropagation();"/>
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
@@ -840,8 +840,8 @@
       <menupopup xbl:inherits="onpopupshowing"
                  onpopupshowing="this.parentNode.createTreeContextMenu(event);"
                  onpopuphidden="if (content) content.focus()"
-                 onclick="event.preventBubble();"
-                 onkeypress="event.preventBubble();"/>
+                 onclick="event.stopPropagation();"
+                 onkeypress="event.stopPropagation();"/>
       <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onselect="this.parentNode.treeBoxObject.view.selectionChanged();" seltype="single">

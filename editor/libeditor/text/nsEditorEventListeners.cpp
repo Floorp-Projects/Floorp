@@ -356,9 +356,9 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         else
           editor->Paste(clipboard);
 
-        // Prevent the event from bubbling up to be possibly handled
+        // Prevent the event from propagating up to be possibly handled
         // again by the containing window:
-        nsevent->PreventBubble();
+        mouseEvent->StopPropagation();
         mouseEvent->PreventDefault();
 
         // We processed the event, whether drop/paste succeeded or not
@@ -652,11 +652,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
-  //some day we want to use another way to stop this from bubbling.
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
-  if (nsevent)
-    nsevent->PreventBubble();
-
+  aMouseEvent->StopPropagation();
   aMouseEvent->PreventDefault();
   return mEditor->InsertFromDrop(aMouseEvent);
 }
@@ -1012,6 +1008,7 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
 nsresult
 nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 {
+  NS_ENSURE_ARG(aEvent);
   // It's possible for us to receive a focus when we're really not focused.
   // This happens, for example, when an onfocus handler that's hooked up
   // before this listener focuses something else.  In that case, all of the
@@ -1029,10 +1026,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
   // turn on selection and caret
   if (mEditor)
   {
-    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
-    if (nsevent) {
-      nsevent->PreventBubble();
-    }
+    aEvent->StopPropagation();
 
     PRUint32 flags;
     mEditor->GetFlags(&flags);
@@ -1077,13 +1071,11 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
 {
+  NS_ENSURE_ARG(aEvent);
   // turn off selection and caret
   if (mEditor)
   {
-    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aEvent));
-    if (nsevent) {
-      nsevent->PreventBubble();
-    }
+    aEvent->StopPropagation();
 
     // when imeEditor exists, call ForceCompositionEnd() to tell
     // the input focus is leaving first

@@ -2005,7 +2005,7 @@ function GetMessagesForAccount(aEvent)
   var uri = aEvent.target.id;
   var server = GetServer(uri);
   GetMessagesForInboxOnServer(server);
-  aEvent.preventBubble();
+  aEvent.stopPropagation();
 }
 
 

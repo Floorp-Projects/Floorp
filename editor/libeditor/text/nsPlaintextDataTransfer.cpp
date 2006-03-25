@@ -408,9 +408,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   rv = dragService->InvokeDragSession(domnode, transferableArray, nsnull, flags);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
-  if (nsevent)
-    nsevent->PreventBubble();
+  aDragEvent->StopPropagation();
 
   return rv;
 }

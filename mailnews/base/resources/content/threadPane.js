@@ -77,7 +77,7 @@ function ThreadPaneOnClick(event)
         // double clicking should not toggle the open / close state of the 
         // thread.  this will happen if we don't prevent the event from
         // bubbling to the default handler in tree.xml
-        event.preventBubble();
+        event.stopPropagation();
       }
       else if (col.value.id == "junkStatusCol") {
         MsgJunkMailInfo(true);
@@ -85,7 +85,7 @@ function ThreadPaneOnClick(event)
       else if (col.value.id == "threadCol" && !event.shiftKey &&
           (event.ctrlKey || event.metaKey)) {
         gDBView.ExpandAndSelectThreadByIndex(row.value, true);
-        event.preventBubble();
+        event.stopPropagation();
       }
     }
 }

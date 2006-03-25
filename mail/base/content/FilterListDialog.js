@@ -612,7 +612,7 @@ function onFilterClick(event)
     if (row.value == -1 || row.value > filterTree.view.rowCount-1 || event.originalTarget.localName != "treechildren") {
       if (event.originalTarget.localName == "treecol") { 
         // clicking on the name column in the filter list should not sort
-        event.preventBubble();
+        event.stopPropagation();
       }
       return;
     }

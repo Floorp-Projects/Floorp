@@ -914,8 +914,10 @@ function awRecipientKeyDown(event, element)
     */
     if (!element.value)
       awDeleteHit(element);
-    event.preventBubble();  //We need to stop the event else the listbox will receive it and the function
-                            //awKeyDown will be executed!
+
+    // We need to stop the event else the listbox will receive it and the
+    // function awKeyDown will be executed!
+    event.stopPropagation();
     break;
   }
 }

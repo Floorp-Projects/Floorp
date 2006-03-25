@@ -27,7 +27,7 @@
         <children/>
       </xul:scrollbox>
       <xul:autorepeatbutton class="autorepeatbutton-down" collapsed="true"
-                            oncommand="this.parentNode.scrollByIndex(1); event.preventBubble();"/>
+                            oncommand="this.parentNode.scrollByIndex(1); event.stopPropagation();"/>
     </content>
     
     <implementation>
@@ -45,20 +45,20 @@
     </implementation>    
 
     <handlers>
-      <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.preventBubble();"/>
+      <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
 
       <handler event="underflow"><![CDATA[
         var kids = document.getAnonymousNodes(this);
         kids[0].collapsed = true;
         kids[2].collapsed = true;
-        event.preventBubble();
+        event.stopPropagation();
       ]]></handler>
 
       <handler event="overflow"><![CDATA[
         var kids = document.getAnonymousNodes(this);
         kids[0].collapsed = false;
         kids[2].collapsed = false;
-        event.preventBubble();
+        event.stopPropagation();
       ]]></handler>
     </handlers>
   </binding>

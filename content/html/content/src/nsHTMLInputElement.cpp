@@ -1630,10 +1630,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           if (mType == NS_FORM_INPUT_BUTTON ||
               mType == NS_FORM_INPUT_RESET ||
               mType == NS_FORM_INPUT_SUBMIT) {
-            nsCOMPtr<nsIDOMNSEvent> nsevent =
-              do_QueryInterface(aVisitor.mDOMEvent);
-            if (nsevent) {
-              nsevent->PreventBubble();
+            if (aVisitor.mDOMEvent) {
+              aVisitor.mDOMEvent->StopPropagation();
             } else {
               rv = NS_ERROR_FAILURE;
             }

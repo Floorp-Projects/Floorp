@@ -91,13 +91,7 @@ nsMenuListener::~nsMenuListener()
 nsresult
 nsMenuListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-  if (nsevent) {
-    nsevent->PreventBubble();
-    nsevent->PreventCapture();
-  }
-
+  aKeyEvent->StopPropagation();
   aKeyEvent->PreventDefault();
 
   return NS_ERROR_BASE; // I am consuming event

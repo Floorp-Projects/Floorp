@@ -622,7 +622,7 @@ function DirPaneClick(event)
 
   // if the user clicks on the header / trecol, do nothing
   if (event.originalTarget.localName == "treecol") {
-    event.preventBubble();
+    event.stopPropagation();
     return;
   }
 

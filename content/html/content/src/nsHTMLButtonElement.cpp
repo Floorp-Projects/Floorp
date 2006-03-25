@@ -423,14 +423,8 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       case NS_MOUSE_RIGHT_BUTTON_DOWN:
       case NS_MOUSE_RIGHT_BUTTON_UP:
         {
-          nsCOMPtr<nsIDOMNSEvent> nsevent;
-
           if (aVisitor.mDOMEvent) {
-            nsevent = do_QueryInterface(aVisitor.mDOMEvent);
-          }
-
-          if (nsevent) {
-            nsevent->PreventBubble();
+            aVisitor.mDOMEvent->StopPropagation();
           } else {
             rv = NS_ERROR_FAILURE;
           }

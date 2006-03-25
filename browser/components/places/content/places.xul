@@ -120,7 +120,7 @@
           <menu id="viewColumns" 
                 label="&view.columns.label;" accesskey="&view.columns.accesskey;">
             <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
-                       oncommand="ViewMenu.showHideColumn(event.target); event.preventBubble();"/>
+                       oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
           </menu>
           <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
           <menuitem id="viewGroupNone" type="radio" name="group"
@@ -134,10 +134,10 @@
           <menuseparator id="directionSeparator"/>
           <menuitem id="viewSortAscending" type="radio" name="direction" 
                     label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
-                    oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.preventBubble();"/>
+                    oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
           <menuitem id="viewSortDescending" type="radio" name="direction" 
                     label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
-                    oncommand="ViewMenu.setSortColumn(null, 'descending'); event.preventBubble();"/>
+                    oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
         </menupopup>
       </menu>
       <menu id="helpMenu">

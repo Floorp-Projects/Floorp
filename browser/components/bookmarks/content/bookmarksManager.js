@@ -185,7 +185,7 @@ function onViewMenuSortItemSelected(aEvent)
     break;
   }
 
-  aEvent.preventCapture();
+  aEvent.stopPropagation();
 }  
 
 var gConstructedColumnsMenuItems = false;
@@ -216,7 +216,7 @@ function fillColumnsMenu(aEvent)
     }
   }
   
-  aEvent.preventBubble();
+  aEvent.stopPropagation();
 }
 
 function onViewMenuColumnItemSelected(aEvent)
@@ -227,7 +227,7 @@ function onViewMenuColumnItemSelected(aEvent)
     bookmarksView.toggleColumnVisibility(resource);
   }  
 
-  aEvent.preventBubble();
+  aEvent.stopPropagation();
 }
 
 function onViewSelected(aEvent)

@@ -930,7 +930,7 @@
       <xul:spacer class="tabs-right"/>
       <xul:hbox hidden="true" anonid="messageClose" class="tabs-closebutton-box"
                 align="center" pack="end">
-        <xul:toolbarbutton ondblclick="event.preventBubble();"
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            class="tabs-closebutton close-button"
                            oncommand="this.parentNode.parentNode.hide();"/>
       </xul:hbox>

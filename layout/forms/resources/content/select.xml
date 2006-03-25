@@ -729,13 +729,13 @@
       <handler event="underflow">
         <![CDATA[
           this.childNodes[1].setAttribute("disabled", true);
-          event.preventBubble();
+          event.stopPropagation();
         ]]>
       </handler>
       <handler event="overflow">
         <![CDATA[
           this.childNodes[1].removeAttribute("disabled");
-          event.preventBubble();
+          event.stopPropagation();
         ]]>
       </handler>
     </handlers>
