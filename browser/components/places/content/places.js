@@ -744,7 +744,7 @@ var ViewMenu = {
       else
         popup.appendChild(menuitem);      
     }
-    event.preventBubble();
+    event.stopPropagation();
   },
   
   /**

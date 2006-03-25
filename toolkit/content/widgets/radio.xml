@@ -297,19 +297,19 @@
       </handler>
       <handler event="keypress" keycode="VK_UP" phase="target">
         this.checkAdjacentElement(false);
-        event.preventBubble();
+        event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_LEFT" phase="target">
         this.checkAdjacentElement(false);
-        event.preventBubble();
+        event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_DOWN" phase="target">
         this.checkAdjacentElement(true);
-        event.preventBubble();
+        event.stopPropagation();
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" phase="target">
         this.checkAdjacentElement(true);
-        event.preventBubble();
+        event.stopPropagation();
       </handler>
 
       <!-- set a focused attribute on the selected item when the group

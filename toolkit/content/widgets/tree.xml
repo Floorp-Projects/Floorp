@@ -596,7 +596,7 @@
             tree.setAttribute("hidehscroll", "true");
           else if (event.detail == 0)
             tree.setAttribute("hidevscroll", "true");
-          event.preventBubble();
+          event.stopPropagation();
         ]]>
       </handler>
       <handler event="overflow">
@@ -606,7 +606,7 @@
             tree.removeAttribute("hidehscroll");
           else if (event.detail == 0)
             tree.removeAttribute("hidevscroll");
-          event.preventBubble();
+          event.stopPropagation();
         ]]>
       </handler>
     </handlers>
@@ -891,7 +891,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           // prevent click event from firing after column drag and drop
-          aEvent.preventBubble();
+          aEvent.stopPropagation();
           aEvent.preventDefault();
         ]]></body>        
       </method>

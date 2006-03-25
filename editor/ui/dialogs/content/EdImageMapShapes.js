@@ -212,7 +212,7 @@ function addPoint(event, pointX, pointY, start){
     dump('addPoint Called with event\n');
     pointX = event.clientX+window.frames[0].pageXOffset;
     pointY = event.clientY+window.frames[0].pageYOffset;
-    event.preventBubble();
+    event.stopPropagation();
     if (event.detail == 2){
       polyFinish();
       return;
@@ -281,7 +281,7 @@ function polyFinish(event, construct){
   else
     deleteElement(currentPoly);
   if (event)
-    event.preventBubble();
+    event.stopPropagation();
 
   currentPoly = null;
 }

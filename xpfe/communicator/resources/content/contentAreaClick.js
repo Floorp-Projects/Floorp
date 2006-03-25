@@ -180,7 +180,7 @@
       var href = ceParams.href;
       if (isKeyPress) {
         openNewTabWith(href, true, event.shiftKey);
-        event.preventBubble();
+        event.stopPropagation();
       }
       else {
         handleLinkClick(event, href, ceParams.linkNode);
@@ -196,7 +196,7 @@
         !event.getPreventDefault() &&
         pref.getBoolPref("middlemouse.contentLoadURL")) {
       if (middleMousePaste(event)) {
-        event.preventBubble();
+        event.stopPropagation();
       }
     }
     return true;
@@ -243,14 +243,14 @@
     // should we open it in a new tab?
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.middleclick")) {
       openNewTabWith(href, sendReferrer, event.shiftKey);
-      event.preventBubble();
+      event.stopPropagation();
       return true;
     }
 
     // should we open it in a new window?
     if (pref && pref.getBoolPref("middlemouse.openNewWindow")) {
       openNewWindowWith(href, sendReferrer);
-      event.preventBubble();
+      event.stopPropagation();
       return true;
     }
 
@@ -341,7 +341,7 @@
       loadURI(url);
     }
 
-    event.preventBubble();
+    event.stopPropagation();
     return true;
   }
 

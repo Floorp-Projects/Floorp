@@ -297,30 +297,22 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
       if (button == 0) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
-
-        if (nsevent) {
-            nsevent->PreventBubble();
-        }
-
+        aMouseEvent->StopPropagation();
         aMouseEvent->PreventDefault();
       }
       break;
     case eXULPopupType_context:
 
-    // Time to launch a context menu
+      // Time to launch a context menu
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
-    // If the context menu launches on mousedown,
-    // we have to fire focus on the content we clicked on
-    FireFocusOnTargetContent(targetNode);
+      // If the context menu launches on mousedown,
+      // we have to fire focus on the content we clicked on
+      FireFocusOnTargetContent(targetNode);
 #endif
-    LaunchPopup(aMouseEvent);
-
-    if (nsevent) {
-        nsevent->PreventBubble();
-    }
-
-    aMouseEvent->PreventDefault();
-    break;
+      LaunchPopup(aMouseEvent);
+      aMouseEvent->StopPropagation();
+      aMouseEvent->PreventDefault();
+      break;
   }
   xulDocument->SetPopupEvent(nsnull);
   return NS_OK;

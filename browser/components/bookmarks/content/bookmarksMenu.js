@@ -449,7 +449,7 @@ var BookmarksMenu = {
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
     var browserTarget = whereToOpenLink(aEvent);
     BookmarksCommand.openBookmark(selection, browserTarget, aDS);
-    aEvent.preventBubble();
+    aEvent.stopPropagation();
   },
 
   ////////////////////////////////////////////////

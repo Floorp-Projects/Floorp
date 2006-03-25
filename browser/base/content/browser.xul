@@ -170,7 +170,7 @@
         <observes element="Browser:Back" attribute="disabled"/>
         <menupopup context=""
                    onpopupshowing="BrowserBackMenu(event);"
-                   oncommand="gotoHistoryIndex(event); event.preventBubble();"
+                   oncommand="gotoHistoryIndex(event); event.stopPropagation();"
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
@@ -184,7 +184,7 @@
         <observes element="Browser:Forward" attribute="disabled"/>
         <menupopup context=""
                    onpopupshowing="BrowserForwardMenu(event);"
-                   oncommand="gotoHistoryIndex(event); event.preventBubble()"
+                   oncommand="gotoHistoryIndex(event); event.stopPropagation()"
                    onclick="checkForMiddleClick(this, event);"/>
       </toolbarbutton>
     
@@ -229,8 +229,7 @@
             <image id="page-proxy-favicon"
                     ondraggesture="PageProxyDragGesture(event);"
                     onload="this.parentNode.selectedIndex = 1;
-                            event.stopPropagation();
-                            event.preventBubble();"
+                            event.stopPropagation();"
                     onerror="gBrowser.addToMissedIconCache(this.src);
                              this.removeAttribute('src');
                              this.parentNode.selectedIndex = 0;"
@@ -242,7 +241,7 @@
                     class="plain"
                     id="feed-button"
                     chromedir="&locale.dir;"
-                    onclick="event.preventBubble();">
+                    onclick="event.stopPropagation();">
               <menupopup position="after_end"
                          onpopupshowing="return FeedHandler.buildFeedList(event);"
 #ifdef MOZ_PLACES
@@ -251,7 +250,7 @@
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
 #endif
             </button>
-            <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.preventBubble();"/>
+            <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
           </hbox>
         </textbox>
       </toolbaritem>
@@ -315,10 +314,10 @@
                 oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
                 onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                 ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-                ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
+                ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
           </hbox>
           <hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
             <hbox mousethrough="always" id="overflow-padder"/>
@@ -332,10 +331,10 @@
                              oncommand="BookmarksMenu.loadBookmark(event, event.target, this.database)"
                              onclick="BookmarksMenu.loadBookmarkMiddleClick(event, this.database)"
                              ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
-                             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
-                             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
+                             ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.stopPropagation()"
+                             ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.stopPropagation()">
                 <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"
 #ifndef XP_MACOSX
                            contextmenu="bookmarks-context-menu"
@@ -351,10 +350,10 @@
 
         <toolbarbutton id="downloads-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        observes="Tools:Downloads"
-                       ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.preventBubble()"
-                       ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.preventBubble()"
-                       ondragenter="nsDragAndDrop.dragEnter(event, DownloadsButtonDNDObserver); event.preventBubble()"
-                       ondragexit="nsDragAndDrop.dragExit(event, DownloadsButtonDNDObserver); event.preventBubble()"
+                       ondragdrop="nsDragAndDrop.drop(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragover="nsDragAndDrop.dragOver(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragenter="nsDragAndDrop.dragEnter(event, DownloadsButtonDNDObserver); event.stopPropagation()"
+                       ondragexit="nsDragAndDrop.dragExit(event, DownloadsButtonDNDObserver); event.stopPropagation()"
                        label="&downloads.label;"
                        tooltiptext="&downloads.tooltip;"/>
 
@@ -502,7 +501,7 @@
       <menupopup onpopupshowing="stylesheetFillPopup(this);"
                  oncommand="stylesheetSwitchAll(window.content, event.target.getAttribute('data')); setStyleDisabled(false);">
         <menuitem label="&pageStyleNoStyle.label;" accesskey="&pageStyleNoStyle.accesskey;"
-                  oncommand="setStyleDisabled(true); event.preventBubble();" type="radio" hidden="true"/>
+                  oncommand="setStyleDisabled(true); event.stopPropagation();" type="radio" hidden="true"/>
         <menuitem label="&pageStylePersistentOnly.label;" accesskey="&pageStylePersistentOnly.accesskey;" type="radio" checked="true"/>
         <menuseparator/>
       </menupopup>
