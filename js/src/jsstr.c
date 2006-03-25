@@ -2426,43 +2426,6 @@ static JSFunctionSpec string_static_methods[] = {
     {0,0,0,0,0}
 };
 
-static JSHashTable *deflated_string_cache;
-#ifdef DEBUG
-static uint32 deflated_string_cache_bytes;
-#endif
-#ifdef JS_THREADSAFE
-static JSLock *deflated_string_cache_lock;
-#endif
-
-JSBool
-js_InitStringGlobals(void)
-{
-#ifdef JS_THREADSAFE
-    /* Must come through here once in primordial thread to init safely! */
-    if (!deflated_string_cache_lock) {
-        deflated_string_cache_lock = JS_NEW_LOCK();
-        if (!deflated_string_cache_lock)
-            return JS_FALSE;
-    }
-#endif
-    return JS_TRUE;
-}
-
-void
-js_FreeStringGlobals()
-{
-    if (deflated_string_cache) {
-        JS_HashTableDestroy(deflated_string_cache);
-        deflated_string_cache = NULL;
-    }
-#ifdef JS_THREADSAFE
-    if (deflated_string_cache_lock) {
-        JS_DESTROY_LOCK(deflated_string_cache_lock);
-        deflated_string_cache_lock = NULL;
-    }
-#endif
-}
-
 JSBool
 js_InitRuntimeStringState(JSContext *cx)
 {
@@ -2471,21 +2434,38 @@ js_InitRuntimeStringState(JSContext *cx)
     JSAtom *atom;
 
     rt = cx->runtime;
-    JS_ASSERT(!rt->emptyString);
+
+    /* Initialize string cache */
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!rt->deflatedStringCacheLock);
+    rt->deflatedStringCacheLock = JS_NEW_LOCK();
+    if (!rt->deflatedStringCacheLock)
+        return JS_FALSE;
+#endif
 
     /* Make a permanently locked empty string. */
+    JS_ASSERT(!rt->emptyString);
     empty = js_NewStringCopyN(cx, js_empty_ucstr, 0, GCF_LOCK);
     if (!empty)
-        return JS_FALSE;
+        goto bad;
 
     /* Atomize it for scripts that use '' + x to convert x to string. */
     atom = js_AtomizeString(cx, empty, ATOM_PINNED);
     if (!atom)
-        return JS_FALSE;
+        goto bad;
 
     rt->emptyString = empty;
     rt->atomState.emptyAtom = atom;
+
     return JS_TRUE;
+
+  bad:
+#ifdef JS_THREADSAFE
+    JS_DESTROY_LOCK(rt->deflatedStringCacheLock);
+    rt->deflatedStringCacheLock = NULL;
+#endif
+    return JS_FALSE;
+
 }
 
 void
@@ -2495,6 +2475,17 @@ js_FinishRuntimeStringState(JSContext *cx)
 
     js_UnlockGCThingRT(rt, rt->emptyString);
     rt->emptyString = NULL;
+
+    if (rt->deflatedStringCache) {
+        JS_HashTableDestroy(rt->deflatedStringCache);
+        rt->deflatedStringCache = NULL;
+    }
+#ifdef JS_THREADSAFE
+    if (rt->deflatedStringCacheLock) {
+        JS_DESTROY_LOCK(rt->deflatedStringCacheLock);
+        rt->deflatedStringCacheLock = NULL;
+    }
+#endif
 }
 
 JSObject *
@@ -2673,26 +2664,26 @@ js_hash_string_pointer(const void *key)
 }
 
 void
-js_PurgeDeflatedStringCache(JSString *str)
+js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str)
 {
     JSHashNumber hash;
     JSHashEntry *he, **hep;
 
-    if (!deflated_string_cache)
+    if (!rt->deflatedStringCache)
         return;
 
     hash = js_hash_string_pointer(str);
-    JS_ACQUIRE_LOCK(deflated_string_cache_lock);
-    hep = JS_HashTableRawLookup(deflated_string_cache, hash, str);
+    JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
+    hep = JS_HashTableRawLookup(rt->deflatedStringCache, hash, str);
     he = *hep;
     if (he) {
 #ifdef DEBUG
-        deflated_string_cache_bytes -= JSSTRING_LENGTH(str);
+        rt->deflatedStringCacheBytes -= JSSTRING_LENGTH(str);
 #endif
         free(he->value);
-        JS_HashTableRawRemove(deflated_string_cache, hep, he);
+        JS_HashTableRawRemove(rt->deflatedStringCache, hep, he);
     }
-    JS_RELEASE_LOCK(deflated_string_cache_lock);
+    JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
 }
 
 void
@@ -2719,7 +2710,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
             free(str->chars);
     }
     if (valid) {
-        js_PurgeDeflatedStringCache(str);
+        js_PurgeDeflatedStringCache(rt, str);
         str->chars = NULL;
     }
     str->length = 0;
@@ -2749,7 +2740,7 @@ js_ValueToPrintableString(JSContext *cx, jsval v)
     str = js_QuoteString(cx, str, 0);
     if (!str)
         return NULL;
-    bytes = js_GetStringBytes(str);
+    bytes = js_GetStringBytes(cx->runtime, str);
     if (!bytes)
         JS_ReportOutOfMemory(cx);
     return bytes;
@@ -3189,31 +3180,31 @@ js_DeflateString(JSContext *cx, const jschar *chars, size_t length)
 #endif
 
 static JSHashTable *
-GetDeflatedStringCache(void)
+GetDeflatedStringCache(JSRuntime *rt)
 {
     JSHashTable *cache;
 
-    cache = deflated_string_cache;
+    cache = rt->deflatedStringCache;
     if (!cache) {
         cache = JS_NewHashTable(8, js_hash_string_pointer,
                                 JS_CompareValues, JS_CompareValues,
                                 NULL, NULL);
-        deflated_string_cache = cache;
+        rt->deflatedStringCache = cache;
     }
     return cache;
 }
 
 JSBool
-js_SetStringBytes(JSString *str, char *bytes, size_t length)
+js_SetStringBytes(JSRuntime *rt, JSString *str, char *bytes, size_t length)
 {
     JSHashTable *cache;
     JSBool ok;
     JSHashNumber hash;
     JSHashEntry **hep;
 
-    JS_ACQUIRE_LOCK(deflated_string_cache_lock);
+    JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
-    cache = GetDeflatedStringCache();
+    cache = GetDeflatedStringCache(rt);
     if (!cache) {
         ok = JS_FALSE;
     } else {
@@ -3223,25 +3214,25 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length)
         ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
 #ifdef DEBUG
         if (ok)
-            deflated_string_cache_bytes += length;
+            rt->deflatedStringCacheBytes += length;
 #endif
     }
 
-    JS_RELEASE_LOCK(deflated_string_cache_lock);
+    JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
     return ok;
 }
 
 char *
-js_GetStringBytes(JSString *str)
+js_GetStringBytes(JSRuntime *rt, JSString *str)
 {
     JSHashTable *cache;
     char *bytes;
     JSHashNumber hash;
     JSHashEntry *he, **hep;
 
-    JS_ACQUIRE_LOCK(deflated_string_cache_lock);
+    JS_ACQUIRE_LOCK(rt->deflatedStringCacheLock);
 
-    cache = GetDeflatedStringCache();
+    cache = GetDeflatedStringCache(rt);
     if (!cache) {
         bytes = NULL;
     } else {
@@ -3260,7 +3251,7 @@ js_GetStringBytes(JSString *str)
             if (bytes) {
                 if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
 #ifdef DEBUG
-                    deflated_string_cache_bytes += JSSTRING_LENGTH(str);
+                    rt->deflatedStringCacheBytes += JSSTRING_LENGTH(str);
 #endif
                 } else {
                     free(bytes);
@@ -3270,7 +3261,7 @@ js_GetStringBytes(JSString *str)
         }
     }
 
-    JS_RELEASE_LOCK(deflated_string_cache_lock);
+    JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
     return bytes;
 }
 

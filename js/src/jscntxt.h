@@ -134,6 +134,14 @@ struct JSRuntime {
     jsdouble            *jsNegativeInfinity;
     jsdouble            *jsPositiveInfinity;
 
+#ifdef JS_THREADSAFE
+    JSLock              *deflatedStringCacheLock;
+#endif
+    JSHashTable         *deflatedStringCache;
+#ifdef DEBUG
+    uint32              deflatedStringCacheBytes;
+#endif
+
     /* Empty string held for use by this runtime's contexts. */
     JSString            *emptyString;
 

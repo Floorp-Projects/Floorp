@@ -81,6 +81,13 @@ JS_BEGIN_EXTERN_C
 extern uint8 *
 js_GetGCThingFlags(void *thing);
 
+/*
+ * The sole purpose of the function is to preserve public API compatibility
+ * in JS_GetStringBytes which takes only single JSString* argument.
+ */
+JSRuntime*
+js_GetGCStringRuntime(JSString *str);
+
 /* These are compatible with JSDHashEntryStub. */
 struct JSGCRootHashEntry {
     JSDHashEntryHdr hdr;

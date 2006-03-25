@@ -294,16 +294,6 @@ typedef enum JSCharType {
 #define JS7_UNHEX(c)    (uintN)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
-/* Initialize truly global state associated with JS strings. */
-extern JSBool
-js_InitStringGlobals(void);
-
-extern void
-js_FreeStringGlobals(void);
-
-extern void
-js_PurgeDeflatedStringCache(JSString *str);
-
 /* Initialize per-runtime string state for the first context in the runtime. */
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
@@ -463,14 +453,18 @@ js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t charsLength,
  * successful association, false on out of memory.
  */
 extern JSBool
-js_SetStringBytes(JSString *str, char *bytes, size_t length);
+js_SetStringBytes(JSRuntime *rt, JSString *str, char *bytes, size_t length);
 
 /*
  * Find or create a deflated string cache entry for str that contains its
  * characters chopped from Unicode code points into bytes.
  */
 extern char *
-js_GetStringBytes(JSString *str);
+js_GetStringBytes(JSRuntime *rt, JSString *str);
+
+/* Remove a deflated string cache entry associated with str if any. */
+extern void
+js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str);
 
 JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,

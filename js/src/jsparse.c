@@ -633,7 +633,7 @@ ReportNoReturnValue(JSContext *cx, JSTokenStream *ts)
 
     fun = cx->fp->fun;
     if (fun->atom) {
-        char *name = js_GetStringBytes(ATOM_TO_STRING(fun->atom));
+        char *name = js_GetStringBytes(cx->runtime, ATOM_TO_STRING(fun->atom));
         ok = js_ReportCompileErrorNumber(cx, ts,
                                          JSREPORT_TS |
                                          JSREPORT_WARNING |
