@@ -533,6 +533,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     case gfxIFormats::BGR_A8:
       {
         cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
 #if defined(MOZ_CAIRO_GFX)
         for (PRUint32 x=0; x<iwidth; x++) {
           const PRUint8 r = *line++;
