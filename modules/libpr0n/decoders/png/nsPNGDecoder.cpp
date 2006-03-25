@@ -545,6 +545,20 @@ row_callback(png_structp png_ptr, png_bytep new_row,
             *cptr++ = 0;
             *cptr++ = 0;
             *cptr++ = 0;
+          } else if (a == 0xFF) {
+#ifdef IS_LITTLE_ENDIAN
+            // BGRA
+            *cptr++ = b;
+            *cptr++ = g;
+            *cptr++ = r;
+            *cptr++ = a;
+#else
+            // ARGB
+            *cptr++ = a;
+            *cptr++ = r;
+            *cptr++ = b;
+            *cptr++ = g;
+#endif
           } else {
 #ifdef IS_LITTLE_ENDIAN
             // BGRA
