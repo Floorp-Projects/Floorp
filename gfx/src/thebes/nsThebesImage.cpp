@@ -82,15 +82,15 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
     switch(aMaskRequirements)
     {
         case nsMaskRequirements_kNeeds1Bit:
-            format = gfxImageSurface::gfxImageFormat::ImageFormatARGB32;
+            format = gfxImageSurface::ImageFormatARGB32;
             mAlphaDepth = 1;
             break;
         case nsMaskRequirements_kNeeds8Bit:
-            format = gfxImageSurface::gfxImageFormat::ImageFormatARGB32;
+            format = gfxImageSurface::ImageFormatARGB32;
             mAlphaDepth = 8;
             break;
         default:
-            format = gfxImageSurface::gfxImageFormat::ImageFormatRGB24;
+            format = gfxImageSurface::ImageFormatRGB24;
             mAlphaDepth = 0;
             break;
     }
