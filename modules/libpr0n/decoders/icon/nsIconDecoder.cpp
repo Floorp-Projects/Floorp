@@ -155,7 +155,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       const PRUint8 r = *rowdata++;
       const PRUint8 g = *rowdata++;
       const PRUint8 b = *rowdata++;
-      const PRUint8 a = (format == gfxIFormat::RGB_A1) ? abpr[i>>3] : abpr[i];
+      const PRUint8 a = (format == gfxIFormats::RGB_A1) ? abpr[i>>3] : abpr[i];
 #ifdef IS_LITTLE_ENDIAN
       // BGRX
       *row++ = b;
