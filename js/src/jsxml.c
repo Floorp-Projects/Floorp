@@ -3851,11 +3851,11 @@ DeleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if (xml->xml_class != JSXML_CLASS_ELEMENT)
                 goto out;
             array = &xml->xml_attrs;
+            length = array->length;
             matcher = MatchAttrName;
         } else {
             matcher = MatchElemName;
         }
-        length = array->length;
         if (length != 0) {
             deleteCount = 0;
             for (index = 0; index < length; index++) {
