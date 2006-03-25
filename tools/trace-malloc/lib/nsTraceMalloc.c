@@ -1201,10 +1201,6 @@ static callsite *calltree(void **bp)
             method = nsDemangle(symbol);
         }
 #endif
-        if (info.dli_fbase == (void*)0x8048000) {
-            /* we're in the binary */
-            info.dli_fbase = 0;
-        }
         if (!method) {
             method = symbol
                      ? strdup(symbol)
