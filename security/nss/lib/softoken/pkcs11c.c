@@ -1593,6 +1593,15 @@ static SECStatus
 sftk_HashSign(SFTKHashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
 		unsigned int maxLen,unsigned char *hash, unsigned int hashLen)
 {
+    return RSA_HashSign(info->hashOid,info->key,sig,sigLen,maxLen,
+							hash,hashLen);
+}
+
+SECStatus
+RSA_HashSign(SECOidTag hashOid, NSSLOWKEYPrivateKey *key,
+		unsigned char *sig, unsigned int *sigLen, unsigned int maxLen,
+		unsigned char *hash, unsigned int hashLen)
+{
     
     SECStatus rv = SECFailure;
     SECItem digder;
@@ -1605,7 +1614,7 @@ sftk_HashSign(SFTKHashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
     if ( !arena ) { goto loser; }
     
     /* Construct digest info */
-    di = SGN_CreateDigestInfo(info->hashOid, hash, hashLen);
+    di = SGN_CreateDigestInfo(hashOid, hash, hashLen);
     if (!di) { goto loser; }
 
     /* Der encode the digest as a DigestInfo */
@@ -1618,7 +1627,7 @@ sftk_HashSign(SFTKHashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
     ** Encrypt signature after constructing appropriate PKCS#1 signature
     ** block
     */
-    rv = RSA_Sign(info->key,sig,sigLen,maxLen,digder.data,digder.len);
+    rv = RSA_Sign(key,sig,sigLen,maxLen,digder.data,digder.len);
 
   loser:
     SGN_DestroyDigestInfo(di);
@@ -2100,10 +2109,19 @@ CK_RV NSC_SignRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
  ************** Crypto Functions:     verify  ************************
  */
 
-/* Handle RSA Signature formating */
+/* Handle RSA Signature formatting */
 static SECStatus
 sftk_hashCheckSign(SFTKHashVerifyInfo *info, unsigned char *sig, 
 	unsigned int sigLen, unsigned char *digest, unsigned int digestLen)
+{
+    return RSA_HashCheckSign(info->hashOid, info->key, sig, sigLen,
+						digest, digestLen);
+}
+
+SECStatus
+RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
+	unsigned char *sig, unsigned int sigLen,
+	unsigned char *digest, unsigned int digestLen)
 {
 
     SECItem it;
@@ -2112,16 +2130,16 @@ sftk_hashCheckSign(SFTKHashVerifyInfo *info, unsigned char *sig,
     
     it.data = NULL;
 
-    if (info->key == NULL) goto loser;
+    if (key == NULL) goto loser;
 
-    it.len = nsslowkey_PublicModulusLen(info->key); 
+    it.len = nsslowkey_PublicModulusLen(key); 
     if (!it.len) goto loser;
 
     it.data = (unsigned char *) PORT_Alloc(it.len);
     if (it.data == NULL) goto loser;
 
     /* decrypt the block */
-    rv = RSA_CheckSignRecover(info->key, it.data, &it.len, it.len, sig, sigLen);
+    rv = RSA_CheckSignRecover(key, it.data, &it.len, it.len, sig, sigLen);
     if (rv != SECSuccess) goto loser;
 
     di = SGN_DecodeDigestInfo(&it);
@@ -2129,7 +2147,7 @@ sftk_hashCheckSign(SFTKHashVerifyInfo *info, unsigned char *sig,
     if (di->digest.len != digestLen)  goto loser; 
 
     /* make sure the tag is OK */
-    if (SECOID_GetAlgorithmTag(&di->digestAlgorithm) != info->hashOid) {
+    if (SECOID_GetAlgorithmTag(&di->digestAlgorithm) != hashOid) {
 	goto loser;
     }
     /* Now check the signature */
