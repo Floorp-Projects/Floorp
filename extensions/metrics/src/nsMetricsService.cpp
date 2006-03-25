@@ -367,7 +367,7 @@ nsMetricsService::EnableCollectors()
   //
   nsresult rv;
   if (mConfig.IsEventEnabled(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
-                             NS_LITERAL_STRING("load"))) {
+                             NS_LITERAL_STRING("document"))) {
     rv = nsLoadCollector::Startup();
     NS_ENSURE_SUCCESS(rv, rv);
   } else {

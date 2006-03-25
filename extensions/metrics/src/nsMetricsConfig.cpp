@@ -97,7 +97,7 @@ nsMetricsConfig::Load(nsIFile *file)
   //         xmlns:foo="http://foo.com/metrics">
   //   <collectors>
   //     <collector type="ui"/>
-  //     <collector type="load"/>
+  //     <collector type="document"/>
   //     <collector type="window"/>
   //     <collector type="foo:mystat"/>
   //   </collectors>

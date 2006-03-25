@@ -256,8 +256,13 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
   } else if (flags & STATE_STOP) {
     RequestEntry entry;
     if (mRequestMap.Get(request, &entry)) {
-      nsHashPropertyBag *props = entry.properties;
+      // Log a <document action="load"> event
 
+      nsHashPropertyBag *props = entry.properties;
+      rv = props->SetPropertyAsACString(NS_LITERAL_STRING("action"),
+                                        NS_LITERAL_CSTRING("load"));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
       // Compute the load time now that we have the end time.
       PRInt64 loadTime = (PR_Now() - entry.startTime) / PR_USEC_PER_MSEC;
       rv = props->SetPropertyAsUint64(NS_LITERAL_STRING("loadtime"), loadTime);
@@ -272,7 +277,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       }
 
       nsMetricsService *ms = nsMetricsService::get();
-      rv = ms->LogEvent(NS_LITERAL_STRING("load"), props);
+      rv = ms->LogEvent(NS_LITERAL_STRING("document"), props);
 
       mRequestMap.Remove(request);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -42,7 +42,7 @@
 // This file defines the load collector class, which monitors requests using
 // the document loader service and records the events into the metrics service.
 //
-// The load collector logs <load/> events.
+// The load collector logs <document action="load"/> events.
 // This event has the following attributes:
 //
 // origin: The action which initiated the load (string).  Possible values are:
