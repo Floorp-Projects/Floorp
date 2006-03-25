@@ -686,7 +686,7 @@ var PlacesController = {
     // selected folder (if a single folder is selected).     
     var sortingChildren = false;
     var name = result.root.title;
-    if (selectedNode) 
+    if (selectedNode && selectedNode.parent) 
       name = selectedNode.parent.title;
     if (hasSingleSelection && this.nodeIsFolder(selectedNode)) {
       name = selectedNode.title;
@@ -860,7 +860,7 @@ var PlacesController = {
         isLivemarkItem = true;
         command.setAttribute("label", strings.getString("livemarkReloadAll"));
       }
-      else {
+      else if (this.nodeIsURI(selectedNode)) {
         var uri = this._uri(selectedNode.uri);
         isLivemarkItem = 
           this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
@@ -923,15 +923,20 @@ var PlacesController = {
       var node = nodes[i];
       if (!this.nodeIsURI(node))
         foundNonLeaf = true;
-      if (!this.nodeIsReadOnly(node) && !this.nodeIsReadOnly(node.parent))
+      if (!this.nodeIsReadOnly(node) && 
+          (node.parent && !this.nodeIsReadOnly(node.parent)))
         metadata["mutable"] = true;
-        
-      var uri = this._uri(node.uri);
+      
+      var uri = null;
+      if (this.nodeIsURI(node))
+        uri = this._uri(node.uri);
       if (this.nodeIsFolder(node))
         uri = this.bookmarks.getFolderURI(asFolder(node).folderId);
-      var names = this.annotations.getPageAnnotationNames(uri, { });
-      for (var j = 0; j < names.length; ++j)
-        metadata[names[i]] = true;
+      if (uri) {
+        var names = this.annotations.getPageAnnotationNames(uri, { });
+        for (var j = 0; j < names.length; ++j)
+          metadata[names[i]] = true;
+      }
       
       if (nodes[i].parent != lastParent || nodes[i].type != lastType)
         metadata["mixed"] = true;
@@ -1265,13 +1270,57 @@ var PlacesController = {
     NS_ASSERT(transactions instanceof Array, "Must pass a transactions array");
     var index = this.getIndexOfNode(range[0]);
     
-    // Walk backwards to preserve insertion order on undo
-    for (var i = range.length - 1; i >= 0; --i) {
+    var removedFolders = [];
+    
+    /**
+     * Determines if a node is contained by another node within a resultset. 
+     * @param   node
+     *          The node to check for containment for
+     * @param   parent
+     *          The parent container to check for containment in
+     * @returns true if node is a member of parent's children, false otherwise.
+     */
+    function isContainedBy(node, parent) {
+      var cursor = node.parent;
+      while (cursor) {
+        if (cursor == parent)
+          return true;
+        cursor = cursor.parent;
+      }
+      return false;
+    }
+    
+    /**
+     * Walk the list of folders we're removing in this delete operation, and
+     * see if the selected node specified is already implicitly being removed 
+     * because it is a child of that folder. 
+     * @param   node
+     *          Node to check for containment. 
+     * @returns true if the node should be skipped, false otherwise. 
+     */
+    function shouldSkipNode(node) {
+      for (var j = 0; j < removedFolders.length; ++j) {
+        if (isContainedBy(node, removedFolders[j]))
+          return true;
+      }
+      return false;          
+    }
+    
+    for (var i = 0; i < range.length; ++i) {
       var node = range[i];
+      if (shouldSkipNode(node))
+        continue;
+      
       if (this.nodeIsFolder(node)) {
         // TODO -- node.parent might be a query and not a folder.  See bug 324948
-        transactions.push(new PlacesRemoveFolderTransaction(
-          asFolder(node).folderId, asFolder(node.parent).folderId, index));
+        var folder = asFolder(node);
+        removedFolders.push(folder);
+        // Undo for bookmark folder removals is handled by the bookmarks service,
+        // for various reasons. See: 
+        // http://groups.google.com/group/mozilla.dev.apps.firefox/msg/215e88fcdb91ff25
+        var txn = this.bookmarks.getRemoveFolderTransaction(folder.folderId);
+        var removeTxn = new PlacesRemoveFolderTransaction(txn, folder.folderId);
+        transactions.push(removeTxn);
       }
       else if (this.nodeIsSeparator(node)) {
         // A Bookmark separator.
@@ -2057,79 +2106,73 @@ function PlacesRemoveFolderSaveChildFolder(name) {
  * likely have a different id.
  */
 
-function PlacesRemoveFolderTransaction(id, oldContainer, oldIndex) {
+function PlacesRemoveFolderTransaction(removeTxn, id) {
+  this._removeTxn = removeTxn;
   this._id = id;
-  this._oldContainer = oldContainer;
-  this._oldIndex = oldIndex;
-  this._oldFolderTitle = null;
-  this._contents = null; // The encoded contents of this folder
+  this._transactions = []; // A set of transactions to remove content.
   this.redoTransaction = this.doTransaction;
 }
 PlacesRemoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
-  
+    
   /**
-   * Save the contents of a folder (items and containers) for restoration 
-   * purposes later.
+   * Create a flat, ordered list of transactions for a depth-first recreation
+   * of items within this folder. 
    * @param   id
-   *          The id of the folder
-   * @param   parent
-   *          The parent PlacesRemoveFolderSaveChildFolder object
+   *          The id of the folder to save the contents of
    */
-  _saveFolderContents: function PRFT__saveFolderContents(id, parent) {
-    var contents = PlacesController.getFolderContents(id, false, false);
+  _saveFolderContents: function PRFT__saveFolderContents() {
+    this._transactions = [];
+    var contents = PlacesController.getFolderContents(this._id, false, false);
     // Container open status doesn't need to be reset to what it was before
     // because it's being deleted.
     contents.containerOpen = true;
-    for (var i = contents.childCount - 1; i >= 0; --i) {
+    var ios = 
+        Cc["@mozilla.org/network/io-service;1"].
+        getService(Ci.nsIIOService);  
+    for (var i = 0; i < contents.childCount; ++i) {
       var child = contents.getChild(i);
-      var obj = null;
+      var txn;
       if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-        obj = new PlacesRemoveFolderSaveChildFolder(child.title);
-        parent.children.push(obj);
-        this._saveFolderContents(asFolder(child).folderId, obj);
+        txn = this.bookmarks.getRemoveFolderTransaction(this._id);
+        var removeTxn = new PlacesRemoveFolderTransaction(txn, this._id);
+        this._transactions.push(txn);
+      }
+      else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
+        txn = new PlacesRemoveSeparatorTransaction(this._id, i);
+        this._transactions.push(txn);
       }
       else {
-        obj = new PlacesRemoveFolderSaveChildItem(child.title, child.uri);
-        parent.children.push(obj);
+        txn = new PlacesRemoveItemTransaction(ios.newURI(child.uri, null, null),
+                                              this._id, i);
+        this._transactions.push(txn);
       }
     }
   },
   
-  /**
-   * Recreate a folder hierarchy from a saved data set.
-   * @param   parent
-   *          The id of the folder to create the items beneath
-   * @param   item
-   *          The object that contains the saved data.
-   */
-  _restore: function PRFT__restore(parent, item) {
-    if (item instanceof PlacesRemoveFolderSaveChildFolder) {
-      var id = this.bookmarks.createFolder(parent, item.name, 0);
-      this._restore(id, item);
-    }
-    else {
-      this.bookmarks.insertItem(parent, item.uri, 0);
-      this.bookmarks.setItemTitle(item.uri, item.name);
-    }    
-  },
-
   doTransaction: function PRFT_doTransaction() {
-    this._oldFolderTitle = this.bookmarks.getFolderTitle(this._id);
-    LOG("Remove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
+    var title = this.bookmarks.getFolderTitle(this._id);
+    LOG("Remove Folder: " + title);
     
-    this._contents = new PlacesRemoveFolderSaveChildFolder(this._oldFolderTitle);
-    this._saveFolderContents(this._id, this._contents);
-
-    this.bookmarks.removeFolder(this._id);
+    this._saveFolderContents();
+    
+    // Remove children backwards to preserve parent-child relationships.
+    for (var i = this._transactions.length - 1; i >= 0; --i)
+      this._transactions[i].doTransaction();
+    
+    // Remove this folder itself. 
+    this._removeTxn.doTransaction();
   },
   
   undoTransaction: function PRFT_undoTransaction() {
-    LOG("UNRemove Folder: " + this._oldFolderTitle + " from: " + this._oldContainer + "," + this._oldIndex);
-    this._id = this.bookmarks.createFolder(this._oldContainer, this._oldFolderTitle, this._oldIndex);
+    this._removeTxn.undoTransaction();
     
-    for (var i = 0; i < this._contents.children.length; ++i)
-      this._restore(this._id, this._contents.children[i]);
+    var title = this.bookmarks.getFolderTitle(this._id);
+    LOG("UNRemove Folder: " + title);
+    
+    // Create children forwards to preserve parent-child relationships.
+    for (var i = 0; i < this._transactions.length; ++i)
+      this._transactions[i].undoTransaction();
   }
 };
 

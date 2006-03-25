@@ -94,8 +94,9 @@
           var result = this.history.executeQueries(queries, queries.length, 
                                                    options);
 
-          var treeviewer = Cc["@mozilla.org/browser/nav-history/result-tree-viewer;1"].
-            createInstance(Ci.nsINavHistoryResultViewer);
+          var treeviewer = 
+              Cc["@mozilla.org/browser/nav-history/result-tree-viewer;1"].
+              createInstance(Ci.nsINavHistoryResultViewer);
           result.viewer = treeviewer;
 
           treeviewer.QueryInterface(Ci.nsITreeView);
