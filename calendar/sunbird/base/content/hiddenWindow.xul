@@ -38,13 +38,7 @@
 
 #ifdef XP_MACOSX
 
-<!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-
-<?xul-overlay href="chrome://calendar/content/dayView.xul"?>
-<?xul-overlay href="chrome://calendar/content/weekView.xul"?>
-<?xul-overlay href="chrome://calendar/content/monthView.xul"?>
-<?xul-overlay href="chrome://calendar/content/multiweekView.xul"?>
 
 <!-- All DTD information is stored in a separate file so that it can be shared by
      hiddenWindow.xul. -->
