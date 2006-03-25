@@ -118,6 +118,10 @@ function initHandlers()
     window.addEventListener("blur", onWindowBlue, true);
 
     client.inputPopup = null;
+
+    // Should fail silently pre-moz1.4
+    doCommandWithParams("cmd_clipboardDragDropHook",
+                        {addhook: CopyPasteHandler});
 }
 
 function onClose()
@@ -2865,3 +2869,50 @@ function my_dccfiledisconnect(e)
     this.display(msg, "DCC-FILE");
 }
 
+var CopyPasteHandler = new Object();
+
+CopyPasteHandler.onPasteOrDrop =
+function phand_onpaste(e, data)
+{
+    // XXXbug 329487: The effect of onPasteOrDrop's return value is actually the
+    //                exact opposite of the definition in the IDL.
+
+    // Don't mess with the multiline box at all.
+    if (client.prefs["multiline"])
+        return true;
+
+    var str = new Object();
+    var strlen = new Object();
+    data.getTransferData("text/unicode", str, strlen);
+    str.value.QueryInterface(Components.interfaces.nsISupportsString);
+    str.value.data = str.value.data.replace(/(^\s*[\r\n]+|[\r\n]+\s*$)/g, "");
+
+    if (str.value.data.indexOf("\n") == -1)
+    {
+        // If, after stripping leading/trailing empty lines, the string is a
+        // single line, put it back in the transferable and return.
+        data.setTransferData("text/unicode", str.value,
+                             str.value.data.length * 2);
+        return true;
+    }
+
+    // If it's a drop, move the text cursor to the mouse position.
+    if (e && ("rangeOffset" in e))
+        client.input.setSelectionRange(e.rangeOffset, e.rangeOffset);
+
+    str = client.input.value.substr(0, client.input.selectionStart) +
+          str.value.data + client.input.value.substr(client.input.selectionEnd);
+    client.prefs["multiline"] = true;
+    client.input.value = str;
+    return false;
+}
+
+CopyPasteHandler.QueryInterface =
+function phand_qi(iid)
+{
+    if (iid.equals(Components.interfaces.nsISupports) ||
+        iid.equals(Components.interfaces.nsIClipboardDragDropHooks))
+        return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+}

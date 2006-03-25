@@ -2005,7 +2005,7 @@ function addDynamicRule (rule)
 function getCommandEnabled(command)
 {
     try {
-        var dispatcher = top.document.commandDispatcher;
+        var dispatcher = document.commandDispatcher;
         var controller = dispatcher.getControllerForCommand(command);
 
         return controller.isCommandEnabled(command);
@@ -2019,10 +2019,32 @@ function getCommandEnabled(command)
 function doCommand(command)
 {
     try {
-        var dispatcher = top.document.commandDispatcher;
+        var dispatcher = document.commandDispatcher;
         var controller = dispatcher.getControllerForCommand(command);
         if (controller && controller.isCommandEnabled(command))
             controller.doCommand(command);
+    }
+    catch (e)
+    {
+    }
+}
+
+function doCommandWithParams(command, params)
+{
+    try {
+        var dispatcher = document.commandDispatcher;
+        var controller = dispatcher.getControllerForCommand(command);
+        controller.QueryInterface(Components.interfaces.nsICommandController);
+
+        if (!controller || !controller.isCommandEnabled(command))
+            return;
+
+        var cmdparams = newObject("@mozilla.org/embedcomp/command-params;1",
+                                  "nsICommandParams");
+        for (var i in params)
+            cmdparams.setISupportsValue(i, params[i]);
+
+        controller.doCommandWithParams(command, cmdparams);
     }
     catch (e)
     {
