@@ -983,7 +983,7 @@ gc_object_class_name(void* thing)
 }
 
 static void
-gc_dump_thing(JSContext *cx, JSGCThing *thing, uint8 flags, FILE *fp)
+gc_dump_thing(JSContext *cx, JSGCThing *thing, FILE *fp)
 {
     GCMarkNode *prev = (GCMarkNode *)cx->gcCurrentMarkNode;
     GCMarkNode *next = NULL;
@@ -1011,7 +1011,7 @@ gc_dump_thing(JSContext *cx, JSGCThing *thing, uint8 flags, FILE *fp)
         return;
 
     fprintf(fp, "%08lx ", (long)thing);
-    switch (flags & GCF_TYPEMASK) {
+    switch (*js_GetGCThingFlags(thing) & GCF_TYPEMASK) {
       case GCX_OBJECT:
       {
         JSObject  *obj = (JSObject *)thing;
@@ -1066,6 +1066,9 @@ js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name)
 {
     GCMarkNode markNode;
 
+    if (!thing)
+        return;
+
     markNode.thing = thing;
     markNode.name  = name;
     markNode.next  = NULL;
@@ -1073,6 +1076,14 @@ js_MarkNamedGCThing(JSContext *cx, void *thing, const char *name)
     if (markNode.prev)
         markNode.prev->next = &markNode;
     cx->gcCurrentMarkNode = &markNode;
+
+    if (thing == js_LiveThingToFind) {
+        /*
+         * Dump js_LiveThingToFind each time we reach it during the marking
+         * phase of GC to print all live references to the thing.
+         */
+        gc_dump_thing(cx, thing, stderr);
+    }
 
     js_MarkGCThing(cx, thing);
 
@@ -1117,41 +1128,8 @@ js_MarkAtom(JSContext *cx, JSAtom *atom)
         js_MarkAtom(cx, atom->entry.value);
 }
 
-/*
- * Macro to avoid passing the GC_MARK_DEBUG-only cx parameter.
- */
-
-#ifdef GC_MARK_DEBUG
-# define GC_MARK_DEBUG_CX(cx, arg) cx, arg
-#else
-# define GC_MARK_DEBUG_CX(cx, arg) arg
-#endif
-
-static uint8 *
-UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(JSContext *cx, void *thing))
-{
-    uint8 flags, *flagp;
-
-    if (!thing)
-        return NULL;
-
-    flagp = js_GetGCThingFlags(thing);
-    flags = *flagp;
-    JS_ASSERT(flags != GCF_FINAL);
-#ifdef GC_MARK_DEBUG
-    if (js_LiveThingToFind == thing)
-        gc_dump_thing(cx, thing, flags, stderr);
-#endif
-
-    if (flags & GCF_MARK)
-        return NULL;
-
-    return flagp;
-}
-
 static jsval *
-NextUnmarkedGCThing(GC_MARK_DEBUG_CX(JSContext *cx, jsval *vp), jsval *end,
-                    void **thingp, uint8 **flagpp)
+NextUnmarkedGCThing(jsval *vp, jsval *end, void **thingp, uint8 **flagpp)
 {
     jsval v;
     void *thing;
@@ -1159,10 +1137,11 @@ NextUnmarkedGCThing(GC_MARK_DEBUG_CX(JSContext *cx, jsval *vp), jsval *end,
 
     while (vp < end) {
         v = *vp;
-        if (JSVAL_IS_GCTHING(v)) {
+        if (JSVAL_IS_GCTHING(v) && v != JSVAL_NULL) {
             thing = JSVAL_TO_GCTHING(v);
-            flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
-            if (flagp) {
+            flagp = js_GetGCThingFlags(thing);
+            if (!(*flagp & GCF_MARK)) {
+                JS_ASSERT(*flagp != GCF_FINAL);
                 *thingp = thing;
                 *flagpp = flagp;
                 return vp;
@@ -1172,17 +1151,6 @@ NextUnmarkedGCThing(GC_MARK_DEBUG_CX(JSContext *cx, jsval *vp), jsval *end,
     }
     return NULL;
 }
-
-/*
- * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always uses
- * non-recursive code that otherwise would be called only on low C stack
- * condition.
- */
-#ifdef JS_GC_ASSUME_LOW_C_STACK
-# define GC_CAN_RECURSE JS_FALSE
-#else
-# define GC_CAN_RECURSE JS_TRUE
-#endif
 
 static void
 AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp);
@@ -1205,7 +1173,19 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
     JSScopeProperty *sprop;
     char name[32];
 #endif
+
+    /*
+     * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
+     * uses the non-recursive code that otherwise would be called only on
+     * a low C stack condition.
+     */
+#ifdef JS_GC_ASSUME_LOW_C_STACK
+# define RECURSION_TOO_DEEP() shouldCheckRecursion
+#else
     int stackDummy;
+# define RECURSION_TOO_DEEP() (shouldCheckRecursion &&                        \
+                               !JS_CHECK_STACK_SIZE(cx, stackDummy))
+#endif
 
     rt = cx->runtime;
     METER(tailCallNesting = 0);
@@ -1221,12 +1201,8 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
               rt->gcStats.maxdepth = rt->gcStats.depth);
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap)
-        gc_dump_thing(cx, thing, *flagp, js_DumpGCHeap);
+        gc_dump_thing(cx, thing, js_DumpGCHeap);
 #endif
-
-#define RECURSION_TOO_DEEP()                                                  \
-    (shouldCheckRecursion &&                                                  \
-     (!GC_CAN_RECURSE || !JS_CHECK_STACK_SIZE(cx, stackDummy)))
 
     switch (*flagp & GCF_TYPEMASK) {
       case GCX_OBJECT:
@@ -1248,8 +1224,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
                     : JS_MIN(obj->map->freeslot, obj->map->nslots));
 
       search_for_unmarked_slot:
-        vp = NextUnmarkedGCThing(GC_MARK_DEBUG_CX(cx, vp),
-                                 end, &thing, &flagp);
+        vp = NextUnmarkedGCThing(vp, end, &thing, &flagp);
         if (!vp)
             break;
         v = *vp;
@@ -1310,8 +1285,7 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
 #endif
 
             do {
-                vp = NextUnmarkedGCThing(GC_MARK_DEBUG_CX(cx, vp + 1),
-                                         end, &next_thing, &next_flagp);
+                vp = NextUnmarkedGCThing(vp + 1, end, &next_thing, &next_flagp);
                 if (!vp) {
                     /*
                      * thing came from the last unmarked GC-thing slot and we
@@ -1356,21 +1330,26 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
         if (!JSSTRING_IS_DEPENDENT(str))
             break;
         thing = JSSTRDEP_BASE(str);
-        flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
-        if (!flagp)
+        flagp = js_GetGCThingFlags(thing);
+        if (*flagp & GCF_MARK)
             break;
 #ifdef GC_MARK_DEBUG
         strcpy(name, "base");
 #endif
-
         /* Fallthrough to code to deal with the tail recursion. */
+
       on_tail_recursion:
 #ifdef GC_MARK_DEBUG
-        /* Do not eliminate C recursion to get full GC graph when debugging. */
+        /*
+         * Do not eliminate C recursion when debugging to allow
+         * js_MarkNamedGCThing to build a full dump of live GC
+         * things.
+         */
         GC_MARK(cx, thing, name);
         break;
 #else
         /* Eliminate tail recursion for the last unmarked child. */
+        JS_ASSERT(*flagp != GCF_FINAL);
         METER(++tailCallNesting);
         *flagp |= GCF_MARK;
         goto start;
@@ -1656,30 +1635,41 @@ void
 js_MarkGCThing(JSContext *cx, void *thing)
 {
     uint8 *flagp;
-    JSBool fromCallback;
 
-    flagp = UnmarkedGCThingFlags(GC_MARK_DEBUG_CX(cx, thing));
-    if (!flagp)
+    if (!thing)
+        return;
+
+    flagp = js_GetGCThingFlags(thing);
+    JS_ASSERT(*flagp != GCF_FINAL);
+    if (*flagp & GCF_MARK)
         return;
     *flagp |= GCF_MARK;
 
-    fromCallback = cx->insideGCMarkCallback;
-    if (fromCallback)
-        cx->insideGCMarkCallback = JS_FALSE;
-    MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
-    if (fromCallback) {
+    if (!cx->insideGCMarkCallback) {
+        MarkGCThingChildren(cx, thing, flagp, JS_TRUE);
+    } else {
         /*
-         * Make sure that JSGC_MARK_END callback can assume that all
-         * reachable things are marked when the callback finishes its own
-         * marking so it can start finalization.
+         * For API compatibility we allow for the callback to assume that
+         * after it calls js_MarkGCThing for the last time, the callback
+         * can start to finalize its own objects that are only referenced
+         * by unmarked GC things.
+         *
+         * Since we do not know which call from inside the callback is the
+         * last, we ensure that the unscanned bag is always empty when we
+         * return to the callback and all marked things are scanned.
+         *
+         * As an optimization we do not check for the stack size here and
+         * pass JS_FALSE as the last argument to MarkGCThingChildren.
+         * Otherwise with low C stack the thing would be pushed to the bag
+         * just to be feed to MarkGCThingChildren from inside
+         * ScanDelayedChildren.
          */
+        cx->insideGCMarkCallback = JS_FALSE;
+        MarkGCThingChildren(cx, thing, flagp, JS_FALSE);
         ScanDelayedChildren(cx);
         cx->insideGCMarkCallback = JS_TRUE;
     }
 }
-
-#ifdef GC_MARK_DEBUG
-#endif
 
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
