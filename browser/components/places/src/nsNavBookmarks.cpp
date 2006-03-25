@@ -282,7 +282,10 @@ nsNavBookmarks::InitTables(mozIStorageConnection* aDBConn)
   // new primary key is unique, reducing the chance that stale references to
   // bookmark folders will reference a random folder. This slows down inserts
   // a little bit, which is why we don't always use it, but bookmark folders
-  // are not created very often.
+  // are not created very often. 
+  // NOTE: The folder undo code depends on the autoincrement behavior because
+  // it must be able to undo deleting of a folder back to the old folder ID,
+  // which we assume has not been taken by something else.
   rv = aDBConn->TableExists(NS_LITERAL_CSTRING("moz_bookmarks_folders"), &exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! exists) {
@@ -963,6 +966,22 @@ NS_IMETHODIMP
 nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
                              PRInt32 aIndex, PRInt64 *aNewFolder)
 {
+  return CreateFolderWithID(-1, aParent, aName, aIndex, aNewFolder);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
+                                PRInt32 aIndex, const nsAString &aType,
+                                PRInt64 *aNewFolder)
+{
+  return CreateContainerWithID(-1, aParent, aName, aIndex, aType, aNewFolder);
+}
+
+nsresult
+nsNavBookmarks::CreateFolderWithID(PRInt64 aFolder, PRInt64 aParent, 
+                                   const nsAString& aName, PRInt32 aIndex,
+                                   PRInt64* aNewFolder)
+{
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
@@ -973,13 +992,24 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
 
   {
     nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_folders (name, type) VALUES (?1, null)"),
-                                 getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aFolder == -1) {
+      rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_folders (name, type) VALUES (?1, null)"),
+                                   getter_AddRefs(statement));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = statement->BindStringParameter(0, aName);
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindStringParameter(0, aName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_folders (id, name, type) VALUES (?1, ?2, null)"),
+                                   getter_AddRefs(statement));
+      NS_ENSURE_SUCCESS(rv, rv);
 
+      rv = statement->BindInt64Parameter(0, aFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindStringParameter(1, aName);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1009,13 +1039,13 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
-                                PRInt32 aIndex, const nsAString &aType,
-                                PRInt64 *aNewFolder)
+nsresult 
+nsNavBookmarks::CreateContainerWithID(PRInt64 aFolder, PRInt64 aParent, 
+                                      const nsAString &aName, PRInt32 aIndex,
+                                      const nsAString &aType, PRInt64 *aNewFolder)
 {
   // Containers are wrappers around read-only folders, with a specific type.
-  nsresult rv = CreateFolder(aParent, aName, aIndex, aNewFolder);
+  nsresult rv = CreateFolderWithID(aFolder, aParent, aName, aIndex, aNewFolder);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the type.
@@ -1034,7 +1064,6 @@ nsNavBookmarks::CreateContainer(PRInt64 aParent, const nsAString &aName,
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsNavBookmarks::InsertSeparator(PRInt64 aParent, PRInt32 aIndex)
@@ -1165,6 +1194,31 @@ nsNavBookmarks::RemoveChildAt(PRInt64 aParent, PRInt32 aIndex)
   return NS_OK;
 }
 
+nsresult 
+nsNavBookmarks::GetParentAndIndexOfFolder(PRInt64 aFolder, PRInt64* aParent, 
+                                          PRInt32* aIndex)
+{
+  nsCAutoString buffer;
+  buffer.AssignLiteral("SELECT parent, position FROM moz_bookmarks WHERE folder_child = ");
+  buffer.AppendInt(aFolder);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = DBConn()->CreateStatement(buffer, getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool results;
+  rv = statement->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!results) {
+    return NS_ERROR_INVALID_ARG; // folder is not in the hierarchy
+  }
+
+  *aParent = statement->AsInt64(0);
+  *aIndex = statement->AsInt32(1);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
 {
@@ -1186,32 +1240,16 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   mozIStorageConnection *dbConn = DBConn();
   mozStorageTransaction transaction(dbConn, PR_FALSE);
 
-  nsCAutoString buffer;
-  buffer.AssignLiteral("SELECT parent, position FROM moz_bookmarks WHERE folder_child = ");
-  buffer.AppendInt(aFolder);
-
   PRInt64 parent;
   PRInt32 index;
-  {
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(buffer, getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool results;
-    rv = statement->ExecuteStep(&results);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!results) {
-      return NS_ERROR_INVALID_ARG; // folder is not in the hierarchy
-    }
-
-    parent = statement->AsInt64(0);
-    index = statement->AsInt32(1);
-  }
+  rv = GetParentAndIndexOfFolder(aFolder, &parent, &index);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Remove all of the folder's children
   RemoveFolderChildren(aFolder);
 
   // Remove the folder from its parent
+  nsCAutoString buffer;
   buffer.AssignLiteral("DELETE FROM moz_bookmarks WHERE folder_child = ");
   buffer.AppendInt(aFolder);
   rv = dbConn->ExecuteSimpleSQL(buffer);
@@ -1232,6 +1270,36 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   ENUMERATE_WEAKARRAY(mObservers, nsINavBookmarkObserver,
                       OnFolderRemoved(aFolder, parent, index))
 
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsNavBookmarks::RemoveFolderTransaction, nsITransaction)
+
+NS_IMETHODIMP
+nsNavBookmarks::GetRemoveFolderTransaction(PRInt64 aFolder, nsITransaction** aResult)
+{
+  // Create and initialize a RemoveFolderTransaction object that can be used to
+  // recreate the folder safely later. 
+
+  nsAutoString title;
+  nsresult rv = GetFolderTitle(aFolder, title);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 parent;
+  PRInt32 index;
+  rv = GetParentAndIndexOfFolder(aFolder, &parent, &index);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString type;
+  rv = GetFolderType(aFolder, type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RemoveFolderTransaction* rft = 
+    new RemoveFolderTransaction(aFolder, parent, title, index, type);
+  if (!rft)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult = rft);
   return NS_OK;
 }
 

@@ -45,6 +45,7 @@
 %}
 
 interface nsIURI;
+interface nsITransaction;
 
 [ptr] native PRInt64Array(nsTArray<PRInt64>);
 
@@ -199,7 +200,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(6979da92-25d4-4553-8450-bfec2b3772db)]
+[scriptable, uuid(df93900d-7ef1-4c5f-8e44-a930aeaf1462)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -275,6 +276,23 @@ interface nsINavBookmarksService : nsISupports
    *  @param folder     The id of the folder to remove.
    */
   void removeFolder(in PRInt64 folder);
+
+  /**
+   * Gets an undo-able transaction for removing a folder from the bookmarks
+   * tree. 
+   *  @param folder     The id of the folder to remove.
+   *  @returns An object implementing nsITransaction that can be used to undo 
+   *           or redo the action. 
+   *
+   * This method exists because complex delete->undo operations rely on 
+   * recreated folders to have the same ID they had before they were deleted, 
+   * so that any other items deleted in different transactions can be 
+   * re-inserted correctly. This provides a safe encapsulation of this 
+   * functionality without exposing the ability to recreate folders with 
+   * specific IDs (potentially dangerous if abused by other code!) in the
+   * public API.
+   */
+  nsITransaction getRemoveFolderTransaction(in PRInt64 folder);
 
   /**
    * Convenience function for container services.  Removes
