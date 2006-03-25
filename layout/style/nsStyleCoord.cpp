@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* representation of length values in computed style data */
+
 #include "nsStyleCoord.h"
 #include "nsString.h"
 #include "nsCRT.h"

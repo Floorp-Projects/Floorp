@@ -36,6 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* tokenization of CSS style sheets */
+
 #ifndef nsCSSScanner_h___
 #define nsCSSScanner_h___
 

@@ -37,6 +37,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rules in a CSS stylesheet other than style rules (e.g., @import rules) */
+
 #ifndef nsCSSRules_h_
 #define nsCSSRules_h_
 

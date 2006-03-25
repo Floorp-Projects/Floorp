@@ -36,6 +36,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * representation of CSS style rules (selectors+declaration), CSS
+ * selectors, and DOM objects for style rules, selectors, and
+ * declarations
+ */
+
 #include "nsCOMPtr.h"
 #include "nsCSSRule.h"
 #include "nsICSSStyleRule.h"

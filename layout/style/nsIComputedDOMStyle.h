@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* DOM object returned from element.getComputedStyle() */
+
 #ifndef nsIComputedDOMStyle_h___
 #define nsIComputedDOMStyle_h___
 

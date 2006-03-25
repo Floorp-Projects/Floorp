@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * methods for dealing with CSS properties and tables of the keyword
+ * values they accept
+ */
+
 #ifndef nsCSSProps_h___
 #define nsCSSProps_h___
 

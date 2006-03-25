@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * representation of media lists used when linking to style sheets or by
+ * @media rules
+ */
+
 #ifndef nsIMediaList_h_
 #define nsIMediaList_h_
 

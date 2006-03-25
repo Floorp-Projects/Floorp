@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* an XPCOM service for cross-module creation of DOM .style objects */
+
 #include "nsCSSOMFactory.h"
 #include "nsDOMCSSAttrDeclaration.h"
 

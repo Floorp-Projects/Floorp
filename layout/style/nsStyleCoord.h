@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* representation of length values in computed style data */
+
 #ifndef nsStyleCoord_h___
 #define nsStyleCoord_h___
 

@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * style rule processor for CSS style sheets, responsible for selector
+ * matching and cascading
+ */
+
 #ifndef nsCSSRuleProcessor_h_
 #define nsCSSRuleProcessor_h_
 

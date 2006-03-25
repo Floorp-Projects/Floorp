@@ -35,6 +35,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * temporary (expanded) representation of the property-value pairs
+ * within a CSS declaration using during parsing and mutation, and
+ * representation of complex values for CSS properties
+ */
+
 #ifndef nsCSSStruct_h___
 #define nsCSSStruct_h___
 

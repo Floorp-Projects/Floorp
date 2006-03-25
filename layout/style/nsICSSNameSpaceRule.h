@@ -37,6 +37,8 @@
 #ifndef nsICSSNameSpaceRule_h___
 #define nsICSSNameSpaceRule_h___
 
+/* internal interface for CSS @namespace rules */
+
 #include "nsICSSRule.h"
 //#include "nsString.h"
 

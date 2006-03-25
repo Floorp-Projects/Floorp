@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a list of all CSS properties with considerable data about them, for
+ * preprocessing
+ */
+
 /******
 
   This file contains the list of all parsed CSS properties.  It is

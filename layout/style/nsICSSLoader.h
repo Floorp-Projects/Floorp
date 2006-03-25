@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* loading of CSS style sheets using the network APIs */
+
 #ifndef nsICSSLoader_h___
 #define nsICSSLoader_h___
 

@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * compact representation of the property-value pairs within a CSS
+ * declaration, and the code for expanding and compacting it
+ */
+
 #include "nsCSSDataBlock.h"
 #include "nsCSSProps.h"
 #include "nsRuleData.h"

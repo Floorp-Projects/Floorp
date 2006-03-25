@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * interface representing a collection of style data attached to a
+ * document, which may be or be combined into a style rule processor
+ */
+
 #ifndef nsIStyleSheet_h___
 #define nsIStyleSheet_h___
 

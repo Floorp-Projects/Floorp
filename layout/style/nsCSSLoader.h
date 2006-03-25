@@ -46,6 +46,8 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
+/* loading of CSS style sheets using the network APIs */
+
 #ifndef nsCSSLoader_h__
 #define nsCSSLoader_h__
 

@@ -40,6 +40,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object returned from element.getComputedStyle() */
+
 #include "nsComputedDOMStyle.h"
 
 #include "nsDOMError.h"

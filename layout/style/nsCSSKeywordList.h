@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* keywords used within CSS property values */
+
 /******
 
   This file contains the list of all parsed CSS keywords

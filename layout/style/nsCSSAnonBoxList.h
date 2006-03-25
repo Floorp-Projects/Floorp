@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* atom list for CSS anonymous boxes */
+
 /*
  * This file contains the list of nsIAtoms and their values for CSS
  * pseudo-element-ish things used internally for anonymous boxes.  It is

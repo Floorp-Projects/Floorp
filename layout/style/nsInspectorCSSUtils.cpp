@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* XPCOM interface to provide some internal information to DOM inspector */
+
 #include "nsInspectorCSSUtils.h"
 #include "nsIStyleRule.h"
 #include "nsRuleNode.h"

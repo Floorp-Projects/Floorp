@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* internal interface for all rule types in a CSS style sheet */
+
 #ifndef nsICSSRule_h___
 #define nsICSSRule_h___
 
@@ -48,7 +51,7 @@ class nsAString;
 #define NS_ICSS_RULE_IID     \
 {0xb9791e20, 0x1a04, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
-
+// inheriting from nsIStyleRule is only for style rules, not other rule types
 class nsICSSRule : public nsIStyleRule {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_RULE_IID)

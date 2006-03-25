@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing color values in DOM computed style */
+
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSPrimitiveValue.h"

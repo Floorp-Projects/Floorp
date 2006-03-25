@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* representation of simple property values within CSS declarations */
+
 #ifndef nsCSSValue_h___
 #define nsCSSValue_h___
 

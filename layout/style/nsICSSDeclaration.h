@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * faster version of nsIDOMCSSStyleDeclaration using enums instead of
+ * strings, for internal use
+ */
+
 #ifndef nsICSSDeclaration_h__
 #define nsICSSDeclaration_h__
 

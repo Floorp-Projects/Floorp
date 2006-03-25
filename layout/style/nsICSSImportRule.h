@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* internal interface for CSS @import rules */
+
 #ifndef nsICSSImportRule_h___
 #define nsICSSImportRule_h___
 

@@ -1,3 +1,9 @@
+
+/*
+ * internal interface that allows XBL code to provide additional style
+ * rules matching an element
+ */
+
 #ifndef _nsIStyleRuleSupplier_h
 #define _nsIStyleRuleSupplier_h
 

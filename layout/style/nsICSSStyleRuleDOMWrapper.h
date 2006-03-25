@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * interface to provide DOM inspector with access to internal interfaces
+ * via DOM interface
+ */
+
 #ifndef nsICSSStyleRuleDOMWrapper_h_
 #define nsICSSStyleRuleDOMWrapper_h_
 

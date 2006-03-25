@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * temporary (expanded) representation of property-value pairs used to
+ * hold data from matched rules during style data computation 
+ */
+
 #ifndef nsRuleData_h_
 #define nsRuleData_h_
 

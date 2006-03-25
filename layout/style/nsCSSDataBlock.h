@@ -33,6 +33,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * compact representation of the property-value pairs within a CSS
+ * declaration, and the code for expanding and compacting it
+ */
+
 #ifndef nsCSSDataBlock_h__
 #define nsCSSDataBlock_h__
 

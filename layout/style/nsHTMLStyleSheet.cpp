@@ -44,6 +44,11 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
+/*
+ * style sheet and style rule processor representing data from presentational
+ * HTML attributes
+ */
+
 #include "nsHTMLStyleSheet.h"
 #include "nsINameSpaceManager.h"
 #include "nsIAtom.h"
