@@ -48,9 +48,9 @@ public:
         return (gfxPlatformMac*) gfxPlatform::GetPlatform();
     }
 
-    gfxASurface *CreateOffscreenSurface(PRUint32 width,
-                                        PRUint32 height,
-                                        gfxASurface::gfxImageFormat imageFormat);
+    already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
+                                                         PRUint32 height,
+                                                         gfxASurface::gfxImageFormat imageFormat);
 };
 
 #endif /* GFX_PLATFORM_MAC_H */
