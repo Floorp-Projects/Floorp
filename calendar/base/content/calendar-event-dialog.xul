@@ -217,7 +217,7 @@
                          value="&newevent.status.label;"/>
                   <menulist id="event-status" class="event-only">
                     <menupopup>
-                      <menuitem label="&priority.level.none;"
+                      <menuitem label="&newevent.status.none.label;"
                                 value="NONE"/>
                       <menuitem label="&newevent.status.tentative.label;"
                                 value="TENTATIVE"/>
@@ -290,7 +290,7 @@
             <menulist id="todo-status" class="todo-only"
                       oncommand="updateToDoStatus(this.value);">
               <menupopup>
-                <menuitem label="&priority.level.none;"
+                <menuitem label="&newevent.status.none.label;"
                           value="NONE"/>
                 <menuitem label="&newevent.status.needsaction.label;"
                           value="NEEDS-ACTION"/>
