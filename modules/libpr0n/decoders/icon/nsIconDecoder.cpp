@@ -147,10 +147,10 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   
   PRInt32 rownum;
 #if defined(MOZ_CAIRO_GFX)
-  PRUint8 *row = malloc(bpr);
+  PRUint8 *row = (PRUint8*)malloc(bpr);
   PRUint8 *adata = data + (bpr * height);
   for (rownum = 0; rownum < height; ++rownum, data += bpr) {
-    PRInt8 *rowdata = data;
+    PRUint8 *rowdata = data;
     for (int i = 0; i < bpr; i++) {
       const PRUint8 r = *rowdata++;
       const PRUint8 g = *rowdata++;
