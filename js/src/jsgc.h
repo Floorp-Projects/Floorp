@@ -162,6 +162,11 @@ js_MarkAtom(JSContext *cx, JSAtom *atom);
             js_MarkAtom(cx, atom);                                            \
     JS_END_MACRO
 
+/*
+ * Always use GC_MARK macro and never call js_MarkGCThing directly so
+ * when GC_MARK_DEBUG is defined the dump of live GC things does not miss
+ * a thing.
+ */
 extern void
 js_MarkGCThing(JSContext *cx, void *thing);
 
