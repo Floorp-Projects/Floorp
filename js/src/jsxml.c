@@ -2966,6 +2966,7 @@ ToAttributeName(JSContext *cx, jsval v)
     JSObject *obj;
     JSClass *clasp;
     JSXMLQName *qn;
+    JSTempValueRooter tvr;
 
     if (JSVAL_IS_STRING(v)) {
         name = JSVAL_TO_STRING(v);
@@ -3006,7 +3007,16 @@ ToAttributeName(JSContext *cx, jsval v)
     qn = js_NewXMLQName(cx, uri, prefix, name);
     if (!qn)
         return NULL;
-    if (!js_GetAttributeNameObject(cx, qn))
+
+    /*
+     * Temp and local root scope APIs take GC-thing pointers tagged as jsvals
+     * and blindly untag.  Since qn is a GC-thing pointer, we can treat it as
+     * an object pointer.
+     */
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(qn), &tvr);
+    obj = js_GetAttributeNameObject(cx, qn);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    if (!obj)
         return NULL;
     return qn;
 }
@@ -5546,13 +5556,12 @@ xml_attribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
     JSXMLQName *qn;
-    jsval name;
 
     qn = ToAttributeName(cx, argv[0]);
     if (!qn)
         return JS_FALSE;
-    name = OBJECT_TO_JSVAL(qn->object);
-    return GetProperty(cx, obj, name, rval);
+    argv[0] = OBJECT_TO_JSVAL(qn->object);      /* local root */
+    return GetProperty(cx, obj, argv[0], rval);
 }
 
 /* XML and XMLList */
@@ -5562,13 +5571,18 @@ xml_attributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     jsval name;
     JSXMLQName *qn;
+    JSTempValueRooter tvr;
+    JSBool ok;
 
     name = ATOM_KEY(cx->runtime->atomState.starAtom);
     qn = ToAttributeName(cx, name);
     if (!qn)
         return JS_FALSE;
     name = OBJECT_TO_JSVAL(qn->object);
-    return GetProperty(cx, obj, name, rval);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, name, &tvr);
+    ok = GetProperty(cx, obj, name, rval);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
 }
 
 static JSXML *
