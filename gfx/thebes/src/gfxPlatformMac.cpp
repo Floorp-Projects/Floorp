@@ -53,7 +53,7 @@ gfxPlatformMac::gfxPlatformMac()
 #endif
 }
 
-gfxASurface*
+already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(PRUint32 width,
                                        PRUint32 height,
                                        gfxASurface::gfxImageFormat imageFormat)
@@ -129,5 +129,6 @@ gfxPlatformMac::CreateOffscreenSurface(PRUint32 width,
 #endif
     }
 
+    NS_IF_ADDREF(newSurface);
     return newSurface;
 }

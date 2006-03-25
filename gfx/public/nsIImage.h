@@ -42,6 +42,10 @@
 #include "nsIRenderingContext.h"
 #include "nsRect.h"
 
+#ifdef MOZ_CAIRO_GFX
+class gfxASurface;
+#endif
+
 class nsIDeviceContext;
 
 struct nsColorMap
@@ -279,6 +283,10 @@ public:
    * @return error result
    */
   NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
+
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD GetSurface(gfxASurface **aSurface) = 0;
+#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIImage, NS_IIMAGE_IID)

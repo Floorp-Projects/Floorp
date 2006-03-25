@@ -159,6 +159,13 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
         for (bit = 128; bit; bit >>= 1)
             byte |= *pos++ & bit;
         mAlpha[cnt] = byte;
+#ifdef MOZ_CAIRO_GFX
+#ifdef IS_LITTLE_ENDIAN
+        mDecoded[(cnt * 4) + 3] = byte ? 255 : 0;
+#else
+        mDecoded[(cnt * 4)] = byte ? 255 : 0;
+#endif
+#endif
     }
 
     for (cnt = 0; cnt < rows; cnt++) {

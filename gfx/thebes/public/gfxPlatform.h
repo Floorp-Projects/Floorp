@@ -44,6 +44,8 @@
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 
+class gfxImageSurface;
+
 class NS_EXPORT gfxPlatform {
 public:
     /**
@@ -69,9 +71,12 @@ public:
      * create a surface that is optimized for rapid pixel
      * changing.
      */
-    virtual gfxASurface *CreateOffscreenSurface(PRUint32 width,
-                                                PRUint32 height,
-                                                gfxASurface::gfxImageFormat imageFormat) = 0;
+    virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(PRUint32 width,
+                                                                 PRUint32 height,
+                                                                 gfxASurface::gfxImageFormat imageFormat) = 0;
+
+
+    virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface);
 
     /*
      * Font bits

@@ -88,30 +88,27 @@ public:
     NS_IMETHOD LockImagePixels(PRBool aMaskPixels);
     NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels);
 
-    void UpdateFromLockedData();
+    NS_IMETHOD GetSurface(gfxASurface **aSurface) {
+        *aSurface = ThebesSurface();
+        NS_ADDREF(*aSurface);
+        return NS_OK;
+    }
 
     gfxASurface* ThebesSurface() {
         if (mOptSurface)
             return mOptSurface;
 
-        EnsureImageSurface();
         return mImageSurface;
     }
 
 protected:
-
-    void EnsureImageSurface();
-
     PRInt32 mWidth;
     PRInt32 mHeight;
+    PRInt32 mStride;
     nsRect mDecoded;
 
     nsRefPtr<gfxImageSurface> mImageSurface;
     nsRefPtr<gfxASurface> mOptSurface;
-
-    // temporary buffers for Lock()
-    PRUint8* mLockedData;
-    PRUint8* mLockedAlpha;
 
     PRUint8 mAlphaDepth;
     PRUint8 mRealAlphaDepth;

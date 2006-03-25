@@ -503,18 +503,55 @@ int nsGIFDecoder2::HaveDecodedRow(
     } else {
       PRUint8* rgbRowIndex = decoder->mRGBLine;
       PRUint8* rowBufIndex = aRowBufPtr;
-      
+
+#if defined(MOZ_CAIRO_GFX)
+      while (rowBufIndex != decoder->mGIFStruct->rowend) {
+        if (*rowBufIndex >= cmapsize ||
+            ((format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) &&
+             (*rowBufIndex == decoder->mGIFStruct->tpixel))) {
+          *rgbRowIndex++ = 0;
+          *rgbRowIndex++ = 0;
+          *rgbRowIndex++ = 0;
+          *rgbRowIndex++ = 0;
+          ++rowBufIndex;
+          continue;
+        }
+			 
+        const PRUint32 colorIndex = *rowBufIndex * 3;
+        const PRUint8 r = cmap[colorIndex];     // red
+        const PRUint8 g = cmap[colorIndex + 1]; // green
+        const PRUint8 b = cmap[colorIndex + 2]; // blue
+#ifdef IS_LITTLE_ENDIAN
+        // BGRX
+        *rgbRowIndex++ = b;
+        *rgbRowIndex++ = g;
+        *rgbRowIndex++ = r;
+        *rgbRowIndex++ = 0xFF;
+#else
+        // XRGB
+        *rgbRowIndex++ = 0xFF;
+        *rgbRowIndex++ = r;
+        *rgbRowIndex++ = g;
+        *rgbRowIndex++ = b;
+#endif
+        ++rowBufIndex;
+      }
+      for (int i=0; i<aDuplicateCount; i++)
+        decoder->mImageFrame->SetImageData(decoder->mRGBLine, bpr, (aRowNumber+i)*bpr);
+
+
+#else
       switch (format) {
         case gfxIFormats::RGB:
         case gfxIFormats::BGR:
         {
           while (rowBufIndex != decoder->mGIFStruct->rowend) {
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(XP_MAC) || defined(XP_MACOSX)
             *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
             if (*rowBufIndex < cmapsize) {
               PRUint32 colorIndex = *rowBufIndex * 3;
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
               *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
               *rgbRowIndex++ = cmap[colorIndex + 1]; // green
               *rgbRowIndex++ = cmap[colorIndex];     // red
@@ -543,12 +580,12 @@ int nsGIFDecoder2::HaveDecodedRow(
           memset(decoder->mAlphaLine, 0, abpr);
           for (PRUint32 x = 0; x < (PRUint32)width; ++x) {
             if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(XP_MAC) || defined(XP_MACOSX)
               *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
               if (*rowBufIndex < cmapsize) {
                 PRUint32 colorIndex = *rowBufIndex * 3;
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
                 *rgbRowIndex++ = cmap[colorIndex + 2]; // blue
                 *rgbRowIndex++ = cmap[colorIndex + 1]; // green
                 *rgbRowIndex++ = cmap[colorIndex];     // red
@@ -564,7 +601,7 @@ int nsGIFDecoder2::HaveDecodedRow(
               }
               decoder->mAlphaLine[x>>3] |= 1<<(7-x&0x7);
             } else {
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(XP_MAC) || defined(XP_MACOSX)
               rgbRowIndex+=4;
 #else
               rgbRowIndex+=3;
@@ -581,6 +618,7 @@ int nsGIFDecoder2::HaveDecodedRow(
           break;
         }
       }
+#endif
     }
 
     decoder->mCurrentRow = aRowNumber + aDuplicateCount - 1;

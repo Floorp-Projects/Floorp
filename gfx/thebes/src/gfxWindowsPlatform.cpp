@@ -79,12 +79,14 @@ gfxWindowsPlatform::Init()
     mFontList->Compact();
 }
 
-gfxASurface*
+already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(PRUint32 width,
                                            PRUint32 height,
                                            gfxASurface::gfxImageFormat imageFormat)
 {
-    return new gfxWindowsSurface(nsnull, width, height, imageFormat);
+    gfxASurface *surf = new gfxWindowsSurface(nsnull, width, height, imageFormat);
+    NS_IF_ADDREF(surf);
+    return surf;
 }
 
 int CALLBACK 

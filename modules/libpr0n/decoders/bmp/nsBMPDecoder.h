@@ -125,7 +125,7 @@ struct bitFields {
 #define RLE_GFXFORMAT_ALPHA gfxIFormats::RGB_A1
 #endif
 
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
 #define GFXBYTESPERPIXEL 4
 #else
 #define GFXBYTESPERPIXEL 3
@@ -230,9 +230,26 @@ private:
 
 /** Sets the pixel data in aDecoded to the given values.
  * The variable passed in as aDecoded will be moved on 3 bytes! */
-inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
+inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue, PRUint8 aAlpha = 0xFF)
 {
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(MOZ_CAIRO_GFX)
+#ifdef IS_LITTLE_ENDIAN
+  // BGRX
+  *aDecoded++ = aBlue;
+  *aDecoded++ = aGreen;
+  *aDecoded++ = aRed;
+  *aDecoded++ = aAlpha;
+#else
+  // XRGB
+  *aDecoded++ = aAlpha;
+  *aDecoded++ = aRed;
+  *aDecoded++ = aGreen;
+  *aDecoded++ = aBlue;
+#endif
+
+#else // MOZ_CAIRO_GFX
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
     *aDecoded++ = 0; // Mac needs this padding byte
 #endif
 #ifdef USE_RGB
@@ -244,6 +261,7 @@ inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 a
     *aDecoded++ = aGreen;
     *aDecoded++ = aRed;
 #endif
+#endif // MOZ_CAIRO_GFX
 }
 
 inline void SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)

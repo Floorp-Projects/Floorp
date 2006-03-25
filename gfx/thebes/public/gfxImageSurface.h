@@ -66,7 +66,7 @@ public:
     virtual ~gfxImageSurface();
 
     // ImageSurface methods
-    int Format() const { return mFormat; }
+    gfxImageFormat Format() const { return mFormat; }
     long Width() const { return mWidth; }
     long Height() const { return mHeight; }
     /**
@@ -82,7 +82,7 @@ public:
 
 private:
     unsigned char *mData;
-    int mFormat;
+    gfxImageFormat mFormat;
     long mWidth;
     long mHeight;
 };
