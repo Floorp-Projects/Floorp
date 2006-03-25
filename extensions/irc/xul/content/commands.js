@@ -853,7 +853,7 @@ function cmdBanOrExcept(e)
     if (e.user)
     {
         // We have a real user object, so get their proper 'ban mask'.
-        mask = e.user.getBanMask();
+        mask = fromUnicode(e.user.getBanMask(), e.server);
     }
     else if (e.nickname)
     {

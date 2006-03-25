@@ -3090,6 +3090,9 @@ function usr_hostmask (pfx)
 CIRCUser.prototype.getBanMask =
 function usr_banmask()
 {
+    if (!this.host)
+        return this.unicodeName + "!*@*";
+
     var hostmask = this.host;
     if (!/^\d+\.\d+\.\d+\.\d+$/.test(hostmask))
         hostmask = hostmask.replace(/^[^.]+/, "*");
@@ -3292,7 +3295,7 @@ function cusr_setban (f)
         return false;
 
     var modifier = (f) ? " +b " : " -b ";
-    modifier += this.getBanMask() + " ";
+    modifier += fromUnicode(this.getBanMask(), server) + " ";
 
     server.sendData("MODE " + this.parent.encodedName + modifier + "\n");
 
@@ -3308,7 +3311,8 @@ function cusr_kban (reason)
         return false;
 
     reason = (typeof reason != "undefined") ? reason : this.encodedName;
-    var modifier = " -o+b " + this.encodedName + " " + this.getBanMask() + " ";
+    var modifier = " -o+b " + this.encodedName + " " +
+                   fromUnicode(this.getBanMask(), server) + " ";
 
     server.sendData("MODE " + this.parent.encodedName + modifier + "\n" +
                     "KICK " + this.parent.encodedName + " " +
