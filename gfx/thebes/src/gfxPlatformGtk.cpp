@@ -70,7 +70,7 @@ gfxPlatformGtk::gfxPlatformGtk()
 #endif
 }
 
-gfxASurface*
+already_AddRefed<gfxASurface>
 gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
                                        PRUint32 height,
                                        gfxASurface::gfxImageFormat imageFormat)
@@ -178,6 +178,7 @@ gfxPlatformGtk::CreateOffscreenSurface(PRUint32 width,
 #endif
     }
 
+    NS_IF_ADDREF(newSurface);
     return newSurface;
 }
 

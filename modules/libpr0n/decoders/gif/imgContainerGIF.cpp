@@ -48,6 +48,10 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsMemory.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
+
 NS_IMPL_ISUPPORTS2(imgContainerGIF, imgIContainer, nsITimerCallback)
 
 //******************************************************************************
@@ -951,11 +955,28 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
   PRUint32 alphaDataLength;
   const PRUint8 setMaskTo = aVisible ? 0xFF : 0x00;
 
+#ifdef MOZ_CAIRO_GFX
+  aFrame->LockImageData();
+  nsresult res = aFrame->GetImageData(&alphaData, &alphaDataLength);
+  if (NS_SUCCEEDED(res)) {
+    for (PRUint32 i = 0; i < alphaDataLength; i+=4) {
+#ifdef IS_LITTLE_ENDIAN
+      alphaData[i+3] = setMaskTo;
+#else
+      alphaData[i] = setMaskTo;
+#endif
+    }
+  }
+  aFrame->UnlockImageData();
+
+#else  
+
   aFrame->LockAlphaData();
   nsresult res = aFrame->GetAlphaData(&alphaData, &alphaDataLength);
   if (NS_SUCCEEDED(res) && alphaData && alphaDataLength)
     memset(alphaData, setMaskTo, alphaDataLength);
   aFrame->UnlockAlphaData();
+#endif
 }
 
 //******************************************************************************
@@ -964,11 +985,23 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
 {
   if (!aFrame)
     return;
+#ifdef MOZ_CAIRO_GFX
+  nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
+  if (!img)
+    return;
 
+  nsRefPtr<gfxASurface> surf;
+  img->GetSurface(getter_AddRefs(surf));
+  nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+  ctx->SetColor(gfxRGBA(0, 0, 0));
+  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  ctx->Paint();
+#else
   PRUint32 aDataLength;
 
   aFrame->GetImageDataLength(&aDataLength);
   aFrame->SetImageData(nsnull, aDataLength, 0);
+#endif
 }
 
 //******************************************************************************
@@ -994,7 +1027,7 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   PRUint32 bpr; // Bytes Per Row
   aFrame->GetImageBytesPerRow(&bpr);
 
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
   const PRUint8 bpp = 4;
 #else
   const PRUint8 bpp = 3;
@@ -1035,6 +1068,7 @@ PRBool imgContainerGIF::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   memcpy(aDataDest, aDataSrc, aDataLengthSrc);
   aDstFrame->UnlockImageData();
 
+#ifndef MOZ_CAIRO_GFX
   // Copy Alpha/Mask Over
   // If no mask, lockAlpha will tell us
   if (NS_SUCCEEDED(aDstFrame->LockAlphaData())) {
@@ -1047,6 +1081,7 @@ PRBool imgContainerGIF::CopyFrameImage(gfxIImageFrame *aSrcFrame,
 
     aDstFrame->UnlockAlphaData();
   }
+#endif
 
   // Tell the image that it's data has been updated
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aDstFrame));

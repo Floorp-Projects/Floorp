@@ -59,19 +59,12 @@
 #endif
 #endif
 
-static PRUint8 Unpremultiply(PRUint8 aVal, PRUint8 aAlpha);
-static void ARGBToThreeChannel(PRUint32* aARGB, PRUint8* aData);
-static PRUint8 Premultiply(PRUint8 aVal, PRUint8 aAlpha);
-static PRUint32 ThreeChannelToARGB(PRUint8* aData, PRUint8 aAlpha);
-
 NS_IMPL_ISUPPORTS1(nsThebesImage, nsIImage)
 
 nsThebesImage::nsThebesImage()
     : mWidth(0),
       mHeight(0),
       mDecoded(0,0,0,0),
-      mLockedData(nsnull),
-      mLockedAlpha(nsnull),
       mAlphaDepth(0),
       mLocked(PR_FALSE),
       mHadAnyData(PR_FALSE),
@@ -82,57 +75,42 @@ nsThebesImage::nsThebesImage()
 nsresult
 nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
-    NS_ASSERTION(aDepth == 24, "nsThebesImage::Init called with depth != 24");
-
     mWidth = aWidth;
     mHeight = aHeight;
 
+    gfxImageSurface::gfxImageFormat format;
     switch(aMaskRequirements)
     {
         case nsMaskRequirements_kNeeds1Bit:
+            format = gfxImageSurface::gfxImageFormat::ImageFormatARGB32;
             mAlphaDepth = 1;
             break;
         case nsMaskRequirements_kNeeds8Bit:
+            format = gfxImageSurface::gfxImageFormat::ImageFormatARGB32;
             mAlphaDepth = 8;
             break;
         default:
+            format = gfxImageSurface::gfxImageFormat::ImageFormatRGB24;
             mAlphaDepth = 0;
             break;
     }
 
+    mImageSurface = new gfxImageSurface(format, mWidth, mHeight);
+    memset(mImageSurface->Data(), 0, mHeight * mImageSurface->Stride());
+
+    mStride = mImageSurface->Stride();
+
     return NS_OK;
-}
-
-void
-nsThebesImage::EnsureImageSurface()
-{
-    if (!mImageSurface) {
-        // always read images as ARGB32
-        mImageSurface = new gfxImageSurface (gfxImageSurface::ImageFormatARGB32, mWidth, mHeight);
-        memset(mImageSurface->Data(), 0xFF, mHeight * mImageSurface->Stride());
-
-        if (mOptSurface) {
-            nsRefPtr<gfxContext> tmpCtx(new gfxContext(mImageSurface));
-            tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-            tmpCtx->SetSource(mOptSurface);
-            tmpCtx->Paint();
-        }
-    }
 }
 
 nsThebesImage::~nsThebesImage()
 {
-    if (mLockedData)
-        nsMemory::Free(mLockedData);
-    if (mLockedAlpha)
-        nsMemory::Free(mLockedAlpha);
 }
 
 PRInt32
 nsThebesImage::GetBytesPix()
 {
-    // not including alpha
-    return 3;
+    return 4;
 }
 
 PRBool
@@ -156,14 +134,15 @@ nsThebesImage::GetHeight()
 PRUint8 *
 nsThebesImage::GetBits()
 {
-    //NS_ASSERTION(mLocked == PR_TRUE, "GetBits called outside of Lock!");
-    return mLockedData;
+    if (mImageSurface)
+        return mImageSurface->Data();
+    return nsnull;
 }
 
 PRInt32
 nsThebesImage::GetLineStride()
 {
-    return mWidth * 3;
+    return mStride;
 }
 
 PRBool
@@ -175,14 +154,13 @@ nsThebesImage::GetHasAlphaMask()
 PRUint8 *
 nsThebesImage::GetAlphaBits()
 {
-    //NS_ASSERTION(mLocked == PR_TRUE, "GetAlphaBits called outside of Lock!");
-    return (PRUint8 *) mLockedAlpha;
+    return nsnull;
 }
 
 PRInt32
 nsThebesImage::GetAlphaLineStride()
 {
-    return mAlphaDepth == 1 ? (mWidth+7)/8 : mWidth;
+    return mStride;
 }
 
 void
@@ -200,28 +178,12 @@ nsThebesImage::GetIsImageComplete()
 nsresult
 nsThebesImage::Optimize(nsIDeviceContext* aContext)
 {
-    UpdateFromLockedData();
-    EnsureImageSurface();
+    if (mOptSurface)
+        return NS_OK;
 
-    if (!mOptSurface) {
-        gfxASurface::gfxImageFormat real_format;
+    mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface);
 
-        if (mRealAlphaDepth == 0)
-            real_format = gfxASurface::ImageFormatRGB24;
-        else
-            real_format = gfxASurface::ImageFormatARGB32;
-
-        mOptSurface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(mWidth, mHeight, real_format);
-    }
-
-    if (mOptSurface) {
-        nsRefPtr<gfxContext> tmpCtx(new gfxContext(mOptSurface));
-        tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpCtx->SetSource(mImageSurface);
-        tmpCtx->Paint();
-
-        mImageSurface = nsnull;
-    }
+    mImageSurface = nsnull;
 
     return NS_OK;
 }
@@ -247,171 +209,17 @@ nsThebesImage::GetBitInfo()
 NS_IMETHODIMP
 nsThebesImage::LockImagePixels(PRBool aMaskPixels)
 {
-    //NS_ASSERTION(!mLocked, "LockImagePixels called on already locked image!");
-    PRUint32 tmpSize;
-
-    // if we already have locked data allocated,
-    // and we have some data, and we're not up to date,
-    // then don't bother updating frmo the image surface
-    // to the 2 buffers -- the 2 buffers are more current,
-    // because UpdateFromLockedData() hasn't been called yet.
-    //
-    // UpdateFromLockedData() is only called right before we
-    // actually try to draw, because the image decoders
-    // will call Lock/Unlock pretty frequently as they decode
-    // rows of the image.
-
-    if (mLockedData && mHadAnyData && !mUpToDate)
-        return NS_OK;
-
-    EnsureImageSurface();
-
-    if (mAlphaDepth > 0) {
-        NS_ASSERTION(mAlphaDepth == 1 || mAlphaDepth == 8,
-                     "Bad alpha depth");
-        tmpSize = mHeight*(mAlphaDepth == 1 ? ((mWidth+7)/8) : mWidth);
-        if (!mLockedAlpha)
-            mLockedAlpha = (PRUint8*)nsMemory::Alloc(tmpSize);
-        if (!mLockedAlpha)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    tmpSize = mWidth * mHeight * 3;
-    if (!mLockedData)
-        mLockedData = (PRUint8*)nsMemory::Alloc(tmpSize);
-    if (!mLockedData)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (mAlphaDepth > 0 && mHadAnyData) {
-        // fill from existing ARGB buffer
-        if (mAlphaDepth == 8) {
-            PRInt32 destCount = 0;
-
-            for (PRInt32 row = 0; row < mHeight; ++row) {
-                PRUint32* srcRow = (PRUint32*) (mImageSurface->Data() + (mImageSurface->Stride()*row));
-
-                for (PRInt32 col = 0; col < mWidth; ++col) {
-                    mLockedAlpha[destCount++] = (PRUint8)(srcRow[col] >> 24);
-                }
-            }
-        } else {
-            PRInt32 i = 0;
-            for (PRInt32 row = 0; row < mHeight; ++row) {
-                PRUint32* srcRow = (PRUint32*) (mImageSurface->Data() + (mImageSurface->Stride()*row));
-                PRUint8 alphaBits = 0;
-
-                for (PRInt32 col = 0; col < mWidth; ++col) {
-                    PRUint8 mask = 1 << (7 - (col&7));
-
-                    if (srcRow[col] & 0xFF000000) {
-                        alphaBits |= mask;
-                    }
-                    if (mask == 0x01) {
-                        // This mask byte is complete, write it back
-                        mLockedAlpha[i] = alphaBits;
-                        alphaBits = 0;
-                        ++i;
-                    }
-                }
-                if (mWidth & 7) {
-                    // write back the incomplete alpha mask
-                    mLockedAlpha[i] = alphaBits;
-                    ++i;
-                }
-            }
-        }
-    }
-    
-    if (mHadAnyData) {
-        int destCount = 0;
-
-        for (PRInt32 row = 0; row < mHeight; ++row) {
-            PRUint32* srcRow = (PRUint32*) (mImageSurface->Data() + (mImageSurface->Stride()*row));
-
-            for (PRInt32 col = 0; col < mWidth; ++col) {
-                ARGBToThreeChannel(&srcRow[col], &mLockedData[destCount*3]);
-                destCount++;
-            }
-        }
-    }
-
-    mLocked = PR_TRUE;
-
-    mOptSurface = nsnull;
-
+    if (aMaskPixels)
+        return NS_ERROR_NOT_IMPLEMENTED;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
 {
-    //NS_ASSERTION(mLocked, "UnlockImagePixels called on unlocked image!");
-        
-    mLocked = PR_FALSE;
-    mUpToDate = PR_FALSE;
-
+    if (aMaskPixels)
+        return NS_ERROR_NOT_IMPLEMENTED;
     return NS_OK;
-}
-
-void
-nsThebesImage::UpdateFromLockedData()
-{
-    if (!mLockedData || mUpToDate)
-        return;
-
-    mUpToDate = PR_TRUE;
-
-    NS_ASSERTION(mAlphaDepth == 0 || mAlphaDepth == 1 || mAlphaDepth == 8,
-                 "Bad alpha depth");
-
-    mRealAlphaDepth = 0;
-
-    PRInt32 alphaIndex = 0;
-    PRInt32 lockedBufIndex = 0;
-    for (PRInt32 row = 0; row < mHeight; ++row) {
-        PRUint32 *destPtr = (PRUint32*) (mImageSurface->Data() + (row * mImageSurface->Stride()));
-
-        for (PRInt32 col = 0; col < mWidth; ++col) {
-            PRUint8 alpha = 0xFF;
-
-            if (mAlphaDepth == 1) {
-                PRUint8 mask = 1 << (7 - (col&7));
-                if (!(mLockedAlpha[alphaIndex] & mask)) {
-                    alpha = 0;
-                }
-                if (mask == 0x01) {
-                    ++alphaIndex;
-                }
-            } else if (mAlphaDepth == 8) {
-                alpha = mLockedAlpha[lockedBufIndex];
-            }
-
-            if (mRealAlphaDepth == 0 && alpha != 0xff)
-                mRealAlphaDepth = mAlphaDepth;
-
-            *destPtr++ =
-                ThreeChannelToARGB(&mLockedData[lockedBufIndex*3], alpha);
-
-            ++lockedBufIndex;
-        }
-        if (mAlphaDepth == 1) {
-            if (mWidth & 7) {
-                ++alphaIndex;
-            }
-        }
-    }
-
-    if (PR_FALSE) { // Enabling this saves memory but can lead to pathologically bad
-        // performance. Would also cause problems with premultiply/unpremultiply too
-        nsMemory::Free(mLockedData);
-        mLockedData = nsnull;
-        if (mLockedAlpha) {
-            nsMemory::Free(mLockedAlpha);
-            mLockedAlpha = nsnull;
-        }
-    }
-
-    mHadAnyData = PR_TRUE;
 }
 
 /* NB: These are pixels, not twips. */
@@ -429,8 +237,6 @@ nsThebesImage::Draw(nsIRenderingContext &aContext, nsIDrawingSurface *aSurface,
                    PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                    PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-    UpdateFromLockedData();
-
     nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
     gfxContext *ctx = thebesRC->Thebes();
 
@@ -469,8 +275,6 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
                         PRInt32 aPadX, PRInt32 aPadY,
                         const nsRect &aTileRect)
 {
-    UpdateFromLockedData();
-
     nsThebesRenderingContext *thebesRC = NS_STATIC_CAST(nsThebesRenderingContext*, &aContext);
     gfxContext *ctx = thebesRC->Thebes();
 
@@ -537,8 +341,6 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
 NS_IMETHODIMP
 nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-    UpdateFromLockedData();
-
     nsThebesImage *dstThebesImage = NS_STATIC_CAST(nsThebesImage*, aDstImage);
 
     nsRefPtr<gfxContext> dst = new gfxContext(dstThebesImage->ThebesSurface());
@@ -557,63 +359,3 @@ nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt3
     return NS_OK;
 }
 
-/** Image conversion utils **/
-
-static PRUint8 Unpremultiply(PRUint8 aVal, PRUint8 aAlpha) {
-    return (aVal*255)/aAlpha;
-}
-
-static void ARGBToThreeChannel(PRUint32* aARGB, PRUint8* aData) {
-#ifdef IS_LITTLE_ENDIAN
-    PRUint8 a = (PRUint8)(*aARGB >> 24);
-    PRUint8 r = (PRUint8)(*aARGB >> 16);
-    PRUint8 g = (PRUint8)(*aARGB >> 8);
-    PRUint8 b = (PRUint8)(*aARGB >> 0);
-#else
-    PRUint8 a = (PRUint8)(*aARGB >> 0);
-    PRUint8 r = (PRUint8)(*aARGB >> 8);
-    PRUint8 g = (PRUint8)(*aARGB >> 16);
-    PRUint8 b = (PRUint8)(*aARGB >> 24);
-#endif
-
-    if (a != 0xFF) {
-        if (a == 0) {
-            r = 0;
-            g = 0;
-            b = 0;
-        } else {
-            r = Unpremultiply(r, a);
-            g = Unpremultiply(g, a);
-            b = Unpremultiply(b, a);
-        }
-    }
-
-    // RGB, red byte first
-    aData[0] = r; aData[1] = g; aData[2] = b;
-}
-
-static PRUint8 Premultiply(PRUint8 aVal, PRUint8 aAlpha) {
-    PRUint32 r;
-    FAST_DIVIDE_BY_255(r, aVal*aAlpha);
-    return (PRUint8)r;
-}
-
-static PRUint32 ThreeChannelToARGB(PRUint8* aData, PRUint8 aAlpha) {
-    PRUint8 r, g, b;
-    // RGB, red byte first
-    r = aData[0]; g = aData[1]; b = aData[2];
-    if (aAlpha != 0xFF) {
-        if (aAlpha == 0) {
-            r = 0;
-            g = 0;
-            b = 0;
-        } else {
-            r = Premultiply(r, aAlpha);
-            g = Premultiply(g, aAlpha);
-            b = Premultiply(b, aAlpha);
-        }
-    }
-
-    // Output is always ARGB with A in the high byte of a dword
-    return (aAlpha << 24) | (r << 16) | (g << 8) | b;
-}

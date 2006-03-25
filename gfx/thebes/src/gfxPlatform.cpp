@@ -45,6 +45,9 @@
 #include "gfxPlatformGtk.h"
 #endif
 
+#include "gfxContext.h"
+#include "gfxImageSurface.h"
+
 #ifdef MOZ_ENABLE_GLITZ
 #include <stdlib.h>
 #endif
@@ -90,6 +93,27 @@ void
 gfxPlatform::SetUseGlitz(PRBool use)
 {
     gGlitzState = (use ? 1 : 0);
+}
+
+already_AddRefed<gfxASurface>
+gfxPlatform::OptimizeImage(gfxImageSurface* aSurface)
+{
+    nsRefPtr<gfxASurface> optSurface;
+    optSurface = CreateOffscreenSurface(aSurface->Width(),
+                                        aSurface->Height(),
+                                        aSurface->Format());
+
+    if (!optSurface)
+        return nsnull;
+
+    nsRefPtr<gfxContext> tmpCtx(new gfxContext(optSurface));
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx->SetSource(aSurface);
+    tmpCtx->Paint();
+
+    gfxASurface *ret = optSurface;
+    NS_ADDREF(ret);
+    return ret;
 }
 
 nsresult

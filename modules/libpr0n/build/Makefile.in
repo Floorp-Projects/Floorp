@@ -89,6 +89,7 @@ SHARED_LIBRARY_LIBS = \
 
 EXTRA_DSO_LIBS	= \
 		gkgfx \
+		thebes \
 		$(NULL)
 
 

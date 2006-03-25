@@ -353,7 +353,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     // Note! row_stride here must match the row_stride in
     // nsJPEGDecoder::OutputScanlines
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
     row_stride = mInfo.output_width * 4;
 #else
     row_stride = mInfo.output_width * 3;
@@ -363,7 +363,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
+#if defined(MOZ_CAIRO_GFX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
     // allocate buffer to do byte flipping / padding
     mRGBRow = (PRUint8*) PR_MALLOC(row_stride);
 #endif
@@ -517,7 +517,32 @@ nsJPEGDecoder::OutputScanlines()
         break;
       }
 
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON))
+#if defined(MOZ_CAIRO_GFX)
+      PRUint8 *ptrOutputBuf = mRGBRow;
+
+      JSAMPLE *j1 = mSamples[0];
+      for (PRUint32 i=0; i < mInfo.output_width; ++i) {
+        const PRUint8 r = *j1++;
+        const PRUint8 g = *j1++;
+        const PRUint8 b = *j1++;
+#ifdef IS_LITTLE_ENDIAN
+        // BGRX
+        *ptrOutputBuf++ = b;
+        *ptrOutputBuf++ = g;
+        *ptrOutputBuf++ = r;
+        *ptrOutputBuf++ = 0xFF;
+#else
+        // XRGB
+        *ptrOutputBuf++ = 0xFF;
+        *ptrOutputBuf++ = r;
+        *ptrOutputBuf++ = g;
+        *ptrOutputBuf++ = b;
+#endif
+      }
+
+      samples = mRGBRow;
+
+#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
       PRUint8 *ptrOutputBuf = mRGBRow;
 
       JSAMPLE *j1 = mSamples[0];
@@ -529,7 +554,7 @@ nsJPEGDecoder::OutputScanlines()
       }
 
       samples = mRGBRow;
-#elif !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#elif defined(XP_MAC) || defined(XP_MACOSX)
       PRUint8 *ptrOutputBuf = mRGBRow;
 
       JSAMPLE *j1 = mSamples[0];
@@ -548,7 +573,7 @@ nsJPEGDecoder::OutputScanlines()
 
       // Note! row_stride here must match the row_stride in
       // nsJPEGDecoder::WriteFrom
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
       int row_stride = mInfo.output_width * 4;
 #else
       int row_stride = mInfo.output_width * 3;

@@ -146,12 +146,40 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                  NS_ERROR_UNEXPECTED);
   
   PRInt32 rownum;
+#if defined(MOZ_CAIRO_GFX)
+  PRUint8 *row = malloc(bpr);
+  PRUint8 *adata = data + (bpr * height);
+  for (rownum = 0; rownum < height; ++rownum, data += bpr) {
+    PRInt8 *rowdata = data;
+    for (int i = 0; i < bpr; i++) {
+      const PRUint8 r = *rowdata++;
+      const PRUint8 g = *rowdata++;
+      const PRUint8 b = *rowdata++;
+      const PRUint8 a = (format == gfxIFormat::RGB_A1) ? abpr[i>>3] : abpr[i];
+#ifdef IS_LITTLE_ENDIAN
+      // BGRX
+      *row++ = b;
+      *row++ = g;
+      *row++ = r;
+      *row++ = a;
+#else
+      // XRGB
+      *row++ = a;
+      *row++ = r;
+      *row++ = g;
+      *row++ = b;
+#endif
+    }
+    mFrame->SetImageData(row, bpr, rownum * bpr);
+  }
+  free(row);
+#else
   for (rownum = 0; rownum < height; ++rownum, data += bpr)
     mFrame->SetImageData(data, bpr, rownum * bpr);
 
   for (rownum = 0; rownum < height; ++rownum, data += abpr)
     mFrame->SetAlphaData(data, abpr, rownum * abpr);   
-
+#endif
   nsIntRect r(0, 0, width, height);
   mObserver->OnDataAvailable(nsnull, mFrame, &r);
 

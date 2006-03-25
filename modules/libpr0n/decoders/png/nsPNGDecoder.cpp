@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -435,7 +435,29 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     switch (format) {
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+      {
+#if defined(MOZ_CAIRO_GFX)
+        cptr = decoder->colorLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          const PRUint8 r = *line++;
+          const PRUint8 g = *line++;
+          const PRUint8 b = *line++;
+#ifdef IS_LITTLE_ENDIAN
+          // BGRX
+          *cptr++ = b;
+          *cptr++ = g;
+          *cptr++ = r;
+          *cptr++ = 0xFF;
+#else
+          // XRGB
+          *cptr++ = 0xFF;
+          *cptr++ = r;
+          *cptr++ = g;
+          *cptr++ = b;
+#endif
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+#elif defined(XP_MAC) || defined(XP_MACOSX)
         cptr = decoder->colorLine;
         for (PRUint32 x=0; x<iwidth; x++) {
           *cptr++ = 0;
@@ -447,10 +469,41 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 #else
         decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
 #endif
+      }
       break;
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
+#if defined(MOZ_CAIRO_GFX)
+        cptr = decoder->colorLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          if (line[3]) {
+            const PRUint8 r = *line++;
+            const PRUint8 g = *line++;
+            const PRUint8 b = *line++;
+#ifdef IS_LITTLE_ENDIAN
+            *cptr++ = b;
+            *cptr++ = g;
+            *cptr++ = r;
+            *cptr++ = 0xFF;
+#else
+            *cptr++ = 0xFF;
+            *cptr++ = r;
+            *cptr++ = g;
+            *cptr++ = b;
+#endif
+            line++;
+          } else {
+            *cptr++ = 0;
+            *cptr++ = 0;
+            *cptr++ = 0;
+            *cptr++ = 0;
+            line += 4;
+          }
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+
+#else
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;
         memset(aptr, 0, abpr);
@@ -473,45 +526,56 @@ row_callback(png_structp png_ptr, png_bytep new_row,
         }
         decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
         decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+#endif
       }
       break;
     case gfxIFormats::RGB_A8:
     case gfxIFormats::BGR_A8:
       {
         cptr = decoder->colorLine;
-        aptr = decoder->alphaLine;
+#if defined(MOZ_CAIRO_GFX)
         for (PRUint32 x=0; x<iwidth; x++) {
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
-          *cptr++ = 0;
-#endif
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          *aptr++ = *line++;
-        }
-        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
-        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
-      }
-      break;
-    case gfxIFormats::RGBA:
-    case gfxIFormats::BGRA:
-#if !defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
-      {
-        cptr = decoder->colorLine;
-        aptr = decoder->alphaLine;
-        for (PRUint32 x=0; x<iwidth; x++) {
-          *cptr++ = 0;
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          *cptr++ = *line++;
-          *aptr++ = *line++;
-        }
-        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
-        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
-      }
+          const PRUint8 r = *line++;
+          const PRUint8 g = *line++;
+          const PRUint8 b = *line++;
+          const PRUint8 a = *line++;
+          if (a == 0) {
+            *cptr++ = 0;
+            *cptr++ = 0;
+            *cptr++ = 0;
+            *cptr++ = 0;
+          } else {
+#ifdef IS_LITTLE_ENDIAN
+            // BGRA
+            FAST_DIVIDE_BY_255(*cptr++, b*a);
+            FAST_DIVIDE_BY_255(*cptr++, g*a);
+            FAST_DIVIDE_BY_255(*cptr++, r*a);
+            *cptr++ = a;
 #else
-      decoder->mFrame->SetImageData(line, bpr, row_num*bpr);
+            // ARGB
+            *cptr++ = a;
+            FAST_DIVIDE_BY_255(*cptr++, r*a);
+            FAST_DIVIDE_BY_255(*cptr++, g*a);
+            FAST_DIVIDE_BY_255(*cptr++, b*a);
 #endif
+          }
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+
+#else
+        for (PRUint32 x=0; x<iwidth; x++) {
+#if defined(XP_MAC) || defined(XP_MACOSX)
+          *cptr++ = 0;
+#endif
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *aptr++ = *line++;
+        }
+        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+#endif
+      }
       break;
     }
 
