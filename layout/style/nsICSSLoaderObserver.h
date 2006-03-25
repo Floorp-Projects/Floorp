@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* internal interface for observing CSS style sheet loads */
+
 #ifndef nsICSSLoaderObserver_h___
 #define nsICSSLoaderObserver_h___
 

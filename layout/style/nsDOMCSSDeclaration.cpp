@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* base class for DOM objects for element.style and cssStyleRule.style */
+
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSParser.h"

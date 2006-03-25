@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * internal interface representing CSS style rules that contain other
+ * rules, such as @media rules
+ */
+
 #ifndef nsICSSGroupRule_h___
 #define nsICSSGroupRule_h___
 

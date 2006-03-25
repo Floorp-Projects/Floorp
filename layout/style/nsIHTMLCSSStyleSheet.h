@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * style sheet and style rule processor representing style attributes
+ * and some additional overrides
+ */
+
 #ifndef nsIHTMLCSSStyleSheet_h___
 #define nsIHTMLCSSStyleSheet_h___
 

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing values in DOM computed style */
+
 #ifndef nsROCSSPrimitiveValue_h___
 #define nsROCSSPrimitiveValue_h___
 

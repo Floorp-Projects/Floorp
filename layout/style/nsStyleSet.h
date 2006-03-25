@@ -37,6 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * the container for the style sheets that apply to a presentation, and
+ * the internal API that the style system exposes for creating (and
+ * potentially re-creating) style contexts
+ */
+
 #ifndef nsStyleSet_h_
 #define nsStyleSet_h_
 

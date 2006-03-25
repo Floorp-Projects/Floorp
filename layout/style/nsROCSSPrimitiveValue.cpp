@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing values in DOM computed style */
+
 #include "nsROCSSPrimitiveValue.h"
 
 #include "nsCOMPtr.h"

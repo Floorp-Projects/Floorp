@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
+/* the interface (to internal code) for retrieving computed style data */
+
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsPresContext.h"

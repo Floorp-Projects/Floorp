@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* atom list for CSS pseudo-classes */
+
 #ifndef nsCSSPseudoClasses_h___
 #define nsCSSPseudoClasses_h___
 

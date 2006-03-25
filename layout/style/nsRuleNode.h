@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a node in the lexicographic tree of rules that match an element,
+ * responsible for converting the rules' information into computed style
+ */
+
 #ifndef nsRuleNode_h___
 #define nsRuleNode_h___
 

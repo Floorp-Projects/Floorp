@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object for element.style */
+
 #ifndef nsDOMCSSAttributeDeclaration_h___
 #define nsDOMCSSAttributeDeclaration_h___
 

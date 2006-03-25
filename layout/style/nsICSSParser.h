@@ -34,8 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsCSS1Parser_h___
-#define nsCSS1Parser_h___
+
+/* parsing of CSS stylesheets, based on a token stream from the CSS scanner */
+
+#ifndef nsICSSParser_h___
+#define nsICSSParser_h___
 
 #include "nsISupports.h"
 #include "nsAString.h"
@@ -150,4 +153,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSParser, NS_ICSS_PARSER_IID)
 nsresult
 NS_NewCSSParser(nsICSSParser** aInstancePtrResult);
 
-#endif /* nsCSS1Parser_h___ */
+#endif /* nsICSSParser_h___ */

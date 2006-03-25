@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing lists of values in DOM computed style */
+
 #ifndef nsDOMCSSValueList_h___
 #define nsDOMCSSValueList_h___
 

@@ -34,6 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * internal abstract interface for containers (roughly origins within
+ * the CSS cascade) that provide style rules matching an element or
+ * pseudo-element
+ */
+
 #ifndef nsIStyleRuleProcessor_h___
 #define nsIStyleRuleProcessor_h___
 

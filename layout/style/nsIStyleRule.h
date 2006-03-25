@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * internal abstract interface for objects providing immutable style
+ * information
+ */
+
 #ifndef nsIStyleRule_h___
 #define nsIStyleRule_h___
 

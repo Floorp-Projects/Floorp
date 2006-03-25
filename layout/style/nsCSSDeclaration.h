@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * representation of a declaration block (or style attribute) in a CSS
+ * stylesheet
+ */
+
 #ifndef nsCSSDeclaration_h___
 #define nsCSSDeclaration_h___
 

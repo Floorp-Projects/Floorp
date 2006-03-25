@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object for element.style */
+
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"

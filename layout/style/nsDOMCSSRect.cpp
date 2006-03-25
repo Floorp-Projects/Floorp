@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing rectangle values in DOM computed style */
+
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSPrimitiveValue.h"

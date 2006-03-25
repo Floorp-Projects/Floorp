@@ -38,6 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
+ * list of structs that contain the data provided by nsStyleContext, the
+ * internal API for computed style data for an element
+ */
+
+/*
  * This file is intended to be used by different parts of the code, with
  * the STYLE_STRUCT macro (or the STYLE_STRUCT_INHERITED and
  * STYLE_STRUCT_RESET pair of macros) defined in different ways.

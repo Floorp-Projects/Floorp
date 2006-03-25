@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * style sheet and style rule processor representing style attributes
+ * and some additional overrides
+ */
+
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"

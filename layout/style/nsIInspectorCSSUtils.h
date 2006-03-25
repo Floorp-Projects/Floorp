@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* XPCOM interface to provide some internal information to DOM inspector */
+
 #ifndef nsIInspectorCSSUtils_h___
 #define nsIInspectorCSSUtils_h___
 

@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * structs that contain the data provided by nsStyleContext, the
+ * internal API for computed style data for an element
+ */
+
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object representing lists of values in DOM computed style */
+
 #include "nsDOMCSSValueList.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"

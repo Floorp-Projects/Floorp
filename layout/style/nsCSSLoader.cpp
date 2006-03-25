@@ -44,6 +44,9 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+
+/* loading of CSS style sheets using the network APIs */
+
 #include "nsCSSLoader.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"

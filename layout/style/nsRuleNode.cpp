@@ -39,6 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a node in the lexicographic tree of rules that match an element,
+ * responsible for converting the rules' information into computed style
+ */
+
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"

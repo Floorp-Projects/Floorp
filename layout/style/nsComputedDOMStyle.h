@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* DOM object returned from element.getComputedStyle() */
+
 #ifndef nsComputedDOMStyle_h__
 #define nsComputedDOMStyle_h__
 

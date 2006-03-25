@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* the interface (to internal code) for retrieving computed style data */
+
 #ifndef _nsStyleContext_h_
 #define _nsStyleContext_h_
 

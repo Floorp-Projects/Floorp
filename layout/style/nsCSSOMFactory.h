@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* an XPCOM service for cross-module creation of DOM .style objects */
+
 #ifndef nsCSSOMFactory_h___
 #define nsCSSOMFactory_h___
 

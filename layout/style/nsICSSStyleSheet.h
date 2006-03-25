@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* representation of a CSS style sheet */
+
 #ifndef nsICSSStyleSheet_h___
 #define nsICSSStyleSheet_h___
 

@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* implementation of nsCSSStyleSheet and nsCSSRuleProcessor */
+
 #include "nsCSSStyleSheet.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 7

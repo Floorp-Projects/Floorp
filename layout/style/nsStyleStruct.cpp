@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * structs that contain the data provided by nsStyleContext, the
+ * internal API for computed style data for an element
+ */
+
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"

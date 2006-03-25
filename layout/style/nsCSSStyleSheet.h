@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* representation of a CSS style sheet */
+
 #ifndef nsCSSStyleSheet_h_
 #define nsCSSStyleSheet_h_
 
