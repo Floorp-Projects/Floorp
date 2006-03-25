@@ -156,6 +156,7 @@
                 
       <constructor>
         <![CDATA[
+          this.mToday = false;
           this.mSelected = false;
           this.mValue = null;
           this.mEditorDate = null; // set only in showMonth
@@ -248,6 +249,17 @@
         <parameter name="aDate"/>
         <body>
           <![CDATA[
+
+            function sameDay(d1, d2) {
+              if (d1 && d2 && 
+                  (d1.getFullYear() == d2.getFullYear()) &&
+                  (d1.getMonth() == d2.getMonth()) &&
+                  (d1.getDate() == d2.getDate())) {
+                return true;
+              }
+              return false;
+            }
+
             if (!aDate) {
               aDate = new Date();
             } else {
@@ -260,6 +272,11 @@
             aDate.setMilliseconds(0);
             var monthChanged = (this.mEditorDate != aDate);
             this.mEditorDate = aDate; // only place mEditorDate is set.
+
+            if (this.mToday) {
+              this.mToday.removeAttribute("today");
+              this.mToday = null;
+            }
 
             if (this.mSelected) {
               this.mSelected.removeAttribute("selected");
@@ -300,6 +317,9 @@
             var date = new Date(aDate);
             date.setDate(date.getDate()-firstWeekday);
 
+            // get today's date
+            var today = new Date();
+
             for (var k = 1; k < calbox.childNodes.length; k++) {
               var row = calbox.childNodes[k];
               for (i = 0; i < 7; i++) {
@@ -310,16 +330,19 @@
                   day.removeAttribute("othermonth");
                 }
 
+                // highlight today
+                if (sameDay(today, date)) {
+                  this.mToday = day;
+                  day.setAttribute("today", "true");
+                }
+
                 // highlight the current date
                 var val = this.value;
-                if (val) {
-                  if ((val.getFullYear() == date.getFullYear()) &&
-                      (val.getMonth() == date.getMonth()) &&
-                      (val.getDate() == date.getDate())) {
-                    this.mSelected = day;
-                    day.setAttribute("selected", "true");
-                  }
+                if (sameDay(val, date)) {
+                  this.mSelected = day;
+                  day.setAttribute("selected", "true");
                 }
+
                 day.date = new Date(date);
                 day.calendar = this;
                 day.setAttribute("value", date.getDate());

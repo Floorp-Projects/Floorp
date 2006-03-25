@@ -12,8 +12,16 @@ calendar-event-column {
   border-top: 1px solid #999999;
 }
 
+calendar-event-column[today="true"] { 
+  background: #dfeaf4 !important;
+}
+
 calendar-event-column[selected="true"] { 
   background: #ffe79c !important;
+}
+
+calendar-header-container[today="true"] {
+  background: #dfeaf4 !important;
 }
 
 calendar-header-container[selected="true"] { 

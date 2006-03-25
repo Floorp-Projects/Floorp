@@ -37,6 +37,10 @@ calendar-month-day-box {
   background: #eeeeee;
 }
 
+calendar-month-day-box[today="true"] {
+  background: #dfeaf4 !important;
+}
+
 calendar-month-day-box[selected="true"] { 
   background: #ffe79c !important;
 }

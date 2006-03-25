@@ -914,6 +914,9 @@
           var dayCount = 7;
           var curRow = null;
 
+          // get today's date
+          var today = this.today();
+
           for each (var date in this.getDateList({})) {
             var box = createXULElement("calendar-month-day-box");
             box.setAttribute("context", this.getAttribute("context"));
@@ -955,6 +958,11 @@
               box.showMonthLabel = true;
             }
             box.monthView = this;
+
+            // highlight today
+            if (date.compare(today) == 0) {
+              box.setAttribute("today", "true");
+            }
 
             // add the box and its data to our stored array
             var boxdata = {
@@ -1001,6 +1009,9 @@
             mainMonth = mainMonth % 12;
           }
 
+          // get today's date
+          var today = this.today();
+
           for each (var date in this.getDateList({})) {
             var box;
             // Get the next box that we haven't updated from the previously
@@ -1039,6 +1050,11 @@
             box.setDate(date);
             if (date.day == 1 || date.day == date.endOfMonth.day) {
               box.showMonthLabel = true;
+            }
+
+            // highlight today
+            if (date.compare(today) == 0) {
+              box.setAttribute("today", "true");
             }
 
             // The box and its data is already in the array.  We fixed the
@@ -1157,6 +1173,17 @@
           for each (box in boxes) {
             box.box.deleteItem(aItem);
           }
+        ]]></body>
+      </method>
+
+      <method name="today">
+        <body><![CDATA[
+          var date = Components.classes["@mozilla.org/calendar/datetime;1"]
+                               .createInstance(Components.interfaces.calIDateTime);
+          date.jsDate = new Date();
+          date.isDate = true;
+          date = date.getInTimezone(this.mTimezone);
+          return date;
         ]]></body>
       </method>
 

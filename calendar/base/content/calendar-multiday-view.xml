@@ -2250,6 +2250,9 @@
           var timebar = document.getAnonymousElementByAttribute(this, "anonid", "timebar");
           timebar.setStartEndMinutes(this.mStartMin, this.mEndMin);
 
+          // get today's date
+          var today = this.today();
+
           var counter = 0;
           for each (var d in computedDateList) {
               var dayEventsBox = createXULElement("calendar-event-column");
@@ -2271,6 +2274,12 @@
 
               dayHeaderBox.calendarView = this;
               dayHeaderBox.setAttribute("orient", orient);
+
+              // highlight today
+              if (this.numVisibleDates > 1 && d.compare(today) == 0) {
+                  dayEventsBox.setAttribute("today", "true");
+                  dayHeaderBox.setAttribute("today", "true");
+              }
 
               var labelbox = createXULElement("box");
               labelbox.setAttribute("flex", "1");
@@ -2590,6 +2599,18 @@
           }
         ]]></body>
       </method>
+
+      <method name="today">
+        <body><![CDATA[
+          var date = Components.classes["@mozilla.org/calendar/datetime;1"]
+                               .createInstance(Components.interfaces.calIDateTime);
+          date.jsDate = new Date();
+          date.isDate = true;
+          date = date.getInTimezone(this.mTimezone);
+          return date;
+        ]]></body>
+      </method>
+ 
     </implementation>
 
     <handlers>

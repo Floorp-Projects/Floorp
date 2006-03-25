@@ -134,6 +134,10 @@
   font-weight: bold;
 }
 
+.minimonth-day[today="true"] {
+  background-color: #dfeaf4;
+}
+
 .minimonth-day[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
