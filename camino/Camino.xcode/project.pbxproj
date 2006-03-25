@@ -4559,7 +4559,6 @@
 				3F44AC3605BDFB9E00CB4B08,
 				3F8C00940681262400658CBC,
 				3F44AC3B05BDFB9E00CB4B08,
-				3F44AC3C05BDFB9E00CB4B08,
 				3F44AC3D05BDFB9E00CB4B08,
 				3F44AC3E05BDFB9E00CB4B08,
 				3F44AC3F05BDFB9E00CB4B08,
@@ -4585,7 +4584,6 @@
 				3F44AC5C05BDFB9E00CB4B08,
 				3F44AC5D05BDFB9E00CB4B08,
 				3F44AC5E05BDFB9E00CB4B08,
-				3F44AC6205BDFB9E00CB4B08,
 				3F44AC6405BDFB9E00CB4B08,
 				3F44AC6505BDFB9E00CB4B08,
 				3F44AC6605BDFB9E00CB4B08,
@@ -4809,12 +4807,6 @@
 			settings = {
 			};
 		};
-		3F44AC3C05BDFB9E00CB4B08 = {
-			fileRef = F538DFB0023B3739010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AC3D05BDFB9E00CB4B08 = {
 			fileRef = F538DFB1023B3739010001CA;
 			isa = PBXBuildFile;
@@ -4973,12 +4965,6 @@
 		};
 		3F44AC6105BDFB9E00CB4B08 = {
 			fileRef = F583E3BB03B820AC01A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AC6205BDFB9E00CB4B08 = {
-			fileRef = F5F415E303B97C6101A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -8486,7 +8472,6 @@
 				3F44AE6F05BDFBA000CB4B08,
 				3F8C00950681262400658CBC,
 				3F44AE7405BDFBA000CB4B08,
-				3F44AE7505BDFBA000CB4B08,
 				3F44AE7605BDFBA000CB4B08,
 				3F44AE7705BDFBA000CB4B08,
 				3F44AE7805BDFBA000CB4B08,
@@ -8512,7 +8497,6 @@
 				3F44AE9505BDFBA000CB4B08,
 				3F44AE9605BDFBA000CB4B08,
 				3F44AE9705BDFBA000CB4B08,
-				3F44AE9B05BDFBA000CB4B08,
 				3F44AE9D05BDFBA000CB4B08,
 				3F44AE9E05BDFBA000CB4B08,
 				3F44AE9F05BDFBA000CB4B08,
@@ -8741,12 +8725,6 @@
 			settings = {
 			};
 		};
-		3F44AE7505BDFBA000CB4B08 = {
-			fileRef = F538DFB0023B3739010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		3F44AE7605BDFBA000CB4B08 = {
 			fileRef = F538DFB1023B3739010001CA;
 			isa = PBXBuildFile;
@@ -8905,12 +8883,6 @@
 		};
 		3F44AE9A05BDFBA000CB4B08 = {
 			fileRef = F583E3BB03B820AC01A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AE9B05BDFBA000CB4B08 = {
-			fileRef = F5F415E303B97C6101A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -14569,7 +14541,6 @@
 				3FAD95540461E43700A80005,
 				F5A112C902DF270F01026D5D,
 				F55B6BF402EF1F7E01026D5D,
-				F5F415E303B97C6101A80166,
 				3003B89C044514B600B85BF3,
 				3003B89D044514B600B85BF3,
 				3003B89E044514B600B85BF3,
@@ -15552,7 +15523,6 @@
 		F538DFAE023B36A7010001CA = {
 			children = (
 				F538DFAF023B3739010001CA,
-				F538DFB0023B3739010001CA,
 				F538DFB1023B3739010001CA,
 				F538DFB2023B3739010001CA,
 			);
@@ -15567,14 +15537,6 @@
 			lastKnownFileType = image.icns;
 			name = fileHtml.icns;
 			path = resources/images/app/fileHtml.icns;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F538DFB0023B3739010001CA = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.icns;
-			name = filePreferences.icns;
-			path = resources/images/app/filePreferences.icns;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -17429,14 +17391,6 @@
 			lastKnownFileType = sourcecode.cpp.objcpp;
 			name = ProgressViewController.mm;
 			path = src/download/ProgressViewController.mm;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		F5F415E303B97C6101A80166 = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			name = small_close.tiff;
-			path = app/small_close.tiff;
 			refType = 4;
 			sourceTree = "<group>";
 		};
