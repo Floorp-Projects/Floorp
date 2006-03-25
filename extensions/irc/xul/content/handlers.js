@@ -1928,7 +1928,7 @@ CIRCNetwork.prototype.onCTCPReplyPing =
 function my_replyping (e)
 {
     // see bug 326523
-    if (e.CTCPData.length != 13)
+    if (stringTrim(e.CTCPData).length != 13)
     {
         this.display(getMsg(MSG_PING_REPLY_INVALID, e.user.unicodeName),
                      "INFO", e.user, "ME!");
