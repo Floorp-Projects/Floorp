@@ -42,8 +42,8 @@
 #include "blapi.h"
 #include "nss.h"
 #include "secerr.h"
-#include "secdert.h"
-#include "secoidt.h"
+#include "secder.h"
+#include "secdig.h"
 #include "keythi.h"
 #include "ec.h"
 #include "hasht.h"
@@ -3978,7 +3978,7 @@ loser:
     }
 }
 
- /*
+/*
  * Perform the RSA Signature Generation Test.
  *
  * reqfn is the pathname of the REQUEST file.
@@ -3999,6 +3999,7 @@ rsa_siggen_test(char *reqfn)
     unsigned char  sha[HASH_LENGTH_MAX];    /* SHA digest */
     unsigned int   shaLength = 0;           /* length of SHA */
     HASH_HashType  shaAlg = HASH_AlgNULL;   /* type of SHA Alg */
+    SECOidTag      shaOid = SEC_OID_UNKNOWN;
     int modulus;                                /* the Modulus size */
     int  publicExponent  = DEFAULT_RSA_PUBLIC_EXPONENT;
     SECItem pe = {0, 0, 0 };
@@ -4014,11 +4015,11 @@ rsa_siggen_test(char *reqfn)
 
     /* calculate the exponent */
     for (i=0; i < 4; i++) {
-        if (peCount || (publicExponent & ((unsigned long)0xff000000L >>
-            (i*8)))) {
-            pubEx[peCount] =  (unsigned char)((publicExponent >>
-            (3-i)*8) & 0xff);
-        peCount++;
+        if (peCount || (publicExponent &
+                ((unsigned long)0xff000000L >> (i*8)))) {
+            pubEx[peCount] =
+                (unsigned char)((publicExponent >> (3-i)*8) & 0xff);
+            peCount++;
         }
     }
     pe.len = peCount;
@@ -4059,7 +4060,7 @@ rsa_siggen_test(char *reqfn)
 
             to_hex_str(buf, rsaBlapiPrivKey->modulus.data,
                        rsaBlapiPrivKey->modulus.len);
-            fprintf(rsaresp, "n = %s\n\n", buf);
+            fprintf(rsaresp, "\nn = %s\n\n", buf);
             to_hex_str(buf, rsaBlapiPrivKey->publicExponent.data,
                        rsaBlapiPrivKey->publicExponent.len);
             fprintf(rsaresp, "e = %s\n", buf);
@@ -4140,38 +4141,44 @@ rsa_siggen_test(char *reqfn)
                      goto loser;
                 }
                 shaLength = SHA1_LENGTH;
+                shaOid = SEC_OID_SHA1;
             } else if (shaAlg == HASH_AlgSHA256) {
                 if (SHA256_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA256");
                      goto loser;
                 }
                 shaLength = SHA256_LENGTH;
+                shaOid = SEC_OID_SHA256;
             } else if (shaAlg == HASH_AlgSHA384) {
                 if (SHA384_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA384");
                      goto loser;
                 }
                 shaLength = SHA384_LENGTH;
+                shaOid = SEC_OID_SHA384;
             } else if (shaAlg == HASH_AlgSHA512) {
                 if (SHA512_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA512");
                      goto loser;
                 }
                 shaLength = SHA512_LENGTH;
+                shaOid = SEC_OID_SHA512;
             } else {
                 fprintf(rsaresp, "ERROR: SHAAlg not defined.");
                 goto loser;
             }
 
             /* Perform RSA signature with the RSA private key. */
-            rv = RSA_Sign( rsa_private_key, rsa_computed_signature,
-                           &rsa_bytes_signed,
-                           nsslowkey_PrivateModulusLen(rsa_private_key),
-                           sha,
-                           shaLength);
+            rv = RSA_HashSign( shaOid,
+                               rsa_private_key,
+                               rsa_computed_signature,
+                               &rsa_bytes_signed,
+                               nsslowkey_PrivateModulusLen(rsa_private_key),
+                               sha,
+                               shaLength);
 
             if( rv != SECSuccess ) {
-                 fprintf(rsaresp, "ERROR: RSA_Sign failed");
+                 fprintf(rsaresp, "ERROR: RSA_HashSign failed");
                  goto loser;
             }
 
@@ -4181,13 +4188,14 @@ rsa_siggen_test(char *reqfn)
             fprintf(rsaresp, "S = %s\n", buf);
 
             /* Perform RSA verification with the RSA public key. */
-            rv = RSA_CheckSign( rsa_public_key,
-                                rsa_computed_signature,
-                                rsa_bytes_signed,
-                                sha,
-                                shaLength);
+            rv = RSA_HashCheckSign( shaOid,
+                                    rsa_public_key,
+                                    rsa_computed_signature,
+                                    rsa_bytes_signed,
+                                    sha,
+                                    shaLength);
             if( rv != SECSuccess ) {
-                 fprintf(rsaresp, "ERROR: RSA_CheckSign failed");
+                 fprintf(rsaresp, "ERROR: RSA_HashCheckSign failed");
                  goto loser;
             }
             continue;
@@ -4225,6 +4233,7 @@ rsa_sigver_test(char *reqfn)
     unsigned char   sha[HASH_LENGTH_MAX];   /* SHA digest */
     unsigned int    shaLength = 0;              /* actual length of the digest */
     HASH_HashType   shaAlg = HASH_AlgNULL;
+    SECOidTag       shaOid = SEC_OID_UNKNOWN;
     int modulus = 0;                            /* the Modulus size */
     unsigned char   signature[513];    /* largest signature size + '\n' */
     unsigned int    signatureLength = 0;   /* actual length of the signature */
@@ -4376,24 +4385,28 @@ rsa_sigver_test(char *reqfn)
                      goto loser;
                 }
                 shaLength = SHA1_LENGTH;
+                shaOid = SEC_OID_SHA1;
             } else if (shaAlg == HASH_AlgSHA256) {
                 if (SHA256_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA256");
                      goto loser;
                 }
                 shaLength = SHA256_LENGTH;
+                shaOid = SEC_OID_SHA256;
             } else if (shaAlg == HASH_AlgSHA384) {
                 if (SHA384_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA384");
                      goto loser;
                 }
                 shaLength = SHA384_LENGTH;
+                shaOid = SEC_OID_SHA384;
             } else if (shaAlg == HASH_AlgSHA512) {
                 if (SHA512_HashBuf(sha, msg, j) != SECSuccess) {
                      fprintf(rsaresp, "ERROR: Unable to generate SHA512");
                      goto loser;
                 }
                 shaLength = SHA512_LENGTH;
+                shaOid = SEC_OID_SHA512;
             } else {
                 fprintf(rsaresp, "ERROR: SHAAlg not defined.");
                 goto loser;
@@ -4429,11 +4442,12 @@ rsa_sigver_test(char *reqfn)
             fputs(buf, rsaresp);
 
             /* Perform RSA verification with the RSA public key. */
-            rv = RSA_CheckSign( rsa_public_key,
-                                signature,
-                                signatureLength,
-                                sha,
-                                shaLength);
+            rv = RSA_HashCheckSign( shaOid,
+                                    rsa_public_key,
+                                    signature,
+                                    signatureLength,
+                                    sha,
+                                    shaLength);
             if( rv == SECSuccess ) {
                 fputs("Result = P\n", rsaresp);
             } else {

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.10 2006/03/21 19:33:52 rrelyea%redhat.com Exp $ */
+/* $Id: softoken.h,v 1.11 2006/03/25 23:45:23 glen.beasley%sun.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -81,7 +81,7 @@ extern unsigned char *RSA_FormatOneBlock(unsigned int modulusLen,
 /*
  * convenience wrappers for doing single RSA operations. They create the
  * RSA context internally and take care of the formatting
- * requirements. Blinding happens automagically within RSA_SignHash and
+ * requirements. Blinding happens automagically within RSA_Sign and
  * RSA_DecryptBlock.
  */
 extern
@@ -89,9 +89,19 @@ SECStatus RSA_Sign(NSSLOWKEYPrivateKey *key, unsigned char *output,
 		       unsigned int *outputLen, unsigned int maxOutputLen,
 		       unsigned char *input, unsigned int inputLen);
 extern
+SECStatus RSA_HashSign(SECOidTag hashOid,
+			NSSLOWKEYPrivateKey *key, unsigned char *sig,
+			unsigned int *sigLen, unsigned int maxLen,
+			unsigned char *hash, unsigned int hashLen);
+extern
 SECStatus RSA_CheckSign(NSSLOWKEYPublicKey *key, unsigned char *sign,
 			    unsigned int signLength, unsigned char *hash,
 			    unsigned int hashLength);
+extern
+SECStatus RSA_HashCheckSign(SECOidTag hashOid,
+			    NSSLOWKEYPublicKey *key, unsigned char *sig,
+			    unsigned int sigLen, unsigned char *digest,
+			    unsigned int digestLen);
 extern
 SECStatus RSA_CheckSignRecover(NSSLOWKEYPublicKey *key, unsigned char *data,
     			    unsigned int *data_len,unsigned int max_output_len, 
