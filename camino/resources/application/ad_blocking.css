@@ -46,6 +46,9 @@ a:link[href*="/banman.asp?"] img,
 a:link[href*="adsys.townnews.com"] img,
 a:link[href*="ak.m3.net"] img,
 a:link[href*=".pointroll.com"] img,
+a:link[href*=".mspaceads.com"] img,
+a:link[href*="247realmedia.com"] img,
+a:link[href*="adserv.quality-channel.de"] img,
 
 embed[src*="/us.yimg.com/a/"],
 embed[type="application/x-shockwave-flash"][src*="/ad."],
@@ -88,6 +91,8 @@ embed[type="application/x-shockwave-flash"][src*=".gms1.net"],
 embed[type="application/x-shockwave-flash"][src*="ak.m3.net"],
 embed[type="application/x-shockwave-flash"][src*="ads.t-online.de"],
 embed[type="application/x-shockwave-flash"][src*=".pointroll.com"],
+embed[type="application/x-shockwave-flash"][src*="gfx.dvlabs.com"],
+embed[type="application/x-shockwave-flash"][src*="adserv.quality-channel.de"],
 
 img[src*="googlesyndication.com"],
 img[src*="ad.doubleclick.net"],
@@ -123,6 +128,9 @@ img[src*="ak.m3.net"],
 img[src*="atdmt.com"],
 img[src*=".falkag."],
 img[src*=".pointroll.com"],
+img[src*="gfx.dvlabs.com"],
+img[id*="km_placer"],
+img[src*="247realmedia.com"],
 
 iframe[src*="/ad."],
 iframe[src*="/ads."],
@@ -174,6 +182,7 @@ iframe[src*="ak.m3.net"],
 iframe[src*="adsvr.adknowledge.com"],
 iframe[src*=".pointroll.com"],
 iframe#google_ads_frame,
+iframe[src*="lycos.spiegel.de"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -186,7 +195,8 @@ div.yschspns,
 div#yschsec,
 div#rh>div#rc,
 div#sponsorsAd,
-div[id^="ads_"]
+div[id^="ads_"],
+div[id*="ad440x160"]
 
 { display: none ! important }
 
