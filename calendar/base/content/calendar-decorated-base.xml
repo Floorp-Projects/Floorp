@@ -75,7 +75,7 @@
                         <xul:spacer flex="1" />
                     </xul:hbox>
                 </xul:vbox>
-                <xul:vbox anonid="next-button-box">
+                <xul:vbox class="next-button-box">
                     <xul:spacer flex="1" />
                     <xul:image direction="next"
                                class="nav-buttons"
