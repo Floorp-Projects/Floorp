@@ -718,19 +718,6 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
         for (ReteNodeSet::Iterator i = livenodes.First(); i != last; ++i) {
             nsRDFTestNode* rdftestnode = NS_STATIC_CAST(nsRDFTestNode*, *i);
 
-            PRBool isdominated = PR_FALSE;
-
-            for (ReteNodeSet::ConstIterator j = livenodes.First(); j != last; ++j) {
-                // we can't be dominated by ourself
-                if (j == i)
-                    continue;
-
-                if (rdftestnode->HasAncestor(*j)) {
-                    isdominated = PR_TRUE;
-                    break;
-                }
-            }
-
             // What happens here is we create an instantiation as if we were
             // at the found test in the rule network. For example, if the
             // found test was a member test (parent => child), the parent
@@ -744,33 +731,32 @@ nsXULTemplateQueryProcessorRDF::Propagate(nsIRDFResource* aSource,
             // the new assertion couldn't cause a new match. If the result
             // exists, call Propagate to continue to the later RDF tests to
             // fill in the rest of the variable assignments.
-            if (! isdominated) {
-                // Bogus, to get the seed instantiation
-                Instantiation seed;
-                rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed);
 
-                InstantiationSet* instantiations = new InstantiationSet();
-                if (!instantiations)
-                    return NS_ERROR_OUT_OF_MEMORY;
-                instantiations->Append(seed);
+            // Bogus, to get the seed instantiation
+            Instantiation seed;
+            rdftestnode->CanPropagate(aSource, aProperty, aTarget, seed);
 
-                rv = rdftestnode->Constrain(*instantiations);
-                if (NS_FAILED(rv)) {
-                    delete instantiations;
-                    return rv;
-                }
+            InstantiationSet* instantiations = new InstantiationSet();
+            if (!instantiations)
+                return NS_ERROR_OUT_OF_MEMORY;
+            instantiations->Append(seed);
 
-                PRBool owned = PR_FALSE;
-                if (!instantiations->Empty())
-                    rv = rdftestnode->Propagate(*instantiations, PR_TRUE, owned);
-
-                // owned should always be false in update mode, but check just
-                // to be sure
-                if (!owned)
-                    delete instantiations;
-                if (NS_FAILED(rv))
-                    return rv;
+            rv = rdftestnode->Constrain(*instantiations);
+            if (NS_FAILED(rv)) {
+                delete instantiations;
+                return rv;
             }
+
+            PRBool owned = PR_FALSE;
+            if (!instantiations->Empty())
+                rv = rdftestnode->Propagate(*instantiations, PR_TRUE, owned);
+
+            // owned should always be false in update mode, but check just
+            // to be sure
+            if (!owned)
+                delete instantiations;
+            if (NS_FAILED(rv))
+                return rv;
         }
     }
 
