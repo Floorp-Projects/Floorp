@@ -198,6 +198,9 @@ struct JSGCArena {
 #define PAGE_INDEX(pi)                                                        \
     ((size_t)((pi)->offsetInArena >> GC_PAGE_SHIFT))
 
+#define THING_TO_PAGE(thing)                                                  \
+    ((JSGCPageInfo *)((jsuword)(thing) & ~GC_PAGE_MASK))
+
 /*
  * Given a thing size n, return the size of the gap from the page start before
  * the first thing.  We know that any n not a power of two packs from
@@ -299,17 +302,33 @@ FinishGCArenaList(JSGCArenaList *arenaList)
 uint8 *
 js_GetGCThingFlags(void *thing)
 {
-    jsuword pageAddress, offsetInArena, thingIndex;
+    JSGCPageInfo *pi;
+    jsuword offsetInArena, thingIndex;
 
-    pageAddress = (jsuword)thing & ~GC_PAGE_MASK;
-    offsetInArena = ((JSGCPageInfo *)pageAddress)->offsetInArena;
+    pi = THING_TO_PAGE(thing);
+    offsetInArena = pi->offsetInArena;
     JS_ASSERT(offsetInArena < GC_THINGS_SIZE);
     thingIndex = ((offsetInArena & ~GC_PAGE_MASK) |
                   ((jsuword)thing & GC_PAGE_MASK)) / sizeof(JSGCThing);
     JS_ASSERT(thingIndex < GC_PAGE_SIZE);
     if (thingIndex >= (offsetInArena & GC_PAGE_MASK))
         thingIndex += GC_THINGS_SIZE;
-    return (uint8 *)(pageAddress - offsetInArena + thingIndex);
+    return (uint8 *)pi - offsetInArena + thingIndex;
+}
+
+JSRuntime*
+js_GetGCStringRuntime(JSString *str)
+{
+    JSGCPageInfo *pi;
+    JSGCArenaList *list;
+
+    pi = THING_TO_PAGE(str);
+    list = PAGE_TO_ARENA(pi)->list;
+
+    JS_ASSERT(list->thingSize == sizeof(JSGCThing));
+    JS_ASSERT(GC_FREELIST_INDEX(sizeof(JSGCThing)) == 0);
+
+    return (JSRuntime *)((uint8 *)list - offsetof(JSRuntime, gcArenaList));
 }
 
 JSBool
@@ -1425,7 +1444,7 @@ AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp)
               rt->gcStats.maxunscanned = rt->gcUnscannedBagSize);
 #endif
 
-    pi = (JSGCPageInfo *) ((jsuword)thing & ~GC_PAGE_MASK);
+    pi = THING_TO_PAGE(thing);
     arena = PAGE_TO_ARENA(pi);
     thingSize = arena->list->thingSize;
     GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap);
@@ -2106,7 +2125,7 @@ restart:
                         thing = (JSGCThing *)(firstPage + offset);
                         *flagp = (uint8)(flags | GCF_FINAL);
                         if (type >= GCX_EXTERNAL_STRING)
-                            js_PurgeDeflatedStringCache((JSString *)thing);
+                            js_PurgeDeflatedStringCache(rt, (JSString *)thing);
                         finalizer(cx, thing);
                     }
 

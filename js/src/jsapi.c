@@ -663,8 +663,6 @@ JS_NewRuntime(uint32 maxbytes)
     JS_END_MACRO;
 #endif /* DEBUG */
 
-    if (!js_InitStringGlobals())
-        return NULL;
     rt = (JSRuntime *) malloc(sizeof(JSRuntime));
     if (!rt)
         return NULL;
@@ -764,7 +762,6 @@ JS_ShutDown(void)
 {
     JS_ArenaShutDown();
     js_FinishDtoa();
-    js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
@@ -4259,7 +4256,7 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
     }
 
     /* Hand off bytes to the deflated string cache, if possible. */
-    if (!js_SetStringBytes(str, bytes, nbytes))
+    if (!js_SetStringBytes(cx->runtime, str, bytes, nbytes))
         JS_free(cx, bytes);
     return str;
 }
@@ -4356,9 +4353,11 @@ JS_InternUCString(JSContext *cx, const jschar *s)
 JS_PUBLIC_API(char *)
 JS_GetStringBytes(JSString *str)
 {
+    JSRuntime *rt;
     char *bytes;
 
-    bytes = js_GetStringBytes(str);
+    rt = js_GetGCStringRuntime(str);
+    bytes = js_GetStringBytes(rt, str);
     return bytes ? bytes : "";
 }
 

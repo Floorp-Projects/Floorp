@@ -1116,7 +1116,7 @@ js_ReportUncaughtException(JSContext *cx)
     } else {
         if (vp)
             vp[1] = STRING_TO_JSVAL(str);
-        bytes = js_GetStringBytes(str);
+        bytes = js_GetStringBytes(cx->runtime, str);
     }
     ok = JS_TRUE;
 

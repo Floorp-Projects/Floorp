@@ -309,7 +309,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     JS_ASSERT(JSVAL_IS_STRING(*rval));
     numStr = JSVAL_TO_STRING(*rval);
-    num = js_GetStringBytes(numStr);
+    num = js_GetStringBytes(cx->runtime, numStr);
 
     /* Find bit before the decimal. */
     dec = strchr(num, '.');
