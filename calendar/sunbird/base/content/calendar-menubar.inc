@@ -430,10 +430,20 @@
            <menuitem accesskey="&releaseCmd.accesskey;"
                      label="&releaseCmd.label;"
                      oncommand="launchBrowser('&releaseURL;');" />
+
+# On Mac OS X, the "About Sunbird" menuitem belongs under the "Sunbird" menu.
+# We hide it (and its separator) here, but we don't ifdef the entire menuitem
+# out, as doing so will prevent it from appearing in either place at all!
+#
+#ifndef XP_MACOSX
            <menuseparator id="menu_HelpAboutSeparator"/>
+#endif
            <menuitem id="aboutName"
                      label="&aboutCmd.label;"
                      accesskey="&aboutCmd.accesskey;"
+#ifdef XP_MACOSX
+                     hidden="true"
+#endif
                      oncommand="openAboutDialog();"/>
          </menupopup>
        </menu>
