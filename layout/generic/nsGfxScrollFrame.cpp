@@ -83,6 +83,7 @@
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsDisplayList.h"
+#include "nsBidiUtils.h"
 
 static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
 
@@ -2138,6 +2139,24 @@ nsGfxScrollFrameInner::IsLTR() const
   }
 
   return frame->GetStyleVisibility()->mDirection != NS_STYLE_DIRECTION_RTL;
+}
+
+PRBool
+nsGfxScrollFrameInner::IsScrollbarOnRight() const
+{
+  nsPresContext *presContext = mOuter->GetPresContext();
+  switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
+    default:
+    case 0: // UI directionality
+      return presContext->GetCachedIntPref(kPresContext_BidiDirection)
+             == IBMBIDI_TEXTDIRECTION_LTR;
+    case 1: // Document / content directionality
+      return IsLTR();
+    case 2: // Always right
+      return PR_TRUE;
+    case 3: // Always left
+      return PR_FALSE;
+  }
 }
 
 /**
