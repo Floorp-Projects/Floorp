@@ -564,6 +564,9 @@ nsPresContext::GetUserPreferences()
   mEnableJapaneseTransform =
     nsContentUtils::GetBoolPref("layout.enable_japanese_specific_transform");
 
+  mPrefScrollbarSide =
+    nsContentUtils::GetIntPref("layout.scrollbar.side");
+
   GetFontPreferences();
 
   // * image animation
@@ -576,36 +579,36 @@ nsPresContext::GetUserPreferences()
   else if (animatePref.Equals("once"))
     mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
 
-#ifdef IBMBIDI
   PRUint32 bidiOptions = GetBidi();
 
   PRInt32 prefInt =
-    nsContentUtils::GetIntPref("bidi.direction",
+    nsContentUtils::GetIntPref(IBMBIDI_TEXTDIRECTION_STR,
                                GET_BIDI_OPTION_DIRECTION(bidiOptions));
   SET_BIDI_OPTION_DIRECTION(bidiOptions, prefInt);
+  mPrefBidiDirection = prefInt;
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.texttype",
+    nsContentUtils::GetIntPref(IBMBIDI_TEXTTYPE_STR,
                                GET_BIDI_OPTION_TEXTTYPE(bidiOptions));
   SET_BIDI_OPTION_TEXTTYPE(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.controlstextmode",
+    nsContentUtils::GetIntPref(IBMBIDI_CONTROLSTEXTMODE_STR,
                                GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions));
   SET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.numeral",
+    nsContentUtils::GetIntPref(IBMBIDI_NUMERAL_STR,
                                GET_BIDI_OPTION_NUMERAL(bidiOptions));
   SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.support",
+    nsContentUtils::GetIntPref(IBMBIDI_SUPPORTMODE_STR,
                                GET_BIDI_OPTION_SUPPORT(bidiOptions));
   SET_BIDI_OPTION_SUPPORT(bidiOptions, prefInt);
 
   prefInt =
-    nsContentUtils::GetIntPref("bidi.characterset",
+    nsContentUtils::GetIntPref(IBMBIDI_CHARSET_STR,
                                GET_BIDI_OPTION_CHARACTERSET(bidiOptions));
   SET_BIDI_OPTION_CHARACTERSET(bidiOptions, prefInt);
 
@@ -613,7 +616,6 @@ nsPresContext::GetUserPreferences()
   // prescontext or we are being called from UpdateAfterPreferencesChanged()
   // which triggers a reflow anyway.
   SetBidi(bidiOptions, PR_FALSE);
-#endif
 }
 
 void

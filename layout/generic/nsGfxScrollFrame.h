@@ -140,7 +140,7 @@ public:
   nsMargin GetActualScrollbarSizes() const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
   PRBool IsLTR() const;
-  PRBool IsScrollbarOnRight() const { return IsLTR(); }
+  PRBool IsScrollbarOnRight() const;
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea,

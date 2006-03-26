@@ -954,6 +954,13 @@ pref("layout.frames.force_resizability", false);
 // pref to report CSS errors to the error console
 pref("layout.css.report_errors", true);
 
+// pref for which side vertical scrollbars should be on
+// 0 = end-side in UI direction
+// 1 = end-side in document/content direction
+// 2 = right
+// 3 = left
+pref("layout.scrollbar.side", 0);
+
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
 
