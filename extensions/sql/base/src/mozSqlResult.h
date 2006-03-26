@@ -293,7 +293,7 @@ class mozSqlResult : public mozISqlResult,
                      public mozISqlDataSource,
                      public nsIRDFDataSource,
                      public nsIRDFRemoteDataSource,
-                     public nsITreeView
+                     public nsINativeTreeView
 {
   public:
     mozSqlResult(mozISqlConnection* aConnection,
@@ -328,6 +328,8 @@ class mozSqlResult : public mozISqlResult,
     NS_DECL_NSIRDFREMOTEDATASOURCE
 
     NS_DECL_NSITREEVIEW
+    // nsINativeTreeView: Untrusted code can use us
+    NS_IMETHOD EnsureNative() { return NS_OK; }
 
     friend class mozSqlResultEnumerator;
     friend class mozSqlResultStream;

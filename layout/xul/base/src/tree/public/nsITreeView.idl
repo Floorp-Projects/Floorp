@@ -225,3 +225,14 @@ interface nsITreeView : nsISupports
    */
   void performActionOnCell(in wstring action, in long row, in nsITreeColumn col);
 };
+
+/**
+ * The following interface is not scriptable and MUST NEVER BE MADE scriptable.
+ * Native treeviews implement it, and we use this to check whether a treeview
+ * is native (and therefore suitable for use by untrusted content).
+ */
+[uuid(38e0b44d-fa08-458c-83fb-3e10b12aeb45)]
+interface nsINativeTreeView : nsITreeView
+{
+  [noscript] void ensureNative();
+};

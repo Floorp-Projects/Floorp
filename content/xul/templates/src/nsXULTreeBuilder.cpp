@@ -74,7 +74,7 @@
  */
 class nsXULTreeBuilder : public nsXULTemplateBuilder,
                          public nsIXULTreeBuilder,
-                         public nsITreeView
+                         public nsINativeTreeView
 {
 public:
     // nsISupports
@@ -85,6 +85,8 @@ public:
 
     // nsITreeView
     NS_DECL_NSITREEVIEW
+    // nsINativeTreeView: Untrusted code can use us
+    NS_IMETHOD EnsureNative() { return NS_OK; }
 
     virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 

@@ -1020,9 +1020,6 @@ nsContentUtils::IsCallerChrome()
 
 static PRBool IsCallerTrustedForCapability(const char* aCapability)
 {
-  if (nsContentUtils::IsCallerChrome())
-    return PR_TRUE;
-
   // The secman really should handle UniversalXPConnect case, since that
   // should include UniversalBrowserRead... doesn't right now, though.
   PRBool hasCap;
