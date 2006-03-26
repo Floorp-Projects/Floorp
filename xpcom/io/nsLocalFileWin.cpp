@@ -349,19 +349,54 @@ IsShortcutPath(const nsAString &path)
 }
 
 //-----------------------------------------------------------------------------
+// We need the following three definitions to make |OpenFile| convert a file 
+// handle to an NSPR file descriptor correctly when |O_APPEND| flag is
+// specified. It is defined in a private header of NSPR (primpl.h) we can't
+// include. As a temporary workaround until we decide how to extend
+// |PR_ImportFile|, we define it here. Currently, |_PR_HAVE_PEEK_BUFFER|
+// and |PR_STRICT_ADDR_LEN| are not defined for the 'w95'-dependent portion
+// of NSPR so that fields of |PRFilePrivate| #ifdef'd by them are not copied.
+// Similarly, |_MDFileDesc| is taken from nsprpub/pr/include/md/_win95.h.
+// In an unlikely case we switch to 'NT'-dependent NSPR AND this temporary 
+// workaround last beyond the switch, |PRFilePrivate| and |_MDFileDesc| 
+// need to be changed to match the definitions for WinNT.
+//-----------------------------------------------------------------------------
+typedef enum {
+    _PR_TRI_TRUE = 1,
+    _PR_TRI_FALSE = 0,
+    _PR_TRI_UNKNOWN = -1
+} _PRTriStateBool;
+
+struct _MDFileDesc {
+    PROsfd osfd;
+};
+
+struct PRFilePrivate {
+    PRInt32 state;
+    PRBool nonblocking;
+    _PRTriStateBool inheritable;
+    PRFileDesc *next;
+    PRIntn lockCount;   /*   0: not locked
+                         *  -1: a native lockfile call is in progress
+                         * > 0: # times the file is locked */
+    PRBool  appendMode; 
+    _MDFileDesc md;
+};
+
+//-----------------------------------------------------------------------------
 // Six static methods defined below (OpenFile,  FileTimeToPRTime, GetFileInfo,
 // OpenDir, CloseDir, ReadDir) should go away once the corresponding 
-// UTF-16 APIs  are implemented on all the supported platforms (or at least 
+// UTF-16 APIs are implemented on all the supported platforms (or at least 
 // Windows 9x/ME) in NSPR. Currently, they're only implemented on 
 // Windows NT4 or later. (bug 330665)
 //-----------------------------------------------------------------------------
 
+// copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} : 
+// PR_Open and _PR_MD_OPEN
 static nsresult
 OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
          PRFileDesc **fd)
 {
-    
-    // Copied from _PR_MD_OPEN of NSPR (w95io.c)
     // XXX : 'mode' is not translated !!!
     PRInt32 access = 0;
     PRInt32 flags = 0;
@@ -398,8 +433,12 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
     }
 
     *fd = PR_ImportFile((PROsfd) file); 
-    if (*fd)
+    if (*fd) {
+        // On Windows, _PR_HAVE_O_APPEND is not defined so that we have to
+        // add it manually. (see |PR_Open| in nsprpub/pr/src/io/prfile.c)
+        (*fd)->secret->appendMode = (PR_APPEND & osflags) ? PR_TRUE : PR_FALSE;
         return NS_OK;
+    }
 
     nsresult rv = NS_ErrorAccordingToNSPR();
 
@@ -408,7 +447,8 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
     return rv;
 }
 
-// copied from nsprpub/src/md/windows/ntio.c (w95io.c)
+// copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} :
+// PR_FileTimeToPRTime and _PR_FileTimeToPRTime
 static
 void FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm)
 {
@@ -427,8 +467,8 @@ void FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm)
 #endif
 }
 
-// copied from nsprpub/src/md/windows/w95io.c (with some
-// changes). 
+// copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} with some
+// changes : PR_GetFileInfo64, _PR_MD_GETFILEINFO64
 static nsresult
 GetFileInfo(const nsAFlatString &name, PRFileInfo64 *info)
 {
