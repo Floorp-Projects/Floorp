@@ -109,6 +109,10 @@ public:
 
   static PRBool   IsCallerChrome();
 
+  static PRBool   IsCallerTrustedForRead();
+
+  static PRBool   IsCallerTrustedForWrite();
+
   /*
    * Returns true if the nodes are both in the same document or
    * if neither is in a document.

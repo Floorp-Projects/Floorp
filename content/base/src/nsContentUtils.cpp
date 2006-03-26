@@ -1018,6 +1018,37 @@ nsContentUtils::IsCallerChrome()
   return is_caller_chrome;
 }
 
+static PRBool IsCallerTrustedForCapability(const char* aCapability)
+{
+  if (nsContentUtils::IsCallerChrome())
+    return PR_TRUE;
+
+  // The secman really should handle UniversalXPConnect case, since that
+  // should include UniversalBrowserRead... doesn't right now, though.
+  PRBool hasCap;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (NS_FAILED(ssm->IsCapabilityEnabled(aCapability, &hasCap)))
+    return PR_FALSE;
+  if (hasCap)
+    return PR_TRUE;
+    
+  if (NS_FAILED(ssm->IsCapabilityEnabled("UniversalXPConnect", &hasCap)))
+    return PR_FALSE;
+  return hasCap;
+}
+
+PRBool
+nsContentUtils::IsCallerTrustedForRead()
+{
+  return IsCallerTrustedForCapability("UniversalBrowserRead");
+}
+
+PRBool
+nsContentUtils::IsCallerTrustedForWrite()
+{
+  return IsCallerTrustedForCapability("UniversalBrowserWrite");
+}
+
 // static
 PRBool
 nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
