@@ -61,6 +61,7 @@
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-recurrence-dialog.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-dialog-utils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
 
   <vbox>
 
@@ -96,12 +97,15 @@
           <deck id="period-deck">
 
             <!-- Daily -->
-            <hbox align="top">
-              <label value="&newevent.recurrence.every.label;"/>
-              <textbox id="daily-days" value="1" size="3" oninput="validateIntegers(event); updateAccept();"/>
-              <label value="&repeat.units.days;"/>
+            <vbox>
+              <hbox align="center">
+                <label value="&newevent.recurrence.every.label;"/>
+                <textbox id="daily-days" value="1" size="3" oninput="validateIntegers(event); updateAccept();"/>
+                <label value="&repeat.units.days;"/>
+                <spacer flex="1"/>
+              </hbox>
               <spacer flex="1"/>
-            </hbox>
+            </vbox>
 
             <!-- Weekly -->
             <hbox>
@@ -119,23 +123,13 @@
               </vbox>
             </hbox>
 
-            <vbox align="center">
-              <menulist>
-                <menupopup>
-                  <menuitem label="&newevent.recurrence.every.label;"/>
-                  <menuitem label="&newevent.repeat.first.label;"/>
-                  <menuitem label="&newevent.repeat.second.label;"/>
-                  <menuitem label="&newevent.repeat.third.label;"/>
-                  <menuitem label="&newevent.repeat.fourth.label;"/>
-                  <menuitem label="&newevent.repeat.fifth.label;"/>
-                  <menuitem label="&newevent.repeat.last.label;"/>
-                </menupopup>
-              </menulist>
-
-              <hbox>
-                <label value="&newevent.repeat.onthe.label;"/>
-                <textbox value="10,23,29" size="8"/>
-              </hbox>
+            <vbox>
+              <label value="&newevent.recurrence.every.label;"/>
+              <radiogroup id="monthly-type">
+                <radio id="monthly-nth-day" value="nth-day"/>
+                <radio id="monthly-nth-week" value="nth-week"/>
+                <radio id="monthly-last-week" hidden="true" value="last-week"/>
+              </radiogroup>
             </vbox>
 
             <hbox align="top">
@@ -175,15 +169,6 @@
               <spacer flex="1"/>
             </hbox>
           </row>
-
-          <row>
-            <spacer/>
-            <label id="repeat-numberoftimes-warning"
-                   class="warning-text-class"
-                   value="&newevent.recurnumberoftimes.warning;"
-                   hidden="true"/>
-          </row>
-
           <row>
             <radio label="&newevent.repeat.until.label;" value="until"/>
             <hbox>
@@ -215,5 +200,11 @@
 
   </vbox>
 
+  <hbox>
+    <label id="repeat-numberoftimes-warning"
+           class="warning-text-class"
+           value="&newevent.recurnumberoftimes.warning;"
+           hidden="true"/>
+  </hbox>
 
 </dialog>

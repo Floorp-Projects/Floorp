@@ -80,6 +80,41 @@ function onCancel()
 
 function loadDialog()
 {
+    // Start with setting some labels, that depend on the (start)date of the item
+    // Those labels are for the monthly recurrence deck.
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+
+    // Set label to '15th day of the month'
+    var nthstr = props.GetStringFromName("ordinal"+window.calendarEvent.startDate.day);
+    var str = props.formatStringFromName("recurNthDay", [nthstr], 1);
+    document.getElementById("monthly-nth-day").label = str;
+
+    // Set label to 'second week of the month'
+    var monthWeekNum = Math.floor(window.calendarEvent.startDate.day / 7) + 1;
+    nthstr = props.GetStringFromName("wordOrdinal"+monthWeekNum);
+    var daystr = props.GetStringFromName("day"+window.calendarEvent.startDate.weekday);
+    str = props.formatStringFromName("recurNthWeek", [nthstr, daystr], 2);
+    document.getElementById("monthly-nth-week").label = str;
+
+    // Set two values needed to create the real rrule later
+    document.getElementById("monthly-nth-week").day = window.calendarEvent.startDate.weekday;
+    document.getElementById("monthly-nth-week").week = monthWeekNum;
+
+    // If this is the last friday of the month, set label to 'last friday of the month'
+    // (Or any other day, ofcourse.) Otherwise, hide last option
+    var monthLength = window.calendarEvent.startDate.endOfMonth.day;
+    var isLastWeek = (monthLength - window.calendarEvent.startDate.day) < 7;
+    document.getElementById("monthly-last-week").hidden = !isLastWeek;
+    if (isLastWeek) {
+        str = props.formatStringFromName("recurLast", [daystr], 1);
+        document.getElementById("monthly-last-week").label = str;
+    }
+
+    document.getElementById("monthly-last-week").day = window.calendarEvent.startDate.weekday;
+
+
     /* Set a starting value for the exceptions picker */
     var item = window.calendarEvent;
     var date = item.startDate || item.entryDate || item.dueDate;
@@ -117,6 +152,20 @@ function loadDialog()
                 break;
             case "MONTHLY":
                 document.getElementById("period-list").selectedIndex = 2;
+                // XXX This code ignores a lot of monthly recurrence rules that
+                // can come in from external sources. There just is no UI to
+                // show them
+                var days = rule.getComponent("BYMONTHDAY", {});
+                if (days.length > 0 && days[0]) {
+                    radioGroupSelectItem("monthly-type", "monthly-nth-day");
+                }
+                days = rule.getComponent("BYDAY", {}) ;
+                if (days.length > 0 && days[0] > 0) {
+                    radioGroupSelectItem("monthly-type", "monthly-nth-week");
+                }
+                if (days.length > 0 && days[0] < 0) {
+                    radioGroupSelectItem("monthly-type", "monthly-last-week");
+                }
                 break;
             case "YEARLY":
                 document.getElementById("period-list").selectedIndex = 3;
@@ -209,6 +258,23 @@ function saveDialog()
         break;
     case 2:
         recRule.type = "MONTHLY";
+        recRule.interval = 1; // XXX we need to support every 2 months and so on..
+        var recurtype = getElementValue("monthly-type");
+        switch (recurtype) {
+          case "nth-day":
+            recRule.setComponent("BYMONTHDAY", 1, [window.calendarEvent.startDate.day]);
+            break;
+          case "nth-week":
+            var el = document.getElementById('monthly-nth-week');
+            // For more info on where this magic formula comes from, see icalrecur.c,
+            // icalrecurrencetype_day_day_of_week()
+            recRule.setComponent("BYDAY", 1, [el.week*8 + el.day+1]);
+            break;
+          case "last-week":
+            el = document.getElementById('monthly-last-week');
+            recRule.setComponent("BYDAY", 1, [(-1)*(8+Number(el.day)+1)]);
+            break;
+        }
         break;
     case 3:
         recRule.type = "YEARLY";
