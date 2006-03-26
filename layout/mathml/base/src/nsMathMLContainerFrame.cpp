@@ -748,13 +748,12 @@ nsMathMLContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 NS_IMETHODIMP
 nsMathMLContainerFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
-                             nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(aContext->GetRuleNode()->GetPresContext(), aContent);
+  MapAttributesIntoCSS(GetPresContext(), aContent);
 
   // let the base class do its Init()
-  return nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  return nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // ...We will build our automatic MathML data once the entire <math>...</math>
   // tree is constructed.
@@ -1500,15 +1499,15 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 //==========================
 
 nsIFrame*
-NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmathBlockFrame;
+  return new (aPresShell) nsMathMLmathBlockFrame(aContext);
 }
 
 //==========================
 
 nsIFrame*
-NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmathInlineFrame;
+  return new (aPresShell) nsMathMLmathInlineFrame(aContext);
 }

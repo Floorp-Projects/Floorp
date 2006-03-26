@@ -57,12 +57,12 @@
 class nsIContent;
 class nsIMenuFrame;
 
-nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell);
+nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsMenuBarFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
-  nsMenuBarFrame(nsIPresShell* aShell);
+  nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext);
   virtual ~nsMenuBarFrame();
 
   NS_DECL_ISUPPORTS
@@ -107,7 +107,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);

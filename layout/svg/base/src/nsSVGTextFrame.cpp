@@ -84,10 +84,10 @@ class nsSVGTextFrame : public nsSVGTextFrameBase,
                        public nsSupportsWeakReference
 {
   friend nsIFrame*
-  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGTextFrame();
-  
+  nsSVGTextFrame(nsStyleContext* aContext);
+
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
@@ -205,7 +205,7 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGTextElement> text_elem = do_QueryInterface(aContent);
   if (!text_elem) {
@@ -216,11 +216,12 @@ NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGTextFrame;
+  return new (aPresShell) nsSVGTextFrame(aContext);
 }
 
-nsSVGTextFrame::nsSVGTextFrame()
-    : mFragmentTreeState(suspended), mMetricsState(suspended),
+nsSVGTextFrame::nsSVGTextFrame(nsStyleContext* aContext)
+    : nsSVGTextFrameBase(aContext),
+      mFragmentTreeState(suspended), mMetricsState(suspended),
       mFragmentTreeDirty(PR_FALSE), mPositioningDirty(PR_FALSE),
       mPropagateTransform(PR_TRUE)
 {

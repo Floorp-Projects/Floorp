@@ -57,7 +57,9 @@ class nsGridRowLeafFrame : public nsBoxFrame
 {
 public:
 
-  friend nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
+                                          nsStyleContext* aContext,
+                                          nsIBoxLayout* aLayoutManager);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -66,7 +68,11 @@ public:
   }
 #endif
 
-  nsGridRowLeafFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager);
+  nsGridRowLeafFrame(nsIPresShell* aPresShell,
+                     nsStyleContext* aContext,
+                     PRBool aIsRoot,
+                     nsIBoxLayout* aLayoutManager):
+    nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
 
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 

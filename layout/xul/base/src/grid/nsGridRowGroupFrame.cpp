@@ -49,17 +49,16 @@
 #include "nsGridLayout2.h"
 
 nsIFrame*
-NS_NewGridRowGroupFrame (nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewGridRowGroupFrame (nsIPresShell* aPresShell,
+                         nsStyleContext* aContext,
+                         PRBool aIsRoot,
+                         nsIBoxLayout* aLayoutManager)
 {
   return
-    new (aPresShell) nsGridRowGroupFrame (aPresShell, aIsRoot, aLayoutManager);
+    new (aPresShell) nsGridRowGroupFrame (aPresShell, aContext, aIsRoot, aLayoutManager);
 } 
 
-nsGridRowGroupFrame::nsGridRowGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager)
-{
 
-}
 
 /**
  * This is redefined because row groups have a funny property. If they are flexible

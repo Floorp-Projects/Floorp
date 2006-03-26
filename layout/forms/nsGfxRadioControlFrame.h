@@ -57,7 +57,7 @@ class nsGfxRadioControlFrame : public nsFormControlFrame,
 private:
 
 public:
-  nsGfxRadioControlFrame();
+  nsGfxRadioControlFrame(nsStyleContext* aContext);
   ~nsGfxRadioControlFrame();
 
    //nsIRadioControlFrame methods

@@ -48,12 +48,12 @@
 class nsISupportsArray;
 class nsSplitterFrameInner;
 
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell);
+nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsSplitterFrame : public nsBoxFrame
 {
 public:
-  nsSplitterFrame(nsIPresShell* aPresShell);
+  nsSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   virtual ~nsSplitterFrame();
 
 #ifdef DEBUG
@@ -69,7 +69,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,

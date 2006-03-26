@@ -155,7 +155,7 @@ public:
   void PaintBorder(nsIRenderingContext& aRenderingContext, nsPoint aPt);
 
 protected:
-  nsHTMLFramesetBorderFrame(PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
+  nsHTMLFramesetBorderFrame(nsStyleContext* aContext, PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
   virtual void GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -192,6 +192,7 @@ public:
                     nsReflowStatus&          aStatus);
 
 protected:
+  nsHTMLFramesetBlankFrame(nsStyleContext* aContext) : nsLeafFrame(aContext) {}
   virtual ~nsHTMLFramesetBlankFrame();
   virtual void GetDesiredSize(nsPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -207,8 +208,8 @@ PRBool  nsHTMLFramesetFrame::gDragInProgress = PR_FALSE;
 #define kFrameResizePref "layout.frames.force_resizability"
 #define DEFAULT_BORDER_WIDTH_PX 6
 
-nsHTMLFramesetFrame::nsHTMLFramesetFrame()
-  : nsHTMLContainerFrame()
+nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
+  : nsHTMLContainerFrame(aContext)
 {
   mNumRows             = 0;
   mRowSizes            = nsnull;
@@ -300,10 +301,9 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Init(nsIContent*      aContent,
                           nsIFrame*        aParent,
-                          nsStyleContext*  aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   // find the highest ancestor that is a frameset
   nsresult rv = NS_OK;
   nsIFrame* parentFrame = GetParent();
@@ -401,7 +401,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
       if (tag == nsHTMLAtoms::frameset) {
-        frame = NS_NewHTMLFramesetFrame(shell);
+        frame = NS_NewHTMLFramesetFrame(shell, kidSC);
         if (NS_UNLIKELY(!frame))
           return NS_ERROR_OUT_OF_MEMORY;
 
@@ -410,7 +410,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
         childFrame->SetParentFrameborder(frameborder);
         childFrame->SetParentBorderWidth(borderWidth);
         childFrame->SetParentBorderColor(borderColor);
-        result = frame->Init(child, this, kidSC, nsnull);
+        result = frame->Init(child, this, nsnull);
         if (NS_FAILED(result)) {
           frame->Destroy(aPresContext);
           return result;
@@ -418,11 +418,11 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
-        frame = NS_NewSubDocumentFrame(shell);
+        frame = NS_NewSubDocumentFrame(shell, kidSC);
         if (NS_UNLIKELY(!frame))
           return NS_ERROR_OUT_OF_MEMORY;
 
-        result = frame->Init(child, this, kidSC, nsnull);
+        result = frame->Init(child, this, nsnull);
         if (NS_FAILED(result)) {
           frame->Destroy(aPresContext);
           return result;
@@ -450,22 +450,20 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
   mNonBlankChildCount = mChildCount;
   // add blank frames for frameset cells that had no content provided
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
-    // XXX the blank frame is using the content of its parent - at some point it 
-    // should just have null content, if we support that
-    nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame;
-    if (!blankFrame)
-      return NS_ERROR_OUT_OF_MEMORY;
-
     nsRefPtr<nsStyleContext> pseudoStyleContext;
-    pseudoStyleContext = shell->StyleSet()->ResolvePseudoStyleFor(nsnull,
-                                                                  nsCSSAnonBoxes::framesetBlank,
-                                                                  mStyleContext);
+    pseudoStyleContext = shell->StyleSet()->
+      ResolvePseudoStyleFor(nsnull, nsCSSAnonBoxes::framesetBlank, mStyleContext);
     if (!pseudoStyleContext) {
-      blankFrame->Destroy(aPresContext);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    result = blankFrame->Init(mContent, this, pseudoStyleContext, nsnull);
+    // XXX the blank frame is using the content of its parent - at some point it 
+    // should just have null content, if we support that                                                            
+    nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame(pseudoStyleContext);
+    if (!blankFrame)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    result = blankFrame->Init(mContent, this, nsnull);
     if (NS_FAILED(result)) {
       blankFrame->Destroy(aPresContext);
       return result;
@@ -1054,14 +1052,17 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       offset.x = 0;
       offset.y += lastSize.height;
       if (firstTime) { // create horizontal border
-        borderFrame = new (shell) nsHTMLFramesetBorderFrame(borderWidth,
-                                                            PR_FALSE,
-                                                            PR_FALSE);
+
         nsRefPtr<nsStyleContext> pseudoStyleContext;
         pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
                                                              nsCSSPseudoElements::horizontalFramesetBorder,
                                                              mStyleContext);
-        borderFrame->Init(mContent, this, pseudoStyleContext, nsnull);
+
+        borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
+                                                            borderWidth,
+                                                            PR_FALSE,
+                                                            PR_FALSE);
+        borderFrame->Init(mContent, this, nsnull);
 
         mChildCount++;
         lastChild->SetNextSibling(borderFrame);
@@ -1083,14 +1084,17 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*          aPresContext,
       if (cellIndex.x > 0) {  // moved to next col in same row
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
-            borderFrame = new (shell) nsHTMLFramesetBorderFrame(borderWidth,
-                                                                PR_TRUE,
-                                                                PR_FALSE);
+            
             nsRefPtr<nsStyleContext> pseudoStyleContext;
             pseudoStyleContext = styleSet->ResolvePseudoStyleFor(mContent,
                                                                  nsCSSPseudoElements::verticalFramesetBorder,
                                                                  mStyleContext);
-            borderFrame->Init(mContent, this, pseudoStyleContext, nsnull);
+
+            borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext, 
+                                                                borderWidth,
+                                                                PR_TRUE,
+                                                                PR_FALSE);
+            borderFrame->Init(mContent, this, nsnull);
 
             mChildCount++;
             lastChild->SetNextSibling(borderFrame);
@@ -1560,18 +1564,19 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
 }  
 
 nsIFrame*
-NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell)
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsHTMLFramesetFrame;
+  return new (aPresShell) nsHTMLFramesetFrame(aContext);
 }
 
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
-nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth, 
-                                                     PRBool  aVertical, 
+nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
+                                                     PRInt32 aWidth,
+                                                     PRBool  aVertical,
                                                      PRBool  aVisibility)
-  : nsLeafFrame(), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
+  : nsLeafFrame(aContext), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
    mVisibilityOverride = PR_FALSE;
    mCanResize    = PR_TRUE;

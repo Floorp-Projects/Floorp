@@ -96,13 +96,13 @@ extern PRLogModuleInfo * kLayoutPrintingLogMod;
 PRBool nsPageFrame::mDoCreateWidget = PR_TRUE;
 
 nsIFrame*
-NS_NewPageFrame(nsIPresShell* aPresShell)
+NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPageFrame;
+  return new (aPresShell) nsPageFrame(aContext);
 }
 
-nsPageFrame::nsPageFrame() :
-  mSupressHF(PR_FALSE)
+nsPageFrame::nsPageFrame(nsStyleContext* aContext)
+: nsContainerFrame(aContext), mSupressHF(PR_FALSE)
 {
 }
 
@@ -693,7 +693,7 @@ nsPageFrame::SetSharedPageData(nsSharedPageData* aPD)
 }
 
 nsIFrame*
-NS_NewPageBreakFrame(nsIPresShell* aPresShell)
+NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   NS_PRECONDITION(aPresShell, "null PresShell");
 #ifdef DEBUG
@@ -701,11 +701,11 @@ NS_NewPageBreakFrame(nsIPresShell* aPresShell)
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
 #endif
 
-  return new (aPresShell) nsPageBreakFrame;
+  return new (aPresShell) nsPageBreakFrame(aContext);
 }
 
-nsPageBreakFrame::nsPageBreakFrame()
-: mHaveReflowed(PR_FALSE)
+nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext) :
+  nsLeafFrame(aContext), mHaveReflowed(PR_FALSE)
 {
 }
 

@@ -50,7 +50,8 @@
 #include "nsBoxLayoutState.h"
 
 class nsListScrollSmoother;
-nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, 
+nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
+                                 nsStyleContext* aContext,
                                  PRBool aIsRoot = PR_FALSE,
                                  nsIBoxLayout* aLayoutManager = nsnull);
 
@@ -59,21 +60,21 @@ class nsListBoxBodyFrame : public nsBoxFrame,
                            public nsIScrollbarMediator,
                            public nsIReflowCallback
 {
-  nsListBoxBodyFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
+  nsListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsListBoxBodyFrame();
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSILISTBOXOBJECT
 
-  friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, 
+  friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
+                                          nsStyleContext* aContext,
                                           PRBool aIsRoot,
                                           nsIBoxLayout* aLayoutManager);
   
   // nsIFrame
   NS_IMETHOD Init(nsIContent*     aContent,
                   nsIFrame*       aParent, 
-                  nsStyleContext* aContext, 
                   nsIFrame*       aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aModType);

@@ -71,13 +71,9 @@
 static const PRUnichar kSlashChar = PRUnichar('/');
 
 nsIFrame*
-NS_NewMathMLmfracFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmfracFrame;
-}
-
-nsMathMLmfracFrame::nsMathMLmfracFrame()
-{
+  return new (aPresShell) nsMathMLmfracFrame(aContext);
 }
 
 nsMathMLmfracFrame::~nsMathMLmfracFrame()
@@ -100,21 +96,19 @@ nsMathMLmfracFrame::IsBevelled()
 NS_IMETHODIMP
 nsMathMLmfracFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (IsBevelled()) {
     // enable the bevelled rendering
     mSlashChar = new nsMathMLChar();
     if (mSlashChar) {
-      nsPresContext *aPresContext = GetPresContext();
+      nsPresContext* presContext = GetPresContext();
     
       nsAutoString slashChar; slashChar.Assign(kSlashChar);
-      mSlashChar->SetData(aPresContext, slashChar);
-      ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
+      mSlashChar->SetData(presContext, slashChar);
+      ResolveMathMLCharStyle(presContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
     }
   }
 

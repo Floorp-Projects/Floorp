@@ -49,10 +49,12 @@ nsresult NS_GetSVGGradient(nsISVGGradient**        result,
                            nsIPresShell*           aPresShell);
 
 nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent);
+                                       nsIContent*   aContent,
+                                       nsStyleContext* aContext);
 
 nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent);
+                                       nsIContent*   aContent,
+                                       nsStyleContext* aContext);
 
 #endif // __NS_SVGGRADIENT_H__
 

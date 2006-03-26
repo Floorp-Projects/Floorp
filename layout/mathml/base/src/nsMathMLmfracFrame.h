@@ -85,7 +85,7 @@ element.
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
@@ -103,7 +103,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -149,7 +148,7 @@ public:
                     nscoord          aDefaultRuleThickness);
 
 protected:
-  nsMathMLmfracFrame();
+  nsMathMLmfracFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmfracFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

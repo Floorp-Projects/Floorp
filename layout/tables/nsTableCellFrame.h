@@ -78,12 +78,11 @@ public:
 
   // default constructor supplied by the compiler
 
-  nsTableCellFrame();
+  nsTableCellFrame(nsStyleContext* aContext);
   ~nsTableCellFrame();
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
 #ifdef ACCESSIBILITY
@@ -119,7 +118,7 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -428,7 +427,7 @@ class nsBCTableCellFrame : public nsTableCellFrame
 {
 public:
 
-  nsBCTableCellFrame();
+  nsBCTableCellFrame(nsStyleContext* aContext);
 
   ~nsBCTableCellFrame();
 

@@ -198,9 +198,9 @@ NS_IMPL_ISUPPORTS1(nsComboButtonListener, nsIDOMMouseListener)
 nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
 
 nsIFrame*
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags)
 {
-  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame;
+  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame(aContext);
 
   if (it) {
     // set the state flags (if any are provided)
@@ -317,8 +317,8 @@ if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
 //-- Done with macros
 //------------------------------------------------------
 
-nsComboboxControlFrame::nsComboboxControlFrame()
-  : nsAreaFrame() 
+nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
+  : nsAreaFrame(aContext) 
 {
   mListControlFrame            = nsnull;
   mDroppedDown                 = PR_FALSE;
@@ -1905,12 +1905,12 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   }
 
   // Start by by creating our anonymous block frame
-  mDisplayFrame = NS_NewBlockFrame(shell, NS_BLOCK_SPACE_MGR);
+  mDisplayFrame = NS_NewBlockFrame(shell, styleContext, NS_BLOCK_SPACE_MGR);
   if (NS_UNLIKELY(!mDisplayFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = mDisplayFrame->Init(mContent, this, styleContext, nsnull);
+  nsresult rv = mDisplayFrame->Init(mContent, this, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;
@@ -1918,13 +1918,13 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
   }
 
   // Create a text frame and put it inside the block frame
-  mTextFrame = NS_NewTextFrame(shell);
+  mTextFrame = NS_NewTextFrame(shell, textStyleContext);
   if (NS_UNLIKELY(!mTextFrame)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // initialize the text frame
-  rv = mTextFrame->Init(aContent, mDisplayFrame, textStyleContext, nsnull);
+  rv = mTextFrame->Init(aContent, mDisplayFrame, nsnull);
   if (NS_FAILED(rv)) {
     mDisplayFrame->Destroy(aPresContext);
     mDisplayFrame = nsnull;

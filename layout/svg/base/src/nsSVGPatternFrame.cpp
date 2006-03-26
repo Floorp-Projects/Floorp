@@ -97,12 +97,15 @@ class nsSVGPatternFrame : public nsSVGPatternFrameBase,
 {
 public:
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
-                                         nsIContent*   aContent);
+                                         nsIContent*   aContent,
+                                         nsStyleContext* aContext);
 
   friend nsresult NS_GetSVGPatternFrame(nsIFrame**      result, 
                                         nsIURI*         aURI, 
                                         nsIContent*     aContent,
                                         nsIPresShell*   aPresShell);
+
+  nsSVGPatternFrame(nsStyleContext* aContext) : nsSVGPatternFrameBase(aContext) {}
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -985,16 +988,17 @@ nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *bbox, 
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
-                                nsIContent*   aContent)
+nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
+                                nsIContent*     aContent,
+                                nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGPatternElement> patternElement = do_QueryInterface(aContent);
   NS_ASSERTION(patternElement, 
                "NS_NewSVGPatternFrame -- Content doesn't support nsIDOMSVGPattern");
   if (!patternElement)
     return nsnull;
-  
-  nsSVGPatternFrame* it = new (aPresShell) nsSVGPatternFrame;
+
+  nsSVGPatternFrame* it = new (aPresShell) nsSVGPatternFrame(aContext);
   if (!it)
     return nsnull;
 

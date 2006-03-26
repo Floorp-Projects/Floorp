@@ -52,9 +52,11 @@
 class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 {
   friend nsIFrame*
-  NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
+  
+  nsSVGEllipseFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
   /**
    * Get the "type" of the frame
@@ -88,7 +90,7 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 // Implementation
 
 nsIFrame*
-NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGEllipseElement> ellipse = do_QueryInterface(aContent);
   if (!ellipse) {
@@ -98,7 +100,7 @@ NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGEllipseFrame;
+  return new (aPresShell) nsSVGEllipseFrame(aContext);
 }
 
 NS_IMETHODIMP

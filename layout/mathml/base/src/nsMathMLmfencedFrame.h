@@ -48,7 +48,7 @@
 
 class nsMathMLmfencedFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
@@ -120,7 +120,7 @@ public:
             nscoord&           dx);
 
 protected:
-  nsMathMLmfencedFrame();
+  nsMathMLmfencedFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmfencedFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

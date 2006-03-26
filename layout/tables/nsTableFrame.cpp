@@ -198,8 +198,8 @@ nsTableFrame::GetType() const
 }
 
 
-nsTableFrame::nsTableFrame()
-  : nsHTMLContainerFrame(),
+nsTableFrame::nsTableFrame(nsStyleContext* aContext)
+  : nsHTMLContainerFrame(aContext),
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull),
     mPreferredWidth(0)
@@ -248,13 +248,12 @@ nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsTableFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
   nsresult  rv;
 
   // Let the base class do its processing
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
@@ -812,10 +811,10 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
                                                            nsCSSAnonBoxes::tableColGroup,
                                                            mStyleContext);
   // Create a col group frame
-  nsIFrame* newFrame = NS_NewTableColGroupFrame(shell);
+  nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
   if (newFrame) {
     ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
-    newFrame->Init(colGroupContent, this, colGroupStyle, nsnull);
+    newFrame->Init(colGroupContent, this, nsnull);
   }
   return (nsTableColGroupFrame *)newFrame;
 }
@@ -925,9 +924,9 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
     // create the new col frame
-    nsIFrame* colFrame = NS_NewTableColFrame(shell);
+    nsIFrame* colFrame = NS_NewTableColFrame(shell, styleContext);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
-    colFrame->Init(iContent, aColGroupFrame, styleContext, nsnull);
+    colFrame->Init(iContent, aColGroupFrame, nsnull);
     colFrame->SetInitialChildList(presContext, nsnull, nsnull);
 
     // Add the col to the sibling chain
@@ -3967,9 +3966,9 @@ nscoord nsTableFrame::GetAscent()
 /* ----- global methods ----- */
 
 nsIFrame*
-NS_NewTableFrame(nsIPresShell* aPresShell)
+NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableFrame;
+  return new (aPresShell) nsTableFrame(aContext);
 }
 
 nsTableFrame*

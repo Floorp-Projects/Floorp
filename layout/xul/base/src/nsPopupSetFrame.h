@@ -54,7 +54,7 @@
 #include "nsITimer.h"
 #include "nsISupportsArray.h"
 
-nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell);
+nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 struct nsPopupFrameList {
   nsPopupFrameList* mNextPopup;  // The next popup in the list.
@@ -83,13 +83,13 @@ public:
 class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {
 public:
-  nsPopupSetFrame(nsIPresShell* aShell);
+  nsPopupSetFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+    nsBoxFrame(aShell, aContext) {}
 
   NS_DECL_ISUPPORTS
   
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
     // nsIBox

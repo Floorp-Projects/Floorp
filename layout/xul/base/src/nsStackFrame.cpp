@@ -59,12 +59,13 @@
 #include "nsStackLayout.h"
 
 nsIFrame*
-NS_NewStackFrame ( nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager)
+NS_NewStackFrame (nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsStackFrame(aPresShell, aLayoutManager);
+  return new (aPresShell) nsStackFrame(aPresShell, aContext, aLayoutManager);
 } // NS_NewStackFrame
 
-nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell)
+nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager):
+  nsBoxFrame(aPresShell, aContext)
 {
     // if no layout manager specified us the stack layout
   nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;

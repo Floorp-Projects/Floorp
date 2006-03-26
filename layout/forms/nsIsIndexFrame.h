@@ -57,16 +57,8 @@ class nsIsIndexFrame : public nsAreaFrame,
                        public nsIStatefulFrame
 {
 public:
-  nsIsIndexFrame();
+  nsIsIndexFrame(nsStyleContext* aContext);
   virtual ~nsIsIndexFrame();
-
-  // XXX Hack so we can squirrel away the pres context pointer for the KeyPress method
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow) {
-    return nsAreaFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  }
 
   /**
    * Processes a key pressed event

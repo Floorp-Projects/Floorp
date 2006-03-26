@@ -57,13 +57,13 @@
 // Creates a new TitleBar frame and returns it
 //
 nsIFrame*
-NS_NewTitleBarFrame(nsIPresShell* aPresShell)
+NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTitleBarFrame(aPresShell);
+  return new (aPresShell) nsTitleBarFrame(aPresShell, aContext);
 } // NS_NewTitleBarFrame
 
-nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
-:nsBoxFrame(aPresShell, PR_FALSE)
+nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+:nsBoxFrame(aPresShell, aContext, PR_FALSE)
 {
   mTrackingMouseMove = PR_FALSE;
 }
@@ -73,12 +73,11 @@ nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
 NS_IMETHODIMP
 nsTitleBarFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        asPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, asPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, asPrevInFlow);
 
-  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
+  CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
 
   return rv;
 }

@@ -46,13 +46,9 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell)
+NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsHTMLCanvasFrame;
-}
-
-nsHTMLCanvasFrame::nsHTMLCanvasFrame()
-{
+  return new (aPresShell) nsHTMLCanvasFrame(aContext);
 }
 
 nsHTMLCanvasFrame::~nsHTMLCanvasFrame()

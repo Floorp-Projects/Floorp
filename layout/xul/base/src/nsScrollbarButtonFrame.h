@@ -54,17 +54,17 @@ class nsScrollbarButtonFrame : public nsButtonBoxFrame,
                                public nsITimerCallback
 {
 public:
-  nsScrollbarButtonFrame(nsIPresShell* aPresShell);
+  nsScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
+    nsButtonBoxFrame(aPresShell, aContext) {}
 
   // Overrides
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  friend nsIFrame* NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewScrollBarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
-
 
   static nsresult GetChildWithTag(nsPresContext* aPresContext,
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);

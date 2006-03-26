@@ -44,13 +44,12 @@ class nsTitleBarFrame : public nsBoxFrame
 {
 
 public:
-  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell);  
+  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
-  nsTitleBarFrame(nsIPresShell* aPresShell);
+  nsTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,

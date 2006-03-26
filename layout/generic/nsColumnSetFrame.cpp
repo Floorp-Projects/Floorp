@@ -50,7 +50,7 @@
 
 class nsColumnSetFrame : public nsHTMLContainerFrame {
 public:
-  nsColumnSetFrame();
+  nsColumnSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -143,9 +143,9 @@ protected:
  * XXX should we support CSS columns applied to table elements?
  */
 nsIFrame*
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags)
 {
-  nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame;
+  nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame(aContext);
   if (it) {
     // set the state flags (if any are provided)
     it->AddStateBits(aStateFlags);
@@ -154,8 +154,8 @@ NS_NewColumnSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
   return it;
 }
 
-nsColumnSetFrame::nsColumnSetFrame()
-  : nsHTMLContainerFrame(), mLastBalanceHeight(NS_INTRINSICSIZE),
+nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
+  : nsHTMLContainerFrame(aContext), mLastBalanceHeight(NS_INTRINSICSIZE),
     mLastFrameStatus(NS_FRAME_COMPLETE)
 {
 }

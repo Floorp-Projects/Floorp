@@ -56,7 +56,6 @@ public:
   // nsIFrame overrides
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -185,7 +184,7 @@ public:
                               const nsDisplayListSet& aLists);
 
 protected:
-  nsContainerFrame();
+  nsContainerFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
   ~nsContainerFrame();
 
   /**

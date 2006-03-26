@@ -55,15 +55,10 @@
 #include "nsMathMLTokenFrame.h"
 
 nsIFrame*
-NS_NewMathMLTokenFrame(nsIPresShell* aPresShell)
+NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLTokenFrame;
+  return new (aPresShell) nsMathMLTokenFrame(aContext);
 }
-
-nsMathMLTokenFrame::nsMathMLTokenFrame()
-{
-}
-
 nsMathMLTokenFrame::~nsMathMLTokenFrame()
 {
 }
@@ -104,7 +99,6 @@ CompressWhitespace(nsIContent* aContent)
 NS_IMETHODIMP
 nsMathMLTokenFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
   // leading and trailing whitespace doesn't count -- bug 15402
@@ -113,7 +107,7 @@ nsMathMLTokenFrame::Init(nsIContent*      aContent,
   CompressWhitespace(aContent);
 
   // let the base class do its Init()
-  return nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  return nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 NS_IMETHODIMP

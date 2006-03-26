@@ -66,7 +66,7 @@ class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
                                public nsISVGChildFrame
 {
 protected:
-  nsSVGPathGeometryFrame();
+  nsSVGPathGeometryFrame(nsStyleContext* aContext);
   virtual ~nsSVGPathGeometryFrame();
   
 public:
@@ -79,7 +79,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,

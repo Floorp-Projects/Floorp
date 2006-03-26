@@ -131,13 +131,17 @@ nsIBox* nsBoxFrame::mDebugChild = nsnull;
 #endif
 
 nsIFrame*
-NS_NewBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager);
+  return new (aPresShell) nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
 } // NS_NewBoxFrame
 
-nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-  : mMouseThrough(unset)
+nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell,
+                       nsStyleContext* aContext,
+                       PRBool aIsRoot,
+                       nsIBoxLayout* aLayoutManager) :
+  nsContainerFrame(aContext),
+  mMouseThrough(unset)
 {
   mState |= NS_FRAME_IS_BOX;
   mState |= NS_STATE_IS_HORIZONTAL;
@@ -204,10 +208,9 @@ nsBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::Init(nsIContent*      aContent,
                  nsIFrame*        aParent,
-                 nsStyleContext*  aContext,
                  nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {

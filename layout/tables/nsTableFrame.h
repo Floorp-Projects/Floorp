@@ -186,14 +186,13 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 
     */
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
 
@@ -547,7 +546,7 @@ protected:
   /** protected constructor. 
     * @see NewFrame
     */
-  nsTableFrame();
+  nsTableFrame(nsStyleContext* aContext);
 
   /** destructor, responsible for mColumnLayoutData */
   virtual ~nsTableFrame();

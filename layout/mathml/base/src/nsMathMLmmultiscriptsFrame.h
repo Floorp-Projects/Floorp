@@ -49,7 +49,7 @@
 
 class nsMathMLmmultiscriptsFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   TransmitAutomaticData();
@@ -60,7 +60,7 @@ public:
         nsHTMLReflowMetrics& aDesiredSize);
 
 protected:
-  nsMathMLmmultiscriptsFrame();
+  nsMathMLmmultiscriptsFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmmultiscriptsFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

@@ -51,6 +51,8 @@ typedef nsFrame  nsSVGStopFrameBase;
 class nsSVGStopFrame : public nsSVGStopFrameBase
 {
 public:
+  nsSVGStopFrame(nsStyleContext* aContext) : nsSVGStopFrameBase(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -79,9 +81,10 @@ public:
   }
 #endif
 
-  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                                      nsIContent*   aContent, 
-                                      nsIFrame*     aParentFrame);
+  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell*   aPresShell,
+                                      nsIContent*     aContent,
+                                      nsIFrame*       aParentFrame,
+                                      nsStyleContext* aContext);
 };
 
 //----------------------------------------------------------------------
@@ -148,14 +151,15 @@ nsSVGStopFrame::AttributeChanged(PRInt32         aNameSpaceID,
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                             nsIContent*   aContent, 
-                             nsIFrame*     aParentFrame)
+nsIFrame* NS_NewSVGStopFrame(nsIPresShell*   aPresShell,
+                             nsIContent*     aContent,
+                             nsIFrame*       aParentFrame,
+                             nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGStopElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGStopFrame -- Content doesn't support nsIDOMSVGStopElement");
   if (!grad)
     return nsnull;
 
-  return new (aPresShell) nsSVGStopFrame;
+  return new (aPresShell) nsSVGStopFrame(aContext);
 }

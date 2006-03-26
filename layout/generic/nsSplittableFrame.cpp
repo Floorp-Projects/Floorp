@@ -42,12 +42,9 @@
 NS_IMETHODIMP
 nsSplittableFrame::Init(nsIContent*      aContent,
                         nsIFrame*        aParent,
-                        nsStyleContext*  aContext,
                         nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
-  
-  rv = nsFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Hook the frame into the flow

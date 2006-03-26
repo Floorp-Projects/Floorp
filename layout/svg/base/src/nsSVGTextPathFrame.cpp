@@ -61,11 +61,11 @@ class nsSVGTextPathFrame : public nsSVGTextPathFrameBase,
                            public nsSupportsWeakReference
 {
 public:
+  nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
 
   // nsIFrame:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -129,7 +129,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrame)
 
 nsIFrame*
 NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                       nsIFrame* parentFrame)
+                       nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
   nsISVGTextFrame *text_container;
@@ -146,7 +146,7 @@ NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGTextPathFrame;
+  return new (aPresShell) nsSVGTextPathFrame(aContext);
 }
 
 nsSVGTextPathFrame::~nsSVGTextPathFrame()
@@ -157,10 +157,9 @@ nsSVGTextPathFrame::~nsSVGTextPathFrame()
 NS_IMETHODIMP
 nsSVGTextPathFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsSVGTextPathFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsSVGTextPathFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   nsCOMPtr<nsIDOMSVGTextPathElement> tpath = do_QueryInterface(mContent);
 

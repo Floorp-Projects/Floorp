@@ -52,11 +52,13 @@ class nsSVGRectFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
 
 public:
+  nsSVGRectFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
 
@@ -92,7 +94,7 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGRectElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
@@ -100,7 +102,7 @@ NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGRectFrame;
+  return new (aPresShell) nsSVGRectFrame(aContext);
 }
 
 NS_IMETHODIMP

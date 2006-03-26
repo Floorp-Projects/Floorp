@@ -166,13 +166,14 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
 }
 
 nsIFrame*
-NS_NewImageFrame(nsIPresShell* aPresShell)
+NS_NewImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsImageFrame;
+  return new (aPresShell) nsImageFrame(aContext);
 }
 
 
-nsImageFrame::nsImageFrame() :
+nsImageFrame::nsImageFrame(nsStyleContext* aContext) :
+  ImageFrameSuper(aContext),
   mComputedSize(0, 0),
   mIntrinsicSize(0, 0)
 {
@@ -267,10 +268,9 @@ nsImageFrame::Destroy(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsImageFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsSplittableFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mListener = new nsImageListener(this);

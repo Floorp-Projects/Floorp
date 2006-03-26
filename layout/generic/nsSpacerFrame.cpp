@@ -50,7 +50,7 @@
 
 class SpacerFrame : public nsFrame {
 public:
-  friend nsIFrame* NS_NewSpacerFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIHTMLReflow
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -61,18 +61,14 @@ public:
   PRUint8 GetType();
 
 protected:
-  SpacerFrame();
+  SpacerFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~SpacerFrame();
 };
 
 nsIFrame*
-NS_NewSpacerFrame(nsIPresShell* aPresShell)
+NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) SpacerFrame;
-}
-
-SpacerFrame::SpacerFrame()
-{
+  return new (aPresShell) SpacerFrame(aContext);
 }
 
 SpacerFrame::~SpacerFrame()

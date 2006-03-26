@@ -53,9 +53,10 @@ class nsSVGUseFrame : public nsSVGUseFrameBase,
                       public nsIAnonymousContentCreator
 {
   friend nsIFrame*
-  NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
 protected:
+  nsSVGUseFrame(nsStyleContext* aContext) : nsSVGUseFrameBase(aContext) {}
 
   NS_IMETHOD InitSVG();
 
@@ -105,7 +106,7 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
@@ -115,7 +116,7 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGUseFrame;
+  return new (aPresShell) nsSVGUseFrame(aContext);
 }
 
 NS_IMETHODIMP

@@ -108,9 +108,9 @@ nsPopupFrameList* nsPopupFrameList::GetEntryByFrame(nsIFrame* aPopupFrame) {
 // Wrapper for creating a new menu popup container
 //
 nsIFrame*
-NS_NewPopupSetFrame(nsIPresShell* aPresShell)
+NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPopupSetFrame (aPresShell);
+  return new (aPresShell) nsPopupSetFrame (aPresShell, aContext);
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -132,22 +132,12 @@ NS_INTERFACE_MAP_BEGIN(nsPopupSetFrame)
   NS_INTERFACE_MAP_ENTRY(nsIPopupSetFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
-
-//
-// nsPopupSetFrame cntr
-//
-nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
-{
-
-} // cntr
-
 NS_IMETHODIMP
 nsPopupSetFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   nsIRootBox *rootBox;
   nsresult res = CallQueryInterface(aParent->GetParent(), &rootBox);

@@ -170,8 +170,11 @@ NS_IMPL_ISUPPORTS1(nsListScrollSmoother, nsITimerCallback)
 
 /////////////// nsListBoxBodyFrame //////////////////
 
-nsListBoxBodyFrame::nsListBoxBodyFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-  : nsBoxFrame(aPresShell, aIsRoot, aLayoutManager),
+nsListBoxBodyFrame::nsListBoxBodyFrame(nsIPresShell* aPresShell,
+                                       nsStyleContext* aContext,
+                                       PRBool aIsRoot,
+                                       nsIBoxLayout* aLayoutManager)
+  : nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager),
     mRowCount(-1),
     mRowHeight(0),
     mRowHeightWasSet(PR_FALSE),
@@ -232,14 +235,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 NS_IMETHODIMP
 nsListBoxBodyFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent, 
-                         nsStyleContext* aContext, 
                          nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
-  nsPresContext *aPresContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   
-  mOnePixel = aPresContext->IntScaledPixelsToTwips(1);
+  mOnePixel = presContext->IntScaledPixelsToTwips(1);
   
   nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
   if (!scrollFrame)
@@ -257,11 +259,12 @@ nsListBoxBodyFrame::Init(nsIContent*     aContent,
   nsCOMPtr<nsIScrollbarFrame> scrollbarFrame(do_QueryInterface(verticalScrollbar));
   scrollbarFrame->SetScrollbarMediator(this);
 
-  nsBoxLayoutState boxLayoutState(aPresContext);
+  nsBoxLayoutState boxLayoutState(presContext);
 
   nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->DeviceContext()->GetMetricsFor(aContext->GetStyleFont()->mFont,
-                                               *getter_AddRefs(fm));
+  presContext->DeviceContext()->GetMetricsFor(
+    GetStyleContext()->GetStyleFont()->mFont, *getter_AddRefs(fm)
+    );
   fm->GetHeight(mRowHeight);
 
   return rv;
@@ -1457,9 +1460,9 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
 nsIFrame*
-NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, PRBool aIsRoot, 
-                       nsIBoxLayout* aLayoutManager)
+NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                       PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
   return 
-    new (aPresShell) nsListBoxBodyFrame(aPresShell, aIsRoot, aLayoutManager);
+    new (aPresShell) nsListBoxBodyFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
 }

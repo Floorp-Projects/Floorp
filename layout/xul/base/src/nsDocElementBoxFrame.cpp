@@ -73,9 +73,11 @@
 class nsDocElementBoxFrame : public nsBoxFrame, public nsIAnonymousContentCreator {
 public:
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+                                  nsStyleContext* aContext);
 
-  nsDocElementBoxFrame(nsIPresShell* aShell);
+  nsDocElementBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
+    :nsBoxFrame(aShell, aContext, PR_TRUE) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -94,13 +96,9 @@ public:
 //----------------------------------------------------------------------
 
 nsIFrame*
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell)
+NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsDocElementBoxFrame (aPresShell);
-}
-
-nsDocElementBoxFrame::nsDocElementBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
-{
+  return new (aPresShell) nsDocElementBoxFrame (aPresShell, aContext);
 }
 
 NS_IMETHODIMP

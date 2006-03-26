@@ -56,16 +56,8 @@ class nsFileControlFrame : public nsAreaFrame,
                            public nsIAnonymousContentCreator
 {
 public:
-  nsFileControlFrame();
+  nsFileControlFrame(nsStyleContext* aContext);
   virtual ~nsFileControlFrame();
-
-  // XXX Hack so we can squirrel away the pres context pointer
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
-                  nsIFrame*        aPrevInFlow) {
-    return nsAreaFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  }
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,

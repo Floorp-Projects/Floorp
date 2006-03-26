@@ -69,8 +69,9 @@
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
 
-nsSVGPathGeometryFrame::nsSVGPathGeometryFrame()
-  : mUpdateFlags(0),
+nsSVGPathGeometryFrame::nsSVGPathGeometryFrame(nsStyleContext* aContext)
+  : nsSVGPathGeometryFrameBase(aContext),
+    mUpdateFlags(0),
     mFillGradient(nsnull), mStrokeGradient(nsnull),
     mFillPattern(nsnull), mStrokePattern(nsnull),
     mPropagateTransform(PR_TRUE)
@@ -117,7 +118,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrameBase)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
                              nsIFrame*        aParent,
-                             nsStyleContext*  aContext,
                              nsIFrame*        aPrevInFlow)
 {
   mContent = aContent;
@@ -129,8 +129,7 @@ nsSVGPathGeometryFrame::Init(nsIContent*      aContent,
   }
   
   InitSVG();
-  
-  SetStyleContext(aContext);
+  DidSetStyleContext();
     
   return NS_OK;
 }

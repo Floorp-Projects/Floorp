@@ -70,10 +70,6 @@
 #undef NOISY
 #endif
 
-nsContainerFrame::nsContainerFrame()
-{
-}
-
 nsContainerFrame::~nsContainerFrame()
 {
 }
@@ -81,11 +77,9 @@ nsContainerFrame::~nsContainerFrame()
 NS_IMETHODIMP
 nsContainerFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
-                       nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsresult rv;
-  rv = nsSplittableFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
   if (aPrevInFlow) {
     // Make sure we copy bits from our prev-in-flow that will affect
     // us. A continuation for a container frame needs to know if it

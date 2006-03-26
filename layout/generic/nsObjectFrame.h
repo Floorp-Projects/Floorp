@@ -53,12 +53,13 @@ class nsPresContext;
 
 class nsObjectFrame : public nsObjectFrameSuper, public nsIObjectFrame {
 public:
+  friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
   // nsISupports 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Init(nsIContent* aContent,
                   nsIFrame* aParent,
-                  nsStyleContext* aContext,
                   nsIFrame* aPrevInFlow);
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -123,6 +124,7 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  nsObjectFrame(nsStyleContext* aContext) : nsObjectFrameSuper(aContext) {}
   virtual ~nsObjectFrame();
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so

@@ -72,7 +72,7 @@ class nsTextControlFrame : public nsStackFrame,
 
 {
 public:
-  nsTextControlFrame(nsIPresShell* aShell);
+  nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext);
   virtual ~nsTextControlFrame();
 
   virtual void RemovedAsPrimaryFrame(nsPresContext* aPresContext); 

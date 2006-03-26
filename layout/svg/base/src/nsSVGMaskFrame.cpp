@@ -53,11 +53,13 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase,
                        public nsISVGMaskFrame
 {
   friend nsIFrame*
-  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
 
  public:
+  nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
+ 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -108,9 +110,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskFrameBase)
 // Implementation
 
 nsIFrame*
-NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGMaskFrame;
+  return new (aPresShell) nsSVGMaskFrame(aContext);
 }
 
 nsresult

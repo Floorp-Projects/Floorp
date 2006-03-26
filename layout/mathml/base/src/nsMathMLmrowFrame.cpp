@@ -53,13 +53,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmrowFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmrowFrame;
-}
-
-nsMathMLmrowFrame::nsMathMLmrowFrame()
-{
+  return new (aPresShell) nsMathMLmrowFrame(aContext);
 }
 
 nsMathMLmrowFrame::~nsMathMLmrowFrame()

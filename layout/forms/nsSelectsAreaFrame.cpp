@@ -43,9 +43,9 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewSelectsAreaFrame(nsIPresShell* aShell, PRUint32 aFlags)
+NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
-  nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame;
+  nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame(aContext);
 
   if (it) {
     // We need NS_BLOCK_SPACE_MGR to ensure that the options inside the select

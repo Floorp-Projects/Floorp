@@ -44,14 +44,9 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewPlaceholderFrame(nsIPresShell* aPresShell)
+NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPlaceholderFrame;
-}
-
-// These are useful for debugging
-nsPlaceholderFrame::nsPlaceholderFrame()
-{
+  return new (aPresShell) nsPlaceholderFrame(aContext);
 }
 
 nsPlaceholderFrame::~nsPlaceholderFrame()

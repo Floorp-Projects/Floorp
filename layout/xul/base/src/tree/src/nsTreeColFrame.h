@@ -40,6 +40,7 @@
 #include "nsITreeColumns.h"
 
 nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell, 
+                             nsStyleContext* aContext,
                              PRBool aIsRoot = PR_FALSE,
                              nsIBoxLayout* aLayoutManager = nsnull);
 
@@ -48,9 +49,14 @@ class nsTreeColFrame : public nsBoxFrame
 public:
   NS_DECL_ISUPPORTS
 
+  nsTreeColFrame(nsIPresShell* aPresShell,
+                 nsStyleContext* aContext,
+                 PRBool aIsRoot = nsnull,
+                 nsIBoxLayout* aLayoutManager = nsnull):
+    nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
+
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
@@ -71,7 +77,6 @@ public:
                                       nsIBoxLayout* aLayoutManager);
 
 protected:
-  nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsTreeColFrame();
 
   void EnsureColumns();

@@ -50,8 +50,10 @@ class nsXTFSVGDisplayFrame : public nsXTFSVGDisplayFrameBase,
                              public nsIAnonymousContentCreator
 {
 public:
+  nsXTFSVGDisplayFrame(nsStyleContext* aContext) : nsXTFSVGDisplayFrameBase(aContext) {}
+
   friend nsIFrame*
-  NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
@@ -75,9 +77,9 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsXTFSVGDisplayFrame;
+  return new (aPresShell) nsXTFSVGDisplayFrame(aContext);
 }
 
 //----------------------------------------------------------------------

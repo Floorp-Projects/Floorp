@@ -67,13 +67,9 @@
 #define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE  6
 
 nsIFrame*
-NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmpaddedFrame;
-}
-
-nsMathMLmpaddedFrame::nsMathMLmpaddedFrame()
-{
+  return new (aPresShell) nsMathMLmpaddedFrame(aContext);
 }
 
 nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()

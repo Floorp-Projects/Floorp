@@ -68,13 +68,13 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewLeafBoxFrame (nsIPresShell* aPresShell)
+NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsLeafBoxFrame(aPresShell);
+  return new (aPresShell) nsLeafBoxFrame(aPresShell, aContext);
 } // NS_NewLeafBoxFrame
 
-nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell)
-    : mMouseThrough(unset)
+nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext)
+    : nsLeafFrame(aContext), mMouseThrough(unset)
 {
     mState |= NS_FRAME_IS_BOX;
 }
@@ -95,10 +95,9 @@ NS_IMETHODIMP
 nsLeafBoxFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafFrame::Init(aContent, aParent, aPrevInFlow);
 
    // see if we need a widget
   if (aParent && aParent->IsBoxFrame()) {

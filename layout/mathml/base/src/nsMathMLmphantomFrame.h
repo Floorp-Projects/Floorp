@@ -48,7 +48,7 @@
 
 class nsMathMLmphantomFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
@@ -58,7 +58,8 @@ public:
                               const nsDisplayListSet& aLists) { return NS_OK; }
 
 protected:
-  nsMathMLmphantomFrame();
+  nsMathMLmphantomFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmphantomFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

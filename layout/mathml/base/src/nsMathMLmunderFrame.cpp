@@ -57,13 +57,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmunderFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmunderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmunderFrame;
-}
-
-nsMathMLmunderFrame::nsMathMLmunderFrame()
-{
+  return new (aPresShell) nsMathMLmunderFrame(aContext);
 }
 
 nsMathMLmunderFrame::~nsMathMLmunderFrame()

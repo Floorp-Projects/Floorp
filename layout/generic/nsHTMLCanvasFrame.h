@@ -46,12 +46,12 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 
-nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell);
+nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsHTMLCanvasFrame : public nsSplittableFrame
 {
 public:
-  nsHTMLCanvasFrame();
+  nsHTMLCanvasFrame(nsStyleContext* aContext) : nsSplittableFrame(aContext) {}
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,

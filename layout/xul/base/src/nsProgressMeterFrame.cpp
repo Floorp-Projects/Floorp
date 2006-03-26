@@ -57,20 +57,10 @@
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewProgressMeterFrame (nsIPresShell* aPresShell)
+NS_NewProgressMeterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsProgressMeterFrame(aPresShell);
+  return new (aPresShell) nsProgressMeterFrame(aPresShell, aContext);
 } // NS_NewProgressMeterFrame
-
-//
-// nsProgressMeterFrame cntr
-//
-// Init, if necessary
-//
-nsProgressMeterFrame :: nsProgressMeterFrame (nsIPresShell* aPresShell)
-:nsBoxFrame(aPresShell)
-{
-}
 
 //
 // nsProgressMeterFrame dstr

@@ -49,7 +49,7 @@
 
 class nsMathMLmsubsupFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   TransmitAutomaticData();
@@ -70,7 +70,7 @@ public:
                     nscoord              aScriptSpace = NSFloatPointsToTwips(0.5f));
 
 protected:
-  nsMathMLmsubsupFrame();
+  nsMathMLmsubsupFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmsubsupFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

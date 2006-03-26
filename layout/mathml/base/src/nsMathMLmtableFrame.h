@@ -49,7 +49,7 @@ class nsMathMLmtableOuterFrame : public nsTableOuterFrame,
                                  public nsMathMLFrame
 {
 public:
-  friend nsIFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -82,7 +82,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -94,7 +93,7 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
-  nsMathMLmtableOuterFrame();
+  nsMathMLmtableOuterFrame(nsStyleContext* aContext) : nsTableOuterFrame(aContext) {}
   virtual ~nsMathMLmtableOuterFrame();
 
   // helper to find the row frame at a given index, positive or negative, e.g.,
@@ -110,7 +109,7 @@ protected:
 class nsMathMLmtdFrame : public nsTableCellFrame
 {
 public:
-  friend nsIFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -120,7 +119,7 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
-  nsMathMLmtdFrame();
+  nsMathMLmtdFrame(nsStyleContext* aContext) : nsTableCellFrame(aContext) {}
   virtual ~nsMathMLmtdFrame();
 }; // class nsMathMLmtdFrame
 
@@ -129,7 +128,7 @@ protected:
 class nsMathMLmtdInnerFrame : public nsBlockFrame,
                               public nsMathMLFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -159,7 +158,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -170,7 +168,7 @@ public:
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const;
 
 protected:
-  nsMathMLmtdInnerFrame();
+  nsMathMLmtdInnerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
   virtual ~nsMathMLmtdInnerFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }

@@ -57,13 +57,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmoverFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmoverFrame;
-}
-
-nsMathMLmoverFrame::nsMathMLmoverFrame()
-{
+  return new (aPresShell) nsMathMLmoverFrame(aContext);
 }
 
 nsMathMLmoverFrame::~nsMathMLmoverFrame()

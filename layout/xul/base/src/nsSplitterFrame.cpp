@@ -228,13 +228,13 @@ nsSplitterFrameInner::GetState()
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewSplitterFrame (nsIPresShell* aPresShell)
+NS_NewSplitterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSplitterFrame(aPresShell);
+  return new (aPresShell) nsSplitterFrame(aPresShell, aContext);
 } // NS_NewSplitterFrame
 
-nsSplitterFrame::nsSplitterFrame(nsIPresShell* aPresShell)
-: nsBoxFrame(aPresShell),
+nsSplitterFrame::nsSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+: nsBoxFrame(aPresShell, aContext),
   mInner(0)
 {
 }
@@ -299,7 +299,6 @@ nsSplitterFrame::AttributeChanged(PRInt32 aNameSpaceID,
 NS_IMETHODIMP
 nsSplitterFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
   NS_ENSURE_FALSE(mInner, NS_ERROR_ALREADY_INITIALIZED);
@@ -338,15 +337,15 @@ nsSplitterFrame::Init(nsIContent*      aContent,
       if (str.IsEmpty()) {
         aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
-        nsStyleContext* parent = aContext->GetParent();
-        newContext = aContext->GetRuleNode()->GetPresContext()->StyleSet()->
-          ResolveStyleFor(aContent, parent);
-        aContext = newContext;
+        nsStyleContext* parentStyleContext = aParent->GetStyleContext();
+        newContext = GetStyleContext()->GetRuleNode()->GetPresContext()->StyleSet()->
+          ResolveStyleFor(aContent, parentStyleContext);
+        SetStyleContextWithoutNotification(newContext);
       }
     }
   }
 
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   nsHTMLContainerFrame::CreateViewForFrame(this, nsnull, PR_TRUE);
   nsIView* view = GetView();

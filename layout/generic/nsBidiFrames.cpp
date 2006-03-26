@@ -42,8 +42,8 @@
 #include "nsLayoutAtoms.h"
 
 
-nsDirectionalFrame::nsDirectionalFrame(PRUnichar aChar)
-  : mChar(aChar)
+nsDirectionalFrame::nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar)
+  : nsFrame(aContext), mChar(aChar)
 {
 }
 
@@ -84,9 +84,9 @@ nsDirectionalFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 nsIFrame*
-NS_NewDirectionalFrame(nsIPresShell* aPresShell, PRUnichar aChar)
+NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUnichar aChar)
 {
-  return new (aPresShell) nsDirectionalFrame(aChar);
+  return new (aPresShell) nsDirectionalFrame(aContext, aChar);
 }
 
 #endif /* IBMBIDI */

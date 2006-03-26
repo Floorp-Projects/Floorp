@@ -119,6 +119,8 @@ public:
                                   nsLineBox* aLine);
 
 protected:
+  nsHTMLContainerFrame(nsStyleContext *aContext) : nsContainerFrame(aContext) {}
+
   /**
    * Displays the below-children decorations, then the children, then
    * the above-children decorations, with the decorations going in the

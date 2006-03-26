@@ -56,9 +56,9 @@
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewScrollbarFrame (nsIPresShell* aPresShell)
+NS_NewScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsScrollbarFrame (aPresShell);
+  return new (aPresShell) nsScrollbarFrame (aPresShell, aContext);
 } // NS_NewScrollbarFrame
 
 //
@@ -70,14 +70,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 
 NS_IMETHODIMP
-nsScrollbarFrame::Init(
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow)
+nsScrollbarFrame::Init(nsIContent* aContent,
+                       nsIFrame*   aParent,
+                       nsIFrame*   aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+
+  CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
   nsIView* view = GetView();
   view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
 

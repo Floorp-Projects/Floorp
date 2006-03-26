@@ -450,9 +450,9 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
 }
 
 nsIFrame*
-NS_NewEmptyFrame(nsIPresShell* aPresShell)
+NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFrame;
+  return new (aPresShell) nsFrame(aContext);
 }
 
 MOZ_DECL_CTOR_COUNTER(nsFrame)
@@ -488,11 +488,13 @@ nsFrame::operator delete(void* aPtr, size_t sz)
 }
 
 
-nsFrame::nsFrame()
+nsFrame::nsFrame(nsStyleContext* aContext)
 {
   MOZ_COUNT_CTOR(nsFrame);
 
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY;
+  mStyleContext = aContext;
+  mStyleContext->AddRef();
 }
 
 nsFrame::~nsFrame()
@@ -546,7 +548,6 @@ nsrefcnt nsFrame::Release(void)
 NS_IMETHODIMP
 nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
   mContent = aContent;
@@ -575,7 +576,7 @@ nsFrame::Init(nsIContent*      aContent,
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_GENERATED_CONTENT);
   }
-  SetStyleContext(aContext);
+  DidSetStyleContext();
 
   if (IsBoxWrapped())
     InitBoxMetrics(PR_FALSE);

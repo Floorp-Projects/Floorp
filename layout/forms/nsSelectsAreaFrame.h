@@ -49,7 +49,7 @@ class nsIContent;
 class nsSelectsAreaFrame : public nsAreaFrame
 {
 public:
-  friend nsIFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell, PRUint32 aFlags);
+  friend nsIFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRUint32 aFlags);
 
   // nsISupports
   //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -64,6 +64,9 @@ public:
 
   static PRBool IsOptionElement(nsIContent* aContent);
   static PRBool IsOptionElementFrame(nsIFrame *aFrame);
+  
+protected:
+  nsSelectsAreaFrame(nsStyleContext* aContext) : nsAreaFrame(aContext) {}
 };
 
 #endif /* nsSelectsAreaFrame_h___ */

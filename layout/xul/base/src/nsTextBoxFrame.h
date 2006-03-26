@@ -56,11 +56,10 @@ public:
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
-  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
@@ -102,7 +101,7 @@ protected:
 
   void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
-  nsTextBoxFrame(nsIPresShell* aShell);
+  nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   void CalculateTitleForWidth(nsPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,

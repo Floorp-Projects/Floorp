@@ -48,7 +48,7 @@
 
 class nsMathMLmpaddedFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
@@ -60,7 +60,7 @@ public:
          nsReflowStatus&          aStatus);
   
 protected:
-  nsMathMLmpaddedFrame();
+  nsMathMLmpaddedFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmpaddedFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

@@ -43,10 +43,12 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 
-nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent);
+nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
+                                       nsIContent*     aContent,
+                                       nsStyleContext* aContext);
 
-nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                       nsIContent*   aContent);
+nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
+                                       nsIContent*     aContent,
+                                       nsStyleContext* aContext);
 #endif // __NS_SVGGRADIENTFRAME_H__
 

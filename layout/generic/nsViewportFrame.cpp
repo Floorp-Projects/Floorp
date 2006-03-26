@@ -46,9 +46,9 @@
 #include "nsIPresShell.h"
 
 nsIFrame*
-NS_NewViewportFrame(nsIPresShell* aPresShell)
+NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) ViewportFrame;
+  return new (aPresShell) ViewportFrame(aContext);
 }
 
 NS_IMETHODIMP

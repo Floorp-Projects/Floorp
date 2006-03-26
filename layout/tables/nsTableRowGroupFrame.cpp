@@ -57,7 +57,8 @@
 
 #include "nsCellMap.h"//table cell navigation
 
-nsTableRowGroupFrame::nsTableRowGroupFrame()
+nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext):
+  nsHTMLContainerFrame(aContext)
 {
   SetRepeatable(PR_FALSE);
 #ifdef DEBUG_TABLE_REFLOW_TIMING
@@ -1770,21 +1771,18 @@ nsTableRowGroupFrame::GetType() const
 /* ----- global methods ----- */
 
 nsIFrame*
-NS_NewTableRowGroupFrame(nsIPresShell* aPresShell)
+NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableRowGroupFrame;
+  return new (aPresShell) nsTableRowGroupFrame(aContext);
 }
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::Init(nsIContent*      aContent,
                            nsIFrame*        aParent,
-                           nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
-
   // Let the base class do its processing
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;

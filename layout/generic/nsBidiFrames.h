@@ -55,7 +55,7 @@ protected:
   virtual ~nsDirectionalFrame();
 
 public:
-  nsDirectionalFrame(PRUnichar aChar);
+  nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DIRECTIONAL_FRAME_IID)
 

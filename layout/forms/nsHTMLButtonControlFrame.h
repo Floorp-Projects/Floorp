@@ -60,7 +60,7 @@ class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
                                  public nsIFormControlFrame 
 {
 public:
-  nsHTMLButtonControlFrame();
+  nsHTMLButtonControlFrame(nsStyleContext* aContext);
   ~nsHTMLButtonControlFrame();
 
 
@@ -85,7 +85,6 @@ public:
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;

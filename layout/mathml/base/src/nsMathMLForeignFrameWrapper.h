@@ -49,7 +49,7 @@
 class nsMathMLForeignFrameWrapper : public nsBlockFrame,
                                     public nsMathMLFrame {
 public:
-  friend nsIFrame* NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -75,12 +75,6 @@ public:
   }
 
   // overloaded nsBlockFrame methods
-
-  NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsStyleContext*  aContext,
-       nsIFrame*        aPrevInFlow);
 
 #ifdef NS_DEBUG
   NS_IMETHOD
@@ -131,7 +125,7 @@ public:
   }
 
 protected:
-  nsMathMLForeignFrameWrapper() {}
+  nsMathMLForeignFrameWrapper(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
   virtual ~nsMathMLForeignFrameWrapper() {}
 };
 

@@ -80,7 +80,7 @@ public:
     * @param aContent the content representing this frame
     * @param aParentFrame the parent frame
     */
-  nsFormControlFrame();
+  nsFormControlFrame(nsStyleContext*);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

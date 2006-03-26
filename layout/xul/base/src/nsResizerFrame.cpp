@@ -63,13 +63,13 @@
 // Creates a new Resizer frame and returns it
 //
 nsIFrame*
-NS_NewResizerFrame(nsIPresShell* aPresShell)
+NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsResizerFrame(aPresShell);
+  return new (aPresShell) nsResizerFrame(aPresShell, aContext);
 } // NS_NewResizerFrame
 
-nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
-:nsTitleBarFrame(aPresShell)
+nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+:nsTitleBarFrame(aPresShell, aContext)
 {
   mDirection = topleft; // by default...
 }
@@ -77,10 +77,9 @@ nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
 NS_IMETHODIMP
 nsResizerFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
                      nsIFrame*        asPrevInFlow)
 {
-  nsresult rv = nsTitleBarFrame::Init(aContent, aParent, aContext, asPrevInFlow);
+  nsresult rv = nsTitleBarFrame::Init(aContent, aParent, asPrevInFlow);
 
   GetInitialDirection(mDirection);
 

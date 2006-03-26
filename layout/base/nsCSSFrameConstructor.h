@@ -211,7 +211,6 @@ private:
   nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
                                 nsIContent*                    aContent,
                                 nsIFrame*                      aParentFrame,
-                                nsStyleContext*                aStyleContext,
                                 nsIFrame*                      aPrevInFlow,
                                 nsIFrame*                      aNewFrame,
                                 PRBool                         aAllowCounters = PR_TRUE);
@@ -672,7 +671,7 @@ private:
                             nsFrameItems&            aFrameItems);
 
   // A function that can be invoked to create some sort of image frame.
-  typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*);
+  typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*, nsStyleContext*);
 
   /**
    * CreateHTMLImageFrame will do some tests on aContent, and if it determines

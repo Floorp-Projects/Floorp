@@ -54,9 +54,9 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGDefsFrame;
+  return new (aPresShell) nsSVGDefsFrame(aContext);
 }
 
 // Stub method specialized by subclasses.  Not called by said
@@ -82,11 +82,10 @@ NS_IMETHODIMP
 nsSVGDefsFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGDefsFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSVGDefsFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   InitSVG();
   

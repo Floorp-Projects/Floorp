@@ -49,7 +49,7 @@
 
 class nsMathMLmoFrame : public nsMathMLTokenFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmoFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsIAtom* GetType() const;
 
@@ -93,7 +93,7 @@ public:
           nsHTMLReflowMetrics& aDesiredStretchSize);
 
 protected:
-  nsMathMLmoFrame();
+  nsMathMLmoFrame(nsStyleContext* aContext) : nsMathMLTokenFrame(aContext) {}
   virtual ~nsMathMLmoFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

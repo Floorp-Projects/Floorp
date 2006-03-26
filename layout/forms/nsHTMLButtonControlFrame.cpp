@@ -73,13 +73,13 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell)
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsHTMLButtonControlFrame;
+  return new (aPresShell) nsHTMLButtonControlFrame(aContext);
 }
 
-nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
-  : nsHTMLContainerFrame()
+nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext)
+  : nsHTMLContainerFrame(aContext)
 {
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
@@ -101,11 +101,10 @@ NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(
               nsIContent*      aContent,
               nsIFrame*        aParent,
-              nsStyleContext*  aContext,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  mRenderer.SetFrame(this,GetPresContext());
+  nsresult  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  mRenderer.SetFrame(this, GetPresContext());
   return rv;
 }
 

@@ -53,8 +53,7 @@
 #define COL_CONSTRAINT_BITS           0x07000000 // uses bits 25-27
 #define COL_CONSTRAINT_OFFSET         24
 
-nsTableColFrame::nsTableColFrame()
-  : nsFrame()
+nsTableColFrame::nsTableColFrame(nsStyleContext* aContext) : nsFrame(aContext)
 {
   SetColType(eColContent);
   ResetSizingInfo();
@@ -238,21 +237,18 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
 /* ----- global methods ----- */
 
 nsIFrame* 
-NS_NewTableColFrame(nsIPresShell* aPresShell)
+NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableColFrame;
+  return new (aPresShell) nsTableColFrame(aContext);
 }
 
 NS_IMETHODIMP
 nsTableColFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
-
   // Let the base class do its initialization
-  rv = nsFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsFrame::Init(aContent, aParent, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
