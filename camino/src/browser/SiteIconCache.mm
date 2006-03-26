@@ -37,6 +37,7 @@
 
 #import "NSString+Utils.h"
 #import "NSFileManager+Utils.h"
+#import "PreferenceManager.h"
 
 #import "SiteIconCache.h"
 
@@ -152,12 +153,13 @@ static NSString* const kCacheEntryExpirationDateKey = @"exp_date";
   if (!imageSaved)
     NSLog(@"Failed to archive image for %@ to file", inURL);
 }
+  
 
 #pragma mark -
 
 - (NSString*)cacheDirectory
 {
-  return [@"~/Library/Caches/Camino/IconCache" stringByStandardizingPath];
+  return [[[PreferenceManager sharedInstance] cacheParentDirPath] stringByAppendingPathComponent:@"IconCache"];
 }
 
 - (NSString*)imageDataFileWithUUID:(NSString*)inUUID

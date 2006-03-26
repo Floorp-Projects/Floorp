@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Conrad Carlen <ccarlen@netscape.com>
+ *  Hakan Waara <hwaara@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,114 +44,148 @@
 #include <Carbon/Carbon.h>
 
 // Defines
+#define APP_REGISTRY_NAME         NS_LITERAL_CSTRING("Application.regs")
 
-#define APP_REGISTRY_NAME   NS_LITERAL_CSTRING("Application.regs")
 
-//*****************************************************************************
-// AppDirServiceProvider::Constructor/Destructor
-//*****************************************************************************   
-
-AppDirServiceProvider::AppDirServiceProvider(const nsACString& productDirName)
+AppDirServiceProvider::AppDirServiceProvider(const char *inName, PRBool isCustomProfile)
 {
-  mProductDirName.Assign(productDirName);
+  mIsCustomProfile = isCustomProfile;
+  mName.Assign(inName);
 }
 
 AppDirServiceProvider::~AppDirServiceProvider()
 {
 }
 
-//*****************************************************************************
-// AppDirServiceProvider::nsISupports
-//*****************************************************************************   
-
 NS_IMPL_ISUPPORTS1(AppDirServiceProvider, nsIDirectoryServiceProvider)
 
-//*****************************************************************************
-// AppDirServiceProvider::nsIDirectoryServiceProvider
-//*****************************************************************************   
+
+// nsIDirectoryServiceProvider implementation 
 
 NS_IMETHODIMP
 AppDirServiceProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {    
   nsCOMPtr<nsILocalFile>  localFile;
   nsresult rv = NS_ERROR_FAILURE;
-  nsCAutoString strBuf;
 
   *_retval = nsnull;
   *persistent = PR_TRUE;
   
-  if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+  if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0 ||
+      strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR)   == 0)
   {
-    rv = GetProductDirectory(getter_AddRefs(localFile));
+    rv = GetProfileDirectory(getter_AddRefs(localFile));
   }
   else if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
   {
-    rv = GetProductDirectory(getter_AddRefs(localFile));
+    rv = GetProfileDirectory(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(APP_REGISTRY_NAME);
   }
-  else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
-  {
-    rv = GetProductDirectory(getter_AddRefs(localFile));
-  }
   else if (strcmp(prop, NS_APP_CACHE_PARENT_DIR) == 0)
   {
-    rv = GetCacheDirectory(getter_AddRefs(localFile));
+    rv = GetParentCacheDirectory(getter_AddRefs(localFile));
   }
-    
+
   if (localFile && NS_SUCCEEDED(rv))
     return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
     
   return rv;
 }
 
-//*****************************************************************************
-// AppDirServiceProvider::AppDirServiceProvider
-//*****************************************************************************   
-
-NS_METHOD
-AppDirServiceProvider::GetProductDirectory(nsILocalFile **outLocalFile)
-{
-  return EnsureFolder(kApplicationSupportFolderType, outLocalFile);
-}
+// Protected methods
 
 nsresult
-AppDirServiceProvider::GetCacheDirectory(nsILocalFile** outCacheFolder)
-{
-  return EnsureFolder(kCachedDataFolderType, outCacheFolder);
-}
-
-nsresult
-AppDirServiceProvider::EnsureFolder(OSType inFolderType, nsILocalFile** outFolder)
+AppDirServiceProvider::GetProfileDirectory(nsILocalFile** outFolder)
 {
   NS_ENSURE_ARG_POINTER(outFolder);
   *outFolder = nsnull;
+  nsresult rv = NS_OK;
   
-  nsresult rv;
-  FSRef   foundRef;
+  // Init and cache the profile directory; we'll get queried for it a lot of times.
+  if (!mProfileDir)
+  {
+    if (mIsCustomProfile)
+    {
+      rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(mName), PR_FALSE, getter_AddRefs(mProfileDir));
+      
+      if (NS_FAILED(rv))
+      {
+        NS_WARNING ("Couldn't use the specified custom path!");
+        return rv;
+      }
+    }
+    else
+    {
+      // if this is not a custom profile path, we have a product name, and we'll use
+      // Application Support/<mName> as our profile dir.
+      rv = GetSystemDirectory(kApplicationSupportFolderType, getter_AddRefs(mProfileDir));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      // if it's not a custom profile, mName is our product name.
+      mProfileDir->AppendNative(mName);
+    }
+    
+    rv = EnsureExists(mProfileDir);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } // end lazy init
+  
+  nsCOMPtr<nsIFile> profileDir;
+	rv = mProfileDir->Clone(getter_AddRefs(profileDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return CallQueryInterface(profileDir, outFolder);
+}
+
+nsresult
+AppDirServiceProvider::GetSystemDirectory(OSType inFolderType, nsILocalFile** outFolder)
+{
+  FSRef foundRef;
+  *outFolder = nsnull;
   
   OSErr err = ::FSFindFolder(kUserDomain, inFolderType, kCreateFolder, &foundRef);
   if (err != noErr)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsILocalFileMac> localDir(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  if (!localDir)
+  
+  nsCOMPtr<nsILocalFileMac> macFolder = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  if (!macFolder)
     return NS_ERROR_FAILURE;
-  rv = localDir->InitWithFSRef(&foundRef);
-  if (NS_FAILED(rv))
-    return rv;
-  rv = localDir->AppendNative(mProductDirName);
-  if (NS_FAILED(rv))
-    return rv;
   
-  PRBool exists;
-  rv = localDir->Exists(&exists);
-  if (NS_SUCCEEDED(rv) && !exists)
-    rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv = macFolder->InitWithFSRef(&foundRef);
+  NS_ENSURE_SUCCESS(rv, rv);
   
-  *outFolder = localDir;
-  NS_ADDREF(*outFolder);
-  
-  return rv; 
+  NS_ADDREF(*outFolder = macFolder);
+  return NS_OK;
 }
+
+// Gets the parent directory to the Cache folder.
+nsresult
+AppDirServiceProvider::GetParentCacheDirectory(nsILocalFile** outFolder)
+{
+  *outFolder = nsnull;
+  
+  if (mIsCustomProfile)
+    return GetProfileDirectory(outFolder);
+  
+  // we don't have a custom profile path, so use Caches/<product name>
+  nsresult rv = GetSystemDirectory(kCachedDataFolderType, outFolder);
+  if (NS_FAILED(rv) || !(*outFolder))
+    return NS_ERROR_FAILURE;
+  
+  (*outFolder)->AppendNative(mName);
+  rv = EnsureExists(*outFolder);
+
+  return rv;
+}
+
+/* static */ 
+nsresult
+AppDirServiceProvider::EnsureExists(nsILocalFile* inFolder)
+{
+  PRBool exists;
+  nsresult rv = inFolder->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && !exists)
+    rv = inFolder->Create(nsIFile::DIRECTORY_TYPE, 0775);
+  return rv;
+}
+

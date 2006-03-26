@@ -780,13 +780,13 @@ static id gSharedProgressController = nil;
   }
   
   // now save
-  NSString *profileDir = [[PreferenceManager sharedInstance] newProfilePath];
+  NSString *profileDir = [[PreferenceManager sharedInstance] profilePath];
   [downloadArray writeToFile: [profileDir stringByAppendingPathComponent:@"downloads.plist"] atomically: YES];
 }
 
 -(void)loadProgressViewControllers
 {
-  NSString* downloadsPath = [[[PreferenceManager sharedInstance] newProfilePath] stringByAppendingPathComponent:@"downloads.plist"];
+  NSString* downloadsPath = [[[PreferenceManager sharedInstance] profilePath] stringByAppendingPathComponent:@"downloads.plist"];
   NSArray*  downloads     = [NSArray arrayWithContentsOfFile:downloadsPath];
   
   if (downloads)

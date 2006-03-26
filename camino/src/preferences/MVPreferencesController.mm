@@ -38,6 +38,7 @@
 
 #import "MVPreferencesController.h"
 #import "ToolbarAdditions.h"
+#import "PreferenceManager.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -124,8 +125,8 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
     [self loadPreferencePanesAtPath:paneBundlesPath];
 
     // this matches code in -initMozillaPrefs
-    NSString* profileDirName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozNewProfileDirName"];
-    NSString* prefPanesSubpath = [profileDirName stringByAppendingPathComponent:@"PreferencePanes"];
+    NSString* profilePath = [[PreferenceManager sharedInstance] profilePath];
+    NSString* prefPanesSubpath = [profilePath stringByAppendingPathComponent:@"PreferencePanes"];
 
     NSString* userLibPath = [MVPreferencesController applicationSupportPathForDomain:kUserDomain];
     if (userLibPath)

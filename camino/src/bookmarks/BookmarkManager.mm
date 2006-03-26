@@ -1193,7 +1193,7 @@ static BookmarkManager* gBookmarkManager = nil;
 //
 - (BOOL)readBookmarks
 {
-  NSString *profileDir = [[PreferenceManager sharedInstance] newProfilePath];  
+  NSString *profileDir = [[PreferenceManager sharedInstance] profilePath];  
 
   //
   // figure out where Bookmarks.plist is and store it as mPathToBookmarkFile

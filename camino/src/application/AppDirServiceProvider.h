@@ -54,19 +54,29 @@ class nsIFile;
 class AppDirServiceProvider : public nsIDirectoryServiceProvider
 {
 public:
-                        AppDirServiceProvider(const nsACString& productDirName);
+                            // If |isCustomProfile| is true, we use the passed in string as a path to the custom 
+                            // profile.   If it is false, the string is the product name, which will be used for the 
+                            // Application Support/<name> folder, as well as the Caches/<name> system folder.
+                            AppDirServiceProvider(const char *inProductName, PRBool isCustomProfile);
 
-   NS_DECL_ISUPPORTS
-   NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
 protected:
-   virtual              ~AppDirServiceProvider();
+    virtual                 ~AppDirServiceProvider();
 
-   NS_METHOD            GetProductDirectory(nsILocalFile **aLocalFile);
-   nsresult             GetCacheDirectory(nsILocalFile** outCacheFolder);
-   nsresult             EnsureFolder(OSType inFolderType, nsILocalFile** outFolder);
-
-   nsCString            mProductDirName;
+    nsresult                GetProfileDirectory(nsILocalFile **outFolder);
+    nsresult                GetParentCacheDirectory(nsILocalFile** outFolder);
+      
+    nsresult                GetSystemDirectory(OSType inFolderType, nsILocalFile** outFolder);
+    static nsresult 				AppDirServiceProvider::EnsureExists(nsILocalFile* inFolder);
+  
+protected:
+    nsCOMPtr<nsILocalFile>  mProfileDir;
+    PRBool                  mIsCustomProfile;
+    
+    // this is either the product name (e.g., "Camino") or a path, depending on mIsCustomPath
+    nsCString               mName; 
 };
 
 #endif // __AppDirServiceProvider_h__

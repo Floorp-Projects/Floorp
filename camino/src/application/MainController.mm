@@ -225,12 +225,6 @@ const int kReuseWindowOnAE = 2;
 {
   [self ensureGeckoInitted];
 
-  // previous versions would keep the cache in the profile folder. If we find it there, remove it so
-  // that backup apps can more easily back up our profile. This will mean if anyone goes back to 
-  // 0.8.x, they'll lose their favicons and cache, but that's ok.
-  NSString* cacheDir = [[[PreferenceManager sharedInstance] newProfilePath] stringByAppendingPathComponent:@"Cache"];
-  [[NSFileManager defaultManager] removeFileAtPath:cacheDir handler:nil];
-
   NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
   // turn on menu display notifications
   [NSMenu setupMenuWillDisplayNotifications];

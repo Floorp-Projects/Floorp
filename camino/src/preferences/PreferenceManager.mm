@@ -41,6 +41,7 @@
 #import "NSString+Utils.h"
 
 #import "PreferenceManager.h"
+#import "AppDirServiceProvider.h"
 #import "UserDefaults.h"
 #import "CHBrowserService.h"
 #import "CHISupportsOwner.h"
@@ -56,7 +57,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsEmbedAPI.h"
-#include "AppDirServiceProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIRegistry.h"
 #include "nsIStyleSheetService.h"
@@ -67,6 +67,8 @@
 nsStaticModuleInfo const *const kPStaticModules = nsnull;
 PRUint32 const kStaticModuleCount = 0;
 #endif
+
+#define CUSTOM_PROFILE_DIR  "CAMINO_PROFILE_DIR"
 
 NSString* const kPrefChangedNotificationName = @"PrefChangedNotification";
 // userInfo entries:
@@ -101,9 +103,6 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 
 - (void)termEmbedding: (NSNotification*)aNotification;
 - (void)xpcomTerminate: (NSNotification*)aNotification;
-
-- (NSString*)oldProfilePath;
-- (void)migrateChimeraProfile:(NSString*)newProfilePath;
 
 - (void)showLaunchFailureAndQuitWithErrorTitle:(NSString*)inTitleFormat errorMessage:(NSString*)inMessageFormat;
 
@@ -286,6 +285,7 @@ static BOOL gMadePrefManager;
   if (self == gSharedInstance)
     gSharedInstance = nil;
 
+  [mProfilePath release];
   [super dealloc];
 }
 
@@ -376,21 +376,40 @@ static BOOL gMadePrefManager;
     // This shouldn't be needed since we are initing XPCOM with this
     // directory but causes a (harmless) warning if not defined.
     setenv("MOZILLA_FIVE_HOME", binDirPath, 1);
-
-    // get the 'mozNewProfileDirName' key from our Info.plist file
-    NSString *dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozNewProfileDirName"];
-    const char* profileDirName;
-    if (dirString)
-      profileDirName = [dirString UTF8String];
-    else {
-      NSLog(@"mozNewProfileDirName key missing from Info.plist file. Using default profile directory");
-      profileDirName = "Camino";
+    
+    const char* profileDirectory;
+    const char* customProfilePath = getenv(CUSTOM_PROFILE_DIR);
+    BOOL isCustomProfile = NO;
+    
+    // Based on whether $CAMINO_PROFILE_DIR is set, figure out what the
+    // profile path should be.
+    if (!customProfilePath)
+    {
+      // If it isn't, we then check the 'mozProfileDirName' key in our Info.plist file
+      // and use the regular Application Support/<mozProfileDirName>, and Caches/<mozProfileDirName> 
+      // folders.
+      NSString *dirString = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozProfileDirName"];
+      if (dirString)
+        profileDirectory = [dirString UTF8String];
+      else 
+      {
+        NSLog(@"mozNewProfileDirName key missing from Info.plist file. Using default profile directory");
+        profileDirectory = "Camino";
+      }
+      isCustomProfile = NO;
+    }
+    else
+    {
+      // If we have a custom profile path, let's just use that.
+      profileDirectory = customProfilePath;
+      isCustomProfile = YES;
     }
     
     // Supply our own directory service provider so we can control where
     // the registry and profiles are located.
-    AppDirServiceProvider *provider = new AppDirServiceProvider(nsDependentCString(profileDirName));
-    if (!provider)
+    AppDirServiceProvider *provider = new AppDirServiceProvider(profileDirectory, isCustomProfile);
+    
+    if (!provider) 
     {
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
                                       errorMessage:NSLocalizedString(@"StartupFailureMsg", @"")];
@@ -409,7 +428,7 @@ static BOOL gMadePrefManager;
       return NO;
     }
     
-    NSString* profilePath = [self newProfilePath];
+    NSString* profilePath = [self profilePath];
     if (!profilePath) {
       NSLog(@"Failed to determine profile path!");
       [self showLaunchFailureAndQuitWithErrorTitle:NSLocalizedString(@"StartupFailureAlert", @"")
@@ -417,13 +436,6 @@ static BOOL gMadePrefManager;
       // not reached
       return NO;
     }
-
-    // Check for the existence of prefs.js in our new (as of 0.8) profile dir.
-    // If it doesn't exist, attempt to migrate over the contents of the old
-    // one at ~/Library/Application Support/Chimera/Profiles/default/xxxxxxxx.slt/
-    NSFileManager *fileMgr = [NSFileManager defaultManager];
-    if (![fileMgr fileExistsAtPath:[profilePath stringByAppendingPathComponent:@"prefs.js"]])
-        [self migrateChimeraProfile:profilePath];
 
     rv = NS_NewProfileDirServiceProvider(PR_TRUE, &mProfileProvider);
     if (NS_FAILED(rv))
@@ -803,7 +815,7 @@ typedef enum EProxyConfig {
 // returns YES if there was a userContent.css in the chrome dir.
 - (BOOL)cleanupUserContentCSS
 {
-  NSString* profilePath = [self newProfilePath];
+  NSString* profilePath = [self profilePath];
   NSString* chromeDirPath = [profilePath stringByAppendingPathComponent:@"chrome"];
   NSString* userContentCSSPath = [chromeDirPath stringByAppendingPathComponent:@"userContent.css"];
   
@@ -1023,173 +1035,46 @@ typedef enum EProxyConfig {
 }
 
 //
-// -oldProfilePath
+// -profilePath
 //
-// Find the path to the pre-0.8 profile folder using the old registry. It will be
-// along the lines of ~/Library/Application Support/Chimera/profiles/default/xxxxx.slt/
-// Returns |nil| if there are any problems finding the path.
-//
-- (NSString *) oldProfilePath
-{
-#define kRegistryProfileSubtreeString (NS_LITERAL_STRING("Profiles"))
-#define kRegistryCurrentProfileString (NS_LITERAL_STRING("CurrentProfile"))
-#define kRegistryDirectoryString (NS_LITERAL_STRING("directory"))
-
-  NSString *resultPath = nil;
-
-  // The old registry file is at ~/Library/Application Support/Chimera/Application.regs
-  FSRef foundRef;
-  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType,
-                            kCreateFolder, &foundRef);
-  if (err != noErr)
-    return nil;
-      
-  UInt8 pathBuf[PATH_MAX];                        
-  err = FSRefMakePath(&foundRef, pathBuf, sizeof(pathBuf));
-  if (err != noErr)
-    return nil;
-
-  NSString *oldDirName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"mozOldProfileDirName"];
-  if (!oldDirName) {
-    NSLog(@"mozNewProfileDirName key missing from Info.plist file - using default");
-    oldDirName = @"Chimera";
-  }
-  NSString *registryPath = [[[NSString stringWithUTF8String:(char*)pathBuf]
-                              stringByAppendingPathComponent:oldDirName]
-                              stringByAppendingPathComponent:@"Application.regs"];
-
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> registryFile;
-  rv = NS_NewNativeLocalFile(nsDependentCString([registryPath fileSystemRepresentation]),
-                              PR_TRUE, getter_AddRefs(registryFile));
-  if (NS_FAILED(rv))
-    return nil;
-  nsCOMPtr<nsIRegistry> registry = do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return nil;
-  rv = registry->Open(registryFile);
-  if (NS_FAILED(rv))
-    return nil;
-  
-  nsRegistryKey profilesTreeKey;
-  rv = registry->GetKey(nsIRegistry::Common,
-                          kRegistryProfileSubtreeString.get(),
-                          &profilesTreeKey);
-  if (NS_FAILED(rv))
-    return nil;
-
-  // Get the current profile
-  nsXPIDLString currProfileName;
-  rv = registry->GetString(profilesTreeKey,
-                             kRegistryCurrentProfileString.get(),
-                             getter_Copies(currProfileName));
-  if (NS_FAILED(rv))
-    return nil;
-                             
-  nsRegistryKey currProfileKey;
-  rv = registry->GetKey(profilesTreeKey,
-                          currProfileName.get(),
-                          &currProfileKey);
-  if (NS_FAILED(rv))
-    return nil;
-
-  nsXPIDLString profDirDesc;
-  rv = registry->GetString(currProfileKey,
-                           kRegistryDirectoryString.get(),
-                           getter_Copies(profDirDesc));
-  if (NS_FAILED(rv))
-    return nil;
-
-  nsCOMPtr<nsILocalFile> profDirFile;
-  rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(profDirFile));
-  if (NS_SUCCEEDED(rv)) {
-    // profDirDesc is ASCII so no loss
-    rv = profDirFile->SetPersistentDescriptor(NS_LossyConvertUTF16toASCII(profDirDesc));
-    PRBool exists;
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(profDirFile->Exists(&exists)) && exists) {
-      nsCAutoString nativePath;
-      profDirFile->GetNativePath(nativePath);
-      resultPath = [NSString stringWithUTF8String:nativePath.get()];
-
-      // If the descriptor, which is an alias, is broken, this would be the place to
-      // do some exhaustive alias searching, prompt the user, etc.    
-    }
-  }
-  return resultPath;
-}
-
-//
-// -newProfilePath
-//
-// Returns the path for our post 0.8 profiles stored in Application Support/Camino.
+// Returns the path for our post 0.8 profiles.
 // We no longer have distinct profiles. The profile dir is the same as
 // NS_APP_USER_PROFILES_ROOT_DIR - imposed by our own AppDirServiceProvider. Will
 // return |nil| if there is a problem.
 //
-- (NSString*) newProfilePath
+- (NSString*) profilePath
 {
-  nsCOMPtr<nsIFile> appSupportDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
-                                       getter_AddRefs(appSupportDir));
+  if (!mProfilePath)
+  {
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
+                                         getter_AddRefs(profileDir));
+    if (NS_FAILED(rv))
+      return nil;
+    nsCAutoString nativePath;
+    rv = profileDir->GetNativePath(nativePath);
+    if (NS_FAILED(rv))
+      return nil;
+    mProfilePath = [NSString stringWithUTF8String:nativePath.get()];
+    [mProfilePath retain];
+  }
+  
+  return mProfilePath;
+}
+
+- (NSString*) cacheParentDirPath
+{
+  nsCOMPtr<nsIFile> cacheParentDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_CACHE_PARENT_DIR,
+                                       getter_AddRefs(cacheParentDir));
   if (NS_FAILED(rv))
     return nil;
   nsCAutoString nativePath;
-  rv = appSupportDir->GetNativePath(nativePath);
+  rv = cacheParentDir->GetNativePath(nativePath);
   if (NS_FAILED(rv))
     return nil;
   return [NSString stringWithUTF8String:nativePath.get()];
 }
-
-//
-// -migrateChimeraProfile:
-//
-// Takes the old profile and copies out the pertinent info into the new profile
-// given by the path in |newProfilePath|. Copies everything except the cache dir.
-//
-- (void)migrateChimeraProfile:(NSString*)newProfilePath;
-{
-  NSFileManager *fileMgr = [NSFileManager defaultManager];
-  NSString *oldProfilePath = [self oldProfilePath];
-  if (!oldProfilePath)
-    return;
-  
-  BOOL exists, isDir;
-  exists = [fileMgr fileExistsAtPath:oldProfilePath isDirectory:&isDir];
-  if (!exists || !isDir)
-    return;
-      
-  // The parent of the terminal node in the dest path given to copyPath has to exist already.
-  exists = [fileMgr fileExistsAtPath:newProfilePath isDirectory:&isDir];
-  if (exists && !isDir) {
-    NSLog(@"Can't migrate profile to %@: there's a file in the way", newProfilePath);
-    return;
-  }
-  else if (!exists) {
-    NSLog(@"%@ should exist if [self newProfilePath] has been called", newProfilePath);
-    return;
-  }
-  
-  NSArray *profileContents = [fileMgr directoryContentsAtPath:oldProfilePath];
-  NSEnumerator *enumerator = [profileContents objectEnumerator];
-  id anItem;
-  
-  // loop over the contents of the profile copying everything except for invisible
-  // files and the cache
-  while ((anItem = [enumerator nextObject])) {
-    NSString *sourcePath = [oldProfilePath stringByAppendingPathComponent:anItem];
-    NSString *destPath = [newProfilePath stringByAppendingPathComponent:anItem];
-    // Ensure that the file exists
-    if ([fileMgr fileExistsAtPath:sourcePath isDirectory:&isDir]) {
-      // That it's not invisible (.parentlock, .DS_Store)
-      if ([anItem hasPrefix:@"."] == NO) {
-        // That it's not the Cache or Cache.Trash dir
-        if (!isDir || ![anItem hasPrefix:@"Cache"])
-            [fileMgr copyPath:sourcePath toPath:destPath handler:nil];
-      }
-    }
-  }
-}
-
 
 - (void)addObserver:(id)inObject forPref:(const char*)inPrefName
 {

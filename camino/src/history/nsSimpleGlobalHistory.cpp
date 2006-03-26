@@ -1757,12 +1757,11 @@ nsSimpleGlobalHistory::OpenDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool exists = PR_TRUE;
-
   historyFile->Exists(&exists);
 
-  if (!exists || NS_FAILED(rv = OpenExistingFile(gMdbFactory, filePath.get())))
+  if (exists && NS_FAILED(rv = OpenExistingFile(gMdbFactory, filePath.get())))
   {
-    // we couldn't open the file, so it's either corrupt or doesn't exist.
+    // we couldn't open the file, so it might be corrupt.
     // attempt to delete the file, but ignore the error
     NS_ASSERTION(0, "Failed to open history.dat file");
 #if DEBUG
@@ -1776,8 +1775,12 @@ nsSimpleGlobalHistory::OpenDB()
 #else
     historyFile->Remove(PR_FALSE);
 #endif
+    // generate a new history file.
+    exists = PR_FALSE;
+  } 
+  
+  if (!exists)
     rv = OpenNewFile(gMdbFactory, filePath.get());
-  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 

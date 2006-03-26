@@ -55,6 +55,7 @@ extern NSString* const kPrefChangedNotificationName;
     NSMutableDictionary*  mPrefChangeObservers; // dict of NSMutableArray of PrefChangeObserverOwner, keyed by pref name.
 
     long                  mLastRunPrefsVersion;
+    NSString*             mProfilePath;
 
     // proxies notification stuff
     CFRunLoopSourceRef    mRunLoopSource;
@@ -80,7 +81,7 @@ extern NSString* const kPrefChangedNotificationName;
 - (void)setPref:(const char*)prefName toBoolean:(BOOL)value;
 
 // the path to the user profile's root folder, used by camino 0.8+
-- (NSString*) newProfilePath;
+- (NSString*) profilePath;
 
 // turn notifications on and off when the given pref changes. 
 // if not nil, inObject is used at the 'object' of the resulting notification.
