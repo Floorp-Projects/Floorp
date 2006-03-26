@@ -51,7 +51,9 @@
 
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
   <script type="application/x-javascript"><![CDATA[
-    
+
+    var gShowSearchLocked;
+
     window.onload = function()
     {
       setCheck("cbxAutoFill", window.arguments[0], window.arguments[4]);
@@ -63,31 +65,31 @@
       updateImage("AutoFill");
       updateImage("ShowPopup");
       updateImage("ShowSearch");
-      
+
       updateShowPopup();
     }
-    
+
     function onAccept()
     {
       window.opener.receiveACPrefs(getCheck("cbxAutoFill"), 
                                    getCheck("cbxShowPopup"),
                                    getCheck("cbxShowSearch"),
                                    getCheck("cbxMatchOnlyTyped"));
-                                         
+
       return true;                                           
     }
-    
+
     function getCheck(aName)
     {
       return document.getElementById(aName).checked;
     }
-    
+
     function setCheck(aName, aTruth, aDisabled)
     {
       document.getElementById(aName).checked = (aTruth == "true");
       document.getElementById(aName).disabled = (aDisabled == "true");
     }
-    
+
     function updateImage(aImg)
     {
      var img = document.getElementById("img"+aImg);
@@ -102,20 +104,20 @@
         img.setAttribute("hidden", !checked2 || !checked);
       }
     }
-    
+
     function updateShowPopup()
     {
       var spChecked = document.getElementById("cbxShowPopup").checked;
       var showSearch = document.getElementById("cbxShowSearch");
       showSearch.disabled = !spChecked || gShowSearchLocked;
     }
-    
+
     function doHelpButton() {
       openHelp('navigator_pref_autocomplete-adv');
     }
-    
+
   ]]></script>
-  
+
   <groupbox>
     <caption label="&autoCompleteAdvanced.title;"/>
     <vbox>
@@ -128,7 +130,7 @@
       <checkbox id="cbxMatchOnlyTyped" label="&autoCompleteMatchOnlyTyped.label;"/>
     </vbox>
   </groupbox>
-  
+
   <label value="&autocompletePreview.label;"/>
   <dialogheader>
     <vbox height="159">
