@@ -1536,9 +1536,9 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   nscoord shift = 0;
   nscoord cellSpacingX = tableFrame->GetCellSpacingX();
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
-  nsTableCellFrame* cellFrame = GetFirstCell();
-  
+
   if (aCollapseGroup || collapseRow) {
+    nsTableCellFrame* cellFrame = GetFirstCell();
     aDidCollapse = PR_TRUE;
     shift = rowRect.height + cellSpacingY;
     while (cellFrame) {
@@ -1586,9 +1586,11 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
         // spans into
         prevColIndex = (iter.IsLeftToRight()) ?
                        cellColIndex + (cellColSpan - 1) : cellColIndex;
+        PRInt32 startIndex = (iter.IsLeftToRight()) ?
+                             cellColIndex : cellColIndex + (cellColSpan - 1);
         PRInt32 actualColSpan = cellColSpan;
         PRBool isVisible = PR_FALSE;
-        for (PRInt32 colX = cellColIndex; actualColSpan > 0;
+        for (PRInt32 colX = startIndex; actualColSpan > 0;
              colX += colIncrement, actualColSpan--) {
 
           nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
