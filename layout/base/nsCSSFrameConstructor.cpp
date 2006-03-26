@@ -2684,16 +2684,10 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
   nsPresContext* presContext = aState.mPresContext;
 
   if (nsLayoutAtoms::tableFrame == pseudoFrames.mLowestType) {
-    // if the processing should be limited to the colgroup frame and the
-    // table frame is the lowest type of created pseudo frames that
-    // can have pseudo frame children, process only the colgroup pseudo frames
-    // and leave the table frame untouched.
-    if (nsLayoutAtoms::tableColGroupFrame == aHighestType) {
-      if (pseudoFrames.mColGroup.mFrame) {
-        rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
-                                aHighestFrame);
-      }
-      return rv;
+    if (pseudoFrames.mColGroup.mFrame) {
+      rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
+                              aHighestFrame);
+      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     rv = ProcessPseudoTableFrame(presContext, pseudoFrames, aHighestFrame);
     if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
@@ -2714,7 +2708,11 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
   else if (nsLayoutAtoms::tableRowGroupFrame == pseudoFrames.mLowestType) {
     rv = ProcessPseudoFrame(presContext, pseudoFrames.mRowGroup, aHighestFrame);
     if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
-
+    if (pseudoFrames.mColGroup.mFrame) {
+      rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
+                              aHighestFrame);
+      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+    }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(presContext, pseudoFrames, aHighestFrame);
       if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
@@ -2736,6 +2734,11 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
       rv = ProcessPseudoFrame(presContext, pseudoFrames.mRowGroup, aHighestFrame);
       if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
+    if (pseudoFrames.mColGroup.mFrame) {
+      rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
+                              aHighestFrame);
+      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
+    }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(presContext, pseudoFrames, aHighestFrame);
       if (nsLayoutAtoms::tableOuterFrame == aHighestType) return rv;
@@ -2756,6 +2759,11 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
     if (pseudoFrames.mRowGroup.mFrame) {
       rv = ProcessPseudoFrame(presContext, pseudoFrames.mRowGroup, aHighestFrame);
       if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
+    }
+    if (pseudoFrames.mColGroup.mFrame) {
+      rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
+                              aHighestFrame);
+      if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
       rv = ProcessPseudoTableFrame(presContext, pseudoFrames, aHighestFrame);
@@ -3150,15 +3158,17 @@ nsCSSFrameConstructor::GetPseudoColGroupFrame(nsTableCreator&          aTableCre
     rv = CreatePseudoColGroupFrame(aTableCreator, aState, &aParentFrameIn);
   }
   else {
-    if (!pseudoFrames.mColGroup.mFrame) { 
-      if (pseudoFrames.mRowGroup.mFrame && !(pseudoFrames.mRow.mFrame)) {
-        rv = CreatePseudoRowFrame(aTableCreator, aState);
-      }
-      if (pseudoFrames.mRow.mFrame && !(pseudoFrames.mCellOuter.mFrame)) {
-        rv = CreatePseudoCellFrame(aTableCreator, aState);
-      }
-      if (pseudoFrames.mCellOuter.mFrame && !(pseudoFrames.mTableOuter.mFrame)) {
-        rv = CreatePseudoTableFrame(aTableCreator, aState);
+    if (!pseudoFrames.mColGroup.mFrame) {
+      if (!pseudoFrames.mTableInner.mFrame) {
+        if (pseudoFrames.mRowGroup.mFrame && !(pseudoFrames.mRow.mFrame)) {
+          rv = CreatePseudoRowFrame(aTableCreator, aState);
+        }
+        if (pseudoFrames.mRow.mFrame && !(pseudoFrames.mCellOuter.mFrame)) {
+          rv = CreatePseudoCellFrame(aTableCreator, aState);
+        }
+        if (pseudoFrames.mCellOuter.mFrame && !(pseudoFrames.mTableOuter.mFrame)) {
+          rv = CreatePseudoTableFrame(aTableCreator, aState);
+        }
       }
       rv = CreatePseudoColGroupFrame(aTableCreator, aState);
     }
