@@ -61,8 +61,7 @@ public:
   */
 class ViewportFrame : public nsContainerFrame {
 public:
-  ViewportFrame() { }          // useful for debugging
-
+  ViewportFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
   virtual ~ViewportFrame() { } // useful for debugging
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);

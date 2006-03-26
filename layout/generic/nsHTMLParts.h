@@ -50,6 +50,7 @@ class nsIFrame;
 class nsIHTMLContentSink;
 class nsIFragmentContentSink;
 class nsPresContext;
+class nsStyleContext;
 class nsITextContent;
 class nsIURI;
 class nsString;
@@ -84,7 +85,7 @@ NS_NewFrameContentIterator(nsPresContext*      aPresContext,
 
 // Create a frame that supports "display: block" layout behavior
 nsIFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, PRUint32 aFlags = 0);
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags = 0);
 
 // Special Generated Content Frame
 nsresult
@@ -97,153 +98,154 @@ NS_NewAttributeContent(nsNodeInfoManager *aNodeInfoManager,
 // By default, area frames will extend
 // their height to cover any children that "stick out".
 nsIFrame*
-NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
 // Create a basic area frame.
 nsIFrame*
-NS_NewAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 
 // These AreaFrame's shrink wrap around their contents
 inline nsIFrame*
-NS_NewTableCellInnerFrame(nsIPresShell* aPresShell) {
-  return NS_NewBlockFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewBlockFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is the document root, a margin root, and the
 // initial containing block for absolutely positioned elements
 inline nsIFrame*
-NS_NewDocumentElementFrame(nsIPresShell* aPresShell) {
-  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+NS_NewDocumentElementFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewAreaFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is a margin root, but does not shrink wrap
 inline nsIFrame*
-NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell) {
-  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewAreaFrame(aPresShell, aContext, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame shrink wraps
 inline nsIFrame*
-NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell) {
-  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
+NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewAreaFrame(aPresShell, aContext,
+    NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame doesn't use its own space manager and
 // doesn't shrink wrap.
 inline nsIFrame*
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell) {
-  return NS_NewAreaFrame(aPresShell, 0);
+NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewAreaFrame(aPresShell, aContext, 0);
 }
 
 nsIFrame*
-NS_NewBRFrame(nsIPresShell* aPresShell);
+NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewCommentFrame(nsIPresShell* aPresShell);
+NS_NewCommentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // <frame> and <iframe> 
 nsIFrame*
-NS_NewSubDocumentFrame(nsIPresShell* aPresShell);
+NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 // <frameset>
 nsIFrame*
-NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell);
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewViewportFrame(nsIPresShell* aPresShell);
+NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewCanvasFrame(nsIPresShell* aPresShell);
+NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewImageFrame(nsIPresShell* aPresShell);
+NS_NewImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewInlineFrame(nsIPresShell* aPresShell);
+NS_NewInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewPositionedInlineFrame(nsIPresShell* aPresShell);
+NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewObjectFrame(nsIPresShell* aPresShell);
+NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSpacerFrame(nsIPresShell* aPresShell);
+NS_NewSpacerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTextFrame(nsIPresShell* aPresShell);
+NS_NewTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewContinuingTextFrame(nsIPresShell* aPresShell);
+NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewEmptyFrame(nsIPresShell* aPresShell);
+NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 inline nsIFrame*
-NS_NewWBRFrame(nsIPresShell* aPresShell) {
-  return NS_NewEmptyFrame(aPresShell);
+NS_NewWBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext) {
+  return NS_NewEmptyFrame(aPresShell, aContext);
 }
 
 nsIFrame*
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags );
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags);
 
 nsIFrame*
-NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell);
+NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewPageFrame(nsIPresShell* aPresShell);
+NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewPageContentFrame(nsIPresShell* aPresShell);
+NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewPageBreakFrame(nsIPresShell* aPresShell);
+NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewFirstLetterFrame(nsIPresShell* aPresShell);
+NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewFirstLineFrame(nsIPresShell* aPresShell);
+NS_NewFirstLineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // forms
 nsIFrame*
-NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell);
+NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell);
+NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewImageControlFrame(nsIPresShell* aPresShell);
+NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell);
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell);
+NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell);
+NS_NewNativeCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewFieldSetFrame(nsIPresShell* aPresShell);
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewFileControlFrame(nsIPresShell* aPresShell);
+NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewLegendFrame(nsIPresShell* aPresShell);
+NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewNativeTextControlFrame(nsIPresShell* aPresShell);
+NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTextControlFrame(nsIPresShell* aPresShell);
+NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell);
+NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell);
+NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell);
+NS_NewNativeRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewNativeSelectControlFrame(nsIPresShell* aPresShell);
+NS_NewNativeSelectControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewListControlFrame(nsIPresShell* aPresShell);
+NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 nsIFrame*
-NS_NewIsIndexFrame(nsIPresShell* aPresShell);
+NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Table frame factories
 nsIFrame*
-NS_NewTableOuterFrame(nsIPresShell* aPresShell);
+NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableFrame(nsIPresShell* aPresShell);
+NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableCaptionFrame(nsIPresShell* aPresShell);
+NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableColFrame(nsIPresShell* aPresShell);
+NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableColGroupFrame(nsIPresShell* aPresShell);
+NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableRowFrame(nsIPresShell* aPresShell);
+NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableRowGroupFrame(nsIPresShell* aPresShell);
+NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewTableCellFrame(nsIPresShell* aPresShell, PRBool aIsBorderCollapse);
+NS_NewTableCellFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsBorderCollapse);
 
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,

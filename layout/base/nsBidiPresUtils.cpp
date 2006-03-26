@@ -65,7 +65,7 @@ static const PRUnichar ALEF              = 0x05D0;
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
 nsIFrame*
-NS_NewDirectionalFrame(nsIPresShell* aPresShell, PRUnichar aChar);
+NS_NewDirectionalFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUnichar aChar);
 
 nsBidiPresUtils::nsBidiPresUtils() : mArraySize(8),
                                      mIndexMap(nsnull),
@@ -224,6 +224,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   mContentToFrameIndex.Clear();
   
   nsIPresShell* shell = aPresContext->PresShell();
+  nsStyleContext* styleContext = aBlockFrame->GetStyleContext();
 
   // handle bidi-override being set on the block itself before calling
   // InitLogicalArray.
@@ -234,10 +235,10 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
     nsIFrame *directionalFrame = nsnull;
 
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-      directionalFrame = NS_NewDirectionalFrame(shell, kRLO);
+      directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kRLO);
     }
     else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-      directionalFrame = NS_NewDirectionalFrame(shell, kLRO);
+      directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kLRO);
     }
 
     if (directionalFrame) {
@@ -247,7 +248,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   mSuccess = InitLogicalArray(aPresContext, aFirstChild, nsnull, PR_TRUE);
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, kPDF);
+    nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
     if (directionalFrame) {
       mLogicalFrames.AppendElement(directionalFrame);
     }
@@ -465,15 +466,16 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
   nsIFrame*             frame;
   nsIFrame*             directionalFrame;
   nsresult              res = NS_OK;
-  
+
   nsIPresShell* shell = aPresContext->PresShell();
+  nsStyleContext* styleContext;
 
   for (frame = aCurrentFrame;
        frame && frame != aNextInFlow;
        frame = frame->GetNextSibling()) {
     directionalFrame = nsnull;
     const nsStyleDisplay* display = frame->GetStyleDisplay();
-    
+
     if (aAddMarkers && !display->IsBlockLevel() ) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
@@ -481,19 +483,23 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
         case NS_STYLE_UNICODE_BIDI_NORMAL:
           break;
         case NS_STYLE_UNICODE_BIDI_EMBED:
+          styleContext = frame->GetStyleContext();
+
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, kRLE);
+            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kRLE);
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, kLRE);
+            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kLRE);
           }
           break;
         case NS_STYLE_UNICODE_BIDI_OVERRIDE:
+          styleContext = frame->GetStyleContext();
+
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, kRLO);
+            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kRLO);
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            directionalFrame = NS_NewDirectionalFrame(shell, kLRO);
+            directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kLRO);
           }
           break;
       }
@@ -524,7 +530,7 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
     if (directionalFrame) {
-      directionalFrame = NS_NewDirectionalFrame(shell, kPDF);
+      directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
    
       // Create a directional frame after the last frame of an
       // element specifying embedding or override

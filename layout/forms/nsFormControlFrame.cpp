@@ -46,9 +46,10 @@
 
 const PRInt32 kSizeNotSet = -1;
 
-nsFormControlFrame::nsFormControlFrame()
+nsFormControlFrame::nsFormControlFrame(nsStyleContext* aContext) :
+  nsLeafFrame(aContext),
+  mDidInit(PR_FALSE)
 {
-  mDidInit        = PR_FALSE;
 }
 
 nsFormControlFrame::~nsFormControlFrame()

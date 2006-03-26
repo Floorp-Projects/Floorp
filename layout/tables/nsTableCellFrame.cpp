@@ -69,7 +69,8 @@
 #include "nsILookAndFeel.h"
 
 
-nsTableCellFrame::nsTableCellFrame()
+nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext) :
+  nsHTMLContainerFrame(aContext)
 {
   mBits.mColIndex  = 0;
   mPriorAvailWidth = 0;
@@ -109,13 +110,10 @@ nsTableCellFrame::GetNextCell() const
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
-                       nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
-  
   // Let the base class do its initialization
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Set the column index
@@ -733,8 +731,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
     availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
   }
 
-  nsresult rv = NS_OK;
-
   // see if a special height reflow needs to occur due to having a pct height
   if (!NeedSpecialReflow()) 
     nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
@@ -1143,13 +1139,14 @@ nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
 }
 
 nsIFrame*
-NS_NewTableCellFrame(nsIPresShell* aPresShell, 
-                     PRBool        aIsBorderCollapse)
+NS_NewTableCellFrame(nsIPresShell*   aPresShell,
+                     nsStyleContext* aContext,
+                     PRBool          aIsBorderCollapse)
 {
   if (aIsBorderCollapse)
-    return new (aPresShell) nsBCTableCellFrame;
+    return new (aPresShell) nsBCTableCellFrame(aContext);
   else
-    return new (aPresShell) nsTableCellFrame;
+    return new (aPresShell) nsTableCellFrame(aContext);
 }
 
 nsMargin* 
@@ -1176,8 +1173,8 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 // nsBCTableCellFrame
 
-nsBCTableCellFrame::nsBCTableCellFrame()
-:nsTableCellFrame()
+nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext)
+:nsTableCellFrame(aContext)
 {
   mTopBorder = mRightBorder = mBottomBorder = mLeftBorder = 0;
 }

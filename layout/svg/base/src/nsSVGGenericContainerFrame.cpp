@@ -43,16 +43,9 @@
 // nsSVGGenericContainerFrame Implementation
 
 nsIFrame*
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGGenericContainerFrame;
-}
-
-nsSVGGenericContainerFrame::nsSVGGenericContainerFrame()
-{
-#ifdef DEBUG
-//  printf("nsSVGGenericContainerFrame CTOR\n");
-#endif
+  return new (aPresShell) nsSVGGenericContainerFrame(aContext);
 }
 
 nsSVGGenericContainerFrame::~nsSVGGenericContainerFrame()
@@ -82,11 +75,10 @@ NS_IMETHODIMP
 nsSVGGenericContainerFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGGenericContainerFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSVGGenericContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   Init();
   

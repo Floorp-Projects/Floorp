@@ -51,7 +51,7 @@ class nsSVGDefsFrame : public nsSVGDefsFrameBase,
                        public nsISVGContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   NS_IMETHOD InitSVG();
   
@@ -61,8 +61,9 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
-  // nsIFrame:
+  nsSVGDefsFrame(nsStyleContext* aContext) : nsSVGDefsFrameBase(aContext) {}
 
+  // nsIFrame:
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
   NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
@@ -72,7 +73,6 @@ public:
                           nsIFrame*       aOldFrame);
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

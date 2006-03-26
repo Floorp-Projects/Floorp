@@ -250,7 +250,7 @@ protected:
 
 class nsTextFrame : public nsFrame {
 public:
-  nsTextFrame();
+  nsTextFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   
   // nsIFrame
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -1400,9 +1400,10 @@ nsTextFrame::Destroy(nsPresContext* aPresContext)
 
 class nsContinuingTextFrame : public nsTextFrame {
 public:
+  friend nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
@@ -1436,18 +1437,16 @@ public:
   virtual nsIFrame* GetFirstContinuation() const;
   
 protected:
+  nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
   nsIFrame* mPrevContinuation;
 };
 
 NS_IMETHODIMP
 nsContinuingTextFrame::Init(nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv;
-  
-  rv = nsTextFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsTextFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     nsIFrame* nextContinuation = aPrevInFlow->GetNextContinuation();
@@ -1827,19 +1826,15 @@ VerifyNotDirty(state)
 #endif
 
 nsIFrame*
-NS_NewTextFrame(nsIPresShell* aPresShell)
+NS_NewTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTextFrame;
+  return new (aPresShell) nsTextFrame(aContext);
 }
 
 nsIFrame*
-NS_NewContinuingTextFrame(nsIPresShell* aPresShell)
+NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsContinuingTextFrame;
-}
-
-nsTextFrame::nsTextFrame()
-{
+  return new (aPresShell) nsContinuingTextFrame(aContext);
 }
 
 nsTextFrame::~nsTextFrame()
@@ -1933,7 +1928,6 @@ nsTextFrame::CharacterDataChanged(nsPresContext* aPresContext,
   if (markAllDirty) {
     // Mark this frame and all the next-in-flow frames as dirty
     nsTextFrame*  textFrame = this;
-    nsPropertyTable *propTable = aPresContext->PropertyTable();
     while (textFrame) {
       textFrame->mState &= ~TEXT_WHITESPACE_FLAGS;
       textFrame->mState |= NS_FRAME_IS_DIRTY;

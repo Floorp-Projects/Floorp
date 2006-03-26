@@ -157,9 +157,9 @@ class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsSVGCoordCtxProvider
 {
   friend nsIFrame*
-  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGOuterSVGFrame();
+  nsSVGOuterSVGFrame(nsStyleContext* aContext);
   nsresult Init();
   
    // nsISupports interface:
@@ -171,7 +171,6 @@ public:
   // nsIFrame:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
   
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -264,7 +263,7 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {  
   nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(aContent);
   if (!svgElement) {
@@ -274,11 +273,12 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGOuterSVGFrame;
+  return new (aPresShell) nsSVGOuterSVGFrame(aContext);
 }
 
-nsSVGOuterSVGFrame::nsSVGOuterSVGFrame()
-    : mRedrawSuspendCount(0),
+nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
+    : nsSVGOuterSVGFrameBase(aContext),
+      mRedrawSuspendCount(0),
       mNeedsReflow(PR_FALSE),
       mViewportInitialized(PR_FALSE)
 {
@@ -333,11 +333,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGOuterSVGFrameBase)
 NS_IMETHODIMP
 nsSVGOuterSVGFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
-                         nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   Init();
 

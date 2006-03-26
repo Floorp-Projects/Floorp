@@ -59,15 +59,10 @@
 // Creates a new Button frame and returns it
 //
 nsIFrame*
-NS_NewButtonBoxFrame (nsIPresShell* aPresShell)
+NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsButtonBoxFrame(aPresShell);
+  return new (aPresShell) nsButtonBoxFrame(aPresShell, aContext);
 } // NS_NewXULButtonFrame
-
-nsButtonBoxFrame::nsButtonBoxFrame(nsIPresShell* aPresShell)
-:nsBoxFrame(aPresShell, PR_FALSE)
-{
-}
 
 NS_IMETHODIMP
 nsButtonBoxFrame::GetMouseThrough(PRBool& aMouseThrough)

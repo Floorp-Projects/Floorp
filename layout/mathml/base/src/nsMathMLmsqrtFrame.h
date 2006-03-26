@@ -73,7 +73,7 @@ TODO:
 
 class nsMathMLmsqrtFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 
@@ -82,10 +82,9 @@ public:
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
   NS_IMETHOD
-  Init(nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsStyleContext*  aContext,
-       nsIFrame*        aPrevInFlow);
+  Init(nsIContent* aContent,
+       nsIFrame*   aParent,
+       nsIFrame*   aPrevInFlow);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
@@ -111,7 +110,7 @@ public:
   FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize);
 
 protected:
-  nsMathMLmsqrtFrame();
+  nsMathMLmsqrtFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmsqrtFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

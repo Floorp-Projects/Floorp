@@ -54,12 +54,14 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase,
                            public nsISVGClipPathFrame
 {
   friend nsIFrame*
-  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   virtual ~nsSVGClipPathFrame();
   NS_IMETHOD InitSVG();
 
  public:
+  nsSVGClipPathFrame(nsStyleContext* aContext) : nsSVGClipPathFrameBase(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -110,7 +112,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGClipPathFrameBase)
 // Implementation
 
 nsIFrame*
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
@@ -120,7 +122,7 @@ NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGClipPathFrame;
+  return new (aPresShell) nsSVGClipPathFrame(aContext);
 }
 
 nsresult

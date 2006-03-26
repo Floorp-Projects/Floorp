@@ -53,11 +53,13 @@ class nsSVGPolygonFrame : public nsSVGPathGeometryFrame,
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
   
 public:
+  nsSVGPolygonFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -102,7 +104,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 // Implementation
 
 nsIFrame*
-NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGAnimatedPoints> anim_points = do_QueryInterface(aContent);
   if (!anim_points) {
@@ -112,7 +114,7 @@ NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGPolygonFrame;
+  return new (aPresShell) nsSVGPolygonFrame(aContext);
 }
 
 NS_IMETHODIMP

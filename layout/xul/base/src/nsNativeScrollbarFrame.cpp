@@ -55,9 +55,9 @@
 // Creates a new scrollbar frame and returns it
 //
 nsIFrame*
-NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell)
+NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsNativeScrollbarFrame (aPresShell);
+  return new (aPresShell) nsNativeScrollbarFrame (aPresShell, aContext);
 } // NS_NewNativeScrollbarFrame
 
 
@@ -66,13 +66,6 @@ NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell)
 //
 NS_INTERFACE_MAP_BEGIN(nsNativeScrollbarFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
-
-
-nsNativeScrollbarFrame::nsNativeScrollbarFrame(nsIPresShell* aShell)
-  : nsBoxFrame(aShell), mScrollbarNeedsContent(PR_TRUE)
-{
-
-}
 
 nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
 {
@@ -92,17 +85,16 @@ nsNativeScrollbarFrame::~nsNativeScrollbarFrame ( )
 NS_IMETHODIMP
 nsNativeScrollbarFrame::Init(nsIContent*     aContent,
                              nsIFrame*       aParent,
-                             nsStyleContext* aContext,
                              nsIFrame*       aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   // create a view for this frame and then associate the view with the native
   // scrollbar widget. The net result of this is that the view will automatically
   // be resized and moved for us when things reflow, and the widget will follow
   // suit. We don't have to lift a finger!
   static NS_DEFINE_IID(kScrollbarCID,  NS_NATIVESCROLLBAR_CID);
-  if ( NS_SUCCEEDED(CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE)) ) {
+  if ( NS_SUCCEEDED(CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE)) ) {
     nsIView* myView = GetView();
     if ( myView ) {
       nsWidgetInitData widgetData;

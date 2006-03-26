@@ -71,7 +71,7 @@
 // Implementation
 
 nsIFrame*
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
   if (!foreignObject) {
@@ -81,11 +81,12 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGForeignObjectFrame;
+  return new (aPresShell) nsSVGForeignObjectFrame(aContext);
 }
 
-nsSVGForeignObjectFrame::nsSVGForeignObjectFrame()
-  : mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE)
+nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
+  : nsSVGForeignObjectFrameBase(aContext),
+    mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE)
 {
   AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT |
                NS_FRAME_REFLOW_ROOT);
@@ -152,11 +153,10 @@ NS_IMETHODIMP
 nsSVGForeignObjectFrame::Init(
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   Init();
 

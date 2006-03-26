@@ -55,9 +55,9 @@ class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase,
                                    public nsISVGContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGGenericContainerFrame();
+  nsSVGGenericContainerFrame(nsStyleContext* aContext) : nsSVGGenericContainerFrameBase(aContext) {}
   virtual ~nsSVGGenericContainerFrame();
   nsresult Init();
   
@@ -78,7 +78,6 @@ public:
                           nsIFrame*       aOldFrame);
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,

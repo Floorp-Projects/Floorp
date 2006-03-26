@@ -54,6 +54,7 @@ struct nsRect;
 
 class nsLegendFrame : public nsAreaFrame {
 public:
+  nsLegendFrame(nsStyleContext* aContext) : nsAreaFrame(aContext) {}
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

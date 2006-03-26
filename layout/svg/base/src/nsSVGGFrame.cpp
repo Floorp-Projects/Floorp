@@ -59,7 +59,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 // Implementation
 
 nsIFrame*
-NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {  
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
@@ -69,7 +69,7 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGGFrame;
+  return new (aPresShell) nsSVGGFrame(aContext);
 }
 
 nsIAtom *

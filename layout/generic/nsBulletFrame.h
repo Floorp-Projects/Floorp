@@ -50,7 +50,7 @@ class gfxIImageFrame;
  */
 class nsBulletFrame : public nsFrame {
 public:
-  nsBulletFrame();
+  nsBulletFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~nsBulletFrame();
 
   // nsIFrame

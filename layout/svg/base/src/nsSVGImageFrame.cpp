@@ -84,12 +84,14 @@ class nsSVGImageFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   virtual ~nsSVGImageFrame();
   NS_IMETHOD InitSVG();
 
 public:
+  nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -140,7 +142,7 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
@@ -150,7 +152,7 @@ NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGImageFrame;
+  return new (aPresShell) nsSVGImageFrame(aContext);
 }
 
 nsSVGImageFrame::~nsSVGImageFrame()

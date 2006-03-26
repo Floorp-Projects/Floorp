@@ -77,12 +77,13 @@
 #define SYNC_BOTH 0x3
 
 nsIFrame*
-NS_NewFileControlFrame(nsIPresShell* aPresShell)
+NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFileControlFrame();
+  return new (aPresShell) nsFileControlFrame(aContext);
 }
 
-nsFileControlFrame::nsFileControlFrame():
+nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
+  nsAreaFrame(aContext),
   mTextFrame(nsnull), 
   mCachedState(nsnull),
   mDidPreDestroy(PR_FALSE)

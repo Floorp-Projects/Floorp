@@ -52,13 +52,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmphantomFrame;
-}
-
-nsMathMLmphantomFrame::nsMathMLmphantomFrame()
-{
+  return new (aPresShell) nsMathMLmphantomFrame(aContext);
 }
 
 nsMathMLmphantomFrame::~nsMathMLmphantomFrame()

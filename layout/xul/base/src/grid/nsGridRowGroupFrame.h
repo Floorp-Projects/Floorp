@@ -58,7 +58,9 @@ class nsGridRowGroupFrame : public nsBoxFrame
 {
 public:
 
-  friend nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
+                                           nsStyleContext* aContext,
+                                           nsIBoxLayout* aLayoutManager);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
@@ -67,7 +69,11 @@ public:
   }
 #endif
 
-  nsGridRowGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager);
+  nsGridRowGroupFrame(nsIPresShell* aPresShell,
+                      nsStyleContext* aContext,
+                      PRBool aIsRoot,
+                      nsIBoxLayout* aLayoutManager):
+    nsBoxFrame(aPresShell, aContext, aIsRoot, aLayoutManager) {}
 
   NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
 

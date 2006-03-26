@@ -92,7 +92,7 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableColFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext*  aContext);
 
   nsStyleCoord GetStyleWidth() const;
 
@@ -104,7 +104,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -179,7 +178,7 @@ public:
 
 protected:
 
-  nsTableColFrame();
+  nsTableColFrame(nsStyleContext* aContext);
   ~nsTableColFrame();
 
   // the index of the column with respect to the whole tabble (starting at 0) 

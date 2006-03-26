@@ -55,7 +55,7 @@ class nsSVGLineFrame : public nsSVGPathGeometryFrame,
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
 
@@ -74,6 +74,8 @@ protected:
 #endif
 
 public:
+  nsSVGLineFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -106,7 +108,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 // Implementation
 
 nsIFrame*
-NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGLineElement> line = do_QueryInterface(aContent);
   if (!line) {
@@ -116,7 +118,7 @@ NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGLineFrame;
+  return new (aPresShell) nsSVGLineFrame(aContext);
 }
 
 NS_IMETHODIMP

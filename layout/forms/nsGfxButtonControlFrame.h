@@ -57,7 +57,7 @@ class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
                                 public nsIAnonymousContentCreator
 {
 public:
-  nsGfxButtonControlFrame();
+  nsGfxButtonControlFrame(nsStyleContext* aContext);
 
      //nsIFrame
   NS_IMETHOD Reflow(nsPresContext*          aCX,

@@ -52,8 +52,7 @@ class nsISupportsArray;
 class nsITimer;
 class nsSliderFrame;
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell);
-
+nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsSliderMediator : public nsIDOMMouseListener, 
                          public nsITimerCallback
@@ -125,7 +124,7 @@ class nsSliderFrame : public nsBoxFrame
 public:
   friend class nsSliderMediator;
 
-  nsSliderFrame(nsIPresShell* aShell);
+  nsSliderFrame(nsIPresShell* aShell, nsStyleContext* aContext);
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG
@@ -169,7 +168,6 @@ public:
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
 

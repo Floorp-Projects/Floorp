@@ -60,18 +60,9 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLForeignFrameWrapper, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLForeignFrameWrapper, nsBlockFrame, nsMathMLFrame)
 
 nsIFrame*
-NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell)
+NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLForeignFrameWrapper;
-}
-
-NS_IMETHODIMP
-nsMathMLForeignFrameWrapper::Init(nsIContent*      aContent,
-                                  nsIFrame*        aParent,
-                                  nsStyleContext*  aContext,
-                                  nsIFrame*        aPrevInFlow)
-{
-  return nsBlockFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  return new (aPresShell) nsMathMLForeignFrameWrapper(aContext);
 }
 
 NS_IMETHODIMP

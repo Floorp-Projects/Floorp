@@ -73,7 +73,8 @@ class nsHTMLInfo;
 #define NS_STATE_EQUAL_SIZE              0x40000000
 //#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
 
-nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
+nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+                         nsStyleContext* aContext,
                          PRBool aIsRoot = PR_FALSE,
                          nsIBoxLayout* aLayoutManager = nsnull);
 
@@ -82,6 +83,7 @@ class nsBoxFrame : public nsContainerFrame
 public:
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
+                                  nsStyleContext* aContext,
                                   PRBool aIsRoot,
                                   nsIBoxLayout* aLayoutManager);
 
@@ -125,7 +127,6 @@ public:
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
  
@@ -166,7 +167,7 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
   
-  nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
+  nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
   static nsresult CreateViewForFrame(nsPresContext* aPresContext,
                                      nsIFrame* aChild,

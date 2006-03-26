@@ -62,18 +62,10 @@
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell)
+NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsScrollbarButtonFrame (aPresShell);
+  return new (aPresShell) nsScrollbarButtonFrame(aPresShell, aContext);
 } // NS_NewScrollBarButtonFrame
-
-
-nsScrollbarButtonFrame::nsScrollbarButtonFrame(nsIPresShell* aPresShell)
-:nsButtonBoxFrame(aPresShell)
-{
-}
-
-
 
 NS_IMETHODIMP 
 nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      

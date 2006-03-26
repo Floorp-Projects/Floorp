@@ -69,7 +69,7 @@ class nsImageControlFrame : public nsImageControlFrameSuper,
                             public nsIImageControlFrame
 {
 public:
-  nsImageControlFrame();
+  nsImageControlFrame(nsStyleContext* aContext);
   ~nsImageControlFrame();
 
   NS_IMETHOD Destroy(nsPresContext *aPresContext);
@@ -115,7 +115,8 @@ protected:
 };
 
 
-nsImageControlFrame::nsImageControlFrame()
+nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext):
+  nsImageControlFrameSuper(aContext)
 {
   mLastClickPoint = nsPoint(0,0);
 }
@@ -133,9 +134,9 @@ nsImageControlFrame::Destroy(nsPresContext *aPresContext)
 }
 
 nsIFrame*
-NS_NewImageControlFrame(nsIPresShell* aPresShell)
+NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsImageControlFrame;
+  return new (aPresShell) nsImageControlFrame(aContext);
 }
 
 // Frames are not refcounted, no need to AddRef

@@ -48,9 +48,9 @@ class nsXTFXULDisplayFrame : public nsXTFXULDisplayFrameBase,
                              public nsIAnonymousContentCreator
 {
 public:
-  friend nsIFrame* NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   
-  nsXTFXULDisplayFrame(nsIPresShell* aPresShell);
+  nsXTFXULDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -81,13 +81,13 @@ public:
 // Implementation
 
 nsIFrame*
-NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell)
+NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsXTFXULDisplayFrame(aPresShell);
+  return new (aPresShell) nsXTFXULDisplayFrame(aPresShell, aContext);
 }
 
-nsXTFXULDisplayFrame::nsXTFXULDisplayFrame(nsIPresShell* aPresShell)
-    : nsXTFXULDisplayFrameBase(aPresShell, PR_FALSE, nsnull)
+nsXTFXULDisplayFrame::nsXTFXULDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+    : nsXTFXULDisplayFrameBase(aPresShell, aContext, PR_FALSE, nsnull)
 {}
 
 //----------------------------------------------------------------------

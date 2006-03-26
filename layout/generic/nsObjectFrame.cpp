@@ -466,14 +466,13 @@ static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 NS_IMETHODIMP 
 nsObjectFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
 #ifdef DEBUG
   mInstantiating = PR_FALSE;
 #endif
 
-  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
   nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
   NS_ASSERTION(objContent, "Why not an object loading content?");
   objContent->HasNewFrame(this);
@@ -1482,9 +1481,9 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 }
 
 nsIFrame*
-NS_NewObjectFrame(nsIPresShell* aPresShell)
+NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsObjectFrame;
+  return new (aPresShell) nsObjectFrame(aContext);
 }
 
 

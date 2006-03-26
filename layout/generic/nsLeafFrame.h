@@ -60,6 +60,7 @@ public:
                     nsReflowStatus&      aStatus);
 
 protected:
+  nsLeafFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
   virtual ~nsLeafFrame();
 
   /**

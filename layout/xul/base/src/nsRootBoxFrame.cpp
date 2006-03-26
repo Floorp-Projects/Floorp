@@ -68,9 +68,9 @@
 class nsRootBoxFrame : public nsBoxFrame, public nsIRootBox {
 public:
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  nsRootBoxFrame(nsIPresShell* aShell);
+  nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext *aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -121,12 +121,13 @@ protected:
 //----------------------------------------------------------------------
 
 nsIFrame*
-NS_NewRootBoxFrame(nsIPresShell* aPresShell)
+NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsRootBoxFrame (aPresShell);
+  return new (aPresShell) nsRootBoxFrame (aPresShell, aContext);
 }
 
-nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
+nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+  nsBoxFrame(aShell, aContext, PR_TRUE)
 {
   mPopupSetFrame = nsnull;
 

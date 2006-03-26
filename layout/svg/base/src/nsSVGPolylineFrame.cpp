@@ -53,11 +53,13 @@ class nsSVGPolylineFrame : public nsSVGPathGeometryFrame,
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
 
 public:
+  nsSVGPolylineFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
+
   /**
    * Get the "type" of the frame
    *
@@ -101,7 +103,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 // Implementation
 
 nsIFrame*
-NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGAnimatedPoints> anim_points = do_QueryInterface(aContent);
   if (!anim_points) {
@@ -111,7 +113,7 @@ NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGPolylineFrame;
+  return new (aPresShell) nsSVGPolylineFrame(aContext);
 }
 
 NS_IMETHODIMP

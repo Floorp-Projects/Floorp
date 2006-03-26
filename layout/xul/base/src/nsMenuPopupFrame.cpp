@@ -114,9 +114,9 @@ GetPopupSetFrame(nsPresContext* aPresContext)
 // Wrapper for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuPopupFrame(nsIPresShell* aPresShell)
+NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMenuPopupFrame (aPresShell);
+  return new (aPresShell) nsMenuPopupFrame (aPresShell, aContext);
 }
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -143,10 +143,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
-  :nsBoxFrame(aShell), mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull),
-   mMenuCanOverlapOSBar(PR_FALSE), mShouldAutoPosition(PR_TRUE), mShouldRollup(PR_TRUE),
-   mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT)
+nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext)
+  :nsBoxFrame(aShell, aContext),
+  mCurrentMenu(nsnull),
+  mTimerMenu(nsnull),
+  mCloseTimer(nsnull),
+  mMenuCanOverlapOSBar(PR_FALSE),
+  mShouldAutoPosition(PR_TRUE),
+  mShouldRollup(PR_TRUE),
+  mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 } // ctor
@@ -155,26 +160,25 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell)
 NS_IMETHODIMP
 nsMenuPopupFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aParent,
-                       nsStyleContext*  aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuPopupTimerMediator(this);
   if (NS_UNLIKELY(!mTimerMediator))
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsPresContext *aPresContext = GetPresContext();
+  nsPresContext* presContext = GetPresContext();
 
   // lookup if we're allowed to overlap the OS bar (menubar/taskbar) from the
   // look&feel object
   PRBool tempBool;
-  aPresContext->LookAndFeel()->
+  presContext->LookAndFeel()->
     GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
   mMenuCanOverlapOSBar = tempBool;
 
-  CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
+  CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE);
 
   // Now that we've made a view, remove it and insert it at the correct
   // position in the view hierarchy (as the root view).  We do this so that we

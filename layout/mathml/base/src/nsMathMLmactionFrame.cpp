@@ -78,13 +78,9 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmactionFrame, nsMathMLContainerFrame, nsIDOMMouseListener)
 
 nsIFrame*
-NS_NewMathMLmactionFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmactionFrame;
-}
-
-nsMathMLmactionFrame::nsMathMLmactionFrame()
-{
+  return new (aPresShell) nsMathMLmactionFrame(aContext);
 }
 
 nsMathMLmactionFrame::~nsMathMLmactionFrame()
@@ -98,7 +94,6 @@ nsMathMLmactionFrame::~nsMathMLmactionFrame()
 NS_IMETHODIMP
 nsMathMLmactionFrame::Init(nsIContent*      aContent,
                            nsIFrame*        aParent,
-                           nsStyleContext*  aContext,
                            nsIFrame*        aPrevInFlow)
 {
   nsAutoString value, prefix;
@@ -147,14 +142,14 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
 
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = aParent->GetStyleContext();
-        newStyleContext = aContext->GetRuleNode()->GetPresContext()->
-          StyleSet()->ResolveStyleFor(aContent, parentStyleContext);
+        newStyleContext = GetPresContext()->StyleSet()->
+          ResolveStyleFor(aContent, parentStyleContext);
 
         if (!newStyleContext) 
           mRestyle.Truncate();
         else {
-          if (newStyleContext != aContext)
-            aContext = newStyleContext;
+          if (newStyleContext != GetStyleContext())
+            SetStyleContextWithoutNotification(newStyleContext);
           else
             mRestyle.Truncate();
         }
@@ -163,7 +158,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
   }
 
   // Let the base class do the rest
-  return nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  return nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsresult

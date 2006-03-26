@@ -76,6 +76,7 @@
 class nsMathMLContainerFrame : public nsHTMLContainerFrame,
                                public nsMathMLFrame {
 public:
+  nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -121,7 +122,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -315,7 +315,7 @@ protected:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames
@@ -376,7 +376,7 @@ public:
   }
 
 protected:
-  nsMathMLmathBlockFrame() {}
+  nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
   virtual ~nsMathMLmathBlockFrame() {}
 
   NS_IMETHOD
@@ -393,7 +393,7 @@ protected:
 
 class nsMathMLmathInlineFrame : public nsInlineFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   SetInitialChildList(nsPresContext* aPresContext,
@@ -452,7 +452,7 @@ public:
   }
 
 protected:
-  nsMathMLmathInlineFrame() {}
+  nsMathMLmathInlineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}
   virtual ~nsMathMLmathInlineFrame() {}
 
   NS_IMETHOD

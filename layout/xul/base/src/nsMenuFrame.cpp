@@ -108,9 +108,9 @@ nsString *nsMenuFrame::gModifierSeparator = nsnull;
 // Wrapper for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuFrame(nsIPresShell* aPresShell, PRUint32 aFlags)
+NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
-  nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell);
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell, aContext);
   
   if ((it != nsnull) && aFlags)
     it->SetIsMenu(PR_TRUE);
@@ -141,7 +141,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsMenuFrame cntr
 //
-nsMenuFrame::nsMenuFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
+nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+  nsBoxFrame(aShell, aContext),
     mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
     mCreateHandlerSucceeded(PR_FALSE),
@@ -171,10 +172,9 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
 NS_IMETHODIMP
 nsMenuFrame::Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   // Set up a mediator which can be used for callbacks on this frame.
   mTimerMediator = new nsMenuTimerMediator(this);

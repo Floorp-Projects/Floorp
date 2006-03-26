@@ -104,19 +104,16 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // default constructor supplied by the compiler
-
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   virtual ~nsTableRowGroupFrame();
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
@@ -248,7 +245,7 @@ public:
 
 
 protected:
-  nsTableRowGroupFrame();
+  nsTableRowGroupFrame(nsStyleContext* aContext);
 
   void InitChildReflowState(nsPresContext&    aPresContext, 
                             PRBool             aBorderCollapse,

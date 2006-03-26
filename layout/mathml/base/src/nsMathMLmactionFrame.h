@@ -56,14 +56,13 @@
 class nsMathMLmactionFrame : public nsMathMLContainerFrame,
                              public nsIDOMMouseListener {
 public:
-  friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -101,7 +100,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)  { MOUSE(event); return NS_OK; }
 
 protected:
-  nsMathMLmactionFrame();
+  nsMathMLmactionFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmactionFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

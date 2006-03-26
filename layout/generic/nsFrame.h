@@ -135,7 +135,7 @@ public:
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell);
+  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
@@ -163,7 +163,6 @@ public:
   // nsIFrame
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
   NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
@@ -455,7 +454,7 @@ public:
 
 protected:
   // Protected constructor and destructor
-  nsFrame();
+  nsFrame(nsStyleContext* aContext);
   virtual ~nsFrame();
 
   /**

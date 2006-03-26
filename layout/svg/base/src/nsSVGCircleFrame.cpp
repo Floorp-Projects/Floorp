@@ -52,9 +52,11 @@ class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
+  
+  nsSVGCircleFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
 public:
   /**
@@ -89,7 +91,7 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGCircleElement> circle = do_QueryInterface(aContent);
   if (!circle) {
@@ -99,7 +101,7 @@ NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent)
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGCircleFrame;
+  return new (aPresShell) nsSVGCircleFrame(aContext);
 }
 
 NS_IMETHODIMP

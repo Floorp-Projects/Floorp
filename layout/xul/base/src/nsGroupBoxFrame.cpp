@@ -45,7 +45,8 @@
 class nsGroupBoxFrame : public nsBoxFrame {
 public:
 
-  nsGroupBoxFrame(nsIPresShell* aShell);
+  nsGroupBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+    nsBoxFrame(aShell, aContext) {}
 
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
@@ -77,7 +78,8 @@ public:
 class nsGroupBoxInnerFrame : public nsBoxFrame {
 public:
 
-    nsGroupBoxInnerFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
+    nsGroupBoxInnerFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+      nsBoxFrame(aShell, aContext) {}
 
 
 #ifdef DEBUG
@@ -93,13 +95,9 @@ public:
 */
 
 nsIFrame*
-NS_NewGroupBoxFrame(nsIPresShell* aPresShell)
+NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsGroupBoxFrame(aPresShell);
-}
-
-nsGroupBoxFrame::nsGroupBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
-{
+  return new (aPresShell) nsGroupBoxFrame(aPresShell, aContext);
 }
 
 MOZ_DECL_CTOR_COUNTER(nsDisplayXULGroupBackground)

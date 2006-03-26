@@ -72,20 +72,19 @@ public:
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD NeedsRecalc();
 
-  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIBox frame interface
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-  NS_IMETHOD  DidSetStyleContext ();
+  NS_IMETHOD DidSetStyleContext();
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
@@ -127,7 +126,7 @@ public:
                    nsPoint aPt);
 
 protected:
-  nsImageBoxFrame(nsIPresShell* aShell);
+  nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   virtual void GetImageSize();
 

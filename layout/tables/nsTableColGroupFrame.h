@@ -67,14 +67,13 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   /** sets defaults for the colgroup.
     * @see nsIFrame::Init
     */
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   /** Initialize the colgroup frame with a set of children.
@@ -238,7 +237,7 @@ public:
   void SetContinuousBCBorderWidth(PRUint8     aForSide,
                                   BCPixelSize aPixelValue);
 protected:
-  nsTableColGroupFrame();
+  nsTableColGroupFrame(nsStyleContext* aContext);
 
   void InsertColsReflow(PRInt32         aColIndex,
                         nsIFrame*       aFirstFrame,
@@ -275,8 +274,8 @@ protected:
   BCPixelSize mBottomContBorderWidth;
 };
 
-inline nsTableColGroupFrame::nsTableColGroupFrame()
-: mColCount(0), mStartColIndex(0)
+inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext *aContext)
+: nsHTMLContainerFrame(aContext), mColCount(0), mStartColIndex(0)
 { 
   SetColType(eColGroupContent);
 }

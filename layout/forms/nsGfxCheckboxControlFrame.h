@@ -56,7 +56,7 @@ public:
 
   //NS_DECL_NSIACCESSIBLE
 
-  nsGfxCheckboxControlFrame();
+  nsGfxCheckboxControlFrame(nsStyleContext* aContext);
   virtual ~nsGfxCheckboxControlFrame();
   
 #ifdef DEBUG

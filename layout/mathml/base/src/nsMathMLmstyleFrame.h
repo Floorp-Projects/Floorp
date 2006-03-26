@@ -48,7 +48,7 @@
 
 class nsMathMLmstyleFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,
@@ -74,7 +74,7 @@ public:
                                     PRUint32        aFlagsToUpdate);
 
 protected:
-  nsMathMLmstyleFrame();
+  nsMathMLmstyleFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmstyleFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }

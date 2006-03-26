@@ -79,7 +79,7 @@ class nsListControlFrame : public nsHTMLScrollFrame,
                            public nsISelectControlFrame
 {
 public:
-  friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -100,7 +100,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD DidReflow(nsPresContext*           aPresContext, 
@@ -210,7 +209,7 @@ protected:
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
   virtual void ResetList(PRBool aAllowScrolling);
 
-  nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument);
+  nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument, nsStyleContext* aContext);
   virtual ~nsListControlFrame();
 
   // Utility methods

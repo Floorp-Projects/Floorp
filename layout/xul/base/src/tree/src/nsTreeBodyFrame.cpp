@@ -125,9 +125,9 @@ CancelImageRequest(const nsAString& aKey,
 // Creates a new tree frame
 //
 nsIFrame*
-NS_NewTreeBodyFrame(nsIPresShell* aPresShell)
+NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTreeBodyFrame(aPresShell);
+  return new (aPresShell) nsTreeBodyFrame(aPresShell, aContext);
 } // NS_NewTreeFrame
 
 
@@ -144,13 +144,26 @@ NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
 
 // Constructor
-nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
-:nsLeafBoxFrame(aPresShell),
- mScrollbar(nsnull), mHorzScrollbar(nsnull), mColScrollContent(nsnull), mColScrollView(nsnull), 
- mHorzPosition(0), mHorzWidth(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
- mTopRowIndex(0), mFocused(PR_FALSE), mHasFixedRowCount(PR_FALSE), 
- mVerticalOverflow(PR_FALSE), mHorizontalOverflow(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
- mUpdateBatchNest(0), mRowCount(0), mSlots(nsnull)
+nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+:nsLeafBoxFrame(aPresShell, aContext),
+ mScrollbar(nsnull),
+ mHorzScrollbar(nsnull),
+ mColScrollContent(nsnull),
+ mColScrollView(nsnull),
+ mHorzPosition(0),
+ mHorzWidth(0),
+ mRowHeight(0),
+ mIndentation(0),
+ mStringWidth(-1),
+ mTopRowIndex(0),
+ mFocused(PR_FALSE),
+ mHasFixedRowCount(PR_FALSE),
+ mVerticalOverflow(PR_FALSE),
+ mHorizontalOverflow(PR_FALSE),
+ mReflowCallbackPosted(PR_FALSE),
+ mUpdateBatchNest(0),
+ mRowCount(0),
+ mSlots(nsnull)
 {
   mColumns = new nsTreeColumns(nsnull);
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
@@ -235,11 +248,10 @@ AdjustForBorderPadding(nsStyleContext* aContext, nsRect& aRect)
 NS_IMETHODIMP
 nsTreeBodyFrame::Init(nsIContent*     aContent,
                       nsIFrame*       aParent,
-                      nsStyleContext* aContext,
                       nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  nsBoxFrame::CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
+  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
+  nsBoxFrame::CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
   nsLeafBoxFrame::GetView()->CreateWidget(kWidgetCID);
 
   mIndentation = GetIndentation();

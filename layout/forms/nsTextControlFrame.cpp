@@ -943,9 +943,9 @@ nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset,
 }
 
 nsIFrame*
-NS_NewTextControlFrame(nsIPresShell* aPresShell)
+NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTextControlFrame(aPresShell);
+  return new (aPresShell) nsTextControlFrame(aPresShell, aContext);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame)
@@ -995,8 +995,8 @@ NS_IMETHODIMP nsTextControlFrame::GetAccessible(nsIAccessible** aAccessible)
 }
 #endif
 
-nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell)
-  : nsStackFrame(aShell)
+nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext)
+  : nsStackFrame(aShell, aContext)
 {
   mUseEditor = PR_FALSE;
   mIsProcessing = PR_FALSE;

@@ -72,12 +72,14 @@ class nsSVGFilterFrame : public nsSVGDefsFrame,
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   virtual ~nsSVGFilterFrame();
   NS_IMETHOD InitSVG();
 
 public:
+  nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGDefsFrame(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -131,9 +133,9 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 
 nsIFrame*
-NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGFilterFrame;
+  return new (aPresShell) nsSVGFilterFrame(aContext);
 }
 
 nsresult

@@ -75,9 +75,9 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
 {
   friend nsIFrame*
   NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame);
+                      nsIFrame* parentFrame, nsStyleContext* aContext);
 protected:
-  nsSVGTSpanFrame();
+  nsSVGTSpanFrame(nsStyleContext* aContext);
   
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

@@ -108,7 +108,7 @@ public:
   // Woohoo, concrete class with an IID!
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMESETFRAME_IID)
 
-  nsHTMLFramesetFrame();
+  nsHTMLFramesetFrame(nsStyleContext* aContext);
 
   virtual ~nsHTMLFramesetFrame();
 
@@ -116,7 +116,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   static PRBool  gDragInProgress;

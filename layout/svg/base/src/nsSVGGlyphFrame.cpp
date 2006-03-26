@@ -80,8 +80,8 @@ class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
 protected:
   friend nsIFrame*
   NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame);
-  nsSVGGlyphFrame();
+                      nsIFrame* parentFrame, nsStyleContext* aContext);
+  nsSVGGlyphFrame(nsStyleContext* aContext);
   virtual ~nsSVGGlyphFrame();
 
 public:
@@ -94,7 +94,6 @@ public:
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD  CharacterDataChanged(nsPresContext*  aPresContext,
@@ -204,7 +203,7 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame)
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame, nsStyleContext* aContext)
 {
 #ifdef DEBUG
   NS_ASSERTION(parentFrame, "null parent");
@@ -216,11 +215,12 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
   NS_ASSERTION(tc, "trying to construct an SVGGlyphFrame for wrong content element");
 #endif
 
-  return new (aPresShell) nsSVGGlyphFrame;
+  return new (aPresShell) nsSVGGlyphFrame(aContext);
 }
 
-nsSVGGlyphFrame::nsSVGGlyphFrame()
-    : mGeometryUpdateFlags(0), mMetricsUpdateFlags(0),
+nsSVGGlyphFrame::nsSVGGlyphFrame(nsStyleContext* aContext)
+    : nsSVGGlyphFrameBase(aContext),
+      mGeometryUpdateFlags(0), mMetricsUpdateFlags(0),
       mCharOffset(0),
       mFillGradient(nsnull), mStrokeGradient(nsnull),
       mFillPattern(nsnull), mStrokePattern(nsnull),
@@ -265,11 +265,9 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGlyphFrameBase)
 NS_IMETHODIMP
 nsSVGGlyphFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
-//  rv = nsSVGGlyphFrameBase::Init(aPresContext, aContent, aParent,
-//                                 aContext, aPrevInFlow);
+//  rv = nsSVGGlyphFrameBase::Init(aPresContext, aContent, aParent, aPrevInFlow);
 
   mContent = aContent;
   NS_IF_ADDREF(mContent);
@@ -283,7 +281,7 @@ nsSVGGlyphFrame::Init(nsIContent*      aContent,
   nsISVGOuterSVGFrame* outerSVGFrame = nsSVGUtils::GetOuterSVGFrame(this);
   if (!outerSVGFrame) {
     NS_ERROR("No outerSVGFrame");
-    SetStyleContext(aContext);
+    DidSetStyleContext();
     return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsISVGRenderer> renderer;
@@ -292,8 +290,8 @@ nsSVGGlyphFrame::Init(nsIContent*      aContent,
     renderer->CreateGlyphMetrics(this, getter_AddRefs(mMetrics));
     renderer->CreateGlyphGeometry(this, getter_AddRefs(mGeometry));
   }
-  
-  SetStyleContext(aContext);
+
+  DidSetStyleContext();
 
   if (!renderer || !mMetrics || !mGeometry)
     return NS_ERROR_FAILURE;

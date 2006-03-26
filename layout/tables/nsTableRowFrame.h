@@ -71,7 +71,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
@@ -87,7 +86,7 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
@@ -255,7 +254,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableRowFrame();
+  nsTableRowFrame(nsStyleContext *aContext);
 
   void InitChildReflowState(nsPresContext&         aPresContext,
                             const nsSize&           aAvailSize,

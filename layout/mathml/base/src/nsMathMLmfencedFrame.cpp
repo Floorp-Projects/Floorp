@@ -54,13 +54,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmfencedFrame;
-}
-
-nsMathMLmfencedFrame::nsMathMLmfencedFrame()
-{
+  return new (aPresShell) nsMathMLmfencedFrame(aContext);
 }
 
 nsMathMLmfencedFrame::~nsMathMLmfencedFrame()

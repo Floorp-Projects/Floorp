@@ -83,14 +83,17 @@ class nsSVGGradientFrame : public nsSVGGradientFrameBase,
 {
 protected:
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                                nsIContent*   aContent);
+                                                nsIContent*   aContent,
+                                                nsStyleContext* aContext);
 
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                                nsIContent*   aContent);
+                                                nsIContent*   aContent,
+                                                nsStyleContext* aContext);
 
   friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
                                       nsIContent*   aContent, 
-                                      nsIFrame*     aParentFrame);
+                                      nsIFrame*     aParentFrame,
+                                      nsStyleContext* aContext);
 
   friend nsresult NS_GetSVGGradientFrame(nsIFrame**      result, 
                                          nsIURI*         aURI, 
@@ -99,6 +102,9 @@ protected:
 
 
 public:
+  nsSVGGradientFrame(nsStyleContext* aContext) :
+    nsSVGGradientFrameBase(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -174,6 +180,9 @@ class nsSVGLinearGradientFrame : public nsSVGLinearGradientFrameBase,
                                  public nsISVGLinearGradient
 {
 public:
+  nsSVGLinearGradientFrame(nsStyleContext* aContext) :
+    nsSVGLinearGradientFrameBase(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -214,6 +223,9 @@ class nsSVGRadialGradientFrame : public nsSVGRadialGradientFrameBase,
                                  public nsISVGRadialGradient
 {
 public:
+  nsSVGRadialGradientFrame(nsStyleContext* aContext) :
+    nsSVGRadialGradientFrameBase(aContext) {}
+
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -1171,15 +1183,16 @@ nsSVGRadialGradientFrame::GetR(float *aR)
 // -------------------------------------------------------------------------
 
 nsIFrame* 
-NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                             nsIContent*   aContent)
+NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
+                             nsIContent*     aContent,
+                             nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGLinearGradientElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGLinearGradient");
   if (!grad)
     return nsnull;
   
-  nsSVGLinearGradientFrame* it = new (aPresShell) nsSVGLinearGradientFrame;
+  nsSVGLinearGradientFrame* it = new (aPresShell) nsSVGLinearGradientFrame(aContext);
   if (nsnull == it)
     return nsnull;
 
@@ -1195,15 +1208,16 @@ NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
 }
 
 nsIFrame*
-NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                             nsIContent*   aContent)
+NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
+                             nsIContent*     aContent,
+                             nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGRadialGradientElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGRadialGradient");
   if (!grad)
     return nsnull;
   
-  nsSVGRadialGradientFrame* it = new (aPresShell) nsSVGRadialGradientFrame;
+  nsSVGRadialGradientFrame* it = new (aPresShell) nsSVGRadialGradientFrame(aContext);
   if (nsnull == it)
     return nsnull;
 

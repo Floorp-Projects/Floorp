@@ -49,16 +49,13 @@
 #include "nsGridLayout2.h"
 
 nsIFrame*
-NS_NewGridRowLeafFrame ( nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
+                       nsStyleContext* aContext,
+                       PRBool aIsRoot,
+                       nsIBoxLayout* aLayoutManager)
 {
-    return new (aPresShell) nsGridRowLeafFrame (aPresShell, aIsRoot, aLayoutManager);
+    return new (aPresShell) nsGridRowLeafFrame (aPresShell, aContext, aIsRoot, aLayoutManager);
 } 
-
-nsGridRowLeafFrame::nsGridRowLeafFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager)
-{
-
-}
 
 /*
  * Our border and padding could be affected by our columns or rows.

@@ -61,7 +61,8 @@
 #define NO_SIDE 100
 
 // caption frame
-nsTableCaptionFrame::nsTableCaptionFrame()
+nsTableCaptionFrame::nsTableCaptionFrame(nsStyleContext* aContext):
+  nsBlockFrame(aContext)
 {
   // shrink wrap 
   SetFlags(NS_BLOCK_SPACE_MGR);
@@ -85,9 +86,9 @@ nsTableCaptionFrame::GetType() const
 }
 
 nsIFrame* 
-NS_NewTableCaptionFrame(nsIPresShell* aPresShell)
+NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableCaptionFrame;
+  return new (aPresShell) nsTableCaptionFrame(aContext);
 }
 
 /* ----------- nsTableOuterFrame ---------- */
@@ -95,7 +96,8 @@ NS_NewTableCaptionFrame(nsIPresShell* aPresShell)
 NS_IMPL_ADDREF_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
 
-nsTableOuterFrame::nsTableOuterFrame()
+nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
+  nsHTMLContainerFrame(aContext)
 {
   mPriorAvailWidth = 0;
 #ifdef DEBUG_TABLE_REFLOW_TIMING
@@ -148,11 +150,9 @@ NS_IMETHODIMP
 nsTableOuterFrame::Init(
                    nsIContent*           aContent,
                    nsIFrame*             aParent,
-                   nsStyleContext*       aContext,
                    nsIFrame*             aPrevInFlow)
 {
-  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
-  if (NS_FAILED(rv) || !mStyleContext) return rv;
+  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   
   // record that children that are ignorable whitespace should be excluded 
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;
@@ -2140,9 +2140,9 @@ NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColC
 
 
 nsIFrame*
-NS_NewTableOuterFrame(nsIPresShell* aPresShell)
+NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableOuterFrame;
+  return new (aPresShell) nsTableOuterFrame(aContext);
 }
 
 #ifdef DEBUG

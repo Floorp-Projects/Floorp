@@ -419,7 +419,6 @@ public:
    */
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow) = 0;
 
   /**
@@ -555,6 +554,18 @@ public:
       if (aContext) {
         aContext->AddRef();
         DidSetStyleContext();
+      }
+    }
+  }
+  
+  void SetStyleContextWithoutNotification(nsStyleContext* aContext)
+  {
+    if (aContext != mStyleContext) {
+      if (mStyleContext)
+        mStyleContext->Release();
+      mStyleContext = aContext;
+      if (aContext) {
+        aContext->AddRef();
       }
     }
   }

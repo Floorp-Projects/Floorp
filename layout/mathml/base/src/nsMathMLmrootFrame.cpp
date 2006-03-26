@@ -69,12 +69,13 @@
 static const PRUnichar kSqrChar = PRUnichar(0x221A);
 
 nsIFrame*
-NS_NewMathMLmrootFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmrootFrame;
+  return new (aPresShell) nsMathMLmrootFrame(aContext);
 }
 
-nsMathMLmrootFrame::nsMathMLmrootFrame() :
+nsMathMLmrootFrame::nsMathMLmrootFrame(nsStyleContext* aContext) :
+  nsMathMLContainerFrame(aContext),
   mSqrChar(),
   mBarRect()
 {
@@ -87,19 +88,18 @@ nsMathMLmrootFrame::~nsMathMLmrootFrame()
 NS_IMETHODIMP
 nsMathMLmrootFrame::Init(nsIContent*      aContent,
                          nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
   
-  nsPresContext *aPresContext = GetPresContext();
+  nsPresContext *presContext = GetPresContext();
 
   // No need to tract the style context given to our MathML char. 
   // The Style System will use Get/SetAdditionalStyleContext() to keep it
   // up-to-date if dynamic changes arise.
   nsAutoString sqrChar; sqrChar.Assign(kSqrChar);
-  mSqrChar.SetData(aPresContext, sqrChar);
-  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar, PR_TRUE);
+  mSqrChar.SetData(presContext, sqrChar);
+  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mSqrChar, PR_TRUE);
 
   return rv;
 }

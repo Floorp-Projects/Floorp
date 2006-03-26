@@ -46,7 +46,7 @@ class nsLeafBoxFrame : public nsLeafFrame
 {
 public:
 
-  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // Override addref/release to not assert
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -80,7 +80,6 @@ public:
   NS_IMETHOD  Init(
                nsIContent*      aContent,
                nsIFrame*        aParent,
-               nsStyleContext*  aContext,
                nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -112,7 +111,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) {}
 
- nsLeafBoxFrame(nsIPresShell* aShell);
+ nsLeafBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
 protected:
   eMouseThrough mMouseThrough;

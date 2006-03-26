@@ -45,7 +45,7 @@
 
 nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                    nsIFrame* parentFrame)
+                    nsIFrame* parentFrame, nsStyleContext* aContext)
 {
   NS_ASSERTION(parentFrame, "null parent");
   nsISVGTextContainerFrame *text_container;
@@ -63,11 +63,12 @@ NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
     return nsnull;
   }
 
-  return new (aPresShell) nsSVGTSpanFrame;
+  return new (aPresShell) nsSVGTSpanFrame(aContext);
 }
 
-nsSVGTSpanFrame::nsSVGTSpanFrame()
-  : mCharOffset(0), mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
+nsSVGTSpanFrame::nsSVGTSpanFrame(nsStyleContext* aContext)
+  : nsSVGTSpanFrameBase(aContext),
+    mCharOffset(0), mFragmentTreeDirty(PR_FALSE), mPropagateTransform(PR_TRUE)
 {
 }
 

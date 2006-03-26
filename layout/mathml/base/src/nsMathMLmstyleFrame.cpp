@@ -54,13 +54,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmstyleFrame;
-}
-
-nsMathMLmstyleFrame::nsMathMLmstyleFrame()
-{
+  return new (aPresShell) nsMathMLmstyleFrame(aContext);
 }
 
 nsMathMLmstyleFrame::~nsMathMLmstyleFrame()

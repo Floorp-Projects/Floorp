@@ -108,12 +108,13 @@ nsSharedPageData::~nsSharedPageData()
 }
 
 nsIFrame*
-NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell)
+NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSimplePageSequenceFrame;
+  return new (aPresShell) nsSimplePageSequenceFrame(aContext);
 }
 
-nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
+  nsContainerFrame(aContext),
   mIsPrintingSelection(PR_FALSE),
   mTotalPages(-1),
   mSelectionHeight(-1),

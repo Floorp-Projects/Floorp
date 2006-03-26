@@ -290,6 +290,7 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   // now, re-resolve the style contexts in our subtree to pick up any changes
   if (hasChanged) {
+    // this is unused
     nsFrameManager *fm = aPresContext->FrameManager();
     nsStyleChangeList changeList;
     nsChangeHint maxChange = fm->ComputeStyleChangeFor(aCellFrame, &changeList,
@@ -360,14 +361,9 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtableOuterFrame, nsTableOuterFrame, nsMathMLFrame)
 
 nsIFrame*
-NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell)
+NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmtableOuterFrame;
-}
-
-nsMathMLmtableOuterFrame::nsMathMLmtableOuterFrame()
-  :nsTableOuterFrame()
-{
+  return new (aPresShell) nsMathMLmtableOuterFrame(aContext);
 }
 
 nsMathMLmtableOuterFrame::~nsMathMLmtableOuterFrame()
@@ -398,12 +394,11 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 NS_IMETHODIMP
 nsMathMLmtableOuterFrame::Init(nsIContent*      aContent,
                                nsIFrame*        aParent,
-                               nsStyleContext*  aContext,
                                nsIFrame*        aPrevInFlow)
 {
-  MapAttributesIntoCSS(aContext->GetRuleNode()->GetPresContext(), aContent);
+  MapAttributesIntoCSS(GetPresContext(), aContent);
 
-  return nsTableOuterFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  return nsTableOuterFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
 nsIFrame*
@@ -584,13 +579,9 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtdFrame, nsTableCellFrame)
 
 nsIFrame*
-NS_NewMathMLmtdFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmtdFrame;
-}
-
-nsMathMLmtdFrame::nsMathMLmtdFrame()
-{
+  return new (aPresShell) nsMathMLmtdFrame(aContext);
 }
 
 nsMathMLmtdFrame::~nsMathMLmtdFrame()
@@ -641,13 +632,9 @@ NS_IMPL_RELEASE_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtdInnerFrame, nsBlockFrame, nsMathMLFrame)
 
 nsIFrame*
-NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmtdInnerFrame;
-}
-
-nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame()
-{
+  return new (aPresShell) nsMathMLmtdInnerFrame(aContext);
 }
 
 nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
@@ -657,10 +644,9 @@ nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
 NS_IMETHODIMP
 nsMathMLmtdInnerFrame::Init(nsIContent*      aContent,
                             nsIFrame*        aParent,
-                            nsStyleContext*  aContext,
                             nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBlockFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
 
   // record that children that are ignorable whitespace should be excluded
   mState |= NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE;

@@ -71,9 +71,9 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
                            public nsISVGSVGFrame
 {
   friend nsIFrame*
-  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGInnerSVGFrame();
+  nsSVGInnerSVGFrame(nsStyleContext* aContext);
   nsresult Init();
   
    // nsISupports interface:
@@ -93,7 +93,6 @@ public:
                           nsIFrame*      aOldFrame);
   NS_IMETHOD Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
-                  nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
   NS_IMETHOD DidSetStyleContext();
 
@@ -161,12 +160,13 @@ protected:
 // Implementation
 
 nsIFrame*
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGInnerSVGFrame;
+  return new (aPresShell) nsSVGInnerSVGFrame(aContext);
 }
 
-nsSVGInnerSVGFrame::nsSVGInnerSVGFrame() : mPropagateTransform(PR_TRUE)
+nsSVGInnerSVGFrame::nsSVGInnerSVGFrame(nsStyleContext* aContext) :
+  nsSVGInnerSVGFrameBase(aContext), mPropagateTransform(PR_TRUE)
 {
 #ifdef DEBUG
 //  printf("nsSVGInnerSVGFrame CTOR\n");
@@ -227,11 +227,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGInnerSVGFrameBase)
 NS_IMETHODIMP
 nsSVGInnerSVGFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
-                         nsStyleContext* aContext,
                          nsIFrame*       aPrevInFlow)
 {
   nsresult rv;
-  rv = nsSVGInnerSVGFrameBase::Init(aContent, aParent, aContext, aPrevInFlow);
+  rv = nsSVGInnerSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
 
   Init();
   

@@ -53,6 +53,7 @@ class nsDeckFrame : public nsBoxFrame
 public:
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
+                                   nsStyleContext* aContext,
                                    nsIBoxLayout* aLayoutManager);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
@@ -71,7 +72,6 @@ public:
                                          
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD ChildrenMustHaveWidgets(PRBool& aMust) const;
@@ -83,11 +83,11 @@ public:
   }
 #endif
 
-  nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
+  nsDeckFrame(nsIPresShell* aPresShell,
+              nsStyleContext* aContext,
+              nsIBoxLayout* aLayout = nsnull);
 
 protected:
-
-  nsDeckFrame(nsIPresShell* aPresShell);
 
   // REVIEW: Sorry, I couldn't resist devirtualizing these.
   nsIBox* GetSelectedBox();

@@ -48,13 +48,13 @@
 
 class nsMathMLmrowFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);
 
 protected:
-  nsMathMLmrowFrame();
+  nsMathMLmrowFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmrowFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }

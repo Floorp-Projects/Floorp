@@ -49,7 +49,7 @@
 
 class nsMathMLmoverFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmoverFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   Place(nsIRenderingContext& aRenderingContext,
@@ -80,7 +80,7 @@ public:
                    PRInt32         aModType);
 
 protected:
-  nsMathMLmoverFrame();
+  nsMathMLmoverFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmoverFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }

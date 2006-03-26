@@ -64,7 +64,7 @@
 //  need to find a good place to put them together.
 //  if someone changes one, please also change the other.
 
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell) ;
+nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsIViewManager;
 class nsIView;
@@ -101,7 +101,7 @@ private:
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent
 {
 public:
-  nsMenuPopupFrame(nsIPresShell* aShell);
+  nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContext);
 
   NS_DECL_ISUPPORTS
 
@@ -142,7 +142,6 @@ public:
   // Overridden methods
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,

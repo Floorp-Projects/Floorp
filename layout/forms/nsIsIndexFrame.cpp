@@ -83,12 +83,13 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 nsIFrame*
-NS_NewIsIndexFrame(nsIPresShell* aPresShell)
+NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsIsIndexFrame();
+  return new (aPresShell) nsIsIndexFrame(aContext);
 }
 
-nsIsIndexFrame::nsIsIndexFrame()
+nsIsIndexFrame::nsIsIndexFrame(nsStyleContext* aContext) :
+  nsAreaFrame(aContext)
 {
     //Shrink the area around its contents
   SetFlags(NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR);

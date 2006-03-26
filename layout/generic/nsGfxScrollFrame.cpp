@@ -92,13 +92,13 @@ static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
 //----------nsHTMLScrollFrame-------------------------------------------
 
 nsIFrame*
-NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot)
+NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot)
 {
-  return new (aPresShell) nsHTMLScrollFrame(aPresShell, aIsRoot);
+  return new (aPresShell) nsHTMLScrollFrame(aPresShell, aContext, aIsRoot);
 }
 
-nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
-  : nsHTMLContainerFrame(),
+nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot)
+  : nsHTMLContainerFrame(aContext),
     mInner(this, aIsRoot, PR_FALSE)
 {
 }
@@ -899,13 +899,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
 //----------nsXULScrollFrame-------------------------------------------
 
 nsIFrame*
-NS_NewXULScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot)
+NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot)
 {
-  return new (aPresShell) nsXULScrollFrame(aPresShell, aIsRoot);
+  return new (aPresShell) nsXULScrollFrame(aPresShell, aContext, aIsRoot);
 }
 
-nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
-  : nsBoxFrame(aShell, aIsRoot),
+nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, PRBool aIsRoot)
+  : nsBoxFrame(aShell, aContext, aIsRoot),
     mInner(this, aIsRoot, PR_TRUE),
     mMaxElementWidth(0)
 {

@@ -65,11 +65,13 @@ class nsSVGMarkerFrame : public nsSVGDefsFrame,
 {
 protected:
   friend nsIFrame*
-  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   NS_IMETHOD InitSVG();
 
 public:
+  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGDefsFrame(aContext) {}
+
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -133,9 +135,9 @@ NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 
 nsIFrame*
-NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGMarkerFrame;
+  return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 
 nsresult

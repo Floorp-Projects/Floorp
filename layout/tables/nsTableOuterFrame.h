@@ -54,10 +54,10 @@ class nsTableCaptionFrame : public nsBlockFrame
 public:
   // nsISupports
   virtual nsIAtom* GetType() const;
-  friend nsIFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsStyleContext*  aContext);
 
 protected:
-  nsTableCaptionFrame();
+  nsTableCaptionFrame(nsStyleContext*  aContext);
   virtual ~nsTableCaptionFrame();
 };
 
@@ -83,13 +83,12 @@ public:
     *
     * @return           the frame that was created
     */
-  friend nsIFrame* NS_NewTableOuterFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
   
   // nsIFrame overrides - see there for a description
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
@@ -189,7 +188,7 @@ public:
 protected:
 
 
-  nsTableOuterFrame();
+  nsTableOuterFrame(nsStyleContext* aContext);
   virtual ~nsTableOuterFrame();
 
   void InitChildReflowState(nsPresContext&    aPresContext,                     

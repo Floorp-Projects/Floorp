@@ -59,13 +59,9 @@
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX   0
 
 nsIFrame*
-NS_NewMathMLmoFrame(nsIPresShell* aPresShell)
+NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsStyleContext *aContext)
 {
-  return new (aPresShell) nsMathMLmoFrame;
-}
-
-nsMathMLmoFrame::nsMathMLmoFrame()
-{
+  return new (aPresShell) nsMathMLmoFrame(aContext);
 }
 
 nsMathMLmoFrame::~nsMathMLmoFrame()

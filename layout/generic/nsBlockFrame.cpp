@@ -263,20 +263,13 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 nsIFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, PRUint32 aFlags)
+NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags)
 {
-  nsBlockFrame* it = new (aPresShell) nsBlockFrame;
+  nsBlockFrame* it = new (aPresShell) nsBlockFrame(aContext);
   if (it) {
     it->SetFlags(aFlags);
   }
   return it;
-}
-
-nsBlockFrame::nsBlockFrame() 
-{
-#ifdef DEBUG
-  InitDebugFlags();
-#endif
 }
 
 nsBlockFrame::~nsBlockFrame()
@@ -6639,7 +6632,6 @@ nsBlockFrame::VerifyTree() const
 NS_IMETHODIMP
 nsBlockFrame::Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
   if (aPrevInFlow) {
@@ -6649,7 +6641,7 @@ nsBlockFrame::Init(nsIContent*      aContent,
     SetFlags(blockFrame->mState & NS_BLOCK_FLAGS_MASK);
   }
 
-  nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
   if (IsBoxWrapped())
     mState |= NS_BLOCK_SPACE_MGR;
@@ -6716,12 +6708,11 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
         ResolvePseudoStyleFor(mContent, pseudoElement, mStyleContext);
 
       // Create bullet frame
-      nsBulletFrame* bullet = new (shell) nsBulletFrame;
-
+      nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);
       if (nsnull == bullet) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      bullet->Init(mContent, this, kidSC, nsnull);
+      bullet->Init(mContent, this, nsnull);
 
       // If the list bullet frame should be positioned inside then add
       // it to the flow now.

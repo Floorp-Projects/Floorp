@@ -47,14 +47,13 @@
 
 class nsMathMLTokenFrame : public nsMathMLContainerFrame {
 public:
-  friend nsIFrame* NS_NewMathMLTokenFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsIAtom* GetType() const;
 
   NS_IMETHOD
   Init(nsIContent*      aContent,
        nsIFrame*        aParent,
-       nsStyleContext*  aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
@@ -82,7 +81,7 @@ public:
                    nsIAtom*        aAttribute,
                    PRInt32         aModType);
 protected:
-  nsMathMLTokenFrame();
+  nsMathMLTokenFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLTokenFrame();
 
   virtual PRIntn GetSkipSides() const { return 0; }

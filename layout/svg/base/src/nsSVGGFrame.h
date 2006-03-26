@@ -52,7 +52,8 @@ class nsSVGGFrame : public nsSVGGFrameBase,
                     public nsSupportsWeakReference
 {
 public:
-  nsSVGGFrame() : mPropagateTransform(PR_TRUE) {}
+  nsSVGGFrame(nsStyleContext* aContext) :
+    nsSVGGFrameBase(aContext), mPropagateTransform(PR_TRUE) {}
 
   /**
    * Get the "type" of the frame
@@ -75,7 +76,7 @@ protected:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 
   friend nsIFrame*
-  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext();

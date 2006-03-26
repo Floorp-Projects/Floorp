@@ -47,12 +47,15 @@ class nsSVGLeafFrame : public nsFrame
     return MakeFrameName(NS_LITERAL_STRING("SVGLeaf"), aResult);
   }
 #endif
+
+public:
+  nsSVGLeafFrame(nsStyleContext* aContext) : nsFrame(aContext) {}
 };
 
 nsIFrame*
-NS_NewSVGLeafFrame(nsIPresShell* aPresShell)
+NS_NewSVGLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGLeafFrame;
+  return new (aPresShell) nsSVGLeafFrame(aContext);
 }
 
 PRBool

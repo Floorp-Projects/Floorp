@@ -60,15 +60,16 @@
 
 const nscoord kSuggestedNotSet = -1;
 
-nsGfxButtonControlFrame::nsGfxButtonControlFrame():
-mSuggestedSize(kSuggestedNotSet, kSuggestedNotSet)
+nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext):
+  nsHTMLButtonControlFrame(aContext),
+  mSuggestedSize(kSuggestedNotSet, kSuggestedNotSet)
 {
 }
 
 nsIFrame*
-NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell)
+NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsGfxButtonControlFrame;
+  return new (aPresShell) nsGfxButtonControlFrame(aContext);
 }
       
 nsIAtom*
@@ -143,19 +144,19 @@ nsGfxButtonControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     nsIFrame * parentFrame = mFrames.FirstChild();
     nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
-    newFrame = NS_NewTextFrame(aPresContext->PresShell());
-    if (NS_UNLIKELY(!newFrame)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     nsRefPtr<nsStyleContext> textStyleContext;
     textStyleContext = aPresContext->StyleSet()->
       ResolveStyleForNonElement(styleContext);
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
 
     if (styleContext) {
+      newFrame = NS_NewTextFrame(aPresContext->PresShell(), textStyleContext);
+      if (NS_UNLIKELY(!newFrame)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    
       // initialize the text frame
-      newFrame->Init(content, parentFrame, textStyleContext, nsnull);
+      newFrame->Init(content, parentFrame, nsnull);
       newFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
       rv = NS_OK;
     }

@@ -55,12 +55,13 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell)
+NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsGfxRadioControlFrame;
+  return new (aPresShell) nsGfxRadioControlFrame(aContext);
 }
 
-nsGfxRadioControlFrame::nsGfxRadioControlFrame()
+nsGfxRadioControlFrame::nsGfxRadioControlFrame(nsStyleContext* aContext):
+  nsFormControlFrame(aContext)
 {
    // Initialize GFX-rendered state
   mRadioButtonFaceStyle = nsnull;

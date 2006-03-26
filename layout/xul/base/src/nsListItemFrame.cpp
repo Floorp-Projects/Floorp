@@ -59,8 +59,11 @@ nsListItemFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsListItemFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsGridRowLeafFrame)
 
-nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-  : nsGridRowLeafFrame(aPresShell, aIsRoot, aLayoutManager) 
+nsListItemFrame::nsListItemFrame(nsIPresShell* aPresShell,
+                                 nsStyleContext* aContext,
+                                 PRBool aIsRoot,
+                                 nsIBoxLayout* aLayoutManager)
+  : nsGridRowLeafFrame(aPresShell, aContext, aIsRoot, aLayoutManager) 
 {
 }
 
@@ -98,8 +101,8 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsIFrame*
-NS_NewListItemFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsListItemFrame(aPresShell, aIsRoot, aLayoutManager);
+  return new (aPresShell) nsListItemFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
 } // NS_NewListItemFrame
 

@@ -56,13 +56,13 @@ class nsPresContext;
 class nsIContent;
 class nsStyleContext;
 
-nsIFrame* NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell);
-
+nsIFrame* NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsNativeScrollbarFrame : public nsBoxFrame
 {
 public:
-  nsNativeScrollbarFrame(nsIPresShell* aShell);
+  nsNativeScrollbarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+    nsBoxFrame(aShell, aContext), mScrollbarNeedsContent(PR_TRUE) {}
   virtual ~nsNativeScrollbarFrame ( ) ;
 
 #ifdef DEBUG
@@ -73,7 +73,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
-                  nsStyleContext* aContext,
                   nsIFrame*       aPrevInFlow);
            
   // nsIFrame overrides

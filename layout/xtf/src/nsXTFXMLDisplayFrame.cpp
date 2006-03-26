@@ -51,7 +51,7 @@
 ////////////////////////////////////////////////////////////////////////
 // nsXTFXMLBlockDisplayFrame
 
-nsIFrame* NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, PRBool isBlock);
+nsIFrame* NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool isBlock);
 
 typedef nsBlockFrame nsXTFXMLBlockDisplayFrameBase;
 
@@ -59,7 +59,8 @@ class nsXTFXMLBlockDisplayFrame : public nsXTFXMLBlockDisplayFrameBase,
                                   public nsIAnonymousContentCreator
 {
 public:
-  nsXTFXMLBlockDisplayFrame();
+  nsXTFXMLBlockDisplayFrame(nsStyleContext* aContext)
+    : nsXTFXMLBlockDisplayFrameBase(aContext) {}
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -87,13 +88,6 @@ public:
                             nsIFrame**        aFrame) {
     if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }  
 };
-
-//----------------------------------------------------------------------
-// Implementation
-
-nsXTFXMLBlockDisplayFrame::nsXTFXMLBlockDisplayFrame()
-    : nsXTFXMLBlockDisplayFrameBase()
-{}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -152,7 +146,8 @@ class nsXTFXMLInlineDisplayFrame : public nsXTFXMLInlineDisplayFrameBase,
                                    public nsIAnonymousContentCreator
 {
 public:
-  nsXTFXMLInlineDisplayFrame();
+  nsXTFXMLInlineDisplayFrame(nsStyleContext* aContext)
+    : nsXTFXMLInlineDisplayFrameBase(aContext) {}
 
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -180,13 +175,6 @@ public:
                             nsIFrame**        aFrame) {
     if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 };
-
-//----------------------------------------------------------------------
-// Implementation
-
-nsXTFXMLInlineDisplayFrame::nsXTFXMLInlineDisplayFrame()
-    : nsXTFXMLInlineDisplayFrameBase()
-{}
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -240,10 +228,10 @@ nsXTFXMLInlineDisplayFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 // Construction API
 
 nsIFrame*
-NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, PRBool isBlock)
+NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool isBlock)
 {
   if (isBlock)
-    return new (aPresShell) nsXTFXMLBlockDisplayFrame();
+    return new (aPresShell) nsXTFXMLBlockDisplayFrame(aContext);
   else
-    return new (aPresShell) nsXTFXMLInlineDisplayFrame();
+    return new (aPresShell) nsXTFXMLInlineDisplayFrame(aContext);
 }

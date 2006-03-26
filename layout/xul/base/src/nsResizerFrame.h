@@ -57,18 +57,16 @@ protected:
   
 
 public:
-  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell);  
+  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);  
 
-  nsResizerFrame(nsIPresShell* aPresShell);
+  nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
   NS_IMETHOD  Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
-                   nsStyleContext*  aContext,
                    nsIFrame*        asPrevInFlow);
   
   NS_IMETHOD AttributeChanged(PRInt32 aNameSpaceID,
@@ -84,9 +82,6 @@ protected:
 protected:
 	eDirection mDirection;
 	nsRect mWidgetRect;
-
-
-
 }; // class nsResizerFrame
 
 #endif /* nsResizerFrame_h___ */

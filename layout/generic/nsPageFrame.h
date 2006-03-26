@@ -47,7 +47,7 @@ class nsSharedPageData;
 class nsPageFrame : public nsContainerFrame {
 
 public:
-  friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsIFrame
   NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
@@ -100,7 +100,7 @@ public:
                       nsPoint              aPt);
                       
 protected:
-  nsPageFrame();
+  nsPageFrame(nsStyleContext* aContext);
   virtual ~nsPageFrame();
 
   typedef enum {
@@ -154,7 +154,7 @@ protected:
 
 class nsPageBreakFrame : public nsLeafFrame {
 
-  nsPageBreakFrame();
+  nsPageBreakFrame(nsStyleContext* aContext);
   ~nsPageBreakFrame();
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -171,7 +171,7 @@ protected:
                               nsHTMLReflowMetrics&     aDesiredSize);
     PRBool mHaveReflowed;
 
-    friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell);
+    friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 };
 
 #endif /* nsPageFrame_h___ */

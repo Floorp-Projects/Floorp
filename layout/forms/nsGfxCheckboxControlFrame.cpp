@@ -58,16 +58,16 @@
 
 //------------------------------------------------------------
 nsIFrame*
-NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell)
+NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsGfxCheckboxControlFrame;
+  return new (aPresShell) nsGfxCheckboxControlFrame(aContext);
 }
 
 
 //------------------------------------------------------------
 // Initialize GFX-rendered state
-nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
-: mCheckButtonFaceStyle(nsnull)
+nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame(nsStyleContext* aContext)
+: nsFormControlFrame(aContext), mCheckButtonFaceStyle(nsnull)
 {
 }
 

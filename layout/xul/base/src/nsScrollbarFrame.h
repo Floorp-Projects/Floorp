@@ -49,12 +49,13 @@
 class nsISupportsArray;
 class nsIScrollbarMediator;
 
-nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell);
+nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsScrollbarFrame : public nsBoxFrame, public nsIScrollbarFrame
 {
 public:
-    nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mScrollbarMediator(nsnull) {}
+    nsScrollbarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+      nsBoxFrame(aShell, aContext), mScrollbarMediator(nsnull) {}
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
@@ -89,7 +90,6 @@ public:
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,

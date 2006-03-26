@@ -59,9 +59,9 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
                                 public nsSupportsWeakReference
 {
   friend nsIFrame*
-  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGForeignObjectFrame();
+  nsSVGForeignObjectFrame(nsStyleContext* aContext);
   nsresult Init();
   
   // nsISupports interface:
@@ -73,7 +73,6 @@ public:
   // nsIFrame:  
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,

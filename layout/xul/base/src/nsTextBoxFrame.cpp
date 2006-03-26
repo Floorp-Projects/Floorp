@@ -106,9 +106,9 @@ PRBool nsTextBoxFrame::gInsertSeparatorPrefInitialized = PR_FALSE;
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewTextBoxFrame (nsIPresShell* aPresShell)
+NS_NewTextBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-    return new (aPresShell) nsTextBoxFrame (aPresShell);
+    return new (aPresShell) nsTextBoxFrame (aPresShell, aContext);
 } // NS_NewTextFrame
 
 
@@ -140,7 +140,8 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
     return NS_OK;
 }
 
-nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell), mCropType(CropRight),mAccessKeyInfo(nsnull)
+nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+  nsLeafBoxFrame(aShell, aContext), mCropType(CropRight),mAccessKeyInfo(nsnull)
 {
     mState |= NS_STATE_NEED_LAYOUT;
     NeedsRecalc();
@@ -155,22 +156,19 @@ nsTextBoxFrame::~nsTextBoxFrame()
 NS_IMETHODIMP
 nsTextBoxFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-    nsresult rv = nsTextBoxFrameSuper::Init(aContent, aParent, aContext, aPrevInFlow);
-    if (NS_FAILED(rv))
-        return rv;
-        
-    nsPresContext *aPresContext = GetPresContext();
+    nsresult rv = nsTextBoxFrameSuper::Init(aContent, aParent, aPrevInFlow);
+
+    nsPresContext *presContext = GetPresContext();
 
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;
     PRBool aRedraw;
-    UpdateAttributes(aPresContext, nsnull, aResize, aRedraw); /* update all */
+    UpdateAttributes(presContext, nsnull, aResize, aRedraw); /* update all */
 
     // register access key
-    RegUnregAccessKey(aPresContext, PR_TRUE);
+    RegUnregAccessKey(presContext, PR_TRUE);
 
     return NS_OK;
 }

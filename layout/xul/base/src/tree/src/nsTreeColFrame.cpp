@@ -57,10 +57,10 @@
 // Creates a new col frame
 //
 nsIFrame*
-NS_NewTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, 
-                   nsIBoxLayout* aLayoutManager)
+NS_NewTreeColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+                   PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsTreeColFrame(aPresShell, aIsRoot, aLayoutManager);
+  return new (aPresShell) nsTreeColFrame(aPresShell, aContext, aIsRoot, aLayoutManager);
 } // NS_NewTreeColFrame
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -81,12 +81,6 @@ nsTreeColFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsTreeColFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
-// Constructor
-nsTreeColFrame::nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-  : nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
-{
-}
-
 // Destructor
 nsTreeColFrame::~nsTreeColFrame()
 {
@@ -95,10 +89,9 @@ nsTreeColFrame::~nsTreeColFrame()
 NS_IMETHODIMP
 nsTreeColFrame::Init(nsIContent*      aContent,
                      nsIFrame*        aParent,
-                     nsStyleContext*  aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
   EnsureColumns();
   if (mColumns)
     mColumns->InvalidateColumns();

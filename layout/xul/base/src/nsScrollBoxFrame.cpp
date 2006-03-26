@@ -66,8 +66,8 @@ class nsAutoRepeatBoxFrame : public nsButtonBoxFrame,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsAutoRepeatBoxFrame(nsIPresShell* aPresShell);
-  friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
+                                            nsStyleContext* aContext);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
@@ -78,20 +78,17 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
 protected:
+  nsAutoRepeatBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
+    nsButtonBoxFrame(aPresShell, aContext) {}
+
   PRPackedBool mTrustedEvent;
 };
 
 nsIFrame*
-NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell)
+NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsAutoRepeatBoxFrame (aPresShell);
+  return new (aPresShell) nsAutoRepeatBoxFrame (aPresShell, aContext);
 } // NS_NewScrollBarButtonFrame
-
-
-nsAutoRepeatBoxFrame::nsAutoRepeatBoxFrame(nsIPresShell* aPresShell)
-:nsButtonBoxFrame(aPresShell)
-{
-}
 
 NS_INTERFACE_MAP_BEGIN(nsAutoRepeatBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)

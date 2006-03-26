@@ -68,7 +68,7 @@ class nsLegendFrame;
 class nsFieldSetFrame : public nsHTMLContainerFrame {
 public:
 
-  nsFieldSetFrame();
+  nsFieldSetFrame(nsStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                  nsIAtom*       aListName,
@@ -120,13 +120,13 @@ protected:
 };
 
 nsIFrame*
-NS_NewFieldSetFrame(nsIPresShell* aPresShell)
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFieldSetFrame;
+  return new (aPresShell) nsFieldSetFrame(aContext);
 }
 
-nsFieldSetFrame::nsFieldSetFrame()
-  : nsHTMLContainerFrame()
+nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
+  : nsHTMLContainerFrame(aContext)
 {
   mContentFrame = nsnull;
   mLegendFrame  = nsnull;

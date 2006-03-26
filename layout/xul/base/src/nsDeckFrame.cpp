@@ -59,15 +59,16 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager)
+NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsIBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsDeckFrame(aPresShell, aLayoutManager);
+  return new (aPresShell) nsDeckFrame(aPresShell, aContext, aLayoutManager);
 } // NS_NewDeckFrame
 
 
 nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell,
+                         nsStyleContext* aContext,
                          nsIBoxLayout* aLayoutManager)
-  : nsBoxFrame(aPresShell), mIndex(0)
+  : nsBoxFrame(aPresShell, aContext), mIndex(0)
 {
      // if no layout manager specified us the static sprocket layout
   nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
@@ -109,10 +110,9 @@ nsDeckFrame::AttributeChanged(PRInt32         aNameSpaceID,
 NS_IMETHODIMP
 nsDeckFrame::Init(nsIContent*     aContent,
                   nsIFrame*       aParent,
-                  nsStyleContext* aStyleContext,
                   nsIFrame*       aPrevInFlow)
 {
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aStyleContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   mIndex = GetSelectedIndex();
 

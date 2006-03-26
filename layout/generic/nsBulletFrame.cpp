@@ -85,10 +85,6 @@ private:
 
 
 
-nsBulletFrame::nsBulletFrame()
-{
-}
-
 nsBulletFrame::~nsBulletFrame()
 {
 }

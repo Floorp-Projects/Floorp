@@ -86,10 +86,10 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIStatefulFrame
 {
 public:
-  friend nsIFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+  friend nsIFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
   friend class RedisplayTextEvent;
 
-  nsComboboxControlFrame();
+  nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
 
    // nsISupports

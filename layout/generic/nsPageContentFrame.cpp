@@ -55,13 +55,9 @@
 
 
 nsIFrame*
-NS_NewPageContentFrame(nsIPresShell* aPresShell)
+NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPageContentFrame;
-}
-
-nsPageContentFrame::nsPageContentFrame()
-{
+  return new (aPresShell) nsPageContentFrame(aContext);
 }
 
 NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,

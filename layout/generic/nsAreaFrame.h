@@ -53,14 +53,13 @@ struct nsStylePosition;
 class nsAreaFrame : public nsBlockFrame
 {
 public:
-  friend nsIFrame* NS_NewAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
+  friend nsIFrame* NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext *aContext, PRUint32 aFlags);
   
   // nsIFrame
 
 #ifdef MOZ_XUL
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
-                  nsStyleContext*  aContext,
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
@@ -82,7 +81,7 @@ public:
 #endif
 
 protected:
-  nsAreaFrame();
+  nsAreaFrame(nsStyleContext *aContext) : nsBlockFrame(aContext) {}
 
 #ifdef MOZ_XUL
   nsresult RegUnregAccessKey(nsPresContext* aPresContext,

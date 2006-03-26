@@ -239,9 +239,9 @@ FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 // Creates a new image frame and returns it
 //
 nsIFrame*
-NS_NewImageBoxFrame (nsIPresShell* aPresShell)
+NS_NewImageBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsImageBoxFrame (aPresShell);
+  return new (aPresShell) nsImageBoxFrame (aPresShell, aContext);
 } // NS_NewTitledButtonFrame
 
 NS_IMETHODIMP
@@ -263,8 +263,8 @@ nsImageBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return rv;
 }
 
-nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell) :
-  nsLeafBoxFrame(aShell),
+nsImageBoxFrame::nsImageBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
+  nsLeafBoxFrame(aShell, aContext),
   mUseSrcAttr(PR_FALSE),
   mSuppressStyleCheck(PR_FALSE),
   mIntrinsicSize(0,0),
@@ -302,7 +302,6 @@ nsImageBoxFrame::Destroy(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsImageBoxFrame::Init(nsIContent*      aContent,
                       nsIFrame*        aParent,
-                      nsStyleContext*  aContext,
                       nsIFrame*        aPrevInFlow)
 {
   if (!mListener) {
@@ -315,7 +314,7 @@ nsImageBoxFrame::Init(nsIContent*      aContent,
   }
 
   mSuppressStyleCheck = PR_TRUE;
-  nsresult  rv = nsLeafBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsLeafBoxFrame::Init(aContent, aParent, aPrevInFlow);
   mSuppressStyleCheck = PR_FALSE;
 
   UpdateLoadFlags();

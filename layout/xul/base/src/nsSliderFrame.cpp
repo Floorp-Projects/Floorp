@@ -94,13 +94,17 @@ GetContentOfBox(nsIBox *aBox)
 }
 
 nsIFrame*
-NS_NewSliderFrame (nsIPresShell* aPresShell)
+NS_NewSliderFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSliderFrame(aPresShell);
+  return new (aPresShell) nsSliderFrame(aPresShell, aContext);
 } // NS_NewSliderFrame
 
-nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell),
- mCurPos(0), mScrollbarListener(nsnull),mChange(0), mMediator(nsnull)
+nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):
+  nsBoxFrame(aPresShell, aContext),
+  mCurPos(0),
+  mScrollbarListener(nsnull),
+  mChange(0),
+  mMediator(nsnull)
 {
 }
 
@@ -113,10 +117,9 @@ nsSliderFrame::~nsSliderFrame()
 NS_IMETHODIMP
 nsSliderFrame::Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
-                    nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aContent, aParent, aContext, aPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
 
   static PRBool gotPrefs = PR_FALSE;
   if (!gotPrefs) {
@@ -126,7 +129,7 @@ nsSliderFrame::Init(nsIContent*      aContent,
     gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 
-  CreateViewForFrame(GetPresContext(), this, aContext, PR_TRUE);
+  CreateViewForFrame(GetPresContext(), this, GetStyleContext(), PR_TRUE);
   nsIView* view = GetView();
   view->GetViewManager()->SetViewContentTransparency(view, PR_TRUE);
   return rv;

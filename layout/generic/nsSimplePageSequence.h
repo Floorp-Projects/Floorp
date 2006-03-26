@@ -77,7 +77,7 @@ public:
 class nsSimplePageSequenceFrame : public nsContainerFrame,
                                   public nsIPageSequenceFrame {
 public:
-  friend nsIFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -134,7 +134,7 @@ public:
 
 
 protected:
-  nsSimplePageSequenceFrame();
+  nsSimplePageSequenceFrame(nsStyleContext* aContext);
   virtual ~nsSimplePageSequenceFrame();
 
   nsresult CreateContinuingPageFrame(nsPresContext* aPresContext,
