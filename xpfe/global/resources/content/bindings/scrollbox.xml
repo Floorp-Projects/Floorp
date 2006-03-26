@@ -22,7 +22,7 @@
   <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true"
-                            oncommand="this.parentNode.scrollByIndex(-1); event.preventBubble();"/>
+                            oncommand="this.parentNode.scrollByIndex(-1); event.stopPropagation();"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
       </xul:scrollbox>
