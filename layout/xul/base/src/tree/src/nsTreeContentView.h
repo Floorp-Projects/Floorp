@@ -50,7 +50,7 @@
 
 nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
-class nsTreeContentView : public nsITreeView,
+class nsTreeContentView : public nsINativeTreeView,
                           public nsITreeContentView,
                           public nsStubDocumentObserver
 {
@@ -64,6 +64,8 @@ class nsTreeContentView : public nsITreeView,
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSITREEVIEW
+    // nsINativeTreeView: Untrusted code can use us
+    NS_IMETHOD EnsureNative() { return NS_OK; }
 
     NS_DECL_NSITREECONTENTVIEW
 

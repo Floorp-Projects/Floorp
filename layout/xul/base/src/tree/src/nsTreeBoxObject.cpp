@@ -49,6 +49,8 @@
 #include "nsINodeInfo.h"
 #include "nsXULAtoms.h"
 #include "nsChildIterator.h"
+#include "nsContentUtils.h"
+#include "nsDOMError.h"
 
 class nsTreeBoxObject : public nsPITreeBoxObject, public nsBoxObject
 {
@@ -172,6 +174,14 @@ NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
 
 NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
 {
+  // Untrusted content is only allowed to specify known-good views
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    nsCOMPtr<nsINativeTreeView> nativeTreeView = do_QueryInterface(aView);
+    if (!nativeTreeView || NS_FAILED(nativeTreeView->EnsureNative()))
+      // XXX ERRMSG need a good error here for developers
+      return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsITreeBoxObject* body = GetTreeBody();
   if (body) {
     body->SetView(aView);
