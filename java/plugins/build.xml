@@ -128,70 +128,44 @@
 
   <target name="clean" depends="clean.classes">
 
-  <delete>
-      <fileset dir="${basedir}/src_moz">
-        <include name="**/*BrowserControlCanvas.h"/>
-        <exclude name="motif/MotifBrowserControlCanvas.h"/>
-      </fileset>
-    </delete>
-
     <delete >
-      <fileset dir="${basedir}/src_share">
-        <include name="*.h"/>
-        <exclude name="bal_util.h"/>
-        <exclude name="jni_util_export.h"/>
-        <exclude name="jni_util.h"/>
-      </fileset>
-    </delete>
-
-    <delete >
-      <fileset dir="${basedir}/src_moz">
+      <fileset dir="${basedir}/src">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
 
     <delete >
-      <fileset dir="${basedir}/src_ie">
+      <fileset dir="${basedir}/jni">
         <include name="*.ilk"/>
       </fileset>
     </delete>
 
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+    <exec os="SunOS" dir="${basedir}/src" executable="gmake" 
           failonerror="yes">
-
       <arg line="clobber_all"/>
-
     </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Linux" dir="${basedir}/src" executable="make" 
           failonerror="yes">
-
-      <arg line="clobber_all"/>
-
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
-                     failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_ie" executable="make" 
+    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="SunOS" dir="${basedir}/src_share" executable="gmake"
-          failonerror="yes">
-
-      <arg line="clobber_all"/>
-
-    </exec>
-    <exec os="Linux" dir="${basedir}/src_share" executable="make"
-          failonerror="yes">
-
-      <arg line="clobber_all"/>
-
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="make" 
+    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
                      failonerror="yes">
+      <arg line="clobber_all"/>
+    </exec>
+    <exec os="SunOS" dir="${basedir}/jni" executable="gmake"
+          failonerror="yes">
+
+      <arg line="clobber_all"/>
+
+    </exec>
+    <exec os="Linux" dir="${basedir}/jni" executable="make"
+          failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
