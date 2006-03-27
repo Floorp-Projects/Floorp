@@ -192,8 +192,6 @@
 <!ENTITY historySearchCmd.accesskey "s">
 <!ENTITY historyShowCmd.label "View All History...">
 <!ENTITY historyShowCmd.accesskey "v">
-<!ENTITY historyClearCmd.label "Clear History...">
-<!ENTITY historyClearCmd.accesskey "c">
 <!-- XXX remove below if places sticks -->
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">
