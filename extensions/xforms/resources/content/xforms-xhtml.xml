@@ -127,6 +127,7 @@
               getAnonymousElementByAttribute(this, "anonid", 'implicitcontent'),
             _explicitContent: this.ownerDocument.
               getAnonymousElementByAttribute(this, 'anonid', 'explicitcontent'),
+            __proto__: this,
 
             set value(val) {
               if (val != null) {
@@ -136,6 +137,26 @@
                 this._implicitContent.textContent = '';
                 this._explicitContent.style.display = 'inline';
               }
+            },
+
+            get textValue() {
+              if (this._explicitContent.style.display == 'none')
+                return this._implicitContent.textContent;
+              return this.textContent;
+            },
+            get nodeValue() {
+              var fragment = this.ownerDocument.createDocumentFragment();
+
+              var container = null;
+              if (this._explicitContent.style.display == 'none')
+                container = this._implicitContent;
+              else
+                container = this;
+
+              for (var node = container.firstChild; node; node = node.nextSibling) {
+                fragment.appendChild(node.cloneNode(true));
+              }
+              return fragment;
             }
           };
         </body>

@@ -171,6 +171,7 @@
       <destructor>
         this._delegate = null;
         this._accessors = null;
+        this._control = null;
       </destructor>
 
       <property name="delegate" readonly="true">
@@ -216,6 +217,8 @@
     method what returns the object:
     {
       set value(); // set "string" value
+      get textValue() // return text representing label value
+      get nodeValue() // return document fragment representing label value
     }
   -->
   <binding id="xformswidget-label-base"
@@ -229,6 +232,11 @@
         </body>
       </method>
 
+      <property name="textValue" readonly="true"
+                onget="return this.control.textValue;"/>
+
+      <property name="nodeValue" readonly="true"
+                onget="return this.control.nodeValue;"/>
     </implementation>
   </binding>
 

@@ -468,12 +468,18 @@ case > html|div.-moz-xforms-case-container {
 }
 
 /* select */
-select {
-  -moz-binding: url('chrome://xforms/content/select.xml#xformswidget-select');
+html|*:root select {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-compact');
+}
+html|*:root select html|span[anonid="control"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#widget-select-compact');
 }
 
-select[appearance="full"] {
-  -moz-binding: url('chrome://xforms/content/select.xml#xformswidget-select-full');
+html|*:root select[appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-full');
+}
+html|*:root select[appearance="full"] html|span[anonid="control"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#widget-select-full');
 }
 
 select html|div.select-choice-label {

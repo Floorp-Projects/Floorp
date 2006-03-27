@@ -18,6 +18,7 @@ xforms.jar:
   content/xforms/select1.xml                   (resources/content/select1.xml)
   content/xforms/range.xml                     (resources/content/range.xml)
   content/xforms/select.xml                    (resources/content/select.xml)
+  content/xforms/select-xhtml.xml              (resources/content/select-xhtml.xml)
   content/xforms/bindingex.css                 (resources/content/bindingex.css)
   content/xforms/bindingex.xul                 (resources/content/bindingex.xul)
   content/xforms/calendar.png                  (resources/content/calendar.png)
