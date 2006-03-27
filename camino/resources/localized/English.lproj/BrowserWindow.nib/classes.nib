@@ -152,8 +152,6 @@
             CLASS = BrowserWindowController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mAddToAddressBook = NSMenuItem; 
-                mAddToAddressBook2 = NSMenuItem; 
                 mBackItem = NSMenuItem; 
                 mContentView = BrowserContentView; 
                 mCopyItem = NSMenuItem; 

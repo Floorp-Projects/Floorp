@@ -140,8 +140,6 @@ typedef enum
   IBOutlet NSMenuItem*          mBackItem;
   IBOutlet NSMenuItem*          mForwardItem;
   IBOutlet NSMenuItem*          mCopyItem;
-  IBOutlet NSMenuItem*          mAddToAddressBook;
-  IBOutlet NSMenuItem*          mAddToAddressBook2; // From the mailto link + image menu
   
   NSToolbarItem*                mSidebarToolbarItem;
   NSToolbarItem*                mBookmarkToolbarItem;
@@ -286,9 +284,9 @@ typedef enum
 
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
-- (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress;
+- (NSMenuItem*)prepareAddToAddressBookMenuItem:(NSString*)emailAddress;
 - (NSMenu*)getContextMenu;
-- (NSString*)getMailAddressFromContextMenuLinkNode;
+- (NSArray*)mailAddressesInContextMenuLinkNode;
 - (NSString*)getContextMenuNodeHrefText;
 
 // Context menu methods

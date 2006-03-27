@@ -3211,26 +3211,27 @@ enum BWCOpenDest {
   return @"";
 }
 
+//
 // Determine if the node the context menu has been invoked for is an <a> node
-// indicating a mailto: link. If so return the indicated e-mail address
-// otherwise return nil
-- (NSString*)getMailAddressFromContextMenuLinkNode
+// indicating a mailto: link. If so return an array containing the e-mail addresses
+// in the link. Otherwise return nil.
+//
+- (NSArray*)mailAddressesInContextMenuLinkNode
 {
   NSString* hrefStr = [self getContextMenuNodeHrefText];
   
   if ([hrefStr hasPrefix:@"mailto:"]) {
     NSString* linkTargetText = [hrefStr substringFromIndex:7];
     
-    // mailto: links can contain arguments (after '?') and/or multiple e-mail
-    // addresses (comma separated). We want just the first e-mail address.
-    NSRange separatorRange = [linkTargetText rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@",?"]];
+    // mailto: links can contain arguments (after '?')
+    NSRange separatorRange = [linkTargetText rangeOfCharacterFromSet:[NSCharacterSet characterSetWithCharactersInString:@"?"]];
     
     if (separatorRange.length != 0)
       linkTargetText = [linkTargetText substringToIndex:separatorRange.location];
       
-    return linkTargetText;
+    return [linkTargetText componentsSeparatedByString:@","];
   }
-  
+
   return nil;
 }
 
@@ -3239,7 +3240,7 @@ enum BWCOpenDest {
 // open the address book at the record containing it.
 - (IBAction)addToAddressBook:(id)aSender
 {
-  NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
+  NSString* emailAddress = [aSender representedObject];
   if (emailAddress) {
     ABAddressBook* abook = [ABAddressBook sharedAddressBook];
     if ([abook emailAddressExistsInAddressBook:emailAddress] )
@@ -3249,11 +3250,11 @@ enum BWCOpenDest {
   }
 }
 
-// Copy the e-mail address from the mailto: link of the context menu node
+// Copy the e-mail address(es) from the mailto: link of the context menu node
 // onto the clipboard.
 - (IBAction)copyAddressToClipboard:(id)aSender
 {
-  NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
+  NSString* emailAddress = [[self mailAddressesInContextMenuLinkNode] componentsJoinedByString:@","];
   
   if (emailAddress) {
     NSPasteboard* clipboard = [NSPasteboard generalPasteboard];
@@ -3265,16 +3266,30 @@ enum BWCOpenDest {
   }
 }
 
-- (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress
+//
+// Create a menu item to add/open the specified e-mail address to Address Book
+//
+- (NSMenuItem*)prepareAddToAddressBookMenuItem:(NSString*)emailAddress
 {
-  if ([[ABAddressBook sharedAddressBook] emailAddressExistsInAddressBook:emailAddress]) {
-    NSString* realName = [[ABAddressBook sharedAddressBook] getRealNameForEmailAddress:[self getMailAddressFromContextMenuLinkNode]];
-    [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Open %@ in Address Book", @""), realName != nil ? realName : @""]];
+  NSMenuItem* addToAddressBookItem = nil;
+
+  if ([emailAddress length] > 0) {
+    addToAddressBookItem = [[NSMenuItem alloc] init];
+
+    if ([[ABAddressBook sharedAddressBook] emailAddressExistsInAddressBook:emailAddress]) {
+      NSString* realName = [[ABAddressBook sharedAddressBook] getRealNameForEmailAddress:emailAddress];
+      [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Open %@ in Address Book", @""), realName != nil ? realName : @""]];
+    } else {
+      [addToAddressBookItem setTitle:[NSString stringWithFormat:NSLocalizedString(@"Add %@ to Address Book", @""), emailAddress]];
+    }
+
     [addToAddressBookItem setEnabled:YES];
-  } else {
-    [addToAddressBookItem setTitle:NSLocalizedString(@"Add to Address Book", @"")];
-    [addToAddressBookItem setEnabled:([emailAddress length] > 0) ];
+    [addToAddressBookItem setRepresentedObject:emailAddress];
+    [addToAddressBookItem setAction:@selector(addToAddressBook:)];
+    [addToAddressBookItem autorelease];
   }
+  
+  return addToAddressBookItem;
 }
 
 - (NSMenu*)getContextMenu
@@ -3286,26 +3301,27 @@ enum BWCOpenDest {
   
   NSMenu* menuPrototype = nil;
   int contextMenuFlags = mDataOwner->mContextMenuFlags;
+  
+  NSArray* emailAddresses = nil;
+  unsigned numEmailAddresses = 0;
 
   BOOL hasSelection = [[mBrowserView getBrowserView] canCopy];
 
   if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
   {
-    NSString* emailAddress = [self getMailAddressFromContextMenuLinkNode];
-    
+    emailAddresses = [self mailAddressesInContextMenuLinkNode];
+    if (emailAddresses != nil)
+      numEmailAddresses = [emailAddresses count];
+
     if ((contextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
-      if (emailAddress) {
-        [self prepareAddToAddressBookMenuItem:mAddToAddressBook2 address:emailAddress];
+      if (numEmailAddresses > 0)
         menuPrototype = mImageMailToLinkMenu;
-      } 
       else
         menuPrototype = mImageLinkMenu;
     } 
     else {
-      if (emailAddress) {
-        [self prepareAddToAddressBookMenuItem:mAddToAddressBook address:emailAddress];
+      if (numEmailAddresses > 0)
         menuPrototype = mMailToLinkMenu;
-      } 
       else
         menuPrototype = mLinkMenu;
     }
@@ -3322,7 +3338,7 @@ enum BWCOpenDest {
     // show the document menu. This prevents us from failing to find a case
     // and not showing the context menu.
     menuPrototype = mPageMenu;
-    [mBackItem 		setEnabled: [[mBrowserView getBrowserView] canGoBack]];
+    [mBackItem    setEnabled: [[mBrowserView getBrowserView] canGoBack]];
     [mForwardItem setEnabled: [[mBrowserView getBrowserView] canGoForward]];
     [mCopyItem		setEnabled:hasSelection];
   }
@@ -3345,7 +3361,7 @@ enum BWCOpenDest {
   NSMenu* result = [[menuPrototype copy] autorelease];
 
   const int kFrameRelatedItemsTag = 100;
-  const int kFrameInapplicableItemsTag 	= 101;
+  const int kFrameInapplicableItemsTag = 101;
   const int kSelectionRelatedItemsTag = 102;
   
   // if there's no selection or no search bar in the toolbar, hide the search item.
@@ -3365,6 +3381,18 @@ enum BWCOpenDest {
     NSMenuItem* frameItem;
     while ((frameItem = [result itemWithTag:kFrameRelatedItemsTag]) != nil)
       [result removeItem:frameItem];
+  }
+  
+  // Add items to add/open each e-mail address in a mailto: link and
+  // change "address" to the plural form if necessary
+  if (numEmailAddresses > 0) {
+    for (signed i = (signed) numEmailAddresses - 1; i >= 0 ; --i) {
+      NSMenuItem* item = [self prepareAddToAddressBookMenuItem:[emailAddresses objectAtIndex:i]];
+      if (item)
+        [result insertItem:item atIndex:1];
+    }
+    if (numEmailAddresses > 1)
+      [[result itemWithTarget:self andAction:@selector(copyAddressToClipboard:)] setTitle:NSLocalizedString(@"Copy Addresses", @"")];
   }
   
   return result;
