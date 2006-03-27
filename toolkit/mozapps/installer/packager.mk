@@ -74,7 +74,8 @@ PACKAGE       = $(PKG_BASENAME)$(PKG_SUFFIX)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 
-CREATE_FINAL_TAR = tar -c --owner=0 --group=0 --numeric-owner --mode="go-w" -f
+CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
+  --mode="go-w" -f
 UNPACK_TAR       = tar -x
 
 ifeq ($(MOZ_PKG_FORMAT),TAR)

@@ -5467,6 +5467,14 @@ if test -z "$MOZ_XPINSTALL"; then
 fi
 AC_SUBST(MOZ_INSTALLER)
 
+AC_MSG_CHECKING([for tar archiver])
+AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
+if test -z "$TAR"; then
+    AC_MSG_ERROR([no tar archiver found in \$PATH])
+fi
+AC_MSG_RESULT([$TAR])
+AC_SUBST(TAR)
+
 dnl ========================================================
 dnl Updater
 dnl ========================================================
