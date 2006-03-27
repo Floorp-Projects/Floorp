@@ -541,7 +541,7 @@ endif
 NSS_CO_FLAGS := $(NSS_CO_FLAGS) $(if $(NSS_CO_TAG),-r $(NSS_CO_TAG),-A)
 
 # Cannot pull static tags by date
-ifeq ($(NSS_CO_TAG),NSS_CLIENT_TAG)
+ifneq (,$(findstring _RTM,$(NSS_CO_TAG)))
 CVSCO_NSS = $(CVS) $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(NSS_CO_MODULE)
 else
 CVSCO_NSS = $(CVS) $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSS_CO_MODULE)
