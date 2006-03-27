@@ -1059,6 +1059,27 @@ function DoTestSendCall(toCall) {
   phoneInterface.makeCall(toCall,"");
 }
 
+function DoGoogleToggle() {
+  // marcio
+  //google xhtml string call http://www.google.com/gwt/n?q=xml&site=mozilla_minimo&u=www.xml.com/
+  
+  var locationAddress="google.com";
+
+  if(gURLBar.value.indexOf("http://")>-1) {
+	locationAddress=gURLBar.value.split("http://")[1];	
+  }
+
+  try { 
+        
+    gBrowser.selectedTab = gBrowser.addTab('http://www.google.com/gwt/n?q=xml&site=mozilla_minimo&u='+locationAddress);
+    
+    browserInit(gBrowser.selectedTab);
+
+  } catch (e) {
+    
+  }  
+}
+
 function DoSSRToggle()
 {
   try {
