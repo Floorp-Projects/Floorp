@@ -1268,9 +1268,6 @@
               this.calView.doAddItem(occ);
           },
           onDeleteItem: function (aItem) {
-            if (!(aItem instanceof Components.interfaces.calIEvent))
-              return;
-
             var occs = aItem.getOccurrencesBetween(this.calView.startDate,
                                                    this.calView.queryEndDate,
                                                    {});
