@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prprf.h"
+#include "nsCRT.h"
 #include "nsRegisterItem.h"
 #include "nsInstallResources.h"
 #include "nsNetUtil.h"
