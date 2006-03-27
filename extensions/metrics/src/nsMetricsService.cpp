@@ -55,6 +55,7 @@
 #include "nsIProperty.h"
 #include "nsIVariant.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMSerializer.h"
 #include "nsMultiplexInputStream.h"
 #include "nsStringStream.h"
@@ -68,6 +69,7 @@
 #include "nsIClassInfoImpl.h"
 #endif
 #include "nsIUUIDGenerator.h"
+#include "nsDocShellCID.h"
 
 // Make our MIME type inform the server of possible compression.
 #ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA
@@ -89,6 +91,22 @@ PRLogModuleInfo *gMetricsLog;
 static const char kQuitApplicationTopic[] = "quit-application";
 
 //-----------------------------------------------------------------------------
+
+nsMetricsService::nsMetricsService()  
+    : mEventCount(0),
+      mSuspendCount(0),
+      mUploading(PR_FALSE),
+      mNextWindowID(0)
+{
+  NS_ASSERTION(!sMetricsService, ">1 MetricsService object created");
+  sMetricsService = this;
+}
+
+nsMetricsService::~nsMetricsService()
+{
+  NS_ASSERTION(sMetricsService == this, ">1 MetricsService object created");
+  sMetricsService = nsnull;
+}
 
 NS_IMPL_ISUPPORTS6_CI(nsMetricsService, nsIMetricsService, nsIAboutModule,
                       nsIStreamListener, nsIRequestObserver, nsIObserver,
@@ -358,21 +376,16 @@ nsMetricsService::OnStopRequest(nsIRequest *request, nsISupports *context,
 nsresult
 nsMetricsService::EnableCollectors()
 {
-  // Start and stop collectors based on the current config. For now, this only
-  // applies to the load collector since the window collector may be needed by
-  // other collectors.
-  //
-  // TODO(darin): Come up with a better solution for this.  A broadcast
-  //              notification to the collectors might be ideal.
-  //
+  // Start and stop collectors based on the current config.
   nsresult rv;
-  if (mConfig.IsEventEnabled(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
-                             NS_LITERAL_STRING("document"))) {
-    rv = nsLoadCollector::Startup();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    nsLoadCollector::Shutdown();
-  }
+  rv = nsLoadCollector::SetEnabled(
+      IsEventEnabled(NS_LITERAL_STRING("document")));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsWindowCollector::SetEnabled(
+      IsEventEnabled(NS_LITERAL_STRING("window")));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -392,12 +405,24 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
 {
   if (strcmp(topic, kQuitApplicationTopic) == 0) {
     Flush();
-    nsLoadCollector::Shutdown();
-    nsWindowCollector::Shutdown();
+    nsLoadCollector::SetEnabled(PR_FALSE);
+    nsWindowCollector::SetEnabled(PR_FALSE);
   } else if (strcmp(topic, "profile-after-change") == 0) {
     nsresult rv = ProfileStartup();
     NS_ENSURE_SUCCESS(rv, rv);
+  } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
+             strcmp(topic, NS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
+    // We handle dispatching to the window collector, if it's enabled,
+    // to avoid having an observer ordering dependency.
+    nsWindowCollector *wc = nsWindowCollector::GetInstance();
+    if (wc) {
+      wc->Observe(subject, topic, data);
+    }
+    
+    // Remove the window from our map.
+    mWindowMap.Remove(subject);
   }
+  
   return NS_OK;
 }
 
@@ -431,6 +456,9 @@ nsMetricsService::ProfileStartup()
   rv = prefs->SetIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  // Set up the window id map
+  NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
+
   // Create an XML document to serve as the owner document for elements.
   mDocument = do_CreateInstance("@mozilla.org/xml/xml-document;1");
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
@@ -440,9 +468,6 @@ nsMetricsService::ProfileStartup()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Start up the collectors
-  rv = nsWindowCollector::Startup();
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   rv = EnableCollectors();
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -502,6 +527,8 @@ nsMetricsService::Init()
 {
   // We defer most of our initialization until the profile-after-change
   // notification, because profile prefs aren't available until then.
+  // Register for notifications here though, since the observer service
+  // is set up.
   
 #ifdef PR_LOGGING
   gMetricsLog = PR_NewLogModule("nsMetricsService");
@@ -511,16 +538,23 @@ nsMetricsService::Init()
 
   nsresult rv;
 
-  // Hook ourselves up to receive the xpcom shutdown event so we can properly
-  // flush our data to disk.
   nsCOMPtr<nsIObserverService> obsSvc =
       do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // The rest of startup will happen on profile-after-change
+  rv = obsSvc->AddObserver(this, "profile-after-change", PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Listen for quit-application so we can properly flush our data to disk
   rv = obsSvc->AddObserver(this, kQuitApplicationTopic, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = obsSvc->AddObserver(this, "profile-after-change", PR_FALSE);
+  // Listen for window destruction so that we can remove the windows
+  // from our window id map.
+  rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_DESTROY, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_DESTROY, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -817,6 +851,23 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
   clientID.Assign(idstr + 1, kGUIDLength - 2);
   PR_Free(idstr);
   return NS_OK;
+}
+
+/* static */ PRUint16
+nsMetricsService::GetWindowID(nsIDOMWindow *window)
+{
+  if (!sMetricsService) {
+    NS_NOTREACHED("metrics service not created");
+    return PR_UINT16_MAX;
+  }
+
+  PRUint16 id;
+  if (!sMetricsService->mWindowMap.Get(window, &id)) {
+    id = sMetricsService->mNextWindowID++;
+    sMetricsService->mWindowMap.Put(window, id);
+  }
+
+  return id;
 }
 
 /* static */ nsresult

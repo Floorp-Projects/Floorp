@@ -47,53 +47,50 @@
 #include "nsDocShellCID.h"
 #include "nsAutoPtr.h"
 
-static nsWindowCollector *gWindowCollector = nsnull;
+nsWindowCollector *nsWindowCollector::sInstance = nsnull;
 
 /* static */ nsresult
-nsWindowCollector::Startup()
+nsWindowCollector::SetEnabled(PRBool enabled)
 {
-  NS_ASSERTION(!gWindowCollector, "nsWindowCollector::Startup called twice");
+  if (enabled) {
+    if (!sInstance) {
+      sInstance = new nsWindowCollector();
+      NS_ENSURE_TRUE(sInstance, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(sInstance);
 
-  gWindowCollector = new nsWindowCollector();
-  NS_ENSURE_TRUE(gWindowCollector, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(gWindowCollector);
+      nsresult rv = sInstance->Init();
+      if (NS_FAILED(rv)) {
+        MS_LOG(("Failed to initialize the window collector"));
+        NS_RELEASE(sInstance);
+        return rv;
+      }
+    }
+  } else {
+    // We want to release our reference to sInstance so that it can
+    // be destroyed.  However, window destroy events can happen during xpcom
+    // shutdown (after we've been notified), and we need to still be able to
+    // access sInstance to log those correctly.  So, this releases the
+    // reference but keeps sInstance around until the destructor runs.
 
-  nsresult rv = gWindowCollector->Init();
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(gWindowCollector);
-    return rv;
+    if (sInstance) {
+      sInstance->Release();
+    }
   }
 
   return NS_OK;
-}
-
-/* static */ void
-nsWindowCollector::Shutdown()
-{
-  // We want to release our reference to gWindowCollector so that it can
-  // be destroyed.  However, window destroy events can happen during xpcom
-  // shutdown (after we've been notified), and we need to still be able to
-  // access gWindowCollector to log those correctly.  So, this releases the
-  // reference but keeps gWindowCollector around until the destructor runs.
-
-  if (gWindowCollector) {
-    gWindowCollector->Release();
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsWindowCollector, nsIObserver)
 
 nsWindowCollector::~nsWindowCollector()
 {
-  NS_ASSERTION(gWindowCollector == this, "two window collectors created?");
-  gWindowCollector = nsnull;
+  NS_ASSERTION(sInstance == this, "two window collectors created?");
+  sInstance = nsnull;
 }
 
 nsresult
 nsWindowCollector::Init()
 {
-  NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
-
   nsresult rv;
   nsCOMPtr<nsIObserverService> obsSvc =
     do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -109,10 +106,10 @@ nsWindowCollector::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = obsSvc->AddObserver(this, "domwindowclosed", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = obsSvc->AddObserver(this, NS_WEBNAVIGATION_DESTROY, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = obsSvc->AddObserver(this, NS_CHROME_WEBNAVIGATION_DESTROY, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We receive NS_WEBNAVIGATION_DESTROY and NS_CHROME_WEBNAVIGATION_DESTROY
+  // directly from the MetricsService.  This way, we avoid a dependency
+  // on the order in which observers fire, which is not guaranteed.
 
   return NS_OK;
 }
@@ -146,9 +143,9 @@ nsWindowCollector::Observe(nsISupports *subject,
     item->GetParent(getter_AddRefs(parentItem));
     nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentItem);
     if (parentWindow) {
+      PRUint16 id = nsMetricsService::GetWindowID(parentWindow);
       rv = nsMetricsUtils::PutUint16(properties,
-                                     NS_LITERAL_STRING("parent"),
-                                     GetWindowID(parentWindow));
+                                     NS_LITERAL_STRING("parent"), id);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -169,7 +166,7 @@ nsWindowCollector::Observe(nsISupports *subject,
       // Toplevel windows opened from native code have no opener.
       rv = nsMetricsUtils::PutUint16(properties,
                                      NS_LITERAL_STRING("opener"),
-                                     GetWindowID(opener));
+                                     nsMetricsService::GetWindowID(opener));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else if (strcmp(topic, "domwindowclosed") == 0) {
@@ -181,15 +178,11 @@ nsWindowCollector::Observe(nsISupports *subject,
     // Log a window destroy event.
     action.AssignLiteral("destroy");
     window = do_GetInterface(subject);
-
-    // Remove the window from our map.
-    mWindowMap.Remove(subject);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (window) {
     rv = nsMetricsUtils::PutUint16(properties, NS_LITERAL_STRING("windowid"),
-                                   GetWindowID(window));
+                                   nsMetricsService::GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = properties->SetPropertyAsACString(NS_LITERAL_STRING("action"),
@@ -202,21 +195,4 @@ nsWindowCollector::Observe(nsISupports *subject,
   }
 
   return rv;
-}
-
-/* static */ PRUint16
-nsWindowCollector::GetWindowID(nsIDOMWindow *window)
-{
-  if (!gWindowCollector) {
-    NS_NOTREACHED("window collector not created");
-    return PR_UINT16_MAX;
-  }
-
-  PRUint16 id;
-  if (!gWindowCollector->mWindowMap.Get(window, &id)) {
-    id = gWindowCollector->mNextWindowID++;
-    gWindowCollector->mWindowMap.Put(window, id);
-  }
-
-  return id;
 }

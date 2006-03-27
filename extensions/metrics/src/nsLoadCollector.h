@@ -75,11 +75,10 @@ class nsLoadCollector : public nsIWebProgressListener,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Creates the collector singleton and registers for notifications.
-  static nsresult Startup();
-
-  // Destroys the collector singleton.
-  static void Shutdown();
+  // Enables or disables the load collector.
+  // The collector should be shut down with SetEnabled(PR_FALSE)
+  // when the metrics service is shut down.
+  static nsresult SetEnabled(PRBool enabled);
 
  private:
   ~nsLoadCollector() {}
