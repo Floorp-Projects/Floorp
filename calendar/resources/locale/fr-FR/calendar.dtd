@@ -101,7 +101,7 @@
 <!ENTITY newevent.before.label       "avant" >
 <!ENTITY newevent.after.label        "après" >
 <!ENTITY newevent.private.label      "Privé" >
-<!ENTITY newevent.privacy.label      "Vie privée" >
+<!ENTITY newevent.privacy.label      "Confidentialité" >
 <!ENTITY newevent.private.note       "Cet événement est privé." >
 <!ENTITY newevent.public.label       "Public" >
 <!ENTITY newevent.confidential.label "Confidentiel" >
@@ -543,8 +543,8 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importer : importer les événements d'un fichier local dans un agenda existant.">
 <!ENTITY calendar.wizard.export.label              "Exporter : exporter les événements d'un agenda existant dans un fichier local.">
-<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier d'agenda sur une machine distante (càd. sur Internet)">
-<!ENTITY calendar.wizard.publish.label             "Publier : publier des événements sur une machine distante (càd. sur Internet) pour permettre à d'autres d'y souscrire.">
+<!ENTITY calendar.wizard.subscribe.label           "Souscrire : souscrire à un fichier d'agenda sur une machine distante (c-à-d. sur Internet)">
+<!ENTITY calendar.wizard.publish.label             "Publier : publier des événements sur une machine distante (c-à-d. sur Internet) pour permettre à d'autres d'y souscrire.">
 
 <!-- Calendar Import Outlook CSV Dialog -->
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
@@ -570,13 +570,14 @@
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Imprimer un agenda">
-<!ENTITY calendar.print.selectoptions.label "Sélectionnez vos options ci-dessous et cliquez sur OK pour imprimer">
-<!ENTITY calendar.print.selectviews.label "Sélectionnez la vue à imprimer">
-<!ENTITY calendar.print.currentview.label "Lister tous les événements dans la vue courante">
-<!ENTITY calendar.print.listselected.label "Lister les événements sélectionnés">
-<!ENTITY calendar.print.custom.label "Lister les événements entre :">
-<!ENTITY calendar.print.onlyitemsstatus.label "N'imprimer que les entrées avec cet état :">
-<!ENTITY calendar.print.onlyitemscategory.label "N'imprimer que les entrées de cette catégorie :">
+<!ENTITY calendar.print.title.label "Titre">
+<!ENTITY calendar.print.layout.label "Affichage">
+<!ENTITY calendar.print.range.label "Période à imprimer">
+<!ENTITY calendar.print.currentview.label "Événements de la vue courante">
+<!ENTITY calendar.print.selected.label "Événements sélectionnés">
+<!ENTITY calendar.print.custom.label "Personnaliser :">
+<!ENTITY calendar.print.from.label "Du :">
+<!ENTITY calendar.print.to.label "Au :">
 
 <!-- Error reporting -->
 <!ENTITY calendar.error.detail "Détails…">
