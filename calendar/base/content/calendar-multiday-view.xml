@@ -1012,28 +1012,55 @@
               }
           }
 
-          // XXX ok, yeah, this stuff needs some JS helper love
-          var estart = col.mDate.clone();
-          estart.isDate = false;
-          estart.hour = 0;
-          estart.minute = dragState.startMin + col.mStartMin;
-          estart.normalize();
+          var newStart;
+          var newEnd;
 
-          var eend = col.mDate.clone();
-          eend.isDate = false;
-          eend.hour = 0;
-          eend.minute = dragState.endMin + col.mStartMin;
-          eend.normalize();
+          if (dragState.dragType == "new") {
+              newStart = col.mDate.clone();
+              newStart.isDate = false;
+              newEnd = col.mDate.clone();
+              newEnd.isDate = false;
+          } else {
+              newStart = dragState.dragOccurrence.startDate.clone();
+              newEnd = dragState.dragOccurrence.endDate.clone();
+          }
+
+          if (dragState.dragType == "modify-start" ||
+              dragState.dragType == "new") {
+              newStart.hour = 0;
+              newStart.minute = dragState.startMin + col.mStartMin;
+              newStart.normalize();
+          }
+
+          if (dragState.dragType == "modify-end" ||
+              dragState.dragType == "new") {
+              newEnd.hour = 0;
+              newEnd.minute = dragState.endMin + col.mStartMin;
+              newEnd.normalize();
+          }
+
+          if (dragState.dragType == "move") {
+              // Figure out how much the event moved.
+              var duration = col.mDate.subtractDate(dragState.origDate);
+
+              duration.minutes = dragState.startMin - dragState.origMin;
+              duration.normalize();
+              newStart.addDuration(duration);
+              newStart.normalize();
+              newEnd.addDuration(duration);
+              newEnd.normalize();
+          }
 
           if (dragState.dragType == "new") {
               col.calendarView.controller.createNewEvent(col.calendarView.displayCalendar,
-                                                         estart,
-                                                         eend);
+                                                         newStart,
+                                                         newEnd);
           } else if (dragState.dragType == "move" ||
                      dragState.dragType == "modify-start" ||
                      dragState.dragType == "modify-end")
           {
-              col.calendarView.controller.modifyOccurrence(dragState.dragOccurrence, estart, eend);
+              col.calendarView.controller.modifyOccurrence(dragState.dragOccurrence, 
+                                                           newStart, newEnd);
           }
           document.calendarEventColumnDragging = null;
           col.mDragState = null;
@@ -1111,6 +1138,10 @@
               // (we move the end based on the duration of the event,
               // not including our snap)
               this.mDragState.origMin = Math.floor(mins.start/15) * 15;
+
+              // Because we can pass this event to other columns, we also need
+              // to track the original column's date too, to get the correct offset
+              this.mDragState.origDate = this.mDate;
               this.fgboxes.dragspacer.setAttribute(sizeattr, this.mDragState.origMin * this.mPixPerMin);
               this.fgboxes.dragbox.setAttribute(sizeattr, (mins.end - mins.start) * this.mPixPerMin);
 
