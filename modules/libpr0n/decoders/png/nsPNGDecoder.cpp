@@ -46,6 +46,8 @@
 #include "nsIInputStream.h"
 
 #include "imgIContainerObserver.h"
+#include "nsIImage.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "nsColor.h"
 
@@ -67,7 +69,10 @@ NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
-  colorLine(nsnull), alphaLine(nsnull),
+#ifndef MOZ_CAIRO_GFX
+  colorLine(nsnull),
+  alphaLine(nsnull),
+#endif
   interlacebuf(nsnull), ibpr(0),
   mError(PR_FALSE)
 {
@@ -75,10 +80,12 @@ nsPNGDecoder::nsPNGDecoder() :
 
 nsPNGDecoder::~nsPNGDecoder()
 {
+#ifndef MOZ_CAIRO_GFX
   if (colorLine)
     nsMemory::Free(colorLine);
   if (alphaLine)
     nsMemory::Free(alphaLine);
+#endif
   if (interlacebuf)
     nsMemory::Free(interlacebuf);
 }
@@ -348,13 +355,15 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mObserver)
     decoder->mObserver->OnStartFrame(nsnull, decoder->mFrame);
 
-  PRUint32 bpr, abpr;
+  PRUint32 bpr;
   decoder->mFrame->GetImageBytesPerRow(&bpr);
+#ifndef MOZ_CAIRO_GFX
+  PRUint32 abpr;
   decoder->mFrame->GetAlphaBytesPerRow(&abpr);
   decoder->colorLine = (PRUint8 *)nsMemory::Alloc(bpr);
   if (channels > 3)
     decoder->alphaLine = (PRUint8 *)nsMemory::Alloc(abpr);
-
+#endif
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     if (channels > 3)
       decoder->ibpr = channels*width;
@@ -425,7 +434,17 @@ row_callback(png_structp png_ptr, png_bytep new_row,
 
     gfx_format format;
     decoder->mFrame->GetFormat(&format);
+#ifndef MOZ_CAIRO_GFX
     PRUint8 *aptr, *cptr;
+#else
+    // we're thebes. we can write stuff directly to the data
+    PRUint8 *imageData;
+    PRUint32 imageDataLength;
+    decoder->mFrame->GetImageData(&imageData, &imageDataLength);
+    nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
+#endif
+    nsIntRect r(0, row_num, width, 1);
+
 
     // The mac specific ifdefs in the code below are there to make sure we
     // always fill in 4 byte pixels right now, which is what the mac always
@@ -437,26 +456,16 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     case gfxIFormats::BGR:
       {
 #if defined(MOZ_CAIRO_GFX)
-        cptr = decoder->colorLine;
+        PRUint32 *cptr32 = (PRUint32*)(imageData + (row_num*bpr));
         for (PRUint32 x=0; x<iwidth; x++) {
-          const PRUint8 r = *line++;
-          const PRUint8 g = *line++;
-          const PRUint8 b = *line++;
-#ifdef IS_LITTLE_ENDIAN
-          // BGRX
-          *cptr++ = b;
-          *cptr++ = g;
-          *cptr++ = r;
-          *cptr++ = 0xFF;
-#else
-          // XRGB
-          *cptr++ = 0xFF;
-          *cptr++ = r;
-          *cptr++ = g;
-          *cptr++ = b;
-#endif
+          PRUint8 r = *line++;
+          PRUint8 g = *line++;
+          PRUint8 b = *line++;
+          *cptr32++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
         }
-        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+        r.y = row_num;
+        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+
 #elif defined(XP_MAC) || defined(XP_MACOSX)
         cptr = decoder->colorLine;
         for (PRUint32 x=0; x<iwidth; x++) {
@@ -475,33 +484,21 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     case gfxIFormats::BGR_A1:
       {
 #if defined(MOZ_CAIRO_GFX)
-        cptr = decoder->colorLine;
+        PRUint32 *cptr32 = (PRUint32*)(imageData + (row_num*bpr));
         for (PRUint32 x=0; x<iwidth; x++) {
           if (line[3]) {
-            const PRUint8 r = *line++;
-            const PRUint8 g = *line++;
-            const PRUint8 b = *line++;
-#ifdef IS_LITTLE_ENDIAN
-            *cptr++ = b;
-            *cptr++ = g;
-            *cptr++ = r;
-            *cptr++ = 0xFF;
-#else
-            *cptr++ = 0xFF;
-            *cptr++ = r;
-            *cptr++ = g;
-            *cptr++ = b;
-#endif
+            PRUint8 r = *line++;
+            PRUint8 g = *line++;
+            PRUint8 b = *line++;
             line++;
+            *cptr32++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
           } else {
-            *cptr++ = 0;
-            *cptr++ = 0;
-            *cptr++ = 0;
-            *cptr++ = 0;
+            *cptr32++ = 0x00000000;
             line += 4;
           }
         }
-        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+        r.y = row_num;
+        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 
 #else
         cptr = decoder->colorLine;
@@ -532,52 +529,30 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     case gfxIFormats::RGB_A8:
     case gfxIFormats::BGR_A8:
       {
-        cptr = decoder->colorLine;
-        aptr = decoder->alphaLine;
 #if defined(MOZ_CAIRO_GFX)
+        PRUint32 *cptr32 = (PRUint32*)(imageData + (row_num*bpr));
         for (PRUint32 x=0; x<iwidth; x++) {
-          const PRUint8 r = *line++;
-          const PRUint8 g = *line++;
-          const PRUint8 b = *line++;
-          const PRUint8 a = *line++;
-          if (a == 0) {
-            *cptr++ = 0;
-            *cptr++ = 0;
-            *cptr++ = 0;
-            *cptr++ = 0;
-          } else if (a == 0xFF) {
-#ifdef IS_LITTLE_ENDIAN
-            // BGRA
-            *cptr++ = b;
-            *cptr++ = g;
-            *cptr++ = r;
-            *cptr++ = a;
-#else
-            // ARGB
-            *cptr++ = a;
-            *cptr++ = r;
-            *cptr++ = b;
-            *cptr++ = g;
-#endif
+          PRUint8 r = *line++;
+          PRUint8 g = *line++;
+          PRUint8 b = *line++;
+          PRUint8 a = *line++;
+          if (a == 0xFF) {
+            *cptr32++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
+          } else if (a == 0x00) {
+            *cptr32++ = 0x00000000;
           } else {
-#ifdef IS_LITTLE_ENDIAN
-            // BGRA
-            FAST_DIVIDE_BY_255(*cptr++, b*a);
-            FAST_DIVIDE_BY_255(*cptr++, g*a);
-            FAST_DIVIDE_BY_255(*cptr++, r*a);
-            *cptr++ = a;
-#else
-            // ARGB
-            *cptr++ = a;
-            FAST_DIVIDE_BY_255(*cptr++, r*a);
-            FAST_DIVIDE_BY_255(*cptr++, g*a);
-            FAST_DIVIDE_BY_255(*cptr++, b*a);
-#endif
+            FAST_DIVIDE_BY_255(r, r*a);
+            FAST_DIVIDE_BY_255(g, g*a);
+            FAST_DIVIDE_BY_255(b, b*a);
+            *cptr32++ = (a << 24) | (r << 16) | (g << 8) | b;
           }
         }
-        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
 
+        r.y = row_num;
+        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 #else
+        cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
         for (PRUint32 x=0; x<iwidth; x++) {
 #if defined(XP_MAC) || defined(XP_MACOSX)
           *cptr++ = 0;
@@ -594,7 +569,6 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       break;
     }
 
-    nsIntRect r(0, row_num, width, 1);
     decoder->mObserver->OnDataAvailable(nsnull, decoder->mFrame, &r);
   }
 }
