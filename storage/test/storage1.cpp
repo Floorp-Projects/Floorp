@@ -5,8 +5,9 @@
 #include "nsIComponentManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsILocalFile.h"
 
 #include "mozIStorageService.h"

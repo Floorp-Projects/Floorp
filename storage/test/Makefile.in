@@ -44,7 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM = teststorage1$(BIN_SUFFIX)
-MOZILLA_INTERNAL_API = 1
 
 CPPSRCS = storage1.cpp
 
@@ -57,7 +56,7 @@ REQUIRES = \
 
 LIBS = \
 	$(LIBS_DIR) \
-	$(XPCOM_LIBS) \
+	$(XPCOM_GLUE_LDOPTS) \
 	$(NSPR_LIBS) \
 	$(NULL)
 
