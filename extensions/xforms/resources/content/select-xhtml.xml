@@ -1,0 +1,386 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - IBM Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Doron Rosenberg <doronr@us.ibm.com>
+   -  Olli Pettay <Olli.Pettay@helsinki.fi>
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- SELECT CONTROLS FOR XHTML
+  This file contains xforms select controls implementations for XHTML.
+-->
+
+
+<bindings id="xformsSelectBindingsForXHTML"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xforms="http://www.w3.org/2002/xforms">
+
+
+<!-- SELECT CONTROLS
+  The section contains xforms select controls implementations for XHTML. All
+  controls are inherited from interface bindings realized in select.xml.
+-->
+
+  <!-- SELECT APPEARANCE='COMPACT' : <DEFAULT> -->
+  <binding id="xformswidget-select-compact"
+           extends="chrome://xforms/content/select.xml#xformswidget-select-base">
+    <content>
+      <html:label>
+        <html:span class="label-container">
+           <children includes="label"/>
+        </html:span>
+        <html:span anonid="control" xbl:inherits="style, accesskey"/>
+        <children/>
+      </html:label>
+    </content>
+  </binding>
+
+  <!-- SELECT APPEARANCE='FULL' -->
+  <binding id="xformswidget-select-full"
+           extends="chrome://xforms/content/select.xml#xformswidget-select-base">
+    <content>
+      <html:table xbl:inherits="style">
+        <html:tr>
+          <html:td valign="top"><children includes="label"/></html:td>
+          <html:td>
+            <html:span anonid="control" xbl:inherits="style, accesskey"/>
+          </html:td>
+        </html:tr>
+      </html:table>
+      <children/>
+    </content>
+  </binding>
+
+
+<!-- CONTROL WIDGETS FOR SELECT CONTROLS
+  The section contains underlying widgets implementations needed for select
+  controls. All underlying widgets implements the interface what base widget
+  for xforms select controls ask for. You can find interface description in
+  'select.xml' file.
+
+  Thease control widgets are also capable of being bound to directly rather than
+  just through xforms select widgets. We are supporting the use of a readonly
+  attribute on elements that bind this way.
+-->
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='COMPACT' -->
+  <binding id="widget-select-compact"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content>
+      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+                   class="xf-value" multiple="true" size="5" anonid="control"/>
+    </content>
+
+    <implementation>
+      <property name="readonly">
+        <getter>
+          return this.getAttribute("readonly" == "true") ? true : false;
+        </getter>
+        <setter>
+          if (val) {
+            this.setAttribute("readonly", "true");
+          } else {
+            this.removeAttribute("readonly");
+          }
+        </setter>
+      </property>
+
+      <property name="selectedIndex"
+                onget="return this.control.selectedIndex;"
+                onset="this.control.selectedIndex = val;"/>
+
+      <method name="removeAllItems">
+        <body>
+          for (var i = this.control.childNodes.length; i > 0; i--) {
+             this.control.removeChild(this.control.childNodes[i-1]);
+          }
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var item = document.createElementNS(this.XHTML_NS, "option");
+          item.setAttribute("value", aValue);
+
+          if (aLabel) {
+            item.appendChild(aLabel.cloneNode(true));
+          }
+
+          if (aGroup) {
+            aGroup.appendChild(item);
+          } else {
+            this.control.appendChild(item);
+          }
+          return item;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          var item = document.createElementNS(this.XHTML_NS, "optgroup");
+          if (aLabel) {
+            item.appendChild(aLabel.cloneNode(true));
+          }
+          if (aGroup) {
+            aGroup.appendChild(item);
+          } else {
+            this.control.appendChild(item);
+          }
+          return item;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.selected = true;
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.selected = false;
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem.selected) {
+            return true;
+          }
+          return false;
+        </body>
+      </method>
+
+      <field name="_control">null</field>
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control) {
+            this._control =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._control;
+        </getter>
+      </property>
+
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        this.dispatchDOMUIEvent("DOMFocusIn");
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        this.updateInstanceData(false);
+        this.dispatchDOMUIEvent("DOMFocusOut");
+      </handler>
+
+      <handler event="change">
+        this.updateInstanceData(true);
+      </handler>
+
+      <!--
+        XXX: since xforms:label can include arbitrary elements then 'focus',
+          'blur' and 'change' events should be listen from 'xhtml:select'
+          element only.
+      -->
+    </handlers>
+
+  </binding>
+
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
+  <binding id="widget-select-full"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content orient="vertical"/>
+
+    <implementation>
+
+      <property name="readonly">
+        <getter>
+          return this.getAttribute("readonly") == "true" ? true : false;
+        </getter>
+        <setter>
+          <![CDATA[
+          if (val) {
+            this.setAttribute("readonly", "true");
+          } else {
+            this.removeAttribute("readonly");
+          }
+          ]]>
+        </setter>
+      </property>
+
+      <!-- XXX: not implemented -->
+      <property name="selectedIndex"
+                onget="throw new Error(this.selectedIndexErrorMsg);"
+                onset="throw new Error(this.selectedIndexErrorMsg);"/>
+
+      <field name="selectedIndexErrorMsg">
+      <![CDATA[
+        "<xforms:select appearance='full'/>: 'selectedIndex' property isn't implemented."
+      ]]>
+      </field>
+
+      <method name="removeAllItems">
+        <body>
+          for (var i = this.control.childNodes.length; i > 0; i--) {
+           this.control.removeChild(this.control.childNodes[i-1]);
+          }
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var div = document.createElementNS(this.XHTML_NS, "div");
+          var input = document.createElementNS(this.XHTML_NS, "input");
+          input.setAttribute("type", "checkbox");
+          input.setAttribute("value", aValue);
+          input.setAttribute("anonid", "wcontrol");
+          if (this.readonly) 
+            input.setAttribute("disabled", "true");
+
+          div.appendChild(input);
+          if (aLabel) 
+            div.appendChild(aLabel.cloneNode(true));
+
+          if (aGroup) {
+            aGroup.appendChild(div);
+          } else {
+            this.control.appendChild(div);
+          }
+          return div;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          var mainDiv = document.createElementNS(this.XHTML_NS, "div");
+
+          var labelDiv = document.createElementNS(this.XHTML_NS, "div");
+          if (aLabel) {
+            labelDiv.className = "select-choice-label";
+            labelDiv.appendChild(aLabel.cloneNode(true));
+          }
+          mainDiv.appendChild(labelDiv);
+
+          var contentDiv = document.createElementNS(this.XHTML_NS, "div");
+          contentDiv.className = "select-choice-content";
+          mainDiv.appendChild(contentDiv);
+
+          if (aGroup) {
+            aGroup.appendChild(mainDiv);
+          } else {
+            this.control.appendChild(mainDiv);
+          }
+
+          return contentDiv;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.firstChild.checked = true;
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.firstChild.checked = false;
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem.firstChild.checked) 
+            return true;
+          return false;
+        </body>
+      </method>
+
+      <field name="_control">null</field>
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control) {
+            this._control = this;
+          }
+
+          return this._control;
+        </getter>
+      </property>
+
+    </implementation>
+
+    <handlers>
+      <handler event="change">
+        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
+          this.updateInstanceData(true);
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
+          this.updateInstanceData(false);
+      </handler>
+
+      <!-- 
+        XXX: need to send DOMFocusIn/DOMFocusOut events
+        XXX: when incremental='false' then model data should be updated on 
+        'blur' event for xforms:select only
+      -->
+
+    </handlers>
+
+  </binding>
+</bindings>
