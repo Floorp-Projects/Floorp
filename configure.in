@@ -4907,16 +4907,6 @@ MOZ_ARG_DISABLE_BOOL(crypto,
     MOZ_PSM=,
     MOZ_PSM=1 )
 
-if test "$COMPILE_ENVIRONMENT"; then
-    case $target in
-    *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince)
-        if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
-            AC_MSG_ERROR([Building crypto support requires a valid version of the standalone assembler (ml.exe for MSVC).])
-        fi
-        ;;
-    esac
-fi
-
 dnl ========================================================
 dnl = JS Debugger XPCOM component (js/jsd)
 dnl ========================================================

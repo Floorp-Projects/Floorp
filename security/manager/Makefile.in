@@ -117,7 +117,7 @@ FREEBL_64INT_CHK = libfreebl_64int_3.chk
 FREEBL_64FPU_LIB = libfreebl_64fpu_3$(DLL_SUFFIX)
 FREEBL_64FPU_CHK = libfreebl_64fpu_3.chk
 endif
- 
+
 ABS_DIST := $(shell cd $(DIST) && pwd)
 ifeq ($(HOST_OS_ARCH),WINNT)
 ifdef CYGDRIVE_MOUNT
@@ -142,7 +142,6 @@ endif
 # NSS makefiles are not safe for parallel execution.
 DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
 DEFAULT_GMAKE_FLAGS += CC="$(CC)"
-DEFAULT_GMAKE_FLAGS += MOZILLA_INCLUDES=-I$(ABS_DIST)/include/dbm
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += DIST=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += NSPR_INCLUDE_DIR=$(NSPR_INCLUDE_DIR)
@@ -241,13 +240,7 @@ endif
 libs::
 ifndef MOZ_NATIVE_NSS
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
-endif
-ifeq ($(OS_ARCH),WINNT)
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)dbm$(MOZ_BITS).$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
-else
-	cd $(DIST)/lib; cp -f $(LIB_PREFIX)mozdbm_s.$(LIB_SUFFIX) $(LIB_PREFIX)dbm.$(LIB_SUFFIX); $(RANLIB) $(LIB_PREFIX)dbm.$(LIB_SUFFIX)
-endif
-ifndef MOZ_NATIVE_NSS
+	$(MAKE) -C $(topsrcdir)/security/dbm $(DEFAULT_GMAKE_FLAGS) 
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)
 ifndef SKIP_CHK
 	$(MAKE) -C $(topsrcdir)/security/nss/cmd/lib $(DEFAULT_GMAKE_FLAGS)

@@ -183,9 +183,6 @@ MODULES_core :=                                 \
   mozilla/tools/test-harness                    \
   $(NULL)
 
-# Should be NSS, bug 301249
-MODULES_core += mozilla/dbm
-
 LOCALES_core :=                                 \
   netwerk                                       \
   dom                                           \
@@ -366,7 +363,7 @@ MODULES_all :=                                  \
 # and commit this file on that tag.
 #MOZ_CO_TAG          = <tag>
 NSPR_CO_TAG          = NSPRPUB_PRE_4_2_CLIENT_BRANCH
-NSS_CO_TAG           = NSS_CLIENT_TAG
+NSS_CO_TAG           = NSS_3_11_RTM
 LDAPCSDK_CO_TAG      = ldapcsdk_50_client_branch
 LOCALES_CO_TAG       =
 
@@ -531,8 +528,10 @@ endif # MOZ_BUILD_PROJECTS
 # CVS defines for NSS
 #
 NSS_CO_MODULE =               \
+		mozilla/dbm               \
 		mozilla/security/nss      \
 		mozilla/security/coreconf \
+		mozilla/security/dbm      \
 		$(NULL)
 
 NSS_CO_FLAGS := -P

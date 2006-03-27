@@ -96,13 +96,6 @@ storage/build/Makefile
 storage/test/Makefile
 "
 
-MAKEFILES_dbm="
-dbm/Makefile
-dbm/include/Makefile
-dbm/src/Makefile
-dbm/tests/Makefile
-"
-
 MAKEFILES_dom="
 dom/Makefile
 dom/public/Makefile
@@ -1580,7 +1573,6 @@ add_makefiles "
 $MAKEFILES_caps
 $MAKEFILES_chrome
 $MAKEFILES_db
-$MAKEFILES_dbm
 $MAKEFILES_docshell
 $MAKEFILES_dom
 $MAKEFILES_editor
@@ -1751,8 +1743,6 @@ MAKEFILES_content="modules/libimg/png/Makefile xpcom/Makefile xpcom/string/Makef
 MAKEFILES_content_packs="extensions/content-packs/Makefile"
 
 MAKEFILES_cookie="xpcom/Makefile xpcom/string/Makefile webshell/public/Makefile modules/libimg/png/Makefile js/src/fdlibm/Makefile js/src/Makefile js/src/xpconnect/Makefile ipc/ipcd/Makefile xpcom/obsolete/Makefile embedding/components/profilesharingsetup/Makefile modules/libpref/Makefile netwerk/cache/Makefile intl/uconv/native/Makefile widget/src/gtkxtbin/Makefile netwerk/mime/Makefile uriloader/base/Makefile embedding/components/windowwatcher/public/Makefile rdf/util/Makefile intl/unicharutil/Makefile parser/expat/Makefile modules/libutil/Makefile parser/htmlparser/Makefile rdf/Makefile profile/dirserviceprovider/Makefile docshell/shistory/Makefile embedding/components/webbrowserpersist/Makefile db/mdb/public/Makefile db/mork/src/Makefile db/mork/build/Makefile xpfe/browser/public/Makefile xpfe/Makefile embedding/components/ui/progressDlg/Makefile xpfe/components/download-manager/Makefile directory/xpcom/base/Makefile editor/txmgr/Makefile xpfe/components/directory/Makefile xpfe/components/find/public/Makefile xpfe/components/find/src/Makefile xpfe/components/search/datasets/Makefile xpfe/components/search/public/Makefile xpfe/components/search/src/Makefile xpfe/components/related/public/Makefile xpfe/components/related/src/Makefile xpfe/components/intl/Makefile xpfe/components/windowds/Makefile xpfe/components/autocomplete/public/Makefile xpfe/components/autocomplete/src/Makefile xpfe/components/bookmarks/public/Makefile xpfe/components/bookmarks/src/Makefile xpfe/components/urlbarhistory/public/Makefile xpfe/components/urlbarhistory/src/Makefile xpfe/components/build/Makefile xpfe/components/history/public/Makefile xpfe/components/history/Makefile embedding/browser/webBrowser/Makefile embedding/browser/build/Makefile profile/pref-migrator/Makefile profile/Makefile xpfe/appshell/Makefile xpfe/components/xremote/public/Makefile xpfe/components/xremote/Makefile widget/public/Makefile widget/src/Makefile view/Makefile editor/composer/public/Makefile intl/lwbrk/Makefile content/xul/content/Makefile content/xul/templates/Makefile content/xul/document/Makefile embedding/components/ui/helperAppDlg/Makefile embedding/components/find/Makefile embedding/components/commandhandler/Makefile editor/txtsvc/Makefile editor/Makefile uriloader/prefetch/Makefile docshell/Makefile embedding/components/jsconsole/public/Makefile embedding/base/Makefile embedding/components/windowwatcher/src/Makefile embedding/components/appstartup/src/Makefile embedding/components/jsconsole/src/Makefile embedding/components/printingui/src/unixshared/Makefile embedding/components/build/Makefile intl/chardet/public/Makefile intl/chardet/src/Makefile intl/uconv/Makefile intl/locale/Makefile accessible/Makefile netwerk/protocol/viewsource/Makefile netwerk/protocol/gopher/Makefile sun-java/Makefile modules/libjar/Makefile js/src/liveconnect/Makefile modules/oji/Makefile other-licenses/libart_lgpl/Makefile layout/Makefile rdf/chrome/src/Makefile rdf/chrome/build/Makefile content/Makefile gfx/src/xprintutil/Makefile gfx/src/xlibrgb/Makefile gfx/Makefile jpeg/Makefile modules/libpr0n/Makefile netwerk/Makefile intl/strres/Makefile uriloader/exthandler/Makefile modules/plugin/Makefile caps/Makefile dom/Makefile extensions/cookie/Makefile"
-
-MAKEFILES_dbm="dbm/Makefile"
 
 MAKEFILES_docshell="xpcom/Makefile xpcom/string/Makefile modules/libimg/png/Makefile intl/uconv/native/Makefile webshell/public/Makefile js/src/fdlibm/Makefile js/src/Makefile js/src/xpconnect/Makefile gfx/src/xprintutil/Makefile widget/src/gtkxtbin/Makefile embedding/components/windowwatcher/public/Makefile rdf/util/Makefile intl/unicharutil/Makefile parser/expat/Makefile modules/libutil/Makefile parser/htmlparser/Makefile rdf/Makefile ipc/ipcd/Makefile embedding/components/profilesharingsetup/Makefile profile/dirserviceprovider/Makefile db/mdb/public/Makefile db/mork/src/Makefile db/mork/build/Makefile docshell/shistory/Makefile xpfe/browser/public/Makefile xpfe/Makefile embedding/components/ui/progressDlg/Makefile xpfe/components/download-manager/Makefile directory/xpcom/base/Makefile editor/txmgr/Makefile xpfe/components/directory/Makefile xpfe/components/find/public/Makefile xpfe/components/find/src/Makefile xpfe/components/search/datasets/Makefile xpfe/components/search/public/Makefile xpfe/components/search/src/Makefile xpfe/components/related/public/Makefile xpfe/components/related/src/Makefile xpfe/components/intl/Makefile xpfe/components/windowds/Makefile xpfe/components/autocomplete/public/Makefile xpfe/components/autocomplete/src/Makefile xpfe/components/bookmarks/public/Makefile xpfe/components/bookmarks/src/Makefile xpfe/components/urlbarhistory/public/Makefile xpfe/components/urlbarhistory/src/Makefile xpfe/components/build/Makefile xpfe/components/history/public/Makefile xpfe/components/history/Makefile embedding/browser/webBrowser/Makefile embedding/browser/build/Makefile xpcom/obsolete/Makefile profile/pref-migrator/Makefile profile/Makefile xpfe/appshell/Makefile xpfe/components/xremote/public/Makefile xpfe/components/xremote/Makefile widget/public/Makefile widget/src/Makefile view/Makefile gfx/src/xlibrgb/Makefile gfx/Makefile intl/locale/Makefile intl/lwbrk/Makefile content/xul/content/Makefile content/xul/templates/Makefile content/xul/document/Makefile embedding/components/commandhandler/Makefile editor/composer/public/Makefile editor/txtsvc/Makefile editor/Makefile accessible/Makefile sun-java/Makefile modules/libjar/Makefile js/src/liveconnect/Makefile modules/oji/Makefile other-licenses/libart_lgpl/Makefile layout/Makefile uriloader/base/Makefile embedding/components/webbrowserpersist/Makefile embedding/components/find/Makefile embedding/components/jsconsole/public/Makefile embedding/base/Makefile embedding/components/windowwatcher/src/Makefile embedding/components/appstartup/src/Makefile embedding/components/jsconsole/src/Makefile embedding/components/printingui/src/unixshared/Makefile embedding/components/build/Makefile intl/chardet/public/Makefile intl/chardet/src/Makefile intl/uconv/Makefile netwerk/mime/Makefile netwerk/protocol/viewsource/Makefile netwerk/protocol/gopher/Makefile netwerk/Makefile intl/strres/Makefile modules/libpref/Makefile netwerk/cache/Makefile jpeg/Makefile modules/libpr0n/Makefile rdf/chrome/src/Makefile rdf/chrome/build/Makefile uriloader/prefetch/Makefile content/Makefile dom/Makefile embedding/components/ui/helperAppDlg/Makefile uriloader/exthandler/Makefile modules/plugin/Makefile caps/Makefile docshell/Makefile"
 
@@ -2077,7 +2067,6 @@ MAKEFILES_zlib="modules/zlib/standalone/Makefile"
         content) add_makefiles "$MAKEFILES_content" ;;
         content-packs) add_makefiles "$MAKEFILES_content_packs" ;;
         cookie) add_makefiles "$MAKEFILES_cookie" ;;
-        dbm) add_makefiles "$MAKEFILES_dbm" ;;
         docshell) add_makefiles "$MAKEFILES_docshell" ;;
         dom) add_makefiles "$MAKEFILES_dom" ;;
         downloadmanager) add_makefiles "$MAKEFILES_downloadmanager" ;;
