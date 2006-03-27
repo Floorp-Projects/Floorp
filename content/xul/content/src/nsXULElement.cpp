@@ -1019,21 +1019,9 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     nsresult rv = EnsureContentsGenerated();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsMutationGuard::DidMutate();
-
-    nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.ChildAt(aIndex);
-    NS_ENSURE_TRUE(oldKid, NS_ERROR_FAILURE);
-
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-      mutation.mRelatedNode =
-          do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEventDispatcher::Dispatch(oldKid, nsnull, &mutation, nsnull, &status);
+    nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
+    if (!oldKid) {
+      return NS_OK;
     }
 
     // On the removal of a <treeitem>, <treechildren>, or <treecell> element,
@@ -1096,12 +1084,8 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       }
     }
 
-    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
-    mAttrsAndChildren.RemoveChildAt(aIndex);
-    if (aNotify && doc) {
-        doc->ContentRemoved(this, oldKid, aIndex);
-    }
-
+    rv = nsGenericElement::RemoveChildAt(aIndex, aNotify);
+    
     if (newCurrentIndex == -2)
         controlElement->SetCurrentItem(nsnull);
     else if (newCurrentIndex > -1) {
@@ -1120,7 +1104,8 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
         }
     }
 
-    if (fireSelectionHandler && doc) {
+    nsIDocument* doc;
+    if (fireSelectionHandler && (doc = GetCurrentDoc())) {
       nsContentUtils::DispatchTrustedEvent(doc,
                                            NS_STATIC_CAST(nsIContent*, this),
                                            NS_LITERAL_STRING("select"),
@@ -1128,11 +1113,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
                                            PR_TRUE);
     }
 
-    // This will cause the script object to be unrooted for each
-    // element in the subtree.
-    oldKid->UnbindFromTree();
-
-    return NS_OK;
+    return rv;
 }
 
 void
