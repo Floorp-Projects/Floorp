@@ -2089,7 +2089,7 @@
               this.mStartMin = aStartMin;
               this.mEndMin = aEndMin;
 
-              this.relayout();
+              this.refresh();
           }
 	]]></body>
       </method>
