@@ -428,6 +428,12 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   return [[self window] fieldEditor:NO forObject:self];
 }
 
+// this catches the escape key
+- (IBAction)cancel:(id)sender
+{
+  [self revertText];
+}
+
 #pragma mark -
 
 // searching ////////////////////////////
