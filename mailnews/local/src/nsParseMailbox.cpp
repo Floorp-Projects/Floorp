@@ -1719,13 +1719,16 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, 
       char * headers = m_headers.GetBuffer();
       PRUint32 headersSize = m_headers.GetBufferPos();
       nsresult matchTermStatus;
+      // get nsILocalFile from m_inboxFileSpec
+      nsCOMPtr <nsILocalFile> localFile;
+      NS_FileSpecToIFile(&m_inboxFileSpec, getter_AddRefs(localFile));
       if (m_filterList)
         matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
-                    msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow);
+                    msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow, localFile);
       if (!m_msgMovedByFilter && m_deferredToServerFilterList)
       {
         matchTermStatus = m_deferredToServerFilterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
-                    msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow);
+                    msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow, localFile);
       }
     }
   }

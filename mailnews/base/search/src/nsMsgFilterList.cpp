@@ -53,6 +53,7 @@
 #include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
+#include "nsMsgSearchScopeTerm.h"
 #include "nsISupportsObsolete.h"
 #include "nsNetUtil.h"
 
@@ -303,12 +304,19 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
                                    const char *headers,
                                    PRUint32 headersSize,
                                    nsIMsgFilterHitNotify *listener,
-                                   nsIMsgWindow *msgWindow)
+                                   nsIMsgWindow *msgWindow,
+                                   nsILocalFile *aMessageFile)
 {
   nsCOMPtr <nsIMsgFilter>	filter;
   PRUint32		filterCount = 0;
   nsresult		rv = GetFilterCount(&filterCount);
   NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsMsgSearchScopeTerm* scope = new nsMsgSearchScopeTerm(nsnull, nsMsgSearchScope::offlineMail, folder);
+  scope->AddRef();
+  if (!scope) return NS_ERROR_OUT_OF_MEMORY;
+  if (aMessageFile)
+    scope->m_localFile = aMessageFile;
   
   for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
   {
@@ -327,7 +335,9 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
         nsresult matchTermStatus = NS_OK;
         PRBool result;
         
+        filter->SetScope(scope);
         matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize, &result);
+        filter->SetScope(nsnull);
         if (NS_SUCCEEDED(matchTermStatus) && result && listener)
         {
           PRBool applyMore = PR_TRUE;
@@ -339,6 +349,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
       }
     }
   }
+  scope->Release();
   return rv;
 }
 

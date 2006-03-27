@@ -248,7 +248,8 @@ public:
   nsresult AppendMsgFromFile(nsIOFileStream *fileStream, PRInt32 offset, 
                              PRUint32 length, nsFileSpec &destFileSpec);
 
-  virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, PRUint32 msgOffset);
+  virtual void	ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow, 
+                             PRUint32 msgOffset);
   nsresult    ApplyForwardAndReplyFilter(nsIMsgWindow *msgWindow);
 
 protected:

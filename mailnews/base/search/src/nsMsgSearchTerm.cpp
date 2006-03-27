@@ -1458,15 +1458,23 @@ nsMsgSearchScopeTerm::GetSearchSession(nsIMsgSearchSession** aResult)
 NS_IMETHODIMP nsMsgSearchScopeTerm::GetMailFile(nsILocalFile **aLocalFile)
 {
   NS_ENSURE_ARG_POINTER(aLocalFile);
- if (!m_folder)
-   return NS_ERROR_NULL_POINTER;
+  if (!m_localFile)
+  {
+    if (!m_folder)
+     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr <nsIFileSpec> fileSpec;
-  m_folder->GetPath(getter_AddRefs(fileSpec));
-  nsFileSpec realSpec;
-  fileSpec->GetFileSpec(&realSpec);
-  NS_FileSpecToIFile(&realSpec, aLocalFile);
-  return (*aLocalFile) ? NS_OK : NS_ERROR_FAILURE;
+    nsCOMPtr <nsIFileSpec> fileSpec;
+    m_folder->GetPath(getter_AddRefs(fileSpec));
+    nsFileSpec realSpec;
+    fileSpec->GetFileSpec(&realSpec);
+    NS_FileSpecToIFile(&realSpec, getter_AddRefs(m_localFile));
+  }
+  if (m_localFile)
+  {
+    NS_ADDREF(*aLocalFile = m_localFile);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgSearchScopeTerm::GetInputStream(nsIInputStream **aInputStream)

@@ -691,12 +691,12 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
       if (filterCount)
       {
         rv = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
-          headers, headersSize, this, m_msgWindow);
+          headers, headersSize, this, m_msgWindow, nsnull);
       }
       if (serverFilterCount)
       {
         rv = m_serverFilterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
-          headers, headersSize, this, m_msgWindow);
+          headers, headersSize, this, m_msgWindow, nsnull);
       }
 
       PR_Free ((void*) headers);

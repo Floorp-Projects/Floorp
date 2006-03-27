@@ -3058,7 +3058,7 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol *aProtocol
           {
             GetMoveCoalescer();  // not sure why we're doing this here.
             m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
-                                            headers, headersSize, this, msgWindow);
+                                            headers, headersSize, this, msgWindow, nsnull);
           }
         }
       }

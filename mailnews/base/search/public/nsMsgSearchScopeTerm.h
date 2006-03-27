@@ -69,6 +69,7 @@ public:
   nsCOMPtr <nsIMsgFolder> m_folder;
   nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
   nsCOMPtr <nsIInputStream> m_inputStream; // for message bodies
+  nsCOMPtr <nsILocalFile> m_localFile; // if set, input stream comes from this
   nsWeakPtr m_searchSession;
   PRBool m_searchServer;
   

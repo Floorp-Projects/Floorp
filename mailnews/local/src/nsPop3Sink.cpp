@@ -808,7 +808,7 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
         return HandleTempDownloadFailed(aMsgWindow);   
 
       m_outFileStream->Open(m_tmpDownloadFileSpec, (PR_RDWR | PR_CREATE_FILE));
-
+      hdr->SetMessageKey(0);
       m_newMailParser->ApplyFilters(&moved, aMsgWindow, 0);
       if (!moved)
       {

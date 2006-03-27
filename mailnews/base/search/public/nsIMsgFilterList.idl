@@ -53,7 +53,7 @@ interface nsIOutputStream;
 
 typedef long nsMsgFilterFileAttribValue;
 
-[scriptable, uuid(08ecbcb4-0493-11d3-a50a-0060b0fc04b7)]
+[scriptable, uuid(ab0105ad-86bf-4862-9adb-84f4e266577c)]
 interface nsIMsgFilterList : nsISupports {
 
     const nsMsgFilterFileAttribValue attribNone = 0;
@@ -112,7 +112,8 @@ interface nsIMsgFilterList : nsISupports {
                            //[array, size_is(headerSize)] in string headers,
                            in unsigned long headerSize,
                            in nsIMsgFilterHitNotify listener,
-                           in nsIMsgWindow msgWindow);
+                           in nsIMsgWindow msgWindow,
+                           in nsILocalFile aMessageFile);
 
     // IO routines, used by filter object filing code.
     void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value, in nsIOFileStream stream);
