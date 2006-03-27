@@ -43,17 +43,17 @@
 #ifndef nsLoggingProgressNotifier_H__
 #define nsLoggingProgressNotifier_H__
 
-#include "nsIXPINotifier.h"
-#include "nsFileStream.h"
+#include "nsCOMPtr.h"
 #include "nsIFile.h"
-
+#include "nsIOutputStream.h"
+#include "nsIXPINotifier.h"
 
 class nsLoggingProgressListener : public nsIXPIListener
 {
     public:
         
         nsLoggingProgressListener();
-        virtual ~nsLoggingProgressListener();
+        ~nsLoggingProgressListener();
         
         NS_DECL_ISUPPORTS
 
@@ -62,10 +62,7 @@ class nsLoggingProgressListener : public nsIXPIListener
    
      private:
         void GetTime(char** aString);
-        nsOutputFileStream  *mLogStream;
+        nsCOMPtr<nsIOutputStream>  mLogStream;
 };
-
-nsresult Convert_nsIFile_To_nsFileSpec(nsIFile     *aInIFile, 
-                                       nsFileSpec **aOutFileSpec);
 
 #endif

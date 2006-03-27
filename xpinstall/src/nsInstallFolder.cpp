@@ -49,8 +49,6 @@
 #include "nsUnicharUtils.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsXPIDLString.h"
-#include "nsFileSpec.h"
-#include "nsIFileSpec.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsDirectoryService.h"
@@ -59,6 +57,7 @@
 
 #ifdef XP_WIN
 #include <stdarg.h>
+#include <stdlib.h>
 #include <winbase.h>
 #include <winreg.h>
 #endif
@@ -276,27 +275,23 @@ nsInstallFolder::SetDirectoryPath(const nsAString& aFolderID, const nsString& aR
             {
                 if (!aRelativePath.IsEmpty())
                 {
-                    nsFileSpec             tmpSpec;
-                    nsCAutoString          tmpPath("file:///");
                     nsCAutoString          nativePath;
                     nsCOMPtr<nsILocalFile> localFile;
 
                     NS_CopyUnicodeToNative(aRelativePath, nativePath);
-                    tmpPath.Append(nativePath);
-                    tmpSpec =  nsFileURL(tmpPath.get());
-
-                    rv = NS_FileSpecToIFile( &tmpSpec, getter_AddRefs(localFile) );
-                    if (NS_SUCCEEDED(rv))
-                    {
+                    rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localFile));
+                    if (rv == NS_ERROR_FILE_UNRECOGNIZED_PATH) {
+                      // we need to convert this relative path to absolute
+                      directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localFile));
+                      if (localFile)
+                          rv = localFile->AppendRelativeNativePath(nativePath);
+                    }
+                    if (NS_SUCCEEDED(rv)) {
                         mFileSpec = do_QueryInterface(localFile);
                     }
                 }
-
                 // file:// is a special case where it returns and does not
-                // go to the standard relative path code below.  This is
-                // so that nsFile(Spec|Path) will work properly.  (ie. Passing
-                // just "file://" to the nsFileSpec && nsFileURL is wrong).
-
+                // go to the standard relative path code below.
                 return;
             }
             break;

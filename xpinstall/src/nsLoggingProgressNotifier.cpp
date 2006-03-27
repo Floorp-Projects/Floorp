@@ -43,8 +43,6 @@
 
 #include "nsInstall.h"
 
-#include "nsFileSpec.h"
-#include "nsFileStream.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -52,6 +50,8 @@
 #include "nsNativeCharsetUtils.h"
 
 #include "nspr.h"
+#include "plstr.h"
+#include "nsNetUtil.h"
 
 #ifdef XP_MAC
 #define INSTALL_LOG NS_LITERAL_CSTRING("Install Log")
@@ -59,6 +59,9 @@
 #define INSTALL_LOG NS_LITERAL_CSTRING("install.log")
 #endif
 
+#define _SMALL_TEXT_BUFFER_SIZE  64
+#define _MEDIUM_TEXT_BUFFER_SIZE 1024
+#define _LARGE_TEXT_BUFFER_SIZE  2048
 
 nsLoggingProgressListener::nsLoggingProgressListener()
     : mLogStream(0)
@@ -69,10 +72,9 @@ nsLoggingProgressListener::~nsLoggingProgressListener()
 {
     if (mLogStream)
     {
-        NS_WARN_IF_FALSE(PR_FALSE, "We're being destroyed before script finishes!");
-        mLogStream->close();
-        delete mLogStream;
-        mLogStream = 0;
+        NS_ERROR("We're being destroyed before script finishes!");
+        mLogStream->Close();
+        mLogStream = nsnull;
     }
 }
 
@@ -82,7 +84,6 @@ NS_IMETHODIMP
 nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
 {
     nsCOMPtr<nsIFile> iFile;
-    nsFileSpec *logFile = nsnull;
     nsresult rv = NS_OK;
 
     // Not in stub installer
@@ -175,27 +176,22 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
         if (NS_FAILED(rv) || !bWritable) return NS_ERROR_FAILURE;
     }
 
-    rv = Convert_nsIFile_To_nsFileSpec(iFile, &logFile);
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(mLogStream), iFile,
+                                     PR_WRONLY | PR_CREATE_FILE | PR_APPEND,
+                                     0744);
     if (NS_FAILED(rv)) return rv;
-    if (!logFile) return NS_ERROR_NULL_POINTER;
-
-    mLogStream = new nsOutputFileStream(*logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    if (!mLogStream)
-        return NS_ERROR_NULL_POINTER;
 
     char* time;
     GetTime(&time);
+    char buffer[_LARGE_TEXT_BUFFER_SIZE];
+    PRUint32 dummy;
 
-    mLogStream->seek(logFile->GetFileSize());
 
-    *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << NS_ConvertUTF16toUTF8(URL).get() << "  --  " << time << nsEndl;
-    *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << nsEndl;
 
+    snprintf(buffer, sizeof(buffer), "-------------------------------------------------------------------------------\n%s -- %s\n-------------------------------------------------------------------------------\n\n", NS_ConvertUTF16toUTF8(URL).get(), time);
     PL_strfree(time);
-    if (logFile)
-        delete logFile;
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
@@ -203,42 +199,48 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
 NS_IMETHODIMP
 nsLoggingProgressListener::OnInstallDone(const PRUnichar *aURL, PRInt32 aStatus)
 {
+    nsresult rv;
+    PRUint32 dummy;
+    char buffer[_SMALL_TEXT_BUFFER_SIZE];
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << nsEndl;
+    rv = mLogStream->Write("\n", 1, &dummy);
+    if (NS_FAILED(rv)) return rv;
 
     switch (aStatus)
     {
     case nsInstall::SUCCESS:
-        *mLogStream << "     Install completed successfully";
+        snprintf(buffer, sizeof(buffer), "     Install completed successfully");
         break;
 
     case nsInstall::REBOOT_NEEDED:
-        *mLogStream << "     Install completed successfully, restart required";
+        snprintf(buffer, sizeof(buffer), "     Install completed successfully, restart required");
         break;
 
     case nsInstall::INSTALL_CANCELLED:
-        *mLogStream << "     Install cancelled by script";
+        snprintf(buffer, sizeof(buffer), "     Install cancelled by script");
         break;
 
     case nsInstall::USER_CANCELLED:
-        *mLogStream << "     Install cancelled by user";
+        snprintf(buffer, sizeof(buffer), "     Install cancelled by user");
         break;
 
     default:
-        *mLogStream << "     Install **FAILED** with error " << aStatus;
+        snprintf(buffer, sizeof(buffer), "     Install **FAILED** with error %d", aStatus);
         break;
     }
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
+    if (NS_FAILED(rv)) return rv;
 
     char* time;
     GetTime(&time);
 
-    *mLogStream << "  --  " << time << nsEndl << nsEndl;
-
+    snprintf(buffer, sizeof(buffer), " -- %s\n\n", time);
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
     PL_strfree(time);
+    if (NS_FAILED(rv)) return rv;
 
-    mLogStream->close();
-    delete mLogStream;
+    mLogStream->Close();
     mLogStream = nsnull;
 
     return NS_OK;
@@ -249,8 +251,9 @@ nsLoggingProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnicha
 {
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-//    char* time;
-//    GetTime(&time);
+    char buffer[_MEDIUM_TEXT_BUFFER_SIZE];
+    PRUint32 dummy;
+    nsresult rv;
 
     nsCString name;
     nsCString version;
@@ -266,16 +269,10 @@ nsLoggingProgressListener::OnPackageNameSet(const PRUnichar *URL, const PRUnicha
     for ( unsigned int i=0; i < name.Length(); ++i)
         uline.Append('-');
 
-    *mLogStream << "     " << name.get() << " (version " << version.get() << ")" << nsEndl;
-    *mLogStream << "     " << uline.get() << nsEndl;
-
-    *mLogStream << nsEndl;
-//    *mLogStream << "     Starting Installation at " << time << nsEndl;
-//    *mLogStream << nsEndl;
-
-
-//    PL_strfree(time);
-    return NS_OK;
+    snprintf(buffer, sizeof(buffer), "     %s (version %s)\n     %s\n\n",
+             name.get(), version.get(), uline.get());
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -288,6 +285,9 @@ NS_IMETHODIMP
 nsLoggingProgressListener::OnFinalizeProgress(const PRUnichar* aMessage, PRInt32 aItemNum, PRInt32 aTotNum )
 {
     nsCString messageConverted;
+    nsresult rv;
+    char buffer[_MEDIUM_TEXT_BUFFER_SIZE];
+    PRUint32 dummy;
 
     // this Lossy conversion is safe because the input source came from a
     // similar fake-ascii-to-not-really-unicode conversion.
@@ -297,8 +297,10 @@ nsLoggingProgressListener::OnFinalizeProgress(const PRUnichar* aMessage, PRInt32
 
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     [" << (aItemNum) << "/" << aTotNum << "]\t" << messageConverted.get() << nsEndl;
-    return NS_OK;
+    snprintf(buffer, sizeof(buffer), "     [%d/%d]\t%s\n", aItemNum, aTotNum,
+             messageConverted.get());
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
+    return rv;
 }
 
 void
@@ -315,47 +317,15 @@ NS_IMETHODIMP
 nsLoggingProgressListener::OnLogComment(const PRUnichar* aComment)
 {
     nsCString commentConverted;
+    nsresult rv;
+    char buffer[_MEDIUM_TEXT_BUFFER_SIZE];
+    PRUint32 dummy;
 
     NS_CopyUnicodeToNative(nsDependentString(aComment), commentConverted);
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     ** " << commentConverted.get() << nsEndl;
-    return NS_OK;
-}
-
-nsresult
-Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
-{
-    nsresult rv = NS_OK;
-
-    if (!aInIFile || !aOutFileSpec)
-        return NS_ERROR_FAILURE;
-
-    *aOutFileSpec = nsnull;
-
-#ifdef XP_MAC
-    FSSpec fsSpec;
-    nsCOMPtr<nsILocalFileMac> iFileMac;
-
-    iFileMac = do_QueryInterface(aInIFile, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-        iFileMac->GetFSSpec(&fsSpec);
-        *aOutFileSpec = new nsFileSpec(fsSpec, PR_FALSE);
-    }
-#else
-    nsCAutoString path;
-    rv = aInIFile->GetNativePath(path);
-    if (NS_SUCCEEDED(rv))
-    {
-        *aOutFileSpec = new nsFileSpec(path.get(), PR_FALSE);
-    }
-    // NOTE: don't release path since nsFileSpec's mPath points to it
-#endif
-
-    if (!*aOutFileSpec)
-        rv = NS_ERROR_FAILURE;
-
+    snprintf(buffer, sizeof(buffer), "     ** %s\n", commentConverted.get());
+    rv = mLogStream->Write(buffer, strlen(buffer), &dummy);
     return rv;
 }
 

@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
+#include "plstr.h"
 #include "nsXPITriggerInfo.h"
 #include "nsNetUtil.h"
 #include "nsDebug.h"

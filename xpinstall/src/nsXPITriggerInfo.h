@@ -44,7 +44,6 @@
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
-#include "nsIFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIOutputStream.h"
 #include "jsapi.h"

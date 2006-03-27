@@ -54,6 +54,7 @@
 #include "nsNetUtil.h"
 
 #include "nspr.h"
+#include "plstr.h"
 #include "jsapi.h"
 
 #include "nsIEventQueueService.h"
