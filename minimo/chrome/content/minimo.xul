@@ -305,8 +305,9 @@
 	  <menuitem id="full_screen" 
                 label="&gotoFullScreen.label;" 
                 oncommand="DoFullScreen()"/>
-      
-      <!-- this shouldn't be an option on smartphones -->
+   
+        <!-- this shouldn't be an option on smartphones -->
+
 	  <menuitem id="snav_toggle" 
                 label="" 
                 oncommand="DoSNavToggle()"/>
@@ -314,7 +315,12 @@
 	  <menuitem id="ssr_toggle" 
                 label="" 
                 oncommand="DoSSRToggle()"/>
+     
+     	  <menuitem id="togglet_google" 
+                label="&togglet_google.label;" 
+                oncommand="DoGoogleToggle()"/>
       
+ 
       <menuseparator/>
       
 	  <menuitem id="textplus" 
