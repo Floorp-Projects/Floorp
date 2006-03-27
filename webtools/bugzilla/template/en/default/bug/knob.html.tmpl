@@ -72,24 +72,9 @@
         Resolve [% terms.bug %], changing 
         <a href="page.cgi?id=fields.html#resolution">resolution</a> to
       </label>  
-      <select name="resolution"
-              onchange="document.changeform.knob[[% knum %]].checked=true">
-        [% FOREACH r = bug.choices.resolution %]
-          <option value="[% r FILTER html %]">[% resolution_descs.${r} FILTER html %]</option>
-        [% END %]
-      </select>
-      <br>
-      [% knum = knum + 1 %]
+      [% PROCESS select_resolution %]
 
-      <input type="radio" id="knob-duplicate" name="knob" value="duplicate">
-      <label for="knob-duplicate">
-        Resolve [% terms.bug %], mark it as duplicate of [% terms.bug %] #
-      </label>
-      <input name="dup_id" size="6"
-             onchange="if (this.value != '')
-                       {document.changeform.knob[[% knum %]].checked=true}">
-      <br>
-      [% knum = knum + 1 %]
+      [% PROCESS duplicate %]
 
       [% IF bug.user.canedit %]
         <input type="radio" id="knob-reassign" name="knob" value="reassign">
@@ -135,6 +120,14 @@
     [% ELSE %]
       [% IF bug.resolution != "MOVED" ||
            (bug.resolution == "MOVED" && bug.user.canmove) %]
+        <input type="radio" id="knob-change-resolution" name="knob" value="change_resolution">
+        <label for="knob-change-resolution">
+          Change <a href="page.cgi?id=fields.html#resolution">resolution</a> to
+        </label>
+        [% PROCESS select_resolution %]
+
+        [% PROCESS duplicate %]
+
         <input type="radio" id="knob-reopen" name="knob" value="reopen">
         <label for="knob-reopen">
           Reopen [% terms.bug %]
@@ -162,7 +155,6 @@
   [% END %]
 
   <input type="submit" value="Commit">
-  <input type="hidden" name="form_name" value="process_bug">
   <p>
     <font size="+1">
       <b>
@@ -186,3 +178,27 @@
     [% END %]
   </p>
 
+
+[%# Common actions %]
+
+[% BLOCK select_resolution %]
+  <select name="resolution"
+          onchange="document.changeform.knob[[% knum %]].checked=true">
+    [% FOREACH r = bug.choices.resolution %]
+      <option value="[% r FILTER html %]">[% resolution_descs.${r} FILTER html %]</option>
+    [% END %]
+  </select>
+  <br>
+  [% knum = knum + 1 %]
+[% END %]
+
+[% BLOCK duplicate %]
+  <input type="radio" id="knob-duplicate" name="knob" value="duplicate">
+  <label for="knob-duplicate">
+    Mark the [% terms.bug %] as duplicate of [% terms.bug %] #
+  </label>
+  <input name="dup_id" size="6"
+         onchange="if (this.value != '') {document.changeform.knob[[% knum %]].checked=true}">
+  <br>
+  [% knum = knum + 1 %]
+[% END %]

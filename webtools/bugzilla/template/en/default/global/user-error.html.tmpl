@@ -320,11 +320,6 @@
     [% title = "Description Required" %]
     You must provide a description of the [% terms.bug %].
 
-  [% ELSIF error == "dupe_entry_found" %]
-    [% title = "Already marked as duplicate" %]
-    This [% terms.bug %] has already been marked as a duplicate
-    of [% terms.bug %] [%+ dupe_of FILTER html %].
-
   [% ELSIF error == "dupe_not_allowed" %]
     [% title = "Cannot mark $terms.bugs as duplicates" %]
     You cannot mark [% terms.bugs %] as duplicates when

@@ -449,13 +449,6 @@ sub CheckCanChangeField {
     {
         return 1;
     }
-
-    # A resolution change is always accompanied by a status change. So, we 
-    # always OK resolution changes; if they really can't do this, we will 
-    # notice it when status is checked. 
-    if ($field eq "resolution") { 
-        return 1;             
-    }
     # END DO_NOT_CHANGE
 
     # Allow anyone to change comments.
@@ -1127,7 +1120,7 @@ SWITCH: for ($cgi->param('knob')) {
         ChangeResolution('');
         last SWITCH;
     };
-    /^resolve$/ && CheckonComment( "resolve" ) && do {
+    /^(resolve|change_resolution)$/ && CheckonComment( "resolve" ) && do {
         # Check here, because its the only place we require the resolution
         check_field('resolution', scalar $cgi->param('resolution'),
                     \@::settable_resolution);
@@ -1144,11 +1137,14 @@ SWITCH: for ($cgi->param('knob')) {
             }
         }
 
-        # RESOLVED bugs should have no time remaining;
-        # more time can be added for the VERIFY step, if needed.
-        _remove_remaining_time();
+        if ($cgi->param('knob') eq 'resolve') {
+            # RESOLVED bugs should have no time remaining;
+            # more time can be added for the VERIFY step, if needed.
+            _remove_remaining_time();
 
-        ChangeStatus('RESOLVED');
+            ChangeStatus('RESOLVED');
+        }
+
         ChangeResolution($cgi->param('resolution'));
         last SWITCH;
     };
@@ -1221,20 +1217,10 @@ SWITCH: for ($cgi->param('knob')) {
         ValidateBugID($duplicate, 'dup_id');
         $cgi->param('dup_id', $duplicate);
 
-        # Make sure the bug is not already marked as a dupe
-        # (may appear in race condition)
-        my $dupe_of =
-            $dbh->selectrow_array("SELECT dupe_of FROM duplicates
-                                   WHERE dupe = ?",
-                                   undef, $cgi->param('id'));
-        if ($dupe_of) {
-            ThrowUserError("dupe_entry_found", { dupe_of => $dupe_of });
-        }
-
         # Make sure a loop isn't created when marking this bug
         # as duplicate.
         my %dupes;
-        $dupe_of = $duplicate;
+        my $dupe_of = $duplicate;
         my $sth = $dbh->prepare('SELECT dupe_of FROM duplicates
                                  WHERE dupe = ?');
 
@@ -1699,13 +1685,13 @@ foreach my $id (@idlist) {
         SendSQL($query);
     }
 
-    # Check for duplicates if the bug is [re]open
+    # Check for duplicates if the bug is [re]open or its resolution is changed.
     SendSQL("SELECT resolution FROM bugs WHERE bug_id = $id");
     my $resolution = FetchOneColumn();
-    if ($resolution eq '') {
+    if ($resolution ne 'DUPLICATE') {
         SendSQL("DELETE FROM duplicates WHERE dupe = $id");
     }
-    
+
     my $newproduct_id = $oldhash{'product_id'};
     if ($cgi->param('product') ne $cgi->param('dontchange')) {
         my $newproduct_id = get_product_id($cgi->param('product'));
@@ -2068,6 +2054,11 @@ foreach my $id (@idlist) {
     }
 
     if ($duplicate) {
+        # If the bug was already marked as a duplicate, remove
+        # the existing entry.
+        $dbh->do('DELETE FROM duplicates WHERE dupe = ?',
+                  undef, $cgi->param('id'));
+
         # Check to see if Reporter of this bug is reporter of Dupe 
         SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
                 $cgi->param('id'));
