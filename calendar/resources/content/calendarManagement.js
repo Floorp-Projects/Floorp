@@ -92,6 +92,9 @@ var calCalendarManagerObserver = {
     },
 
     onCalendarPrefDeleting: function(aCalendar, aName) {
+        if (aName != 'color' && aName != 'name') {
+            return;
+        }
         setCalendarManagerUI();
         if (aName == 'color')
             updateStyleSheetForObject(aCalendar);
@@ -211,6 +214,14 @@ function setCalendarManagerUI()
     }
 }
 
+function onCalendarListSelect() {
+    var selectedCalendar = getSelectedCalendarOrNull();
+    if (!selectedCalendar) {
+        return;
+    }
+    getDisplayComposite().defaultCalendar = selectedCalendar;
+}
+
 function initCalendarManager()
 {
     var calMgr = getCalendarManager();
@@ -228,6 +239,8 @@ function initCalendarManager()
     composite.addObserver(calCompositeCalendarObserver);
     setCalendarManagerUI();
     initColors();
+    var calendarList = document.getElementById("list-calendars-listbox");
+    calendarList.addEventListener("select", onCalendarListSelect, true);
 }
 
 function finishCalendarManager() {
@@ -235,6 +248,10 @@ function finishCalendarManager() {
     var pbi = prefService.getBranch("");
     pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
+
+    var calendarList = document.getElementById("list-calendars-listbox");
+    calendarList.removeEventListener("select", onCalendarListSelect, true);
+
 }
 
 function getDefaultCalendar()
