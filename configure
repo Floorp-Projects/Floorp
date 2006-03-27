@@ -13228,7 +13228,7 @@ calendar)
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-  MOZ_EXTENSIONS_DEFAULT=" pref"
+  MOZ_EXTENSIONS_DEFAULT=
   MOZ_UNIVERSALCHARDET=
   cat >> confdefs.h <<\EOF
 #define MOZ_SUNBIRD 1
