@@ -58,8 +58,8 @@ public:
     nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
                       nsIAtom* aContentVariable);
 
-    virtual nsresult
-    FilterInstantiations(InstantiationSet& aInstantiations) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
+                                          PRBool* aCantHandleYet) const;
 
     nsresult
     Constrain(InstantiationSet& aInstantiations);

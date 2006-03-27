@@ -151,9 +151,13 @@ nsRDFPropertyTestNode::nsRDFPropertyTestNode(TestNode* aParent,
 
 
 nsresult
-nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
+                                            PRBool* aCantHandleYet) const
 {
     nsresult rv;
+
+    if (aCantHandleYet)
+        *aCantHandleYet = PR_FALSE;
 
     nsIRDFDataSource* ds = mProcessor->GetDataSource();
 
@@ -333,9 +337,13 @@ nsRDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations) c
             aInstantiations.Erase(inst--);
         }
         else {
-            // Neither source nor target assignment!
-            NS_ERROR("can't do open ended queries like that!");
-            return NS_ERROR_UNEXPECTED;
+            if (!aCantHandleYet) {
+                // Neither source nor target assignment!
+                return NS_ERROR_UNEXPECTED;
+            }
+
+            *aCantHandleYet = PR_TRUE;
+            return NS_OK;
         }
     }
 

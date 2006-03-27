@@ -107,9 +107,13 @@ nsRDFConInstanceTestNode::nsRDFConInstanceTestNode(TestNode* aParent,
 }
 
 nsresult
-nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
+                                               PRBool* aCantHandleYet) const
 {
     nsresult rv;
+
+    if (aCantHandleYet)
+        *aCantHandleYet = PR_FALSE;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc
         = do_GetService("@mozilla.org/rdf/container-utils;1");

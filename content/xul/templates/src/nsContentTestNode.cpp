@@ -79,8 +79,12 @@ nsContentTestNode::nsContentTestNode(nsXULTemplateQueryProcessorRDF* aProcessor,
 }
 
 nsresult
-nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
+                                        PRBool* aCantHandleYet) const
+
 {
+    if (aCantHandleYet)
+        *aCantHandleYet = PR_FALSE;
     return NS_OK;
 }
 
