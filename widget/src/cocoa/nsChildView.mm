@@ -1581,25 +1581,6 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 //-------------------------------------------------------------------------
 //
-//
-//-------------------------------------------------------------------------
-
-PRBool nsChildView::ConvertStatus(nsEventStatus aStatus)
-{
-  switch (aStatus)
-  {
-    case nsEventStatus_eIgnore:             return(PR_FALSE);
-    case nsEventStatus_eConsumeNoDefault:   return(PR_TRUE);  // don't do default processing
-    case nsEventStatus_eConsumeDoDefault:   return(PR_FALSE);
-    default:
-      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-      break;
-  }
-  return(PR_FALSE);
-}
-
-//-------------------------------------------------------------------------
-//
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------

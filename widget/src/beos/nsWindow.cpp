@@ -371,29 +371,6 @@ NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 //-------------------------------------------------------------------------
 //
-// Convert nsEventStatus value to a windows boolean
-//
-//-------------------------------------------------------------------------
-
-PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
-{
-	switch(aStatus) 
-	{
-		case nsEventStatus_eIgnore:
-			return PR_FALSE;
-		case nsEventStatus_eConsumeNoDefault:
-			return PR_TRUE;
-		case nsEventStatus_eConsumeDoDefault:
-			return PR_FALSE;
-		default:
-			NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-			break;
-	}
-	return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
 // Initialize an event to dispatch
 //
 //-------------------------------------------------------------------------

@@ -239,15 +239,7 @@ public:
 
   inline PRBool     ConvertStatus(nsEventStatus aStatus)
 		{
-		switch(aStatus) {
-		  case nsEventStatus_eIgnore:
-		  case nsEventStatus_eConsumeDoDefault:
-		    return(PR_FALSE);
-		  case nsEventStatus_eConsumeNoDefault:
-		    return(PR_TRUE);
-		  }
-		NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
-		return PR_FALSE;
+		return aStatus == nsEventStatus_eConsumeNoDefault;
 		}
 
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);

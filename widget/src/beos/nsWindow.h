@@ -210,7 +210,8 @@ protected:
 	PRBool                  DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
                                            PRUint32 aKeyCode, PRUint32 aFlags = 0);
 	PRBool                  DispatchFocus(PRUint32 aEventType);
-	static PRBool           ConvertStatus(nsEventStatus aStatus);
+	static PRBool           ConvertStatus(nsEventStatus aStatus)
+	                        { return aStatus == nsEventStatus_eConsumeNoDefault; }
 	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
 
 	PRBool                  DispatchWindowEvent(nsGUIEvent* event);

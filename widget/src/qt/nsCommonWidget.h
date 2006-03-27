@@ -167,7 +167,8 @@ protected:
     virtual void NativeResize(PRInt32, PRInt32, PRBool);
     virtual void NativeShow(PRBool);
 
-    bool ignoreEvent(nsEventStatus aStatus) const;
+    static bool ignoreEvent(nsEventStatus aStatus)
+                { return aStatus == nsEventStatus_eConsumeNoDefault; }
 
     /**
      * Has to be called in subclasses after they created
