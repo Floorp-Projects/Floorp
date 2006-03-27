@@ -44,10 +44,12 @@
 ]>
 
 <dialog id="chooseCalendar"
+        title="&calendar.select.dialog.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
         onload="loadCalendars();"
-        ondialogaccept="return doOK();">
+        ondialogaccept="return doOK();"
+        persist="screenX screenY height width">
 
     <script type="application/x-javascript"><![CDATA[
         function loadCalendars() {
@@ -83,9 +85,9 @@
         }
     ]]></script>
 
-    <vbox id="dialog-box">
+    <vbox id="dialog-box" flex="1">
         <textbox id="prompt" class="plain" readonly="true" multiline="true" rows="2"/>
-        <listbox id="calendar-list" rows="5">
+        <listbox id="calendar-list" rows="5" flex="1">
             <listcols>
                 <listcol/>
                 <listcol flex="1"/>

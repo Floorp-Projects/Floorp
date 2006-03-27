@@ -516,6 +516,9 @@
 
 <!ENTITY calendar.publish.example.url.description   "Something like http://www.myserver.com/webdav/test.ics">
 
+<!-- Select Calendar Dialog -->
+<!ENTITY calendar.select.dialog.title    "Select Calendar">
+
 <!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
 <!ENTITY allDayEvents.label "All Day Events">
 

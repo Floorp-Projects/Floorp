@@ -130,7 +130,7 @@ function loadEventsFromFile(aCalendar)
             args.onOk = putItemsIntoCal;
             args.promptText = getCalStringBundle().GetStringFromName("importPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
-                       "_blank", "chrome,titlebar,modal", args);
+                       "_blank", "chrome,titlebar,modal,resizable", args);
         }
     }
 }
@@ -331,7 +331,7 @@ function exportEntireCalendar(aCalendar) {
             args.onOk = getItemsFromCal;
             args.promptText = getCalStringBundle().GetStringFromName("exportPrompt");
             openDialog("chrome://calendar/content/chooseCalendarDialog.xul", 
-                       "_blank", "chrome,titlebar,modal", args);
+                       "_blank", "chrome,titlebar,modal,resizable", args);
         }
     } else {
         getItemsFromCal(aCalendar);
