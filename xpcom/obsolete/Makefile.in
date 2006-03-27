@@ -99,9 +99,7 @@ XPIDLSRCS	= nsIFileSpec.idl \
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
-SHARED_LIBRARY_LIBS = \
-	$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(NULL)
+EXTRA_DSO_LIBS = mozreg_s
 
 # due to symbol conflicts on win32, this needs to be shared
 ifndef MOZ_ENABLE_LIBXUL

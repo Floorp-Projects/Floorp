@@ -83,6 +83,8 @@ SHARED_LIBRARY_LIBS += \
 	$(NULL)
 endif
 
+EXTRA_DSO_LIBS += mozreg_s
+
 # Link to gkgfx for GNOME shell service
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 EXTRA_DSO_LIBS += gkgfx

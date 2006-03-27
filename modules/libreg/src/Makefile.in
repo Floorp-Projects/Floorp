@@ -62,6 +62,9 @@ FORCE_STATIC_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+# We do want this in the static libraries list
+EXPORT_LIBRARY = 1
+
 include $(topsrcdir)/config/config.mk
 
 DEFINES         += -DUSE_BUFFERED_REGISTRY_IO	

@@ -113,7 +113,10 @@ REQUIRES	+= mozldap \
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 
-EXTRA_DSO_LIBS += rdfutil_s
+EXTRA_DSO_LIBS += \
+	rdfutil_s \
+	mozreg_s \
+	$(NULL)
 
 CPPSRCS		= nsMailModule.cpp
 
