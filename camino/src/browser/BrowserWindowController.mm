@@ -2125,9 +2125,15 @@ enum BWCOpenDest {
 
   [[self getBrowserWrapper] getTitle:&titleString andHref:&urlString];
   
-  if (!titleString) titleString = @"";
-  if (!urlString)   urlString   = @"";
-  
+  if (!urlString)
+    return;
+
+  if (!titleString)
+    titleString = @"";
+
+  // put < > around the URL to minimise problems when e-mailing
+  urlString = [NSString stringWithFormat:@"<%@>", urlString];
+
   // we need to encode entities in the title and url strings first. For some reason
   // CFURLCreateStringByAddingPercentEscapes is only happy with UTF-8 strings.
   CFStringRef urlUTF8String   = CFStringCreateWithCString(kCFAllocatorDefault, [urlString   UTF8String], kCFStringEncodingUTF8);
@@ -2161,12 +2167,13 @@ enum BWCOpenDest {
   if (!linkContent || href.IsEmpty())
     return;
   
-  NSString* urlString = [NSString stringWith_nsAString: href];
+  // put < > around the URL to minimise problems when e-mailing
+  NSString* urlString = [NSString stringWithFormat:@"<%@>", [NSString stringWith_nsAString:href]];
   
   // we need to encode entities in the title and url strings first. For some reason
   // CFURLCreateStringByAddingPercentEscapes is only happy with UTF-8 strings.
-  CFStringRef urlUTF8String   = CFStringCreateWithCString(kCFAllocatorDefault, [urlString   UTF8String], kCFStringEncodingUTF8);
-  CFStringRef escapedURL   = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, urlUTF8String,   NULL, CFSTR("&?="), kCFStringEncodingUTF8);
+  CFStringRef urlUTF8String = CFStringCreateWithCString(kCFAllocatorDefault, [urlString UTF8String], kCFStringEncodingUTF8);
+  CFStringRef escapedURL    = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, urlUTF8String, NULL, CFSTR("&?="), kCFStringEncodingUTF8);
   
   NSString* mailtoURLString = [NSString stringWithFormat:@"mailto:?body=%@", (NSString*)escapedURL];
   
@@ -3034,21 +3041,21 @@ enum BWCOpenDest {
     BrowserTabViewItem* tabViewItem = nil;
     
     if (tabPolicy == eReplaceTabs && i < curNumTabs)
-      tabViewItem = [mTabBrowser tabViewItemAtIndex: i];
+      tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:i];
     else if (tabPolicy == eReplaceFromCurrentTab && selectedTabIndex < curNumTabs)
-      tabViewItem = [mTabBrowser tabViewItemAtIndex: selectedTabIndex++];
+      tabViewItem = (BrowserTabViewItem*)[mTabBrowser tabViewItemAtIndex:selectedTabIndex++];
     else
     {
       tabViewItem = [self createNewTabItem];
-      [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
-      [mTabBrowser addTabViewItem: tabViewItem];
+      [tabViewItem setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
+      [mTabBrowser addTabViewItem:tabViewItem];
     }
     
     if (!tabViewToSelect)
       tabViewToSelect = tabViewItem;
 
-    [[tabViewItem view] loadURI: thisURL referrer:nil
-                          flags: NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
+    [[tabViewItem view] loadURI:thisURL referrer:nil
+                          flags:NSLoadFlagsNone activate:(i == 0) allowPopups:inAllowPopups];
   }
   
   // if we replace all tabs (because we opened a tab group), or we open additional tabs
