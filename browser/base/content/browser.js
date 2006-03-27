@@ -6275,7 +6275,7 @@ BookmarkAllTabsCommand.prototype = {
   
   execute: function BATC_execute() {
     LOG("BookmarkAllTabs.execute: IMPLEMENT ME");
-  },
+  }
 };
 BookmarkAllTabsCommand.NAME = "Browser:BookmarkAllTabs";
 
@@ -6449,17 +6449,6 @@ var HistoryMenu = {
     // XXX The places view needs to be updated before this
     // does something different than show history.
     PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);
-  },
-  
-  /**
-   * Clears the browser history.
-   * (XXX This might be changed to show the Clear Private Data menu instead)
-   */
-  clearHistory: function PHM_clearHistory() {
-    var globalHistory = 
-        Cc["@mozilla.org/browser/global-history;2"].
-        getService(Ci.nsIBrowserHistory);
-    globalHistory.removeAllPages();
   }
 };
 
@@ -6564,4 +6553,3 @@ var BookmarksEventHandler = {
 #include ../../../toolkit/content/debug.js
 
 #endif
-

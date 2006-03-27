@@ -177,7 +177,7 @@
     <command id="Browser:ShowHistory" 
              oncommand="PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);"/>
     <command id="Browser:SearchHistory" oncommand="HistoryMenu.showPlacesSearch();"/>
-    <command id="Browser:ClearHistory" oncommand="HistoryMenu.clearHistory();"/>
+
 #endif
   </commandset>
 
