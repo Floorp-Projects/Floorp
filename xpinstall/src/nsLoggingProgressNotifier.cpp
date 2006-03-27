@@ -53,6 +53,10 @@
 #include "plstr.h"
 #include "nsNetUtil.h"
 
+#ifdef XP_WIN
+#define snprintf _snprintf
+#endif
+
 #ifdef XP_MAC
 #define INSTALL_LOG NS_LITERAL_CSTRING("Install Log")
 #else
