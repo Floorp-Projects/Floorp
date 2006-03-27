@@ -73,7 +73,7 @@ struct AllocationNode {
 
 static PLHashNumber hash_pointer(const void *key)
 {
-    return (PLHashNumber) key;
+    return (PLHashNumber) NS_PTR_TO_INT32(key);
 }
 
 static int sort_by_index(const void* e1, const void* e2, void*)
