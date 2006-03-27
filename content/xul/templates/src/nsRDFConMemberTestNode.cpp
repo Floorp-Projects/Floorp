@@ -98,10 +98,14 @@ nsRDFConMemberTestNode::nsRDFConMemberTestNode(TestNode* aParent,
 }
 
 nsresult
-nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
+nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
+                                             PRBool* aCantHandleYet) const
 {
     // XXX Uh, factor me, please!
     nsresult rv;
+
+    if (aCantHandleYet)
+        *aCantHandleYet = PR_FALSE;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
         do_GetService("@mozilla.org/rdf/container-utils;1");
@@ -476,8 +480,12 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) 
 
         if (! hasContainerBinding && ! hasMemberBinding) {
             // Neither container nor member assignment!
-            NS_ERROR("can't do open ended queries like that!");
-            return NS_ERROR_UNEXPECTED;
+            if (!aCantHandleYet) {
+                return NS_ERROR_UNEXPECTED;
+            }
+
+            *aCantHandleYet = PR_TRUE;
+            return NS_OK;
         }
 
         // finally, remove the "under specified" instantiation.

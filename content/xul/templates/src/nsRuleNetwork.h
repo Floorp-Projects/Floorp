@@ -868,10 +868,14 @@ public:
      * those which do pass the test node's test.
      *
      * @param aInstantiations the set of instantiations to be
-     *   filtered
+     *        filtered
+     * @param aCantHandleYet [out] true if the instantiations do not contain
+     *        enough information to constrain the data. May be null if this
+     *        isn't important to the caller.
      * @return NS_OK if no errors occurred.
      */
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const = 0;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
+                                          PRBool* aCantHandleYet) const = 0;
     //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     /**

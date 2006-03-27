@@ -337,7 +337,7 @@ TestNode::Propagate(InstantiationSet& aInstantiations,
 
     aTakenInstantiations = PR_FALSE;
 
-    nsresult rv = FilterInstantiations(aInstantiations);
+    nsresult rv = FilterInstantiations(aInstantiations, nsnull);
     if (NS_FAILED(rv))
         return rv;
 
@@ -390,17 +390,27 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
            ("TestNode[%p]: Constrain() begin", this));
 
-    rv = FilterInstantiations(aInstantiations);
+    // if the cantHandleYet flag is set by FilterInstantiations,
+    // there isn't enough information yet available to fill in.
+    // For this, continue the constrain all the way to the top
+    // and then call FilterInstantiations again afterwards. This
+    // should fill in any missing information.
+    PRBool cantHandleYet = PR_FALSE;
+    rv = FilterInstantiations(aInstantiations, &cantHandleYet);
     if (NS_FAILED(rv)) return rv;
 
-    if (mParent && ! aInstantiations.Empty()) {
-        // if we still have instantiations, then ride 'em on up to the
+    if ((mParent && ! aInstantiations.Empty()) || cantHandleYet) {
+        // if we still have instantiations, or if the instantiations
+        // could not be filled in yet, then ride 'em on up to the
         // parent to narrow them.
 
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("TestNode[%p]: Constrain() passing to parent %p", this, mParent));
 
         rv = mParent->Constrain(aInstantiations);
+
+        if (NS_SUCCEEDED(rv) && cantHandleYet)
+            rv = FilterInstantiations(aInstantiations, nsnull);
     }
     else {
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,

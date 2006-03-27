@@ -75,7 +75,8 @@ public:
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aTarget);
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
+                                          PRBool* aCantHandleYet) const;
 
     virtual PRBool
     CanPropagate(nsIRDFResource* aSource,

@@ -61,7 +61,8 @@ public:
                              Test aContainer,
                              Test aEmpty);
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
+                                          PRBool* aCantHandleYet) const;
 
     virtual PRBool
     CanPropagate(nsIRDFResource* aSource,
