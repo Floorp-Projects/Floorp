@@ -7328,11 +7328,16 @@ JSObject *
 js_NewXMLObject(JSContext *cx, JSXMLClass xml_class)
 {
     JSXML *xml;
+    JSObject *obj;
+    JSTempValueRooter tvr;
 
     xml = js_NewXML(cx, xml_class);
     if (!xml)
         return NULL;
-    return js_GetXMLObject(cx, xml);
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(xml), &tvr);
+    obj = js_GetXMLObject(cx, xml);
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return obj;
 }
 
 static JSObject *
