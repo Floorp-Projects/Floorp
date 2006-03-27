@@ -1504,25 +1504,6 @@ NS_METHOD nsCommonWidget::SetCursor(nsCursor aCursor)
     return NS_OK;
 }
 
-bool nsCommonWidget::ignoreEvent(nsEventStatus aStatus) const
-{
-      switch(aStatus) {
-    case nsEventStatus_eIgnore:
-        return(PR_FALSE);
-
-    case nsEventStatus_eConsumeNoDefault:
-        return(PR_TRUE);
-
-    case nsEventStatus_eConsumeDoDefault:
-        return(PR_FALSE);
-
-    default:
-        NS_ASSERTION(0,"Illegal nsEventStatus enumeration value");
-        break;
-    }
-    return(PR_FALSE);
-}
-
 NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
 {
 #ifdef DEBUG_WIDGETS

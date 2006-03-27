@@ -314,7 +314,8 @@ protected:
 
    virtual void SubclassWindow(BOOL bState);
 
-   PRBool  ConvertStatus( nsEventStatus aStatus);
+   PRBool  ConvertStatus( nsEventStatus aStatus)
+                        { return aStatus == nsEventStatus_eConsumeNoDefault; }
    void    InitEvent( nsGUIEvent &event, nsPoint *pt = 0);
    virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
    virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);

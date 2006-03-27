@@ -178,7 +178,8 @@ protected:
 
   nsCOMPtr<nsIRegion> mUpdateArea;
   // private event functions
-  PRBool ConvertStatus(nsEventStatus aStatus);
+  static PRBool ConvertStatus(nsEventStatus aStatus)
+                { return aStatus == nsEventStatus_eConsumeNoDefault; }
 
   // create the native window for this class
   virtual void CreateNativeWindow(Window aParent, nsRect aRect,

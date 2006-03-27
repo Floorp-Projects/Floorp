@@ -336,7 +336,9 @@ protected:
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK DefaultWindowProc(HWND hWns, UINT msg, WPARAM wParam, LPARAM lParam);
 
-  static PRBool ConvertStatus(nsEventStatus aStatus);
+  // Convert nsEventStatus value to a windows boolean
+  static PRBool ConvertStatus(nsEventStatus aStatus)
+                       { return aStatus == nsEventStatus_eConsumeNoDefault; }
 
   PRBool DispatchStandardEvent(PRUint32 aMsg);
   PRBool DispatchAppCommandEvent(PRUint32 aEventCommand);

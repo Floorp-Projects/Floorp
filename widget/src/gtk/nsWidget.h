@@ -182,7 +182,8 @@ public:
     
   // Utility functions
 
-  PRBool     ConvertStatus(nsEventStatus aStatus);
+  PRBool     ConvertStatus(nsEventStatus aStatus)
+                          { return aStatus == nsEventStatus_eConsumeNoDefault; }
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
   PRBool     DispatchStandardEvent(PRUint32 aMsg);
   PRBool     DispatchFocus(nsGUIEvent &aEvent);

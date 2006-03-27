@@ -1235,22 +1235,6 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent * aEvent,
   return NS_OK;
 }
 
-PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
-{
-  switch(aStatus) {
-    case nsEventStatus_eIgnore:
-      return(PR_FALSE);
-    case nsEventStatus_eConsumeNoDefault:
-      return(PR_TRUE);
-    case nsEventStatus_eConsumeDoDefault:
-      return(PR_FALSE);
-    default:
-      NS_WARNING("Illegal nsEventStatus enumeration value\n");
-      break;
-  }
-  return(PR_FALSE);
-}
-
 void nsWidget::WidgetPut(nsWidget *aWidget)
 {
 }
