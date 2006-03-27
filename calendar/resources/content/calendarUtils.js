@@ -375,6 +375,18 @@ function getContrastingTextColor(bgColor)
 }
 
 /**
+ * Returns the selected day in the views in a platform (Sunbird vs. Lightning)
+ * neutral way
+ */
+function getSelectedDay() {
+    var sbView = document.getElementById("view-deck");
+    var ltnView = document.getElementById("calendar-view-box");
+    var viewDeck = sbView || ltnView;
+    return viewDeck.selectedPanel.selectedDay;
+}
+
+
+/**
  * Read default alarm settings from user preferences and apply them to
  * the event/todo passed in.
  *
@@ -409,8 +421,7 @@ function setDefaultAlarmValues(aItem)
             if (alarmsBranch.getIntPref("onfortodos") == 1) {
                 // You can't have an alarm if the entryDate doesn't exist.
                 if (!aItem.entryDate) {
-                    // XXX We should use the selected day from view instead
-                    aItem.entryDate = now();
+                    aItem.entryDate = getSelectedDay().clone();
                 }
                 var alarmOffset = Components.classes["@mozilla.org/calendar/duration;1"]
                                             .createInstance(Components.interfaces.calIDuration);
