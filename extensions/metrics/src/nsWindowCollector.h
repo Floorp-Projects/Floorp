@@ -40,7 +40,6 @@
 #define nsWindowCollector_h_
 
 #include "nsIObserver.h"
-#include "nsDataHashtable.h"
 
 class nsIDOMWindow;
 
@@ -54,55 +53,53 @@ class nsIDOMWindow;
 //
 // Event descriptions:
 //
-// <windowcreate/>: logged on new window creation.
+// <window action="create"/>: logged on new window creation.
 // This window can correspond to a toplevel window or to a subframe.
 // Attributes:
-//   id: The id of the new window (uint16)
+//   windowid: The id of the new window (uint16)
 //   parent: The id of the window's parent (uint16)
 //   chrome: Set to true if the window has a chrome docshell (boolean)
 //
-// <windowopen/>: logged when window.open() is called.
+// <window action="open"/>: logged when window.open() is called.
 // This will be logged immediately following <windowcreate/> when a toplevel
 // window is opened.  It will never be logged for subframe windows.
 // Attributes:
-//   id: The id of the opened window (uint16)
+//   windowid: The id of the opened window (uint16)
 //   opener: The id of the window's opener (uint16)
 //
-// <windowclose/>: logged when a toplevel window is closed.
+// <window action="close"/>: logged when a toplevel window is closed.
 // Attributes:
-//   id: The id of the closed window (uint16)
+//   windowid: The id of the closed window (uint16)
 //
-// <windowdestroy/>: logged when a window is destroyed.
+// <window action="destroy"/>: logged when a window is destroyed.
 // Attributes:
-//   id: The id of the destroyed window (uint16).
+//   windowid: The id of the destroyed window (uint16).
 
 class nsWindowCollector : public nsIObserver
 {
  public:
-  nsWindowCollector() : mNextWindowID(0) {}
+  nsWindowCollector() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  // Get the window id for the given DOMWindow.  If a window id has not
-  // yet been assigned for the window, the next id will be used.
-  static PRUint16 GetWindowID(nsIDOMWindow *window);
+  // Enables or disables the window collector.
+  // The collector should be shut down with SetEnabled(PR_FALSE)
+  // when the metrics service is shut down.
+  static nsresult SetEnabled(PRBool enabled);
 
-  // Creates the collector singleton and registers for notifications.
-  static nsresult Startup();
-  // Destroys the collector singleton.
-  static void Shutdown();
-
+  // Returns the singleton nsWindowCollector object, or NULL
+  // if the window collector is not enabled.
+  static nsWindowCollector *GetInstance() { return sInstance; }
+  
  private:
   ~nsWindowCollector();
 
-  // Object intiliazation, to be called by Startup()
+  // Object initialization, to be called by Startup()
   nsresult Init();
 
-  // Window to incrementing-id map.  The keys are nsIDOMWindow*.
-  nsDataHashtable<nsVoidPtrHashKey, PRUint16> mWindowMap;
-
-  PRUint16 mNextWindowID;
+  // the window collector singleton
+  static nsWindowCollector *sInstance;
 };
 
 #endif // nsWindowCollector_h_

@@ -71,7 +71,8 @@ public:
    * Call this method to determine if the given event type is enabled for
    * collection.
    */
-  PRBool IsEventEnabled(const nsAString &eventNS, const nsAString &eventName);
+  PRBool IsEventEnabled(const nsAString &eventNS,
+                        const nsAString &eventName) const;
 
   /**
    * Get the limit on the number of events that should be collected.

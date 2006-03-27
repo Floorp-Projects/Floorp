@@ -208,7 +208,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
     nsHashPropertyBag *props = entry.properties;
 
     rv = nsMetricsUtils::PutUint16(props, NS_LITERAL_STRING("window"),
-                                   nsWindowCollector::GetWindowID(window));
+                                   nsMetricsService::GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (flags & STATE_RESTORING) {
@@ -323,30 +323,26 @@ nsLoadCollector::OnSecurityChange(nsIWebProgress *webProgress,
 }
 
 /* static */ nsresult
-nsLoadCollector::Startup()
+nsLoadCollector::SetEnabled(PRBool enabled)
 {
-  if (sLoadCollector)
-    return NS_OK;
+  if (enabled) {
+    if (!sLoadCollector) {
+      sLoadCollector = new nsLoadCollector();
+      NS_ENSURE_TRUE(sLoadCollector, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(sLoadCollector);
 
-  sLoadCollector = new nsLoadCollector();
-  NS_ENSURE_TRUE(sLoadCollector, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(sLoadCollector);
-
-  nsresult rv = sLoadCollector->Init();
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(sLoadCollector);
-    return rv;
+      nsresult rv = sLoadCollector->Init();
+      if (NS_FAILED(rv)) {
+        MS_LOG(("Failed to initialize the load collector"));
+        NS_RELEASE(sLoadCollector);
+        return rv;
+      }
+    }
+  } else {
+    NS_IF_RELEASE(sLoadCollector);
+    GetMemUsage_Shutdown();
   }
-
   return NS_OK;
-}
-
-/* static */ void
-nsLoadCollector::Shutdown()
-{
-  NS_IF_RELEASE(sLoadCollector);
-
-  GetMemUsage_Shutdown();
 }
 
 nsresult

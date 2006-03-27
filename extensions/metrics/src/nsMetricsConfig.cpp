@@ -211,7 +211,7 @@ nsMetricsConfig::ProcessCollectorElement(nsIDOMElement *elem)
 
 PRBool
 nsMetricsConfig::IsEventEnabled(const nsAString &eventNS,
-                                const nsAString &eventName)
+                                const nsAString &eventName) const
 {
   return mEventSet.GetEntry(MakeKey(eventNS, eventName)) != nsnull;
 }
