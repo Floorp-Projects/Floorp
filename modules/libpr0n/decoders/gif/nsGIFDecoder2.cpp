@@ -501,46 +501,30 @@ int nsGIFDecoder2::HaveDecodedRow(
                                            bpr, (aRowNumber+i)*bpr);
       }
     } else {
-      PRUint8* rgbRowIndex = decoder->mRGBLine;
       PRUint8* rowBufIndex = aRowBufPtr;
 
 #if defined(MOZ_CAIRO_GFX)
+      PRUint32 *rgbRowIndex = (PRUint32*)decoder->mRGBLine;
       while (rowBufIndex != decoder->mGIFStruct->rowend) {
         if (*rowBufIndex >= cmapsize ||
             ((format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) &&
              (*rowBufIndex == decoder->mGIFStruct->tpixel))) {
-          *rgbRowIndex++ = 0;
-          *rgbRowIndex++ = 0;
-          *rgbRowIndex++ = 0;
-          *rgbRowIndex++ = 0;
+          *rgbRowIndex++ = 0x00000000;
           ++rowBufIndex;
           continue;
         }
-			 
-        const PRUint32 colorIndex = *rowBufIndex * 3;
-        const PRUint8 r = cmap[colorIndex];     // red
-        const PRUint8 g = cmap[colorIndex + 1]; // green
-        const PRUint8 b = cmap[colorIndex + 2]; // blue
-#ifdef IS_LITTLE_ENDIAN
-        // BGRX
-        *rgbRowIndex++ = b;
-        *rgbRowIndex++ = g;
-        *rgbRowIndex++ = r;
-        *rgbRowIndex++ = 0xFF;
-#else
-        // XRGB
-        *rgbRowIndex++ = 0xFF;
-        *rgbRowIndex++ = r;
-        *rgbRowIndex++ = g;
-        *rgbRowIndex++ = b;
-#endif
+
+        PRUint32 colorIndex = *rowBufIndex * 3;
+        *rgbRowIndex++ = (0xFF << 24) |
+          (cmap[colorIndex] << 16) |
+          (cmap[colorIndex+1] << 8) |
+          (cmap[colorIndex+2]);
         ++rowBufIndex;
       }
       for (int i=0; i<aDuplicateCount; i++)
         decoder->mImageFrame->SetImageData(decoder->mRGBLine, bpr, (aRowNumber+i)*bpr);
-
-
 #else
+      PRUint8* rgbRowIndex = decoder->mRGBLine;
       switch (format) {
         case gfxIFormats::RGB:
         case gfxIFormats::BGR:

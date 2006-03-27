@@ -110,7 +110,9 @@ public:
   jstate mState;
 
   JSAMPARRAY mSamples;
+#ifndef MOZ_CAIRO_GFX
   PRUint8*   mRGBRow;
+#endif
 
   PRInt32 mCompletedPasses;
   PRInt32 mPasses;

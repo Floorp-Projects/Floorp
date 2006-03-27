@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@netscape.com>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +47,8 @@
 #include "nspr.h"
 #include "nsCRT.h"
 #include "ImageLogging.h"
+#include "nsIImage.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "jerror.h"
 
@@ -93,7 +95,9 @@ nsJPEGDecoder::nsJPEGDecoder()
   mFillState = READING_BACK;
 
   mSamples = nsnull;
+#ifndef MOZ_CAIRO_GFX
   mRGBRow = nsnull;
+#endif
 
   mBytesToSkip = 0;
   
@@ -115,8 +119,10 @@ nsJPEGDecoder::~nsJPEGDecoder()
     PR_Free(mBuffer);
   if (mBackBuffer)
     PR_Free(mBackBuffer);
+#ifndef MOZ_CAIRO_GFX
   if (mRGBRow)
     PR_Free(mRGBRow);
+#endif
 }
 
 
@@ -363,9 +369,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
 
-#if defined(MOZ_CAIRO_GFX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
+#ifndef MOZ_CAIRO_GFX
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
     // allocate buffer to do byte flipping / padding
     mRGBRow = (PRUint8*) PR_MALLOC(row_stride);
+#endif
 #endif
 
     mState = JPEG_START_DECOMPRESS;
@@ -506,8 +514,30 @@ nsJPEGDecoder::OutputScanlines()
   PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
 
+  PRUint32 bpr;
+  mFrame->GetImageBytesPerRow(&bpr);
+
+  // Note! row_stride here must match the row_stride in
+  // nsJPEGDecoder::WriteFrom
+#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
+  const int row_stride = mInfo.output_width << 2; // * 4
+#else
+  const int row_stride = mInfo.output_width * 3;
+#endif
+
+#if defined(MOZ_CAIRO_GFX)
+  // we're thebes. we can write stuff directly to the data
+  PRUint8 *imageData;
+  PRUint32 imageDataLength;
+  mFrame->GetImageData(&imageData, &imageDataLength);
+  nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
+  nsIntRect r(0, 0, mInfo.output_width, 1);
+#endif
+
   while ((mInfo.output_scanline < mInfo.output_height)) {
+#ifndef MOZ_CAIRO_GFX
       JSAMPROW samples;
+#endif
 
       /* Request one scanline.  Returns 0 or 1 scanlines. */
       int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
@@ -518,31 +548,20 @@ nsJPEGDecoder::OutputScanlines()
       }
 
 #if defined(MOZ_CAIRO_GFX)
-      PRUint8 *ptrOutputBuf = mRGBRow;
-
+      PRUint32 offset = (mInfo.output_scanline - 1) * bpr;
+      PRUint32 *ptrOutputBuf = (PRUint32*)(imageData + offset);
       JSAMPLE *j1 = mSamples[0];
       for (PRUint32 i=0; i < mInfo.output_width; ++i) {
-        const PRUint8 r = *j1++;
-        const PRUint8 g = *j1++;
-        const PRUint8 b = *j1++;
-#ifdef IS_LITTLE_ENDIAN
-        // BGRX
-        *ptrOutputBuf++ = b;
-        *ptrOutputBuf++ = g;
-        *ptrOutputBuf++ = r;
-        *ptrOutputBuf++ = 0xFF;
-#else
-        // XRGB
-        *ptrOutputBuf++ = 0xFF;
-        *ptrOutputBuf++ = r;
-        *ptrOutputBuf++ = g;
-        *ptrOutputBuf++ = b;
-#endif
+        PRUint8 r = *j1++;
+        PRUint8 g = *j1++;
+        PRUint8 b = *j1++;
+        *ptrOutputBuf++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
       }
+      r.y = mInfo.output_scanline;
+      img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+#else
 
-      samples = mRGBRow;
-
-#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
       PRUint8 *ptrOutputBuf = mRGBRow;
 
       JSAMPLE *j1 = mSamples[0];
@@ -571,20 +590,11 @@ nsJPEGDecoder::OutputScanlines()
       samples = mSamples[0];
 #endif
 
-      // Note! row_stride here must match the row_stride in
-      // nsJPEGDecoder::WriteFrom
-#if defined(MOZ_CAIRO_GFX) || defined(XP_MAC) || defined(XP_MACOSX)
-      int row_stride = mInfo.output_width * 4;
-#else
-      int row_stride = mInfo.output_width * 3;
-#endif
-
-      PRUint32 bpr;
-      mFrame->GetImageBytesPerRow(&bpr);
       mFrame->SetImageData(
         samples,             // data
         row_stride,          // length
         (mInfo.output_scanline-1) * bpr); // offset
+#endif
   }
 
   if (top != mInfo.output_scanline) {
