@@ -82,3 +82,8 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CXXFLAGS	+= $(TK_CFLAGS)
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
