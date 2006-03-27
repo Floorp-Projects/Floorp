@@ -84,7 +84,6 @@ tier_0_dirs = \
 #
 # tier 1 -  3rd party individual libraries
 #
-tier_1_dirs	+= dbm
 
 ifndef MOZ_NATIVE_JPEG
 tier_1_dirs	+= jpeg
