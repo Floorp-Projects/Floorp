@@ -92,6 +92,8 @@ var gPref = null;                    // so far snav toggles on / off via direct 
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
 var gPrefAdded=false; // shall be used to flush the pref. 
 
+var gMinimoBundle = null;  // Strings and such. 
+
 function nsBrowserStatusHandler()
 {
 }
@@ -408,8 +410,13 @@ nsBrowserStatusHandler.prototype =
    
   bmInitXUL(document,document.getElementById("homebarcontainer"));
   document.getElementById("browserleftbar").style.display="block";
-
   document.getElementById("browserleftbar").addEventListener("mousedown",HomebarHandler,true);  
+
+  /*
+   * Local bundle repository
+   */
+
+  gMinimoBundle = document.getElementById("minimo_properties");
 
 }
 
@@ -810,24 +817,33 @@ function BrowserResetZoomMinus() {
 
 
 function MenuMainPopupShowing () {
-  try {
+
+   try {
     var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefBranch);
     if (pref.getBoolPref("snav.enabled"))
     {
-      document.getElementById("snav_toggle").label = "Enable arrow key scrolling";
+
+      document.getElementById("snav_toggle").label = gMinimoBundle.getString("snavToggleEnableKeyScrolling");
+
     }
     else
     {
-      document.getElementById("snav_toggle").label = "Enable jump to links";
+
+      document.getElementById("snav_toggle").label = gMinimoBundle.getString("snavToggleEnableJumpToLinks");
+
     }
 
     if (pref.getBoolPref("ssr.enabled"))
     {
-      document.getElementById("ssr_toggle").label = "Desktop layout";
+
+      document.getElementById("ssr_toggle").label = gMinimoBundle.getString("ssrDesktopLayout");
+     
     }
     else
     {
-      document.getElementById("ssr_toggle").label = "Single column layout";
+
+      document.getElementById("ssr_toggle").label = gMinimoBundle.getString("ssrSingleColumn"); 
+
     }
   }
   catch(ex) { alert(ex); }
