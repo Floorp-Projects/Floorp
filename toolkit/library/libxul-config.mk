@@ -84,6 +84,7 @@ endif
 # dependent libraries
 STATIC_LIBS += \
 	xpcom_core \
+	mozreg_s \
 	xpcom_compat \
 	unicharutil_s \
 	ucvutil_s \
