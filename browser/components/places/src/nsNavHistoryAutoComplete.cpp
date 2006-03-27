@@ -378,7 +378,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch(
   nsCString sql = NS_LITERAL_CSTRING(
       "SELECT url, title "
       "FROM moz_historyvisit v JOIN moz_history h ON v.page_id = h.id "
-      "WHERE h.typed = 1 ORDER BY visit_count DESC LIMIT ");
+      "WHERE h.typed = 1 ORDER BY visit_date DESC LIMIT ");
   sql.AppendInt(AUTOCOMPLETE_MAX_PER_TYPED * 3);
   nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(dbSelectStatement));
   NS_ENSURE_SUCCESS(rv, rv);
