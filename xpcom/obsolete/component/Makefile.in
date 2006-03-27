@@ -74,7 +74,10 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../ \
 		$(NULL)
 
+EXTRA_DSO_LIBS += mozreg_s
+
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		    $(EXTRA_DSO_LIBS) \
 		    $(MOZ_XPCOM_OBSOLETE_LIBS) \
 		    $(NULL)
 
