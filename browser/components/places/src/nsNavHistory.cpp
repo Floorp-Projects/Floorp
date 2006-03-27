@@ -130,8 +130,6 @@ static void GetSubstringFromNthDot(const nsCString& aInput, PRInt32 aStartingSpo
 static nsresult GenerateTitleFromURI(nsIURI* aURI, nsAString& aTitle);
 static PRInt32 GetTLDCharCount(const nsCString& aHost);
 static PRInt32 GetTLDType(const nsCString& aHostTail);
-static void GetUnreversedHostname(const nsString& aBackward,
-                                  nsAString& aForward);
 static PRBool IsNumericHostName(const nsCString& aHost);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries);
@@ -3847,36 +3845,6 @@ GetReversedHostname(const nsString& aForward, nsAString& aRevHost)
 {
   ReverseString(aForward, aRevHost);
   aRevHost.Append(PRUnichar('.'));
-}
-
-
-// GetUnreversedHostname
-//
-//    This takes a reversed hostname as above and converts it to a
-//    "regular" hostname with no dot at the beginning.
-//
-//    Input:
-//      gor.allizom.
-//    Output
-//      mozilla.org
-//
-//    See GetReversedHostname() above
-
-void
-GetUnreversedHostname(const nsString& aBackward, nsAString& aForward)
-{
-  NS_ASSERTION(! aBackward.IsEmpty() && aBackward[aBackward.Length()-1] == '.',
-               "Malformed reversed hostname with no trailing dot");
-
-  aForward.Truncate(0);
-  if (! aBackward.IsEmpty() && aBackward[aBackward.Length()-1] == '.') {
-    // copy everything except the trailing dot
-    for (PRInt32 i = aBackward.Length() - 2; i >= 0; i -- )
-      aForward.Append(aBackward[i]);
-  } else {
-    NS_WARNING("Malformed reversed host name: no trailing dot");
-    ReverseString(aBackward, aForward);
-  }
 }
 
 
