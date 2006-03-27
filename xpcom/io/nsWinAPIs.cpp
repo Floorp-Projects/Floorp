@@ -226,6 +226,15 @@ BOOL WINAPI nsMoveFileW(LPCWSTR aSrc, LPCWSTR aDest)
     return MoveFileA(pSrc, pDest);
 }
 
+#if defined(_MSC_VER) && _MSC_VER <= 0x1200
+#define GetFileVersionInfoA(aPath, aHandle, aLen, aData) \
+  GetFileVersionInfoA((LPSTR)aPath, aHandle, aLen, aData)
+#define GetFileVersionInfoSizeA(aPath, aHandle) \
+  GetFileVersionInfoSizeA((LPSTR)aPath, aHandle)
+#define GetFileVersionInfoW ((nsGetFileVersionInfo)GetFileVersionInfoW)
+#define GetFileVersionInfoSizeW ((nsGetFileVersionInfoSize)GetFileVersionInfoSizeW)
+#endif
+
 BOOL WINAPI nsGetFileVersionInfoW(LPCWSTR aPath, DWORD aHandle, DWORD aLen,
                                   LPVOID aData)
 {
