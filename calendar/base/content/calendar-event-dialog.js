@@ -817,6 +817,11 @@ function loadDetails() {
         updateToDoStatus(item.status);
     }
 
+    /* Task percent complete */
+    if (isToDo(item)) {
+        setElementValue("percent-complete-menulist", item.getProperty("PERCENT-COMPLETE"));
+    }
+
     /* Priority */
     var priorityInteger = parseInt(item.priority);
     if (priorityInteger >= 1 && priorityInteger <= 4) {
