@@ -191,9 +191,11 @@
                onmousedown="URLBarMouseDownHandler(event, this);"
                onclick="URLBarClickHandler(event, this);">
 		
+		<!--
 		<deck onclick="PageProxyClickHandler(event)" id='proxy-deck' >
 		  <image id="urlbar-deck"  />  
 		</deck>
+		-->
 		
         <hbox>
 		  <button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button">
