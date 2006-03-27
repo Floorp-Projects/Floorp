@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim:cindent:ts=8:et:sw=4:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -157,7 +158,16 @@ static int my_dladdr(const void *address, Dl_info *info)
     info->dli_saddr = NULL;
 
     /* Ah, the joys of libbfd.... */
-    abfd = bfd_openr(matchlib->l_name, "elf32-i386");
+    const char target[] = 
+#if defined(__i386)
+        "elf32-i386"
+#elif defined(__x86_64__)
+        "elf64-x86-64"
+#else 
+#error Unknown architecture
+#endif
+        ;
+    abfd = bfd_openr(matchlib->l_name, target);
     if (!abfd)
         return 0;
     if (!bfd_check_format(abfd, bfd_object)) {
@@ -505,7 +515,7 @@ static void log_event8(logfile *fp, char event, uint32 serial, uint32 ui2,
 typedef struct callsite callsite;
 
 struct callsite {
-    uint32      pc;
+    void*       pc;
     uint32      serial;
     lfd_set     lfdset;
     char        *name;
@@ -633,7 +643,7 @@ static callsite *calltree(int skip)
     STACKFRAME frame[MAX_STACKFRAMES];
     uint32 library_serial, method_serial;
     int framenum;
-    uint32 pc;
+    void *pc;
     uint32 depth, nkids;
     callsite *parent, **csp, *tmp;
     callsite *site = NULL;
@@ -806,7 +816,7 @@ static callsite *calltree(int skip)
             he = *hep;
             library = strdup(library); /* strdup it always? */
             if (he) {
-                library_serial = (uint32) he->value;
+                library_serial = (uint32) NS_PTR_TO_INT32(he->value);
                 le = (lfdset_entry *) he;
                 if (LFD_TEST(fp->lfd, &le->lfdset)) {
                     /* We already logged an event on fp for this library. */
@@ -852,7 +862,7 @@ static callsite *calltree(int skip)
             hep = PL_HashTableRawLookup(filenames, hash, filename);
             he = *hep;
             if (he) {
-                filename_serial = (uint32) he->value;
+                filename_serial = (uint32) NS_PTR_TO_INT32(he->value);
                 le = (lfdset_entry *) he;
                 if (LFD_TEST(fp->lfd, &le->lfdset)) {
                     /* We already logged an event on fp for this filename. */
@@ -922,7 +932,7 @@ static callsite *calltree(int skip)
         hep = PL_HashTableRawLookup(methods, hash, method);
         he = *hep;
         if (he) {
-            method_serial = (uint32) he->value;
+            method_serial = (uint32) NS_PTR_TO_INT32(he->value);
             if (method != noname) {
                 free((void*) method);
             }
@@ -1120,7 +1130,7 @@ static callsite *calltree(void **bp)
             hep = PL_HashTableRawLookup(libraries, hash, library);
             he = *hep;
             if (he) {
-                library_serial = (uint32) he->value;
+                library_serial = (uint32) NS_PTR_TO_INT32(he->value);
                 le = (lfdset_entry *) he;
                 if (LFD_TEST(fp->lfd, &le->lfdset)) {
                     /* We already logged an event on fp for this library. */
@@ -1166,7 +1176,7 @@ static callsite *calltree(void **bp)
             hep = PL_HashTableRawLookup(filenames, hash, filename);
             he = *hep;
             if (he) {
-                filename_serial = (uint32) he->value;
+                filename_serial = (uint32) NS_PTR_TO_INT32(he->value);
                 le = (lfdset_entry *) he;
                 if (LFD_TEST(fp->lfd, &le->lfdset)) {
                     /* We already logged an event on fp for this filename. */
@@ -1229,7 +1239,7 @@ static callsite *calltree(void **bp)
         hep = PL_HashTableRawLookup(methods, hash, method);
         he = *hep;
         if (he) {
-            method_serial = (uint32) he->value;
+            method_serial = (uint32) NS_PTR_TO_INT32(he->value);
             free((void*) method);
             method = (char *) he->key;
             le = (lfdset_entry *) he;
@@ -1357,7 +1367,7 @@ backtrace(int skip)
     bp = (void**) __builtin_frame_address(0);
 #endif
     while (--skip >= 0) {
-        bpdown = (void**) *bp++;
+        bpdown = (void**) bp[0];
         if (bpdown < bp)
             break;
         bp = bpdown;
@@ -1451,10 +1461,11 @@ static PLHashTable *new_allocations(void)
 
 #ifdef XP_UNIX
 
-__ptr_t malloc(size_t size)
+NS_EXTERNAL_VIS_(__ptr_t)
+malloc(size_t size)
 {
     PRUint32 start, end;
-    __ptr_t *ptr;
+    __ptr_t ptr;
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
@@ -1491,10 +1502,11 @@ __ptr_t malloc(size_t size)
     return ptr;
 }
 
-__ptr_t calloc(size_t count, size_t size)
+NS_EXTERNAL_VIS_(__ptr_t)
+calloc(size_t count, size_t size)
 {
     PRUint32 start, end;
-    __ptr_t *ptr;
+    __ptr_t ptr;
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
@@ -1513,7 +1525,7 @@ __ptr_t calloc(size_t count, size_t size)
     if (!PR_Initialized()) {
         return __libc_calloc(count, size);
     }
-	
+
     start = PR_IntervalNow();
     ptr = __libc_calloc(count, size);
     end = PR_IntervalNow();
@@ -1544,7 +1556,8 @@ __ptr_t calloc(size_t count, size_t size)
     return ptr;
 }
 
-__ptr_t realloc(__ptr_t ptr, size_t size)
+NS_EXTERNAL_VIS_(__ptr_t)
+realloc(__ptr_t ptr, size_t size)
 {
     PRUint32 start, end;
     __ptr_t oldptr;
@@ -1577,8 +1590,9 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 trackfp = alloc->trackfp;
                 if (trackfp) {
                     fprintf(alloc->trackfp,
-                            "\nrealloc(%p, %u), oldsize %u, alloc site %p\n",
-                            (void*) ptr, size, oldsize, (void*) oldsite);
+                            "\nrealloc(%p, %lu), oldsize %lu, alloc site %p\n",
+                            (void*) ptr, (unsigned long) size,
+                            (unsigned long) oldsize, (void*) oldsite);
                     NS_TraceStack(1, trackfp);
                 }
             }
@@ -1639,7 +1653,8 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     return ptr;
 }
 
-void free(__ptr_t ptr)
+NS_EXTERNAL_VIS_(void)
+free(__ptr_t ptr)
 {
     PLHashEntry **hep, *he;
     callsite *site;
@@ -1648,7 +1663,8 @@ void free(__ptr_t ptr)
     PRUint32 start, end;
 
     if (!PR_Initialized()) {
-        return __libc_free(ptr);
+        __libc_free(ptr);
+        return;
     }
 
     TM_ENTER_MONITOR();
@@ -2049,16 +2065,16 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     callsite *site = (callsite*) he->value;
 
     extern const char* nsGetTypeName(const void* ptr);
-    unsigned *p, *end;
+    void **p, **end;
 
-    fprintf(ofp, "0x%08X <%s> (%lu)\n",
-            (unsigned) he->key,
+    fprintf(ofp, "%p <%s> (%lu)\n",
+            he->key,
             nsGetTypeName(he->key),
             (unsigned long) alloc->size);
 
-    end = (unsigned*)(((char*) he->key) + alloc->size);
-    for (p = (unsigned*)he->key; p < end; ++p)
-        fprintf(ofp, "\t0x%08X\n", *p);
+    end = (void**)(((char*) he->key) + alloc->size);
+    for (p = (void**)he->key; p < end; ++p)
+        fprintf(ofp, "\t%p\n", *p);
 
     while (site) {
         if (site->name || site->parent) {
