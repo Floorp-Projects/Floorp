@@ -521,6 +521,10 @@ const int kReuseWindowOnAE = 2;
   
   BOOL loadNewTabsInBackgroundPref = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
   
+  // if shift is held down, reverse the "open new tab/window with focus"-behavior.
+  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
+    loadNewTabsInBackgroundPref = !loadNewTabsInBackgroundPref;
+  
   NSWindow* behindWindow = nil;
 
   switch (behavior)
