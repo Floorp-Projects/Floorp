@@ -1390,6 +1390,13 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
   if (!widgetToScroll)
     return PR_FALSE;
 
+  if (gRollupListener && gRollupWidget && gRollupWidget != widgetToScroll) {
+    PRBool rollup = PR_FALSE;
+    gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+    if (rollup)
+      gRollupListener->Rollup();
+  }
+
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, widgetToScroll);
 
   // The direction we get from the carbon event is opposite from the way
