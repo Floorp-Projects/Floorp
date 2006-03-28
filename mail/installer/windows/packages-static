@@ -304,7 +304,7 @@ bin\nssckbi.dll
 
 ; core platform files
 bin\regxpcom.exe
-bin\components\autocomplete.xpt
+bin\components\xpautocomplete.xpt
 bin\components\alerts.xpt
 bin\components\jsdservice.xpt
 bin\components\fastfind.xpt
