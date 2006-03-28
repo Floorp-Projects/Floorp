@@ -24,7 +24,7 @@ class AMO_SQL extends SQL
          * If our current script is in the shadow array, we should 
          * connect to the shadow db instead of the default.
          */
-        if (in_array(SCRIPT_NAME, $shadow_config)) {
+        if (defined('SCRIPT_NAME') && in_array(SCRIPT_NAME, $shadow_config)) {
             $shadow_dsn = array (
                 'phptype'  => 'mysql',
                 'dbsyntax' => 'mysql',

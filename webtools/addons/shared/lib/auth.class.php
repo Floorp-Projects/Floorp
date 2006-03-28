@@ -277,10 +277,10 @@ class AMO_Auth extends AMO_Object{
 
     /**
      * Clean out stale sessions
-     * @access private
+     * @access public
      * @return bool true
      */
-    function _gcSession()
+    function gcSession()
     {
         $_sql = "DELETE FROM 
                     `{$this->_session_table}`

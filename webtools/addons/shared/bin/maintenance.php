@@ -23,7 +23,10 @@ if (isset($_SERVER['HTTP_HOST'])) {
 }
 
 // If we get here, we're on the command line, which means we can continue.
-require_once('config.php');
+require_once('../../public/inc/config.php');
+
+// For the addon object and db stuff
+require_once('../../public/inc/includes.php');
 
 /**
  *  * Get time as a float.
@@ -203,6 +206,10 @@ switch ($action) {
 
         // This is unreliable, but it's not a big deal.
         $affected_rows = mysql_affected_rows();
+
+        echo 'Cleaning session tables...'."\n";
+        $_auth->gcSession();
+
     break;
 
 
