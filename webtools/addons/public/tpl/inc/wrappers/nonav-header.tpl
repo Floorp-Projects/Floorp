@@ -16,6 +16,9 @@
     <script src="{$config.webpath}/js/install.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/search-plugin.js" type="text/javascript"></script>
     <script src="{$config.webpath}/js/auth.js" type="text/javascript"></script>
+    {if $extraHeaders}
+    {$extraHeaders}
+    {/if}
 </head>
 
 <body>

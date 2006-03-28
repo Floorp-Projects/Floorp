@@ -411,6 +411,14 @@
     background: transparent url("../../img/key-point_br.gif") scroll no-repeat bottom right ;
 }
 
-#search-side {
-    padding: 10px;
+#search-options {
+    display: none;
+}
+
+#hide-search-options {
+    display: none;
+}
+
+#show-search-options {
+    display: inline;
 }

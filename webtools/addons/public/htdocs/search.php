@@ -9,7 +9,6 @@
  * @todo add page links ( 1 2 3 4 5 ..... n ) for big result sets?  is this necessary?
  * @todo take pagination and throw it into a class so we can reuse the methodology.
  * @todo check validation - the form has some errors in it.
- * @todo fix CSS so the pull-downs look symmetrical before design freaks start crying.
  */
 
 // Get our cache_id based on what we have in our query string.
@@ -135,6 +134,7 @@ $select = "
 // Where clause.
 $where = "
     WHERE
+        version.approved = 'YES' AND
 ";
 
 // Order by.
@@ -142,9 +142,7 @@ $orderby = "
     ORDER BY
 ";
 
-if (!empty($sql['platform'])||!empty($sql['app'])) {
-    $select .= " INNER JOIN version ON version.ID = main.ID ";
-}
+$select .= " INNER JOIN version ON version.ID = main.ID ";
 
 if (!empty($sql['cat'])) {
     $select .= " INNER JOIN categoryxref ON categoryxref.ID = main.ID ";
@@ -277,7 +275,8 @@ $tpl->assign(
         'sort'          => $sort,
         'perpage'       => $perpage,
         'content'       => 'search.tpl',
-        'title'         => 'Search'
+        'title'         => 'Search',
+        'extraHeaders'  => '<script src="'.WEB_PATH.'/js/search.js" type="text/javascript"></script>'
     )
 );
 ?>

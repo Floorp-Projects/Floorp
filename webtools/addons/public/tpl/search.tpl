@@ -1,29 +1,30 @@
 
-<div id="side">
-{* @todo fix the javascript hide/show so it's not n00bl3t1z3t3d *}
+<div class="key-point">
 
-<div id="nav">
-
-<form id="search-side" action="{$smarty.server.PHP_SELF}" method="get">
+<form action="{$smarty.server.PHP_SELF}" method="get" class="amo-form">
 
 <div>
 <input type="text" name="q" value="{$clean.q}" maxlength="32"/>
-<input type="submit" value="Search"/>
+<div id="show-search-options"><input class="amo-submit" type="submit" value="Search"/> <a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Show Options</a></div>
+<div id="hide-search-options"><a href="javascript:toggle('show-search-options','hide-search-options','inline');hide('search-options');">Hide Options</a></div>
 </div>
 
+<div id="search-options">
+
 <fieldset>
+
     <legend>Search Options</legend>
 
-    <div class="search-option">
-    <label for="cat">Category:</label>
+    <div>
+    <label class="amo-label-small" for="cat">Category:</label>
     <select name="cat" id="cat">
     <option value="null">Any</option>
     {html_options options=$cats selected=$clean.cat}
     </select>
     </div>
 
-    <div class="search-option">
-    <label for="type">Type:</label>
+    <div>
+    <label class="amo-label-small" for="type">Type:</label>
     <select id="type" name="type">
     <option value="null">Any</option>
     <option value="E"{if $clean.type eq 'E'} selected="selected"{/if}>Extensions</option>
@@ -31,39 +32,39 @@
     </select>
     </div>
 
-    <div class="search-option">
-    <label for="app">App:</label>
+    <div>
+    <label class="amo-label-small" for="app">App:</label>
     <select id="app" name="app">
     <option value="null">Any</option>
     {html_options options=$apps selected=$app}
     </select>
     </div>
 
-    <div class="search-option">   
-    <label for="platform">Platform:</label>
+    <div>   
+    <label class="amo-label-small" for="platform">Platform:</label>
     <select id="platform" name="platform">
     <option value="null">Any</option>
     {html_options options=$platforms selected=$clean.platform}
     </select>
     </div>
 
-    <div class="search-option">
-    <label for="date">Date:</label>
+    <div>
+    <label class="amo-label-small" for="date">Date:</label>
     <select id="date" name="date">
     <option value="null">Any</option>
     {html_options options=$dates selected=$clean.date}
     </select>
     </div>
 
-    <div class="search-option">
-    <label for="sort">Sort by:</label>
+    <div>
+    <label class="amo-label-small" for="sort">Sort by:</label>
     <select id="sort" name="sort">
     {html_options options=$sort selected=$clean.sort}
     </select>
     </div>
 
-    <div class="search-option">
-    <label for="perpage">Per page:</label>
+    <div>
+    <label class="amo-label-small" for="perpage">Per page:</label>
     <select id="perpage" name="perpage">
     {html_options options=$perpage selected=$clean.perpage}
     </select>
@@ -71,21 +72,21 @@
 
 </fieldset>
 
-<p><input type="submit" value="Search"/></p>
+<p><input class="amo-submit" type="submit" value="Search"/></p>
+
+<!-- end search-options -->
+</div>
 
 </form>
 
 </div>
-<!-- end nav -->
 
-</div>
-<!-- end side -->
+<div id="mBody">
 
-<div id="mainContent">
 
 {if $results}
 
-<h2>Addon Search Results</h2>
+<h2>Search Results</h2>
 <p class="first"><b>{$page.resultCount}</b> Addons found.  Showing records <b>{$page.leftDisplay}-{$page.right}</b>. <em>Too many results?  Try narrowing your search.</em></p>
 
 <div class="pages">
@@ -152,6 +153,5 @@ Next Page &raquo;
 
 {/if}
 
+<!-- End mBody -->
 </div>
-<!-- end mainContent -->
-
