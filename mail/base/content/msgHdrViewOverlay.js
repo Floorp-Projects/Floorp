@@ -257,10 +257,8 @@ function OnLoadMsgHeaderPane()
 
   initializeHeaderViewTables();
 
-  var toggleHeaderView = document.getElementById("msgHeaderView");
-  var initialCollapsedSetting = toggleHeaderView.getAttribute("state");
-  if (initialCollapsedSetting == "true")
-    gCollapsedHeaderViewMode = true;   
+  var deckHeaderView = document.getElementById("msgHeaderViewDeck");
+  gCollapsedHeaderViewMode = deckHeaderView.selectedIndex == 0;   
 
   // dispatch an event letting any listeners know that we have loaded the message pane
   var event = document.createEvent('Events');
@@ -674,39 +672,19 @@ function updateHeaderViews()
 
 function ToggleHeaderView ()
 {
-  var expandedNode = document.getElementById("expandedHeaderView");
-  var collapsedNode = document.getElementById("collapsedHeaderView");
-  var toggleHeaderView = document.getElementById("msgHeaderView");
+  gCollapsedHeaderViewMode = !gCollapsedHeaderViewMode;
+  // Work around a xul deck bug where the height of the deck is determined by the tallest panel in the deck
+  // even if that panel is not selected...
+  document.getElementById('msgHeaderViewDeck').selectedPanel.collapsed = true;
+  
+  UpdateMessageHeaders(); 
+  
+  // select the new panel. 
+  document.getElementById('msgHeaderViewDeck').selectedIndex = gCollapsedHeaderViewMode ? 0 : 1;
 
-  if (gCollapsedHeaderViewMode)
-  {          
-    gCollapsedHeaderViewMode = false;
-    // hide the current view
-    hideHeaderView(gCollapsedHeaderView);
-    // update the current view
-    UpdateMessageHeaders();
-    
-    // now uncollapse / collapse the right views
-    expandedNode.collapsed = false;
-    collapsedNode.collapsed = true;
-  }
-  else
-  {
-    gCollapsedHeaderViewMode = true;
-    // hide the current view
-    hideHeaderView(gExpandedHeaderView);
-    // update the current view
-    UpdateMessageHeaders();
-    
-    // now uncollapse / collapse the right views
-    collapsedNode.collapsed = false;
-    expandedNode.collapsed = true;
-  }  
-
-  if (gCollapsedHeaderViewMode)
-    toggleHeaderView.setAttribute("state", "true");
-  else
-    toggleHeaderView.setAttribute("state", "false");
+  // Work around a xul deck bug where the height of the deck is determined by the tallest panel in the deck
+  // even if that panel is not selected...  
+  document.getElementById('msgHeaderViewDeck').selectedPanel.collapsed = false;
 }
 
 // default method for updating a header value into a header entry
@@ -823,19 +801,7 @@ function ClearCurrentHeaders()
 
 function ShowMessageHeaderPane()
 { 
-  var node;
-  if (gCollapsedHeaderViewMode)
-  {          
-    node = document.getElementById("collapsedHeaderView");
-    if (node)
-      node.collapsed = false;
-  }
-  else
-  {
-    node = document.getElementById("expandedHeaderView");
-    if (node)
-      node.collapsed = false;
-  }
+  document.getElementById('msgHeaderView').collapsed = false;
 
 	/* workaround for 39655 */
   if (gFolderJustSwitched) 
@@ -848,22 +814,12 @@ function ShowMessageHeaderPane()
 
 function HideMessageHeaderPane()
 {
-  var node = document.getElementById("collapsedHeaderView");
-  if (node)
-    node.collapsed = true;
+  document.getElementById('msgHeaderView').collapsed = true;
 
-  node = document.getElementById("expandedHeaderView");
-  if (node)
-    node.collapsed = true;
-
-  // we also have to disable the File/Attachments menuitem
-  node = document.getElementById("fileAttachmentMenu");
-  if (node)
-    node.setAttribute("disabled", "true");
-
-  node = document.getElementById("attachmentView");
-  if (node)
-    node.collapsed = true;
+  // disable the File/Attachments menuitem
+  document.getElementById("fileAttachmentMenu").setAttribute("disabled", "true");
+  // disable the attachment box
+  document.getElementById("attachmentView").collapsed = true;
 }
 
 function OutputNewsgroups(headerEntry, headerValue)
