@@ -121,29 +121,24 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
     mLoadedPanes  = [[NSMutableDictionary dictionary] retain];
     mPaneInfo     = [[NSMutableDictionary dictionary] retain];
 
-    NSString* paneBundlesPath = [NSString stringWithFormat:@"%@/Contents/PreferencePanes", [[NSBundle mainBundle] bundlePath]];
-    [self loadPreferencePanesAtPath:paneBundlesPath];
+    // Load preference panes from three different locations:
+    // 1. First, check inside the app bundle for the built-in prefpanes
+    NSString* panesInBundlesPath = [NSString stringWithFormat:@"%@/Contents/PreferencePanes", [[NSBundle mainBundle] bundlePath]];
+    [self loadPreferencePanesAtPath:panesInBundlesPath];
 
-    // this matches code in -initMozillaPrefs
-    NSString* profilePath = [[PreferenceManager sharedInstance] profilePath];
-    NSString* prefPanesSubpath = [profilePath stringByAppendingPathComponent:@"PreferencePanes"];
+    // 2. Check inside this Camino's profile folder's PrefencePanes/ folder for extension prefpanes.
+    NSString* panesInProfilePath = [[[PreferenceManager sharedInstance] profilePath] 
+                                    stringByAppendingPathComponent:@"PreferencePanes"];
+    [self loadPreferencePanesAtPath:[panesInProfilePath stringByStandardizingPath]];
 
-    NSString* userLibPath = [MVPreferencesController applicationSupportPathForDomain:kUserDomain];
-    if (userLibPath)
-    {
-      userLibPath = [userLibPath stringByAppendingPathComponent:prefPanesSubpath];
-      [self loadPreferencePanesAtPath:[userLibPath stringByStandardizingPath]];
-    }
-    
-    NSString* globalLibPath = [MVPreferencesController applicationSupportPathForDomain:kLocalDomain];
-    if (globalLibPath)
-    {
-      globalLibPath = [globalLibPath stringByAppendingPathComponent:prefPanesSubpath];
-      [self loadPreferencePanesAtPath:[globalLibPath stringByStandardizingPath]];
-    }
-    
+    // 3. Check inside the global /Library/Application Support/Camino/PreferencePanes for prefpanes.
+    NSString* globalAppSupportsFolder = [MVPreferencesController applicationSupportPathForDomain:kLocalDomain];
+    if (globalAppSupportsFolder)
+      [self loadPreferencePanesAtPath:
+        [[globalAppSupportsFolder stringByAppendingPathComponent:@"Camino/PreferencePanes"] stringByStandardizingPath]];
+
     [self buildPrefPaneIdentifierList];
-    
+
     [NSBundle loadNibNamed:@"MVPreferences" owner:self];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(doUnselect:)
