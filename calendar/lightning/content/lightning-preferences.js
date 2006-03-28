@@ -43,13 +43,17 @@ var gLightningPane = {
         var timezones = icsService.timezoneIds;
 
         prefValue = document.getElementById("calendar.timezone.local").value;
+        var itemToSelect;
         while (timezones.hasMore()) {
             var tzid = timezones.getNext();
             var listItem = tzListBox.appendItem(tzid, tzid);
             if (tzid == prefValue) {
-                tzListBox.selectItem(listItem);
-                tzListBox.scrollToIndex(tzListBox.getIndexOfItem(listItem));
+                itemToSelect = listItem;
             }
+        }
+        if (itemToSelect) {
+            tzListBox.scrollToIndex(tzListBox.getIndexOfItem(itemToSelect));
+            tzListBox.selectItem(itemToSelect);
         }
     },
 
