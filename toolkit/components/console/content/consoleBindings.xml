@@ -165,6 +165,7 @@
           row.setAttribute("typetext", this.mStrBundle.getString(typetext));
           row.setAttribute("type", warning ? "warning" : "error");
           row.setAttribute("msg", aObject.errorMessage);
+          row.setAttribute("category", aObject.category);
           if (aObject.lineNumber || aObject.sourceName) {
             row.setAttribute("href", aObject.sourceName);
             row.setAttribute("line", aObject.lineNumber);
