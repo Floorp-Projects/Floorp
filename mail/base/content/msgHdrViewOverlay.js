@@ -705,15 +705,9 @@ function createNewHeaderView(headerName)
   newHeader.setAttribute('id', idName);
 
   if (headerName.indexOf("Dummy-Header") == 0) // -1 means not found, 0 means starts at the beginning
-  {
     newHeader.setAttribute('label', "");
-  } 
   else
-  {
     newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
-    // all mail-headerfield elements are keyword related
-    newHeader.setAttribute('keywordrelated','true');
-  }
   
   newHeader.collapsed = true;
 

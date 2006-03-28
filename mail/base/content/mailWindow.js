@@ -87,9 +87,6 @@ var gFakeAccountPageLoaded = false;
 var gIsEditableMsgFolder = false;
 var gOfflineManager;
 
-// cache the last keywords
-var gLastKeywords = "";
-
 function OnMailWindowUnload()
 {
   RemoveMailOfflineObserver();
@@ -548,53 +545,52 @@ function ShowAccountCentral()
 // load the iframe in the AccountCentral box with corresponding page.
 function ShowingAccountCentral()
 {
-    try
-    {
-        var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
-                                               Components.interfaces.nsIPrefLocalizedString).data;
-        GetMessagePane().collapsed = true;
-        document.getElementById("threadpane-splitter").collapsed = true;
-        document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
+  try
+  {
+    var acctCentralPage = pref.getComplexValue("mailnews.account_central_page.url",
+                                           Components.interfaces.nsIPrefLocalizedString).data;
+    GetMessagePane().collapsed = true;
+    document.getElementById("threadpane-splitter").collapsed = true;
+    document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
 
-        window.frames["accountCentralPane"].location.href = acctCentralPage;
-        
-        if (!IsFolderPaneCollapsed())
-            GetFolderTree().focus();        
+    window.frames["accountCentralPane"].location.href = acctCentralPage;
+    
+    if (!IsFolderPaneCollapsed())
+      GetFolderTree().focus();        
 
-        gAccountCentralLoaded = true;
-    }
-    catch (ex)
-    {
-        dump("Error loading AccountCentral page -> " + ex + "\n");
-    }
+    gAccountCentralLoaded = true;
+  }
+  catch (ex)
+  {
+    dump("Error loading AccountCentral page -> " + ex + "\n");
+  }
 }
 
 function HidingAccountCentral()
 {
-    try
-    {
-        window.frames["accountCentralPane"].location.href = "about:blank";
-    }
-    catch (ex)
-    {
-        dump("Error hiding AccountCentral page -> " + ex + "\n");
-    }
-    document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
-    gAccountCentralLoaded = false;
+  try
+  {
+    window.frames["accountCentralPane"].location.href = "about:blank";
+  }
+  catch (ex)
+  {
+    dump("Error hiding AccountCentral page -> " + ex + "\n");
+  }
+  document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
+  gAccountCentralLoaded = false;
 }
 
 function ShowThreadPane()
 {
-    document.getElementById("displayDeck").selectedPanel = 
-        document.getElementById("threadPaneBox");
+  document.getElementById("displayDeck").selectedPanel = 
+    document.getElementById("threadPaneBox");
 }
 
 function ShowingThreadPane()
 {
-    var threadPaneSplitter = document.getElementById("threadpane-splitter");
-    threadPaneSplitter.collapsed = false;
-    GetMessagePane().collapsed =
-        (threadPaneSplitter.getAttribute("state") == "collapsed");
+  var threadPaneSplitter = document.getElementById("threadpane-splitter");
+  threadPaneSplitter.collapsed = false;
+  GetMessagePane().collapsed = (threadPaneSplitter.getAttribute("state") == "collapsed");
 }
 
 function HidingThreadPane()
@@ -610,19 +606,19 @@ function getBrowser()
 
 function ObserveDisplayDeckChange(event)
 {
-    var deck = document.getElementById("displayDeck");
-    var nowSelected = null;
-    try { nowSelected = deck.selectedPanel.id; } catch (ex) { }
+  var deck = document.getElementById("displayDeck");
+  var nowSelected = null;
+  try { nowSelected = deck.selectedPanel.id; } catch (ex) { }
 
-    if (nowSelected == "threadPaneBox")
-        ShowingThreadPane();
-    else
-        HidingThreadPane();
-    
-    if (nowSelected == "accountCentralBox")
-        ShowingAccountCentral();
-    else
-        HidingAccountCentral();
+  if (nowSelected == "threadPaneBox")
+    ShowingThreadPane();
+  else
+    HidingThreadPane();
+  
+  if (nowSelected == "accountCentralBox")
+    ShowingAccountCentral();
+  else
+    HidingAccountCentral();
 }
 
 // Given the server, open the twisty and the set the selection
@@ -630,23 +626,22 @@ function ObserveDisplayDeckChange(event)
 // prompt if offline.
 function OpenInboxForServer(server)
 {
-    try {
-        ShowThreadPane();
-        var inboxFolder = GetInboxFolder(server);
-        SelectFolder(inboxFolder.URI);
+  try {
+    ShowThreadPane();
+    var inboxFolder = GetInboxFolder(server);
+    SelectFolder(inboxFolder.URI);
 
-        if(CheckOnline())	{
-            if (server.type != "imap")
-                GetMessagesForInboxOnServer(server);
-        }
-        else if (DoGetNewMailWhenOffline()) {
-                GetMessagesForInboxOnServer(server);
-        }
+    if(CheckOnline())	{
+      if (server.type != "imap")
+        GetMessagesForInboxOnServer(server);
     }
-    catch (ex) {
-        dump("Error opening inbox for server -> " + ex + "\n");
-        return;
-    }
+    else if (DoGetNewMailWhenOffline())
+      GetMessagesForInboxOnServer(server);
+  }
+  catch (ex) {
+      dump("Error opening inbox for server -> " + ex + "\n");
+      return;
+  }
 }
 
 function GetSearchSession()
@@ -655,44 +650,4 @@ function GetSearchSession()
     return gSearchSession;
   else
     return null;
-}
-
-function SetKeywords(aKeywords) 
-{ 
-  // we cache the last keywords.  
-  // if there is no chagne, we do nothing.
-  // most of the time, this will be the case.
-  if (aKeywords == gLastKeywords)
-    return;
-
-  // these are the UI elements who care about keywords
-  var elements = document.getElementsByAttribute("keywordrelated","true");
-  var len = elements.length;
-  for (var i=0; i<len; i++) {
-    var element = elements[i];
-    var originalclass = element.getAttribute("originalclass");
-
-    // we use XBL for certain headers.
-    // if the element has keywordrelated="true"
-    // but no original class, it's an XBL widget
-    // so to get the real element, use getAnonymousElementByAttribute()
-    if (!originalclass) {
-      element = document.getAnonymousElementByAttribute(element, "keywordrelated", "true");
-      originalclass = element.getAttribute("originalclass");
-    }
-
-    if (aKeywords) {
-      if (element.getAttribute("appendoriginalclass") == "true") {
-        aKeywords += " " + originalclass;
-      }
-      element.setAttribute("class", aKeywords);
-    }
-    else {
-      // if no keywords, reset class to the original class
-      element.setAttribute("class", originalclass);
-    }
-  }
-
-  // cache the keywords 
-  gLastKeywords = aKeywords;
 }

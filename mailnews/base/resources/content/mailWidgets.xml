@@ -588,7 +588,7 @@
         <xul:spacer flex="1"/>
         <xul:label class="headerName" xbl:inherits="value=label"/>  
       </xul:hbox>
-      <xul:textbox originalclass="headerValue plain" appendoriginalclass="true" keywordrelated="true" class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/>
+      <xul:textbox class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/>
     </content>
 
     <implementation>      
@@ -604,7 +604,7 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
-      <xul:textbox originalclass="headerValue plain" appendoriginalclass="true" keywordrelated="true" class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/> 
+      <xul:textbox class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/> 
     </content>
 
     <implementation>      
@@ -617,8 +617,8 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
-      <xul:label originalclass="headerValue plain headerValueUrl" onclick="if (!event.button) messenger.launchExternalURL(event.target.value);" 
-                 appendoriginalclass="true" keywordrelated="true" class="headerValue plain headerValueUrl" 
+      <xul:label onclick="if (!event.button) messenger.launchExternalURL(event.target.value);" 
+                 class="headerValue plain headerValueUrl" 
                  anonid="headerValue" flex="1" readonly="true" context="copyUrlPopup"/> 
     </content>
   </binding>
