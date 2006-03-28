@@ -35,7 +35,12 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+<!DOCTYPE overlay [
+  <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd" >
+  %helpDTD;
+  <!ENTITY % communicatorDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+  %communicatorDTD;
+]>
 <overlay id="helpContextOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -70,6 +75,14 @@
                 label="&selectAllCmd.label;"
                 accesskey="&selectAllCmd.accesskey;"
                 command="cmd_selectAll"/>
+      <menuseparator id="context-sep-selectall"/>
+      <menuitem id="context-zlevel"
+                type="checkbox"
+                checked="true"
+                persist="checked"
+                label="&zLevel.label;"
+                accesskey="&zLevel.accesskey;"
+                oncommand="toggleZLevel(this);"/>
     </popup>
   </popupset>
 </overlay>

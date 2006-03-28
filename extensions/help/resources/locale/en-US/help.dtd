@@ -27,3 +27,7 @@
 <!ENTITY findPrevCmd.commandkey2  "VK_F3">
 <!ENTITY findOnCmd.commandkey     "f">
 <!ENTITY printCmd.commandkey      "p">
+
+<!-- Context menu -->
+<!ENTITY zLevel.label             "Always on Top">
+<!ENTITY zLevel.accesskey         "w">

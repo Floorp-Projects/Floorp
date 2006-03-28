@@ -174,6 +174,14 @@ function init() {
 
   //Always show the Table of Contents sidebar at startup.
   showPanel('help-toc');
+
+  // alwaysRaised only works on Mac & Win.
+  if (!/Win|Mac/.test(navigator.platform)) {
+    var toggleSeparator = document.getElementById("context-sep-selectall");
+    var toggleOnTop = document.getElementById("context-zlevel");
+    toggleOnTop.hidden = true;
+    toggleSeparator.hidden = true;
+  }
 }
 
 function contentClick(event) {
@@ -708,4 +716,30 @@ function showRelativePanel(goForward) {
   else if (selectedIndex < 0)
     selectedIndex = sidebarButtons.length - 1;
   sidebarButtons[selectedIndex].doCommand();
+}
+
+// getXulWin - Returns the current Help window as a nsIXULWindow.
+function getXulWin() {
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var webnav = window.getInterface(Components.interfaces.nsIWebNavigation);
+  var dsti = webnav.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
+  var treeowner = dsti.treeOwner;
+  var ifreq = treeowner.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+
+  return ifreq.getInterface(Components.interfaces.nsIXULWindow);
+}
+
+// toggleZLevel - Toggles whether or not the window will always appear on top.
+// element is the DOM node that persists the checked state
+function toggleZLevel(element) {
+  var xulwin = getXulWin();
+
+  // Now we can flip the zLevel, and set the attribute so that it persists correctly
+  if (xulwin.zLevel > xulwin.normalZ) {
+    xulwin.zLevel = xulwin.normalZ;
+    element.setAttribute("checked", "false");
+  } else {
+    xulwin.zLevel = xulwin.raisedZ;
+    element.setAttribute("checked", "true");
+  }
 }

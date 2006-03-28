@@ -17,7 +17,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    width="480"
    height="360"
-   persist="width height screenX screenY"
+   persist="width height screenX screenY zlevel"
    onload="init();"
    onunload="window.XULBrowserWindow.destroy();">
 
