@@ -146,7 +146,7 @@ endif
 ifdef MOZ_ENABLE_CAIRO_FT
 CSRCS   += cairo-ft-font.c
 EXPORTS += cairo-ft.h
-LOCAL_INCLUDES += $(CAIRO_FT_CFLAGS)
+OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 
 
