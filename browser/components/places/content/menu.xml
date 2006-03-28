@@ -44,6 +44,7 @@
             
       <method name="onPopupShowing">
         <body><![CDATA[
+        PlacesController.activeView = this;
         if (!this._resultNode)
           this._init();
         if (PlacesController.nodeIsContainer(this._resultNode)) {

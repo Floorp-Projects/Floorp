@@ -177,6 +177,7 @@
           place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(event);"
+          onclick="PlacesOrganizer.onTreeClick(event);"
           seltype="single">
       <treecols>
         <treecol id="title" flex="1" primary="true" hideheader="true"/>
@@ -215,7 +216,8 @@
 #include advancedSearch.inc          
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" type="places" 
-                ondblclick="PlacesController.mouseLoadURI(event);">
+                ondblclick="PlacesController.mouseLoadURI(event);"
+                onclick="PlacesOrganizer.onTreeClick(event);">
             <treecols id="placeContentColumns">
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
