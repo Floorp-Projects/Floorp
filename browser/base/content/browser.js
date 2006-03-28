@@ -3450,7 +3450,7 @@ nsBrowserStatusHandler.prototype =
           }
           // If msg is false then we did not have an error (channel may have
           // been null, in the case of a stray image load).
-          if (!msg) {
+          if (!msg && (!location || location.spec != "about:blank")) {
             msg = gNavigatorBundle.getString("nv_done");
           }
           this.status = "";
