@@ -65,6 +65,9 @@ include $(topsrcdir)/config/config.mk
 ifneq (,$(filter FreeBSD NetBSD OpenBSD BSD_OS Darwin,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
+ifeq (Darwin,$(OS_ARCH))
+DEFINES		+= -DKEEP_STACK_16_BYTE_ALIGNED
+endif
 endif
 endif
 #
