@@ -104,99 +104,39 @@
 
 #define CONTEXT(_th) ((_th)->md.context)
 
+#if defined(__i386__) || defined(__sparc__) || defined(__m68k__) || defined(__powerpc__)
+#define JB_SP_INDEX 2
+#elif defined(__mips__)
+#define JB_SP_INDEX 4
+#elif defined(__alpha__)
+#define JB_SP_INDEX 34
+#elif defined(__arm32__)
+/*
+ * On the arm32, the jmpbuf regs underwent a name change after NetBSD 1.3.
+ */
+#ifdef JMPBUF_REG_R13
+#define JB_SP_INDEX JMPBUF_REG_R13
+#else
+#define JB_SP_INDEX _JB_REG_R13
+#endif
+#else
+#error "Need to define SP index in jmp_buf here"
+#endif
+#define _MD_GET_SP(_th)    (_th)->md.context[JB_SP_INDEX]
+
+#define PR_NUM_GCREGS	_JBLEN
+
 /*
 ** Initialize a thread context to run "_main()" when started
 */
-#ifdef __i386__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[2] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[0] = (int) _main;					\
-    *status = PR_TRUE;							\
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)  \
+{  \
+    *status = PR_TRUE;  \
+    if (sigsetjmp(CONTEXT(_thread), 1)) {  \
+        _main();  \
+    }  \
+    _MD_GET_SP(_thread) = (unsigned char*) ((_sp) - 64); \
 }
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[2]
-#endif
-#ifdef __sparc_v9__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[1] = (unsigned char*) ((_sp) - 176 - 0x7ff);	\
-    CONTEXT(_thread)[2] = (long) _main;					\
-    CONTEXT(_thread)[3] = (long) _main + 4;				\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	(CONTEXT(_thread)[2]+0x7ff)
-#elif defined(__sparc__)
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[2] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[3] = (int) _main;					\
-    CONTEXT(_thread)[4] = (int) _main + 4;				\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[2]
-#endif
-#ifdef __powerpc__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[3] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[4] = (int) _main;					\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[3]
-#endif
-#ifdef __m68k__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[2] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[5] = (int) _main;					\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[2]
-#endif
-#ifdef __mips__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[32] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[2] = (int) _main;					\
-    CONTEXT(_thread)[28] = (int) _main;					\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[32]
-#endif
-#if defined(__arm32__) || defined(__arm__) || defined(__armel__) \
-    || defined(__armeb__)
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[23] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[24] = (int) _main;					\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[23]
-#endif
-#ifdef __alpha__
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)			\
-{									\
-    sigsetjmp(CONTEXT(_thread), 1);					\
-    CONTEXT(_thread)[34] = (unsigned char*) ((_sp) - 128);		\
-    CONTEXT(_thread)[2] = (long) _main;					\
-    CONTEXT(_thread)[30] = (long) _main;				\
-    CONTEXT(_thread)[31] = (long) _main;				\
-    *status = PR_TRUE;							\
-}
-#define	_MD_GET_SP(_thread)	CONTEXT(_thread)[34]
-#endif
-#ifndef _MD_INIT_CONTEXT
-#error "Need to define _MD_INIT_CONTEXT for this platform"
-#endif
-
-#define PR_NUM_GCREGS	_JBLEN
 
 #define _MD_SWITCH_CONTEXT(_thread)  \
     if (!sigsetjmp(CONTEXT(_thread), 1)) {  \
