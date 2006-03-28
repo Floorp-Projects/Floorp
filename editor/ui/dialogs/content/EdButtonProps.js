@@ -166,7 +166,7 @@ function onAccept()
   {
     if (!InsertElementAroundSelection(buttonElement))
     {
-      buttonElement.innerHTML = editor.outputToString("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
+      buttonElement.innerHTML = editor.outputToString("text/html", kOutputSelectionOnly);
       editor.insertElementAtSelection(buttonElement, true);
     }
   }
