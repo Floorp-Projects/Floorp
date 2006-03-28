@@ -1388,13 +1388,11 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
     case nsIDOMKeyEvent::DOM_VK_RIGHT : 
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirPrevious : eDirNext;
-        tHint = (baseLevel & 1) ? HINTRIGHT : HINTLEFT; //stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT  : //no break
         InvalidateDesiredX();
         pos.mDirection = (baseLevel & 1) ? eDirNext : eDirPrevious;
-        tHint = (baseLevel & 1) ? HINTLEFT : HINTRIGHT; //stick to opposite of movement
         PostReason(nsISelectionListener::KEYPRESS_REASON);
       break;
     case nsIDOMKeyEvent::DOM_VK_DOWN : 
@@ -1421,23 +1419,36 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
   default :return NS_ERROR_FAILURE;
   }
   pos.mPreferLeft = tHint;
-  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
+  if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
-    tHint = (HINT)pos.mPreferLeft;
+    nsIFrame *theFrame;
+    PRInt32 currentOffset, frameStart, frameEnd;
+
+    if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT ||
+        aKeycode == nsIDOMKeyEvent::DOM_VK_LEFT)
+    {
+      // For left/right, PeekOffset() sets pos.mResultFrame correctly, but does not set pos.mPreferLeft,
+      // so determine the hint here based on the result frame and offset:
+      // If we're at the end of a text frame, set the hint to HINTLEFT to indicate that we
+      // want the caret displayed at the end of this frame, not at the beginning of the next one.
+      theFrame = pos.mResultFrame;
+      theFrame->GetOffsets(frameStart, frameEnd);
+      currentOffset = pos.mContentOffset;
+      if (frameEnd == currentOffset && !(frameStart == 0 && frameEnd == 0))
+        tHint = HINTLEFT;
+      else
+        tHint = HINTRIGHT;
+    } else {
+      // For up/down and home/end, pos.mResultFrame might not be set correctly, or not at all.
+      // In these cases, get the frame based on the content and hint returned by PeekOffset().
+      tHint = (HINT)pos.mPreferLeft;
+      result = GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, tHint, &theFrame, &currentOffset);
+      NS_ENSURE_SUCCESS(result, result);
+      theFrame->GetOffsets(frameStart, frameEnd);
+    }
+
     if (context->BidiEnabled())
     {
-      nsIFrame *theFrame;
-      PRInt32 currentOffset, frameStart, frameEnd;
-
-      // XXX - I expected to be able to use pos.mResultFrame, but when we move from frame to frame
-      //       and |PeekOffset| is called recursively, pos.mResultFrame on exit is sometimes set to the original
-      //       frame, not the frame that we ended up in, so I need this call to |GetFrameForNodeOffset|.
-      //       I don't know if that could or should be changed or if it would break something else.
-      result = GetFrameForNodeOffset(pos.mResultContent, pos.mContentOffset, tHint, &theFrame, &currentOffset);
-      if (NS_FAILED(result))
-        return result;
-      theFrame->GetOffsets(frameStart, frameEnd);
-
       switch (aKeycode) {
         case nsIDOMKeyEvent::DOM_VK_HOME:
         case nsIDOMKeyEvent::DOM_VK_END:

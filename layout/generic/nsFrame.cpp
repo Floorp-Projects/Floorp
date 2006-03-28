@@ -4471,8 +4471,6 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
 NS_IMETHODIMP
 nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  PRBool preferLeft = aPos->mPreferLeft;
-
   // Find the prev/next selectable frame
   PRBool selectable = PR_FALSE;
   nsIFrame *traversedFrame = this;
@@ -4534,16 +4532,11 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
         return NS_ERROR_FAILURE;//we are done. cannot jump lines
       if (aPos->mAmount != eSelectWord)
       {
-        preferLeft = (PRBool)!preferLeft;//drift to other side
         aPos->mAmount = eSelectNoAmount;
       }
       else{
         if (aPos->mEatingWS)//done finding what we wanted
           return NS_ERROR_FAILURE;
-        if (aPos->mDirection == eDirNext)
-        {
-          preferLeft = (PRBool)!preferLeft;//drift to other side
-        }
       }
     }
     nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
@@ -4582,18 +4575,12 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   else
     aPos->mStartOffset = -1;
 #ifdef IBMBIDI
-  PRUint8 oldLevel = NS_GET_EMBEDDING_LEVEL(this);
   PRUint8 newLevel = NS_GET_EMBEDDING_LEVEL(traversedFrame);
   PRUint8 newBaseLevel = NS_GET_BASE_LEVEL(traversedFrame);
   if ((newLevel & 1) != (newBaseLevel & 1)) // The new frame is reverse-direction, go to the other end
     aPos->mStartOffset = -1 - aPos->mStartOffset;
-
-  if ((aPos->mAmount == eSelectNoAmount) && ((newLevel & 1) != (oldLevel & 1)))  {
-    preferLeft = (PRBool)!preferLeft;
-  }
 #endif
   aPos->mResultFrame = traversedFrame;
-  aPos->mPreferLeft = preferLeft;
   return NS_OK;
 }
 
