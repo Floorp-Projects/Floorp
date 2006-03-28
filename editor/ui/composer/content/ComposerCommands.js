@@ -1928,9 +1928,8 @@ function StartPublishing()
     if (gPublishData.otherFilesURI)
     {
       try {
-        // (256 = Output encoded entities)
         gRestoreDocumentSource = 
-          editor.outputToString(editor.contentsMIMEType, 256);
+          editor.outputToString(editor.contentsMIMEType, kOutputEncodeW3CEntities);
       } catch (e) {}
     }
 
@@ -2678,7 +2677,7 @@ var nsIsIndexCommand =
     try {
       var editor = GetCurrentEditor();
       var isindexElement = editor.createElementWithDefaults("isindex");
-      isindexElement.setAttribute("prompt", editor.outputToString("text/plain", 1)); // OutputSelectionOnly
+      isindexElement.setAttribute("prompt", editor.outputToString("text/plain", kOutputSelectionOnly));
       editor.insertElementAtSelection(isindexElement, true);
     } catch (e) {}
   }

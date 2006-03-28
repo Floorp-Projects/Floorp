@@ -55,7 +55,7 @@ function Startup()
 
   var selection;
   try {
-    selection = editor.outputToString("text/html", 35); // OutputWrap+OutputFormatted+OutputSelectionOnly
+    selection = editor.outputToString("text/html", kOutputFormatted | kOutputSelectionOnly | kOutputWrap);
   } catch (e) {}
   if (selection)
   {

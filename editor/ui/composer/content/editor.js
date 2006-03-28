@@ -1760,14 +1760,14 @@ function SetEditMode(mode)
     // Get the entire document's source string
 
     var flags = (editor.documentCharacterSet == "ISO-8859-1")
-      ? 32768  // OutputEncodeLatin1Entities
-      : 16384; // OutputEncodeBasicEntities
+      ? kOutputEncodeLatin1Entities
+      : kOutputEncodeBasicEntities;
     try { 
       var encodeEntity = gPrefs.getCharPref("editor.encode_entity");
       switch (encodeEntity) {
-        case "basic"  : flags = 16384; break; // OutputEncodeBasicEntities
-        case "latin1" : flags = 32768; break; // OutputEncodeLatin1Entities
-        case "html"   : flags = 65536; break; // OutputEncodeHTMLEntities
+        case "basic"  : flags = kOutputEncodeBasicEntities; break;
+        case "latin1" : flags = kOutputEncodeLatin1Entities; break;
+        case "html"   : flags = kOutputEncodeHTMLEntities; break;
         case "none"   : flags = 0;     break;
       }
     } catch (e) { }
@@ -1775,11 +1775,11 @@ function SetEditMode(mode)
     try { 
       var prettyPrint = gPrefs.getBoolPref("editor.prettyprint");
       if (prettyPrint)
-        flags |= 2; // OutputFormatted
+        flags |= kOutputFormatted;
 
     } catch (e) {}
 
-    flags |= 1024; // OutputLFLineBreak
+    flags |= kOutputLFLineBreak;
     var source = editor.outputToString(kHTMLMimeType, flags);
     var start = source.search(/<html/i);
     if (start == -1) start = 0;
@@ -1807,7 +1807,7 @@ function SetEditMode(mode)
       try {
         // We are coming from edit source mode,
         //   so transfer that back into the document
-        source = gSourceTextEditor.outputToString(kTextMimeType, 1024); // OutputLFLineBreak
+        source = gSourceTextEditor.outputToString(kTextMimeType, kOutputLFLineBreak);
         editor.rebuildDocumentFromSource(source);
 
         // Get the text for the <title> from the newly-parsed document
@@ -1859,7 +1859,7 @@ function FinishHTMLSource()
   //Or RebuildDocumentFromSource() will fail.
   if (IsInHTMLSourceMode())
   {
-    var htmlSource = gSourceTextEditor.outputToString(kTextMimeType, 1024); // OutputLFLineBreak
+    var htmlSource = gSourceTextEditor.outputToString(kTextMimeType, kOutputLFLineBreak);
     if (htmlSource.length > 0)
     {
       var beginHead = htmlSource.indexOf("<head");

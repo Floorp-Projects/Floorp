@@ -47,8 +47,15 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 // Object to attach commonly-used widgets (all dialogs should use this)
 var gDialog = {};
 
-// Bummer! Can't get at enums from nsIDocumentEncoder.h
-// http://lxr.mozilla.org/seamonkey/source/content/base/public/nsIDocumentEncoder.h#111
+const kOutputEncodeBasicEntities = Components.interfaces.nsIDocumentEncoder.OutputEncodeBasicEntities;
+const kOutputEncodeHTMLEntities = Components.interfaces.nsIDocumentEncoder.OutputEncodeHTMLEntities;
+const kOutputEncodeLatin1Entities = Components.interfaces.nsIDocumentEncoder.OutputEncodeLatin1Entities;
+const kOutputEncodeW3CEntities = Components.interfaces.nsIDocumentEncoder.OutputEncodeW3CEntities;
+const kOutputFormatted = Components.interfaces.nsIDocumentEncoder.OutputFormatted;
+const kOutputLFLineBreak = Components.interfaces.nsIDocumentEncoder.OutputLFLineBreak;
+const kOutputSelectionOnly = Components.interfaces.nsIDocumentEncoder.OutputSelectionOnly;
+const kOutputWrap = Components.interfaces.nsIDocumentEncoder.OutputWrap;
+
 var gStringBundle;
 var gIOService;
 var gPrefsService;
@@ -195,7 +202,7 @@ function ConvertToCDATAString(string)
 function GetSelectionAsText()
 {
   try {
-    return GetCurrentEditor().outputToString("text/plain", 1); // OutputSelectionOnly
+    return GetCurrentEditor().outputToString("text/plain", kOutputSelectionOnly);
   } catch (e) {}
 
   return "";

@@ -121,8 +121,7 @@ function onAccept()
   var editor = GetCurrentEditor();
   var str;
   try {
-    // 1 = OutputSelectionOnly, 1024 = OutputLFLineBreak
-    str = editor.outputToString("text/html", 1+1024);
+    str = editor.outputToString("text/html", kOutputLFLineBreak | kOutputSelectionOnly);
   } catch (e) {}
   if (!str)
   {
