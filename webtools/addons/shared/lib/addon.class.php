@@ -268,7 +268,7 @@ class AddOn extends AMO_Object {
                 feedback
             WHERE
                 ID = '{$this->ID}' AND
-                CommentNote IS NOT NULL
+                CommentVote IS NOT NULL
             ORDER BY
                 CommentDate DESC
             {$_limitSql}
