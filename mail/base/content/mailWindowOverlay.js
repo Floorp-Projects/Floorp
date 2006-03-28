@@ -62,10 +62,12 @@ const kNoRemoteContentPolicy = 0;
 const kBlockRemoteContent = 1;
 const kAllowRemoteContent = 2;
 
-const kMsgNotificationNoStatus = 0;
-const kMsgNotificationJunkBar = 1;
-const kMsgNotificationRemoteImages = 2;
-const kMsgNotificationPhishingBar = 3;
+const kIsAPhishMessage = 0;
+const kNotAPhishMessage = 1;
+
+const kMsgNotificationPhishingBar = 1;
+const kMsgNotificationJunkBar = 2;
+const kMsgNotificationRemoteImages = 3;
 
 var gMessengerBundle;
 var gPromptService;
@@ -2124,59 +2126,54 @@ function HandleJunkStatusChanged(folder)
   var loadedMessage = GetLoadedMessage();
   if (loadedMessage && (!(/type=application\/x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
   {
-    // if multiple message are selected
-    // and we change the junk status
-    // we don't want to show the junk bar
-    // (since the message pane is blank)
+    // if multiple message are selected and we change the junk status
+    // we don't want to show the junk bar (since the message pane is blank)
+    var msgHdr = null;
     if (GetNumSelectedMessages() == 1)
+      msgHdr = messenger.msgHdrFromURI(loadedMessage);
+    gMessageNotificationBar.setJunkMsg(msgHdr);
+    
+    if (msgHdr)
     {
-      var msgHdr = messenger.messageServiceFromURI(loadedMessage).messageURIToMsgHdr(loadedMessage);
-
-      if (msgHdr)
+      // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
+      // reload the message if the status has just changed to not junk. 
+      var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
+      if (sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
       {
-        // HandleJunkStatusChanged is a folder wide event and does not necessarily mean
-        // that the junk status on our currently selected message has changed.
-        // We have no way of determining if the junk status of our current message has really changed
-        // the only thing we can do is cheat by asking if the junkbar visibility had to change as a result of this notification
+        var moveJunkMail = (folder && folder.server && folder.server.spamSettings) ?
+	                          folder.server.spamSettings.manualMark : false;
 
-        var changedJunkStatus = gMessageNotificationBar.setJunkMsg(msgHdr);
+        var junkScore = msgHdr.getStringProperty("junkscore"); 
+        var isJunk = ((junkScore != "") && (junkScore != "0"));
 
-        // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
-        // reload the message if the status has just changed to not junk. 
-
-        var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
-        if (changedJunkStatus && sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
-        {
-          var loadedFolder = GetLoadedMsgFolder();
-          var moveJunkMail = (loadedFolder && loadedFolder.server && loadedFolder.server.spamSettings) ?
-	                     loadedFolder.server.spamSettings.manualMark : false;
-
-          var junkScore = msgHdr.getStringProperty("junkscore"); 
-          var isJunk = ((junkScore != "") && (junkScore != "0"));
-
-          // we used to only reload the message if we were toggling the message to NOT JUNK from junk
-          // but it can be useful to see the HTML in the message get converted to sanitized form when a message
-          // is marked as junk.
-          // Furthermore, if we are about to move the message that was just marked as junk, 
-          // then don't bother reloading it.
-          if (!(isJunk && moveJunkMail)) 
+        // we used to only reload the message if we were toggling the message to NOT JUNK from junk
+        // but it can be useful to see the HTML in the message get converted to sanitized form when a message
+        // is marked as junk.
+        // Furthermore, if we are about to move the message that was just marked as junk, 
+        // then don't bother reloading it.
+        if (!(isJunk && moveJunkMail)) 
           MsgReload();
-        }
       }
     }
-    else
-      gMessageNotificationBar.setJunkMsg(null);
   }
 }
 
 var gMessageNotificationBar = 
 {
+  mBarStatus: 0,
+  // flag bit values for mBarStatus, indexed by kMsgNotificationXXX
+  mBarFlagValues: [
+                    0, // for no msgNotificationBar
+                    1, // 1 << (kMsgNotificationPhishingBar - 1)
+                    2, // 1 << (kMsgNotificationJunkBar - 1)
+                    4  // 1 << (kMsgNotificationRemoteImages - 1)
+                  ],
+
   mMsgNotificationBar: document.getElementById('msgNotificationBar'),
 
-  setJunkMsg: function (aMsgHdr)
+  setJunkMsg: function(aMsgHdr)
   {
     var isJunk = false;
-    var isCurrentlyNotJunk = this.mMsgNotificationBar.selectedIndex != kMsgNotificationJunkBar;
   
     if (aMsgHdr) 
     {
@@ -2184,55 +2181,48 @@ var gMessageNotificationBar =
       isJunk = ((junkScore != "") && (junkScore != "0"));
     }
 
-    // phishing scams take precedence over junk
-    if (this.mMsgNotificationBar.selectedIndex != kMsgNotificationPhishingBar && isJunk)
-      this.updateMsgNotificationBar (kMsgNotificationJunkBar);
+    this.updateMsgNotificationBar(kMsgNotificationJunkBar, isJunk);
 
     goUpdateCommand('button_junk');
-
-    return (isJunk && isCurrentlyNotJunk) || (!isJunk && !isCurrentlyNotJunk);
   },
 
-  setRemoteContentMsg: function (aMsgHdr)
+  setRemoteContentMsg: function(aMsgHdr)
   {  
-    // phishing and junk messages take precedence over the remote content msg...
-    if (this.mMsgNotificationBar.selectedIndex == kMsgNotificationNoStatus)
-      this.updateMsgNotificationBar(aMsgHdr && aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent ? 
-                                    kMsgNotificationRemoteImages : kMsgNotificationNoStatus);
+    var blockRemote = aMsgHdr &&
+                      aMsgHdr.getUint32Property("remoteContentPolicy") == kBlockRemoteContent;
+    this.updateMsgNotificationBar(kMsgNotificationRemoteImages, blockRemote);
   },
 
   // aUrl is the nsIURI for the message currently loaded in the message pane
   setPhishingMsg: function(aUrl)
   {
-    var msgURI = GetLoadedMessage();
-    if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
-    {
-      var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-      // if we've explicitly marked this message as not being an email scam, then don't
-      // bother checking it with the phishing detector.
-      if (msgHdr && msgHdr.getUint32Property("notAPhishMessage"))
-        return; 
-    }
-
-    // phishing scams take precedence over junk and remote images.
-    if (isMsgEmailScam(aUrl))
-      this.updateMsgNotificationBar(kMsgNotificationPhishingBar);
+    // if we've explicitly marked this message as not being an email scam, then don't
+    // bother checking it with the phishing detector.
+    var phishingMsg = false;
+    if (!checkMsgHdrPropertyIsNot("notAPhishMessage", kIsAPhishMessage))
+      phishingMsg = isMsgEmailScam(aUrl);
+    this.updateMsgNotificationBar(kMsgNotificationPhishingBar, phishingMsg);
   },
 
   clearMsgNotifications: function()
   {
-    this.updateMsgNotificationBar(kMsgNotificationNoStatus);
+    this.mBarStatus = 0;
+    this.mMsgNotificationBar.selectedIndex = 0;
+    this.mMsgNotificationBar.collapsed = true;
   },
 
   // private method used to set our message notification deck to the correct value...
-  updateMsgNotificationBar: function(aIndex)
+  updateMsgNotificationBar: function(aIndex, aSet)
   {
-    if (aIndex == kMsgNotificationNoStatus)
-      this.mMsgNotificationBar.setAttribute('collapsed', true);
-    else
-      this.mMsgNotificationBar.removeAttribute('collapsed');
-    
-    this.mMsgNotificationBar.selectedIndex = aIndex;
+    var chunk = this.mBarFlagValues[aIndex];
+    var status = aSet ? this.mBarStatus | chunk : this.mBarStatus & ~chunk;
+    this.mBarStatus = status;
+
+    // the phishing message takes precedence over the junk message
+    // which takes precedence over the remote content message
+    this.mMsgNotificationBar.selectedIndex = this.mBarFlagValues.indexOf(status & -status);
+
+    this.mMsgNotificationBar.collapsed = !status;
   }
 };
 
@@ -2242,18 +2232,7 @@ function LoadMsgWithRemoteContent()
   // change the "remoteContentBar" property on it
   // then reload the message
 
-  var msgURI = GetLoadedMessage();
-  var msgHdr = null;
-    
-  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
-  {
-    msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
-    if (msgHdr)
-    {
-      msgHdr.setUint32Property("remoteContentPolicy", kAllowRemoteContent); 
-      MsgReload();
-    }
-  }
+  setMsgHdrPropertyAndReload("remoteContentPolicy", kAllowRemoteContent);
 }
 
 function MsgIsNotAScam()
@@ -2262,18 +2241,40 @@ function MsgIsNotAScam()
   // change the "isPhishingMsg" property on it
   // then reload the message
 
+  setMsgHdrPropertyAndReload("notAPhishMessage", kNotAPhishMessage);
+}
+
+function setMsgHdrPropertyAndReload(aProperty, aValue)
+{
+  // we want to get the msg hdr for the currently selected message
+  // change the appropiate property on it then reload the message
+
   var msgURI = GetLoadedMessage();
-  var msgHdr = null;
-    
+
   if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
   {
-    msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    var msgHdr = messenger.msgHdrFromURI(msgURI);
     if (msgHdr)
     {
-      msgHdr.setUint32Property("notAPhishMessage", 1); 
+      msgHdr.setUint32Property(aProperty, aValue);
       MsgReload();
     }
   }
+}
+
+function checkMsgHdrPropertyIsNot(aProperty, aValue)
+{
+  // we want to get the msg hdr for the currently selected message,
+  // get the appropiate property on it and then test against value.
+
+  var msgURI = GetLoadedMessage();
+    
+  if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
+  {
+    var msgHdr = messenger.msgHdrFromURI(msgURI);
+    return (msgHdr && msgHdr.getUint32Property(aProperty) != aValue);
+  }
+  return false;
 }
 
 function MarkCurrentMessageAsRead()
