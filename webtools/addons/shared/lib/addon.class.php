@@ -40,6 +40,8 @@ class AddOn extends AMO_Object {
 
     var $AppVersions;
 
+    var $OsVersions;
+
     // Preview information.
     var $PreviewID;
     var $PreviewURI;
@@ -87,6 +89,7 @@ class AddOn extends AMO_Object {
         $this->getMainPreview();
         $this->getUserInfo();
         $this->getAppVersions();
+        $this->getOsVersions();
     }
     
     /**
@@ -308,30 +311,86 @@ class AddOn extends AMO_Object {
           SELECT 
             `applications`.`AppName`, 
             `version`.`MinAppVer`, 
-            `version`.`MaxAppVer` 
+            `version`.`MaxAppVer`,
+            `os`.`OSName`
           FROM 
             `version` 
           INNER JOIN
             `applications`
           ON
             `version`.`AppID` = `applications`.`AppID`
+          INNER JOIN
+            `os`
+          ON
+            `version`.`OSID` = `os`.`OSID`
           WHERE
             `version`.`Version`='{$this->Version}'
           AND 
             `version`.`ID`={$this->ID}
           AND
             `applications`.`supported` = 1
+          ORDER BY
+            `applications`.`AppName`
+        ", SQL_ALL, SQL_ASSOC);
+
+        foreach ($this->db->record as $var => $val) {
+            $_key = "{$val['AppName']} {$val['MinAppVer']} - {$val['MaxAppVer']}";
+
+            // We've already got at least one hit, just add the OS
+            if (array_key_exists($_key, $_final)) {
+                array_push($_final[$_key]['os'], $val['OSName']);
+            } else {
+                $_final[$_key] = array (
+                    'AppName'   => $val['AppName'],
+                    'MinAppVer' => $val['MinAppVer'],
+                    'MaxAppVer' => $val['MaxAppVer'],
+                    'os'        => array ($val['OSName'])
+                );
+            }
+        }
+
+        $this->setVar('AppVersions',$_final);
+    }
+
+    /* A very similar function as getAppVersions() but this
+    has an additional GROUP BY which limits the OS's that
+    come back */
+    function getOsVersions() {
+        $_final = array();
+        $this->db->query("
+          SELECT 
+            `version`.`URI`,
+            `version`.`Size`,
+            `os`.`OSName`
+          FROM 
+            `version` 
+          INNER JOIN
+            `applications`
+          ON
+            `version`.`AppID` = `applications`.`AppID`
+          INNER JOIN
+            `os`
+          ON
+            `version`.`OSID` = `os`.`OSID`
+          WHERE
+            `version`.`Version`='{$this->Version}'
+          AND 
+            `version`.`ID`={$this->ID}
+          AND
+            `applications`.`supported` = 1
+          GROUP BY 
+            `os`.`OSID`
         ", SQL_ALL, SQL_ASSOC);
 
         foreach ($this->db->record as $var => $val) {
             $_final[] = array (
-                'AppName'   => $val['AppName'],
-                'MinAppVer' => $val['MinAppVer'],
-                'MaxAppVer' => $val['MaxAppVer'],
+                'URI'       => $val['URI'],
+                'Size'      => $val['Size'],
+                'OSName'    => $val['OSName']
             );
         }
 
-        $this->setVar('AppVersions',$_final);
+        $this->setVar('OsVersions',$_final);
     }
 }
 ?>

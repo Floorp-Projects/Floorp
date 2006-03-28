@@ -21,21 +21,45 @@ released on {$addon->VersionDateAdded|date_format}
 <p>{$addon->Description}</p>
 
 <p class="requires">
-Requires:
+Works with:
 </p>
-<table>
-{section name=AppVersions loop=$addon->AppVersions}
-<tr>
-    <td><img src="{$config.webpath}/images/{$addon->AppVersions[AppVersions].AppName|lower}_icon.png" width="34" height="34" alt="{$addon->AppVersions[AppVersions].AppName}"></td>
-    <td>{$addon->AppVersions[AppVersions].AppName}</td>
-    <td>{$addon->AppVersions[AppVersions].MinAppVer} - {$addon->AppVersions[AppVersions].MaxAppVer}</td>
-</tr>
-{/section}
+<table summary="Compatible applications and their versions.">
+{foreach key=key item=item from=$addon->AppVersions}
+    {counter assign=count start=0}
+    <tr>
+        <td><img src="{$config.webpath}/images/{$item.AppName|lower}_icon.png" width="34" height="34" alt="{$item.AppName|escape}"></td>
+        <td>{$item.AppName|escape}</td>
+        <td>{$item.MinAppVer|escape} - {$item.MaxAppVer|escape}</td>
+        <td>{foreach key=throwaway item=os from=$item.os}{counter assign=count}{if $count > 1}, {/if}{$os|escape}{/foreach}</td>
+    </tr>
+{/foreach}
 </table>
-
-<div class="key-point install-box">
-<div class="install">
-<b><a href="{$addon->URI}" onclick="return install(event,'{$addon->AppName|escape} {$addon->Version|escape}', '{$config.webpath}/images/default.png');" TITLE="Install {$addon->AppName|escape} {$addon->Version|escape} (Right-Click to Download)">Install Now</a></b> ({$addon->Size|escape} KB File)</div></div>
+    <div class="key-point install-box">
+        <div class="install">
+        {if $multiDownloadLinks}
+            <b>Install Now:</b><br />
+        {/if}
+            {section name=OsVersions loop=$addon->OsVersions}
+                {if $addon->OsVersions[OsVersions].URI}
+                    <div>
+                    <a href="{$addon->OsVersions[OsVersions].URI|escape}" onclick="return install(event,'{$addon->OsVersions[OsVersions].AppName|escape} {$addon->OsVersions[OsVersions].Version|escape}', '{$config.webpath}/images/default.png');" title="Install for {$addon->OsVersions[OsVersions].OSName|escape} {$addon->OsVersions[OsVersions].Version|escape} (Right-Click to Download)">
+                        {if $multiDownloadLinks}
+                            {$addon->OsVersions[OsVersions].OSName|escape}
+                        {else}
+                            Install Now
+                        {/if}
+                    </a> ({$addon->OsVersions[OsVersions].Size|escape} <abbr title="Kilobytes">KB</abbr>)
+                    </div>
+                {/if}
+            {/section}
+        </div>
+    </div>
+<!--
+</noscript>
+-->
+    <div class="install-other">
+        <a href="{$config.webpath}/{$app}/{$addon->ID}/history">Other Versions</a>
+    </div>
 
 <h3 id="user-comments">User Comments</h3>
 

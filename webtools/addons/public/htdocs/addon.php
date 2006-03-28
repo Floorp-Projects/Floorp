@@ -16,9 +16,21 @@ require_once('includes.php');
 // Create our AddOn object using the ID.
 $addon = new AddOn($sql['ID']);
 
+/* This is kind of a cheesy hack to determine how to display
+   download links on the addon page.  If only one link is shown,
+   there will just be an "Install Now" link, otherwise there will
+   be links for each version. */
+if (sizeof($addon->OsVersions) == 1) {
+    $multiDownloadLinks = false;
+} else {
+    $multiDownloadLinks = true;
+}
+
+
 // Assign template variables.
 $tpl->assign(
     array(  'addon'     => $addon,
+            'multiDownloadLinks' => $multiDownloadLinks,
             'title'     => $addon->Name,
             'content'   => 'addon.tpl',
             'sidebar'   => 'inc/addon-sidebar.tpl')

@@ -79,9 +79,6 @@
 }
 
 .install a {
-	background: url(../../images/install.png) no-repeat;
-	padding: 3px 0 8px 30px;
-	display: block;
 	text-decoration: none;
 }
 
@@ -91,6 +88,12 @@
 
 .install-box {
 	width: 18em;
+}
+
+.install div {
+	background: url(../../images/install.png) no-repeat;
+	padding: 3px 0 8px 30px;
+
 }
 
 #opinions h4 {
