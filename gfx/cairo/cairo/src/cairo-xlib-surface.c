@@ -1708,14 +1708,6 @@ _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
     *options = surface->screen_info->font_options;
 }
 
-static cairo_status_t
-_cairo_xlib_surface_flush (void *abstract_surface)
-{
-    cairo_xlib_surface_t *surface = abstract_surface;
-    XSync (surface->dpy, False);
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static void
 _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 
@@ -1742,7 +1734,7 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_get_extents,
     NULL, /* old_show_glyphs */
     _cairo_xlib_surface_get_font_options,
-    _cairo_xlib_surface_flush,
+    NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     _cairo_xlib_surface_scaled_font_fini,
     _cairo_xlib_surface_scaled_glyph_fini,
