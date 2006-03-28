@@ -103,7 +103,26 @@ switch ($action) {
      * Update all total download counts.
      */
     case 'total':
+
+        // Get the max dID from downloads so we don't miscount hits 
+        // that occur while the update query is running.
+        $max_sql = "
+            SELECT
+                MAX(dID) as max_id
+            FROM
+                downloads
+        ";
+
+        $max_result = mysql_query($max_sql, $connection)
+            or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
+                             E_USER_NOTICE);
+
+        $max_row = mysql_fetch_array($max_result,MYSQL_ASSOC);
+
+        $max_id = $max_row['max_id'];
+
         // Get uncounted hits from the download table.
+        // We only select counts for dID < max_id for accuracy.
         $uncounted_hits_sql = "
             SELECT
                 downloads.ID as ID,
@@ -111,7 +130,8 @@ switch ($action) {
             FROM
                 downloads
             WHERE
-                `counted`=0
+                `counted`=0 AND
+                dID <= {$max_id}
             GROUP BY
                 downloads.ID
             ORDER BY
@@ -135,7 +155,7 @@ switch ($action) {
 
             foreach ($uncounted_hits as $id=>$hits) {
                 $uncounted_update_sql = "
-                    UPDATE `main` SET `TotalDownloads`=`TotalDownloads`+{$hits} WHERE `ID`='{$id}'
+                    UPDATE `main` SET `TotalDownloads`=`TotalDownloads`+{$hits} WHERE `ID`={$id}
                 ";
                 $uncounted_update_result = mysql_query($uncounted_update_sql, $connection) 
                     or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
@@ -146,21 +166,21 @@ switch ($action) {
             // If we get here, we've counted everything and we can mark stuff for
             // deletion.
             //
-            // Mark the downloads we just counted as counted if:
-            //      a) it is a day count that is more than 8 days old
-            //      b) it is a download log that has not been counted
-            //
-            // We may lose a couple counts, theoretically, but it's negligible - we're not
-            // NASA (yes, THE NASA).
+            // Mark the downloads we just counted as counted if it has a key lower 
+            // than max_id, because all keys lower than max_id have been counted above
             $counted_update_sql = "
                 UPDATE
                     `downloads`
                 SET
                     `counted`=1
+                WHERE
+                    dID <= {$max_id}
             ";
             $counted_update_result = mysql_query($counted_update_sql, $connection) 
                 or trigger_error('MySQL Error '.mysql_errno().': '.mysql_error()."", 
                                  E_USER_NOTICE);
+        } else {
+            $affected_rows = 0;
         }
     break;
 
