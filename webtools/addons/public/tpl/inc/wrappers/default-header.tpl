@@ -63,7 +63,7 @@
         <ul id="menu-firefox">
             <li{if $currentTab eq "home"} class="current"{/if}><a href="{$config.webpath}/{$app}/">Home</a></li>
             <li{if $currentTab eq "extensions"} class="current"{/if}><a href="{$config.webpath}/{$app}/extensions/">Extensions</a></li>
-            <li{if $currentTab eq "pfs"} class="current"{/if}><a href="https://pfs.mozilla.org/plugins/?app={$app}">Plugins</a></li>
+            <li{if $currentTab eq "pfs"} class="current"{/if}><a href="{$config.webpath}/{$app}/plugins/">Plugins</a></li>
             <li{if $currentTab eq "search-engines"} class="current"{/if}><a href="{$config.webpath}/{$app}/search-engines/">Search Engines</a></li>
             <li{if $currentTab eq "themes"} class="current"{/if}><a href="{$config.webpath}/{$app}/themes/">Themes</a></li>
         </ul>

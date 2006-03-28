@@ -126,7 +126,8 @@ class AMO_Object
             FROM
                 applications
             WHERE
-                public_ver = 'YES'
+                public_ver = 'YES' AND
+                supported = 1
             GROUP BY
                 AppName
         ", SQL_INIT, SQL_ASSOC);

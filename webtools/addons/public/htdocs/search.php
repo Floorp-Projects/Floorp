@@ -48,10 +48,8 @@ if (isset($_GET['date'])&&$_GET['date']!='null'&&ctype_alpha($_GET['date'])) {
 }
 
 // Application.
-if (isset($_GET['app'])&&$_GET['app']!='null'&&ctype_alpha($_GET['app'])) {
-    $clean['app'] = $_GET['app'];
-} elseif ($_GET['app']=='null') {
-    unset($clean['app']);
+if (isset($_GET['appfilter'])&&$_GET['appfilter']!='null'&&is_numeric($_GET['appfilter'])) {
+    $clean['appfilter'] = $_GET['appfilter'];
 }
 
 // Query.
@@ -108,12 +106,6 @@ $sort = array(
     'downloads' => 'Popularity'
 );
 
-$apps = array(
-    'firefox'     => 'Firefox',
-    'thunderbird' => 'Thunderbird',
-    'mozilla'     => 'Mozilla'
-);
-
 $perpage = array(
     10 => '10',
     25 => '25',
@@ -155,7 +147,7 @@ if (!empty($sql['platform'])) {
 
 if (!empty($sql['app'])) {
     $select .= " INNER JOIN applications ON version.AppID = applications.AppID ";
-    $where .= " applications.AppName = '{$sql['app']}' AND ";
+    $where .= " applications.AppID = '{$sql['appfilter']}' AND ";
 }
 
 if (!empty($sql['q'])) {
@@ -270,7 +262,7 @@ $tpl->assign(
         'clean'         => $clean,
         'cats'          => $amo->getCats(),
         'platforms'     => $amo->getPlatforms(),
-        'apps'          => $apps,
+        'apps'          => $amo->getApps(),
         'dates'         => $dates,
         'sort'          => $sort,
         'perpage'       => $perpage,

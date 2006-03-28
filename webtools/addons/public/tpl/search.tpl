@@ -33,10 +33,10 @@
     </div>
 
     <div>
-    <label class="amo-label-small" for="app">App:</label>
-    <select id="app" name="app">
+    <label class="amo-label-small" for="appfilter">App:</label>
+    <select id="appfilter" name="appfilter">
     <option value="null">Any</option>
-    {html_options options=$apps selected=$app}
+    {html_options options=$apps selected=$clean.appfilter}
     </select>
     </div>
 

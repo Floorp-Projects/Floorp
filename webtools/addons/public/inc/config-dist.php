@@ -178,6 +178,7 @@ $memcache_config = array(
  */
 $contentType_config = array(
     'update.php' => 'text/xml; charset=utf-8',
-    'rss.php'    => 'text/xml; charset=utf-8'
+    'rss.php'    => 'text/xml; charset=utf-8',
+    'pfs.php'    => 'text/xml; charset=utf-8'
 );
 ?>
