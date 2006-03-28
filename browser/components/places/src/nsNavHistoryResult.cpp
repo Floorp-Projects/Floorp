@@ -3414,15 +3414,19 @@ nsNavHistoryResult::GetRoot(nsINavHistoryQueryResultNode** aRoot)
     FolderObserverList* _fol = BookmarkObserversForId(_folderId, PR_FALSE); \
     if (_fol) { \
       FolderObserverList _listCopy(*_fol); \
-      for (PRUint32 _fol_i = 0; _fol_i < _listCopy.Length(); _fol_i ++) \
-        _listCopy[_fol_i]->_functionCall; \
+      for (PRUint32 _fol_i = 0; _fol_i < _listCopy.Length(); _fol_i ++) { \
+        if (_listCopy[_fol_i]) \
+          _listCopy[_fol_i]->_functionCall; \
+      } \
     } \
   }
 #define ENUMERATE_HISTORY_OBSERVERS(_functionCall) \
   { \
     nsTArray<nsNavHistoryQueryResultNode*> observerCopy(mEverythingObservers); \
-    for (PRUint32 _obs_i = 0; _obs_i < observerCopy.Length(); _obs_i ++) \
+    for (PRUint32 _obs_i = 0; _obs_i < observerCopy.Length(); _obs_i ++) { \
+      if (observerCopy[_obs_i]) \
       observerCopy[_obs_i]->_functionCall; \
+    } \
   }
 
 // nsNavHistoryResult::OnBeginUpdateBatch (nsINavBookmark/HistoryObserver)

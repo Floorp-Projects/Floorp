@@ -339,7 +339,8 @@ var PlacesController = {
    *          True to make query items expand as new containers. For managing,
    *          you want this to be false, for menus and such, you want this to
    *          be true.
-   * @returns A HistoryResultNode containing the contents of the folder. 
+   * @returns A HistoryContainerResultNode containing the contents of the 
+   *          folder. This container is guaranteed to be open.
    */
   getFolderContents: function PC_getFolderContents(folderId, excludeItems, expandQueries) {
     var query = this.history.getNewQuery();
@@ -625,6 +626,8 @@ var PlacesController = {
    */
   _selectionOverlapsSystemArea: function PC__selectionOverlapsSystemArea() {
     var v = this.activeView;
+    if (!v.hasSelection)
+      return false;
     var nodes = v.getSelectionNodes();
     for (var i = 0; i < nodes.length; ++i) {
       if (this.getIndexOfNode(nodes[i]) >= v.peerDropIndex)
@@ -648,16 +651,28 @@ var PlacesController = {
     var selectedNode = v.selectedNode;
     var canInsert = this._canInsert();
     
-    // Select All
-    this._setEnabled("placesCmd_select:all", v.selType != "single");
     // Show Info
     var hasSingleSelection = v.hasSingleSelection;
     this._setEnabled("placesCmd_show:info", !inSysArea && hasSingleSelection);
+    this._updateSelectCommands();
     this._updateEditCommands(inSysArea, canInsert);
     this._updateOpenCommands(inSysArea, hasSingleSelection, selectedNode);
     this._updateSortCommands(inSysArea, hasSingleSelection, selectedNode, canInsert);
     this._updateCreateCommands(inSysArea, canInsert);
     this._updateLivemarkCommands(hasSingleSelection, selectedNode);
+  },
+  
+  /**
+   * Updates commands for selecting.
+   */
+  _updateSelectCommands: function PC__updateSelectCommands() {
+    var result = this._activeView.getResult();
+    if (result) {
+      var container = asContainer(result.root);
+      this._setEnabled("placesCmd_select:all", 
+                       this._activeView.selType != "single" && 
+                       container.childCount > 0);
+    }
   },
   
   /**
@@ -686,17 +701,32 @@ var PlacesController = {
     // selected folder (if a single folder is selected).     
     var sortingChildren = false;
     var name = result.root.title;
-    if (selectedNode && selectedNode.parent) 
+    var sortFolder = result.root;
+    if (selectedNode && selectedNode.parent) {
       name = selectedNode.parent.title;
+      sortFolder = selectedNode.parent;
+    }
     if (hasSingleSelection && this.nodeIsFolder(selectedNode)) {
       name = selectedNode.title;
+      sortFolder = selectedNode;
       sortingChildren = true;
     }
-
+    
+    // Count the children of the container. If there aren't at least two, we 
+    // don't want to enable the command since there's nothing to be sorted.
+    // We need to get the unfiltered contents of the container to make this
+    // determination, which means a new query, since the existing query may
+    // be filtered (e.g. left list). 
+    var enoughChildrenToSort = false;
+    if (this.nodeIsFolder(sortFolder)) {
+      var folder = asFolder(sortFolder);
+      var contents = this.getFolderContents(folder.folderId, false, false);
+      enoughChildrenToSort = contents.childCount > 1;
+    }
     var metadata = this._buildSelectionMetadata();
     this._setEnabled("placesCmd_sortby:name", 
-      (!inSysArea || sortingChildren) && canInsert && viewIsFolder && 
-      !("mixed" in metadata));
+      (sortingChildren || !inSysArea) && canInsert && viewIsFolder && 
+      !("mixed" in metadata) && enoughChildrenToSort);
     
     var strings = document.getElementById("placeBundle");
     var command = document.getElementById("placesCmd_sortby:name");
@@ -729,6 +759,10 @@ var PlacesController = {
     // We can open multiple links in tabs if there is either: 
     //  a) a single folder selected
     //  b) many links or folders selected
+    // XXXben - inSysArea should be removed, and generally be replaced by 
+    //          something that counts the number of selected links or the
+    //          number of links in the folder and enables the command only if
+    //          the number is less than some 'safe' amount. 
     var singleFolderSelected = hasSingleSelection && 
                                this.nodeIsFolder(selectedNode);
     this._setEnabled("placesCmd_open:tabs", 
@@ -750,6 +784,10 @@ var PlacesController = {
   
   /**
    * Looks at the data on the clipboard to see if it is paste-able. 
+   * Paste-able data is:
+   *   - in a format that the view can receive
+   *   - not a set of URIs that is entirely already present in the view, 
+   *     since we can only have one instance of a URI per container. 
    * @returns true if the data is paste-able, false if the clipboard data
    *          cannot be pasted
    */
@@ -772,7 +810,39 @@ var PlacesController = {
     if (!this._viewSupportsInsertingType(type.value))
       return false;
     try {
-      this.unwrapNodes(data, type.value);
+      var nodes = this.unwrapNodes(data, type.value);
+      
+      var ip = this.activeView.insertionPoint;
+      var contents = this.getFolderContents(ip.folderId);
+      var cc = contents.childCount;
+      
+      /**
+       * Determines whether or not a node is a first-level child of a folder. 
+       * @param   node
+       *          The node to check
+       * @returns true if the node is a child of the container at the top level, false 
+       *          otherwise
+       */
+      function nodeIsInList(node) {
+        for (var i = 0; i < cc; ++i) {
+          if (contents.getChild(i).uri == node.uri.spec)
+            return true;
+        }
+        return false;
+      }
+      
+      // Since the bookmarks data model enforces only one instance of a URI per
+      // folder, it is not possible to paste a selection into a folder where 
+      // all of the URIs already exist. Thus we need to return false to disable
+      // the command for this case. If only some of the URIs are present, we 
+      // can still paste the non-present URIs, so it's ok to enable the command. 
+      var nodesInList = 0;
+      // Sadly, this is O(N^2). 
+      for (var i = 0; i < nodes.length; ++i) {
+        if (nodeIsInList(nodes[i]))
+          ++nodesInList;
+      }
+      return (nodesInList != nodes.length);
     }
     catch (e) {
       // Unwrap nodes failed, possibly because a field that should have 
@@ -780,7 +850,7 @@ var PlacesController = {
       // parse-able as a URI. 
       return false;
     }
-    return true;
+    return false;
   },
   
   /**
@@ -833,8 +903,9 @@ var PlacesController = {
       }
     }
     
-    // New Folder
-    this._setEnabled("placesCmd_new:folder", !inSysArea && canInsertFolders && canInsert);
+    // New Folder - don't check inSysArea since we should be able to create 
+    // folders in the left list even when elements at the top are selected.
+    this._setEnabled("placesCmd_new:folder", canInsertFolders && canInsert);
     
     // New Bookmark
     this._setEnabled("placesCmd_new:bookmark", !inSysArea && canInsertURLs && canInsert);
@@ -915,17 +986,38 @@ var PlacesController = {
         metadata["remotecontainer"] = true;
     }
     
+    // Mutability is whether or not a container can have selected items
+    // inserted or reordered. It does _not_ dictate whether or not the container
+    // can have items removed from it, since some containers that aren't 
+    // reorderable can have items removed from them, e.g. a history list. 
+    //
+    // The mutability property starts out set to true, and is removed if 
+    // any component of the selection is found to be part of a readonly 
+    // container.
+    metadata["mutable"] = true;
+    
     var foundNonLeaf = false;
     var nodes = this._activeView.getSelectionNodes();
-    if (nodes.length) 
+    if (this._activeView.hasSelection) 
       var lastParent = nodes[0].parent, lastType = nodes[0].type;
+    else {
+      // If there is no selection, mutability is determined by the readonly-ness
+      // of the result root. See note above on mutability.
+      if (this.nodeIsReadOnly(this._activeView.getResult().root))
+        delete metadata["mutable"];
+    }
+    // Walk the selection, gathering metadata about the selected items.       
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       if (!this.nodeIsURI(node))
         foundNonLeaf = true;
-      if (!this.nodeIsReadOnly(node) && 
-          (node.parent && !this.nodeIsReadOnly(node.parent)))
-        metadata["mutable"] = true;
+      
+      // If there is a selection, mutability is determined by the readonly-ness
+      // of the selected item, or the parent of the selection. See note above
+      // on mutability.
+      if (this.nodeIsReadOnly(node) ||
+          (node.parent && this.nodeIsReadOnly(node.parent)))
+        delete metadata["mutable"];
       
       var uri = null;
       if (this.nodeIsURI(node))
@@ -1017,8 +1109,13 @@ var PlacesController = {
    */
   mouseLoadURI: function PC_mouseLoadURI(event) {
     var node = this._activeView.selectedURINode;
-    if (node)
-      this.browserWindow.openUILink(node.uri, event, false, false);
+    if (node) {
+      var browser = this._getBrowserWindow();
+      if (browser)      
+        browser.openUILink(node.uri, event, false, false);
+      else
+        this._openBrowserWith(node.uri);
+    }
   },
 
   /**
@@ -1107,11 +1204,22 @@ var PlacesController = {
     this.bookmarks.changeBookmarkURI(oldURI, newURI);
   },
 
-  get browserWindow() {
+  /**
+   * Gets the current active browser window.
+   */
+  _getBrowserWindow: function PC__getBrowserWindow() {
     var wm = 
         Cc["@mozilla.org/appshell/window-mediator;1"].
         getService(Ci.nsIWindowMediator);
     return wm.getMostRecentWindow("navigator:browser");
+  },
+  
+  /**
+   * Opens a new browser window, showing the specified url. 
+   */
+  _openBrowserWith: function PC__openBrowserWith(url) {
+    openDialog("chrome://browser/content/browser.xul", "_blank", 
+               "chrome,all,dialog=no", url, null, null);
   },
 
   /**
@@ -1119,8 +1227,13 @@ var PlacesController = {
    */
   openLinkInNewTab: function PC_openLinkInNewTab() {
     var node = this._activeView.selectedURINode;
-    if (node)
-      this.browserWindow.openNewTabWith(node.uri, null, null);
+    if (node) {
+      var browser = this._getBrowserWindow();
+      if (browser) 
+        browser.openNewTabWith(node.uri, null, null);
+      else
+        this._openBrowserWith(node.uri);
+    }
   },
 
   /**
@@ -1128,22 +1241,36 @@ var PlacesController = {
    */
   openLinkInNewWindow: function PC_openLinkInNewWindow() {
     var node = this._activeView.selectedURINode;
-    if (node)
-      this.browserWindow.openNewWindowWith(node.uri, null, null);
+    if (node) {
+      var browser = this._getBrowserWindow();
+      if (browser) 
+        browser.openNewWindowWith(node.uri, null, null);
+      else
+        this._openBrowserWith(node.uri);
+    }
   },
 
   /**
    * Loads the selected URL in the current window, replacing the Places page.
    */
   openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
-    LOG("openLinkInCurrentWindow");
     var node = this._activeView.selectedURINode;
-    if (node)
-      this.browserWindow.loadURI(node.uri, null, null);
+    if (node) {
+      var browser = this._getBrowserWindow();
+      if (browser)
+        browser.loadURI(node.uri, null, null);
+      else
+        this._openBrowserWith(node.uri);
+    }
   },
   
   /**
    * Opens the links in the selected folder, or the selected links in new tabs. 
+   * XXXben this needs to handle the case when there are no open browser windows
+   * XXXben this function is really long, should be split apart. The codepaths 
+   *        seem different between load folder in tabs and load selection in
+   *        tabs, too. 
+   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=331908
    */
   openLinksInTabs: function PC_openLinksInTabs() {
     var node = this._activeView.selectedNode;
@@ -1152,7 +1279,7 @@ var PlacesController = {
       var doReplace = getBoolPref("browser.tabs.loadFolderAndReplace");
       var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground");
       // Get the start index to open tabs at
-      var browser = this.browserWindow.getBrowser();
+      var browser = this._getBrowserWindow().getBrowser();
       var tabPanels = browser.browsers;
       var tabCount = tabPanels.length;
       var firstIndex;
@@ -1217,7 +1344,7 @@ var PlacesController = {
       var nodes = this._activeView.getSelectionNodes();
       for (var i = 0; i < nodes.length; ++i) {
         if (this.nodeIsURI(nodes[i]))
-          this.browserWindow.openNewTabWith(nodes[i].uri,
+          this._getBrowserWindow().openNewTabWith(nodes[i].uri,
               null, null);
       }
     }
@@ -1472,16 +1599,26 @@ var PlacesController = {
       case TYPE_X_MOZ_PLACE_CONTAINER:
       case TYPE_X_MOZ_PLACE:
       case TYPE_X_MOZ_PLACE_SEPARATOR:
+        // Data in these types has 4 parts, so if there are less than 4 parts
+        // remaining, the data blob is malformed and we should stop. 
+        if (i > (parts.length - 4))
+          break;
         nodes.push({  folderId: parseInt(parts[i++]),
                       uri: parts[i] ? this._uri(parts[i]) : null,
                       parent: parseInt(parts[++i]),
                       index: parseInt(parts[++i]) });
         break;
       case TYPE_X_MOZ_URL:
+        // See above.
+        if (i > (parts.length - 2))
+          break;
         nodes.push({  uri: this._uri(parts[i++]),
                       title: parts[i] });
         break;
       case TYPE_UNICODE:
+        // See above.
+        if (i > (parts.length - 1))
+          break;
         nodes.push({  uri: this._uri(parts[i]) });
         break;
       default:
@@ -1750,31 +1887,75 @@ var PlacesController = {
   /**
    * Paste Bookmarks and Folders from the clipboard
    */
-  paste: function() {
-    var xferable = 
-        Cc["@mozilla.org/widget/transferable;1"].
-        createInstance(Ci.nsITransferable);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE_SEPARATOR);
-    xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
-    xferable.addDataFlavor(TYPE_X_MOZ_URL);
-    xferable.addDataFlavor(TYPE_UNICODE);
-    
+  paste: function PC_paste() {
+    // Strategy:
+    // 
+    // There can be data of various types (folder, separator, link) on the 
+    // clipboard. We need to get all of that data and build edit transactions
+    // for them. This means asking the clipboard once for each type and 
+    // aggregating the results. 
+  
+    /**
+     * Constructs a transferable that can receive data of specific types.
+     * @param   types
+     *          The types of data the transferable can hold, in order of
+     *          preference.
+     * @returns The transferable.
+     */
+    function makeXferable(types) {
+      var xferable = 
+          Cc["@mozilla.org/widget/transferable;1"].
+          createInstance(Ci.nsITransferable);
+      for (var i = 0; i < types.length; ++i) 
+        xferable.addDataFlavor(types[i]);
+      return xferable;
+    }
+  
     var clipboard = 
         Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-    clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
+
+    var ip = this.activeView.insertionPoint;
+
+    var self = this;
+    /**
+     * Gets a list of transactions to perform the paste of specific types.
+     * @param   types
+     *          The types of data to form paste transactions for
+     * @returns An array of transactions that perform the paste.
+     */
+    function getTransactions(types) {
+      var xferable = makeXferable(types);
+      clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
+      
+      var data = { }, type = { };
+      try {
+        xferable.getAnyTransferData(type, data, { });
+        data = data.value.QueryInterface(Ci.nsISupportsString).data;
+        var items = self.unwrapNodes(data, type.value);
+        var transactions = [];
+        for (var i = 0; i < items.length; ++i) {
+          transactions.push(self.makeTransaction(items[i], type.value, 
+                                                 ip.folderId, ip.index, true));
+        }
+        return transactions;
+      }
+      catch (e) {
+        // getAnyTransferData will throw if there is no data of the specified
+        // type on the clipboard. 
+        // unwrapNodes will throw if the data that is present is malformed in
+        // some way. 
+        // In either case, don't fail horribly, just return no data. 
+      }
+      return [];
+    }
     
-    var data = { }, type = { };
-    xferable.getAnyTransferData(type, data, { });
-    data = data.value.QueryInterface(Ci.nsISupportsString).data;
-    data = this.unwrapNodes(data, type.value);
-    
-    var ip = this._activeView.insertionPoint;
-    var transactions = [];
-    for (var i = 0; i < data.length; ++i)
-      transactions.push(this.makeTransaction(data[i], type.value, 
-                                             ip.folderId, ip.index, true));
-    
+    // Get transactions to paste any folders, separators or links that might
+    // be on the clipboard, aggregate them and execute them. 
+    var transactions = 
+        [].concat(getTransactions([TYPE_X_MOZ_PLACE_CONTAINER]),
+                  getTransactions([TYPE_X_MOZ_PLACE_SEPARATOR]),
+                  getTransactions([TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL, 
+                                  TYPE_UNICODE]));
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     this.tm.doTransaction(txn);
   }
@@ -2124,9 +2305,6 @@ PlacesRemoveFolderTransaction.prototype = {
   _saveFolderContents: function PRFT__saveFolderContents() {
     this._transactions = [];
     var contents = PlacesController.getFolderContents(this._id, false, false);
-    // Container open status doesn't need to be reset to what it was before
-    // because it's being deleted.
-    contents.containerOpen = true;
     var ios = 
         Cc["@mozilla.org/network/io-service;1"].
         getService(Ci.nsIIOService);  
@@ -2134,19 +2312,19 @@ PlacesRemoveFolderTransaction.prototype = {
       var child = contents.getChild(i);
       var txn;
       if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-        txn = this.bookmarks.getRemoveFolderTransaction(this._id);
-        var removeTxn = new PlacesRemoveFolderTransaction(txn, this._id);
-        this._transactions.push(txn);
+        var folder = asFolder(child);
+        var removeTxn = 
+          this.bookmarks.getRemoveFolderTransaction(folder.folderId);
+        txn = new PlacesRemoveFolderTransaction(removeTxn, folder.folderId);
       }
       else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
         txn = new PlacesRemoveSeparatorTransaction(this._id, i);
-        this._transactions.push(txn);
       }
       else {
         txn = new PlacesRemoveItemTransaction(ios.newURI(child.uri, null, null),
                                               this._id, i);
-        this._transactions.push(txn);
       }
+      this._transactions.push(txn);
     }
   },
   

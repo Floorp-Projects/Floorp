@@ -27,11 +27,11 @@
   <menuitem id="placesContext_edit:copy" command="placesCmd_edit:copy"
             selection="link|links|folder|mixed"/>
   <menuitem id="placesContext_edit:paste" command="placesCmd_edit:paste"
-            selection="link|links|folder|mixed"/>
+            selection="mutable"/>
   <menuitem id="placesContext_edit:delete" command="placesCmd_edit:delete"
             selection="link|links|folder|mixed"/>
   <menuseparator id="placesContext_editSeparator"
-            selection="link|links|folder|mixed"/>
+            selection="link|links|folder|mixed|mutable"/>
   <menuitem id="placesContext_select:all" command="placesCmd_select:all"
             selection="multiselect"/>
   <menuseparator id="placesContext_selectSeparator"
