@@ -41,7 +41,6 @@ DEPTH=../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
 
 DIRS = module loader $(NULL)
 
@@ -55,8 +54,8 @@ MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1 
 
-LOCAL_INCLUDES = $(PYTHON_INCLUDES)
-EXTRA_LIBS += $(PYTHON_LIBS)
+LOCAL_INCLUDES = $(MOZ_PYTHON_INCLUDES)
+EXTRA_LIBS += $(MOZ_PYTHON_LIBS)
 
 EXPORTS		= PyXPCOM.h
 

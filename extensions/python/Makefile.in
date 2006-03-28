@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -14,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mark Hammond <mhammond@skippinet.com.au>.
-# Portions created by the Initial Developer are Copyright (C) 2002
+# Netscape Communications Corporation.
+# Portions created by the Initial Developer are Copyright (C) 1998
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Mark Hammond
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,43 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# The PyXPCOM component loader
-
-DEPTH=../../../../..
-
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= pyloader
-IS_COMPONENT	= 1
-REQUIRES	= pyxpcom xpcom string xpcom_obsolete $(NULL)
-MOZILLA_INTERNAL_API = 1
-FORCE_SHARED_LIB = 1 
-FORCE_USE_PIC = 1
-
-LOCAL_INCLUDES = $(MOZ_PYTHON_INCLUDES)
-
-EXTRA_LIBS += $(MOZ_PYTHON_LIBS)
-
-ifeq ($(OS_ARCH), WINNT)
-EXTRA_LIBS += $(DIST)/lib/pyxpcom.lib
-else
-EXTRA_LIBS += -lpyxpcom
-endif
-
-
-CPPSRCS		=		   \
-		pyloader.cpp	   \
-		$(NULL)
-
-include $(topsrcdir)/config/config.mk
+DIRS		= $(MOZ_PYTHON_EXTENSIONS)
 
 include $(topsrcdir)/config/rules.mk
-CXXFLAGS += -DPYTHON_SO=\"libpython$(MOZ_PYTHON_VER_DOTTED).so\"
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
-
-clobber::
-	rm -f *.ilk

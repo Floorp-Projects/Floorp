@@ -41,20 +41,20 @@ DEPTH=../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
+pyexecdir	= @libdir@/python$(MOZ_PYTHON_VER_DOTTED)/site-packages
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= _xpcom$(PYTHON_DEBUG_SUFFIX)
+LIBRARY_NAME	= _xpcom$(MOZ_PYTHON_DEBUG_SUFFIX)
 REQUIRES	= pyxpcom xpcom string $(NULL)
 MOZILLA_INTERNAL_API = 1
 FORCE_SHARED_LIB = 1 
 FORCE_USE_PIC = 1 
 
-DLL_SUFFIX=$(PYTHON_DLL_SUFFIX)
-LOCAL_INCLUDES = $(PYTHON_INCLUDES)
+DLL_SUFFIX=$(MOZ_PYTHON_DLL_SUFFIX)
+LOCAL_INCLUDES = $(MOZ_PYTHON_INCLUDES)
 
-EXTRA_LIBS += $(PYTHON_LIBS)
+EXTRA_LIBS += $(MOZ_PYTHON_LIBS)
 
 ifeq ($(OS_ARCH), WINNT)
 EXTRA_LIBS += $(DIST)/lib/pyxpcom.lib
@@ -92,7 +92,7 @@ endif
 install::
 ifneq ($(OS_ARCH),WINNT)
 	$(SYSINSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom
-	mv $(DISTDIR)$(pyexecdir)/xpcom/$(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom/_xpcom$(PYTHON_DLL_SUFFIX)
+	mv $(DISTDIR)$(pyexecdir)/xpcom/$(SHARED_LIBRARY) $(DISTDIR)$(pyexecdir)/xpcom/_xpcom$(MOZ_PYTHON_DLL_SUFFIX)
 endif
 
 clobber::

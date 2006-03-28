@@ -49,4 +49,4 @@ include $(topsrcdir)/config/rules.mk
 
 check::
 	@echo "Running Python XPCOM tests"
-	@$(PYTHON)$(PYTHON_DEBUG_SUFFIX) $(srcdir)/regrtest.py
+	@$(MOZ_PYTHON)$(MOZ_PYTHON_DEBUG_SUFFIX) $(srcdir)/regrtest.py
