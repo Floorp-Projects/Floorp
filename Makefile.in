@@ -111,8 +111,12 @@ tier_2_dirs	= \
 		xpcom \
 		$(NULL)
 
+ifneq (,$(MOZ_NO_XPCOM_OBSOLETE)$(MOZ_XPINSTALL))
+tier_2_dirs += modules/libreg
+endif
+
 ifndef MOZ_NO_XPCOM_OBSOLETE
-tier_2_dirs += modules/libreg xpcom/obsolete
+tier_2_dirs += xpcom/obsolete
 endif
 
 ifdef NS_TRACE_MALLOC
