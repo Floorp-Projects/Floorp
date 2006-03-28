@@ -37,7 +37,7 @@
 #ifndef CAIRO_PLATFORM_H
 #define CAIRO_PLATFORM_H
 
-#if defined(_MSC_VER)
+#if defined(XP_WIN)
 
 #define cairo_public extern __declspec(dllexport)
 #define CCALLBACK
