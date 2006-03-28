@@ -9,7 +9,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= thebes
 LIBRARY_NAME	= thebes
 LIBXUL_LIBRARY	= 1
-EXPORT_LIBRARAY	= 1
+EXPORT_LIBRARY	= 1
 
 REQUIRES = \
 	cairo \
@@ -44,6 +44,9 @@ CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		$(NULL)
 
 _OS_LIBS	= usp10 ole32
+ifdef GNU_CXX
+_OS_LIBS	+= gdi32 uuid
+endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
