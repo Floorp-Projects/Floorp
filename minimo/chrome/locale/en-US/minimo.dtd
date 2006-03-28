@@ -43,7 +43,11 @@
 <!ENTITY contextCopy.label            "Copy" >
 <!ENTITY contextPaste.label           "Paste" >
 
-<!-- menu urlabr view options --> 
+<!-- Page modifiers --> 
+
+<!ENTITY togglet_google.label          "View as Google XHTML" >
+
+<!-- deprecated...--> 
 
 <!ENTITY decksb.label                  "Search del.icio.us" >
 <!ENTITY decksearch.label              "Google Search" >
