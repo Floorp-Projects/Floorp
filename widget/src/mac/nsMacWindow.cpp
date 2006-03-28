@@ -383,7 +383,16 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                       kWindowCollapseBoxAttribute | kWindowResizableAttributes;
                     break;
 
-                  default:
+                  case eBorderStyle_none: // 0
+                    // kSimpleWindowClass (18) is only defined in SDK >=
+                    // 10.3, but it works with runtime >= 10.1.  It's
+                    // borderless and chromeless, which is more visually
+                    // appropriate in Aqua than kPlainWindowClass, which
+                    // gives a 1px black border.
+                    windowClass = 18; // kSimpleWindowClass
+                    break;
+
+                  default: // not reached
                     NS_WARNING("Unhandled combination of window flags");
                     break;
                 }
