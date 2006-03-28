@@ -1824,12 +1824,11 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   if (!FindInReadable(NS_LITERAL_STRING(">"),beginclosebody,endclosebody))
     return NS_ERROR_FAILURE;
 
-  nsAutoString bodyTag(Substring(beginbody,endclosebody));//<bodyXXXX >
   // Truncate at the end of the body tag
-  
   // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
-  bodyTag.ReplaceSubstring(NS_LITERAL_STRING("body").get(),
-                           NS_LITERAL_STRING("div").get());
+  nsAutoString bodyTag;
+  bodyTag.AssignLiteral("<div ");
+  bodyTag.Append(Substring(endbody, endclosebody));
 
   nsCOMPtr<nsIDOMRange> range;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
