@@ -27,7 +27,7 @@
 
 <!ENTITY downloadMediaCaption.label  "Download Media">
 <!ENTITY useDownloadDir.label        "Use Download Folder">
-<!ENTITY dontAskForLaunch.label      "Download to Storage Card, if available">
+<!ENTITY dontAskForLaunch.label      "Always download to storage card when available">
 <!ENTITY setSaveDirectory.label      "Set Save Directory">
 
 <!-- Home pane --> 
@@ -50,7 +50,7 @@
 <!ENTITY useSWKeyboard.label         "Use Software Keyboard">
 <!ENTITY dumpJSConsole.label         "Dump JS console at shutdown">
 <!ENTITY useDiskCache.label          "Use Disk Cache">
-<!ENTITY storeCacheStorageCard.label "Store Cache on Storage Card">
+<!ENTITY storeCacheStorageCard.label "Use Disk Cache when storage card is available">
 <!ENTITY enablePreFetching.label     "Enable Pre-Fetching">
 <!ENTITY cacheSettings.label         "Cache">
 <!ENTITY cacheSize.label             "Cache Size (KB)">
