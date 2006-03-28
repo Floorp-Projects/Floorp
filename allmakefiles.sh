@@ -1537,6 +1537,9 @@ for extension in $MOZ_EXTENSIONS; do
             extensions/xmlterm/tests/Makefile
             extensions/xmlterm/ui/Makefile
             " ;;
+        python ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/python/Makefile
+            " ;;
         python/xpcom ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/python/xpcom/Makefile
             extensions/python/xpcom/components/Makefile

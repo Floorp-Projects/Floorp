@@ -4278,6 +4278,7 @@ MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PROFILESHARING=1
 MOZ_PSM=1
+MOZ_PYTHON_EXTENSIONS="xpcom"
 MOZ_PYTHON=
 MOZ_PYTHON_DEBUG_SUFFIX=
 MOZ_PYTHON_DLL_SUFFIX=
@@ -6860,17 +6861,21 @@ fi
 AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
-dnl Python XPCOM bindings - if enabled, we must locate Python.
+dnl Two ways to enable Python support:
+dnl   --enable-extensions=python # select all available.
+dnl    (MOZ_PYTHON_EXTENSIONS contains the list of extensions)
+dnl or:
+dnl   --enable-extensions=python/xpcom,... # select individual ones
+dnl
+dnl If either is used, we locate the Python to use.
 dnl ========================================================
 dnl
-dnl Allow PYTHON to point to the Python interpreter to use.
-dnl If not set, we use whatever Python we can find.  Setting
-dnl PYTHON will allow you to build from any Python version you nominate
-dnl
-dnl If future Python based extensions are added, some of this should
-dnl be split out appropriately.
-if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
-    dnl If PYTHON is in the environment, we use that
+dnl If 'python' appears anywhere in the extensions list, go lookin'...
+if test `echo "$MOZ_EXTENSIONS" | grep -c python` -ne 0; then
+    dnl Allow PYTHON to point to the Python interpreter to use
+    dnl (note that it must be the python executable - which we
+    dnl run to locate the relevant paths etc)
+    dnl If not set, we use whatever Python we can find.
     if test -z "$PYTHON"; then
         AC_PATH_PROG(PYTHON, python, :)
     fi
@@ -6939,8 +6944,10 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
     else
         MOZ_PYTHON_DEBUG_SUFFIX=
     fi
-    AC_MSG_RESULT(Building PyXPCOM using Python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX)
+    AC_MSG_RESULT(Building Python extensions using python-$MOZ_PYTHON_VER_DOTTED from $MOZ_PYTHON_PREFIX)
 fi
+dnl Later we may allow MOZ_PYTHON_EXTENSIONS to be specified, but not necessary now.
+AC_SUBST(MOZ_PYTHON_EXTENSIONS)
 AC_SUBST(MOZ_PYTHON)
 AC_SUBST(MOZ_PYTHON_PREFIX)
 AC_SUBST(MOZ_PYTHON_INCLUDES)

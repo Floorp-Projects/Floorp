@@ -52,7 +52,7 @@ endif
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-pyexecdir	= @libdir@/python$(PYTHON_VER_DOTTED)/site-packages
+pyexecdir	= @libdir@/python$(MOZ_PYTHON_VER_DOTTED)/site-packages
 
 PYSRCS_XPCOM = \
 	__init__.py \
