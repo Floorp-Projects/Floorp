@@ -387,16 +387,28 @@ const gPopupBlockerObserver = {
       item.parentNode.removeChild(item);
       item = next;
     }
-    var blockedPopupsSeparator;
+
+    var foundUsablePopupURI = false;
     var pageReport = gBrowser.selectedBrowser.pageReport;
-    if (pageReport && pageReport.length > 0) {
-      blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
-      blockedPopupsSeparator.removeAttribute("hidden");
+    if (pageReport) {
       for (var i = 0; i < pageReport.length; ++i) {
         var popupURIspec = pageReport[i].popupWindowURI.spec;
+
+        // Sometimes the popup URI that we get back from the pageReport
+        // isn't useful (for instance, netscape.com's popup URI ends up
+        // being "http://www.netscape.com", which isn't really the URI of
+        // the popup they're trying to show).  This isn't going to be
+        // useful to the user, so we won't create a menu item for it.
         if (popupURIspec == "" || popupURIspec == "about:blank" ||
             popupURIspec == uri.spec)
           continue;
+
+        // Because of the short-circuit above, we may end up in a situation
+        // in which we don't have any usable popup addresses to show in
+        // the menu, and therefore we shouldn't show the separator.  However,
+        // since we got past the short-circuit, we must've found at least
+        // one usable popup URI and thus we'll turn on the separator later.
+        foundUsablePopupURI = true;
 
         var menuitem = document.createElement("menuitem");
         var label = bundle_browser.getFormattedString("popupShowPopupPrefix",
@@ -413,10 +425,15 @@ const gPopupBlockerObserver = {
         aEvent.target.appendChild(menuitem);
       }
     }
-    else {
-      blockedPopupsSeparator = document.getElementById("blockedPopupsSeparator");
-      blockedPopupsSeparator.setAttribute("hidden", "true");
-    }
+
+    // Show or hide the separator, depending on whether we added any
+    // showable popup addresses to the menu.
+    var blockedPopupsSeparator =
+      document.getElementById("blockedPopupsSeparator");
+    if (foundUsablePopupURI)
+      blockedPopupsSeparator.removeAttribute("hidden");
+    else
+      blockedPopupsSeparator.setAttribute("hidden", true);
 
     var blockedPopupDontShowMessage = document.getElementById("blockedPopupDontShowMessage");
     var showMessage = gPrefService.getBoolPref("privacy.popups.showBrowserMessage");
