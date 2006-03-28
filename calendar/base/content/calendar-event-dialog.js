@@ -303,6 +303,17 @@ function saveDialog(item)
             dueDate = dueDate.getInTimezone(kDefaultTimezone);
         }
         setItemProperty(item, "dueDate",     dueDate);
+
+        var percentCompleteInteger = 0;
+        if (getElementValue("percent-complete-textbox") != "") {
+            percentCompleteInteger = parseInt(getElementValue("percent-complete-textbox"));
+        }
+        if (percentCompleteInteger < 0) {
+            percentCompleteInteger = 0;
+        } else if (percentCompleteInteger > 100) {
+            percentCompleteInteger = 100;
+        }
+        setItemProperty(item, "PERCENT-COMPLETE", percentCompleteInteger);
     }
 
     /* recurrence */
@@ -347,8 +358,6 @@ function saveDialog(item)
     if (item.status == "COMPLETED" && isToDo(item)) {
         item.completedDate = jsDateToDateTime(getElementValue("completed-date-picker"));
     }
-
-    setItemProperty(item, "PERCENT-COMPLETE", getElementValue("percent-complete-menulist"));
 
     /* attendence */
     item.removeAllAttendees();
@@ -819,7 +828,17 @@ function loadDetails() {
 
     /* Task percent complete */
     if (isToDo(item)) {
-        setElementValue("percent-complete-menulist", item.getProperty("PERCENT-COMPLETE"));
+        var percentCompleteInteger = 0;
+        var percentCompleteProperty = item.getProperty("PERCENT-COMPLETE");
+        if (percentCompleteProperty != null) {
+            percentCompleteInteger = parseInt(percentCompleteProperty);
+        }
+        if (percentCompleteInteger < 0) {
+            percentCompleteInteger = 0;
+        } else if (percentCompleteInteger > 100) {
+            percentCompleteInteger = 100;
+        }
+        setElementValue("percent-complete-textbox", percentCompleteInteger);
     }
 
     /* Priority */
@@ -906,24 +925,24 @@ function updateToDoStatus(status, passedInCompletedDate)
     }
 
     // remember the original values
-    var oldPercentComplete = getElementValue("percent-complete-menulist");
+    var oldPercentComplete = getElementValue("percent-complete-textbox");
     var oldCompletedDate   = getElementValue("completed-date-picker");
 
     switch (status) {
     case "":
     case "NONE":
         document.getElementById("todo-status").selectedIndex = 0;
-        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-textbox");
         disableElement("percent-complete-label");
         break;
     case "CANCELLED":
         document.getElementById("todo-status").selectedIndex = 4;
-        disableElement("percent-complete-menulist");
+        disableElement("percent-complete-textbox");
         disableElement("percent-complete-label");
         break;
     case "COMPLETED":
         document.getElementById("todo-status").selectedIndex = 3;
-        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-textbox");
         enableElement("percent-complete-label");
         // if there isn't a completedDate, set it to now
         if (!completedDate)
@@ -932,22 +951,22 @@ function updateToDoStatus(status, passedInCompletedDate)
     case "IN-PROCESS":
         document.getElementById("todo-status").selectedIndex = 2;
         disableElement("completed-date-picker");
-        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-textbox");
         enableElement("percent-complete-label");
         break;
     case "NEEDS-ACTION":
         document.getElementById("todo-status").selectedIndex = 1;
-        enableElement("percent-complete-menulist");
+        enableElement("percent-complete-textbox");
         enableElement("percent-complete-label");
         break;
     }
 
     if (status == "COMPLETED") {
-        setElementValue("percent-complete-menulist", "100");
+        setElementValue("percent-complete-textbox", "100");
         setElementValue("completed-date-picker", completedDate);
         enableElement("completed-date-picker");
     } else {
-        setElementValue("percent-complete-menulist", oldPercentComplete);
+        setElementValue("percent-complete-textbox", oldPercentComplete);
         setElementValue("completed-date-picker", oldCompletedDate);
         disableElement("completed-date-picker");
     }

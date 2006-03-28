@@ -304,21 +304,7 @@
             </menulist>
             <datepicker id="completed-date-picker" class="todo-only"
                         value="" disabled="true"/>
-            <menulist id="percent-complete-menulist" class="todo-only">
-              <menupopup>
-                <menuitem label="0"   value="0"/>
-                <menuitem label="10"  value="10"/>
-                <menuitem label="20"  value="20"/>
-                <menuitem label="30"  value="30"/>
-                <menuitem label="40"  value="40"/>
-                <menuitem label="50"  value="50"/>
-                <menuitem label="60"  value="60"/>
-                <menuitem label="70"  value="70"/>
-                <menuitem label="80"  value="80"/>
-                <menuitem label="90"  value="90"/>
-                <menuitem label="100" value="100"/>
-              </menupopup>
-            </menulist>
+            <textbox id="percent-complete-textbox" size="3" oninput="validateIntegers(event);"/>
             <label id="percent-complete-label" class="todo-only"
                    value="&newtodo.percentcomplete.label;"/>
           </hbox>
