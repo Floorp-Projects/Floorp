@@ -101,8 +101,15 @@
    <?xml-stylesheet href='chrome://global/skin/' type='text/css'?> \
    <window title='[XForms]'\
      xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' \
-     onkeypress='if (event.keyCode == event.DOM_VK_ESCAPE) window.close();' \
-     onload='document.documentElement.lastChild.previousSibling \
+     onkeypress='if (event.keyCode == event.DOM_VK_ESCAPE) window.close();' "
+
+#define MESSAGE_WINDOW_UI_PART1_WITH_SRC \
+     "onload='document.documentElement.lastChild.previousSibling \
+             .firstChild.nextSibling.focus();'>"
+
+#define MESSAGE_WINDOW_UI_PART1_WITHOUT_SRC \
+     "onload='window.sizeToContent(); \
+             document.documentElement.lastChild.previousSibling \
              .firstChild.nextSibling.focus();'>"
 
 #define MESSAGE_WINDOW_UI_PART2 \
@@ -187,7 +194,6 @@ private:
   nsresult HandleEphemeralMessage(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent);
   nsresult HandleModalAndModelessMessage(nsIDOMDocument* aDoc, nsAString& aLevel);
   void CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget);
-  void AppendCSSOptions(nsIDOMViewCSS* aViewCSS, nsAString& aOptions);
   PRBool HandleInlineAlert(nsIDOMEvent* aEvent);
   nsresult ConstructMessageWindowURL(nsAString& aData,
                                      PRBool aIsLink,
@@ -716,15 +722,12 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
                                                                instanceData);
 
   nsAutoString options;
-  options.AppendLiteral(MESSAGE_WINDOW_PROPERTIES);
+  options.AssignLiteral(MESSAGE_WINDOW_PROPERTIES);
 
   nsAutoString src;
   if (!hasBinding) {
     mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
   }
-
-  nsCOMPtr<nsIDOMViewCSS> cssView(do_QueryInterface(internal));
-  AppendCSSOptions(cssView, options);
 
   // order of precedence is single-node binding, linking attribute then
   // inline text
@@ -737,7 +740,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
   } else {
     // Cloning the content of the xf:message and creating a
     // dialog for it.
-    options.AppendLiteral(",dialog,chrome,dependent");
+    options.AppendLiteral(",dialog,chrome,dependent,width=200,height=200");
     nsCOMPtr<nsIDOMDocument> ddoc;
     nsCOMPtr<nsIDOMDOMImplementation> domImpl;
     rv = aDoc->GetImplementation(getter_AddRefs(domImpl));
@@ -820,65 +823,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
   // it gets reused.  Using "_blank" makes sure we get a new window each time.
   internal->OpenDialog(src, NS_LITERAL_STRING("_blank"), options, arg,
                        getter_AddRefs(messageWindow));
-  if (!isModal) {
-    nsCOMPtr<nsIDOMWindowInternal> msgWinInternal =
-      do_QueryInterface(messageWindow);
-    if (msgWinInternal)
-      msgWinInternal->Focus();
-  }
   return NS_OK;
-}
-
-void
-nsXFormsMessageElement::AppendCSSOptions(nsIDOMViewCSS* aViewCSS, nsAString& aOptions)
-{
-  if (!aViewCSS)
-    return;
-  // Try to get the calculated size of the message element. It will
-  // be used for the new window.
-  //XXX This could be extended also for 'top', 'left' etc. properties.
-  PRInt32 computedWidth = 0;
-  PRInt32 computedHeight = 0;
-  
-  nsAutoString tmp;
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> styles;
-  aViewCSS->GetComputedStyle(mElement, tmp, getter_AddRefs(styles));
-  if (styles) {
-    nsCOMPtr<nsIDOMCSSValue> cssWidth;
-    styles->GetPropertyCSSValue(NS_LITERAL_STRING("width"),
-                                getter_AddRefs(cssWidth));
-    nsCOMPtr<nsIDOMCSSPrimitiveValue> pvalueWidth(do_QueryInterface(cssWidth));
-    float width = 0;
-    if (pvalueWidth) {
-      PRUint16 type;
-      pvalueWidth->GetPrimitiveType(&type);
-      if (type == nsIDOMCSSPrimitiveValue::CSS_PX)
-        pvalueWidth->GetFloatValue(type, &width);
-    }
-
-    nsCOMPtr<nsIDOMCSSValue> cssHeight;
-    styles->GetPropertyCSSValue(NS_LITERAL_STRING("height"),
-                                getter_AddRefs(cssHeight));
-    nsCOMPtr<nsIDOMCSSPrimitiveValue> pvalueHeight(do_QueryInterface(cssHeight));
-    float height = 0;
-    if (pvalueHeight) {
-      PRUint16 type;
-      pvalueHeight->GetPrimitiveType(&type);
-      if (type == nsIDOMCSSPrimitiveValue::CSS_PX)
-        pvalueHeight->GetFloatValue(type, &height);
-    }
-    computedWidth = NS_STATIC_CAST(PRInt32, width);
-    computedHeight = NS_STATIC_CAST(PRInt32, height);
-  }
-
-  if (computedWidth > 0 && computedHeight > 0) {
-    nsAutoString options;
-    options.AppendLiteral(",innerWidth=");
-    options.AppendInt(computedWidth);
-    options.AppendLiteral(",innerHeight=");
-    options.AppendInt(computedHeight);
-    aOptions.Append(options);
-  }
 }
 
 nsresult
@@ -903,8 +848,12 @@ nsXFormsMessageElement::ConstructMessageWindowURL(nsAString& aData,
 
   nsAutoString xul;
   xul.AssignLiteral(MESSAGE_WINDOW_UI_PART1);
-  if (aIsLink)
+  if (aIsLink) {
+    xul.AppendLiteral(MESSAGE_WINDOW_UI_PART1_WITH_SRC);
     xul.AppendLiteral("<browser flex='1' src='");
+  } else {
+    xul.AppendLiteral(MESSAGE_WINDOW_UI_PART1_WITHOUT_SRC);
+  }
 
   xul.Append(aData);
 
