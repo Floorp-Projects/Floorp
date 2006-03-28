@@ -75,7 +75,16 @@ ReadIntegerAttr(nsIDOMElement *elem, const nsAString &attrName, PRInt32 *result)
 
 nsMetricsConfig::nsMetricsConfig()
 {
+}
+
+PRBool
+nsMetricsConfig::Init()
+{
+  if (!mEventSet.Init()) {
+    return PR_FALSE;
+  }
   Reset();
+  return PR_TRUE;
 }
 
 void
@@ -83,6 +92,8 @@ nsMetricsConfig::Reset()
 {
   // By default, we have no event limit, but all collectors are disabled
   // until we're told by the server to enable them.
+  NS_ASSERTION(mEventSet.IsInitialized(), "nsMetricsConfig::Init not called");
+
   mEventSet.Clear();
   mEventLimit = PR_INT32_MAX;
   mUploadInterval = NS_DEFAULT_UPLOAD_INTERVAL;
@@ -104,6 +115,8 @@ nsMetricsConfig::Load(nsIFile *file)
   //   <limit events="200"/>
   //   <upload interval="600"/>
   // </config>
+
+  NS_ASSERTION(mEventSet.IsInitialized(), "nsMetricsConfig::Init not called");
 
   PRInt64 fileSize;
   nsresult rv = file->GetFileSize(&fileSize);
@@ -213,5 +226,6 @@ PRBool
 nsMetricsConfig::IsEventEnabled(const nsAString &eventNS,
                                 const nsAString &eventName) const
 {
+  NS_ASSERTION(mEventSet.IsInitialized(), "nsMetricsConfig::Init not called");
   return mEventSet.GetEntry(MakeKey(eventNS, eventName)) != nsnull;
 }
