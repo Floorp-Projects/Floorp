@@ -423,7 +423,8 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
         focusController->MoveFocus(PR_FALSE, nsnull);
       }
     } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
-      *aHandled = nsXFormsUtils::HandleBindingException(mElement);
+      *aHandled = nsXFormsUtils::HandleFatalError(mElement,
+                                                  NS_LITERAL_STRING("XFormsBindingException"));
     }
   }
   

@@ -1567,7 +1567,8 @@ nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
 
 /* static */
 PRBool
-nsXFormsUtils::HandleBindingException(nsIDOMElement *aElement)
+nsXFormsUtils::HandleFatalError(nsIDOMElement    *aElement,
+                                const nsAString  &aName)
 {
   if (!aElement) {
     return PR_FALSE;
@@ -1610,13 +1611,15 @@ nsXFormsUtils::HandleBindingException(nsIDOMElement *aElement)
   // Show popup
   nsCOMPtr<nsIDOMWindow> messageWindow;
   rv = internal->OpenDialog(NS_LITERAL_STRING("chrome://xforms/content/bindingex.xul"),
-                            NS_LITERAL_STRING("XFormsBindingException"),
+                            aName,
                             NS_LITERAL_STRING("modal,dialog,chrome,dependent"),
-                            nsnull, getter_AddRefs(messageWindow));
+                            nsnull,
+                            getter_AddRefs(messageWindow));
   return NS_SUCCEEDED(rv);
 }
 
-/* static */ PRBool
+/* static */
+PRBool
 nsXFormsUtils::AreEntitiesEqual(nsIDOMNamedNodeMap *aEntities1,
                                 nsIDOMNamedNodeMap *aEntities2)
 {

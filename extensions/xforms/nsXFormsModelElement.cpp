@@ -466,10 +466,15 @@ nsXFormsModelElement::InitializeInstances()
         }
       }
       if (NS_FAILED(rv)) {
-        // this is a fatal error (XXX)
+        // this is a fatal error
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-        return NS_OK;
+        rv = NS_OK;
+        if (!nsXFormsUtils::HandleFatalError(mElement,
+                                             NS_LITERAL_STRING("XFormsLinkException"))) {
+            rv = NS_ERROR_FAILURE;
+        }
+        return rv;
       }
     }
   }
@@ -566,7 +571,8 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
     Reset();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
-    *aHandled = nsXFormsUtils::HandleBindingException(mElement);
+    *aHandled = nsXFormsUtils::HandleFatalError(mElement,
+                                                NS_LITERAL_STRING("XFormsBindingException"));
   } else {
     *aHandled = PR_FALSE;
   }

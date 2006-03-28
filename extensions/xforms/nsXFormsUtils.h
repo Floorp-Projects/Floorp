@@ -463,18 +463,18 @@ public:
                                              const PRBool      aOnlyXForms,
                                              nsIDOMElement    *aCaller,
                                              nsIDOMElement   **aElement);
-
-
+  
   /**
-   * Shows an error dialog for the user the first time an
-   * xforms-binding-exception event is received by the control.
+   * Shows an error dialog for fatal errors.
    *
    * The dialog can be disabled via the |xforms.disablePopup| preference.
    *
    * @param aElement         Element the exception occured at
+   * @param aName            The name to use for the new window
    * @return                 Whether handling was successful
    */
-  static PRBool HandleBindingException(nsIDOMElement *aElement);
+  static NS_HIDDEN_(PRBool) HandleFatalError(nsIDOMElement   *aElement,
+                                             const nsAString &aName);
 
   /**
    * Returns whether the given NamedNodeMaps of Entities are equal
