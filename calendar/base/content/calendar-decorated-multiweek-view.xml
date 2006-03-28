@@ -128,6 +128,16 @@
                        // Just refresh, the goToDay function will notice
                        this.calView.goToDay(this.calView.selectedDay);
                        break;
+                   case "calendar.timezone.local":
+                       var viewElem = document.getAnonymousElementByAttribute(
+                                      this.calView, "anonid", "view-element");
+                       viewElem.timezone = subj.getCharPref(pref);
+                       if (!this.calView.startDay || !this.calView.endDay) {
+                           // Don't refresh if we're not initialized
+                           return;
+                       }
+                       this.calView.goToDay(this.calView.selectedDay);
+                       break;
 
                    default:
                        break;

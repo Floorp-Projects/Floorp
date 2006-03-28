@@ -82,12 +82,8 @@ calendarPrefObserver.prototype =
                 }
                 break;
 
-            case "calendar.local-time-zone":
+            case "calendar.timezone.local":
                 gDefaultTimezone = subject.getCharPref( prefName );
-
-                if (this.CalendarPreferences.calendarWindow.currentView != null) {
-                  this.CalendarPreferences.calendarWindow.currentView.refresh();
-                }
                 refreshEventTree();
                 toDoUnifinderRefresh();
                 break;
