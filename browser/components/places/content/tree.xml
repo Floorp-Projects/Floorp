@@ -459,7 +459,9 @@
               index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
             }
           }
-          return new InsertionPoint(asFolder(container).folderId, index, orientation);
+          if (PlacesController.nodeIsFolder(container)) 
+            return new InsertionPoint(asFolder(container).folderId, index, orientation);
+          return null;
         ]]></body>
       </method>
       
@@ -840,6 +842,8 @@
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
           var ip = this._self._getInsertionPoint(index, orientation);
+          if (!ip)
+            throw Cr.NS_ERROR_NOT_AVAILABLE;
           if (sourceView == this._self) {
             // We are moving nodes within the same view, we need to adjust the
             // insertion point to take into account the fact that rows may

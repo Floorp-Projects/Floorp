@@ -134,16 +134,36 @@ var PlacesOrganizer = {
    * Called when a place folder is selected in the left pane.
    */
   onPlaceSelected: function PP_onPlaceSelected(event) {
-    var node = asQuery(this._places.selectedNode);
-    if (!node)
+    if (!this._places.hasSelection)
       return;
+    var node = asQuery(this._places.selectedNode);
     LOG("NODEURI: " + node.uri);
-
     this._content.place = node.uri;
 
     Groupers.setGroupingOptions(this._content.getResult(), true);
 
     this._setHeader("showing", node.title);
+  },
+  
+  /**
+   * Handle clicks on the tree. If the user middle clicks on a URL, load that 
+   * URL according to rules. Single clicks or modified clicks do not result in 
+   * any special action, since they're related to selection. 
+   * @param   event
+   *          The mouse event.
+   */
+  onTreeClick: function PP_onURLClicked(event) {
+    var v = PlacesController.activeView;
+    if (v.hasSingleSelection && event.button == 1) {
+      if (PlacesController.nodeIsURI(v.selectedNode))
+        PlacesController.mouseLoadURI(event);
+      else if (PlacesController.nodeIsContainer(v.selectedNode)) {
+        // The command execution function will take care of seeing the 
+        // selection is a folder/container and loading its contents in 
+        // tabs for us. 
+        PlacesController.openLinksInTabs();
+      }
+    }
   },
 
   /**

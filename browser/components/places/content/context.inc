@@ -23,13 +23,13 @@
   <menuseparator id="placesContext_newSeparator"
             selection="mutable"/>
   <menuitem id="placesContext_edit:cut" command="placesCmd_edit:cut"
-            selection="link|links|folder|mixed"/>
+            selection="separator|link|links|folder|mixed"/>
   <menuitem id="placesContext_edit:copy" command="placesCmd_edit:copy"
-            selection="link|links|folder|mixed"/>
+            selection="separator|link|links|folder|mixed"/>
   <menuitem id="placesContext_edit:paste" command="placesCmd_edit:paste"
             selection="mutable"/>
   <menuitem id="placesContext_edit:delete" command="placesCmd_edit:delete"
-            selection="link|links|folder|mixed"/>
+            selection="separator|link|links|folder|mixed"/>
   <menuseparator id="placesContext_editSeparator"
             selection="link|links|folder|mixed|mutable"/>
   <menuitem id="placesContext_select:all" command="placesCmd_select:all"

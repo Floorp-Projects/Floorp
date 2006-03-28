@@ -192,6 +192,8 @@
 <!ENTITY historySearchCmd.accesskey "s">
 <!ENTITY historyShowCmd.label "View All History...">
 <!ENTITY historyShowCmd.accesskey "v">
+<!ENTITY placesToolbarButton.label "Show Bookmarks &amp; History">
+<!ENTITY placesToolbarButton.tooltip "Show Bookmarks &amp; History">
 <!-- XXX remove below if places sticks -->
 <!ENTITY goMenu.label "Go">
 <!ENTITY goMenu.accesskey "g">

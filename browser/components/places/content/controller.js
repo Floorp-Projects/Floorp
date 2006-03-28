@@ -435,12 +435,14 @@ var PlacesController = {
    *          false otherwise. 
    */
   _hasRemovableSelection: function PC__hasRemovableSelection() {
-    NS_ASSERT(this._activeView, "No active view - cannot paste!");
-    if (!this._activeView)
+    var v = this.activeView;
+    NS_ASSERT(v, "No active view - cannot paste!");
+    if (!v)
       return false;
-    var nodes = this._activeView.getSelectionNodes();
+    var nodes = v.getSelectionNodes();
+    var root = v.getResult().root;
     for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent || this._activeView.getResult().root;
+      var parent = nodes[i].parent || root;
       // We don't call nodeIsReadOnly here, because nodeIsReadOnly means that
       // a node has children that cannot be edited, reordered or removed. Here,
       // we don't care if a node's children can't be reordered or edited, just
@@ -456,6 +458,8 @@ var PlacesController = {
           return !readOnly;
       }
     }
+    if (!v.hasSelection)
+      return !this.nodeIsReadOnly(root);
     return true;
   },
   
@@ -488,16 +492,20 @@ var PlacesController = {
    * Determines whether or not nodes can be inserted relative to the selection.
    */
   _canInsert: function PC__canInsert() {
-    NS_ASSERT(this._activeView, "No active view - cannot insert!");
-    if (!this._activeView)
+    var v = this.activeView;
+    NS_ASSERT(v, "No active view - cannot insert!");
+    if (!v)
       return false;
-    var nodes = this._activeView.getSelectionNodes();
+    var nodes = v.getSelectionNodes();
+    var root = v.getResult().root;
     for (var i = 0; i < nodes.length; ++i) {
-      var parent = nodes[i].parent || this._activeView.getResult().root;
+      var parent = nodes[i].parent || root;
       if (this.nodeIsReadOnly(parent))
         return false;
     }
-    return true;
+    // Even if there's no selection, we need to check the root. Otherwise 
+    // commands may be enabled for history views when nothing is selected. 
+    return !this.nodeIsReadOnly(root);
   },
   
   /**
@@ -602,13 +610,12 @@ var PlacesController = {
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsRemoteContainer: function PC_nodeIsRemoteContainer(node) {
-      const NHRN = Ci.nsINavHistoryResultNode;
-      if (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
-        return true;
-      if (node.type == NHRN.RESULT_TYPE_FOLDER)
-        return asContainer(node).remoteContainerType != "";
-      
-      return false;
+    const NHRN = Ci.nsINavHistoryResultNode;
+    if (node.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
+      return true;
+    if (this.nodeIsFolder(node))
+      return asContainer(node).remoteContainerType != "";
+    return false;
   },
   
   /**
@@ -629,8 +636,11 @@ var PlacesController = {
     if (!v.hasSelection)
       return false;
     var nodes = v.getSelectionNodes();
+    var root = v.getResult().root;
     for (var i = 0; i < nodes.length; ++i) {
-      if (this.getIndexOfNode(nodes[i]) >= v.peerDropIndex)
+      // We also don't care about nodes that aren't at the root level.
+      if (nodes[i].parent != root || 
+          this.getIndexOfNode(nodes[i]) >= v.peerDropIndex)
         return false;
     }
     return true;
@@ -804,18 +814,24 @@ var PlacesController = {
         Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
     
-    var data = { }, type = { };
-    xferable.getAnyTransferData(type, data, { });
-    data = data.value.QueryInterface(Ci.nsISupportsString).data;
-    if (!this._viewSupportsInsertingType(type.value))
-      return false;
     try {
+      // getAnyTransferData can throw if no data is available. 
+      var data = { }, type = { };
+      xferable.getAnyTransferData(type, data, { });
+      data = data.value.QueryInterface(Ci.nsISupportsString).data;
+      if (!this._viewSupportsInsertingType(type.value))
+        return false;
+      
+      // unwrapNodes will throw if the data blob is malformed. 
       var nodes = this.unwrapNodes(data, type.value);
       
       var ip = this.activeView.insertionPoint;
+      if (!ip)
+        return false;
       var contents = this.getFolderContents(ip.folderId);
       var cc = contents.childCount;
       
+      var self = this;
       /**
        * Determines whether or not a node is a first-level child of a folder. 
        * @param   node
@@ -824,6 +840,10 @@ var PlacesController = {
        *          otherwise
        */
       function nodeIsInList(node) {
+        // Anything that isn't a URI is paste-able many times (folders, 
+        // separators)
+        if (!self.nodeIsURI(node))
+          return false;
         for (var i = 0; i < cc; ++i) {
           if (contents.getChild(i).uri == node.uri.spec)
             return true;
@@ -935,7 +955,7 @@ var PlacesController = {
         var uri = this._uri(selectedNode.uri);
         isLivemarkItem = 
           this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
-        if (isLivemarkItem)
+        if (isLivemarkItem && selectedNode.parent)
           var name = selectedNode.parent.title;
         if (!isLivemarkItem && this.nodeIsFolder(selectedNode)) {
           var folderId = asFolder(selectedNode).folderId;
@@ -973,17 +993,20 @@ var PlacesController = {
   _buildSelectionMetadata: function PC__buildSelectionMetadata() {
     var metadata = { };
     
-    var hasSingleSelection = this._activeView.hasSingleSelection;
-    if (this._activeView.selectedURINode && hasSingleSelection)
+    var v = this.activeView;
+    var hasSingleSelection = v.hasSingleSelection;
+    if (v.selectedURINode && hasSingleSelection)
       metadata["link"] = true;
     if (hasSingleSelection) {
-      var selectedNode = this._activeView.selectedNode;
+      var selectedNode = v.selectedNode;
       if (this.nodeIsFolder(selectedNode))
         metadata["folder"] = true;
       if (this.nodeIsQuery(selectedNode))
         metadata["query"] = true;
       if (this.nodeIsRemoteContainer(selectedNode))
         metadata["remotecontainer"] = true;
+      if (this.nodeIsSeparator(selectedNode))
+        metadata["separator"] = true;
     }
     
     // Mutability is whether or not a container can have selected items
@@ -996,27 +1019,39 @@ var PlacesController = {
     // container.
     metadata["mutable"] = true;
     
-    var foundNonLeaf = false;
-    var nodes = this._activeView.getSelectionNodes();
-    if (this._activeView.hasSelection) 
+    var self = this;
+    /**
+     * Determines whether or not a node is a readonly folder. 
+     * @param   node
+     *          The node to test.
+     * @returns true if the node is a readonly folder.
+     */
+    function folderIsReadOnly(node) {
+      return self.nodeIsFolder(node) && 
+             self.bookmarks.getFolderReadonly(asFolder(node).folderId);
+    }
+    
+    var foundNonURI = false;
+    var nodes = v.getSelectionNodes();
+    var root = v.getResult().root;
+    if (v.hasSelection) 
       var lastParent = nodes[0].parent, lastType = nodes[0].type;
     else {
       // If there is no selection, mutability is determined by the readonly-ness
       // of the result root. See note above on mutability.
-      if (this.nodeIsReadOnly(this._activeView.getResult().root))
+      if (folderIsReadOnly(root))
         delete metadata["mutable"];
     }
     // Walk the selection, gathering metadata about the selected items.       
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       if (!this.nodeIsURI(node))
-        foundNonLeaf = true;
+        foundNonURI = true;
       
       // If there is a selection, mutability is determined by the readonly-ness
       // of the selected item, or the parent of the selection. See note above
       // on mutability.
-      if (this.nodeIsReadOnly(node) ||
-          (node.parent && this.nodeIsReadOnly(node.parent)))
+      if (this.nodeIsReadOnly(node) || folderIsReadOnly(node.parent || root))
         delete metadata["mutable"];
       
       var uri = null;
@@ -1034,11 +1069,11 @@ var PlacesController = {
         metadata["mixed"] = true;
     }
     
-    if (this._activeView.selType != "single")
+    if (v.selType != "single")
       metadata["multiselect"] = true;
-    if (!foundNonLeaf && nodes.length > 1)
+    if (!foundNonURI && nodes.length > 1)
       metadata["links"] = true;
-    
+
     return metadata;
   },
   
@@ -1075,6 +1110,7 @@ var PlacesController = {
     
     // Determine availability/enabled state of commands
     var metadata = this._buildSelectionMetadata();
+    
     var lastVisible = null;
     for (var i = 0; i < popup.childNodes.length; ++i) {
       var item = popup.childNodes[i];
@@ -1111,7 +1147,7 @@ var PlacesController = {
     var node = this._activeView.selectedURINode;
     if (node) {
       var browser = this._getBrowserWindow();
-      if (browser)      
+      if (browser)
         browser.openUILink(node.uri, event, false, false);
       else
         this._openBrowserWith(node.uri);
@@ -1367,6 +1403,8 @@ var PlacesController = {
     var value = { value: bundle.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
       var ip = view.insertionPoint;
+      if (!ip)
+        throw Cr.NS_ERROR_NOT_AVAILABLE;
       var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
       this.tm.doTransaction(txn);
@@ -1380,6 +1418,8 @@ var PlacesController = {
    */
   newSeparator: function PC_newSeparator() {
     var ip = this._activeView.insertionPoint;
+    if (!ip)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
     var txn = new PlacesInsertSeparatorTransaction(ip.folderId, ip.index);
     this.tm.doTransaction(txn);
     this._activeView.focus();
@@ -1485,7 +1525,7 @@ var PlacesController = {
     // Other containers are history queries, just delete from history
     // history deletes are not undoable.
     var nodes = this._activeView.getSelectionNodes();
-    for (i = 0; i < nodes.length; ++i) {
+    for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       var bhist = this.history.QueryInterface(Ci.nsIBrowserHistory);
       if (this.nodeIsHost(node))
@@ -1915,6 +1955,8 @@ var PlacesController = {
         Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
 
     var ip = this.activeView.insertionPoint;
+    if (!ip)
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
 
     var self = this;
     /**

@@ -17,3 +17,6 @@ menuitem.spell-suggestion {
   font-size: 12px !important;
 }
 
+#PersonalToolbar > #bookmarksBarShowPlaces > .toolbarbutton-text {
+  visibility: collapse;
+}
