@@ -4481,13 +4481,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
 #ifdef IBMBIDI
   // XXX TODO: - this explanation may not be accurate
-  //           - need to better explain what aPos->mPreferLeft means
-  //             for two frames on the same line
   //           - need to better explain for what happens when you move
   //             from the end of a line to the beginning of the next 
   //             despite not making a move logically within the text.
-  //           - need to explain why XORing with the embedding level
-  //             achieves the desired effect
   //
   // When you move your caret by in some visual direction, and you find the
   // new position is at the edge of a line (beginning or end), you usually
@@ -4514,11 +4510,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // one "on the left" - the first frame on the next
   // line.
   //
-  // Now, it seems the PeekOffset() method does not _use_ the mPreferLeft
-  // value, but it does _set_ it for the caller, and this must be done
-  // consistently along calls to PeekOffset of nsTextFrames on the _same_
-  // line as well as on different lines.
-  //
   // Note:
   // eDirPrevious means 'left-then-up' if the containing block is LTR, 
   // 'right-then-up' if it is RTL.
@@ -4530,11 +4521,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
   PRBool isReverseDirection = (NS_GET_EMBEDDING_LEVEL(this) & 1) != (NS_GET_BASE_LEVEL(this) & 1);
 
-  if ((eSelectCharacter == aPos->mAmount)
-      || (eSelectWord == aPos->mAmount))
-    // this 'flip' will be in effect only for this frame, not
-    // for recursive calls to PeekOffset()
-    aPos->mPreferLeft ^= isReverseDirection;
 #endif
 
   if (!aPos || !mContent)
@@ -4574,11 +4560,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more continuation\n");
       return NS_ERROR_INVALID_ARG;
     }
-    // undoing the RTL flipping of mPreferLeft for the delegation
-    // to the next frame
-    if ((eSelectCharacter == aPos->mAmount)
-        || (eSelectWord == aPos->mAmount))
-      aPos->mPreferLeft ^= isReverseDirection;
     return nextContinuation->PeekOffset(aPresContext, aPos);
   }
  
@@ -4587,7 +4568,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   //             to the content indices, why not handle the cases of
   //             eSelectBeginLine/eSelectEndLine 
   //           - why can't we make the hand-off to the parent class' method
-  //             before the of aPos->mStartOffset and aPos->mPreferLeft?
+  //             before correcting aPos->mStartOffset?
  
   if (aPos->mAmount == eSelectLine || aPos->mAmount == eSelectBeginLine 
       || aPos->mAmount == eSelectEndLine || aPos->mAmount == eSelectParagraph)
@@ -4788,15 +4769,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
-          // undoing the RTL flipping of mPreferLeft in the case where 
-          // the inner call will do it itself;
-          // note that mAmount, as well as mPreferLeft might have been modified
-          // by the call to GetFrameFromDirection (if we are moving to another line)
-          if (eSelectCharacter == aPos->mAmount)
-            aPos->mPreferLeft ^= isReverseDirection;
-          result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
-          if (NS_FAILED(result))
-            return result;
+          return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
         }
       }
       else
@@ -4963,12 +4936,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           result = GetFrameFromDirection(aPresContext, aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
-          // undoing the RTL flipping of mPreferLeft in the case where
-          // the inner call will do it itself;
-          // note that mAmount, as well as mPreferLeft might have been modified
-          // by the call to GetFrameFromDirection (if we are moving to another line)
-          if (eSelectWord == aPos->mAmount)
-            aPos->mPreferLeft ^= isReverseDirection;
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
           else if (aPos->mDirection == eDirNext)
