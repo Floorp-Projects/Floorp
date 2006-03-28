@@ -50,7 +50,6 @@
 #include "nsDataHashtable.h"
 
 class nsNavHistory;
-class nsNavHistoryResult;
 class nsIDateTimeFormat;
 class nsIWritablePropertyBag;
 class nsNavHistoryQuery;
@@ -92,6 +91,7 @@ private:
   const PRInt64 mValue;
 };
 
+
 // Declare methods for implementing nsINavBookmarkObserver
 // and nsINavHistoryObserver (some methods, such as BeginUpdateBatch overlap)
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER                               \
@@ -106,6 +106,94 @@ private:
   NS_IMETHOD OnClearHistory();                                          \
   NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
                            const nsAString &aValue);
+
+
+// nsNavHistoryResult
+//
+//    nsNavHistory creates this object and fills in mChildren (by getting
+//    it through GetTopLevel()). Then FilledAllResults() is called to finish
+//    object initialization.
+//
+//    This object implements nsITreeView so you can just set it to a tree
+//    view and it will work. This object also observes the necessary history
+//    and bookmark events to keep itself up-to-date.
+
+#define NS_NAVHISTORYRESULT_IID \
+  { 0x455d1d40, 0x1b9b, 0x40e6, { 0xa6, 0x41, 0x8b, 0xb7, 0xe8, 0x82, 0x23, 0x87 } }
+
+class nsNavHistoryResult : public nsSupportsWeakReference,
+                           public nsINavHistoryResult,
+                           public nsINavBookmarkObserver,
+                           public nsINavHistoryObserver
+{
+public:
+  static nsresult NewHistoryResult(nsINavHistoryQuery** aQueries,
+                                   PRUint32 aQueryCount,
+                                   nsNavHistoryQueryOptions* aOptions,
+                                   nsNavHistoryContainerResultNode* aRoot,
+                                   nsNavHistoryResult** result);
+
+  // the tree viewer can go faster if it can bypass XPCOM
+  friend class nsNavHistoryResultTreeViewer;
+
+#ifdef MOZILLA_1_8_BRANCH
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
+#else
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
+#endif
+
+  nsresult PropertyBagFor(nsISupports* aObject,
+                          nsIWritablePropertyBag** aBag);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSINAVHISTORYRESULT
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER
+
+  void AddEverythingObserver(nsNavHistoryQueryResultNode* aNode);
+  void AddBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+  void RemoveEverythingObserver(nsNavHistoryQueryResultNode* aNode);
+  void RemoveBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
+
+  // returns the view. NOT-ADDREFED. May be NULL if there is no view
+  nsINavHistoryResultViewer* GetView() const
+    { return mView; }
+
+public:
+  // two-stage init, use NewHistoryResult to construct
+  nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot);
+  ~nsNavHistoryResult();
+  nsresult Init(nsINavHistoryQuery** aQueries,
+                PRUint32 aQueryCount,
+                nsNavHistoryQueryOptions *aOptions);
+
+  nsRefPtr<nsNavHistoryContainerResultNode> mRootNode;
+
+  nsCOMArray<nsINavHistoryQuery> mQueries;
+  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+
+  // One of nsNavHistoryQueryOptions.SORY_BY_* This is initialized to mOptions.sortingMode,
+  // but may be overridden if the user clicks on one of the columns.
+  PRUint32 mSortingMode;
+
+  nsCOMPtr<nsINavHistoryResultViewer> mView;
+
+  // property bags for all result nodes, see PropertyBagFor
+  nsInterfaceHashtable<nsISupportsHashKey, nsIWritablePropertyBag> mPropertyBags;
+
+  // node observers
+  PRBool mIsHistoryObserver;
+  PRBool mIsBookmarksObserver;
+  nsTArray<nsNavHistoryQueryResultNode*> mEverythingObservers;
+  typedef nsTArray<nsNavHistoryFolderResultNode*> FolderObserverList;
+  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkObservers;
+  FolderObserverList* BookmarkObserversForId(PRInt64 aFolderId, PRBool aCreate);
+
+  void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
+                               PRBool aExpand);
+
+  void InvalidateTree();
+};
+
 
 // nsNavHistoryResultNode
 //
@@ -702,93 +790,6 @@ protected:
                                   PRBool* aDescending = nsnull);
 
   nsresult FormatFriendlyTime(PRTime aTime, nsAString& aResult);
-};
-
-
-// nsNavHistoryResult
-//
-//    nsNavHistory creates this object and fills in mChildren (by getting
-//    it through GetTopLevel()). Then FilledAllResults() is called to finish
-//    object initialization.
-//
-//    This object implements nsITreeView so you can just set it to a tree
-//    view and it will work. This object also observes the necessary history
-//    and bookmark events to keep itself up-to-date.
-
-#define NS_NAVHISTORYRESULT_IID \
-  { 0x455d1d40, 0x1b9b, 0x40e6, { 0xa6, 0x41, 0x8b, 0xb7, 0xe8, 0x82, 0x23, 0x87 } }
-
-class nsNavHistoryResult : public nsSupportsWeakReference,
-                           public nsINavHistoryResult,
-                           public nsINavBookmarkObserver,
-                           public nsINavHistoryObserver
-{
-public:
-  static nsresult NewHistoryResult(nsINavHistoryQuery** aQueries,
-                                   PRUint32 aQueryCount,
-                                   nsNavHistoryQueryOptions* aOptions,
-                                   nsNavHistoryContainerResultNode* aRoot,
-                                   nsNavHistoryResult** result);
-
-  // the tree viewer can go faster if it can bypass XPCOM
-  friend class nsNavHistoryResultTreeViewer;
-
-#ifdef MOZILLA_1_8_BRANCH
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
-#else
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULT_IID)
-#endif
-
-  nsresult PropertyBagFor(nsISupports* aObject,
-                          nsIWritablePropertyBag** aBag);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSINAVHISTORYRESULT
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER
-
-  void AddEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void AddBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
-  void RemoveEverythingObserver(nsNavHistoryQueryResultNode* aNode);
-  void RemoveBookmarkObserver(nsNavHistoryFolderResultNode* aNode, PRInt64 aFolder);
-
-  // returns the view. NOT-ADDREFED. May be NULL if there is no view
-  nsINavHistoryResultViewer* GetView() const
-    { return mView; }
-
-public:
-  // two-stage init, use NewHistoryResult to construct
-  nsNavHistoryResult(nsNavHistoryContainerResultNode* mRoot);
-  ~nsNavHistoryResult();
-  nsresult Init(nsINavHistoryQuery** aQueries,
-                PRUint32 aQueryCount,
-                nsNavHistoryQueryOptions *aOptions);
-
-  nsRefPtr<nsNavHistoryContainerResultNode> mRootNode;
-
-  nsCOMArray<nsINavHistoryQuery> mQueries;
-  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
-
-  // One of nsNavHistoryQueryOptions.SORY_BY_* This is initialized to mOptions.sortingMode,
-  // but may be overridden if the user clicks on one of the columns.
-  PRUint32 mSortingMode;
-
-  nsCOMPtr<nsINavHistoryResultViewer> mView;
-
-  // property bags for all result nodes, see PropertyBagFor
-  nsInterfaceHashtable<nsISupportsHashKey, nsIWritablePropertyBag> mPropertyBags;
-
-  // node observers
-  PRBool mIsHistoryObserver;
-  PRBool mIsBookmarksObserver;
-  nsTArray<nsNavHistoryQueryResultNode*> mEverythingObservers;
-  typedef nsTArray<nsNavHistoryFolderResultNode*> FolderObserverList;
-  nsDataHashtable<nsTrimInt64HashKey, FolderObserverList* > mBookmarkObservers;
-  FolderObserverList* BookmarkObserversForId(PRInt64 aFolderId, PRBool aCreate);
-
-  void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
-                               PRBool aExpand);
-
-  void InvalidateTree();
 };
 
 #endif // nsNavHistoryResult_h_
