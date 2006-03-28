@@ -65,6 +65,11 @@ var PlacesOrganizer = {
     if ("arguments" in window)
       placeURI = window.arguments[0];
     selectPlaceURI(placeURI);
+    
+    // Initialize the active view so that all commands work properly without
+    // the user needing to explicitly click in a view (since the search box is
+    // focused by default). 
+    PlacesController.activeView = this._places;
 
     // Set up the search UI.
     PlacesSearchBox.init();

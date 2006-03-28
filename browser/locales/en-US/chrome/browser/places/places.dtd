@@ -106,15 +106,15 @@
 <!ENTITY cmd.open_window.label
   "Open in a New Window">
 <!ENTITY cmd.open_window.accesskey
-  "W">
+  "N">
 <!ENTITY cmd.open_tab.label
   "Open in a New Tab">
 <!ENTITY cmd.open_tab.accesskey
-  "T">
+  "w">
 <!ENTITY cmd.open_tabs.label
   "Open in Tabs">
 <!ENTITY cmd.open_tabs.accesskey
-  "s">
+  "O">
 <!ENTITY cmd.show_infoWin.label
   "Properties">
 <!ENTITY cmd.show_infoWin.accesskey
