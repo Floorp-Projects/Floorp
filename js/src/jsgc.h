@@ -260,8 +260,13 @@ struct JSGCArenaStats {
     uint32  maxarenas;      /* maximun number of allocated arenas */
     uint32  nthings;        /* number of allocates JSGCThing */
     uint32  maxthings;      /* maximum number number of allocates JSGCThing */
+    uint32  totalnew;       /* number of succeeded calls to js_NewGCThing */
     uint32  freelen;        /* freeList lengths */
     uint32  recycle;        /* number of things recycled through freeList */
+    uint32  totalarenas;    /* total number of arenas with live things that
+                               GC scanned so far */
+    uint32  totalfreelen;   /* total number of things that GC put to free
+                               list so far */
 };
 #endif
 
