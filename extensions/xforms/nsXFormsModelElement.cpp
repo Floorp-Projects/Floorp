@@ -1546,6 +1546,8 @@ nsXFormsModelElement::InitializeControls()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  mChangedNodes.Clear();
+
   return NS_OK;
 }
 
