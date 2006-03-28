@@ -449,15 +449,34 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     totalMaxThings = 0;
     totalBytes = 0;
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
-        JSGCArenaStats *stats = &rt->gcArenaList[i].stats;
-        fprintf(fp, "ARENA LIST %u(thing size %lu):\n",
+        JSGCArenaList *list = &rt->gcArenaList[i];
+        JSGCArenaStats *stats = &list->stats;
+        if (stats->maxarenas == 0) {
+            fprintf(fp, "ARENA LIST %u (thing size %lu): NEVER USED\n",
+                    i, UL(GC_FREELIST_NBYTES(i)));
+            continue;
+        }
+        fprintf(fp, "ARENA LIST %u (thing size %lu):\n",
                 i, UL(GC_FREELIST_NBYTES(i)));
         fprintf(fp, "                     arenas: %lu\n", UL(stats->narenas));
         fprintf(fp, "                 max arenas: %lu\n", UL(stats->maxarenas));
         fprintf(fp, "                     things: %lu\n", UL(stats->nthings));
         fprintf(fp, "                 max things: %lu\n", UL(stats->maxthings));
         fprintf(fp, "                  free list: %lu\n", UL(stats->freelen));
+        fprintf(fp, "          free list density: %.1f%%\n",
+                stats->narenas == 0
+                ? 0.0
+                : (100.0 * list->thingSize * (jsdouble)stats->freelen /
+                   (GC_THINGS_SIZE * (jsdouble)stats->narenas)));
+        fprintf(fp, "  average free list density: %.1f%%\n",
+                stats->totalarenas == 0
+                ? 0.0
+                : (100.0 * list->thingSize * (jsdouble)stats->totalfreelen /
+                   (GC_THINGS_SIZE * (jsdouble)stats->totalarenas)));
         fprintf(fp, "                   recycles: %lu\n", UL(stats->recycle));
+        fprintf(fp, "        recycle/alloc ratio: %.2f\n",
+                (jsdouble)stats->recycle /
+                (jsdouble)(stats->totalnew - stats->recycle));
         totalThings += stats->nthings;
         totalMaxThings += stats->maxthings;
         totalBytes += GC_FREELIST_NBYTES(i) * stats->nthings;
@@ -791,6 +810,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
 #endif
     METER(if (flags & GCF_LOCK) rt->gcStats.lockborn++);
     JS_UNLOCK_GC(rt);
+    METER(++arenaList->stats.totalnew);
     return thing;
 
 fail:
@@ -2206,6 +2226,8 @@ restart:
                 arenaList->freeList = freeList;
                 ap = &a->prev;
                 METER(arenaList->stats.freelen += nfree);
+                METER(arenaList->stats.totalfreelen += nfree);
+                METER(++arenaList->stats.totalarenas);
             }
             limit = GC_THINGS_SIZE;
         } while ((a = *ap) != NULL);
