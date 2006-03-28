@@ -71,7 +71,7 @@ CPPSRCS += nsLeakDetector.cpp
 REQUIRES	+= boehm
 endif
 
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS		+= nsMacUtilsImpl.cpp
 endif
 
@@ -130,7 +130,7 @@ ifdef GC_LEAK_DETECTOR
 XPIDLSRCS       += nsILeakDetector.idl
 endif
 
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 XPIDLSRCS	+= nsIMacUtils.idl
 endif
 

@@ -48,7 +48,7 @@ FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
 LIBRARY_NAME=XUL

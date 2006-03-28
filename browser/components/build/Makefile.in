@@ -103,8 +103,9 @@ ifdef MOZ_PLACES
 EXTRA_DSO_LDOPTS += $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
 endif
 
-# Need to link to CoreFoundation for Mac Migrators (PList reading code)
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+# Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
+# GTK2: Need to link with glib for GNOME shell service
+ifneq (,$(filter mac cocoa gtk2,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
   $(TK_LIBS) \
   $(NULL)
