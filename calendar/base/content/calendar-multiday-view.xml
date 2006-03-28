@@ -149,8 +149,9 @@
           while (topbox.lastChild)
               topbox.removeChild(topbox.lastChild);
 
-          var formatter = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
-                                    .getService(nsIScriptableDateFormat);
+          var formatter = 
+              Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+              .getService(Components.interfaces.nsIScriptableDateFormat);
           var timeString;
           var theMin = this.mStartMin;
           var theHour = Math.floor(theMin / 60);
@@ -170,9 +171,9 @@
               if (dur != 60) {
                   box = makeTimeBox("", dur * this.mPixPerMin);
               } else {
-                  timeString = formatter.FormatTime("", 
-                                   nsIScriptableDateFormat.timeFormatNoSeconds,
-                                   theHour, 0, 0);
+                  timeString = formatter.FormatTime("",
+                               Components.interfaces.nsIScriptableDateFormat
+                               .timeFormatNoSeconds, theHour, 0, 0);
                   box = makeTimeBox(timeString, dur * this.mPixPerMin);
               }
 
@@ -1209,13 +1210,14 @@
           var endhr = Math.floor(realendmin / 60);
           var endmin = realendmin % 60;
 
-          var formatter = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
-                                    .getService(nsIScriptableDateFormat);
+          var formatter = 
+              Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+              .getService(Components.interfaces.nsIScriptableDateFormat);
           var startstr = formatter.FormatTime("", 
-                             nsIScriptableDateFormat.timeFormatNoSeconds,
+                             Components.interfaces.nsIScriptableDateFormat.timeFormatNoSeconds,
                              starthr, startmin, 0);
           var endstr = formatter.FormatTime("", 
-                           nsIScriptableDateFormat.timeFormatNoSeconds,
+                           Components.interfaces.nsIScriptableDateFormat.timeFormatNoSeconds,
                            endhr, endmin, 0);
 
           this.fgboxes.startlabel.setAttribute("value", startstr);
