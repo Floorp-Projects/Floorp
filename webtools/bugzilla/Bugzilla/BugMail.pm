@@ -246,6 +246,7 @@ sub ProcessOneBug {
     my $diffheader = "";
     my @diffparts;
     my $lastwho = "";
+    my @changedfields;
     foreach my $ref (@$diffs) {
         my ($who, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
         my $diffpart = {};
@@ -271,7 +272,9 @@ sub ProcessOneBug {
         $diffpart->{'fieldname'} = $fieldname;
         $diffpart->{'text'} = $difftext;
         push(@diffparts, $diffpart);
+        push(@changedfields, $what);
     }
+    $values{'changed_fields'} = join(' ', @changedfields);
 
     my $deptext = "";
 
@@ -625,6 +628,11 @@ sub sendMail {
     $substs{"component"} = $values{'component'};
     $substs{"keywords"} = $values{'keywords'};
     $substs{"severity"} = $values{'bug_severity'};
+    $substs{"status"} = $values{'bug_status'};
+    $substs{"priority"} = $values{'priority'};
+    $substs{"assignedto"} = $values{'assigned_to'};
+    $substs{"targetmilestone"} = $values{'target_milestone'};
+    $substs{"changedfields"} = $values{'changed_fields'};
     $substs{"summary"} = $values{'short_desc'};
     my (@headerrel, @watchingrel);
     while (my ($rel, $bits) = each %{$relRef}) {

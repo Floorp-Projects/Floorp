@@ -76,6 +76,11 @@ X-Bugzilla-Component: %component%
 X-Bugzilla-Keywords: %keywords%
 X-Bugzilla-Severity: %severity%
 X-Bugzilla-Who: %changer%
+X-Bugzilla-Status: %status%
+X-Bugzilla-Priority: %priority%
+X-Bugzilla-Assigned-To: %assignedto%
+X-Bugzilla-Target-Milestone: %targetmilestone%
+X-Bugzilla-Changed-Fields: %changedfields%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
