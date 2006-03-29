@@ -2102,6 +2102,9 @@ nsChildView::GetThebesSurface()
 
 - (void)dealloc
 {
+  if (sLastViewEntered == self)
+    sLastViewEntered = nil;
+  
   [super dealloc];    // This sets the current port to _savePort (which should be
                       // a valid port, checked with the assertion above.
   SetPort(NULL);      // Bullet-proof against future changes in NSQDView
@@ -2677,13 +2680,13 @@ nsChildView::GetThebesSurface()
 
 static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
                                     nsMouseEvent::reasonType aReason,
-                                    NSPoint localEventLocation,
+                                    NSPoint* localEventLocation,
                                     nsChildView* receiver)
 {
   nsEventStatus status;
   nsMouseEvent event(isTrusted, msg, w, aReason);
-  event.refPoint.x = nscoord((PRInt32)localEventLocation.x);
-  event.refPoint.y = nscoord((PRInt32)localEventLocation.y);
+  event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
+  event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
   receiver->DispatchEvent(&event, status);
   return status;
 }
@@ -2696,7 +2699,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
     NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
     NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
     // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
     
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
@@ -2714,7 +2717,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
     NSPoint eventLocation = [theEvent locationInWindow];
     NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
     // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
     
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
@@ -2732,7 +2735,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
     NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
     NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
     // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
     
     // don't continue because this isn't a standard NSView mouseExited: call
     return;
@@ -2742,7 +2745,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
     NSPoint eventLocation = [theEvent locationInWindow];
     NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
     // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, &localEventLocation, mGeckoChild);
     
     // Now we need to send NS_MOUSE_ENTERED to whatever view we're over now.
     // Otherwise that view won't get get the Cocoa mouseEntered: if it was a
