@@ -46,7 +46,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsIPlatformCharset.h"
 
 #include "nsNetUtil.h"
 
@@ -269,16 +268,6 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
     if (net_NormalizeFileURL(spec, buf))
         specPtr = &buf;
 #endif
-
-    nsCAutoString urlCharset;
-    // We should set file system charset until bug 278161 is fixed.
-    nsCOMPtr <nsIPlatformCharset> platformCharset =
-        do_GetService(NS_PLATFORMCHARSET_CONTRACTID);
-    if (platformCharset) {
-        platformCharset->GetCharset(kPlatformCharsetSel_FileName, urlCharset);
-        if (!urlCharset.IsEmpty())
-            charset = urlCharset.get();
-    }
 
     nsresult rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
                             *specPtr, charset, baseURI);

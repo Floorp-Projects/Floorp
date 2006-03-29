@@ -42,6 +42,7 @@
 #include "nsURLHelper.h"
 #include "nsEscape.h"
 #include "nsILocalFile.h"
+#include "nsNativeCharsetUtils.h"
 
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
@@ -49,17 +50,19 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     // NOTE: This is identical to the implementation in nsURLHelperOSX.cpp
 
     nsresult rv;
-    nsCAutoString ePath;
+    nsAutoString path;
 
-    // construct URL spec from native file path
-    rv = aFile->GetNativePath(ePath);
+    // construct URL spec from  file path
+    rv = aFile->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString escPath;
     NS_NAMED_LITERAL_CSTRING(prefix, "file://");
         
     // Escape the path with the directory mask
-    if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+    NS_ConvertUTF16toUTF8 ePath(path);
+    if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced+esc_AlwaysCopy,
+                     escPath))
         escPath.Insert(prefix, 0);
     else
         escPath.Assign(prefix + ePath);
@@ -113,8 +116,22 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     
     NS_UnescapeURL(path);
 
-    // assuming path is encoded in the native charset
-    rv = localFile->InitWithNativePath(path);
+    if (IsUTF8(path)) {
+        // speed up the start-up where UTF-8 is the native charset
+        // (e.g. on recent Linux distributions)
+        if (NS_IsNativeUTF8())
+            rv = localFile->InitWithNativePath(path);
+        else
+            rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
+            // XXX In rare cases, a valid UTF-8 string can be valid as a native 
+            // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
+            // However, the chance is very low that a meaningful word in a legacy
+            // encoding is valid as UTF-8.
+    }
+    else 
+        // if path is not in UTF-8, assume it is encoded in the native charset
+        rv = localFile->InitWithNativePath(path);
+
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(*result = localFile);

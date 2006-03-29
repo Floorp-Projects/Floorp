@@ -65,6 +65,7 @@ NS_COM PRInt32 NS_ConvertWtoA(const PRUnichar *aStrInW, int aBufferSizeOut,
 #endif
 NS_COM nsresult NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output);
 NS_COM nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output);
+NS_COM PRBool NS_IsNativeUTF8();
 
 /**
  * internal
