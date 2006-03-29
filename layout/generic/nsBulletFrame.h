@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for list-item bullets */
+
 #ifndef nsBulletFrame_h___
 #define nsBulletFrame_h___
 

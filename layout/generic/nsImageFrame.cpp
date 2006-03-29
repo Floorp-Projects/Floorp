@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for replaced elements with bitmap image data */
+
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
 #include "nsImageFrame.h"

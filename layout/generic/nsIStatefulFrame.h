@@ -1,3 +1,8 @@
+/*
+ * interface for rendering objects whose state is saved in
+ * session-history (back-forward navigation)
+ */
+
 #ifndef _nsIStatefulFrame_h
 #define _nsIStatefulFrame_h
 

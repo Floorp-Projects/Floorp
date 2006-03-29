@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object to wrap rendering objects that should be scrollable */
+
 #ifndef nsGfxScrollFrame_h___
 #define nsGfxScrollFrame_h___
 

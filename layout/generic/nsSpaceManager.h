@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * class that manages regions of 2-D space, originally designed
+ * generally but actually specific to space occupied by floats
+ */
+
 #ifndef nsSpaceManager_h___
 #define nsSpaceManager_h___
 

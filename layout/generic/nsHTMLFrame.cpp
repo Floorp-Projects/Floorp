@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object that goes directly inside the document's scrollbars */
+
 #include "nsIServiceManager.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"

@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* derived class of nsBlockFrame; distinction barely relevant anymore */
+
 #include "nsAreaFrame.h"
 #include "nsBlockBandData.h"
 #include "nsStyleContext.h"

@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * interface for rendering objects for replaced elements containing a
+ * document, such as <frame>, <iframe>, and some <object>s
+ */
+
 #ifndef nsIFrameFrame_h___
 #define nsIFrameFrame_h___
 

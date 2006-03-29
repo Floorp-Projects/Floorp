@@ -38,6 +38,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* base class of all rendering objects */
+
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 #include "nsFrameList.h"

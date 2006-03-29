@@ -44,6 +44,9 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+
+/* state and methods used while laying out a single line of a block frame */
+
 #ifndef nsLineLayout_h___
 #define nsLineLayout_h___
 

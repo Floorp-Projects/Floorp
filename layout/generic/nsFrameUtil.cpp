@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* utilities for regression tests based on frame tree comparison */
+ 
 #include "nsIFrameUtil.h"
 #include "nsFrame.h"
 #include "nsString.h"

@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * interface for rendering objects that manually create subtrees of
+ * anonymous content
+ */
 
 #ifndef nsIAnonymousContentCreator_h___
 #define nsIAnonymousContentCreator_h___

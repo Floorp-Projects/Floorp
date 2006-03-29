@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* state used in reflow of block frames */
+
 #include "nsBlockReflowContext.h"
 #include "nsBlockReflowState.h"
 #include "nsBlockFrame.h"

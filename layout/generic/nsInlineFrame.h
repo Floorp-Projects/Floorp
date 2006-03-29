@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for CSS display:inline objects */
+
 #ifndef nsInlineFrame_h___
 #define nsInlineFrame_h___
 

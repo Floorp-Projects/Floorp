@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for replaced elements with bitmap image data */
+
 #ifndef nsImageFrame_h___
 #define nsImageFrame_h___
 

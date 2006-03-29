@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* class for maintaining a linked list of child frames */
+
 #ifndef nsFrameList_h___
 #define nsFrameList_h___
 

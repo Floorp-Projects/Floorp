@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* code for HTML client-side image maps */
+
 #ifndef nsImageMap_h___
 #define nsImageMap_h___
 

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* interface for all rendering objects */
+
 #ifndef nsIFrame_h___
 #define nsIFrame_h___
 

@@ -41,6 +41,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering objects for replaced elements implemented by a plugin */
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"

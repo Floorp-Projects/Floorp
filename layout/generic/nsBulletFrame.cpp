@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for list-item bullets */
+
 #include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
 #include "nsHTMLAtoms.h"
