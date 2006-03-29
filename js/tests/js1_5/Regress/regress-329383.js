@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
-var bug = 328769;
+var bug = 329383;
 var summary = 'Math copysign issues';
 var actual = '';
 var expect = '';
