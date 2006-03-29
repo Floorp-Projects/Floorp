@@ -121,7 +121,7 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
 
     // first verify all files in the jar are also in the manifest.
     nsCOMPtr<nsISimpleEnumerator> entries;
-    rv = hZip->FindEntries("*", getter_AddRefs(entries));
+    rv = hZip->FindEntries(nsnull, getter_AddRefs(entries));
     if (NS_FAILED(rv))
         return rv;
 
@@ -138,7 +138,19 @@ nsresult VerifySigning(nsIZipReader* hZip, nsIPrincipal* aPrincipal)
         if ( PL_strncasecmp("META-INF/", name.get(), 9) == 0)
             continue;
 
-        // we only count the entries not in the meta-inf directory
+        // libjar creates fake entries for directories which are
+        // not in the zip but do exist as part of the path of some
+        // entry within the zip, e.g. foo/ in a zip containing
+        // only foo/bar.txt -- skip those, because they shouldn't
+        // be in the manifest
+        PRBool isSynthetic;
+        rv = file->GetIsSynthetic(&isSynthetic);
+        if (NS_FAILED(rv)) return rv;
+        if (isSynthetic)
+            continue;
+
+        // we only count the entries which are not in the meta-inf
+        // directory and which are explicitly listed in the zip
         entryCount++;
 
         // Each entry must be signed

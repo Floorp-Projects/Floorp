@@ -25,6 +25,7 @@
  *   Samir Gehani <sgehani@netscape.com>
  *   Mitch Stoltz <mstoltz@netscape.com>
  *   Jeroen Dobbelaere <jeroen.dobbelaere@acunia.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -115,7 +116,7 @@ char * strdup(const char *src)
     #include <unistd.h>
 #endif
 
-#ifndef XP_UNIX /* we need to have some constant defined in limits.h and unistd.h */
+#ifndef XP_UNIX /* we need some constants defined in limits.h and unistd.h */
 #  ifndef S_IFMT
 #    define S_IFMT 0170000
 #  endif
@@ -275,7 +276,12 @@ PR_PUBLIC_API(void*) ZIP_FindInit(void* hZip, const char * pattern)
     return 0;   /* whatever it is isn't one of ours! */
 
   /*--- initialize the pattern search ---*/
-  return zip->FindInit(pattern);
+  nsZipFind* find;
+  PRInt32 rv = zip->FindInit(pattern, &find);
+  if (rv != ZIP_OK)
+      find = NULL;
+
+  return find;
 }
 
 
@@ -519,9 +525,10 @@ PRInt32 nsZipArchive::Test(const char *aEntryName, PRFileDesc* aFd)
   }
   else // test all items in archive
   {
-    nsZipFind *iterator = FindInit(NULL);
-    if (!iterator)
-      return ZIP_ERR_GENERAL;
+    nsZipFind *iterator;
+    rv = FindInit(NULL, &iterator);
+    if (rv != ZIP_OK)
+      return rv;
 
     // iterate over items in list
     while (ZIP_OK == FindNext(iterator, &currItem))
@@ -548,7 +555,6 @@ PRInt32 nsZipArchive::Test(const char *aEntryName, PRFileDesc* aFd)
 //---------------------------------------------
 PRInt32 nsZipArchive::CloseArchive()
 {
-  
 #ifndef STANDALONE
   PL_FinishArenaPool(&mArena);
 
@@ -664,6 +670,10 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname,
   if (!item)
     return ZIP_ERR_FNF;
 
+  // Directory extraction is handled in nsJAR::Extract,
+  // so the item to be extracted should never be a directory
+  PR_ASSERT(!item->isDirectory);
+
   // delete any existing file so that we overwrite the file permissions
   PR_Delete(aOutname);
 
@@ -702,7 +712,7 @@ nsZipArchive::ExtractItemToFileDesc(nsZipItem* item, PRFileDesc* outFD,
                                     PRFileDesc* aFd)
 {
   //-- sanity check arguments
-  if (item == 0 || outFD == 0)
+  if (item == 0 || outFD == 0 || item->isDirectory)
     return ZIP_ERR_PARAM;
 
   PRInt32 status;
@@ -729,8 +739,15 @@ nsZipArchive::ExtractItemToFileDesc(nsZipItem* item, PRFileDesc* outFD,
 //---------------------------------------------
 // nsZipArchive::FindInit
 //---------------------------------------------
-nsZipFind* nsZipArchive::FindInit(const char * aPattern)
+PRInt32
+nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
 {
+  if (!aFind)
+    return ZIP_ERR_PARAM;
+
+  // null out param in case an error happens
+  *aFind = NULL;
+
   PRBool  regExp = PR_FALSE;
   char*   pattern = 0;
 
@@ -740,7 +757,7 @@ nsZipFind* nsZipArchive::FindInit(const char * aPattern)
     switch (NS_WildCardValid((char*)aPattern))
     {
       case INVALID_SXP:
-        return 0;
+        return ZIP_ERR_PARAM;
 
       case NON_SXP:
         regExp = PR_FALSE;
@@ -753,15 +770,19 @@ nsZipFind* nsZipArchive::FindInit(const char * aPattern)
       default:
         // undocumented return value from RegExpValid!
         PR_ASSERT(PR_FALSE);
-        return 0;
+        return ZIP_ERR_PARAM;
     }
 
     pattern = PL_strdup(aPattern);
     if (!pattern)
-      return 0;
+      return ZIP_ERR_PARAM;
   }
 
-  return new nsZipFind(this, pattern, regExp);
+  *aFind = new nsZipFind(this, pattern, regExp);
+  if (!*aFind)
+    return ZIP_ERR_MEMORY;
+
+  return ZIP_OK;
 }
 
 
@@ -803,14 +824,44 @@ PRInt32 nsZipArchive::FindNext(nsZipFind* aFind, nsZipItem** aResult)
 #else
       found = (PL_strcmp(item->name, aFind->mPattern) == 0);
 #endif
+
+    // The way that the actual zip entry for a directory overrides a synthetic
+    // entry created earlier means that a properly-constructed zip could return
+    // the "same" entry twice during enumeration.  For example, adding foo/bar
+    // and then foo/ to a new zip with Info-ZIP will return two entries for foo/
+    // during any enumeration that finds foo/.  Here's how we solve the problem:
+    //
+    //   * non-synthetic items are always matches
+    //   * a synthetic item is a match if for every prior item in
+    //     the current chain, either of the following hold:
+    //     * the prior item is not a directory (synthetic implies directory)
+    //     * the prior item's name is different from the current item's name
+    //
+    // We test whether a prior item is a directory before comparing names
+    // because name comparison involves function call overhead and because
+    // the typical zip contains more files than directories.
+    if (found && item->isSynthetic)
+    {
+      for (nsZipItem* curr = mFiles[slot]; curr != item; curr = curr->next)
+      {
+        if (!curr->isDirectory)
+          continue;
+        if (0 == strcmp(item->name, curr->name))
+        {
+          // we already found the real item with this name -- skip this item
+          found = PR_FALSE;
+          break;
+        }
+      }
+    }
   }
 
   if (found)
   {
-      *aResult = item;
-      aFind->mSlot = slot;
-      aFind->mItem = item;
-      status = ZIP_OK;
+    *aResult = item;
+    aFind->mSlot = slot;
+    aFind->mItem = item;
+    status = ZIP_OK;
   }
   else
     status = ZIP_ERR_FNF;
@@ -872,6 +923,26 @@ PRInt32 nsZipArchive::ResolveSymlink(const char *path, nsZipItem *item)
 //***********************************************************
 
 #define BR_BUF_SIZE 1024 /* backward read buffer size */
+
+//---------------------------------------------
+//  nsZipArchive::CreateZipItem
+//---------------------------------------------
+nsZipItem* nsZipArchive::CreateZipItem()
+{
+  nsZipItem* item;
+
+#ifndef STANDALONE
+  // Arena allocate the nsZipItem
+  void *mem;
+  PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsZipItem));
+  // Use placement new to arena allocate the nsZipItem
+  item = mem ? new (mem) nsZipItem() : nsnull;
+#else
+  item = new nsZipItem();
+#endif
+
+  return item;
+}
 
 //---------------------------------------------
 //  nsZipArchive::BuildFileList
@@ -945,7 +1016,7 @@ PRInt32 nsZipArchive::BuildFileList(PRFileDesc* aFd)
 
     if(pos <= 0)
       //-- We're at the beginning of the file, and still no sign
-      //-- of the end signiture.  File must be corrupted!
+      //-- of the end signature.  File must be corrupted!
       status = ZIP_ERR_CORRUPT;
 
     //-- backward read must overlap ZipEnd length
@@ -991,40 +1062,32 @@ PRInt32 nsZipArchive::BuildFileList(PRFileDesc* aFd)
     PRUint32 namelen = xtoint(central->filename_len);
     PRUint32 extralen = xtoint(central->extrafield_len);
     PRUint32 commentlen = xtoint(central->commentfield_len);
-#ifndef STANDALONE
-    // Arena allocate the nsZipItem
-    void *mem;
-    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsZipItem));
-    // Use placement new to arena allcoate the nsZipItem
-    nsZipItem* item = mem ? new (mem) nsZipItem() : nsnull;
-#else
-    nsZipItem* item = new nsZipItem();
-#endif
+
+    nsZipItem* item = CreateZipItem();
     if (!item)
     {
       status = ZIP_ERR_MEMORY;
       break;
     }
 
-    item->offset = xtolong(central->localhdr_offset);
+    item->offset      = xtolong(central->localhdr_offset);
+    item->size        = xtolong(central->size);
+    item->realsize    = xtolong(central->orglen);
+    item->crc32       = xtolong(central->crc32);
+    item->time        = xtoint(central->time);
+    item->date        = xtoint(central->date);
+    item->isSynthetic = PR_FALSE;
     item->compression = (PRUint8)xtoint(central->method);
 #if defined(DEBUG)
-    /*
-     * Make sure our space optimization is non lossy.
-     */
+    /* Make sure our space optimization is non lossy. */
     PR_ASSERT(xtoint(central->method) == (PRUint16)item->compression);
 #endif
-    item->size = xtolong(central->size);
-    item->realsize = xtolong(central->orglen);
-    item->crc32 = xtolong(central->crc32);
     PRUint32 external_attributes = xtolong(central->external_attributes);
     item->mode = ExtractMode(external_attributes);
     if (IsSymlink(external_attributes))
     {
       item->flags |= ZIFLAG_SYMLINK;
     }
-    item->time = xtoint(central->time);
-    item->date = xtoint(central->date);
 
     pos += ZIPCENTRAL_SIZE;
 
@@ -1032,6 +1095,7 @@ PRInt32 nsZipArchive::BuildFileList(PRFileDesc* aFd)
     // get the item name
     //-------------------------------------------------------
 #ifndef STANDALONE
+    void* mem;
     PL_ARENA_ALLOCATE(mem, &mArena, (namelen + 1));
     item->name = (char *) mem;
     if (!item->name)
@@ -1043,13 +1107,13 @@ PRInt32 nsZipArchive::BuildFileList(PRFileDesc* aFd)
     }
 #else
     item->name = new char[namelen + 1];
-#endif
     if (!item->name)
     {
       status = ZIP_ERR_MEMORY;
       delete item;
       break;
     }
+#endif
 
     PRUint32 leftover = (PRUint32)(bufsize - pos);
     if (leftover < namelen)
@@ -1070,12 +1134,117 @@ PRInt32 nsZipArchive::BuildFileList(PRFileDesc* aFd)
     memcpy(item->name, buf+pos, namelen);
     item->name[namelen] = 0;
 
+    //-- an item whose name ends with '/' is a directory
+    item->isDirectory = ('/' == item->name[namelen - 1]);
+
     //-- add item to file table
+    //-- note that an explicit entry for a directory will override
+    //-- a fake entry created for that directory (as in the case
+    //-- of processing foo/bar.txt and then foo/) -- this will
+    //-- preserve an explicit directory's metadata at the cost of
+    //-- an extra nsZipItem (and that only happens if we process a
+    //-- file inside that directory before processing the directory
+    //-- entry itself)
     PRUint32 hash = HashName(item->name);
     item->next = mFiles[hash];
     mFiles[hash] = item;
 
     pos += namelen;
+
+    //-- add entries for directories in the current item's path
+    //-- go from end to beginning, because then we can stop trying
+    //-- to create diritems if we find that the diritem we want to
+    //-- create already exists
+    //-- start just before the last char so as to not add the item
+    //-- twice if it's a directory
+    for (char* p = item->name + namelen - 2; p >= item->name; p--)
+    {
+      if ('/' != *p)
+        continue;
+
+      PRUint32 dirnamelen = p + 1 - item->name;
+
+      // See whether we need to create any more implicit directories,
+      // because if we don't we can avoid a lot of work.
+      // We can even avoid (de)allocating space for a bogus dirname with
+      // a little trickery -- save the char at item->name[dirnamelen],
+      // set it to 0, compare the strings, and restore the saved
+      // char when done
+      char savedChar = item->name[dirnamelen];
+      item->name[dirnamelen] = 0;
+
+      // Is the directory in the file table?
+      PRUint32 hash = HashName(item->name);
+      PRBool done = PR_FALSE;
+      for (nsZipItem* zi = mFiles[hash]; zi != NULL; zi = zi->next)
+      {
+        if (0 == strcmp(item->name, zi->name))
+        {
+          // we've already added this dir and all its parents
+          done = PR_TRUE;
+          break;
+        }
+      }
+
+      // restore the char immediately
+      item->name[dirnamelen] = savedChar;
+
+      // if the directory was found, break out of the directory
+      // creation loop now that we know all implicit directories
+      // are there -- otherwise, start creating the zip item
+      if (done)
+        break;
+
+      nsZipItem* diritem = CreateZipItem();
+      if (!diritem)
+      {
+        status = ZIP_ERR_MEMORY;
+        break;
+      }
+
+#ifndef STANDALONE
+      void* mem;
+      PL_ARENA_ALLOCATE(mem, &mArena, (dirnamelen + 1));
+      char* dirname = (char *) mem;
+      if (!dirname)
+      {
+        status = ZIP_ERR_MEMORY;
+        // No need to delete name. It gets deleted only when the entire arena
+        // goes away.
+        break;
+      }
+#else
+      char* dirname = new char[dirnamelen + 1];
+      if (!dirname)
+      {
+        status = ZIP_ERR_MEMORY;
+        delete diritem;
+        break;
+      }
+#endif
+
+      memcpy(dirname, item->name, dirnamelen);
+      dirname[dirnamelen] = 0;
+      diritem->name = dirname;
+
+      diritem->isDirectory = PR_TRUE;
+      diritem->isSynthetic = PR_TRUE;
+      diritem->compression = STORED;
+      diritem->size = diritem->realsize = 0;
+      diritem->crc32 = 0;
+      diritem->mode = 0755;
+
+      // Set an obviously wrong last-modified date/time, because
+      // finding something more accurate like the most recent
+      // last-modified date/time of the dir's contents is a lot
+      // of effort.  The date/time corresponds to 1980-01-01 00:00.
+      diritem->time = 0;
+      diritem->date = 1 + (1 << 5) + (0 << 9);
+
+      // add diritem to the file table
+      diritem->next = mFiles[hash];
+      mFiles[hash] = diritem;
+    } /* end processing of dirs in item's name */
 
     //-------------------------------------------------------
     // set up to process the next item at the top of loop
@@ -1254,7 +1423,7 @@ nsZipArchive::CopyItemToDisk(const nsZipItem* aItem,
 
 #ifndef STANDALONE
 //------------------------------------------
-// nsZipArchive::Read
+// nsZipReadState::Read
 //------------------------------------------
 PRInt32
 nsZipReadState::Read(char* aBuffer, PRUint32 aCount,
@@ -1281,7 +1450,7 @@ nsZipReadState::Read(char* aBuffer, PRUint32 aCount,
     result = ZIP_ERR_UNSUPPORTED;
   }
 
-  // be agressive about closing!
+  // be aggressive about closing!
   // note that sometimes, we will close mFd before we've finished
   // deflating - this is because zlib buffers the input
   if (mCurPos >= mItem->size && mFd) {
@@ -1577,6 +1746,14 @@ PRInt32 nsZipArchive::TestItem(const nsZipItem* aItem, PRFileDesc* aFd)
     return ZIP_ERR_PARAM;
   if (aItem->compression != STORED && aItem->compression != DEFLATED)
     return ZIP_ERR_UNSUPPORTED;
+
+  //-- don't test synthetic items -- I think for a normal zip
+  //-- you actually *can* get away with testing a synthetic
+  //-- with no ill results except some unnecessary work, but
+  //-- for a zip which doesn't start with a zip entry (e.g.,
+  //-- a self-extracting zip) it'll fail
+  if (aItem->isSynthetic)
+    return ZIP_OK;
 
   //-- move to the start of file's data
   if (SeekToItem(aItem, aFd) != ZIP_OK)

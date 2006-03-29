@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,8 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsJAR.h"
 #include "nsJARChannel.h"
 #include "nsJARProtocolHandler.h"
+#include "nsJARDirectoryInputStream.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsInt64.h"
@@ -49,6 +52,11 @@
 #include "nsIJAR.h"
 
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+
+// the entry for a directory will either be empty (in the case of the
+// top-level directory) or will end with a slash
+#define ENTRY_IS_DIRECTORY(_entry) \
+  ((_entry).IsEmpty() || '/' == (_entry).Last())
 
 //-----------------------------------------------------------------------------
 
@@ -74,10 +82,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
-    nsJARInputThunk(nsIFile *jarFile, const nsACString &jarEntry,
+    nsJARInputThunk(nsIFile *jarFile,
+                    nsIURI* fullJarURI,
+                    const nsACString &jarEntry,
                     nsIZipReaderCache *jarCache)
         : mJarCache(jarCache)
         , mJarFile(jarFile)
+        , mFullJarURI(fullJarURI)
         , mJarEntry(jarEntry)
         , mContentLength(-1)
     {
@@ -107,6 +118,7 @@ private:
     nsCOMPtr<nsIZipReaderCache> mJarCache;
     nsCOMPtr<nsIZipReader>      mJarReader;
     nsCOMPtr<nsIFile>           mJarFile;
+    nsCOMPtr<nsIURI>            mFullJarURI;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
     PRInt32                     mContentLength;
@@ -135,8 +147,25 @@ nsJARInputThunk::EnsureJarStream()
     }
     if (NS_FAILED(rv)) return rv;
 
-    rv = mJarReader->GetInputStream(mJarEntry.get(),
-                                    getter_AddRefs(mJarStream));
+    if (ENTRY_IS_DIRECTORY(mJarEntry)) {
+        // This isn't simply part of nsJAR::GetInputStream because it shouldn't
+        // be possible to get an input stream for a directory in a zip via that
+        // path, just as it isn't possible to get a directory stream via an
+        // nsIFileInputStream
+
+        nsCAutoString jarDirSpec;
+        rv = mFullJarURI->GetAsciiSpec(jarDirSpec);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = nsJARDirectoryInputStream::Create(mJarReader,
+                                               jarDirSpec,
+                                               mJarEntry.get(),
+                                               getter_AddRefs(mJarStream));
+    }
+    else {
+        rv = mJarReader->GetInputStream(mJarEntry.get(),
+                                        getter_AddRefs(mJarStream));
+    }
     if (NS_FAILED(rv)) return rv;
 
     // ask the JarStream for the content length
@@ -260,7 +289,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache)
     nsresult rv = mJarFile->Clone(getter_AddRefs(clonedFile));
     if (NS_FAILED(rv)) return rv;
 
-    mJarInput = new nsJARInputThunk(clonedFile, mJarEntry, jarCache);
+    mJarInput = new nsJARInputThunk(clonedFile, mJarURI, mJarEntry, jarCache);
     if (!mJarInput)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mJarInput);
@@ -281,7 +310,7 @@ nsJARChannel::EnsureJarInput(PRBool blocking)
     rv = mJarURI->GetJAREntry(mJarEntry);
     if (NS_FAILED(rv)) return rv;
 
-    // The name of the JAR entry must not contains URL escaped characters:
+    // The name of the JAR entry must not contain URL-escaped characters:
     // we're moving from URL domain to a filename domain here. nsStandardURL
     // does basic escaping by default, which breaks reading zipped files which
     // have e.g. spaces in their filenames.
@@ -532,26 +561,31 @@ nsJARChannel::GetContentType(nsACString &result)
         //
         // generate content type and set it
         //
-        if (mJarEntry.IsEmpty()) {
-            LOG(("mJarEntry is empty!\n"));
-            return NS_ERROR_NOT_AVAILABLE;
-        }
-    
         const char *ext = nsnull, *fileName = mJarEntry.get();
         PRInt32 len = mJarEntry.Length();
-        for (PRInt32 i = len-1; i >= 0; i--) {
-            if (fileName[i] == '.') {
-                ext = &fileName[i + 1];
-                break;
+
+        // check if we're displaying a directory
+        // mJarEntry will be empty if we're trying to display
+        // the topmost directory in a zip, e.g. jar:foo.zip!/
+        if (ENTRY_IS_DIRECTORY(mJarEntry)) {
+            mContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
+        }
+        else {
+            // not a directory, take a guess by its extension
+            for (PRInt32 i = len-1; i >= 0; i--) {
+                if (fileName[i] == '.') {
+                    ext = &fileName[i + 1];
+                    break;
+                }
             }
+            if (ext) {
+                nsIMIMEService *mimeServ = gJarHandler->MimeService();
+                if (mimeServ)
+                    mimeServ->GetTypeFromExtension(nsDependentCString(ext), mContentType);
+            }
+            if (mContentType.IsEmpty())
+                mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
         }
-        if (ext) {
-            nsIMIMEService *mimeServ = gJarHandler->MimeService();
-            if (mimeServ)
-                mimeServ->GetTypeFromExtension(nsDependentCString(ext), mContentType);
-        }
-        if (mContentType.IsEmpty())
-            mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
     }
     result = mContentType;
     return NS_OK;

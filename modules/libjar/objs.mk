@@ -43,6 +43,7 @@ MODULES_STANDALONE_LCPPSRCS = \
 MODULES_LIBJAR_LCPPSRCS = \
 		$(MODULES_STANDALONE_LCPPSRCS) \
 		nsJARInputStream.cpp \
+		nsJARDirectoryInputStream.cpp \
 		nsJAR.cpp \
 		nsJARFactory.cpp \
 		nsXPTZipLoader.cpp \
