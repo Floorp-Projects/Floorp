@@ -46,35 +46,26 @@
 #include "nsEscape.h"
 #include "nsILocalFile.h"
 
-static int isleadbyte(int c);
-
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
     nsresult rv;
-    nsCAutoString ePath;
+    nsAutoString path;
 
-    // construct URL spec from native file path
-    rv = aFile->GetNativePath(ePath);
+    // construct URL spec from file path
+    rv = aFile->GetPath(path);
     if (NS_FAILED(rv)) return rv;
-
+  
     // Replace \ with / to convert to an url
-    for (char *s = ePath.BeginWriting(s); *s; ++s) {
-        // We need to call isleadbyte because
-        // Japanese windows can have 0x5C in the sencond byte 
-        // of a Japanese character, for example 0x8F 0x5C is
-        // one Japanese character
-        if(isleadbyte(*s) && *(s+1))
-            ++s;
-        else if (*s == '\\')
-            *s = '/';
-    }
+    path.ReplaceChar(PRUnichar(0x5Cu), PRUnichar(0x2Fu));
 
     nsCAutoString escPath;
     NS_NAMED_LITERAL_CSTRING(prefix, "file:///");
-
+  
     // Escape the path with the directory mask
-    if (NS_EscapeURL(ePath.get(), ePath.Length(), esc_Directory+esc_Forced, escPath))
+    NS_ConvertUTF16toUTF8 ePath(path);
+    if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced+esc_AlwaysCopy,
+                     escPath))
         escPath.Insert(prefix, 0);
     else
         escPath.Assign(prefix + ePath);
@@ -145,47 +136,19 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     if (path.CharAt(0) == '\\')
         path.Cut(0, 1);
 
-    // assuming path is encoded in the native charset
-    rv = localFile->InitWithNativePath(path);
+    if (IsUTF8(path))
+        rv = localFile->InitWithPath(NS_ConvertUTF8toUTF16(path));
+        // XXX In rare cases, a valid UTF-8 string can be valid as a native 
+        // encoding (e.g. 0xC5 0x83 is valid both as UTF-8 and Windows-125x).
+        // However, the chance is very low that a meaningful word in a legacy
+        // encoding is valid as UTF-8.
+    else 
+        // if path is not in UTF-8, assume it is encoded in the native charset
+        rv = localFile->InitWithNativePath(path);
+
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(*result = localFile);
     return NS_OK;
 }
 
-static int isleadbyte(int c)
-{
-  static BOOL bDBCSFilled=FALSE;
-  static BYTE DBCSInfo[12] = { 0 };  /* According to the Control Program Guide&Ref,
-                                             12 bytes is sufficient */
-  BYTE *curr;
-  BOOL retval = FALSE;
-
-  if( !bDBCSFilled ) {
-    COUNTRYCODE ctrycodeInfo = { 0 };
-    APIRET rc = NO_ERROR;
-    ctrycodeInfo.country = 0;     /* Current Country */
-    ctrycodeInfo.codepage = 0;    /* Current Codepage */
-
-    rc = DosQueryDBCSEnv( sizeof( DBCSInfo ),
-                          &ctrycodeInfo,
-                          DBCSInfo );
-    if( rc != NO_ERROR ) {
-      /* we had an error, do something? */
-      return FALSE;
-    }
-    bDBCSFilled=TRUE;
-  }
-
-  curr = DBCSInfo;
-  /* DBCSInfo returned by DosQueryDBCSEnv is terminated with two '0' bytes in a row */
-  while(( *curr != 0 ) && ( *(curr+1) != 0)) {
-    if(( c >= *curr ) && ( c <= *(curr+1) )) {
-      retval=TRUE;
-      break;
-    }
-    curr+=2;
-  }
-
-  return retval;
-}
