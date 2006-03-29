@@ -64,8 +64,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
   
     // Escape the path with the directory mask
     NS_ConvertUTF16toUTF8 ePath(path);
-    if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced+esc_AlwaysCopy,
-                     escPath))
+    if (NS_EscapeURL(ePath.get(), -1, esc_Directory+esc_Forced, escPath))
         escPath.Insert(prefix, 0);
     else
         escPath.Assign(prefix + ePath);
