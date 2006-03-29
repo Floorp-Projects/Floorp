@@ -70,7 +70,8 @@ private:
 
   nsresult AnalyzeRecursively(nsIDOMNode              *aContextNode,
                               const nsXFormsXPathNode *aNode,
-                              PRUint32                 aIndent);
+                              PRUint32                 aIndent,
+                              PRBool                   aCollect = PR_FALSE);
 
 public:
   nsXFormsXPathAnalyzer(nsIXFormsXPathEvaluator  *aEvaluator,
@@ -83,7 +84,8 @@ public:
                    const nsAString           *aExprString,
                    nsCOMArray<nsIDOMNode>    *aSet,
                    PRUint32                   aSize,
-                   PRUint32                   aPosition);
+                   PRUint32                   aPosition,
+                   PRBool                     aIncludeRoot);
 
   const nsStringArray& IndexesUsed() const;
 };

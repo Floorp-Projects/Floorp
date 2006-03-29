@@ -435,7 +435,8 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                               &aExpression,
                               aSet,
                               aContextPosition,
-                              aContextSize);
+                              aContextSize,
+                              aResultType == nsIDOMXPathResult::STRING_TYPE);
         NS_ENSURE_SUCCESS(rv, nsnull);
 
         if (aIndexesUsed)

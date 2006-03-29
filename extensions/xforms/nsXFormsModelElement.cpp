@@ -1755,7 +1755,7 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
         nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(propStrings[j]));
         deps.Clear();
         rv = analyzer.Analyze(node, xNode, expr, &propStrings[j], &deps,
-                              snapItem + 1, snapLen);
+                              snapItem + 1, snapLen, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Insert into MDG
