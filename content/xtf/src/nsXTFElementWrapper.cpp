@@ -757,6 +757,9 @@ nsresult
 nsXTFElementWrapper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   nsresult rv = NS_OK;
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
+    return rv;
+  }
 
   if (!aVisitor.mDOMEvent) {
     // We haven't made a DOMEvent yet.  Force making one now.
