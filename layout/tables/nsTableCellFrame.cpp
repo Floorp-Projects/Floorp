@@ -399,20 +399,16 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
     nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
 
-    // display background if we need to. Note that we don't try to display
-    // a background item to catch events; our anonymous inner block will catch
-    // events for us.
-    if (!tableFrame->IsBorderCollapse() ||
-        aBuilder->IsAtRootOfPseudoStackingContext()) {
+    // display background if we need to.
+    if (aBuilder->IsForEventDelivery() ||
+        (((!tableFrame->IsBorderCollapse() || aBuilder->IsAtRootOfPseudoStackingContext()) &&
+        (!GetStyleBackground()->IsTransparent() || GetStyleDisplay()->mAppearance)))) {
       // The cell background was not painted by the nsTablePainter,
       // so we need to do it. We have special background processing here
       // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
-      if (!GetStyleBackground()->IsTransparent() ||
-          GetStyleDisplay()->mAppearance) {
-        nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-            nsDisplayTableCellBackground(this));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+             nsDisplayTableCellBackground(this));
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     
     // display borders if we need to
