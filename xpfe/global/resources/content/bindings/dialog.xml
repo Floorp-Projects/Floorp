@@ -145,22 +145,29 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          var focusInit = 
-            function() {
-              // give focus to the first focusable element in the dialog
-              if (!document.commandDispatcher.focusedElement) {
-                document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
-                var focusedElt = document.commandDispatcher.focusedElement;
-                if (focusedElt && focusedElt.localName == 'tab') {
-                  // We don't want to focus on anonymous OK, Cancel, etc. buttons
+          function focusInit() {
+            // give focus to the first focusable element in the dialog
+            if (!document.commandDispatcher.focusedElement) {
+              document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+              var focusedElt = document.commandDispatcher.focusedElement;
+              if (focusedElt) {
+                if (focusedElt.localName == 'tab') {
+                  // Move focus into the tab
                   document.commandDispatcher.advanceFocusIntoSubtree(focusedElt);
                   if (document.commandDispatcher.focusedElement.hasAttribute("dlgtype")) {
-                    // Prefer to keep focus on label rather than focus a dialog button
+                    // We don't want to focus on anonymous OK, Cancel, etc. buttons,
+                    // so return focus to the tab itself
                     focusedElt.focus();
                   }
+                } else {
+                  const dialog = document.documentElement;
+                  const defaultButton = dialog.getButton(dialog.defaultButton);
+                  if (focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton)
+                    defaultButton.focus();
                 }
               }
-            };
+            }
+          }
 
           // Give focus after onload completes, see bug 103197.
           setTimeout(focusInit, 0);
