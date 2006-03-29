@@ -203,7 +203,7 @@ nsresult nsMessengerUnixIntegration::ShowAlertMessage(const PRUnichar * aAlertTi
 // Opening Thunderbird's new mail alert notification window
 // aUserInitiated --> true if we are opening the alert notification in response to a user action
 //                    like clicking on the biff icon
-nsresult nsMessengerWinIntegration::ShowNewAlertNotification(PRBool aUserInitiated)
+nsresult nsMessengerUnixIntegration::ShowNewAlertNotification(PRBool aUserInitiated)
 {
   nsresult rv;
 
