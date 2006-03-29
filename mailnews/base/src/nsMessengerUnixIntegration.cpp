@@ -167,7 +167,6 @@ nsresult nsMessengerUnixIntegration::GetStringBundle(nsIStringBundle **aBundle)
   return rv;
 }
 
-#ifndef MOZ_THUNDERBIRD
 nsresult nsMessengerUnixIntegration::ShowAlertMessage(const PRUnichar * aAlertTitle, const PRUnichar * aAlertText, const char * aFolderURI)
 {
   nsresult rv;
@@ -199,68 +198,6 @@ nsresult nsMessengerUnixIntegration::ShowAlertMessage(const PRUnichar * aAlertTi
 
   return rv;
 }
-#else
-// Opening Thunderbird's new mail alert notification window
-// aUserInitiated --> true if we are opening the alert notification in response to a user action
-//                    like clicking on the biff icon
-nsresult nsMessengerUnixIntegration::ShowNewAlertNotification(PRBool aUserInitiated)
-{
-  nsresult rv;
-
-  // if we are already in the process of showing an alert, don't try to show another....
-  if (mAlertInProgress) 
-    return NS_OK;
-  
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  PRBool showAlert = PR_TRUE;
-  
-  if (prefBranch)
-    prefBranch->GetBoolPref(SHOW_ALERT_PREF, &showAlert);
-  
-  if (showAlert)
-  {
-    nsCOMPtr<nsISupportsArray> argsArray;
-    rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // pass in the array of folders with unread messages
-    nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    ifptr->SetData(mFoldersWithNewMail);
-    ifptr->SetDataIID(&NS_GET_IID(nsISupportsArray));
-    argsArray->AppendElement(ifptr);
-
-    // pass in the observer
-    ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this));
-    ifptr->SetData(supports);
-    ifptr->SetDataIID(&NS_GET_IID(nsIObserver));
-    argsArray->AppendElement(ifptr);
-    
-    // pass in the animation flag
-    nsCOMPtr<nsISupportsPRBool> scriptableUserInitiated (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    scriptableUserInitiated->SetData(aUserInitiated);
-    argsArray->AppendElement(scriptableUserInitiated);
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = wwatch->OpenWindow(0, ALERT_CHROME_URL, "_blank",
-                "chrome,dialog=yes,titlebar=no,popup=yes", argsArray,
-                 getter_AddRefs(newWindow));
-
-    mAlertInProgress = PR_TRUE;
-  }
-
-  // if the user has turned off the mail alert, or  openWindow generated an error, 
-  // then go straight to the system tray.
-  if (!showAlert || NS_FAILED(rv)) 
-    AlertFinished();
-
-  return rv;
-}
-#endif
 
 nsresult nsMessengerUnixIntegration::AlertFinished()
 {
