@@ -81,16 +81,13 @@ class nsChildView;
 #endif
 {
 @private
-  NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
+  NSWindow* mWindow; // shortcut to the top window, [WEAK]
   
-    // the nsChildView that created the view. It retains this NSView, so
-    // the link back to it must be weak.
+  // the nsChildView that created the view. It retains this NSView, so
+  // the link back to it must be weak.
   nsChildView* mGeckoChild;
-  
-    // allows us to redispatch events back to a centralized location
-  nsIEventSink* mEventSink;
-  
-    // tag for our mouse enter/exit tracking rect
+    
+  // tag for our mouse enter/exit tracking rect
   NSTrackingRectTag mMouseEnterExitTag;
 
   // Whether we're a plugin view.
@@ -103,8 +100,6 @@ class nsChildView;
   NSRange mSelectedRange;
   BOOL mInComposition;
   BOOL mIgnoreDoCommand;
-
-  BOOL mToggleMouseMoveEventWatching;
 
   BOOL mInHandScroll; // true for as long as we are hand scrolling
   // hand scroll locations
