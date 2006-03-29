@@ -53,12 +53,12 @@ $memcacheId = md5(SCRIPT_NAME.$_SERVER['QUERY_STRING']);
  * If it is, try to connect.  If connection to the cache server fails, fall back on regular runtime.
  * We also are storing the status of the connection in $memcacheConnected for use in finish.php.
  */
-if (!empty($cache_config[SCRIPT_NAME]) && class_exists('memcache') ) {
+if (!empty($cache_config[SCRIPT_NAME]) && class_exists('Memcache') ) {
 
     /**
      * Instantiate our memcache object.
      */
-    $cache = new memcache();
+    $cache = new Memcache();
 
     /**
      * Boolean so we know whether or not we've found a valid memcached server.

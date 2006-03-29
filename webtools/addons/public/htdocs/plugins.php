@@ -6,11 +6,13 @@
  * @subpackage docs
  */
 
+$currentTab = 'plugins';
 startProcessing('plugins.tpl',$memcacheId,$compileId,'nonav');
 
 // Assign template variables.
 $tpl->assign(
-    array(  'title'     => 'Plugins',
+    array(  'currentTab'=> $currentTab,
+            'title'     => 'Plugins',
             'content'   => 'plugins.tpl')
 );
 ?>
