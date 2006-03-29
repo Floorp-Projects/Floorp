@@ -1,3 +1,4 @@
+<div><a class="finalists-link" href="{$config.webpath}/winners.php">Extend Firefox Contest Winners Announced</a></div>
 
 <div class="split-feature">
     <div class="split-feature-one">
@@ -9,7 +10,7 @@
         </div>
         <h2>Featured Extension</h2>
         <h2><a href="{$config.webpath}/{$app}/{$feature.id}/">{$feature.name}</a></h2>
-        <p class="first">{$feature.body|nl2br} <a href="{$config.webpath}/{$app}/{$feature.id}/">Learn more...</a></p>
+        <p class="first">{$feature.body|nl2br} <a href="{$config.webpath}/{$app}/{$feature.id}/"><br/>Learn more...</a></p>
     </div>
     <a class="top-feature" href="{$config.webpath}/{$app}/recommended/"><img src="{$config.webpath}/images/feature-recommend.png" width="213" height="128" style="padding-left: 12px;" alt="We Recommend: See some of our favorite extensions to get you started."></a>
 
