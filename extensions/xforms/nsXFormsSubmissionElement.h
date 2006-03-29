@@ -105,7 +105,7 @@ public:
   NS_HIDDEN_(nsresult) SerializeData(nsIDOMNode *data, nsCString &uri, nsIInputStream **, nsCString &contentType);
   NS_HIDDEN_(nsresult) SerializeDataXML(nsIDOMNode *data, nsIInputStream **, nsCString &contentType, SubmissionAttachmentArray *);
   NS_HIDDEN_(nsresult) CreateSubmissionDoc(nsIDOMNode *source, const nsString &encoding, SubmissionAttachmentArray *, nsIDOMDocument **result);
-  NS_HIDDEN_(nsresult) CopyChildren(nsIDOMNode *source, nsIDOMNode *dest, nsIDOMDocument *destDoc, SubmissionAttachmentArray *, const nsString &cdataElements, PRBool indent, PRUint32 depth);
+  NS_HIDDEN_(nsresult) CopyChildren(nsIModelElementPrivate* model, nsIDOMNode *source, nsIDOMNode *dest, nsIDOMDocument *destDoc, SubmissionAttachmentArray *, const nsString &cdataElements, PRBool indent, PRUint32 depth);
   NS_HIDDEN_(nsresult) SerializeDataURLEncoded(nsIDOMNode *data, nsCString &uri, nsIInputStream **, nsCString &contentType);
   NS_HIDDEN_(void)     AppendURLEncodedData(nsIDOMNode *data, const nsCString &sep, nsCString &buf);
   NS_HIDDEN_(nsresult) SerializeDataMultipartRelated(nsIDOMNode *data, nsIInputStream **, nsCString &contentType);
@@ -142,12 +142,15 @@ private:
    * model->HandleInstanceDataNode()that ensures that the instance is valid,
    * required conditions met...if so, then can submit.
    *
-   * @param   aTopNode Root instance node of tree to be evaluated
-   * @return  NS_ERROR_ABORT if instance is not valid and empty
-   *          required nodes, otherwise return NS_OK.
+   * @param aTopNode         Root instance node of tree to be evaluated
+   * @param aModel           The model for the submission
+   * @param aCheckSiblings   Check siblings too?
+   * @return                 NS_ERROR_ABORT if instance is not valid and empty
+   *                         required nodes, otherwise return NS_OK.
    *
    */
-  nsresult CanSubmit(nsIDOMNode *aTopNode);
+  nsresult CanSubmit(nsIDOMNode *aTopNode, nsIModelElementPrivate *aModel,
+                     PRBool aCheckSiblings = PR_TRUE);
 
   /**
    * Send xforms-submit-done/-error, depending on |aSucceeded|

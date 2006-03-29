@@ -757,7 +757,9 @@ nsXFormsSubmissionElement::SerializeData(nsIDOMNode *data,
 
   // Ensure the data is valid and required nodes are non-empty
   // This is handled directly within SerializeDataXML()
-  nsresult rv = CanSubmit(data);
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_STATE(model);
+  nsresult rv = CanSubmit(data, model, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mFormat & ENCODING_URL)
@@ -1205,8 +1207,10 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMNode *source,
     startNode = source;
   }
 
-  nsresult rv = CopyChildren(startNode, doc, doc, attachments, cdataElements,
-                             indent, 0);
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_STATE(model);
+  nsresult rv = CopyChildren(model, startNode, doc, doc, attachments,
+                             cdataElements, indent, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*result = doc);
@@ -1214,14 +1218,14 @@ nsXFormsSubmissionElement::CreateSubmissionDoc(nsIDOMNode *source,
 }
 
 nsresult
-nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
+nsXFormsSubmissionElement::CopyChildren(nsIModelElementPrivate* model,
+                                        nsIDOMNode *source, nsIDOMNode *dest,
                                         nsIDOMDocument *destDoc,
                                         SubmissionAttachmentArray *attachments,
                                         const nsString &cdataElements,
                                         PRBool indent, PRUint32 depth)
 {
   nsCOMPtr<nsIDOMNode> currentNode(source), node, destChild;
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
 
   while (currentNode)
   {
@@ -1347,10 +1351,15 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
         nsCOMPtr<nsIDOMNode> startNode;
         currentNode->GetFirstChild(getter_AddRefs(startNode));
 
-        nsresult rv = CopyChildren(startNode, destChild, destDoc, attachments,
-                                   cdataElements, indent, depth + 1);
+        nsresult rv = CopyChildren(model, startNode, destChild, destDoc,
+                                   attachments, cdataElements, indent,
+                                   depth + 1);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+    }
+
+    if (!depth) {
+      break;
     }
 
     currentNode->GetNextSibling(getter_AddRefs(node));
@@ -1360,15 +1369,15 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
 }
 
 nsresult
-nsXFormsSubmissionElement::CanSubmit(nsIDOMNode *aTopNode)
+nsXFormsSubmissionElement::CanSubmit(nsIDOMNode             *aTopNode,
+                                     nsIModelElementPrivate *aModel,
+                                     PRBool                  aCheckSiblings)
 {
   nsCOMPtr<nsIDOMNode> currentNode(aTopNode), node;
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  NS_ENSURE_STATE(model);
 
   while (currentNode) {
     PRUint16 handleNodeResult;
-    model->HandleInstanceDataNode(currentNode, &handleNodeResult);
+    aModel->HandleInstanceDataNode(currentNode, &handleNodeResult);
 
     /*
      *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
@@ -1381,9 +1390,8 @@ nsXFormsSubmissionElement::CanSubmit(nsIDOMNode *aTopNode)
       currentNode->GetNextSibling(getter_AddRefs(node));
       currentNode.swap(node);
       continue;
-    } else if (
-      handleNodeResult ==
-      nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
+    } else if (handleNodeResult ==
+               nsIModelElementPrivate::SUBMIT_ABORT_SUBMISSION) {
 
       // abort
       return NS_ERROR_ABORT;
@@ -1396,8 +1404,12 @@ nsXFormsSubmissionElement::CanSubmit(nsIDOMNode *aTopNode)
     nsCOMPtr<nsIDOMNode> firstChild;
     currentNode->GetFirstChild(getter_AddRefs(firstChild));
 
-    nsresult rv = CanSubmit(firstChild);
+    nsresult rv = CanSubmit(firstChild, aModel);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aCheckSiblings) {
+      break;
+    }
 
     currentNode->GetNextSibling(getter_AddRefs(node));
     currentNode.swap(node);
