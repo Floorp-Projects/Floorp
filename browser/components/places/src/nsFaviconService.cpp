@@ -390,6 +390,23 @@ NS_IMETHODIMP
 nsFaviconService::SetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
                                            PRBool aForceReload)
 {
+#ifdef LAZY_ADD
+  nsNavHistory* historyService = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(historyService, NS_ERROR_OUT_OF_MEMORY);
+  return historyService->AddLazyLoadFaviconMessage(aPage, aFavicon,
+                                                   aForceReload);
+#else
+  return DoSetAndLoadFaviconForPage(aPage, aFavicon, aForceReload);
+#endif
+}
+
+
+// nsFaviconService::DoSetAndLoadFaviconForPage
+
+nsresult
+nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
+                                             PRBool aForceReload)
+{
   // check the failed favicon cache
   PRBool previouslyFailed;
   nsresult rv = IsFailedFavicon(aFavicon, &previouslyFailed);

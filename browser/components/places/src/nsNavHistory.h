@@ -79,6 +79,9 @@
 // set to use more optimized (in-memory database) link coloring
 //#define IN_MEMORY_LINKS
 
+// define to enable lazy link adding
+#define LAZY_ADD
+
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
 #define QUERYUPDATE_COMPLEX 2
@@ -135,6 +138,30 @@ public:
     return gHistoryService;
   }
 
+  /**
+   * Call this function before doing any database reads. It will ensure that
+   * any data not flushed to the DB yet is flushed.
+   */
+  void SyncDB()
+  {
+    #ifdef LAZY_ADD
+      CommitLazyMessages();
+    #endif
+  }
+
+#ifdef LAZY_ADD
+  /**
+   * Adds a lazy message for adding a favicon. Used by the favicon service so
+   * that favicons are handled lazily just like page adds.
+   */
+  nsresult AddLazyLoadFaviconMessage(nsIURI* aPage, nsIURI* aFavicon,
+                                     PRBool aForceReload);
+#endif
+
+  /**
+   * Returns the database ID for the given URI, or 0 if not found an autoCreate
+   * is false.
+   */
   nsresult GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
                        PRBool aAutoCreate);
 
@@ -351,7 +378,11 @@ protected:
   nsCOMPtr<mozIStorageConnection> mDummyDBConn;
   nsCOMPtr<mozIStorageStatement> mDBDummyStatement;
 
-  nsresult AddVisitChain(nsIURI* aURI, PRBool aToplevel, PRBool aRedirect,
+  nsresult AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
+                          PRBool aToplevel, nsIURI* aReferrer);
+
+  nsresult AddVisitChain(nsIURI* aURI, PRTime aTime,
+                         PRBool aToplevel, PRBool aRedirect,
                          nsIURI* aReferrer, PRInt64* aVisitID,
                          PRInt64* aSessionID, PRInt64* aRedirectBookmark);
   nsresult InternalAddNewPage(nsIURI* aURI, const nsAString& aTitle,
@@ -371,6 +402,57 @@ protected:
   PRBool mNowValid;
   nsCOMPtr<nsITimer> mExpireNowTimer;
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
+
+#ifdef LAZY_ADD
+  // lazy add committing
+  struct LazyMessage {
+    enum MessageType { Type_Invalid, Type_AddURI, Type_Title, Type_Favicon };
+    LazyMessage()
+    {
+      type = Type_Invalid;
+      isRedirect = PR_FALSE;
+      isToplevel = PR_FALSE;
+      time = 0;
+      alwaysLoadFavicon = PR_FALSE;
+    }
+
+    // call this with common parms to initialize. Caller is responsible for
+    // setting other elements manually depending on type.
+    nsresult Init(MessageType aType, nsIURI* aURI)
+    {
+      type = aType;
+      nsresult rv = aURI->Clone(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
+      return uri->GetSpec(uriSpec);
+    }
+
+    // common elements
+    MessageType type;
+    nsCOMPtr<nsIURI> uri;
+    nsCString uriSpec; // stringified version of URI, for quick isVisited
+
+    // valid when type == Type_AddURI
+    nsCOMPtr<nsIURI> referrer;
+    PRBool isRedirect;
+    PRBool isToplevel;
+    PRTime time;
+
+    // valid when type == Type_Title
+    nsString title;
+
+    // valid when type == LAZY_FAVICON
+    nsCOMPtr<nsIURI> favicon;
+    PRBool alwaysLoadFavicon;
+  };
+  nsTArray<LazyMessage> mLazyMessages;
+  nsCOMPtr<nsITimer> mLazyTimer;
+  PRBool mLazyTimerSet;
+  PRUint32 mLazyTimerDeferments; // see StartLazyTimer
+  nsresult StartLazyTimer();
+  nsresult AddLazyMessage(const LazyMessage& aMessage);
+  static void LazyTimerCallback(nsITimer* aTimer, void* aClosure);
+  void CommitLazyMessages();
+#endif
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                PRInt32 aStartParameter,
