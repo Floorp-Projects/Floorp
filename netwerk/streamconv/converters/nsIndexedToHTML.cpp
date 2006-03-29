@@ -237,6 +237,21 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
         mExpectAbsLoc = PR_TRUE;
+    } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &isScheme)) && isScheme) {
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
+
+        // a top-level jar directory URL is of the form jar:foo.zip!/
+        // path will be of the form foo.zip!/, and its last two characters
+        // will be "!/"
+        //XXX this won't work correctly when the name of the directory being
+        //XXX displayed ends with "!", but then again, jar: URIs don't deal
+        //XXX particularly well with such directories anyway
+        if (!StringEndsWith(path, NS_LITERAL_CSTRING("!/"))) {
+            rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
     else {
         // default behavior for other protocols is to assume the channel's
@@ -513,12 +528,16 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     }
     else {
         // escape as relative
-        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon;
+        // esc_Directory is needed for protocols which allow the same name for
+        // both a directory and a file and distinguish between the two by a
+        // trailing '/' -- without it, the trailing '/' will be escaped, and
+        // links from within that directory will be incorrect
+        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(utf8UnEscapeSpec.get(), utf8UnEscapeSpec.Length(), escFlags, escapeBuf);
-  
+
     AppendUTF8toUTF16(escapeBuf, pushBuffer);
-    
+
     pushBuffer.AppendLiteral("\"><img src=\"");
 
     switch (type) {

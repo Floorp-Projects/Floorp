@@ -25,6 +25,7 @@
  *   Samir Gehani <sgehani@netscape.com>
  *   Mitch Stoltz <mstoltz@netsape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Jeff Walden <jwalden+code@mit.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -56,23 +57,6 @@
   #include <sys/stat.h>
 #elif defined (XP_WIN) || defined(XP_OS2)
   #include <io.h>
-#endif
-
-//----------------------------------------------
-// Errors and other utility definitions
-//----------------------------------------------
-#ifndef __gen_nsIFile_h__
-#define NS_ERROR_FILE_UNRECOGNIZED_PATH         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
-#define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
-#define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
-#define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
-#define NS_ERROR_FILE_DESTINATION_NOT_DIR       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
-#define NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 6)
-#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
-#define NS_ERROR_FILE_ALREADY_EXISTS            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
-#define NS_ERROR_FILE_INVALID_PATH              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
-#define NS_ERROR_FILE_DISK_FULL                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 10)
-#define NS_ERROR_FILE_CORRUPTED                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 11)
 #endif
 
 static nsresult
@@ -280,15 +264,37 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   if (err != ZIP_OK)
     return ziperr2nsresult(err);
 
-  // Remove existing file so we set permissions correctly.
-  localFile->Remove(PR_FALSE);
+  // Remove existing file or directory so we set permissions correctly.
+  // If it's a directory that already exists and contains files, throw
+  // an exception and return.
 
-  PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, item->mode, &fd);
-  if (NS_FAILED(rv)) return NS_ERROR_FILE_ACCESS_DENIED;
+  //XXX Bug 332139:
+  //XXX If we guarantee that rv in the case of a non-empty directory
+  //XXX is always FILE_DIR_NOT_EMPTY, we can remove
+  //XXX |rv == NS_ERROR_FAILURE| - bug 322183 needs to be completely
+  //XXX fixed before that can happen
+  rv = localFile->Remove(PR_FALSE);
+  if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY ||
+      rv == NS_ERROR_FAILURE)
+    return rv;
 
-  err = mZip.ExtractItemToFileDesc(item, fd, mFd);
-  PR_Close(fd);
+  if (item->isDirectory)
+  {
+    rv = localFile->Create(nsIFile::DIRECTORY_TYPE, item->mode);
+    if (NS_FAILED(rv)) return rv;
+    //XXX Do this in nsZipArchive?  It would be nice to keep extraction
+    //XXX code completely there, but that would require a way to get a
+    //XXX PRDir from localFile.
+  }
+  else
+  {
+    PRFileDesc* fd;
+    rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, item->mode, &fd);
+    if (NS_FAILED(rv)) return rv;
+
+    err = mZip.ExtractItemToFileDesc(item, fd, mFd);
+    PR_Close(fd);
+  }
 
   if (err != ZIP_OK)
     outFile->Remove(PR_FALSE);
@@ -340,10 +346,11 @@ nsJAR::FindEntries(const char *aPattern, nsISimpleEnumerator **result)
 {
   if (!result)
     return NS_ERROR_INVALID_POINTER;
-    
-  nsZipFind *find = mZip.FindInit(aPattern);
-  if (!find)
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsZipFind *find;
+  PRInt32 rv = mZip.FindInit(aPattern, &find);
+  if (rv != ZIP_OK)
+    return ziperr2nsresult(rv);
 
   nsISimpleEnumerator *zipEnum = new nsJAREnumerator(find);
   if (!zipEnum)
@@ -363,18 +370,16 @@ nsJAR::GetInputStream(const char* aFilename, nsIInputStream** result)
 
   NS_ENSURE_ARG_POINTER(result);
   nsJARInputStream* jis = new nsJARInputStream();
-  if (!jis) return NS_ERROR_FAILURE;
+  if (!jis) return NS_ERROR_OUT_OF_MEMORY;
 
-  // addref now so we can delete if the Init() fails
-  *result = NS_STATIC_CAST(nsIInputStream*,jis);
+  // addref now so we can call Init()
+  *result = jis;
   NS_ADDREF(*result);
   
-  nsresult rv;
-  rv = jis->Init(this, aFilename);
-  
+  nsresult rv = jis->Init(this, aFilename);
   if (NS_FAILED(rv)) {
     NS_RELEASE(*result);
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   return NS_OK;
@@ -1055,7 +1060,7 @@ nsJARItem::~nsJARItem()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsJARItem, nsIZipEntry)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARItem, nsIZipEntry)
 
 void nsJARItem::Init(nsZipItem* aZipItem)
 {
@@ -1086,13 +1091,11 @@ nsJARItem::GetName(char * *aName)
 //------------------------------------------
 // nsJARItem::GetCompression
 //------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJARItem::GetCompression(PRUint16 *aCompression)
 {
     if (!aCompression)
         return NS_ERROR_NULL_POINTER;
-    if (!mZipItem->compression)
-        return NS_ERROR_FAILURE;
 
     *aCompression = mZipItem->compression;
     return NS_OK;
@@ -1101,13 +1104,11 @@ nsJARItem::GetCompression(PRUint16 *aCompression)
 //------------------------------------------
 // nsJARItem::GetSize
 //------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJARItem::GetSize(PRUint32 *aSize)
 {
     if (!aSize)
         return NS_ERROR_NULL_POINTER;
-    if (!mZipItem->size)
-        return NS_ERROR_FAILURE;
 
     *aSize = mZipItem->size;
     return NS_OK;
@@ -1116,13 +1117,11 @@ nsJARItem::GetSize(PRUint32 *aSize)
 //------------------------------------------
 // nsJARItem::GetRealSize
 //------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJARItem::GetRealSize(PRUint32 *aRealsize)
 {
     if (!aRealsize)
         return NS_ERROR_NULL_POINTER;
-    if (!mZipItem->realsize)
-        return NS_ERROR_FAILURE;
 
     *aRealsize = mZipItem->realsize;
     return NS_OK;
@@ -1131,15 +1130,52 @@ nsJARItem::GetRealSize(PRUint32 *aRealsize)
 //------------------------------------------
 // nsJARItem::GetCrc32
 //------------------------------------------
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsJARItem::GetCRC32(PRUint32 *aCrc32)
 {
     if (!aCrc32)
         return NS_ERROR_NULL_POINTER;
-    if (!mZipItem->crc32)
-        return NS_ERROR_FAILURE;
 
     *aCrc32 = mZipItem->crc32;
+    return NS_OK;
+}
+
+//------------------------------------------
+// nsJARItem::GetIsDirectory
+//------------------------------------------
+NS_IMETHODIMP
+nsJARItem::GetIsDirectory(PRBool *aIsDirectory)
+{
+    if (!aIsDirectory)
+        return NS_ERROR_NULL_POINTER;
+
+    *aIsDirectory = mZipItem->isDirectory;
+    return NS_OK;
+}
+
+//------------------------------------------
+// nsJARItem::GetIsSynthetic
+//------------------------------------------
+NS_IMETHODIMP 
+nsJARItem::GetIsSynthetic(PRBool *aIsSynthetic)
+{
+    if (!aIsSynthetic)
+        return NS_ERROR_NULL_POINTER;
+
+    *aIsSynthetic = mZipItem->isSynthetic;
+    return NS_OK;
+}
+
+//------------------------------------------
+// nsJARItem::GetLastModifiedTime
+//------------------------------------------
+NS_IMETHODIMP
+nsJARItem::GetLastModifiedTime(PRTime* aLastModTime)
+{
+    if (!aLastModTime)
+        return NS_ERROR_NULL_POINTER;
+
+    *aLastModTime = mZipItem->GetModTime();
     return NS_OK;
 }
 
@@ -1289,15 +1325,15 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   // case is where one thread Releases the zip and discovers that the ref
   // count has gone to one. Before it can call this ReleaseZip method
   // another thread calls our GetZip method. The ref count goes to two. That
-  // second thread then Releases the zip and the ref coutn goes to one. It
-  // Then tries to enter this ReleaseZip method and blocks while the first
+  // second thread then Releases the zip and the ref count goes to one. It
+  // then tries to enter this ReleaseZip method and blocks while the first
   // thread is still here. The first thread continues and remove the zip from 
   // the cache and calls its Release method sending the ref count to 0 and
   // deleting the zip. However, the second thread is still blocked at the
   // start of ReleaseZip, but the 'zip' param now hold a reference to a
   // deleted zip!
   // 
-  // So, we are going to try safegaurding here by searching our hashtable while
+  // So, we are going to try safeguarding here by searching our hashtable while
   // locked here for the zip. We return fast if it is not found. 
 
   ZipFindData find_data = {zip, PR_FALSE};

@@ -93,26 +93,26 @@ nsJARInputStream::IsNonBlocking(PRBool *aNonBlocking)
 NS_IMETHODIMP
 nsJARInputStream::Close()
 {
-    NS_IF_RELEASE(mJAR);
+    mJAR = nsnull;
     return NS_OK;
 }
 
 nsresult 
 nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
 {
-  if (!aFilename)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aJAR);
+  NS_ENSURE_ARG_POINTER(aFilename);
+
   mJAR = aJAR;
-  NS_ADDREF(mJAR);
 
-  PRInt32 result;
+  // Don't assert if !fd, because it's possible that aJAR comes
+  // from a cache and aJAR's file has been deled
   PRFileDesc* fd = aJAR->OpenFile();
-  NS_ASSERTION(fd, "Couldn't open JAR!");
-
   if (!fd)
       return NS_ERROR_UNEXPECTED;
-  
-  result = aJAR->mZip.ReadInit(aFilename, &mReadInfo, fd);
+
+  // mReadInfo takes ownership of fd here
+  PRInt32 result = aJAR->mZip.ReadInit(aFilename, &mReadInfo, fd);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
   return NS_OK;
@@ -123,7 +123,6 @@ nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
 //----------------------------------------------
 
 nsJARInputStream::nsJARInputStream()
-    : mJAR(nsnull)
 {
 }
 
@@ -131,4 +130,3 @@ nsJARInputStream::~nsJARInputStream()
 {
   Close();
 }
-

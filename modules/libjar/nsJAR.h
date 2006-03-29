@@ -118,6 +118,7 @@ class nsJAR : public nsIZipReader, public nsIJAR
     }
 
     PRFileDesc* OpenFile();
+
   protected:
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
@@ -230,4 +231,3 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif /* nsJAR_h__ */
-

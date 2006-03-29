@@ -1,5 +1,5 @@
-/* nsJARInputStream.h
- * 
+/* nsJARDirectoryInputStream.h
+ *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Netscape Communicator source code.
+ * The Original Code is Mozilla libjar code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Jeff Walden <jwalden+code@mit.edu>.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mitch Stoltz <mstoltz@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,41 +36,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsJARINPUTSTREAM_h__
-#define nsJARINPUTSTREAM_h__
-
-// {a756724a-1dd1-11b2-90d8-9c98fc2b7ac0}
-#define NS_JARINPUTSTREAM_CID \
-   {0xa756724a, 0x1dd1, 0x11b2, \
-     {0x90, 0xd8, 0x9c, 0x98, 0xfc, 0x2b, 0x7a, 0xc0}}
+#ifndef nsJARDIRECTORYINPUTSTREAM_h__
+#define nsJARDIRECTORYINPUTSTREAM_h__
 
 #include "nsAutoPtr.h"
+#include "nsCOMArray.h"
 #include "nsIInputStream.h"
 #include "nsJAR.h"
 
 /*-------------------------------------------------------------------------
- * Class nsJARInputStream declaration. This class defines the type of the
- * object returned by calls to nsJAR::GetInputStream(filename) for the
- * purpose of reading a file item out of a JAR file. 
+ * Class nsJARDirectoryInputStream declaration. This class represents a
+ * stream whose contents are an application/http-index-format listing for
+ * a directory in a zip file.
  *------------------------------------------------------------------------*/
-class nsJARInputStream : public nsIInputStream
+class nsJARDirectoryInputStream : public nsIInputStream
 {
   public:
 
-    nsJARInputStream();
-    virtual ~nsJARInputStream();
-    
-    NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARINPUTSTREAM_CID );
-  
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
-   
+
+    static nsresult Create(nsIZipReader* aZip,
+                           const nsACString& aJarDirSpec,
+                           const char* aDir,
+                           nsIInputStream** result);
+  private:
+    nsJARDirectoryInputStream();
+    virtual ~nsJARDirectoryInputStream();
+
     nsresult 
-    Init(nsJAR* jar, const char* aFilename);
-  
+    Init(nsIZipReader* aZip, const nsACString& aJarDirSpec, const char* aDir);
+
+    PRUint32 CopyDataToBuffer(char* &aBuffer, PRUint32 &aCount);
+
   protected:
-    nsZipReadState  mReadInfo;
-    nsRefPtr<nsJAR> mJAR;
+    nsresult                mStatus;     // current status of the stream
+    PRUint32                mDirNameLen; // length of dirname
+    nsCAutoString           mBuffer;     // storage for generated text of stream
+    PRUint32                mArrPos;     // current position within mArray
+    PRUint32                mBufPos;     // current position within mBuffer
+    nsCOMArray<nsIZipEntry> mArray;      // array of nsIZipEntrys in directory
 };
 
-#endif /* nsJARINPUTSTREAM_h__ */
+#endif /* nsJARDIRECTORYINPUTSTREAM_h__ */

@@ -116,10 +116,15 @@ class nsZipItem
 public:
   char*       name; /* '\0' terminated */
 
-  PRUint32    offset;
-  PRUint32    size;             /* size in original file */
-  PRUint32    realsize;         /* inflated size */
-  PRUint32    crc32;
+  PRUint32     offset;
+  PRUint32     size;             /* size in original file */
+  PRUint32     realsize;         /* inflated size */
+  PRUint32     crc32;
+  PRPackedBool isDirectory;
+  PRPackedBool isSynthetic;      /* whether item is an actual zip entry or was
+                                    generated as part of a real entry's path,
+                                    e.g. foo/ in a zip containing only foo/a.txt
+                                    and no foo/ entry is synthetic */
 
   nsZipItem*  next;
 
@@ -259,9 +264,12 @@ public:
    *
    * @param   aPattern    a string or RegExp pattern to search for
    *                      (may be NULL to find all files in archive)
-   * @return  a structure used in FindNext. NULL indicates error
+   * @param   aFind       a pointer to a pointer to a structure used
+   *                      in FindNext.  In the case of an error this
+   *                      will be set to NULL.
+   * @return  status code
    */
-  nsZipFind* FindInit(const char * aPattern);
+  PRInt32 FindInit(const char * aPattern, nsZipFind** aFind);
 
   /**
    * FindNext
@@ -298,6 +306,7 @@ private:
   nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
   nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
+  nsZipItem*        CreateZipItem();
   PRInt32           BuildFileList(PRFileDesc* aFd);
   nsZipItem*        GetFileItem(const char * zipEntry);
   PRUint32          HashName(const char* aName);
