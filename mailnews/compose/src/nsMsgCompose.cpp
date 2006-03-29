@@ -4127,6 +4127,14 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     {
       nsCOMPtr<nsISupports> item;
       addrbookDirArray->GetElementAt(k, getter_AddRefs(item));
+
+      // Avoid recursive mailing lists
+      if (abDirectory && (item == abDirectory))
+      {
+        stillNeedToSearch = PR_FALSE;
+        break;
+      }
+       
       abDirectory = do_QueryInterface(item, &rv);
       if (NS_FAILED(rv))
         return rv;
@@ -4236,7 +4244,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     
                     if (bIsMailList)
                     {
-                      //TODO: we must do something to avoid recursivity
                       stillNeedToSearch = PR_TRUE;
                     }
                     else
