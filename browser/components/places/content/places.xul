@@ -169,7 +169,10 @@
       <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder"/>
       <toolbarbutton id="toolbarDelete" command="placesCmd_edit:delete"/>
       <spacer flex="1"/>
-      <toolbarbutton id="toolbarGroup" command="placesCmd_groupby:site" type="checkbox"/>
+      <toolbarbutton id="toolbarGroup" type="radio" group="grouping" 
+                     observes="placesBC_grouping:off"/>
+      <toolbarbutton id="toolbarGroup" type="radio" group="grouping" 
+                     observes="placesBC_grouping:on" />
     </toolbar>
   </toolbox>
   <hbox flex="1" id="placesView">

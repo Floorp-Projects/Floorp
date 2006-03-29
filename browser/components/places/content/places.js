@@ -139,8 +139,8 @@ var PlacesOrganizer = {
     var node = asQuery(this._places.selectedNode);
     LOG("NODEURI: " + node.uri);
     this._content.place = node.uri;
-
-    Groupers.setGroupingOptions(this._content.getResult(), true);
+    
+    Groupers.setGroupingOptions();
 
     this._setHeader("showing", node.title);
   },
@@ -164,25 +164,6 @@ var PlacesOrganizer = {
         PlacesController.openLinksInTabs();
       }
     }
-  },
-
-  /**
-   * Shows all subscribed feeds (Live Bookmarks) grouped under their parent 
-   * feed.
-   */
-  groupByFeed: function PP_groupByFeed() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
-    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    PlacesController.groupByAnnotation("livemark/feedURI", [], 0);
-  },
-  
-  /**
-   * Shows all subscribed feed (Live Bookmarks) content in a flat list
-   */
-  groupByPost: function PP_groupByPost() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
-    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    PlacesController.groupByAnnotation("livemark/bookmarkFeedURI", [], 0);
   },
   
   /**
@@ -931,26 +912,27 @@ var Groupers = {
                          placeBundle.getString("defaultGroupOnAccesskey"),
                          placeBundle.getString("defaultGroupOffLabel"),
                          placeBundle.getString("defaultGroupOffAccesskey"),
-                         "PlacesOrganizer.groupBySite()",
-                         "PlacesOrganizer.groupByPage()");
+                         "Groupers.groupBySite()",
+                         "Groupers.groupByPage()");
     var subscriptionConfig = 
       new GroupingConfig("livemark/", placeBundle.getString("livemarkGroupOnLabel"),
                          placeBundle.getString("livemarkGroupOnAccesskey"),
                          placeBundle.getString("livemarkGroupOffLabel"),
                          placeBundle.getString("livemarkGroupOffAccesskey"),
-                         "PlacesOrganizer.groupByFeed()",
-                         "PlacesOrganizer.groupByPost()");
+                         "Groupers.groupByFeed()",
+                         "Groupers.groupByPost()");
     this.annotationGroupers.push(subscriptionConfig);
   },
   
   /**
    * Updates the grouping broadcasters for the given result. 
-   * @param   result
-   *          
-   * @param   on
-   *
    */
-  setGroupingOptions: function G_setGroupingOptions(result, on) {
+  setGroupingOptions: function G_setGroupingOptions() {
+    var result = PlacesOrganizer._content.getResult();
+    var query = asQuery(result.root);
+    var groupingsCountRef = { };
+    query.queryOptions.getGroupingMode(groupingsCountRef);
+
     var node = asQuery(result.root);
     
     var separator = document.getElementById("placesBC_grouping:separator");
@@ -992,16 +974,75 @@ var Groupers = {
       groupOff.setAttribute("accesskey", config.offAccesskey);
       groupOff.setAttribute("oncommand", config.offOncommand);
       // Update the checked state of the UI
-      if (on) {
-        groupOn.setAttribute("checked", "true");
-        groupOff.removeAttribute("checked");
-      }
-      else {
-        groupOff.setAttribute("checked", "true");
-        groupOn.removeAttribute("checked");
-      }
+      this.updateBroadcasters(groupingsCountRef.value > 0);
     }
-  }
+  },
+
+  /**
+   * Update the visual state of UI that controls grouping. 
+   */
+  updateBroadcasters: function PO_updateGroupingBroadcasters(on) {
+    var groupingOn = document.getElementById("placesBC_grouping:on");
+    var groupingOff = document.getElementById("placesBC_grouping:off");
+    if (on) {    
+      groupingOn.setAttribute("checked", "true");
+      groupingOff.removeAttribute("checked");
+    }
+    else {
+      groupingOff.setAttribute("checked", "true");
+      groupingOn.removeAttribute("checked");
+    }
+  },
+  
+  /**
+   * Shows visited pages grouped by site. 
+   */
+  groupBySite: function PO_groupBySite() {
+    var query = asQuery(PlacesOrganizer._content.getResult().root);
+    var queries = query.getQueries({ });
+    var options = query.queryOptions;
+    var newOptions = options.clone();
+    const NHQO = Ci.nsINavHistoryQueryOptions;
+    newOptions.setGroupingMode([NHQO.GROUP_BY_DOMAIN], 1);
+    PlacesOrganizer._content._load(queries, newOptions);
+    
+    this.updateBroadcasters(true);
+  },
+  
+  /**
+   * Shows visited pages without grouping. 
+   */
+  groupByPage: function PO_groupByPage() {
+    var query = asQuery(PlacesOrganizer._content.getResult().root);
+    var queries = query.getQueries({ });
+    var options = query.queryOptions;
+    var newOptions = options.clone();
+    newOptions.setGroupingMode([], 0);
+    PlacesOrganizer._content._load(queries, newOptions);
+
+    this.updateBroadcasters(false);
+  },
+
+  /**
+   * Shows all subscribed feeds (Live Bookmarks) grouped under their parent 
+   * feed.
+   */
+  groupByFeed: function PP_groupByFeed() {
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
+    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+    PlacesController.groupByAnnotation("livemark/feedURI", [], 0);
+  },
+  
+  /**
+   * Shows all subscribed feed (Live Bookmarks) content in a flat list
+   */
+  groupByPost: function PP_groupByPost() {
+    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
+    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
+    PlacesController.groupByAnnotation("livemark/bookmarkFeedURI", [], 0);
+  },
+  
+  
 };
 
 #include ../../../../toolkit/content/debug.js
