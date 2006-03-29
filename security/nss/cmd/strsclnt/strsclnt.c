@@ -1481,6 +1481,7 @@ main(int argc, char **argv)
     exitVal = ( exitVal || failed_already );
     SSL_ClearSessionCache();
     if (NSS_Shutdown() != SECSuccess) {
+        printf("strsclnt: NSS_Shutdown() failed.\n");
         exit(1);
     }
 
