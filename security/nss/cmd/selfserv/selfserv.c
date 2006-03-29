@@ -58,6 +58,7 @@
 #include <Process.h>	/* for getpid() */
 #endif
 
+#include <signal.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -882,6 +883,13 @@ reload_crl(PRFileDesc *crlFile)
     return rv;
 }
 
+void stop_server()
+{
+    stopping = 1;
+    VLOG(("selfserv: handle_connection: stop command"));
+    PR_Interrupt(acceptorThread);
+    PZ_TraceFlush();
+}
 
 int
 handle_connection( 
@@ -1177,14 +1185,20 @@ cleanup:
 
     /* do a nice shutdown if asked. */
     if (!strncmp(buf, stopCmd, sizeof stopCmd - 1)) {
-	stopping = 1;
-        VLOG(("selfserv: handle_connection: stop command"));
-	PR_Interrupt(acceptorThread);
-        PZ_TraceFlush();
+        stop_server();
     }
     VLOG(("selfserv: handle_connection: exiting"));
     return SECSuccess;	/* success */
 }
+
+#ifdef XP_UNIX
+
+void sigusr1_handler(int sig)
+{
+    stop_server();
+}
+
+#endif
 
 SECStatus
 do_accepts(
@@ -1200,6 +1214,13 @@ do_accepts(
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
 
     acceptorThread = PR_GetCurrentThread();
+#ifdef XP_UNIX
+    /* set up the signal handler */
+    if (signal(SIGUSR1, sigusr1_handler) == SIG_ERR) {
+        fprintf(stderr, "Error installing signal handler.\n");
+        exit(1);
+    }
+#endif
     while (!stopping) {
 	PRFileDesc *tcp_sock;
 	PRCList    *myLink;
@@ -1293,6 +1314,14 @@ getBoundListenSocket(unsigned short port)
     prStatus = PR_SetSocketOption(listen_sock, &opt);
     if (prStatus < 0) {
 	errExit("PR_SetSocketOption(PR_SockOpt_Reuseaddr)");
+    }
+
+    opt.option=PR_SockOpt_Linger;
+    opt.value.linger.polarity = PR_TRUE;
+    opt.value.linger.linger = PR_SecondsToInterval(1);;
+    prStatus = PR_SetSocketOption(listen_sock, &opt);
+    if (prStatus < 0) {
+        errExit("PR_SetSocketOption(PR_SockOpt_Linger)");
     }
 
     prStatus = PR_Bind(listen_sock, &addr);
