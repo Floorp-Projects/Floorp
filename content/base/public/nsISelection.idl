@@ -122,13 +122,12 @@ interface nsISelection : nsISupports
     void collapseToEnd();
 
     /**
-     * The value of entirelyContained determines the detail of the search to determine if
-     * the selection contains the node.  If entirelyContained is set to PR_TRUE, t
-     * or false if
-     * @param node      The node where the selection will be extended to
-     * @param entirelyContained Whether
+     * Indicates whether the node is part of the selection. If partlyContained 
+     * is set to PR_TRUE, the function returns true when some part of the node 
+     * is part of the selection. If partlyContained is set to PR_FALSE, the
+     * function only returns true when the entire node is part of the selection.
      */
-    boolean containsNode(in nsIDOMNode node, in boolean entirelyContained);
+    boolean containsNode(in nsIDOMNode node, in boolean partlyContained);
 
     /**
      * Adds all children of the specified node to the selection.
