@@ -45,7 +45,6 @@ REQUIRES += libreg widget gfx
 
 CPPSRCS += \
 	dlldeps.cpp \
-	dlldeps-obs.cpp \
 	nsGFXDeps.cpp \
 	nsDllMain.cpp \
 	$(NULL)
@@ -69,7 +68,6 @@ REQUIRES += libreg widget gfx
 
 CPPSRCS += \
 	dlldeps.cpp \
-	dlldeps-obs.cpp \
 	nsGFXDeps.cpp \
 	$(NULL)
 
@@ -85,7 +83,6 @@ endif
 STATIC_LIBS += \
 	xpcom_core \
 	mozreg_s \
-	xpcom_compat \
 	unicharutil_s \
 	ucvutil_s \
 	gkgfx \
@@ -94,7 +91,6 @@ STATIC_LIBS += \
 
 # component libraries
 COMPONENT_LIBS += \
-	xpcom_compat_c \
 	xpconnect \
 	necko \
 	auth \

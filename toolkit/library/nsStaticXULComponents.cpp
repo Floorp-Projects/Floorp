@@ -172,7 +172,6 @@
 #endif
 
 #define XUL_MODULES                          \
-    MODULE(xpcomObsoleteModule)              \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
     MODULE(nsUConvModule)                    \

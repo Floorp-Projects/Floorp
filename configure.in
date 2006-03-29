@@ -4478,6 +4478,7 @@ xulrunner)
   MOZ_JAVAXPCOM=1
   MOZ_PLACES=1
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc gnomevfs"
+  MOZ_NO_XPCOM_OBSOLETE=1
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
@@ -5089,9 +5090,6 @@ MOZ_ARG_DISABLE_BOOL(xpcom-obsolete,
     MOZ_NO_XPCOM_OBSOLETE=)
 
 if test -n "$MOZ_NO_XPCOM_OBSOLETE"; then
-if test -n "$MOZ_XPINSTALL"; then
-    AC_MSG_ERROR([Building without xpcom-obsolete isn't support when building xpinstal.])
-fi
 if test -z "$MOZ_SINGLE_PROFILE"; then
     AC_MSG_ERROR([Building without xpcom-obsolete isn't support when building full profile support.])
 fi

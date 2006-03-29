@@ -59,7 +59,6 @@ endif
 REQUIRES = \
 	xpcom \
 	string \
-	xpcom_obsolete \
 	$(ZLIB_REQUIRES) \
 	xulapp \
 	$(NULL)

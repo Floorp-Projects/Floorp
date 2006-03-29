@@ -65,7 +65,6 @@ DEFINES += \
 	-D_IMPL_NS_STRINGAPI \
 	-DEXPORT_XPT_API \
 	-DEXPORT_XPTC_API \
-	-D_IMPL_NS_COM_OBSOLETE \
 	-D_IMPL_NS_GFX \
 	-D_IMPL_NS_WIDGET \
 	$(NULL)
@@ -85,10 +84,7 @@ ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
 endif
 
-export:: dlldeps.cpp dlldeps-obs.cpp
+export:: dlldeps.cpp
 
 dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
-	$(INSTALL) $^ .
-
-dlldeps-obs.cpp: $(topsrcdir)/xpcom/obsolete/dlldeps-obs.cpp
 	$(INSTALL) $^ .
