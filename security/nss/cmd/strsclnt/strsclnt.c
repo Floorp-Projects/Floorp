@@ -126,7 +126,7 @@ int ssl3CipherSuites[] = {
 
 static const char *cipherString;
 
-static int certsTested;
+static PRInt32 certsTested;
 static int MakeCertOK;
 static int NoReuse;
 static int fullhs = NO_FULLHS_PERCENTAGE; /* percentage of full handshakes to
@@ -272,7 +272,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     /* invoke the "default" AuthCert handler. */
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
-    ++certsTested;
+    PR_AtomicIncrement(&certsTested);
     if (rv == SECSuccess) {
 	fputs("strsclnt: -- SSL: Server Certificate Validated.\n", stderr);
     }
@@ -1457,7 +1457,8 @@ main(int argc, char **argv)
     if (ssl3stats->hsh_sid_cache_hits + ssl3stats->hsh_sid_cache_misses +
         ssl3stats->hsh_sid_cache_not_ok == 0) {
 	/* presumably we were testing SSL2. */
-	printf("strsclnt: %d server certificates tested.\n", certsTested);
+	printf("strsclnt: SSL2 - %d server certificates tested.\n",
+               certsTested);
     } else {
 	printf(
 	"strsclnt: %ld cache hits; %ld cache misses, %ld cache not reusable\n",
@@ -1470,9 +1471,12 @@ main(int argc, char **argv)
 	exitVal = (ssl3stats->hsh_sid_cache_misses > 1) ||
                 (ssl3stats->hsh_sid_cache_not_ok != 0) ||
                 (certsTested > 1);
-    else
+    else {
+	printf("strsclnt: NoReuse - %d server certificates tested.\n",
+               certsTested);
 	exitVal = (ssl3stats->hsh_sid_cache_misses != connections) ||
                 (certsTested != connections);
+    }
 
     exitVal = ( exitVal || failed_already );
     SSL_ClearSessionCache();
