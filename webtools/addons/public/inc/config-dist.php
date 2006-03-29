@@ -111,6 +111,7 @@ $shadow_config = array(
     'extensions.php',
     'faq.php',
     'feeds.php',
+    'finalists.php',
     'history.php',
     'index.php',
     'policy.php',
@@ -119,7 +120,8 @@ $shadow_config = array(
     'search-engines.php',
     'search.php',
     'themes.php',
-    'update.php'
+    'update.php',
+    'winners.php'
 );
 
 /**
