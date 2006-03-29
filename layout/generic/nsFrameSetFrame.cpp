@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for HTML <frameset> elements */
+
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
 #include "nsContentUtils.h"

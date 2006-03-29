@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* interface to rendering object that lives inside the document scrollbars */
+
 #ifndef nsICanvasFrame_h__
 #define nsICanvasFrame_h__
 

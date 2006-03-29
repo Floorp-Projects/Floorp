@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* base class #1 for rendering objects that have child lists */
+
 #ifndef nsContainerFrame_h___
 #define nsContainerFrame_h___
 

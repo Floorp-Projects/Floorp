@@ -36,6 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* representation of one line within a block frame, a CSS line box */
+
 #ifndef nsLineBox_h___
 #define nsLineBox_h___
 

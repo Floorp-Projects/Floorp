@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * rendering object for CSS display:block and display:list-item objects,
+ * also used inside table cells
+ */
+
 #ifndef nsBlockFrame_h___
 #define nsBlockFrame_h___
 

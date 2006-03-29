@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* a set of ranges on a number-line */
+
 #ifndef nsIntervalSet_h___
 #define nsIntervalSet_h___
 

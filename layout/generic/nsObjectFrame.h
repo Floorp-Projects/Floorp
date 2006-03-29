@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering objects for replaced elements implemented by a plugin */
+
 #ifndef nsObjectFrame_h___
 #define nsObjectFrame_h___
 

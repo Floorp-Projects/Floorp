@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * base class for rendering objects that can be split across lines,
+ * columns, or pages
+ */
+
 #include "nsSplittableFrame.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"

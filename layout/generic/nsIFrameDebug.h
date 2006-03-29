@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* debugging interface for all rendering objects */
+
 #ifndef nsIFrameDebug_h___
 #define nsIFrameDebug_h___
 

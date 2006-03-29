@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* state used in reflow of block frames */
+
 #ifndef nsBlockReflowState_h__
 #define nsBlockReflowState_h__
 

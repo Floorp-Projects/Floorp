@@ -35,6 +35,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * class for transformation of text before rendering, including CSS
+ * text-transform
+ */
+
 #include <ctype.h>
 #include "nsCOMPtr.h"
 #include "nsTextTransformer.h"

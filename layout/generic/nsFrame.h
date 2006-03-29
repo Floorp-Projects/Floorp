@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* base class of all rendering objects */
+
 #ifndef nsFrame_h___
 #define nsFrame_h___
 

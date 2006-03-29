@@ -36,6 +36,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* class that a parent frame uses to reflow a block frame */
+
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
 #include "nsSpaceManager.h"

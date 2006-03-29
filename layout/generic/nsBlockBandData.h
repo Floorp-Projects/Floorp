@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* code for management of floats that implements space manager interfaces */
+
 #ifndef nsBlockBandData_h___
 #define nsBlockBandData_h___
 

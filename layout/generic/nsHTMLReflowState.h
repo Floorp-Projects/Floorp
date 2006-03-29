@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* struct containing the input to nsIFrame::Reflow */
+
 #ifndef nsHTMLReflowState_h___
 #define nsHTMLReflowState_h___
 

@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * interface for rendering objects that wrap rendering objects that should
+ * be scrollable
+ */
+
 #ifndef nsIScrollFrame_h___
 #define nsIScrollFrame_h___
 

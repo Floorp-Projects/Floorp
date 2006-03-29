@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* rendering object for HTML <spacer> element */
+
 #include "nsHTMLParts.h"
 #include "nsFrame.h"
 #include "nsLineLayout.h"

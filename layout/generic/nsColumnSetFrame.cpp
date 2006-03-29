@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* rendering object for css3 multi-column layout */
+
 #include "nsHTMLContainerFrame.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"

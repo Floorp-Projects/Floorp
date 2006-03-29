@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* base class for rendering objects that do not have child lists */
+
 #ifndef nsLeafFrame_h___
 #define nsLeafFrame_h___
 
