@@ -173,8 +173,6 @@ kill_selfserv()
   if [ "${OS_ARCH}" = "WINNT" -o "${OS_ARCH}" = "WIN95" -o "${OS_ARCH}" = "OS2" ]; then
       ${KILL} ${PID}
   else
-      # SIGUSR1 is only supported on Unix
-      # selfserv will terminate cleanly and call NSS_Shutdown() when receiving it
       ${KILL} -USR1 ${PID}
   fi
   wait ${PID}
