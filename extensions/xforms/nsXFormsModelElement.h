@@ -117,6 +117,100 @@ protected:
 };
 
 /**
+ * A class for storing pointers to XForms controls added to an XForms
+ * model. Organized as a tree, with pointers to first child and next sibling.
+ *
+ * Notes:
+ * 1) The root node is special; only has children and a nsnull mNode.
+ * 2) All functions operate on the node they are called on, and its
+ * subtree. Functions will never go up (as in: nearer the root) in the tree.
+ */
+class nsXFormsControlListItem
+{
+  /** The XForms control itself */
+  nsCOMPtr<nsIXFormsControl>      mNode;
+
+  /** The next sibling of the node */
+  nsXFormsControlListItem        *mNextSibling;
+
+  /** The first child of the node */
+  nsXFormsControlListItem        *mFirstChild;
+
+public:
+  nsXFormsControlListItem(nsIXFormsControl* aControl);
+  ~nsXFormsControlListItem();
+  nsXFormsControlListItem(const nsXFormsControlListItem& aCopy);
+
+  /** Clear contents of current node, all siblings, and all children */
+  void Clear();
+
+  /**
+   * Remove a control from the current (sub-) tree. Will search from that node
+   * and down in the tree for the node.
+   *
+   * @param aControl     The control to remove
+   * @param aRemoved     Was the control found and removed?
+   */
+  nsresult RemoveControl(nsIXFormsControl *aControl, PRBool &aRemoved);
+
+  /**
+   * Add a control to the (sub-) tree as a child to the given |aParent|. If
+   * there is no |aParent|, it will insert it as a sibling to |this|. If
+   * |aParent| is not found, it will bail.
+   *
+   * @param aControl     The control to insert
+   * @param aParent      The (eventual) parent to insert it under
+   */
+  nsresult AddControl(nsIXFormsControl *aControl,
+                      nsIXFormsControl *aParent);
+
+  /**
+   * Find a control in the (sub-) tree.
+   *
+   * @param aControl     The control to find
+   */
+  nsXFormsControlListItem* FindControl(nsIXFormsControl *aControl);
+
+  /**
+   * Return the nsIXFormsControl that this node contains.
+   */
+  already_AddRefed<nsIXFormsControl> Control();
+
+  /** Return the first child of the node */
+  nsXFormsControlListItem* FirstChild() { return mFirstChild; };
+
+  /** Return the next sibling of the node */
+  nsXFormsControlListItem* NextSibling() { return mNextSibling; };
+
+  /**
+   * An iterator implementation for the class.
+   */
+  class iterator
+  {
+  private:
+    /** The control the iterator is currently pointing at */
+    nsXFormsControlListItem  *mCur;
+
+    /** A stack of non-visited nodes */
+    nsVoidArray               mStack;
+
+  public:
+    iterator();
+    iterator(const nsXFormsControlListItem::iterator&);
+    iterator operator=(nsXFormsControlListItem*);
+    bool operator!=(const nsXFormsControlListItem*);
+    iterator operator++();
+    nsXFormsControlListItem* operator*();
+  };
+
+  /** The begining position for the node (itself) */
+  nsXFormsControlListItem* begin();
+
+  /** The end position for the node (nsnull) */
+  nsXFormsControlListItem* end();
+};
+
+/**
  * Implementation of the XForms \<model\> element.
  *
  * This includes all of the code for loading the model's external resources and
@@ -247,10 +341,13 @@ private:
    */
   NS_HIDDEN_(nsresult) HandleUnload(nsIDOMEvent *aEvent);
 
+  NS_HIDDEN_(nsresult) RefreshSubTree(nsXFormsControlListItem *aCurrent,
+                                      PRBool                    aForceRebind);
+
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
   nsStringArray             mPendingInlineSchemas;
-  nsVoidArray               mFormControls;
+  nsXFormsControlListItem   mFormControls;
 
   PRInt32 mSchemaCount;
   PRInt32 mSchemaTotal;

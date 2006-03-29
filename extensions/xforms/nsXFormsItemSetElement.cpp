@@ -225,12 +225,7 @@ nsXFormsItemSetElement::SelectItemByNode(nsIDOMNode *aNode,
 NS_IMETHODIMP
 nsXFormsItemSetElement::Bind()
 {
-  mModel = nsXFormsUtils::GetModel(mElement);
-  if (mModel) {
-    mModel->AddFormControl(this);
-  }
-
-  return NS_OK;
+  return BindToModel();
 }
 
 NS_IMETHODIMP

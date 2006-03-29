@@ -200,19 +200,7 @@ nsXFormsContextContainer::SetContext(nsIDOMNode *aContextNode,
   mContextPosition = aContextPosition;
   mContextSize = aContextSize;
 
-  // Remove from old model (if any)
-  if (mModel) {
-    mModel->RemoveFormControl(this);
-  }
-
-  // Add to new model
-  mModel = nsXFormsUtils::GetModel(mElement);
-  if (mModel) {
-    mModel->AddFormControl(this);
-    mModel->SetStates(this, mBoundNode);
-  }
-
-  return NS_OK;
+  return Bind();
 }
 
 NS_IMETHODIMP
@@ -238,6 +226,14 @@ nsXFormsContextContainer::GetContext(nsAString      &aModelID,
 NS_IMETHODIMP
 nsXFormsContextContainer::Bind()
 {
+
+  nsresult rv = BindToModel();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (mModel) {
+    mModel->SetStates(this, mBoundNode);
+  }
+
   return NS_OK;
 }
 

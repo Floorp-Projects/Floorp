@@ -178,6 +178,313 @@ SupportsDtorFunc(void *aObject, nsIAtom *aPropertyName,
   NS_IF_RELEASE(propertyValue);
 }
 
+
+//------------------------------------------------------------------------------
+// --- nsXFormsControlListItem  ---
+
+
+nsXFormsControlListItem::iterator::iterator()
+  : mCur(0)
+{
+}
+
+nsXFormsControlListItem::iterator::iterator(const nsXFormsControlListItem::iterator& aCopy)
+  : mCur(aCopy.mCur)
+{
+  mStack = aCopy.mStack;
+}
+
+nsXFormsControlListItem::iterator
+nsXFormsControlListItem::iterator::operator=(nsXFormsControlListItem* aCnt)
+{
+  mCur = aCnt;
+  return *this;
+}
+
+bool
+nsXFormsControlListItem::iterator::operator!=(const nsXFormsControlListItem* aCnt)
+{
+  return mCur != aCnt;
+}
+
+nsXFormsControlListItem::iterator
+nsXFormsControlListItem::iterator::operator++()
+{
+  if (!mCur)
+    return *this;
+
+  if (mCur->mFirstChild) {
+    if (!mCur->mNextSibling) {
+      mCur = mCur->mFirstChild;
+      return *this;
+    }
+    mStack.AppendElement(mCur->mFirstChild);
+  }
+    
+  if (mCur->mNextSibling) {
+    mCur = mCur->mNextSibling;
+  } else if (mStack.Count()) {
+    mCur = (nsXFormsControlListItem*) mStack[mStack.Count() - 1];
+    mStack.RemoveElementAt(mStack.Count() - 1);
+  } else {
+    mCur = nsnull;
+  }
+
+  return *this;
+}
+
+nsXFormsControlListItem*
+nsXFormsControlListItem::iterator::operator*()
+{
+  return mCur;
+}
+
+nsXFormsControlListItem::nsXFormsControlListItem(nsIXFormsControl* aControl)
+  : mNode(aControl),
+    mNextSibling(nsnull),
+    mFirstChild(nsnull)
+{
+  
+}
+
+nsXFormsControlListItem::~nsXFormsControlListItem()
+{
+  Clear();
+}
+
+nsXFormsControlListItem::nsXFormsControlListItem(const nsXFormsControlListItem& aCopy)
+  : mNode(aCopy.mNode)
+{
+  if (aCopy.mNextSibling) {
+    mNextSibling = new nsXFormsControlListItem(*aCopy.mNextSibling);
+    NS_WARN_IF_FALSE(mNextSibling, "could not new?!");
+  } else {
+    mNextSibling = nsnull;
+  }
+
+  if (aCopy.mFirstChild) {
+    mFirstChild = new nsXFormsControlListItem(*aCopy.mFirstChild);
+    NS_WARN_IF_FALSE(mFirstChild, "could not new?!");
+  } else {
+    mFirstChild = nsnull;
+  }
+}
+
+void
+nsXFormsControlListItem::Clear()
+{
+  if (mFirstChild) {
+    mFirstChild->Clear();
+    NS_ASSERTION(!(mFirstChild->mFirstChild || mFirstChild->mNextSibling),
+                 "child did not clear members!!");
+    delete mFirstChild;
+    mFirstChild = nsnull;
+  }
+  if (mNextSibling) {
+    mNextSibling->Clear();
+    NS_ASSERTION(!(mNextSibling->mFirstChild || mNextSibling->mNextSibling),
+                 "sibling did not clear members!!");
+    delete mNextSibling;
+    mNextSibling = nsnull;
+  }
+  if (mNode)
+    mNode = nsnull;
+}
+
+nsresult
+nsXFormsControlListItem::AddControl(nsIXFormsControl *aControl,
+                                    nsIXFormsControl *aParent)
+{
+  // Four insertion posibilities:
+
+  // 1) Delegate to first child from root node
+  if (!mNode && mFirstChild) {
+    return mFirstChild->AddControl(aControl, aParent);
+  }
+
+  // 2) control with no parent
+  if (!aParent) {
+    nsXFormsControlListItem* newNode = new nsXFormsControlListItem(aControl);
+    NS_ENSURE_STATE(newNode);
+
+    // Empty tree (we have already checked mFirstChild)
+    if (!mNode) {
+      mFirstChild = newNode;
+      return NS_OK;
+    }
+
+    if (mNextSibling) {
+      newNode->mNextSibling = mNextSibling;
+    }
+    mNextSibling = newNode;
+#ifdef DEBUG
+    nsXFormsControlListItem* next = newNode->mNextSibling;
+    while (next) {
+      NS_ASSERTION(aControl != next->mNode,
+                   "Node already in tree!!");
+      next = next->mNextSibling;
+    }
+#endif
+
+    return NS_OK;
+  }
+
+  // Locate parent
+  nsXFormsControlListItem* parentControl = FindControl(aParent);
+  NS_ASSERTION(parentControl, "Parent not found?!");
+
+  // 3) parentControl has a first child, insert as sibling to that
+  if (parentControl->mFirstChild) {
+    return parentControl->mFirstChild->AddControl(aControl, nsnull);
+  }
+
+  // 4) first child for parentControl
+  nsXFormsControlListItem* newNode = new nsXFormsControlListItem(aControl);
+  NS_ENSURE_STATE(newNode);
+  parentControl->mFirstChild = newNode;
+
+  return NS_OK;
+}
+
+nsresult
+nsXFormsControlListItem::RemoveControl(nsIXFormsControl *aControl,
+                                       PRBool           &aRemoved)
+{
+  nsXFormsControlListItem* deleteMe = nsnull;
+  aRemoved = PR_FALSE;
+
+  // Try children
+  if (mFirstChild) {
+    // The control to remove is our first child
+    if (mFirstChild->mNode == aControl) {
+      deleteMe = mFirstChild;
+
+      // Fix siblings
+      if (deleteMe->mNextSibling) {
+        mFirstChild = deleteMe->mNextSibling;
+        deleteMe->mNextSibling = nsnull;
+      } else {
+        mFirstChild = nsnull;
+      }
+
+      // Fix children
+      if (deleteMe->mFirstChild) {
+        if (!mFirstChild) {
+          mFirstChild = deleteMe->mFirstChild;
+        } else {
+          nsXFormsControlListItem *insertPos = mFirstChild;
+          while (insertPos->mNextSibling) {
+            insertPos = insertPos->mNextSibling;
+          }
+          insertPos->mNextSibling = deleteMe->mFirstChild;
+        }
+        deleteMe->mFirstChild = nsnull;
+      }
+    } else {
+      // Run through children
+      nsresult rv = mFirstChild->RemoveControl(aControl, aRemoved);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (aRemoved)
+        return rv;
+    }
+  }
+
+  // Try siblings
+  if (!deleteMe && mNextSibling) {
+    if (mNextSibling->mNode == aControl) {
+      deleteMe = mNextSibling;
+      // Fix siblings
+      if (deleteMe->mNextSibling) {
+        mNextSibling = deleteMe->mNextSibling;
+        deleteMe->mNextSibling = nsnull;
+      } else {
+        mNextSibling = nsnull;
+      }
+      // Fix children
+      if (deleteMe->mFirstChild) {
+        if (!mNextSibling) {
+          mNextSibling = deleteMe->mFirstChild;
+        } else {
+          nsXFormsControlListItem *insertPos = mNextSibling;
+          while (insertPos->mNextSibling) {
+            insertPos = insertPos->mNextSibling;
+          }
+          insertPos->mNextSibling = deleteMe->mFirstChild;
+        }
+        deleteMe->mFirstChild = nsnull;
+      }
+    } else {
+      // run through siblings
+      return mNextSibling->RemoveControl(aControl, aRemoved);
+    }
+  }
+
+  if (deleteMe) {
+    NS_ASSERTION(!(deleteMe->mNextSibling),
+                 "Deleted control should not have siblings!");
+    NS_ASSERTION(!(deleteMe->mFirstChild),
+                 "Deleted control should not have children!");
+    delete deleteMe;
+    aRemoved = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+nsXFormsControlListItem*
+nsXFormsControlListItem::FindControl(nsIXFormsControl *aControl)
+{
+  if (!aControl)
+    return nsnull;
+
+  // this should only be false for the root
+  if (mNode) {
+    // XXX: *sigh* pointer comparision of nsIXFormsControl would be nice...
+    nsCOMPtr<nsIDOMElement> el1, el2;
+    aControl->GetElement(getter_AddRefs(el1));
+    mNode->GetElement(getter_AddRefs(el2));
+
+    if (el1 == el2)
+      return this;
+  }
+
+  nsXFormsControlListItem* cur = nsnull;
+  if (mFirstChild) {
+    cur = mFirstChild->FindControl(aControl);
+  }
+  if (!cur && mNextSibling) {
+    cur = mNextSibling->FindControl(aControl);
+  }
+  return cur;
+}
+
+already_AddRefed<nsIXFormsControl>
+nsXFormsControlListItem::Control()
+{
+  nsIXFormsControl* res = nsnull;
+  if (mNode)
+    NS_ADDREF(res = mNode);
+  NS_WARN_IF_FALSE(res, "Returning nsnull for a control. Bad sign.");
+  return res;
+}
+
+nsXFormsControlListItem*
+nsXFormsControlListItem::begin()
+{
+  // handle root
+  if (!mNode)
+    return mFirstChild;
+
+  return this;
+}
+
+nsXFormsControlListItem*
+nsXFormsControlListItem::end()
+{
+  return nsnull;
+}
+
+
 //------------------------------------------------------------------------------
 
 static const nsIID sScriptingIIDs[] = {
@@ -263,6 +570,7 @@ nsXFormsModelElement::CancelPostRefresh(nsIXFormsControl* aControl)
 
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
+    mFormControls(nsnull),
     mSchemaCount(0),
     mSchemaTotal(0),
     mPendingInstanceCount(0),
@@ -299,6 +607,8 @@ nsXFormsModelElement::OnDestroyed()
 
   if (mInstanceDocuments)
     mInstanceDocuments->DropReferences();
+
+  mFormControls.Clear();
 
   return NS_OK;
 }
@@ -672,34 +982,14 @@ nsXFormsModelElement::Rebuild()
 
   // 3. Re-attach all elements
   if (mDocumentLoaded) { // if it's not during initializing phase
-    // Copy the form control list as it stands right now.
-    nsVoidArray *oldFormList = new nsVoidArray();
-    NS_ENSURE_TRUE(oldFormList, NS_ERROR_OUT_OF_MEMORY);
-    *oldFormList = mFormControls;
-  
-    // Clear out mFormControls so that we can rebuild the list.  We'll go control 
-    // by control over the old list and rebind the controls.
-    mFormControls.Clear(); // if this happens on a documentchange
+    nsXFormsControlListItem::iterator it;
+    for (it = mFormControls.begin(); it != mFormControls.end(); ++it) {
+      nsCOMPtr<nsIXFormsControl> control = (*it)->Control();
+      NS_ASSERTION(control, "mFormControls has null control?!");
 
-    PRInt32 controlCount = oldFormList->Count();
-    for (PRInt32 i = 0; i < controlCount; ++i) {
-      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, 
-                                                 (*oldFormList)[i]);
-      /// @todo If a control is removed because of previous control has been
-      /// refreshed, we do, obviously, not need to refresh it. So mFormControls
-      /// should have weak bindings to the controls I guess? (XXX)
-      ///
-      /// This could happen for \<repeatitem\>s for example.
-      if (!control) {
-        continue;
-      }
-
-      // run bind to reset mBoundNode for all of these controls and also, in the
-      // process, they will be added to the model that they should be bound to.
+      // run bind to reset mBoundNode for all of the model's controls
       control->Bind();
     }
-    
-    delete oldFormList;
 
     // Triggers a refresh of all controls
     mNeedsRefresh = PR_TRUE;
@@ -800,6 +1090,159 @@ nsXFormsModelElement::Revalidate()
   return NS_OK;
 }
 
+nsresult
+nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
+                                     PRBool                   aForceRebind)
+{
+  nsresult rv;
+
+  while (aCurrent) {
+    nsCOMPtr<nsIXFormsControl> control(aCurrent->Control());
+    NS_ASSERTION(control, "A tree node without a control?!");
+    
+    // Get bound node
+    nsCOMPtr<nsIDOMNode> boundNode;
+    control->GetBoundNode(getter_AddRefs(boundNode));
+
+    PRBool rebind = aForceRebind;
+    PRBool refresh = PR_FALSE;
+    PRBool rebindChildren = PR_FALSE;
+
+#ifdef DEBUG_MODEL
+      nsCOMPtr<nsIDOMElement> controlElement;
+      control->GetElement(getter_AddRefs(controlElement));
+      printf("rebind: %d, mNeedsRefresh: %d, rebindChildren: %d\n",
+             rebind, mNeedsRefresh, rebindChildren);
+      if (controlElement) {
+        printf("Checking control: ");
+        //DBG_TAGINFO(controlElement);
+      }
+#endif
+
+    if (mNeedsRefresh || rebind) {
+      refresh = PR_TRUE;
+    } else {
+      PRBool usesModelBinding = PR_FALSE;
+      control->GetUsesModelBinding(&usesModelBinding);
+
+#ifdef DEBUG_MODEL
+      printf("usesModelBinding: %d\n", usesModelBinding);
+#endif
+
+      nsCOMArray<nsIDOMNode> *deps = nsnull;
+      if (usesModelBinding) {
+        if (!boundNode) {
+          // If a control uses a model binding, but has no bound node a
+          // rebuild is the only thing that'll (eventually) change it
+          aCurrent = aCurrent->NextSibling();
+          continue;
+        }
+      } else {
+        // Get dependencies
+        control->GetDependencies(&deps);
+      }
+      PRUint32 depCount = deps ? deps->Count() : 0;
+        
+#ifdef DEBUG_MODEL
+      nsAutoString boundName;
+      if (boundNode)
+        boundNode->GetNodeName(boundName);
+      printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
+             depCount,
+             NS_ConvertUTF16toUTF8(boundName).get(),
+             (void*) boundNode);
+
+      nsAutoString depNodeName;
+      for (PRUint32 t = 0; t < depCount; ++t) {
+        nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
+        if (tmpdep) {
+          tmpdep->GetNodeName(depNodeName);
+          printf("\t\t%s [%p]\n",
+                 NS_ConvertUTF16toUTF8(depNodeName).get(),
+                 (void*) tmpdep);
+        }
+      }
+#endif
+
+      nsCOMPtr<nsIDOM3Node> curChanged;
+
+      // Iterator over changed nodes. Checking for rebind, too.  If it ever
+      // becomes true due to some condition below, we can stop this testing
+      // since any control that needs to rebind will also refresh.
+      for (PRInt32 j = 0; j < mChangedNodes.Count() && !rebind; ++j) {
+        curChanged = do_QueryInterface(mChangedNodes[j]);
+
+        // Check whether the bound node is dirty. If so, we need to refresh the
+        // control (get updated node value from the bound node)
+        if (!refresh && boundNode) {
+          curChanged->IsSameNode(boundNode, &refresh);
+
+          // Two ways to go here. Keep in mind that controls using model
+          // binding expressions never needs to have dependencies checked as
+          // they only rebind on xforms-rebuild
+          if (refresh && usesModelBinding) {
+            // 1) If the control needs a refresh, and uses model bindings,
+            // we can stop checking here
+            break;
+          }
+          if (refresh || usesModelBinding) {
+            // 2) If either the control needs a refresh or it uses a model
+            // binding we can continue to next changed node
+            continue;
+          }
+        }
+
+        // Check whether any dependencies are dirty. If so, we need to rebind
+        // the control (re-evaluate it's binding expression)
+        for (PRUint32 k = 0; k < depCount; ++k) {
+          /// @note beaufour: I'm not too happy about this ...
+          /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
+          /// for sorting and comparing does not work...
+          curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
+          if (rebind)
+            // We need to rebind the control, no need to check any more
+            break;
+        }
+      }
+#ifdef DEBUG_MODEL
+      printf("\trebind: %d, refresh: %d\n", rebind, refresh);
+#endif    
+    }
+
+    // Handle rebinding
+    if (rebind) {
+      nsCOMPtr<nsIDOMNode> oldBoundNode;
+      control->GetBoundNode(getter_AddRefs(oldBoundNode));
+      rv = control->Bind();
+      NS_ENSURE_SUCCESS(rv, rv);
+      control->GetBoundNode(getter_AddRefs(boundNode));
+      rebindChildren = (oldBoundNode != boundNode);
+    }
+
+    // Handle refreshing
+    if (rebind || refresh) {
+      rv = SetStatesInternal(control, boundNode);
+      NS_ENSURE_SUCCESS(rv, rv);
+      control->Refresh();
+      // XXX: we should really check the return result, but f.x. select1
+      // returns error because of no widget...?  so we should ensure that an
+      // error is only returned when there actually is an error, and we should
+      // report that on the console... possibly we should then continue,
+      // instead of bailing totally.
+      // NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // Refresh children
+    rv = RefreshSubTree(aCurrent->FirstChild(), rebindChildren);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aCurrent = aCurrent->NextSibling();
+  }
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsXFormsModelElement::Refresh()
 {
@@ -808,133 +1251,17 @@ nsXFormsModelElement::Refresh()
 #endif
   nsPostRefresh postRefresh = nsPostRefresh();
 
-  // Iterate over all form controls if not during initialization phase (then
-  // this is handled in InitializeControls())
-  if (mDocumentLoaded) {
-    PRInt32 controlCount = mFormControls.Count();
-    for (PRInt32 i = 0; i < controlCount; ++i) {
-      nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i]);
-      /// @todo If a control is removed because of previous control has been
-      /// refreshed, we do, obviously, not need to refresh it. So mFormControls
-      /// should have weak bindings to the controls I guess? (XXX)
-      ///
-      /// This could happen for \<repeatitem\>s for example.
-      if (!control) {
-        continue;
-      }
-
-      // Get bound node
-      nsCOMPtr<nsIDOMNode> boundNode;
-      control->GetBoundNode(getter_AddRefs(boundNode));
-
-      PRBool rebind = PR_FALSE;
-      PRBool refresh = PR_FALSE;
-
-      if (mNeedsRefresh) {
-        refresh = PR_TRUE;
-      } else {
-        PRBool usesModelBinding = PR_FALSE;
-        control->GetUsesModelBinding(&usesModelBinding);
-
-        nsCOMArray<nsIDOMNode> *deps = nsnull;
-        if (usesModelBinding) {
-          if (!boundNode)
-          // If a control uses a model binding, but has no bound node a
-          // rebuild is the only thing that'll (eventually) change it
-          continue;
-        } else {
-          // Get dependencies
-          control->GetDependencies(&deps);    
-        }
-        PRUint32 depCount = deps ? deps->Count() : 0;
-        
-#ifdef DEBUG_MODEL
-        nsCOMPtr<nsIDOMElement> controlElement;
-        control->GetElement(getter_AddRefs(controlElement));
-        if (controlElement) {
-          printf("Checking control: ");      
-          //DBG_TAGINFO(controlElement);
-          nsAutoString boundName;
-          if (boundNode)
-            boundNode->GetNodeName(boundName);
-          printf("\tDependencies: %d, Bound to: '%s' [%p]\n",
-                 depCount,
-                 NS_ConvertUTF16toUTF8(boundName).get(),
-                 (void*) boundNode);
-
-          nsAutoString depNodeName;
-          for (PRUint32 t = 0; t < depCount; ++t) {
-            nsCOMPtr<nsIDOMNode> tmpdep = deps->ObjectAt(t);
-            if (tmpdep) {
-              tmpdep->GetNodeName(depNodeName);
-              printf("\t\t%s [%p]\n",
-                     NS_ConvertUTF16toUTF8(depNodeName).get(),
-                     (void*) tmpdep);
-            }
-          }
-        }
-#endif
-
-        nsCOMPtr<nsIDOM3Node> curChanged;
-
-        // Checking for rebind, too.  If it ever becomes true due to some
-        // condition below, we can stop this testing since any control that
-        // needs to rebind will also refresh.
-        for (PRInt32 j = 0; j < mChangedNodes.Count() && !rebind; ++j) {
-          curChanged = do_QueryInterface(mChangedNodes[j]);
-
-          // Check whether the bound node is dirty. If so, we need to refresh the
-          // control (get updated node value from the bound node)
-          if (!refresh && boundNode) {
-            curChanged->IsSameNode(boundNode, &refresh);
-
-            // Two ways to go here. Keep in mind that controls using model
-            // binding expressions never needs to have dependencies checked as
-            // they only rebind on xforms-rebuild
-            if (refresh && usesModelBinding) {
-              // 1) If the control needs a refresh, and uses model bindings,
-              // we can stop checking here
-              break;
-            }
-            if (refresh || usesModelBinding) {
-              // 2) If either the control needs a refresh or it uses a model
-              // binding we can continue to next changed node
-              continue;
-            }
-          }
-
-          // Check whether any dependencies are dirty. If so, we need to rebind
-          // the control (re-evaluate it's binding expression)
-          for (PRUint32 k = 0; k < depCount; ++k) {
-            /// @note beaufour: I'm not to happy about this ...
-            /// O(mChangedNodes.Count() * deps->Count()), but using the pointers
-            /// for sorting and comparing does not work...
-            curChanged->IsSameNode(deps->ObjectAt(k), &rebind);
-            if (rebind)
-              // We need to rebind the control, no need to check any more
-              break;
-          }
-        }
-#ifdef DEBUG_MODEL
-        printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
-#endif    
-      }
-
-      if (rebind) {
-        control->Bind();
-        control->GetBoundNode(getter_AddRefs(boundNode));
-      }
-      if (rebind || refresh) {
-        nsresult rv = SetStatesInternal(control, boundNode);
-        NS_ENSURE_SUCCESS(rv, rv);
-        control->Refresh();
-      }
-    }
-
-    mChangedNodes.Clear();
-    mNeedsRefresh = PR_FALSE;
+  if (!mDocumentLoaded) {
+    return NS_OK;
   }
-  
+
+  // Kick off refreshing on root node
+  nsresult rv = RefreshSubTree(mFormControls.FirstChild(), PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear refresh structures
+  mChangedNodes.Clear();
+  mNeedsRefresh = PR_FALSE;
   mMDG.ClearDispatchFlags();
 
   return NS_OK;
@@ -991,18 +1318,22 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
 // nsIModelElementPrivate
 
 NS_IMETHODIMP
-nsXFormsModelElement::AddFormControl(nsIXFormsControl *aControl)
+nsXFormsModelElement::AddFormControl(nsIXFormsControl *aControl,
+                                     nsIXFormsControl *aParent)
 {
-  if (mFormControls.IndexOf(aControl) == -1)
-    mFormControls.AppendElement(aControl);
-  return NS_OK;
+  NS_ENSURE_ARG(aControl);
+  return mFormControls.AddControl(aControl, aParent);
 }
 
 NS_IMETHODIMP
 nsXFormsModelElement::RemoveFormControl(nsIXFormsControl *aControl)
 {
-  mFormControls.RemoveElement(aControl);
-  return NS_OK;
+  NS_ENSURE_ARG(aControl);
+  PRBool removed;
+  nsresult rv = mFormControls.RemoveControl(aControl, removed);
+  NS_WARN_IF_FALSE(removed,
+                   "Tried to remove control that was not in the model");
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1525,15 +1856,19 @@ nsXFormsModelElement::InitializeControls()
 #endif
   nsPostRefresh postRefresh = nsPostRefresh();
 
-  PRInt32 controlCount = mFormControls.Count();
+  nsXFormsControlListItem::iterator it;
   nsresult rv;
-  for (PRInt32 i = 0; i < controlCount; ++i) {
+  for (it = mFormControls.begin(); it != mFormControls.end(); ++it) {
     // Get control
-    nsIXFormsControl *control = NS_STATIC_CAST(nsIXFormsControl*,
-                                               mFormControls[i]);
-    if (!control)
-      continue;
+    nsCOMPtr<nsIXFormsControl> control = (*it)->Control();
+    NS_ASSERTION(control, "mFormControls has null control?!");
 
+#ifdef DEBUG_MODEL
+    printf("\tControl (%p): ", (void*) control);
+    nsCOMPtr<nsIDOMElement> controlElement;
+    control->GetElement(getter_AddRefs(controlElement));
+    // DBG_TAGINFO(controlElement);
+#endif
     // Rebind
     rv = control->Bind();
     NS_ENSURE_SUCCESS(rv, rv);

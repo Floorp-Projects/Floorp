@@ -211,11 +211,20 @@ protected:
   void ResetProperties();
 
   /**
+   * Checks whether an attribute is a binding attribute for the control. This
+   * should be overriden by controls that have "non-standard" binding
+   * attributes.
+   *
+   * @param aAttr        The attribute to check.
+   */
+  virtual PRBool IsBindingAttribute(const nsIAtom *aAttr) const;
+ 
+  /**
    * Causes Bind() and Refresh() to be called if aName is the atom of a
    * single node binding attribute for this control.  Called by AttributeSet
    * and AttributeRemoved.
    */
-  void MaybeBindAndRefresh(nsIAtom *aName);
+  void AfterSetAttribute(nsIAtom *aName);
 
   /**
    * Removes this control from its model's list of controls if a single node
@@ -225,10 +234,31 @@ protected:
    * @param aName  - atom of the attribute being changed
    * @param aValue - value that the attribute is being changed to.
    */
-  void MaybeRemoveFromModel(nsIAtom *aName, const nsAString &aValue); 
+  void BeforeSetAttribute(nsIAtom *aName, const nsAString &aValue);
 
   /** Removes the index change event listeners */
   void RemoveIndexListeners();
+
+  /**
+   * Binds the control to the model. Does _not_ set mBoundNode, etc. Just sets
+   * mModel, and handle attaching to the model (including reattaching from any
+   * old model).
+   */
+  nsresult BindToModel();
+
+  /**
+   * Forces a rebinding to the model.
+   */
+  nsresult ForceModelRebind();
+
+  /**
+   * Adds the form control to the model, if the model has changed.
+   *
+   * @param aOldModel         The previous model the control was bound to
+   * @param aParent           The parent XForms control
+   */
+  nsresult MaybeAddToModel(nsIModelElementPrivate *aOldModel,
+                           nsIXFormsControl       *aParent);
 };
 
 

@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventStateManager.h"
 #include "nsIContent.h"
+#include "nsIDOM3Node.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -227,10 +228,33 @@ nsXFormsControlStubBase::GetUsesModelBinding(PRBool *aRes)
 }
 
 nsresult
+nsXFormsControlStubBase::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
+                                         nsIXFormsControl       *aParent)
+{
+  // XXX: just doing pointer comparison would be nice....
+  PRBool sameModel = PR_FALSE;
+  nsCOMPtr<nsIDOM3Node> n3Model(do_QueryInterface(mModel));
+  nsCOMPtr<nsIDOMNode> nOldModel(do_QueryInterface(aOldModel));
+  NS_ASSERTION(n3Model, "model element not supporting nsIDOM3Node?!");
+  nsresult rv = n3Model->IsSameNode(nOldModel, &sameModel);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sameModel) {
+    if (aOldModel) {
+      rv = aOldModel->RemoveFormControl(this);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    rv = mModel->AddFormControl(this, aParent);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+
+nsresult
 nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAttr,
-                                        PRUint16                 aResultType,
-                                        nsIDOMXPathResult      **aResult,
-                                        nsIModelElementPrivate **aModel)
+                                            PRUint16                 aResultType,
+                                            nsIDOMXPathResult      **aResult,
+                                            nsIModelElementPrivate **aModel)
 {
   nsStringArray indexesUsed;
 
@@ -250,6 +274,8 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
 
   nsresult rv;
   PRBool usesModelBinding;
+  nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
+  nsCOMPtr<nsIXFormsControl> parentControl;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
                                           aBindingAttr,
@@ -258,11 +284,14 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
                                           getter_AddRefs(mModel),
                                           aResult,
                                           &usesModelBinding,
+                                          getter_AddRefs(parentControl),
                                           &mDependencies,
                                           &indexesUsed);
   NS_ENSURE_STATE(mModel);
-  
-  mModel->AddFormControl(this);
+
+  rv = MaybeAddToModel(oldModel, parentControl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (aModel)
     NS_ADDREF(*aModel = mModel);
   mUsesModelBinding = usesModelBinding;
@@ -288,6 +317,17 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
   }
 
   return rv;
+}
+
+nsresult
+nsXFormsControlStubBase::BindToModel()
+{
+  nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
+
+  nsCOMPtr<nsIXFormsControl> parentControl;
+  mModel = nsXFormsUtils::GetModel(mElement, getter_AddRefs(parentControl));
+
+  return MaybeAddToModel(oldModel, parentControl);
 }
 
 void
@@ -503,16 +543,25 @@ nsXFormsControlStubBase::OnDestroyed()
 }
 
 nsresult
+nsXFormsControlStubBase::ForceModelRebind()
+{
+  if (mModel) {
+    // Remove from model, so Bind() will be forced to reattach
+    mModel->RemoveFormControl(this);
+    mModel = nsnull;
+  }
+  nsresult rv = Bind();
+  NS_ENSURE_SUCCESS(rv, rv);
+  return Refresh();
+}
+
+
+nsresult
 nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
 {
   // We need to re-evaluate our instance data binding when our document
   // changes, since our context can change
-  if (aNewDocument) {
-    Bind();
-    Refresh();
-  }
-
-  return NS_OK;
+  return aNewDocument ? ForceModelRebind() : NS_OK;
 }
 
 nsresult
@@ -521,39 +570,34 @@ nsXFormsControlStubBase::ParentChanged(nsIDOMElement *aNewParent)
   mHasParent = aNewParent != nsnull;
   // We need to re-evaluate our instance data binding when our parent changes,
   // since xmlns declarations or our context could have changed.
-  if (mHasParent) {
-    Bind();
-    Refresh();
-  }
-
-  return NS_OK;
+  return mHasParent ? ForceModelRebind() : NS_OK;
 }
 
 nsresult
 nsXFormsControlStubBase::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
 {
-  MaybeRemoveFromModel(aName, aValue);
+  BeforeSetAttribute(aName, aValue);
   return NS_OK;
 }
 
 nsresult
 nsXFormsControlStubBase::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 {
-  MaybeBindAndRefresh(aName);
+  AfterSetAttribute(aName);
   return NS_OK;
 }
 
 nsresult
 nsXFormsControlStubBase::WillRemoveAttribute(nsIAtom *aName)
 {
-  MaybeRemoveFromModel(aName, EmptyString());
+  BeforeSetAttribute(aName, EmptyString());
   return NS_OK;
 }
 
 nsresult
 nsXFormsControlStubBase::AttributeRemoved(nsIAtom *aName)
 {
-  MaybeBindAndRefresh(aName);
+  AfterSetAttribute(aName);
   return NS_OK;
 }
 
@@ -642,13 +686,22 @@ nsXFormsControlStubBase::AddRemoveSNBAttr(nsIAtom *aName, const nsAString &aValu
   }
 }
 
-void
-nsXFormsControlStubBase::MaybeBindAndRefresh(nsIAtom *aName)
+PRBool
+nsXFormsControlStubBase::IsBindingAttribute(const nsIAtom *aAttr) const
 {
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref  ||
-      aName == nsXFormsAtoms::model) {
+  if (aAttr == nsXFormsAtoms::bind ||
+      aAttr == nsXFormsAtoms::ref  ||
+      aAttr == nsXFormsAtoms::model) {
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
+}
 
+void
+nsXFormsControlStubBase::AfterSetAttribute(nsIAtom *aName)
+{
+  if (IsBindingAttribute(aName)) {
     Bind();
     Refresh();
   }
@@ -656,15 +709,10 @@ nsXFormsControlStubBase::MaybeBindAndRefresh(nsIAtom *aName)
 }
 
 void
-nsXFormsControlStubBase::MaybeRemoveFromModel(nsIAtom         *aName, 
-                                              const nsAString &aValue)
+nsXFormsControlStubBase::BeforeSetAttribute(nsIAtom         *aName,
+                                            const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::ref) {
-    if (mModel)
-      mModel->RemoveFormControl(this);
-
+  if (IsBindingAttribute(aName)) {
     AddRemoveSNBAttr(aName, aValue);
   }
 }

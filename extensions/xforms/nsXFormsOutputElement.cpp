@@ -123,8 +123,7 @@ nsXFormsOutputElement::Bind()
         nsXFormsModelElement::DeferElementBind(domDoc, this);
       }
   
-      mModel = nsXFormsUtils::GetModel(mElement);
-      return NS_OK;
+      return BindToModel();
     }
   }
 

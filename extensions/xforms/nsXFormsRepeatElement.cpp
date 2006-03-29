@@ -281,17 +281,7 @@ protected:
    */
   nsresult CloneNode(nsIDOMNode *aSrc, nsIDOMNode **aTarget);
 
-  /**
-   * If this attribute name is bind, model or nodeset, then remove the repeat
-   * control from the list of controls that the model keeps.
-   */
-  void MaybeRemoveFromModel(nsIAtom *aName);
-
-  /**
-   * If this attribute name is bind, model or nodeset, then try to Bind and
-   * Refresh to keep the repeat element current
-   */
-  void MaybeBindAndRefresh(nsIAtom *aName);
+  PRBool IsBindingAttribute(const nsIAtom *aAttr) const;
 
   /**
    * Make sure that an index value is inside the valid index range.
@@ -312,10 +302,6 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD WillRemoveAttribute(nsIAtom *aName);
-  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
   NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
@@ -388,34 +374,6 @@ nsXFormsRepeatElement::OnDestroyed()
   mIndexUsers.Clear();
 
   return nsXFormsControlStub::OnDestroyed();
-}
-
-NS_IMETHODIMP
-nsXFormsRepeatElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
-{
-  MaybeRemoveFromModel(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsRepeatElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
-{
-  MaybeBindAndRefresh(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsRepeatElement::WillRemoveAttribute(nsIAtom *aName)
-{
-  MaybeRemoveFromModel(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsRepeatElement::AttributeRemoved(nsIAtom *aName)
-{
-  MaybeBindAndRefresh(aName);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -743,11 +701,7 @@ nsXFormsRepeatElement::Bind()
   if (mAddingChildren)
     return NS_OK;
 
-  mModel = nsXFormsUtils::GetModel(mElement);
-  if (mModel)
-    mModel->AddFormControl(this);
-
-  return NS_OK;
+  return BindToModel();
 }
 
 NS_IMETHODIMP
@@ -1145,28 +1099,17 @@ nsXFormsRepeatElement::GetIntAttr(const nsAString &aName,
   return rv;
 }
 
-void nsXFormsRepeatElement::MaybeBindAndRefresh(nsIAtom *aName)
+PRBool
+nsXFormsRepeatElement::IsBindingAttribute(const nsIAtom *aAttr) const
 {
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::nodeset ||
-      aName == nsXFormsAtoms::model) {
-
-    Bind();
-    Refresh();
+  if (aAttr == nsXFormsAtoms::bind ||
+      aAttr == nsXFormsAtoms::nodeset  ||
+      aAttr == nsXFormsAtoms::model) {
+    return PR_TRUE;
   }
+  
+  return PR_FALSE;
 }
-
-void nsXFormsRepeatElement::MaybeRemoveFromModel(nsIAtom *aName)
-{
-  if (aName == nsXFormsAtoms::bind ||
-      aName == nsXFormsAtoms::nodeset ||
-      aName == nsXFormsAtoms::model) {
-    if (mModel) {
-      mModel->RemoveFormControl(this);
-    }
-  }
-}
-
 
 // Factory
 NS_HIDDEN_(nsresult)

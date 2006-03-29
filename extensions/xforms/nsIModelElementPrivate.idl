@@ -47,7 +47,7 @@ interface nsIDOMNode;
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(a6522c1a-a343-4b36-a130-75eb279a667a)]
+[uuid(d84caeb1-355f-48ff-9180-a45d8352d26a)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -55,7 +55,7 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * this model.  These form controls will be refreshed when refresh() is
    * called on the model.
    */
-  void addFormControl(in nsIXFormsControl control);
+  void addFormControl(in nsIXFormsControl control, in nsIXFormsControl parent);
   void removeFormControl(in nsIXFormsControl control);
 
   /**
