@@ -46,7 +46,7 @@
 interface nsIXFormsControl;
 interface nsIDOMNode;
 
-[uuid(419e780d-4f31-4aa4-bae8-a18099d77bb6)]
+[uuid(41a0ea05-3fe0-48e8-8c38-96cbb544309c)]
 interface nsIXFormsRepeatElement : nsISupports
 {
   /**
@@ -115,5 +115,19 @@ interface nsIXFormsRepeatElement : nsISupports
    */
   void indexHasChanged();
 
+  /**
+   * Retrieve the starting index for the repeat, that is the index that the
+   * repeat is initialized to. It is the "startindex" attribute, corrected to
+   * be a valid index value.
+   */
   unsigned long getStartingIndex();
+
+  /**
+   * Handle insertion of a node, ie. eventually adjust index. Note that the
+   * node might not be influencing the repeat, it is the repeat's
+   * responsibility to check that.
+   *
+   * @param node              The node that was inserted
+   */
+  void handleNodeInsert(in nsIDOMNode node);
 };
