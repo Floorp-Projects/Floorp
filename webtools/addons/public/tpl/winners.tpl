@@ -7,7 +7,7 @@
 <br class="clear-both"/>
 <strong>{$item.prize}</strong>
     <img class="recommended-img" alt="" src="{$config.webpath}/images/finalists/{$screenshots[$item.guid]}"/>
-    <h2><a href="./extensions/moreinfo.php?id={$item.id}">{$item.name}</a> <small>by {$item.author}</small></h2>
+    <h2><a href="{$config.webpath}/{$app}/{$item.id}/">{$item.name}</a> <small>by {$item.author}</small></h2>
     <div class="recommended-download">
         <h3><a href="{$item.uri}" onclick="return install(event,'{$item.name} {$item.version}', '{$config.webpath}/images/default.png');" title="Install {$item.name} {$item.version} (Right-Click to Download)">Install Extension ({$item.size}KB)</a></h3>
     </div>
