@@ -384,6 +384,10 @@ endif
 
 ifdef MOZ_SUITE
 tier_99_dirs	+= suite
+# When Suite becomes a full MOZ_XUL_APP we can remove this ifdef
+ifdef MOZ_XUL_APP
+tier_99_dirs	+= themes
+endif
 endif
 
 ifdef MINIMO
@@ -391,9 +395,12 @@ tier_99_dirs	+= minimo
 endif
 
 ifdef MOZ_XUL_APP
+# XXX SUITE doesn't want to build the toolkit installer yet
+ifndef MOZ_SUITE
 ifdef MOZ_INSTALLER
 tier_99_dirs     +=  toolkit/mozapps/installer
 endif
+endif # MOZ_SUITE
 else
 ifneq (,$(MOZ_XPFE_COMPONENTS)$(MOZ_XUL))
 ifndef MINIMO
