@@ -65,13 +65,8 @@ var gShowLargeAttachmentView = false;
 var gShowUserAgent = false;
 var gMinNumberOfHeaders = 0;
 var gDummyHeaderIdIndex = 0;
-var gCollectIncoming = false;
-var gCollectOutgoing = false;
-var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
 var gSlimAttachmentView = false;
-var gCollectAddressTimer = null;
-var gCollectAddress = null;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
@@ -243,9 +238,6 @@ function OnLoadMsgHeaderPane()
   // load any preferences that at are global with regards to 
   // displaying a message...
   gNumAddressesToShow = pref.getIntPref("mailnews.max_header_display_length");
-  gCollectIncoming = pref.getBoolPref("mail.collect_email_address_incoming");
-  gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
-  gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   gMinNumberOfHeaders = pref.getIntPref("mailnews.headers.minNumHeaders");
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
@@ -301,14 +293,6 @@ var messageHeaderSink = {
     onStartHeaders: function()
     {
       this.mSaveHdr = null;
-      // clear out any pending collected address timers...
-      if (gCollectAddressTimer)
-      {
-        gCollectAddress = "";        
-        clearTimeout(gCollectAddressTimer);
-        gCollectAddressTimer = null;
-      }
-
       // every time we start to redisplay a message, check the view all headers pref....
       var showAllHeadersPref = pref.getIntPref("mail.show_headers");
       if (showAllHeadersPref == 2)
@@ -412,29 +396,6 @@ var messageHeaderSink = {
         }
         else
          currentHeaderData[lowerCaseHeaderName] = header;
-
-        if (lowerCaseHeaderName == "from")
-        {
-          if (header.headerValue)
-          {
-            try
-            {
-              var createCard = (gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress);
-              if (createCard || gCollectOutgoing)
-              {
-                if (!abAddressCollector)
-                  abAddressCollector = Components.classes[abAddressCollectorContractID]
-                                                 .getService(Components.interfaces.nsIAbAddressCollecter);
-
-                gCollectAddress = header.headerValue;
-                // collect, add card if doesn't exist and gCollectOutgoing is set, 
-                // otherwise only update existing cards, unknown preferred send format
-                gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, ' + createCard + ', Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
-              }
-            }
-            catch(ex) {}
-          }
-        } // if lowerCaseHeaderName == "from"
       } // while we have more headers to parse
 
       if (("from" in currentHeaderData) && ("sender" in currentHeaderData) && msgHeaderParser)
@@ -855,62 +816,12 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
         headerEntry.enclosingBox.addAddressView(address);
       else
         updateEmailAddressNode(headerEntry.enclosingBox.emailAddressNode, address);
-
-      if (headerEntry.enclosingBox.getAttribute("id") == "expandedfromBox") {
-        setFromBuddyIcon(addresses.value[index]);
-      }
-
       index++;
     }
     
     if (headerEntry.useToggle)
       headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
   } // if msgheader parser
-}
-
-
-function setFromBuddyIcon(email)
-{
-   var fromBuddyIcon = document.getElementById("fromBuddyIcon");
-
-   try {
-     // better to cache this?
-     var myScreenName = pref.getCharPref("aim.session.screenname");
-
-     if (!abAddressCollector)
-       abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
-
-     var card = abAddressCollector.getCardFromAttribute("PrimaryEmail", email);
-
-     if (myScreenName && card && card.aimScreenName) {
-       if (!gIOService) {
-         // lazily create these globals
-         gIOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-         gFileHandler = gIOService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-         
-         var dirService = Components.classes["@mozilla.org/file/directory_service;1"]
-             .getService(Components.interfaces.nsIProperties);
-         var profileDir = dirService.get("ProfD", Components.interfaces.nsIFile);
-         gProfileDirURL = gIOService.newFileURI(profileDir);
-       }
-
-       // if we did have a buddy icon on disk for this screenname, this would be the file url spec for it
-       var iconURLStr = gProfileDirURL.spec + "/NIM/" + myScreenName + "/picture/" + card.aimScreenName + ".gif";
-
-       // check if the file exists
-       // is this a perf hit?  (how expensive is stat()?)
-       var iconFile = gFileHandler.getFileFromURLSpec(iconURLStr);
-       if (iconFile.exists()) {
-         fromBuddyIcon.setAttribute("src", iconURLStr);
-         return;
-       }
-     }
-   }
-   catch (ex) {
-     // can get here if no screenname
-     //dump("ex = " + ex + "\n");
-   }
-   fromBuddyIcon.setAttribute("src", "");
 }
 
 function updateEmailAddressNode(emailAddressNode, address)

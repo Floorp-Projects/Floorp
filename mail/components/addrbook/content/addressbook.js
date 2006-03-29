@@ -629,7 +629,6 @@ function AbDeleteDirectory()
     // Check if this address book is being used for collection
     if (gPrefs.getCharPref("mail.collect_addressbook") == selectedABURI &&
         (gPrefs.getBoolPref("mail.collect_email_address_outgoing") ||
-         gPrefs.getBoolPref("mail.collect_email_address_incoming") ||
          gPrefs.getBoolPref("mail.collect_email_address_newsgroup"))) {
       var brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
 
@@ -652,7 +651,6 @@ function AbDeleteDirectory()
   // First clear all the prefs if required
   if (clearPrefsRequired) {
     gPrefs.setBoolPref("mail.collect_email_address_outgoing", false);
-    gPrefs.setBoolPref("mail.collect_email_address_incoming", false);
     gPrefs.setBoolPref("mail.collect_email_address_newsgroup", false);
 
     // Also reset the displayed value so that we don't get a blank item in the
