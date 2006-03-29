@@ -68,6 +68,8 @@
 #include "nsGfxUtils.h" // for StPortSetter
 #endif
 
+static NSView* sLastViewEntered = nil;
+
 // category of NSView methods to quiet warnings
 @interface NSView(ChildViewExtensions)
 
@@ -2673,14 +2675,86 @@ nsChildView::GetThebesSurface()
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
+static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w,
+                                    nsMouseEvent::reasonType aReason,
+                                    NSPoint localEventLocation,
+                                    nsChildView* receiver)
+{
+  nsEventStatus status;
+  nsMouseEvent event(isTrusted, msg, w, aReason);
+  event.refPoint.x = nscoord((PRInt32)localEventLocation.x);
+  event.refPoint.y = nscoord((PRInt32)localEventLocation.y);
+  receiver->DispatchEvent(&event, status);
+  return status;
+}
+
 - (void)mouseEntered:(NSEvent*)theEvent
 {
+  // Getting nil for theEvent is a special case. That only happens if we called 
+  // this from mouseExited: because the mouse exited a view that is a subview of this.
+  if (theEvent == nil) {
+    NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
+    NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
+    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    
+    // mark this view as the last view entered
+    sLastViewEntered = (NSView*)self;
+    
+    // don't continue because this isn't a standard NSView mouseEntered: call
+    return;
+  }
+  
+  NSView* view = [[[self window] contentView] hitTest:[theEvent locationInWindow]];
+  if (view == (NSView*)self) {    
+    // if we entered from another gecko view then we need to send NS_MOUSE_EXIT to that view
+    if (sLastViewEntered)
+      [sLastViewEntered mouseExited:nil];
+    
+    NSPoint eventLocation = [theEvent locationInWindow];
+    NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
+    // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    
+    // mark this view as the last view entered
+    sLastViewEntered = (NSView*)self;
+  }
+  
   // checks to see if we should change to the hand cursor
   [self flagsChanged:theEvent];
 }
 
 - (void)mouseExited:(NSEvent*)theEvent
 {
+  // Getting nil for theEvent is a special case. That only happens if we called this
+  // from mouseEntered: because the mouse entered a view that is a subview of this.
+  if (theEvent == nil) {    
+    NSPoint windowEventLocation = [[self window] convertScreenToBase:[NSEvent mouseLocation]];
+    NSPoint localEventLocation = [self convertPoint:windowEventLocation fromView:nil];
+    // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    
+    // don't continue because this isn't a standard NSView mouseExited: call
+    return;
+  }
+  
+  if (sLastViewEntered == (NSView*)self) {
+    NSPoint eventLocation = [theEvent locationInWindow];
+    NSPoint localEventLocation = [self convertPoint:eventLocation fromView:nil];
+    // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", localEventLocation.x, localEventLocation.y);
+    SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal, localEventLocation, mGeckoChild);
+    
+    // Now we need to send NS_MOUSE_ENTERED to whatever view we're over now.
+    // Otherwise that view won't get get the Cocoa mouseEntered: if it was a
+    // superview of this view. Be careful with this logic, remember that the mouse
+    // can move onto another window from another app that overlaps this view.
+    NSView* view = [[[self window] contentView] hitTest:eventLocation];
+    if (view && view != self && [view isKindOfClass:[ChildView class]] && [self isDescendantOf:view])
+      [(ChildView*)view mouseEntered:nil];
+    else
+      sLastViewEntered = nil;
+  }
+  
   // Gecko may have set the cursor to ibeam or link hand, or handscroll may
   // have set it to the open hand cursor. Cocoa won't call this during a drag.
   mGeckoChild->SetCursor(eCursor_standard);
