@@ -98,6 +98,8 @@ else
 EXTRA_DSO_LIBS += msgbaseutil
 endif
 
+EXTRA_DSO_LIBS += mozreg_s
+
 EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
