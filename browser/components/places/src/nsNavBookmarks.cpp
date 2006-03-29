@@ -1554,6 +1554,10 @@ nsNavBookmarks::SetItemTitle(nsIURI *aURI, const nsAString &aTitle)
 NS_IMETHODIMP
 nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
 {
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  history->SyncDB();
+
   mozIStorageStatement *statement = DBGetURLPageInfo();
   nsresult rv = BindStatementURI(statement, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
