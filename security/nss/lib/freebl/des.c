@@ -658,7 +658,7 @@ DES_Do1Block(HALF * ks, const BYTE * inbuf, BYTE * outbuf)
     HALFPTR(outbuf)[0]  = left; 
     HALFPTR(outbuf)[1]  = right; 
 #else
-    if (((ptrdiff_t)inbuf & 0x03) == 0) {
+    if (((ptrdiff_t)outbuf & 0x03) == 0) {
 #if defined(IS_LITTLE_ENDIAN)
 	BYTESWAP(left, temp);
 	BYTESWAP(right, temp);
