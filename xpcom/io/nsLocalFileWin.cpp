@@ -1128,7 +1128,7 @@ nsLocalFile::AppendInternal(const nsAFlatString &node, PRBool multipleComponents
 
     // check the relative path for validity
     if (node.First() == L'\\'                                   // can't start with an '\'
-        || node.FindChar(L'\\') != kNotFound                    // can't contain /
+        || node.FindChar(L'/') != kNotFound                     // can't contain /
         || node.EqualsASCII(".."))                              // can't be ..
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
