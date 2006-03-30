@@ -44,6 +44,9 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+
+/* storage of the frame tree and information about it */
+
 #include "nscore.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"

@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* container for a document and its presentation */
+
 #ifndef nsIDocumentViewer_h___
 #define nsIDocumentViewer_h___
 

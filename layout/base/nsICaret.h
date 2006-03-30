@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* the caret is the text cursor used, e.g., when editing */
+
 #ifndef nsICaret_h__
 #define nsICaret_h__
 

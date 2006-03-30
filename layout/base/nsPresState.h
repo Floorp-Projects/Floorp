@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a piece of state that is stored in session history when the document
+ * is not
+ */
+
 #ifndef nsPresState_h_
 #define nsPresState_h_
 

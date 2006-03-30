@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * construction of a frame tree that is nearly isomorphic to the content
+ * tree and updating of that tree in response to dynamic changes
+ */
+
 #ifndef nsCSSFrameConstructor_h___
 #define nsCSSFrameConstructor_h___
 

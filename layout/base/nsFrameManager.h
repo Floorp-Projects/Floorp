@@ -47,6 +47,8 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
+/* storage of the frame tree and information about it */
+
 #ifndef _nsFrameManager_h_
 #define _nsFrameManager_h_
 

@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* constants for what needs to be recomputed in response to style changes */
+
 #ifndef nsChangeHint_h___
 #define nsChangeHint_h___
 

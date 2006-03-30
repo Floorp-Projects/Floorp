@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* container for a document and its presentation */
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"

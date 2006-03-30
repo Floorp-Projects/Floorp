@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a list of the recomputation that needs to be done in response to a
+ * style change
+ */
+
 #include "nsStyleChangeList.h"
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"

@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* implementation of interface for managing user and user-agent style sheets */
+
 #ifndef nsStyleSheetService_h_
 #define nsStyleSheetService_h_
 

@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* the caret is the text cursor used, e.g., when editing */
 
 #include "nsCOMPtr.h"
 
