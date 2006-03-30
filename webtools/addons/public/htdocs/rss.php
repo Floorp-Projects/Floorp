@@ -11,20 +11,7 @@ startProcessing('rss.tpl',$memcacheId,$compileId,'xml');
 /**
  * Pull our input params.
  */
-$rssapp = (!empty($_GET['app']) && ctype_alpha($_GET['app'])) ? $_GET['app'] : null;
-switch (strtolower($rssapp)) {
-    case 'mozilla':
-        $clean['app'] = 'mozilla';
-        break;
-    case 'thunderbird':
-        $clean['app'] = 'thunderbird';
-        break;
-    case 'firefox':
-    default:
-        $clean['app'] = 'firefox';
-        break;
-}
-
+$clean['app']= (!empty($_GET['app']) && ctype_alpha($_GET['app'])) ? $_GET['app'] : null;
 $rsstype = !empty($_GET['type']) && ctype_alpha($_GET['type']) ? $_GET['type'] : null;
 switch (strtolower($rsstype)) {
     case 'themes':
@@ -44,7 +31,7 @@ switch (strtolower($rsslist)) {
         $rssOrderBy = 'm.downloadcount desc, m.totaldownloads desc, m.rating desc, m.dateupdated desc, m.name asc';
         break;
     case 'updated':
-        $rssOrderBy = 'm.dateupdated desc, m.name asc';
+        $rssOrderBy = 'v.dateupdated desc, m.name asc';
         break;
     case 'rated':
         $rssOrderBy = 'm.rating desc, m.downloadcount desc, m.name asc';
@@ -54,7 +41,7 @@ switch (strtolower($rsslist)) {
         /**
          * @TODO change this to dateapproved once the db has this in it.
          */
-        $rssOrderBy = 'm.dateupdateddesc, m.name asc';
+        $rssOrderBy = 'v.dateupdated desc, m.name asc';
         break;
 }
 
@@ -83,13 +70,17 @@ $_rssSql = "
         a.appname
     FROM
         main m
-    INNER JOIN version v ON v.id = m.id
+    INNER JOIN version v ON m.id = v.id
+    INNER JOIN (
+        SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+        FROM version v       
+        WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+    ON vv.mxvid = v.vid AND vv.id = v.id
     INNER JOIN applications a ON a.appid = v.appid
     WHERE
         v.approved = 'yes' AND
         a.appname = '{$sql['app']}' AND
-        m.type = '{$sql['type']}' AND
-        v.vid = (SELECT max(vid) FROM version WHERE id=m.id AND approved='YES')
+        m.type = '{$sql['type']}'
     ORDER BY
         {$rssOrderBy}
     LIMIT 0,10

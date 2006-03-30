@@ -151,23 +151,25 @@ class AMO_Object
 
         // Get most popular extensions based on application.
         $this->db->query("
-            SELECT DISTINCT
+            SELECT
                 m.ID ID, 
                 m.Name name, 
                 m.downloadcount dc,
-                v.DateUpdated as dateupdated
+                v.DateUpdated as dateupdated,
+                v.version
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
-            INNER JOIN applications TA ON v.AppID = TA.AppID
-            INNER JOIN os o ON v.OSID = o.OSID
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+            ON vv.mxvid = v.vid AND vv.id = v.id
+            INNER JOIN applications a ON a.appid = v.appid
             WHERE
-                AppName = '{$app}' AND 
-                downloadcount > '0' AND
-                approved = 'YES' AND
-                Type = '{$type}'
-            GROUP BY
-                m.ID
+                v.approved = 'yes' AND
+                a.appname = '{$app}' AND
+                m.type = '{$type}'
             ORDER BY
                 v.dateupdated DESC , downloadcount DESC, rating DESC
             LIMIT 
@@ -189,25 +191,26 @@ class AMO_Object
 
         // Return most popular addons.
         $this->db->query("
-            SELECT DISTINCT
+            SELECT
                 m.ID ID, 
                 m.Name name, 
                 m.downloadcount dc,
                 v.DateUpdated as dateupdated
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
-            INNER JOIN applications TA ON v.AppID = TA.AppID
-            INNER JOIN os o ON v.OSID = o.OSID
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+            ON vv.mxvid = v.vid AND vv.id = v.id
+            INNER JOIN applications a ON a.appid = v.appid
             WHERE
-                AppName = '{$app}' AND 
-                downloadcount > '0' AND
-                approved = 'YES' AND
-                Type = '{$type}'
-            GROUP BY
-                m.ID
+                v.approved = 'yes' AND
+                a.appname = '{$app}' AND
+                m.type = '{$type}'
             ORDER BY
-                downloadcount DESC, rating DESC, v.dateupdated DESC 
+                m.downloadcount DESC, m.rating DESC, v.dateupdated DESC 
             LIMIT 
                 {$limit}
         ", SQL_ALL, SQL_ASSOC);

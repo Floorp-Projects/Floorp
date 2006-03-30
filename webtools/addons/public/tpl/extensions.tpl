@@ -6,14 +6,14 @@ button to a completely new feature. They allow the application to be customized
 to fit the personal needs of each user if they need additional features,
 while minimizing the size of the application itself.</p>
 
-<h2>Fresh from the Oven</h2>
+<h2>Recently Updated</h2>
 <ul>
 {section name=ne loop=$newestExtensions step=1 start=0}
-<li><a href="{$config.webpath}/{$app}/{$newestExtensions[ne].ID}/">{$newestExtensions[ne].name}</a> ({$newestExtensions[ne].dateupdated|date_format})</li>
+<li><a href="{$config.webpath}/{$app}/{$newestExtensions[ne].ID}/">{$newestExtensions[ne].name} {$newestExtensions[ne].version}</a> ({$newestExtensions[ne].dateupdated|date_format})</li>
 {/section}
 </ul>
 
-<h2>Hot this Week</h2>
+<h2>Top Extensions</h2>
 <ul>
 {section name=pe loop=$popularExtensions step=1 start=0}
 <li><a href="{$config.webpath}/{$app}/{$popularExtensions[pe].ID}/">{$popularExtensions[pe].name}</a> ({$popularExtensions[pe].dc} downloads)</li>
