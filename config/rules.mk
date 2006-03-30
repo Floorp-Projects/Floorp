@@ -1563,7 +1563,6 @@ ifndef NO_DIST_INSTALL
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
 	    -d $(MAKE_JARS_TARGET)/chrome -j $(FINAL_TARGET)/chrome \
 	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
-	    $(FINAL_TARGET)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
 	fi
 endif
 
@@ -1578,7 +1577,6 @@ ifndef NO_INSTALL
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
 	    -d $(MAKE_JARS_TARGET) -j $(DESTDIR)$(mozappdir)/chrome \
 	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
-	    $(DESTDIR)$(mozappdir)/chrome $(JAR_MANIFEST) $(_NO_FLOCK); \
 	fi
 endif
 
