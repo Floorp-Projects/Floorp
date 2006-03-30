@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsILayoutHistoryState.h"
-#include "nsWeakReference.h"
-#include "nsClassHashtable.h"
-#include "nsPresState.h"
-
 /*
  * container for information saved in session history when the document
  * is not
  */
+
+#include "nsILayoutHistoryState.h"
+#include "nsWeakReference.h"
+#include "nsClassHashtable.h"
+#include "nsPresState.h"
 
 class nsLayoutHistoryState : public nsILayoutHistoryState,
                              public nsSupportsWeakReference
