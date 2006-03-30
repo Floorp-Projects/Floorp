@@ -471,6 +471,8 @@
 <!ENTITY folderSizeColumn.label "Size">
 
 <!-- Folder Pane Context Menu -->
+<!ENTITY folderContextOpenNewWindow.label "Open">
+<!ENTITY folderContextOpenNewWindow.accesskey "O">
 <!ENTITY folderContextRename.label "Rename">
 <!ENTITY folderContextRename.accesskey "R">
 <!ENTITY folderContextRemove.label "Delete">
