@@ -14,7 +14,8 @@
  *
  * The Original Code is The JavaScript 2 Protoype.
  *
- * The Initial Developer of the Original Code is Netscape Communicatins Corp.
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corp.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *

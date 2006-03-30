@@ -16,11 +16,12 @@
  * The Original Code is the Mozilla browser.
  *
  * The Initial Developer of the Original Code is
- * Matt Judy. Portions of code @2002 nibfile.com.
+ * Matt Judy.
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Portions of code @2002 nibfile.com.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or

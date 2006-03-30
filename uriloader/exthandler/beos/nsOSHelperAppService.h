@@ -14,7 +14,7 @@
  * The Original Code is nsOSHelperAppService.h. 
  * 
  * The Initial Developer of the Original Code is 
- * PaulAshford. 
+ * Paul Ashford. 
  * Portions created by the Initial Developer are Copyright (C) 2002 
  * the Initial Developer. All Rights Reserved. 
  * 

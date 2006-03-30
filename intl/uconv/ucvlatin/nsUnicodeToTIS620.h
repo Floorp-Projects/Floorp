@@ -15,7 +15,7 @@
  * The Original Code is Mozilla communicator client code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communication Corporation. 
+ * Netscape Communications Corporation. 
  * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *

@@ -18,8 +18,8 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard and Jamie Zawinski.  Portions created Christopher Blizzard are Copyright (C) 2000 Christopher Blizzard.
- * Portions created by the Initial Developer are Copyright (C) 1994
+ * Christopher Blizzard and Jamie Zawinski.
+ * Portions created by the Initial Developer are Copyright (C) 1994-2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):

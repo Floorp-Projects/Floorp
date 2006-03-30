@@ -17,7 +17,7 @@
  * The Original Code is CharToByteX11Johab.java.
  *
  * The Initial Developer of the Original Code is
- * Deogtae Kim <dtkim@calab.kaist.ac.kr> (98/05/03) and Based on: Hanterm source code adapted by Jungshik Shin <jshin@pantheon.yale.edu>.
+ * Deogtae Kim <dtkim@calab.kaist.ac.kr> (98/05/03)
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -39,6 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsUnicodeToX11Johab.h"
 #include "nsUCvKODll.h"
 
