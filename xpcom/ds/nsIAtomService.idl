@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -56,7 +57,7 @@
  * pointer identity.
  */
  
-[scriptable, uuid(e5d0d92b-ea45-4622-ab48-302baf2094ee)]
+[scriptable, uuid(8c0e6018-6a06-47f5-bfa1-2e051705c9de)]
 interface nsIAtomService : nsISupports {
 
   /**
@@ -70,4 +71,10 @@ interface nsIAtomService : nsISupports {
    * the XPCOM library.  See nsIAtom.idl.
    */
   nsIAtom getPermanentAtom(in wstring value);
+
+  /**
+   * Get an atom with a utf8 string.
+   */
+  [noscript] nsIAtom getAtomUTF8(in string value);
+  [noscript] nsIAtom getPermanentAtomUTF8(in string value);
 };
