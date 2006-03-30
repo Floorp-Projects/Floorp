@@ -114,10 +114,10 @@ nsMenuX::~nsMenuX()
   if (mMacMenu) {
     if (mHandler)
       ::RemoveEventHandler(mHandler);
-    [mMacMenu release];
+    [mMacMenu autorelease];
   }
   
-  [mMenuDelegate release];
+  [mMenuDelegate autorelease];
   
   // alert the change notifier we don't care no more
   mManager->Unregister(mMenuContent);
@@ -1132,10 +1132,17 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   UInt32 kind = ::GetEventKind(event);
   if (kind == kEventMenuTargetItem) {
     // get the position of the menu item we want
-    nsIMenu* targetMenu = reinterpret_cast<nsIMenu*>(userData);
     PRUint16 aPos;
     ::GetEventParameter(event, kEventParamMenuItemIndex, typeMenuItemIndex, NULL, sizeof(MenuItemIndex), NULL, &aPos);
     aPos--; // subtract 1 from aPos because Carbon menu positions start at 1 not 0
+    
+    // don't request a menu item that doesn't exist or we crash
+    // this might happen just due to some random quirks in the event system
+    PRUint32 itemCount;
+    nsIMenu* targetMenu = NS_REINTERPRET_CAST(nsIMenu*, userData);
+    targetMenu->GetItemCount(itemCount);
+    if (aPos >= itemCount)
+      return result;
     
     nsISupports* aTargetMenuItem;
     targetMenu->GetItemAt((PRUint32)aPos, aTargetMenuItem);
