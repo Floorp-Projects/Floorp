@@ -107,6 +107,8 @@ nsresultForErrno(int err)
 #endif /* EPERM */
       case EACCES:
         return NS_ERROR_FILE_ACCESS_DENIED;
+      case ENOTEMPTY:
+        return NS_ERROR_FILE_DIR_NOT_EMPTY;
       default:
         return NS_ERROR_FAILURE;
     }
