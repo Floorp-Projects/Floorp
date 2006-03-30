@@ -15,7 +15,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- *   Steve Swanson  steve.swanson@mackichan.com.
+ *   Steve Swanson <steve.swanson@mackichan.com>
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
