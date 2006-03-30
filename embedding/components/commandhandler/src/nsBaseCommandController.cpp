@@ -47,11 +47,11 @@ NS_IMPL_ADDREF(nsBaseCommandController)
 NS_IMPL_RELEASE(nsBaseCommandController)
 
 NS_INTERFACE_MAP_BEGIN(nsBaseCommandController)
-	NS_INTERFACE_MAP_ENTRY(nsIController)
-	NS_INTERFACE_MAP_ENTRY(nsICommandController)
-	NS_INTERFACE_MAP_ENTRY(nsIControllerContext)
-	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllerContext)
+  NS_INTERFACE_MAP_ENTRY(nsIController)
+  NS_INTERFACE_MAP_ENTRY(nsICommandController)
+  NS_INTERFACE_MAP_ENTRY(nsIControllerContext)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIControllerContext)
 NS_INTERFACE_MAP_END
 
 nsBaseCommandController::nsBaseCommandController()
@@ -113,6 +113,7 @@ nsBaseCommandController::IsCommandEnabled(const char *aCommand,
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->IsCommandEnabled(aCommand, mCommandContext, aResult);
 }
 
@@ -121,6 +122,7 @@ nsBaseCommandController::SupportsCommand(const char *aCommand, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->SupportsCommand(aCommand, mCommandContext, aResult);
 }
 
@@ -128,6 +130,7 @@ NS_IMETHODIMP
 nsBaseCommandController::DoCommand(const char *aCommand)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
+  NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->DoCommand(aCommand, mCommandContext);
 }
 
@@ -136,6 +139,7 @@ nsBaseCommandController::DoCommandWithParams(const char *aCommand,
                                              nsICommandParams *aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
+  NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->DoCommandParams(aCommand, aParams, mCommandContext);
 }
 
@@ -144,6 +148,7 @@ nsBaseCommandController::GetCommandStateWithParams(const char *aCommand,
                                                    nsICommandParams *aParams)
 {
   NS_ENSURE_ARG_POINTER(aCommand);
+  NS_ENSURE_STATE(mCommandTable);
   return mCommandTable->GetCommandState(aCommand, aParams, mCommandContext);
 }
 
