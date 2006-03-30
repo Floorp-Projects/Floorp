@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* constants for quirks mode, standards mode, and almost standards mode */
+
 #ifndef nsCompatibility_h___
 #define nsCompatibility_h___
 

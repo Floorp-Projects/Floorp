@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* a presentation of a document, part 1 */
+
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
 

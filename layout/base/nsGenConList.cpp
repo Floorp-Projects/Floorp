@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* base class for nsCounterList and nsQuoteList */
+
 #include "nsGenConList.h"
 #include "nsLayoutUtils.h"
 

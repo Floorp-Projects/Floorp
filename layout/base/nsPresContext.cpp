@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* a presentation of a document, part 1 */
+
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"

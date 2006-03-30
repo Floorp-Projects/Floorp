@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* implementation of CSS counters (for numbering things) */
+
 #ifndef nsCounterManager_h_
 #define nsCounterManager_h_
 

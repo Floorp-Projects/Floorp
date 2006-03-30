@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* implementation of interface for managing user and user-agent style sheets */
+
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
 #include "nsICSSLoader.h"

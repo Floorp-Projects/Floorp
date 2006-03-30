@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * interface for container for information saved in session history when
+ * the document is not
+ */
+
 #ifndef _nsILayoutHistoryState_h
 #define _nsILayoutHistoryState_h
 

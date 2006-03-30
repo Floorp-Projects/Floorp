@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* implementation of quotes for the CSS 'content' property */
+
 #ifndef nsQuoteList_h___
 #define nsQuoteList_h___
 

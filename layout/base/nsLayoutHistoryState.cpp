@@ -41,6 +41,11 @@
 #include "nsClassHashtable.h"
 #include "nsPresState.h"
 
+/*
+ * container for information saved in session history when the document
+ * is not
+ */
+
 class nsLayoutHistoryState : public nsILayoutHistoryState,
                              public nsSupportsWeakReference
 {

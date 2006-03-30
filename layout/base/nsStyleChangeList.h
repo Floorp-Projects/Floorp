@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * a list of the recomputation that needs to be done in response to a
+ * style change
+ */
+
 #ifndef nsStyleChangeList_h___
 #define nsStyleChangeList_h___
 

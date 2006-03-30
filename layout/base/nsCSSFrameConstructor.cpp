@@ -38,6 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * construction of a frame tree that is nearly isomorphic to the content
+ * tree and updating of that tree in response to dynamic changes
+ */
+
 #include "nsCSSFrameConstructor.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"

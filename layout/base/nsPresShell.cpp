@@ -52,6 +52,8 @@
  * 05/03/2000   IBM Corp.       Observer events for reflow states
  */ 
 
+/* a presentation of a document, part 2 */
+
 #define PL_ARENA_CONST_ALIGN_MASK 3
 
 #include "nsIPresShell.h"

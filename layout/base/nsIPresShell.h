@@ -48,6 +48,9 @@
  * Date         Modified by     Description of modification
  * 05/03/2000   IBM Corp.       Observer related defines for reflow
  */
+
+/* a presentation of a document, part 2 */
+
 #ifndef nsIPresShell_h___
 #define nsIPresShell_h___
 

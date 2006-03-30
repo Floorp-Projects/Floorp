@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* utility functions for drawing borders and backgrounds */
+
 #ifndef nsCSSRendering_h___
 #define nsCSSRendering_h___
 

@@ -38,6 +38,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* utility functions for drawing borders and backgrounds */
+
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIImage.h"

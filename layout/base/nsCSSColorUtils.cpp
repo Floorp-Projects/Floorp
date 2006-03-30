@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* functions that manipulate colors */
+
 #include "nsCSSColorUtils.h"
 #include <math.h>
 

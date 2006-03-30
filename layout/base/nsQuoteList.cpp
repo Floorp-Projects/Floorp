@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* implementation of quotes for the CSS 'content' property */
+
 #include "nsQuoteList.h"
 #include "nsReadableUtils.h"
 

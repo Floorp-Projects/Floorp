@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* XPCOM interface for layout-debug extension to reach layout internals */
+
 #ifndef nsILayoutDebugger_h___
 #define nsILayoutDebugger_h___
 

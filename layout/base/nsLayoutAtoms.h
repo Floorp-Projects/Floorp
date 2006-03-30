@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* atom list */
+
 #ifndef nsLayoutAtoms_h___
 #define nsLayoutAtoms_h___
 

@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * implementation of interface that allows layout-debug extension access
+ * to some internals of layout
+ */
+
 #include "nsILayoutDebugger.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"

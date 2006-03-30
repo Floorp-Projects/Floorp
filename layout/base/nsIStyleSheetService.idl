@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* interface for managing user and user-agent style sheets */
+
 #include "nsISupports.idl"
 
 interface nsIURI;

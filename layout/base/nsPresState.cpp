@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * a piece of state that is stored in session history when the document
+ * is not
+ */
+
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

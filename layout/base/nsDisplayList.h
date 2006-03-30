@@ -35,6 +35,11 @@
  * ***** END LICENSE BLOCK *****
  */
 
+/*
+ * structures that represent things to be painted (ordered in z-order),
+ * used during painting and hit testing
+ */
+
 #ifndef NSDISPLAYLIST_H_
 #define NSDISPLAYLIST_H_
 

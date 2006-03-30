@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* class to notify frames of background image loads */
+
 #include "imgIDecoderObserver.h"
 
 class nsPresContext;
