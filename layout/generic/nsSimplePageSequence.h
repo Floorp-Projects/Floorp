@@ -59,7 +59,7 @@ public:
   PRUnichar * mDocTitle;
   PRUnichar * mDocURL;
 
-  nsRect      mReflowRect;
+  nsSize      mReflowSize;
   nsMargin    mReflowMargin;
   nsSize      mShadowSize;       // shadow of page in PrintPreview
   nsMargin    mDeadSpaceMargin;  // Extra dead space around outside of Page in PrintPreview
@@ -93,7 +93,6 @@ public:
                                const nsDisplayListSet& aLists);
 
   // nsIPageSequenceFrame
-  NS_IMETHOD SetOffsets(nscoord aStartOffset, nscoord aEndOffset);
   NS_IMETHOD SetPageNo(PRInt32 aPageNo) { return NS_OK;}
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) { mYSelOffset = aYOffset; mSelectionHeight = aHeight; return NS_OK; }
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) { mTotalPages = aTotal; return NS_OK; }
@@ -109,17 +108,13 @@ public:
                         nsIPrintSettings* aPrintSettings,
                         PRUnichar*        aDocTitle,
                         PRUnichar*        aDocURL);
-  NS_IMETHOD PrintNextPage(nsPresContext*  aPresContext);
+  NS_IMETHOD PrintNextPage();
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
   NS_IMETHOD GetNumPages(PRInt32* aNumPages);
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
-  NS_IMETHOD SkipPageBegin() { mSkipPageBegin = PR_TRUE; return NS_OK; }
-  NS_IMETHOD SkipPageEnd() { mSkipPageEnd = PR_TRUE; return NS_OK; }
-  NS_IMETHOD DoPageEnd(nsPresContext*  aPresContext);
-  NS_IMETHOD GetPrintThisPage(PRBool*  aPrintThisPage) { *aPrintThisPage = mPrintThisPage; return NS_OK; }
+  NS_IMETHOD DoPageEnd();
   NS_IMETHOD SetOffset(nscoord aX, nscoord aY) { mOffsetX = aX; mOffsetY = aY; return NS_OK; }
-  NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
 
   /**
    * Get the "type" of the frame
@@ -146,7 +141,6 @@ protected:
   // SharedPageData Helper methods
   void SetDateTimeStr(PRUnichar * aDateTimeStr);
   void SetPageNumberFormat(PRUnichar * aFormatStr, PRBool aForPageNumOnly);
-  void SetPageSizes(const nsRect& aRect, const nsMargin& aMarginRect);
 
   void GetEdgePaperMarginCoord(char* aPrefName, nscoord& aCoord);
   void GetEdgePaperMargin(nsMargin& aMargin);
@@ -154,27 +148,19 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void) {return nsContainerFrame::AddRef();}
   NS_IMETHOD_(nsrefcnt) Release(void) {return nsContainerFrame::Release();}
 
-
-  nscoord  mStartOffset;
-  nscoord  mEndOffset;
-
   nsMargin mMargin;
   PRBool   mIsPrintingSelection;
 
   // Asynch Printing
   PRInt32      mPageNum;
   PRInt32      mTotalPages;
-  PRInt32      mPrintedPageNum;
   nsIFrame *   mCurrentPageFrame;
   PRPackedBool mDoingPageRange;
   PRInt32      mPrintRangeType;
   PRInt32      mFromPageNum;
   PRInt32      mToPageNum;
-  PRPackedBool mSkipPageBegin;
-  PRPackedBool mSkipPageEnd;
   PRPackedBool mPrintThisPage;
 
-  PRPackedBool mSupressHF;
   nscoord      mOffsetX;
   nscoord      mOffsetY;
 

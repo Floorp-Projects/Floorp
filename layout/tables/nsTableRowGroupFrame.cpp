@@ -1018,10 +1018,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
   if (!aPresContext->IsPaginated())
     return  NS_ERROR_NOT_IMPLEMENTED;
   // get the page height
-  nsRect actualRect;
-  nsRect adjRect;
-  aPresContext->GetPageDim(&actualRect, &adjRect);
-  nscoord pageHeight = actualRect.height;
+  nscoord pageHeight = aPresContext->GetPageSize().height;
+  NS_ASSERTION(pageHeight != NS_UNCONSTRAINEDSIZE, 
+               "The table shouldn't be split when there should be space");
 
   PRBool isTopOfPage = aReflowState.mFlags.mIsTopOfPage;
   nsTableRowFrame* firstRowThisPage = GetFirstRow();

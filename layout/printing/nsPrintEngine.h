@@ -85,19 +85,33 @@ class nsPagePrintTimer;
 //   because the document is no longer stable.
 // 
 //------------------------------------------------------------------------
-class nsPrintEngine : public nsIWebBrowserPrint, public nsIObserver
+class nsPrintEngine : public nsIObserver
 {
 public:
-  //NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-  // nsIWebBrowserPrint
-  NS_DECL_NSIWEBBROWSERPRINT
-
   // nsIObserver
   NS_DECL_NSIOBSERVER
+
+  // Old nsIWebBrowserPrint methods; not cleaned up yet
+  NS_IMETHOD Print(nsIPrintSettings*       aPrintSettings,
+                   nsIWebProgressListener* aWebProgressListener);
+  NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings,
+                          nsIDOMWindow *aChildDOMWin,
+                          nsIWebProgressListener* aWebProgressListener);
+  NS_IMETHOD GetIsFramesetDocument(PRBool *aIsFramesetDocument);
+  NS_IMETHOD GetIsIFrameSelected(PRBool *aIsIFrameSelected);
+  NS_IMETHOD GetIsRangeSelection(PRBool *aIsRangeSelection);
+  NS_IMETHOD GetIsFramesetFrameSelected(PRBool *aIsFramesetFrameSelected);
+  NS_IMETHOD GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages);
+  NS_IMETHOD EnumerateDocumentNames(PRUint32* aCount, PRUnichar*** aResult);
+  static nsresult GetGlobalPrintSettings(nsIPrintSettings** aPrintSettings);
+  NS_IMETHOD GetDoingPrint(PRBool *aDoingPrint);
+  NS_IMETHOD GetDoingPrintPreview(PRBool *aDoingPrintPreview);
+  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings **aCurrentPrintSettings);
+  NS_IMETHOD Cancel();
+
 
   // This enum tells indicates what the default should be for the title
   // if the title from the document is null
@@ -144,7 +158,6 @@ public:
   PRBool   PrintDocContent(nsPrintObject* aPO, nsresult& aStatus);
   nsresult DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting,
                    PRBool& aDonePrinting);
-  void SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs = PR_TRUE);
 
   enum ePrintFlags {
     eSetPrintFlag = 1U,
@@ -172,15 +185,8 @@ public:
                          PRBool aDoCalcShrink);
 
   nsresult ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink);
-  nsresult CalcPageFrameLocation(nsIPresShell * aPresShell,
-                                  nsPrintObject*   aPO);
-  nsPrintObject * FindPrintObjectByDS(nsPrintObject* aPO, nsIDocShell * aDocShell);
-  void MapContentForPO(nsPrintObject*   aRootObject,
-                       nsIPresShell*  aPresShell,
-                       nsIContent*    aContent);
-  void MapContentToWebShells(nsPrintObject* aRootPO, nsPrintObject* aPO);
+
   void CheckForChildFrameSets(nsPrintObject* aPO);
-  nsresult MapSubDocFrameLocations(nsPrintObject* aPO);
 
   void CalcNumPrintableDocsAndPages(PRInt32& aNumDocs, PRInt32& aNumPages);
   void DoProgressForAsIsFrames();
@@ -189,7 +195,6 @@ public:
   nsresult CleanupOnFailure(nsresult aResult, PRBool aIsPrinting);
   nsresult FinishPrintPreview();
   static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
-
   void SetDocAndURLIntoProgress(nsPrintObject* aPO,
                                 nsIPrintProgressParams* aParams);
   void ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, PRBool aDoFront);
@@ -234,16 +239,11 @@ public:
                                     eDocTitleDefault  aDefType = eDocTitleDefNone);
   static void ShowPrintErrorDialog(nsresult printerror,
                                    PRBool aIsPrinting = PR_TRUE);
-  static void GetPresShellAndRootContent(nsIDocShell *  aDocShell,
-                                         nsIPresShell** aPresShell,
-                                         nsIContent**   aContent);
 
   static PRBool HasFramesetChild(nsIContent* aContent);
 
   PRBool   CheckBeforeDestroy();
   nsresult Cancelled();
-
-  nsresult ShowDocList(PRBool aShow);
 
   void GetNewPresentation(nsCOMPtr<nsIPresShell>& aShell, 
                           nsCOMPtr<nsPresContext>& aPC, 
@@ -313,7 +313,6 @@ protected:
 
 protected:
   void FirePrintCompletionEvent();
-  nsresult ShowDocListInternal(nsPrintObject* aPO, PRBool aShow);
   nsresult GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
                                             nsIFrame*&      aSeqFrame,
                                             PRInt32&        aCount);
@@ -354,6 +353,17 @@ protected:
                                     nsIAtom *       aType,
                                     nsRect&         aRect,
                                     nsRect&         aChildRect);
+
+  static void MapContentForPO(nsPrintObject* aPO, nsIContent* aContent);
+
+  static void MapContentToWebShells(nsPrintObject* aRootPO, nsPrintObject* aPO);
+
+  static nsresult MapSubDocFrameLocations(nsPrintObject* aPO);
+
+  static nsresult CalcPageFrameLocation(nsIPresShell*  aPresShell,
+                                        nsPrintObject* aPO);
+
+  static void SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs = PR_TRUE);
 
   // Static member variables
   PRBool mIsCreatingPrintPreview;

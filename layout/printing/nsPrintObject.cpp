@@ -36,33 +36,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrintObject.h"
-#include "imgIContainer.h"
 
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mFrameType(eFrame), mStyleSet(nsnull),
-  mRootView(nsnull), mContent(nsnull),
-  mSeqFrame(nsnull), mPageFrame(nsnull), mPageNum(-1),
-  mRect(0,0,0,0), mReflowRect(0,0,0,0),
-  mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
-  mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE), mIsHidden(PR_FALSE), mInvisible(PR_FALSE),
-  mImgAnimationMode(imgIContainer::kNormalAnimMode),
-  mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0), mXMost(0)
+  mFrameType(eFrame), mRootView(nsnull), mContent(nsnull), mSeqFrame(nsnull),
+  mPageNum(-1), mRect(0,0,0,0), mParent(nsnull), mHasBeenPrinted(PR_FALSE),
+  mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
+  mSharedPresShell(PR_FALSE), mIsHidden(PR_FALSE), mInvisible(PR_FALSE),
+  mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0)
 {
 }
 
 
 nsPrintObject::~nsPrintObject()
 {
-  if (mPresContext) {
-    mPresContext->SetImageAnimationMode(mImgAnimationMode);
-  }
-
   for (PRInt32 i=0;i<mKids.Count();i++) {
     nsPrintObject* po = (nsPrintObject*)mKids[i];
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
     delete po;
   }
 
@@ -87,9 +78,6 @@ nsPrintObject::Init(nsIDocShell* aDocShell)
   mDocShell->GetPresShell(getter_AddRefs(mDisplayPresShell));
   NS_ENSURE_TRUE(mDisplayPresShell, NS_ERROR_FAILURE);
 
-  mDocShell->GetPresContext(getter_AddRefs(mDisplayPresContext));
-  NS_ENSURE_TRUE(mDisplayPresContext, NS_ERROR_FAILURE);
-
   mDocument = mDisplayPresShell->GetDocument();
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
 
@@ -106,6 +94,5 @@ nsPrintObject::DestroyPresentation()
   if (mPresShell) mPresShell->Destroy();
   mPresShell   = nsnull;
   mViewManager = nsnull;
-  mStyleSet    = nsnull;
 }
 

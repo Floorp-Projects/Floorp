@@ -102,7 +102,7 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 nsPageFrame::nsPageFrame(nsStyleContext* aContext)
-: nsContainerFrame(aContext), mSupressHF(PR_FALSE)
+: nsContainerFrame(aContext)
 {
 }
 
@@ -167,24 +167,26 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     // XXX Pay attention to the page's border and padding...
     if (mFrames.NotEmpty()) {
       nsIFrame* frame = mFrames.FirstChild();
-      // When availableHeight is NS_UNCONSTRAINEDSIZE it means we are reflowing a single page
-      // to print selection. So this means we want to use NS_UNCONSTRAINEDSIZE without altering it
+      // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
+      // a single page to print selection. So this means we want to use
+      // NS_UNCONSTRAINEDSIZE without altering it
       nscoord avHeight;
-      if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE) {
+      if (mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE) {
         avHeight = NS_UNCONSTRAINEDSIZE;
       } else {
-        avHeight = mPD->mReflowRect.height - mPD->mReflowMargin.top - mPD->mReflowMargin.bottom;
+        avHeight = mPD->mReflowSize.height - mPD->mReflowMargin.TopBottom();
       }
-      nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
+      nsSize  maxSize(mPD->mReflowSize.width - mPD->mReflowMargin.LeftRight(),
                       avHeight);
       // Get the number of Twips per pixel from the PresContext
       nscoord onePixelInTwips = aPresContext->IntScaledPixelsToTwips(1);
-      NS_ASSERTION(maxSize.width >= onePixelInTwips, "maxSize.width must be >= 1 pixel");
-      NS_ASSERTION(maxSize.height >= onePixelInTwips, "maxSize.height must be >= 1 pixel");
       // insurance against infinite reflow, when reflowing less than a pixel
+      // XXX Shouldn't we do something more friendly when invalid margins
+      //     are set?
       if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
         aDesiredSize.width  = 0;
         aDesiredSize.height = 0;
+        NS_WARNING("Reflow aborted; no space for content");
         return NS_OK;
       }
 
@@ -545,14 +547,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   rv = nsContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, set);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-  PR_PL(("PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
-          mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No"));
-  PR_PL(("PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d] SC:%s\n", this, 
-          mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height, specialClipIsSet?"Yes":"No"));
-#endif
-
-  if (!mSupressHF) {
+  if (GetPresContext()->IsRootPaginatedDocument()) {
     rv = set.Content()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(this, ::PaintHeaderFooter, "HeaderFooter"));
     NS_ENSURE_SUCCESS(rv, rv);

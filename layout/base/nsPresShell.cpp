@@ -1678,6 +1678,7 @@ PresShell::Init(nsIDocument* aDocument,
     return NS_ERROR_NULL_POINTER;
   }
   if (mDocument) {
+    NS_WARNING("PresShell double init'ed");
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
