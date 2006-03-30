@@ -89,6 +89,9 @@
 .install-box {
 	width: 18em;
 }
+.key-point {
+    background-color:#bee6a1;
+}
 
 .install div {
 	background: url(../../images/install.png) no-repeat;

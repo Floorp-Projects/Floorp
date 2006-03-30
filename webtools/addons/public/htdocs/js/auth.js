@@ -31,5 +31,5 @@ function readCookie(name)
 /* Someone should make this a js builtin */
 function htmlEntities(str)
 {
-    return str.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;');
+    return str.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;').replace('+','&nbsp;');
 }

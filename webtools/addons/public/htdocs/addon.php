@@ -26,7 +26,6 @@ if (sizeof($addon->OsVersions) == 1) {
     $multiDownloadLinks = true;
 }
 
-
 // Assign template variables.
 $tpl->assign(
     array(  'addon'     => $addon,
