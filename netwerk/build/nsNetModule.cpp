@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -79,6 +80,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
   
 #include "nsProtocolProxyService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
+NS_DECL_CLASSINFO(nsProtocolProxyService)
 
 #include "nsStreamTransportService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamTransportService)
@@ -762,7 +764,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { NS_PROTOCOLPROXYSERVICE_CLASSNAME,
       NS_PROTOCOLPROXYSERVICE_CID,
       NS_PROTOCOLPROXYSERVICE_CONTRACTID,
-      nsProtocolProxyServiceConstructor },
+      nsProtocolProxyServiceConstructor,
+      nsnull, nsnull, nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsProtocolProxyService),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsProtocolProxyService),
+      nsIClassInfo::SINGLETON },
 
     // from netwerk/streamconv:
 

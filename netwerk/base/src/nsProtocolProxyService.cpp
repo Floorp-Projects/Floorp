@@ -39,6 +39,7 @@
 
 #include "nsProtocolProxyService.h"
 #include "nsProxyInfo.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIProxyAutoConfig.h"
@@ -67,6 +68,13 @@
 static PRLogModuleInfo *sLog = PR_NewLogModule("proxy");
 #endif
 #define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
+
+//----------------------------------------------------------------------------
+
+#define PROXY_PREF_BRANCH  "network.proxy"
+#define PROXY_PREF(x)      PROXY_PREF_BRANCH "." x
+
+#define WPAD_URL "http://wpad/wpad.dat"
 
 //----------------------------------------------------------------------------
 
@@ -298,10 +306,15 @@ proxy_GetBoolPref(nsIPrefBranch *aPrefBranch,
 
 //----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(nsProtocolProxyService,
-                   nsIProtocolProxyService,
-                   nsPIProtocolProxyService,
-                   nsIObserver)
+NS_IMPL_ADDREF(nsProtocolProxyService)
+NS_IMPL_RELEASE(nsProtocolProxyService)
+NS_IMPL_QUERY_INTERFACE3_CI(nsProtocolProxyService,
+                            nsIProtocolProxyService,
+                            nsIProtocolProxyService2,
+                            nsIObserver)
+NS_IMPL_CI_INTERFACE_GETTER2(nsProtocolProxyService,
+                             nsIProtocolProxyService,
+                             nsIProtocolProxyService2)
 
 nsProtocolProxyService::nsProtocolProxyService()
     : mFilters(nsnull)
@@ -338,7 +351,7 @@ nsProtocolProxyService::Init()
             do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
         // monitor proxy prefs
-        prefBranch->AddObserver("network.proxy", this, PR_FALSE);
+        prefBranch->AddObserver(PROXY_PREF_BRANCH, this, PR_FALSE);
 
         // read all prefs
         PrefsChanged(prefBranch, nsnull);
@@ -391,9 +404,9 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
     PRBool reloadPAC = PR_FALSE;
     nsXPIDLCString tempString;
 
-    if (!pref || !strcmp(pref, "network.proxy.type")) {
+    if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
         PRInt32 type = -1;
-        rv = prefBranch->GetIntPref("network.proxy.type",&type);
+        rv = prefBranch->GetIntPref(PROXY_PREF("type"), &type);
         if (NS_SUCCEEDED(rv)) {
             // bug 115720 - for ns4.x backwards compatability
             if (type == eProxyConfig_Direct4x) {
@@ -403,7 +416,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                 // I'm paranoid about a loop of some sort - only do this
                 // if we're enumerating all prefs, and ignore any error
                 if (!pref)
-                    prefBranch->SetIntPref("network.proxy.type", type);
+                    prefBranch->SetIntPref(PROXY_PREF("type"), type);
             } else if (type >= eProxyConfig_Last) {
                 LOG(("unknown proxy type: %lu; assuming direct\n", type));
                 type = eProxyConfig_Direct;
@@ -413,39 +426,39 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
         }
     }
 
-    if (!pref || !strcmp(pref, "network.proxy.http"))
-        proxy_GetStringPref(prefBranch, "network.proxy.http", mHTTPProxyHost);
+    if (!pref || !strcmp(pref, PROXY_PREF("http")))
+        proxy_GetStringPref(prefBranch, PROXY_PREF("http"), mHTTPProxyHost);
 
-    if (!pref || !strcmp(pref, "network.proxy.http_port"))
-        proxy_GetIntPref(prefBranch, "network.proxy.http_port", mHTTPProxyPort);
+    if (!pref || !strcmp(pref, PROXY_PREF("http_port")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("http_port"), mHTTPProxyPort);
 
-    if (!pref || !strcmp(pref, "network.proxy.ssl"))
-        proxy_GetStringPref(prefBranch, "network.proxy.ssl", mHTTPSProxyHost);
+    if (!pref || !strcmp(pref, PROXY_PREF("ssl")))
+        proxy_GetStringPref(prefBranch, PROXY_PREF("ssl"), mHTTPSProxyHost);
 
-    if (!pref || !strcmp(pref, "network.proxy.ssl_port"))
-        proxy_GetIntPref(prefBranch, "network.proxy.ssl_port", mHTTPSProxyPort);
+    if (!pref || !strcmp(pref, PROXY_PREF("ssl_port")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("ssl_port"), mHTTPSProxyPort);
 
-    if (!pref || !strcmp(pref, "network.proxy.ftp"))
-        proxy_GetStringPref(prefBranch, "network.proxy.ftp", mFTPProxyHost);
+    if (!pref || !strcmp(pref, PROXY_PREF("ftp")))
+        proxy_GetStringPref(prefBranch, PROXY_PREF("ftp"), mFTPProxyHost);
 
-    if (!pref || !strcmp(pref, "network.proxy.ftp_port"))
-        proxy_GetIntPref(prefBranch, "network.proxy.ftp_port", mFTPProxyPort);
+    if (!pref || !strcmp(pref, PROXY_PREF("ftp_port")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("ftp_port"), mFTPProxyPort);
 
-    if (!pref || !strcmp(pref, "network.proxy.gopher"))
-        proxy_GetStringPref(prefBranch, "network.proxy.gopher", mGopherProxyHost);
+    if (!pref || !strcmp(pref, PROXY_PREF("gopher")))
+        proxy_GetStringPref(prefBranch, PROXY_PREF("gopher"), mGopherProxyHost);
 
-    if (!pref || !strcmp(pref, "network.proxy.gopher_port"))
-        proxy_GetIntPref(prefBranch, "network.proxy.gopher_port", mGopherProxyPort);
+    if (!pref || !strcmp(pref, PROXY_PREF("gopher_port")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("gopher_port"), mGopherProxyPort);
 
-    if (!pref || !strcmp(pref, "network.proxy.socks"))
-        proxy_GetStringPref(prefBranch, "network.proxy.socks", mSOCKSProxyHost);
+    if (!pref || !strcmp(pref, PROXY_PREF("socks")))
+        proxy_GetStringPref(prefBranch, PROXY_PREF("socks"), mSOCKSProxyHost);
     
-    if (!pref || !strcmp(pref, "network.proxy.socks_port"))
-        proxy_GetIntPref(prefBranch, "network.proxy.socks_port", mSOCKSProxyPort);
+    if (!pref || !strcmp(pref, PROXY_PREF("socks_port")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("socks_port"), mSOCKSProxyPort);
 
-    if (!pref || !strcmp(pref, "network.proxy.socks_version")) {
+    if (!pref || !strcmp(pref, PROXY_PREF("socks_version"))) {
         PRInt32 version;
-        proxy_GetIntPref(prefBranch, "network.proxy.socks_version", version);
+        proxy_GetIntPref(prefBranch, PROXY_PREF("socks_version"), version);
         // make sure this preference value remains sane
         if (version == 5)
             mSOCKSProxyVersion = 5;
@@ -453,14 +466,16 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             mSOCKSProxyVersion = 4;
     }
 
-    if (!pref || !strcmp(pref, "network.proxy.socks_remote_dns"))
-        proxy_GetBoolPref(prefBranch, "network.proxy.socks_remote_dns", mSOCKSProxyRemoteDNS);
+    if (!pref || !strcmp(pref, PROXY_PREF("socks_remote_dns")))
+        proxy_GetBoolPref(prefBranch, PROXY_PREF("socks_remote_dns"),
+                          mSOCKSProxyRemoteDNS);
 
-    if (!pref || !strcmp(pref, "network.proxy.failover_timeout"))
-        proxy_GetIntPref(prefBranch, "network.proxy.failover_timeout", mFailedProxyTimeout);
+    if (!pref || !strcmp(pref, PROXY_PREF("failover_timeout")))
+        proxy_GetIntPref(prefBranch, PROXY_PREF("failover_timeout"),
+                         mFailedProxyTimeout);
 
-    if (!pref || !strcmp(pref, "network.proxy.no_proxies_on")) {
-        rv = prefBranch->GetCharPref("network.proxy.no_proxies_on",
+    if (!pref || !strcmp(pref, PROXY_PREF("no_proxies_on"))) {
+        rv = prefBranch->GetCharPref(PROXY_PREF("no_proxies_on"),
                                      getter_Copies(tempString));
         if (NS_SUCCEEDED(rv))
             LoadHostFilters(tempString.get());
@@ -474,13 +489,13 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
     //  1) network.proxy.type changed, or
     //  2) network.proxy.autoconfig_url changed and PAC is configured
 
-    if (!pref || !strcmp(pref, "network.proxy.autoconfig_url"))
+    if (!pref || !strcmp(pref, PROXY_PREF("autoconfig_url")))
         reloadPAC = PR_TRUE;
 
     if (reloadPAC) {
         tempString.Truncate();
         if (mProxyConfig == eProxyConfig_PAC) {
-            prefBranch->GetCharPref("network.proxy.autoconfig_url",
+            prefBranch->GetCharPref(PROXY_PREF("autoconfig_url"),
                                     getter_Copies(tempString));
         }
         else if (mProxyConfig == eProxyConfig_WPAD) {
@@ -490,7 +505,7 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
             // get added over time.  We could consider doing only a single
             // substitution of the first component, if that proves to help
             // compatibility.
-            tempString.AssignLiteral("http://wpad/wpad.dat");
+            tempString.AssignLiteral(WPAD_URL);
         }
         ConfigureFromPAC(tempString);
     }
@@ -751,6 +766,25 @@ nsProtocolProxyService::IsProxyDisabled(nsProxyInfo *pi)
     return PR_TRUE;
 }
 
+nsresult
+nsProtocolProxyService::ConfigureFromPAC(const nsCString &spec)
+{
+    if (!mPACMan) {
+        mPACMan = new nsPACMan();
+        if (!mPACMan)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    mFailedProxies.Clear();
+
+    nsCOMPtr<nsIURI> pacURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(pacURI), spec);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return mPACMan->LoadPACFromURI(pacURI);
+}
+
 void
 nsProtocolProxyService::ProcessPACString(const nsCString &pacString,
                                          nsIProxyInfo **result)
@@ -776,6 +810,30 @@ nsProtocolProxyService::ProcessPACString(const nsCString &pacString,
         }
     }
     *result = first;
+}
+
+// nsIProtocolProxyService2
+NS_IMETHODIMP
+nsProtocolProxyService::ReloadPAC()
+{
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return NS_OK;
+
+    PRInt32 type;
+    nsresult rv = prefs->GetIntPref(PROXY_PREF("type"), &type);
+    if (NS_FAILED(rv))
+        return NS_OK;
+
+    nsXPIDLCString pacSpec;
+    if (type == eProxyConfig_PAC)
+        prefs->GetCharPref(PROXY_PREF("autoconfig_url"), getter_Copies(pacSpec));
+    else if (type == eProxyConfig_WPAD)
+        pacSpec.AssignLiteral(WPAD_URL);
+
+    if (!pacSpec.IsEmpty())
+        ConfigureFromPAC(pacSpec);
+    return NS_OK;
 }
 
 // nsIProtocolProxyService
@@ -893,25 +951,6 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
 }
 
 NS_IMETHODIMP
-nsProtocolProxyService::ConfigureFromPAC(const nsACString &spec)
-{
-    if (!mPACMan) {
-        mPACMan = new nsPACMan();
-        if (!mPACMan)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mFailedProxies.Clear();
-
-    nsCOMPtr<nsIURI> pacURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(pacURI), spec);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mPACMan->LoadPACFromURI(pacURI);
-}
-
-NS_IMETHODIMP
 nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
                                             nsIURI        *aURI,
                                             nsresult       aStatus,
@@ -966,7 +1005,8 @@ nsProtocolProxyService::RegisterFilter(nsIProtocolProxyFilter *filter,
             if (last) {
                 link->next = last->next;
                 last->next = link;
-            } else {
+            }
+            else {
                 link->next = mFilters;
                 mFilters = link;
             }

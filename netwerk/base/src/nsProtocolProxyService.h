@@ -45,7 +45,7 @@
 #include "nsAutoPtr.h"
 #include "nsVoidArray.h"
 #include "nsIPrefBranch.h"
-#include "nsPIProtocolProxyService.h"
+#include "nsIProtocolProxyService2.h"
 #include "nsIProtocolProxyFilter.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsIProxyInfo.h"
@@ -62,12 +62,12 @@ typedef nsDataHashtable<nsCStringHashKey, PRUint32> nsFailedProxyTable;
 class nsProxyInfo;
 struct nsProtocolInfo;
 
-class nsProtocolProxyService : public nsPIProtocolProxyService
+class nsProtocolProxyService : public nsIProtocolProxyService2
                              , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSPIPROTOCOLPROXYSERVICE
+    NS_DECL_NSIPROTOCOLPROXYSERVICE2
     NS_DECL_NSIPROTOCOLPROXYSERVICE
     NS_DECL_NSIOBSERVER
 
@@ -107,6 +107,14 @@ protected:
      */
     NS_HIDDEN_(const char *) ExtractProxyInfo(const char *proxy,
                                               nsProxyInfo **result);
+
+    /**
+     * Load the specified PAC file.
+     * 
+     * @param pacURI
+     *        The URI spec of the PAC file to load.
+     */
+    NS_HIDDEN_(nsresult) ConfigureFromPAC(const nsCString &pacURI);
 
     /**
      * This method builds a list of nsProxyInfo objects from the given PAC-

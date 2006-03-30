@@ -611,6 +611,10 @@ nsIOService::SetOffline(PRBool offline)
         }
         mOffline = PR_FALSE;    // indicate success only AFTER we've
                                 // brought up the services
+         
+        // trigger a PAC reload when we come back online
+        if (mProxyService)
+            mProxyService->ReloadPAC();
  
         // don't care if notification fails
         if (observerService)

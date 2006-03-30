@@ -198,7 +198,8 @@
         </grid>
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"/>
         <hbox class="indent" flex="1" align="center">
-          <textbox id="networkProxyAutoconfigURL" flex="1" preference="network.proxy.autoconfig_url"/>
+          <textbox id="networkProxyAutoconfigURL" flex="1" preference="network.proxy.autoconfig_url"
+                   oninput="gConnectionsDialog.updateReloadButton();"/>
           <button id="autoReload" icon="refresh"
                   label="&reload.label;" accesskey="&reload.accesskey;"
                   oncommand="gConnectionsDialog.reloadPAC();" 

@@ -45,7 +45,7 @@
 #include "nsVoidArray.h"
 #include "nsPISocketTransportService.h" 
 #include "nsPIDNSService.h" 
-#include "nsIProtocolProxyService.h"
+#include "nsIProtocolProxyService2.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
@@ -129,7 +129,7 @@ private:
     PRPackedBool                         mOfflineForProfileChange;
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
-    nsCOMPtr<nsIProtocolProxyService>    mProxyService;
+    nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
     nsCOMPtr<nsIEventQueueService>       mEventQueueService;
     
     // Cached protocol handlers

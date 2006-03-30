@@ -43,7 +43,7 @@ interface nsIProxyInfo;
 interface nsICancelable;
 
 /**
- * This interface servers as a closure for nsIProtocolProxyService's
+ * This interface serves as a closure for nsIProtocolProxyService's
  * asyncResolve method.
  *
  * @status UNDER_REVIEW
@@ -67,7 +67,7 @@ interface nsIProtocolProxyCallback : nsISupports
    * @param aStatus
    *        The status of the callback.  This is a failure code if the request
    *        could not be satisfied, in which case the value of aStatus
-   *        indicates the reason for the failure.
+   *        indicates the reason for the failure and aProxyInfo will be null.
    */
   void onProxyAvailable(in nsICancelable aRequest,
                         in nsIURI aURI,

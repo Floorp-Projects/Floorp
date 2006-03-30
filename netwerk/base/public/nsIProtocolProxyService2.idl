@@ -1,5 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:set ts=4 sw=4 sts=4 et: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,15 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Necko code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@meer.net>
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,29 +39,14 @@
 #include "nsIProtocolProxyService.idl"
 
 /**
- * THIS IS A PRIVATE INTERFACE
- *
- * It exists purely as a hack to support the configureFromPAC method used by
- * the preference panels in the various apps.  Those apps need to be taught to
- * just use the preferences API to "reload" the PAC file.  Then, at that point,
- * we can eliminate this interface completely.
+ * An extension of nsIProtocolProxyService
  */
-[scriptable, uuid(d2c7b3eb-7778-468b-ae9b-c106c2afb5d1)]
-interface nsPIProtocolProxyService : nsIProtocolProxyService
+[scriptable, uuid(dbd9565d-29b1-437a-bff5-2fc339e2c5df)]
+interface nsIProtocolProxyService2 : nsIProtocolProxyService
 {
-    /**
-     * This method may be called to re-configure proxy settings given a URI
-     * to a new proxy auto config file.  This method may return before the
-     * configuration actually takes affect (i.e., the URI may be loaded
-     * asynchronously).
-     *
-     * WARNING: This method is considered harmful since it may cause the PAC
-     * preferences to be out of sync with the state of the Protocol Proxy
-     * Service.  This method is going to be eliminated in the near future.
-     *
-     * @param aURI
-     *        The location of the PAC file to load.  If this value is empty,
-     *        then the PAC configuration will be removed.
-     */
-    void configureFromPAC(in AUTF8String aURI);
+  /**
+   * Call this method to cause the PAC file (if any is configured) to be
+   * reloaded.  The PAC file is loaded asynchronously.
+   */
+  void reloadPAC();
 };

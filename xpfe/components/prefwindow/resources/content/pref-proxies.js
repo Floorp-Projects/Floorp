@@ -116,12 +116,11 @@ function enableUnlockedElements(elements)
   }
 }
 
-const nsPIProtocolProxyService = Components.interfaces.nsPIProtocolProxyService;
-
 function ReloadPAC() {
-  var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"]
-                       .getService(nsPIProtocolProxyService);
-  pps.configureFromPAC(autoURL.value);
+  // XXX(darin): This reloads the PAC URL stored in preferences, which may
+  //             differ from what the user may have typed in the UI.
+  Components.classes["@mozilla.org/network/protocol-proxy-service;1"].
+      getService().reloadPAC();
 }
 
 function FixProxyURL()
