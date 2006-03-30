@@ -1490,12 +1490,12 @@ endif # SDK_XPIDLSRCS
 ifdef EXTRA_COMPONENTS
 libs:: $(EXTRA_COMPONENTS)
 ifndef NO_DIST_INSTALL
-	$(INSTALL) $(IFLAGS2) $^ $(FINAL_TARGET)/components
+	$(INSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/components
 endif
 
 install:: $(EXTRA_COMPONENTS)
 ifndef NO_INSTALL
-	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(mozappdir)/components
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/components
 endif
 endif
 
