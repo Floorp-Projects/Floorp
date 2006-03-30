@@ -1569,7 +1569,8 @@ nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!results) {
-    return NS_ERROR_INVALID_ARG;
+    aTitle.SetIsVoid(PR_TRUE);
+    return NS_OK;
   }
 
   // First check for a user title
@@ -1577,7 +1578,7 @@ nsNavBookmarks::GetItemTitle(nsIURI *aURI, nsAString &aTitle)
     return statement->GetString(nsNavHistory::kGetInfoIndex_UserTitle, aTitle);
 
   // If there is no user title, check for a history title.
-  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);  
+  return statement->GetString(nsNavHistory::kGetInfoIndex_Title, aTitle);
 }
 
 NS_IMETHODIMP
@@ -2127,8 +2128,10 @@ nsNavBookmarks::GetKeywordForURI(nsIURI* aURI, nsAString& aKeyword)
 
   PRBool hasMore = PR_FALSE;
   rv = mDBGetKeywordForURI->ExecuteStep(&hasMore);
-  if (NS_FAILED(rv) || ! hasMore)
-    return NS_OK; // not found: leave keyword field empty
+  if (NS_FAILED(rv) || ! hasMore) {
+    aKeyword.SetIsVoid(PR_TRUE);
+    return NS_OK; // not found: return void keyword string
+  }
 
   // found, get the keyword
   return mDBGetKeywordForURI->GetString(0, aKeyword);
