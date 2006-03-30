@@ -665,6 +665,7 @@ public:
 
     static void GlobalInit();
     static void GlobalShutdown() { }
+    static PRBool IsNativeUTF8();
 
 private:
     static PRBool gWCharIsUnicode;
