@@ -107,8 +107,15 @@ nsresultForErrno(int err)
 #endif /* EPERM */
       case EACCES:
         return NS_ERROR_FILE_ACCESS_DENIED;
+      /*
+       * On AIX 4.3, ENOTEMPTY is defined as EEXIST,
+       * so there can't be cases for both without
+       * preprocessing.
+       */
+#if ENOTEMPTY != EEXIST
       case ENOTEMPTY:
         return NS_ERROR_FILE_DIR_NOT_EMPTY;
+#endif /* ENOTEMPTY != EEXIST */
       default:
         return NS_ERROR_FAILURE;
     }
