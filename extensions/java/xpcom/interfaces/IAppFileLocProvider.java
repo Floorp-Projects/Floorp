@@ -76,7 +76,7 @@ public interface IAppFileLocProvider {
    *
    * @return            the file represented by the property
    */
-  public File getFile(String prop, boolean[] persistent);
+  File getFile(String prop, boolean[] persistent);
 
   /**
    * Directory Service calls this when it gets a request for
@@ -86,7 +86,7 @@ public interface IAppFileLocProvider {
    *
    * @return      an array of file locations
    */
-  public File[] getFiles(String prop);
+  File[] getFiles(String prop);
 
 }
 
