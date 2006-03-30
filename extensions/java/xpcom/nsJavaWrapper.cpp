@@ -855,7 +855,8 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
     {
       LOG(("long (void*)\n"));
       if (!aIsOut && !aIsArrayElement) {  // 'in'
-        aVariant.val.p = (void*) env->CallLongMethod(aParam, longValueMID);
+        aVariant.val.p =
+          NS_REINTERPRET_CAST(void*, env->CallLongMethod(aParam, longValueMID));
       } else { // 'inout' & 'array'
         jlong value;
         if (aParam) {
@@ -871,7 +872,8 @@ SetupParams(JNIEnv *env, const jobject aParam, PRUint8 aType, PRBool aIsOut,
           }
           aVariant.SetPtrIsData();
         } else {  // 'array'
-          NS_STATIC_CAST(void**, aVariant.val.p)[aIndex] = (void*) value;
+          NS_STATIC_CAST(void**, aVariant.val.p)[aIndex] =
+                  NS_REINTERPRET_CAST(void*, value);
         }
       }
       break;
@@ -1284,6 +1286,53 @@ FinalizeParams(JNIEnv *env, const nsXPTParamInfo &aParamInfo, PRUint8 aType,
   return rv;
 }
 
+nsresult
+QueryAttributeInfo(nsIInterfaceInfo* aIInfo, const char* aMethodName,
+                   PRBool aCapitalizedAttr, PRUint16* aMethodIndex,
+                   const nsXPTMethodInfo** aMethodInfo)
+
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // An 'attribute' will start with either "get" or "set".  But first,
+  // we check the length, in order to skip over method names that match exactly
+  // "get" or "set".
+  if (strlen(aMethodName) > 3) {
+    if (strncmp("get", aMethodName, 3) == 0) {
+      char* getterName = strdup(aMethodName + 3);
+      if (!aCapitalizedAttr) {
+        getterName[0] = tolower(getterName[0]);
+      }
+      rv = aIInfo->GetMethodInfoForName(getterName, aMethodIndex, aMethodInfo);
+      free(getterName);
+    } else if (strncmp("set", aMethodName, 3) == 0) {
+      char* setterName = strdup(aMethodName + 3);
+      if (!aCapitalizedAttr) {
+        setterName[0] = tolower(setterName[0]);
+      }
+      rv = aIInfo->GetMethodInfoForName(setterName, aMethodIndex, aMethodInfo);
+      if (NS_SUCCEEDED(rv)) {
+        // If this succeeded, GetMethodInfoForName will have returned the
+        // method info for the 'getter'.  We want the 'setter', so increase
+        // method index by one ('setter' immediately follows the 'getter'),
+        // and get its method info.
+        (*aMethodIndex)++;
+        rv = aIInfo->GetMethodInfo(*aMethodIndex, aMethodInfo);
+        if (NS_SUCCEEDED(rv)) {
+          // Double check that this methodInfo matches the given method.
+          if (!(*aMethodInfo)->IsSetter() ||
+              strcmp(setterName, (*aMethodInfo)->name) != 0) {
+            rv = NS_ERROR_FAILURE;
+          }
+        }
+      }
+      free(setterName);
+    }
+  }
+
+  return rv;
+}
+
 /**
  * Given an interface info struct and a method name, returns the method info
  * and index, if that method exists.
@@ -1296,84 +1345,39 @@ nsresult
 QueryMethodInfo(nsIInterfaceInfo* aIInfo, const char* aMethodName,
                 PRUint16* aMethodIndex, const nsXPTMethodInfo** aMethodInfo)
 {
+  // Skip over any leading underscores, since these are methods that conflicted
+  // with existing Java keywords
+  const char* methodName = aMethodName;
+  if (methodName[0] == '_') {
+    methodName++;
+  }
+
   // The common case is that the method name is lower case, so we check
   // that first.
   nsresult rv;
-  rv = aIInfo->GetMethodInfoForName(aMethodName, aMethodIndex, aMethodInfo);
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  // If there is no method called <aMethodName>, then maybe it is an
-  // 'attribute'.  An 'attribute' will start with "get" or "set".  But first,
-  // we check the length, in order to skip over method names that match exactly
-  // "get" or "set".
-  if (strlen(aMethodName) > 3) {
-    if (strncmp("get", aMethodName, 3) == 0) {
-      char* getterName = strdup(aMethodName + 3);
-      getterName[0] = tolower(getterName[0]);
-      rv = aIInfo->GetMethodInfoForName(getterName, aMethodIndex, aMethodInfo);
-      free(getterName);
-    } else if (strncmp("set", aMethodName, 3) == 0) {
-      char* setterName = strdup(aMethodName + 3);
-      setterName[0] = tolower(setterName[0]);
-      rv = aIInfo->GetMethodInfoForName(setterName, aMethodIndex, aMethodInfo);
-      if (NS_SUCCEEDED(rv)) {
-        // If this succeeded, GetMethodInfoForName will have returned the
-        // method info for the 'getter'.  We want the 'setter', so increase
-        // method index by one ('setter' immediately follows the 'getter'),
-        // and get its method info.
-        (*aMethodIndex)++;
-        rv = aIInfo->GetMethodInfo(*aMethodIndex, aMethodInfo);
-        if (NS_SUCCEEDED(rv)) {
-          // Double check that this methodInfo matches the given method.
-          if (!(*aMethodInfo)->IsSetter() ||
-              strcmp(setterName, (*aMethodInfo)->name) != 0) {
-            rv = NS_ERROR_FAILURE;
-          }
-        }
-      }
-      free(setterName);
-    }
-  }
-  if (NS_SUCCEEDED(rv))
-    return rv;
-
-  // If we get here, then maybe the method name is capitalized.
-  char* methodName = strdup(aMethodName);
-  methodName[0] = toupper(methodName[0]);
   rv = aIInfo->GetMethodInfoForName(methodName, aMethodIndex, aMethodInfo);
-  free(methodName);
   if (NS_SUCCEEDED(rv))
     return rv;
 
   // If there is no method called <aMethodName>, then maybe it is an
   // 'attribute'.
-  if (strlen(aMethodName) > 3) {
-    if (strncmp("get", aMethodName, 3) == 0) {
-      char* getterName = strdup(aMethodName + 3);
-      rv = aIInfo->GetMethodInfoForName(getterName, aMethodIndex, aMethodInfo);
-      free(getterName);
-    } else if (strncmp("set", aMethodName, 3) == 0) {
-      char* setterName = strdup(aMethodName + 3);
-      rv = aIInfo->GetMethodInfoForName(setterName, aMethodIndex, aMethodInfo);
-      if (NS_SUCCEEDED(rv)) {
-        // If this succeeded, GetMethodInfoForName will have returned the
-        // method info for the 'getter'.  We want the 'setter', so increase
-        // method index by one ('setter' immediately follows the 'getter'),
-        // and get its method info.
-        (*aMethodIndex)++;
-        rv = aIInfo->GetMethodInfo(*aMethodIndex, aMethodInfo);
-        if (NS_SUCCEEDED(rv)) {
-          // Double check that this methodInfo matches the given method.
-          if (!(*aMethodInfo)->IsSetter() ||
-              strcmp(setterName, (*aMethodInfo)->name) != 0) {
-            rv = NS_ERROR_FAILURE;
-          }
-        }
-      }
-      free(setterName);
-    }
-  }
+  rv = QueryAttributeInfo(aIInfo, methodName, PR_FALSE, aMethodIndex,
+                          aMethodInfo);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  // If we get here, then maybe the method name is capitalized.
+  char* name = strdup(methodName);
+  name[0] = toupper(name[0]);
+  rv = aIInfo->GetMethodInfoForName(name, aMethodIndex, aMethodInfo);
+  free(name);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  // If there is no method called <aMethodName>, then maybe it is an
+  // 'attribute'.
+  rv = QueryAttributeInfo(aIInfo, methodName, PR_TRUE, aMethodIndex,
+                          aMethodInfo);
 
   return rv;
 }

@@ -45,7 +45,6 @@
 #include "xptcall.h"
 #include "nsNetUtil.h"
 #include "nsDataHashtable.h"
-#include "nsHashKeys.h"
 #include "nsIWeakReference.h"
 #include <stdio.h>
 #include <ctype.h>
@@ -151,20 +150,29 @@ public:
 
 
 static const char* kJavaKeywords[] = {
-  "abstract", "default", "if"        , "private"     , "this"     ,
-  "boolean" , "do"     , "implements", "protected"   , "throw"    ,
-  "break"   , "double" , "import",     "public"      , "throws"   ,
-  "byte"    , "else"   , "instanceof", "return"      , "transient",
-  "case"    , "extends", "int"       , "short"       , "try"      ,
-  "catch"   , "final"  , "interface" , "static"      , "void"     ,
-  "char"    , "finally", "long"      , "strictfp"    , "volatile" ,
-  "class"   , "float"  , "native"    , "super"       , "while"    ,
-  "const"   , "for"    , "new"       , "switch"      ,
-  "continue", "goto"   , "package"   , "synchronized",
-  "assert"  ,  /* added in Java 1.4 */
-  "enum"    ,  /* added in Java 5.0 */
-  "clone"   ,  /* clone is a member function of java.lang.Object */
-  "finalize"   /* finalize is a member function of java.lang.Object */
+  "abstract", "default"  , "if"        , "private"     , "throw"       ,
+  "boolean" , "do"       , "implements", "protected"   , "throws"      ,
+  "break"   , "double"   , "import",     "public"      , "transient"   ,
+  "byte"    , "else"     , "instanceof", "return"      , "try"         ,
+  "case"    , "extends"  , "int"       , "short"       , "void"        ,
+  "catch"   , "final"    , "interface" , "static"      , "volatile"    ,
+  "char"    , "finally"  , "long"      , "super"       , "while"       ,
+  "class"   , "float"    , "native"    , "switch"      ,
+  "const"   , "for"      , "new"       , "synchronized",
+  "continue", "goto"     , "package"   , "this"        ,
+    /* added in Java 1.2 */
+  "strictfp",
+    /* added in Java 1.4 */
+  "assert"  ,
+    /* added in Java 5.0 */
+  "enum"    ,
+    /* Java constants */
+  "true"    , "false"    , "null"      ,
+    /* java.lang.Object methods                                           *
+     *    - don't worry about "toString", since it does the same thing    *
+     *      as Object's "toString"                                        */
+  "clone"   , "equals"   , "finalize"  , "getClass"    , "hashCode"    ,
+  "notify"  , "notifyAll", /*"toString"  ,*/ "wait"
 };
 
 static void ToUpperCase(nsACString& aString)
@@ -412,7 +420,7 @@ public:
 
   nsresult WriteIID(nsIOutputStream* out, nsIInterfaceInfo* aIInfo)
   {
-    static const char kIIDDecl1[] = "  public static final String ";
+    static const char kIIDDecl1[] = "  String ";
     static const char kIIDDecl2[] = " =\n    \"";
     static const char kIIDDecl3[] = "\";\n\n";
 
@@ -460,9 +468,8 @@ public:
   nsresult WriteConstants(nsIOutputStream* out, nsIInterfaceInfo* aIInfo,
                           PRUint16 aParentConstCount)
   {
-    static const char kConstDecl1[] = "  public static final ";
-    static const char kConstDecl2[] = " = ";
-    static const char kConstDecl3[] = ";\n\n";
+    static const char kConstDecl1[] = " = ";
+    static const char kConstDecl2[] = ";\n\n";
 
     PRUint16 constCount;
     nsresult rv = aIInfo->GetConstantCount(&constCount);
@@ -474,7 +481,7 @@ public:
       NS_ENSURE_SUCCESS(rv, rv);
 
       PRUint32 count;
-      rv = out->Write(kConstDecl1, sizeof(kConstDecl1) - 1, &count);
+      rv = out->Write("  ", 2, &count);
       NS_ENSURE_SUCCESS(rv, rv);
       const nsXPTType &type = constInfo->GetType();
       rv = WriteType(out, &type, aIInfo, nsnull, nsnull);
@@ -484,12 +491,12 @@ public:
       const char* name = constInfo->GetName();
       rv = out->Write(name, strlen(name), &count);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = out->Write(kConstDecl2, sizeof(kConstDecl2) - 1, &count);
+      rv = out->Write(kConstDecl1, sizeof(kConstDecl1) - 1, &count);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = WriteConstantValue(out, &type, constInfo->GetValue());
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = out->Write(kConstDecl3, sizeof(kConstDecl3) - 1, &count);
+      rv = out->Write(kConstDecl2, sizeof(kConstDecl2) - 1, &count);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -610,13 +617,12 @@ public:
                           const nsXPTMethodInfo* aMethodInfo,
                           PRUint16 aMethodIndex)
   {
-    static const char kMethodDecl1[] = "  public ";
     static const char kVoidReturn[] = "void";
     static const char kParamSeparator[] = ", ";
-    static const char kMethodDecl2[] = ");\n\n";
+    static const char kMethodEnd[] = ");\n\n";
 
     PRUint32 count;
-    nsresult rv = out->Write(kMethodDecl1, sizeof(kMethodDecl1) - 1, &count);
+    nsresult rv = out->Write("  ", 2, &count);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // write return type
@@ -649,9 +655,10 @@ public:
     } else {
       method_name.Append(tolower(name[0]));
       method_name.Append(name + 1);
-      // don't use Java keywords as method names
-      if (mJavaKeywords.Get(method_name, nsnull))
-        method_name.Append('_');
+    }
+    // don't use Java keywords as method names
+    if (mJavaKeywords.Get(method_name, nsnull)) {
+      method_name.Insert('_', 0);
     }
     rv = out->Write(" ", 1, &count);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -675,7 +682,7 @@ public:
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = out->Write(kMethodDecl2, sizeof(kMethodDecl2) - 1, &count);
+    rv = out->Write(kMethodEnd, sizeof(kMethodEnd) - 1, &count);
     return rv;
   }
 
