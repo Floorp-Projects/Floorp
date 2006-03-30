@@ -186,6 +186,23 @@
                 element.setAttribute("type", "menu");
                 element.setAttribute("container", "true");
                 element.setAttribute("label", child.title);
+
+                if (PlacesController.nodeIsRemoteContainer(child)) {
+                  if (asContainer(child).remoteContainerType == "@mozilla.org/browser/livemark-service;1") {
+                    element.setAttribute("livemark", "true");
+                    var folder = asFolder(child).folderId;
+                    var bms =
+                      Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                      getService(Ci.nsINavBookmarksService);
+                    var folderURI = bms.getFolderURI(folder);
+                    var anno =
+                      Cc["@mozilla.org/browser/annotation-service;1"].
+                      getService(Ci.nsIAnnotationService);
+                    var siteURI = anno.getAnnotationString(folderURI, "livemark/siteURI");
+                    element.setAttribute("siteURI", siteURI);
+                  }
+                }
+
                 var popup = document.createElementNS(XULNS, "menupopup");
                 popup.setAttribute("type", "places");
                 element.appendChild(popup);

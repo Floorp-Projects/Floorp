@@ -6515,6 +6515,8 @@ var BookmarksEventHandler = {
     // If this is the special "Open in Tabs" menuitem, load all the menuitems in tabs.
     if (event.target.hasAttribute("openInTabs"))
       PlacesController.openLinksInTabs();
+    else if (event.target.hasAttribute("siteURI"))
+      openUILink(event.target.getAttribute("siteURI"), event);
     // If this is a normal bookmark, just load the bookmark's URI.
     else
       PlacesController.mouseLoadURI(event);
@@ -6528,13 +6530,13 @@ var BookmarksEventHandler = {
    *        DOMEvent for popupshowing
    */
   onPopupShowing: function BM_onPopupShowing(event) {
-    if (event.target.localName == "menupopup" &&
-        event.target.id != "bookmarksMenuPopup") {
+    var target = event.target;
 
+    if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
       // Show "Open in Tabs" menuitem if there are at least
       // two menuitems with places result nodes.
       var numNodes = 0;
-      var currentChild = event.target.firstChild;
+      var currentChild = target.firstChild;
       while (currentChild && numNodes < 2) {
         if (currentChild.node && currentChild.localName == "menuitem")
           numNodes++;
@@ -6542,12 +6544,24 @@ var BookmarksEventHandler = {
       }
       if (numNodes >= 2) {
         var separator = document.createElement("menuseparator");
-        event.target.appendChild(separator);
+        target.appendChild(separator);
+
+        var strings = document.getElementById("placeBundle");
+
+        var button = target.parentNode;
+        if (button.getAttribute("livemark") == "true") {
+          var openHomePage = document.createElement("menuitem");
+          openHomePage.setAttribute("siteURI", button.getAttribute("siteURI"));
+          openHomePage.setAttribute("label",
+              strings.getFormattedString("menuOpenLivemarkOrigin.label",
+                                         [button.getAttribute("label")]));
+          target.appendChild(openHomePage);
+        }
+
         var openInTabs = document.createElement("menuitem");
         openInTabs.setAttribute("openInTabs", "true");
-        var strings = document.getElementById("placeBundle");
         openInTabs.setAttribute("label", strings.getString("menuOpenInTabs.label"));
-        event.target.appendChild(openInTabs);
+        target.appendChild(openInTabs);
       }
     }
   },
