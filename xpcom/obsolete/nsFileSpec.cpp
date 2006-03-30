@@ -929,7 +929,7 @@ void nsFileSpec::MakeUnique(PRBool inCreateFile)
             localFile->GetNativePath(path);
     }
 
-    NS_WARN_IF_FALSE(!path.IsEmpty(), "MakeUnique() failed!");
+    NS_ASSERTION(!path.IsEmpty(), "MakeUnique() failed!");
     *this = path.get(); // reset the filepath to point to the unique location
 
 } // nsFileSpec::MakeUnique

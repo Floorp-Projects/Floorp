@@ -3845,7 +3845,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   // after the wrapper is found.
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeObj));
-  NS_WARN_IF_FALSE(sgo, "nativeObj not a global object!");
+  NS_ASSERTION(sgo, "nativeObj not a global object!");
 
   if (sgo) {
     *parentObj = sgo->GetGlobalJSObject();

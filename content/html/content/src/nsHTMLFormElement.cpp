@@ -1863,7 +1863,7 @@ nsFormControlList::NamedItem(const nsAString& aName,
     if (!*aReturn) {
       // If not, we check if it's a node list.
       nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(supports));
-      NS_WARN_IF_FALSE(nodeList, "Huh, what's going one here?");
+      NS_ASSERTION(nodeList, "Huh, what's going one here?");
 
       if (nodeList) {
         // And since we're only asking for one node here, we return the first

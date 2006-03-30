@@ -274,9 +274,9 @@ nsWebDAVService::ChannelFromResource(nsIWebDAVResource *aResource,
     if (NS_SUCCEEDED(rv)) {
         rv = baseChannel->SetLoadFlags(loadFlags | 
                                        nsIRequest::VALIDATE_ALWAYS);
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "nsWebDavService::ChannelFromResource(): "
-                         "Couldn't set loadflags on channel");
+        NS_ASSERTION(NS_SUCCEEDED(rv),
+                     "nsWebDavService::ChannelFromResource(): "
+                     "Couldn't set loadflags on channel");
     }
 
     rv = CallQueryInterface(baseChannel, aChannel);

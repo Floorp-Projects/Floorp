@@ -104,10 +104,10 @@ nsEntryStack::~nsEntryStack() {
 void 
 nsEntryStack::ReleaseAll(nsNodeAllocator* aNodeAllocator)
 {
-  NS_WARN_IF_FALSE(aNodeAllocator,"no allocator? - potential leak!");
+  NS_ASSERTION(aNodeAllocator,"no allocator? - potential leak!");
 
   if(aNodeAllocator) {
-    NS_WARN_IF_FALSE(mCount >= 0,"count should not be negative");
+    NS_ASSERTION(mCount >= 0,"count should not be negative");
     while(mCount > 0) {
       nsCParserNode* node=this->Pop();
       IF_FREE(node,aNodeAllocator);

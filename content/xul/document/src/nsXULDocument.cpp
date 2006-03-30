@@ -1622,7 +1622,7 @@ nsXULDocument::GetElementById(const nsAString& aId,
     NS_ENSURE_ARG_POINTER(aReturn);
     *aReturn = nsnull;
 
-    NS_WARN_IF_FALSE(!aId.IsEmpty(),"getElementById(\"\"), fix caller?");
+    NS_ASSERTION(!aId.IsEmpty(),"getElementById(\"\"), fix caller?");
     if (aId.IsEmpty())
       return NS_OK;
 

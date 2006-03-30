@@ -1588,7 +1588,7 @@ nsPlainTextSerializer::Write(const nsAString& aString)
 
     // This mustn't be mixed with intelligent wrapping without clearing
     // the mCurrentLine buffer before!!!
-    NS_WARN_IF_FALSE(mCurrentLine.IsEmpty(),
+    NS_ASSERTION(mCurrentLine.IsEmpty(),
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (!mCurrentLine.IsEmpty()) {
       FlushLine();

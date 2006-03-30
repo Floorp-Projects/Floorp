@@ -1315,8 +1315,8 @@ SinkContext::CloseContainer(const nsHTMLTag aTag, PRBool aMalformed)
                   "SinkContext::CloseContainer", 
                   aTag, mStackPos - 1, mSink);
 
-  NS_WARN_IF_FALSE(mStackPos > 0,
-                   "stack out of bounds. wrong context probably!");
+  NS_ASSERTION(mStackPos > 0,
+               "stack out of bounds. wrong context probably!");
 
   if (mStackPos <= 0) {
     return NS_OK; // Fix crash - Ref. bug 45975 or 45007
@@ -2052,7 +2052,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
                              getter_AddRefs(mObservers));
 
-  NS_WARN_IF_FALSE(mDocShell, "oops no docshell!");
+  NS_ASSERTION(mDocShell, "oops no docshell!");
 
   // Find out if subframes are enabled
   if (mDocShell) {

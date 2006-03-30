@@ -842,7 +842,7 @@ nsresult
 nsExpatDriver::HandleError()
 {
   PRInt32 code = XML_GetErrorCode(mExpatParser);
-  NS_WARN_IF_FALSE(code > XML_ERROR_NONE, "unexpected XML error code");
+  NS_ASSERTION(code > XML_ERROR_NONE, "unexpected XML error code");
 
   // Map Expat error code to an error string
   // XXX Deal with error returns.

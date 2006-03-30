@@ -119,7 +119,7 @@ EndGather(MimeObject *obj, PRBool abort_p)
                                                         *ssobj->buffer,
                                                         asHTML);
     if (NS_FAILED(rv)) {
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "converter failure");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "converter failure");
         return -1;
     }
 

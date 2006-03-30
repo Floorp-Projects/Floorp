@@ -756,7 +756,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 
   // get the DOM event receiver
   nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-  NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+  NS_ASSERTION(erP, "No event receiver in document!");
 
   if (erP) {
     rv = erP->AddEventListenerByIID(mFocusListener,
@@ -1298,7 +1298,7 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   if (mFocusListener) {
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-    NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+    NS_ASSERTION(erP, "No event receiver in document!");
 
     if (erP) {
       erP->AddEventListenerByIID(mFocusListener,
@@ -1360,7 +1360,7 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
   if (mFocusListener) {
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
-    NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+    NS_ASSERTION(erP, "No event receiver in document!");
 
     if (erP) {
       erP->RemoveEventListenerByIID(mFocusListener,
@@ -1687,7 +1687,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
     // Register the focus listener on the new document
 
     nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mDocument, &rv);
-    NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+    NS_ASSERTION(erP, "No event receiver in document!");
 
     if (erP) {
       rv = erP->AddEventListenerByIID(mFocusListener,

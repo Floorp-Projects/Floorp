@@ -370,8 +370,8 @@ getCharacterExtentsCB(AtkText *aText, gint aOffset,
     *aY = extY;
     *aWidth = extWidth;
     *aHeight = extHeight;
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceText::GetCharacterExtents, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceText::GetCharacterExtents, failed\n");
 }
 
 gint

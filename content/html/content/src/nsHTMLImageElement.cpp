@@ -338,7 +338,7 @@ nsHTMLImageElement::GetWidthHeight()
 
   if (imageFrame) {
     CallQueryInterface(imageFrame, &frame);
-    NS_WARN_IF_FALSE(frame,"Should not happen - image frame is not frame");
+    NS_ASSERTION(frame,"Should not happen - image frame is not frame");
   }
 
   if (frame) {

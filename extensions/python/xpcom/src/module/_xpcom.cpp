@@ -148,7 +148,7 @@ PyXPCOMMethod_XPTC_InvokeByIndex(PyObject *self, PyObject *args)
 
 	// We no longer rely on PyErr_Occurred() for our error state,
 	// but keeping this assertion can't hurt - it should still always be true!
-	NS_WARN_IF_FALSE(!PyErr_Occurred(), "Should be no pending Python error!");
+	NS_ASSERTION(!PyErr_Occurred(), "Should be no pending Python error!");
 
 	if (!PyArg_ParseTuple(args, "OiO", &obIS, &index, &obParams))
 		return NULL;

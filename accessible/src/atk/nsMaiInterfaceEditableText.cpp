@@ -145,8 +145,8 @@ setTextContentsCB(AtkEditableText *aText, const gchar *aString)
     NS_ConvertUTF8toUTF16 strContent(aString);
     nsresult rv = accText->SetTextContents(strContent);
 
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::SetTextContents, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::SetTextContents, failed\n");
 }
 
 void
@@ -172,8 +172,8 @@ insertTextCB(AtkEditableText *aText,
     // *aPosition = pos;
 
     nsresult rv = accText->InsertText(strContent, *aPosition);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::InsertText, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::InsertText, failed\n");
 
     MAI_LOG_DEBUG(("EditableText: insert aString=%s, aLength=%d, aPosition=%d",
                    aString, aLength, *aPosition));
@@ -195,8 +195,8 @@ copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
     MAI_LOG_DEBUG(("EditableText: copyTextCB, aStartPos=%d, aEndPos=%d",
                    aStartPos, aEndPos));
     nsresult rv = accText->CopyText(aStartPos, aEndPos);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::CopyText, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::CopyText, failed\n");
 }
 
 void
@@ -214,8 +214,8 @@ cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
     MAI_LOG_DEBUG(("EditableText: cutTextCB, aStartPos=%d, aEndPos=%d",
                    aStartPos, aEndPos));
     nsresult rv = accText->CutText(aStartPos, aEndPos);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::CutText, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::CutText, failed\n");
 }
 
 void
@@ -234,8 +234,8 @@ deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
     MAI_LOG_DEBUG(("EditableText: deleteTextCB, aStartPos=%d, aEndPos=%d",
                    aStartPos, aEndPos));
     nsresult rv = accText->DeleteText(aStartPos, aEndPos);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::DeleteText, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::DeleteText, failed\n");
 }
 
 void
@@ -253,6 +253,6 @@ pasteTextCB(AtkEditableText *aText, gint aPosition)
 
     MAI_LOG_DEBUG(("EditableText: pasteTextCB, aPosition=%d", aPosition));
     nsresult rv = accText->PasteText(aPosition);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "MaiInterfaceEditableText::PasteText, failed\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "MaiInterfaceEditableText::PasteText, failed\n");
 }

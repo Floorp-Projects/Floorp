@@ -145,7 +145,7 @@ struct nsTraceRefcntStats {
 
   // I hope to turn this on for everybody once we hit it a little less.
 #define ASSERT_ACTIVITY_IS_LEGAL                                             \
-  NS_WARN_IF_FALSE(gActivityTLS != BAD_TLS_INDEX &&                          \
+  NS_ASSERTION(gActivityTLS != BAD_TLS_INDEX &&                          \
              NS_PTR_TO_INT32(PR_GetThreadPrivate(gActivityTLS)) == 0,        \
              "XPCOM objects created/destroyed from static ctor/dtor");
 

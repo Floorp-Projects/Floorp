@@ -192,7 +192,7 @@ static TimelineThreadData *GetThisThreadData()
         if (new_data->timers==NULL)
             goto done;
         new_data->initTime = PR_Now();
-        NS_WARN_IF_FALSE(!gTimelineDisabled,
+        NS_ASSERTION(!gTimelineDisabled,
                          "Why are we creating new state when disabled?");
         new_data->disabled = PR_FALSE;
         data = new_data;
@@ -202,7 +202,7 @@ static TimelineThreadData *GetThisThreadData()
 done:
     if (new_data) // eeek - error during creation!
         delete new_data;
-    NS_WARN_IF_FALSE(data, "TimelineService could not get thread-local data");
+    NS_ASSERTION(data, "TimelineService could not get thread-local data");
     return data;
 }
 
@@ -232,7 +232,7 @@ PRStatus TimelineInit(void)
     PRInt64 tmp1, tmp2;
 
     PRStatus status = PR_NewThreadPrivateIndex( &gTLSIndex, ThreadDestruct );
-    NS_WARN_IF_FALSE(status==0, "TimelineService could not allocate TLS storage.");
+    NS_ASSERTION(status==0, "TimelineService could not allocate TLS storage.");
 
     timeStr = PR_GetEnv("NS_TIMELINE_INIT_TIME");
     // NS_TIMELINE_INIT_TIME only makes sense for the main thread, so if it

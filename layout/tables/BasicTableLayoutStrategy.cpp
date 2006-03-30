@@ -320,7 +320,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowSt
   if (totalCounts[PCT] > 0) {
     if (totalAllocated + totalWidths[PCT] - dupedWidths[PCT] <= maxWidth) {
       AllocateFully(totalAllocated, allocTypes, PCT);
-      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_ASSERTION(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, PCT, PR_FALSE, allocTypes, p2t);
@@ -331,7 +331,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowSt
   if ((totalAllocated < maxWidth) && (totalCounts[FIX] > 0)) {
     if (totalAllocated + totalWidths[FIX] - dupedWidths[FIX] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, FIX);
-      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_ASSERTION(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX, PR_TRUE, allocTypes, p2t);
@@ -342,7 +342,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowSt
   if ((totalAllocated < maxWidth) && (totalCounts[FIX_ADJ] > 0)) {
     if (totalAllocated + totalWidths[FIX_ADJ] - dupedWidths[FIX_ADJ] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, FIX_ADJ);
-      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_ASSERTION(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, FIX_ADJ, PR_TRUE, allocTypes, p2t);
@@ -355,7 +355,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowSt
     if (totalAllocated + totalWidths[MIN_PRO] - dupedWidths[MIN_PRO] +
         totalWidths[DES_CON] - dupedWidths[DES_CON] <= maxWidth) { 
       AllocateFully(totalAllocated, allocTypes, DES_CON);
-      //NS_WARN_IF_FALSE(totalAllocated <= maxWidth, "over allocated");
+      //NS_ASSERTION(totalAllocated <= maxWidth, "over allocated");
     }
     else {
       AllocateConstrained(maxWidth - totalAllocated, DES_CON, PR_TRUE, allocTypes, p2t);

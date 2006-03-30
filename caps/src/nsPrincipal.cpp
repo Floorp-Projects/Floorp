@@ -130,7 +130,7 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
     }
   }
 
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsPrincipal::Init() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrincipal::Init() failed");
 
   return rv;
 }

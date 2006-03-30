@@ -986,7 +986,7 @@ nsXFormsUtils::EventHandlingAllowed(nsIDOMEvent* aEvent, nsIDOMNode* aTarget)
       }
     }
   }
-  NS_WARN_IF_FALSE(allow, "Event handling not allowed!");
+  NS_ASSERTION(allow, "Event handling not allowed!");
   return allow;
 }
 

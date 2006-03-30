@@ -366,7 +366,7 @@ nsBaseHashtableMT<KeyClass,DataType,UserDataType>::Init(PRUint32 initSize)
     return PR_FALSE;
 
   this->mLock = PR_NewLock();
-  NS_WARN_IF_FALSE(this->mLock, "Error creating lock during nsBaseHashtableL::Init()");
+  NS_ASSERTION(this->mLock, "Error creating lock during nsBaseHashtableL::Init()");
 
   return (this->mLock != nsnull);
 }

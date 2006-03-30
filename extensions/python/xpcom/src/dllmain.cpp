@@ -234,7 +234,7 @@ void pyxpcom_construct(void)
 #ifndef PYXPCOM_USE_PYGILSTATE
 	PRStatus status;
 	status = PR_NewThreadPrivateIndex( &tlsIndex, NULL );
-	NS_WARN_IF_FALSE(status==0, "Could not allocate TLS storage");
+	NS_ASSERTION(status==0, "Could not allocate TLS storage");
 	if (NS_FAILED(status)) {
 		PR_DestroyLock(g_lockMain);
 		return; // PR_FALSE;

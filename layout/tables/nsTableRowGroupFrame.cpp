@@ -1061,8 +1061,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
           if ((rowMetrics.height <= rowReflowState.availableHeight) || isTopOfPage) {
             // The row stays on this page because either it split ok or we're on the top of page.
             // If top of page and the height exceeded the avail height, then there will be data loss
-            NS_WARN_IF_FALSE(rowMetrics.height <= rowReflowState.availableHeight, 
-                            "data loss - incomplete row needed more height than available, on top of page");
+            NS_ASSERTION(rowMetrics.height <= rowReflowState.availableHeight, 
+                         "data loss - incomplete row needed more height than available, on top of page");
             CreateContinuingRowFrame(*aPresContext, *rowFrame, (nsIFrame**)&contRow);
             if (contRow) {
               aDesiredSize.height += rowMetrics.height;

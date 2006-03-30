@@ -567,7 +567,7 @@ EmbedPrivate::PushStartup(void)
       XRE_NotifyProfile();
 
     rv = RegisterAppComponents();
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
 
     // XXX startup appshell service?
     // XXX create offscreen window for appshell service?

@@ -778,7 +778,7 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
    // notify observers so that we can hide the splash screen if possible
    nsCOMPtr<nsIObserverService> obssvc
      (do_GetService("@mozilla.org/observer-service;1"));
-   NS_WARN_IF_FALSE(obssvc, "Couldn't get observer service.");
+   NS_ASSERTION(obssvc, "Couldn't get observer service.");
    if (obssvc) {
      obssvc->NotifyObservers(nsnull, "xul-window-visible", nsnull); 
    }

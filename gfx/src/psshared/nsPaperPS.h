@@ -74,7 +74,7 @@ class NS_PSSHARED nsPaperSizePS {
          * @return VOID
          */
         void Next() {
-            NS_WARN_IF_FALSE(!AtEnd(), "Invalid current item");
+            NS_ASSERTION(!AtEnd(), "Invalid current item");
             mCurrent++;
         }
 
