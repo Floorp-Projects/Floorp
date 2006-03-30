@@ -681,6 +681,18 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   scrolledArea.UnionRect(mInner.GetScrolledRect(aState.mScrollPortRect.Size()),
                          nsRect(nsPoint(0,0), aState.mScrollPortRect.Size()));
 
+  // Store the new overflow area. Note that this changes where an outline
+  // of the scrolled frame would be painted, but scrolled frames can't have
+  // outlines (the outline would go on this scrollframe instead).
+  // Using FinishAndStoreOverflow is needed so NS_FRAME_OUTSIDE_CHILDREN
+  // gets set correctly.  It also messes with the overflow rect in the
+  // -moz-hidden-unscrollable case, but scrolled frames can't have
+  // 'overflow' either.
+  // This needs to happen before SyncFrameViewAfterReflow so
+  // NS_FRAME_OUTSIDE_CHILDREN is set.
+  scrolledFrame->FinishAndStoreOverflow(&scrolledArea,
+                                        scrolledFrame->GetSize());
+
   // Note that making the view *exactly* the size of the scrolled area
   // is critical, since the view scrolling code uses the size of the
   // scrolled view to clamp scroll requests.
@@ -689,16 +701,6 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                                              scrolledView,
                                              &scrolledArea,
                                              NS_FRAME_NO_MOVE_VIEW);
-
-  // Store the new overflow area. Note that this changes where an outline
-  // of the scrolled frame would be painted, but scrolled frames can't have
-  // outlines (the outline would go on this scrollframe instead).
-  // Using FinishAndStoreOverflow is needed so NS_FRAME_OUTSIDE_CHILDREN
-  // gets set correctly.  It also messes with the overflow rect in the
-  // -moz-hidden-unscrollable case, but scrolled frames can't have
-  // 'overflow' either.
-  scrolledFrame->FinishAndStoreOverflow(&scrolledArea,
-                                        scrolledFrame->GetSize());
 
   mInner.PostOverflowEvents();
 }
