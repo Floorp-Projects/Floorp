@@ -331,11 +331,12 @@ nsTextFragment::Append(const nsAString& aData)
     mState.mLength += len;
     mState.mIs2b = PR_TRUE;
 
-    if (!mState.mInHeap) {
+    if (mState.mInHeap) {
       nsMemory::Free(m2b);
     }
     m2b = buff;
 
+    mState.mInHeap = PR_TRUE;
 
     return;
   }
@@ -356,6 +357,7 @@ nsTextFragment::Append(const nsAString& aData)
     }
 
     memcpy(buff, m1b, mState.mLength);
+    mState.mInHeap = PR_TRUE;
   }
     
   for (PRUint32 i = 0; i < len; ++i) {
