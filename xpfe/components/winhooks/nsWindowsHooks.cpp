@@ -223,7 +223,7 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     prefs->mHaveBeenSet  = BoolRegistryEntry( "haveBeenSet"      );
 
 #ifdef DEBUG_law
-NS_WARN_IF_FALSE( NS_SUCCEEDED( rv ), "GetPreferences failed" );
+NS_ASSERTION( NS_SUCCEEDED( rv ), "GetPreferences failed" );
 #endif
 
     return rv;

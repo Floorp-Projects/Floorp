@@ -5157,7 +5157,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
 
   // Failure here is not a show-stopper so just warn.
   rv = EnsurePrivateDirServiceProvider();
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to register dir service provider.");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to register dir service provider.");
 
   nsCOMPtr<nsIProperties> dirService(do_GetService(kDirectoryServiceContractID, &rv));
   if (NS_FAILED(rv))

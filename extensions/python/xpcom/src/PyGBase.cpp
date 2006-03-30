@@ -264,7 +264,7 @@ PyG_Base::MakeInterfaceParam(nsISupports *pis,
 	// But if it ever triggers, the poor Python code has no real hope
 	// of returning something useful, so we should at least do our
 	// best to provide the useful data.
-	NS_WARN_IF_FALSE( ((piid != NULL) ^ (d != NULL)) == 1, "No information on the interface available - Python's gunna have a hard time doing much with it!");
+	NS_ASSERTION( ((piid != NULL) ^ (d != NULL)) == 1, "No information on the interface available - Python's gunna have a hard time doing much with it!");
 	PyObject *obIID = NULL;
 	PyObject *obISupports = NULL;
 	PyObject *obParamDesc = NULL;
@@ -306,7 +306,7 @@ PyG_Base::MakeInterfaceParam(nsISupports *pis,
 				       paramIndex);
 done:
 	if (PyErr_Occurred()) {
-		NS_WARN_IF_FALSE(result==NULL, "Have an error, but also a result!");
+		NS_ASSERTION(result==NULL, "Have an error, but also a result!");
 		PyXPCOM_LogError("Wrapping an interface object for the gateway failed\n");
 	}
 	Py_XDECREF(obIID);
@@ -389,7 +389,7 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 			Py_DECREF(result);
 		} else {
 			NS_ABORT_IF_FALSE(PyErr_Occurred(), "Got NULL result, but no Python error flagged!");
-			NS_WARN_IF_FALSE(!supports, "Have failure with success flag set!");
+			NS_ASSERTION(!supports, "Have failure with success flag set!");
 			PyXPCOM_LogError("The _QueryInterface_ processing failed.\n");
 			// supports remains false.
 			// We have reported the error, and are returning to COM,

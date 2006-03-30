@@ -410,8 +410,8 @@ nsFrameLoader::EnsureDocShell()
       // enclosing chrome shell.
 
       chromeEventHandler = do_QueryInterface(mOwnerContent);
-      NS_WARN_IF_FALSE(chromeEventHandler,
-                       "This mContent should implement this.");
+      NS_ASSERTION(chromeEventHandler,
+                   "This mContent should implement this.");
     } else {
       nsCOMPtr<nsIDocShell> parentShell(do_QueryInterface(parentAsNode));
 

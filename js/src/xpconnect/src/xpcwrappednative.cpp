@@ -1496,7 +1496,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
                         proto = JS_GetPrototype(ccx, jso);
 
-                        NS_WARN_IF_FALSE(proto && proto != our_proto,
+                        NS_ASSERTION(proto && proto != our_proto,
                             "!!! xpconnect/xbl check - wrapper has no special proto");
 
                         PRBool found_our_proto = PR_FALSE;
@@ -1506,7 +1506,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                             found_our_proto = proto == our_proto;
                         }
 
-                        NS_WARN_IF_FALSE(found_our_proto,
+                        NS_ASSERTION(found_our_proto,
                             "!!! xpconnect/xbl check - wrapper has extra proto");
                     }
                     else

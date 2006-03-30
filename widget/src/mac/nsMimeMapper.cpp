@@ -240,7 +240,7 @@ nsMimeMapperMac::ParseMappings ( const char* inMappings )
 char*
 nsMimeMapperMac::ExportMapping ( short * outLength ) const
 {
-  NS_WARN_IF_FALSE ( outLength, "No out param provided" );
+  NS_ASSERTION ( outLength, "No out param provided" );
   if ( outLength )
     *outLength = 0;
 

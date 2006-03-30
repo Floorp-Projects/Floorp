@@ -1188,7 +1188,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 		NS_ABORT_IF_FALSE(!td.is_auto_in, "Param is 'auto-in', but we are filling it normally!");
 		PyObject *val_use = NULL; // a temp object converters can use, and will be DECREF'd
 		PyObject *val = PySequence_GetItem(m_pyparams, param_index);
-		NS_WARN_IF_FALSE(val, "Have an 'in' param, but no Python value!");
+		NS_ASSERTION(val, "Have an 'in' param, but no Python value!");
 		if (val==NULL) {
 			PyErr_Format(PyExc_ValueError, "Param %d is marked as 'in', but no value was given", value_index);
 			return PR_FALSE;
@@ -1397,7 +1397,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 		  case nsXPTType::T_INTERFACE_IS: {
 			nsIID iid;
 			nsXPTCVariant &ns_viid = m_var_array[td.argnum];
-			NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
+			NS_ASSERTION(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
 			// This is a pretty serious problem, but not Python's fault!
 			// Just return an nsISupports and hope the caller does whatever
 			// QI they need before using it.
@@ -1718,7 +1718,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 	  case nsXPTType::T_INTERFACE_IS: {
 		nsIID iid;
 		nsXPTCVariant &ns_viid = m_var_array[td.argnum];
-		NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
+		NS_ASSERTION(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
 		if (XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID) {
 			nsIID *piid = (nsIID *)ns_viid.val.p;
 			if (piid==NULL)
@@ -2173,7 +2173,7 @@ PRBool PyXPCOM_GatewayVariantHelper::GetIIDForINTERFACE_ID(int index, const nsII
 	// in or out, so we will allow it.
 	nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+index;
 	nsXPTType typ = pi->GetType();
-	NS_WARN_IF_FALSE(XPT_TDP_TAG(typ) == nsXPTType::T_IID, "INTERFACE_IS IID param isn't an IID!");
+	NS_ASSERTION(XPT_TDP_TAG(typ) == nsXPTType::T_IID, "INTERFACE_IS IID param isn't an IID!");
 	NS_ABORT_IF_FALSE(typ.IsPointer(), "Expecting to re-fill a pointer value.");
 	if (XPT_TDP_TAG(typ) != nsXPTType::T_IID)
 		*ppret = &NS_GET_IID(nsISupports);

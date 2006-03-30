@@ -122,10 +122,10 @@ QGeckoGlobals::pushStartup()
         }
 
         rv = startupProfile();
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to start up profiles.\n");
 
         rv = registerAppComponents();
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Warning: Failed to register app components.\n");
 
         // XXX startup appshell service?
 

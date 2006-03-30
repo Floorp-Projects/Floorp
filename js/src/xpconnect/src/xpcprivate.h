@@ -763,7 +763,7 @@ public:
 
     nsIXPCSecurityManager* GetAppropriateSecurityManager(PRUint16 flags) const
         {
-            NS_WARN_IF_FALSE(CallerTypeIsKnown(),"missing caller type set somewhere");
+            NS_ASSERTION(CallerTypeIsKnown(),"missing caller type set somewhere");
             if(!CallerTypeIsJavaScript())
                 return nsnull;
             if(mSecurityManager)

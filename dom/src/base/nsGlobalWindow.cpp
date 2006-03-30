@@ -837,8 +837,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                PRBool aClearScopeHint,
                                PRBool aIsInternalCall)
 {
-  NS_WARN_IF_FALSE(mDocumentPrincipal == nsnull,
-                   "mDocumentPrincipal prematurely set!");
+  NS_ASSERTION(mDocumentPrincipal == nsnull,
+               "mDocumentPrincipal prematurely set!");
 #ifdef PR_LOGGING
   if (IsInnerWindow() && aDocument && gDOMLeakPRLog &&
       PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
@@ -3089,7 +3089,7 @@ nsGlobalWindow::MakeScriptDialogTitle(const nsAString &aInTitle,
   // right thing for javascript: and data: documents.
 
   nsresult rv = NS_OK;
-  NS_WARN_IF_FALSE(sSecMan, "Global Window has no security manager!");
+  NS_ASSERTION(sSecMan, "Global Window has no security manager!");
   if (sSecMan) {
     nsCOMPtr<nsIPrincipal> principal;
     rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));

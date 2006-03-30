@@ -2449,8 +2449,8 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
         return GetElementById(aElementId, aReturn);
       }
 
-      NS_WARN_IF_FALSE(!aElementId.IsEmpty(),
-                       "getElementById(\"\") called, fix caller?");
+      NS_ASSERTION(!aElementId.IsEmpty(),
+                   "getElementById(\"\") called, fix caller?");
 
       if (mRootContent && !aElementId.IsEmpty()) {
         e = nsContentUtils::MatchElementId(mRootContent, idAtom);
@@ -3534,7 +3534,7 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
     channel->SetOriginalURI(wcwgURI);
 
     rv = loadGroup->AddRequest(mWyciwygChannel, nsnull);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to add request to load group.");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to add request to load group.");
   }
 
   return rv;

@@ -93,7 +93,7 @@ nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,
 :	mLength(aLength), mList(aList)
 {
         if(! aList) {
-           NS_WARN_IF_FALSE(!aLength, "Geez, this deosn't make sense");
+           NS_ASSERTION(!aLength, "Geez, this deosn't make sense");
            mLength = 0;
         }
 

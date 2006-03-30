@@ -357,7 +357,7 @@ nsDocShell::DestroyChildren()
     PRInt32 n = mChildList.Count();
     for (PRInt32 i = 0; i < n; i++) {
         shell = do_QueryInterface(ChildAt(i));
-        NS_WARN_IF_FALSE(shell, "docshell has null child");
+        NS_ASSERTION(shell, "docshell has null child");
 
         if (shell) {
             shell->SetTreeOwner(nsnull);

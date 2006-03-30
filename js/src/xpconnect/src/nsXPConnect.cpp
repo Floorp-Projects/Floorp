@@ -1054,8 +1054,8 @@ nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
             // This code should do the right thing even if we're
             // restoring the current proto, but warn in that case
             // since doing that is pointless.
-            NS_WARN_IF_FALSE(proto != oldProto,
-                             "Restoring current prototype, fix caller!");
+            NS_ASSERTION(proto != oldProto,
+                         "Restoring current prototype, fix caller!");
         }
 
         map->Add(aClassInfo, proto);

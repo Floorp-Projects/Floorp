@@ -764,7 +764,7 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  NS_WARN_IF_FALSE(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
+  NS_ASSERTION(!aElementId.IsEmpty(), "getElementById(\"\"), fix caller?");
   if (aElementId.IsEmpty())
     return NS_OK;
 

@@ -483,7 +483,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
     if ( rootView )
       popupDocumentWidget = rootView->GetNearestWidget(nsnull);
   }
-  NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
+  NS_ASSERTION(popupDocumentWidget, "ACK, BAD WIDGET");
   
   // Find the widget associated with the target's document.
   // For tooltips, we check the document's tooltipNode (which is set by
@@ -496,7 +496,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   else
     inPopupDoc->TrustedGetPopupNode(getter_AddRefs(targetNode));
 
-  //NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
+  //NS_ASSERTION(targetNode, "no popup/tooltip node on document!");
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
   nsIWidget* targetDocumentWidget = nsnull;
   if ( targetAsContent ) {
@@ -529,7 +529,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
       }
     }
   }
-  //NS_WARN_IF_FALSE(targetDocumentWidget, "ACK, BAD TARGET");
+  //NS_ASSERTION(targetDocumentWidget, "ACK, BAD TARGET");
 
   // the offset we need is the difference between the upper left corner of the two widgets. Use
   // screen coordinates to find the global offset between them.

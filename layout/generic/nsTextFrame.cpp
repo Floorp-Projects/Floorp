@@ -5315,7 +5315,7 @@ nsTextFrame::MeasureText(nsPresContext*          aPresContext,
     if (isWhitespace) {
       if ('\n' == firstChar) {
         // We hit a newline. Stop looping.
-        NS_WARN_IF_FALSE(aTs.mPreformatted, "newline w/o ts.mPreformatted");
+        NS_ASSERTION(aTs.mPreformatted, "newline w/o ts.mPreformatted");
         prevOffset = aTextData.mOffset;
         aTextData.mOffset++;
         endsInWhitespace = PR_TRUE;

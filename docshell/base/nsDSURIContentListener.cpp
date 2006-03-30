@@ -66,7 +66,7 @@ nsDSURIContentListener::Init()
 {
     nsresult rv;
     mNavInfo = do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get webnav info");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get webnav info");
     return rv;
 }
 

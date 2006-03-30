@@ -800,7 +800,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     if (nsComponentManagerImpl::gComponentManager) {
       nsrefcnt cnt;
       NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
-      NS_WARN_IF_FALSE(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+      NS_ASSERTION(cnt == 0, "Component Manager being held past XPCOM shutdown.");
     }
     nsComponentManagerImpl::gComponentManager = nsnull;
 

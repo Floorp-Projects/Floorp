@@ -2398,11 +2398,11 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 	// currently, the nsMacEventHandler is owned by nsMacWindow, which is the top level window
 	// we delegate this call to its parent
   nsIWidget* parent = GetParent();
-  NS_WARN_IF_FALSE(parent, "cannot get parent");
+  NS_ASSERTION(parent, "cannot get parent");
   if (parent)
   {
     nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(parent);
-    NS_WARN_IF_FALSE(kb, "cannot get parent");
+    NS_ASSERTION(kb, "cannot get parent");
   	if (kb) {
   		return kb->ResetInputState();
   	}

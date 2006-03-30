@@ -365,7 +365,7 @@ else printf( "Setting %s=%s\n", fullName().get(), setting.get() );
                    rc = ::RegSetValueExA( key, valueNameArg(), 0, REG_SZ,
                         (LPBYTE)cSetting.get(), cSetting.Length() );
 #ifdef DEBUG_law
-                   NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
+                   NS_ASSERTION( rc == ERROR_SUCCESS, fullName().get() );
 #endif
                    if ( rc == ERROR_SUCCESS ) {
                       result = NS_OK;
@@ -397,7 +397,7 @@ else printf( "Setting %s=%s\n", fullName().get(), setting.get() );
         ::RegCloseKey( key );
     } else {
 #ifdef DEBUG_law
-NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
+NS_ASSERTION( rc == ERROR_SUCCESS, fullName().get() );
 #endif
     }
     return result;

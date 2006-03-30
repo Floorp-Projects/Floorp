@@ -185,13 +185,13 @@ OSStatus CTextInputEventHandler::HandleUpdateActiveInputArea(
   if (noErr == err)  
   {
     TextRangeArray* pt = (TextRangeArray*)::malloc(rngSize);
-    NS_WARN_IF_FALSE( (pt), "Cannot malloc for hiliteRng") ; 
+    NS_ASSERTION( (pt), "Cannot malloc for hiliteRng") ; 
     if (pt)
     { 
       hiliteRng = pt;
       err = ::GetEventParameter(inEvent, kEventParamTextInputSendHiliteRng, typeTextRangeArray, NULL, 
                               rngSize, &rngSize, hiliteRng);
-      NS_WARN_IF_FALSE( (noErr == err), "Cannot get hiliteRng") ; 
+      NS_ASSERTION( (noErr == err), "Cannot get hiliteRng") ; 
     }                          
   }                     
   // printf("call HandleUpdateActiveInputArea textlength = %d ",text.Length());

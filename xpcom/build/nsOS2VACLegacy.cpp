@@ -539,7 +539,7 @@ __cl__16nsQueryInterfaceCFRC4nsIDPPv	proc
 	mov	[ebp-04h],eax;	status
 
 ; 48 #ifdef NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
-; 49 				NS_WARN_IF_FALSE(NS_SUCCEEDED(status), "interface not found---were you expecting that?");
+; 49 				NS_ASSERTION(NS_SUCCEEDED(status), "interface not found---were you expecting that?");
 ; 50 #endif
 ; 51 			}
 	jmp	@BLBL2
@@ -583,7 +583,7 @@ nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
 			{
 				status = mRawPtr->QueryInterface(aIID, answer);
 #ifdef NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
-				NS_WARN_IF_FALSE(NS_SUCCEEDED(status), "interface not found---were you expecting that?");
+				NS_ASSERTION(NS_SUCCEEDED(status), "interface not found---were you expecting that?");
 #endif
 			}
 		else
