@@ -116,7 +116,7 @@ sub canonicalise_query {
         my $esc_key = url_quote($key);
 
         foreach my $value ($self->param($key)) {
-            if ($value) {
+            if (defined($value)) {
                 my $esc_value = url_quote($value);
 
                 push(@parameters, "$esc_key=$esc_value");

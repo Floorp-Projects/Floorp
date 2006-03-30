@@ -314,9 +314,13 @@ for (my $chart = 0; $cgi->param("field$chart-0-0"); $chart++) {
     for (my $row = 0; $cgi->param("field$chart-$row-0"); $row++) {
         my @cols;
         for (my $col = 0; $cgi->param("field$chart-$row-$col"); $col++) {
+            my $value = $cgi->param("value$chart-$row-$col");
+            if (!defined($value)) {
+                $value = '';
+            }
             push(@cols, { field => $cgi->param("field$chart-$row-$col"),
                           type => $cgi->param("type$chart-$row-$col") || 'noop',
-                          value => $cgi->param("value$chart-$row-$col") || '' });
+                          value => $value });
         }
         push(@rows, \@cols);
     }
