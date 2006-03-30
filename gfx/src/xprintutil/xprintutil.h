@@ -17,7 +17,7 @@
  * The Original Code is the X11 print system utilities library.
  *
  * The Initial Developer of the Original Code is
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>. All Rights Reserved.
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *

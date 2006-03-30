@@ -14,7 +14,7 @@
  * The Original Code is editor atom table.
  *
  * The Initial Developer of the Original Code is
- * Netscape communications Corp.
+ * Netscape Communications Corp.
  * Portions created by the Initial Developer are Copyright (C) 2003
  * the Initial Developer. All Rights Reserved.
  *

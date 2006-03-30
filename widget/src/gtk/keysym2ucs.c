@@ -16,7 +16,7 @@
  * The Original Code is from xterm-122 source XFree86: xc/programs/xterm/keysym2ucs.c,v 1.3 1999/07/11 08:49:37 dawes Exp.
  *
  * The Initial Developer of the Original Code is
- * Markus G. Kuhn <mkuhn@acm.org>, University of Cambridge, June 1999 Richard Verhoeven <river@win.tue.nl>.
+ * Markus G. Kuhn <mkuhn@acm.org> and Richard Verhoeven <river@win.tue.nl>.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *

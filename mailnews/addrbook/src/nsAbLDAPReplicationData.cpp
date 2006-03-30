@@ -15,8 +15,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * <rdayal@netscape.com>
- *
+ * Rajiv Dayal <rdayal@netscape.com>
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *

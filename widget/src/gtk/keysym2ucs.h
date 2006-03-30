@@ -16,8 +16,7 @@
  * xc/programs/xterm/keysym2ucs.h,v 1.1 1999/06/12 15:37:18 dawes Exp.
  *
  * The Initial Developer of the Original Code is
- * Markus G. Kuhn <mkuhn@acm.org>, University of Cambridge, June 1999 
- * Richard Verhoeven <river@win.tue.nl>.
+ * Markus G. Kuhn <mkuhn@acm.org> and Richard Verhoeven <river@win.tue.nl>.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *

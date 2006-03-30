@@ -14,9 +14,8 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Michal Ceresna
- * for Lixto GmbH.
- *
+ * The Initial Developer of the Original Code is
+ * Lixto GmbH.
  * Portions created by Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *

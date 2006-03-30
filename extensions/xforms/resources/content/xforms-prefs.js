@@ -14,7 +14,7 @@
  * The Original Code is Mozilla XForms Support.
  *
  * The Initial Developer of the Original Code is
- * IBM Corportation.
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *

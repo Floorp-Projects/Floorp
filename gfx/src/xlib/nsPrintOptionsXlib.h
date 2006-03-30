@@ -16,7 +16,7 @@
  * The Original Code is Mozilla Xlib toolkit.
  *
  * The Initial Developer of the Original Code is
- * Roland Mainz. Copyright (C) 2001 Roland Mainz. All Rights Reserved.
+ * Roland Mainz.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
