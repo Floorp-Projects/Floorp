@@ -37,6 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Class for managing loading of a subframe (creation of the docshell,
+ * handling of loads in it, recursion-checking).
+ */
+
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMWindow.h"

@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Storage of the children and attributes of a DOM node; storage for
+ * the two is unified to minimize footprint.
+ */
+
 #ifndef nsAttrAndChildArray_h___
 #define nsAttrAndChildArray_h___
 

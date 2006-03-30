@@ -35,6 +35,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Implementation of the |attributes| property of DOM Core's Node object.
+ */
+
 #ifndef nsDOMAttributeMap_h___
 #define nsDOMAttributeMap_h___
 
@@ -51,7 +56,7 @@ class nsINodeInfo;
 class nsIDocument;
 
 /**
- * Structure used to cache nsDOMAttributes with.
+ * Structure used as a key for caching nsDOMAttributes in nsDOMAttributeMap's mAttributeCache.
  */
 class nsAttrKey
 {

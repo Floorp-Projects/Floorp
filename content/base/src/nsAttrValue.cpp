@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A struct that represents the value (type and actual data) of an
+ * attribute.
+ */
+
 #include "nsAttrValue.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"

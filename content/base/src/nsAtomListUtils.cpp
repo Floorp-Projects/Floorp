@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Static helper class for implementing atom lists.
+ */
+
 #include "nsAtomListUtils.h"
 #include "nsIAtom.h"
 #include "nsStaticAtom.h"

@@ -123,6 +123,7 @@ private:
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
 
   // weak ref, this is probably my owning webshell
+  // FIXME: we set this and never null it out.  That's bad!  See bug 332187.
   nsIWebNavigation* mNavigator;
 
 };

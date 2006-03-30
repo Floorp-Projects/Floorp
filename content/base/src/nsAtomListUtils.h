@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Static helper class for implementing atom lists.
+ */
+
 #ifndef nsAtomListUtils_h__
 #define nsAtomListUtils_h__
 

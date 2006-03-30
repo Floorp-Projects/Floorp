@@ -34,6 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Base class for all our document implementations.
+ */
+
 #ifndef nsDocument_h___
 #define nsDocument_h___
 

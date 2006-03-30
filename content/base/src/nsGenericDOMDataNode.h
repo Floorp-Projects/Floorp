@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Base class for DOM Core's Comment, DocumentType, Text,
+ * CDATASection, and ProcessingInstruction nodes.
+ */
+
 #ifndef nsGenericDOMDataNode_h___
 #define nsGenericDOMDataNode_h___
 

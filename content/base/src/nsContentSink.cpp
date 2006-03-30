@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Base class for the XML and HTML content sinks, which construct a
+ * DOM based on information from the parser.
+ */
+
 #include "nsContentSink.h"
 #include "nsIScriptLoader.h"
 #include "nsIDocument.h"

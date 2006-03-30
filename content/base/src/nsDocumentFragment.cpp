@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Implementation of DOM Core's DocumentFragment.
+ */
+
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsIDOMDocumentFragment.h"

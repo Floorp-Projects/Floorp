@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* 
+ * Implementation of the "@mozilla.org/layout/content-policy;1" contract.
+ */
+
 #include "prlog.h"
 
 #include "nsISupports.h"
