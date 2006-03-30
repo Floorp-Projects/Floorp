@@ -325,6 +325,15 @@ var BookmarkPropertiesPanel = {
 
     if (this._identifierIsURI()) {
       this._bookmarkTitle = this._bms.getItemTitle(this._bookmarkURI);
+
+      /* If we can't get a title for a new bookmark, let's set it to
+         be the first 100 characters of the URI. */
+      if (this._isVariant(this.ADD_BOOKMARK_VARIANT) && !this._bookmarkTitle) {
+        this._bookmarkTitle = this._bookmarkURI.spec;
+        if (this._bookmarkTitle.length > 100) {
+          this._bookmarkTitle = this._bookmarkTitle.substr(0, 100);
+        }
+      }
     }
     else {
       this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
