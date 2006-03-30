@@ -379,24 +379,19 @@ public:
   PRBool HasPaginatedScrolling() const { return mCanPaginatedScroll; }
 
   /**
-   * Gets the rect for the page dimensions,
-   * this includes X,Y Offsets which are used to determine 
-   * the inclusion of margins
-   * Also, indicates whether the size has been overridden
-   *
-   * @param aActualRect returns the size of the actual device/surface
-   * @param aRect returns the adjusted size 
+   * Get/set the size of a page
    */
-  NS_HIDDEN_(void) GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
+  nsSize GetPageSize() { return mPageSize; }
+  void SetPageSize(nsSize aSize) { mPageSize = aSize; }
 
   /**
-   * Sets the "adjusted" rect for the page Dimimensions, 
-   * this includes X,Y Offsets which are used to determine 
-   * the inclusion of margins
-   *
-   * @param aRect returns the adjusted size 
+   * Get/set whether this document should be treated as having real pages
+   * XXX This raises the obvious question of why a document that isn't a page
+   *     is paginated; there isn't a good reason except history
    */
-  NS_HIDDEN_(void) SetPageDim(const nsRect& aRect);
+  PRBool IsRootPaginatedDocument() { return mIsRootPaginatedDocument; }
+  void SetIsRootPaginatedDocument(PRBool aIsRootPaginatedDocument)
+    { mIsRootPaginatedDocument = aIsRootPaginatedDocument; }
 
   /**
    * Conversion from device pixels to twips.
@@ -688,7 +683,7 @@ protected:
   nscoord               mMinimumFontSize;
 
   nsRect                mVisibleArea;
-  nsRect                mPageDim;
+  nsSize                mPageSize;
 
   nscolor               mDefaultColor;
   nscolor               mBackgroundColor;
@@ -731,8 +726,10 @@ protected:
   unsigned              mCanPaginatedScroll : 1;
   unsigned              mDoScaledTwips : 1;
   unsigned              mEnableJapaneseTransform : 1;
+  unsigned              mIsRootPaginatedDocument : 1;
   unsigned              mPrefBidiDirection : 1;
   unsigned              mPrefScrollbarSide : 2;
+
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;
   unsigned              mIsBidiSystem : 1;

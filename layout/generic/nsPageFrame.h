@@ -83,8 +83,6 @@ public:
   // Tell the page which page number it is out of how many
   virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
 
-  virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
-
   virtual void SetSharedPageData(nsSharedPageData* aPD);
 
 // XXX Part of Temporary fix for Bug 127263
@@ -142,8 +140,6 @@ protected:
   PRInt32     mPageNum;
   PRInt32     mTotNumPages;
   nsMargin    mMargin;
-
-  PRPackedBool mSupressHF;
 
   nsSharedPageData* mPD;
 

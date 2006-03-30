@@ -3648,10 +3648,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 NS_IMETHODIMP
 DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings)
 {
-  NS_ENSURE_ARG_POINTER(aGlobalPrintSettings);
-
-  nsPrintEngine printEngine;
-  return printEngine.GetGlobalPrintSettings(aGlobalPrintSettings);
+  return nsPrintEngine::GetGlobalPrintSettings(aGlobalPrintSettings);
 }
 
 /* readonly attribute boolean doingPrint; */
@@ -4182,8 +4179,6 @@ DocumentViewerImpl::InstallNewPresentation()
   mViewManager->EnableRefresh(NS_VMREFRESH_DEFERRED);
 
   Show();
-
-  mPrintEngine->ShowDocList(PR_TRUE);
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
 }
 

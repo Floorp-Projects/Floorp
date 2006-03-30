@@ -74,9 +74,9 @@ static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 //-- nsPrintData Class Impl
 //---------------------------------------------------
 nsPrintData::nsPrintData(ePrintDataType aType) :
-  mType(aType), mPrintView(nsnull), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
+  mType(aType), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
   mShowProgressDialog(PR_TRUE), mProgressDialogIsShown(PR_FALSE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
-  mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE), mOnStartSent(PR_FALSE),
+  mIsParentAFrameSet(PR_FALSE), mOnStartSent(PR_FALSE),
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),

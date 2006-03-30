@@ -3219,15 +3219,13 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
   // set the repeatablility of headers and footers in the original table during its first reflow
   // the repeatability of header and footers on continued tables is handled when they are created
   if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE == aReflowState.availSize.height)) {
-    nsRect actualRect;
-    nsRect adjRect;
-    presContext->GetPageDim(&actualRect, &adjRect);
+    nscoord height = presContext->GetPageSize().height;
     // don't repeat the thead or tfoot unless it is < 25% of the page height
-    if (thead) {
-      thead->SetRepeatable(IsRepeatable(*thead, actualRect.height));
+    if (thead && height != NS_UNCONSTRAINEDSIZE) {
+      thead->SetRepeatable(IsRepeatable(*thead, height));
     }
-    if (tfoot) {
-      tfoot->SetRepeatable(IsRepeatable(*tfoot, actualRect.height));
+    if (tfoot && height != NS_UNCONSTRAINEDSIZE) {
+      tfoot->SetRepeatable(IsRepeatable(*tfoot, height));
     }
   }
 

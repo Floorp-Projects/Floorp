@@ -74,39 +74,32 @@ public:
   // Data Members
   nsCOMPtr<nsIDocShell>    mDocShell;
   nsCOMPtr<nsIPresShell>   mDisplayPresShell;
-  nsCOMPtr<nsPresContext> mDisplayPresContext;
   nsCOMPtr<nsIDocument>    mDocument;
 
-  PrintObjectType mFrameType;
-  nsCOMPtr<nsPresContext> mPresContext;
-  nsStyleSet              *mStyleSet;
+  nsCOMPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;
-  nsIView         *mRootView;
+  nsIView*                 mRootView;
 
-  nsIContent      *mContent;
-  nsIFrame        *mSeqFrame;
-  nsIFrame        *mPageFrame;
+  nsIContent*      mContent;
+  nsIFrame*        mSeqFrame;
   PRInt32          mPageNum;
   nsRect           mRect;
-  nsRect           mReflowRect;
-
+  PrintObjectType  mFrameType;
+  
   nsVoidArray      mKids;
-  nsPrintObject*     mParent;
+  nsPrintObject*   mParent;
   PRPackedBool     mHasBeenPrinted;
   PRPackedBool     mDontPrint;
   PRPackedBool     mPrintAsIs;
-  PRPackedBool     mSkippedPageEject;
   PRPackedBool     mSharedPresShell;
   PRPackedBool     mIsHidden;         // Indicates PO is hidden, not reflowed, not shown
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
 
-  PRUint16         mImgAnimationMode;
   PRUnichar*       mDocTitle;
   PRUnichar*       mDocURL;
   float            mShrinkRatio;
-  nscoord          mXMost;
 
 private:
   nsPrintObject& operator=(const nsPrintObject& aOther); // not implemented
