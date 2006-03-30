@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsISchema.h"
+#include "nsIDOMNode.h"
 #include "nsCOMArray.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -228,6 +229,8 @@ public:
                                        nsSchemaDerivedSimpleType *aDerived);
   static void CopyDerivedSimpleType(nsSchemaDerivedSimpleType *aDerivedDest,
                                     nsSchemaDerivedSimpleType *aDerivedSrc);
+
+  static void SetToNullOrElement(nsIDOMNode *aNode, nsIDOMNode **aResultNode);
 private:
   nsSchemaValidatorUtils();
   ~nsSchemaValidatorUtils();

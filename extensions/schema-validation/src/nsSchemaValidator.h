@@ -44,6 +44,7 @@
 #include "nsISchema.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsIAtom.h"
 
 /* eced2af3-fde9-4575-b5a4-e1c830b24611 */
 #define NS_SCHEMAVALIDATOR_CID \
@@ -107,7 +108,8 @@ private:
                                      nsStringArray *aEnumerationList,
                                      PRBool *aResult);
 
-  nsresult ValidateBuiltinTypeBoolean(const nsAString & aNodeValue, PRBool *aResult);
+  nsresult ValidateBuiltinTypeBoolean(const nsAString & aNodeValue,
+                                      PRBool *aResult);
 
   nsresult ValidateBuiltinTypeGDay(const nsAString & aNodeValue,
                                    const nsAString & aMaxExclusive,
@@ -126,7 +128,8 @@ private:
                                      const nsAString & aMaxInclusive,
                                      const nsAString & aMinInclusive,
                                      PRBool *aResult);
-  PRBool IsValidSchemaGMonth(const nsAString & aNodeValue, nsSchemaGMonth *aResult);
+  PRBool IsValidSchemaGMonth(const nsAString & aNodeValue,
+                             nsSchemaGMonth *aResult);
 
   nsresult ValidateBuiltinTypeGYear(const nsAString & aNodeValue,
                                     const nsAString & aMaxExclusive,
@@ -134,7 +137,8 @@ private:
                                     const nsAString & aMaxInclusive,
                                     const nsAString & aMinInclusive,
                                     PRBool *aResult);
-  PRBool IsValidSchemaGYear(const nsAString & aNodeValue, nsSchemaGYear *aResult);
+  PRBool IsValidSchemaGYear(const nsAString & aNodeValue,
+                            nsSchemaGYear *aResult);
 
   nsresult ValidateBuiltinTypeGYearMonth(const nsAString & aNodeValue,
                                          const nsAString & aMaxExclusive,
@@ -142,7 +146,8 @@ private:
                                          const nsAString & aMaxInclusive,
                                          const nsAString & aMinInclusive,
                                          PRBool *aResult);
-  PRBool IsValidSchemaGYearMonth(const nsAString & aNodeValue, nsSchemaGYearMonth *aYearMonth);
+  PRBool IsValidSchemaGYearMonth(const nsAString & aNodeValue,
+                                 nsSchemaGYearMonth *aYearMonth);
 
   nsresult ValidateBuiltinTypeGMonthDay(const nsAString & aNodeValue,
                                         const nsAString & aMaxExclusive,
@@ -150,7 +155,8 @@ private:
                                         const nsAString & aMaxInclusive,
                                         const nsAString & aMinInclusive,
                                         PRBool *aResult);
-  PRBool IsValidSchemaGMonthDay(const nsAString & aNodeValue, nsSchemaGMonthDay *aYearMonth);
+  PRBool IsValidSchemaGMonthDay(const nsAString & aNodeValue,
+                                nsSchemaGMonthDay *aYearMonth);
 
   nsresult ValidateBuiltinTypeDateTime(const nsAString & aNodeValue,
                                        const nsAString & aMaxExclusive,
@@ -160,7 +166,8 @@ private:
                                        PRBool *aResult);
   int CompareSchemaDateTime(nsSchemaDateTime datetime1,
                             nsSchemaDateTime datetime2);
-  PRBool IsValidSchemaDateTime(const nsAString & aNodeValue, nsSchemaDateTime *aResult);
+  PRBool IsValidSchemaDateTime(const nsAString & aNodeValue,
+                               nsSchemaDateTime *aResult);
 
   nsresult ValidateBuiltinTypeDate(const nsAString & aNodeValue,
                                    const nsAString & aMaxExclusive,
@@ -228,7 +235,8 @@ private:
                                       PRBool *aResult);
   PRBool IsValidSchemaDecimal(const nsAString & aNodeValue, nsAString & aWholePart,
                               nsAString & aFractionPart);
-  int CompareFractionStrings(const nsAString & aString1, const nsAString & aString2);
+  int CompareFractionStrings(const nsAString & aString1,
+                             const nsAString & aString2);
 
   nsresult ValidateBuiltinTypeAnyURI(const nsAString & aNodeValue,
                                      PRUint32 aLength, PRUint32 aMinLength,
@@ -246,7 +254,8 @@ private:
                                            PRBool aMaxLengthDefined,
                                            nsStringArray *aEnumerationList,
                                            PRBool *aResult);
-  PRBool IsValidSchemaBase64Binary(const nsAString & aString, char** aDecodedString);
+  PRBool IsValidSchemaBase64Binary(const nsAString & aString,
+                                   char** aDecodedString);
 
 
   nsresult ValidateBuiltinTypeHexBinary(const nsAString & aNodeValue,
@@ -275,8 +284,71 @@ private:
   // helper methods
   void DumpBaseType(nsISchemaBuiltinType *aBuiltInType);
 
+  // methods dealing with complextypes
+  nsresult ValidateComplextype(nsIDOMNode *aNode,
+                               nsISchemaComplexType *aSchemaComplexType,
+                               PRBool *aResult);
+
+  nsresult ValidateComplexModelElement(nsIDOMNode *aNode,
+                                       nsISchemaComplexType *aSchemaComplexType,
+                                       PRBool *aResult);
+
+  nsresult ValidateComplexModelSimple(nsIDOMNode *aNode,
+                                      nsISchemaComplexType *aSchemaComplexType,
+                                      PRBool *aResult);
+
+  nsresult ValidateComplexModelGroup(nsIDOMNode* aNode,
+                                     nsISchemaModelGroup *aSchemaModelGroup,
+                                     nsIDOMNode **aLeftOvers, PRBool *aResult);
+
+  nsresult ValidateComplexSequence(nsIDOMNode *aStartNode,
+                                   nsISchemaModelGroup *aSchemaModelGroup,
+                                   nsIDOMNode **aLeftOvers, PRBool *aNotFound,
+                                   PRBool *aResult);
+
+  nsresult ValidateComplexParticle(nsIDOMNode* aNode,
+                                   nsISchemaParticle *aSchemaParticle,
+                                   nsIDOMNode **aLeftOvers, PRBool *aNotFound,
+                                   PRBool *aResult);
+
+  nsresult ValidateComplexElement(nsIDOMNode* aNode,
+                                  nsISchemaParticle *aSchemaParticle,
+                                  PRBool *aResult);
+
+  nsresult ValidateComplexChoice(nsIDOMNode* aStartNode,
+                                 nsISchemaModelGroup *aSchemaModelGroup,
+                                 nsIDOMNode **aLeftOvers, PRBool *aNotFound,
+                                 PRBool *aResult);
+
+  nsresult ValidateComplexAll(nsIDOMNode* aStartNode,
+                              nsISchemaModelGroup *aSchemaModelGroup,
+                              nsIDOMNode **aLeftOvers, PRBool *aNotFound,
+                              PRBool *aResult);
+
+  nsresult ValidateAttributeComponent(nsIDOMNode* aNode,
+                                      nsISchemaAttributeComponent *aAttrComp,
+                                      PRUint32 *aFoundAttrCount, PRBool *aResult);
+  nsresult ValidateSchemaAttribute(nsIDOMNode* aNode, nsISchemaAttribute *aAttr,
+                                   const nsAString & aAttrName,
+                                   PRUint32 *aFoundAttrCount, PRBool *aResult);
+  nsresult ValidateSchemaAttributeGroup(nsIDOMNode* aNode,
+                                        nsISchemaAttributeGroup *aAttr,
+                                        const nsAString & aAttrName,
+                                        PRUint32 *aFoundAttrCount,
+                                        PRBool *aResult);
+
+static void
+ReleaseObject(void    *aObject,
+              nsIAtom *aPropertyName,
+              void    *aPropertyValue,
+              void    *aData)
+{
+  NS_STATIC_CAST(nsISupports *, aPropertyValue)->Release();
+}
+
 protected:
   nsCOMPtr<nsISchemaCollection> mSchema;
+  PRBool mForceInvalid;
 };
 
 #endif // __nsSchemaValidator_h__

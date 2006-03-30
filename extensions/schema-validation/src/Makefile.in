@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  unicharutil \
 		  content \
+		  layout \
 		  js \
 		  htmlparser \
 		  necko \

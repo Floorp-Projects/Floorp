@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <schema targetNamespace="http://www.mozilla.org/schema/test"
-        xmlns="http://www.w3.org/2001/XMLSchema"
         xmlns:test="http://www.mozilla.org/schema/test"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
+        attributeFormDefault="qualified"
+        xmlns="http://www.w3.org/2001/XMLSchema">
 
   <simpleType name="integer-test-1">
     <restriction base='integer'>
@@ -484,6 +484,12 @@
   </simpleType>
 
   <!-- complex types -->
+	<element name="foo" type="test:duration-test-2"/>
+
+
+  <attributeGroup name="attrgroup-1">
+    <attribute name="id" type="string" form="unqualified"/>
+  </attributeGroup>
 
   <element name="transaction">
     <complexType>
@@ -499,10 +505,9 @@
 	<element name="balance">
 		<complexType>
 			<sequence>
-				<element ref="transaction" />
+				<element ref="test:transaction" />
 			</sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -520,8 +525,7 @@
 					</complexType>
 				</element>
 			</sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -539,8 +543,7 @@
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -558,8 +561,7 @@
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -577,8 +579,7 @@
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -597,12 +598,11 @@
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
-  <attribute name="testAttr3" type="boolean" fixed="true"/>
+  <attribute name="testAttr3" type="boolean" />
   <attribute name="testAttr4" type="boolean"/>
 
   <element name="balance7">
@@ -617,14 +617,13 @@
 							<element name="amount" type="decimal" minOccurs="0"/>
 						</sequence>
             <attribute name="testAttr" type="boolean" use="required"/>
-            <attribute name="testAttr2" type="boolean" use="optional" fixed="true"/>
-            <attribute ref="testAttr3" use="optional"/>
-            <attribute ref="testAttr4" use="required"/>
+            <attribute name="testAttr2" type="boolean" use="optional" form="unqualified"/>
+            <attribute ref="test:testAttr3" use="optional"/>
+					  <attribute ref="test:testAttr4" use="required"/>
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -646,8 +645,7 @@
 				  <element name="lastname" type="string" minOccurs="0"/>
 			  </sequence>
 			</sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -673,8 +671,7 @@
 				  <element name="test2" type="string" />
 			  </sequence>
 			</sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -696,8 +693,7 @@
 				  <element name="lastname" type="string" minOccurs="0"/>
 			  </sequence>
       </sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -714,7 +710,7 @@
               <element name="foopy">
                 <complexType>
                   <sequence minOccurs="2" maxOccurs="4">
-			              <element ref="balance9"/>
+			              <element ref="test:balance9"/>
                   </sequence>
                 </complexType>
               </element>
@@ -722,8 +718,7 @@
 					</complexType>
 				</element>
 			</sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
@@ -745,93 +740,284 @@
 					</complexType>
 				</element>
 			</sequence>
-    <attribute name="id" type="string"/>
-    <attribute name="xsi:type" type="string"/>
+      <attributeGroup ref="test:attrgroup-1"/>
+		</complexType>
+	</element>
+
+  <element name="date" type="date"/>
+
+	<element name="balance13">
+		<complexType>
+			<sequence>
+				<element ref="test:date"/>
+			</sequence>
+      <attributeGroup ref="test:attrgroup-1"/>
 		</complexType>
 	</element>
 
   <!-- Chilled -->
+  <simpleType name="chilledDecimal">
+    <restriction base="decimal">
+      <totalDigits value="5"/>
+      <fractionDigits value="2"/>
+      <minInclusive value="0"/>
+    </restriction>
+  </simpleType>
 
-    <simpleType name="chilledDecimal">
-        <restriction base="decimal">
-            <totalDigits value="5"/>
-            <fractionDigits value="2"/>
-            <minInclusive value="0"/>
-        </restriction>
-    </simpleType>
+  <simpleType name="milk">
+    <restriction base="string">
+      <enumeration value="full-cream"/>
+      <enumeration value="semi-skimmed"/>
+      <enumeration value="skimmed"/>
+    </restriction>
+  </simpleType>
 
-    <simpleType name="milk">
+  <simpleType name="milk2">
+    <restriction base="test:milk">
+      <enumeration value="full-cream"/>
+    </restriction>
+  </simpleType>
+
+  <simpleType name="butter">
       <restriction base="string">
-        <enumeration value="full-cream"/>
-        <enumeration value="semi-skimmed"/>
-        <enumeration value="skimmed"/>
+          <enumeration value="salted"/>
+          <enumeration value="non-salted"/>
       </restriction>
-    </simpleType>
-
-    <simpleType name="butter">
-        <restriction base="string">
-            <enumeration value="salted"/>
-            <enumeration value="non-salted"/>
-        </restriction>
-    </simpleType>
+  </simpleType>
 
   <element name="volume">
       <complexType>
           <simpleContent>
               <extension base="test:chilledDecimal">
-                  <attribute name="uom" fixed="litres" type="string"/>
+                  <attribute name="uom" fixed="litres" type="string" form="unqualified"/>
               </extension>
           </simpleContent>
       </complexType>
   </element>
 
-    <element name="weight">
-        <complexType>
-            <simpleContent>
-                <extension base="test:chilledDecimal">
-                    <attribute name="uom" fixed="kg" type="string"/>
-                </extension>
-            </simpleContent>
-        </complexType>
-    </element>
+  <element name="weight">
+    <complexType>
+      <simpleContent>
+        <extension base="test:chilledDecimal">
+          <attribute name="uom" fixed="kg" type="string" form="unqualified"/>
+        </extension>
+      </simpleContent>
+    </complexType>
+  </element>
 
-<element name="fridge">
+  <element name="fridge">
+    <complexType>
+      <sequence>
+        <element name="contents">
+          <complexType>
+            <sequence>
+              <element name="dairyProduce" type="test:dairy_Produce" minOccurs="0"/>
+            </sequence>
+          </complexType>
+        </element>
+      </sequence>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+  </element>
+
+  <complexType name="dairy_Produce">
+    <sequence>
+      <element name="milk" minOccurs="1" maxOccurs="unbounded">
         <complexType>
             <sequence>
-                <element name="contents">
-                    <complexType>
-                        <sequence>
-                            <element name="dairyProduce" type="test:dairy_Produce" minOccurs="0"/>
-                        </sequence>
-                    </complexType>
-                </element>
+                <element ref="test:volume"/>
             </sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+            <attribute name="type" type="test:milk" form="unqualified"/>
+            <attribute name="type2" type="test:milk2" use="optional" form="unqualified"/>
         </complexType>
-    </element>
-
- <complexType name="dairy_Produce">
-      <sequence>
-          <element name="milk" minOccurs="1" maxOccurs="unbounded">
-              <complexType>
-                  <sequence>
-                      <element ref="volume"/>
-                  </sequence>
-                  <attribute name="type" type="test:milk"/>
-              </complexType>
-          </element>
-          <element name="butter" minOccurs="0" maxOccurs="unbounded">
-                <complexType>
-                    <sequence>
-                        <element ref="weight"/>
-                    </sequence>
-                    <attribute name="type" type="test:butter"/>
-                </complexType>
-          </element>
-      </sequence>
-      <attribute name="id" type="string"/>
-      <attribute name="xsi:type" type="string"/>
+      </element>
+      <element name="butter" minOccurs="0" maxOccurs="unbounded">
+        <complexType>
+            <sequence>
+                <element ref="test:weight"/>
+            </sequence>
+            <attribute name="type" type="test:butter" form="unqualified"/>
+        </complexType>
+      </element>
+    </sequence>
+    <attributeGroup ref="test:attrgroup-1"/>
   </complexType>
 
+  <element name="dairy" type="test:dairy_Produce"/>
+
+  <!-- xsd:all checks -->
+  <element name="name" type="string"/>
+  <element name="born" type="date"/>
+  <element name="dead" type="date"/>
+
+  <element name="author">
+    <complexType>
+      <all>
+        <element ref="test:name"/>
+        <element ref="test:born"/>
+        <element ref="test:dead" minOccurs="0"/>
+      </all>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+  </element>
+
+  <element name="author-2">
+    <complexType>
+      <sequence>
+        <element ref="test:author"/>
+        <element ref="test:transaction"/>
+      </sequence>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+  </element>
+
+  <element name="author-3">
+    <complexType>
+      <sequence>
+        <element ref="test:author" minOccurs="0"/>
+        <element ref="test:transaction"/>
+      </sequence>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+  </element>
+
+  <element name="author-4">
+    <complexType>
+      <all minOccurs="0">
+        <element ref="test:name"/>
+        <element ref="test:born"/>
+        <element ref="test:dead" minOccurs="0"/>
+      </all>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+  </element>
+
+  <!-- attr group -->
+  <attributeGroup name="attrgroup-2">
+    <attributeGroup ref="test:attrgroup-1"/>
+    <attribute name="test" type="boolean" use="optional"/>
+  </attributeGroup>
+
+	<element name="balance-attrgroup-1">
+		<complexType>
+			<sequence>
+			  <element ref="test:transaction" />
+			</sequence>
+             <attributeGroup ref="test:attrgroup-2"/>
+		</complexType>
+	</element>
+
+  <!-- group -->
+  <group name="group-1">
+    <sequence>
+      <element ref="test:name"/>
+      <element ref="test:born"/>
+      <element ref="test:dead" minOccurs="0"/>
+    </sequence>
+  </group>
+
+	<element name="balance-group-1">
+    <complexType>
+      <sequence>
+        <group ref="test:group-1" />
+      </sequence>
+      <attributeGroup ref="test:attrgroup-1"/>
+    </complexType>
+	</element>
+
+  <!-- deriviation by extension -->
+  <complexType name="deriv-base">
+    <sequence>
+      <element ref="test:name"/>
+      <element ref="test:born"/>
+    </sequence>
+    <attributeGroup ref="test:attrgroup-1"/>
+  </complexType>
+
+  <complexType name="deriv-ext-type-1">
+    <complexContent>
+      <extension base="test:deriv-base">
+        <sequence>
+          <element ref="test:dead"/>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+
+  <element name="deriv-ext-1" id="deriv-ext-1-1" type="test:deriv-ext-type-1"/>
+
+  <!-- deriviation by restriction-->
+  <complexType name="deriv-res-base">
+    <sequence>
+      <element ref="test:name"/>
+      <element ref="test:born"/>
+      <element ref="test:dead" minOccurs="0"/>
+    </sequence>
+    <attribute name="id" type="string" form="unqualified" use="required"/>
+  </complexType>
+
+  <element name="deriv-res-1">
+    <complexType>
+      <complexContent>
+        <restriction base="test:deriv-res-base">
+          <sequence>
+            <element ref="test:name"/>
+            <element ref="test:born"/>
+          </sequence>
+        </restriction>
+      </complexContent>
+    </complexType>
+  </element>
+
+  <element name="deriv-res-2">
+    <complexType>
+      <complexContent>
+        <restriction base="test:deriv-res-base">
+          <sequence>
+            <element ref="test:name"/>
+            <element ref="test:born"/>
+            <element ref="test:dead"/>
+          </sequence>
+        </restriction>
+      </complexContent>
+    </complexType>
+  </element>
+
+  <!-- DERIVATION_EXTENSION_COMPLEX -->
+  <complexType name="personName">
+   <sequence>
+    <element name="title" type="string" minOccurs="0"/>
+    <element name="forename" type="string" minOccurs="0" maxOccurs="unbounded"/>
+    <element name="surname" type="string"/>
+   </sequence>
+   <attributeGroup ref="test:attrgroup-1"/>
+  </complexType>
+
+  <complexType name="extendedName">
+   <complexContent>
+    <extension base="test:personName">
+     <sequence>
+      <element name="generation" type="string" minOccurs="0"/>
+     </sequence>
+    </extension>
+   </complexContent>
+  </complexType>
+
+  <element name="deriv-ext-complex-1" type="test:extendedName"/>
+
+  <!-- DERIVATION_RESTRICTION_COMPLEX -->
+  <complexType name="simpleName">
+   <complexContent>
+    <restriction base="test:personName">
+     <sequence>
+      <element name="forename" type="string" minOccurs="1" maxOccurs="1"/>
+      <element name="surname" type="string"/>
+     </sequence>
+    </restriction>
+   </complexContent>
+  </complexType>
+
+  <element name="deriv-ext-restriction-1" type="test:simpleName"/>
+
 </schema>
+

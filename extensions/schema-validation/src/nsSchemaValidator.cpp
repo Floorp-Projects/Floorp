@@ -40,12 +40,15 @@
 #include "nsSchemaValidator.h"
 
 // content includes
+#include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMNodeList.h"
 #include "nsIParserService.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsDataHashtable.h"
 
 // string includes
 #include "nsReadableUtils.h"
@@ -61,7 +64,6 @@
 #include "nsISchema.h"
 #include "nsISchemaLoader.h"
 #include "nsSchemaValidatorUtils.h"
-#include "nsISchemaValidatorRegexp.h"
 
 #include "nsNetUtil.h"
 #include "prlog.h"
@@ -76,7 +78,7 @@
 
 #define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
 #define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
-#define kREGEXP_CID "@mozilla.org/xmlextras/schemas/schemavalidatorregexp;1"
+#define NS_SCHEMA_INSTANCE_NAMESPACE "http://www.w3.org/2001/XMLSchema-instance"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo *gSchemaValidationLog = PR_NewLogModule("schemaValidation");
@@ -89,7 +91,7 @@ PRLogModuleInfo *gSchemaValidationLog = PR_NewLogModule("schemaValidation");
 
 NS_IMPL_ISUPPORTS1_CI(nsSchemaValidator, nsISchemaValidator)
 
-nsSchemaValidator::nsSchemaValidator()
+nsSchemaValidator::nsSchemaValidator() : mForceInvalid(PR_FALSE)
 {
 }
 
@@ -117,7 +119,7 @@ nsSchemaValidator::ValidateString(const nsAString & aValue,
                                   const nsAString & aNamespace,
                                   PRBool *aResult)
 {
-  LOG((" --------- nsSchemaValidator::ValidateString called --------- "));
+  LOG(("--------- nsSchemaValidator::ValidateString called ---------"));
 
   // empty type is invalid
   if (aType.IsEmpty())
@@ -158,70 +160,125 @@ nsSchemaValidator::ValidateString(const nsAString & aValue,
 NS_IMETHODIMP
 nsSchemaValidator::Validate(nsIDOMNode* aElement, PRBool *aResult)
 {
-  LOG((" \n \n nsSchemaValidator::Validate called."));
+  LOG(("--------- nsSchemaValidator::Validate called ---------"));
 
   if (!aElement)
     return NS_ERROR_SCHEMAVALIDATOR_NO_DOM_NODE_SPECIFIED;
 
+  // init the override
+  mForceInvalid = PR_FALSE;
+
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aElement);
   NS_ENSURE_STATE(domElement);
 
-  nsAutoString typeAttribute;
-  nsresult rv = domElement->GetAttributeNS(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE),
+  PRBool hasTypeAttribute = PR_FALSE;
+  nsresult rv = domElement->HasAttributeNS(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE),
                                            NS_LITERAL_STRING("type"),
-                                           typeAttribute);
-  NS_ENSURE_SUCCESS(rv, rv);
-  LOG((" \n Type is: %s \n", NS_ConvertUTF16toUTF8(typeAttribute).get()));
-  if (typeAttribute.IsEmpty())
-    return NS_ERROR_SCHEMAVALIDATOR_NO_TYPE_FOUND;
-
-  // split type (ns:type) into namespace and type.
-  nsCOMPtr<nsIParserService> parserService =
-    do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+                                           &hasTypeAttribute);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsAFlatString& qName = PromiseFlatString(typeAttribute);
-  const PRUnichar *colon;
-  rv = parserService->CheckQName(qName, PR_TRUE, &colon);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // will hold the type to validate against
+  nsCOMPtr<nsISchemaType> type;
 
-  const PRUnichar* end;
-  qName.EndReading(end);
+  if (hasTypeAttribute) {
+    LOG(("  -- found type attribute"));
 
-  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
-  NS_ENSURE_STATE(domNode3);
+    nsAutoString typeAttribute;
+    rv = domElement->GetAttributeNS(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE),
+                                    NS_LITERAL_STRING("type"),
+                                    typeAttribute);
+    NS_ENSURE_SUCCESS(rv, rv);
+    LOG(("  Type is: %s", NS_ConvertUTF16toUTF8(typeAttribute).get()));
 
-  nsAutoString schemaTypePrefix, schemaType, schemaTypeNamespace;
-  if (!colon) {
-    // colon not found, so no prefix
-    schemaType.Assign(typeAttribute);
+    if (typeAttribute.IsEmpty())
+      return NS_ERROR_SCHEMAVALIDATOR_NO_TYPE_FOUND;
+
+    // split type (ns:type) into namespace and type.
+    nsCOMPtr<nsIParserService> parserService =
+      do_GetService("@mozilla.org/parser/parser-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    const nsAFlatString& qName = PromiseFlatString(typeAttribute);
+    const PRUnichar *colon;
+    rv = parserService->CheckQName(qName, PR_TRUE, &colon);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    const PRUnichar* end;
+    qName.EndReading(end);
+
+    nsAutoString schemaTypePrefix, schemaType, schemaTypeNamespace;
+    if (!colon) {
+      // colon not found, so no prefix
+      schemaType.Assign(typeAttribute);
+
+      // get namespace from node
+      aElement->GetNamespaceURI(schemaTypeNamespace);
+    } else {
+      schemaTypePrefix.Assign(Substring(qName.get(), colon));
+      schemaType.Assign(Substring(colon + 1, end));
+
+      // get the namespace url from the prefix
+      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
+      rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    LOG(("  Type to validate against is %s:%s",
+      NS_LossyConvertUTF16toASCII(schemaTypePrefix).get(),
+      NS_LossyConvertUTF16toASCII(schemaType).get()));
+
+    // no schemas loaded and type is not builtin, abort
+    if (!mSchema &&
+        !schemaTypeNamespace.EqualsLiteral(NS_SCHEMA_1999_NAMESPACE) &&
+        !schemaTypeNamespace.EqualsLiteral(NS_SCHEMA_2001_NAMESPACE))
+      return NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED;
+
+    // get the type
+    rv = GetType(schemaType, schemaTypeNamespace, getter_AddRefs(type));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (mSchema) {
+    // no type attribute, look for an xsd:element in the schema that matches
+    LOG(("   -- no type attribute found, so looking for matching xsd:element"));
 
     // get namespace from node
-    aElement->GetNamespaceURI(schemaTypeNamespace);
-  } else {
-    schemaTypePrefix.Assign(Substring(qName.get(), colon));
-    schemaType.Assign(Substring(colon + 1, end));
-
-    // get the namespace url from the prefix
-    rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+    nsAutoString schemaTypeNamespace;
+    rv = aElement->GetNamespaceURI(schemaTypeNamespace);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString localName;
+    rv = aElement->GetLocalName(localName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISchemaElement> element;
+    mSchema->GetElement(localName, schemaTypeNamespace, getter_AddRefs(element));
+
+    if (!element) {
+      // no type and no matching element, abort
+      // XXX: needed better error here
+      return NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED;
+    }
+
+    rv = element->GetType(getter_AddRefs(type));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // no type attribute and no loaded schemas, so abort
+    // XXX: needed better error here
+    return NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED;
   }
 
-  LOG(("  Type to validate against is %s:%s",
-    NS_LossyConvertUTF16toASCII(schemaTypePrefix).get(),
-    NS_LossyConvertUTF16toASCII(schemaType).get()));
+  /* 
+   * We allow the schema validator to continue validating a structure
+   * even if the nodevalue is invalid per its simpletype binding.  This is done
+   * so that we continue to mark nodes with their types, even if we encounter
+   * an invalid nodevalue.  We remember that we had an invalid nodevalue by 
+   * using mForceInvalid as an override for the final return.
+   */
 
-  // no schemas loaded and type is not builtin, abort
-  if (!mSchema &&
-      !schemaTypeNamespace.EqualsLiteral(NS_SCHEMA_1999_NAMESPACE) &&
-      !schemaTypeNamespace.EqualsLiteral(NS_SCHEMA_2001_NAMESPACE))
-    return NS_ERROR_SCHEMAVALIDATOR_NO_SCHEMA_LOADED;
+  PRBool isValid = PR_FALSE;
+  rv = ValidateAgainstType(aElement, type, &isValid);
 
-  // get the type
-  nsCOMPtr<nsISchemaType> type;
-  rv = GetType(schemaType, schemaTypeNamespace, getter_AddRefs(type));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return ValidateAgainstType(aElement, type, aResult);
+  *aResult = mForceInvalid ? PR_FALSE : isValid;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -253,9 +310,39 @@ nsSchemaValidator::ValidateAgainstType(nsIDOMNode* aElement,
         NS_ConvertUTF16toUTF8(nodeValue).get()));
 
       rv = ValidateSimpletype(nodeValue, simpleType, &isValid);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString typeName, nodeName;
+      rv = aType->GetName(typeName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = aElement->GetLocalName(nodeName);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // go on validating, but remember we failed
+      if (!isValid) {
+        mForceInvalid = PR_TRUE;
+        isValid = PR_TRUE;
+      }
+
+      // set the property so that callers can check validity of nodes
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+      NS_ENSURE_STATE(content);
+
+      nsCOMPtr<nsIAtom> myAtom = do_GetAtom("xsdtype");
+
+      // We need to make aType live one cycle longer, so that getProperty
+      // can access it.  ReleaseObject will take care of the releasing.
+      NS_ADDREF(aType);
+      rv = content->SetProperty(myAtom, aType, ReleaseObject);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   } else if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-    rv = NS_ERROR_NOT_IMPLEMENTED;
+    nsCOMPtr<nsISchemaComplexType> complexType = do_QueryInterface(aType);
+    if (complexType) {
+      LOG(("  Type is a complex type!"));
+      rv = ValidateComplextype(aElement, complexType, &isValid);
+    }
   } else {
     rv = NS_ERROR_UNEXPECTED;
   }
@@ -278,7 +365,7 @@ nsSchemaValidator::GetType(const nsAString & aType,
     // if we are a built-in type, we can get a nsISchemaType for it from
     // nsISchemaCollection->GetType.
     nsCOMPtr<nsISchemaLoader> schemaLoader =
-      do_GetService("@mozilla.org/xmlextras/schemas/schemaloader;1", &rv);
+      do_CreateInstance("@mozilla.org/xmlextras/schemas/schemaloader;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     mSchema = do_QueryInterface(schemaLoader);
     NS_ENSURE_STATE(mSchema);
@@ -1504,7 +1591,7 @@ nsSchemaValidator::IsValidSchemaGDay(const nsAString & aNodeValue,
   // GDay looks like this: ---DD(Z|(+|-)hh:mm)
 
   PRUint32 strLength = aNodeValue.Length();
-  //   ---DD               ---DDZ              ---DD(+|-)hh:mm
+  //   ---DD            ---DDZ            ---DD(+|-)hh:mm
   if (strLength != 5 && strLength != 6 && strLength != 11)
     return PR_FALSE;
 
@@ -1628,7 +1715,7 @@ nsSchemaValidator::IsValidSchemaGMonth(const nsAString & aNodeValue,
   // GMonth looks like this: --MM(Z|(+|-)hh:mm)
 
   PRUint32 strLength = aNodeValue.Length();
-  //   --MM              --MMZ             --MM(+|-)hh:mm
+  //   --MM                --MMZ               --MM(+|-)hh:mm
   if ((strLength != 4) && (strLength != 5) && (strLength != 10))
     return PR_FALSE;
 
@@ -1642,7 +1729,7 @@ nsSchemaValidator::IsValidSchemaGMonth(const nsAString & aNodeValue,
   aNodeValue.EndReading(end);
   nsAutoString nodeValue(aNodeValue);
 
-  // validate the --MM-- part
+  // validate the --MM part
   PRBool isValid = Substring(start.get(), start.get()+2).EqualsLiteral("--") &&
                    IsValidSchemaGType(Substring(start.get()+2, start.get()+4),
                                       1, 12, &monthInt);
@@ -1931,7 +2018,8 @@ nsSchemaValidator::IsValidSchemaGYearMonth(const nsAString & aNodeValue,
       // back one up since we have the separator included
       year = Substring(buffStart, --start);
 
-      isValid = IsValidSchemaGYear(year, aYearMonth ? &aYearMonth->gYear : nsnull);
+      isValid = IsValidSchemaGYear(year,
+                                   aYearMonth ? &aYearMonth->gYear : nsnull);
 
       if (isValid) {
         nsAutoString month;
@@ -1939,7 +2027,8 @@ nsSchemaValidator::IsValidSchemaGYearMonth(const nsAString & aNodeValue,
         start++;
         month.Append(Substring(start, end));
 
-        isValid = IsValidSchemaGMonth(month, aYearMonth ? &aYearMonth->gMonth : nsnull);
+        isValid = IsValidSchemaGMonth(month,
+                                      aYearMonth ? &aYearMonth->gMonth : nsnull);
       }
       done = PR_TRUE;
     } else {
@@ -2054,7 +2143,8 @@ nsSchemaValidator::IsValidSchemaGMonthDay(const nsAString & aNodeValue,
       nsAutoString month;
       month.AppendLiteral("--");
       month.Append(Substring(buffStart, start.advance(2)));
-      isValid = IsValidSchemaGMonth(month, aMonthDay ? &aMonthDay->gMonth : nsnull);
+      isValid = IsValidSchemaGMonth(month,
+                                    aMonthDay ? &aMonthDay->gMonth : nsnull);
 
       if (isValid) {
         buffStart = start;
@@ -2067,7 +2157,8 @@ nsSchemaValidator::IsValidSchemaGMonthDay(const nsAString & aNodeValue,
       nsAutoString day;
       day.AppendLiteral("---");
       day.Append(Substring(++buffStart, end));
-      isValid = IsValidSchemaGDay(day, aMonthDay ? &aMonthDay->gDay : nsnull);
+      isValid = IsValidSchemaGDay(day,
+                                  aMonthDay ? &aMonthDay->gDay : nsnull);
       done = PR_TRUE;
     }
   }
@@ -2361,7 +2452,6 @@ nsSchemaValidator::ValidateBuiltinTypeDateTime(const nsAString & aValue,
     char fulldate[100] = "";
     nsCAutoString monthShorthand;
     nsSchemaValidatorUtils::GetMonthShorthand(dateTime.date.month, monthShorthand);
-
     // 22-AUG-1993 10:59:12.82
     sprintf(fulldate, "%d-%s-%u %d:%d:%d.%u",
       dateTime.date.day,
@@ -2398,9 +2488,8 @@ nsSchemaValidator::IsValidSchemaDate(const nsAString & aNodeValue,
 
   nsAutoString dateString(aNodeValue); 
   if (dateString.First() == '-') {
-    /* nspr can't handle negative years it seems */
     aResult->isNegative = PR_TRUE;
- }
+  }
 
  /*
     http://www.w3.org/TR/xmlschema-2/#date
@@ -2507,7 +2596,8 @@ nsSchemaValidator::IsValidSchemaDuration(const nsAString & aNodeValue,
   PRBool isValid = PR_FALSE;
   nsCOMPtr<nsISchemaDuration> duration;
 
-  isValid = nsSchemaValidatorUtils::ParseSchemaDuration(aNodeValue, getter_AddRefs(duration));
+  isValid = nsSchemaValidatorUtils::ParseSchemaDuration(aNodeValue,
+                                                        getter_AddRefs(duration));
 
   duration.swap(*aResult);
   return isValid;
@@ -2656,7 +2746,8 @@ nsSchemaValidator::ValidateBuiltinTypeByte(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
  *aResult = isValid;
@@ -2738,7 +2829,8 @@ nsSchemaValidator::ValidateBuiltinTypeFloat(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -2878,7 +2970,8 @@ nsSchemaValidator::ValidateBuiltinTypeDecimal(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -3009,7 +3102,8 @@ nsSchemaValidator::ValidateBuiltinTypeAnyURI(const nsAString & aNodeValue,
             (!aMaxLength || length <= aMaxLength);
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
   *aResult = isValid;
@@ -3051,7 +3145,7 @@ nsSchemaValidator::ValidateBuiltinTypeBase64Binary(const nsAString & aNodeValue,
   if (isValid) {
     length = strlen(decodedString);
 
-    if (aLengthDefined && (length != aLength)) {  
+    if (aLengthDefined && (length != aLength)) {
       isValid = PR_FALSE;
       LOG(("  Not valid: Not the right length (%d)", length));
     }
@@ -3068,7 +3162,8 @@ nsSchemaValidator::ValidateBuiltinTypeBase64Binary(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -3126,7 +3221,8 @@ nsSchemaValidator::ValidateBuiltinTypeQName(const nsAString & aNodeValue,
   }
 
   if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                        *aEnumerationList);
   }
 
 #ifdef PR_LOGGING
@@ -3195,7 +3291,8 @@ nsSchemaValidator::ValidateBuiltinTypeHexBinary(const nsAString & aNodeValue,
     }
 
     if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
-      isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+      isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue,
+                                                          *aEnumerationList);
     }
   }
 
@@ -3245,3 +3342,1044 @@ nsSchemaValidator::DumpBaseType(nsISchemaBuiltinType *aBuiltInType)
   LOG(("  Base Type is %s (%d)", NS_ConvertUTF16toUTF8(typeName).get(),foo));
 }
 #endif
+
+
+
+/****************************************************
+ * Complex Type Validation                          *
+ ****************************************************/
+
+// http://w3c.org/TR/xmlschema-1/#Complex_Type_Definitions
+nsresult
+nsSchemaValidator::ValidateComplextype(nsIDOMNode* aNode,
+                                       nsISchemaComplexType *aSchemaComplexType,
+                                       PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+  *aResult = PR_FALSE;
+
+  PRUint16 contentModel;
+  nsresult rv = aSchemaComplexType->GetContentModel(&contentModel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch(contentModel) {
+    case nsISchemaComplexType::CONTENT_MODEL_EMPTY: {
+      // element has no children
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    }
+
+    case nsISchemaComplexType::CONTENT_MODEL_SIMPLE: {
+      LOG(("    complex type, simple content"));
+      rv = ValidateComplexModelSimple(aNode, aSchemaComplexType, &isValid);
+      break;
+    }
+
+    case nsISchemaComplexType::CONTENT_MODEL_ELEMENT_ONLY: {
+      LOG(("    xsd:element only"));
+      rv = ValidateComplexModelElement(aNode, aSchemaComplexType, &isValid);
+      break;
+    }
+
+    case nsISchemaComplexType::CONTENT_MODEL_MIXED: {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    }
+  }
+
+  if (!isValid) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  // if we are valid, validate the attributes
+  nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+  rv = aNode->GetAttributes(getter_AddRefs(attrMap));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 attrCount = 0, ignoreAttrCount = 0, totalAttr = 0, foundAttrCount = 0;
+
+  // Get total attributes on node.
+  // We need to walk all nodes and count attribute nodes who don't get used
+  // in schema validation - namespace declarations (xmlns=, xmlns:foo=) and
+  // attributes nodes in the schema instance namespace
+  attrMap->GetLength(&totalAttr);
+  nsCOMPtr<nsIDOMNode> attrNode;
+  nsCOMPtr<nsIDOMAttr> attr;
+  nsAutoString name;
+
+  for (PRUint32 i = 0; i < totalAttr; ++i) {
+    rv = attrMap->Item(i, getter_AddRefs(attrNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    attr = do_QueryInterface(attrNode);
+    if (attr) {
+      // XXX: we need to make this per spec (such as Part 1 3.2.7)
+      attr->GetName(name);
+      if (StringBeginsWith(name, NS_LITERAL_STRING("xmlns"))) {
+        // is the entire string xmlns or does : come right after xmlns?
+        if (name.Length() == 5 || name.CharAt(5) == ':')
+          ignoreAttrCount++;
+      } else {
+        // check if the namespace is in the schema instance namespace
+        nsAutoString nsuri;
+        rv = attr->GetNamespaceURI(nsuri);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (nsuri.EqualsLiteral(NS_SCHEMA_INSTANCE_NAMESPACE))
+          ignoreAttrCount++;
+      }
+    }
+  }
+
+  // we subtract namespace declaration attributes
+  totalAttr -= ignoreAttrCount;
+  LOG(("    Number of attributes on node: %d (%d omitted)", totalAttr,
+       ignoreAttrCount));
+
+  // get total defined attributes on schema
+  aSchemaComplexType->GetAttributeCount(&attrCount);
+  LOG(("    Number of schema-defined attributes found: %d", attrCount));
+
+  // iterate through all the attribute definitions on the schema and check
+  // if they pass
+  PRUint32 count = 0;
+  nsCOMPtr<nsISchemaAttributeComponent> attrComp;
+
+  while (isValid && (count < attrCount)) {
+    rv = aSchemaComplexType->GetAttributeByIndex(count,
+                                                 getter_AddRefs(attrComp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ValidateAttributeComponent(aNode, attrComp, &foundAttrCount,
+                                    &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ++count;
+  }
+
+  // we walked all the attribute definitions.  If foundAttrCount is smaller
+  // than the attributes on the node, we have undefined attributes.
+  if (isValid && (totalAttr > foundAttrCount)) {
+    isValid = PR_FALSE;
+    LOG(("  --  Node contains attributes not defined in its schema!"));
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+// http://w3c.org/TR/xmlschema-1/#cElement_Declarations
+nsresult
+nsSchemaValidator::ValidateComplexModelElement(nsIDOMNode* aNode,
+                                               nsISchemaComplexType *aSchemaComplexType,
+                                               PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+
+  nsCOMPtr<nsISchemaModelGroup> modelGroup;
+  nsresult rv = aSchemaComplexType->GetModelGroup(getter_AddRefs(modelGroup));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> leftOvers, startNode;
+  aNode->GetFirstChild(getter_AddRefs(startNode));
+
+  rv = ValidateComplexModelGroup(startNode, modelGroup,
+                                 getter_AddRefs(leftOvers), &isValid);
+
+  if (isValid && leftOvers) {
+    // unexpected node
+    isValid = PR_FALSE;
+#ifdef PR_LOGGING
+    nsAutoString name;
+    leftOvers->GetNodeName(name);
+    LOG(("  -- Expected end but found more nodes (%s)!",
+         NS_ConvertUTF16toUTF8(name).get()));
+#endif
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexModelSimple(nsIDOMNode* aNode,
+                                              nsISchemaComplexType *aSchemaComplexType,
+                                              PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+
+  PRUint16 derivation;;
+  nsresult rv = aSchemaComplexType->GetDerivation(&derivation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // two choices for complex model with simple content: derivation through
+  // extension or through restriction
+  switch(derivation) {
+    case nsISchemaComplexType::DERIVATION_EXTENSION_SIMPLE:
+    case nsISchemaComplexType::DERIVATION_RESTRICTION_SIMPLE: {
+
+#ifdef PR_LOGGING
+      if (derivation == nsISchemaComplexType::DERIVATION_EXTENSION_SIMPLE)
+        LOG(("      -- deriviation by extension of a simple type"));
+      else
+        LOG(("      -- deriviation by restriction of a simple type"));
+#endif
+
+      nsCOMPtr<nsISchemaSimpleType> simpleBaseType;
+      rv = aSchemaComplexType->GetSimpleBaseType(getter_AddRefs(simpleBaseType));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsAutoString nodeValue;
+      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aNode);
+      domNode3->GetTextContent(nodeValue);
+
+      rv = ValidateSimpletype(nodeValue, simpleBaseType, &isValid);
+      break;
+    }
+
+    default:
+      rv = NS_ERROR_UNEXPECTED;
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexModelGroup(nsIDOMNode* aNode,
+                                             nsISchemaModelGroup *aSchemaModelGroup,
+                                             nsIDOMNode **aLeftOvers,
+                                             PRBool *aResult)
+{
+  nsresult rv = NS_OK;
+  PRBool notFound = PR_FALSE, isValid = PR_FALSE;
+
+  // a model group can be of type All, Sequence or Choice
+  // http://w3c.org/TR/xmlschema-1/#Model_Groups
+  PRUint16 compositor;
+  rv = aSchemaModelGroup->GetCompositor(&compositor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 minOccurs;
+  aSchemaModelGroup->GetMinOccurs(&minOccurs);
+
+  PRUint32 maxOccurs;
+  aSchemaModelGroup->GetMaxOccurs(&maxOccurs);
+
+  PRUint32 particleCount;
+  aSchemaModelGroup->GetParticleCount(&particleCount);
+
+  nsCOMPtr<nsIDOMNode> currentNode(aNode), leftOvers;
+
+  switch(compositor) {
+    case nsISchemaModelGroup::COMPOSITOR_ALL: {
+      LOG(("      - It is a All Compositor (%d)", particleCount));
+      // xsd:all has several limitations:
+      //  - order does not matter
+      //  - xsd:all can only occur a maximum of once
+      //  - it can contain only xsd:elements, who may only occur 0 or 1 times.
+
+      // since an xsd:all can only happen once or never, validate it once
+      // and return.
+
+      rv = ValidateComplexAll(currentNode, aSchemaModelGroup,
+                              getter_AddRefs(leftOvers), &notFound, &isValid);
+      currentNode = leftOvers;
+
+      // if it wasn't found but is required to happen once, it is invalid
+      if (isValid && notFound && minOccurs == 1) {
+        isValid = PR_FALSE;
+#ifdef PR_LOGGING
+        nsCOMPtr<nsISchemaParticle> particle;
+        aSchemaModelGroup->GetParticle(0, getter_AddRefs(particle));
+        if (particle) {
+          nsAutoString name;
+          particle->GetName(name);
+          LOG(("      - Expected one occurance of %s, but found none!",
+               NS_ConvertUTF16toUTF8(name).get()));
+        }
+#endif
+      }
+
+      break;
+    }
+
+    case nsISchemaModelGroup::COMPOSITOR_SEQUENCE: {
+      LOG(("      - It is a Sequence (%d)", particleCount));
+      PRUint32 iterations = 0;
+      isValid = PR_TRUE;
+
+      while (currentNode && isValid && (iterations < maxOccurs) && !notFound) {
+        rv = ValidateComplexSequence(currentNode, aSchemaModelGroup,
+                                     getter_AddRefs(leftOvers), &notFound,
+                                     &isValid);
+        if (isValid && !notFound) {
+          iterations++;
+        }
+        currentNode = leftOvers;
+      }
+
+      // if we didn't hit minOccurs, invalid
+      if (isValid && (iterations < minOccurs)) {
+        isValid = PR_FALSE;
+#ifdef PR_LOGGING
+        nsCOMPtr<nsISchemaParticle> particle;
+        nsAutoString name;
+        aSchemaModelGroup->GetParticle(0, getter_AddRefs(particle));
+
+        if (particle) {
+          particle->GetName(name);
+          LOG(("      - Expected at least %d iterations of %s, only found %d",
+               minOccurs, NS_ConvertUTF16toUTF8(name).get(), iterations));
+        }
+#endif
+      }
+
+      break;
+    }
+
+    case nsISchemaModelGroup::COMPOSITOR_CHOICE: {
+      LOG(("      - It is a Choice"));
+
+      PRUint32 iterations = 0;
+      isValid = PR_TRUE;
+
+      while (currentNode && isValid && (iterations < maxOccurs)) {
+        rv = ValidateComplexChoice(currentNode, aSchemaModelGroup,
+                                   getter_AddRefs(leftOvers), &notFound,
+                                   &isValid);
+        if (isValid) {
+          iterations++;
+        }
+        currentNode = leftOvers;
+      }
+
+      // if we didn't hit minOccurs, invalid
+      if (isValid && (iterations < minOccurs)) {
+        isValid = PR_FALSE;
+#ifdef PR_LOGGING
+        nsCOMPtr<nsISchemaParticle> particle;
+        nsAutoString name;
+        aSchemaModelGroup->GetParticle(0, getter_AddRefs(particle));
+
+        if (particle) {
+          particle->GetName(name);
+          LOG(("      - Expected at least %d iterations of %s, only found %d",
+               minOccurs, NS_ConvertUTF16toUTF8(name).get(), iterations));
+        }
+#endif
+      }
+
+      break;
+    }
+  }
+
+  leftOvers.swap(*aLeftOvers);
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexSequence(nsIDOMNode* aStartNode,
+                                           nsISchemaModelGroup *aSchemaModelGroup,
+                                           nsIDOMNode **aLeftOvers,
+                                           PRBool *aNotFound, PRBool *aResult)
+{
+  if (!aStartNode || !aSchemaModelGroup)
+    return NS_ERROR_UNEXPECTED;
+
+  PRBool isValid = PR_FALSE;
+  PRBool notFound = PR_FALSE;
+
+  // get the model group details
+  PRUint32 minOccurs;
+  nsresult rv = aSchemaModelGroup->GetMinOccurs(&minOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxOccurs;
+  rv = aSchemaModelGroup->GetMaxOccurs(&maxOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 particleCount;
+  rv = aSchemaModelGroup->GetParticleCount(&particleCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // xsd:sequence means that the order of the particles matters
+  PRUint32 validatedNodes = 0;
+  PRUint32 particleCounter = 0;
+  PRUint16 nodeType;
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsISchemaParticle> particle;
+  nsCOMPtr<nsIDOMNode> currentNode(aStartNode), leftOvers, tmpNode;
+
+  LOG(("====================== New Sequence ==========================="));
+
+  // while valid and not done
+  // we are done when we hit a node that doesn't fit our schema
+  while (!done && currentNode && (particleCounter < particleCount)) {
+    // get node type
+    currentNode->GetNodeType(&nodeType);
+
+    // if not an element node, skip
+    if (nodeType != nsIDOMNode::ELEMENT_NODE) {
+      currentNode->GetNextSibling(getter_AddRefs(tmpNode));
+      currentNode = tmpNode;
+      continue;
+    }
+
+    // get the particle
+    rv = aSchemaModelGroup->GetParticle(particleCounter,
+                                        getter_AddRefs(particle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ValidateComplexParticle(currentNode, particle,
+                                 getter_AddRefs(leftOvers), &notFound, &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // if we found the node, increment the amount of validated nodes.
+    if (!notFound)
+      validatedNodes++;
+
+    if (isValid) {
+      particleCounter++;
+    } else {
+      done = PR_TRUE;
+    }
+
+    // valid and not found means it was optional, so ok
+    if (isValid && notFound) {
+      notFound = PR_FALSE;
+    }
+
+    // not valid and not found means we finish this sequence.  If any particles
+    // are left that are required, that will be handled below.
+    if (!isValid && notFound) {
+      isValid = PR_TRUE;
+      particleCounter++;
+    }
+
+    currentNode = leftOvers;
+  }
+
+  if (validatedNodes == 0) {
+    // we didn't walk through any nodes, thus empty sequence.  The caller
+    // will check if enough occurances (minOccurs) happened.  We don't want to
+    // check remaining particles, since we could have met minOccurs already,
+    // and the sequence is now over.
+    isValid = PR_TRUE;
+    notFound = PR_TRUE;
+  } else if (isValid && (particleCounter < particleCount)) {
+    // check if any of the remaining particles are required
+    while (isValid && (particleCounter < particleCount)) {
+      nsCOMPtr<nsISchemaParticle> tmpParticle;
+      rv = aSchemaModelGroup->GetParticle(particleCounter,
+                                          getter_AddRefs(tmpParticle));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRUint32 tmpMinOccurs;
+      rv = tmpParticle->GetMinOccurs(&tmpMinOccurs);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (tmpMinOccurs == 0) {
+        // this particle isn't required
+        particleCounter++;
+      } else {
+        isValid = PR_FALSE;
+#ifdef PR_LOGGING
+        nsAutoString particleName;
+        tmpParticle->GetName(particleName);
+        LOG(("        - Nodelist missing required element (%s)",
+             NS_ConvertUTF16toUTF8(particleName).get()));
+#endif
+      }
+    }
+  }
+
+  // make sure aLeftOvers points to null or an element node
+  nsSchemaValidatorUtils::SetToNullOrElement(currentNode, aLeftOvers);
+
+  *aNotFound = notFound;
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexParticle(nsIDOMNode* aNode,
+                                           nsISchemaParticle *aSchemaParticle,
+                                           nsIDOMNode **aLeftOvers,
+                                           PRBool *aNotFound,
+                                           PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+  PRBool notFound = PR_FALSE;
+
+  PRUint16 particleType;
+  nsresult rv = aSchemaParticle->GetParticleType(&particleType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 minOccurs;
+  rv = aSchemaParticle->GetMinOccurs(&minOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxOccurs;
+  rv = aSchemaParticle->GetMaxOccurs(&maxOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode>leftOvers;
+
+  switch(particleType) {
+    case nsISchemaParticle::PARTICLE_TYPE_ELEMENT: {
+      LOG(("            -- Particle is an Element"));
+      PRUint32 iterations = 0;
+      PRBool done = PR_FALSE;
+      nsAutoString nodeName, particleName;
+      leftOvers = aNode;
+
+      while (leftOvers && !done && (iterations < maxOccurs)) {
+        // get node type
+        PRUint16 nodeType;
+        leftOvers->GetNodeType(&nodeType);
+
+        // if not an element node, skip
+        if (nodeType != nsIDOMNode::ELEMENT_NODE) {
+          leftOvers->GetNextSibling(getter_AddRefs(leftOvers));
+          continue;
+        }
+
+        // use localname since SchemaLoader has already resolved all namespace
+        // references for us.
+        leftOvers->GetLocalName(nodeName);
+        rv = aSchemaParticle->GetName(particleName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (nodeName.Equals(particleName)) {
+          rv = ValidateComplexElement(leftOvers, aSchemaParticle, &isValid);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // set rest to the next element if node is valid
+          if (isValid)
+            leftOvers->GetNextSibling(getter_AddRefs(leftOvers));
+
+          iterations++;
+          done = !isValid;
+        } else {
+          done = PR_TRUE;
+        }
+      }
+
+      // optional and not found, so ok
+      if (!isValid && (iterations == 0) && (minOccurs == 0)) {
+        isValid = PR_TRUE;
+      } else if ((iterations > 0) && (iterations < minOccurs)) {
+        // we stopped finding the element, but haven't met the minOccurs
+        isValid = PR_FALSE;
+        LOG(("            -- Unexpected Node Found (%s), was expecting %s",
+          NS_ConvertUTF16toUTF8(nodeName).get(),
+          NS_ConvertUTF16toUTF8(particleName).get()));
+      }
+
+      notFound = (iterations == 0);
+      break;
+    }
+
+    case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: {
+      LOG(("            -- Particle is an Model Group"));
+      nsCOMPtr<nsISchemaModelGroup> modelGroup =
+        do_QueryInterface(aSchemaParticle);
+
+      rv = ValidateComplexModelGroup(aNode, modelGroup,
+                                     getter_AddRefs(leftOvers), &isValid);
+      break;
+    }
+
+    case nsISchemaParticle::PARTICLE_TYPE_ANY: {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    }
+  }
+
+  leftOvers.swap(*aLeftOvers);
+  *aNotFound = notFound;
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexElement(nsIDOMNode* aNode,
+                                          nsISchemaParticle *aSchemaParticle,
+                                          PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+
+  nsCOMPtr<nsISchemaElement> schemaElement(do_QueryInterface(aSchemaParticle));
+
+  if (!schemaElement)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsISchemaType> type;
+  nsresult rv = schemaElement->GetType(getter_AddRefs(type));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!type)
+    return NS_ERROR_UNEXPECTED;
+
+  PRUint16 typeValue;
+  rv = type->GetSchemaType(&typeValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch(typeValue) {
+    case nsISchemaType::SCHEMA_TYPE_SIMPLE: {
+      nsCOMPtr<nsISchemaSimpleType> simpleType(do_QueryInterface(type));
+      if (simpleType) {
+        LOG(("  Element is a simple type!"));
+        rv = ValidateAgainstType(aNode, simpleType, &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaType::SCHEMA_TYPE_COMPLEX: {
+      nsCOMPtr<nsISchemaComplexType> complexType(do_QueryInterface(type));
+      if (complexType) {
+        LOG(("  Element is a complex type!"));
+        rv = ValidateAgainstType(aNode, complexType, &isValid);
+      }
+      break;
+    }
+
+    case nsISchemaType::SCHEMA_TYPE_PLACEHOLDER: {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    }
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexChoice(nsIDOMNode* aStartNode,
+                                         nsISchemaModelGroup *aSchemaModelGroup,
+                                         nsIDOMNode **aLeftOvers,
+                                         PRBool *aNotFound, PRBool *aResult)
+{
+  // get the model group details
+  PRUint32 minOccurs;
+  nsresult rv = aSchemaModelGroup->GetMinOccurs(&minOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxOccurs;
+  rv = aSchemaModelGroup->GetMaxOccurs(&maxOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 particleCount;
+  rv = aSchemaModelGroup->GetParticleCount(&particleCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  aStartNode->GetChildNodes(getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!nodeList)
+    return NS_ERROR_UNEXPECTED;
+
+  PRUint32 childNodesLength;
+  rv = nodeList->GetLength(&childNodesLength);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /*
+    xsd:choice means one of the particles must validate.
+  */
+  PRBool isValid = PR_FALSE;
+  PRBool notFound = PR_FALSE;
+  nsCOMPtr<nsISchemaParticle> particle;
+  nsCOMPtr<nsIDOMNode> currentNode(aStartNode), leftOvers, tmpNode;
+  nsAutoString localName, particleName;
+  PRUint32 particleCounter = 0;
+
+  LOG(("======================== New Choice ==============================="));
+
+  while (!isValid && currentNode && (particleCounter < particleCount)) {
+    // get node type
+    PRUint16 nodeType;
+    currentNode->GetNodeType(&nodeType);
+
+    // if not an element node, skip
+    if (nodeType != nsIDOMNode::ELEMENT_NODE) {
+      currentNode->GetNextSibling(getter_AddRefs(tmpNode));
+      currentNode = tmpNode;
+      continue;
+    }
+
+    // get the particle
+    rv = aSchemaModelGroup->GetParticle(particleCounter, getter_AddRefs(particle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    particle->GetName(particleName);
+    currentNode->GetLocalName(localName);
+
+    // if the particle has no name (so not an xsd:element) or the name matches
+    // the node's localname, then we should try to validate.
+    if (particleName.IsEmpty() || localName.Equals(particleName)) {
+      rv = ValidateComplexParticle(currentNode, particle,
+                                   getter_AddRefs(leftOvers), &notFound,
+                                   &isValid);
+
+      // if not valid and the names matched, we can bail early
+      if (!isValid && localName.Equals(particleName)) {
+        // The schema spec says that you can't have 2 particles with the same name,
+        // so we know we don't have to continue looking for matching particles.
+        LOG(("  Invalid: We found a matching particle, but it did not validate"));
+        break;
+      }
+
+      currentNode = leftOvers;
+    }
+
+    particleCounter++;
+  }
+
+  if (!isValid) {
+    // None of the particles managed to validate.
+    notFound = PR_TRUE;
+  }
+
+  // make sure aLeftOvers points to null or an element node
+  nsSchemaValidatorUtils::SetToNullOrElement(currentNode, aLeftOvers);
+
+  *aNotFound = notFound;
+  *aResult = isValid;
+
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateComplexAll(nsIDOMNode* aStartNode,
+                                      nsISchemaModelGroup *aSchemaModelGroup,
+                                      nsIDOMNode **aLeftOvers, PRBool *aNotFound,
+                                      PRBool *aResult)
+{
+  if (!aStartNode || !aSchemaModelGroup)
+    return NS_ERROR_UNEXPECTED;
+
+  // get the model group details
+  PRUint32 minOccurs;
+  nsresult rv = aSchemaModelGroup->GetMinOccurs(&minOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 maxOccurs;
+  rv = aSchemaModelGroup->GetMaxOccurs(&maxOccurs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 particleCount;
+  rv = aSchemaModelGroup->GetParticleCount(&particleCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // since xsd:all does not care about order, we need to record how often each
+  // particle was hit
+  nsDataHashtable<nsISupportsHashKey,PRUint32> particleHits;
+  if (!particleHits.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // xsd:all means that the order of the particles does not matter, and
+  // that particles can only occur 0 or 1 time
+  PRBool isValid = PR_FALSE;
+  PRBool notFound = PR_FALSE;
+  PRBool done = PR_FALSE;
+  nsCOMPtr<nsISchemaParticle> particle;
+  nsCOMPtr<nsIDOMNode> currentNode(aStartNode), leftOvers, tmpNode;
+  nsAutoString localName, particleName;
+
+  for (PRUint32 i = 0; i < particleCount; ++i) {
+    rv = aSchemaModelGroup->GetParticle(i, getter_AddRefs(particle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    particleHits.Put(particle, 0);
+  }
+
+  LOG(("====================== New All ==========================="));
+
+  PRUint32 validatedNodes = 0;
+
+  // we are done when we hit a node that doesn't fit our schema
+  while (!done && currentNode) {
+    // get node type
+    PRUint16 nodeType;
+    currentNode->GetNodeType(&nodeType);
+    currentNode->GetLocalName(localName);
+
+    // if not an element node, skip
+    if (nodeType != nsIDOMNode::ELEMENT_NODE) {
+      currentNode->GetNextSibling(getter_AddRefs(tmpNode));
+      currentNode = tmpNode;
+      continue;
+    }
+
+    LOG(("      - Validating element (%s)",
+         NS_ConvertUTF16toUTF8(localName).get()));
+
+    // walk all the particles until we find one that validates
+    PRUint32 particleNum = 0;
+    PRBool foundParticle = PR_FALSE;
+
+    while (!foundParticle && particleNum < particleCount) {
+      rv = aSchemaModelGroup->GetParticle(particleNum, getter_AddRefs(particle));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      particle->GetName(particleName);
+
+      if (particleName.Equals(localName)) {
+        // try to validate
+        rv = ValidateComplexParticle(currentNode, particle,
+                                     getter_AddRefs(leftOvers), &notFound,
+                                     &foundParticle);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      if (foundParticle) {
+        validatedNodes++;
+
+        PRUint32 hitCount = 0;
+        particleHits.Get(particle, &hitCount);
+
+        if (hitCount > 0) {
+          // particles in an xsd:all can only occur a maximum of once.  If we hit
+          // a particle twice, we finish this iteration and reset the leftover
+          // to the currentNode.  We basically say this xsd:all is done, the current
+          // node might be the start of another compositor (assuming all required
+          // particles are hit
+          foundParticle = PR_TRUE;
+          leftOvers = currentNode;
+          done = PR_TRUE;
+          LOG(("        -- Particle (%s) occured more than once, so ending",
+               NS_ConvertUTF16toUTF8(particleName).get()));
+          break;
+        } else {
+          hitCount++;
+          particleHits.Put(particle, hitCount);
+          LOG(("        -- Element validated"));
+        }
+      } else {
+        particleNum++;
+      }
+    }
+
+    // set isvalid
+    isValid = foundParticle;
+
+    if (!isValid) {
+      done = PR_TRUE;
+      LOG(("        -- Element could not be validated!"));
+    }
+
+    currentNode = leftOvers;
+  }
+
+  if (validatedNodes == 0) {
+    // we didn't walk through any nodes, thus empty sequence.  The caller
+    // will check if enough occurances (minOccurs) happened.
+    isValid = PR_TRUE;
+    notFound = PR_TRUE;
+  } else {
+    // check if any of the particles didn't occur enough.  We already checked
+    // if a particle is hit more than once
+    PRUint32 hits, particleMinOccurs, particleMaxOccurs;
+
+    for (PRUint32 i = 0; i < particleCount; ++i) {
+      rv = aSchemaModelGroup->GetParticle(i, getter_AddRefs(particle));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // we assume the schema is valid and min/max is not larger that 1
+      particle->GetMinOccurs(&particleMinOccurs);
+      particle->GetMaxOccurs(&particleMaxOccurs);
+      particleHits.Get(particle, &hits);
+
+      if (hits < particleMinOccurs || hits > particleMaxOccurs) {
+        isValid = PR_FALSE;
+
+        particle->GetName(particleName);
+        LOG(("      - Particle (%s) occured %d times, but should have occured [%d, %d] times",
+          NS_ConvertUTF16toUTF8(particleName).get(), hits, particleMinOccurs,
+          particleMaxOccurs));
+        break;
+      }
+    }
+  }
+
+  // make sure aLeftOvers points to null or an element node
+  nsSchemaValidatorUtils::SetToNullOrElement(currentNode, aLeftOvers);
+
+  *aNotFound = notFound;
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateAttributeComponent(nsIDOMNode* aNode,
+                                              nsISchemaAttributeComponent *aAttrComp,
+                                              PRUint32 *aFoundAttrCount,
+                                              PRBool *aResult)
+{
+  PRBool isValid = PR_FALSE;
+
+  PRUint16 componentType;
+  nsresult rv = aAttrComp->GetComponentType(&componentType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString name;
+  rv = aAttrComp->GetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch(componentType) {
+    case nsISchemaAttributeComponent::COMPONENT_TYPE_ATTRIBUTE: {
+      nsCOMPtr<nsISchemaAttribute> attr(do_QueryInterface(aAttrComp, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      LOG(("      Attribute Component (%s) is an attribute!",
+           NS_ConvertUTF16toUTF8(name).get()));
+
+      rv = ValidateSchemaAttribute(aNode, attr, name, aFoundAttrCount, &isValid);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      break;
+    }
+
+    case nsISchemaAttributeComponent::COMPONENT_TYPE_GROUP: {
+      nsCOMPtr<nsISchemaAttributeGroup> attrGroup(do_QueryInterface(aAttrComp, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      LOG(("      Attribute Component (%s) is an attribute group!",
+           NS_ConvertUTF16toUTF8(name).get()));
+
+      rv = ValidateSchemaAttributeGroup(aNode, attrGroup, name, aFoundAttrCount,
+                                        &isValid);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      break;
+    }
+
+    case nsISchemaAttributeComponent::COMPONENT_TYPE_ANY: {
+      rv = NS_ERROR_NOT_IMPLEMENTED;
+      break;
+    }
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateSchemaAttribute(nsIDOMNode* aNode,
+                                           nsISchemaAttribute *aAttr,
+                                           const nsAString & aAttrName,
+                                           PRUint32 *aFoundAttrCount,
+                                           PRBool *aResult)
+{
+  PRUint16 use;
+  nsresult rv = aAttr->GetUse(&use);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString fixedValue, attrValue;
+  rv = aAttr->GetFixedValue(fixedValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISchemaSimpleType> simpleType;
+  rv = aAttr->GetType(getter_AddRefs(simpleType));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMElement> elm(do_QueryInterface(aNode));
+
+  // check if the attribute is to be qualified or not
+  nsAutoString qualifiedNamespace;
+  aAttr->GetQualifiedNamespace(qualifiedNamespace);
+
+  PRBool hasAttr = PR_FALSE;
+  PRBool isValid = PR_FALSE;
+
+  if (!qualifiedNamespace.IsEmpty()) {
+    rv = elm->HasAttributeNS(qualifiedNamespace, aAttrName, &hasAttr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (hasAttr) {
+      rv = elm->GetAttributeNS(qualifiedNamespace, aAttrName, attrValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  } else {
+    rv = elm->HasAttribute(aAttrName, &hasAttr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (hasAttr) {
+      rv = elm->GetAttribute(aAttrName, attrValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  if (!hasAttr) {
+    // no attribute found
+    if (use == nsISchemaAttribute::USE_OPTIONAL) {
+      isValid = PR_TRUE;
+      LOG(("        -- attribute not found, but optional, so fine!"));
+    } else if (use == nsISchemaAttribute::USE_REQUIRED) {
+      // we default to invalid
+      LOG(("        -- attribute not found, but required!"));
+    } else if (use == nsISchemaAttribute::USE_PROHIBITED) {
+      // prohibited and doesn't exist is valid
+      isValid = PR_TRUE;
+      LOG(("        -- attribute not found, but prohibited, so fine!"));
+    }
+  } else if (!fixedValue.IsEmpty()) {
+    // XXX: what about default="" ?
+    // we assume the default or fixed value is valid for now
+    (*aFoundAttrCount)++;
+
+    if (attrValue.Equals(fixedValue)) {
+      LOG(("        -- attribute has fixed value and it equals the attribute value."));
+      isValid = PR_TRUE;
+    } else {
+      LOG(("        -- attribute has fixed value, but does not equal the attribute value!"));
+    }
+  } else {
+    (*aFoundAttrCount)++;
+    if (use == nsISchemaAttribute::USE_PROHIBITED) {
+      // If it is is prohibited and it exists, we don't have to do anything,
+      // since we default to invalid.
+      LOG(("        -- attribute prohibited!"));
+    } else {
+      rv = ValidateSimpletype(attrValue, simpleType, &isValid);
+    }
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
+nsresult
+nsSchemaValidator::ValidateSchemaAttributeGroup(nsIDOMNode* aNode,
+                                                nsISchemaAttributeGroup *aAttrGroup,
+                                                const nsAString & aAttrName,
+                                                PRUint32 *aFoundAttrCount,
+                                                PRBool *aResult)
+{
+  PRBool isValid = PR_TRUE;
+  PRUint32 attrCount, count = 0;
+
+  nsresult rv = aAttrGroup->GetAttributeCount(&attrCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISchemaAttributeComponent> attrComp;
+
+  while (isValid && (count < attrCount)) {
+    rv = aAttrGroup->GetAttributeByIndex(count, getter_AddRefs(attrComp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ValidateAttributeComponent(aNode, attrComp, aFoundAttrCount,
+                                    &isValid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ++count;
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
