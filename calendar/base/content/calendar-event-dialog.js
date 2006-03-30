@@ -349,6 +349,9 @@ function saveDialog(item)
         status = getElementValue("event-status");
     } else {
         status = getElementValue("todo-status");
+        if (status != "COMPLETED") {
+            item.completedDate = null;
+        }
     }
 
     setItemProperty(item, "STATUS",   status);
