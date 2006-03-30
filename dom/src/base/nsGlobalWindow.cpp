@@ -5619,7 +5619,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
     NS_ASSERTION(sSecMan, "No Security Manager Found!");
     // Note that the opener script principal is not relevant for openDialog
     // callers, since those already have chrome privileges.  So we
-    // only want to do this wen aDoJSFixups is true.
+    // only want to do this when aDoJSFixups is true.
     if (aDoJSFixups && sSecMan) {
       nsCOMPtr<nsIPrincipal> principal;
       sSecMan->GetSubjectPrincipal(getter_AddRefs(principal));
