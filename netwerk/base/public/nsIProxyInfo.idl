@@ -67,6 +67,8 @@ interface nsIProxyInfo : nsISupports
    *   "socks4"   SOCKS v4 proxy
    *   "direct"   no proxy
    *   "unknown"  unknown proxy (see nsIProtocolProxyService::resolve)
+   *
+   * A future version of this interface may define additional types.
    */
   readonly attribute ACString type; 
 
@@ -92,8 +94,9 @@ interface nsIProxyInfo : nsISupports
 
 
   /****************************************************************************
-   * The following "Proxy Flags" may be bit-wise combined to construct the flags
-   * attribute defined on this interface.
+   * The following "Proxy Flags" may be bit-wise combined to construct the
+   * flags attribute defined on this interface.  All unspecified bits are
+   * reserved for future use.
    */
 
   /**

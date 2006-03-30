@@ -115,15 +115,10 @@ function DoEnabling()
   }
 }
 
-const nsIProtocolProxyService = Components.interfaces.nsIProtocolProxyService;
-const kPROTPROX_CID = '{e9b301c0-e0e4-11D3-a1a8-0050041caf44}';
-
 function ReloadPAC() 
 {
-  var autoURL = document.getElementById("networkProxyAutoconfigURL");
-  var pps = Components.classesByID[kPROTPROX_CID]
-                       .getService(nsIProtocolProxyService);
-  pps.configureFromPAC(autoURL.value);
+  Components.classes["@mozilla.org/network/protocol-proxy-service;1"].
+      getService().reloadPAC();
 }   
 
 function onConnectionsDialogOK()
