@@ -871,8 +871,10 @@ nsDiskCacheMap::WriteDataCacheBlocks(nsDiskCacheBinding * binding, char * buffer
     
     // update binding and cache map record
     binding->mRecord.SetDataBlocks(fileIndex, startBlock, blockCount);
-    rv = UpdateRecord(&binding->mRecord);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!binding->mDoomed) {
+        rv = UpdateRecord(&binding->mRecord);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     return NS_OK;
 }
