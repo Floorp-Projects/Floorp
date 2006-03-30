@@ -37,6 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A serializer and content sink that removes potentially insecure or
+ * otherwise dangerous or offending HTML (eg for display of HTML
+ * e-mail attachments or something).
+ */
+
 #ifndef mozSanitizingSerializer_h__
 #define mozSanitizingSerializer_h__
 

@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A struct that represents the value (type and actual data) of an
+ * attribute.
+ */
+
 #ifndef nsAttrValue_h___
 #define nsAttrValue_h___
 

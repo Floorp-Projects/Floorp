@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Implementation of the DOM Core Attr node.
+ */
+
 #include "nsDOMAttribute.h"
 #include "nsGenericElement.h"
 #include "nsIContent.h"

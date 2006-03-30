@@ -37,7 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Removes potentially insecure or offending HTML
+/*
+ * A serializer and content sink that removes potentially insecure or
+ * otherwise dangerous or offending HTML (eg for display of HTML
+ * e-mail attachments or something).
+ */
 
 /* I used nsPlaintextSerializer as base for this class. I don't understand
    all of the functions in the beginning. Possible that I fail to do

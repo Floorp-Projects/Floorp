@@ -34,6 +34,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Implementations of DOM Core's Comment node.
+ */
+
 #include "nsIDOMComment.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsLayoutAtoms.h"

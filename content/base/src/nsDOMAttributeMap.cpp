@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Implementation of the |attributes| property of DOM Core's Node object.
+ */
+
 #include "nsDOMAttributeMap.h"
 #include "nsDOMAttribute.h"
 #include "nsGenericElement.h"

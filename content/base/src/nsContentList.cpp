@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsBaseContentList is a basic list of content nodes; nsContentList
+ * is a commonly used NodeList implementation (used for
+ * getElementsByTagName, some properties on HTMLDocument, etc).
+ */
+
 #include "nsContentList.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"

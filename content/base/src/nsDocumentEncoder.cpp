@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Object that can be used to serialize selections, ranges, or nodes
+ * to strings in a gazillion different ways.
+ */
+ 
 #include "nsIDocumentEncoder.h"
 
 #include "nscore.h"

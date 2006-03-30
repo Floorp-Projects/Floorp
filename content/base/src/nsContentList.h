@@ -34,6 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * nsBaseContentList is a basic list of content nodes; nsContentList
+ * is a commonly used NodeList implementation (used for
+ * getElementsByTagName, some properties on HTMLDocument, etc).
+ */
+
 #ifndef nsContentList_h___
 #define nsContentList_h___
 

@@ -39,6 +39,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Base class for all our document implementations.
+ */
+
 #include "plstr.h"
 
 #include "nsIInterfaceRequestor.h"

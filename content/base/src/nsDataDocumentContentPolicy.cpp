@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Content policy implementation that prevents all loads of images,
+ * subframes, etc from documents loaded as data (eg documents loaded
+ * via XMLHttpRequest).
+ */
+
 #include "nsDataDocumentContentPolicy.h"
 #include "nsIDocument.h"
 #include "nsINode.h"

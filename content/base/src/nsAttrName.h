@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Class that represents the name (nodeinfo or atom) of an attribute;
+ * using nodeinfos all the time is too slow, so we use atoms when we
+ * can.
+ */
+
 #ifndef nsAttrName_h___
 #define nsAttrName_h___
 

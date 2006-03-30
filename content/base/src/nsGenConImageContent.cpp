@@ -34,18 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/**
+ * A fake content node class so that the image frame for
+ *   content: url(foo);
+ * in CSS can have an nsIImageLoadingContent but use an
+ * imgIRequest that's already been loaded from the style system.
+ */
+
 #include "nsContentCreatorFunctions.h"
 #include "nsXMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "nsIEventStateManager.h"
 
-/**
- * A fake content node class so that the image frame for
- *   p:before { content: url(foo.gif); }
- * can have a content node that knows about image loading but can take
- * an imgIRequest that's already been loaded from the style system.
- */
 class nsGenConImageContent : public nsXMLElement,
                              public nsImageLoadingContent
 {

@@ -36,11 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * nsContentIterator.cpp: Implementation of the nsContentIterator object.
- * This ite
- */
-
 #include "nsISupports.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContentIterator.h"
