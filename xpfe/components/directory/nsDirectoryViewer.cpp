@@ -434,7 +434,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
 
   PRBool isDirType = (type == nsIDirIndex::TYPE_DIRECTORY);
 
-  if (isDirType) {
+  if (isDirType && entryuriC.Last() != '/') {
       entryuriC.Append('/');
   }
 
@@ -470,6 +470,8 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
       // description
       rv = aIndex->GetDescription(getter_Copies(xpstr));
       if (NS_FAILED(rv)) return rv;
+      if (xpstr.Last() == '/')
+        xpstr.Truncate(xpstr.Length() - 1);
 
       rv = mDirRDF->GetLiteral(xpstr.get(), getter_AddRefs(lit));
       if (NS_FAILED(rv)) return rv;
