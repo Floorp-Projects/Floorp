@@ -46,11 +46,13 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
         ondialogaccept="return OnPrefOK()"
-        onload="OnPrefLoad()"
+        onload="OnPrefLoad();centerWindowOnScreen();"
         width="500"
         height="200"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
+  <script type="application/x-javascript"   
+  src="chrome://global/content/dialogOverlay.js" />
 <vbox>
 <label>&prefs.description;</label>
 <label>&prefName.label;</label>

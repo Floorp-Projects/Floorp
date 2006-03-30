@@ -1,0 +1,4 @@
+box.ccklist {
+    -moz-binding: url('chrome://cckwizard/content/ccklist.xml#ccklist');
+}
+

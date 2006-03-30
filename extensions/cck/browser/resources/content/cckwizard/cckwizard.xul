@@ -41,6 +41,7 @@
 <!DOCTYPE wizard SYSTEM "chrome://cckwizard/locale/cckWizard.dtd">
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://cckwizard/content/ccklist.css" type="text/css"?>
 
 <wizard id="example-window" title="&cckWizard.title;"
   height="480"
@@ -51,6 +52,8 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://cckwizard/content/cckwizard.js"/>
+  <script type="application/x-javascript"   
+  src="chrome://global/content/dialogOverlay.js" />
 
   <wizardpage onpageshow="document.getElementById('example-window').canAdvance = true;">
     <description>&cckWizard.description;</description>
@@ -263,58 +266,25 @@
     </groupbox>
   </wizardpage>
 
-  
-  <wizardpage label="&customizeBrowserPlugins.label;" onpageadvanced="return ValidateFile('BrowserPluginPath1','BrowserPluginPath2','BrowserPluginPath3','BrowserPluginPath4','BrowserPluginPath5');">
-    <description>&browserPlugins.description;</description>
-    <hbox>
-      <textbox id="BrowserPluginPath1" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath1');"/>
-    </hbox>
-    <hbox>
-      <textbox id="BrowserPluginPath2" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath2');"/>
-    </hbox>
-    <hbox>
-      <textbox id="BrowserPluginPath3" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath3');"/>
-    </hbox>
-    <hbox>
-      <textbox id="BrowserPluginPath4" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath4');"/>
-    </hbox>
-    <hbox>
-      <textbox id="BrowserPluginPath5" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath5');"/>
-    </hbox>
-  </wizardpage>
-
-
-  <wizardpage label="&customizeSearchPlugins.label;" onpageshow="enableSearchPluginButtons();">
-    <description>&searchPlugins.description;</description>
-
-    <groupbox>
-      <hbox flex="1">
-      <vbox flex="1">
-      <richlistbox id="searchPluginList" flex="1" rows="5" onselect="enableSearchPluginButtons();" ondblclick="onEditSearchPlugin();">
-    </richlistbox>
-    </vbox>
-        <vbox>
-          <button id="newSearchPluginButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
-                  oncommand="onNewSearchPlugin();"/>
-          <button id="editSearchPluginButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
-                  oncommand="onEditSearchPlugin();"/>
-          <button id="deleteSearchPluginButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
-                  oncommand="onDeleteSearchPlugin();"/>
-          <spacer flex="1"/>
-        </vbox>
-        </hbox>
+  <wizardpage label="&customizeBrowserPlugins.label;">
+      <groupbox>
+      <caption label="&plugins.label;"/>
+      <description>&browserPlugins.description;</description>
+      <box class="ccklist" id="browserPluginList" new="onNewBrowserPlugin();" edit="onEditBrowserPlugin();"/>
     </groupbox>
-    
+  </wizardpage>
+
+
+  <wizardpage label="&customizeSearchEngines.label;">
+    <groupbox>
+    <description>&searchEngines.description;</description>
+    <box class="ccklist" id="searchEngineList" new="onNewSearchEngine();" edit="onEditSearchEngine();"/>
+    </groupbox>
   </wizardpage>
 
 
 
-  <wizardpage label="&customizeToolbarOne.label;">
+  <wizardpage id="tbFolder" label="&customizeToolbarOne.label;">
     <groupbox>
       <caption label="&addToolbarFolder.caption;"/>
       <description>&addToolbarFolder.description;</description>
@@ -322,41 +292,7 @@
         <label>&folderTitle.label;</label>
         <textbox id="ToolbarFolder1"/>
       </hbox>
-      <label value="&bookmark.label; 1"/>
-      <hbox align="center">
-        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle1" flex="1"/>
-        <label control="ToolbarFolder1.BookmarkURL1">&bookmarkURL.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkURL1" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 2"/>
-      <hbox align="center">
-        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle2" flex="1"/>
-        <label control="ToolbarFolder1.BookmarkURL2">&bookmarkURL.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkURL2" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 3"/>
-      <hbox align="center">
-        <label control="ToolbarFolder1.BookmarkTitle3">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle3" flex="1"/>
-        <label control="ToolbarFolder1.BookmarkURL3">&bookmarkURL.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkURL3" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 4"/>
-      <hbox align="center">
-        <label control="ToolbarFolder1.BookmarkTitle4">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle4" flex="1"/>
-        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkURL4" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 5"/>
-      <hbox align="center">
-        <label control="ToolbarFolder1.BookmarkTitle5">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle5" flex="1"/>
-        <label control="ToolbarFolder1.BookmarkURL5">&bookmarkURL.label;</label>
-        <textbox id="ToolbarFolder1.BookmarkURL5" flex="1"/>
-      </hbox>
+      <box class="ccklist" id="tbFolder.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
     </groupbox>
   </wizardpage>
 
@@ -490,51 +426,21 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizePrefs.label;" onpageshow="enablePrefButtons();">
+  <wizardpage label="&customizePrefs.label;">
     <groupbox>
       <caption label="&prefs.label;"/>
       <description>&prefs.description;</description>
-      <hbox flex="1">
-      <vbox flex="1">
-        <listbox id="prefList" flex="1" rows="5" onselect="enablePrefButtons();" ondblclick="onEditPreference();">
-        </listbox>
-      </vbox>
-        <vbox>
-          <button id="newPrefButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
-                  oncommand="onNewPreference();"/>
-          <button id="editPrefButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
-                  oncommand="onEditPreference();"/>
-          <button id="deletePrefButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
-                  oncommand="onDeletePreference();"/>
-          <spacer flex="1"/>
-        </vbox>
-        </hbox>
-    </groupbox>
-  </wizardpage>
-  
-  <wizardpage label="&customizeRegistry.label;" onpageshow="enableRegButtons();">
-    <groupbox>
-      <caption label="&registry.label;"/>
-      <description>&registry.description;</description>
-      <hbox flex="1">
-      <vbox flex="1">
-    <listbox id="regList" flex="1" rows="5" onselect="enableRegButtons();" ondblclick="onEditRegKey();">
-      
-    </listbox>
-    </vbox>
-        <vbox>
-          <button id="newRegButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
-                  oncommand="onNewRegKey();"/>
-          <button id="editRegButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
-                  oncommand="onEditRegKey();"/>
-          <button id="deleteRegButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
-                  oncommand="onDeleteRegKey();"/>
-          <spacer flex="1"/>
-        </vbox>
-        </hbox>
+      <box flex="1" class="ccklist" id="prefList" new="onNewPreference();" edit="onEditPreference();"/>
     </groupbox>
   </wizardpage>
 
+  <wizardpage label="&customizeRegistry.label;">
+    <groupbox>
+      <caption label="&registry.label;"/>
+      <description>&registry.description;</description>
+      <box class="ccklist" id="regList" new="onNewRegKey();" edit="onEditRegKey();"/>
+    </groupbox>
+  </wizardpage>
 
   <wizardpage label="&customizeCerts.label;" onpageadvanced="return ValidateFile('CertPath1','CertPath2','CertPath3','CertPath4','CertPath5');">>
     <description>&customizeCerts.warning;</description>

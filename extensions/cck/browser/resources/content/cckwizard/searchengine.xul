@@ -42,29 +42,28 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 
-<dialog id="createplugin" title="&plugins.label;"
+<dialog id="createsearchengine" title="&engines.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
-        ondialogaccept="return OnBrowserPluginOK()"
-        onload="OnPluginLoad()"
+        ondialogaccept="return OnSearchEngineOK()"
+        onload="OnSearchEngineLoad()"
         width="500"
         height="200"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 <vbox>
-<label>&plugins.description;</label>
+<label>&engines.description;</label>
+          <label>&engine.label;</label>
 <hbox align="center">
-           <textbox flex="1" id="pluginpath"/>
-           <button label="&chooseFile.label;" oncommand="choosefile('pluginpath');"/>
+          <textbox flex="1" id="searchengine"/>
+           <button label="&chooseFile.label;" oncommand="choosefile('searchengine');"/>
            </hbox>
+          <label>&engineIcon.label;</label>
          <hbox align="center">
-           <menulist flex="1" id="plugintype">
-             <menupopup>
-	       <menuitem label="Windows" value="WINNT_x86-msvc"/>
-	       <menuitem label="Linux" value="Linux_x86-gcc3"/>
-	       <menuitem label="Macintosh" value="Darwin_ppc-gcc3"/>
-             </menupopup>
-           </menulist>
+           <textbox flex="1" id="searchengineicon"/>
+           <image id="icon" src='' width='16' height='16'/>
+           <button label="&chooseFile.label;" oncommand="chooseimage('searchengineicon','icon');"/>
          </hbox>        
+           
 </vbox>
 </dialog>

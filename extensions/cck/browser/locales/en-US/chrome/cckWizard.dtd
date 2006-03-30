@@ -5,7 +5,7 @@
 <!ENTITY  beforeYouBegin.description    "Decide which customizations you want to make and create/collect the customized files, such as:
                                          <html:ul>
                                          <html:li>Custom animation files for browser's animated logo</html:li>
-                                         <html:li>Search plugins</html:li>
+                                         <html:li>Search engines (SRC files and the corresponding images)</html:li>
                                          <html:li>Browser plug-ins</html:li>
                                          </html:ul>">
                                          
@@ -93,13 +93,20 @@
 <!ENTITY  installAllowedSites.label     "Install Allowed Sites:">
 
 <!ENTITY  customizeBrowserPlugins.label "Customize Browser Plug-ins">
-<!ENTITY  browserPlugins.description    "You may select up to five browser plug-ins to be preinstalled.">
+<!ENTITY  browserPlugins.description    "Use the buttons below to add browser plug-ins.">
 
+<!ENTITY  plugins.label                 "Browser Plug-ins">
+<!ENTITY  plugins.description           "Please select a browser plug-
+in and the platform it is written for.">
 
+<!ENTITY  customizeSearchEngines.label  "Customize Search Engines">
+<!ENTITY  searchEngines.description     "Use the buttons below to add search engines.">
 
+<!ENTITY  engines.label                 "Search Engines">
+<!ENTITY  engines.description           "Please select a .src file and the corresponding image.">
 
-<!ENTITY  customizeSearchPlugins.label  "Customize Search Plugins">
-<!ENTITY  searchPlugins.description     "Use the buttons below to add search plugins.">
+<!ENTITY  engine.label                  "SRC File">
+<!ENTITY  engineIcon.label              "Image File:">
 
 <!ENTITY  file.label                    "File:">
 <!ENTITY  icon.label                    "Icon:">
@@ -126,6 +133,7 @@
 
 
 <!ENTITY  bookmark.label                  "Bookmark">
+<!ENTITY  bookmark.description              "Enter a Bookmark">
 <!ENTITY  bookmarkTitle.label           "Title:">
 <!ENTITY  bookmarkURL.label             "URL:">
 
