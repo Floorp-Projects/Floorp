@@ -93,20 +93,17 @@ nsDirectoryIndexStream::nsDirectoryIndexStream()
            ("nsDirectoryIndexStream[%p]: created", this));
 }
 
-static int PR_CALLBACK compare(const void* aElement1,
-                               const void* aElement2,
+static int PR_CALLBACK compare(nsIFile* aElement1,
+                               nsIFile* aElement2,
                                void* aData)
 {
-    nsIFile* a = (nsIFile*)aElement1;
-    nsIFile* b = (nsIFile*)aElement2;
-
     // Not that this #ifdef makes much of a difference... We need it
     // to work out which version of GetLeafName to use, though
 #ifdef THREADSAFE_I18N
     // don't check for errors, because we can't report them anyway
     nsXPIDLString name1, name2;
-    a->GetUnicodeLeafName(getter_Copies(name1));
-    b->GetUnicodeLeafName(getter_Copies(name2));
+    aElement1->GetUnicodeLeafName(getter_Copies(name1));
+    aElement2->GetUnicodeLeafName(getter_Copies(name2));
 
     // Note - we should be the collation to do sorting. Why don't we?
     // Because that is _slow_. Using TestProtocols to list file:///dev/
@@ -132,8 +129,8 @@ static int PR_CALLBACK compare(const void* aElement1,
     return res;*/
 #else
     nsCAutoString name1, name2;
-    a->GetNativeLeafName(name1);
-    b->GetNativeLeafName(name2);
+    aElement1->GetNativeLeafName(name1);
+    aElement2->GetNativeLeafName(name2);
     
     return Compare(name1, name2);
 #endif
@@ -183,11 +180,8 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         rv = iter->GetNext(getter_AddRefs(elem));
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
-            if (file) {
-                nsIFile* f = file;
-                NS_ADDREF(f);
-                mArray.AppendElement(f);
-            }
+            if (file)
+                mArray.AppendObject(file); // addrefs
         }
     }
 
@@ -245,12 +239,6 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
 nsDirectoryIndexStream::~nsDirectoryIndexStream()
 {
-    PRInt32 i;
-    for (i=0; i<mArray.Count(); ++i) {
-        nsIFile* elem = (nsIFile*)mArray.ElementAt(i);
-        NS_RELEASE(elem);
-    }
-
     PR_LOG(gLog, PR_LOG_DEBUG,
            ("nsDirectoryIndexStream[%p]: destroyed", this));
 }
@@ -330,8 +318,10 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         while (PRUint32(mBuf.Length()) < aCount) {
             PRBool more = mPos < mArray.Count();
             if (!more) break;
-            
-            nsCOMPtr<nsIFile> current = (nsIFile*)mArray.ElementAt(mPos);
+
+            // don't addref, for speed - an addref happened when it
+            // was placed in the array, so it's not going to go stale
+            nsIFile* current = mArray.ObjectAt(mPos);
             ++mPos;
 
 #ifdef PR_LOGGING

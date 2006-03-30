@@ -42,7 +42,7 @@
 #include "nsString.h"
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
-#include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsITextToSubURI.h"
 
 class nsDirectoryIndexStream : public nsIInputStream
@@ -52,8 +52,8 @@ private:
     PRInt32 mOffset;
     nsresult mStatus;
 
-    PRInt32 mPos;
-    nsVoidArray mArray;
+    PRInt32             mPos;   // position within mArray
+    nsCOMArray<nsIFile> mArray; // file objects within the directory
     
     // XXX - we could make these statics, and share them. But we're only going to have one
     // of directoryindexstream at once, so there's no point
