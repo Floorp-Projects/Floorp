@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/* enum types for CSS properties and their values */
+ 
 #ifndef nsCSSProperty_h___
 #define nsCSSProperty_h___
 
