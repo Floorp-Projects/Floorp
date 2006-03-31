@@ -10579,6 +10579,7 @@
 				0F518835088593F30091F3FB,
 				0FF288550961EDDD007527B4,
 				4DC28F5E099184B80081939B,
+				7B9E1BFF09DD967E003256C9,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13097,6 +13098,20 @@
 //792
 //793
 //794
+		7B9E1BFE09DD966F003256C9 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozreg_s.a;
+			path = ../dist/lib/libmozreg_s.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		7B9E1BFF09DD967E003256C9 = {
+			fileRef = 7B9E1BFE09DD966F003256C9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //820
 //821
 //822
@@ -16197,6 +16212,7 @@
 				4DC41D3E0869D7A400947045,
 				4DC41D3E0869D7A400947046,
 				4DC28F5D099184B80081939B,
+				7B9E1BFE09DD966F003256C9,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
