@@ -571,8 +571,9 @@ nsXFormsInstanceElement::LoadExternalInstance(const nsAString &aSrc)
               }
             }
           } else {
-            nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadOrigin"),
-                                       domDoc);
+            const PRUnichar *strings[] = {NS_LITERAL_STRING("instance").get()};
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("externalLinkLoadOrigin"),
+                                       strings, 1, mElement, mElement);
           }
         }
       }
