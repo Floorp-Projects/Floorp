@@ -16,6 +16,8 @@ if (verifyDiskSpace(fProgram, srChrome + srComponents))
                  "content/xforms/");
   registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "xforms.jar"),
                  "locale/en-US/xforms/");
+  registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "xforms.jar"),
+                 "skin/xforms/");
 
   if (err == SUCCESS)
   {

@@ -2,6 +2,7 @@ xforms.jar:
 % overlay	chrome://browser/content/preferences/preferences.xul	chrome://xforms/content/xforms-prefs.xul
 % content	xforms	%content/xforms/
 % locale	xforms	en-US	%locale/en-US/xforms/
+% skin	xforms	classic/1.0	%skin/xforms/
   content/xforms/contents.rdf                  (resources/content/contents.rdf)
 * content/xforms/xforms.css                    (resources/content/xforms.css)
 * content/xforms/xforms-prefs.xul              (resources/content/xforms-prefs.xul)
@@ -25,4 +26,5 @@ xforms.jar:
 * locale/en-US/xforms/contents.rdf             (resources/locale/en-US/contents.rdf)
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
+* skin/xforms/contents.rdf                     (resources/skin/contents.rdf)
 
