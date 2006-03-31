@@ -236,8 +236,10 @@ calCompositeCalendar.prototype = {
         if (this.mDefaultCalendar && this.mDefaultCalendar.uri.equals(cal.uri))
             return;
         if (usePref && this.mPrefPrefix) {
-            this.mCalMgr.deleteCalendarPref(this.mDefaultCalendar,
-                                            this.mDefaultPref);
+            if (this.mDefaultCalendar) {
+                this.mCalMgr.deleteCalendarPref(this.mDefaultCalendar,
+                                                this.mDefaultPref);
+            }
             this.mCalMgr.setCalendarPref(cal, this.mDefaultPref,
                                          "true");
         }
