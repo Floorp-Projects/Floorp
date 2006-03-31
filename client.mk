@@ -363,7 +363,7 @@ MODULES_all :=                                  \
 # and commit this file on that tag.
 #MOZ_CO_TAG          = <tag>
 NSPR_CO_TAG          = NSPRPUB_PRE_4_2_CLIENT_BRANCH
-NSS_CO_TAG           = NSS_3_11_RTM
+NSS_CO_TAG           = NSS_3_11_20060331_TAG
 LDAPCSDK_CO_TAG      = ldapcsdk_50_client_branch
 LOCALES_CO_TAG       =
 
@@ -541,7 +541,7 @@ endif
 NSS_CO_FLAGS := $(NSS_CO_FLAGS) $(if $(NSS_CO_TAG),-r $(NSS_CO_TAG),-A)
 
 # Cannot pull static tags by date
-ifneq (,$(findstring _RTM,$(NSS_CO_TAG)))
+ifneq (,$(findstring _RTM,$(NSS_CO_TAG))$(findstring _TAG,$(NSS_CO_TAG)))
 CVSCO_NSS = $(CVS) $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(NSS_CO_MODULE)
 else
 CVSCO_NSS = $(CVS) $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSS_CO_MODULE)
