@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A class for handing out nodeinfos and ensuring sharing of them as needed.
+ */
+
 #include "nsNodeInfoManager.h"
 #include "nsNodeInfo.h"
 #include "nsCOMPtr.h"

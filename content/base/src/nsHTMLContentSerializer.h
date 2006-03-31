@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsIContentSerializer implementation that can be used with an
+ * nsIDocumentEncoder to convert an HTML (not XHTML!) DOM to an HTML
+ * string that could be parsed into more or less the original DOM.
+ */
+
 #ifndef nsHTMLContentSerializer_h__
 #define nsHTMLContentSerializer_h__
 

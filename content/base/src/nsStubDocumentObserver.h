@@ -34,17 +34,20 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * nsStubDocumentObserver is an implementation of the nsIDocumentObserver
+ * interface (except for the methods on nsISupports) that is intended to be
+ * used as a base class within the content/layout library.  All methods do
+ * nothing.
+ */
+
 #ifndef nsStubDocumentObserver_h_
 #define nsStubDocumentObserver_h_
 
 #include "nsIDocumentObserver.h"
 
 /**
- * nsStubDocumentObserver is an implementation of the
- * nsIDocumentObserver interface (except for the methods on nsISupports)
- * that is intended to be used within the content/layout library.  All
- * methods do nothing.
- *
  * There are two advantages to inheriting from nsStubDocumentObserver
  * rather than directly from nsIDocumentObserver:
  *  1. smaller compiled code size (since there's no need for the code

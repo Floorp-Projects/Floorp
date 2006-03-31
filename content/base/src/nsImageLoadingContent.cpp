@@ -37,6 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A base class which implements nsIImageLoadingContent and can be
+ * subclassed by various content nodes that want to provide image
+ * loading functionality (eg <img>, <object>, etc).
+ */
+
 #include "nsImageLoadingContent.h"
 #include "nsContentErrors.h"
 #include "nsIContent.h"

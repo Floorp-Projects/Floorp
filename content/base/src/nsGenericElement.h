@@ -34,6 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * Base class for all element classes; this provides an implementation
+ * of DOM Core's Element, implements nsIContent, provides utility
+ * methods for subclasses, and so forth.
+ */
+
 #ifndef nsGenericElement_h___
 #define nsGenericElement_h___
 

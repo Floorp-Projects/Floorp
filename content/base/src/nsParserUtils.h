@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Namespace class for some static parsing-related methods.
+ */
+
 #ifndef nsParserUtils_h__
 #define nsParserUtils_h__
 

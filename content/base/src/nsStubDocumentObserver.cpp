@@ -35,6 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsStubDocumentObserver is an implementation of the nsIDocumentObserver
+ * interface (except for the methods on nsISupports) that is intended to be
+ * used as a base class within the content/layout library.  All methods do
+ * nothing.
+ */
+
 #include "nsStubDocumentObserver.h"
 
 NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsStubDocumentObserver)

@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A unique per-element set of attributes that is used as an
+ * nsIStyleRule; used to implement presentational attributes.
+ */
+
 #ifndef nsMappedAttributes_h___
 #define nsMappedAttributes_h___
 

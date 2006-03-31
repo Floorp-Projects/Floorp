@@ -35,20 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A base class for simple DOM NodeLists which implements nsISupports
+ * and expects subclasess to implement GetLength() and Item()
+ */
+
 #ifndef nsGenericDOMNodeList_h__
 #define nsGenericDOMNodeList_h__
 
 #include "nsISupports.h"
 #include "nsIDOMNodeList.h"
 
-/**
- * This is a base class for a generic DOM Node List. The base class
- * provides implementations for nsISupports, it is up to the subclass
- * to implement the core node list methods:
- *
- *   GetLength
- *   Item
- * */
 class nsGenericDOMNodeList : public nsIDOMNodeList 
 {
 public:

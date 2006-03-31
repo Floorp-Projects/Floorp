@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A class for handing out nodeinfos and ensuring sharing of them as needed.
+ */
+
 #ifndef nsNodeInfoManager_h___
 #define nsNodeInfoManager_h___
 

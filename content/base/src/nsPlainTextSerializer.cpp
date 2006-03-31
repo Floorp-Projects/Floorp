@@ -37,6 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * nsIContentSerializer implementation that can be used with an
+ * nsIDocumentEncoder to convert a DOM into plaintext in a nice way
+ * (eg for copy/paste as plaintext).
+ */
+
 #include "nsPlainTextSerializer.h"
 #include "nsLWBrkCIID.h"
 #include "nsIServiceManager.h"

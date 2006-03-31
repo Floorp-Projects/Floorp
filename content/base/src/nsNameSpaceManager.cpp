@@ -34,6 +34,12 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * A class for managing namespace IDs and mapping back and forth
+ * between namespace IDs and namespace URIs.
+ */
+
 #include "nscore.h"
 #include "nsINameSpaceManager.h"
 #include "nsAutoPtr.h"

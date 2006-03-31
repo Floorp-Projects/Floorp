@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Namespace class for some static parsing-related methods.
+ */
+
 #include "nsParserUtils.h"
 #include "nsIParser.h" // for kQuote et. al.
 #include "jsapi.h"
@@ -165,8 +169,6 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
 }
 
 
-// XXX Stolen from nsHTMLContentSink. Needs to be shared.
-// XXXbe share also with nsRDFParserUtils.cpp and nsHTMLContentSink.cpp
 // Returns PR_TRUE if the language name is a version of JavaScript and
 // PR_FALSE otherwise
 PRBool
