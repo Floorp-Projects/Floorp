@@ -65,7 +65,6 @@ private:
     PRBool mOwnsDC;
     HDC mDC;
     HWND mWnd;
-    HBITMAP mOrigBitmap;
 };
 
 #endif /* GFX_WINDOWSSURFACE_H */
