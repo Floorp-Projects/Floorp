@@ -196,12 +196,13 @@ public:
 
   public:
     iterator();
-    iterator(const nsXFormsControlListItem::iterator&);
+    iterator(const iterator&);
     iterator operator=(nsXFormsControlListItem*);
     bool operator!=(const nsXFormsControlListItem*);
     iterator operator++();
     nsXFormsControlListItem* operator*();
   };
+  friend class nsXFormsControlListItem::iterator;
 
   /** The begining position for the node (itself) */
   nsXFormsControlListItem* begin();
