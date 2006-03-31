@@ -775,7 +775,8 @@ PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *mech,
 	return NULL;
     }
 
-    symKey = PK11_KeyGen(slot, type, mech, 0, wincx);
+    symKey = PK11_TokenKeyGenWithFlags(slot, type, mech, 0, NULL,
+           CKF_SIGN|CKF_ENCRYPT|CKF_DECRYPT|CKF_UNWRAP|CKF_WRAP, 0, wincx);
 
     PORT_ZFree(pbe_params->pPassword, pwitem->len);
     pbe_params->pPassword = NULL;
