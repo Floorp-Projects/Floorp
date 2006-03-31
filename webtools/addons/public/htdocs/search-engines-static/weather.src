@@ -1,0 +1,37 @@
+# Status: Working
+# Mozilla plugin file for weather.com by Matthew A. McGuigan <webnugget.com>
+#
+# Created:  Jan 18, 2003
+# Last updated: Jan 18, 2003
+#
+# Known issues:
+#  
+# 1. None.  This is a semi-plugin.  There are no sidebar results to parse.
+#
+<SEARCH
+    version = "7.1"
+   name="weather.com"
+   description="The Weather Channel" 
+   action="http://www.weather.com/search/search"
+   searchForm="http://www.weather.com/"
+   method="GET" >
+
+<input name="where" user>
+<input name="sourceid" value="mozilla-search">
+
+<interpret
+    browserResultType = "result"
+
+    resultListStart="this is a semi-plugin"
+    resultListEnd="no side bar results should appear"
+
+    resultItemStart=""
+    resultItemEnd=""
+	>
+</search>
+
+<BROWSER
+        update="http://mycroft.mozdev.org/plugins/weather.src"
+        updateIcon="http://mycroft.mozdev.org/plugins/weather.png"
+        updateCheckDays="3"
+>

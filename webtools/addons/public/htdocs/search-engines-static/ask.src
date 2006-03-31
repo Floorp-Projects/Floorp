@@ -1,0 +1,34 @@
+# Ask Jeeves Search Plugin for Mozilla
+# Authors: Erich Iseli <sherlock@iseli.org>, Julius Ross <juliusross@mac.com>
+# Last updated November 18, 2005 (CC, REWRITE)
+# 
+# Known issues:
+# 1. Support for the next/previous buttons is not included.
+
+<SEARCH
+  version = "7.1"
+  name="AskJeeves"
+  description="Ask Jeeves"
+  method="GET"
+  action="http://www.ask.com/web"
+  queryCharset="UTF-8"
+>
+
+<input name="q" user>
+
+<INTERPRET
+  charset="UTF-8"
+  resultListStart='Web Results</td>'
+  resultListEnd='<div class="op nw">'
+  resultItemStart='<div class="m10_0_16">'
+  resultItemEnd='<div class="T1"'
+>
+
+</SEARCH>
+
+
+<BROWSER
+  update="http://mycroft.mozdev.org/plugins/jeeves.src" 
+  updateIcon="http://mycroft.mozdev.org/plugins/jeeves.gif" 
+  updateCheckDays="7"
+>
