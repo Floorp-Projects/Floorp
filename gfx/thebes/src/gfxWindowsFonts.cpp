@@ -772,7 +772,19 @@ TRY_AGAIN_JUST_SHAPE:
             }
         }
 
-        if (numGlyphs > 0 && glyphs[0] == 0) {
+
+        // XXX Do we want to only use a new font for the glyphs that
+        // we are unable to render and use the current font for the rest.
+        // check for missing glyphs
+        PRBool isMissingGlyphs = PR_FALSE;
+        for (int l = 0; l < numGlyphs; ++l) {
+            if (glyphs[l] == 0) {
+                isMissingGlyphs = PR_TRUE;
+                break;
+            }
+        }
+
+        if (isMissingGlyphs) {
             if (fontIndex < mGroup->mFonts.Length() - 1) {
                 fontIndex++;
                 cairo_win32_scaled_font_done_font(scaledFont);
