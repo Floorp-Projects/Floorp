@@ -71,6 +71,7 @@
 #include "cdbhdl.h"
 #endif
 
+
 /*
  * ******************** Static data *******************************
  */
@@ -1273,7 +1274,8 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
 	if ( !sftk_hasAttribute(object, CKA_SUBPRIME)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	if ( !sftk_hasAttribute(object, CKA_NETSCAPE_DB)) {
+	if (sftk_isTrue(object,CKA_TOKEN) &&
+		!sftk_hasAttribute(object, CKA_NETSCAPE_DB)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	/* fall through */
@@ -1299,7 +1301,8 @@ sftk_handlePrivateKeyObject(SFTKSession *session,SFTKObject *object,CK_KEY_TYPE 
 	if ( !sftk_hasAttribute(object, CKA_VALUE)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
-	if ( !sftk_hasAttribute(object, CKA_NETSCAPE_DB)) {
+	if (sftk_isTrue(object,CKA_TOKEN) &&
+		!sftk_hasAttribute(object, CKA_NETSCAPE_DB)) {
 	    return CKR_TEMPLATE_INCOMPLETE;
 	}
 	encrypt = CK_FALSE;
@@ -2047,9 +2050,12 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
     	crv = sftk_Attribute2SSecItem(arena,&privKey->u.dsa.privateValue,
 							object,CKA_VALUE);
     	if (crv != CKR_OK) break;
-    	crv = sftk_Attribute2SSecItem(arena,&privKey->u.dsa.publicValue,
-							object,CKA_NETSCAPE_DB);
-	/* can't set the public value.... */
+	if (sftk_hasAttribute(object,CKA_NETSCAPE_DB)) {
+	    crv = sftk_Attribute2SSecItem(arena, &privKey->u.dsa.publicValue,
+				      object,CKA_NETSCAPE_DB);
+	    /* privKey was zero'd so public value is already set to NULL, 0
+	     * if we don't set it explicitly */
+	}
 	break;
 
     case CKK_DH:
@@ -2063,8 +2069,12 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
     	crv = sftk_Attribute2SSecItem(arena,&privKey->u.dh.privateValue,
 							object,CKA_VALUE);
     	if (crv != CKR_OK) break;
-    	crv = sftk_Attribute2SSecItem(arena,&privKey->u.dh.publicValue,
-							object,CKA_NETSCAPE_DB);
+	if (sftk_hasAttribute(object,CKA_NETSCAPE_DB)) {
+	    crv = sftk_Attribute2SSecItem(arena, &privKey->u.dh.publicValue,
+				      object,CKA_NETSCAPE_DB);
+	    /* privKey was zero'd so public value is already set to NULL, 0
+	     * if we don't set it explicitly */
+	}
 	break;
 
 #ifdef NSS_ENABLE_ECC
@@ -2086,9 +2096,13 @@ sftk_mkPrivKey(SFTKObject *object, CK_KEY_TYPE key_type, CK_RV *crvp)
 	crv = sftk_Attribute2SSecItem(arena,&privKey->u.ec.privateValue,
 							object,CKA_VALUE);
 	if (crv != CKR_OK) break;
-	crv = sftk_Attribute2SSecItem(arena, &privKey->u.ec.publicValue,
+	if (sftk_hasAttribute(object,CKA_NETSCAPE_DB)) {
+	    crv = sftk_Attribute2SSecItem(arena, &privKey->u.ec.publicValue,
 				      object,CKA_NETSCAPE_DB);
-	if (crv != CKR_OK) break;
+	    if (crv != CKR_OK) break;
+	    /* privKey was zero'd so public value is already set to NULL, 0
+	     * if we don't set it explicitly */
+	}
         rv = DER_SetUInteger(privKey->arena, &privKey->u.ec.version,
                           NSSLOWKEY_EC_PRIVATE_KEY_VERSION);
 	if (rv != SECSuccess) crv = CKR_HOST_MEMORY;
@@ -3939,7 +3953,7 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     if (attribute == NULL) {
 	return CKR_TEMPLATE_INCOMPLETE;
     }
-    paramString = (unsigned char *)attribute->attrib.pValue;
+    paramString = (char *)attribute->attrib.pValue;
     crv = secmod_parseParameters(paramString, &paramStrings, isFIPS);
     if (crv != CKR_OK) {
 	goto loser;
@@ -4002,7 +4016,9 @@ CK_RV NSC_CreateObject(CK_SESSION_HANDLE hSession,
     SFTKSlot *slot = sftk_SlotFromSessionHandle(hSession);
     SFTKSession *session;
     SFTKObject *object;
-    CK_OBJECT_CLASS class;
+    /* make sure class isn't randomly CKO_NETSCAPE_NEWSLOT or
+     * CKO_NETSCPE_DELSLOT. */
+    CK_OBJECT_CLASS class = CKO_VENDOR_DEFINED;
     CK_RV crv;
     int i;
 
