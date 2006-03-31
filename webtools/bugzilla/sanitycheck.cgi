@@ -103,16 +103,15 @@ $template->put_header("Bugzilla Sanity Check");
 if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
     $dbh->bz_lock_tables('bugs WRITE', 'votes READ');
-    SendSQL("UPDATE bugs SET votes = 0");
-    SendSQL("SELECT bug_id, SUM(vote_count) FROM votes " .
-            $dbh->sql_group_by('bug_id'));
-    my %votes;
-    while (@row = FetchSQLData()) {
-        my ($id, $v) = (@row);
-        $votes{$id} = $v;
-    }
-    foreach my $id (keys %votes) {
-        SendSQL("UPDATE bugs SET votes = $votes{$id} WHERE bug_id = $id");
+    $dbh->do(q{UPDATE bugs SET votes = 0});
+    my $sth_update = $dbh->prepare(q{UPDATE bugs 
+                                        SET votes = ? 
+                                      WHERE bug_id = ?});
+    my $sth = $dbh->prepare(q{SELECT bug_id, SUM(vote_count)
+                                FROM votes }. $dbh->sql_group_by('bug_id'));
+    $sth->execute();
+    while (my ($id, $v) = $sth->fetchrow_array) {
+        $sth_update->execute($v, $id);
     }
     $dbh->bz_unlock_tables();
     Status("Vote cache has been rebuilt.");
@@ -222,22 +221,23 @@ if (defined $cgi->param('rescanallBugMail')) {
     require Bugzilla::BugMail;
 
     Status("OK, now attempting to send unsent mail");
-    SendSQL("SELECT bug_id FROM bugs 
-              WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND
-             delta_ts < now() - " . $dbh->sql_interval(30, 'MINUTE') .
-            " ORDER BY bug_id");
-    my @list;
-    while (MoreSQLData()) {
-        push (@list, FetchOneColumn());
-    }
-
-    Status(scalar(@list) . ' bugs found with possibly unsent mail.');
-
-    foreach my $bugid (@list) {
+    my $time = $dbh->sql_interval(30, 'MINUTE');
+    
+    my $list = $dbh->selectcol_arrayref(qq{
+                                        SELECT bug_id
+                                          FROM bugs 
+                                         WHERE (lastdiffed IS NULL
+                                                OR lastdiffed < delta_ts)
+                                           AND delta_ts < now() - $time
+                                      ORDER BY bug_id});
+         
+    Status(scalar(@$list) . ' bugs found with possibly unsent mail.');
+      
+    foreach my $bugid (@$list) {
         Bugzilla::BugMail::Send($bugid);
     }
 
-    if (scalar(@list) > 0) {
+    if (scalar(@$list) > 0) {
         Status("Unsent mail has been sent.");
     }
 
@@ -319,29 +319,32 @@ sub CrossCheck {
         my %exceptions = map { $_ => 1 } @$exceptions;
 
         Status("... from $refertable.$referfield");
-        
-        SendSQL("SELECT DISTINCT $refertable.$referfield" . ($keyname ? ", $refertable.$keyname" : '') . " " .
-                "FROM   $refertable LEFT JOIN $table " .
-                "  ON   $refertable.$referfield = $table.$field " .
-                "WHERE  $table.$field IS NULL " .
-                "  AND  $refertable.$referfield IS NOT NULL");
+       
+        my $query = qq{SELECT DISTINCT $refertable.$referfield} .
+            ($keyname ? qq{, $refertable.$keyname } : q{}) .
+                     qq{ FROM $refertable
+                    LEFT JOIN $table
+                           ON $refertable.$referfield = $table.$field
+                        WHERE $table.$field IS NULL
+                          AND $refertable.$referfield IS NOT NULL};
+         
+        my $sth = $dbh->prepare($query);
+        $sth->execute;
 
         my $has_bad_references = 0;
-        while (MoreSQLData()) {
-            my ($value, $key) = FetchSQLData();
-            if (!$exceptions{$value}) {
-                my $alert = "Bad value &quot;$value&quot; found in $refertable.$referfield";
-                if ($keyname) {
-                    if ($keyname eq 'bug_id') {
-                        $alert .= ' (bug ' . BugLink($key) . ')';
-                    }
-                    else {
-                        $alert .= " ($keyname == '$key')";
-                    }
+
+        while (my ($value, $key) = $sth->fetchrow_array) {
+            next if $exceptions{$value};
+            my $alert = "Bad value &quot;$value&quot; found in $refertable.$referfield";
+            if ($keyname) {
+                if ($keyname eq 'bug_id') {
+                    $alert .= ' (bug ' . BugLink($key) . ')';
+                } else {
+                    $alert .= " ($keyname == '$key')";
                 }
-                Alert($alert);
-                $has_bad_references = 1;
             }
+            Alert($alert);
+            $has_bad_references = 1;
         }
         # References to non existent bugs can be safely removed, bug 288461
         if ($table eq 'bugs' && $has_bad_references) {
@@ -480,19 +483,22 @@ sub DoubleCrossCheck {
         my ($refertable, $referfield1, $referfield2, $keyname) = @$ref;
  
         Status("... from $refertable.$referfield1 / $refertable.$referfield2");
-        
-        SendSQL("SELECT DISTINCT $refertable.$referfield1, $refertable.$referfield2" . ($keyname ? ", $refertable.$keyname" : '') . " " .
-                "FROM   $refertable LEFT JOIN $table " .
-                "  ON   $refertable.$referfield1 = $table.$field1 " .
-                " AND   $refertable.$referfield2 = $table.$field2 " .
-                "WHERE  $table.$field1 IS NULL " .
-                "  AND  $table.$field2 IS NULL " .
-                "  AND  $refertable.$referfield1 IS NOT NULL " .
-                "  AND  $refertable.$referfield2 IS NOT NULL");
- 
-        while (MoreSQLData()) {
-            my ($value1, $value2, $key) = FetchSQLData();
- 
+
+        my $d_cross_check = $dbh->selectall_arrayref(qq{
+                        SELECT DISTINCT $refertable.$referfield1, 
+                                        $refertable.$referfield2 } .
+                       ($keyname ? qq{, $refertable.$keyname } : q{}) .
+                      qq{ FROM $refertable
+                     LEFT JOIN $table
+                            ON $refertable.$referfield1 = $table.$field1
+                           AND $refertable.$referfield2 = $table.$field2 
+                         WHERE $table.$field1 IS NULL 
+                           AND $table.$field2 IS NULL 
+                           AND $refertable.$referfield1 IS NOT NULL 
+                           AND $refertable.$referfield2 IS NOT NULL});
+
+        foreach my $check (@$d_cross_check) {
+            my ($value1, $value2, $key) = @$check;
             my $alert = "Bad values &quot;$value1&quot;, &quot;$value2&quot; found in " .
                 "$refertable.$referfield1 / $refertable.$referfield2";
             if ($keyname) {
@@ -530,9 +536,10 @@ DoubleCrossCheck("milestones", "product_id", "value",
  
 Status("Checking profile logins");
 
-SendSQL("SELECT userid, login_name FROM profiles");
+my $sth = $dbh->prepare(q{SELECT userid, login_name FROM profiles});
+$sth->execute;
 
-while (my ($id,$email) = (FetchSQLData())) {
+while (my ($id, $email) = $sth->fetchrow_array) {
     validate_email_syntax($email)
       || Alert "Bad profile email address, id=$id,  &lt;$email&gt;.";
 }
@@ -549,15 +556,17 @@ sub AlertBadVoteCache {
     $offervotecacherebuild = 1;
 }
 
-SendSQL("SELECT bug_id, votes, keywords FROM bugs " .
-        "WHERE votes != 0 OR keywords != ''");
+$sth = $dbh->prepare(q{SELECT bug_id, votes, keywords
+                         FROM bugs
+                        WHERE votes != 0 
+                           OR keywords != ''});
+$sth->execute;
 
 my %votes;
 my %bugid;
 my %keyword;
 
-while (@row = FetchSQLData()) {
-    my($id, $v, $k) = (@row);
+while (my ($id, $v, $k) = $sth->fetchrow_array) {
     if ($v != 0) {
         $votes{$id} = $v;
     }
@@ -567,11 +576,12 @@ while (@row = FetchSQLData()) {
 }
 
 Status("Checking cached vote counts");
-SendSQL("SELECT bug_id, SUM(vote_count) FROM votes " .
-        $dbh->sql_group_by('bug_id'));
+$sth = $dbh->prepare(q{SELECT bug_id, SUM(vote_count)
+                         FROM votes }.
+                       $dbh->sql_group_by('bug_id'));
+$sth->execute;
 
-while (@row = FetchSQLData()) {
-    my ($id, $v) = (@row);
+while (my ($id, $v) = $sth->fetchrow_array) {
     if ($v <= 0) {
         Alert("Bad vote sum for bug $id");
     } else {
@@ -593,9 +603,12 @@ if ($offervotecacherebuild) {
 Status("Checking keywords table");
 
 my %keywordids;
-SendSQL("SELECT id, name FROM keyworddefs");
-while (@row = FetchSQLData()) {
-    my ($id, $name) = (@row);
+
+my $keywords = $dbh->selectall_arrayref(q{SELECT id, name 
+                                            FROM keyworddefs});
+
+foreach my $keyword (@$keywords) {
+    my ($id, $name) = @$keyword;
     if ($keywordids{$id}) {
         Alert("Duplicate entry in keyworddefs for id $id");
     }
@@ -605,12 +618,13 @@ while (@row = FetchSQLData()) {
     }
 }
 
-
-SendSQL("SELECT bug_id, keywordid FROM keywords ORDER BY bug_id, keywordid");
+$sth = $dbh->prepare(q{SELECT bug_id, keywordid
+                         FROM keywords
+                     ORDER BY bug_id, keywordid});
+$sth->execute;
 my $lastid;
 my $lastk;
-while (@row = FetchSQLData()) {
-    my ($id, $k) = (@row);
+while (my ($id, $k) = $sth->fetchrow_array) {
     if (!$keywordids{$k}) {
         Alert("Bogus keywordids $k found in keywords table");
     }
@@ -630,18 +644,21 @@ if (defined $cgi->param('rebuildkeywordcache')) {
                                   'keyworddefs read');
 }
 
-SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
-        "FROM keywords " .
-        "INNER JOIN keyworddefs " .
-        "   ON keyworddefs.id = keywords.keywordid " .
-        "INNER JOIN bugs " .
-        "   ON keywords.bug_id = bugs.bug_id " .
-        "ORDER BY keywords.bug_id, keyworddefs.name");
+my $query = q{SELECT keywords.bug_id, keyworddefs.name
+                FROM keywords
+          INNER JOIN keyworddefs
+                  ON keyworddefs.id = keywords.keywordid
+          INNER JOIN bugs
+                  ON keywords.bug_id = bugs.bug_id
+            ORDER BY keywords.bug_id, keyworddefs.name};
+
+$sth = $dbh->prepare($query);
+$sth->execute;
 
 my $lastb = 0;
 my @list;
 while (1) {
-    my ($b, $k) = FetchSQLData();
+    my ($b, $k) = $sth->fetchrow_array; 
     if (!defined $b || $b != $lastb) {
         if (@list) {
             $realk{$lastb} = join(', ', @list);
@@ -671,6 +688,11 @@ if (@badbugs) {
     @badbugs = sort {$a <=> $b} @badbugs;
     Alert(scalar(@badbugs) . " bug(s) found with incorrect keyword cache: " .
           BugListLinks(@badbugs));
+          
+    my $sth_update = $dbh->prepare(q{UPDATE bugs
+                                        SET keywords = ?
+                                      WHERE bug_id = ?});
+                                      
     if (defined $cgi->param('rebuildkeywordcache')) {
         Status("OK, now fixing keyword cache.");
         foreach my $b (@badbugs) {
@@ -678,8 +700,7 @@ if (@badbugs) {
             if (exists($realk{$b})) {
                 $k = $realk{$b};
             }
-            SendSQL("UPDATE bugs SET keywords = " . SqlQuote($k) .
-                    " WHERE bug_id = $b");
+            $sth_update->execute($k, $b);
         }
         Status("Keyword cache fixed.");
     } else {
@@ -697,20 +718,13 @@ if (defined $cgi->param('rebuildkeywordcache')) {
 
 sub BugCheck {
     my ($middlesql, $errortext, $repairparam, $repairtext) = @_;
-    
-    SendSQL("SELECT DISTINCT bugs.bug_id " .
-            "FROM $middlesql " .
-            "ORDER BY bugs.bug_id");
-    
-    my @badbugs = ();
-    
-    while (@row = FetchSQLData()) {
-        my ($id) = (@row);
-        push (@badbugs, $id);
-    }
+ 
+    my $badbugs = $dbh->selectcol_arrayref(qq{SELECT DISTINCT bugs.bug_id
+                                                FROM $middlesql 
+                                            ORDER BY bugs.bug_id});
 
-    if (@badbugs) {
-        Alert("$errortext: " . BugListLinks(@badbugs));
+    if (scalar(@$badbugs)) {
+        Alert("$errortext: " . BugListLinks(@$badbugs));
         if ($repairparam) {
             $repairtext ||= 'Repair these bugs';
             print qq{<a href="sanitycheck.cgi?$repairparam=1">$repairtext</a>.},
@@ -770,8 +784,10 @@ sub DateCheck {
     my $table = shift @_;
     my $field = shift @_;
     Status("Checking dates in $table.$field");
-    SendSQL("SELECT COUNT( $field ) FROM $table WHERE $field > NOW()");
-    my $c = FetchOneColumn();
+    my $c = $dbh->selectrow_array(qq{SELECT COUNT($field)
+                                       FROM $table
+                                      WHERE $field > NOW()});
+    
     if ($c) {
         Alert("Found $c dates in future");
     }
@@ -787,18 +803,19 @@ DateCheck("profiles", "refreshed_when");
 # Checks for values that are invalid OR
 # not among the 9 valid combinations
 Status("Checking for bad values in group_control_map");
-SendSQL("SELECT COUNT(product_id) FROM group_control_map WHERE " .
-        "membercontrol NOT IN(" . CONTROLMAPNA . "," . CONTROLMAPSHOWN .
-        "," . CONTROLMAPDEFAULT . "," . CONTROLMAPMANDATORY . ")" .
-        " OR " .
-        "othercontrol NOT IN(" . CONTROLMAPNA . "," . CONTROLMAPSHOWN .
-        "," . CONTROLMAPDEFAULT . "," . CONTROLMAPMANDATORY . ")" .
-        " OR " .
-        "( (membercontrol != othercontrol) " .
-          "AND (membercontrol != " . CONTROLMAPSHOWN . ") " .
-          "AND ((membercontrol != " . CONTROLMAPDEFAULT . ") " .
-            "OR (othercontrol = " . CONTROLMAPSHOWN . ")))");
-my $c = FetchOneColumn();
+my $groups = join(", ", (CONTROLMAPNA, CONTROLMAPSHOWN, CONTROLMAPDEFAULT,
+CONTROLMAPMANDATORY));
+$query = qq{
+     SELECT COUNT(product_id) 
+       FROM group_control_map 
+      WHERE membercontrol NOT IN( $groups )
+         OR othercontrol NOT IN( $groups )
+         OR ((membercontrol != othercontrol)
+             AND (membercontrol != } . CONTROLMAPSHOWN . q{)
+             AND ((membercontrol != } . CONTROLMAPDEFAULT . q{)
+                  OR (othercontrol = } . CONTROLMAPSHOWN . q{)))};
+                  
+my $c = $dbh->selectrow_array($query);
 if ($c) {
     Alert("Found $c bad group_control_map entries");
 }
@@ -837,21 +854,18 @@ BugCheck("bugs
 
 Status("Checking for unsent mail");
 
-@badbugs = ();
+my $time = $dbh->sql_interval(30, 'MINUTE');
+my $badbugs = $dbh->selectcol_arrayref(qq{
+                    SELECT bug_id 
+                      FROM bugs 
+                     WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts)
+                       AND delta_ts < now() - $time
+                  ORDER BY bug_id});
 
-SendSQL("SELECT bug_id " .
-        "FROM bugs WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND " .
-        "delta_ts < now() - " . $dbh->sql_interval(30, 'MINUTE') .
-        " ORDER BY bug_id");
 
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
+if (scalar(@$badbugs > 0)) {
     Alert("Bugs that have changes but no mail sent for at least half an hour: " .
-          BugListLinks(@badbugs));
+          BugListLinks(@$badbugs));
 
     print qq{<a href="sanitycheck.cgi?rescanallBugMail=1">Send these mails</a>.<p>\n};
 }
