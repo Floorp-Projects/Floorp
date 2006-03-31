@@ -74,7 +74,8 @@
 
 #include "nsNativeCharsetUtils.h"
 
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
 #include "nsToolkitCompsCID.h" 
 #define PROFILE_COMMANDLINE_ARG " -profile "
 #else
@@ -326,14 +327,14 @@ NOTIFYICONDATAW nsMessengerWinIntegration::sWideBiffIconData = { sizeof(NOTIFYIC
                                                     0,
                                                     0 };
 
-#ifdef MOZ_THUNDERBIRD
 #ifdef MOZ_STATIC_BUILD
 #define MAIL_DLL_NAME NULL
 #else
+#ifdef MOZ_STATIC_MAIL_BUILD
 #define MAIL_DLL_NAME "mail.dll"
-#endif
 #else
 #define MAIL_DLL_NAME "msgbase.dll"
+#endif
 #endif
 
 void nsMessengerWinIntegration::InitializeBiffStatusIcon()
@@ -417,7 +418,8 @@ nsMessengerWinIntegration::Init()
 
   if (mStoreUnreadCounts)
   {
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
     // get current profile path for the commandliner
     nsCOMPtr<nsIFile> profilePath;
     rv = directoryService->Get(NS_APP_USER_PROFILE_50_DIR, 
@@ -1037,7 +1039,8 @@ nsMessengerWinIntegration::UpdateRegistryWithCurrent()
   commandLinerForAppLaunch.Append(mAppName);
   commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));
   commandLinerForAppLaunch.Append(NS_LITERAL_STRING(PROFILE_COMMANDLINE_ARG));
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
   commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));
   commandLinerForAppLaunch.Append(mProfilePath);
   commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));

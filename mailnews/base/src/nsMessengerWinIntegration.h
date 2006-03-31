@@ -153,7 +153,8 @@ private:
   nsString  mEmailPrefix;
   nsCString mShellDllPath;
 
-#ifdef MOZ_THUNDERBIRD
+  // XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
   nsString mProfilePath;
 #else
   nsXPIDLString mProfileName;
