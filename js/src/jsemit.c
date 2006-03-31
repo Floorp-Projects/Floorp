@@ -1780,9 +1780,11 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     fp = cx->fp;
     obj = fp->varobj;
     clasp = OBJ_GET_CLASS(cx, obj);
-    if (!(fp->flags & JSFRAME_SPECIAL) &&
-        clasp != &js_FunctionClass &&
-        clasp != &js_CallClass) {
+    if (clasp != &js_FunctionClass && clasp != &js_CallClass) {
+        /* Check for an eval or debugger frame. */
+        if (fp->flags & JSFRAME_SPECIAL) 
+            return JS_TRUE;
+
         /*
          * Optimize global variable accesses if there are at least 100 uses
          * in unambiguous contexts, or failing that, if least half of all the
