@@ -1682,7 +1682,7 @@ var PlacesController = {
   _getItemCopyTransaction: function (uri, container, index) {
     var itemTitle = this.bookmarks.getItemTitle(uri);
     var createTxn = new PlacesCreateItemTransaction(uri, container, index);
-    var editTxn = new PlacesEditItemTransaction(uri, { title: itemTitle });
+    var editTxn = new PlacesEditItemTitleTransaction(uri, itemTitle);
     return new PlacesAggregateTransaction("ItemCopy", [createTxn, editTxn]);
   },
   
@@ -1782,7 +1782,7 @@ var PlacesController = {
       var createTxn = 
         new PlacesCreateItemTransaction(data.uri, container, index);
       var editTxn = 
-        new PlacesEditItemTransaction(data.uri, { title: data.title });
+        new PlacesEditItemTitleTransaction(data.uri, data.title);
       return new PlacesAggregateTransaction("DropMozURLItem", [createTxn, editTxn]);
     case TYPE_UNICODE:
       // Creating and Setting the title is a two step process, so create
@@ -1790,7 +1790,7 @@ var PlacesController = {
       var createTxn = 
         new PlacesCreateItemTransaction(data.uri, container, index);
       var editTxn = 
-        new PlacesEditItemTransaction(data.uri, { title: data.uri });
+        new PlacesEditItemTitleTransaction(data.uri, data.uri);
       return new PlacesAggregateTransaction("DropItem", [createTxn, editTxn]);
     }
     return null;
@@ -2129,8 +2129,8 @@ function PlacesBaseTransaction() {
 }
 PlacesBaseTransaction.prototype = {
   bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-             getService(Ci.nsINavBookmarksService), 
-           
+             getService(Ci.nsINavBookmarksService),
+  LOG: LOG,
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
@@ -2156,21 +2156,21 @@ PlacesAggregateTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
   
   doTransaction: function() {
-    LOG("== " + this._name + " (Aggregate) ==============");
+    this.LOG("== " + this._name + " (Aggregate) ==============");
     this.bookmarks.beginUpdateBatch();
     for (var i = 0; i < this._transactions.length; ++i)
       this._transactions[i].doTransaction();
     this.bookmarks.endUpdateBatch();
-    LOG("== " + this._name + " (Aggregate Ends) =========");
+    this.LOG("== " + this._name + " (Aggregate Ends) =========");
   },
   
   undoTransaction: function() {
-    LOG("== UN" + this._name + " (UNAggregate) ============");
+    this.LOG("== UN" + this._name + " (UNAggregate) ============");
     this.bookmarks.beginUpdateBatch();
-    for (var i = 0; i < this._transactions.length; ++i)
+    for (var i = this._transactions.length - 1; i >= 0; --i)
       this._transactions[i].undoTransaction();
     this.bookmarks.endUpdateBatch();
-    LOG("== UN" + this._name + " (UNAggregate Ends) =======");
+    this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
 };
 
@@ -2189,12 +2189,12 @@ PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PCFT_doTransaction() {
-    LOG("Create Folder: " + this._name + " in: " + this._container + "," + this._index);
+    this.LOG("Create Folder: " + this._name + " in: " + this._container + "," + this._index);
     this._id = this.bookmarks.createFolder(this._container, this._name, this._index);
   },
   
   undoTransaction: function PCFT_undoTransaction() {
-    LOG("UNCreate Folder: " + this._name + " from: " + this._container + "," + this._index);
+    this.LOG("UNCreate Folder: " + this._name + " from: " + this._container + "," + this._index);
     this.bookmarks.removeFolder(this._id);
   }
 };
@@ -2212,12 +2212,12 @@ PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PCIT_doTransaction() {
-    LOG("Create Item: " + this._uri.spec + " in: " + this._container + "," + this._index);
+    this.LOG("Create Item: " + this._uri.spec + " in: " + this._container + "," + this._index);
     this.bookmarks.insertItem(this._container, this._uri, this._index);
   },
   
   undoTransaction: function PCIT_undoTransaction() {
-    LOG("UNCreate Item: " + this._uri.spec + " from: " + this._container + "," + this._index);
+    this.LOG("UNCreate Item: " + this._uri.spec + " from: " + this._container + "," + this._index);
     this.bookmarks.removeItem(this._container, this._uri);
   }
 };
@@ -2234,12 +2234,12 @@ PlacesInsertSeparatorTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PIST_doTransaction() {
-    LOG("Create separator in: " + this._container + "," + this._index);
+    this.LOG("Create separator in: " + this._container + "," + this._index);
     this._id = this.bookmarks.insertSeparator(this._container, this._index);
   },
   
   undoTransaction: function PIST_undoTransaction() {
-    LOG("UNCreate separator from: " + this._container + "," + this._index);
+    this.LOG("UNCreate separator from: " + this._container + "," + this._index);
     this.bookmarks.removeChildAt(this._container, this._index);
   }
 };
@@ -2260,12 +2260,12 @@ PlacesMoveFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PMFT_doTransaction() {
-    LOG("Move Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
+    this.LOG("Move Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this.bookmarks.moveFolder(this._id, this._newContainer, this._newIndex);
   },
   
   undoTransaction: function PMFT_undoTransaction() {
-    LOG("UNMove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
+    this.LOG("UNMove Folder: " + this._id + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this.bookmarks.moveFolder(this._id, this._oldContainer, this._oldIndex);
   }
 };
@@ -2285,13 +2285,13 @@ PlacesMoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PMIT_doTransaction() {
-    LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
+    this.LOG("Move Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this.bookmarks.removeItem(this._oldContainer, this._uri);
     this.bookmarks.insertItem(this._newContainer, this._uri, this._newIndex);
   },
   
   undoTransaction: function PMIT_undoTransaction() {
-    LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
+    this.LOG("UNMove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex + " to: " + this._newContainer + "," + this._newIndex);
     this.bookmarks.removeItem(this._newContainer, this._uri);
     this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
   }
@@ -2372,7 +2372,7 @@ PlacesRemoveFolderTransaction.prototype = {
   
   doTransaction: function PRFT_doTransaction() {
     var title = this.bookmarks.getFolderTitle(this._id);
-    LOG("Remove Folder: " + title);
+    this.LOG("Remove Folder: " + title);
     
     this._saveFolderContents();
     
@@ -2388,7 +2388,7 @@ PlacesRemoveFolderTransaction.prototype = {
     this._removeTxn.undoTransaction();
     
     var title = this.bookmarks.getFolderTitle(this._id);
-    LOG("UNRemove Folder: " + title);
+    this.LOG("UNRemove Folder: " + title);
     
     // Create children forwards to preserve parent-child relationships.
     for (var i = 0; i < this._transactions.length; ++i)
@@ -2409,12 +2409,12 @@ PlacesRemoveItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
   
   doTransaction: function PRIT_doTransaction() {
-    LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
+    this.LOG("Remove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.removeItem(this._oldContainer, this._uri);
   },
   
   undoTransaction: function PRIT_undoTransaction() {
-    LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
+    this.LOG("UNRemove Item: " + this._uri.spec + " from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.insertItem(this._oldContainer, this._uri, this._oldIndex);
   }
 };
@@ -2430,72 +2430,78 @@ PlacesRemoveSeparatorTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype, 
 
   doTransaction: function PRST_doTransaction() {
-    LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
+    this.LOG("Remove Separator from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.removeChildAt(this._oldContainer, this._oldIndex);
   },
   
   undoTransaction: function PRST_undoTransaction() {
-    LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
+    this.LOG("UNRemove Separator from: " + this._oldContainer + "," + this._oldIndex);
     this.bookmarks.insertSeparator(this._oldContainer, this._oldIndex);
   }
 };
 
 /**
- * Edit a Folder
+ * Edit a bookmark's title.
  */
-function PlacesEditFolderTransaction(id, oldAttributes, newAttributes) {
-  this._id = id;
-  this._oldAttributes = oldAttributes;
-  this._newAttributes = newAttributes;
+function PlacesEditItemTitleTransaction(uri, newTitle) {
+  this._uri = uri;
+  this._newTitle = newTitle;
+  this._oldTitle = "";
   this.redoTransaction = this.doTransaction;
 }
-PlacesEditFolderTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype, 
+PlacesEditItemTitleTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
 
-  doTransaction: function PEFT_doTransaction() {
-    LOG("Edit Folder: " + this._id + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
-    // Use Bookmarks and Annotation Services to perform these operations.
+  doTransaction: function PEITT_doTransaction() {
+    this._oldTitle = this.bookmarks.getItemTitle(this._uri);
+    this.bookmarks.setItemTitle(this._uri, this._newTitle);
   },
-  
-  undoTransaction: function PEFT_undoTransaction() {
-    LOG("UNEdit Folder: " + this._id + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
-    // Use Bookmarks and Annotation Services to perform these operations.
+
+  undoTransaction: function PEITT_undoTransaction() {
+    this.bookmarks.setItemTitle(this._uri, this._oldTitle);
   }
 };
 
 /**
- * Edit an Item
+ * Edit a folder's title.
  */
-function PlacesEditItemTransaction(uri, newAttributes) {
-  this._uri = uri;
-  this._newAttributes = newAttributes;
-  this._oldAttributes = { };
+function PlacesEditFolderTitleTransaction(id, newTitle) {
+  this._id = id;
+  this._newTitle = newTitle;
+  this._oldTitle = "";
   this.redoTransaction = this.doTransaction;
 }
-PlacesEditItemTransaction.prototype = {
-  __proto__: PlacesBaseTransaction.prototype, 
-  
-  doTransaction: function PEIT_doTransaction() {
-    LOG("Edit Item: " + this._uri.spec + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
-    for (var p in this._newAttributes) {
-      if (p == "title") {
-        this._oldAttributes[p] = this.bookmarks.getItemTitle(this._uri);
-        this.bookmarks.setItemTitle(this._uri, this._newAttributes[p]);
-      }
-      else {
-        // Use Annotation Service
-      }
-    }
+PlacesEditFolderTitleTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PEFTT_doTransaction() {
+    this._oldTitle = this.bookmarks.getFolderTitle(this._id);
+    this.bookmarks.setFolderTitle(this._id, this._newTitle);
   },
-  
-  undoTransaction: function PEIT_undoTransaction() {
-    LOG("UNEdit Item: " + this._uri.spec + " oldAttrs: " + this._oldAttributes.toSource() + " newAttrs: " + this._newAttributes.toSource());
-    for (var p in this._newAttributes) {
-      if (p == "title")
-        this.bookmarks.setItemTitle(this._uri, this._oldAttributes[p]);
-      else {
-        // Use Annotation Service
-      }
-    }
+
+  undoTransaction: function PEFTT_undoTransaction() {
+    this.bookmarks.setFolderTitle(this._id, this._oldTitle);
+  }
+};
+
+/**
+ * Edit a bookmark's keyword.
+ */
+function PlacesEditBookmarkKeywordTransaction(uri, newKeyword) {
+  this._uri = uri;
+  this._newKeyword = newKeyword;
+  this._oldKeyword = "";
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditBookmarkKeywordTransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PEBKT_doTransaction() {
+    this._oldKeyword = this.bookmarks.getKeywordForURI(this._uri);
+    this.bookmarks.setKeywordForURI(this._uri, this._newKeyword);
+  },
+
+  undoTransaction: function PEBKT_undoTransaction() {
+    this.bookmarks.setKeywordForURI(this._uri, this._oldKeyword);
   }
 };
