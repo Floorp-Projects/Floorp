@@ -55,9 +55,12 @@ function QueryInterface(aIID) {
 calOutlookCSVImporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     return([{defaultExtension:'csv', 
              extensionFilter:'*.csv', 
-             description:'Comma Separated Values (from Outlook)'}]);
+             description: props.GetStringFromName('outlookDesc')}]);
 };
 
 const localeEn = {
@@ -400,9 +403,12 @@ function QueryInterface(aIID) {
 calOutlookCSVExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     return([{defaultExtension:'csv', 
              extensionFilter:'*.csv', 
-             description:'Comma Separated Values (from Outlook)'}]);
+             description:props.GetStringFromName('outlookDesc')}]);
 };
 
 // not prototype.export. export is reserved.

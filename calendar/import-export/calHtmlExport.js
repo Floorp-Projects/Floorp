@@ -55,9 +55,12 @@ function QueryInterface(aIID) {
 calHtmlExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     return([{defaultExtension:'html', 
              extensionFilter:'*.html; *.htm', 
-             description:'HTML'}]);
+             description: props.GetStringFromName('htmlDesc')}]);
 };
 
 // not prototype.export. export is reserved.

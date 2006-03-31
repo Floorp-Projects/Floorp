@@ -54,9 +54,12 @@ function QueryInterface(aIID) {
 calIcsImporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     return([{defaultExtension:'ics', 
              extensionFilter:'*.ics', 
-             description:'iCalendar'}]);
+             description: props.GetStringFromName('icsDesc')}]);
 };
 
 calIcsImporter.prototype.importFromStream =
@@ -138,9 +141,12 @@ function QueryInterface(aIID) {
 calIcsExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
     return([{defaultExtension:'ics', 
              extensionFilter:'*.ics', 
-             description:'iCalendar'}]);
+             description: props.GetStringFromName('icsDesc')}]);
 };
 
 // not prototype.export. export is reserved.
