@@ -34,6 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * This class wraps up the creation (and destruction) of the standard
+ * set of atoms used by gklayout; the atoms are created when gklayout
+ * is loaded and they are destroyed when gklayout is unloaded.
+ */
+
 #include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
 

@@ -35,6 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A base class for simple DOM NodeLists which implements nsISupports
+ * and expects subclasess to implement GetLength() and Item()
+ */
+
 #include "nsGenericDOMNodeList.h"
 #include "nsGenericElement.h"
 

@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A service that provides methods for synchronously loading a DOM in various ways.
+ */
+
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsIDOMLoadListener.h"

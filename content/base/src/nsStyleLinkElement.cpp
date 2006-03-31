@@ -37,6 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A base class which implements nsIStyleSheetLinkingElement and can
+ * be subclassed by various content nodes that want to load
+ * stylesheets (<style>, <link>, processing instructions, etc).
+ */
+
 #include "nsStyleLinkElement.h"
 
 #include "nsHTMLAtoms.h"

@@ -45,6 +45,13 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
+/**
+ * nsPropertyTable allows a set of arbitrary key/value pairs to be stored
+ * for any number of nodes, in a global hashtable rather than on the nodes
+ * themselves.  Nodes can be any type of object; the hashtable keys are
+ * nsIAtom pointers, and the values are void pointers.
+ */
+
 #include "nsPropertyTable.h"
 #include "pldhash.h"
 #include "nsContentErrors.h"

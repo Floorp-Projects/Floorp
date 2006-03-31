@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A class that handles loading and evaluation of <script> elements.
+ */
+
 #ifndef __nsScriptLoader_h__
 #define __nsScriptLoader_h__
 

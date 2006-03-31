@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A class that handles loading and evaluation of <script> elements.
+ */
+
 #include "nsScriptLoader.h"
 #include "nsIDOMCharacterData.h"
 #include "nsParserUtils.h"

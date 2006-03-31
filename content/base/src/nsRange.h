@@ -34,12 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsRange_h___
-#define nsRange_h___
 
 /*
- * nsRange.h: interface of the nsRange object.
+ * Implementation of the DOM Range object.
  */
+
+#ifndef nsRange_h___
+#define nsRange_h___
 
 #include "nsIDOMRange.h"
 #include "nsIRangeUtils.h"

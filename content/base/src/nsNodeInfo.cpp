@@ -35,6 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Class that represents a prefix/namespace/localName triple; a single
+ * nodeinfo is shared by all elements in a document that have that
+ * prefix, namespace, and localName.
+ */
+
 #include "nscore.h"
 #include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"

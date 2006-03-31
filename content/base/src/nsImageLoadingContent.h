@@ -36,6 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A base class which implements nsIImageLoadingContent and can be
+ * subclassed by various content nodes that want to provide image
+ * loading functionality (eg <img>, <object>, etc).
+ */
+
 #ifndef nsImageLoadingContent_h__
 #define nsImageLoadingContent_h__
 
@@ -50,11 +56,6 @@ class nsIDocument;
 class imgILoader;
 class nsIIOService;
 
-/**
- * This is an implementation of nsIImageLoadingContent.  This class
- * can be subclassed by various content nodes that want to provide
- * image-loading functionality (eg <img>, <object>, etc).
- */
 class nsImageLoadingContent : public nsIImageLoadingContent
 {
   /* METHODS */

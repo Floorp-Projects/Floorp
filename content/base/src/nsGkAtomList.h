@@ -35,12 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/******
+/*
+  This file contains the list of all atoms used by gklayout;
+  see nsGkAtoms for access to the atoms.
+*/
 
-  This file contains the list of all atoms used by gklayout
-  See nsGkAtoms.h for access to the atoms
-
-  It is designed to be used as inline input to nsGkAtoms.cpp and nsGkAtoms.h
+/*
+  This file is designed to be used as inline input to nsGkAtoms.cpp and nsGkAtoms.h
   *only* through the magic of C preprocessing.
 
   All entires must be enclosed in the macro GK_ATOM which will have cruel
@@ -48,8 +49,7 @@
 
   The first argument to GK_ATOM is the C++ name of the atom
   The second argument it GK_ATOM is the string value of the atom
-
- ******/
+*/
 
 // OUTPUT_CLASS=nsGkAtoms
 // MACRO_NAME=GK_ATOM
