@@ -59,7 +59,7 @@
         <xul:hbox class="tab-drop-indicator-bar" hidden="true">
           <xul:image class="tab-drop-indicator"/>
         </xul:hbox>
-        <xul:hbox class="tabbrowser-strip chromeclass-toolbar" collapsed="true" tooltip="_child" context="_child"
+        <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
                   anonid="strip"
                   ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode); event.stopPropagation();"
                   ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode); event.stopPropagation();"
