@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * A class for keeping track of prefix-to-namespace-id mappings
+ */
+
 #include "nsXMLNameSpaceMap.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"

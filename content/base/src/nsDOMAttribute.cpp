@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of the DOM Core Attr node.
+ * Implementation of DOM Core's nsIDOMAttr node.
  */
 
 #include "nsDOMAttribute.h"

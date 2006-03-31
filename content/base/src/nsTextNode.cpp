@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/*
+ * Implementation of DOM Core's nsIDOMText node.
+ */
+
 #include "nsGenericDOMDataNode.h"
 #include "nsIDOMText.h"
 #include "nsLayoutAtoms.h"

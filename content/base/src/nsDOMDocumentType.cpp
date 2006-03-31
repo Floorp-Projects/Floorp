@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of DOM Core's DocumentType node.
+ * Implementation of DOM Core's nsIDOMDocumentType node.
  */
 
 #include "nsDOMDocumentType.h"

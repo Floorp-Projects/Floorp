@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of the |attributes| property of DOM Core's Node object.
+ * Implementation of the |attributes| property of DOM Core's nsIDOMNode object.
  */
 
 #ifndef nsDOMAttributeMap_h___

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementations of DOMStringList and DOMNameList, used by various
+ * Implementations of nsIDOMDOMStringList and nsIDOMNameList, used by various
  * DOM3 stuff and some interfaces specified by WHATWG.
  */
 
