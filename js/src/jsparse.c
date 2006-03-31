@@ -775,7 +775,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 {
     JSOp op, prevop;
     JSParseNode *pn, *body, *result;
-    JSAtom *funAtom, *argAtom;
+    JSAtom *funAtom, *objAtom, *argAtom;
     JSStackFrame *fp;
     JSObject *varobj, *pobj;
     JSAtomListElement *ale;
@@ -898,11 +898,26 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
 #endif
 
+
     /*
      * Set interpreted early so js_EmitTree can test it to decide whether to
      * eliminate useless expressions.
      */
     fun->interpreted = JS_TRUE;
+
+    /*
+     * Atomize fun->object early to protect against a last-ditch GC under
+     * js_LookupHiddenProperty.
+     *
+     * Absent use of the new scoped local GC roots API around compiler calls,
+     * we need to atomize here to protect against a GC activation.  Atoms are
+     * protected from GC during compilation by the JS_FRIEND_API entry points
+     * in this file.  There doesn't seem to be any gain in switching from the
+     * atom-keeping method to the bulkier, slower scoped local roots method.
+     */
+    objAtom = js_AtomizeObject(cx, fun->object, 0);
+    if (!objAtom)
+        return NULL;
 
     /* Now parse formal argument list and compute fun->nargs. */
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_FORMAL);
@@ -1031,17 +1046,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
         op = JSOP_NOP;
 
-    /*
-     * Absent use of the new scoped local GC roots API around compiler calls,
-     * we need to atomize here to protect against a GC activation.  Atoms are
-     * protected from GC during compilation by the JS_FRIEND_API entry points
-     * in this file.  There doesn't seem to be any gain in switching from the
-     * atom-keeping method to the bulkier, slower scoped local roots method.
-     */
-    pn->pn_funAtom = js_AtomizeObject(cx, fun->object, 0);
-    if (!pn->pn_funAtom)
-        return NULL;
-
+    pn->pn_funAtom = objAtom;
     pn->pn_op = op;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS);
