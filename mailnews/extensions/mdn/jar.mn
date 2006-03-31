@@ -1,4 +1,4 @@
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 messenger.jar:
     content/messenger/am-mdn.xul                                     (resources/content/am-mdn.xul)
     content/messenger/am-mdn.js                                      (resources/content/am-mdn.js)
