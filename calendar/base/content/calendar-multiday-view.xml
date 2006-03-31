@@ -1359,6 +1359,9 @@
       <handler event="dblclick" button="0"><![CDATA[
         this.calendarView.controller.createNewEvent();
       ]]></handler>
+      <handler event="mousedown"><![CDATA[
+        this.calendarView.selectedDay = this.mDate;
+      ]]></handler>
     </handlers>
   </binding>
 
@@ -1452,6 +1455,7 @@
         if (this.mEditing)
             return;
 
+        this.parentColumn.calendarView.selectedDay = this.parentColumn.mDate;
         this.mInMouseDown = true;
         this.mMouseX = event.screenX;
         this.mMouseY = event.screenY;
@@ -2305,6 +2309,7 @@
               dayHeaderBox.setAttribute("flex", "1");
               headerdaybox.appendChild(dayHeaderBox);
 
+              dayHeaderBox.date = d;
               dayHeaderBox.calendarView = this;
               dayHeaderBox.setAttribute("orient", orient);
 
