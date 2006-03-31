@@ -41,14 +41,14 @@
 THEBES_IMPL_REFCOUNTING(gfxWindowsSurface)
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
-    mOwnsDC(PR_TRUE), mWnd(wnd), mOrigBitmap(nsnull)
+    mOwnsDC(PR_TRUE), mWnd(wnd)
 {
     mDC = ::GetDC(mWnd);
     Init(cairo_win32_surface_create(mDC));
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, PRBool deleteDC) :
-    mOwnsDC(deleteDC), mDC(dc),mWnd(nsnull), mOrigBitmap(nsnull)
+    mOwnsDC(deleteDC), mDC(dc),mWnd(nsnull)
 {
     Init(cairo_win32_surface_create(mDC));
 }
@@ -71,12 +71,6 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long 
 gfxWindowsSurface::~gfxWindowsSurface()
 {
     Destroy();
-
-    if (mDC && mOrigBitmap) {
-        HBITMAP tbits = (HBITMAP)::SelectObject(mDC, mOrigBitmap);
-        if (tbits)
-            DeleteObject(tbits);
-    }
 
     if (mOwnsDC) {
         if (mWnd)

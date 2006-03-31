@@ -65,10 +65,7 @@ nsThebesImage::nsThebesImage()
     : mWidth(0),
       mHeight(0),
       mDecoded(0,0,0,0),
-      mAlphaDepth(0),
-      mLocked(PR_FALSE),
-      mHadAnyData(PR_FALSE),
-      mUpToDate(PR_FALSE)
+      mAlphaDepth(0)
 {
 }
 

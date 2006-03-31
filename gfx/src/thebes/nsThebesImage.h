@@ -111,10 +111,6 @@ protected:
     nsRefPtr<gfxASurface> mOptSurface;
 
     PRUint8 mAlphaDepth;
-    PRUint8 mRealAlphaDepth;
-    PRPackedBool mLocked;
-    PRPackedBool mHadAnyData;
-    PRPackedBool mUpToDate;
 };
 
 #endif /* _NSTHEBESIMAGE_H_ */
