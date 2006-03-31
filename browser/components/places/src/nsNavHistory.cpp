@@ -1709,10 +1709,11 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
   rv = InternalAddVisit(pageID, aReferringVisit, aSessionID, aTime,
                         aTransitionType, aVisitID);
 
-  // Notify observers
+  // Notify observers: The hidden detection code must match that in
+  // GetQueryResults to maintain consistency.
   // FIXME bug 325241: make a way to observe hidden URLs
   transaction.Commit();
-  if (! hidden) {
+  if (! hidden && aTransitionType != TRANSITION_EMBED) {
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnVisit(aURI, *aVisitID, aTime, aSessionID,
                                 aReferringVisit, aTransitionType));
@@ -1868,8 +1869,18 @@ nsNavHistory::GetQueryResults(const nsCOMArray<nsNavHistoryQuery>& aQueries,
      aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_FULL_VISIT);
 
   nsCAutoString commonConditions("visit_count > 0 ");
-  if (! aOptions->IncludeHidden())
+  if (! aOptions->IncludeHidden()) {
+    // The hiding code here must match the notification behavior in AddVisit
     commonConditions.AppendLiteral("AND hidden <> 1 ");
+
+    // Some items are unhidden but are subframe navigations that we shouldn't
+    // show. This happens especially on imported profiles because the previous
+    // history system didn't hide as many things as we do now. Some sites,
+    // especially Javascript-heavy ones, load things in frames to display them,
+    // resulting in a lot of these entries. This filters those visits out.
+    if (asVisits)
+      commonConditions.AppendLiteral("AND v.visit_type <> 4 "); // not TRANSITION_EMBED
+  }
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
   // WATCH OUT: nsNavBookmarks::Init also creates some statements that share
