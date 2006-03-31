@@ -50,25 +50,14 @@ function addCalendarToTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
 
-    // XXXdmose in theory, we should be able to do something along the lines
-    //
-    // var calendarRow = getCalendars().indexOf(aCalendar);
-    // boxobj.rowCountChanged(calendarRow, 1);
-    //
-    // Unfortunately, the indexOf in that statement will currently fail
-    // since it's not possible to compare "interface pointers" for identity
-    // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing
-    // this the right way.  But for now...
+    // Special trick to compare interface pointers, since normal, ==
+    // comparison can fail due to javascript wrapping.
+    var sip = Components.classes["@mozilla.org/supports-interface-pointer;1"]
+                         .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+    sip.data = aCalendar;
+    sip.dataIID = Components.interfaces.calICalendar;
 
-    // trigger tree redraw by signalizing that a line was added at the top of
-    // the list
-    // a perfect solution would just invalidate the affected lines
-    boxobj.rowCountChanged(0, 1);
-    
-    // as this might lead to situations where nothing has to be changed visually
-    // the whole view should be invalidated (note that we're pretending to
-    // change line 0 only)
-    boxobj.invalidate();
+    boxobj.rowCountChanged(getCalendars().indexOf(sip.data), 1);
     
     updateStyleSheetForCalendar(aCalendar);
 }
@@ -77,24 +66,13 @@ function removeCalendarFromTree(aCalendar)
 {
     var boxobj = document.getElementById("calendarTree").treeBoxObject;
 
-    // XXXdmose in theory, we should be able to do something along the lines
-    //
-    // boxobj.rowCountChanged(getCalendars().indexOf(aCalendar), -1);
-    //
-    // Unfortunately, the indexOf in that statement will currently fail
-    // since it's not possible to compare "interface pointers" for identity
-    // because of XPConnect wrapping vagaries.  Bug 325650 covers fixing this
-    // the right way.  But for now...
-
-    // trigger tree redraw by signalizing that a line was removed from the
-    // top of the list
-    // a perfect solution would just invalidate the affected lines
-    boxobj.rowCountChanged(0, -1);
-
-    // as this might lead to situations where nothing has to be changed visually
-    // the whole view should be invalidated (note that we're pretending to
-    // change line 0 only)
-    boxobj.invalidate();
+    // Special trick to compare interface pointers, since normal, ==
+    // comparison can fail due to javascript wrapping.
+    var sip = Components.classes["@mozilla.org/supports-interface-pointer;1"]
+                         .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+    sip.data = aCalendar;
+    sip.dataIID = Components.interfaces.calICalendar;
+    boxobj.rowCountChanged(getCalendars().indexOf(sip.data), -1);
 }
 
 var ltnCalendarManagerObserver = {
