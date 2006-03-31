@@ -34,6 +34,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ * A class which represents a fragment of text (eg inside a text
+ * node); if only codepoints below 256 are used, the text is stored as
+ * a char*; otherwise the text is stored as a PRUnichar*
+ */
+
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsCRT.h"

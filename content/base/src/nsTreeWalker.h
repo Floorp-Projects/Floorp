@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
+/*
+ * Implementation of DOM Traversal's nsIDOMTreeWalker
+ */
+
 #ifndef nsTreeWalker_h___
 #define nsTreeWalker_h___
-
-/*
- * nsTreeWalker.h: interface of the nsTreeWalker object.
- */
 
 #include "nsIDOMNode.h"
 #include "nsIDOMTreeWalker.h"

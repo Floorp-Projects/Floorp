@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of the DOM Range object.
+ * Implementation of the DOM nsIDOMRange object.
  */
 
 #include "nscore.h"

@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementations of DOM Core's Comment node.
+ * Implementations of DOM Core's nsIDOMComment node.
  */
 
 #include "nsIDOMComment.h"

@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * nsTreeWalker.cpp: Implementation of the nsIDOMTreeWalker object.
+ * Implementation of DOM Traversal's nsIDOMTreeWalker
  */
 
 #include "nsTreeWalker.h"

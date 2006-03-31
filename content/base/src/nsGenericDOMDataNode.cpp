@@ -36,8 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Base class for DOM Core's Comment, DocumentType, Text,
- * CDATASection, and ProcessingInstruction nodes.
+ * Base class for DOM Core's nsIDOMComment, nsIDOMDocumentType, nsIDOMText,
+ * nsIDOMCDATASection, and nsIDOMProcessingInstruction nodes.
  */
 
 #include "nsGenericDOMDataNode.h"
