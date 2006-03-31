@@ -376,7 +376,7 @@ static id gSharedProgressController = nil;
   }
 
   int instanceToSelect = -1;
-  BOOL shiftKeyDown (([theEvent modifierFlags] & NSShiftKeyMask) != 0);
+  BOOL shiftKeyDown = (([theEvent modifierFlags] & NSShiftKeyMask) != 0);
 
   unichar key = [[theEvent characters] characterAtIndex:0];
   switch (key)

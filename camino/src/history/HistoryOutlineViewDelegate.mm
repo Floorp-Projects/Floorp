@@ -191,7 +191,7 @@ static NSString* const kExpandedHistoryStatesDefaultsKey = @"history_expand_stat
 
   BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
   BOOL openInTabs       = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
-  BOOL cmdKeyDown       = (GetCurrentKeyModifiers() & cmdKey) != 0;
+  BOOL cmdKeyDown       = (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0);
   
   NSEnumerator* itemEnum = [selectedHistoryItems objectEnumerator];
   id curItem;

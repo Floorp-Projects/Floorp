@@ -531,7 +531,7 @@ const int kReuseWindowOnAE = 2;
   {
     case eBookmarkOpenBehavior_Preferred:
       {
-        BOOL cmdKeyDown = (GetCurrentKeyModifiers() & cmdKey) != 0;
+        BOOL cmdKeyDown = (([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask) != 0);
         if (cmdKeyDown)
           if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL]) {
             openInNewTab = YES;

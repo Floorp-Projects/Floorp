@@ -1978,14 +1978,14 @@ enum BWCOpenDest {
 
 - (IBAction)viewSource:(id)aSender
 {
-  BOOL loadInBackground = ((GetCurrentKeyModifiers() & shiftKey) != 0);
+  BOOL loadInBackground = (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0);
   NSString* urlStr = [[mBrowserView getBrowserView] getFocusedURLString];
   [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
 
 - (IBAction)viewPageSource:(id)aSender
 {
-  BOOL loadInBackground = ((GetCurrentKeyModifiers() & shiftKey) != 0);
+  BOOL loadInBackground = (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0);
   NSString* urlStr = [[mBrowserView getBrowserView] getCurrentURI];
   [self loadSourceOfURL:urlStr inBackground:loadInBackground];
 }
@@ -2498,7 +2498,7 @@ enum BWCOpenDest {
 {
   unsigned int reloadFlags = NSLoadFlagsNone;
   
-  if (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0)
+  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     reloadFlags = NSLoadFlagsBypassCacheAndProxy;
   
   [[mBrowserView getBrowserView] reload: reloadFlags];
@@ -2850,7 +2850,7 @@ enum BWCOpenDest {
 - (IBAction)reloadAllTabs:(id)sender
 {
   unsigned int reloadFlags = NSLoadFlagsNone;
-  if (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0)
+  if ([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask)
     reloadFlags = NSLoadFlagsBypassCacheAndProxy;
 
   NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];

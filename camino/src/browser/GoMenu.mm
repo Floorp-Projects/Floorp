@@ -428,7 +428,7 @@ static const unsigned int kMaxTitleLength = 50;
     BrowserWindowController* bwc = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
     if (bwc)
     {
-      if (GetCurrentKeyModifiers() & cmdKey)
+      if ([[NSApp currentEvent] modifierFlags] & NSCommandKeyMask)
       {
         BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
         if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
