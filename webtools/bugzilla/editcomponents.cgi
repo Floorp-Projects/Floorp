@@ -359,8 +359,7 @@ if ($action eq 'update') {
     my $default_assignee_id   = login_to_id($default_assignee);
     my $default_qa_contact_id = login_to_id($default_qa_contact) || undef;
 
-    $dbh->bz_lock_tables('components WRITE', 'products READ',
-                         'profiles READ');
+    $dbh->bz_lock_tables('components WRITE', 'profiles READ');
 
     if ($comp_name ne $component_old->name) {
 

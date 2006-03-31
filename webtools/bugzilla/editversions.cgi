@@ -255,9 +255,7 @@ if ($action eq 'update') {
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$version' or WHERE='$versionold'
 
-    $dbh->bz_lock_tables('bugs WRITE',
-                         'versions WRITE',
-                         'products READ');
+    $dbh->bz_lock_tables('bugs WRITE', 'versions WRITE');
 
     if ($version_name ne $version_old->name) {
         

@@ -565,8 +565,7 @@ sub doGroupChanges {
 
     $dbh->bz_lock_tables('groups WRITE', 'group_group_map WRITE',
                          'bug_group_map WRITE', 'user_group_map WRITE',
-                         'group_control_map READ', 'bugs READ', 'profiles READ',
-                         'namedqueries READ', 'whine_queries READ');
+                         'group_control_map READ', 'bugs READ', 'profiles READ');
 
     # Check that the given group ID and regular expression are valid.
     # If tests are successful, trimmed values are returned by CheckGroup*.

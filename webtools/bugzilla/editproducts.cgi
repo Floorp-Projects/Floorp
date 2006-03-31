@@ -806,12 +806,7 @@ if ($action eq 'update') {
                        {votestoconfirm => $stored_votestoconfirm});
     }
 
-    $dbh->bz_lock_tables('products WRITE',
-                         'versions READ',
-                         'groups WRITE',
-                         'group_control_map WRITE',
-                         'profiles WRITE',
-                         'milestones READ');
+    $dbh->bz_lock_tables('products WRITE', 'milestones READ');
 
     my $testproduct = 
         new Bugzilla::Product({name => $product_name});

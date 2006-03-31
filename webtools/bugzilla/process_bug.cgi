@@ -1471,11 +1471,10 @@ foreach my $id (@idlist) {
     $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
                                 # whether we do LOW_PRIORITY ...
-    $dbh->bz_lock_tables("bugs $write", "bugs_activity $write",
-            "cc $write", "cc AS selectVisible_cc $write",
+    $dbh->bz_lock_tables("bugs $write", "bugs_activity $write", "cc $write",
             "profiles READ", "dependencies $write", "votes $write",
             "products READ", "components READ",
-            "keywords $write", "longdescs $write", "fielddefs $write",
+            "keywords $write", "longdescs $write", "fielddefs READ",
             "bug_group_map $write", "flags $write", "duplicates $write",
             "user_group_map READ", "group_group_map READ", "flagtypes READ",
             "flaginclusions AS i READ", "flagexclusions AS e READ",

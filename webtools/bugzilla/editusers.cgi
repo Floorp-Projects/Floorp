@@ -199,13 +199,8 @@ if ($action eq 'search') {
     my $disabledtext = trim($cgi->param('disabledtext') || '');
 
     # Lock tables during the check+creation session.
-    $dbh->bz_lock_tables('profiles WRITE',
-                         'profiles_activity WRITE',
-                         'groups READ',
-                         'user_group_map WRITE',
-                         'email_setting WRITE',
-                         'namedqueries READ',
-                         'whine_queries READ',
+    $dbh->bz_lock_tables('profiles WRITE', 'email_setting WRITE',
+                         'user_group_map WRITE', 'groups READ',
                          'tokens READ');
 
     # Validity checks
@@ -249,13 +244,10 @@ if ($action eq 'search') {
     $dbh->bz_lock_tables('profiles WRITE',
                          'profiles_activity WRITE',
                          'fielddefs READ',
-                         'namedqueries READ',
-                         'whine_queries READ',
                          'tokens WRITE',
                          'logincookies WRITE',
                          'groups READ',
                          'user_group_map WRITE',
-                         'user_group_map AS ugm READ',
                          'group_group_map READ',
                          'group_group_map AS ggm READ');
  
@@ -528,10 +520,8 @@ if ($action eq 'search') {
                          'profiles_activity WRITE',
                          'email_setting WRITE',
                          'profile_setting WRITE',
-                         'groups READ',
                          'bug_group_map READ',
                          'user_group_map WRITE',
-                         'group_group_map READ',
                          'flags WRITE',
                          'flagtypes READ',
                          'cc WRITE',
