@@ -45,7 +45,8 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsCRT.h"
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
 #include "nsIExtensionManager.h"
 #endif
 #include "nsIFile.h"
@@ -119,7 +120,8 @@ nsPalmSyncSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
     // otherwise, take the appropriate action based on the topic
     else if (!strcmp(aTopic, "profile-after-change"))
     {
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
         // we can't call installPalmSync in app-startup because the extension manager hasn't been initialized yet. 
         // so we need to wait until the profile-after-change notification has fired. 
         rv = LaunchPalmSyncInstallExe(); 
@@ -128,7 +130,9 @@ nsPalmSyncSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUn
     } 
     else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
         rv = ShutdownPalmSyncSupport();
-#ifdef MOZ_THUNDERBIRD
+
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
     else if (aSubject && !strcmp(aTopic, "em-action-requested") && !nsCRT::strcmp(aData, NS_LITERAL_STRING("item-uninstalled").get()))
     {
         // make sure the subject is our extension.
@@ -171,7 +175,8 @@ nsPalmSyncSupport::~nsPalmSyncSupport()
 {
 }
 
-#ifdef MOZ_THUNDERBIRD
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifdef MOZ_XUL_APP
 nsresult nsPalmSyncSupport::GetPalmSyncInstall(nsILocalFile ** aLocalFile)
 {
     nsresult rv;
