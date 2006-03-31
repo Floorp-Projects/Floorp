@@ -59,8 +59,8 @@
                           ["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch2);
                 // Set the preference for the default start of the week
-                viewElem = document.getAnonymousElementByAttribute(
-                             this, "anonid", "view-element");
+                var viewElem = document.getAnonymousElementByAttribute(
+                                 this, "anonid", "view-element");
                 try {
                     viewElem.weekStartOffset = pb2.getIntPref("calendar.week.start");
                 } catch (ex) {}
@@ -268,8 +268,8 @@
                                 daysOff.push(Number(i));
                             }
                         }
-                        viewElem = document.getAnonymousElementByAttribute(
-                                            this, "anonid", "view-element");
+                        var viewElem = document.getAnonymousElementByAttribute(
+                                                this, "anonid", "view-element");
                         viewElem.daysOffArray = daysOff;
                     } catch (ex) {}
                 ]]></body>
