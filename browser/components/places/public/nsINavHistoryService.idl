@@ -604,6 +604,12 @@ interface nsINavHistoryResultTreeViewer : nsINavHistoryResultViewer
    * Returns INDEX_INVISIBLE if the item is not visible (for example, its
    * parent is collapsed). This is only valid when a tree is attached. The
    * the result will always be INDEX_INVISIBLE if not.
+   * 
+   * Note: This sounds sort of obvious, but it got me: aNode must be a node
+   *       retrieved from the same result that this viewer is for. If you 
+   *       execute another query and get a node from a _different_ result, this 
+   *       function will always return the index of that node in the tree that
+   *       is attached to that result.
    */
   const PRUint32 INDEX_INVISIBLE = 0xffffffff;
   PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);

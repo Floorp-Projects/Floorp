@@ -697,13 +697,45 @@
         <parameter name="insertionPoint"/>
         <parameter name="excludeItems"/>
         <body><![CDATA[ 
-          var folder = 
-            PlacesController.getFolderContents(insertionPoint.folderId,
-                                               excludeItems, false);
+          // The InsertionPoint defines a place within the view hierarchy where 
+          // items may be inserted. This function returns the node adjacent to 
+          // that point. In order to get the right node, we must enumerate the
+          // contents of the containing folder, but we cannot construct a new
+          // query for this, because if we do so the node will be a member of
+          // another result node (that constructed by |getFolderContents| say, 
+          // instead of the displayed tree view). So we need to walk the 
+          // children of the result to find the right folder. 
+          function findFolder(folderId, container) {
+            var wasOpen = container.containerOpen;
+            container.containerOpen = true;
+            var cc = container.childCount;
+            var foundNode = null;
+            for (var i = 0; i < cc; ++i) {
+              var node = container.getChild(i);
+              if (PlacesController.nodeIsFolder(node)) {
+                var folder = asFolder(node);
+                if (folder.folderId == folderId) {
+                  foundNode = node;
+                  break;
+                }
+                foundNode = findFolder(folderId, folder);
+                if (foundNode)
+                  break;
+              }
+            }
+            container.containerOpen = wasOpen;
+            return foundNode;
+          }
+          var folder = null;
+          var root = asContainer(this.getResult().root);
+          if (PlacesController.nodeIsFolder(root) && 
+              asFolder(root).folderId == insertionPoint.folderId)
+            folder = root;
+          else
+            folder = findFolder(insertionPoint.folderId, root);
+
           var index = insertionPoint.index;
-          if (insertionPoint.index == 0) 
-            index = 0;
-          else if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
+          if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
             index = folder.childCount - 1;
           NS_ASSERT(index < folder.childCount, 
                     "index out of range: " + index + " > " + folder);
@@ -772,7 +804,7 @@
           
           // If the dropped items are invisible, we don't need to adjust the 
           // insertion point. 
-          if (index == Ci.nsINavHistoryResult.INDEX_INVISIBLE)
+          if (index == Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE)
             return;
         
           var selection = this._self.view.selection;
@@ -797,7 +829,7 @@
          */
         _getSourceView: function VO__getSourceView() {
           var session = this._getCurrentSession();
-          var sourceView = session.sourceNode.wrappedJSObject;
+          var sourceView = session.sourceNode;
           while (sourceView && sourceView.localName != "tree")
             sourceView = sourceView.parentNode;
           return sourceView;
@@ -828,9 +860,9 @@
           
           var sourceView = this._getSourceView();
           
-          // Determine how many items will be visible in the target view after
-          // the drop operation completes. This can be zero if all items are
-          // dropped into a closed folder.
+          // Determine how many items will be visibly inserted in the target 
+          // view after the drop operation completes. This can be zero if all 
+          // items are dropped into a closed folder.
           var session = this._getCurrentSession();
           var visibleInsertCount = session.numDropItems;
           if (orientation == NHRVO.DROP_ON &&
