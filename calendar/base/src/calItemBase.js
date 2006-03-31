@@ -551,6 +551,13 @@ calItemBase.prototype = {
         var alarmComp = icalcomp.getFirstSubcomponent("VALARM");
         if (alarmComp) {
             var triggerProp = alarmComp.getFirstProperty("TRIGGER");
+            // Really, really old Sunbird/Calendar versions didn't give us a
+            // trigger.
+            if (!triggerProp) {
+                Components.utils.reportError("No trigger property for alarm on item: "+this.id);
+                // No parsing happens after alarms, so just return
+                return;
+            }
             var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                                      .createInstance(Components.interfaces.calIDuration);
             duration.icalString = triggerProp.valueAsIcalString;
