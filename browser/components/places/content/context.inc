@@ -29,7 +29,7 @@
   <menuitem id="placesContext_edit:paste" command="placesCmd_edit:paste"
             selection="mutable"/>
   <menuitem id="placesContext_edit:delete" command="placesCmd_edit:delete"
-            selection="separator|link|links|folder|mixed"/>
+            selection="host|separator|link|links|folder|mixed"/>
   <menuseparator id="placesContext_editSeparator"
             selection="link|links|folder|mixed|mutable"/>
   <menuitem id="placesContext_select:all" command="placesCmd_select:all"

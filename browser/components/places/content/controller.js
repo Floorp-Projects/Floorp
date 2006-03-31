@@ -892,7 +892,7 @@ var PlacesController = {
                      !inSysArea && this.activeView.hasSelection);
     // Paste: cannot paste adjacent to system items. only if the containing 
     //        folder is not read only. only if there is clipboard data. only
-    //        if that data is a valid place format.    
+    //        if that data is a valid place format.
     this._setEnabled("placesCmd_edit:paste", !inSysArea && canInsert && 
                      this._hasClipboardData() && this._canPaste());
   },
@@ -1007,6 +1007,8 @@ var PlacesController = {
         metadata["remotecontainer"] = true;
       if (this.nodeIsSeparator(selectedNode))
         metadata["separator"] = true;
+      if (this.nodeIsHost(selectedNode))
+        metadata["host"] = true;
     }
     
     // Mutability is whether or not a container can have selected items
@@ -1420,7 +1422,7 @@ var PlacesController = {
     var ip = this._activeView.insertionPoint;
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
-    var txn = new PlacesInsertSeparatorTransaction(ip.folderId, ip.index);
+    var txn = new PlacesCreateSeparatorTransaction(ip.folderId, ip.index);
     this.tm.doTransaction(txn);
     this._activeView.focus();
   },
@@ -1482,12 +1484,7 @@ var PlacesController = {
         // TODO -- node.parent might be a query and not a folder.  See bug 324948
         var folder = asFolder(node);
         removedFolders.push(folder);
-        // Undo for bookmark folder removals is handled by the bookmarks service,
-        // for various reasons. See: 
-        // http://groups.google.com/group/mozilla.dev.apps.firefox/msg/215e88fcdb91ff25
-        var txn = this.bookmarks.getRemoveFolderTransaction(folder.folderId);
-        var removeTxn = new PlacesRemoveFolderTransaction(txn, folder.folderId);
-        transactions.push(removeTxn);
+        transactions.push(new PlacesRemoveFolderTransaction(folder.folderId));
       }
       else if (this.nodeIsSeparator(node)) {
         // A Bookmark separator.
@@ -1699,34 +1696,38 @@ var PlacesController = {
    */
   _getFolderCopyTransaction: 
   function PC__getFolderCopyTransaction(data, container, index) {
-    var transactions = [];
     var self = this;
-    function createTransactions(folderId, container, index) {
-      var folderTitle = self.bookmarks.getFolderTitle(folderId);
-    
-      var createTxn = 
-        new PlacesCreateFolderTransaction(folderTitle, container, index);
-      transactions.push(createTxn);
-    
-      // Get the folder's children
-      var kids = self.getFolderContents(folderId, false, false);
-      var wasOpen = kids.containerOpen;
-      kids.containerOpen = true;
-      var cc = kids.childCount;
+    function getChildTransactions(folderId) {
+      var childTransactions = [];
+      var children = self.getFolderContents(folderId, false, false);
+      var cc = children.childCount;
+      var txn = null;
       for (var i = 0; i < cc; ++i) {
-        var node = kids.getChild(i);
-        if (self.nodeIsFolder(node))
-          createTransactions(node.folderId, folderId, i);
-        else if (self.nodeIsURI(node)) {
-          var uri = self._uri(node.uri);
-          transactions.push(self._getItemCopyTransaction(uri, container, 
-                                                         index));
+        var node = children.getChild(i);
+        if (self.nodeIsFolder(node)) {
+          var folderId = asFolder(node).folderId;
+          var title = self.bookmarks.getFolderTitle(folderId);
+          txn = new PlacesCreateFolderTransaction(title, -1, index);
+          txn.childTransactions = getChildTransactions(folderId);
         }
+        else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
+          txn = self._getItemCopyTransaction(self._uri(node.uri), -1, 
+                                             index);
+        }
+        else if (self.nodeIsSeparator(node)) {
+          txn = new PlacesCreateSeparatorTransaction(-1, index);
+        }
+        childTransactions.push(txn);
       }
-      kids.containerOpen = wasOpen;
+      return childTransactions;
     }
-    createTransactions(data.folderId, container, index);
-    return new PlacesAggregateTransaction("FolderCopy", transactions);
+    
+    var title = this.bookmarks.getFolderTitle(data.folderId);
+    var createTxn = 
+      new PlacesCreateFolderTransaction(title, container, index);
+    createTxn.childTransactions = 
+      getChildTransactions(data.folderId, createTxn);
+    return createTxn;
   },
   
   /**
@@ -1767,14 +1768,14 @@ var PlacesController = {
       if (copy) {
         // There is no data in a separator, so copying it just amounts to
         // inserting a new separator.
-        return new PlacesInsertSeparatorTransaction(container, index);
+        return new PlacesCreateSeparatorTransaction(container, index);
       }
       // Similarly, moving a separator is just removing the old one and
       // then creating a new one.
       var removeTxn =
         new PlacesRemoveSeparatorTransaction(data.parent, data.index);
       var createTxn =
-        new PlacesInsertSeparatorTransaction(container, index);
+        new PlacesCreateSeparatorTransaction(container, index);
       return new PlacesAggregateTransaction("SeparatorMove", [removeTxn, createTxn]);
     case TYPE_X_MOZ_URL:
       // Creating and Setting the title is a two step process, so create
@@ -1875,8 +1876,9 @@ var PlacesController = {
         var suffix = i < (nodes.length - 1) ? NEWLINE : "";
         return self.wrapNode(node, type) + suffix;
       }
-      if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) 
+      if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) {
         pcString += generateChunk(TYPE_X_MOZ_PLACE_CONTAINER);
+      }
       else if (this.nodeIsSeparator(node)) {
         psString += generateChunk(TYPE_X_MOZ_PLACE_SEPARATOR);
       }
@@ -2150,6 +2152,7 @@ PlacesBaseTransaction.prototype = {
 function PlacesAggregateTransaction(name, transactions) {
   this._transactions = transactions;
   this._name = name;
+  this.container = -1;
   this.redoTransaction = this.doTransaction;
 }
 PlacesAggregateTransaction.prototype = {
@@ -2158,8 +2161,12 @@ PlacesAggregateTransaction.prototype = {
   doTransaction: function() {
     this.LOG("== " + this._name + " (Aggregate) ==============");
     this.bookmarks.beginUpdateBatch();
-    for (var i = 0; i < this._transactions.length; ++i)
-      this._transactions[i].doTransaction();
+    for (var i = 0; i < this._transactions.length; ++i) {
+      var txn = this._transactions[i];
+      if (this.container > -1) 
+        txn.container = this.container;
+      txn.doTransaction();
+    }
     this.bookmarks.endUpdateBatch();
     this.LOG("== " + this._name + " (Aggregate Ends) =========");
   },
@@ -2167,8 +2174,12 @@ PlacesAggregateTransaction.prototype = {
   undoTransaction: function() {
     this.LOG("== UN" + this._name + " (UNAggregate) ============");
     this.bookmarks.beginUpdateBatch();
-    for (var i = this._transactions.length - 1; i >= 0; --i)
-      this._transactions[i].undoTransaction();
+    for (var i = this._transactions.length; i >= 0; --i) {
+      var txn = this._transactions[i];
+      if (this.container > -1) 
+        txn.container = this.container;
+      txn.undoTransaction();
+    }
     this.bookmarks.endUpdateBatch();
     this.LOG("== UN" + this._name + " (UNAggregate Ends) =======");
   }
@@ -2180,22 +2191,33 @@ PlacesAggregateTransaction.prototype = {
  */
 function PlacesCreateFolderTransaction(name, container, index) {
   this._name = name;
-  this._container = container;
+  this.container = container;
   this._index = index;
   this._id = null;
+  this.childTransactions = [];
   this.redoTransaction = this.doTransaction;
 }
 PlacesCreateFolderTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PCFT_doTransaction() {
-    this.LOG("Create Folder: " + this._name + " in: " + this._container + "," + this._index);
-    this._id = this.bookmarks.createFolder(this._container, this._name, this._index);
+    this.LOG("Create Folder: " + this._name + " in: " + this.container + "," + this._index);
+    this._id = this.bookmarks.createFolder(this.container, this._name, this._index);
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.container = this._id;
+      txn.doTransaction();
+    }
   },
   
   undoTransaction: function PCFT_undoTransaction() {
-    this.LOG("UNCreate Folder: " + this._name + " from: " + this._container + "," + this._index);
+    this.LOG("UNCreate Folder: " + this._name + " from: " + this.container + "," + this._index);
     this.bookmarks.removeFolder(this._id);
+    for (var i = 0; i < this.childTransactions.length; ++i) {
+      var txn = this.childTransactions[i];
+      txn.container = this._id;
+      txn.undoTransaction();
+    }
   }
 };
 
@@ -2204,7 +2226,7 @@ PlacesCreateFolderTransaction.prototype = {
  */
 function PlacesCreateItemTransaction(uri, container, index) {
   this._uri = uri;
-  this._container = container;
+  this.container = container;
   this._index = index;
   this.redoTransaction = this.doTransaction;
 }
@@ -2212,35 +2234,35 @@ PlacesCreateItemTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PCIT_doTransaction() {
-    this.LOG("Create Item: " + this._uri.spec + " in: " + this._container + "," + this._index);
-    this.bookmarks.insertItem(this._container, this._uri, this._index);
+    this.LOG("Create Item: " + this._uri.spec + " in: " + this.container + "," + this._index);
+    this.bookmarks.insertItem(this.container, this._uri, this._index);
   },
   
   undoTransaction: function PCIT_undoTransaction() {
-    this.LOG("UNCreate Item: " + this._uri.spec + " from: " + this._container + "," + this._index);
-    this.bookmarks.removeItem(this._container, this._uri);
+    this.LOG("UNCreate Item: " + this._uri.spec + " from: " + this.container + "," + this._index);
+    this.bookmarks.removeItem(this.container, this._uri);
   }
 };
 
 /**
  * Create a new Separator
  */
-function PlacesInsertSeparatorTransaction(container, index) {
-  this._container = container;
+function PlacesCreateSeparatorTransaction(container, index) {
+  this.container = container;
   this._index = index;
   this._id = null;
 }
-PlacesInsertSeparatorTransaction.prototype = {
+PlacesCreateSeparatorTransaction.prototype = {
   __proto__: PlacesBaseTransaction.prototype,
 
   doTransaction: function PIST_doTransaction() {
-    this.LOG("Create separator in: " + this._container + "," + this._index);
-    this._id = this.bookmarks.insertSeparator(this._container, this._index);
+    this.LOG("Create separator in: " + this.container + "," + this._index);
+    this._id = this.bookmarks.insertSeparator(this.container, this._index);
   },
   
   undoTransaction: function PIST_undoTransaction() {
-    this.LOG("UNCreate separator from: " + this._container + "," + this._index);
-    this.bookmarks.removeChildAt(this._container, this._index);
+    this.LOG("UNCreate separator from: " + this.container + "," + this._index);
+    this.bookmarks.removeChildAt(this.container, this._index);
   }
 };
 
@@ -2298,29 +2320,6 @@ PlacesMoveItemTransaction.prototype = {
 };
 
 /**
- * A named leaf item.
- * @param   name
- *          The name of the item
- * @param   uri
- *          The URI fo the item
- */
-function PlacesRemoveFolderSaveChildItem(name, uri) {
-  this.name = name;
-  var ios = 
-      Cc["@mozilla.org/network/io-service;1"].
-      getService(Ci.nsIIOService);  
-  this.uri = ios.newURI(uri, null, null);
-}
-/**
- * A named folder, with children.
- * @param   name
- *          The name of the folder.
- */
-function PlacesRemoveFolderSaveChildFolder(name) {
-  this.name = name;
-  this.children = [];
-} 
-/**
  * Remove a Folder
  * This is a little complicated. When we remove a container we need to remove 
  * all of its children. We can't just repurpose our existing transactions for
@@ -2329,8 +2328,8 @@ function PlacesRemoveFolderSaveChildFolder(name) {
  * likely have a different id.
  */
 
-function PlacesRemoveFolderTransaction(removeTxn, id) {
-  this._removeTxn = removeTxn;
+function PlacesRemoveFolderTransaction(id) {
+  this._removeTxn = this.bookmarks.getRemoveFolderTransaction(id);
   this._id = id;
   this._transactions = []; // A set of transactions to remove content.
   this.redoTransaction = this.doTransaction;
@@ -2355,9 +2354,7 @@ PlacesRemoveFolderTransaction.prototype = {
       var txn;
       if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
         var folder = asFolder(child);
-        var removeTxn = 
-          this.bookmarks.getRemoveFolderTransaction(folder.folderId);
-        txn = new PlacesRemoveFolderTransaction(removeTxn, folder.folderId);
+        txn = new PlacesRemoveFolderTransaction(folder.folderId);
       }
       else if (child.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
         txn = new PlacesRemoveSeparatorTransaction(this._id, i);
