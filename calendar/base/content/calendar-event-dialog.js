@@ -139,6 +139,7 @@ function loadDialog(item)
         if (startDate.isDate) {
             setElementValue("event-all-day", true, "checked");
             endDate.day -= 1;
+            gItemDuration.days -= 1;
 
             // The date/timepicker uses jsDate internally. Because jsDate does
             // not know the concept of dates we end up displaying times unequal
