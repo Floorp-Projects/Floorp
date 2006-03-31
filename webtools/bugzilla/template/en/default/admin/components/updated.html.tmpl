@@ -55,13 +55,13 @@
 [% END %]
 
 [% IF updated_initialowner %]
-  <p>Updated Default Assignee to: '[% comp.initialowner FILTER html %]'.</p>
+  <p>Updated Default Assignee to: '[% comp.default_assignee.login FILTER html %]'.</p>
 [% END %]
 
 [% IF updated_initialqacontact %]
   <p>
-  [% IF initialqacontact %]
-    Updated Default QA Contact to '[% comp.initialqacontact FILTER html %]'.
+  [% IF comp.default_qa_contact.id %]
+    Updated Default QA Contact to '[% comp.default_qa_contact.login FILTER html %]'.
   [% ELSE %]
     Removed Default QA Contact.
   [% END %]
