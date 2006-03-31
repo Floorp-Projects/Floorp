@@ -14,7 +14,7 @@
  *
  * The Original Code is Novell code.
  *
- * The Initial Developer of the Novell Code is Novell Corporation.
+ * The Initial Developer of the Original Code is Novell Corporation.
  * Portions created by Novell are Copyright (C) 2005 Novell. All Rights Reserved.
  *
  * Contributor(s):
