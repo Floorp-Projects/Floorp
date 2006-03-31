@@ -557,7 +557,7 @@ nsJPEGDecoder::OutputScanlines()
         PRUint8 b = *j1++;
         *ptrOutputBuf++ = (0xFF << 24) | (r << 16) | (g << 8) | b;
       }
-      r.y = mInfo.output_scanline;
+      r.y = mInfo.output_scanline - 1;
       img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
 #else
 
