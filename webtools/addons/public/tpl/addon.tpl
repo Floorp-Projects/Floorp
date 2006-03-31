@@ -47,12 +47,13 @@ Works with:
 
                 document.writeln("<div>");
 
-                if (installs[platform]) 
-                    document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
-                else if ("{$key|escape}" == "ALL")
-                    document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
-                else 
+                if (installs[platform]) {ldelim}
+                        document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                {rdelim} else if ("{$key|escape}" == "ALL") {ldelim}
+                        document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                {rdelim} else  {ldelim}
                     document.writeln("<strong>{$addon->Name|escape}</strong> is not available for " + platform + ".");
+                {rdelim}
                 
                 document.writeln("</div>");
 

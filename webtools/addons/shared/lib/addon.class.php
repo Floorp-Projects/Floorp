@@ -327,10 +327,12 @@ class AddOn extends AMO_Object {
             `version`.`Version`='{$this->Version}'
           AND 
             `version`.`ID`={$this->ID}
+          AND 
+            `version`.`approved`='yes'
           AND
             `applications`.`supported` = 1
           ORDER BY
-            `applications`.`AppName`
+            `applications`.`AppName` 
         ", SQL_ALL, SQL_ASSOC);
 
         foreach ($this->db->record as $var => $val) {
@@ -359,6 +361,7 @@ class AddOn extends AMO_Object {
         $_final = array();
         $this->db->query("
           SELECT 
+            `applications`.`appname`,
             `version`.`URI`,
             `version`.`Size`,
             `os`.`OSName`
@@ -378,15 +381,19 @@ class AddOn extends AMO_Object {
             `version`.`ID`={$this->ID}
           AND
             `applications`.`supported` = 1
+          AND 
+            `version`.`approved`='yes'
           GROUP BY 
             `os`.`OSID`
         ", SQL_ALL, SQL_ASSOC);
 
         foreach ($this->db->record as $var => $val) {
-            $_final[] = array (
+            $_final[$val['OSName']] = array (
+                'AppName'   => $val['appname'],
                 'URI'       => $val['URI'],
                 'Size'      => $val['Size'],
-                'OSName'    => $val['OSName']
+                'OSName'    => $val['OSName'],
+                'Version'   => $this->Version
             );
         }
 
