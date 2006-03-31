@@ -438,11 +438,17 @@ var BookmarkPropertiesPanel = {
     if (folders.length == 0)
       return;
 
-    this._bms.beginUpdateBatch();
+    var transactions = [];
     for (var i = 0; i < folders.length; i++) {
-      this._bms.removeItem(folders[i], bookmarkURI);
+      var index = this._bms.indexOfItem(folders[i], bookmarkURI);
+      var transaction = new PlacesRemoveItemTransaction(bookmarkURI,
+                                                        folders[i], index)
+      transactions.push(transaction);
     }
-    this._bms.endUpdateBatch();
+
+    var aggregate =
+      new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
+    this._controller.tm.doTransaction(aggregate);
   },
 
   /**
@@ -450,6 +456,7 @@ var BookmarkPropertiesPanel = {
    * was open.
    */
   _saveChanges: function PBD_saveChanges() {
+    var transactions = [];
     var urlbox = this._dialogWindow.document.getElementById("editURLBar");
     var newURI = this._bookmarkURI;
     if (this._identifierIsURI() && this._isURIEditable())
@@ -463,7 +470,8 @@ var BookmarkPropertiesPanel = {
         if (node.type == node.RESULT_TYPE_FOLDER) {
           var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
           if (!folder.childrenReadOnly) {
-            this._bms.insertItem(folder.folderId, newURI, -1);
+            transactions.push(
+              new PlacesCreateItemTransaction(newURI, folder.folderId, -1));
           }
         }
       }
@@ -472,20 +480,31 @@ var BookmarkPropertiesPanel = {
 
     var titlebox = this._dialogWindow.document.getElementById("editTitleBox");
     if (this._identifierIsURI())
-      this._bms.setItemTitle(this._bookmarkURI, titlebox.value);
+      transactions.push(
+        new PlacesEditItemTitleTransaction(newURI, titlebox.value));
     else
-      this._bms.setFolderTitle(this._folderId, titlebox.value);
+      transactions.push(
+        new PlacesEditFolderTitleTransaction(this._folderId, titlebox.value));
 
     if (this._isShortcutVisible()) {
       var shortcutbox =
         this._dialogWindow.document.getElementById("editShortcutBox");
-      this._bms.setKeywordForURI(this._bookmarkURI, shortcutbox.value);
+      transactions.push(
+        new PlacesEditBookmarkKeywordTransaction(this._bookmarkURI,
+                                                 shortcutbox.value));
     }
 
     if (this._isVariant(this.EDIT_BOOKMARK_VARIANT) &&
         (newURI.spec != this._bookmarkURI.spec)) {
-      this._controller.changeBookmarkURI(this._bookmarkURI,
-                                         this._uri(urlbox.value));
+          this._controller.changeBookmarkURI(this._bookmarkURI, newURI);
+    }
+
+    // If we have any changes to perform, do them via the
+    // transaction manager in the PlacesController so they can be undone.
+    if (transactions.length > 0) {
+      var aggregate =
+        new PlacesAggregateTransaction(this._getDialogTitle(), transactions);
+      this._controller.tm.doTransaction(aggregate);
     }
   },
 
@@ -495,4 +514,4 @@ var BookmarkPropertiesPanel = {
   _hideBookmarkProperties: function BPP__hideBookmarkProperties() {
     this._dialogWindow.close();
   }
-}
+};
