@@ -62,6 +62,7 @@
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-event-dialog.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-dialog-utils.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+  <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
 
   <!-- Used for the button to show/hide details -->
   <script type="application/x-javascript">
@@ -281,7 +282,11 @@
 
         <row align="center" details="true">
           <label value="&newevent.uri.label;"/>
-          <textbox id="item-url"/>
+          <hbox flex="1">
+            <textbox id="item-url" flex="1" oninput="updateURL(this.value)"/>
+            <button id="load-url-button" oncommand="loadURL()"
+                    label="&newevent.uri.visit.label;"/>
+          </hbox>
         </row>
 
         <row class="todo-only" details="true">

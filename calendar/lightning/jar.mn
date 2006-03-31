@@ -23,6 +23,7 @@ en-US.jar:
   locale/en-US/lightning/lightning.properties		(locale/lightning.properties)
 
 calendar.jar:
+*  content/calendar/applicationUtil.js		(/calendar/resources/content/applicationUtil.js) 
   content/calendar/calendarProperties.xul		(/calendar/resources/content/calendarProperties.xul) 
   content/calendar/calendarProperties.js		(/calendar/resources/content/calendarProperties.js) 
   content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
