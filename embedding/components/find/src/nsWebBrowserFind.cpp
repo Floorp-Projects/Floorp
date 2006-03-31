@@ -170,7 +170,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
         enumDirection = nsIDocShell::ENUMERATE_FORWARDS;
         
     nsCOMPtr<nsISimpleEnumerator> docShellEnumerator;
-    rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
+    rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
             enumDirection, getter_AddRefs(docShellEnumerator));    
     if (NS_FAILED(rv)) return rv;
         
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     // because nsISimpleEnumerator is totally lame and isn't resettable, I
     // have to make a new one
     docShellEnumerator = nsnull;
-    rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeContent,
+    rv = rootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
             enumDirection, getter_AddRefs(docShellEnumerator));    
     if (NS_FAILED(rv)) return rv;
     
