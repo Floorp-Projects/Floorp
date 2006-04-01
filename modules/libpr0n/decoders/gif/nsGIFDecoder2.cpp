@@ -492,6 +492,9 @@ int nsGIFDecoder2::HaveDecodedRow(
 
     if (!cmap) { // cmap could have null value if the global color table flag is 0
       for (int i = 0; i < aDuplicateCount; ++i) {
+#ifdef MOZ_CAIRO_GFX
+        imgContainerGIF::BlackenFrame(decoder->mImageFrame, 0, aRowNumber+i, width, 1);
+#else
         if (format == gfxIFormats::RGB_A1 ||
             format == gfxIFormats::BGR_A1) {
           decoder->mImageFrame->SetAlphaData(nsnull,
@@ -499,6 +502,7 @@ int nsGIFDecoder2::HaveDecodedRow(
         }
         decoder->mImageFrame->SetImageData(nsnull,
                                            bpr, (aRowNumber+i)*bpr);
+#endif
       }
     } else {
       PRUint8* rowBufIndex = aRowBufPtr;
@@ -602,7 +606,7 @@ int nsGIFDecoder2::HaveDecodedRow(
           break;
         }
       }
-#endif
+#endif // else !MOZ_CAIRO_GFX
     }
 
     decoder->mCurrentRow = aRowNumber + aDuplicateCount - 1;
