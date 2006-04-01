@@ -986,16 +986,13 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
   if (!aFrame)
     return;
 #ifdef MOZ_CAIRO_GFX
-  nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
-  if (!img)
-    return;
+  PRInt32 widthFrame;
+  PRInt32 heightFrame;
+  aFrame->GetWidth(&widthFrame);
+  aFrame->GetHeight(&heightFrame);
 
-  nsRefPtr<gfxASurface> surf;
-  img->GetSurface(getter_AddRefs(surf));
-  nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-  ctx->SetColor(gfxRGBA(0, 0, 0));
-  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  ctx->Paint();
+  BlackenFrame(aFrame, 0, 0, widthFrame, heightFrame);
+
 #else
   PRUint32 aDataLength;
 
@@ -1012,6 +1009,24 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   if (!aFrame)
     return;
 
+#ifdef MOZ_CAIRO_GFX
+  nsCOMPtr<nsIImage> img(do_GetInterface(aFrame));
+  if (!img)
+    return;
+
+  nsRefPtr<gfxASurface> surf;
+  img->GetSurface(getter_AddRefs(surf));
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+  ctx->SetColor(gfxRGBA(0, 0, 0));
+  ctx->Rectangle(gfxRect(aX, aY, aWidth, aHeight));
+  ctx->Fill();
+
+  nsIntRect r(aX, aY, aWidth, aHeight);
+  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+
+#else // MOZ_CAIRO_GFX
+
   PRInt32 widthFrame;
   PRInt32 heightFrame;
   aFrame->GetWidth(&widthFrame);
@@ -1027,7 +1042,7 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   PRUint32 bpr; // Bytes Per Row
   aFrame->GetImageBytesPerRow(&bpr);
 
-#if defined(MOZ_CAIRO_GFX) && (defined(XP_MAC) || defined(XP_MACOSX))
+#if defined(XP_MAC) || defined(XP_MACOSX)
   const PRUint8 bpp = 4;
 #else
   const PRUint8 bpp = 3;
@@ -1038,6 +1053,7 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   for (PRInt32 y = 0; y < height; y++) {
     aFrame->SetImageData(nsnull, bprToWrite, ((y + aY) * bpr) + xOffset);
   }
+#endif // MOZ_CAIRO_GFX
 }
 
 

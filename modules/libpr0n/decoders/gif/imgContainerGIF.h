@@ -136,6 +136,8 @@ public:
   virtual ~imgContainerGIF();
 
 private:
+  friend class nsGIFDecoder2;
+
   /** "Disposal" method indicates how the image should be handled before the
    *   subsequent image is displayed.
    */
@@ -208,12 +210,12 @@ private:
    *
    * @note Does not set the mask
    */
-  void BlackenFrame(gfxIImageFrame* aFrame);
+  static void BlackenFrame(gfxIImageFrame* aFrame);
   //! @overload
-  void BlackenFrame(gfxIImageFrame* aFrame,
+  static void BlackenFrame(gfxIImageFrame* aFrame,
                     PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   //! @overload
-  inline void BlackenFrame(gfxIImageFrame* aFrame, nsIntRect &aRect) {
+  static inline void BlackenFrame(gfxIImageFrame* aFrame, nsIntRect &aRect) {
     BlackenFrame(aFrame, aRect.x, aRect.y, aRect.width, aRect.height);
   }
 
