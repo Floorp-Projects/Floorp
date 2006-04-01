@@ -896,15 +896,8 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
     const nsDependentString target(aTarget);
     const nsDependentString data(aData);
 
-    nsReadingIterator<PRUnichar> targetStart, targetEnd, tmp;
-
-    target.BeginReading(targetStart);
-    target.EndReading(targetEnd);
-
-    tmp = targetStart;
-
     nsresult rv;
-    if (FindInReadable(NS_LITERAL_STRING("xul-overlay"), targetStart, targetEnd)) {
+    if (target.EqualsLiteral("xul-overlay")) {
       // Load a XUL overlay.
       nsAutoString href;
       nsParserUtils::GetQuotedAttributeValue(data, nsGkAtoms::href, href);
@@ -928,9 +921,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
       return mPrototype->AddOverlayReference(url);
     }
 
-    targetStart = tmp;
-    if (!FindInReadable(NS_LITERAL_STRING("xml-stylesheet"), targetStart,
-                        targetEnd)) {
+    if (!target.EqualsLiteral("xml-stylesheet")) {
         return NS_OK;
     }
 
