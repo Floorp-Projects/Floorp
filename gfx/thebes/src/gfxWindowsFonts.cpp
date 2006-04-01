@@ -603,6 +603,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
         if (dxBuf != stackBuf)
             free(dxBuf);
+        free(cglyphs);
     }
 
     free(glyphs);
