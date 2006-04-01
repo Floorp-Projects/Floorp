@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMetricsService.h"
+#include "nsMetricsEventItem.h"
 #include "nsXPCOM.h"
 #include "nsServiceManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
@@ -113,11 +114,121 @@ NS_IMPL_ISUPPORTS6_CI(nsMetricsService, nsIMetricsService, nsIAboutModule,
                       nsITimerCallback)
 
 NS_IMETHODIMP
-nsMetricsService::LogEvent(const nsAString &eventNS,
-                           const nsAString &eventName,
-                           nsIPropertyBag *eventProperties)
+nsMetricsService::CreateEventItem(const nsAString &itemNamespace,
+                                  const nsAString &itemName,
+                                  nsIMetricsEventItem **result)
 {
-  NS_ENSURE_ARG_POINTER(eventProperties);
+  *result = nsnull;
+
+  nsMetricsEventItem *item = new nsMetricsEventItem(itemNamespace, itemName);
+  NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*result = item);
+  return NS_OK;
+}
+
+nsresult
+nsMetricsService::BuildEventItem(nsIMetricsEventItem *item,
+                                 nsIDOMElement **itemElement)
+{
+  *itemElement = nsnull;
+
+  nsAutoString itemNS, itemName;
+  item->GetItemNamespace(itemNS);
+  item->GetItemName(itemName);
+
+  nsCOMPtr<nsIDOMElement> element;
+  nsresult rv = mDocument->CreateElementNS(itemNS, itemName,
+                                           getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Attach the given properties as attributes.
+  nsCOMPtr<nsIPropertyBag> properties;
+  item->GetProperties(getter_AddRefs(properties));
+  if (properties) {
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = properties->GetEnumerator(getter_AddRefs(enumerator));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> propertySupports;
+    while (NS_SUCCEEDED(
+               enumerator->GetNext(getter_AddRefs(propertySupports)))) {
+      nsCOMPtr<nsIProperty> property = do_QueryInterface(propertySupports);
+      if (!property) {
+        NS_WARNING("PropertyBag enumerator has non-nsIProperty elements");
+        continue;
+      }
+
+      nsAutoString name;
+      rv = property->GetName(name);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get property name");
+        continue;
+      }
+
+      nsCOMPtr<nsIVariant> value;
+      rv = property->GetValue(getter_AddRefs(value));
+      if (NS_FAILED(rv) || !value) {
+        NS_WARNING("Failed to get property value");
+        continue;
+      }
+
+      // If the type is boolean, we want to use the strings "true" and "false",
+      // rather than "1" and "0" which is what nsVariant generates on its own.
+      PRUint16 dataType;
+      value->GetDataType(&dataType);
+
+      nsAutoString valueString;
+      if (dataType == nsIDataType::VTYPE_BOOL) {
+        PRBool valueBool;
+        rv = value->GetAsBool(&valueBool);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Variant has bool type but couldn't get bool value");
+          continue;
+        }
+        valueString = valueBool ? NS_LITERAL_STRING("true")
+                      : NS_LITERAL_STRING("false");
+      } else {
+        rv = value->GetAsDOMString(valueString);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Failed to convert property value to string");
+          continue;
+        }
+      }
+
+      rv = element->SetAttribute(name, valueString);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to set attribute value");
+      }
+      continue;
+    }
+  }
+
+  // Now recursively build the child event items
+  PRInt32 childCount = 0;
+  item->GetChildCount(&childCount);
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIMetricsEventItem> childItem;
+    item->ChildAt(i, getter_AddRefs(childItem));
+    NS_ASSERTION(childItem, "The child list cannot contain null items");
+
+    nsCOMPtr<nsIDOMElement> childElement;
+    rv = BuildEventItem(childItem, getter_AddRefs(childElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNode> nodeReturn;
+    rv = element->AppendChild(childElement, getter_AddRefs(nodeReturn));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  element.swap(*itemElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMetricsService::LogEvent(nsIMetricsEventItem *item)
+{
+  NS_ENSURE_ARG_POINTER(item);
 
   if (mSuspendCount != 0)  // Ignore events while suspended
     return NS_OK;
@@ -127,71 +238,17 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
     return NS_OK;
 
   // Restrict the types of events logged
+  nsAutoString eventNS, eventName;
+  item->GetItemNamespace(eventNS);
+  item->GetItemName(eventName);
+
   if (!mConfig.IsEventEnabled(eventNS, eventName))
     return NS_OK;
 
   // Create a DOM element for the event and append it to our document.
   nsCOMPtr<nsIDOMElement> eventElement;
-  nsresult rv = mDocument->CreateElementNS(eventNS, eventName,
-                                           getter_AddRefs(eventElement));
+  nsresult rv = BuildEventItem(item, getter_AddRefs(eventElement));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Attach the given properties as attributes.
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = eventProperties->GetEnumerator(getter_AddRefs(enumerator));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> propertySupports;
-  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(propertySupports)))) {
-    nsCOMPtr<nsIProperty> property = do_QueryInterface(propertySupports);
-    if (!property) {
-      NS_WARNING("PropertyBag enumerator has non-nsIProperty elements");
-      continue;
-    }
-
-    nsAutoString name;
-    rv = property->GetName(name);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get property name");
-      continue;
-    }
-
-    nsCOMPtr<nsIVariant> value;
-    rv = property->GetValue(getter_AddRefs(value));
-    if (NS_FAILED(rv) || !value) {
-      NS_WARNING("Failed to get property value");
-      continue;
-    }
-
-    // If the type is boolean, we want to use the strings "true" and "false",
-    // rather than "1" and "0" which is what nsVariant generates on its own.
-    PRUint16 dataType;
-    value->GetDataType(&dataType);
-
-    nsAutoString valueString;
-    if (dataType == nsIDataType::VTYPE_BOOL) {
-      PRBool valueBool;
-      rv = value->GetAsBool(&valueBool);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Variant has bool type but couldn't get bool value");
-        continue;
-      }
-      valueString = valueBool ? NS_LITERAL_STRING("true")
-        : NS_LITERAL_STRING("false");
-    } else {
-      rv = value->GetAsDOMString(valueString);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to convert property value to string");
-        continue;
-      }
-    }
-
-    rv = eventElement->SetAttribute(name, valueString);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to set attribute value");
-    }
-    continue;
-  }
 
   // Add the event timestamp
   nsAutoString timeString;
@@ -211,6 +268,21 @@ nsMetricsService::LogEvent(const nsAString &eventNS,
   if ((++mEventCount % NS_EVENTLOG_FLUSH_POINT) == 0)
     Flush();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMetricsService::LogSimpleEvent(const nsAString &eventNS,
+                                 const nsAString &eventName,
+                                 nsIPropertyBag *eventProperties)
+{
+  NS_ENSURE_ARG_POINTER(eventProperties);
+
+  nsCOMPtr<nsIMetricsEventItem> item;
+  nsresult rv = CreateEventItem(eventNS, eventName, getter_AddRefs(item));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  item->SetProperties(eventProperties);
+  return LogEvent(item);
 }
 
 NS_IMETHODIMP
