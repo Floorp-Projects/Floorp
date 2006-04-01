@@ -912,7 +912,7 @@ function loadDetails() {
 
     updateTaskAlarmWarnings();
 
-    updateURL();
+    updateURL(item.getProperty("URL"));
     return;
 }
 
