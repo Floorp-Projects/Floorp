@@ -198,6 +198,12 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "prenv.h"
 #include <stdio.h>
 
+//switch to page layout
+#include "nsIDeviceContextSpecFactory.h"
+#include "nsIDeviceContextSpec.h"
+#include "nsGfxCIID.h"
+static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+
 #ifdef NS_DEBUG
 
 #undef NOISY_VIEWER
@@ -363,7 +369,8 @@ private:
                         nsIDeviceContext* aDeviceContext,
                         const nsRect& aBounds,
                         PRBool aDoCreation,
-                        PRBool aInPrintPreview);
+                        PRBool aInPrintPreview,
+                        PRBool aNeedMakeCX = PR_TRUE);
   nsresult InitPresentationStuff(PRBool aDoInitialReflow);
 
   nsresult GetPopupNode(nsIDOMNode** aNode);
@@ -451,6 +458,7 @@ protected:
   nsCString mForceCharacterSet;
   nsCString mPrevDocCharacterSet;
   
+  PRPackedBool mIsPageMode;
 
 };
 
@@ -508,7 +516,8 @@ void DocumentViewerImpl::PrepareToStartLoad()
 DocumentViewerImpl::DocumentViewerImpl(nsPresContext* aPresContext)
   : mPresContext(aPresContext),
     mIsSticky(PR_TRUE),
-    mHintCharsetSource(kCharsetUninitialized)
+    mHintCharsetSource(kCharsetUninitialized),
+    mIsPageMode(PR_FALSE)
 {
   PrepareToStartLoad();
 }
@@ -782,7 +791,8 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  nsIDeviceContext* aDeviceContext,
                                  const nsRect& aBounds,
                                  PRBool aDoCreation,
-                                 PRBool aInPrintPreview)
+                                 PRBool aInPrintPreview,
+                                 PRBool aNeedMakeCX /*= PR_TRUE*/)
 {
   mParentWidget = aParentWidget; // not ref counted
 
@@ -803,9 +813,14 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   if (aDoCreation) {
     if (aParentWidget && !mPresContext) {
       // Create presentation context
-      mPresContext = new nsPresContext(GetIsCreatingPrintPreview() ?
-                                        nsPresContext::eContext_PrintPreview :
-                                        nsPresContext::eContext_Galley);
+      if (GetIsCreatingPrintPreview())
+        mPresContext = new nsPresContext(nsPresContext::eContext_PrintPreview);
+      else
+        if (mIsPageMode) {
+          //Presentation context already created in SetPageMode which is calling this method
+        }
+        else
+          mPresContext = new nsPresContext(nsPresContext::eContext_Galley);
       NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
       nsresult rv = mPresContext->Init(aDeviceContext); 
@@ -815,7 +830,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       }
 
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-      makeCX = !GetIsPrintPreview(); // needs to be true except when we are already in PP
+      makeCX = !GetIsPrintPreview() && aNeedMakeCX; // needs to be true except when we are already in PP or we are enabling/disabling paginated mode.
 #else
       makeCX = PR_TRUE;
 #endif
@@ -832,6 +847,22 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       rv = MakeWindow(aParentWidget, aBounds);
       NS_ENSURE_SUCCESS(rv, rv);
       Hide();
+
+      if (mIsPageMode) {
+        nsCOMPtr<nsIDeviceContext> devctx;
+        nsCOMPtr<nsIDeviceContextSpec> devspec;
+        nsCOMPtr<nsIDeviceContextSpecFactory> factory = do_CreateInstance(kDeviceContextSpecFactoryCID);
+        // mWindow has been initialized by preceding call to MakeWindow
+        factory->CreateDeviceContextSpec(mWindow, mPresContext->GetPrintSettings(), *getter_AddRefs(devspec), PR_FALSE);
+        mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(devctx));
+        mDeviceContext->SetAltDevice(devctx);
+        mDeviceContext->SetUseAltDC(kUseAltDCFor_SURFACE_DIM, PR_TRUE);
+        //Get paper dims:
+        PRInt32 pageWidth, pageHeight;
+        devctx->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
+        mPresContext->SetPageSize(nsSize(pageWidth, pageHeight));
+        mPresContext->SetIsRootPaginatedDocument(PR_TRUE);
+      }
     }
   }
 
@@ -4226,4 +4257,46 @@ DocumentViewerImpl::OnDonePrinting()
     }
   }
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
+}
+
+NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings* aPrintSettings)
+{
+  mIsPageMode = aPageMode;
+  // Get the current size of what is being viewed
+  nsRect bounds;
+  mWindow->GetBounds(bounds);
+
+  if (mPresShell) {
+    // Break circular reference (or something)
+    mPresShell->EndObservingDocument();
+    nsCOMPtr<nsISelection> selection;
+    nsresult rv = GetDocumentSelection(getter_AddRefs(selection));
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+    if (NS_SUCCEEDED(rv) && selPrivate && mSelectionListener)
+      selPrivate->RemoveSelectionListener(mSelectionListener);
+    mPresShell->Destroy();
+  }
+
+  if (mPresContext) {
+    mPresContext->SetContainer(nsnull);
+    mPresContext->SetLinkHandler(nsnull);
+  }
+
+  mPresShell    = nsnull;
+  mPresContext  = nsnull;
+  mViewManager  = nsnull;
+  mWindow       = nsnull;
+
+  if (aPageMode)
+  {    
+    mPresContext = new nsPresContext(nsPresContext::eContext_PageLayout);
+    mPresContext->SetPaginatedScrolling(PR_TRUE);
+    mPresContext->SetPrintSettings(aPrintSettings);
+    nsresult rv = mPresContext->Init(mDeviceContext);
+  }
+  InitInternal(mParentWidget, nsnull, mDeviceContext, bounds, PR_TRUE, PR_FALSE, PR_FALSE);
+  mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+
+  Show();
+  return NS_OK;
 }

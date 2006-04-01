@@ -55,7 +55,6 @@
 #include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsStyleContext.h"
-#include "nsLayoutAtoms.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
@@ -156,8 +155,7 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
   // bother initializing members to 0.
 
 nsPresContext::nsPresContext(nsPresContextType aType)
-  : mType(aType),
-    mTextZoom(1.0),
+  : mType(aType), mTextZoom(1.0),
     mPageSize(-1, -1), mIsRootPaginatedDocument(PR_FALSE),
     mCanPaginatedScroll(PR_TRUE),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
@@ -205,14 +203,19 @@ nsPresContext::nsPresContext(nsPresContextType aType)
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   if (aType == eContext_Galley) {
     mMedium = nsLayoutAtoms::screen;
-    mImageAnimationMode = imgIContainer::kNormalAnimMode;
   } else {
     SetBackgroundImageDraw(PR_FALSE);
     SetBackgroundColorDraw(PR_FALSE);
-    mImageAnimationMode = imgIContainer::kDontAnimMode;
-    mNeverAnimate = PR_TRUE;
     mMedium = nsLayoutAtoms::print;
     mPaginated = PR_TRUE;
+  }
+
+  if (!IsDynamic()) {
+    mImageAnimationMode = imgIContainer::kDontAnimMode;
+    mNeverAnimate = PR_TRUE;
+  } else {
+    mImageAnimationMode = imgIContainer::kNormalAnimMode;
+    mNeverAnimate = PR_FALSE;
   }
 }
 
@@ -765,7 +768,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (doc) {
       nsIURI *docURI = doc->GetDocumentURI();
 
-      if (mMedium != nsLayoutAtoms::print && docURI) {
+      if (IsDynamic() && docURI) {
         PRBool isChrome = PR_FALSE;
         PRBool isRes = PR_FALSE;
         docURI->SchemeIs("chrome", &isChrome);
@@ -910,7 +913,7 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
                aMode == imgIContainer::kLoopOnceAnimMode, "Wrong Animation Mode is being set!");
 
   // Image animation mode cannot be changed when rendering to a printer.
-  if (mMedium == nsLayoutAtoms::print)
+  if (!IsDynamic())
     return;
 
   // This hash table contains a list of background images
@@ -1258,7 +1261,7 @@ nsPresContext::SysColorChanged()
 void
 nsPresContext::SetPaginatedScrolling(PRBool aPaginated)
 {
-  if (mType == eContext_PrintPreview)
+  if (mType == eContext_PrintPreview || mType == eContext_PageLayout)
     mCanPaginatedScroll = aPaginated;
 }
 

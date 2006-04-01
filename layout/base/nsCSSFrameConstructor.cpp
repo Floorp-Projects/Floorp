@@ -4779,6 +4779,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   PRBool isPaginated = presContext->IsPaginated();
   PRBool isPrintPreview =
     presContext->Type() == nsPresContext::eContext_PrintPreview;
+  PRBool isPageLayout =
+    presContext->Type() == nsPresContext::eContext_PageLayout;
 
   nsIFrame* rootFrame = nsnull;
   nsIAtom* rootPseudo;
@@ -4841,7 +4843,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
   }
 
   if (isPaginated) {
-    if (isPrintPreview) {
+    if (isPrintPreview || isPageLayout) {
       isScrollable = presContext->HasPaginatedScrolling();
     } else {
       isScrollable = PR_FALSE; // we are printing

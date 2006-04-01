@@ -59,6 +59,7 @@
 #include "nsCRT.h"
 #include "nsIPrintSettings.h"
 #include "nsPropertyTable.h"
+#include "nsLayoutAtoms.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -136,7 +137,8 @@ public:
   enum nsPresContextType {
     eContext_Galley,       // unpaginated screen presentation
     eContext_PrintPreview, // paginated screen presentation
-    eContext_Print         // paginated printer presentation
+    eContext_Print,        // paginated printer presentation
+    eContext_PageLayout    // paginated & editable.
   };
 
   nsPresContext(nsPresContextType aType) NS_HIDDEN;
@@ -630,6 +632,11 @@ public:
    * to actual nscoord values.
    */
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
+
+  PRBool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); };
+  PRBool IsScreen() { return (mMedium == nsLayoutAtoms::screen ||
+                              mType == eContext_PageLayout ||
+                              mType == eContext_PrintPreview); };
 
 protected:
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);

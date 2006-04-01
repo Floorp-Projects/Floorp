@@ -213,12 +213,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
 
-  // absolutely ignore all other types of reflows
-  // we only want to have done the Initial Reflow
-  if (eReflowReason_Resize == aReflowState.reason ||
-      eReflowReason_Incremental == aReflowState.reason ||
-      eReflowReason_StyleChange == aReflowState.reason ||
-      eReflowReason_Dirty == aReflowState.reason) {
+  if (eReflowReason_Resize == aReflowState.reason) {
     // Return our desired size
     aDesiredSize.height  = mSize.height;
     aDesiredSize.width   = mSize.width;
@@ -277,7 +272,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nsMargin deadSpaceMargin(0,0,0,0);
   nsMargin extraMargin(0,0,0,0);
   nsSize   shadowSize(0,0);
-  if (isPrintPreview && !suppressMargins) {
+  if (aPresContext->IsScreen() && !suppressMargins) {
     deadSpaceMargin.SizeTo(deadSpaceGap, deadSpaceGap, deadSpaceGap, deadSpaceGap);
     extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
     nscoord fourPixels = aPresContext->IntScaledPixelsToTwips(4);
@@ -294,7 +289,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nsSize reflowPageSize(0,0);
 
   // See if it's an incremental reflow command
-  if (eReflowReason_Incremental == aReflowState.reason) {
+  if (!aPresContext->IsDynamic() &&
+      eReflowReason_Incremental == aReflowState.reason) {
     // XXX Skip Incremental reflow, 
     // in fact, all we want is the initial reflow
     y = mRect.height;
@@ -412,6 +408,11 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.width   = reflowPageSize.width+deadSpaceMargin.right+shadowSize.width+extraMargin.right+extraMargin.left;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
+
+  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
+                                      aDesiredSize.height);
+
+  FinishAndStoreOverflow(&aDesiredSize);
 
   // cache the size so we can set the desired size 
   // for the other reflows that happen
