@@ -12,15 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * The MITRE Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Peter Van der Beken.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Keith Visco <kvisco@ziplink.net> (Original Author)
+ *   Peter Van der Beken <peterv@propagandism.org>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,54 +37,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * StringResult
- * Represents a String as a Result of evaluating an Expr
-**/
-#include "txExprResult.h"
+#include "txExpr.h"
 
-/**
- * Default Constructor
-**/
-StringResult::StringResult(txResultRecycler* aRecycler)
-    : txAExprResult(aRecycler)
+nsresult
+Expr::evaluateToBool(txIEvalContext* aContext, PRBool& aResult)
 {
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aResult = exprRes->booleanValue();
+
+    return NS_OK;
 }
 
-/**
- * Creates a new StringResult with the value of the given String parameter
- * @param str the String to use for initialization of this StringResult's value
-**/
-StringResult::StringResult(const nsAString& aValue, txResultRecycler* aRecycler)
-    : txAExprResult(aRecycler), mValue(aValue)
+nsresult
+Expr::evaluateToString(txIEvalContext* aContext, nsString& aResult)
 {
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    exprRes->stringValue(aResult);
+
+    return NS_OK;
 }
-
-/*
- * Virtual Methods from ExprResult
-*/
-
-short StringResult::getResultType() {
-    return txAExprResult::STRING;
-} //-- getResultType
-
-void
-StringResult::stringValue(nsString& aResult)
-{
-    aResult.Append(mValue);
-}
-
-const nsString*
-StringResult::stringValuePointer()
-{
-    return &mValue;
-}
-
-MBool StringResult::booleanValue() {
-   return !mValue.IsEmpty();
-} //-- booleanValue
-
-double StringResult::numberValue() {
-    return Double::toDouble(mValue);
-} //-- numberValue
-

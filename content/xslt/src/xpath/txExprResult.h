@@ -68,8 +68,9 @@ public:
         RESULT_TREE_FRAGMENT
     };
 
-    txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler) {}
-    virtual ~txAExprResult() {};
+    txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler)
+    {
+    }
 
     void AddRef()
     {
@@ -86,15 +87,16 @@ public:
 
     /**
      * Creates a String representation of this ExprResult
-     * @param str the destination string to append the String representation to.
+     * @param aResult the destination string to append the String
+     *                representation to.
     **/
-    virtual void stringValue(nsAString& str) = 0;
+    virtual void stringValue(nsString& aResult) = 0;
 
     /**
      * Returns a pointer to the stringvalue if possible. Otherwise null is
      * returned.
      */
-    virtual nsAString* stringValuePointer() = 0;
+    virtual const nsString* stringValuePointer() = 0;
 
     /**
      * Converts this ExprResult to a Boolean (MBool) value
@@ -115,8 +117,8 @@ private:
 
 #define TX_DECL_EXPRRESULT                                        \
     virtual short getResultType();                                \
-    virtual void stringValue(nsAString& str);                     \
-    virtual nsAString* stringValuePointer();                      \
+    virtual void stringValue(nsString& aString);                  \
+    virtual const nsString* stringValuePointer();                 \
     virtual PRBool booleanValue();                                \
     virtual double numberValue();                                 \
 

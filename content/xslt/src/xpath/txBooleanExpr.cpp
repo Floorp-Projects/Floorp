@@ -43,7 +43,6 @@
 **/
 
 #include "txExpr.h"
-#include "txExprResult.h"
 #include "txIXPathContext.h"
 
 /**
@@ -58,12 +57,10 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
-    nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = leftExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    PRBool lval;
+    nsresult rv = leftExpr->evaluateToBool(aContext, lval);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    PRBool lval = exprRes->booleanValue();
-
     // check for early decision
     if (op == OR && lval) {
         aContext->recycler()->getBoolResult(PR_TRUE, aResult);
@@ -76,11 +73,12 @@ BooleanExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         return NS_OK;
     }
 
-    rv = rightExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    PRBool rval;
+    rv = rightExpr->evaluateToBool(aContext, rval);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // just use rval, since we already checked lval
-    aContext->recycler()->getBoolResult(exprRes->booleanValue(), aResult);
+    aContext->recycler()->getBoolResult(rval, aResult);
 
     return NS_OK;
 } //-- evaluate

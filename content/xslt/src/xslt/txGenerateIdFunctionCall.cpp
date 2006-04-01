@@ -35,10 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txExprResult.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
+#include "txXPathTreeWalker.h"
 #include "txXSLTFunctions.h"
 
 /*

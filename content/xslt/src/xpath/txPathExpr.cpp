@@ -41,6 +41,7 @@
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
 #include "txXMLUtils.h"
+#include "txXPathTreeWalker.h"
 
   //------------/
  //- PathExpr -/

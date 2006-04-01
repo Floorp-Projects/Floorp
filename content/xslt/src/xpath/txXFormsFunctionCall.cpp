@@ -57,6 +57,7 @@
 #include "nsIXFormsUtilityService.h"
 #include "nsServiceManagerUtils.h"  // needed for do_GetService?
 #include "prprf.h"
+#include "txXPathTreeWalker.h"
 
 /*
  * Creates a XFormsFunctionCall of the given type
@@ -113,9 +114,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-      PRInt32 retvalue = -1;
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString booleanValue;
-      evaluateToString((Expr*)iter.next(), aContext, booleanValue);
+      expr1->evaluateToString(aContext, booleanValue);
 
       aContext->recycler()->getBoolResult(
                                   booleanValue.EqualsLiteral("1") ||
@@ -134,7 +136,6 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                                       getter_AddRefs(nodes));
       NS_ENSURE_SUCCESS(rv, rv);
    
-      double res = 0, test = 0;
       PRInt32 i, count=0;
       for (i = 0; i < nodes->size(); ++i) {
         nsAutoString resultStr;
@@ -151,8 +152,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString date;
-      evaluateToString((Expr*)iter.next(), aContext, date);
+      expr1->evaluateToString(aContext, date);
    
       nsCOMPtr<nsIXFormsUtilityService>xformsService = 
             do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
@@ -176,19 +179,21 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     {
       if (!requireParams(3, 3, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
-   
+
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       PRBool test;
       nsAutoString valueToReturn;
-      test = evaluateToBoolean((Expr*)iter.next(), aContext);
+      expr1->evaluateToBool(aContext, test);
 
       // grab 'true' value to return
-      Expr *getvalue = (Expr*)iter.next();
+      Expr *getvalue = NS_STATIC_CAST(Expr*, iter.next());
    
       if (!test) {
         // grab 'false' value to return
-        getvalue = (Expr*)iter.next();
+        getvalue = NS_STATIC_CAST(Expr*, iter.next());
       }
-      evaluateToString(getvalue, aContext, valueToReturn);
+      getvalue->evaluateToString(aContext, valueToReturn);
    
       return aContext->recycler()->getStringResult(valueToReturn, aResult);
     }
@@ -200,8 +205,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
           return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString indexId;
-      evaluateToString((Expr*)iter.next(), aContext, indexId);
+      expr1->evaluateToString(aContext, indexId);
 
       // here document is the XForms document
       nsCOMPtr<nsIDOMDocument> document;
@@ -238,8 +245,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
       NS_ENSURE_SUCCESS(rv, rv);
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString instanceId;
-      evaluateToString((Expr*)iter.next(), aContext, instanceId);
+      expr1->evaluateToString(aContext, instanceId);
    
       // here document is the XForms document
       nsCOMPtr<nsIDOMDocument> document;
@@ -396,8 +405,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString duration;
-      evaluateToString((Expr*)iter.next(), aContext, duration);
+      expr1->evaluateToString(aContext, duration);
    
       nsCOMPtr<nsIXFormsUtilityService>xformsService = 
             do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
@@ -448,8 +459,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString property;
-      evaluateToString((Expr*)iter.next(), aContext, property);
+      expr1->evaluateToString(aContext, property);
  
       // This function can handle "version" and "conformance-level"
       //   which is all that the XForms 1.0 spec is worried about
@@ -465,8 +478,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
           return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString duration;
-      evaluateToString((Expr*)iter.next(), aContext, duration);
+      expr1->evaluateToString(aContext, duration);
    
       nsCOMPtr<nsIXFormsUtilityService>xformsService = 
             do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
@@ -490,8 +505,10 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
+      Expr *expr1 = NS_STATIC_CAST(Expr*, iter.next());
+
       nsAutoString dateTime;
-      evaluateToString((Expr*)iter.next(), aContext, dateTime);
+      expr1->evaluateToString(aContext, dateTime);
    
       nsCOMPtr<nsIXFormsUtilityService>xformsService = 
             do_GetService("@mozilla.org/xforms-utility-service;1", &rv);

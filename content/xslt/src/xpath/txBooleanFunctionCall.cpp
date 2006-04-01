@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txExprResult.h"
 #include "txFunctionLib.h"
 #include "nsReadableUtils.h"
 #include "txAtoms.h"
@@ -72,8 +71,12 @@ BooleanFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(1, 1, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            aContext->recycler()->getBoolResult(
-                evaluateToBoolean((Expr*)iter.next(), aContext), aResult);
+            Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+            PRBool result;
+            nsresult rv = param->evaluateToBool(aContext, result);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            aContext->recycler()->getBoolResult(result, aResult);
 
             return NS_OK;
         }
@@ -98,7 +101,10 @@ BooleanFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
 
             nsAutoString arg;
-            evaluateToString((Expr*)iter.next(), aContext, arg);
+            Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+            nsresult rv = param->evaluateToString(aContext, arg);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             PRBool result = arg.Equals(Substring(lang, 0, arg.Length()),
                                        txCaseInsensitiveStringComparator()) &&
                             (lang.Length() == arg.Length() ||
@@ -113,8 +119,12 @@ BooleanFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(1, 1, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            aContext->recycler()->getBoolResult(
-                  !evaluateToBoolean((Expr*)iter.next(), aContext), aResult);
+            Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+            PRBool result;
+            nsresult rv = param->evaluateToBool(aContext, result);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            aContext->recycler()->getBoolResult(!result, aResult);
 
             return NS_OK;
         }

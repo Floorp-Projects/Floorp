@@ -39,6 +39,7 @@
 #include "txExpr.h"
 #include "txNodeSet.h"
 #include "txIXPathContext.h"
+#include "txXPathTreeWalker.h"
 
 /**
  * Evaluates this Expr based on the given context node and processor state

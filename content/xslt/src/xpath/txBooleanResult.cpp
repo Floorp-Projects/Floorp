@@ -60,12 +60,18 @@ short BooleanResult::getResultType() {
     return txAExprResult::BOOLEAN;
 } //-- getResultType
 
-void BooleanResult::stringValue(nsAString& str)  {
-    if ( value ) str.AppendLiteral("true");
-    else str.AppendLiteral("false");
-} //-- toString
+void
+BooleanResult::stringValue(nsString& aResult)
+{
+    if (value) {
+        aResult.AppendLiteral("true");
+    }
+    else {
+        aResult.AppendLiteral("false");
+    }
+}
 
-nsAString*
+const nsString*
 BooleanResult::stringValuePointer()
 {
     // In theory we could set strings containing "true" and "false" somewhere,

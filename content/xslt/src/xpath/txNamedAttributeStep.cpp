@@ -40,6 +40,7 @@
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 #include "txExpr.h"
+#include "txXPathTreeWalker.h"
 
 txNamedAttributeStep::txNamedAttributeStep(PRInt32 aNsID,
                                            nsIAtom* aPrefix,

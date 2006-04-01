@@ -43,6 +43,7 @@
 #include "txExpr.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
+#include "txXPathTreeWalker.h"
 
   //-----------------------------/
  //- Virtual methods from Expr -/

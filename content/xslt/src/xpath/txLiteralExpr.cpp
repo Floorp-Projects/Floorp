@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txExpr.h"
-#include "txExprResult.h"
 
 txLiteralExpr::txLiteralExpr(double aDbl)
     : mValue(new NumberResult(aDbl, nsnull))

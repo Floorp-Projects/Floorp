@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txExpr.h"
-#include "txExprResult.h"
 #include "txIXPathContext.h"
 
 /*

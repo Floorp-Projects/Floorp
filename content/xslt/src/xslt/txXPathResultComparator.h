@@ -47,7 +47,8 @@
 #endif
 #include "nsString.h"
 
-class txAExprResult;
+class Expr;
+class txIEvalContext;
 
 /*
  * Result comparators
@@ -68,7 +69,8 @@ public:
     /*
      * Create a sortable value.
      */
-    virtual TxObject* createSortableValue(txAExprResult* exprRes) = 0;
+    virtual nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
+                                         TxObject *&aResult) = 0;
 };
 
 /*
@@ -82,7 +84,8 @@ public:
     virtual ~txResultStringComparator();
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
-    TxObject* createSortableValue(txAExprResult* aExprRes);
+    nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
+                                 TxObject *&aResult);
 private:
 #ifndef TX_EXE
     nsCOMPtr<nsICollation> mCollation;
@@ -120,7 +123,8 @@ public:
     virtual ~txResultNumberComparator();
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
-    TxObject* createSortableValue(txAExprResult* aExprRes);
+    nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
+                                 TxObject *&aResult);
 
 private:
     int mAscending;

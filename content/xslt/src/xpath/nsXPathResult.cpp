@@ -45,6 +45,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
+#include "txXPathTreeWalker.h"
 
 nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
@@ -97,7 +98,10 @@ nsXPathResult::GetStringValue(nsAString &aStringValue)
         return NS_ERROR_DOM_TYPE_ERR;
     }
 
-    mResult.get()->stringValue(aStringValue);
+    nsAutoString stringValue;
+    mResult.get()->stringValue(stringValue);
+
+    aStringValue.Assign(stringValue);
 
     return NS_OK;
 }

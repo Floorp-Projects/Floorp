@@ -39,6 +39,7 @@
 #include "txNodeSet.h"
 #include "txLog.h"
 #include "nsMemory.h"
+#include "txXPathTreeWalker.h"
 
 /**
  * Implementation of an XPath nodeset
@@ -479,7 +480,7 @@ txNodeSet::numberValue()
 }
 
 void
-txNodeSet::stringValue(nsAString& aStr)
+txNodeSet::stringValue(nsString& aStr)
 {
     NS_ASSERTION(mDirection == kForward,
                  "only append(aNode) is supported on reversed nodesets");
@@ -489,7 +490,7 @@ txNodeSet::stringValue(nsAString& aStr)
     txXPathNodeUtils::appendNodeValue(get(0), aStr);
 }
 
-nsAString*
+const nsString*
 txNodeSet::stringValuePointer()
 {
     return nsnull;

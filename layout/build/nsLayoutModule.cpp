@@ -136,6 +136,7 @@
 #include "txXSLTProcessor.h"
 #include "nsXPath1Scheme.h"
 #include "nsXFormsXPathEvaluator.h"
+#include "txXSLTProcessor.h"
 
 // view stuff
 #include "nsViewsCID.h"

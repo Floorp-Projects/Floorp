@@ -83,10 +83,12 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             while (iter.hasNext()) {
-                evaluateToString((Expr*)iter.next(), aContext, strRes->mValue);
+                Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+                rv = param->evaluateToString(aContext, strRes->mValue);
+                NS_ENSURE_SUCCESS(rv, rv);
             }
-            *aResult = strRes;
-            NS_ADDREF(*aResult);
+
+            NS_ADDREF(*aResult = strRes);
 
             return NS_OK;
         }
@@ -95,15 +97,22 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(2, 2, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsAutoString arg1, arg2;
-            Expr* arg1Expr = (Expr*)iter.next();
-            evaluateToString((Expr*)iter.next(), aContext, arg2);
+            Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+            Expr* arg2Expr = NS_STATIC_CAST(Expr*, iter.next());
+
+            nsAutoString arg2;
+            rv = arg2Expr->evaluateToString(aContext, arg2);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             if (arg2.IsEmpty()) {
                 aContext->recycler()->getBoolResult(PR_TRUE, aResult);
             }
             else {
-                evaluateToString(arg1Expr, aContext, arg1);
-                aContext->recycler()->getBoolResult(arg1.Find(arg2) >= 0,
+                nsAutoString arg1;
+                rv = arg1Expr->evaluateToString(aContext, arg1);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                aContext->recycler()->getBoolResult(FindInReadable(arg2, arg1),
                                                     aResult);
             }
 
@@ -115,11 +124,15 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString resultStr;
-            if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, resultStr);
-            else
+            if (iter.hasNext()) {
+                Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+                rv = param->evaluateToString(aContext, resultStr);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else {
                 txXPathNodeUtils::appendNodeValue(aContext->getContextNode(),
                                                   resultStr);
+            }
 
             nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
@@ -154,17 +167,26 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(2, 2, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsAutoString arg1, arg2;
-            Expr* arg1Expr = (Expr*)iter.next();
-            evaluateToString((Expr*)iter.next(), aContext, arg2);
+            Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+            Expr* arg2Expr = NS_STATIC_CAST(Expr*, iter.next());
+
+            nsAutoString arg2;
+            rv = arg2Expr->evaluateToString(aContext, arg2);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            PRBool result;
             if (arg2.IsEmpty()) {
-                aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+                result = PR_TRUE;
             }
             else {
-                evaluateToString(arg1Expr, aContext, arg1);
-                aContext->recycler()->getBoolResult(
-                      StringBeginsWith(arg1, arg2), aResult);
+                nsAutoString arg1;
+                rv = arg1Expr->evaluateToString(aContext, arg1);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                result = StringBeginsWith(arg1, arg2);
             }
+
+            aContext->recycler()->getBoolResult(result, aResult);
 
             return NS_OK;
         }
@@ -174,11 +196,15 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString resultStr;
-            if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, resultStr);
-            else
+            if (iter.hasNext()) {
+                Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+                rv = arg1Expr->evaluateToString(aContext, resultStr);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else {
                 txXPathNodeUtils::appendNodeValue(aContext->getContextNode(),
                                                   resultStr);
+            }
             rv = aContext->recycler()->getNumberResult(resultStr.Length(),
                                                        aResult);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -190,10 +216,14 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(2, 3, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
+            Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+
             nsAutoString src;
-            double start, end;
-            evaluateToString((Expr*)iter.next(), aContext, src);
-            start = evaluateToNumber((Expr*)iter.next(), aContext);
+            rv = param->evaluateToString(aContext, src);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            double start = evaluateToNumber(NS_STATIC_CAST(Expr*, iter.next()),
+                                            aContext);
 
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
@@ -205,6 +235,8 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             }
 
             start = floor(start + 0.5) - 1;
+
+            double end;
             if (iter.hasNext()) {
                 end = start + evaluateToNumber((Expr*)iter.next(),
                                                aContext);
@@ -241,9 +273,16 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             if (!requireParams(2, 2, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsAutoString arg1, arg2;
-            evaluateToString((Expr*)iter.next(), aContext, arg1);
-            evaluateToString((Expr*)iter.next(), aContext, arg2);
+            Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+            nsAutoString arg1;
+            rv = arg1Expr->evaluateToString(aContext, arg1);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            Expr* arg2Expr = NS_STATIC_CAST(Expr*, iter.next());
+            nsAutoString arg2;
+            rv = arg2Expr->evaluateToString(aContext, arg2);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             if (arg2.IsEmpty()) {
                 return aContext->recycler()->getStringResult(arg1, aResult);
             }
@@ -255,26 +294,30 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_OK;
             }
 
-            PRUint32 len = arg2.Length();
-            return aContext->recycler()->getStringResult(
-                  Substring(arg1, idx + len, arg1.Length() - (idx + len)),
-                  aResult);
+            const nsSubstring& result = Substring(arg1, idx + arg2.Length());
+            return aContext->recycler()->getStringResult(result, aResult);
         }
         case SUBSTRING_BEFORE:
         {
             if (!requireParams(2, 2, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsAutoString arg1, arg2;
-            Expr* arg1Expr = (Expr*)iter.next();
-            evaluateToString((Expr*)iter.next(), aContext, arg2);
+            Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+            Expr* arg2Expr = NS_STATIC_CAST(Expr*, iter.next());
+
+            nsAutoString arg2;
+            rv = arg2Expr->evaluateToString(aContext, arg2);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             if (arg2.IsEmpty()) {
                 aContext->recycler()->getEmptyStringResult(aResult);
 
                 return NS_OK;
             }
 
-            evaluateToString(arg1Expr, aContext, arg1);
+            nsAutoString arg1;
+            rv = arg1Expr->evaluateToString(aContext, arg1);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             PRInt32 idx = arg1.Find(arg2);
             if (idx == kNotFound) {
@@ -283,16 +326,20 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_OK;
             }
 
-            return aContext->recycler()->
-                getStringResult(Substring(arg1, 0, idx), aResult);
+            return aContext->recycler()->getStringResult(StringHead(arg1, idx),
+                                                         aResult);
         }
         case TRANSLATE:
         {
             if (!requireParams(3, 3, aContext))
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
+            Expr* arg1Expr = NS_STATIC_CAST(Expr*, iter.next());
+
             nsAutoString src;
-            evaluateToString((Expr*)iter.next(), aContext, src);
+            rv = arg1Expr->evaluateToString(aContext, src);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             if (src.IsEmpty()) {
                 aContext->recycler()->getEmptyStringResult(aResult);
 
@@ -304,9 +351,17 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             strRes->mValue.SetCapacity(src.Length());
+
+            Expr* arg2Expr = NS_STATIC_CAST(Expr*, iter.next());
+            Expr* arg3Expr = NS_STATIC_CAST(Expr*, iter.next());
+
             nsAutoString oldChars, newChars;
-            evaluateToString((Expr*)iter.next(), aContext, oldChars);
-            evaluateToString((Expr*)iter.next(), aContext, newChars);
+            rv = arg2Expr->evaluateToString(aContext, oldChars);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            rv = arg3Expr->evaluateToString(aContext, newChars);
+            NS_ENSURE_SUCCESS(rv, rv);
+
             PRUint32 i;
             PRInt32 newCharsLength = (PRInt32)newChars.Length();
             for (i = 0; i < src.Length(); i++) {
@@ -319,8 +374,8 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     strRes->mValue.Append(src.CharAt(i));
                 }
             }
-            *aResult = strRes;
-            NS_ADDREF(*aResult);
+
+            NS_ADDREF(*aResult = strRes);
 
             return NS_OK;
         }
@@ -333,13 +388,17 @@ StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, strRes->mValue);
-            else
+            if (iter.hasNext()) {
+                Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+                rv = param->evaluateToString(aContext, strRes->mValue);
+                NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else {
                 txXPathNodeUtils::appendNodeValue(aContext->getContextNode(),
                                                   strRes->mValue);
-            *aResult = strRes;
-            NS_ADDREF(*aResult);
+            }
+
+            NS_ADDREF(*aResult = strRes);
 
             return NS_OK;
         }

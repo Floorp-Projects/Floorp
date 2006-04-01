@@ -47,6 +47,7 @@
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
+#include "txXPathTreeWalker.h"
 
 /*
  * Creates a NodeSetFunctionCall of the given type

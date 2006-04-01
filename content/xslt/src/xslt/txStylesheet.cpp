@@ -44,6 +44,7 @@
 #include "txXSLTFunctions.h"
 #include "txLog.h"
 #include "txKey.h"
+#include "txXPathTreeWalker.h"
 
 txStylesheet::txStylesheet()
     : mRootFrame(nsnull),

@@ -41,7 +41,6 @@
 #include "txError.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
-#include "txExprResult.h"
 #include "txNamespaceMap.h"
 
 /*
@@ -78,12 +77,10 @@ ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext,
     txListIterator iter(&params);
     Expr* param = (Expr*) iter.next();
 
-    nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = param->evaluate(aContext, getter_AddRefs(exprResult));
+    nsAutoString property;
+    nsresult rv = param->evaluateToString(aContext, property);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoString property;
-    exprResult->stringValue(property);
     txExpandedName qname;
     rv = qname.init(property, mMappings, MB_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);

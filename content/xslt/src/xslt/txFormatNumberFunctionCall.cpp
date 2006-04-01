@@ -41,7 +41,6 @@
 #include "txIXPathContext.h"
 #include "txStylesheet.h"
 #include <math.h>
-#include "txExprResult.h"
 #include "txNamespaceMap.h"
 
 #include "prdtoa.h"
@@ -77,7 +76,6 @@ nsresult
 txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                                      txAExprResult** aResult)
 {
-    nsresult rv = NS_OK;
     *aResult = nsnull;
     if (!requireParams(2, 3, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
@@ -86,14 +84,21 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     txListIterator iter(&params);
 
     double value;
-    nsAutoString formatStr;
     txExpandedName formatName;
 
     value = evaluateToNumber((Expr*)iter.next(), aContext);
-    evaluateToString((Expr*)iter.next(), aContext, formatStr);
+
+    nsAutoString formatStr;
+    Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+    nsresult rv = param->evaluateToString(aContext, formatStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (iter.hasNext()) {
         nsAutoString formatQName;
-        evaluateToString((Expr*)iter.next(), aContext, formatQName);
+        param = NS_STATIC_CAST(Expr*, iter.next());
+        rv = param->evaluateToString(aContext, formatQName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         rv = formatName.init(formatQName, mMappings, MB_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
     }

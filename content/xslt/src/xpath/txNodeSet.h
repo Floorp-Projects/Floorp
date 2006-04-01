@@ -46,7 +46,7 @@
 #include "txExprResult.h"
 #include "nsVoidArray.h"
 #include "txError.h"
-#include "txXPathTreeWalker.h"
+#include "txXPathNode.h"
 
 class txNodeSet : public txAExprResult
 {
