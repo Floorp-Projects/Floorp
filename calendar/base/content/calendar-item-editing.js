@@ -43,7 +43,7 @@ function createEventWithDialog(calendar, startDate, endDate, summary, event)
 
 
     var onNewEvent = function(event, calendar, originalEvent) {
-        calendar.addItem(event, null);
+        doTransaction('add', event, calendar, null, null);
     }
 
     if (event) {
@@ -105,7 +105,7 @@ function createTodoWithDialog(calendar, dueDate, summary, todo)
     const kDefaultTimezone = calendarDefaultTimezone();
 
     var onNewItem = function(item, calendar, originalItem) {
-        calendar.addItem(item, null);
+        doTransaction('add', item, calendar, null, null);
     }
 
     if (todo) {
@@ -143,10 +143,9 @@ function modifyEventWithDialog(item)
         // not ==.
         if (!originalItem.calendar || 
             (originalItem.calendar.uri.equals(calendar.uri)))
-            calendar.modifyItem(item, originalItem, null);
+            doTransaction('modify', item, item.calendar, originalItem, null);
         else {
-            originalItem.calendar.deleteItem(item, null);
-            calendar.addItem(item, null);
+            doTransaction('move', item, item.calendar, originalItem, null);
         }
     }
 
@@ -212,5 +211,113 @@ function getOccurrenceOrParent(occurrence) {
         return occurrence;
     } else {
         return occurrence.parentItem;
+    }
+}
+
+// Undo/Redo code
+var gTransactionMgr = Components.classes["@mozilla.org/transactionmanager;1"]
+                                .createInstance(Components.interfaces.nsITransactionManager);
+function doTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
+    var txn = new calTransaction(aAction, aItem, aCalendar, aOldItem, aListener);
+    gTransactionMgr.doTransaction(txn);
+    updateUndoRedoMenu();
+}
+
+function undo() {
+    gTransactionMgr.undoTransaction();
+    updateUndoRedoMenu();
+}
+
+function redo() {
+    gTransactionMgr.redoTransaction();
+    updateUndoRedoMenu();
+}
+
+function startBatchTransaction() {
+    gTransactionMgr.beginBatch();
+}
+function endBatchTransaction() {
+    gTransactionMgr.endBatch();
+    updateUndoRedoMenu();
+}
+
+function canUndo() {
+    return (gTransactionMgr.numberOfUndoItems > 0);
+}
+function canRedo() {
+    return (gTransactionMgr.numberOfRedoItems > 0);
+}
+
+// Valid values for aAction: 'add', 'modify', 'delete', 'move'
+// aOldItem is only needed for aAction == 'modify'
+function calTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
+    this.mAction = aAction;
+    this.mItem = aItem;
+    this.mCalendar = aCalendar;
+    this.mOldItem = aOldItem;
+    this.mListener = aListener;
+}
+
+calTransaction.prototype = {
+    mAction: null,
+    mItem: null,
+    mCalendar: null,
+    mOldItem: null,
+    mOldCalendar: null,
+    mListener: null,
+
+    QueryInterface: function (aIID) {
+        if (!aIID.equals(Components.interfaces.nsISupports) &&
+            !aIID.equals(Components.interfaces.nsITransaction))
+        {
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+        }
+        return this;
+    },
+
+    doTransaction: function () {
+        switch (this.mAction) {
+            case 'add':
+                this.mCalendar.addItem(this.mItem, this.mListener);
+                break;
+            case 'modify':
+                this.mCalendar.modifyItem(this.mItem, this.mOldItem,
+                                          this.mListener);
+                break;
+            case 'delete':
+                this.mCalendar.deleteItem(this.mItem, this.mListener);
+                break;
+            case 'move':
+                this.mOldCalendar = this.mOldItem.calendar;
+                this.mOldCalendar.deleteItem(this.mOldItem, this.mListener);
+                this.mCalendar.addItem(this.mItem, this.mListener);
+                break;
+        }
+    },
+    undoTransaction: function () {
+        switch (this.mAction) {
+            case 'add':
+                this.mCalendar.deleteItem(this.mItem, null);
+                break;
+            case 'modify':
+                this.mCalendar.modifyItem(this.mOldItem, this.mItem, null);
+                break;
+            case 'delete':
+                this.mCalendar.addItem(this.mItem, null);
+                break;
+            case 'move':
+                this.mCalendar.deleteItem(this.mItem, this.mListener);
+                this.mOldCalendar.addItem(this.mOldItem, this.mListener);
+                break;
+        }
+    },
+    redoTransaction: function () {
+        this.doTransaction();
+    },
+    isTransient: false,
+    
+    merge: function (aTransaction) {
+        // No support for merging
+        return false;
     }
 }

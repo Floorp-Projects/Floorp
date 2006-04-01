@@ -173,12 +173,12 @@ var ltnCalendarViewController = {
             var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
             event.title = props.GetStringFromName("newEvent");
             setDefaultAlarmValues(event);
-            aCalendar.addItem(event, null);
+            doTransaction('add', event, aCalendar, null, null);
         } else if (aStartTime && aStartTime.isDate) {
             var event = createEvent();
             event.startDate = aStartTime;
             setDefaultAlarmValues(event);
-            aCalendar.addItem(event, null);
+            doTransaction('add', event, aCalendar, null, null);
         } else {
             // default pop up the dialog
             var date = document.getElementById("calendar-view-box").selectedPanel.selectedDay.clone();
@@ -210,7 +210,7 @@ var ltnCalendarViewController = {
             instance.startDate = aNewStartTime;
             instance.endDate = aNewEndTime;
 
-            instance.calendar.modifyItem(instance, itemToEdit, null);
+            doTransaction('modify', instance, instance.calendar, itemToEdit, null);
         } else {
             modifyEventWithDialog(itemToEdit);
         }
@@ -221,9 +221,9 @@ var ltnCalendarViewController = {
         if (itemToDelete.parentItem != itemToDelete) {
             var event = itemToDelete.parentItem.clone();
             event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);
-            event.calendar.modifyItem(event, itemToDelete.parentItem, null);
+            doTransaction('modify', event, event.calendar, itemToDelete.parentItem, null);
         } else {
-            aOccurrence.calendar.deleteItem(itemToDelete, null);
+            doTransaction('delete', aOccurrence, aOccurrence.calendar, null, null);
         }
     }
 };
