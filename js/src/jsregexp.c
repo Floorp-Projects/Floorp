@@ -4123,10 +4123,12 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
         return NULL;
     JS_PUSH_SINGLE_TEMP_ROOT(cx, STRING_TO_JSVAL(str), &tvr);
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
-    if (!obj || !JS_SetPrivate(cx, obj, re) || !js_SetLastIndex(cx, obj, 0)) {
+    if (!obj || !JS_SetPrivate(cx, obj, re)) {
         js_DestroyRegExp(cx, re);
         obj = NULL;
     }
+    if (obj && !js_SetLastIndex(cx, obj, 0))
+        obj = NULL;
     JS_POP_TEMP_ROOT(cx, &tvr);
     return obj;
 }
