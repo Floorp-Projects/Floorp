@@ -128,4 +128,9 @@ _cairo_clip_extract_rectangles (cairo_clip_t *clip,
                                 cairo_clip_rect_t *rectangles_out,
                                 int *num_rectangles_out);
 
+cairo_private void
+_cairo_clip_translate (cairo_clip_t  *clip,
+                       cairo_fixed_t  tx,
+                       cairo_fixed_t  ty);
+
 #endif /* CAIRO_CLIP_PRIVATE_H */

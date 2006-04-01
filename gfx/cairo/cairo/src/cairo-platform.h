@@ -80,5 +80,8 @@
 
 #endif
 
+#ifdef MOZILLA_VERSION
+#include "cairo-rename.h"
+#endif
 
 #endif /* CAIRO_PLATFORM_H */

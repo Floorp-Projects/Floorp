@@ -1,7 +1,9 @@
-Snapshots of cairo and glitz for mozilla usage.  Where possible,
-these should be official releases from the cairo project as-is.  If
-changes are necessary, they should be documented below and the patch
-file included in this directory.
+Snapshots of cairo and glitz for mozilla usage.  A git branch
+of this version of cairo is available at
+
+	vladimir@git.cairographics.org:~vladimir/cairo
+
+in the 'mozilla-tree-cairo' branch.
 
 We only include the relevant parts of each release (generally, src/*.[ch]),
 as we have Makefile.in's that integrate into the Mozilla build system.  For
@@ -10,7 +12,7 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo 1.1.1 (cvs - 2006-02-02)
+  cairo 1.1.1 (cvs - 2006-03-31)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -19,6 +21,8 @@ VC6 cannot build pixman from cairo.  Therefore, VC6 builds are not supported
 if cairo is enabled.  Please upgrade to VC7.1/8.
 
 ==== Patches ====
+
+[somewhat obsolete, see git repository history for patch info]
 
 Last update: 23 Feb 2006
 
