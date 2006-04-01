@@ -106,7 +106,7 @@
 
     <groupbox>
       <caption label="&addressingGroupTitle.label;"/>
-#ifndef MOZ_XUL_APP
+#ifndef MOZ_THUNDERBIRD
       <hbox align="center">
         <checkbox wsm_persist="true" id="identity.autocompleteToMyDomain"
                   label="&autocompleteToMyDomain.label;"

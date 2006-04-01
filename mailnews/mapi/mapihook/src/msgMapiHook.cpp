@@ -161,7 +161,8 @@ PRBool nsMapiHook::isMapiService = PR_FALSE;
 
 PRBool nsMapiHook::Initialize()
 {
-#ifndef MOZ_THUNDERBIRD 
+// XXX test for this as long as there are still non-xul-app suite builds
+#ifndef MOZ_XUL_APP
     nsresult rv;
     nsCOMPtr<nsINativeAppSupport> native;
     nsCOMPtr<nsICmdLineService> cmdLineArgs (do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
