@@ -136,97 +136,97 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  if (eReflowReason_Incremental != aReflowState.reason) {
-    // Do we have any children?
-    // XXX We should use the overflow list instead...
-    nsIFrame*           firstFrame  = mFrames.FirstChild();
-    nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
-    NS_ASSERTION(contentPage, "There should always be a content page");
-    NS_ASSERTION(nsLayoutAtoms::pageContentFrame == firstFrame->GetType(),
-                 "This frame isn't a pageContentFrame");
+  // Do we have any children?
+  // XXX We should use the overflow list instead...
+  nsIFrame*           firstFrame  = mFrames.FirstChild();
+  nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
+  NS_ASSERTION(contentPage, "There should always be a content page");
+  NS_ASSERTION(nsLayoutAtoms::pageContentFrame == firstFrame->GetType(),
+               "This frame isn't a pageContentFrame");
 
-    if (contentPage && GetPrevInFlow()) {
-      nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, GetPrevInFlow());
-      nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
-      nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
+  if (contentPage && GetPrevInFlow() &&
+      eReflowReason_Incremental != aReflowState.reason &&
+      eReflowReason_Dirty != aReflowState.reason) {
 
-      // Create a continuing child of the previous page's last child
-      nsIFrame*     newFrame;
+    nsPageFrame*        prevPage        = NS_STATIC_CAST(nsPageFrame*, GetPrevInFlow());
+    nsPageContentFrame* prevContentPage = NS_STATIC_CAST(nsPageContentFrame*, prevPage->mFrames.FirstChild());
+    nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
 
-      aPresContext->PresShell()->FrameConstructor()->
-        CreateContinuingFrame(aPresContext, prevLastChild,
-                              contentPage, &newFrame);
+    // Create a continuing child of the previous page's last child
+    nsIFrame*     newFrame;
 
-      // Make the new area frame the 1st child of the page content frame. There may already be
-      // children placeholders which don't get reflowed but must not be destroyed until the 
-      // page content frame is destroyed.
-      contentPage->mFrames.InsertFrame(contentPage, nsnull, newFrame);
+    aPresContext->PresShell()->FrameConstructor()->
+      CreateContinuingFrame(aPresContext, prevLastChild,
+                            contentPage, &newFrame);
+
+    // Make the new area frame the 1st child of the page content frame. There may already be
+    // children placeholders which don't get reflowed but must not be destroyed until the 
+    // page content frame is destroyed.
+    contentPage->mFrames.InsertFrame(contentPage, nsnull, newFrame);
+  }
+
+  // Resize our frame allowing it only to be as big as we are
+  // XXX Pay attention to the page's border and padding...
+  if (mFrames.NotEmpty()) {
+    nsIFrame* frame = mFrames.FirstChild();
+    // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
+    // a single page to print selection. So this means we want to use
+    // NS_UNCONSTRAINEDSIZE without altering it
+    nscoord avHeight;
+    if (mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE) {
+      avHeight = NS_UNCONSTRAINEDSIZE;
+    } else {
+      avHeight = mPD->mReflowSize.height - mPD->mReflowMargin.TopBottom();
+    }
+    nsSize  maxSize(mPD->mReflowSize.width - mPD->mReflowMargin.LeftRight(),
+                    avHeight);
+    // Get the number of Twips per pixel from the PresContext
+    nscoord onePixelInTwips = aPresContext->IntScaledPixelsToTwips(1);
+    // insurance against infinite reflow, when reflowing less than a pixel
+    // XXX Shouldn't we do something more friendly when invalid margins
+    //     are set?
+    if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
+      aDesiredSize.width  = 0;
+      aDesiredSize.height = 0;
+      NS_WARNING("Reflow aborted; no space for content");
+      return NS_OK;
     }
 
-    // Resize our frame allowing it only to be as big as we are
-    // XXX Pay attention to the page's border and padding...
-    if (mFrames.NotEmpty()) {
-      nsIFrame* frame = mFrames.FirstChild();
-      // When the reflow size is NS_UNCONSTRAINEDSIZE it means we are reflowing
-      // a single page to print selection. So this means we want to use
-      // NS_UNCONSTRAINEDSIZE without altering it
-      nscoord avHeight;
-      if (mPD->mReflowSize.height == NS_UNCONSTRAINEDSIZE) {
-        avHeight = NS_UNCONSTRAINEDSIZE;
-      } else {
-        avHeight = mPD->mReflowSize.height - mPD->mReflowMargin.TopBottom();
-      }
-      nsSize  maxSize(mPD->mReflowSize.width - mPD->mReflowMargin.LeftRight(),
-                      avHeight);
-      // Get the number of Twips per pixel from the PresContext
-      nscoord onePixelInTwips = aPresContext->IntScaledPixelsToTwips(1);
-      // insurance against infinite reflow, when reflowing less than a pixel
-      // XXX Shouldn't we do something more friendly when invalid margins
-      //     are set?
-      if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
-        aDesiredSize.width  = 0;
-        aDesiredSize.height = 0;
-        NS_WARNING("Reflow aborted; no space for content");
-        return NS_OK;
-      }
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
+    kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
 
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
-      kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
+    // calc location of frame
+    nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
+    nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
 
-      // calc location of frame
-      nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
-      nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
+    // Get the child's desired size
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
 
-      // Get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
+    // Place and size the child
+    FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
-
-      // Place and size the child
-      FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
-
-      // Make sure the child is at least as tall as our max size (the containing window)
-      if (aDesiredSize.height < aReflowState.availableHeight &&
-          aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-        aDesiredSize.height = aReflowState.availableHeight;
-      }
-
-      nsIView* view = frame->GetView();
-      if (view) {
-        nsRegion region(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
-        view->GetViewManager()->SetViewChildClipRegion(view, &region);
-      }
-
-      NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
-                   !frame->GetNextInFlow(), "bad child flow list");
-    }
-    PR_PL(("PageFrame::Reflow %p ", this));
-    PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight));
-
-    // Return our desired size
-    aDesiredSize.width = aReflowState.availableWidth;
-    if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+    // Make sure the child is at least as tall as our max size (the containing window)
+    if (aDesiredSize.height < aReflowState.availableHeight &&
+        aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
       aDesiredSize.height = aReflowState.availableHeight;
     }
+
+    nsIView* view = frame->GetView();
+    if (view) {
+      nsRegion region(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
+      view->GetViewManager()->SetViewChildClipRegion(view, &region);
+    }
+
+    NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
+                 !frame->GetNextInFlow(), "bad child flow list");
+  }
+  PR_PL(("PageFrame::Reflow %p ", this));
+  PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight));
+
+  // Return our desired size
+  aDesiredSize.width = aReflowState.availableWidth;
+  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.height = aReflowState.availableHeight;
   }
   PR_PL(("PageFrame::Reflow %p ", this));
   PR_PL(("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight));
@@ -532,7 +532,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   nsDisplayListCollection set;
   
-  if (GetPresContext()->Type() == nsPresContext::eContext_PrintPreview) {
+  if (GetPresContext()->IsScreen()) {
     nsresult rv = set.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayGeneric(this, ::PaintPrintPreviewBackground, "PrintPreviewBackground"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -608,11 +608,11 @@ nsPageFrame::PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
   nsPresContext* pc = GetPresContext();
 
   if (!mPD->mPrintSettings) {
-    if (pc->Type() == nsPresContext::eContext_PrintPreview) {
+    if (pc->Type() == nsPresContext::eContext_PrintPreview || pc->IsDynamic())
       mPD->mPrintSettings = pc->GetPrintSettings();
-    }
+    if (!mPD->mPrintSettings)
+      return;
   }
-  NS_ASSERTION(mPD->mPrintSettings, "Must have a good PrintSettings here!");
 
   // get the current margin
   mPD->mPrintSettings->GetMarginInTwips(mMargin);

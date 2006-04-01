@@ -69,67 +69,65 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  if (eReflowReason_Incremental != aReflowState.reason) {
-    // Resize our frame allowing it only to be as big as we are
-    // XXX Pay attention to the page's border and padding...
-    if (mFrames.NotEmpty()) {
-      nsIFrame* frame = mFrames.FirstChild();
-      nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
+  // Resize our frame allowing it only to be as big as we are
+  // XXX Pay attention to the page's border and padding...
+  if (mFrames.NotEmpty()) {
+    nsIFrame* frame = mFrames.FirstChild();
+    nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
 
-      mPD->mPageContentSize  = aReflowState.availableWidth;
+    mPD->mPageContentSize  = aReflowState.availableWidth;
 
-      // Reflow the page content area to get the child's desired size
-      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+    // Reflow the page content area to get the child's desired size
+    ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
 
-      // The document element's background should cover the entire canvas, so
-      // take into account the combined area and any space taken up by
-      // absolutely positioned elements
-      nsMargin padding(0,0,0,0);
+    // The document element's background should cover the entire canvas, so
+    // take into account the combined area and any space taken up by
+    // absolutely positioned elements
+    nsMargin padding(0,0,0,0);
 
-      // XXXbz this screws up percentage padding (sets padding to zero
-      // in the percentage padding case)
-      kidReflowState.mStylePadding->GetPadding(padding);
+    // XXXbz this screws up percentage padding (sets padding to zero
+    // in the percentage padding case)
+    kidReflowState.mStylePadding->GetPadding(padding);
 
-      // First check the combined area
-      if (NS_FRAME_OUTSIDE_CHILDREN & frame->GetStateBits()) {
-        // The background covers the content area and padding area, so check
-        // for children sticking outside the child frame's padding edge
-        if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
-          mPD->mPageContentXMost =
-            aDesiredSize.mOverflowArea.XMost() +
-            kidReflowState.mStyleBorder->GetBorderWidth(NS_SIDE_RIGHT) +
-            padding.right;
-        }
+    // First check the combined area
+    if (NS_FRAME_OUTSIDE_CHILDREN & frame->GetStateBits()) {
+      // The background covers the content area and padding area, so check
+      // for children sticking outside the child frame's padding edge
+      if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
+        mPD->mPageContentXMost =
+          aDesiredSize.mOverflowArea.XMost() +
+          kidReflowState.mStyleBorder->GetBorderWidth(NS_SIDE_RIGHT) +
+          padding.right;
       }
+    }
 
-      // Place and size the child
-      FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, 0, 0, 0);
+    // Place and size the child
+    FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, 0, 0, 0);
 
-      NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
-                   !frame->GetNextInFlow(), "bad child flow list");
+    NS_ASSERTION(aPresContext->IsDynamic() || !NS_FRAME_IS_COMPLETE(aStatus) ||
+                  !frame->GetNextInFlow(), "bad child flow list");
 
 #ifdef DEBUG_PRINTING
-      nsRect r = frame->GetRect();
-      printf("PCF: Area Frame %p Bounds: %5d,%5d,%5d,%5d\n", frame, r.x, r.y, r.width, r.height);
-      nsIView* view = frame->GetView();
-      if (view) {
-        r = view->GetBounds();
-        printf("PCF: Area Frame View Bounds: %5d,%5d,%5d,%5d\n", r.x, r.y, r.width, r.height);
-      } else {
-        printf("PCF: Area Frame View Bounds: NO VIEW\n");
-      }
+    nsRect r = frame->GetRect();
+    printf("PCF: Area Frame %p Bounds: %5d,%5d,%5d,%5d\n", frame, r.x, r.y, r.width, r.height);
+    nsIView* view = frame->GetView();
+    if (view) {
+      r = view->GetBounds();
+      printf("PCF: Area Frame View Bounds: %5d,%5d,%5d,%5d\n", r.x, r.y, r.width, r.height);
+    } else {
+      printf("PCF: Area Frame View Bounds: NO VIEW\n");
+    }
 #endif
-    }
-    // Reflow our fixed frames 
-    mFixedContainer.Reflow(this, aPresContext, aReflowState, aReflowState.availableWidth, 
-                           aReflowState.availableHeight);
+  }
+  // Reflow our fixed frames 
+  mFixedContainer.Reflow(this, aPresContext, aReflowState, aReflowState.availableWidth, 
+                          aReflowState.availableHeight);
 
-    // Return our desired size
-    aDesiredSize.width = aReflowState.availableWidth;
-    if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-      aDesiredSize.height = aReflowState.availableHeight;
-    }
+  // Return our desired size
+  aDesiredSize.width = aReflowState.availableWidth;
+  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.height = aReflowState.availableHeight;
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
