@@ -59,7 +59,6 @@ calendar.jar:
     content/calendar/calendarProperties.xul (content/calendarProperties.xul)
     content/calendar/calendarProperties.js (content/calendarProperties.js)
     content/calendar/clipboard.js (content/clipboard.js)
-    content/calendar/dateUtils.js (content/dateUtils.js)
     content/calendar/goToDateDialog.js (content/goToDateDialog.js)
     content/calendar/goToDateDialog.xul (content/goToDateDialog.xul)
     content/calendar/import-export.js (/calendar/base/content/import-export.js)

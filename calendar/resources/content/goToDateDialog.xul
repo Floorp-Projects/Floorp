@@ -68,8 +68,6 @@
 
   <script type="application/x-javascript"
    src="chrome://global/content/strres.js" />
-  <script type="application/x-javascript" 
-   src="chrome://calendar/content/dateUtils.js"/>
   <script type="application/x-javascript"
    src="chrome://calendar/content/goToDateDialog.js"/>
 

@@ -238,10 +238,11 @@ function unifinderOnDaySelect() {
 *   Helper function to display event datetimes in the unifinder
 */
 
-function formatUnifinderEventDateTime( datetime, isAllDay )
+function formatUnifinderEventDateTime(datetime)
 {
-  var d = datetime.getInTimezone(kDefaultTimezone).jsDate;
-  return gCalendarWindow.dateFormater.formatDateTime( d, true, datetime.isDate );
+  var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                .getService(Components.interfaces.calIDateTimeFormatter);
+  return dateFormatter.formatDateTime(datetime.getInTimezone(kDefaultTimezone));
 }
 
 

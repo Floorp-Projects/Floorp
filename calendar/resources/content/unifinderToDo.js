@@ -142,9 +142,12 @@ function finishCalendarToDoUnifinder()
 
 function formatUnifinderToDoDateTime(aDateTime)
 {
+    var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                  .getService(Components.interfaces.calIDateTimeFormatter);
+
     // datetime is from todo object, it is not a javascript date
     if (aDateTime && aDateTime.isValid)
-        return gCalendarWindow.dateFormater.formatDateTime(aDateTime.jsDate, true);
+        return dateFormatter.formatDateTime(aDateTime);
     return "";
 }
 

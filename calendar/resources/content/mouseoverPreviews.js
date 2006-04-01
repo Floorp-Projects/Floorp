@@ -154,15 +154,13 @@ function getPreviewForTask( toDoItem )
    
     if (toDoItem.entryDate && toDoItem.entryDate.isValid)
     {
-      var startDate = toDoItem.entryDate.jsDate;
-      boxAppendLabeledDateTime(vbox, "tooltipStart", startDate, false);
+      boxAppendLabeledDateTime(vbox, "tooltipStart", toDoItem.entryDate);
       hasHeader = true;
     }
    
-    if (toDoItem.dueDat && toDoItem.dueDate.isValid)
+    if (toDoItem.dueDate && toDoItem.dueDate.isValid)
     {
-      var dueDate = toDoItem.dueDate.jsDate;
-      boxAppendLabeledDateTime(vbox, "tooltipDue", dueDate, false);
+      boxAppendLabeledDateTime(vbox, "tooltipDue", toDoItem.dueDate);
       hasHeader = true;
     }   
 
@@ -188,8 +186,7 @@ function getPreviewForTask( toDoItem )
       if (toDoItem.completedDate == null) {
         boxAppendLabeledText(vbox, "tooltipPercent", "100%");
       } else { 
-        var completedDate = toDoItem.completedDate.jsDate;
-        boxAppendLabeledDateTime(vbox, "tooltipCompleted", completedDate, false);
+        boxAppendLabeledDateTime(vbox, "tooltipCompleted", toDoItem.completedDate);
       } 
       hasHeader = true;
     }
@@ -244,16 +241,6 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       if (event.startDate.isDate && eventEnd) { 
         eventEnd.setDate(eventEnd.getDate() - 1);
       }
-      var relativeToDate;
-
-      if (!eventEnd ||
-          gCalendarWindow.dateFormater.isOnSameDate(eventStart, eventEnd)) {
-        // event within single day, ok to omit dates if same as relativeToDate
-        relativeToDate = instStartDate || new Date(); // today
-      } else {
-        // event spanning multiple days, do not omit dates.
-        relativeToDate = false;
-      }
 
       var startDate, endDate;
       if (instStartDate && instEndDate) {
@@ -268,9 +255,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
                              : 0);
         endDate = new Date(startDate.getTime() + eventDuration);
       }
-      boxAppendLabeledDateTimeInterval(vbox, "tooltipDate",
-                                       startDate, endDate, event.startDate.isDate,
-                                       relativeToDate);
+      boxAppendLabeledDateTimeInterval(vbox, "tooltipDate", startDate, endDate);
     }
 
     if (event.status && event.status != "NONE")
@@ -365,20 +350,28 @@ function boxAppendLines(vbox, textString, maxLineCount)
     boxAppendText(vbox, lines[i]);
   }
 }
-/** PRIVATE: Use dateFormater to format date and time.
+/** PRIVATE: Use dateFormatter to format date and time.
     Append date to box inside an xul description node containing a single text node. **/
-function boxAppendLabeledDateTime(box, labelProperty, date, isAllDay )
+function boxAppendLabeledDateTime(box, labelProperty, date)
 {
-  var jsDate = new Date(date.getTime());
-  var formattedDateTime = gCalendarWindow.dateFormater.formatDateTime( jsDate, true, isAllDay );
+  var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                .getService(Components.interfaces.calIDateTimeFormatter);
+  date = date.getInTimezone(calendarDefaultTimezone());
+  var formattedDateTime = dateFormatter.formatDateTime(date);
   boxAppendLabeledText(box, labelProperty, formattedDateTime);
 }
-/** PRIVATE: Use dateFormater to format date and time interval.
+/** PRIVATE: Use dateFormatter to format date and time interval.
     Append interval to box inside an xul description node containing a single text node. **/
-function boxAppendLabeledDateTimeInterval(box, labelProperty, start, end, isAllDay, relativeToDate)
+function boxAppendLabeledDateTimeInterval(box, labelProperty, start, end)
 {
-  var formattedInterval = gCalendarWindow.dateFormater.formatInterval( start, end, isAllDay, relativeToDate);
-  boxAppendLabeledText(box, labelProperty, formattedInterval);
+  var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                .getService(Components.interfaces.calIDateTimeFormatter);
+  var startString = new Object();
+  var endString = new Object();
+  start = jsDateToDateTime(start).getInTimezone(calendarDefaultTimezone());
+  end = jsDateToDateTime(end).getInTimezone(calendarDefaultTimezone());
+  dateFormatter.formatInterval(start, end, startString, endString);
+  boxAppendLabeledText(box, labelProperty, startString.value + ' - ' + endString.value);
 }
 
 function boxInitializeHeaderGrid(box)

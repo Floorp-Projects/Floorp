@@ -103,7 +103,6 @@ var gViewController = new calViewController();
 *  Maintains the three calendar views and the selection.
 *
 * PROPERTIES
-*     dateFormater           - a date formatter, an instance of DateFormater
 *     selectedDate           - selected date, instance of Date 
 *  
 */
@@ -128,9 +127,6 @@ function CalendarWindow( )
    //setup the calendar event selection
    this.EventSelection = new CalendarEventSelection( this );
    gViewController.selectionManager = this.EventSelection;
-
-   //global date formater
-   this.dateFormater = new DateFormater( this );
 
    /** This object only exists to keep too many things from breaking during the
     *   switch to the new views

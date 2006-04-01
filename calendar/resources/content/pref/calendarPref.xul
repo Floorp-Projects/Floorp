@@ -53,9 +53,9 @@
       onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');calendarPrefOnLoad()"
       headertitle="&calendarPanel.label;">
 
-   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-   
+   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+
    <script type="application/x-javascript">
       var labelLong = "&pref.dateformat.long;";      
       var labelShort = "&pref.dateformat.short;";
@@ -71,12 +71,12 @@
     <![CDATA[
       function calendarPrefOnLoad()
       {
-         var now = new Date();
-         var dateFormatter = new DateFormater();
+         var dateFormatter = Components.classes["@mozilla.org/calendar/datetime-formatter;1"]
+                                       .getService(Components.interfaces.calIDateTimeFormatter);
          //
          // create example dates using today's date
-         var dateFormattedLong = dateFormatter.getLongFormatedDate( now );
-         var dateFormattedShort = dateFormatter.getShortFormatedDate( now );
+         var dateFormattedLong = dateFormatter.formatDateLong(now());
+         var dateFormattedShort = dateFormatter.formatDateShort(now());
          //
          // menu items include examples of current date formats.
          document.getElementById( "dateformat-long-menuitem" ).setAttribute( "label", labelLong+": "+dateFormattedLong);

@@ -68,9 +68,6 @@
   <!-- NEEDED FOR PUBLICATION SUPPORT -->
   <script type="application/x-javascript" src="chrome://calendar/content/publish.js"/>
 
-  <!-- NEEDED FOR DATE UTILS -->
-  <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-
   <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
   <script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>

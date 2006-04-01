@@ -49,7 +49,6 @@
 	onload="parent.initPanel('chrome://calendar/content/pref/timezonePrefs.xul');"
       headertitle="&calendar.timezone.label;">
 
-   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
    <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
    
  <script type="application/x-javascript">

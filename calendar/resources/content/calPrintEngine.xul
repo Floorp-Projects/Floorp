@@ -61,7 +61,6 @@
     <stringbundle id="bundle_date" src="chrome://calendar/locale/dateFormat.properties"/>
   </stringbundleset>
 
-  <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
   <!-- added for Thunderbird 0.7.1 support -->
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script src="chrome://calendar/content/calPrintEngine.js"/>
