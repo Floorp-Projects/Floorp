@@ -101,9 +101,9 @@ public:
   nsresult LogEvent(const nsAString &eventName,
                     nsHashPropertyBag *eventProperties)
   {
-    return LogEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
-                    eventName,
-                    NS_STATIC_CAST(nsIWritablePropertyBag*, eventProperties));
+    return LogSimpleEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE), eventName,
+                          NS_STATIC_CAST(nsIWritablePropertyBag*,
+                                         eventProperties));
   }
 
   // Get the window id for the given DOMWindow.  If a window id has not
@@ -150,7 +150,11 @@ private:
     return mConfig.IsEventEnabled(NS_LITERAL_STRING(NS_METRICS_NAMESPACE),
                                   event);
   }
-  
+
+  // Builds up a DOMElement tree from the given item and its children
+  nsresult BuildEventItem(nsIMetricsEventItem *item,
+                          nsIDOMElement **itemElement);
+
 private:
   // Pointer to the metrics service singleton
   static nsMetricsService* sMetricsService;

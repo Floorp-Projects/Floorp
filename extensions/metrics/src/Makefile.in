@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsLoadCollector.cpp \
 		nsMetricsConfig.cpp \
+		nsMetricsEventItem.cpp \
 		nsMetricsModule.cpp \
 		nsMetricsService.cpp \
 		nsWindowCollector.cpp \

@@ -40,26 +40,130 @@
 
 interface nsIPropertyBag;
 
-[scriptable, uuid(30cad119-e248-4211-9682-8f95efe995c4)]
+/**
+ * This file defines the interfaces for the Metrics Service.
+ *
+ * This service allows arbitrary types of events to be logged and uploaded
+ * to a server, based on server-configured collection parameters.
+ * The nsIMetricsService API provides an abstraction for the underlying XML
+ * data format.
+ * 
+ * For more information about the data format and the built-in
+ * event collectors, see http://wiki.mozilla.org/Browser_Metrics.
+ */
+
+
+/**
+ * nsIMetricsEventItem represents a particular node of data to record
+ * in an event.  Each item has a namespaced item name, a list of properties
+ * (key/value pairs), and an ordered list of child items.  The child items
+ * need not be unique; an item may be repeated.
+ */
+[scriptable, uuid(880b8655-15a4-4b72-b6d4-6e3325bca4b6)]
+interface nsIMetricsEventItem : nsISupports
+{
+  /**
+   * The namespace for this item, which must be a valid XML namespace URI.
+   */
+  readonly attribute DOMString itemNamespace;
+
+  /**
+   * The name of this item, which must be a valid XML tag name.
+   */
+  readonly attribute DOMString itemName;
+
+  /**
+   * A PropertyBag containing the key/value pairs to be included in the item.
+   * JavaScript callers can simply set this to an object containing the
+   * key/value pairs as object properties.
+   */
+  attribute nsIPropertyBag properties;
+
+  /**
+   * Returns the child event item at the given index.
+   */
+  nsIMetricsEventItem childAt(in long index);
+
+  /**
+   * Returns the first occurrence of the given item in the child list,
+   * or -1 if the item is not in the child list.
+   */
+  long indexOf(in nsIMetricsEventItem item);
+
+  /**
+   * Appends a child event item to this item.
+   */
+  void appendChild(in nsIMetricsEventItem item);
+
+  /**
+   * Inserts a child event item at a given index, moving later items
+   * up by one position.
+   *  @param item   The new item to insert 
+   *  @param index  The position in the array.  If the index is equal to
+   *                childCount, the new item will be appended.
+   *                The index may not be greater than childCount.
+   */
+  void insertChildAt(in nsIMetricsEventItem item, in long index);
+
+  /**
+   * Removes a child event item at the given index, moving all items
+   * stored at a higher position down one.
+   */
+  void removeChildAt(in long index);
+
+  /**
+   * Replaces a child event item at the given index.
+   *  @param newItem  The new item
+   *  @param index    The position of the item to be replaced
+   */
+  void replaceChildAt(in nsIMetricsEventItem newItem, in long index);
+
+  /**
+   * Clears all of the child items.
+   */
+  void clearChildren();
+
+  /**
+   * The number of child event items
+   */
+  readonly attribute long childCount;
+};
+
+[scriptable, uuid(ff320b73-ecd4-4e08-a09d-b37537770df6)]
 interface nsIMetricsService : nsISupports
 {
   /**
-   * Logs an event using the given namespace.  The event is recorded with a
-   * timestamp generated at the time at which this method is called.
+   * Creates a new EventItem object to hold event data.
+   * The event will not be logged until logEvent() is called.
+   *  @param itemNamespace   The new item's namespace
+   *  @param itemName        The new item's name
    *
-   * @param eventNS
-   *        The namespace of the event, which must be a valid XML namespace
-   *        URI.
-   * @param eventName
-   *        The name of the event, which must be a valid XML tag name.
-   * @param eventValues
-   *        A PropertyBag containing the key/value pairs to be included
-   *        in the event.  JavaScript callers can simply pass in an object
-   *        containing the key/value pairs as object properties.
-   *        The "time" key is reserved for the event timestamp.
+   * @returns a new MetricsEventItem instance
    */
-  void logEvent(in DOMString eventNS, in DOMString event,
-                in nsIPropertyBag eventValues);
+  nsIMetricsEventItem createEventItem(in DOMString itemNamespace,
+                                      in DOMString itemName);
+
+  /**
+   * Logs an event using the given EventItem.  The event is recorded with a
+   * timestamp generated at the time at which this method is called, and a
+   * session id for this instance of the application.  The keys "time" and
+   * "sessionid" are reserved for this data.
+   *
+   * @param item
+   *        The item to log.  This item and its entire tree of child items
+   *        will be logged as part of the event.
+   */
+  void logEvent(in nsIMetricsEventItem item);
+
+  /**
+   * Constructs and logs an EventItem, using the given namespace, event name,
+   * and event properties. This is a more convenient version of logEvent() for
+   * the case where there are no child EventItems.
+   *
+   * @see nsIMetricsEventItem
+   */
+  void logSimpleEvent(in DOMString eventNS, in DOMString event,
+                      in nsIPropertyBag eventValues);
 
   /**
    * Flush data to disk.
