@@ -66,7 +66,6 @@ var gShowUserAgent = false;
 var gMinNumberOfHeaders = 0;
 var gDummyHeaderIdIndex = 0;
 var gCollapsedHeaderViewMode = false;
-var gSlimAttachmentView = false;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
 var gBuiltExpandedView = false;
@@ -82,7 +81,6 @@ var gDeleteLabelAccesskey;
 var gMessengerBundle;
 var gProfileDirURL;
 var gIOService;
-var gFileHandler;  
 var gShowCondensedEmailAddresses = true; // show the friendly display names for people I know instead of the name + email address
 var gPersonalAddressBookDirectory; // used for determining if we want to show just the display name in email address nodes
 
