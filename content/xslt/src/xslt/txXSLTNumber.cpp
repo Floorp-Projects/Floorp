@@ -41,7 +41,6 @@
 #include "txCore.h"
 #include <math.h>
 #include "txExpr.h"
-#include "txExprResult.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"
@@ -144,7 +143,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
     if (!aCountPattern) {
         ownsCountPattern = MB_TRUE;
-        txNodeTest* nodeTest = 0;
+        txNodeTest* nodeTest;
         PRUint16 nodeType = txXPathNodeUtils::getNodeType(currNode);
         switch (nodeType) {
             case txXPathNodeType::ELEMENT_NODE:
@@ -315,12 +314,9 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
     nsAutoString groupSeparator;
     PRInt32 groupSize = 0;
     if (aGroupSize && aGroupSeparator) {
-        nsRefPtr<txAExprResult> exprRes;
-        rv = aGroupSize->evaluate(aContext, getter_AddRefs(exprRes));
-        NS_ENSURE_SUCCESS(rv, rv);
-
         nsAutoString sizeStr;
-        exprRes->stringValue(sizeStr);
+        rv = aGroupSize->evaluateToString(aContext, sizeStr);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         double size = Double::toDouble(sizeStr);
         groupSize = (PRInt32)size;
@@ -328,20 +324,16 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
             groupSize = 0;
         }
 
-        rv = aGroupSeparator->evaluate(aContext, getter_AddRefs(exprRes));
+        rv = aGroupSeparator->evaluateToString(aContext, groupSeparator);
         NS_ENSURE_SUCCESS(rv, rv);
-        
-        exprRes->stringValue(groupSeparator);
     }
 
     nsAutoString format;
     if (aFormat) {
-        nsRefPtr<txAExprResult> formatRes;
-        rv = aFormat->evaluate(aContext, getter_AddRefs(formatRes));
+        rv = aFormat->evaluateToString(aContext, format);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        formatRes->stringValue(format);
     }
+
     PRUint32 formatLen = format.Length();
     PRUint32 formatPos = 0;
     PRUnichar ch = 0;

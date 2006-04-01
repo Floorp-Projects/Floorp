@@ -49,6 +49,7 @@
 #include "nsHashKeys.h"
 #include "txKey.h"
 #include "txStylesheet.h"
+#include "txXPathTreeWalker.h"
 
 class txAOutputHandlerFactory;
 class txAXMLEventHandler;

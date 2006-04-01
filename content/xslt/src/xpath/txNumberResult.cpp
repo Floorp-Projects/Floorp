@@ -64,11 +64,13 @@ short NumberResult::getResultType() {
     return txAExprResult::NUMBER;
 } //-- getResultType
 
-void NumberResult::stringValue(nsAString& str)  {
-    Double::toString(value, str);
-} //-- stringValue
+void
+NumberResult::stringValue(nsString& aResult)
+{
+    Double::toString(value, aResult);
+}
 
-nsAString*
+const nsString*
 NumberResult::stringValuePointer()
 {
     return nsnull;

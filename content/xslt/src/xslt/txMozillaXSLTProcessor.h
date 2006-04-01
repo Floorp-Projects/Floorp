@@ -39,24 +39,18 @@
 #ifndef TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 #define TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 
-#include "txExprResult.h"
-#include "nsIDocumentTransformer.h"
-#include "nsIVariant.h"
-#include "nsIXSLTProcessor.h"
-#include "nsVoidArray.h"
-#include "nsWeakPtr.h"
-#include "txExpandedNameMap.h"
-#include "txXMLEventHandler.h"
-#include "nsIXSLTProcessorObsolete.h"
-#include "txXSLTProcessor.h"
-#include "nsVoidArray.h"
 #include "nsAutoPtr.h"
 #include "nsIDocumentObserver.h"
+#include "nsIDocumentTransformer.h"
+#include "nsIXSLTProcessor.h"
+#include "nsIXSLTProcessorObsolete.h"
+#include "txExpandedNameMap.h"
 
-class nsIURI;
-class nsIXMLContentSink;
 class nsIDOMNode;
 class nsIPrincipal;
+class nsIURI;
+class nsIXMLContentSink;
+class txStylesheet;
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
@@ -66,47 +60,6 @@ class nsIPrincipal;
 "@mozilla.org/document-transformer;1?type=xslt"
 
 #define XSLT_MSGS_URL  "chrome://global/locale/xslt/xslt.properties"
-
-class txVariable : public txIGlobalParameter
-{
-public:
-    txVariable(nsIVariant *aValue) : mValue(aValue),
-                                     mTxValue(nsnull)
-    {
-    }
-    nsresult getValue(txAExprResult** aValue)
-    {
-        NS_ASSERTION(mValue, "variablevalue is null");
-
-        if (!mTxValue) {
-            nsresult rv = Convert(mValue, getter_AddRefs(mTxValue));
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        *aValue = mTxValue;
-        NS_ADDREF(*aValue);
-
-        return NS_OK;
-    }
-    nsresult getValue(nsIVariant** aValue)
-    {
-        *aValue = mValue;
-        NS_ADDREF(*aValue);
-        return NS_OK;
-    }
-    void setValue(nsIVariant* aValue)
-    {
-        NS_ASSERTION(aValue, "setting variablevalue to null");
-        mValue = aValue;
-        mTxValue = nsnull;
-    }
-
-private:
-    static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
-
-    nsCOMPtr<nsIVariant> mValue;
-    nsRefPtr<txAExprResult> mTxValue;
-};
 
 /**
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.

@@ -68,6 +68,7 @@ CPPSRCS = txAdditiveExpr.cpp \
         txBooleanExpr.cpp \
         txBooleanFunctionCall.cpp \
         txBooleanResult.cpp \
+        txExpr.cpp \
         txExprLexer.cpp \
         txExprParser.cpp \
         txFilterExpr.cpp \

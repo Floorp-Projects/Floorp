@@ -45,6 +45,7 @@
 #include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "txXPathTreeWalker.h"
 
 /*
  * Creates a NumberFunctionCall of the given type

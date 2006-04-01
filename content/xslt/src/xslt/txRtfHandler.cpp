@@ -54,7 +54,8 @@ short txResultTreeFragment::getResultType()
     return RESULT_TREE_FRAGMENT;
 }
 
-void txResultTreeFragment::stringValue(nsAString& aResult)
+void
+txResultTreeFragment::stringValue(nsString& aResult)
 {
     if (!mBuffer) {
         return;
@@ -63,7 +64,8 @@ void txResultTreeFragment::stringValue(nsAString& aResult)
     aResult.Append(mBuffer->mStringValue);
 }
 
-nsAString* txResultTreeFragment::stringValuePointer()
+const nsString*
+txResultTreeFragment::stringValuePointer()
 {
     return mBuffer ? &mBuffer->mStringValue : nsnull;
 }

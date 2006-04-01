@@ -311,7 +311,7 @@ txExprParser::createExpr(txExprLexer& lexer, txIParseContext* aContext,
 
     txStack exprs;
     txStack ops;
-    
+
     while (!done) {
 
         MBool unary = MB_FALSE;
@@ -572,7 +572,7 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
             return rv;
         }
     }
-    
+
     //-- handle parametes
     rv = parseParameters(fnCall, lexer, aContext);
     NS_ENSURE_SUCCESS(rv, rv);

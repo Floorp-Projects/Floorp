@@ -239,6 +239,47 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
     return createHandlerWith(aFormat, aHandler);
 }
 
+class txVariable : public txIGlobalParameter
+{
+public:
+    txVariable(nsIVariant *aValue) : mValue(aValue),
+                                     mTxValue(nsnull)
+    {
+    }
+    nsresult getValue(txAExprResult** aValue)
+    {
+        NS_ASSERTION(mValue, "variablevalue is null");
+
+        if (!mTxValue) {
+            nsresult rv = Convert(mValue, getter_AddRefs(mTxValue));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        *aValue = mTxValue;
+        NS_ADDREF(*aValue);
+
+        return NS_OK;
+    }
+    nsresult getValue(nsIVariant** aValue)
+    {
+        *aValue = mValue;
+        NS_ADDREF(*aValue);
+        return NS_OK;
+    }
+    void setValue(nsIVariant* aValue)
+    {
+        NS_ASSERTION(aValue, "setting variablevalue to null");
+        mValue = aValue;
+        mTxValue = nsnull;
+    }
+
+private:
+    static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
+
+    nsCOMPtr<nsIVariant> mValue;
+    nsRefPtr<txAExprResult> mTxValue;
+};
+
 /**
  * txMozillaXSLTProcessor
  */

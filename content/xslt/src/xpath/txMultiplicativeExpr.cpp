@@ -45,7 +45,6 @@
 **/
 
 #include "txExpr.h"
-#include "txExprResult.h"
 #include <math.h>
 #include "txIXPathContext.h"
 

@@ -76,11 +76,14 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
 
     txListIterator iter(&params);
+
     nsAutoString keyQName;
-    evaluateToString((Expr*)iter.next(), aContext, keyQName);
+    Expr* param = NS_STATIC_CAST(Expr*, iter.next());
+    nsresult rv = param->evaluateToString(aContext, keyQName);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     txExpandedName keyName;
-    nsresult rv = keyName.init(keyQName, mMappings, PR_FALSE);
+    rv = keyName.init(keyQName, mMappings, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<txAExprResult> exprResult;

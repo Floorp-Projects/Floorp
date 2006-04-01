@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txFunctionLib.h"
-#include "txExprResult.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
@@ -81,22 +80,6 @@ FunctionCall::addParam(Expr* aExpr)
 } //-- addParam
 
 /*
- * Evaluates the given Expression and converts its result to a String.
- * The value is appended to the given destination String
- */
-void FunctionCall::evaluateToString(Expr* aExpr, txIEvalContext* aContext,
-                                    nsAString& aDest)
-{
-    NS_ASSERTION(aExpr, "missing expression");
-    nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
-    if (NS_FAILED(rv))
-        return;
-
-    exprResult->stringValue(aDest);
-}
-
-/*
  * Evaluates the given Expression and converts its result to a number.
  */
 double FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext)
@@ -108,20 +91,6 @@ double FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext)
         return Double::NaN;
 
     return exprResult->numberValue();
-}
-
-/*
- * Evaluates the given Expression and converts its result to a boolean.
- */
-MBool FunctionCall::evaluateToBoolean(Expr* aExpr, txIEvalContext* aContext)
-{
-    NS_ASSERTION(aExpr, "missing expression");
-    nsRefPtr<txAExprResult> exprResult;
-    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-
-    return exprResult->booleanValue();
 }
 
 /*

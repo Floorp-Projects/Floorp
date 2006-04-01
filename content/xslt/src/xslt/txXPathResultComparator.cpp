@@ -39,7 +39,6 @@
 
 #include "txXPathResultComparator.h"
 #include "txExpr.h"
-#include "txExprResult.h"
 #include "txCore.h"
 #ifndef TX_EXE
 #include "nsCollationCID.h"
@@ -107,43 +106,50 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 }
 #endif
 
-TxObject* txResultStringComparator::createSortableValue(txAExprResult* aExprRes)
+nsresult
+txResultStringComparator::createSortableValue(Expr *aExpr,
+                                              txIEvalContext *aContext,
+                                              txObject *&aResult)
 {
-    StringValue* val = new StringValue;
+    nsAutoPtr<StringValue> val(new StringValue);
+    if (!val) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    if (!val)
-        return 0;
-
+    nsresult rv;
 #ifdef TX_EXE
-    aExprRes->stringValue(val->mStr);
+    rv = aExpr->evaluateToString(aContext, val->mStr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // We don't support case-order on standalone
     TX_ToLowerCase(val->mStr);
 #else
     if (!mCollation)
-        return 0;
+        return NS_ERROR_FAILURE;
 
     val->mCaseKey = new nsString;
     if (!val->mCaseKey) {
-        delete val;
-        return 0;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     nsString& nsCaseKey = *(nsString *)val->mCaseKey;
-    aExprRes->stringValue(nsCaseKey);
+    rv = aExpr->evaluateToString(aContext, nsCaseKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (nsCaseKey.IsEmpty()) {
-        return val;        
+        aResult = val.forget();
+
+        return NS_OK;
     }
-    nsresult rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive,
-                                                 nsCaseKey,
-                                                 &val->mKey, 
-                                                 &val->mLength);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Failed to create raw sort key");
-        delete val;
-        return 0;
-    }
+
+    rv = mCollation->AllocateRawSortKey(nsICollation::kCollationCaseInSensitive,
+                                        nsCaseKey, &val->mKey, &val->mLength);
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
-    return val;
+
+    aResult = val.forget();
+
+    return NS_OK;
 }
 
 int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
@@ -264,12 +270,25 @@ txResultNumberComparator::~txResultNumberComparator()
 {
 }
 
-TxObject* txResultNumberComparator::createSortableValue(txAExprResult* aExprRes)
+nsresult
+txResultNumberComparator::createSortableValue(Expr *aExpr,
+                                              txIEvalContext *aContext,
+                                              TxObject *&aResult)
 {
-    NumberValue* numval = new NumberValue;
-    if (numval)
-        numval->mVal = aExprRes->numberValue();
-    return numval;
+    nsAutoPtr<NumberValue> numval(new NumberValue);
+    if (!numval) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    numval->mVal = exprRes->numberValue();
+
+    aResult = numval.forget();
+
+    return NS_OK;
 }
 
 int txResultNumberComparator::compareValues(TxObject* aVal1, TxObject* aVal2)

@@ -39,7 +39,6 @@
 #include "txInstructions.h"
 #include "txError.h"
 #include "txExpr.h"
-#include "txExprResult.h"
 #include "txStylesheet.h"
 #include "txNodeSetContext.h"
 #include "txTextHandler.h"
@@ -134,13 +133,9 @@ txAttribute::txAttribute(nsAutoPtr<Expr> aName, nsAutoPtr<Expr> aNamespace,
 nsresult
 txAttribute::execute(txExecutionState& aEs)
 {
-    nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = mName->evaluate(aEs.getEvalContext(),
-                                  getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoString name;
-    exprRes->stringValue(name);
+    nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     const PRUnichar* colon;
     if (!XMLUtils::isValidQName(name, &colon) ||
@@ -157,12 +152,10 @@ txAttribute::execute(txExecutionState& aEs)
     PRInt32 nsId = kNameSpaceID_None;
     if (!name.IsEmpty()) {
         if (mNamespace) {
-            rv = mNamespace->evaluate(aEs.getEvalContext(),
-                                      getter_AddRefs(exprRes));
-            NS_ENSURE_SUCCESS(rv, rv);
-
             nsAutoString nspace;
-            exprRes->stringValue(nspace);
+            rv = mNamespace->evaluateToString(aEs.getEvalContext(),
+                                              nspace);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (!nspace.IsEmpty()) {
                 nsId = txNamespaceManager::getNamespaceID(nspace);
@@ -244,12 +237,11 @@ txConditionalGoto::txConditionalGoto(nsAutoPtr<Expr> aCondition,
 nsresult
 txConditionalGoto::execute(txExecutionState& aEs)
 {
-    nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = mCondition->evaluate(aEs.getEvalContext(),
-                                       getter_AddRefs(exprRes));
+    PRBool exprRes;
+    nsresult rv = mCondition->evaluateToBool(aEs.getEvalContext(), exprRes);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!exprRes->booleanValue()) {
+    if (!exprRes) {
         aEs.gotoInstruction(mTarget);
     }
 
@@ -573,7 +565,7 @@ txLREAttribute::execute(txExecutionState& aEs)
                                    getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAString* value = exprRes->stringValuePointer();
+    const nsString* value = exprRes->stringValuePointer();
     if (value) {
         aEs.mResultHandler->attribute(nodeName, mNamespaceID, *value);
     }
@@ -653,13 +645,9 @@ txProcessingInstruction::execute(txExecutionState& aEs)
         NS_STATIC_CAST(txTextHandler*, aEs.popResultHandler()));
     XMLUtils::normalizePIValue(handler->mValue);
 
-    nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = mName->evaluate(aEs.getEvalContext(),
-                                  getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoString name;
-    exprRes->stringValue(name);
+    nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Check name validity (must be valid NCName and a PITarget)
     // XXX Need to check for NCName and PITarget
@@ -908,29 +896,23 @@ txStartElement::txStartElement(nsAutoPtr<Expr> aName,
 nsresult
 txStartElement::execute(txExecutionState& aEs)
 {
-    nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = mName->evaluate(aEs.getEvalContext(),
-                                  getter_AddRefs(exprRes));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoString name;
-    exprRes->stringValue(name);
+    nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     const PRUnichar* colon;
     if (!XMLUtils::isValidQName(name, &colon)) {
-        // tunkate name to indicate failure
+        // truncate name to indicate failure
         name.Truncate();
     }
 
     PRInt32 nsId = kNameSpaceID_None;
     if (!name.IsEmpty()) {
         if (mNamespace) {
-            rv = mNamespace->evaluate(aEs.getEvalContext(),
-                                      getter_AddRefs(exprRes));
-            NS_ENSURE_SUCCESS(rv, rv);
-
             nsAutoString nspace;
-            exprRes->stringValue(nspace);
+            rv = mNamespace->evaluateToString(aEs.getEvalContext(),
+                                              nspace);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (!nspace.IsEmpty()) {
                 nsId = txNamespaceManager::getNamespaceID(nspace);
@@ -1034,7 +1016,7 @@ txValueOf::execute(txExecutionState& aEs)
                                   getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAString* value = exprRes->stringValuePointer();
+    const nsString* value = exprRes->stringValuePointer();
     if (value) {
         if (!value->IsEmpty()) {
             aEs.mResultHandler->characters(*value, mDOE);

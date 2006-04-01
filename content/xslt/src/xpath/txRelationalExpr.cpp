@@ -39,6 +39,7 @@
 #include "txExpr.h"
 #include "txNodeSet.h"
 #include "txIXPathContext.h"
+#include "txXPathTreeWalker.h"
 
 /**
  *  Compares the two ExprResults based on XPath 1.0 Recommendation (section 3.4)
@@ -104,7 +105,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
     // Neither is a NodeSet
     if (mOp == EQUAL || mOp == NOT_EQUAL) {
         PRBool result;
-        nsAString *lString, *rString;
+        const nsString *lString, *rString;
 
         // If either is a bool, compare as bools.
         if (ltype == txAExprResult::BOOLEAN ||
@@ -136,7 +137,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
             else {
                 nsAutoString rStr;
                 aRight->stringValue(rStr);
-                result = rStr.Equals(*lString);
+                result = lString->Equals(rStr);
             }
         }
         else if ((rString = aRight->stringValuePointer())) {

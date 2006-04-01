@@ -318,7 +318,7 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
     }
     tok = aLexer.nextToken();
 
-    txNodeTest* nodeTest = 0;
+    txNodeTest* nodeTest;
     if (tok->mType == Token::CNAME) {
         // resolve QName
         nsCOMPtr<nsIAtom> prefix, lName;
@@ -329,14 +329,11 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
             // XXX error report namespace resolve failed
             return rv;
         }
-        if (isAttr) {
-            nodeTest = new txNameTest(prefix, lName, nspace,
-                                      txXPathNodeType::ATTRIBUTE_NODE);
-        }
-        else {
-            nodeTest = new txNameTest(prefix, lName, nspace,
-                                      txXPathNodeType::ELEMENT_NODE);
-        }
+
+        PRUint16 nodeType = isAttr ?
+                            (PRUint16)txXPathNodeType::ATTRIBUTE_NODE :
+                            (PRUint16)txXPathNodeType::ELEMENT_NODE;
+        nodeTest = new txNameTest(prefix, lName, nspace, nodeType);
         if (!nodeTest) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -347,18 +344,16 @@ nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    txStepPattern* step = new txStepPattern(nodeTest, isAttr);
+    nsAutoPtr<txStepPattern> step(new txStepPattern(nodeTest, isAttr));
     if (!step) {
         delete nodeTest;
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    nodeTest = 0;
-    rv = parsePredicates(step, aLexer, aContext);
-    if (NS_FAILED(rv)) {
-        delete step;
-        return rv;
-    }
 
-    aPattern = step;
+    rv = parsePredicates(step, aLexer, aContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aPattern = step.forget();
+
     return NS_OK;
 }

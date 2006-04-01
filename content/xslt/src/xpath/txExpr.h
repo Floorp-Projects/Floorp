@@ -43,6 +43,7 @@
 
 #include "txList.h"
 #include "nsAutoPtr.h"
+#include "txExprResult.h"
 #include "txCore.h"
 #include "nsString.h"
 
@@ -56,7 +57,6 @@
 */
 
 class nsIAtom;
-class txAExprResult;
 class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;
@@ -149,6 +149,12 @@ public:
      * expression, that is the responsibility of the caller.
      */
     virtual void setSubExprAt(PRUint32 aPos, Expr* aExpr) = 0;
+
+    virtual nsresult evaluateToBool(txIEvalContext* aContext,
+                                    PRBool& aResult);
+
+    virtual nsresult evaluateToString(txIEvalContext* aContext,
+                                      nsString& aResult);
 
 #ifdef TX_TO_STRING
     /**
@@ -280,8 +286,8 @@ _class::setSubExprAt(PRUint32 aPos, Expr* aExpr)              \
  * This class represents a FunctionCall as defined by the XPath 1.0
  * Recommendation.
 **/
-class FunctionCall : public Expr {
-
+class FunctionCall : public Expr
+{
 public:
     virtual ~FunctionCall();
 
@@ -320,28 +326,16 @@ protected:
     FunctionCall();
 
     /*
-     * Evaluates the given Expression and converts its result to a String.
-     * The value is appended to the given destination String
-     */
-    void evaluateToString(Expr* aExpr, txIEvalContext* aContext,
-                          nsAString& aDest);
-
-    /*
      * Evaluates the given Expression and converts its result to a number.
      */
-    double evaluateToNumber(Expr* aExpr, txIEvalContext* aContext);
-
-    /*
-     * Evaluates the given Expression and converts its result to a boolean.
-     */
-    MBool evaluateToBoolean(Expr* aExpr, txIEvalContext* aContext);
+    static double evaluateToNumber(Expr* aExpr, txIEvalContext* aContext);
 
     /*
      * Evaluates the given Expression and converts its result to a NodeSet.
      * If the result is not a NodeSet an error is returned.
      */
-    nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
-                               txNodeSet** aResult);
+    static nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
+                                      txNodeSet** aResult);
 
     /**
      * Returns true if any argument is sensitive to the given context.
@@ -355,7 +349,7 @@ protected:
      */
     virtual nsresult getNameAtom(nsIAtom** aAtom) = 0;
 #endif
-}; //-- FunctionCall
+};
 
 
 /**

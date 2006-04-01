@@ -42,7 +42,6 @@
 #include "txXPathResultComparator.h"
 #include "txAtoms.h"
 #include "txNodeSetContext.h"
-#include "txExprResult.h"
 #include "txExpr.h"
 #include "txStringUtils.h"
 #include "prmem.h"
@@ -81,13 +80,10 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     // Order
     MBool ascending = MB_TRUE;
     if (aOrderExpr) {
-        nsRefPtr<txAExprResult> exprRes;
-        rv = aOrderExpr->evaluate(aContext, getter_AddRefs(exprRes));
+        nsAutoString attrValue;
+        rv = aOrderExpr->evaluateToString(aContext, attrValue);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsAutoString attrValue;
-        exprRes->stringValue(attrValue);
-        
         if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
             ascending = MB_FALSE;
         }
@@ -102,11 +98,8 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     // Create comparator depending on datatype
     nsAutoString dataType;
     if (aDataTypeExpr) {
-        nsRefPtr<txAExprResult> exprRes;
-        rv = aDataTypeExpr->evaluate(aContext, getter_AddRefs(exprRes));
+        rv = aDataTypeExpr->evaluateToString(aContext, dataType);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        exprRes->stringValue(dataType);
     }
 
     if (!aDataTypeExpr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
@@ -115,22 +108,17 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
         // Language
         nsAutoString lang;
         if (aLangExpr) {
-            nsRefPtr<txAExprResult> exprRes;
-            rv = aLangExpr->evaluate(aContext, getter_AddRefs(exprRes));
+            rv = aLangExpr->evaluateToString(aContext, lang);
             NS_ENSURE_SUCCESS(rv, rv);
-
-            exprRes->stringValue(lang);
         }
 
         // Case-order 
         MBool upperFirst = PR_FALSE;
         if (aCaseOrderExpr) {
-            nsRefPtr<txAExprResult> exprRes;
-            rv = aCaseOrderExpr->evaluate(aContext, getter_AddRefs(exprRes));
-            NS_ENSURE_SUCCESS(rv, rv);
-
             nsAutoString attrValue;
-            exprRes->stringValue(attrValue);
+
+            rv = aCaseOrderExpr->evaluateToString(aContext, attrValue);
+            NS_ENSURE_SUCCESS(rv, rv);
 
             if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::upperFirst)) {
                 upperFirst = PR_TRUE;
@@ -288,19 +276,14 @@ txNodeSorter::calcSortValue(TxObject*& aSortValue, SortKey* aKey,
                             SortData* aSortData, PRUint32 aNodeIndex)
 {
     aSortData->mContext->setPosition(aNodeIndex + 1); // position is 1-based
-    nsRefPtr<txAExprResult> res;
-    nsresult rv = aKey->mExpr->evaluate(aSortData->mContext,
-                                        getter_AddRefs(res));
+
+    nsresult rv = aKey->mComparator->createSortableValue(aKey->mExpr,
+                                                         aSortData->mContext,
+                                                         aSortValue);
     if (NS_FAILED(rv)) {
         aSortData->mRv = rv;
         return PR_FALSE;
     }
 
-    aSortValue = aKey->mComparator->createSortableValue(res);
-    if (!aSortValue) {
-        aSortData->mRv = NS_ERROR_OUT_OF_MEMORY;
-        return PR_FALSE;
-    }
-    
     return PR_TRUE;
 }
