@@ -84,17 +84,17 @@ function loadDialog()
     // Those labels are for the monthly recurrence deck.
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                         .getService(Components.interfaces.nsIStringBundleService);
-    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    var props = sbs.createBundle("chrome://calendar/locale/dateFormat.properties");
 
     // Set label to '15th day of the month'
-    var nthstr = props.GetStringFromName("ordinal"+window.calendarEvent.startDate.day);
-    var str = props.formatStringFromName("recurNthDay", [nthstr], 1);
+    var nthstr = props.GetStringFromName("ordinal.suffix."+window.calendarEvent.startDate.day);
+    var str = props.formatStringFromName("recurNthDay", [window.calendarEvent.startDate.day, nthstr], 2);
     document.getElementById("monthly-nth-day").label = str;
 
     // Set label to 'second week of the month'
     var monthWeekNum = Math.floor(window.calendarEvent.startDate.day / 7) + 1;
-    nthstr = props.GetStringFromName("wordOrdinal"+monthWeekNum);
-    var daystr = props.GetStringFromName("day"+window.calendarEvent.startDate.weekday);
+    nthstr = props.GetStringFromName("ordinal.name."+monthWeekNum);
+    var daystr = props.GetStringFromName("day."+(window.calendarEvent.startDate.weekday+1)+".name");
     str = props.formatStringFromName("recurNthWeek", [nthstr, daystr], 2);
     document.getElementById("monthly-nth-week").label = str;
 
