@@ -38,20 +38,17 @@ use Bugzilla::Util;
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::User;
 use Bugzilla::Error;
-use Bugzilla::Product;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
 sub globals_pl_sillyness {
     my $zz;
-    $zz = @main::enterable_products;
     $zz = @main::legal_bug_status;
     $zz = @main::legal_opsys;
     $zz = @main::legal_platform;
     $zz = @main::legal_priority;
     $zz = @main::legal_severity;
-    $zz = @main::milestoneurl;
     $zz = @main::prodmaxvotes;
 }
 
@@ -103,50 +100,10 @@ sub GenerateVersionTable {
     my $dbh = Bugzilla->dbh;
 
     my @line;
-    SendSQL("SELECT components.name, products.name " .
-            "FROM components, products " .
-            "WHERE products.id = components.product_id " .
-            "ORDER BY components.name");
-    while (@line = FetchSQLData()) {
-        my ($c,$p) = (@line);
-        if (!defined $::components{$p}) {
-            $::components{$p} = [];
-        }
-        my $ref = $::components{$p};
-        push @$ref, $c;
-    }
-
-    SendSQL("SELECT products.name, classifications.name " .
-            "FROM products, classifications " .
-            "WHERE classifications.id = products.classification_id " .
-            "ORDER BY classifications.name");
-    while (@line = FetchSQLData()) {
-        my ($p,$c) = (@line);
-        if (!defined $::classifications{$c}) {
-            $::classifications{$c} = [];
-        }
-        my $ref = $::classifications{$c};
-        push @$ref, $p;
-    }
-
-    my $dotargetmilestone = 1;  # This used to check the param, but there's
-                                # enough code that wants to pretend we're using
-                                # target milestones, even if they don't get
-                                # shown to the user.  So we cache all the data
-                                # about them anyway.
-
-    my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-
-    SendSQL("SELECT name, votesperuser, disallownew$mpart " .
+    SendSQL("SELECT name, votesperuser " .
             "FROM products ORDER BY name");
     while (@line = FetchSQLData()) {
-        my ($p, $votesperuser, $dis, $u) = (@line);
-        if (!$dis && scalar($::components{$p})) {
-            push @::enterable_products, $p;
-        }
-        if ($dotargetmilestone) {
-            $::milestoneurl{$p} = $u;
-        }
+        my ($p, $votesperuser) = (@line);
         $::prodmaxvotes{$p} = $votesperuser;
     }
             
@@ -197,15 +154,6 @@ sub GenerateVersionTable {
     print $fh (Data::Dumper->Dump([\@::log_columns],
                                   ['*::log_columns']));
 
-    my @legal_products = map($_->name, Bugzilla::Product::get_all_products());
-    foreach my $i (@legal_products) {
-        if (!defined $::components{$i}) {
-            $::components{$i} = [];
-        }
-    }
-    print $fh (Data::Dumper->Dump([\%::components],
-                                  ['*::components']));
-
     print $fh (Data::Dumper->Dump([\@::legal_priority, \@::legal_severity,
                                    \@::legal_platform, \@::legal_opsys,
                                    \@::legal_bug_status, \@::legal_resolution],
@@ -213,33 +161,8 @@ sub GenerateVersionTable {
                                    '*::legal_platform', '*::legal_opsys',
                                    '*::legal_bug_status', '*::legal_resolution']));
 
-    print $fh (Data::Dumper->Dump([\@::settable_resolution,
-                                   \%::classifications,
-                                   \@::enterable_products, \%::prodmaxvotes],
-                                  ['*::settable_resolution',
-                                   '*::classifications',
-                                   '*::enterable_products', '*::prodmaxvotes']));
-
-    if ($dotargetmilestone) {
-        # reading target milestones in from the database - matthew@zeroknowledge.com
-        SendSQL("SELECT milestones.value, products.name " .
-                "FROM milestones, products " .
-                "WHERE products.id = milestones.product_id " .
-                "ORDER BY milestones.sortkey, milestones.value");
-        my @line;
-        while(@line = FetchSQLData()) {
-            my ($tm, $pr) = (@line);
-            if (!defined $::target_milestone{$pr}) {
-                $::target_milestone{$pr} = [];
-            }
-            push @{$::target_milestone{$pr}}, $tm;
-        }
-
-        print $fh (Data::Dumper->Dump([\%::target_milestone,
-                                       \%::milestoneurl],
-                                      ['*::target_milestone',
-                                       '*::milestoneurl']));
-    }
+    print $fh (Data::Dumper->Dump([\@::settable_resolution, \%::prodmaxvotes],
+                                  ['*::settable_resolution', '*::prodmaxvotes']));
 
     print $fh "1;\n";
     close $fh;

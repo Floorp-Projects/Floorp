@@ -67,8 +67,6 @@ else {
 
 my $dbh = Bugzilla->switch_to_shadow_db();
 
-use vars qw (@legal_product);
-
 my %dbmcount;
 my %count;
 my %before;

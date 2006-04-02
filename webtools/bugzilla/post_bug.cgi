@@ -40,12 +40,10 @@ use Bugzilla::Keyword;
 # "use vars" chokes on me when I try it here.
 sub sillyness {
     my $zz;
-    $zz = %::components;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
     $zz = @::legal_severity;
-    $zz = %::target_milestone;
 }
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
@@ -227,9 +225,10 @@ check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys)
 check_field('bug_status',   scalar $cgi->param('bug_status'),   ['UNCONFIRMED', 'NEW']);
 check_field('version',      scalar $cgi->param('version'),
             [map($_->name, @{$prod_obj->versions})]);
-check_field('component',    scalar $cgi->param('component'),    $::components{$product});
+check_field('component',    scalar $cgi->param('component'),
+            [map($_->name, @{$prod_obj->components})]);
 check_field('target_milestone', scalar $cgi->param('target_milestone'),
-            $::target_milestone{$product});
+            [map($_->name, @{$prod_obj->milestones})]);
 
 foreach my $field_name ('assigned_to', 'bug_file_loc', 'comment') {
     defined($cgi->param($field_name))

@@ -40,7 +40,6 @@ use lib qw(.);
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 require "globals.pl";
-use vars qw(@legal_product); # globals from er, globals.pl
 
 eval "use GD";
 $@ && ThrowCodeError("gd_not_installed");

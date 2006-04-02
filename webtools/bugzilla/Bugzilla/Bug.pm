@@ -32,8 +32,7 @@ use strict;
 
 use vars qw(@legal_platform
             @legal_priority @legal_severity @legal_opsys @legal_bug_status
-            @settable_resolution %components %target_milestone
-            @enterable_products %milestoneurl %prodmaxvotes);
+            @settable_resolution %prodmaxvotes);
 
 use CGI::Carp qw(fatalsToBrowser);
 
@@ -469,7 +468,9 @@ sub milestoneurl {
     my ($self) = @_;
     return $self->{'milestoneurl'} if exists $self->{'milestoneurl'};
     return '' if $self->{'error'};
-    $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
+
+    $self->{'prod_obj'} ||= new Bugzilla::Product({name => $self->{'product'}});
+    $self->{'milestoneurl'} = $self->{'prod_obj'}->milestone_url;
     return $self->{'milestoneurl'};
 }
 
@@ -640,34 +641,11 @@ sub choices {
     $self->{'choices'} = {};
     $self->{prod_obj} ||= new Bugzilla::Product({name => $self->{product}});
 
-    # Fiddle the product list.
-    my $seen_curr_prod;
-    my @prodlist;
-
-    foreach my $product (@::enterable_products) {
-        if ($product eq $self->{'product'}) {
-            # if it's the product the bug is already in, it's ALWAYS in
-            # the popup, period, whether the user can see it or not, and
-            # regardless of the disallownew setting.
-            $seen_curr_prod = 1;
-            push(@prodlist, $product);
-            next;
-        }
-
-        if (!Bugzilla->user->can_enter_product($product)) {
-            # If we're using bug groups to restrict entry on products, and
-            # this product has an entry group, and the user is not in that
-            # group, we don't want to include that product in this list.
-            next;
-        }
-
-        push(@prodlist, $product);
-    }
-
+    my @prodlist = map {$_->name} @{Bugzilla->user->get_enterable_products};
     # The current product is part of the popup, even if new bugs are no longer
     # allowed for that product
-    if (!$seen_curr_prod) {
-        push (@prodlist, $self->{'product'});
+    if (lsearch(\@prodlist, $self->{'product'}) < 0) {
+        push(@prodlist, $self->{'product'});
         @prodlist = sort @prodlist;
     }
 
@@ -683,9 +661,9 @@ sub choices {
        'op_sys' => \@::legal_opsys,
        'bug_status' => \@::legal_bug_status,
        'resolution' => \@res,
-       'component' => $::components{$self->{product}},
+       'component' => [map($_->name, @{$self->{prod_obj}->components})],
        'version' => [map($_->name, @{$self->{prod_obj}->versions})],
-       'target_milestone' => $::target_milestone{$self->{product}},
+       'target_milestone' => [map($_->name, @{$self->{prod_obj}->milestones})],
       };
 
     return $self->{'choices'};

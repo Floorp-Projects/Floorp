@@ -65,13 +65,10 @@ use Bugzilla::FlagType;
 
 # Shut up misguided -w warnings about "used only once":
 
-use vars qw(@legal_product
-          %components
-          %legal_opsys
+use vars qw(%legal_opsys
           %legal_platform
           %legal_priority
           %settable_resolution
-          %target_milestone
           %legal_severity
            );
 
@@ -339,16 +336,18 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
     # worthy of a comment, perhaps.
     #
     my @version_names = map($_->name, @{$prod_obj->versions});
+    my @component_names = map($_->name, @{$prod_obj->components});
     my $vok = lsearch(\@version_names, $cgi->param('version')) >= 0;
-    my $cok = lsearch($::components{$prod}, $cgi->param('component')) >= 0;
+    my $cok = lsearch(\@component_names, $cgi->param('component')) >= 0;
 
     my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
+    my @milestone_names = ();
     if ( Param("usetargetmilestone") ) {
        defined($cgi->param('target_milestone'))
          || ThrowCodeError('undefined_field', { field => 'target_milestone' });
 
-       $mok = lsearch($::target_milestone{$prod},
-                      $cgi->param('target_milestone')) >= 0;
+       @milestone_names = map($_->name, @{$prod_obj->milestones});
+       $mok = lsearch(\@milestone_names, $cgi->param('target_milestone')) >= 0;
     }
 
     # If the product-specific fields need to be verified, or we need to verify
@@ -367,13 +366,13 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             if ($vok) {
                 $defaults{'version'} = $cgi->param('version');
             }
-            $vars->{'components'} = $::components{$prod};
+            $vars->{'components'} = \@component_names;
             if ($cok) {
                 $defaults{'component'} = $cgi->param('component');
             }
             if (Param("usetargetmilestone")) {
                 $vars->{'use_target_milestone'} = 1;
-                $vars->{'milestones'} = $::target_milestone{$prod};
+                $vars->{'milestones'} = \@milestone_names;
                 if ($mok) {
                     $defaults{'target_milestone'} = $cgi->param('target_milestone');
                 } else {
@@ -611,12 +610,12 @@ if (defined $cgi->param('id')) {
     # is more work in the current architecture of this script...)
     my $prod_obj = Bugzilla::Product::check_product($cgi->param('product'));
     check_field('component', scalar $cgi->param('component'), 
-                \@{$::components{$cgi->param('product')}});
+                [map($_->name, @{$prod_obj->components})]);
     check_field('version', scalar $cgi->param('version'),
                 [map($_->name, @{$prod_obj->versions})]);
     if ( Param("usetargetmilestone") ) {
         check_field('target_milestone', scalar $cgi->param('target_milestone'), 
-                    \@{$::target_milestone{$cgi->param('product')}});
+                    [map($_->name, @{$prod_obj->milestones})]);
     }
     check_field('rep_platform', scalar $cgi->param('rep_platform'), \@::legal_platform);
     check_field('op_sys',       scalar $cgi->param('op_sys'),       \@::legal_opsys);
@@ -1473,7 +1472,7 @@ foreach my $id (@idlist) {
                                 # whether we do LOW_PRIORITY ...
     $dbh->bz_lock_tables("bugs $write", "bugs_activity $write", "cc $write",
             "profiles READ", "dependencies $write", "votes $write",
-            "products READ", "components READ",
+            "products READ", "components READ", "milestones READ",
             "keywords $write", "longdescs $write", "fielddefs READ",
             "bug_group_map $write", "flags $write", "duplicates $write",
             "user_group_map READ", "group_group_map READ", "flagtypes READ",
@@ -1568,7 +1567,8 @@ foreach my $id (@idlist) {
     if ($requiremilestone) {
         # musthavemilestoneonaccept applies only if at least two
         # target milestones are defined for the current product.
-        my $nb_milestones = scalar(@{$::target_milestone{$oldhash{'product'}}});
+        my $prod_obj = new Bugzilla::Product({'name' => $oldhash{'product'}});
+        my $nb_milestones = scalar(@{$prod_obj->milestones});
         if ($nb_milestones > 1) {
             my $value = $cgi->param('target_milestone');
             if (!defined $value || $value eq $cgi->param('dontchange')) {

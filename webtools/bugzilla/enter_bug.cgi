@@ -52,7 +52,6 @@ use vars qw(
   @legal_platform
   @legal_priority
   @legal_severity
-  %target_milestone
 );
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
@@ -317,9 +316,9 @@ GetVersionTable();
 
 my $product_id = get_product_id($product);
 
-if (1 == @{$::components{$product}}) {
+if (scalar(@{$prod_obj->components}) == 1) {
     # Only one component; just pick it.
-    $cgi->param('component', $::components{$product}->[0]);
+    $cgi->param('component', $prod_obj->components->[0]->name);
 }
 
 my @components;
@@ -464,7 +463,7 @@ trick_taint($product);
 
 # Get list of milestones.
 if ( Param('usetargetmilestone') ) {
-    $vars->{'target_milestone'} = $::target_milestone{$product};
+    $vars->{'target_milestone'} = [map($_->name, @{$prod_obj->milestones})];
     if (formvalue('target_milestone')) {
        $default{'target_milestone'} = formvalue('target_milestone');
     } else {
