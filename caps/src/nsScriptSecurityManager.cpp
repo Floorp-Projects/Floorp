@@ -49,6 +49,7 @@
 #include "nsJSPrincipals.h"
 #include "nsSystemPrincipal.h"
 #include "nsPrincipal.h"
+#include "nsNullPrincipal.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsIJSContextStack.h"
@@ -246,6 +247,11 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
 {
     *result = PR_FALSE;
 
+    // Note that this is not an Equals() test on purpose -- for URIs that don't
+    // support host/port, we want equality to basically be object identity, for
+    // security purposes.  Otherwise, for example, two javascript: URIs that
+    // are otherwise unrelated could end up "same origin", which would be
+    // unfortunate.
     if (aSourceURI == aTargetURI)
     {
         *result = PR_TRUE;
@@ -880,12 +886,18 @@ nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject
             return NS_OK;
     }
 
-    // Allow access to about:blank
-    nsXPIDLCString origin;
-    rv = aObject->GetOrigin(getter_Copies(origin));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (nsCRT::strcasecmp(origin, "about:blank") == 0)
-        return NS_OK;
+    // Allow access to about:blank, except from null principals (which
+    // never have access to anything but themselves).  If SchemeIs
+    // fails, just deny access -- better safe than sorry.
+    PRBool nullSubject = PR_FALSE;
+    rv = subjectURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME, &nullSubject);
+    if (NS_SUCCEEDED(rv) && !nullSubject) {
+        nsXPIDLCString origin;
+        rv = aObject->GetOrigin(getter_Copies(origin));
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (nsCRT::strcasecmp(origin, "about:blank") == 0)
+            return NS_OK;
+    }
 
     /*
     ** Access tests failed, so now report error.
@@ -967,6 +979,9 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         char *p = start;
 
         //-- skip (nested) jar schemes to reach the "real" URI
+        // FIXME: bug 327241 -- that's not what we do in SecurityCompareURIs!
+        // We should do something more like that, except I guess this is faster
+        // than QI followed by getter, etc... :(
         while (*p == 'j' && *(++p) == 'a' && *(++p) == 'r' && *(++p) == ':')
             start = ++p;
         
@@ -1122,17 +1137,12 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     if (!principal)
         return NS_OK;
 
-    // The system principal can load all URIs.
-    if (principal == mSystemPrincipal)
+    rv = CheckLoadURIWithPrincipal(principal, aURI,
+                                   nsIScriptSecurityManager::STANDARD);
+    if (NS_SUCCEEDED(rv)) {
+        // OK to load
         return NS_OK;
-
-    // Otherwise, principal should have a codebase URI that we can use to
-    // do the remaining tests.
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(principal->GetURI(getter_AddRefs(uri))))
-        return NS_ERROR_FAILURE;
-    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI, nsIScriptSecurityManager::STANDARD )))
-        return NS_OK;
+    }
 
     // See if we're attempting to load a file: URI. If so, let a
     // UniversalFileRead capability trump the above check.
@@ -1221,9 +1231,14 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
+    // FIXME: bug 327244 -- this function should really die...  Really truly.
     NS_PRECONDITION(aSourceURI, "CheckLoadURI called with null source URI");
     NS_ENSURE_ARG_POINTER(aSourceURI);
-    
+
+    // Note: this is not _quite_ right if aSourceURI has
+    // NS_NULLPRINCIPAL_SCHEME, but we'll just extract the scheme in
+    // CheckLoadURIWithPrincipal anyway, so this is good enough.  This method
+    // really needs to go away....
     nsCOMPtr<nsIPrincipal> sourcePrincipal;
     nsresult rv = CreateCodebasePrincipal(aSourceURI,
                                           getter_AddRefs(sourcePrincipal));
@@ -1262,6 +1277,14 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     nsresult rv = GetBaseURIScheme(sourceURI, sourceScheme);
     if (NS_FAILED(rv)) return rv;
 
+    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
+
+    // Don't allow null principals to load anything
+    if (sourceScheme.LowerCaseEqualsLiteral(NS_NULLPRINCIPAL_SCHEME)) {
+        ReportError(nsnull, errorTag, sourceURI, aTargetURI);
+        return NS_ERROR_DOM_BAD_URI;
+    }
+
     // Some loads are not allowed from mail/news messages
     if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) &&
         (sourceScheme.LowerCaseEqualsLiteral("mailbox") ||
@@ -1286,7 +1309,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
        return NS_ERROR_DOM_BAD_URI;
     }
 
-    if (nsCRT::strcasecmp(targetScheme.get(), sourceScheme.get()) == 0)
+    if (targetScheme.Equals(sourceScheme,
+                            nsCaseInsensitiveCStringComparator()))
     {
         // every scheme can access another URI from the same scheme
         return NS_OK;
@@ -1325,10 +1349,14 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
         { "datetime",        DenyProtocol   },
         { "finger",          AllowProtocol  },
         { "res",             DenyProtocol   },
-        { "x-jsd",           ChromeProtocol }
+        { "x-jsd",           ChromeProtocol },
+
+        // Don't allow random people to load null-principal URIs.  Not like it
+        // matters _that_ much, since we won't have a useful handler for them,
+        // but...
+        { NS_NULLPRINCIPAL_SCHEME, DenyProtocol }
     };
 
-    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
     {
         if (targetScheme.LowerCaseEqualsASCII(protocolList[i].name))
@@ -1449,6 +1477,7 @@ nsScriptSecurityManager::CheckLoadURIStr(const nsACString& aSourceURIStr,
                                          const nsACString& aTargetURIStr,
                                          PRUint32 aFlags)
 {
+    // FIXME: bug 327244 -- this function should really die...  Really truly.
     nsCOMPtr<nsIURI> source;
     nsresult rv = NS_NewURI(getter_AddRefs(source), aSourceURIStr,
                             nsnull, nsnull, sIOService);
@@ -1822,6 +1851,9 @@ nsScriptSecurityManager::DoGetCertificatePrincipal(const nsACString& aCertFinger
 nsresult
 nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal **result)
 {
+    // I _think_ it's safe to not create null principals here based on aURI.
+    // At least all the callers would do the right thing in those cases, as far
+    // as I can tell.  --bz
     nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;

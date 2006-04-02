@@ -45,7 +45,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULDocument.h"
 #include "nsINodeInfo.h"
-#include "nsIPrincipal.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIXULDocument.h"

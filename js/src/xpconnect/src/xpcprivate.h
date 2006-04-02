@@ -3511,6 +3511,35 @@ protected:
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
 
 /***************************************************************************/
+#ifndef XPCONNECT_STANDALONE
+
+#define PRINCIPALHOLDER_IID \
+{0xbf109f49, 0xf94a, 0x43d8, {0x93, 0xdb, 0xe4, 0x66, 0x49, 0xc5, 0xd9, 0x7d}}
+
+class PrincipalHolder : public nsIScriptObjectPrincipal
+{
+public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(PRINCIPALHOLDER_IID)
+
+    PrincipalHolder(nsIPrincipal *holdee)
+        : mHoldee(holdee)
+    {
+    }
+    virtual ~PrincipalHolder() { }
+
+    NS_DECL_ISUPPORTS
+
+    nsIPrincipal *GetPrincipal();
+
+private:
+    nsCOMPtr<nsIPrincipal> mHoldee;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
+
+#endif /* !XPCONNECT_STANDALONE */
+
+/***************************************************************************/
 // Utilities
 
 JSBool xpc_IsReportableErrorCode(nsresult code);

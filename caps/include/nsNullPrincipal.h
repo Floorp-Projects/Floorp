@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999-2000
+ * the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Boris Zbarsky <bzbarsky@mit.edu> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,40 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* The privileged system principal. */
+/**
+ * This is the principal that has no rights and can't be accessed by
+ * anything other than itself and chrome; null principals are not
+ * same-origin with anything but themselves.
+ */
 
-#ifndef nsSystemPrincipal_h__
-#define nsSystemPrincipal_h__
+#ifndef nsNullPrincipal_h__
+#define nsNullPrincipal_h__
 
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
+#include "nsCOMPtr.h"
 
-#define NS_SYSTEMPRINCIPAL_CLASSNAME "systemprincipal"
-#define NS_SYSTEMPRINCIPAL_CID \
-{ 0x4a6212db, 0xaccb, 0x11d3, \
-{ 0xb7, 0x65, 0x0, 0x60, 0xb0, 0xb6, 0xce, 0xcb }}
-#define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
+class nsIURI;
 
+#define NS_NULLPRINCIPAL_CLASSNAME "nullprincipal"
+#define NS_NULLPRINCIPAL_CID \
+{ 0xdd156d62, 0xd26f, 0x4441, \
+ { 0x9c, 0xdb, 0xe8, 0xf0, 0x91, 0x07, 0xc2, 0x73 } }
+#define NS_NULLPRINCIPAL_CONTRACTID "@mozilla.org/nullprincipal;1"
 
-class nsSystemPrincipal : public nsIPrincipal
+#define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
+
+class nsNullPrincipal : public nsIPrincipal
 {
 public:
-    // Our refcount is managed by mJSPrincipals.  Use this macro to avoid
-    // an extra refcount member.
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIPRINCIPAL
-    NS_DECL_NSISERIALIZABLE
+  nsNullPrincipal();
+  
+  // Our refcount is managed by mJSPrincipals.  Use this macro to avoid an
+  // extra refcount member.
 
-    nsresult Init();
+  // FIXME: bug 327245 -- I sorta wish there were a clean way to share the
+  // mJSPrincipals munging code between the various principal classes without
+  // giving up the NS_DECL_NSIPRINCIPAL goodness.
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRINCIPAL
+  NS_DECL_NSISERIALIZABLE
 
-    nsSystemPrincipal();
+  nsresult Init();
 
 protected:
-    virtual ~nsSystemPrincipal(void);
+  virtual ~nsNullPrincipal();
 
-    nsJSPrincipals mJSPrincipals;
-    // XXX Probably unnecessary.  See bug 143559.
-    NS_DECL_OWNINGTHREAD
+  nsJSPrincipals mJSPrincipals;
+  nsCOMPtr<nsIURI> mURI;
 };
 
-#endif // nsSystemPrincipal_h__
+#endif // nsNullPrincipal_h__
