@@ -1698,19 +1698,6 @@ nsScriptSecurityManager::doGetSubjectPrincipal(nsresult* rv)
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
 {
-    if (!mSystemPrincipal)
-    {
-        nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
-        if (!system)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        nsresult rv = system->Init();
-        if (NS_FAILED(rv))
-            return rv;
-
-        mSystemPrincipal = system;
-    }
-
     NS_ADDREF(*result = mSystemPrincipal);
 
     return NS_OK;
@@ -3039,6 +3026,15 @@ nsresult nsScriptSecurityManager::Init()
     rv = bundleService->CreateBundle("chrome://global/locale/security/caps.properties", &sStrBundle);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Create our system principal singleton
+    nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
+    NS_ENSURE_TRUE(system, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = system->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mSystemPrincipal = system;
+
     //-- Register security check callback in the JS engine
     //   Currently this is used to control access to function.caller
     nsCOMPtr<nsIJSRuntimeService> runtimeService =
@@ -3133,7 +3129,7 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
     nsIPrincipal *sysprin = nsnull;
     if (gScriptSecMan)
-        gScriptSecMan->GetSystemPrincipal(&sysprin);
+        sysprin = gScriptSecMan->mSystemPrincipal;
     return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
 }
 
