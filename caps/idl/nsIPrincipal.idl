@@ -178,18 +178,26 @@ interface nsIPrincipal : nsISerializable
      * principal.  Principals are equal if they are the same object, they
      * have the same origin, or they have the same certificate ID.
      *
-     * Thus a principal subsumes itself if it is equal to itself.
+     * Thus a principal always subsumes itself.
      *
-     * The system principal subsumes itself and all other principals except
-     * the non-principal.
+     * The system principal subsumes itself and all other principals.
      *
-     * The non-principal is not equal to itself or any other principal, and
-     * therefore does not subsume itself.
+     * A null principal (corresponding to an unknown, hence assumed minimally
+     * privileged, security context) is not equal to any other principal
+     * (including other null principals), and therefore does not subsume
+     * anything but itself.
      *
      * Both codebase and certificate principals are subsumed by the system
      * principal, but no codebase or certificate principal yet subsumes any
      * other codebase or certificate principal.  This may change in a future
      * release; note that nsIPrincipal is unfrozen, not slated to be frozen.
+     *
+     * XXXbz except see bug 147145!
+     *
+     * Note for the future: Perhaps we should consider a certificate principal
+     * for a given URI subsuming a codebase principal for the same URI?  Not
+     * sure what the immediate benefit would be, but I think the setup could
+     * make some code (e.g. MaybeDowngradeToCodebase) clearer.
      */
     [noscript] boolean subsumes(in nsIPrincipal other);
 
