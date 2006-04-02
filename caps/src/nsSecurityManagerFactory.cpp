@@ -44,6 +44,7 @@
 #include "nsIPrincipal.h"
 #include "nsPrincipal.h"
 #include "nsSystemPrincipal.h"
+#include "nsNullPrincipal.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIScriptContext.h"
@@ -341,11 +342,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrincipal)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSystemPrincipal,
     nsScriptSecurityManager::SystemPrincipalSingletonConstructor)
-
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNullPrincipal, Init)
 
 NS_DECL_CLASSINFO(nsPrincipal)
 NS_DECL_CLASSINFO(nsSystemPrincipal)
-
+NS_DECL_CLASSINFO(nsNullPrincipal)
 
 static NS_IMETHODIMP
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
@@ -464,6 +465,19 @@ static const nsModuleComponentInfo capsComponentInfo[] =
       &NS_CLASSINFO_NAME(nsSystemPrincipal),
       nsIClassInfo::SINGLETON | nsIClassInfo::MAIN_THREAD_ONLY |
       nsIClassInfo::EAGER_CLASSINFO
+    },
+
+    { NS_NULLPRINCIPAL_CLASSNAME, 
+      NS_NULLPRINCIPAL_CID, 
+      NS_NULLPRINCIPAL_CONTRACTID,
+      nsNullPrincipalConstructor,
+      nsnull,
+      nsnull,
+      nsnull,
+      NS_CI_INTERFACE_GETTER_NAME(nsNullPrincipal),
+      nsnull,
+      &NS_CLASSINFO_NAME(nsNullPrincipal),
+      nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::EAGER_CLASSINFO
     },
 
     { "Security Script Name Set",

@@ -261,9 +261,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         }
 
         if (NS_FAILED(rv) || !principal) {
-            // If all else fails, use the current URI to generate a principal.
-            rv = securityManager->GetCodebasePrincipal(mURI,
-                                                       getter_AddRefs(principal));
+            // If all else fails, use a null principal
+            principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
         }
 
         if (NS_FAILED(rv) || !principal) {

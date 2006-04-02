@@ -77,11 +77,7 @@
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectPrincipal.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
