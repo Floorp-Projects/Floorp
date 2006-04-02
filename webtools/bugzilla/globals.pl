@@ -185,33 +185,6 @@ sub GetVersionTable {
     $::VersionTableLoaded = 1;
 }
 
-#
-# This function checks if there are any entry groups defined.
-# If called with no arguments, it identifies
-# entry groups for all products.  If called with a product
-# id argument, it checks for entry groups associated with 
-# one particular product.
-sub AnyEntryGroups {
-    my $product_id = shift;
-    $product_id = 0 unless ($product_id);
-    return $::CachedAnyEntryGroups{$product_id} 
-        if defined($::CachedAnyEntryGroups{$product_id});
-    my $dbh = Bugzilla->dbh;
-    PushGlobalSQLState();
-    my $query = "SELECT 1 FROM group_control_map WHERE entry != 0";
-    $query .= " AND product_id = $product_id" if ($product_id);
-    $query .= " " . $dbh->sql_limit(1);
-    SendSQL($query);
-    if (MoreSQLData()) {
-       $::CachedAnyEntryGroups{$product_id} = MoreSQLData();
-       FetchSQLData();
-       PopGlobalSQLState();
-       return $::CachedAnyEntryGroups{$product_id};
-    } else {
-       return undef;
-    }
-}
-#
 # This function checks if there are any default groups defined.
 # If so, then groups may have to be changed when bugs move from
 # one bug to another.

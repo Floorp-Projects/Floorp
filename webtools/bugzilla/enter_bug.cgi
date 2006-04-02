@@ -54,9 +54,7 @@ use vars qw(
   @legal_severity
 );
 
-# If we're using bug groups to restrict bug entry, we need to know who the 
-# user is right from the start. 
-Bugzilla->login(LOGIN_REQUIRED) if AnyEntryGroups();
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cloned_bug;
 my $cloned_bug_id;
@@ -68,8 +66,6 @@ my $vars = {};
 my $product = trim($cgi->param('product') || '');
 
 if ($product eq '') {
-    my $user = Bugzilla->login();
-
     # If the user cannot enter bugs in any product, stop here.
     my @enterable_products = @{$user->get_enterable_products};
     ThrowUserError('no_products') unless scalar(@enterable_products);
@@ -293,8 +289,6 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
-Bugzilla->login(LOGIN_REQUIRED) if (!(AnyEntryGroups()));
-
 # If a user is trying to clone a bug
 #   Check that the user has authorization to view the parent bug
 #   Create an instance of Bug that holds the info from the parent
@@ -302,7 +296,7 @@ $cloned_bug_id = $cgi->param('cloned_bug_id');
 
 if ($cloned_bug_id) {
     ValidateBugID($cloned_bug_id);
-    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, Bugzilla->user->id);
+    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $user->id);
 }
 
 # We need to check and make sure
@@ -310,7 +304,7 @@ if ($cloned_bug_id) {
 my $prod_obj = new Bugzilla::Product({name => $product});
 # Update the product name to get the correct case.
 $product = $prod_obj->name if defined $prod_obj;
-Bugzilla->user->can_enter_product($product, 1);
+$user->can_enter_product($product, 1);
 
 GetVersionTable();
 
