@@ -255,6 +255,11 @@
 #endif
 #define	EAGAIN		35	/* Resource temporarily unavailable */
 
+#ifdef ENOTEMPTY
+#undef ENOTEMPTY
+#endif
+#define	ENOTEMPTY   39	/* Directory not empty */
+
 // in winsock.h
 
 #ifdef EBADRPC
