@@ -14,15 +14,24 @@
 			</Description>
 		</em:targetApplication>
 		
-		<!-- target: Mozilla Firefox, version 0.9 to 1.6 -->
+		<!-- target: Mozilla Firefox, version 0.9 to 3.0 -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 				<em:minVersion>0.9</em:minVersion>
-				<em:maxVersion>1.6</em:maxVersion>
+				<em:maxVersion>3.0</em:maxVersion>
 			</Description>
 		</em:targetApplication>
-
+		
+		<!-- target: SeaMonkey, version 1.0 -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
+				<em:minVersion>1.0</em:minVersion>
+				<em:maxVersion>1.0</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+		
 		<!-- target: Flock, version 0.4 - 1.0+ -->
 		<em:targetApplication>
 			<Description>
