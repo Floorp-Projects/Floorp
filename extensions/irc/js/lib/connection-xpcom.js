@@ -125,13 +125,45 @@ function CBSConnection (binary)
     this._sockService = sockService.QueryInterface
         (Components.interfaces.nsISocketTransportService);
 
-    this.wrappedJSObject = this;
-    this.binaryMode = binary || false;
+    /* Note: as part of the mess from bug 315288 and bug 316178, ChatZilla now
+     *       uses the *binary* stream interfaces for all network
+     *       communications.
+     *
+     *       However, these interfaces do not exist prior to 1999-11-05. To
+     *       make matters worse, an incompatible change to the "readBytes"
+     *       method of this interface was made on 2003-03-13; luckly, this
+     *       change also added a "readByteArray" method, which we will check
+     *       for below, to determin if we can use the binary streams.
+     */
 
-    //if (!ASSERT(!this.binaryMode || jsenv.HAS_WORKING_BINARY_STREAMS,
-    //            "Unable to use binary streams in this build."))
-    //    return null;
+    // We want to check for working binary streams only the first time.
+    if (CBSConnection.prototype.workingBinaryStreams == -1)
+    {
+        CBSConnection.prototype.workingBinaryStreams = false;
+
+        if (typeof nsIBinaryInputStream != "undefined")
+        {
+            var isCls = Components.classes["@mozilla.org/binaryinputstream;1"];
+            var inputStream = isCls.createInstance(nsIBinaryInputStream);
+            if ("readByteArray" in inputStream)
+                CBSConnection.prototype.workingBinaryStreams = true;
+        }
+    }
+
+    this.wrappedJSObject = this;
+    if (typeof binary != "undefined")
+        this.binaryMode = binary;
+    else
+        this.binaryMode = this.workingBinaryStreams;
+
+    if (!ASSERT(!this.binaryMode || this.workingBinaryStreams,
+                "Unable to use binary streams in this build."))
+    {
+        return null;
+    }
 }
+
+CBSConnection.prototype.workingBinaryStreams = -1;
 
 CBSConnection.prototype.connect =
 function bc_connect(host, port, bind, tcp_flag, isSecure, observer)
