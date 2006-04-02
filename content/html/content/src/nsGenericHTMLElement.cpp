@@ -4028,7 +4028,7 @@ nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
 {
   *aEditor = nsnull;
 
-  if (!nsContentUtils::IsCallerChrome())
+  if (!nsContentUtils::IsCallerTrustedForWrite())
     return NS_ERROR_DOM_SECURITY_ERR;
 
   return GetEditorInternal(aEditor);
