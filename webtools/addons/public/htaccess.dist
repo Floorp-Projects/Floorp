@@ -14,6 +14,26 @@ php_value auto_append_file finish.php
 RewriteEngine On
 RewriteBase /YOURPATH/public/htdocs
 
+# Compatiblity for v1 of extensions.  The hardcoded URL's in the old
+# browsers need this to get to the right pages: (the strings are the GUIDs)
+# Old example URL:
+#   /extensions/?application={3550f703-e582-4d05-9a08-453d09bdfdc6}
+# New:
+#   /extensions.php?app={3550f703-e582-4d05-9a08-453d09bdfdc6}
+RewriteCond %{REQUEST_URI} /extensions/
+RewriteCond %{QUERY_STRING} ^application=(.*)$
+RewriteRule ^.*$ extensions.php?app=%1 [L]
+
+# Compatiblity for v1 of extensions.  The hardcoded URL's in the old
+# browsers need this to get to the right pages: (the strings are the GUIDs)
+# Old example URL:
+#   /themes/?application={3550f703-e582-4d05-9a08-453d09bdfdc6}
+# New:
+#   /themes.php?app={3550f703-e582-4d05-9a08-453d09bdfdc6}
+RewriteCond %{REQUEST_URI} /themes/
+RewriteCond %{QUERY_STRING} ^application=(.*)$
+RewriteRule ^.*$ themes.php?app=%1 [L]
+
 # Send rss/* to rss.php.
 # Example:
 #     /rss/firefox/extensions/popular/ -> rss.php?app=firefox&type=extensions&list=popular

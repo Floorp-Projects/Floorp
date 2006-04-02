@@ -1,6 +1,7 @@
 <?php
 /**
- * Home page for extensions, switchable on application.
+ * Home page for extensions, switchable on application.  Since v1 used GUIDs, the
+ * flow on this page is a little confusing (we need to support both name and GUID.
  *
  * @package amo
  * @subpackage docs
@@ -11,20 +12,38 @@ $currentTab = 'extensions';
 startProcessing('extensions.tpl', 'extensions', $compileId);
 require_once('includes.php');
 
-// If app is not set or empty, set it to null for our switch.
-$clean['app'] = (!empty($_GET['app']) && ctype_alpha($_GET['app'])) ? $_GET['app'] : null;
+$_app = array_key_exists('app', $_GET) ? $_GET['app'] : null;
 
-// $sql['app'] can equal $clean['app'] since it was assigned in a switch().
-// We have to ucfirst() it because the DB has caps.
-$sql['app'] = $clean['app'];
+// Determine our application.
+switch( $_app ) {
+    case 'mozilla':
+        $clean['app'] = 'Mozilla';
+        break;
+    case 'thunderbird':
+        $clean['app'] = 'Thunderbird';
+        break;
+    case 'firefox':
+    default:
+        $clean['app'] = 'Firefox';
+        break;
+}
 
 $amo = new AMO_Object();
 
+// Despite what $clean holds, GUIDs were used in v1 so we have to support them
+if (preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$_app)) {
+    $newestExtensions  = $amo->getNewestAddonsByGuid($_app,'E',10);
+    $popularExtensions = $amo->getPopularAddonsByGuid($_app,'E',10);
+} else {
+    $newestExtensions  = $amo->getNewestAddons($clean['app'],'E',10);
+    $popularExtensions = $amo->getPopularAddons($clean['app'],'E',10);
+}
+
 // Assign template variables.
 $tpl->assign(
-    array(  'newestExtensions'  => $amo->getNewestAddons($sql['app'],'E',10),
-            'popularExtensions' => $amo->getPopularAddons($sql['app'],'E',10),
-            'title'             => $clean['app'].' Addons',
+    array(  'newestExtensions'  => $newestExtensions,
+            'popularExtensions' => $popularExtensions,
+            'title'             => 'Addons',
             'currentTab'        => $currentTab,
             'content'           => 'extensions.tpl',
             'sidebar'           => 'inc/category-sidebar.tpl',

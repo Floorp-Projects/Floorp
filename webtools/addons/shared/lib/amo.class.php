@@ -180,6 +180,56 @@ class AMO_Object
     }
 
     /**
+     * Get newest addons from GUID - this is for backwards compatibility with v1
+     *
+     * @param string $GUID
+     * @param string $type
+     * @param int $limit
+     * @return array
+     */
+    function getNewestAddonsByGuid($app='',$type='E',$limit=10) {
+
+        if(empty($app)) {
+            return false;
+        }
+        if (!preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$app)) {
+            return false;
+        }
+
+        // I realize we are running this through a regex, but this doesn't hurt.
+        $app = mysql_real_escape_string($app);
+
+        // Get most popular extensions based on application.
+        $this->db->query("
+            SELECT
+                m.ID ID, 
+                m.Name name, 
+                m.downloadcount dc,
+                v.DateUpdated as dateupdated,
+                v.version
+            FROM
+                main m
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+            ON vv.mxvid = v.vid AND vv.id = v.id
+            INNER JOIN applications a ON a.appid = v.appid
+            WHERE
+                v.approved = 'yes' AND
+                a.GUID = '{$app}' AND
+                m.type = '{$type}'
+            ORDER BY
+                v.dateupdated DESC , downloadcount DESC, rating DESC
+            LIMIT 
+                {$limit}
+        ", SQL_ALL, SQL_ASSOC);
+
+        return $this->db->record;
+    }
+
+    /**
      * Get most popular addons.
      *
      * @param string $app
@@ -208,6 +258,56 @@ class AMO_Object
             WHERE
                 v.approved = 'yes' AND
                 a.appname = '{$app}' AND
+                m.type = '{$type}'
+            ORDER BY
+                m.downloadcount DESC, m.rating DESC, v.dateupdated DESC 
+            LIMIT 
+                {$limit}
+        ", SQL_ALL, SQL_ASSOC);
+
+        return $this->db->record;
+     }
+
+    /**
+     * Get most popular addons from GUID - this is for backwards compatibility with
+     * v1
+     *
+     * @param string $GUID
+     * @param string $type
+     * @param int $limit
+     * @return array
+     */
+     function getPopularAddonsByGuid($app='',$type='E', $limit=10) {
+
+        if(empty($app)) {
+            return false;
+        }
+        if (!preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$app)) {
+            return false;
+        }
+
+        // I realize we are running this through a regex, but this doesn't hurt.
+        $app = mysql_real_escape_string($app);
+
+        // Return most popular addons.
+        $this->db->query("
+            SELECT
+                m.ID ID, 
+                m.Name name, 
+                m.downloadcount dc,
+                v.DateUpdated as dateupdated
+            FROM
+                main m
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+            ON vv.mxvid = v.vid AND vv.id = v.id
+            INNER JOIN applications a ON a.appid = v.appid
+            WHERE
+                v.approved = 'yes' AND
+                a.GUID = '{$app}' AND
                 m.type = '{$type}'
             ORDER BY
                 m.downloadcount DESC, m.rating DESC, v.dateupdated DESC 
@@ -250,6 +350,64 @@ class AMO_Object
             INNER JOIN previews p ON p.ID = m.ID
             WHERE
                 AppName = '{$app}' AND 
+                downloadcount > '0' AND
+                approved = 'YES' AND
+                Type = '{$type}' AND
+                r.featured = 'YES' AND
+                p.preview = 'YES'
+            GROUP BY
+                m.ID
+            ORDER BY
+                m.Name
+            LIMIT 
+                {$limit}
+        ", SQL_ALL, SQL_ASSOC);
+
+        return $this->db->record;
+     }
+
+    /**
+     * Get recommended addons by GUID - for backwards compatibility with v1.
+     *
+     * @param string $app
+     * @param string $type
+     * @param int $limit
+     * @return array
+     */
+     function getRecommendedAddonsByGuid($app='',$type='E', $limit=10) {
+
+        if(empty($app)) {
+            return false;
+        }
+        if (!preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$app)) {
+            return false;
+        }
+
+        // I realize we are running this through a regex, but this doesn't hurt.
+        $app = mysql_real_escape_string($app);
+
+        // Return most popular addons.
+        $this->db->query("
+            SELECT DISTINCT
+                m.id, 
+                m.name, 
+                m.downloadcount,
+                v.dateupdated,
+                v.uri,
+                r.body,
+                r.title,
+                v.size,
+                v.version,
+                p.previewuri
+            FROM
+                main m
+            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN os o ON v.OSID = o.OSID
+            INNER JOIN reviews r ON m.ID = r.ID
+            INNER JOIN previews p ON p.ID = m.ID
+            WHERE
+                TA.GUID = '{$app}' AND 
                 downloadcount > '0' AND
                 approved = 'YES' AND
                 Type = '{$type}' AND
