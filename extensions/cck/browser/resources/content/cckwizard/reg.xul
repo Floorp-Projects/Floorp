@@ -48,7 +48,7 @@
         ondialogaccept="return OnRegOK()"
         onload="OnRegLoad()"
         width="500"
-        height="500"
+        height="340"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
       <vbox>

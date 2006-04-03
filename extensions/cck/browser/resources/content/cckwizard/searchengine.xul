@@ -55,14 +55,14 @@
 <label>&engines.description;</label>
           <label>&engine.label;</label>
 <hbox align="center">
-          <textbox flex="1" id="searchengine"/>
-           <button label="&chooseFile.label;" oncommand="choosefile('searchengine');"/>
+          <textbox flex="1" id="searchengine" onchange="searchEngineCheckOKButton();" onkeyup="searchEngineCheckOKButton();"/>
+           <button label="&chooseFile.label;" oncommand="choosefile('searchengine');searchEngineCheckOKButton();"/>
            </hbox>
           <label>&engineIcon.label;</label>
          <hbox align="center">
-           <textbox flex="1" id="searchengineicon"/>
+           <textbox flex="1" id="searchengineicon" onchange="searchEngineCheckOKButton();" onkeyup="searchEngineCheckOKButton();"/>
            <image id="icon" src='' width='16' height='16'/>
-           <button label="&chooseFile.label;" oncommand="chooseimage('searchengineicon','icon');"/>
+           <button label="&chooseFile.label;" oncommand="chooseimage('searchengineicon','icon');searchEngineCheckOKButton();"/>
          </hbox>        
            
 </vbox>

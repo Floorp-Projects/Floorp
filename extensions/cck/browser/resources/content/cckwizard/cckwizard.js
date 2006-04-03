@@ -476,15 +476,19 @@ function OnPluginLoad()
 
 function pluginCheckOKButton()
 {
-//  if (document.getElementById("pluginpath").value) {
+  if (document.getElementById("pluginpath").value) {
     document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
-//  } else {
-//    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
-//  }
+  } else {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
+  }
 }
 
 function OnBrowserPluginOK()
 {
+  if (!(ValidateFile('pluginpath'))) {
+    return false;
+  }
+
   listbox = this.opener.document.getElementById('browserPluginList');    
   if (window.name == 'newplugin') {
     listitem = listbox.appendItem(document.getElementById('pluginpath').value, document.getElementById('plugintype').value);
@@ -568,15 +572,21 @@ function OnSearchEngineLoad()
 
 function searchEngineCheckOKButton()
 {
-//  if ((document.getElementById("prefname").value) && (document.getElementById("prefvalue").value)) {
-//    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
-//  } else {
-//    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
-//  }
+  if ((document.getElementById("searchengine").value) && (document.getElementById("searchengineicon").value)) {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
+  } else {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
+  }
 }
 
 function OnSearchEngineOK()
 {
+  if (!(ValidateFile('searchengine', 'searchengineicon'))) {
+    return false;
+  }
+
+
+
   listbox = this.opener.document.getElementById('searchEngineList');
   var listitem;
   if (window.name == 'newsearchengine') {

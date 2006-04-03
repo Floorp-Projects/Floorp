@@ -47,15 +47,13 @@
         buttons="accept,cancel"
         ondialogaccept="return OnBrowserPluginOK()"
         onload="OnPluginLoad()"
-        width="500"
-        height="200"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 <vbox>
 <label>&plugins.description;</label>
 <hbox align="center">
-           <textbox flex="1" id="pluginpath"/>
-           <button label="&chooseFile.label;" oncommand="choosefile('pluginpath');"/>
+           <textbox flex="1" id="pluginpath" onchange="pluginCheckOKButton();" onkeyup="pluginCheckOKButton();"/>
+           <button label="&chooseFile.label;" oncommand="choosefile('pluginpath');pluginCheckOKButton();"/>
            </hbox>
          <hbox align="center">
            <menulist flex="1" id="plugintype">

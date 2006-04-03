@@ -34,6 +34,7 @@
 
 <!ENTITY  id.label                      "Unique ID:">
 <!ENTITY  id.error                      "Unique ID is required">
+<!ENTITY  id.format                     "Format: companyname-cck@extensions.domainname.tld">
 <!ENTITY  name.label                    "Name:">
 <!ENTITY  name.error                    "Name is required">
 <!ENTITY  version.label                 "Version:">
@@ -140,10 +141,11 @@
 
 
 <!ENTITY  customizePrefs.label          "Customize Preferences">
+<!ENTITY  customizePrefs.description    "Use the buttons below to add default preferences.">
 <!ENTITY  prefs.label                   "Preferences">
-<!ENTITY  prefs.description             "Use the buttons below to add default preferences. Note these preferences are stored exactly as written, so put quotes around string preferences.">
+<!ENTITY  prefs.description             "Note these preferences are stored exactly as written, so put quotes around string preferences.">
 
-<!ENTITY  prefName.label                "Preference Name">
+<!ENTITY  prefName.label                "Preference Name:">
 <!ENTITY  prefValue.label               "Value: ">
 
 <!ENTITY  newButton.label               "New">
@@ -171,7 +173,7 @@
 
 
 <!ENTITY  customizeCerts.label          "Customize Certificates">
-<!ENTITY  customizeCerts.warning       "You may select up to five certificates to be preinstalled.<html:br/><html:br/>
+<!ENTITY  customizeCerts.warning       "You may select certificates to be preinstalled.<html:br/><html:br/>
                                         <html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
                                         ship a browser outside of your company or institution and call it Firefox.
                                         This feature is intended primarily for corporate and institutional users

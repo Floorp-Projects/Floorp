@@ -111,7 +111,7 @@
          <vbox align="right">
            <label/>
          </vbox>
-         <label>Format: cck-companyname@extensions.domainname.tld</label>
+         <label>&id.format;</label>
        </row>
        <row align="center">
          <vbox align="right">
@@ -326,8 +326,8 @@
 
   <wizardpage label="&customizePrefs.label;">
     <groupbox>
-      <caption label="&prefs.label;"/>
-      <description>&prefs.description;</description>
+      <caption label="&customizePrefs.label;"/>
+      <description>&customizePrefs.description;</description>
       <box flex="1" class="ccklist" id="prefList" new="onNewPreference();" edit="onEditPreference();"/>
     </groupbox>
   </wizardpage>
