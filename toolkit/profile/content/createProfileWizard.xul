@@ -28,7 +28,11 @@
     <description>&profileCreationExplanation_2.text;</description>
     <description>&profileCreationExplanation_3.text;</description>
     <spacer flex="1"/>
+#ifndef XP_MACOSX
     <description>&profileCreationExplanation_4.text;</description>
+#else
+    <description>&profileCreationExplanation_4Mac.text;</description>
+#endif
   </wizardpage>
 
   <wizardpage id="createProfile" onpageshow="initSecondWizardPage();">
