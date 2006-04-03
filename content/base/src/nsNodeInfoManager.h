@@ -151,7 +151,9 @@ private:
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK
   nsIPrincipal *mPrincipal; // STRONG, but not nsCOMPtr to avoid include hell
-                            // while inlining of GetPrincipal()
+                            // while inlining of GetPrincipal().  Never null
+                            // after Init() succeeds.
+  nsCOMPtr<nsIPrincipal> mDefaultPrincipal; // Never null after Init() succeeds
   nsINodeInfo *mTextNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mCommentNodeInfo; // WEAK to avoid circular ownership
   nsINodeInfo *mDocumentNodeInfo; // WEAK to avoid circular ownership
