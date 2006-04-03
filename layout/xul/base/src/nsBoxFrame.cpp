@@ -1314,13 +1314,20 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
     nsBoxLayoutState state(GetPresContext()->PresShell());
+
+    nsIFrame* frameToMove = this;
+    if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      GetPresContext()->PresShell()->GetPlaceholderFrameFor(this,
+                                                            &frameToMove);
+      NS_ASSERTION(frameToMove, "Out of flow without placeholder?");
+    }
     
     nsIBox* parent;
-    GetParentBox(&parent);
+    frameToMove->GetParentBox(&parent);
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
     if (parent) {
-      parent->RelayoutChildAtOrdinal(state, this);
+      parent->RelayoutChildAtOrdinal(state, frameToMove);
       parent->MarkDirty(state);
     }
   }
