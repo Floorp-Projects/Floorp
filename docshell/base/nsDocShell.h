@@ -477,6 +477,7 @@ protected:
     PRPackedBool               mUseErrorPages;
     PRPackedBool               mObserveErrorPages;
     PRPackedBool               mAllowAuth;
+    PRPackedBool               mAllowKeywordFixup;
 
     PRPackedBool               mFiredUnloadEvent;
 

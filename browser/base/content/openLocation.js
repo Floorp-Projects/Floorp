@@ -101,18 +101,21 @@ function open()
     url = dialog.input.value;
 
   try {
+    // Whichever target we use for the load, we allow third-party services to
+    // fixup the URI
     switch (dialog.openWhereList.value) {
       case "0":
-        browser.loadURI(url, null, postData.value);
+        browser.loadURI(url, null, postData.value, true);
         break;
       case "1":
-        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url, postData.value);
+        window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no",
+                                        url, postData.value, null, null, true);
         break;
       case "3":
         if (browser.getBrowser && browser.getBrowser().localName == "tabbrowser")
-          browser.delayedOpenTab(url, null, null, postData.value);
+          browser.delayedOpenTab(url, null, null, postData.value, true);
         else
-          browser.loadURI(url, null, postData.value); // Just do a normal load.
+          browser.loadURI(url, null, postData.value, true); // Just do a normal load.
         break;
     }
   }

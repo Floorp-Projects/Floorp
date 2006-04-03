@@ -49,8 +49,11 @@
  *          If null, there will be no referrer header and no security check.
  * @param postData Form POST data, or null.
  * @param event The triggering event (for the purpose of determining whether to open in the background), or null
+ * @param allowThirdPartyFixup if true, then we allow the URL text to be sent to third party
+ * services (e.g., Google's I Feel Lucky) for interpretation. This parameter may be undefined in
+ * which case it is treated as false.
  */ 
-function openNewTabWith(href, sourceURL, postData, event)
+function openNewTabWith(href, sourceURL, postData, event, allowThirdPartyFixup)
 {
   if (sourceURL)
     urlSecurityCheck(href, sourceURL);
@@ -82,10 +85,11 @@ function openNewTabWith(href, sourceURL, postData, event)
 
   var referrerURI = sourceURL ? makeURI(sourceURL) : null;
 
-  browser.loadOneTab(href, referrerURI, originCharset, postData, loadInBackground);
+  browser.loadOneTab(href, referrerURI, originCharset, postData, loadInBackground,
+                     allowThirdPartyFixup || false);
 }
 
-function openNewWindowWith(href, sourceURL, postData)
+function openNewWindowWith(href, sourceURL, postData, allowThirdPartyFixup)
 {
   if (sourceURL)
     urlSecurityCheck(href, sourceURL);
@@ -100,7 +104,8 @@ function openNewWindowWith(href, sourceURL, postData)
 
   var referrerURI = sourceURL ? makeURI(sourceURL) : null;
 
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrerURI, postData);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no",
+                    href, charsetArg, referrerURI, postData, allowThirdPartyFixup);
 }
 
 /**

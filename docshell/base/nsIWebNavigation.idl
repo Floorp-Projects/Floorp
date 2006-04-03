@@ -175,6 +175,13 @@ interface nsIWebNavigation : nsISupports
    * A hint this load was prompted by an external program: take care!
    */
   const unsigned long LOAD_FLAGS_FROM_EXTERNAL   = 0x1000;
+  
+  /**
+   * This flag specifies that the URI may be submitted to a third-party
+   * server for correction. This should only be applied to non-sensitive
+   * URIs entered by users.
+   */
+  const unsigned long LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x2000;
 
   /**
    * Loads a given URI.  This will give priority to loading the requested URI

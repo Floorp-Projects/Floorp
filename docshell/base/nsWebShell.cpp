@@ -958,7 +958,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       //
       // First try keyword fixup
       //
-      if (aStatus == NS_ERROR_UNKNOWN_HOST)  
+      if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup)
       {
         PRBool keywordsEnabled = PR_FALSE;
 

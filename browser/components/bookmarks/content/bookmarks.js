@@ -686,7 +686,7 @@ var BookmarksCommand = {
     if (url == "")
       return;
 
-    openUILinkIn(url, aTargetBrowser);
+    openUILinkIn(url, aTargetBrowser, false);
   },
 
   openGroupBookmark: function (aURI, aTargetBrowser)
