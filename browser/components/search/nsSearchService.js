@@ -693,7 +693,12 @@ EngineURL.prototype = {
       // stream and supply that as POSTDATA.
       var stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
                          createInstance(Ci.nsIStringInputStream);
+#ifdef MOZILLA_1_8_BRANCH
+# bug 318193
+      stringStream.setData(dataString, dataString.length);
+#else
       stringStream.data = dataString;
+#endif
 
       postData = Cc["@mozilla.org/network/mime-input-stream;1"].
                  createInstance(Ci.nsIMIMEInputStream);
