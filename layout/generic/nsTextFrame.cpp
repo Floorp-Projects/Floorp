@@ -4526,6 +4526,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // the next paragraph"
 
   PRBool isReverseDirection = (NS_GET_EMBEDDING_LEVEL(this) & 1) != (NS_GET_BASE_LEVEL(this) & 1);
+  PRBool movementIsInFrameDirection = 
+    ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
+    ((aPos->mDirection == eDirPrevious) && isReverseDirection);
 
 #endif
 
@@ -4630,8 +4633,6 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsTextTransformer tx(aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
-      nsIFrame *frameUsed = nsnull;
-      PRInt32 start;
       PRBool found = PR_TRUE;
 
       PRBool selectable;
@@ -4643,11 +4644,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       else
       {
 
-  #ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
-        // so that right arrow always moves to the right on screen
-        // and left arrow always moves left
-        if ( ((aPos->mDirection == eDirPrevious) && !isReverseDirection) ||
-             ((aPos->mDirection == eDirNext) && isReverseDirection) ){
+  #ifdef IBMBIDI
+        if (!movementIsInFrameDirection){
   #else
         if (aPos->mDirection == eDirPrevious){
   #endif
@@ -4698,14 +4696,11 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
           if (i <0){
             found = PR_FALSE;
-            frameUsed = GetPrevInFlow();
-            start = mContentOffset;
-            aPos->mContentOffset = start;//in case next call fails we stop at this offset
+            aPos->mContentOffset = mContentOffset;//in case next call fails we stop at this offset
           }
         }
-  #ifdef IBMBIDI // Simon, as above 
-        else if ( ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
-                  ((aPos->mDirection == eDirPrevious) && isReverseDirection) ){
+  #ifdef IBMBIDI
+        else if (movementIsInFrameDirection){
   #else
         else if (aPos->mDirection == eDirNext){
   #endif
@@ -4760,13 +4755,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   */
           if (i > mContentLength){
             found = PR_FALSE;
-            // XXX TODO: explain why in this case GetNextInFlow() is good enough,
-            // but in the case of
-            // aPos->mStartOffset > (mContentOffset + mContentLength)
-            // above, we use the presentation context and get the 'nextBidi'
-            frameUsed = GetNextInFlow();
-            start = mContentOffset + mContentLength;
-            aPos->mContentOffset = start;//in case next call fails we stop at this offset
+            aPos->mContentOffset = mContentOffset + mContentLength;//in case next call fails we stop at this offset
           }
         }
       }
@@ -4794,9 +4783,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsTextTransformer tx(aPresContext);
 
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
-      nsIFrame *frameUsed = nsnull;
       PRBool keepSearching; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
-      PRInt32 start;
       PRBool found = PR_FALSE;
       PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
@@ -4810,11 +4797,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       else
       {
       
-#ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
-        // so that right arrow always moves to the right on screen
-        // and left arrow always moves left
-        if ( ((aPos->mDirection == eDirPrevious) && !isReverseDirection) ||
-             ((aPos->mDirection == eDirNext) && isReverseDirection) ) {
+#ifdef IBMBIDI
+        if (!movementIsInFrameDirection){
 #else
         if (aPos->mDirection == eDirPrevious){
 #endif
@@ -4865,9 +4849,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             }
           }
         }
-#ifdef IBMBIDI // Simon, as above 
-        else if ( ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
-                  ((aPos->mDirection == eDirPrevious) && isReverseDirection) ) {
+#ifdef IBMBIDI
+        else if (movementIsInFrameDirection){
 #else
         else if (aPos->mDirection == eDirNext) {
 #endif
@@ -4915,16 +4898,9 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               found = PR_TRUE;
             }
           } 
-
-  TryNextFrame:
-          // XXX TODO: explain why in this case GetNextInFlow() is good enough,
-          // but in the case of
-          // aPos->mStartOffset > (mContentOffset + mContentLength)
-          // above, we use the presentation context and get the 'nextBidi'
-          frameUsed = GetNextInFlow();
-          start = 0;
         }
       }
+TryNextFrame:
       if (!found ||
           (aPos->mContentOffset > (mContentOffset + mContentLength)) ||
           (aPos->mContentOffset < mContentOffset))
@@ -4944,7 +4920,11 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
+#ifdef IBMBIDI
+          else if (movementIsInFrameDirection)
+#else
           else if (aPos->mDirection == eDirNext)
+#endif
             aPos->mContentOffset = mContentOffset + mContentLength;
           else
             aPos->mContentOffset = mContentOffset;
