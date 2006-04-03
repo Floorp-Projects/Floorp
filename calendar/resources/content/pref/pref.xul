@@ -77,7 +77,7 @@
 
     var url = node.getAttribute("link");
     if (url != "")
-      window.opener.openNewWindowWith(url, null, false);
+      window.opener.openNewWindowWith(url, null, false, false);
   }
 
   ]]>

@@ -120,7 +120,7 @@ function getBoolPref ( prefname, def )
 function openUILink( url, e, ignoreButton, ignoreAlt )
 {
   var where = whereToOpenLink(e, ignoreButton, ignoreAlt);
-  openUILinkIn(url, where);
+  openUILinkIn(url, where, false);
 }
 
 
@@ -193,8 +193,12 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  *  "tabshifted"  same as "tab" but in background if default is to select new tabs, and vice versa
  *  "window"      new window
  *  "save"        save to disk (with no filename hint!)
+ *
+ * allowThirdPartyFixup controls whether third party services such as Google's
+ * I Feel Lucky are allowed to interpret this URL. This parameter may be
+ * undefined, which is treated as false.
  */
-function openUILinkIn( url, where )
+function openUILinkIn( url, where, allowThirdPartyFixup )
 {
   if (!where)
     return;
@@ -230,7 +234,8 @@ function openUILinkIn( url, where )
   case "tabshifted":
   case "tab":
     var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground", false);
-    browser.loadOneTab(url, null, null, null, loadInBackground);
+    browser.loadOneTab(url, null, null, null, loadInBackground,
+                       allowThirdPartyFixup || false);
     break;
   }
 }

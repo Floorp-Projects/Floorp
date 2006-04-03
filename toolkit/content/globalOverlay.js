@@ -225,7 +225,7 @@ function visitLink(aEvent) {
     node = node.parentNode;
   var url = node.getAttribute("link");
   if (url != "")
-    top.opener.openNewWindowWith(url, null, false);
+    top.opener.openNewWindowWith(url, null, false, false);
 }
 
 function isValidLeftClick(aEvent, aName)

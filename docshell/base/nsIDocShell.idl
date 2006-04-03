@@ -115,9 +115,10 @@ interface nsIDocShell : nsISupports
                             in ACString aContentCharset,
                             in nsIDocShellLoadInfo aLoadInfo);
 
-  const long INTERNAL_LOAD_FLAGS_NONE               = 0x0;
-  const long INTERNAL_LOAD_FLAGS_INHERIT_OWNER      = 0x1;
-  const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER = 0x2;
+  const long INTERNAL_LOAD_FLAGS_NONE                    = 0x0;
+  const long INTERNAL_LOAD_FLAGS_INHERIT_OWNER           = 0x1;
+  const long INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER      = 0x2;
+  const long INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x4;
 
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except

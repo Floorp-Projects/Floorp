@@ -226,7 +226,7 @@
             /* openDialog("chrome://browser/content/search/edit-engines.xul", "",
                        "modal,centerscreen"); */
             var regionBundle = document.getElementById("bundle_browser_region");
-            loadURI(regionBundle.getString("searchEnginesURL"), null, null);
+            loadURI(regionBundle.getString("searchEnginesURL"), null, null, false);
           } else {
             this.currentEngine = aEvent.target.engine;
             this.focus();
@@ -270,11 +270,11 @@
 
           if (aInNewTab) {
             content.focus();
-            getBrowser().loadOneTab(url, null, null, postData.value, false);
+            getBrowser().loadOneTab(url, null, null, postData.value, false, false);
             if (gURLBar)
               gURLBar.value = url;
           } else
-            loadURI(url, null, postData.value);
+            loadURI(url, null, postData.value, false);
           content.focus();
         ]]></body>
       </method>
