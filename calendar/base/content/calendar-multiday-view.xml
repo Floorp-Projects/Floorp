@@ -1043,9 +1043,16 @@
           if (dragState.dragType == "move") {
               // Figure out how much the event moved.
               var duration = col.mDate.subtractDate(dragState.origDate);
-
-              duration.minutes = dragState.startMin - dragState.origMin;
+              var minutes = dragState.startMin - dragState.origMin;
+              if (duration.isNegative) {
+                  // Adding negative minutes to a negative duration makes the
+                  // duration more positive, but we want more negative, and
+                  // vice versa.
+                  minutes *= -1;
+              }
+              duration.minutes = minutes;
               duration.normalize();
+
               newStart.addDuration(duration);
               newStart.normalize();
               newEnd.addDuration(duration);
