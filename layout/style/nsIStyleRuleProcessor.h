@@ -61,7 +61,7 @@ class nsRuleWalker;
 class nsAttrValue;
 
 // The implementation of the constructor and destructor are currently in
-// nsCSSStyleSheet.cpp.
+// nsCSSRuleProcessor.cpp.
 
 struct RuleProcessorData {
   RuleProcessorData(nsPresContext* aPresContext,
