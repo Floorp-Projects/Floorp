@@ -13,7 +13,7 @@ installation instructions for the OS/2 builds of SeaMonkey.
 For more info on SeaMonkey, see http://www.mozilla.org/projects/seamonkey/
 For more info on the OS/2 port see http://www.mozilla.org/ports/os2. To
 submit bugs or other feedback, see the Navigator QA menu and check out
-Bugzilla at http://bugzilla.mozilla.org/ for links to known bugs,
+Bugzilla at https://bugzilla.mozilla.org/ for links to known bugs,
 bug-writing guidelines, and more. You can also get help with Bugzilla by
 pointing your IRC client to #mozillazine at irc.mozilla.org, OS/2 specific
 problems are discussed in #warpzilla and in the newsgroup
@@ -72,8 +72,8 @@ installation issues with SeaMonkey.
    recommends using the "Classic" theme for SeaMonkey.
 
    To select the Modern theme after you have installed SeaMonkey, from the
-   Navigator browser, open the View menu, and then open then open the
-   Apply Theme submenu and choose Modern.
+   browser, open the View menu, then open the Apply Theme submenu and
+   choose Modern.
 
 * OS/2
    - This release requires updated C runtime DLLs (libc-0.5.1) from

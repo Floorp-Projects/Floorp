@@ -12,7 +12,7 @@ installation instructions for the Windows builds of SeaMonkey.
 
 For more info on SeaMonkey, see http://www.mozilla.org/projects/seamonkey/
 To submit bugs or other feedback, see the Navigator QA menu and check out
-Bugzilla at http://bugzilla.mozilla.org/ for links to known bugs,
+Bugzilla at https://bugzilla.mozilla.org/ for links to known bugs,
 bug-writing guidelines, and more. You can also get help with Bugzilla by
 pointing your IRC client to #mozillazine at irc.mozilla.org.
 
@@ -63,8 +63,8 @@ crash-data newsgroup.
    recommends using the "Classic" theme for SeaMonkey.
 
    To select the Modern theme after you have installed SeaMonkey, from the
-   Navigator browser, open the View menu, and then open then open the
-   Apply Theme submenu and choose Modern.
+   browser, open the View menu, then open the Apply Theme submenu and
+   choose Modern.
 
 *Windows
 
@@ -109,7 +109,7 @@ make sure you're running the installation with Administrator privileges.
       download the installer file to your machine.
 
    2. Navigate to where you downloaded the file and double-click the
-      SeaMonkey program icon on your machine to begin the Setup program.
+      installer file icon on your machine to begin the Setup program.
 
    3. Follow the on-screen instructions in the setup program. The program
       starts automatically the first time.
@@ -126,7 +126,7 @@ make sure you're running the installation with Administrator privileges.
       compressed file.
 
       Note: This step assumes you already have a recent version of WinZip
-      (or a sililar zip tool) installed, and that you know how to use it.
+      (or a similar zip tool) installed, and that you know how to use it.
       If not, you can get WinZip and information about the program at
       www.winzip.com.
 

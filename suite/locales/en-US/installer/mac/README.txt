@@ -12,7 +12,7 @@ installation instructions for the Mac OS builds of SeaMonkey.
 
 For more info on SeaMonkey, see http://www.mozilla.org/projects/seamonkey/
 To submit bugs or other feedback, see the Navigator QA menu and check out
-Bugzilla at http://bugzilla.mozilla.org/ for links to known bugs,
+Bugzilla at https://bugzilla.mozilla.org/ for links to known bugs,
 bug-writing guidelines, and more. You can also get help with Bugzilla by
 pointing your IRC client to #mozillazine at irc.mozilla.org.
 
@@ -63,8 +63,8 @@ crash-data newsgroup.
    recommends using the "Classic" theme for SeaMonkey.
 
    To select the Modern theme after you have installed SeaMonkey, from the
-   Navigator browser, open the View menu, and then open then open the
-   Apply Theme submenu and choose Modern.
+   browser, open the View menu, then open the Apply Theme submenu and
+   choose Modern.
 
 * Mac OS
 
@@ -95,12 +95,12 @@ For info on building SeaMonkey from the mozilla.org source code, see
 Mac OS X Installation Instructions
 ----------------------------------
 
-   To install Mozilla by downloading the Mozilla disk image,
+   To install SeaMonkey by downloading the SeaMonkey disk image,
    follow these steps:
 
    1. Click the link to seamonkey-x.xx.en-US.mac.dmg (or similar file
-      name) to download tt to your machine. By default, the download
-      file is downloaded to your desktop.
+      name) to download it to your machine. By default, the file
+      is downloaded to your desktop.
 
    2. Once you have downloaded the .dmg file, if the disk image doesn't
       mount automatically, double-click on the .dmg file to mount it. If
@@ -109,7 +109,7 @@ Mac OS X Installation Instructions
       category, choose Disk Copy. You can also use "Open with" from the
       context menu.
 
-   3. Once the disk image mounts, open it, and drag the SeaLonkey icon
+   3. Once the disk image mounts, open it, and drag the SeaMonkey icon
       onto your hard disk.
 
    4. We recommend that you copy it to the Applications folder.
