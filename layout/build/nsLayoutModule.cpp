@@ -129,6 +129,7 @@
 #include "nsILanguageAtomService.h"
 #include "nsTextControlFrame.h"
 #include "nsStyleSheetService.h"
+#include "nsNodeInfo.h"
 
 // Transformiix stuff
 #include "nsXPathEvaluator.h"
@@ -390,6 +391,7 @@ Shutdown()
 
   gInitialized = PR_FALSE;
 
+  nsNodeInfo::ClearCache();
   txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsRange::Shutdown();
