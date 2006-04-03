@@ -14742,7 +14742,7 @@ if test "$MOZ_USE_NATIVE_UCONV"; then
 EOF
 
 fi
-if test "$OS_ARCH" != "WINCE" -a "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
+if test "$OS_ARCH" != "WINCE" -a "$OS_ARCH" != "WINNT" -a "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
     { echo "configure: error: iconv() not found.  Cannot enable native uconv support." 1>&2; exit 1; }
 fi
 
