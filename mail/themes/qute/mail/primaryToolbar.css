@@ -48,8 +48,8 @@
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
 }
 
-.toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
-  display: none;
+.toolbarbutton-1[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-vertical");
 }
 
 toolbar[mode="full"] .toolbarbutton-1 {
