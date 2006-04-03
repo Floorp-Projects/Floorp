@@ -51,6 +51,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsLayoutAtoms.h"
+#include "nsComponentManagerUtils.h"
 
 PRUint32 nsNodeInfoManager::gNodeManagerCount;
 
@@ -114,6 +115,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
     nsNodeInfo::ClearCache();
   }
 
+  // Note: mPrincipal may be null here if we never got inited correctly
   NS_IF_RELEASE(mPrincipal);
 
 #ifdef DEBUG_jst
@@ -152,6 +154,14 @@ nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
 {
   NS_ENSURE_TRUE(mNodeInfoHash, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_PRECONDITION(!mPrincipal,
+                  "Being inited when we already have a principal?");
+  nsresult rv = CallCreateInstance("@mozilla.org/nullprincipal;1",
+                                   &mPrincipal);
+  NS_ENSURE_TRUE(mPrincipal, rv);
+
+  mDefaultPrincipal = mPrincipal;
 
   mDocument = aDocument;
 
@@ -300,8 +310,11 @@ nsNodeInfoManager::GetDocumentNodeInfo()
 void
 nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 {
-  NS_IF_RELEASE(mPrincipal);
-  NS_IF_ADDREF(mPrincipal = aPrincipal);
+  NS_RELEASE(mPrincipal);
+  if (!aPrincipal) {
+    aPrincipal = mDefaultPrincipal;
+  }
+  NS_ADDREF(mPrincipal = aPrincipal);
 }
 
 void
