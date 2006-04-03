@@ -764,7 +764,11 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     selectFolder = PR_FALSE;
   }
   rv = GetDatabase(msgWindow);
-  
+  if (NS_FAILED(rv))
+  {
+    ThrowAlertMsg("errorGettingDB", msgWindow);
+    return rv;
+  }
   PRBool canOpenThisFolder = PR_TRUE;
   GetCanIOpenThisFolder(&canOpenThisFolder);
   

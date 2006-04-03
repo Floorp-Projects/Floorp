@@ -174,6 +174,10 @@ NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate
   return rv;
 }
 
+// This method is called when the caller is trying to create a db without 
+// having a corresponding nsIMsgFolder object.  This happens in a few
+// situatins, including imap folder discovery, compacting local folders, 
+// and copying local folders.
 NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aLeaveInvalidDB, nsIMsgDatabase** pMessageDB)
 {
   if (!aFolderName)
@@ -190,6 +194,8 @@ NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, P
   nsCOMPtr <nsIMsgDatabase> msgDB = do_CreateInstance(NS_MAILBOXDB_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = msgDB->Open(aFolderName, aCreate, aLeaveInvalidDB);
+  if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+    return rv;
   NS_IF_ADDREF(*pMessageDB = msgDB);
   if (aCreate && msgDB && rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
     rv = NS_OK;
@@ -1111,7 +1117,9 @@ NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBo
   summaryFileExists = summaryFile.Exists()  && summaryFile.GetFileSize() > 0;
   
   err = OpenMDB((const char *) summaryFile, aCreate);
-  
+  if (err == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+    return err;
+
   if (NS_SUCCEEDED(err))
   {
     GetDBFolderInfo(&folderInfo);
@@ -1262,6 +1270,8 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
       {
         nsIMdbFile* newFile = 0;
         ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName, &newFile);
+        if (NS_FAILED(ret))
+          ret = NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
         if ( newFile )
         {
           if (ret == NS_OK)
