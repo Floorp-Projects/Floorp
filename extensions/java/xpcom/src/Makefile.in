@@ -13,9 +13,8 @@
 #
 # The Original Code is Java XPCOM Bindings.
 #
-# The Initial Developer of the Original Code is
-# IBM Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# The Initial Developer of the Original Code is IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2006
 # IBM Corporation. All Rights Reserved.
 #
 # Contributor(s):
@@ -73,6 +72,7 @@ JAVA_SRCS = \
 		$(srcdir)/../XPCOMJavaProxyBase.java \
 		$(srcdir)/GREImpl.java \
 		$(srcdir)/XPCOMImpl.java \
+		$(srcdir)/JavaXPCOMMethods.java \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
@@ -127,6 +127,6 @@ $(JARFILE_SRC): $(JARFILE)
 
 #libs:: $(JARFILE)
 #	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
-jarfile:: $(JARFILE)
+jarfile:: $(JARFILE) $(JARFILE_SRC)
 	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 

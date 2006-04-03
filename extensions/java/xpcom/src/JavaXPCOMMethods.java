@@ -36,30 +36,23 @@
 
 package org.mozilla.xpcom.internal;
 
-import java.io.*;
-import org.mozilla.xpcom.*;
+import java.io.File;
 
 
-public class XPCOMImpl extends JavaXPCOMMethods implements IXPCOM {
+public class JavaXPCOMMethods {
 
-  public nsIServiceManager initXPCOM(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider) {
-    registerJavaXPCOMMethods(aMozBinDirectory);
-    return initXPCOMNative(aMozBinDirectory, aAppFileLocProvider);
+  public static void registerJavaXPCOMMethods(File aLibXULDirectory) {
+    // load JNI library
+    String path = "";
+    if (aLibXULDirectory != null) {
+      path = aLibXULDirectory + File.separator;
+    }
+    System.load(path + System.mapLibraryName("javaxpcomglue"));
+
+    registerJavaXPCOMMethodsNative(aLibXULDirectory);
   }
 
-  public native nsIServiceManager initXPCOMNative(File aMozBinDirectory,
-          IAppFileLocProvider aAppFileLocProvider);
-
-  public native void shutdownXPCOM(nsIServiceManager aServMgr);
-
-  public native nsIComponentManager getComponentManager();
-
-  public native nsIComponentRegistrar getComponentRegistrar();
-
-  public native nsIServiceManager getServiceManager();
-
-  public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
-
+  public static native void
+      registerJavaXPCOMMethodsNative(File aLibXULDirectory);
 }
 

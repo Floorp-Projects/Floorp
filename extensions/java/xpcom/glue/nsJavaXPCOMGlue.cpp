@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -40,11 +39,6 @@
 #include "nsXPCOMGlue.h"
 #include <stdlib.h>
 
-#define GRE_NATIVE(func) Java_org_mozilla_xpcom_internal_GREImpl_##func
-#define XPCOM_NATIVE(func) Java_org_mozilla_xpcom_internal_XPCOMImpl_##func
-#define JAVAPROXY_NATIVE(func) \
-          Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_##func
-
 
 /***********************
  *  JNI Load & Unload
@@ -66,58 +60,24 @@ JNI_OnUnload(JavaVM* vm, void* reserved)
  *  JavaXPCOM JNI interfaces
  ********************************/
 
-typedef void     (*JX_InitEmbeddingFunc) (JNIEnv*, jobject, jobject, jobject,
-                                          jobject);
-typedef void     (*JX_TermEmbeddingFunc) (JNIEnv*, jobject);
-typedef jobject  (*JX_InitXPCOMFunc) (JNIEnv*, jobject, jobject, jobject);
-typedef void     (*JX_ShutdownXPCOMFunc) (JNIEnv*, jobject, jobject);
-typedef jobject  (*JX_NewLocalFileFunc) (JNIEnv*, jobject, jstring, jboolean);
-typedef jobject  (*JX_GetComponentManagerFunc) (JNIEnv*, jobject);
-typedef jobject  (*JX_GetComponentRegistrarFunc) (JNIEnv*, jobject);
-typedef jobject  (*JX_GetServiceManagerFunc) (JNIEnv*, jobject);
-typedef jobject  (*JX_CallXPCOMMethodFunc) (JNIEnv*, jclass, jobject, jstring,
-                                            jobjectArray);
-typedef void     (*JX_FinalizeProxyFunc) (JNIEnv*, jclass, jobject);
-typedef jboolean (*JX_IsSameXPCOMObjectFunc) (JNIEnv*, jclass, jobject,
-                                              jobject);
+#define JXM_NATIVE(func) Java_org_mozilla_xpcom_internal_JavaXPCOMMethods_##func
 
-JX_InitEmbeddingFunc          InitEmbedding;
-JX_TermEmbeddingFunc          TermEmbedding;
-JX_InitXPCOMFunc              InitXPCOM;
-JX_ShutdownXPCOMFunc          ShutdownXPCOM;
-JX_NewLocalFileFunc           NewLocalFile;
-JX_GetComponentManagerFunc    GetComponentManager;
-JX_GetComponentRegistrarFunc  GetComponentRegistrar;
-JX_GetServiceManagerFunc      GetServiceManager;
-JX_CallXPCOMMethodFunc        CallXPCOMMethod;
-JX_FinalizeProxyFunc          FinalizeProxy;
-JX_IsSameXPCOMObjectFunc      IsSameXPCOMObject;
-
-static nsDynamicFunctionLoad funcs[] = {
-  { "Java_org_mozilla_xpcom_internal_GREImpl_initEmbedding",
-          (NSFuncPtr*) &InitEmbedding },
-  { "Java_org_mozilla_xpcom_internal_GREImpl_termEmbedding",
-          (NSFuncPtr*) &TermEmbedding },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_initXPCOM",
-          (NSFuncPtr*) &InitXPCOM },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_shutdownXPCOM",
-          (NSFuncPtr*) &ShutdownXPCOM },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_newLocalFile",
-          (NSFuncPtr*) &NewLocalFile },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentManager",
-          (NSFuncPtr*) &GetComponentManager },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentRegistrar",
-          (NSFuncPtr*) &GetComponentRegistrar },
-  { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getServiceManager",
-          (NSFuncPtr*) &GetServiceManager },
-  { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_callXPCOMMethod",
-          (NSFuncPtr*) &CallXPCOMMethod },
-  { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_finalizeProxy",
-          (NSFuncPtr*) &FinalizeProxy },
-  { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_isSameXPCOMObject",
-          (NSFuncPtr*) &IsSameXPCOMObject },
-  { nsnull, nsnull }
+enum {
+  kFunc_InitEmbedding,
+  kFunc_TermEmbedding,
+  kFunc_InitXPCOM,
+  kFunc_ShutdownXPCOM,
+  kFunc_GetComponentManager,
+  kFunc_GetComponentRegistrar,
+  kFunc_GetServiceManager,
+  kFunc_NewLocalFile,
+  kFunc_CallXPCOMMethod,
+  kFunc_FinalizeProxy,
+  kFunc_IsSameXPCOMObject
 };
+
+#define JX_NUM_FUNCS 11
+
 
 // Get path string from java.io.File object.
 jstring
@@ -135,11 +95,10 @@ GetJavaFilePath(JNIEnv* env, jobject aFile)
   return nsnull;
 }
 
-
 // Calls XPCOMGlueStartup using the given java.io.File object, and loads
 // the JavaXPCOM methods from the XUL shared library.
 nsresult
-Initialize(JNIEnv* env, jobject aXPCOMPath)
+LoadXULMethods(JNIEnv* env, jobject aXPCOMPath, void** aFunctions)
 {
   jstring pathString = GetJavaFilePath(env, aXPCOMPath);
   if (!pathString)
@@ -159,6 +118,32 @@ Initialize(JNIEnv* env, jobject aXPCOMPath)
   free(xpcomPath);
   if (NS_FAILED(rv))
     return rv;
+
+  nsDynamicFunctionLoad funcs[] = {
+    { "Java_org_mozilla_xpcom_internal_GREImpl_initEmbedding",
+            (NSFuncPtr*) &aFunctions[kFunc_InitEmbedding] },
+    { "Java_org_mozilla_xpcom_internal_GREImpl_termEmbedding",
+            (NSFuncPtr*) &aFunctions[kFunc_TermEmbedding] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_initXPCOM",
+            (NSFuncPtr*) &aFunctions[kFunc_InitXPCOM] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_shutdownXPCOM",
+            (NSFuncPtr*) &aFunctions[kFunc_ShutdownXPCOM] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentManager",
+            (NSFuncPtr*) &aFunctions[kFunc_GetComponentManager] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getComponentRegistrar",
+            (NSFuncPtr*) &aFunctions[kFunc_GetComponentRegistrar] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_getServiceManager",
+            (NSFuncPtr*) &aFunctions[kFunc_GetServiceManager] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMImpl_newLocalFile",
+            (NSFuncPtr*) &aFunctions[kFunc_NewLocalFile] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_callXPCOMMethod",
+            (NSFuncPtr*) &aFunctions[kFunc_CallXPCOMMethod] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_finalizeProxy",
+            (NSFuncPtr*) &aFunctions[kFunc_FinalizeProxy] },
+    { "Java_org_mozilla_xpcom_internal_XPCOMJavaProxy_isSameXPCOMObject",
+            (NSFuncPtr*) &aFunctions[kFunc_IsSameXPCOMObject] },
+    { nsnull, nsnull }
+  };
 
   rv = XPCOMGlueLoadXULFunctions(funcs);
   if (NS_FAILED(rv))
@@ -207,91 +192,88 @@ ThrowException(JNIEnv* env, const nsresult aErrorCode, const char* aMessage)
   }
 }
 
-extern "C" JNIEXPORT void JNICALL
-GRE_NATIVE(initEmbeddingNative) (JNIEnv* env, jobject aObject,
-                                 jobject aLibXULDirectory,
-                                 jobject aAppDirectory, jobject aAppDirProvider)
+// Register the JavaXPCOM native methods.  This associates a native Java
+// method with its C implementation.
+nsresult
+RegisterNativeMethods(JNIEnv* env, void** aFunctions)
 {
-  nsresult rv = Initialize(env, aLibXULDirectory);
-  if (NS_FAILED(rv)) {
-    ThrowException(env, rv, "Initialization failed in initEmbeddingNative");
-    return;
+  JNINativeMethod gre_methods[] = {
+    { "initEmbeddingNative",
+      "(Ljava/io/File;Ljava/io/File;Lorg/mozilla/xpcom/IAppFileLocProvider;)V",
+      (void*) aFunctions[kFunc_InitEmbedding] },
+    { "termEmbedding", "()V",
+      (void*) aFunctions[kFunc_TermEmbedding] },
+  };
+
+  JNINativeMethod xpcom_methods[] = {
+    { "initXPCOMNative",
+      "(Ljava/io/File;Lorg/mozilla/xpcom/IAppFileLocProvider;)Lorg/mozilla/xpcom/nsIServiceManager;",
+      (void*) aFunctions[kFunc_InitXPCOM] },
+    { "shutdownXPCOM", "(Lorg/mozilla/xpcom/nsIServiceManager;)V",
+      (void*) aFunctions[kFunc_ShutdownXPCOM] },
+    { "getComponentManager", "()Lorg/mozilla/xpcom/nsIComponentManager;",
+      (void*) aFunctions[kFunc_GetComponentManager] },
+    { "getComponentRegistrar", "()Lorg/mozilla/xpcom/nsIComponentRegistrar;",
+      (void*) aFunctions[kFunc_GetComponentRegistrar] },
+    { "getServiceManager", "()Lorg/mozilla/xpcom/nsIServiceManager;",
+      (void*) aFunctions[kFunc_GetServiceManager] },
+    { "newLocalFile", "(Ljava/lang/String;Z)Lorg/mozilla/xpcom/nsILocalFile;",
+      (void*) aFunctions[kFunc_NewLocalFile] }
+  };
+
+  JNINativeMethod proxy_methods[] = {
+    { "callXPCOMMethod",
+      "(Ljava/lang/Object;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/Object;",
+      (void*) aFunctions[kFunc_CallXPCOMMethod] },
+    { "finalizeProxyNative", "(Ljava/lang/Object;)V",
+      (void*) aFunctions[kFunc_FinalizeProxy] },
+    { "isSameXPCOMObject", "(Ljava/lang/Object;Ljava/lang/Object;)Z",
+      (void*) aFunctions[kFunc_IsSameXPCOMObject] }
+  };
+
+  jint rc = -1;
+  jclass clazz = env->FindClass("org/mozilla/xpcom/internal/GREImpl");
+  if (clazz) {
+    rc = env->RegisterNatives(clazz, gre_methods,
+                              sizeof(gre_methods) / sizeof(gre_methods[0]));
+  }
+  NS_ENSURE_TRUE(rc == 0, NS_ERROR_FAILURE);
+
+  rc = -1;
+  clazz = env->FindClass("org/mozilla/xpcom/internal/XPCOMImpl");
+  if (clazz) {
+    rc = env->RegisterNatives(clazz, xpcom_methods,
+                              sizeof(xpcom_methods) / sizeof(xpcom_methods[0]));
+  }
+  NS_ENSURE_TRUE(rc == 0, NS_ERROR_FAILURE);
+
+  rc = -1;
+  clazz = env->FindClass("org/mozilla/xpcom/internal/XPCOMJavaProxy");
+  if (clazz) {
+    rc = env->RegisterNatives(clazz, proxy_methods,
+                              sizeof(proxy_methods) / sizeof(proxy_methods[0]));
+  }
+  NS_ENSURE_TRUE(rc == 0, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+// Load the JavaXPCOM methods from the XUL shared library, and registers them
+// as Java native methods.
+extern "C" JNIEXPORT void JNICALL
+JXM_NATIVE(registerJavaXPCOMMethodsNative) (JNIEnv *env, jclass that,
+                                            jobject aXPCOMPath)
+{
+  void* functions[JX_NUM_FUNCS];
+  memset(functions, 0, JX_NUM_FUNCS * sizeof(void*));
+
+  nsresult rv = LoadXULMethods(env, aXPCOMPath, functions);
+  if (NS_SUCCEEDED(rv)) {
+    rv = RegisterNativeMethods(env, functions);
   }
 
-  InitEmbedding(env, aObject, aLibXULDirectory, aAppDirectory, aAppDirProvider);
-}
-
-extern "C" JNIEXPORT void JNICALL
-GRE_NATIVE(termEmbedding) (JNIEnv *env, jobject aObject)
-{
-  TermEmbedding(env, aObject);
-  XPCOMGlueShutdown();
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(initXPCOMNative) (JNIEnv* env, jobject aObject,
-                               jobject aMozBinDirectory,
-                               jobject aAppFileLocProvider)
-{
-  nsresult rv = Initialize(env, aMozBinDirectory);
   if (NS_FAILED(rv)) {
-    ThrowException(env, rv, "Initialization failed in initXPCOMNative");
-    return nsnull;
+    ThrowException(env, rv, "Failed to register JavaXPCOM methods");
   }
-
-  return InitXPCOM(env, aObject, aMozBinDirectory, aAppFileLocProvider);
-}
-
-extern "C" JNIEXPORT void JNICALL
-XPCOM_NATIVE(shutdownXPCOM) (JNIEnv *env, jobject aObject, jobject aServMgr)
-{
-  ShutdownXPCOM(env, aObject, aServMgr);
-  XPCOMGlueShutdown();
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jobject aObject, jstring aPath,
-                            jboolean aFollowLinks)
-{
-  return NewLocalFile(env, aObject, aPath, aFollowLinks);
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jobject aObject)
-{
-  return GetComponentManager(env, aObject);
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jobject aObject)
-{
-  return GetComponentRegistrar(env, aObject);
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jobject aObject)
-{
-  return GetServiceManager(env, aObject);
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
-                                   jstring aMethodName, jobjectArray aParams)
-{
-  return CallXPCOMMethod(env, that, aJavaProxy, aMethodName, aParams);
-}
-
-extern "C" JNIEXPORT void JNICALL
-JAVAPROXY_NATIVE(finalizeProxyNative) (JNIEnv *env, jclass that,
-                                       jobject aJavaProxy)
-{
-  FinalizeProxy(env, that, aJavaProxy);
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-JAVAPROXY_NATIVE(isSameXPCOMObject) (JNIEnv *env, jclass that, jobject aProxy1,
-                                     jobject aProxy2)
-{
-  return IsSameXPCOMObject(env, that, aProxy1, aProxy2);
 }
 
