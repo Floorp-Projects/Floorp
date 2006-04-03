@@ -3603,17 +3603,18 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
     return NS_ERROR_FAILURE;
 
   nsresult rv = NS_OK;
-  nsCAutoString url;
-  mDocumentURI->GetSpec(url);
   // test if the above works if document.domain is set for Midas document
   // (www.netscape.com --> netscape.com)
-  if (!url.Equals("about:blank")) {
-    // If we're 'about:blank' then we don't care who can edit us.
-    // If we're not about:blank, then we need to check sameOrigin.
-    rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(nsnull,
-                                                            mDocumentURI);
-    if (NS_FAILED(rv))
-      return rv;
+  nsIPrincipal *principal = GetNodePrincipal();
+  if (!principal)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPrincipal> subject;
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (subject) {
+     rv = secMan->CheckSameOriginPrincipal(subject, principal);
+     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
