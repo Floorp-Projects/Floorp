@@ -34,21 +34,386 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <windows.h>
+
 #include "nsNativeUConvService.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharRepresentable.h"
 #include "nsIPlatformCharset.h"
 #include "nsIServiceManager.h"
-#include "string.h"
 
 #include "nsUCSupport.h"
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToUTF8.h"
 
+class WinCEUConvAdapter : public nsIUnicodeDecoder,
+                          public nsIUnicodeEncoder,
+                          public nsICharRepresentable
+{
+public:
+  
+  WinCEUConvAdapter();
+  virtual ~WinCEUConvAdapter();
+  
+  nsresult Init(const char* from, const char* to);
+  
+  NS_DECL_ISUPPORTS;
+  
+  // Decoder methods:
+  
+  NS_IMETHOD Convert(const char * aSrc, 
+                     PRInt32 * aSrcLength, 
+                     PRUnichar * aDest, 
+                     PRInt32 * aDestLength);
+  
+  NS_IMETHOD GetMaxLength(const char * aSrc, 
+                          PRInt32 aSrcLength, 
+                          PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  
+  // Encoder methods:
+  
+  NS_IMETHOD Convert(const PRUnichar * aSrc, 
+                     PRInt32 * aSrcLength, 
+                     char * aDest, 
+                     PRInt32 * aDestLength);
+  
+  
+  NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
+  
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
+                          PRInt32 aSrcLength, 
+                          PRInt32 * aDestLength);
+  
+  // defined by the Decoder:  NS_IMETHOD Reset();
+  
+  NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
+                                    nsIUnicharEncoder * aEncoder, 
+                                    PRUnichar aChar);
+  
+  NS_IMETHOD FillInfo(PRUint32* aInfo);
+  
+  PRUint32 mCodepage;
+};
+
+NS_IMPL_ISUPPORTS3(WinCEUConvAdapter,
+                   nsIUnicodeDecoder,
+                   nsIUnicodeEncoder,
+                   nsICharRepresentable)
+
+WinCEUConvAdapter::WinCEUConvAdapter()
+{
+}
+
+WinCEUConvAdapter::~WinCEUConvAdapter()
+{
+}
+
+typedef struct CharsetCodePageMap {
+  char      charset[32];
+  PRUint16  codepage;
+} CsCpMap;
+
+
+static CsCpMap theCsCPMap[] = {
+  {"Big5",    950},
+  {"EUC-JP", 51932},     
+  {"EUC-KR", 949},  
+  {"GB2312", 936},  
+  {"HZ-GB-2312    ", 52936},     
+  {"IBM850", 850},   
+  {"IBM852", 852},   
+  {"IBM855", 855},   
+  {"IBM857", 857},   
+  {"IBM862", 862},   
+  {"IBM866", 866},   
+  {"IBM869", 869},   
+  {"ISO-2022-JP", 50220},     
+  {"ISO-2022-KR", 50225},     
+  {"ISO-8859-15", 28605},     
+  {"ISO-8859-1", 28591},     
+  {"ISO-8859-2", 28592},     
+  {"ISO-8859-3", 28593},     
+  {"ISO-8859-4", 28594},     
+  {"ISO-8859-5", 28595},     
+  {"ISO-8859-6", 28596},     
+  {"ISO-8859-7", 28597},     
+  {"ISO-8859-8", 28598},     
+  {"ISO-8859-8-I", 1255},      
+  {"ISO-8859-9", 28599},     
+  {"Shift_JIS", 932},       
+  {"TIS-620", 874},       
+  {"UTF-16", 1200},      
+  {"UTF-7", 65000},     
+  {"UTF-8", 65001},     
+  {"gb_2312-80", 936},       
+  {"ks_c_5601-1987", 949},       
+  {"us-ascii", 20127},     
+  {"windows-1250", 1250},      
+  {"windows-1251", 1251},      
+  {"windows-1253", 1253},      
+  {"windows-1254", 1254},      
+  {"windows-1255", 1255},      
+  {"windows-1256", 1256},      
+  {"windows-1257", 1257},      
+  {"windows-1258", 1258},      
+  {"windows-874", 874},       
+  {"windows-936", 936},       
+  {"x-mac-arabic", 10004},     
+  {"x-mac-ce", 10029},     
+  {"x-mac-cyrillic", 10007},     
+  {"x-mac-greek", 10006},     
+  {"x-mac-hebrew", 10005},     
+  {"x-mac-icelandi", 10079},     
+  {"x-x-big5", 950},       
+  {nsnull, 0}
+};
+
+
+nsresult
+WinCEUConvAdapter::Init(const char* from, const char* to)
+{
+  const char* cpstring = nsnull;
+  
+  if (!strcmp(from, "UCS-2"))
+  {
+    cpstring = to;
+  }
+  else
+  {
+    cpstring = from;
+  }
+
+  int i = 0;
+  while (1)
+  {
+    if (theCsCPMap[i].charset[0] == nsnull)
+      break;
+    
+    if (!strcmp(theCsCPMap[i].charset, cpstring))
+    {
+      mCodepage = theCsCPMap[i].codepage;
+      break;
+    }
+    i++;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinCEUConvAdapter::Convert(const char * aSrc, 
+                           PRInt32 * aSrcLength, 
+                           PRUnichar * aDest, 
+                           PRInt32 * aDestLength)
+{
+  int count;
+  
+  count = MultiByteToWideChar(mCodepage,
+                              0,
+                              aSrc,
+                              *aSrcLength,
+                              aDest,
+                              *aDestLength);
+
+#if 0
+  if (count == 0)
+  {
+    int error = GetLastError();
+    switch (error)
+    {
+      case ERROR_NO_UNICODE_TRANSLATION:
+        MessageBox(0, "ERROR_NO_UNICODE_TRANSLATION", "MultiByteToWideChar", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_PARAMETER:
+        MessageBox(0, "ERROR_INVALID_PARAMETER", "MultiByteToWideChar", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_FLAGS:
+        MessageBox(0, "ERROR_INVALID_FLAGS", "MultiByteToWideChar", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INSUFFICIENT_BUFFER:
+        MessageBox(0, "ERROR_INSUFFICIENT_BUFFER", "MultiByteToWideChar", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+    default:
+        MessageBox(0, "other...", "MultiByteToWideChar", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+    }
+  }
+#endif
+
+  *aDestLength = count;
+  *aSrcLength  = count;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinCEUConvAdapter::GetMaxLength(const char * aSrc, 
+                                PRInt32 aSrcLength, 
+                                PRInt32 * aDestLength)
+{
+  int count;
+  
+  count = MultiByteToWideChar(mCodepage,
+                              0,
+                              aSrc,
+                              aSrcLength,
+                              NULL,
+                              NULL);
+
+#if 0
+  if (count == 0)
+  {
+    int error = GetLastError();
+    switch (error)
+    {
+      case ERROR_NO_UNICODE_TRANSLATION:
+        MessageBox(0, "ERROR_NO_UNICODE_TRANSLATION", "MultiByteToWideChar (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_PARAMETER:
+        MessageBox(0, "ERROR_INVALID_PARAMETER", "MultiByteToWideChar (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_FLAGS:
+        MessageBox(0, "ERROR_INVALID_FLAGS", "MultiByteToWideChar (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INSUFFICIENT_BUFFER:
+        MessageBox(0, "ERROR_INSUFFICIENT_BUFFER", "MultiByteToWideChar (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+    default:
+        MessageBox(0, "other...", "MultiByteToWideChar (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+    }
+  }
+#endif
+
+  *aDestLength = count;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinCEUConvAdapter::Reset()
+{
+  return NS_OK;
+}
+
+// Encoder methods:
+
+NS_IMETHODIMP
+WinCEUConvAdapter::Convert(const PRUnichar * aSrc, 
+                           PRInt32 * aSrcLength, 
+                           char * aDest, 
+                           PRInt32 * aDestLength)
+{
+  char * defaultChar = "?";
+  int count;
+  
+  count = WideCharToMultiByte(mCodepage,
+                              WC_COMPOSITECHECK | WC_SEPCHARS | WC_DEFAULTCHAR,
+                              aSrc,
+                              *aSrcLength,
+                              aDest,
+                              *aDestLength,
+                              defaultChar,
+                              NULL);
+
+#if 0
+  if (count == 0)
+  {
+    int error = GetLastError();
+    switch (error)
+    {
+      case ERROR_NO_UNICODE_TRANSLATION:
+        MessageBox(0, "ERROR_NO_UNICODE_TRANSLATION", "WideCharToMultiByte", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_PARAMETER:
+        MessageBox(0, "ERROR_INVALID_PARAMETER", "WideCharToMultiByte", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_FLAGS:
+        MessageBox(0, "ERROR_INVALID_FLAGS", "WideCharToMultiByte", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INSUFFICIENT_BUFFER:
+        MessageBox(0, "ERROR_INSUFFICIENT_BUFFER", "WideCharToMultiByte", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+    default:
+        MessageBox(0, "other...", "WideCharToMultiByte", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+    }
+  }
+#endif
+
+  *aSrcLength = count;
+  *aDestLength = count;
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+WinCEUConvAdapter::Finish(char * aDest, PRInt32 * aDestLength)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinCEUConvAdapter::GetMaxLength(const PRUnichar * aSrc, 
+                                PRInt32 aSrcLength, 
+                                PRInt32 * aDestLength)
+{
+  int count = WideCharToMultiByte(CP_ACP,
+                                  0,
+                                  aSrc,
+                                  aSrcLength,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  NULL);
+  
+
+#if 0
+  if (count == 0)
+  {
+    int error = GetLastError();
+    switch (error)
+    {
+      case ERROR_NO_UNICODE_TRANSLATION:
+        MessageBox(0, "ERROR_NO_UNICODE_TRANSLATION", "WideCharToMultiByte (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_PARAMETER:
+        MessageBox(0, "ERROR_INVALID_PARAMETER", "WideCharToMultiByte (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INVALID_FLAGS:
+        MessageBox(0, "ERROR_INVALID_FLAGS", "WideCharToMultiByte (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+      case ERROR_INSUFFICIENT_BUFFER:
+        MessageBox(0, "ERROR_INSUFFICIENT_BUFFER", "WideCharToMultiByte (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+        break;
+    default:
+        MessageBox(0, "other...", "WideCharToMultiByte (0)", MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND);
+    }
+  }
+#endif
+
+  *aDestLength = count;
+  return NS_OK;
+}
+
+// defined by the Decoder:  NS_IMETHOD Reset();
+
+NS_IMETHODIMP
+WinCEUConvAdapter::SetOutputErrorBehavior(PRInt32 aBehavior, 
+                                          nsIUnicharEncoder * aEncoder, 
+                                          PRUnichar aChar)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinCEUConvAdapter::FillInfo(PRUint32* aInfo)
+{
+  return NS_OK;
+}
+
 // NativeUConvService
 
-NS_IMPL_ISUPPORTS1(NativeUConvService, nsINativeUConvService);
+NS_IMPL_ISUPPORTS1(NativeUConvService, 
+                   nsINativeUConvService);
 
 NS_IMETHODIMP 
 NativeUConvService::GetNativeConverter(const char* from,
@@ -56,22 +421,36 @@ NativeUConvService::GetNativeConverter(const char* from,
                                        nsISupports** aResult) 
 {
   *aResult = nsnull;
-  
-  if (!strcmp(from, "UCS-2"))
+
+
+
+  if (!strcmp(from, "UCS-2") && 
+      !strcmp(to,   "UTF-8") )
   {
     nsUnicodeToUTF8 * inst = new nsUnicodeToUTF8();
     inst->AddRef();
     *aResult = inst;
     return NS_OK;
   }
-  
-  if (!strcmp(to, "UCS-2"))
+
+  if (!strcmp(from, "UTF-8") &&
+      !strcmp(to,   "UCS-2") )
   {
     nsUTF8ToUnicode * inst = new nsUTF8ToUnicode();
     inst->AddRef();
     *aResult = (nsIUnicodeDecoder*) inst;
     return NS_OK;
   }
+
+  WinCEUConvAdapter* ucl = new WinCEUConvAdapter();
+  if (!ucl)
+    return NS_ERROR_OUT_OF_MEMORY;
   
-  return NS_ERROR_NOT_AVAILABLE;
+  nsresult rv = ucl->Init(from, to);
+  
+  if (NS_SUCCEEDED(rv)) {
+    NS_ADDREF(*aResult = (nsISupports*)(nsIUnicharEncoder*)ucl);
+  }
+  
+  return rv;
 }
