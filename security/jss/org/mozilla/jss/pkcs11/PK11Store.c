@@ -310,6 +310,9 @@ finish:
 
 /**********************************************************************
  * PK11Store.deleteCert
+ *
+ * This function deletes the specified certificate and its associated 
+ * private key.
  */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
@@ -330,6 +333,35 @@ Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
     }
 
     status = PK11_DeleteTokenCertAndKey(cert, NULL);
+    status = SEC_DeletePermCertificate(cert);
+
+finish: 
+    return;
+}
+
+/**********************************************************************
+ * PK11Store.deleteCertOnly
+ *
+ * This function deletes the specified certificate only.
+ */
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_pkcs11_PK11Store_deleteCertOnly
+    (JNIEnv *env, jobject this, jobject certObject)
+{
+    CERTCertificate *cert;
+    SECStatus status;
+
+    PR_ASSERT(env!=NULL && this!=NULL);
+    if(certObject == NULL) {
+        JSS_throw(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION);
+        goto finish;
+    }
+
+    if( JSS_PK11_getCertPtr(env, certObject, &cert) != PR_SUCCESS) {
+        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
+        goto finish;
+    }
+
     status = SEC_DeletePermCertificate(cert);
 
 finish: 

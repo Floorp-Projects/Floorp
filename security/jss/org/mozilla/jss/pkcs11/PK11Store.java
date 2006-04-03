@@ -90,9 +90,27 @@ public final class PK11Store implements CryptoStore {
     }
     protected native void putCertsInVector(Vector certs) throws TokenException;
 
+    /**
+     * Deletes the specified certificate and its associated private 
+     * key from the store.
+     *
+     * @param cert certificate to be deleted
+     * @exception NoSuchItemOnTokenException If the certificate not found
+     * @exception TokenException General token error
+     */
 	// Currently have to use PK11_DeleteTokenObject + PK11_FindObjectForCert
 	// or maybe SEC_DeletePermCertificate.
     public native void deleteCert(X509Certificate cert)
+        throws NoSuchItemOnTokenException, TokenException;
+
+    /**
+     * Deletes the specified certificate from the store.
+     *
+     * @param cert certificate to be deleted
+     * @exception NoSuchItemOnTokenException If the certificate not found
+     * @exception TokenException General token error
+     */
+    public native void deleteCertOnly(X509Certificate cert)
         throws NoSuchItemOnTokenException, TokenException;
 
 	////////////////////////////////////////////////////////////

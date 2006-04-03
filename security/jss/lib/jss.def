@@ -295,6 +295,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_abortAccept;
 ;+    global:
 Java_org_mozilla_jss_ssl_SocketBase_getSSLOption;
 Java_org_mozilla_jss_ssl_SSLSocket_getSSLDefaultOption;
+Java_org_mozilla_jss_pkcs11_PK11Store_deleteCertOnly;
 ;+    local:
 ;+       *;
 ;+};
