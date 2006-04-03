@@ -46,9 +46,9 @@
 #define nsCSSRuleProcessor_h_
 
 #include "nsIStyleRuleProcessor.h"
+#include "nsCSSStyleSheet.h"
 
 struct RuleCascadeData;
-class nsICSSStyleSheet;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
