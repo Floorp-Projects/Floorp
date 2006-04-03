@@ -57,5 +57,6 @@
 <textbox flex="1" id="bookmarkname" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
 <label>&bookmarkURL.label;</label>
 <textbox flex="1" id="bookmarkurl" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
+<checkbox id="liveBookmark" label="Live Bookmark"/>
 </vbox>
 </dialog>

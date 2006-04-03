@@ -254,15 +254,14 @@
   <wizardpage label="&customizePartFour.label;">  
     <groupbox>
       <caption label="&allowedSites.caption;"/>
-      <description>&allowedSites.description;</description>
-      <vbox>
-        <label control="PopupAllowedSites">&popupAllowedSites.label;</label>
+        <description control="PopupAllowedSites">&popupAllowedSites.label;</description>
+        <vbox>
         <textbox id="PopupAllowedSites" flex="1"/>
-      </vbox>
-      <vbox>
-        <label control="InstallAllowedSites">&installAllowedSites.label;</label>
+        </vbox>
+        <description control="InstallAllowedSites">&installAllowedSites.label;</description>
+        <vbox>
         <textbox id="InstallAllowedSites" flex="1"/>
-      </vbox>
+        </vbox>
     </groupbox>
   </wizardpage>
 
@@ -277,6 +276,7 @@
 
   <wizardpage label="&customizeSearchEngines.label;">
     <groupbox>
+      <caption label="&engines.label;"/>
     <description>&searchEngines.description;</description>
     <box class="ccklist" id="searchEngineList" new="onNewSearchEngine();" edit="onEditSearchEngine();"/>
     </groupbox>
@@ -284,7 +284,7 @@
 
 
 
-  <wizardpage id="tbFolder" label="&customizeToolbarOne.label;">
+  <wizardpage id="tbFolder" label="&customizeToolbarOne.label;" onpageadvanced="if (document.getElementById('tbFolder.bookmarkList').getRowCount() > 0) return Validate('ToolbarFolder1','&bmFolder.error;')">
     <groupbox>
       <caption label="&addToolbarFolder.caption;"/>
       <description>&addToolbarFolder.description;</description>
@@ -296,49 +296,15 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizeToolbarTwo.label;">
+  <wizardpage id="tb" label="&customizeToolbarTwo.label;">
     <groupbox>
       <caption label="&addToolbarBookmark.caption;"/>
       <description>&addToolbarBookmark.description;</description>
-      <label value="&bookmark.label; 1"/>
-      <hbox align="center">
-        <label control="ToolbarBookmarkTitle1">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarBookmarkTitle1" flex="1"/>
-        <label control="ToolbarBookmarkURL1">&bookmarkURL.label;</label>
-        <textbox id="ToolbarBookmarkURL1" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 2"/>
-      <hbox align="center">
-        <label control="ToolbarBookmarkTitle2">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarBookmarkTitle2" flex="1"/>
-        <label control="ToolbarBookmarkURL2">&bookmarkURL.label;</label>
-        <textbox id="ToolbarBookmarkURL2" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 3"/>
-      <hbox align="center">
-        <label control="ToolbarBookmarkTitle3">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarBookmarkTitle3" flex="1"/>
-        <label control="ToolbarBookmarkURL3">&bookmarkURL.label;</label>
-        <textbox id="ToolbarBookmarkURL3" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 4"/>
-      <hbox align="center">
-        <label control="ToolbarBookmarkTitle4">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarBookmarkTitle4" flex="1"/>
-        <label control="ToolbarBookmarkURL4">&bookmarkURL.label;</label>
-        <textbox id="ToolbarBookmarkURL4" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 5"/>
-      <hbox align="center">
-        <label control="ToolbarBookmarkTitle5">&bookmarkTitle.label;</label>
-        <textbox id="ToolbarBookmarkTitle5" flex="1"/>
-        <label control="ToolbarBookmarkURL5">&bookmarkURL.label;</label>
-        <textbox id="ToolbarBookmarkURL5" flex="1"/>
-      </hbox>
+      <box class="ccklist" id="tb.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizeBookmarksOne.label;">
+  <wizardpage id="bmFolder" label="&customizeBookmarksOne.label;" onpageadvanced="if (document.getElementById('bmFolder.bookmarkList').getRowCount() > 0) return Validate('BookmarkFolder1','&bmFolder.error;')">
     <groupbox>
       <caption label="&addBookmarkFolder.caption;"/>
       <description>&addBookmarkFolder.description;</description>
@@ -346,83 +312,15 @@
         <label control="BookmarkFolder1">&folderTitle.label;</label>
         <textbox id="BookmarkFolder1"/>
       </hbox>
-      <label value="&bookmark.label; 1"/>
-      <hbox align="center">
-        <label control="BookmarkFolder1.BookmarkTitle1">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle1" flex="1"/>
-        <label control="BookmarkFolder1.BookmarkURL1">&bookmarkURL.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkURL1" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 2"/>
-      <hbox align="center">
-        <label control="BookmarkFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle2" flex="1"/>
-        <label control="BookmarkFolder1.BookmarkURL2">&bookmarkURL.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkURL2" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 3"/>
-      <hbox align="center">
-        <label control="BookmarkFolder1.BookmarkTitle3">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle3" flex="1"/>
-        <label control="BookmarkFolder1.BookmarkURL3">&bookmarkURL.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkURL3" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 4"/>
-      <hbox align="center">
-        <label control="BookmarkFolder1.BookmarkTitle4">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle4" flex="1"/>
-        <label control="BookmarkFolder1.BookmarkURL4">&bookmarkURL.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkURL4" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 5"/>
-      <hbox align="center">
-        <label control="BookmarkFolder1.BookmarkTitle5">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle5" flex="1"/>
-        <label control="BookmarkFolder1.BookmarkURL5">&bookmarkURL.label;</label>
-        <textbox id="BookmarkFolder1.BookmarkURL5" flex="1"/>
-      </hbox>
+      <box class="ccklist" id="bmFolder.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizeBookmarksTwo.label;">
+  <wizardpage id="bm" label="&customizeBookmarksTwo.label;">
     <groupbox>
       <caption label="&addBookmark.caption;"/>
       <description>&addBookmark.description;</description>
-      <label value="&bookmark.label; 1"/>
-      <hbox align="center">
-        <label control="BookmarkTitle1">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkTitle1" flex="1"/>
-        <label control="BookmarkURL1">&bookmarkURL.label;</label>
-        <textbox id="BookmarkURL1" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 2"/>
-      <hbox align="center">
-        <label control="BookmarkTitle2">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkTitle2" flex="1"/>
-        <label control="BookmarkURL2">&bookmarkURL.label;</label>
-        <textbox id="BookmarkURL2" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 3"/>
-      <hbox align="center">
-        <label control="BookmarkTitle3">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkTitle3" flex="1"/>
-        <label control="BookmarkURL3">&bookmarkURL.label;</label>
-        <textbox id="BookmarkURL3" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 4"/>
-      <hbox align="center">
-        <label control="BookmarkTitle4">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkTitle4" flex="1"/>
-        <label control="BookmarkURL4">&bookmarkURL.label;</label>
-        <textbox id="BookmarkURL4" flex="1"/>
-      </hbox>
-      <label value="&bookmark.label; 5"/>
-      <hbox align="center">
-        <label control="BookmarkTitle5">&bookmarkTitle.label;</label>
-        <textbox id="BookmarkTitle5" flex="1"/>
-        <label control="BookmarkURL5">&bookmarkURL.label;</label>
-        <textbox id="BookmarkURL5" flex="1"/>
-      </hbox>
+      <box class="ccklist" id="bm.bookmarkList" new="onNewBookmark();" edit="onEditBookmark();"/>
     </groupbox>
   </wizardpage>
 
@@ -442,28 +340,9 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizeCerts.label;" onpageadvanced="return ValidateFile('CertPath1','CertPath2','CertPath3','CertPath4','CertPath5');">>
+  <wizardpage label="&customizeCerts.label;">
     <description>&customizeCerts.warning;</description>
-    <hbox>
-      <textbox id="CertPath1" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('CertPath1');"/>
-    </hbox>
-    <hbox>
-      <textbox id="CertPath2" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('CertPath2');"/>
-    </hbox>
-    <hbox>
-      <textbox id="CertPath3" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('CertPath3');"/>
-    </hbox>
-    <hbox>
-      <textbox id="CertPath4" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('CertPath4');"/>
-    </hbox>
-    <hbox>
-      <textbox id="CertPath5" flex="1"/>
-      <button label="&chooseFile.label;" oncommand="choosefile('CertPath5');"/>
-    </hbox>
+    <box class="ccklist" id="certList" new="onNewCert();" edit="onEditCert();"/>
   </wizardpage>
   
   <wizardpage label="&customizeProxy.label;">

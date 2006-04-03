@@ -62,7 +62,8 @@
              <menupopup>
 	       <menuitem label="Windows" value="WINNT_x86-msvc"/>
 	       <menuitem label="Linux" value="Linux_x86-gcc3"/>
-	       <menuitem label="Macintosh" value="Darwin_ppc-gcc3"/>
+	       <menuitem label="Macintosh (PPC)" value="Darwin_ppc-gcc3"/>
+               <menuitem label="Macintosh (Intel)" value="Darwin_x86-gcc3"/>
              </menupopup>
            </menulist>
          </hbox>        

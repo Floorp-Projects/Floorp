@@ -13,6 +13,8 @@
           <xul:button label="&newButton.label;" accesskey="&newButton.accesskey;" type="new"/>
           <xul:button label="&editButton.label;" accesskey="&editButton.accesskey;" type="edit"/>
           <xul:button label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" type="delete"/>
+          <xul:button label="&moveUpButton.label;" accesskey="&moveUpButton.accesskey;" type="moveup"/>
+          <xul:button label="&moveDownButton.label;" accesskey="&moveDownButton.accesskey;" type="movedown"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
         </xul:hbox>
@@ -20,7 +22,9 @@
     <implementation>
       <constructor>
         document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","true");
-	document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","true");
+        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","true");
+        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
       </constructor>
       <method name="clear">
         <body>
@@ -55,7 +59,18 @@
         <body>
           <![CDATA[
             var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
-	    return listbox.appendItem(label, value);
+	    listboxitem = listbox.appendItem(label, value);
+            listboxitem.cck = new Array();
+            if (listbox.selectedIndex != 0)
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
+            else
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+            if (listbox.selectedIndex != listbox.getRowCount()-1)
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
+            else
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+
+            return listboxitem;
           ]]>
         </body>
       </method>
@@ -67,6 +82,15 @@
       <handler event="select">
         document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","false");
 	document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","false");
+        var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
+        if (listbox.selectedIndex != 0)
+	  document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
+        else
+	  document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+        if (listbox.selectedIndex != listbox.getRowCount()-1)
+	  document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
+        else
+	  document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
       </handler>
       <handler event="dblclick">
         if (event.originalTarget.tagName == "richlistitem")
@@ -78,6 +102,37 @@
 	    listbox.removeItemAt(listbox.selectedIndex);
 	    return;
 	}
+        if ((event.originalTarget.type == "moveup") || (event.originalTarget.type == "movedown")) {
+            var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
+            var listitem=listbox.selectedItem;
+            var index;
+            if (event.originalTarget.type == "moveup")
+              index = listbox.selectedIndex-1;
+            else
+              index = listbox.selectedIndex+2;
+            var newlistitem;
+            if (index >= listbox.getRowCount()) {
+              newlistitem = listbox.appendItem(listitem.label , listitem.value);
+            } else {
+              newlistitem = listbox.insertItemAt(index, listitem.label , listitem.value);
+            }
+            newlistitem.cck = listitem.cck;
+            if (listitem.getAttribute("class") == "listitem-iconic") {
+              newlistitem.setAttribute("class", "listitem-iconic");
+              newlistitem.setAttribute("image", listitem.getAttribute("image"));
+            }
+	    listbox.removeItemAt(listbox.selectedIndex);
+            listbox.selectItem(newlistitem);
+            if (listbox.selectedIndex != 0)
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
+            else
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+            if (listbox.selectedIndex != listbox.getRowCount()-1)
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
+            else
+	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+
+        }
 	eval(this.getAttribute(event.originalTarget.type));
       </handler>
     </handlers>

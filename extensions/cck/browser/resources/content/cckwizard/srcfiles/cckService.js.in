@@ -247,11 +247,9 @@ CCKService.prototype={
       if ((ToolbarLocation) && (ToolbarLocation == "First")) {
         tbIndex = 1;
         addBookmarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
-        addLivemarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
         addFolder(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
       } else {
         addFolder(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
-        addLivemarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
         addBookmarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
       }
 
@@ -263,54 +261,14 @@ CCKService.prototype={
       } catch (ex) {}
       if ((BookmarkLocation) && (BookmarkLocation == "First")) {
         bmIndex = 1;
-        addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
         addBookmarks(bundle, BMSVC, "", bmRoot, bmIndex);
         addFolder(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
       } else {
         addFolder(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
         addBookmarks(bundle,  BMSVC, "", bmRoot, bmIndex);
-        addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
       }
 
 	  prefbranch.setBoolPref("cck.initialized", true);
-    }
-  }
-}
-
-function addLivemarks(bundle, BMSVC, prefix, folder, location)
-{
-  var LivemarkTitle;
-  var LivemarkRSSURL;
-
-  // items are added in reverse order if we are set to "First"
-  var start, end, increment;
-  
-  if (location == -1) {
-    start = 1;
-    end = 6;
-    increment = 1;
-  } else {
-    start = 5;
-    end = 0;
-    increment = -1;
-  }
-
-  for (var i=start; i!=end; i+=increment) {
-    try {
-      LivemarkTitle = bundle.GetStringFromName(prefix + "LivemarkTitle" + i);
-    } catch (ex) {
-    LivemarkTitle = "";
-  }
-  if ((LivemarkTitle) && (LivemarkTitle.length)) {
-    try {
-      LivemarkRSSURL = bundle.GetStringFromName(prefix + "LivemarkRSSURL" + i);
-    } catch (ex) {
-      LivemarkRSSURL = "";
-    }
-    if ((LivemarkRSSURL) && (LivemarkRSSURL.length)) {
-      if (BMSVC.createLivemarkInContainer)
-        BMSVC.createLivemarkInContainer(LivemarkTitle, "", LivemarkRSSURL, "", folder, location);
-      }
     }
   }
 }
@@ -323,12 +281,24 @@ function addBookmarks(bundle, BMSVC, prefix, folder, location)
   // items are added in reverse order if we are set to "First"
   var start, end, increment;
   
+  var i = 1;
+  var numBookmarks = 0;
+  while (1) {
+    try {
+      var title = bundle.GetStringFromName(prefix + "BookmarkTitle" + i);
+    } catch (ex) {
+      break;
+    }
+    i++;
+    numBookmarks++;
+  }
+  
   if (location == -1) {
     start = 1;
-    end = 6;
+    end = numBookmarks+1;
     increment = 1;
   } else {
-    start = 5;
+    start = numBookmarks;
     end = 0;
     increment = -1;
   }
@@ -346,10 +316,20 @@ function addBookmarks(bundle, BMSVC, prefix, folder, location)
         BookmarkURL = "";          
       }
       if ((BookmarkURL) && (BookmarkURL.length)) {
-        if (BMSVC.createBookmarkInContainer.length == 8)
-          BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", folder, location);
-        else
-          BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", folder, location);
+        var bmtype;
+        try {
+          bmtype = bundle.GetStringFromName(prefix + "BookmarkType" + i);
+        } catch (ex) {
+          bmtype = "";
+        }
+        if (bmtype == "live") {
+            BMSVC.createLivemarkInContainer(BookmarkTitle, "", BookmarkURL, "", folder, location);
+        } else {
+          if (BMSVC.createBookmarkInContainer.length == 8)
+            BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", folder, location);
+          else
+            BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", folder, location);
+        }
       }
     }
   }
@@ -383,11 +363,21 @@ function addFolder(bundle, BMSVC, prefix, folder, location)
     }
     if ((BookmarkFolder) && (BookmarkFolder.length)) {
       var newfolder;
-      if (BMSVC.createBookmarkInContainer.length == 8)
-        newfolder = BMSVC.createFolderInContainer(BookmarkFolder, folder, location);
-      else
-        newfolder = BMSVC.createFolderInContainer(BookmarkFolder, folder, location);
-      for (var j=1; j<=5; j++) {
+      newfolder = BMSVC.createFolderInContainer(BookmarkFolder, folder, location);
+
+      var j = 1;
+      var numBookmarks = 0;
+      while (1) {
+        try {
+          var title = bundle.GetStringFromName(prefix + "Folder" + i + ".BookmarkTitle" + j);
+        } catch (ex) {
+          break;
+        }
+        j++;
+        numBookmarks++;
+      }
+
+      for (var j=1; j<=numBookmarks; j++) {
         try {
           BookmarkTitle = bundle.GetStringFromName(prefix + "Folder" + i + ".BookmarkTitle" + j);
         } catch (ex) {
@@ -400,12 +390,22 @@ function addFolder(bundle, BMSVC, prefix, folder, location)
             BookmarkURL = "";
           }
           if ((BookmarkURL) && (BookmarkURL.length)) {
-            if (BMSVC.createBookmarkInContainer.length == 8)
-              BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", newfolder, -1);
-            else
-              BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", newfolder, -1);
-	      }
-	    }
+            var bmtype;
+            try {
+              bmtype = bundle.GetStringFromName(prefix + "BookmarkType" + i);
+            } catch (ex) {
+              bmtype = "";
+            }
+            if (bmtype == "live") {
+              BMSVC.createLivemarkInContainer(BookmarkTitle, "", BookmarkURL, "", newfolder, -1);
+            } else {
+              if (BMSVC.createBookmarkInContainer.length == 8)
+                BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", newfolder, -1);
+              else
+                BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", newfolder, -1);
+            }
+          }
+        }
       }
     }
   }
