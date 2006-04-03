@@ -8254,44 +8254,12 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy()
         state.mFrameManager->ClearPlaceholderFrameMap();
         state.mFrameManager->ClearUndisplayedContentMap();
 
-        // Take the docElementFrame, and remove it from its parent. For
-        // HTML, we'll be removing the Area frame from the Canvas; for
-        // XUL, we'll remove the GfxScroll or Box from the RootBoxFrame.
-        //
-        // The three possible structures (at least the ones observed so
-        // far, see bugs 70258 and 93558) are:
-        //
-        // (HTML)
-        //    nsHTMLScrollFrame(html)<
-        //      Canvas(-1)<
-        //       Area(html)<
-        //        (etc.)
-        //
-        // (XUL #1)
-        //    RootBoxFrame(window)<
-        //     nsXULScrollFrame<
-        //        (etc.)
-        //
-        // (XUL #2)
-        //    RootBox<
-        //     Box<
-        //      (etc.)
-        //
         if (docElementFrame) {
-          nsIFrame* docParentFrame = docElementFrame->GetParent();
+          // Take the docElementFrame, and remove it from its parent.
+        
+          // XXXbz So why can't we reuse ContentRemoved?
 
-#ifdef MOZ_XUL
-          // If we're in a XUL document, then we need to crawl up to the
-          // RootBoxFrame and remove _its_ child.
-          nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-          if (xuldoc) {
-            nsCOMPtr<nsIAtom> frameType;
-            while (docParentFrame && !IsRootBoxFrame(docParentFrame)) {
-              docElementFrame = docParentFrame;
-              docParentFrame = docParentFrame->GetParent();
-            }
-          }
-#endif
+          nsIFrame* docParentFrame = docElementFrame->GetParent();
 
           NS_ASSERTION(docParentFrame, "should have a parent frame");
           if (docParentFrame) {
