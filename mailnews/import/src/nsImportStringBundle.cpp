@@ -46,81 +46,51 @@
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-#define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
-
-nsIStringBundle *	nsImportStringBundle::m_pBundle = nsnull;
-
-nsIStringBundle *nsImportStringBundle::GetStringBundle( void)
+nsresult nsImportStringBundle::GetStringBundle(const char* aPropertyURL, nsIStringBundle** aBundle)
 {
-	if (m_pBundle)
-		return( m_pBundle);
-
-	nsresult			rv;
-	const char			propertyURL[] = IMPORT_MSGS_URL;
-	nsIStringBundle*	sBundle = nsnull;
-
+  nsresult rv;
 
 	nsCOMPtr<nsIStringBundleService> sBundleService = 
 	         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
 	if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) {
-		rv = sBundleService->CreateBundle(propertyURL, &sBundle);
+    rv = sBundleService->CreateBundle(aPropertyURL, aBundle);
 	}
 	
-	m_pBundle = sBundle;
-	return( sBundle);
+  return rv;
 }
 
-nsIStringBundle *nsImportStringBundle::GetStringBundleProxy( void)
+nsresult nsImportStringBundle::GetStringBundleProxy(nsIStringBundle* aOriginalBundle, nsIStringBundle **aProxy)
 {
-	if (!m_pBundle)
-		return( nsnull);
-
-	nsIStringBundle *strProxy = nsnull;
 	nsresult rv;
 	// create a proxy object if we aren't on the same thread?
 	nsCOMPtr<nsIProxyObjectManager> proxyMgr = 
 	         do_GetService(kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
 		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIStringBundle),
-										m_pBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) &strProxy);
+                   aOriginalBundle, PROXY_SYNC | PROXY_ALWAYS, (void **) aProxy);
 	}
-
-	return( strProxy);
+  return rv;
 }
 
-void nsImportStringBundle::GetStringByID( PRInt32 stringID, nsString& result, nsIStringBundle *pBundle)
+void nsImportStringBundle::GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *aBundle)
 {
-	
-	PRUnichar *ptrv = GetStringByID( stringID, pBundle);	
-	result = ptrv;
-	FreeString( ptrv);
+  result.Adopt(GetStringByID(stringID, aBundle));
 }
 
-PRUnichar *nsImportStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle)
+PRUnichar *nsImportStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *aBundle)
 {
-	if (!pBundle) {
-		pBundle = GetStringBundle();
-	}
-	
-	if (pBundle) {
-		PRUnichar *ptrv = nsnull;
-		nsresult rv = pBundle->GetStringFromID(stringID, &ptrv);
+  if (aBundle)
+  {
+    PRUnichar *ptrv = nsnull;
+    nsresult rv = aBundle->GetStringFromID(stringID, &ptrv);
 				
-		if (NS_SUCCEEDED( rv) && ptrv)
-			return( ptrv);
-	}
+    if (NS_SUCCEEDED(rv) && ptrv)
+      return(ptrv);
+  }
 
-	nsString resultString(NS_LITERAL_STRING("[StringID "));
-	resultString.AppendInt(stringID);
-	resultString.AppendLiteral("?]");
+  nsString resultString(NS_LITERAL_STRING("[StringID "));
+  resultString.AppendInt(stringID);
+  resultString.AppendLiteral("?]");
 
-	return( ToNewUnicode(resultString));
+  return ToNewUnicode(resultString);
 }
-
-void nsImportStringBundle::Cleanup( void)
-{
-	if (m_pBundle)
-		m_pBundle->Release();
-	m_pBundle = nsnull;
-}
-

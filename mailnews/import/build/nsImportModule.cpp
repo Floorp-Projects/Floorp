@@ -273,7 +273,6 @@ static const nsModuleComponentInfo components[] = {
 
 PR_STATIC_CALLBACK(void) importModuleDtor(nsIModule* self)
 {
-	nsImportStringBundle::Cleanup();
     nsTextStringBundle::Cleanup();
 
 #if defined(XP_WIN) || defined(XP_MACOSX)

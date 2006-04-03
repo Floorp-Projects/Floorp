@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -63,6 +63,7 @@
 #include "nsAbBaseCID.h"
 #include "nsIAbDirectory.h"
 #include "nsIAddressBook.h"
+#include "nsIStringBundle.h"
 #include "nsImportStringBundle.h"
 #include "nsTextFormatter.h"
 #include "nsIProxyObjectManager.h"
@@ -120,7 +121,7 @@ private:
 
 public:
 	static void	SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError);
-	static void ReportError( PRUnichar *pName, nsString *pStream);
+  static void ReportError(PRUnichar *pName, nsString *pStream, nsIStringBundle *aBundle);
 
 private:
 	nsIImportAddressBooks *		m_pInterface;
@@ -138,6 +139,7 @@ private:
 	PRBool						m_doImport;
 	AddressThreadData *			m_pThreadData;
 	char *						m_pDestinationUri;
+    nsCOMPtr<nsIStringBundle>   m_stringBundle;
 };
 
 class AddressThreadData {
@@ -155,6 +157,7 @@ public:
 	nsISupportsString *		errorLog;
 	char *						pDestinationUri;
 	PRBool                      bAddrLocInput ;
+    nsIStringBundle*            stringBundle;
 
 	AddressThreadData();
 	~AddressThreadData();
@@ -199,6 +202,8 @@ nsImportGenericAddressBooks::nsImportGenericAddressBooks()
 	m_gotLocation = PR_FALSE;
 	m_found = PR_FALSE;
 	m_userVerify = PR_FALSE;
+
+    nsImportStringBundle::GetStringBundle(IMPORT_MSGS_URL, getter_AddRefs(m_stringBundle));
 }
 
 
@@ -562,13 +567,13 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsString *succes
 	
 	if (!m_doImport) {
 		*_retval = PR_TRUE;
-		nsImportStringBundle::GetStringByID( IMPORT_NO_ADDRBOOKS, success);
+    nsImportStringBundle::GetStringByID(IMPORT_NO_ADDRBOOKS, success, m_stringBundle);
 		SetLogs( success, error, successLog, errorLog);
 		return( NS_OK);		
 	}
 	
 	if (!m_pInterface || !m_pBooks) {
-		nsImportStringBundle::GetStringByID( IMPORT_ERROR_AB_NOTINITIALIZED, error);
+    nsImportStringBundle::GetStringByID(IMPORT_ERROR_AB_NOTINITIALIZED, error, m_stringBundle);
 		SetLogs( success, error, successLog, errorLog);
 		*_retval = PR_FALSE;
 		return( NS_OK);
@@ -602,7 +607,9 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsString *succes
 	if (m_pDestinationUri)
 		m_pThreadData->pDestinationUri = nsCRT::strdup( m_pDestinationUri);
 	m_pThreadData->bAddrLocInput = isAddrLocHome ;
-				
+
+    NS_IF_ADDREF(m_pThreadData->stringBundle = m_stringBundle);
+
 	PRThread *pThread = PR_CreateThread( PR_USER_THREAD, &ImportAddressThread, m_pThreadData, 
 									PR_PRIORITY_NORMAL, 
 									PR_LOCAL_THREAD, 
@@ -613,7 +620,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsString *succes
 		m_pThreadData->DriverDelete();
 		m_pThreadData = nsnull;
 		*_retval = PR_FALSE;
-		nsImportStringBundle::GetStringByID( IMPORT_ERROR_AB_NOTHREAD, error);
+    nsImportStringBundle::GetStringByID(IMPORT_ERROR_AB_NOTHREAD, error, m_stringBundle);
 		SetLogs( success, error, successLog, errorLog);
 	}
 	else
@@ -703,18 +710,20 @@ AddressThreadData::AddressThreadData()
 	errorLog = nsnull;
 	pDestinationUri = nsnull;
 	fieldMap = nsnull;
+    stringBundle = nsnull;
 }
 
 AddressThreadData::~AddressThreadData()
 {
-	if (pDestinationUri)
-		nsCRT::free( pDestinationUri);
+  if (pDestinationUri)
+    nsCRT::free(pDestinationUri);
 
-	NS_IF_RELEASE( books);
-	NS_IF_RELEASE( addressImport);
-	NS_IF_RELEASE( errorLog);
-	NS_IF_RELEASE( successLog);
-	NS_IF_RELEASE( fieldMap);
+  NS_IF_RELEASE(books);
+  NS_IF_RELEASE(addressImport);
+  NS_IF_RELEASE(errorLog);
+  NS_IF_RELEASE(successLog);
+  NS_IF_RELEASE(fieldMap);
+  NS_IF_RELEASE(stringBundle);
 }
 
 void AddressThreadData::DriverDelete( void)
@@ -856,16 +865,16 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	return( pDatabase);
 }
 
-void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStream)
+void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStream, nsIStringBundle* aBundle)
 {
 	if (!pStream)
 		return;
 	// load the error string
-	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( IMPORT_ERROR_GETABOOK);
+  PRUnichar *pFmt = nsImportStringBundle::GetStringByID( IMPORT_ERROR_GETABOOK, aBundle);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, pName);
 	pStream->Append( pText);
 	nsTextFormatter::smprintf_free( pText);
-	nsImportStringBundle::FreeString( pFmt);
+    nsCRT::free(pFmt);
 	pStream->AppendWithConversion( NS_LINEBREAK);
 }
 
@@ -885,6 +894,14 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
   
 	nsString					success;
 	nsString					error;
+
+    nsCOMPtr<nsIStringBundle> pBundle;
+    rv = nsImportStringBundle::GetStringBundleProxy(pData->stringBundle, getter_AddRefs(pBundle));
+    if (NS_FAILED(rv))
+    {
+      IMPORT_LOG0("*** ImportMailThread: Unable to obtain proxy string service for the import.");
+      pData->abort = PR_TRUE;
+    }
 
 	for (i = 0; (i < count) && !(pData->abort); i++) {
 		nsCOMPtr<nsIImportABDescriptor> book =
@@ -953,7 +970,7 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 					}
 				}
 				else {
-					nsImportGenericAddressBooks::ReportError( pName, &error);
+          nsImportGenericAddressBooks::ReportError(pName, &error, pBundle);
 				}
 
 				nsCRT::free( pName);

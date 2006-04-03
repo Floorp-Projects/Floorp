@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,6 +47,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+class nsIStringBundle;
 
 class nsImportFieldMap : public nsIImportFieldMap
 {
@@ -55,10 +56,10 @@ public:
 
 	NS_DECL_NSIIMPORTFIELDMAP
 
-	nsImportFieldMap();
+  nsImportFieldMap(nsIStringBundle *aBundle);
 	virtual ~nsImportFieldMap();
 
- 	static NS_METHOD Create( nsISupports *aOuter, REFNSIID aIID, void **aResult);
+ 	static NS_METHOD Create(nsIStringBundle *aBundle, nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
 	nsresult	Allocate( PRInt32 newSize);

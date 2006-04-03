@@ -55,13 +55,4 @@ static const nsModuleComponentInfo components[] = {
       "@mozilla.org/import/import-mimeencode;1", nsIImportMimeEncodeImplConstructor}
 };
 
-
-PR_STATIC_CALLBACK(void)
-importModuleDtor(nsIModule* self)
-{
-	nsImportStringBundle::Cleanup();
-}
-
-NS_IMPL_NSGETMODULE_WITH_DTOR( nsImportServiceModule, components, importModuleDtor)
-
-
+NS_IMPL_NSGETMODULE( nsImportServiceModule, components)

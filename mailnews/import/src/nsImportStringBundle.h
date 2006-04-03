@@ -42,19 +42,16 @@
 
 class nsIStringBundle;
 
-class nsImportStringBundle {
+class nsImportStringBundle
+{
 public:
-	static PRUnichar     *		GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
-	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
-	static nsIStringBundle *	GetStringBundle( void); // don't release
-	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
-	static void					Cleanup( void);
-	static nsIStringBundle *	GetStringBundleProxy( void); // release
-
-private:
-	static nsIStringBundle *	m_pBundle;
+  static PRUnichar* GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
+  static void GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle);
+  static nsresult GetStringBundle(const char* pPropertyURL, nsIStringBundle** aBundle);
+  static nsresult GetStringBundleProxy(nsIStringBundle* aOriginalBundle, nsIStringBundle **aProxy);
 };
 
+#define IMPORT_MSGS_URL       "chrome://messenger/locale/importMsgs.properties"
 
 
 #define	IMPORT_NO_ADDRBOOKS				                    2000
