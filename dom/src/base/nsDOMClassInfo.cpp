@@ -3400,8 +3400,9 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
     // return the Object constructor.
 
     JSString *str = JSVAL_TO_STRING(sConstructor_id);
-    if (!::JS_SetUCProperty(cx, obj, ::JS_GetStringChars(str),
-                            ::JS_GetStringLength(str), &val)) {
+    if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                               ::JS_GetStringLength(str), val, nsnull, nsnull,
+                               JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -5508,8 +5509,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     v = OBJECT_TO_JSVAL(dot_prototype);
 
-    if (!::JS_DefineProperty(cx, class_obj, "prototype", v, NULL, NULL,
-                             JSPROP_ENUMERATE)) {
+    // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
+    if (!::JS_DefineProperty(cx, class_obj, "prototype", v, nsnull, nsnull,
+                             JSPROP_PERMANENT | JSPROP_READONLY)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -7945,8 +7947,10 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSObject *obj,
     JSObject *helper = GetDocumentAllHelper(cx, obj);
 
     if (helper) {
-      jsval v = JSVAL_VOID;
-      ::JS_SetProperty(cx, helper, "all", &v);
+      if (!::JS_DefineProperty(cx, helper, "all", JSVAL_VOID, nsnull, nsnull,
+                               JSPROP_ENUMERATE)) {
+        return JS_FALSE;
+      }
 
       *objp = helper;
     }
