@@ -372,7 +372,7 @@ function JavaScriptOptions()
     if (optString)
     {
       var optList = optString.split(',');
-      for (iOpt = 0; i < optList.length; iOpt++)
+      for (var iOpt = 0; iOpt < optList.length; iOpt++)
       {
         optName = optList[iOpt];
         this[optName] = true;
