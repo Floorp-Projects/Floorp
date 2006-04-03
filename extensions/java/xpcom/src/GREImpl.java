@@ -13,9 +13,8 @@
  *
  * The Original Code is Java XPCOM Bindings.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -41,17 +40,11 @@ import java.io.*;
 import org.mozilla.xpcom.*;
 
 
-public class GREImpl implements IGRE {
+public class GREImpl extends JavaXPCOMMethods implements IGRE {
 
   public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
-                            IAppFileLocProvider aAppDirProvider) {
-    // load JNI library
-    String path = "";
-    if (aLibXULDirectory != null) {
-      path = aLibXULDirectory + File.separator;
-    }
-    System.load(path + System.mapLibraryName("javaxpcomglue"));
-
+          IAppFileLocProvider aAppDirProvider) {
+    registerJavaXPCOMMethods(aLibXULDirectory);
     initEmbeddingNative(aLibXULDirectory, aAppDirectory, aAppDirProvider);
   }
 
