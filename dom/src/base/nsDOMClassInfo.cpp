@@ -5919,6 +5919,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *funObj = ::JS_GetFunctionObject(fun);
 
+    nsAutoGCRoot root(&funObj, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (!::JS_DefineUCProperty(cx, windowObj, ::JS_GetStringChars(str),
                                ::JS_GetStringLength(str), JSVAL_VOID,
                                (JSPropertyOp)funObj, nsnull,
