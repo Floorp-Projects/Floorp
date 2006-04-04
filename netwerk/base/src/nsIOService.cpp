@@ -154,6 +154,7 @@ nsIMemory* nsIOService::gBufferCache = nsnull;
 nsIOService::nsIOService()
     : mOffline(PR_FALSE)
     , mOfflineForProfileChange(PR_FALSE)
+    , mManageOfflineStatus(PR_FALSE)
     , mChannelEventSinks(NS_CHANNEL_EVENT_SINK_CATEGORY)
     , mContentSniffers(NS_CONTENT_SNIFFER_CATEGORY)
 {
@@ -230,12 +231,20 @@ nsIOService::Init()
         observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
         observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+        observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, PR_TRUE);
     }
     else
         NS_WARNING("failed to get observer service");
-
+        
     gIOService = this;
     
+    // go into managed mode if we can
+    mNetworkLinkService = do_GetService(NS_NETWORK_LINK_SERVICE_CONTRACTID);
+    if (mNetworkLinkService) {
+        mManageOfflineStatus = PR_TRUE;
+        TrackNetworkLinkStatusForOffline();
+    }
+
     return NS_OK;
 }
 
@@ -264,8 +273,9 @@ nsIOService::GetInstance() {
     return gIOService;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsIOService,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsIOService,
                               nsIIOService,
+                              nsIIOService2,
                               nsINetUtil,
                               nsIObserver,
                               nsISupportsWeakReference)
@@ -571,15 +581,15 @@ nsIOService::SetOffline(PRBool offline)
         do_GetService("@mozilla.org/observer-service;1");
     
     nsresult rv;
-    if (offline) {
-        NS_NAMED_LITERAL_STRING(offlineString, "offline");
+    if (offline && !mOffline) {
+        NS_NAMED_LITERAL_STRING(offlineString, NS_IOSERVICE_OFFLINE);
         mOffline = PR_TRUE; // indicate we're trying to shutdown
 
         // don't care if notification fails
         // this allows users to attempt a little cleanup before dns and socket transport are shut down.
         if (observerService)
             observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                             "network:offline-about-to-go-offline",
+                                             NS_IOSERVICE_GOING_OFFLINE_TOPIC,
                                              offlineString.get());
 
         // be sure to try and shutdown both (even if the first fails)...
@@ -596,7 +606,7 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         if (observerService)
             observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                             "network:offline-status-changed",
+                                             NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                              offlineString.get());
     }
     else if (!offline && mOffline) {
@@ -619,8 +629,8 @@ nsIOService::SetOffline(PRBool offline)
         // don't care if notification fails
         if (observerService)
             observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                             "network:offline-status-changed",
-                                             NS_LITERAL_STRING("online").get());
+                                             NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
+                                             NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
     }
     return NS_OK;
 }
@@ -752,9 +762,12 @@ nsIOService::Observe(nsISupports *subject,
     }
     else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
         if (mOfflineForProfileChange) {
-            SetOffline(PR_FALSE);
             mOfflineForProfileChange = PR_FALSE;
-        }    
+            if (!mManageOfflineStatus ||
+                NS_FAILED(TrackNetworkLinkStatusForOffline())) {
+                SetOffline(PR_FALSE);
+            }
+        } 
     }
     else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         SetOffline(PR_TRUE);
@@ -762,6 +775,12 @@ nsIOService::Observe(nsISupports *subject,
         // Break circular reference.
         mProxyService = nsnull;
     }
+    else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
+        if (!mOfflineForProfileChange && mManageOfflineStatus) {
+            TrackNetworkLinkStatusForOffline();
+        }
+    }
+    
     return NS_OK;
 }
 
@@ -772,6 +791,45 @@ nsIOService::ParseContentType(const nsACString &aTypeHeader,
                               PRBool *aHadCharset,
                               nsACString &aContentType)
 {
-  net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
-  return NS_OK;
+    net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::SetManageOfflineStatus(PRBool aManage) {
+    PRBool wasManaged = mManageOfflineStatus;
+    mManageOfflineStatus = aManage;
+    if (mManageOfflineStatus && !wasManaged)
+        return TrackNetworkLinkStatusForOffline();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIOService::GetManageOfflineStatus(PRBool* aManage) {
+    *aManage = mManageOfflineStatus;
+    return NS_OK;
+}
+
+nsresult
+nsIOService::TrackNetworkLinkStatusForOffline()
+{
+    NS_ASSERTION(mManageOfflineStatus,
+                 "Don't call this unless we're managing the offline status");
+    if (!mNetworkLinkService)
+        return NS_ERROR_FAILURE;
+  
+    // check to make sure this won't collide with Autodial
+    if (mSocketTransportService) {
+        PRBool autodialEnabled = PR_FALSE;
+        mSocketTransportService->GetAutodialEnabled(&autodialEnabled);
+        // If autodialing-on-link-down is enabled, then pretend the link is
+        // always up for the purposes of offline management.
+        if (autodialEnabled)
+            return SetOffline(PR_FALSE);
+    }
+  
+    PRBool isUp;
+    nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return SetOffline(!isUp);
 }

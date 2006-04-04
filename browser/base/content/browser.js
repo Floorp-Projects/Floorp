@@ -5674,22 +5674,30 @@ var BrowserOffline = {
   // BrowserOffline Public Methods
   init: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    os.addObserver(this, "network:offline-status-changed", false);
-
     if (!this._uiElement)
       this._uiElement = document.getElementById("goOfflineMenuitem");
 
-    // set the initial state
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    var isOffline = false;
-    try {
-      isOffline = gPrefService.getBoolPref("browser.offline");
-    }
-    catch (e) { }
-    ioService.offline = isOffline;
+    var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+    os.addObserver(this, "network:offline-status-changed", false);
 
-    this._updateOfflineUI(isOffline);
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+      getService(Components.interfaces.nsIIOService2);
+
+    // if ioService is managing the offline status, then ioservice.offline
+    // is already set correctly. We will continue to allow the ioService
+    // to manage its offline state until the user uses the "Work Offline" UI.
+    
+    if (!ioService.manageOfflineStatus) {
+      // set the initial state
+      var isOffline = false;
+      try {
+        isOffline = gPrefService.getBoolPref("browser.offline");
+      }
+      catch (e) { }
+      ioService.offline = isOffline;
+    }
+    
+    this._updateOfflineUI(ioService.offline);
   },
 
   uninit: function ()
@@ -5703,14 +5711,24 @@ var BrowserOffline = {
 
   toggleOfflineStatus: function ()
   {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+      getService(Components.interfaces.nsIIOService2);
+
+    // Stop automatic management of the offline status
+    try {
+      ioService.manageOfflineStatus = false;
+    } catch (ex) {
+    }
+  
     if (!this._canGoOffline()) {
       this._updateOfflineUI(false);
       return;
     }
 
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
     ioService.offline = !ioService.offline;
 
+    // Save the current state for later use as the initial state
+    // (if there is no netLinkService)
     gPrefService.setBoolPref("browser.offline", ioService.offline);
   },
 

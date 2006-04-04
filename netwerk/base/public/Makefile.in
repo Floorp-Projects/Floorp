@@ -72,7 +72,9 @@ XPIDLSRCS	= \
 		nsIIncrementalDownload.idl \
 		nsIInputStreamPump.idl \
 		nsIInputStreamChannel.idl \
+                nsIIOService2.idl \
 		nsIMIMEInputStream.idl \
+                nsINetworkLinkService.idl \
 		nsIPasswordManager.idl \
 		nsIPasswordManagerInternal.idl \
 		nsIPermission.idl \

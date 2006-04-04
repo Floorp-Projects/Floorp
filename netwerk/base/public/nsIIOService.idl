@@ -113,6 +113,8 @@ interface nsIIOService : nsISupports
      * necessarily correlate with whether there is actually a network 
      * available -- that's hard to detect without causing the dialer to 
      * come up).
+     *
+     * Changing this fires observer notifications ... see below.
      */
     attribute boolean offline;
 
@@ -144,3 +146,24 @@ interface nsIIOService : nsISupports
      */
     ACString extractScheme(in AUTF8String urlString);
 };
+
+%{C++
+/**
+ * We send notifications through nsIObserverService with topic
+ * NS_IOSERVICE_GOING_OFFLINE_TOPIC and data NS_IOSERVICE_OFFLINE
+ * when 'offline' has changed from false to true, and we are about
+ * to shut down network services such as DNS. When those
+ * services have been shut down, we send a notification with
+ * topic NS_IOSERVICE_OFFLINE_STATUS_TOPIC and data
+ * NS_IOSERVICE_OFFLINE.
+ *
+ * When 'offline' changes from true to false, then after
+ * network services have been restarted, we send a notification
+ * with topic NS_IOSERVICE_OFFLINE_STATUS_TOPIC and data
+ * NS_IOSERVICE_ONLINE.
+ */
+#define NS_IOSERVICE_GOING_OFFLINE_TOPIC  "network:offline-about-to-go-offline"
+#define NS_IOSERVICE_OFFLINE_STATUS_TOPIC "network:offline-status-changed"
+#define NS_IOSERVICE_OFFLINE              "offline"
+#define NS_IOSERVICE_ONLINE               "online"
+%}
