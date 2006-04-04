@@ -4247,26 +4247,24 @@ nsGlobalWindow::Close()
   // Don't allow scripts from content to close windows
   // that were not opened by script
   nsresult rv = NS_OK;
-  if (!mHadOriginalOpener) {
-    if (nsContentUtils::IsCallerTrustedForWrite()) {
-      PRBool allowClose =
-        nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
-                                    PR_TRUE);
-      if (!allowClose) {
-        // We're blocking the close operation
-        // report localized error msg in JS console
-        nsContentUtils::ReportToConsole(
-            nsContentUtils::eDOM_PROPERTIES,
-            "WindowCloseBlockedWarning",
-            nsnull, 0, // No params
-            nsnull, // No URI.  Not clear which URI we should be using
-                    // here anyway
-            EmptyString(), 0, 0, // No source, or column/line number
-            nsIScriptError::warningFlag,
-            "DOM Window");  // Better name for the category?
+  if (!mHadOriginalOpener && !nsContentUtils::IsCallerTrustedForWrite()) {
+    PRBool allowClose =
+      nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
+                                  PR_TRUE);
+    if (!allowClose) {
+      // We're blocking the close operation
+      // report localized error msg in JS console
+      nsContentUtils::ReportToConsole(
+          nsContentUtils::eDOM_PROPERTIES,
+          "WindowCloseBlockedWarning",
+          nsnull, 0, // No params
+          nsnull, // No URI.  Not clear which URI we should be using
+                  // here anyway
+          EmptyString(), 0, 0, // No source, or column/line number
+          nsIScriptError::warningFlag,
+          "DOM Window");  // Better name for the category?
 
-        return NS_OK;
-      }
+      return NS_OK;
     }
   }
 
