@@ -46,7 +46,3 @@ CSRCS =  server.c	\
 
 PROGRAM  = server
 
-REQUIRES = dbm 
-
-DEFINES  = -DNSPR20
-
