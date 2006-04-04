@@ -1206,6 +1206,19 @@ var PlacesController = {
   },
 
   /**
+   * Show an "Add Bookmarks" dialog to allow the adding of a folder full
+   * of bookmarks corresponding to the objects in the uriList.  This will
+   * be called most often as the result of a "Bookmark All Tabs..." command.
+   *
+   * @param uriList  List of nsIURI objects representing the locations
+   *                 to be bookmarked.
+   */
+  showAddMultiBookmarkUI: function PC_showAddMultiBookmarkUI(uriList) {
+    NS_ASSERT(uriList.length, "showAddMultiBookmarkUI expects a list of nsIURI objects");
+    this._showBookmarkDialog(uriList, "addmulti");
+  },
+
+  /**
    * Opens the bookmark properties panel for a given URI.
    *
    * @param   uri an nsIURI object for which the properties are to be shown
@@ -1231,17 +1244,12 @@ var PlacesController = {
    * This is an implementation function, and shouldn't be called directly;
    * rather, use the specific variant above that corresponds to your situation.
    *
-   * @param identifier   the URI or folder ID to show the dialog for
+   * @param identifier   the URI or folder ID or URI list to show
+   *                     properties for
    * @param action "add" or "edit", see _determineVariant in 
    *               bookmarkProperties.js
    */
   _showBookmarkDialog: function PC__showBookmarkDialog(identifier, action) {
-    // The identifier parameter can be either an integer (for folders) or
-    // a nsIURI object (for bookmarks/history items); if it isn't a number
-    // here, we're going to make sure it's a URI object rather than a string.
-    if (typeof(identifier) != "number")
-      this._assertURINotString(identifier);
-
     window.openDialog("chrome://browser/content/places/bookmarkProperties.xul",
                       "", "width=600,height=400,chrome,dependent,modal,resizable",
                       identifier, this, action);
@@ -2218,7 +2226,7 @@ PlacesAggregateTransaction.prototype = {
   undoTransaction: function() {
     this.LOG("== UN" + this._name + " (UNAggregate) ============");
     this.bookmarks.beginUpdateBatch();
-    for (var i = this._transactions.length; i >= 0; --i) {
+    for (var i = this._transactions.length - 1; i >= 0; --i) {
       var txn = this._transactions[i];
       if (this.container > -1) 
         txn.container = this.container;

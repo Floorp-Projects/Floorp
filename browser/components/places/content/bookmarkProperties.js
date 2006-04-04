@@ -100,6 +100,7 @@ var BookmarkPropertiesPanel = {
   ADD_BOOKMARK_VARIANT: 1,
   EDIT_HISTORY_VARIANT: 2,
   EDIT_FOLDER_VARIANT:  3,
+  ADD_MULTIPLE_BOOKMARKS_VARIANT: 4,
 
   /**
    * The variant identifier for the current instance of the dialog.
@@ -118,8 +119,25 @@ var BookmarkPropertiesPanel = {
 
   _identifierIsURI: function BPP__identifierIsURI() {
     switch(this._variant) {
-    case this.EDIT_FOLDER_VARIANT: return false;
-    default: return true;
+    case this.EDIT_FOLDER_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return false;
+    default:
+      return true;
+    }
+  },
+
+  /**
+   * Returns true if this variant of the dialog uses a folder ID  as a primary
+   * identifier for the item being edited.
+   */
+
+  _identifierIsFolderID: function BPP__identifierIsFolderID() {
+    switch(this._variant) {
+    case this.EDIT_FOLDER_VARIANT:
+      return true;
+    default:
+      return false;
     }
   },
 
@@ -128,8 +146,10 @@ var BookmarkPropertiesPanel = {
    */
   _isTitleEditable: function BPP__isTitleEditable() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT: return false;
-    default: return true;
+    case this.EDIT_HISTORY_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -138,9 +158,12 @@ var BookmarkPropertiesPanel = {
    */
   _isURIEditable: function BPP__isURIEditable() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT: return false;
-    case this.EDIT_FOLDER_VARIANT:  return false;
-    default: return true;
+    case this.EDIT_HISTORY_VARIANT:
+    case this.EDIT_FOLDER_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -149,8 +172,11 @@ var BookmarkPropertiesPanel = {
    */
   _isURIVisible: function BPP__isURIVisible() {
     switch(this._variant) {
-    case this.EDIT_FOLDER_VARIANT: return false;
-    default: return true;
+    case this.EDIT_FOLDER_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -160,9 +186,12 @@ var BookmarkPropertiesPanel = {
    */
   _isShortcutVisible: function BPP__isShortcutVisible() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT: return false;
-    case this.EDIT_FOLDER_VARIANT:  return false;
-    default: return true;
+    case this.EDIT_HISTORY_VARIANT:
+    case this.EDIT_FOLDER_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -172,10 +201,13 @@ var BookmarkPropertiesPanel = {
    */
   _isDeletePossible: function BPP__isDeletePossible() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT: return false;
-    case this.ADD_BOOKMARK_VARIANT: return false;
-    case this.EDIT_FOLDER_VARIANT:  return false;
-    default: return true;
+    case this.EDIT_HISTORY_VARIANT:
+    case this.ADD_BOOKMARK_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.EDIT_FOLDER_VARIANT:
+      return false;
+    default:
+      return true;
     }
   },
 
@@ -183,10 +215,13 @@ var BookmarkPropertiesPanel = {
    * Returns true if the URI's folder is editable in this variant
    * of the dialog.
    */
-  _isFolderEditable: function BPP__isFolderVisible() {
+  _isFolderEditable: function BPP__isFolderEditable() {
     switch(this._variant) {
-    case this.ADD_BOOKMARK_VARIANT: return true;
-    default: return false;
+    case this.ADD_BOOKMARK_VARIANT:
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return true;
+    default:
+      return false;
     }
   },
 
@@ -198,7 +233,10 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.ADD_BOOKMARK_VARIANT:
       return this._strings.getString("dialogAcceptLabelAdd");
-    default: return this._strings.getString("dialogAcceptLabelEdit");
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return this._strings.getString("dialogAcceptLabelAddMulti");
+    default:
+      return this._strings.getString("dialogAcceptLabelEdit");
     }
   },
 
@@ -214,8 +252,28 @@ var BookmarkPropertiesPanel = {
       return this._strings.getString("dialogTitleHistoryEdit");
     case this.EDIT_FOLDER_VARIANT:
       return this._strings.getString("dialogTitleFolderEdit");
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+      return this._strings.getString("dialogTitleAddMulti");
     default:
       return this._strings.getString("dialogTitleBookmarkEdit");
+    }
+  },
+
+  /**
+   * Returns a string representing the folder tree selection type for
+   * the given dialog variant.  This is either "single" when you can only
+   * select one folder (usually because we're dealing with the location
+   * of a child folder, which can only have one parent), or "multiple"
+   * when you can select multiple folders (bookmarks can be in multiple
+   * folders).
+   */
+  _getFolderSelectionType: function BPP__getFolderSelectionType() {
+    switch(this._variant) {
+    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.EDIT_FOLDER_VARIANT:
+      return "single";
+    default:
+      return "multiple";
     }
   },
 
@@ -239,7 +297,8 @@ var BookmarkPropertiesPanel = {
    * @param identifier the URI or folder ID to display the properties for
    * @param action -- "add" if this is being triggered from an "add bookmark"
    *                  UI action; or "edit" if this is being triggered from
-   *                  a "properties" UI action
+   *                  a "properties" UI action; or "addmulti" if we're
+   *                  trying to create multiple bookmarks
    *
    * @returns one of the *_VARIANT constants
    */
@@ -253,6 +312,9 @@ var BookmarkPropertiesPanel = {
         return this.ADD_BOOKMARK_VARIANT;
       }
     }
+    else if (action == "addmulti") {
+      return this.ADD_MULTIPLE_BOOKMARKS_VARIANT;
+    }
     else { /* Assume "edit" */
       if (typeof(identifier) == "number")
         return this.EDIT_FOLDER_VARIANT;
@@ -264,6 +326,33 @@ var BookmarkPropertiesPanel = {
         return this.EDIT_HISTORY_VARIANT;
       }
     }
+  },
+
+  /**
+   * This method returns the title string corresponding to a given URI.
+   * If none is available from the bookmark service (probably because
+   * the given URI doesn't appear in bookmarks or history), we synthesize
+   * a title from the first 100 characters of the URI.
+   *
+   * @param uri  a nsIURI object for which we want the title
+   *
+   * @returns a title string
+   */
+
+  _getURITitle: function BPP__getURITitle(uri) {
+    this._assertURINotString(uri);
+
+    var title = this._bms.getItemTitle(uri);
+
+    /* If we can't get a title for a new bookmark, let's set it to
+       be the first 100 characters of the URI. */
+    if (title == null) {
+      title = uri.spec;
+      if (title.length > 100) {
+        title = title.substr(0, 100);
+      }
+    }
+    return title;
   },
 
   /**
@@ -284,8 +373,11 @@ var BookmarkPropertiesPanel = {
       this._assertURINotString(identifier);
       this._bookmarkURI = identifier;
     }
-    else {
+    else if (this._identifierIsFolderID()){
       this._folderId = identifier;
+    }
+    else if (this._isVariant(this.ADD_MULTIPLE_BOOKMARKS_VARIANT)) {
+      this._URIList = identifier;
     }
     this._dialogWindow = dialogWindow;
     this._controller = controller;
@@ -307,6 +399,7 @@ var BookmarkPropertiesPanel = {
     this._folderTree.peerDropTypes = [];
     this._folderTree.childDropTypes = [];
     this._folderTree.excludeItems = true;
+    this._folderTree.setAttribute("seltype", this._getFolderSelectionType());
 
     var query = this._hist.getNewQuery();
     query.setFolders([this._bms.placesRoot], 1);
@@ -324,18 +417,9 @@ var BookmarkPropertiesPanel = {
     var document = this._dialogWindow.document;
 
     if (this._identifierIsURI()) {
-      this._bookmarkTitle = this._bms.getItemTitle(this._bookmarkURI);
-
-      /* If we can't get a title for a new bookmark, let's set it to
-         be the first 100 characters of the URI. */
-      if (this._isVariant(this.ADD_BOOKMARK_VARIANT) && !this._bookmarkTitle) {
-        this._bookmarkTitle = this._bookmarkURI.spec;
-        if (this._bookmarkTitle.length > 100) {
-          this._bookmarkTitle = this._bookmarkTitle.substr(0, 100);
-        }
-      }
+      this._bookmarkTitle = this._getURITitle(this._bookmarkURI);
     }
-    else {
+    else if (this._identifierIsFolderID()){
       this._bookmarkTitle = this._bms.getFolderTitle(this._folderId);
     }
 
@@ -458,6 +542,7 @@ var BookmarkPropertiesPanel = {
   _saveChanges: function PBD_saveChanges() {
     var transactions = [];
     var urlbox = this._dialogWindow.document.getElementById("editURLBar");
+    var titlebox = this._dialogWindow.document.getElementById("editTitleBox");
     var newURI = this._bookmarkURI;
     if (this._identifierIsURI() && this._isURIEditable())
       newURI = this._uri(urlbox.value);
@@ -465,24 +550,45 @@ var BookmarkPropertiesPanel = {
     if (this._isFolderEditable()) {
       var selected =  this._folderTree.getSelectionNodes();
 
-      for (var i = 0; i < selected.length; i++) {
-        var node = selected[i];
-        if (node.type == node.RESULT_TYPE_FOLDER) {
-          var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
-          if (!folder.childrenReadOnly) {
-            transactions.push(
-              new PlacesCreateItemTransaction(newURI, folder.folderId, -1));
+      if (this._identifierIsURI()) {
+        for (var i = 0; i < selected.length; i++) {
+          var node = selected[i];
+          if (node.type == node.RESULT_TYPE_FOLDER) {
+            var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+            if (!folder.childrenReadOnly) {
+              transactions.push(
+                new PlacesCreateItemTransaction(newURI, folder.folderId, -1));
+            }
           }
         }
+      }
+      else if (this._isVariant(this.ADD_MULTIPLE_BOOKMARKS_VARIANT)) {
+        var node = selected[0];
+        var folder = node.QueryInterface(Ci.nsINavHistoryFolderResultNode);
+
+        var newFolderTrans = new PlacesCreateFolderTransaction(
+            titlebox.value, folder.folderId, -1);
+
+        var childTransactions = [];
+        for (var i = 0; i < this._URIList.length; ++i) {
+          var uri = this._URIList[i];
+          childTransactions.push(
+              new PlacesCreateItemTransaction(uri, -1, -1));
+          childTransactions.push(
+              new PlacesEditItemTitleTransaction(uri,
+                                                 this._getURITitle(uri)));
+        }
+        newFolderTrans.childTransactions = childTransactions;
+
+        transactions.push(newFolderTrans);
       }
     }
 
 
-    var titlebox = this._dialogWindow.document.getElementById("editTitleBox");
     if (this._identifierIsURI())
       transactions.push(
         new PlacesEditItemTitleTransaction(newURI, titlebox.value));
-    else
+    else if (this._identifierIsFolderID())
       transactions.push(
         new PlacesEditFolderTitleTransaction(this._folderId, titlebox.value));
 
