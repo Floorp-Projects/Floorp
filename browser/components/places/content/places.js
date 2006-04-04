@@ -182,6 +182,15 @@ var PlacesOrganizer = {
   getCurrentOptions: function PP_getCurrentOptions() {
     var result = this._content.getResult();
     return result.root.QueryInterface(Ci.nsINavHistoryQueryResultNode).queryOptions;
+  },
+  
+  /**
+   * Show the migration wizard for importing from a file.
+   */
+  importBookmarks: function PO_import() {
+    var features = "modal,centerscreen,chrome,resizable=no";
+    openDialog("chrome://browser/content/migration/migration.xul",
+               "", features, "bookmarks");
   }
 };
 
