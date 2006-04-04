@@ -39,6 +39,7 @@
 #define _NSPSMBACKGROUNDTHREAD_H_
 
 #include "nspr.h"
+#include "nscore.h"
 
 class nsPSMBackgroundThread
 {
@@ -64,7 +65,8 @@ protected:
 public:
   nsPSMBackgroundThread();
   virtual ~nsPSMBackgroundThread();
-  
+
+  nsresult startThread();
   void requestExit();
 };
 

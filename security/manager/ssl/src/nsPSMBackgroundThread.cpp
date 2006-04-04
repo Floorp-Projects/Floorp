@@ -52,14 +52,22 @@ nsPSMBackgroundThread::nsPSMBackgroundThread()
 {
   mMutex = PR_NewLock();
   mCond = PR_NewCondVar(mMutex);
+}
 
-  if (mMutex && mCond)
-  {
-    mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsThreadRunner, NS_STATIC_CAST(void*, this), 
-      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+nsresult nsPSMBackgroundThread::startThread()
+{
+  if (!mMutex || !mCond)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ASSERTION(mThreadHandle, "Could not create nsPSMBackgroundThread\n");
-  }
+  mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsThreadRunner, NS_STATIC_CAST(void*, this), 
+    PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+
+  NS_ASSERTION(mThreadHandle, "Could not create nsPSMBackgroundThread\n");
+  
+  if (!mThreadHandle)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 nsPSMBackgroundThread::~nsPSMBackgroundThread()

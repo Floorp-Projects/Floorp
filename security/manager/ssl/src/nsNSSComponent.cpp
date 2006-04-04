@@ -301,7 +301,11 @@ nsNSSComponent::nsNSSComponent()
   mShutdownObjectList = nsNSSShutDownList::construct();
   mIsNetworkDown = PR_FALSE;
   mSSLThread = new nsSSLThread();
+  if (mSSLThread)
+    mSSLThread->startThread();
   mCertVerificationThread = new nsCertVerificationThread();
+  if (mCertVerificationThread)
+    mCertVerificationThread->startThread();
 }
 
 nsNSSComponent::~nsNSSComponent()
@@ -1953,8 +1957,12 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network restore topic\n"));
     delete mSSLThread;
     mSSLThread = new nsSSLThread();
+    if (mSSLThread)
+      mSSLThread->startThread();
     delete mCertVerificationThread;
     mCertVerificationThread = new nsCertVerificationThread();
+    if (mCertVerificationThread)
+      mCertVerificationThread->startThread();
     mIsNetworkDown = PR_FALSE;
   }
 
