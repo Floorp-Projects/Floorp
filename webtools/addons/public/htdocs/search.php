@@ -4,11 +4,6 @@
  *
  * @package amo
  * @subpackage docs
- *
- * @todo figure out why some addon listings have incorrect applications.
- * @todo add page links ( 1 2 3 4 5 ..... n ) for big result sets?  is this necessary?
- * @todo take pagination and throw it into a class so we can reuse the methodology.
- * @todo check validation - the form has some errors in it.
  */
 
 // Get our cache_id based on what we have in our query string.
@@ -115,13 +110,16 @@ $perpage = array(
 
 // Now we need to build our query.  Our query starts with four parts:
 
-// Select and joins.
-$select = "
-    SELECT DISTINCT
+// Select top.
+$selectTop = "
+    SELECT DISTINCT SQL_CALC_FOUND_ROWS
         main.ID
     FROM
         main
 ";
+
+// Select joins.
+$select = "";
 
 // Where clause.
 $where = "
@@ -204,23 +202,32 @@ if (!empty($sql['sort'])) {
 
 $where .= ' 1 ';
 
-$query = $select.$where.$orderby;
+$limit = " LIMIT {$page['left']}, {$page['right']} ";
+
+$query = $selectTop.$select.$where.$orderby.$limit;
 
 $results = array();
 $rawResults = array();
 
+// Get results.
 $db->query($query, SQL_ALL);
-
-unset($select);
-unset($where);
-unset($orderby);
-unset($query);
 
 if (is_array($db->record)) {
     foreach ($db->record as $row) {
         $rawResults[] = $row[0]; 
     }
 }
+
+// Get our result count.
+$db->query("SELECT FOUND_ROWS()", SQL_INIT);
+if (!empty($db->record)) {
+    $resultCount = $db->record[0];
+}
+if ($resultCount<$page['right']) {
+    $page['right'] = $resultCount;
+}
+
+
 
 // If we have only one result, redirect to the addon page.
 if ( count($rawResults) == 1) {
@@ -232,11 +239,6 @@ if ( count($rawResults) == 1) {
             $results[] = new Addon($rawResults[$i]);
         }
     }
-}
-
-$resultCount = count($rawResults);
-if ($resultCount<$page['right']) {
-    $page['right'] = $resultCount;
 }
 
 // Do we even have a next or previous page?

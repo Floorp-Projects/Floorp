@@ -436,3 +436,7 @@
     padding: .5em;
     text-decoration: none;
 }
+
+#comments-sort {
+    float: right;
+}

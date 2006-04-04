@@ -6,6 +6,47 @@ by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
+{if $addon->Comments}
+<p class="first">Showing comments <b>{$page.leftDisplay}-{$page.right}</b> out of <b>{$page.resultCount}</b>.  </p>
+
+<div id="comments-sort">
+<form action="{$config.webpath}/comments.php" method="get">
+<div>
+<input type="hidden" name="app" value="{$app}"/>
+<input type="hidden" name="id" value="{$addon->ID}"/>
+
+<label>Sort by</label>
+<select id="orderby" name="orderby">
+<option value="mosthelpful"{if $orderby eq "mosthelpful" or !$orderby} selected="selected"{/if}>Most Helpful</option>
+<option value="ratinghigh"{if $orderby eq "ratinghigh"} selected="selected"{/if}>Highest Rated</option>
+<option value="datenewest"{if $orderby eq "datenewest"} selected="selected"{/if}>Newest</option>
+<option value="dateoldest"{if $orderby eq "dateoldest"} selected="selected"{/if}>Oldest</option>
+<option value="ratinglow"{if $orderby eq "ratinglow"} selected="selected"{/if}>Lowest Rated</option>
+<option value="leasthelpful"{if $orderby eq "leasthelpful"} selected="selected"{/if}>Least Helpful</option>
+</select>
+<input class="amo-submit" type="submit" value="Go"/></div>
+</form>
+</div>
+<div class="pages">
+<div class="prev">
+{if $page.left}
+<a href="{$config.webpath}/comments.php?{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+{else}
+&laquo; Previous Page
+{/if}
+</div>
+
+<div class="next">
+{if $page.next}
+<a href="{$config.webpath}/comments.php?{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+{else}
+Next Page &raquo;
+{/if}
+</div>
+</div>
+
+
+
 <ul id="opinions">
 {section name=comments loop=$addon->Comments}
 <li>
@@ -18,4 +59,7 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 </li>
 {/section}
 </ul>
+{else}
+<p>There are no comments yet for this addon.  <a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}"></a></p>
+{/if}
 

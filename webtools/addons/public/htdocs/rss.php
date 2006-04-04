@@ -45,12 +45,6 @@ switch (strtolower($rsslist)) {
         break;
 }
 
-unset($rssapp);
-unset($rsstype);
-unset($rsslist);
-
-
-
 // If we get here, we're going to have to pull DB contents.
 require_once('includes.php');
 
@@ -81,6 +75,8 @@ $_rssSql = "
         v.approved = 'yes' AND
         a.appname = '{$sql['app']}' AND
         m.type = '{$sql['type']}'
+    GROUP by
+        m.id
     ORDER BY
         {$rssOrderBy}
     LIMIT 0,10
@@ -89,5 +85,11 @@ $_rssSql = "
 // Get data, then set the results.
 $db->query($_rssSql,SQL_ALL,SQL_ASSOC);
 $_rssData = $db->record;
-$tpl->assign('data',$_rssData);
+$tpl->assign(
+    array(
+        'data'=>$_rssData,
+        'list'=>ucfirst($rsslist)
+    )
+
+);
 ?>

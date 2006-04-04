@@ -4,8 +4,8 @@
 <form action="{$smarty.server.PHP_SELF}" method="get" class="amo-form">
 
 <div>
-<input type="text" name="q" value="{$clean.q}" maxlength="32"/>
-<div id="show-search-options"><input class="amo-submit" type="submit" value="Search"/> <a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Show Options</a></div>
+<input type="text" name="q" value="{$clean.q}" maxlength="32"/><input class="amo-submit" type="submit" value="Search"/> 
+<div id="show-search-options"><a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Show Options</a></div>
 <div id="hide-search-options"><a href="javascript:toggle('show-search-options','hide-search-options','inline');hide('search-options');">Hide Options</a></div>
 </div>
 

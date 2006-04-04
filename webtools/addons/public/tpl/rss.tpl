@@ -1,6 +1,6 @@
 <rss version="2.0">
 <channel>
-    <title>{$listname|escape:html:"UTF-8"} :: Mozilla Addons</title>
+    <title>{$list|escape:html:"UTF-8"} Mozilla Addons</title>
     <link>{$config.host|escape:html:"UTF-8"}{$config.webpath|escape:html:"UTF-8"}</link>
     <description>Mozilla Addons is the place to get extensions and themes for your Mozilla applications.</description>
     <language>en-US</language>

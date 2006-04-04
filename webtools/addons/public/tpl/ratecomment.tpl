@@ -1,5 +1,3 @@
-<div id="mBody">
-
 <h2>{$addon->Name} &raquo; Rate Comment</h2>
 <p class="first">
 <strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,
@@ -17,5 +15,3 @@ released on {$addon->VersionDateAdded|date_format}
 </div>
 
 <p>&laquo; <a href="./addon.php?id={$addon->ID}">Return to information about{$addon->Name}</a></p>
-
-</div>

@@ -4,6 +4,8 @@
  * 
  * @package amo
  * @subpackage docs
+ * @TODO Disallow comment rating by poster -- users should not be able to rate their own comments.
+ * @TODO Throttle for comment ratings.
  */
 
 startProcessing('ratecomment.tpl', null, null);
