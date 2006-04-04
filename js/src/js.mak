@@ -58,7 +58,7 @@ NULL=nul
 OUTDIR=.\Release
 INTDIR=.\Release
 
-ALL : "fdlibm - Win32 Release" "$(OUTDIR)\js32.dll"
+ALL : "fdlibm - Win32 Release" "jskwgen - Win32 Release" "$(OUTDIR)\js32.dll"
 
 CLEAN : 
 	-@erase "$(INTDIR)\jsapi.obj"
@@ -95,9 +95,13 @@ CLEAN :
 	-@erase "$(INTDIR)\jsxdrapi.obj"
 	-@erase "$(INTDIR)\jsxml.obj"
 	-@erase "$(INTDIR)\prmjtime.obj"
+	-@erase "$(INTDIR)\js.pch"
+	-@erase "$(INTDIR)\jsautokw.h"
 	-@erase "$(OUTDIR)\js32.dll"
 	-@erase "$(OUTDIR)\js32.exp"
 	-@erase "$(OUTDIR)\js32.lib"
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Release" clean
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Release" clean
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -208,7 +212,7 @@ LINK32_OBJS= \
 OUTDIR=.\Debug
 INTDIR=.\Debug
 
-ALL : "fdlibm - Win32 Debug" "$(OUTDIR)\js32.dll"
+ALL : "fdlibm - Win32 Debug" "jskwgen - Win32 Debug" "$(OUTDIR)\js32.dll"
 
 CLEAN : 
 	-@erase "$(INTDIR)\jsapi.obj"
@@ -245,11 +249,15 @@ CLEAN :
 	-@erase "$(INTDIR)\jsxdrapi.obj"
 	-@erase "$(INTDIR)\jsxml.obj"
 	-@erase "$(INTDIR)\prmjtime.obj"
+	-@erase "$(INTDIR)\js.pch"
+	-@erase "$(INTDIR)\jsautokw.h"
 	-@erase "$(OUTDIR)\js32.dll"
 	-@erase "$(OUTDIR)\js32.exp"
 	-@erase "$(OUTDIR)\js32.ilk"
 	-@erase "$(OUTDIR)\js32.lib"
 	-@erase "$(OUTDIR)\js32.pdb"
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Debug" clean
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Debug" clean
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -364,6 +372,7 @@ ALL : "$(INTDIR)" "$(INTDIR)\host_jskwgen.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\jskwgen.obj"
+	-@erase "$(INTDIR)\jskwgen.pch"
 	-@erase "$(INTDIR)\host_jskwgen.exe"
 
 "$(INTDIR)" :
@@ -438,6 +447,7 @@ ALL : "$(INTDIR)" "$(INTDIR)\host_jskwgen.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\jskwgen.obj"
+	-@erase "$(INTDIR)\jskwgen.pch"
 	-@erase "$(INTDIR)\host_jskwgen.exe"
 
 "$(INTDIR)" :
@@ -512,7 +522,10 @@ ALL : "js - Win32 Release" "$(OUTDIR)\jsshell.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\js.obj"
+	-@erase "$(INTDIR)\jsshell.pch"
 	-@erase "$(OUTDIR)\jsshell.exe"
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Release" clean
+
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -587,9 +600,11 @@ ALL : "js - Win32 Debug" "$(OUTDIR)\jsshell.exe"
 
 CLEAN : 
 	-@erase "$(INTDIR)\js.obj"
+	-@erase "$(INTDIR)\jsshell.pch"
 	-@erase "$(OUTDIR)\jsshell.exe"
 	-@erase "$(OUTDIR)\jsshell.ilk"
 	-@erase "$(OUTDIR)\jsshell.pdb"
+	-@$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Debug" clean
 
 "$(OUTDIR)" :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
@@ -679,6 +694,7 @@ CLEAN :
 	-@erase "$(INTDIR)\w_atan2.obj"
 	-@erase "$(INTDIR)\w_pow.obj"
 	-@erase "$(INTDIR)\w_sqrt.obj"
+	-@erase "$(INTDIR)\fdlibm.pch"
 	-@erase "$(OUTDIR)\fdlibm.lib"
 
 "$(OUTDIR)" :
@@ -775,6 +791,7 @@ CLEAN :
 	-@erase "$(INTDIR)\w_atan2.obj"
 	-@erase "$(INTDIR)\w_pow.obj"
 	-@erase "$(INTDIR)\w_sqrt.obj"
+	-@erase "$(INTDIR)\fdlibm.pch"
 	-@erase "$(OUTDIR)\fdlibm.lib"
 
 "$(OUTDIR)" :
@@ -3772,12 +3789,12 @@ NODEP_CPP_PRMJT=\
 !IF  "$(CFG)" == "js - Win32 Debug"
 
 "fdlibm - Win32 Debug" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Debug" 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Debug" 
 
 !ELSEIF  "$(CFG)" == "js - Win32 Release"
 
 "fdlibm - Win32 Release" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Release" 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="fdlibm - Win32 Release" 
 
 !ENDIF 
 
@@ -3859,13 +3876,13 @@ NODEP_CPP_JS_C42=\
 
 !IF  "$(CFG)" == "js - Win32 Release"
 
-"js - Win32 Release" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Release" 
+"jskwgen - Win32 Release" : 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Release" 
 
 !ELSEIF  "$(CFG)" == "js - Win32 Debug"
 
-"js - Win32 Debug" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Debug" 
+"jskwgen - Win32 Debug" : 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="jskwgen - Win32 Debug" 
 
 !ENDIF 
 
@@ -3879,12 +3896,12 @@ NODEP_CPP_JS_C42=\
 !IF  "$(CFG)" == "jsshell - Win32 Release"
 
 "js - Win32 Release" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Release" 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Release" 
 
 !ELSEIF  "$(CFG)" == "jsshell - Win32 Debug"
 
 "js - Win32 Debug" : 
-   $(MAKE) /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Debug" 
+   @$(MAKE) /nologo /$(MAKEFLAGS) /F ".\js.mak" CFG="js - Win32 Debug" 
 
 !ENDIF 
 
