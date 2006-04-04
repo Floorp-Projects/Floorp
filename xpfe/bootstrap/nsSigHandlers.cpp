@@ -182,7 +182,6 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGSEGV, ah_crap_handler);
   signal(SIGILL, ah_crap_handler);
   signal(SIGABRT, ah_crap_handler);
-  signal(SIGHUP, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
