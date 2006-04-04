@@ -121,7 +121,7 @@ function ShowHideToolbarSeparators(toolbar) {
 
 function ShowHideToolbarButtons()
 {
-  var array = GetPrefs().getChildList(kEditorToolbarPrefs, {});
+  var array = gPrefs.getChildList(kEditorToolbarPrefs, {});
   for (var i in array) {
     var prefName = array[i];
     var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
@@ -168,13 +168,13 @@ nsPrefListener.prototype =
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
     
-    if (prefName.substr(0, kUseCssPref.length) == kUseCssPref)
+    var editor = GetCurrentEditor();
+    if (prefName == kUseCssPref)
     {
       var cmd = document.getElementById("cmd_highlight");
       if (cmd) {
-        var prefs = GetPrefs();
-        var useCSS = prefs.getBoolPref(prefName);
-        var editor = GetCurrentEditor();
+        var useCSS = gPrefs.getBoolPref(prefName);
+
         if (useCSS && editor) {
           var mixedObj = {};
           var state = editor.getHighlightColorState(mixedObj);
@@ -189,23 +189,18 @@ nsPrefListener.prototype =
         if (editor)
           editor.isCSSEnabled = useCSS;
       }
-     }
-     else if (prefName.substr(0, kEditorToolbarPrefs.length) == kEditorToolbarPrefs)
-     {
-       var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
-       var button = document.getElementById(id);
-       if (button) {
-         button.hidden = !gPrefs.getBoolPref(prefName);
-         ShowHideToolbarSeparators(button.parentNode);
-       }
-     }
-    else if (prefName.substr(0, kCRInParagraphsPref.length) == kCRInParagraphsPref)
+    }
+    else if (prefName.substr(0, kEditorToolbarPrefs.length) == kEditorToolbarPrefs)
     {
-      var crInParagraphCreatesParagraph = gPrefs.getBoolPref(prefName);
-      var editor = GetCurrentEditor();
-      if (editor)
-        editor.returnInParagraphCreatesNewParagraph = crInParagraphCreatesParagraph;
-    }   
+      var id = prefName.substr(kEditorToolbarPrefs.length) + "Button";
+      var button = document.getElementById(id);
+      if (button) {
+        button.hidden = !gPrefs.getBoolPref(prefName);
+        ShowHideToolbarSeparators(button.parentNode);
+      }
+    }
+    else if (editor && (prefName == kCRInParagraphsPref))
+      editor.returnInParagraphCreatesNewParagraph = gPrefs.getBoolPref(prefName);
   }
 }
 
@@ -409,8 +404,7 @@ var gEditorDocumentObserver =
         // Things for just the Web Composer application
         if (IsWebComposer())
         {
-          var prefs = GetPrefs();
-          editor.returnInParagraphCreatesNewParagraph = prefs.getBoolPref(kCRInParagraphsPref);
+          editor.returnInParagraphCreatesNewParagraph = gPrefs.getBoolPref(kCRInParagraphsPref);
 
           // Set focus to content window if not a mail composer
           // Race conditions prevent us from setting focus here
@@ -568,10 +562,9 @@ function EditorStartup()
 
   // hide Highlight button if we are in an HTML editor with CSS mode off
   // and tell the editor if a CR in a paragraph creates a new paragraph
-  var prefs = GetPrefs();
   var cmd = document.getElementById("cmd_highlight");
   if (cmd) {
-    var useCSS = prefs.getBoolPref(kUseCssPref);
+    var useCSS = gPrefs.getBoolPref(kUseCssPref);
     if (!useCSS && is_HTMLEditor) {
       cmd.collapsed = true;
     }
@@ -1329,8 +1322,7 @@ function GetBackgroundElementWithColor()
   }
   else
   {
-    var prefs = GetPrefs();
-    var IsCSSPrefChecked = prefs.getBoolPref(kUseCssPref);
+    var IsCSSPrefChecked = gPrefs.getBoolPref(kUseCssPref);
     if (IsCSSPrefChecked && IsHTMLEditor())
     {
       var selection = editor.selection;
