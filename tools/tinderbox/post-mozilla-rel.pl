@@ -1229,8 +1229,23 @@ sub main {
     $datestamp="$1-$2-$3-$4-$Settings::milestone";
   }
   else {
-    cleanup();
-    return returnStatus('Could not find build id', ('busted'));
+    ## XXX - This code sucks.
+    ## For l10n builds, we don't have an objdir or distdir, so getting the 
+    ## build ID is... non-trivial. And since we have a release in a week, 
+    ## it's time to resurrect old code that works.
+    ## But only for the l10n builds. -jpr
+    if ($Settings::BuildLocales) {
+      my ($c_hour,$c_day,$c_month,$c_year,$c_yday) = (localtime(time))[2,3,4,5,7];
+      $c_year       = $c_year + 1900; # ftso perl
+      $c_month      = $c_month + 1; # ftso perl
+      $c_hour       = pad_digit($c_hour);
+      $c_day        = pad_digit($c_day);
+      $c_month      = pad_digit($c_month);
+      $datestamp = "$c_year-$c_month-$c_day-$c_hour-$Settings::milestone";
+    } else {
+      cleanup();
+      return returnStatus('Could not find build id', ('busted'));
+    }
   }
 
   if (is_windows()) {
