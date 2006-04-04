@@ -91,6 +91,9 @@ extern "C" {
 #elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
 #include "nsRenderingContextGTK.h"
 #include <gdk/gdkx.h>
+#elif defined(XP_BEOS)
+#include <cairo-beos.h>
+#include "nsDrawingSurfaceBeOS.h"
 #endif
 
 /*
@@ -260,6 +263,28 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                                         dev->handle(),
                                         (Visual*)dev->x11Visual(),
                                         mWidth, mHeight);
+#elif defined(XP_BEOS)
+  nsDrawingSurfaceBeOS* surface;
+  ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
+
+  PRBool offScreen;
+  surface->IsOffscreen(&offScreen);
+
+  BView* view;
+  surface->AcquireView(&view);
+
+  NS_ASSERTION(view, "Must have a view");
+
+  if (offScreen) {
+    BBitmap* bitmap;
+    surface->AcquireBitmap(&bitmap);
+
+    NS_ASSERTION(bitmap, "Offscreen surfaces must have a bitmaop");
+
+    cairoSurf = cairo_beos_surface_create_for_bitmap(view, bitmap);
+  } else {
+    cairoSurf = cairo_beos_surface_create(view);
+  }
 #elif defined(XP_WIN)
   nsDrawingSurfaceWin *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);

@@ -27,14 +27,19 @@ CPPSRCS	= \
 	gfxPlatform.cpp \
 	$(NULL)
 
+ifdef MOZ_TREE_CAIRO
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
 	$(NULL)
+else
+EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(NSPR_LIBS) \
-	$(XPCOM_LIBS)
+	$(XPCOM_LIBS) \
+	$(NULL)
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
@@ -59,6 +64,14 @@ CPPSRCS +=	gfxPDFSurface.cpp gfxPSSurface.cpp
 CSRCS = cairo-xlib-utils.c
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(ZLIB_LIBS)
 endif
+
+ifeq ($(MOZ_GFX_TOOLKIT),beos)
+CPPSRCS	+= 	gfxBeOSSurface.cpp gfxBeOSPlatform.cpp
+CPPSRCS +=	gfxPangoFonts.cpp 
+#CPPSRCS +=	gfxPDFSurface.cpp
+EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS) $(CAIRO_FT_LIBS) -lfontconfig -lpangocairo-1.0
+endif
+
 
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
 CPPSRCS	+= 	gfxQuartzSurface.cpp gfxPlatformMac.cpp gfxAtsuiFonts.cpp
@@ -93,6 +106,10 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
-ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
+ifdef MOZ_ENABLE_PANGO
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
+endif
+
+ifeq ($(MOZ_GFX_TOOLKIT),beos)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif

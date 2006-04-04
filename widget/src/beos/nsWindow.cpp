@@ -74,6 +74,11 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxBeOSSurface.h"
+#include "gfxContext.h"
+#endif
+
 // See comments in nsWindow.h as to why we override these calls from nsBaseWidget
 NS_IMPL_THREADSAFE_ADDREF(nsWindow)
 NS_IMPL_THREADSAFE_RELEASE(nsWindow)
@@ -692,6 +697,18 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 	                            aContext, aAppShell, aToolkit, aInitData,
 	                            aParent));
 }
+
+#ifdef MOZ_CAIRO_GFX
+gfxASurface*
+nsWindow::GetThebesSurface()
+{
+	mThebesSurface = nsnull;
+	if (!mThebesSurface) {
+		mThebesSurface = new gfxBeOSSurface(mView);
+	}
+	return mThebesSurface;
+}
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -2611,13 +2628,33 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 							br.IntegerWidth() + 1, br.IntegerHeight() + 1);
 	}	
 
-	
+	nsIRenderingContext* rc = GetRenderingContext();
+	// Double buffering for cairo builds is done here
+#ifdef MOZ_CAIRO_GFX
+	nsRefPtr<gfxContext> ctx =
+		(gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+	ctx->Save();
+
+	// Clip
+	ctx->NewPath();
+	for (int i = 0; i< numrects; i++)
+	{
+		BRect br = breg->RectAt(i);
+		ctx->Rectangle(gfxRect(int(br.left), int(br.top), 
+			       br.IntegerWidth() + 1, br.IntegerHeight() + 1));
+	}
+	ctx->Clip();
+
+	// double buffer
+	ctx->PushGroup(gfxContext::CONTENT_COLOR);
+#endif
+
 	nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
 	InitEvent(event);
 	event.region = mUpdateArea;
 	event.rect = &nsr;
-	event.renderingContext = GetRenderingContext();
+	event.renderingContext = rc;
 	if (event.renderingContext != nsnull)
 	{
 		// TODO: supply nsRenderingContextBeOS with font, colors and other state variables here.
@@ -2631,6 +2668,21 @@ nsresult nsWindow::OnPaint(BRegion *breg)
 	}
 
 	NS_RELEASE(event.widget);
+
+#ifdef MOZ_CAIRO_GFX
+	// The second half of double buffering
+	if (rv == NS_OK) {
+		ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+		ctx->PopGroupToSource();
+		ctx->Paint();
+	} else {
+		// ignore
+		ctx->PopGroup();
+	}
+
+	ctx->Restore();
+#endif
+
 	return rv;
 }
 

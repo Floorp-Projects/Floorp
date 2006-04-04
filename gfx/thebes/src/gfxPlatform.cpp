@@ -43,6 +43,8 @@
 #include "gfxPlatformMac.h"
 #elif defined(MOZ_WIDGET_GTK2)
 #include "gfxPlatformGtk.h"
+#elif defined(XP_BEOS)
+#include "gfxBeOSPlatform.h"
 #endif
 
 #include "gfxContext.h"
@@ -65,6 +67,8 @@ gfxPlatform::GetPlatform()
         gPlatform = new gfxPlatformMac;
 #elif defined(MOZ_WIDGET_GTK2)
         gPlatform = new gfxPlatformGtk;
+#elif defined(XP_BEOS)
+        gPlatform = new gfxBeOSPlatform;
 #endif
     }
 
