@@ -90,13 +90,6 @@ CCKService.prototype={
     } catch (ex) {
       return;
     }
-	var cckinited;
-	try {
-	  cckinited = prefbranch.getBoolPref("cck.initialized");
-	} catch (ex) {
-	  cckinited = false;
-	}
-    
     var sbs;
     var bundle;
     var pm;
@@ -109,6 +102,21 @@ CCKService.prototype={
       ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);	  
     } catch (ex) {
       return;
+    }
+    
+    var cckinited;
+    try {
+      OrgName = bundle.GetStringFromName("OrganizationName");
+      cckinited = prefbranch.getBoolPref("cck." + OrgName + ".initialized");
+    } catch (ex) {
+      try {
+        cckinited = prefbranch.getBoolPref("cck.initialized");
+        OrgName = bundle.GetStringFromName("OrganizationName");
+        prefbranch.setBoolPref("cck." + OrgName + ".initialized", cckinited);
+        prefbranch.deleteBranch("cck.initialized");
+      } catch (ex) {
+        cckinited = false;
+      }
     }
     
     if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
@@ -268,7 +276,8 @@ CCKService.prototype={
         addBookmarks(bundle,  BMSVC, "", bmRoot, bmIndex);
       }
 
-	  prefbranch.setBoolPref("cck.initialized", true);
+      OrgName = bundle.GetStringFromName("OrganizationName");
+      prefbranch.setBoolPref("cck." + OrgName + ".initialized", true);
     }
   }
 }

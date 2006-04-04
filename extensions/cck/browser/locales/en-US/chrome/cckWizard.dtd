@@ -23,7 +23,7 @@
 <!ENTITY  configLocation.label          "Location of configuration">
 
 <!ENTITY  saveOnExit.label              "Save configuration automatically on exit">
-<!ENTITY  zipLocation.label             "In order to create the XPI, we need to use ZIP. If ZIP is not in your path, you can specify it here">
+<!ENTITY  zipLocation.label             "In order to create the XPI, we need to use ZIP. If ZIP is not in your path, you can specify it here:">
 
 
 
@@ -51,8 +51,8 @@
 
 <!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
 
-<!ENTITY  orgName.error                 "Company Identifier is required">
-<!ENTITY  orgName.description           "The Company Identifier is included as part of the browser's user agent string which appears when you open the Help menu and select About Mozilla Firefox.">
+<!ENTITY  orgName.error                 "Company Identifier is required and cannot contain any spaces.">
+<!ENTITY  orgName.description           "The Company Identifier is included as part of the browser's user agent string which appears when you open the Help menu and select About Mozilla Firefox. It is required.">
 <!ENTITY  orgName.label                 "Enter Your Company Identifier (up to 10 characters; no spaces):">
 <!ENTITY  orgName.caption               "Company Identifier">
 

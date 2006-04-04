@@ -53,10 +53,10 @@
 
   <label>&configName.label;</label>
   <vbox flex="1">
-    <textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>/>
+    <textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>
     &configLocation.label;
     <hbox>
-      <textbox readonly="true" flex="1" id="cnc-location"/>
+      <textbox flex="1" id="cnc-location" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>
       <button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
     </hbox>
   </vbox>

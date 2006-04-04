@@ -46,7 +46,7 @@
 <wizard id="example-window" title="&cckWizard.title;"
   height="480"
   width="640"
-  onwizardcancel="CloseCCKWizard();"
+  onwizardcancel="return CloseCCKWizard();"
   onwizardfinish="CreateCCK();"
   onload="OpenCCKWizard();"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -164,7 +164,7 @@
            <label control="filename">&filename.label;</label>
          </vbox>
          <hbox align="center">
-           <textbox flex="1" id="filename"/>
+           <textbox id="filename"/>
            <label>.xpi</label>
          </hbox>
        </row>
@@ -172,7 +172,7 @@
    </grid>
  </wizardpage>
 
-  <wizardpage label="&customizePartOne.label;" onpageadvanced="return Validate('OrganizationName','&orgName.error;')">
+  <wizardpage label="&customizePartOne.label;" onpageadvanced="return ValidateNoSpace('OrganizationName','&orgName.error;')">
     <groupbox>
       <caption label="&orgName.caption;"/>
       <description>&orgName.description;</description>

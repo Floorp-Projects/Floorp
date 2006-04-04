@@ -21,10 +21,7 @@
     </content>
     <implementation>
       <constructor>
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","true");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","true");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+        this._enableDisableButtons();
       </constructor>
       <method name="clear">
         <body>
@@ -61,17 +58,29 @@
             var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
 	    listboxitem = listbox.appendItem(label, value);
             listboxitem.cck = new Array();
-            if ((listbox.selectedIndex != 0) && (listbox.selectedIndex != -1))
-	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
-            else
-	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
-            if ((listbox.selectedIndex != listbox.getRowCount()-1) && (listbox.selectedIndex != -1))
-	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
-            else
-	      document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
-
+            this._enableDisableButtons();
             return listboxitem;
           ]]>
+        </body>
+      </method>
+      <method name="_enableDisableButtons">
+        <body>
+          var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
+          if (listbox.selectedIndex == -1) {
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","true");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","true");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+          } else {
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","false");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","false");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
+            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
+            if (listbox.selectedIndex == 0)
+              document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
+            if (listbox.selectedIndex == listbox.getRowCount()-1)
+              document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+        }
         </body>
       </method>
       <property name="selectedItem"
@@ -80,15 +89,7 @@
     </implementation>
     <handlers>
       <handler event="select">
-        var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","false");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","false");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
-        document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
-        if (listbox.selectedIndex == 0)
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
-        if (listbox.selectedIndex == listbox.getRowCount()-1)
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
+        this._enableDisableButtons();
       </handler>
       <handler event="dblclick">
         if (event.originalTarget.tagName == "listitem")
@@ -97,8 +98,8 @@
       <handler event="command">
         if (event.originalTarget.type == "delete") {
             var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
-	    listbox.removeItemAt(listbox.selectedIndex);
-	} else if ((event.originalTarget.type == "moveup") || (event.originalTarget.type == "movedown")) {
+            listbox.removeItemAt(listbox.selectedIndex);
+        } else if ((event.originalTarget.type == "moveup") || (event.originalTarget.type == "movedown")) {
           var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
           var listitem=listbox.selectedItem;
           var index;
@@ -122,23 +123,16 @@
         } else {
 	  eval(this.getAttribute(event.originalTarget.type));
         }
-        if (listbox.selectedIndex == -1) {
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","true");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","true");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
-        } else {
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[1].setAttribute("disabled","false");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[2].setAttribute("disabled","false");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","false");
-          document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","false");
-          if (listbox.selectedIndex == 0)
-            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[3].setAttribute("disabled","true");
-          if (listbox.selectedIndex == listbox.getRowCount()-1)
-            document.getAnonymousNodes(this)[0].childNodes[1].childNodes[4].setAttribute("disabled","true");
-        }
-        
+        this._enableDisableButtons();
       </handler>
+      <handler event="keypress" keycode="VK_DELETE">
+        if (event.originalTarget.tagName == "xul:listbox") {
+          var listbox=document.getAnonymousNodes(this)[0].childNodes[0].childNodes[0];
+          listbox.removeItemAt(listbox.selectedIndex);
+          this._enableDisableButtons();
+        }
+      </handler>
+      
     </handlers>
   </binding>
 </bindings>
