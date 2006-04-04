@@ -1048,23 +1048,26 @@ sub RemoveVotes {
 
             # Now lets send the e-mail to alert the user to the fact that their votes have
             # been reduced or removed.
-            my %substs;
+            my $vars = {
 
-            $substs{"to"} = $name . Param('emailsuffix');
-            $substs{"bugid"} = $id;
-            $substs{"reason"} = $reason;
+                'to' => $name . Param('emailsuffix'),
+                'bugid' => $id,
+                'reason' => $reason,
 
-            $substs{"votesremoved"} = $removedvotes;
-            $substs{"votesold"} = $oldvotes;
-            $substs{"votesnew"} = $newvotes;
+                'votesremoved' => $removedvotes,
+                'votesold' => $oldvotes,
+                'votesnew' => $newvotes,
 
-            $substs{"votesremovedtext"} = $removedvotestext;
-            $substs{"votesoldtext"} = $oldvotestext;
-            $substs{"votesnewtext"} = $newvotestext;
+                'votesremovedtext' => $removedvotestext,
+                'votesoldtext' => $oldvotestext,
+                'votesnewtext' => $newvotestext,
 
-            $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
+                'count' => $removedvotes . "\n    " . $newvotestext
+            };
 
-            my $msg = perform_substs(Param("voteremovedmail"), \%substs);
+            my $msg;
+            my $template = Bugzilla->template;
+            $template->process("email/votes-removed.txt.tmpl", $vars, \$msg);
             push(@messages, $msg);
         }
         my $votes = $dbh->selectrow_array("SELECT SUM(vote_count) " .

@@ -140,25 +140,6 @@ haven\'t been touched for a week or more.
 You will get this message once a day until you\'ve dealt with these bugs!
 
 '
-  },
-
-  {
-   name => 'voteremovedmail',
-   type => 'l',
-   default => 'From: bugzilla-daemon
-To: %to%
-Subject: [Bug %bugid%] Some or all of your votes have been removed.
-
-Some or all of your votes have been removed from bug %bugid%.
-
-%votesoldtext%
-
-%votesnewtext%
-
-Reason: %reason%
-
-%urlbase%show_bug.cgi?id=%bugid%
-'
   } );
   return @param_list;
 }
