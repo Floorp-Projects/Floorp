@@ -77,6 +77,8 @@
 #define MAX_WAIT_FOR_SERVER 600
 #define WAIT_INTERVAL       100
 
+PRIntervalTime maxInterval    = PR_INTERVAL_NO_TIMEOUT;
+
 int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
     SSL_EN_RC4_128_EXPORT40_WITH_MD5,		/* B */
@@ -374,7 +376,7 @@ thread_main(void * arg)
 	rc = PR_Read(std_in, buf, sizeof buf);
 	if (rc <= 0)
 	    break;
-	wc = PR_Write(ps, buf, rc);
+	wc = PR_Send(ps, buf, rc, 0, maxInterval);
     } while (wc == rc);
     PR_Close(ps);
 }
@@ -419,6 +421,7 @@ int main(int argc, char **argv)
     char *             certDir  =  NULL;
     char *             nickname =  NULL;
     char *             cipherString = NULL;
+    char *             tmp;
     int                multiplier = 0;
     SECStatus          rv;
     PRStatus           status;
@@ -447,6 +450,14 @@ int main(int argc, char **argv)
     if (!progName)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
+
+    tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
+    if (tmp && tmp[0]) {
+       int sec = PORT_Atoi(tmp);
+       if (sec > 0) {
+           maxInterval = PR_SecondsToInterval(sec);
+       }
+    }
 
     optstate = PL_CreateOptState(argc, argv, "23BTfc:h:p:d:m:n:oqsvw:x");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
@@ -875,7 +886,7 @@ int main(int argc, char **argv)
 		FPRINTF(stderr, "%s: Writing %d bytes to server\n", 
 		        progName, nb);
 		do {
-		    PRInt32 cc = PR_Write(s, bufp, nb);
+		    PRInt32 cc = PR_Send(s, bufp, nb, 0, maxInterval);
 		    if (cc < 0) {
 		    	PRErrorCode err = PR_GetError();
 			if (err != PR_WOULD_BLOCK_ERROR) {
@@ -916,7 +927,7 @@ int main(int argc, char **argv)
 #endif
 	    ) {
 	    /* Read from socket and write to stdout */
-	    nb = PR_Read(pollset[SSOCK_FD].fd, buf, sizeof(buf));
+	    nb = PR_Recv(pollset[SSOCK_FD].fd, buf, sizeof buf, 0, maxInterval);
 	    FPRINTF(stderr, "%s: Read from server %d bytes\n", progName, nb);
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
