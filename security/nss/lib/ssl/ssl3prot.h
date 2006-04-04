@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3prot.h,v 1.11 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
+/* $Id: ssl3prot.h,v 1.12 2006/04/04 00:32:27 nelson%bolyard.com Exp $ */
 
 #ifndef __ssl3proto_h_
 #define __ssl3proto_h_
@@ -130,7 +130,14 @@ typedef enum {
     insufficient_security   = 71,
     internal_error          = 80,
     user_canceled           = 90,
-    no_renegotiation        = 100
+    no_renegotiation        = 100,
+
+/* Alerts for client hello extensions */
+    unsupported_extension           = 110,
+    certificate_unobtainable        = 111,
+    unrecognized_name               = 112,
+    bad_certificate_status_response = 113,
+    bad_certificate_hash_value      = 114
 
 } SSL3AlertDescription;
 

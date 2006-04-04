@@ -370,3 +370,17 @@ ER3(SSL_ERROR_NO_RENEGOTIATION_ALERT      , (SSL_ERROR_BASE + 102),
 ER3(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED , (SSL_ERROR_BASE + 103),
 "SSL server cache not configured and not disabled for this socket.")
 
+ER3(SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT    , (SSL_ERROR_BASE + 104),
+"SSL peer does not support requested TLS hello extension.")
+
+ER3(SSL_ERROR_CERTIFICATE_UNOBTAINABLE_ALERT , (SSL_ERROR_BASE + 105),
+"SSL peer could not obtain your certificate from the supplied URL.")
+
+ER3(SSL_ERROR_UNRECOGNIZED_NAME_ALERT        , (SSL_ERROR_BASE + 106),
+"SSL peer has no certificate for the requested DNS name.")
+
+ER3(SSL_ERROR_BAD_CERT_STATUS_RESPONSE_ALERT , (SSL_ERROR_BASE + 107),
+"SSL peer was unable to get an OCSP response for its certificate.")
+
+ER3(SSL_ERROR_BAD_CERT_HASH_VALUE_ALERT      , (SSL_ERROR_BASE + 108),
+"SSL peer reported bad certificate hash value.")
