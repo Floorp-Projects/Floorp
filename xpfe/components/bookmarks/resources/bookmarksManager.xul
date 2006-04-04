@@ -134,10 +134,6 @@
          key="&edit.sortFolder.keybinding;"
          command="cmd_bm_sortfolder" modifiers="accel"/>
 
-    <key id="bm_key_sortFolderByName"
-         key="&edit.sortFolderByName.keybinding;"
-         command="cmd_bm_sortfolderbyname" modifiers="accel"/>
-
     <key id="bm_key_properties"
          key="&edit.properties.keybinding;"
          command="cmd_bm_properties" modifiers="accel"/>
@@ -198,7 +194,6 @@
                     command="cmd_bm_sortfolder"/>
           <menuitem label="&command.sortFolderByName.label;"
                     accesskey="&command.sortFolderByName.accesskey;"
-                    key="bm_key_sortFolderByName"
                     command="cmd_bm_sortfolderbyname"/>
           <menuseparator/>
           <menuitem label="&command.properties.label;"
