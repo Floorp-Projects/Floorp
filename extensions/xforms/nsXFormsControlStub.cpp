@@ -512,9 +512,6 @@ nsXFormsControlStubBase::Create(nsIXTFElementWrapper *aWrapper)
 
   ResetHelpAndHint(PR_TRUE);
 
-  // enabled is on pr. default
-  aWrapper->SetIntrinsicState(NS_EVENT_STATE_ENABLED);
-
 #ifdef DEBUG_smaug
   sControlList->AppendElement(this);
 #endif
@@ -561,7 +558,16 @@ nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
 {
   // We need to re-evaluate our instance data binding when our document
   // changes, since our context can change
-  return aNewDocument ? ForceModelRebind() : NS_OK;
+
+  if (aNewDocument) {
+    // The intrinsic state needs to be initialized here since
+    // SetIntrinsicState will do nothing until the element lives in a document.
+    ResetProperties();
+  
+    return ForceModelRebind();
+  }
+
+  return NS_OK;
 }
 
 nsresult
