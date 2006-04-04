@@ -68,6 +68,7 @@
   <commandset type="container|feed" readonly="true">
     <command id="placesCmd_reload" 
              label="&cmd.reload.label;" accesskey="&cmd.reload.accesskey;"
+             oncommand="PlacesController.reloadSelectedLivemarks();"
              disabled="true"/>
   </commandset>
 </commandset>

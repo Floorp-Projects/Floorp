@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -619,7 +619,18 @@ var PlacesController = {
       return asContainer(node).remoteContainerType != "";
     return false;
   },
-  
+
+ /**
+  * Determines whether a ResultNode is a remote container registered by the livemark service.
+  * @param node
+  *          A NavHistory Result Node
+  * @returns true if the node is a livemark container item
+  */
+  nodeIsLivemarkContainer: function PC_nodeIsLivemarkContainer(node) {
+    return (this.nodeIsRemoteContainer(node) &&
+            asContainer(node).remoteContainerType == "@mozilla.org/browser/livemark-service;1");
+  },
+
   /**
    * Updates undo/redo commands. 
    */
@@ -952,23 +963,25 @@ var PlacesController = {
       if (selectedNode.uri.indexOf("livemark%2F") != -1) {
         isLivemarkItem = true;
         command.setAttribute("label", strings.getString("livemarkReloadAll"));
-      }
-      else if (this.nodeIsURI(selectedNode)) {
-        var uri = this._uri(selectedNode.uri);
-        isLivemarkItem = 
-          this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
-        if (isLivemarkItem && selectedNode.parent)
-          var name = selectedNode.parent.title;
-        if (!isLivemarkItem && this.nodeIsFolder(selectedNode)) {
-          var folderId = asFolder(selectedNode).folderId;
-          uri = this.bookmarks.getFolderURI(folderId);
-          isLivemarkItem = this.annotations.hasAnnotation(uri, "livemark/feedURI");
-          name = selectedNode.title;
         }
-        command.setAttribute("label", 
-          strings.getFormattedString("livemarkReloadOne", [name]));
-      }
+        else {
+          var name;
+          if (this.nodeIsLivemarkContainer(selectedNode)) {
+            isLivemarkItem = true;
+            name = selectedNode.title;
+          }
+          else if (this.nodeIsURI(selectedNode)) {
+            var uri = this._uri(selectedNode.uri);
+            isLivemarkItem = this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
+            if (isLivemarkItem)
+              name = selectedNode.parent.title;
+          }
+
+          if (isLivemarkItem)
+            command.setAttribute("label", strings.getFormattedString("livemarkReloadOne", [name]));
+        }
     }
+    
     if (!isLivemarkItem)
       command.setAttribute("label", strings.getString("livemarkReload"));
       
@@ -1242,6 +1255,35 @@ var PlacesController = {
    */
   changeBookmarkURI: function PC_changeBookmarkProperties(oldURI, newURI) {
     this.bookmarks.changeBookmarkURI(oldURI, newURI);
+  },
+  
+  /**
+   *
+   * Reloads the livemarks associated with the selection.  For the "Subscriptions"
+   * folder, reloads all livemarks; for a livemark folder, reloads its children;
+   * for a single livemark, reloads its siblings (the children of its parent).
+   */
+  reloadSelectedLivemarks: function PC_reloadSelectedLivemarks() {
+    var selectedNode = this._activeView.selectedNode;
+    if (this._activeView.hasSingleSelection) {
+      if (selectedNode.uri.indexOf("livemark%2F") != -1) {
+        this.livemarks.reloadAllLivemarks();
+      }
+      else {
+        var folder = null;
+        if (this.nodeIsLivemarkContainer(selectedNode)) {
+          folder = asFolder(selectedNode);
+        }
+        else if (this.nodeIsURI(selectedNode)) {
+          var uri = this._uri(selectedNode.uri);
+          var isLivemarkItem = this.annotations.hasAnnotation(uri, "livemark/bookmarkFeedURI");
+          if (isLivemarkItem)
+            folder = asFolder(selectedNode.parent);
+        }
+        if (folder)
+          this.livemarks.reloadLivemarkFolder(folder.folderId);
+      }
+    }
   },
 
   /**

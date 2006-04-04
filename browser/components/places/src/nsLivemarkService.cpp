@@ -316,7 +316,7 @@ nsLivemarkService::CreateLivemark(PRInt64 aFolder,
   NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_TRUE(mLivemarks.AppendElement(info), NS_ERROR_OUT_OF_MEMORY);
 
-  UpdateLivemarkChildren(mLivemarks.Length() - 1);
+  UpdateLivemarkChildren(mLivemarks.Length() - 1, PR_FALSE);
 
   return NS_OK;
 }
@@ -481,7 +481,7 @@ nsLivemarkService::FireTimer(nsITimer* aTimer, void* aClosure)
 
   // Go through all of the livemarks, and check if each needs to be updated.
   for (PRUint32 i = 0; i < lmks->mLivemarks.Length(); i++) {
-    lmks->UpdateLivemarkChildren(i);
+    lmks->UpdateLivemarkChildren(i, PR_FALSE);
   }
 }
 
@@ -582,5 +582,27 @@ nsLivemarkService::InsertLivemarkFailedItem(PRInt64 aFolder)
   rv = bookmarks->InsertItem(aFolder, failedURI, -1);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = bookmarks->SetItemTitle(failedURI, mLivemarkFailed);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::ReloadAllLivemarks()
+{
+  for (PRUint32 i = 0; i < mLivemarks.Length(); i++) {
+    UpdateLivemarkChildren(i, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLivemarkService::ReloadLivemarkFolder(PRInt32 aFolderId)
+{
+  nsresult rv = NS_OK;
+  for (PRUint32 i = 0; i < mLivemarks.Length(); i++) {
+    if (mLivemarks[i]->folderId == aFolderId) {
+      rv = UpdateLivemarkChildren(i, PR_TRUE);
+      break;
+    }
+  }
   return rv;
 }
