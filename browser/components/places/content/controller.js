@@ -204,11 +204,12 @@ function asQuery(node)    { return QI_node(node, Ci.nsINavHistoryQueryResultNode
 /** 
  * A View Configuration
  */
-function ViewConfig(peerDropTypes, childDropTypes, excludeItems, expandQueries,
-                    peerDropIndex) {
+function ViewConfig(peerDropTypes, childDropTypes, excludeItems, excludeQueries, 
+                    expandQueries, peerDropIndex) {
   this.peerDropTypes = peerDropTypes;
   this.childDropTypes = childDropTypes;
   this.excludeItems = excludeItems;
+  this.excludeQueries = excludeQueries;
   this.expandQueries = expandQueries;
   this.peerDropIndex = peerDropIndex;
 }
@@ -229,7 +230,7 @@ var ViewConfigurator = {
   rules: { 
     "folder=1": new ViewConfig([TYPE_X_MOZ_PLACE_CONTAINER], 
                                ViewConfig.GENERIC_DROP_TYPES,
-                               true, false, 4)
+                               true, false, false, 4)
   },
   
   /**
@@ -253,6 +254,7 @@ var ViewConfigurator = {
       view.peerDropTypes = rules.peerDropTypes;
       view.childDropTypes = rules.childDropTypes;
       view.excludeItems = rules.excludeItems;
+      view.excludeQueries = rules.excludeQueries;
       view.expandQueries = rules.expandQueries;
       view.peerDropIndex = rules.peerDropIndex;
     }

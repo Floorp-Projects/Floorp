@@ -72,7 +72,7 @@ var gGeneralPane = {
   setHomePageToBookmark: function ()
   {
     var rv = { url: null };
-    document.documentElement.openSubDialog("chrome://browser/content/bookmarks/selectBookmark.xul",
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/selectBookmark.xul",
                                            "resizable", rv);  
     if (rv.url) {
       var homePageField = document.getElementById("browserStartupHomepage");

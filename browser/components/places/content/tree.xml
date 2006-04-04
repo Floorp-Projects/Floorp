@@ -90,6 +90,7 @@
         <body><![CDATA[ 
           // override with our local options
           options.excludeItems = this.excludeItems;
+          options.excludeQueries = this.excludeQueries;
           options.expandQueries = this.expandQueries;
           var result = this.history.executeQueries(queries, queries.length, 
                                                    options);
@@ -476,6 +477,9 @@
       
       <!-- nsIPlacesView -->
       <field name="excludeItems">false</field>
+      
+      <!-- nsIPlacesView -->
+      <field name="excludeQueries">false</field>
       
       <!-- nsIPlacesView -->
       <field name="expandQueries">false</field>
