@@ -1002,12 +1002,18 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   if (mStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED) {
     // In this case, cbrs->frame will always be an ancestor of
     // aContainingBlock, so can just walk our way up the frame tree.
+    // Make sure to not add positions of frames whose parent is a
+    // scrollFrame, since we're doing fixed positioning, which assumes
+    // everything is scrolled to (0,0).
     cbOffset.MoveTo(0, 0);
     do {
-      cbOffset += aContainingBlock->GetPosition();
+      nsPoint curOffset = aContainingBlock->GetPosition();
       aContainingBlock = aContainingBlock->GetParent();
       NS_ASSERTION(aContainingBlock,
                    "Should hit cbrs->frame before we run off the frame tree!");
+      if (aContainingBlock->GetType() != nsLayoutAtoms::scrollFrame) {
+        cbOffset += curOffset;
+      }
     } while (aContainingBlock != cbrs->frame);
   } else {
     cbOffset = aContainingBlock->GetOffsetTo(cbrs->frame);
