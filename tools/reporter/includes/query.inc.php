@@ -404,7 +404,6 @@ class query
     }
 
     function continuityParams($omit = null){
-print "doing continuity params";
         reset($this->where);
         $standard = '';
         
