@@ -30,7 +30,7 @@ released on {$addon->VersionDateAdded|date_format}
 <div class="pages">
 <div class="prev">
 {if $page.left}
-<a href="{$config.webpath}/comments.php?{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
 {else}
 &laquo; Previous Page
 {/if}
@@ -38,7 +38,7 @@ released on {$addon->VersionDateAdded|date_format}
 
 <div class="next">
 {if $page.next}
-<a href="{$config.webpath}/comments.php?{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
 {else}
 Next Page &raquo;
 {/if}
