@@ -783,11 +783,8 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
         return mThebes->GetCairo();
 #ifdef XP_WIN
     if (aType == NATIVE_WINDOWS_DC) {
-        nsRefPtr<gfxASurface> surf = mThebes->CurrentGroupSurface();
-        if (!surf)
-            surf = mThebes->CurrentSurface();
-
-        return cairo_win32_surface_get_dc(surf->CairoSurface());
+        nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
+        return NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
     }
 #endif
 

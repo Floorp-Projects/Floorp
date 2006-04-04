@@ -67,10 +67,12 @@ public:
     gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
                    unsigned long width, unsigned long height);
 
+    gfxXlibSurface(cairo_surface_t *csurf);
+
     virtual ~gfxXlibSurface();
 
-    unsigned long Width() { return mWidth; }
-    unsigned long Height() { return mHeight; }
+    unsigned long Width() { if (mWidth == -1) DoSizeQuery(); return mWidth; }
+    unsigned long Height() { if (mHeight == -1) DoSizeQuery(); return mHeight; }
 
     Display* XDisplay() { return mDisplay; }
     Drawable XDrawable() { return mDrawable; }
@@ -88,8 +90,10 @@ protected:
     Display *mDisplay;
     Drawable mDrawable;
 
-    unsigned long mWidth;
-    unsigned long mHeight;
+    void DoSizeQuery();
+
+    long mWidth;
+    long mHeight;
 };
 
 #endif /* GFX_XLIBSURFACE_H */

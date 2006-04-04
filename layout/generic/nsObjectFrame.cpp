@@ -1105,11 +1105,7 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
 
       nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
       gfxFloat xoff, yoff;
-      nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
-      if (!surf) {
-        surf = ctx->CurrentSurface();
-        xoff = yoff = 0.0;
-      }
+      nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
 
       /* Need to force the clip to be set */
       ctx->UpdateSurfaceClip();

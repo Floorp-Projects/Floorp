@@ -82,5 +82,4 @@ public:                                                          \
   NS_IMETHOD_(nsrefcnt) AddRef(void);                            \
   NS_IMETHOD_(nsrefcnt) Release(void);                           \
 
-
 #endif /* GFX_TYPES_H */

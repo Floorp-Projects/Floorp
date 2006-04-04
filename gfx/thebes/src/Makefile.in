@@ -20,6 +20,7 @@ REQUIRES = \
 	$(NULL)
 
 CPPSRCS	= \
+	gfxASurface.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxPattern.cpp \

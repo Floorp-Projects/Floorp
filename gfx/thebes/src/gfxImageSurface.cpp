@@ -58,6 +58,16 @@ gfxImageSurface::gfxImageSurface(gfxImageFormat format, long width, long height)
     Init(surface);
 }
 
+gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
+{
+    mWidth = cairo_image_surface_get_width(csurf);
+    mHeight = cairo_image_surface_get_height(csurf);
+    mData = nsnull;
+    mFormat = ImageFormatUnknown;
+
+    Init(csurf, PR_TRUE);
+}
+
 gfxImageSurface::~gfxImageSurface()
 {
     Destroy();

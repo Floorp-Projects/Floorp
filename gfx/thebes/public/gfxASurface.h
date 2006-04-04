@@ -60,11 +60,32 @@ public:
         ImageFormatARGB32, ///< ARGB data in native endianness, using premultiplied alpha
         ImageFormatRGB24,  ///< xRGB data in native endianness
         ImageFormatA8,     ///< Only an alpha channel
-        ImageFormatA1      ///< Packed transparency information (one byte refers to 8 pixels)
+        ImageFormatA1,     ///< Packed transparency information (one byte refers to 8 pixels)
+        ImageFormatUnknown
     } gfxImageFormat;
 
+    typedef enum {
+        SurfaceTypeImage,
+        SurfaceTypePDF,
+        SurfaceTypePS,
+        SurfaceTypeXlib,
+        SurfaceTypeXcb,
+        SurfaceTypeGlitz,
+        SurfaceTypeQuartz,
+        SurfaceTypeWin32,
+        SurfaceTypeBeOS,
+        SurfaceTypeDirectFB,
+        SurfaceTypeSVG,
+        SurfaceTypeQuartz2
+    } gfxSurfaceType;
+
+    /* Wrap the given cairo surface and return a gfxASurface for it */
+    static already_AddRefed<gfxASurface> Wrap(cairo_surface_t *csurf);
+
     /*** this DOES NOT addref the surface */
-    cairo_surface_t* CairoSurface() { return mSurface; }
+    cairo_surface_t *CairoSurface() { return mSurface; }
+
+    gfxSurfaceType GetType() const { return (gfxSurfaceType)cairo_surface_get_type(mSurface); }
 
     void SetDeviceOffset (gfxFloat xOff, gfxFloat yOff) {
         cairo_surface_set_device_offset(mSurface,
@@ -103,22 +124,14 @@ public:
     }
 
 protected:
-    void Init(cairo_surface_t* surface) {
-        mDestroyed = PR_FALSE;
-        mSurface = surface;
-    }
+    static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
+    static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
 
-    void Destroy() {
-        if (mDestroyed) {
-            NS_WARNING("Calling Destroy on an already-destroyed surface!");
-            return;
-        }
+    void Init(cairo_surface_t *surface, PRBool existingSurface = PR_FALSE);
 
-        cairo_surface_destroy(mSurface);
-        mDestroyed = PR_TRUE;
-    }
+    void Destroy();
 
-    PRBool Destroyed() {
+    PRBool Destroyed() const {
         return mDestroyed;
     }
 
@@ -128,7 +141,7 @@ protected:
         }
     }
 private:
-    cairo_surface_t* mSurface;
+    cairo_surface_t *mSurface;
     PRBool mDestroyed;
 };
 

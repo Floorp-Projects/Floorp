@@ -87,7 +87,7 @@ public:
     };
 
     struct DrawOutput {
-        gfxASurface* mSurface;
+        nsRefPtr<gfxASurface> mSurface;
         PRPackedBool mUniformAlpha;
         PRPackedBool mUniformColor;
         gfxRGBA      mColor;

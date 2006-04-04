@@ -40,7 +40,7 @@
 
 #include "gfxASurface.h"
 
-#include <cairo-win32.h>
+#include <windows.h>
 
 class NS_EXPORT gfxWindowsSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
@@ -51,6 +51,7 @@ public:
     gfxWindowsSurface(HDC dc,
                       unsigned long width, unsigned long height,
                       gfxImageFormat imageFormat = ImageFormatRGB24);
+    gfxWindowsSurface(cairo_surface_t *csurf);
     virtual ~gfxWindowsSurface();
 
     HDC GetDC() { return mDC; }

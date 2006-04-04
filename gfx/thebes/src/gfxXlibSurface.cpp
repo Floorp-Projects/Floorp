@@ -53,21 +53,8 @@ THEBES_IMPL_REFCOUNTING(gfxXlibSurface)
 gfxXlibSurface::gfxXlibSurface(Display* dpy, Drawable drawable, Visual* visual)
     : mPixmapTaken(PR_FALSE), mDisplay(dpy), mDrawable(drawable)
 {
-    // figure out width/height/depth
-    Window root_ignore;
-    int x_ignore, y_ignore;
-    unsigned int bwidth_ignore, width, height, depth;
-
-    XGetGeometry(dpy,
-                 drawable,
-                 &root_ignore, &x_ignore, &y_ignore,
-                 &width, &height,
-                 &bwidth_ignore, &depth);
-
-    mWidth = width;
-    mHeight = height;
-
-    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, width, height);
+    DoSizeQuery();
+    cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, mWidth, mHeight);
     Init(surf);
 }
 
@@ -121,9 +108,36 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
     TakePixmap();
 }
 
+gfxXlibSurface::gfxXlibSurface(cairo_surface_t *csurf)
+    : mPixmapTaken(PR_FALSE), mWidth(-1), mHeight(-1)
+{
+    mDrawable = cairo_xlib_surface_get_drawable(csurf);
+    mDisplay = cairo_xlib_surface_get_display(csurf);
+
+    Init(csurf, PR_TRUE);
+}
+
 gfxXlibSurface::~gfxXlibSurface()
 {
     Destroy();
+}
+
+void
+gfxXlibSurface::DoSizeQuery()
+{
+    // figure out width/height/depth
+    Window root_ignore;
+    int x_ignore, y_ignore;
+    unsigned int bwidth_ignore, width, height, depth;
+
+    XGetGeometry(mDisplay,
+                 mDrawable,
+                 &root_ignore, &x_ignore, &y_ignore,
+                 &width, &height,
+                 &bwidth_ignore, &depth);
+
+    mWidth = width;
+    mHeight = height;
 }
 
 XRenderPictFormat*
@@ -142,6 +156,8 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
         case ImageFormatA1:
             return XRenderFindStandardFormat (dpy, PictStandardA1);
             break;
+        default:
+            return NULL;
     }
 
     return (XRenderPictFormat*)NULL;

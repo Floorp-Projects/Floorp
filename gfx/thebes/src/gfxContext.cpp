@@ -68,23 +68,26 @@ gfxContext::~gfxContext()
     cairo_destroy(mCairo);
 }
 
-gfxASurface *gfxContext::CurrentSurface()
+gfxASurface *gfxContext::OriginalSurface()
 {
     return mSurface;
 }
 
-already_AddRefed<gfxASurface> gfxContext::CurrentGroupSurface(gfxFloat *dx, gfxFloat *dy)
+already_AddRefed<gfxASurface> gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
 {
     cairo_surface_t *s = cairo_get_group_target(mCairo, dx, dy);
     if (!s) {
-        *dx = 0.0;
-        *dy = 0.0;
-        return NULL;
+        if (dx) {
+            *dx = 0.0;
+            *dy = 0.0;
+        }
+
+        gfxASurface *ret = mSurface;
+        NS_ADDREF(ret);
+        return ret;
     }
 
-    gfxASurface *wrapper = new gfxUnknownSurface(s);
-    NS_ADDREF(wrapper);
-    return wrapper;
+    return gfxASurface::Wrap(s);
 }
 
 void gfxContext::Save()

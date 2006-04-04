@@ -63,6 +63,9 @@ public:
      * XXX why not unsigned long for the dimensions? And, why not gfxSize?
      */
     gfxImageSurface(gfxImageFormat format, long width, long height);
+
+    gfxImageSurface(cairo_surface_t *csurf);
+
     virtual ~gfxImageSurface();
 
     // ImageSurface methods

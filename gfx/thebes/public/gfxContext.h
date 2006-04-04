@@ -75,17 +75,19 @@ public:
     ~gfxContext();
 
     /**
-     * Return the current target surface
+     * Return the surface that this gfxContext was created with
      */
-    gfxASurface *CurrentSurface();
+    gfxASurface *OriginalSurface();
 
     /**
      * Return the current transparency group target, if any, along
-     * with its device offsets from the top.
+     * with its device offsets from the top.  If no group is
+     * active, returns the surface the gfxContext was created with,
+     * and 0,0 in dx,dy.
      */
-    already_AddRefed<gfxASurface> CurrentGroupSurface(gfxFloat *dx, gfxFloat *dy);
-    already_AddRefed<gfxASurface> CurrentGroupSurface() {
-        return CurrentGroupSurface(NULL, NULL);
+    already_AddRefed<gfxASurface> CurrentSurface(gfxFloat *dx, gfxFloat *dy);
+    already_AddRefed<gfxASurface> CurrentSurface() {
+        return CurrentSurface(NULL, NULL);
     }
 
     /**

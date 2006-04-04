@@ -61,7 +61,7 @@
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxMatrix.h"
-#include "cairo-win32.h"
+#include "gfxWindowsSurface.h"
 #endif
 /* 
  * The following constants are used to determine how a widget is drawn using
@@ -762,13 +762,13 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
   gfxFloat xoff, yoff;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
+  nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
   if (!surf) {
     surf = ctx->CurrentSurface();
     xoff = yoff = 0.0;
   }
 
-  HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
+  HDC hdc = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
   SaveDC(hdc);
   SetGraphicsMode(hdc, GM_ADVANCED);
 
@@ -1813,13 +1813,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   nsRefPtr<gfxContext> ctx = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
 
   gfxFloat xoff, yoff;
-  nsRefPtr<gfxASurface> surf = ctx->CurrentGroupSurface(&xoff, &yoff);
-  if (!surf) {
-    surf = ctx->CurrentSurface();
-    xoff = yoff = 0.0;
-  }
-
-  HDC hdc = cairo_win32_surface_get_dc (surf->CairoSurface());
+  nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
+  HDC hdc = NS_STATIC_CAST(gfxWindowsSurface*, NS_STATIC_CAST(gfxASurface*, surf.get()))->GetDC();
   SaveDC(hdc);
   SetGraphicsMode(hdc, GM_ADVANCED);
 
