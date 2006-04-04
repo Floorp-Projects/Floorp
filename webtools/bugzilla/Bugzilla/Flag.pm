@@ -437,6 +437,8 @@ sub process {
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
+    # XXX - we shouldn't quote the timestamp here, but this would involve
+    # many changes in this file.
     $timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
     
     # Take a snapshot of flags before any changes.
@@ -607,10 +609,6 @@ sub modify {
     my ($cgi, $timestamp) = @_;
     my $setter = Bugzilla->user;
 
-    # Use the date/time we were given if possible (allowing calling code
-    # to synchronize the comment's timestamp with those of other records).
-    my $sql_timestamp = ($timestamp ? &::SqlQuote($timestamp) : "NOW()");
-    
     # Extract a list of flags from the form data.
     my @ids = map(/^flag-(\d+)$/ ? $1 : (), $cgi->param());
     
@@ -683,7 +681,7 @@ sub modify {
                         SET    setter_id = " . $setter->id . ", 
                                requestee_id = NULL , 
                                status = '$status' , 
-                               modification_date = $sql_timestamp ,
+                               modification_date = $timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
 
@@ -724,7 +722,7 @@ sub modify {
                         SET    setter_id = " . $setter->id . ", 
                                requestee_id = $requestee_id , 
                                status = '$status' , 
-                               modification_date = $sql_timestamp ,
+                               modification_date = $timestamp ,
                                is_active = 1
                         WHERE  id = $flag->{'id'}");
 
