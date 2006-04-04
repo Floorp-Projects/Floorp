@@ -46,7 +46,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsComponentManagerUtils.h"
-#include "nsNativeCharsetUtils.h"
 #include <objbase.h>
 #include <initguid.h>
 
@@ -75,23 +74,8 @@ static PRUintn gToolkitTLSIndex = 0;
 
 
 HINSTANCE nsToolkit::mDllInstance = 0;
-PRBool    nsToolkit::mIsNT = PR_FALSE;
-PRBool    nsToolkit::mUseImeApiW  = PR_FALSE;
-PRBool    nsToolkit::mW2KXP_CP936 = PR_FALSE;
 PRBool    nsToolkit::mIsWinXP     = PR_FALSE;
 static PRBool dummy = nsToolkit::InitVersionInfo();
-
-DEFINE_GUID(IID_IActiveIMMApp, 
-0x08c0e040, 0x62d1, 0x11d1, 0x93, 0x26, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
-
-DEFINE_GUID(CLSID_CActiveIMM,
-0x4955DD33, 0xB159, 0x11d0, 0x8F, 0xCF, 0x0, 0xAA, 0x00, 0x6B, 0xCC, 0x59);
-
-DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
-0xb5cf2cfa, 0x8aeb, 0x11d1, 0x93, 0x64, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
-
-IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
-PRInt32        nsToolkit::gAIMMCount = 0;
 
 #if !defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_ENABLE_LIBXUL)
 //
@@ -182,315 +166,12 @@ LRESULT CALLBACK DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
 #define MAX_MENU_NAME   128
 #define MAX_FILTER_NAME 256
 
-BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
-{
-  BOOL rtn;
-  OPENFILENAMEA ofnA;
-  char filterA[MAX_FILTER_NAME+2];
-  char customFilterA[MAX_FILTER_NAME+1];
-  char fileA[FILE_BUFFER_SIZE+1];
-  char fileTitleA[MAX_PATH+1];
-  char initDirA[MAX_PATH+1];
-  char titleA[MAX_PATH+1];
-  char defExtA[MAX_PATH+1];
-  char tempNameA[MAX_PATH+1];
-
-  memset(&ofnA, 0, sizeof(OPENFILENAMEA));
-#if _WIN32_WINNT >= 0x0500
-  ofnA.lStructSize = OPENFILENAME_SIZE_VERSION_400; 
-#else
-  ofnA.lStructSize = sizeof(OPENFILENAME); 
-#endif
-  ofnA.hwndOwner = aFileNameW->hwndOwner; 
-  ofnA.hInstance = aFileNameW->hInstance; 
-  if (aFileNameW->lpstrFilter)  {
-    // find the true filter length
-    int len = 0;
-    while ((aFileNameW->lpstrFilter[len]) ||
-           (aFileNameW->lpstrFilter[len+1]))
-    {
-      ++len;
-    }
-
-    len = WideCharToMultiByte(CP_ACP, 0,
-                              aFileNameW->lpstrFilter,
-                              len,
-                              filterA,
-                              MAX_FILTER_NAME, NULL, NULL);
-    filterA[len] = '\0';
-    filterA[len+1] = '\0';
-    ofnA.lpstrFilter = filterA; 
-  }
-  if (aFileNameW->lpstrCustomFilter)  {
-    NS_ConvertWtoA(aFileNameW->lpstrCustomFilter, MAX_FILTER_NAME,
-                   customFilterA, "?");
-    ofnA.lpstrCustomFilter = customFilterA; 
-    ofnA.nMaxCustFilter = MAX_FILTER_NAME;  
-  }
-  ofnA.nFilterIndex = aFileNameW->nFilterIndex; // Index of pair of filter strings. Should be ok.
-  if (aFileNameW->lpstrFile)  {
-    NS_ConvertWtoA(aFileNameW->lpstrFile, FILE_BUFFER_SIZE, fileA, "?");
-    ofnA.lpstrFile = fileA;
-    ofnA.nMaxFile = FILE_BUFFER_SIZE;
-    if (strlen(fileA))  {
-      // find last file offset
-      ofnA.nFileOffset = strrchr(fileA, '\\') - fileA + 1; 
-      // find last file extension offset
-      ofnA.nFileExtension = strrchr(fileA, '.') - fileA + 1; 
-    }
-  }
-  if (aFileNameW->lpstrFileTitle) {
-    NS_ConvertWtoA(aFileNameW->lpstrFileTitle, MAX_PATH, fileTitleA, "?");
-    ofnA.lpstrFileTitle = fileTitleA;
-    ofnA.nMaxFileTitle = MAX_PATH;  
-  }
-  if (aFileNameW->lpstrInitialDir)  {
-    NS_ConvertWtoA(aFileNameW->lpstrInitialDir, MAX_PATH, initDirA, "?");
-    ofnA.lpstrInitialDir = initDirA; 
-  }
-  if (aFileNameW->lpstrTitle) {
-    NS_ConvertWtoA(aFileNameW->lpstrTitle, MAX_PATH, titleA, "?");
-    ofnA.lpstrTitle = titleA; 
-  }
-  ofnA.Flags = aFileNameW->Flags; 
-  if (aFileNameW->lpstrDefExt)  {
-    NS_ConvertWtoA(aFileNameW->lpstrDefExt, MAX_PATH, defExtA, "?");
-    ofnA.lpstrDefExt = defExtA; 
-  }
-  // Warning:  No WtoA() is done to application-defined data 
-  ofnA.lCustData = aFileNameW->lCustData; 
-  ofnA.lpfnHook = aFileNameW->lpfnHook;   
-  if (aFileNameW->lpTemplateName) {
-    NS_ConvertWtoA(aFileNameW->lpTemplateName, MAX_PATH, tempNameA, "?");
-    ofnA.lpTemplateName = tempNameA; 
-  }
-  
-  if (aOpen)
-    rtn = GetOpenFileNameA(&ofnA);
-  else
-    rtn = GetSaveFileNameA(&ofnA);
-
-  if (!rtn)
-    return 0;
-
-  if (ofnA.lpstrFile) {
-    if ((ofnA.Flags & OFN_ALLOWMULTISELECT) && (ofnA.Flags & OFN_EXPLORER)) {
-      // lpstrFile contains the directory and file name strings 
-      // which are NULL separated, with an extra NULL character after the last file name. 
-      int lenA = 0;
-      while ((ofnA.lpstrFile[lenA]) || (ofnA.lpstrFile[lenA+1]))
-      {
-        ++lenA;
-      }
-      // get the size of required Wide Char and make sure aFileNameW->lpstrFile has enough space
-      int lenW = MultiByteToWideChar(CP_ACP, 0, ofnA.lpstrFile, lenA, 0, 0);
-      if (aFileNameW->nMaxFile < lenW+2)
-        return 0; // doesn't have enough allocated space
-      MultiByteToWideChar(CP_ACP, 0, ofnA.lpstrFile, lenA, aFileNameW->lpstrFile, aFileNameW->nMaxFile);
-      aFileNameW->lpstrFile[lenW] = '\0';
-      aFileNameW->lpstrFile[lenW+1] = '\0';
-    }
-    else  { 
-      NS_ConvertAtoW(ofnA.lpstrFile, aFileNameW->nMaxFile, aFileNameW->lpstrFile);
-    }
-  }
-
-  aFileNameW->nFilterIndex = ofnA.nFilterIndex;
-
-  return rtn;
-}
-
-BOOL WINAPI nsGetOpenFileName(LPOPENFILENAMEW aOpenFileNameW)
-{
-  return CallOpenSaveFileNameA(aOpenFileNameW, TRUE);
-}
-
-BOOL WINAPI nsGetSaveFileName(LPOPENFILENAMEW aSaveFileNameW)
-{
-  return CallOpenSaveFileNameA(aSaveFileNameW, FALSE);
-}
-
-int WINAPI nsGetClassName(HWND aWnd, LPWSTR aClassName, int aMaxCount)
-{
-  char classNameA[MAX_CLASS_NAME];
-
-  if (!GetClassNameA(aWnd, classNameA, MAX_CLASS_NAME))
-    return 0;
-
-  aMaxCount = NS_ConvertAtoW(classNameA, MAX_CLASS_NAME, aClassName);
-
-  return aMaxCount;
-}
-
-HWND WINAPI nsCreateWindowEx(DWORD aExStyle,      
-                             LPCWSTR aClassNameW,  
-                             LPCWSTR aWindowNameW, 
-                             DWORD aStyle,        
-                             int aX,                
-                             int aY,                
-                             int aWidth,           
-                             int aHeight,          
-                             HWND aWndParent,      
-                             HMENU aMenu,          
-                             HINSTANCE aInstance,  
-                             LPVOID aParam)
-{
-  char classNameA [MAX_CLASS_NAME];
-  char windowNameA[MAX_CLASS_NAME];
-
-  // Convert class name and Window name from Unicode to ANSI
-  if (aClassNameW)
-      NS_ConvertWtoA(aClassNameW, MAX_CLASS_NAME, classNameA, "?");
-  if (aWindowNameW)
-      NS_ConvertWtoA(aWindowNameW, MAX_CLASS_NAME, windowNameA, "?");
-  
-  // so far only NULL is passed
-  if (aParam != NULL) {
-    NS_ASSERTION(0 , "non-NULL lParam is provided in CreateWindowExA");
-    return NULL;
-  }
-
-  return CreateWindowExA(aExStyle, classNameA, windowNameA,
-      aStyle, aX, aY, aWidth, aHeight, aWndParent, aMenu, aInstance, aParam) ;
-}
-
-LRESULT WINAPI nsSendMessage(HWND aWnd, UINT aMsg, WPARAM awParam, LPARAM alParam)
-{
-  // ************ Developers **********************************************
-  // As far as I am aware, WM_SETTEXT is the only text related message 
-  // we call to SendMessage().  When you need to send other text related message,
-  // please use appropriate converters.
-  NS_ASSERTION((WM_SETTEXT == aMsg || WM_SETICON == aMsg || WM_SETFONT == aMsg), 
-			"Warning. Make sure sending non-Unicode string to ::SendMessage().");
-  if (WM_SETTEXT == aMsg)  {
-    char title[MAX_PATH];
-    if (alParam) // Note: Window titles are truncated to 159 chars by Windows
-      NS_ConvertWtoA((LPCWSTR)alParam, MAX_PATH, title, "?");
-    return SendMessageA(aWnd, aMsg, awParam, (LPARAM)&title);
-  }
-
-  return SendMessageA(aWnd, aMsg, awParam, alParam);
-}
-
-ATOM WINAPI nsRegisterClass(const WNDCLASSW *aClassW)
-{
-  WNDCLASSA wClass;
-  char classNameA[MAX_CLASS_NAME];
-  char menuNameA[MAX_MENU_NAME];
-
-  // Set up ANSI version of class struct
-  wClass.cbClsExtra   = aClassW->cbClsExtra;
-  wClass.cbWndExtra   = aClassW->cbWndExtra;
-  wClass.hbrBackground= aClassW->hbrBackground;
-  wClass.hCursor      = aClassW->hCursor;
-  wClass.hIcon        = aClassW->hIcon;
-  wClass.hInstance    = aClassW->hInstance;
-  wClass.lpfnWndProc  = aClassW->lpfnWndProc;
-  wClass.style        = aClassW->style;
-
-  if (NULL == aClassW->lpszClassName)
-    return 0 ;
-
-  wClass.lpszClassName = classNameA;
-  if (aClassW->lpszClassName)
-    NS_ConvertWtoA(aClassW->lpszClassName, MAX_CLASS_NAME, classNameA, "?");
-  
-  wClass.lpszMenuName = menuNameA; 
-  if (aClassW->lpszMenuName)
-    NS_ConvertWtoA(aClassW->lpszMenuName, MAX_MENU_NAME, menuNameA, "?");
-
-  return RegisterClassA(&wClass);
-}
-
-BOOL WINAPI nsUnregisterClass(LPCWSTR aClassW, HINSTANCE aInst)
-{
-  char classA[MAX_PATH+1];
-
-  if (aClassW)  {
-    NS_ConvertWtoA(aClassW, MAX_PATH, classA, "?");
-    return UnregisterClassA((LPCSTR)classA, aInst);
-  }
-  return FALSE;
-}
-
-#ifndef WINCE
-BOOL WINAPI nsSHGetPathFromIDList(LPCITEMIDLIST aIdList, LPWSTR aPathW)
-{
-  char pathA[MAX_PATH+1];
-
-  if (aPathW)  {
-    NS_ConvertWtoA(aPathW, MAX_PATH, pathA, "?");
-    if (SHGetPathFromIDListA(aIdList, pathA)) {
-      NS_ConvertAtoW(pathA, MAX_PATH, aPathW);
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-LPITEMIDLIST WINAPI nsSHBrowseForFolder(LPBROWSEINFOW aBiW)
-{
-  BROWSEINFO biA;
-  LPITEMIDLIST itemIdList;
-  char displayNameA[MAX_PATH];
-  char titleA[MAX_PATH];
-
-  memset(&biA, 0, sizeof(BROWSEINFO));
-  biA.hwndOwner = aBiW->hwndOwner;
-  biA.pidlRoot = aBiW->pidlRoot;
-  if (aBiW->pszDisplayName)  {
-    NS_ConvertWtoA(aBiW->pszDisplayName, MAX_PATH, displayNameA, "?");
-    biA.pszDisplayName = displayNameA; 
-  }
-  if (aBiW->lpszTitle)  {
-    NS_ConvertWtoA(aBiW->lpszTitle, MAX_PATH, titleA, "?");
-    biA.lpszTitle = titleA; 
-  }
-  biA.ulFlags = aBiW->ulFlags;
-  biA.lpfn = aBiW->lpfn;
-  biA.lParam = aBiW->lParam;
-  biA.iImage = aBiW->iImage;
-
-  itemIdList = SHBrowseForFolderA(&biA);
-  if (biA.pszDisplayName)  {
-    NS_ConvertAtoW(biA.pszDisplayName, MAX_PATH, aBiW->pszDisplayName);
-  }
-  return itemIdList;
-}
-#endif //#ifndef WINCE
-
-HMODULE             nsToolkit::mShell32Module = NULL;
-NS_DefWindowProc    nsToolkit::mDefWindowProc = DefWindowProcA;
-NS_CallWindowProc   nsToolkit::mCallWindowProc = CallWindowProcA;
-NS_SetWindowLong    nsToolkit::mSetWindowLong = SetWindowLongA;
-NS_GetWindowLong    nsToolkit::mGetWindowLong = GetWindowLongA;
-NS_SendMessage      nsToolkit::mSendMessage = nsSendMessage;
-NS_DispatchMessage  nsToolkit::mDispatchMessage = DispatchMessageA;
-NS_GetMessage       nsToolkit::mGetMessage = GetMessageA;
-NS_PeekMessage      nsToolkit::mPeekMessage = PeekMessageA;
-NS_GetOpenFileName  nsToolkit::mGetOpenFileName = nsGetOpenFileName;
-NS_GetSaveFileName  nsToolkit::mGetSaveFileName = nsGetSaveFileName;
-NS_GetClassName     nsToolkit::mGetClassName = nsGetClassName;
-NS_CreateWindowEx   nsToolkit::mCreateWindowEx = nsCreateWindowEx;
-NS_RegisterClass    nsToolkit::mRegisterClass = nsRegisterClass; 
-NS_UnregisterClass  nsToolkit::mUnregisterClass = nsUnregisterClass; 
-
 MouseTrailer*       nsToolkit::gMouseTrailer;
-
-#ifndef WINCE
-NS_SHGetPathFromIDList  nsToolkit::mSHGetPathFromIDList = nsSHGetPathFromIDList; 
-NS_SHBrowseForFolder    nsToolkit::mSHBrowseForFolder = nsSHBrowseForFolder; 
-#endif
 
 void RunPump(void* arg)
 {
     ThreadInitInfo *info = (ThreadInitInfo*)arg;
     ::PR_EnterMonitor(info->monitor);
-
-    // Start Active Input Method Manager on this thread
-    if(nsToolkit::gAIMMApp)
-        nsToolkit::gAIMMApp->Activate(TRUE);
 
     // do registration and creation in this thread
     info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
@@ -504,9 +185,9 @@ void RunPump(void* arg)
 
     // Process messages
     MSG msg;
-    while (nsToolkit::mGetMessage(&msg, NULL, 0, 0)) {
+    while (::GetMessageW(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        nsToolkit::mDispatchMessage(&msg);
+        ::DispatchMessageW(&msg);
     }
 }
 
@@ -519,17 +200,6 @@ nsToolkit::nsToolkit()
 {
     mGuiThread  = NULL;
     mDispatchWnd = 0;
-
-    //
-    // Initialize COM since create Active Input Method Manager object
-    //
-    if (!nsToolkit::gAIMMCount)
-      ::CoInitialize(NULL);
-
-    if(!nsToolkit::gAIMMApp)
-      ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
-
-    nsToolkit::gAIMMCount++;
 
 #if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
     nsToolkit::Startup(GetModuleHandle(NULL));
@@ -547,17 +217,6 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit()
 {
     NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
-
-    nsToolkit::gAIMMCount--;
-
-    if (!nsToolkit::gAIMMCount) {
-        if(nsToolkit::gAIMMApp) {
-            nsToolkit::gAIMMApp->Deactivate();
-            nsToolkit::gAIMMApp->Release();
-            nsToolkit::gAIMMApp = NULL;
-        }
-        ::CoUninitialize();
-    }
 
     // Destroy the Dispatch Window
     ::DestroyWindow(mDispatchWnd);
@@ -592,41 +251,6 @@ nsToolkit::~nsToolkit()
 void
 nsToolkit::Startup(HMODULE hModule)
 {
-#ifndef WINCE
-    if (nsToolkit::mIsNT)
-#endif // #ifndef WINCE
-
-    {
-      // For Windows 9x base OS nsFoo is already pointing to A functions
-      // However on NT base OS we should point them to respective W functions
-      nsToolkit::mDefWindowProc = DefWindowProcW;
-      nsToolkit::mCallWindowProc = CallWindowProcW;
-      nsToolkit::mSetWindowLong = SetWindowLongW;
-      nsToolkit::mGetWindowLong = GetWindowLongW; 
-      nsToolkit::mSendMessage = SendMessageW;
-      nsToolkit::mDispatchMessage = DispatchMessageW;
-      nsToolkit::mGetMessage = GetMessageW;
-      nsToolkit::mPeekMessage = PeekMessageW;
-      nsToolkit::mGetOpenFileName = GetOpenFileNameW;
-      nsToolkit::mGetSaveFileName = GetSaveFileNameW;
-      nsToolkit::mGetClassName = GetClassNameW;
-      nsToolkit::mCreateWindowEx = CreateWindowExW;
-      nsToolkit::mRegisterClass = RegisterClassW; 
-      nsToolkit::mUnregisterClass = UnregisterClassW; 
-      // Explicit call of SHxxxW in Win95 makes moz fails to run (170969)
-      // we use GetProcAddress() to hide
-#ifndef WINCE
-      nsToolkit::mShell32Module = ::LoadLibrary("Shell32.dll");
-      if (nsToolkit::mShell32Module) {
-        nsToolkit::mSHGetPathFromIDList = (NS_SHGetPathFromIDList)GetProcAddress(nsToolkit::mShell32Module, "SHGetPathFromIDListW"); 
-        if (!nsToolkit::mSHGetPathFromIDList)
-          nsToolkit::mSHGetPathFromIDList = &nsSHGetPathFromIDList;
-        nsToolkit::mSHBrowseForFolder = (NS_SHBrowseForFolder)GetProcAddress(nsToolkit::mShell32Module, "SHBrowseForFolderW"); 
-        if (!nsToolkit::mSHBrowseForFolder)
-          nsToolkit::mSHBrowseForFolder = &nsSHBrowseForFolder;
-      }
-#endif // #ifndef WINCE
-    }
     nsToolkit::mDllInstance = hModule;
 
     //
@@ -643,18 +267,15 @@ nsToolkit::Startup(HMODULE hModule)
     wc.hbrBackground    = NULL;
     wc.lpszMenuName     = NULL;
     wc.lpszClassName    = L"nsToolkitClass";
-    VERIFY(nsToolkit::mRegisterClass(&wc));
+    VERIFY(::RegisterClassW(&wc));
 }
 
 
 void
 nsToolkit::Shutdown()
 {
-    if (nsToolkit::mShell32Module)
-      ::FreeLibrary(nsToolkit::mShell32Module);
-
     //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
-    nsToolkit::mUnregisterClass(L"nsToolkitClass", nsToolkit::mDllInstance);
+    ::UnregisterClassW(L"nsToolkitClass", nsToolkit::mDllInstance);
 }
 
 nsIEventQueue* 
@@ -748,9 +369,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     // Store the thread ID of the thread containing the message pump.  
     // If no thread is provided create one
     if (NULL != aThread) {
-        // Start Active Input Method Manager on this thread
-        if(nsToolkit::gAIMMApp)
-            nsToolkit::gAIMMApp->Activate(TRUE);
         CreateInternalWindow(aThread);
     } else {
         // create a thread where the message pump will run
@@ -805,12 +423,7 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     }
 
-    if(nsToolkit::gAIMMApp) {
-        LRESULT lResult;
-        if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
-            return lResult;
-    }
-    return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
+    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 
@@ -873,9 +486,7 @@ PRBool nsToolkit::InitVersionInfo()
   {
     isInitialized = PR_TRUE;
 
-#ifdef WINCE
-    nsToolkit::mUseImeApiW  = PR_TRUE;
-#else
+#ifndef WINCE
     OSVERSIONINFOEX osversion;
     BOOL osVersionInfoEx;
     
@@ -883,30 +494,12 @@ PRBool nsToolkit::InitVersionInfo()
     osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 
     if (!(osVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osversion))) {
-      // if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO.
-      osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-      if (!GetVersionEx((OSVERSIONINFO *)&osversion)) {
-        // maybe we are running on very old Windows OS. Assign FALSE.
-        nsToolkit::mUseImeApiW = PR_FALSE; 
-        return PR_TRUE;
-      }
+      // Win2k or later should support OSVERSIONINFOEX.
+      return PR_FALSE;
     }
 
-    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
-
-    if (nsToolkit::mIsNT)
-    {
-      // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
-      nsToolkit::mUseImeApiW = PR_TRUE;
-      // XXX Hack for stopping the crash (125573)
-      if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
-        nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
-        // "Microsoft Windows 2000 " or "Microsoft Windows XP "
-        if (936 == ::GetACP())  {  // Chinese (PRC, Singapore)
-          nsToolkit::mUseImeApiW = PR_FALSE;
-          nsToolkit::mW2KXP_CP936 = PR_TRUE;
-        }
-      }
+    if (osversion.dwMajorVersion == 5)  { 
+      nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
     }
 #endif
   }
@@ -1035,287 +628,5 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     mtrailer->DestroyTimer();
     mtrailer->mMouseTrailerWindow = nsnull;
   }
-}
-
-//-------------------------------------------------------------------------
-//
-//  nsIMM class(Native IMM wrapper)
-//
-//-------------------------------------------------------------------------
-nsIMM&
-nsIMM::LoadModule()
-{
-  static nsIMM gIMM;
-  return gIMM;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
-{
-#ifndef WINCE
-  mInstance=::LoadLibrary(aModuleName);
-
-  if (mInstance) {
-    mGetCompositionStringA =
-      (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringA");
-    NS_ASSERTION(mGetCompositionStringA != NULL,
-                 "nsIMM.ImmGetCompositionStringA failed.");
-
-    mGetCompositionStringW =
-      (GetCompStrPtr)GetProcAddress(mInstance, "ImmGetCompositionStringW");
-    NS_ASSERTION(mGetCompositionStringW != NULL,
-                 "nsIMM.ImmGetCompositionStringW failed.");
-
-    mGetContext =
-      (GetContextPtr)GetProcAddress(mInstance, "ImmGetContext");
-    NS_ASSERTION(mGetContext != NULL,
-                 "nsIMM.ImmGetContext failed.");
-
-    mReleaseContext =
-      (RelContextPtr)GetProcAddress(mInstance, "ImmReleaseContext");
-    NS_ASSERTION(mReleaseContext != NULL,
-                 "nsIMM.ImmReleaseContext failed.");
-
-    mNotifyIME =
-      (NotifyIMEPtr)GetProcAddress(mInstance, "ImmNotifyIME");
-    NS_ASSERTION(mNotifyIME != NULL,
-                 "nsIMM.ImmNotifyIME failed.");
-
-    mSetCandiateWindow =
-      (SetCandWindowPtr)GetProcAddress(mInstance, "ImmSetCandidateWindow");
-    NS_ASSERTION(mSetCandiateWindow != NULL,
-                 "nsIMM.ImmSetCandidateWindow failed.");
-
-    mGetCompositionWindow =
-      (GetCompWindowPtr)GetProcAddress(mInstance, "ImmGetCompositionWindow");
-    NS_ASSERTION(mGetCompositionWindow != NULL,
-                 "nsIMM.ImmGetCompositionWindow failed.");
-
-    mSetCompositionWindow =
-      (SetCompWindowPtr)GetProcAddress(mInstance, "ImmSetCompositionWindow");
-    NS_ASSERTION(mSetCompositionWindow != NULL,
-                 "nsIMM.ImmSetCompositionWindow failed.");
-
-    mGetProperty =
-      (GetPropertyPtr)GetProcAddress(mInstance, "ImmGetProperty");
-    NS_ASSERTION(mGetProperty != NULL,
-                 "nsIMM.ImmGetProperty failed.");
-
-    mGetDefaultIMEWnd =
-      (GetDefaultIMEWndPtr)GetProcAddress(mInstance, "ImmGetDefaultIMEWnd");
-    NS_ASSERTION(mGetDefaultIMEWnd != NULL,
-                 "nsIMM.ImmGetDefaultIMEWnd failed.");
-
-    mGetOpenStatus =
-      (GetOpenStatusPtr)GetProcAddress(mInstance,"ImmGetOpenStatus");
-    NS_ASSERTION(mGetOpenStatus != NULL,
-                 "nsIMM.ImmGetOpenStatus failed.");
-
-    mSetOpenStatus =
-      (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus");
-    NS_ASSERTION(mSetOpenStatus != NULL,
-                 "nsIMM.ImmSetOpenStatus failed.");
-
-    mAssociateContext =
-      (AssociateContextPtr)GetProcAddress(mInstance,"ImmAssociateContext");
-    NS_ASSERTION(mAssociateContext != NULL,
-                 "nsIMM.ImmAssociateContext failed.");
-  } else {
-    mGetCompositionStringA=NULL;
-    mGetCompositionStringW=NULL;
-    mGetContext=NULL;
-    mReleaseContext=NULL;
-    mNotifyIME=NULL;
-    mSetCandiateWindow=NULL;
-    mGetCompositionWindow=NULL;
-    mSetCompositionWindow=NULL;
-    mGetProperty=NULL;
-    mGetDefaultIMEWnd=NULL;
-    mGetOpenStatus=NULL;
-    mSetOpenStatus=NULL;
-    mAssociateContext=NULL;
-  }
-
-#else // WinCE
-  mInstance=NULL;
-
-  mGetCompositionStringA=(GetCompStrPtr)ImmGetCompositionStringW;
-  mGetCompositionStringW=(GetCompStrPtr)ImmGetCompositionStringW;
-  mGetContext=(GetContextPtr)ImmGetContext;
-  mReleaseContext=(RelContextPtr)ImmReleaseContext;
-  mNotifyIME=(NotifyIMEPtr)ImmNotifyIME;
-  mSetCandiateWindow=(SetCandWindowPtr)ImmSetCandidateWindow;
-  mGetCompositionWindow=(GetCompWindowPtr)ImmGetCompositionWindow;
-  mSetCompositionWindow=(SetCompWindowPtr)ImmSetCompositionWindow;
-  mGetProperty=(GetPropertyPtr)ImmGetProperty;
-  mGetDefaultIMEWnd=(GetDefaultIMEWndPtr)ImmGetDefaultIMEWnd;
-  mGetOpenStatus=(GetOpenStatusPtr)ImmGetOpenStatus;
-  mSetOpenStatus=(SetOpenStatusPtr)ImmSetOpenStatus;
-  mAssociateContext=(AssociateContextPtr)ImmAssociateContext;
-#endif
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-nsIMM::~nsIMM()
-{
-  if(mInstance)
-    ::FreeLibrary(mInstance);
-
-  mGetCompositionStringA=NULL;
-  mGetCompositionStringW=NULL;
-  mGetContext=NULL;
-  mReleaseContext=NULL;
-  mNotifyIME=NULL;
-  mSetCandiateWindow=NULL;
-  mGetCompositionWindow=NULL;
-  mSetCompositionWindow=NULL;
-  mGetProperty=NULL;
-  mGetDefaultIMEWnd=NULL;
-  mGetOpenStatus=NULL;
-  mSetOpenStatus=NULL;
-  mAssociateContext=NULL;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetCompositionStringA(HIMC aIMC, DWORD aIndex,
-                             LPVOID aBuf, DWORD aBufLen)
-{
-  return (mGetCompositionStringA) ?
-    mGetCompositionStringA(aIMC, aIndex, aBuf, aBufLen) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetCompositionStringW(HIMC aIMC, DWORD aIndex,
-                             LPVOID aBuf, DWORD aBufLen)
-{
-  return (mGetCompositionStringW) ?
-    mGetCompositionStringW(aIMC, aIndex, aBuf, aBufLen) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetContext(HWND aWnd)
-{
-  return (mGetContext) ? mGetContext(aWnd) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::ReleaseContext(HWND aWnd, HIMC aIMC)
-{
-  return (mReleaseContext) ? mReleaseContext(aWnd, aIMC) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::NotifyIME(HIMC aIMC, DWORD aAction, DWORD aIndex, DWORD aValue)
-{
-  return (mNotifyIME) ? mNotifyIME(aIMC, aAction, aIndex, aValue) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::SetCandidateWindow(HIMC aIMC, LPCANDIDATEFORM aCandidateForm)
-{
-  return (mSetCandiateWindow) ?
-    mSetCandiateWindow(aIMC, aCandidateForm) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::SetCompositionWindow(HIMC aIMC, LPCOMPOSITIONFORM aCompositionForm)
-{
-  return (mSetCompositionWindow) ?
-    mSetCompositionWindow(aIMC, aCompositionForm) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetCompositionWindow(HIMC aIMC, LPCOMPOSITIONFORM aCompositionForm)
-{
-  return (mGetCompositionWindow) ?
-    mGetCompositionWindow(aIMC, aCompositionForm) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetProperty(HKL aKL, DWORD aIndex)
-{
-  return (mGetProperty) ? mGetProperty(aKL, aIndex) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-LONG
-nsIMM::GetDefaultIMEWnd(HWND aWnd)
-{
-  return (mGetDefaultIMEWnd) ? mGetDefaultIMEWnd(aWnd) : 0L;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-BOOL
-nsIMM::GetOpenStatus(HIMC aIMC)
-{
-  return (mGetOpenStatus) ? mGetOpenStatus(aIMC) : FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-BOOL
-nsIMM::SetOpenStatus(HIMC aIMC, BOOL aStatus)
-{
-  return (mSetOpenStatus) ? mSetOpenStatus(aIMC, aStatus) : FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-HIMC
-nsIMM::AssociateContext(HWND aWnd, HIMC aIMC)
-{
-  return (mAssociateContext) ? mAssociateContext(aWnd, aIMC) : NULL;
 }
 

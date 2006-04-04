@@ -764,16 +764,9 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     SetDevMode(pDevMode); // cache the pointer and takes responsibility for the memory
 
     SetDeviceName(NS_CONST_CAST(char*, nativeName.get()));
-  
-    // The driver should be NULL for Win95/Win98
-    OSVERSIONINFO os;
-    os.dwOSVersionInfoSize = sizeof(os);
-    ::GetVersionEx(&os);
-    if (VER_PLATFORM_WIN32_NT == os.dwPlatformId) {
-      SetDriverName("WINSPOOL");
-    } else {
-      SetDriverName(NULL);
-    }
+
+    SetDriverName("WINSPOOL");
+
     ::ClosePrinter(hPrinter);
     rv = NS_OK;
   } else {

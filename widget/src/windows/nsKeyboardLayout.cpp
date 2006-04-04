@@ -41,9 +41,9 @@
 #include "nsToolkit.h"
 #include "nsQuickSort.h"
 
+#include <winable.h>
 
 #ifndef WINCE
-static PRBool LangIDToCP (WORD aLangID, UINT* aCodePage);
 
 struct DeadKeyEntry
 {
@@ -85,36 +85,6 @@ public:
 
   PRUint16 GetCompositeChar (PRUint16 aBaseChar) const;
 };
-
-
-
-static BOOL WINAPI DummyBlockInput (BOOL)
-{
-  return TRUE;
-}
-
-static BOOL WINAPI BlockInputProc (BOOL fBlockIt)
-{
-  typedef BOOL WINAPI BlockInputProcType (BOOL fBlockIt);
-  static BlockInputProcType* proc = nsnull;
-  
-  if (proc == nsnull)
-  {
-    HMODULE user32 = ::GetModuleHandle ("user32.dll");
-
-    if (user32)
-      proc = NS_REINTERPRET_CAST (BlockInputProcType*, ::GetProcAddress (user32, "BlockInput"));
-    
-    if (!proc)
-      proc = &DummyBlockInput;
-
-  #ifdef DEBUG
-    proc = &DummyBlockInput;    // To be able to debug program we should not block keyboard/mouse input!
-  #endif
-  }
-
-  return proc (fBlockIt);
-}
 
 
 
@@ -355,11 +325,10 @@ void KeyboardLayout::LoadLayout ()
   mActiveDeadKey = -1;
   mNumOfChars = 0;
   mKeyboardLayout = ::GetKeyboardLayout (0);
-  LangIDToCP ((WORD)mKeyboardLayout, &mCodePage);
 
   ReleaseDeadKeyTables ();
 
-  PRBool keyboardInputAlreadyBlocked = !BlockInputProc (PR_TRUE);
+  PRBool keyboardInputAlreadyBlocked = !::BlockInput (PR_TRUE);
 
   // For each shift state gather all printable characters that are produced
   // for normal case when no any dead-key is active.
@@ -377,13 +346,9 @@ void KeyboardLayout::LoadLayout ()
       NS_ASSERTION (vki < NS_ARRAY_LENGTH (mVirtualKeys), "invalid index"); 
 
       PRUint16 uniChars [5];
-      WORD ascii [2];     // On Win9x ToAsciiEx returns WORD per character, on Win2k BYTE per character.
       PRInt32 rv;
 
-      if (nsToolkit::mIsNT)
-        rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)uniChars, NS_ARRAY_LENGTH (uniChars), 0);
-      else
-        rv = ::ToAsciiEx (virtualKey, 0, kbdState, ascii, 0, mKeyboardLayout);
+      rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)uniChars, NS_ARRAY_LENGTH (uniChars), 0);
 
       if (rv < 0)   // dead-key
       {      
@@ -392,13 +357,7 @@ void KeyboardLayout::LoadLayout ()
         // Repeat dead-key to deactivate it and get its character representation.
         PRUint16 deadChar [2];
 
-        if (nsToolkit::mIsNT)
-          rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)deadChar, NS_ARRAY_LENGTH (deadChar), 0);
-        else
-        {
-          rv = ::ToAsciiEx (virtualKey, 0, kbdState, ascii, 0, mKeyboardLayout);
-          ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)ascii, 1, (WCHAR*)deadChar, 1);
-        }
+        rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)deadChar, NS_ARRAY_LENGTH (deadChar), 0);
 
         NS_ASSERTION (rv == 2, "Expecting twice repeated dead-key character");
 
@@ -407,9 +366,6 @@ void KeyboardLayout::LoadLayout ()
       {
         if (rv == 1)  // dead-key can pair only with exactly one base character.
           shiftStatesWithBaseChars |= 1 << shiftState;
-
-        if (!nsToolkit::mIsNT)
-          rv = ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)ascii, rv, (WCHAR*)uniChars, NS_ARRAY_LENGTH (uniChars));
 
         mVirtualKeys [vki].SetNormalChars (shiftState, uniChars, rv);
       }
@@ -448,7 +404,7 @@ void KeyboardLayout::LoadLayout ()
   }
 
   if (!keyboardInputAlreadyBlocked)
-    BlockInputProc (PR_FALSE);
+    ::BlockInput (PR_FALSE);
 #endif
 }
 
@@ -591,10 +547,7 @@ PRBool KeyboardLayout::EnsureDeadKeyActive (PRBool aIsActive, PRUint8 aDeadKey, 
   {
     PRUint16 dummyChars [5];
 
-    if (nsToolkit::mIsNT)
-      rv = ::ToUnicode (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, (LPWSTR)dummyChars, NS_ARRAY_LENGTH (dummyChars), 0);
-    else
-      rv = ::ToAsciiEx (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, dummyChars, 0, mKeyboardLayout);
+    rv = ::ToUnicode (aDeadKey, 0, (PBYTE)aDeadKeyKbdState, (LPWSTR)dummyChars, NS_ARRAY_LENGTH (dummyChars), 0);
     // returned values:
     // <0 - Dead key state is active. The keyboard driver will wait for next character.
     //  1 - Previous pressed key was a valid base character that produced exactly one composite character.
@@ -663,13 +616,9 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
         // Depending on the character the followed the dead-key, the keyboard driver can produce
         // one composite character, or a dead-key character followed by a second character.
         PRUint16 compositeChars [5];
-        WORD ascii [2];     // On Win9x ToAsciiEx returns WORD per character, on Win2k BYTE per character.
         PRInt32 rv;
 
-        if (nsToolkit::mIsNT)
-          rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)compositeChars, NS_ARRAY_LENGTH (compositeChars), 0);
-        else
-          rv = ::ToAsciiEx (virtualKey, 0, kbdState, ascii, 0, mKeyboardLayout);
+        rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)compositeChars, NS_ARRAY_LENGTH (compositeChars), 0);
 
         switch (rv)
         {
@@ -683,15 +632,7 @@ PRUint32 KeyboardLayout::GetDeadKeyCombinations (PRUint8 aDeadKey, const PBYTE a
             // character one more time to determine the base character.
             PRUint16 baseChars [5];
 
-            if (nsToolkit::mIsNT)
-              rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)baseChars, NS_ARRAY_LENGTH (baseChars), 0);
-            else
-            {
-              ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)ascii, 1, (WCHAR*)compositeChars, NS_ARRAY_LENGTH (compositeChars));
-
-              rv = ::ToAsciiEx (virtualKey, 0, kbdState, ascii, 0, mKeyboardLayout);
-              rv = ::MultiByteToWideChar (mCodePage, 0, (LPCSTR)ascii, rv, (WCHAR*)baseChars, NS_ARRAY_LENGTH (baseChars));
-            }
+            rv = ::ToUnicode (virtualKey, 0, kbdState, (LPWSTR)baseChars, NS_ARRAY_LENGTH (baseChars), 0);
 
             NS_ASSERTION (rv == 1, "One base character expected");
 
@@ -738,29 +679,4 @@ PRUint16 DeadKeyTable::GetCompositeChar (PRUint16 aBaseChar) const
   return 0;
 }
 
-PRBool LangIDToCP (WORD aLangID, UINT* aCodePage)
-{
-  DWORD localeid = MAKELCID (aLangID, SORT_DEFAULT);
-  int numchar = ::GetLocaleInfo (localeid, LOCALE_IDEFAULTANSICODEPAGE, NULL, 0);
-  char cp_on_stack [32];
-  char* cp_name;
-
-  if (numchar > 32)
-    cp_name  = new char [numchar];
-  else
-    cp_name = cp_on_stack;
-
-  if (cp_name)
-  {
-    ::GetLocaleInfo (localeid, LOCALE_IDEFAULTANSICODEPAGE, cp_name, numchar);
-    *aCodePage = atoi (cp_name);
-    if (cp_name != cp_on_stack)
-      delete [] cp_name;
-    return PR_TRUE;
-  } else
-  {
-    *aCodePage = CP_ACP;
-    return PR_FALSE;
-  }
-}
 #endif

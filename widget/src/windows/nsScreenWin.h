@@ -53,11 +53,6 @@ public:
   NS_DECL_NSISCREEN
 
 private:
-  
-    // function pointers for multi-monitor API system calls that we use. Not
-    // valid unless |mHasMultiMonitorAPIs| is true
-  PRBool mHasMultiMonitorAPIs;
-  FARPROC mGetMonitorInfoProc ;
 
   void* mScreen;                    // a |HMONITOR|, can't use this type in header file though.
 };

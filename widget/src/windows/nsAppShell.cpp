@@ -87,8 +87,8 @@ BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
 {
   MSG msg1, msg2, *lpMsg;
   BOOL b1, b2;
-  b1 = nsToolkit::mPeekMessage(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
-  b2 = nsToolkit::mPeekMessage(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
+  b1 = ::PeekMessageW(&msg1, NULL, WM_KEYFIRST, WM_IME_KEYLAST, PM_NOREMOVE);
+  b2 = ::PeekMessageW(&msg2, NULL, WM_IME_SETCONTEXT, WM_IME_KEYUP, PM_NOREMOVE);
   if (b1 || b2) {
     if (b1 && b2) {
       if (msg1.time < msg2.time)
@@ -99,7 +99,7 @@ BOOL PeekKeyAndIMEMessage(LPMSG msg, HWND hwnd)
       lpMsg = &msg1;
     else
       lpMsg = &msg2;
-    return nsToolkit::mPeekMessage(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
+    return ::PeekMessageW(msg, hwnd, lpMsg->message, lpMsg->message, PM_REMOVE);
   }
 
   return false;
@@ -124,13 +124,13 @@ NS_METHOD nsAppShell::Run(void)
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
      if (PeekKeyAndIMEMessage(&msg, NULL) ||
-         nsToolkit::mPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-         nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+         ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+         ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       keepGoing = (msg.message != WM_QUIT);
 
       if (keepGoing != 0) {
         TranslateMessage(&msg);
-        nsToolkit::mDispatchMessage(&msg);
+        ::DispatchMessageW(&msg);
       }
     } else {
 
@@ -140,7 +140,7 @@ NS_METHOD nsAppShell::Run(void)
         do {
           timerManager->FireNextIdleTimer();
           timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+        } while (hasTimers && !::PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE));
       } else {
 
         if (!gKeepGoing) {
@@ -185,8 +185,8 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
      if (PeekKeyAndIMEMessage(&msg, NULL) ||
-        nsToolkit::mPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        ::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
       gotMessage = true;
     } else {
       PRBool hasTimers;
@@ -195,7 +195,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
         do {
           timerManager->FireNextIdleTimer();
           timerManager->HasIdleTimers(&hasTimers);
-        } while (hasTimers && !nsToolkit::mPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+        } while (hasTimers && !::PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE));
       } else {
         // Block and wait for any posted application message
         ::WaitMessage();
@@ -217,7 +217,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  nsToolkit::mDispatchMessage((MSG *)aEvent);
+  ::DispatchMessageW((MSG *)aEvent);
   return NS_OK;
 }
 

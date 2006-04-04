@@ -314,14 +314,14 @@ protected:
   BOOL                    OnIMECompositionFull();
   BOOL                    OnIMEEndComposition();
   BOOL                    OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult);
-  BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
+  BOOL                    OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult);
   BOOL                    OnIMESelect(BOOL  aSelected, WORD aLangID);
   BOOL                    OnIMESetContext(BOOL aActive, LPARAM& aISC);
   BOOL                    OnIMEStartComposition();
-  BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
-  BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
+  BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult);
+  BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult);
 
-  void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode, nsCString* aStrAnsi);
+  void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode);
   void                    ResolveIMECaretPos(nsWindow* aClient,
                                              nsRect&   aEventResult,
                                              nsRect&   aResult);
@@ -397,21 +397,10 @@ protected:
   HBRUSH        mBrush;
 
 #ifdef MOZ_XUL
-  union
-  {
-    // Windows 2000 and newer use layered windows to support full 256 level alpha translucency
-    struct
-    {
-      HDC       mMemoryDC;
-      HBITMAP   mMemoryBitmap;
-      PRUint8*  mMemoryBits;
-    } w2k;
-    // Windows NT and 9x use complex shaped window regions to support 1-bit transparency masks
-    struct
-    {
-      PRPackedBool mPerformingSetWindowRgn;
-    } w9x;
-  };
+  // use layered windows to support full 256 level alpha translucency
+  HDC           mMemoryDC;
+  HBITMAP       mMemoryBitmap;
+  PRUint8*      mMemoryBits;
   PRUint8*      mAlphaMask;
   PRPackedBool  mIsTranslucent;
   PRPackedBool  mIsTopTranslucent;     // Topmost window itself or any of it's child windows has tranlucency enabled
@@ -448,7 +437,6 @@ protected:
   // To enable/disable IME
   HIMC          mOldIMC;
 
-  static UINT   gCurrentKeyboardCP;
   static HKL    gKeyboardLayout;
   static PRBool gSwitchKeyboardLayout;
 
@@ -477,12 +465,7 @@ protected:
   static BOOL   sIsPopupClassRegistered;
 
   HDWP mDeferredPositioner;
-  static UINT   uMSH_MOUSEWHEEL;
-
-  // IME special message
-  static UINT   uWM_MSIME_RECONVERT; // reconvert message for MSIME
   static UINT   uWM_MSIME_MOUSE;     // mouse message for MSIME
-  static UINT   uWM_ATOK_RECONVERT;  // reconvert message for ATOK
 
   // Heap dump
   static UINT   uWM_HEAP_DUMP;       // Dump heap to a file
