@@ -57,6 +57,9 @@ LIBXUL_LIBRARY	= 1
 PACKAGE_FILE = pipnss.pkg
 
 CPPSRCS = 				\
+	nsPSMBackgroundThread.cpp       \
+	nsSSLThread.cpp                 \
+	nsCertVerificationThread.cpp    \
 	nsCipherInfo.cpp \
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\
