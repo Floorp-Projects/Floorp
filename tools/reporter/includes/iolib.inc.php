@@ -160,4 +160,26 @@ function strip_all_tags($input){
     return $input;
 }
 
+function myErrorHandler($errno, $errstr, $errfile, $errline) {
+    switch ($errno) {
+        case E_USER_ERROR:
+	    $content = initializeTemplate();
+            $content->assign('title', "Error");
+	    $content->assign('message', $errstr);
+	    displayPage($content, 'error', 'error.tpl');
+            exit(1);
+        break;
+        case E_USER_WARNING:
+            echo "<b>My WARNING</b> [$errno] $errstr<br />\n";
+            break;
+        case E_USER_NOTICE:
+            echo "<b>My NOTICE</b> [$errno] $errstr<br />\n";
+            break;
+        default:
+//            echo "Unkown error type: [$errno] $errstr<br />\n";
+            break;
+    }
+}
+$old_error_handler = set_error_handler("myErrorHandler");
+
 ?>

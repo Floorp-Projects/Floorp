@@ -8,7 +8,9 @@ function NewDBConnection(){
     if ($config['debug']){
         $db->debug = true;
     }
-    if (!$db) die("Connection failed");
+    if (!$db) {
+        trigger_error("Database server unavailable.", E_USER_ERROR);
+    }
     return $db;
 }
 ?>
