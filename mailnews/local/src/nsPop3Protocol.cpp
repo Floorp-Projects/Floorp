@@ -1302,7 +1302,7 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
     }
     else
     // see RFC 2449, chapter 6.3
-    if (!PL_strncasecmp(line, "SASL", 4))
+    if (!PL_strncasecmp(line, "SASL", 4) && strlen(line) > 6)
     {
         nsCAutoString responseLine;
         responseLine.Assign(line + 5);
