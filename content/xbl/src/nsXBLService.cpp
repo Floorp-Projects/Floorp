@@ -103,14 +103,6 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
   return PR_FALSE;
 }
 
-static PRBool IsResourceURI(nsIURI* aURI)
-{
-  PRBool isResource = PR_FALSE;
-  if (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) && isResource)
-      return PR_TRUE; 
-  return PR_FALSE;
-}
-
 // Individual binding requests.
 class nsXBLBindingRequest
 {
@@ -1154,11 +1146,9 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aBoundElement)
     ni = aBoundElement->NodeInfo();
 
-  if (ni && (ni->Equals(nsXULAtoms::scrollbar, kNameSpaceID_XUL) ||
-             ni->Equals(nsXULAtoms::thumb, kNameSpaceID_XUL) || 
-             (ni->Equals(nsHTMLAtoms::select) &&
-              aBoundElement->IsContentOfType(nsIContent::eHTML))) ||
-      IsResourceURI(aDocumentURI))
+  // We really shouldn't have to force a sync load for anything here... could
+  // we get away with not doing that?  Not sure.
+  if (IsChromeOrResourceURI(aDocumentURI))
     aForceSyncLoad = PR_TRUE;
 
   if(!aForceSyncLoad) {
