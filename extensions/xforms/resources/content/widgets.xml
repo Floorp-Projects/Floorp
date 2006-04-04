@@ -47,13 +47,19 @@
 
   <!-- CALENDAR BASE
     The widget assumes successor widgets have following interface:
-      refresh(aFocusedDay) - update days, it is called when year or month are changed
-      refreshCurrentDate(aCurrentDate, aFocusedDay) - select current date
+      refresh(aCurrentDay, aDaysRefreshOnly) - update UI, the method is called
+          when current date is changed.
+        @param aCurrentDay - day of current date
+        @param aDaysRefreshOnly - if true then day of current date will be
+          updated only.
+      focus() - set focus on the widget.
+      currentDay - return day of current date.
   -->
   <binding id="calendar-base">
     <implementation>
-
     <!-- interface -->
+
+      <!-- Set/get readonly state -->
       <property name="readonly">
         <getter>
           return this.hasAttribute("readonly");
@@ -66,22 +72,24 @@
         </setter>
       </property>
 
-      <property name="value"
-                onget="return this.currentDate ? this.currentDate.toLocaleFormat('%Y-%m-%d') : null;"
-                onset="this.currentDate = new Date(val.replace(/-/g, '/'));"/>
+    <!-- The following interface methods serve to manage current date (the date
+      you see) -->
 
+      <!-- Return year of current date -->
       <property name="year"
                 onget="return parseInt(this.getAttribute('year'));"
                 onset="this.setAttribute('year', val); this.refresh();"/>
 
+      <!-- Return month of current date -->
       <property name="month"
         onget="return parseInt(this.getAttribute('month'));"
         onset="this.setDate(this.year, val);"/>
 
+      <!-- Set current date-->
       <method name="setDate">
         <parameter name="aYear"/>
         <parameter name="aMonth"/>
-        <parameter name="aFocusedDay"/>
+        <parameter name="aDay"/>
         <body>
         <![CDATA[
           month = parseInt(aMonth) - 1;
@@ -95,43 +103,63 @@
 
           this.setAttribute("year", aYear + deltayear);
           this.setAttribute("month", month + 1);
-          this.refresh(aFocusedDay);
+          this.refresh(aDay);
         ]]>
         </body>
       </method>
 
-      <property name="currentDay" readonly="true"
-                onget="return this._currentDate ? this._currentDate.getDate() : null;"/>
-
-      <property name="currentMonth" readonly="true"
-                onget="return this._currentDate ? this._currentDate.getMonth() + 1 : null;"/>
-
-      <property name="currentYear" readonly="true"
-                onget="return this._currentDate ? this._currentDate.getFullYear() : null;"/>
-
-      <property name="currentDate"
-                onget="return this._currentDate;"
-                onset="this.setCurrentDate(val);"/>
-
-      <method name="setCurrentDate">
-        <parameter name="aCurrentDate"/>
-        <parameter name="aFocusedDay"/>
+      <!-- Return current date -->
+      <method name="getDate">
         <body>
-          if (!aCurrentDate)
-            aCurrentDate = new Date();
-
-          this._currentDate = aCurrentDate;
-          if (!this.isCurrentDate())
-            this.setDate(this.currentYear, this.currentMonth, aFocusedDay);
-          else
-            this.refreshCurrentDate(this._currentDate.getDate(), aFocusedDay);
+          if (this.focusedDay == -1)
+            return null;
+          return new Date(this.year, this.month - 1, this.currentDay);
         </body>
       </method>
 
-      <method name="isCurrentDate">
+    <!-- The following methods serve to manage selected date -->
+
+      <!-- Return/set selected date as string of format 'yyyy-MM-dd' -->
+      <property name="value"
+                onget="return this.selectedDate ? this.selectedDate.toLocaleFormat('%Y-%m-%d') : null;"
+                onset="this.selectedDate = new Date(val.replace(/-/g, '/'));"/>
+
+      <!-- Return day of selected date -->
+      <property name="selectedDay" readonly="true"
+                onget="return this._selectedDate ? this._selectedDate.getDate() : null;"/>
+
+      <!-- Return month of selected date -->
+      <property name="selectedMonth" readonly="true"
+                onget="return this._selectedDate ? this._selectedDate.getMonth() + 1 : null;"/>
+
+      <!-- Return year of selected date -->
+      <property name="selectedYear" readonly="true"
+                onget="return this._selectedDate ? this._selectedDate.getFullYear() : null;"/>
+
+      <!-- Set/return selected date -->
+      <property name="selectedDate">
+        <getter>
+          return this._selectedDate;
+        </getter>
+        <setter>
+          // if passed date is empty or invalid then we use today date.
+          if (!val || String(val) == this.invalidDate)
+            val = new Date();
+
+          this._selectedDate = val;
+          if (!this.isSelectedDate())
+            this.setDate(this.selectedYear, this.selectedMonth, this.selectedDay);
+          else
+            this.refresh(this.selectedDay, true);
+        </setter>
+      </property>
+
+      <!-- Return true if year and month of current date are the same like for
+        selected date -->
+      <method name="isSelectedDate">
         <body>
         <![CDATA[
-          if (this.currentYear == this.year && this.currentMonth == this.month)
+          if (this.selectedYear == this.year && this.selectedMonth == this.month)
             return true;
           return false;
         ]]>
@@ -186,6 +214,7 @@
         </body>
       </method>
 
+      <!-- Fire 'change' event -->
       <method name="fireChangeEvent">
         <body>
           var event = this.ownerDocument.createEvent("Events");
@@ -193,8 +222,8 @@
           this.dispatchEvent(event);
         </body>
       </method>
-    <!-- private -->
 
+    <!-- private -->
       <method name="getDaysCount">
         <parameter name="aMonth"/>
         <parameter name="aYear"/>
@@ -216,7 +245,11 @@
         </body>
       </method>
 
-      <field name="_currentDate">null</field>
+      <!-- Selected date -->
+      <field name="_selectedDate">null</field>
+
+      <!-- String presentation of invalid javascript date -->
+      <field name="invalidDate">String(new Date(undefined))</field>
     </implementation>
   </binding>
 </bindings>

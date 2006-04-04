@@ -215,7 +215,7 @@ html|span[mozType|calendar] html|td.currentMonth:hover{
 }
 
 input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|div[anonid="picker"] html|td[tabindex="0"],
-html|span[mozType|calendar] html|td[current] {
+html|span[mozType|calendar] html|td[selected] {
   border: 1px solid black;
 }
 
