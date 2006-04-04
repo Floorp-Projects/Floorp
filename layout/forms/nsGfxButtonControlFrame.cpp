@@ -232,23 +232,23 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsXPIDLString& aString)
 nsresult
 nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
 {
-  // Get the text from the "value" property on our content.
-  // If it comes out empty, set it to a default value (localized)
+  // Get the text from the "value" property on our content if there is
+  // one; otherwise set it to a default value (localized).
+  nsresult rv;
   nsCOMPtr<nsIDOMHTMLInputElement> elt = do_QueryInterface(mContent);
-  nsresult rv = NS_OK;
-  if (elt) {
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::value) && elt) {
     rv = elt->GetValue(aLabel);
-  }
-  if (NS_FAILED(rv) || aLabel.IsEmpty()) {
+  } else {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
     // it might not be the string "Reset", "Submit Query", or "Browse..."
     rv = GetDefaultLabel(aLabel);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-    // Compress whitespace out of label if needed.
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Compress whitespace out of label if needed.
   if (!GetStyleText()->WhiteSpaceIsSignificant()) {
     aLabel.CompressWhitespace();
   } else if (aLabel.Length() > 2 && aLabel.First() == ' ' &&
