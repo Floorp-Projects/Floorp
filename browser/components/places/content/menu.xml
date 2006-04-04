@@ -391,6 +391,9 @@
       <field name="excludeItems">false</field>
       
       <!-- nsIPlacesView -->
+      <field name="excludeQueries">false</field>
+      
+      <!-- nsIPlacesView -->
       <field name="expandQueries">false</field>
       
       <!-- nsIPlacesView -->

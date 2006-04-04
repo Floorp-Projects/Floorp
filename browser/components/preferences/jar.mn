@@ -30,5 +30,7 @@ browser.jar:
 *   content/browser/preferences/privacy.js
 *   content/browser/preferences/sanitize.xul
 *   content/browser/preferences/sanitize.js
+*   content/browser/preferences/selectBookmark.xul
+*   content/browser/preferences/selectBookmark.js
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
