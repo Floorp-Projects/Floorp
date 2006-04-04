@@ -3136,7 +3136,7 @@ function BrowserToolboxCustomizeDone(aToolboxChanged)
   }
 #else
   var bookmarksBar = document.getElementById("bookmarksBarContent");
-  bookmarksBar.init();
+  bookmarksBar._init();
 #endif
 
   // XXX Shouldn't have to do this, but I do
