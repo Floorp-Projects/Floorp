@@ -125,11 +125,22 @@ install:: $(addprefix $(LOCALE_SRCDIR)/profile/chrome/,$(PROFILE_CHROME))
 SEARCH_PLUGINS = $(shell cat $(LOCALE_SRCDIR)/searchplugins/list.txt)
 SEARCH_PLUGIN_PREFIX = $(addprefix $(LOCALE_SRCDIR)/searchplugins/,$(SEARCH_PLUGINS))
 
-libs:: $(addsuffix .xml,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).gif)$(wildcard $(base).png))
-	$(INSTALL) $^ $(FINAL_TARGET)/searchplugins
+SEARCH_XML_FILES := $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).xml))
+SEARCH_SHERLOCK_FILES := $(addsuffix .src,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).gif)$(wildcard $(base).png))
 
-install:: $(addsuffix .xml,$(SEARCH_PLUGIN_PREFIX)) $(foreach base,$(SEARCH_PLUGIN_PREFIX),$(wildcard $(base).gif)$(wildcard $(base).png))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/searchplugins
+libs::
+ifneq (,$(strip $(SEARCH_XML_FILES)))
+	$(INSTALL) $(SEARCH_XML_FILES) $(FINAL_TARGET)/searchplugins
+else
+	$(INSTALL) $(SEARCH_SHERLOCK_FILES) $(FINAL_TARGET)/searchplugins
+endif
+
+install::
+ifneq (,$(strip $(SEARCH_XML_FILES)))
+	$(SYSINSTALL) $(IFLAGS1) $(SEARCH_XML_FILES) $(DESTDIR)$(mozappdir)/searchplugins
+else
+	$(SYSINSTALL) $(IFLAGS1) $(SEARCH_SHERLOCK_FILES) $(DESTDIR)$(mozappdir)/searchplugins
+endif
 
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
