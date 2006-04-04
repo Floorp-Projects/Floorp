@@ -885,7 +885,9 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
             if ((-1 == channelContentLength) ||
                 ((channelContentLength - (aOffset + aLength)) == 0))
             {
-                NS_ASSERTION(channelContentLength != -1, "no content length");
+                NS_WARN_IF_FALSE(channelContentLength != -1,
+                    "nsWebBrowserPersist::OnDataAvailable() no content length "
+                    "header, pushing what we have");
                 // we're done with this pass; see if we need to do upload
                 nsCAutoString contentType;
                 channel->GetContentType(contentType);
