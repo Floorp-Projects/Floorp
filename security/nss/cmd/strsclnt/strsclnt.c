@@ -144,10 +144,10 @@ static PRLock    * threadLock; /* protects the global variables below */
 static PRTime lastConnectFailure;
 static PRTime lastConnectSuccess;
 static PRTime lastThrottleUp;
-static int remaining_connections;  /* number of connections left */
+static PRInt32 remaining_connections;  /* number of connections left */
 static int active_threads = 8; /* number of threads currently trying to
                                ** connect */
-static int numUsed;
+static PRInt32 numUsed;
 /* end of variables protected by threadLock */
 
 static SSL3Statistics * ssl3stats;
@@ -157,7 +157,9 @@ static PRBool disableSSL3     = PR_FALSE;
 static PRBool disableTLS      = PR_FALSE;
 static PRBool bypassPKCS11    = PR_FALSE;
 static PRBool disableLocking  = PR_FALSE;
+static PRBool ignoreErrors    = PR_FALSE;
 
+PRIntervalTime maxInterval    = PR_INTERVAL_NO_TIMEOUT;
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
 {
@@ -382,7 +384,7 @@ void
 thread_wrapper(void * arg)
 {
     perThread * slot = (perThread *)arg;
-    PRBool die = PR_FALSE;
+    PRBool done = PR_FALSE;
 
     do {
         PRBool doop = PR_FALSE;
@@ -394,7 +396,7 @@ thread_wrapper(void * arg)
             /* this thread isn't supposed to be running */
             if (!ThrottleUp) {
                 /* we'll never need this thread again, so abort it */
-                die = PR_TRUE;
+                done = PR_TRUE;
             } else if (remaining_connections > 0) {
                 /* we may still need this thread, so just sleep for 1s */
                 dosleep = PR_TRUE;
@@ -417,14 +419,14 @@ thread_wrapper(void * arg)
                 }
             } else {
                 /* no more connections left, we are done */
-                die = PR_TRUE;
+                done = PR_TRUE;
             }
         } else {
             /* this thread should run */
-            if (--remaining_connections >= 0) {
+            if (--remaining_connections >= 0) { /* protected by threadLock */
                 doop = PR_TRUE;
             } else {
-                die = PR_TRUE;
+                done = PR_TRUE;
             }
         }
         PR_Unlock(threadLock);
@@ -436,7 +438,7 @@ thread_wrapper(void * arg)
         if (dosleep) {
             PR_Sleep(PR_SecondsToInterval(1));
         }
-    } while (!die);
+    } while (!done && (!failed_already || ignoreErrors));
 }
 
 SECStatus
@@ -457,8 +459,8 @@ launch_thread(
         return SECFailure;
     }
 
-    i = numUsed;
-    slot = &threads[numUsed++];
+    i = numUsed++;
+    slot = &threads[i];
     slot->a = a;
     slot->b = b;
     slot->tid = tid;
@@ -486,7 +488,6 @@ launch_thread(
 int 
 reap_threads(void)
 {
-    perThread * slot;
     int         i;
 
     for (i = 0; i < MAX_THREADS; ++i) {
@@ -595,12 +596,13 @@ do_writes(
 
     while (sent < bigBuf.len) {
 
-	count = PR_Write(ssl_sock, bigBuf.data + sent, bigBuf.len - sent);
+	count = PR_Send(ssl_sock, bigBuf.data + sent, bigBuf.len - sent, 
+	                0, maxInterval);
 	if (count < 0) {
-	    errWarn("PR_Write bigBuf");
+	    errWarn("PR_Send bigBuf");
 	    break;
 	}
-	FPRINTF(stderr, "strsclnt: PR_Write wrote %d bytes from bigBuf\n", 
+	FPRINTF(stderr, "strsclnt: PR_Send wrote %d bytes from bigBuf\n", 
 		count );
 	sent += count;
     }
@@ -639,9 +641,9 @@ handle_fdx_connection( PRFileDesc * ssl_sock, int connection)
 	    /* do reads here. */
 	    PRInt32 count;
 
-	    count = PR_Read(ssl_sock, buf, RD_BUF_SIZE);
+	    count = PR_Recv(ssl_sock, buf, RD_BUF_SIZE, 0, maxInterval);
 	    if (count < 0) {
-		errWarn("PR_Read");
+		errWarn("PR_Recv");
 		break;
 	    }
 	    countRead += count;
@@ -686,9 +688,9 @@ handle_connection( PRFileDesc *ssl_sock, int tid)
 
     /* compose the http request here. */
 
-    rv = PR_Write(ssl_sock, request, strlen(request));
+    rv = PR_Send(ssl_sock, request, strlen(request), 0, maxInterval);
     if (rv <= 0) {
-	errWarn("PR_Write");
+	errWarn("PR_Send");
 	PR_Free(buf);
 	buf = 0;
         failed_already = 1;
@@ -698,12 +700,13 @@ handle_connection( PRFileDesc *ssl_sock, int tid)
 
     /* read until EOF */
     while (1) {
-	rv = PR_Read(ssl_sock, buf, RD_BUF_SIZE);
+	rv = PR_Recv(ssl_sock, buf, RD_BUF_SIZE, 0, maxInterval);
 	if (rv == 0) {
 	    break;	/* EOF */
 	}
 	if (rv < 0) {
-	    errWarn("PR_Read");
+	    errWarn("PR_Recv");
+	    failed_already = 1;
 	    break;
 	}
 
@@ -1335,7 +1338,7 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:3BC:DNP:TUc:d:n:op:qst:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:3BC:DNP:TUc:d:in:op:qst:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
@@ -1360,6 +1363,8 @@ main(int argc, char **argv)
 	case 'c': connections = PORT_Atoi(optstate->value); break;
 
 	case 'd': dir = optstate->value; break;
+
+	case 'i': ignoreErrors = PR_TRUE; break;
 
         case 'n': nickName = PL_strdup(optstate->value); break;
 
@@ -1412,6 +1417,14 @@ main(int argc, char **argv)
 	PK11_SetPasswordFunc(ownPasswd);
     } else {
 	PK11_SetPasswordFunc(SECU_GetModulePassword);
+    }
+
+    tmp = PR_GetEnv("NSS_DEBUG_TIMEOUT");
+    if (tmp && tmp[0]) {
+        int sec = PORT_Atoi(tmp);
+	if (sec > 0) {
+	    maxInterval = PR_SecondsToInterval(sec);
+    	}
     }
 
     /* Call the libsec initialization routines */
