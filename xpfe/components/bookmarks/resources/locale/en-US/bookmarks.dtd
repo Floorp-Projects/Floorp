@@ -79,7 +79,6 @@
 <!ENTITY edit.sortFolder.keybinding    "S">
 <!ENTITY command.sortFolderByName.label "Sort Folder by Name">
 <!ENTITY command.sortFolderByName.accesskey "N">
-<!ENTITY edit.sortFolderByName.keybinding   "N">
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">
