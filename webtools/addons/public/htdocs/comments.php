@@ -30,7 +30,7 @@ startProcessing('comments.tpl',$clean['id'],$compileId);
 require_once('includes.php');
 
 $addon = new AddOn($sql['id']);
-$addon->getComments($page['left'],$page['right'],$orderby);
+$addon->getComments($page['left'],10,$orderby);
 
 // Get our result count.
 $db->query("SELECT FOUND_ROWS()", SQL_INIT);

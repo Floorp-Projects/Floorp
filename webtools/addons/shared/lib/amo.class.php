@@ -170,6 +170,8 @@ class AMO_Object
                 v.approved = 'yes' AND
                 a.appname = '{$app}' AND
                 m.type = '{$type}'
+            GROUP BY
+                m.id
             ORDER BY
                 v.dateupdated DESC , downloadcount DESC, rating DESC
             LIMIT 
@@ -259,6 +261,8 @@ class AMO_Object
                 v.approved = 'yes' AND
                 a.appname = '{$app}' AND
                 m.type = '{$type}'
+            GROUP BY
+                m.id
             ORDER BY
                 m.downloadcount DESC, m.rating DESC, v.dateupdated DESC 
             LIMIT 

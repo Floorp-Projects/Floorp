@@ -84,7 +84,7 @@ class AddOn extends AMO_Object {
      */
     function getAddOn() {
         $this->getAddonCats();
-        $this->getComments('3');
+        $this->getComments(0,3);
         $this->getCurrentVersion();
         $this->getMainPreview();
         $this->getUserInfo();
@@ -244,18 +244,39 @@ class AddOn extends AMO_Object {
     /**
      * Get comments attached to this Addon.
      *
-     * @param int $limit number of rows to limit by.
+     * @param int $offset starting point of result set.
+     * @param int $numrows number of rows to show.
      * @todo add left/right limit clauses i.e. LIMIT 10,20 to work with pagination
      */
-    function getComments($limit=null) {
+    function getComments($offset=0, $numrows=10, $orderBy=null) {
 
-        // Set the LIMIT if it is not null.
-        $_limitSql = !empty($limit) ? " LIMIT {$limit} " : null;
+        // Set order by.
+        switch ($orderBy) {
+            case 'ratinghigh':
+                $_orderBySql = " ORDER BY CommentVote desc ";
+                break;
+            case 'ratinglow':
+                $_orderBySql = " ORDER BY CommentVote asc ";
+                break;
+            case 'dateoldest':
+                $_orderBySql = " ORDER BY CommentDate asc ";
+                break;
+            case 'datenewest':
+                $_orderBySql = " ORDER BY CommentDate desc ";
+                break;
+            case 'leasthelpful':
+                $_orderBySql = " ORDER BY helpful_no desc, helpful_yes asc ";
+                break;
+            case 'mosthelpful':
+            default:
+                $_orderBySql = " ORDER BY helpful_yes desc ";
+                break;
+        }
     
         // Gather 10 latest comments.
         $this->db->query("
-            SELECT
-	        CommentID,
+            SELECT SQL_CALC_FOUND_ROWS
+                CommentID,
                 CommentName,
                 CommentTitle,
                 CommentNote,
@@ -269,9 +290,8 @@ class AddOn extends AMO_Object {
             WHERE
                 ID = '{$this->ID}' AND
                 CommentVote IS NOT NULL
-            ORDER BY
-                CommentDate DESC
-            {$_limitSql}
+            {$_orderBySql}
+            LIMIT {$offset}, {$numrows} 
         ", SQL_ALL, SQL_ASSOC);
         
         $this->setVar('Comments',$this->db->record);
