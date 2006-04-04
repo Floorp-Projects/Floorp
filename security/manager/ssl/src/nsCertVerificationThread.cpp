@@ -100,8 +100,6 @@ nsCertVerificationThread::nsCertVerificationThread()
                " to create another instance!");
   
   verification_thread_singleton = this;
-
-  NS_ASSERTION(mThreadHandle, "Could not create nsThreadRunner thread\n");
 }
 
 nsCertVerificationThread::~nsCertVerificationThread()

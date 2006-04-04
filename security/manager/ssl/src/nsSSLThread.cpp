@@ -50,8 +50,6 @@ nsSSLThread::nsSSLThread()
   NS_ASSERTION(!ssl_thread_singleton, "nsSSLThread is a singleton, caller attempts to create another instance!");
   
   ssl_thread_singleton = this;
-
-  NS_ASSERTION(mThreadHandle, "Could not create nsSSLThreadRunner thread\n");
 }
 
 nsSSLThread::~nsSSLThread()
