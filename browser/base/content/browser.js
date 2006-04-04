@@ -6294,12 +6294,44 @@ function BookmarkAllTabsCommand() {
 }
 BookmarkAllTabsCommand.prototype = {
   get enabled() {
-    //LOG("BookmarkAllTabs.enabled: " + getBrowser().tabContainer.childNodes.length > 1);
     return getBrowser().tabContainer.childNodes.length > 1;
   },
-  
+
   execute: function BATC_execute() {
-    LOG("BookmarkAllTabs.execute: IMPLEMENT ME");
+    var tabURIs = this._getUniqueTabInfo(getBrowser());
+    PlacesController.showAddMultiBookmarkUI(tabURIs);
+  },
+
+  /**
+   * This function returns a list of nsIURI objects characterizing the
+   * tabs currently open in the given browser.  The URIs will appear in the
+   * list in the order in which their corresponding tabs appeared.  However,
+   * only the first instance of each URI will be returned.
+   *
+   * @param aTabBrowser  the tabBrowser to get the contents of
+   *
+   * @returns a list of nsIURI objects representing unique locations open
+   */
+  _getUniqueTabInfo: function BATC__getUniqueTabInfo(aTabBrowser) {
+    var tabList = [];
+    var seenURIs = [];
+
+    const activeBrowser = aTabBrowser.selectedBrowser;
+    const browsers = aTabBrowser.browsers;
+    for (var i = 0; i < browsers.length; ++i) {
+      var webNav = browsers[i].webNavigation;
+       var uri = webNav.currentURI;
+
+       // skip redundant entries
+       if (uri.spec in seenURIs)
+         continue;
+
+       // add to the set of seen URIs
+       seenURIs[uri.spec] = true;
+
+       tabList.push(uri);
+    }
+    return tabList;
   }
 };
 BookmarkAllTabsCommand.NAME = "Browser:BookmarkAllTabs";
