@@ -192,8 +192,10 @@ nsXFormsSwitchElement::Init(nsIDOMElement* aDeselected)
   nsCOMPtr<nsIDOMElement> firstCase = FindFirstSelectedCase(aDeselected);
   mSelected = firstCase;
   nsCOMPtr<nsIXFormsCaseElement> selected(do_QueryInterface(mSelected));
-  if (selected)
-    selected->SetSelected(PR_TRUE);
+  if (selected) {
+    nsresult rv = selected->SetSelected(PR_TRUE);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to select case");
+  }
 }
 
 already_AddRefed<nsIDOMElement>
@@ -204,7 +206,7 @@ nsXFormsSwitchElement::FindFirstSelectedCase(nsIDOMElement* aDeselected)
   nsCOMPtr<nsIDOMElement> firstCase;
   while (child) {
     nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-    if (childElement  && childElement != aDeselected) {
+    if (childElement && childElement != aDeselected) {
       if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("case"))) {
         if (!firstCase)
           firstCase = childElement;

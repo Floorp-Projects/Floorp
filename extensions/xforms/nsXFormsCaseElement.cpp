@@ -60,6 +60,7 @@ public:
 
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
+  NS_IMETHOD DoneAddingChildren();
 
   nsXFormsCaseElement()
   : mElement(nsnull), mSelected(PR_FALSE), mCachedSelectedAttr(PR_FALSE)
@@ -82,6 +83,8 @@ nsXFormsCaseElement::OnCreated(nsIXTFBindableElementWrapper *aWrapper)
   nsresult rv = nsXFormsBindableStub::OnCreated(aWrapper);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
 
@@ -102,6 +105,19 @@ nsXFormsCaseElement::OnDestroyed()
 }
 
 NS_IMETHODIMP
+nsXFormsCaseElement::DoneAddingChildren()
+{
+  // cache the value of the "selected" attr
+  nsAutoString value;
+  mElement->GetAttribute(NS_LITERAL_STRING("selected"), value);
+  if (value.EqualsLiteral("true") || value.EqualsLiteral("1")) {
+    mCachedSelectedAttr = PR_TRUE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsCaseElement::GetInitialSelectedState(PRBool *aInitialSelectedState)
 {
   *aInitialSelectedState = mCachedSelectedAttr;
@@ -114,24 +130,19 @@ nsXFormsCaseElement::SetSelected(PRBool aEnable)
   mSelected = aEnable;
 
   nsCOMPtr<nsIXFormsCaseUIElement> caseUI(do_QueryInterface(mElement));
-  if (caseUI) {
-    caseUI->CaseSelected(mSelected);
-  }
+  if (!caseUI)
+    return NS_ERROR_FAILURE;
 
+  caseUI->CaseSelected(mSelected);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsCaseElement::WidgetAttached()
 {
-  // cache the value of the "selected" attr
-  nsAutoString value;
-  mElement->GetAttribute(NS_LITERAL_STRING("selected"), value);
-  if (value.EqualsLiteral("true") || value.EqualsLiteral("1")) {
-    mCachedSelectedAttr = PR_TRUE;
-  }
-
   nsCOMPtr<nsIXFormsCaseUIElement> caseUI(do_QueryInterface(mElement));
+  NS_WARN_IF_FALSE(caseUI,
+                   "Case element not implementing nsIXFormCaseUIElement?");
   if (caseUI) {
     caseUI->CaseSelected(mSelected);
   }
