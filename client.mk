@@ -212,11 +212,11 @@ BOOTSTRAP_toolkit :=                            \
   $(NULL)
 
 MODULES_NS_suite :=                             \
-  $(MODULES_NS_core)                            \
+  $(MODULES_NS_toolkit)                         \
   $(NULL)
 
 MODULES_suite :=                                \
-  $(MODULES_core)                               \
+  $(MODULES_toolkit)                            \
   mozilla/directory/xpcom                       \
   mozilla/mailnews                              \
   mozilla/themes                                \
@@ -224,11 +224,11 @@ MODULES_suite :=                                \
   $(NULL)
 
 LOCALES_suite :=                                \
-  $(LOCALES_core)                               \
+  $(LOCALES_toolkit)                            \
   $(NULL)
 
 BOOTSTRAP_suite :=                              \
-  $(BOOTSTRAP_core)                             \
+  $(BOOTSTRAP_toolkit)                          \
   $(NULL)
 
 MODULES_NS_browser :=                           \
