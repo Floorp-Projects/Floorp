@@ -43,7 +43,7 @@
 
 #include "nsISupports.idl"
 
-[uuid(2bd6a7c7-ca59-408b-9a2a-c1bdef919fd5)]
+[uuid(a60f5ef2-6c3d-4c57-af19-033734354115)]
 interface nsIXFormsRepeatItemElement : nsISupports
 {
   /**
@@ -51,4 +51,9 @@ interface nsIXFormsRepeatItemElement : nsISupports
    * can set the :repeat-index accordingly.
    */
   attribute boolean indexState;
+
+  /**
+   * This returns the context position of the repeat item.
+   */
+  readonly attribute long contextPosition;
 };
