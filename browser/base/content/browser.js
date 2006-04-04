@@ -582,13 +582,18 @@ const gXPInstallObserver = {
         }
         var messageString, buttonString, buttonAccesskeyString;
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
-          messageString = browserBundle.getFormattedString("xpinstallDisabledWarning",
-                                                           [brandShortName, host]);
-          buttonAccesskeyString = browserBundle.getString("xpinstallDisabledWarningButton.accesskey");
-          buttonString = browserBundle.getString("xpinstallDisabledWarningButton");
+          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
+            buttonString = ""; // don't show the button
+          }
+          else {
+            messageString = browserBundle.getString("xpinstallDisabledMessage");
+            buttonString = browserBundle.getString("xpinstallDisabledButton");
+            buttonAccesskeyString = browserBundle.getString("xpinstallDisabledButton.accesskey");
+          }
           getBrowser().showMessage(browser, iconURL, messageString, buttonString,
                                    null, "xpinstall-install-edit-prefs",
-                                   null, "top", false, buttonAccesskeyString);
+                                   null, "top", true, buttonAccesskeyString);
         }
         else {
           messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
@@ -602,7 +607,7 @@ const gXPInstallObserver = {
       }
       break;
     case "xpinstall-install-edit-prefs":
-      openPreferences("paneContent");
+      gPrefService.setBoolPref("xpinstall.enabled", true);
       getBrowser().hideMessage(null, "top");
       break;
     case "xpinstall-install-edit-permissions":
