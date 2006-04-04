@@ -14,7 +14,7 @@
 
         <p>Your e-mail address is used as your username to login. You'll also receive a
         confirmation e-mail to this address. In order for your account to be activated
-        succesfully, you must specify a valid e-mail address.</p>
+        successfully, you must specify a valid e-mail address.</p>
 
         {if $error_email_empty}
             <div class="amo-form-error">E-Mail address is a required field.</div>
