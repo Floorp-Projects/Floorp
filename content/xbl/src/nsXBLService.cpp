@@ -1142,10 +1142,6 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   if (aBoundDocument)
     loadGroup = aBoundDocument->GetDocumentLoadGroup();
 
-  nsINodeInfo *ni = nsnull;
-  if (aBoundElement)
-    ni = aBoundElement->NodeInfo();
-
   // We really shouldn't have to force a sync load for anything here... could
   // we get away with not doing that?  Not sure.
   if (IsChromeOrResourceURI(aDocumentURI))
