@@ -215,6 +215,16 @@ function get_os_id()
         'solaris'=>6
     );
 
+    // Check $_GET for a match.
+    if (!empty($_GET['appOS']) && ctype_alpha($_GET['appOS'])) {
+        $appOS = strtolower($_GET['appOS']);
+        foreach ($os as $string=>$id) {
+            if ($appOS == $string) {
+                return $id;
+            }
+        }
+    }
+
     // Check UA string for a match
     foreach ($os as $string=>$id) {
         if (preg_match("/^.*{$string}.*$/i",$_SERVER['HTTP_USER_AGENT'])) {
