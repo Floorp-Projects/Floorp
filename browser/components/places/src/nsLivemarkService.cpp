@@ -595,7 +595,7 @@ nsLivemarkService::ReloadAllLivemarks()
 }
 
 NS_IMETHODIMP
-nsLivemarkService::ReloadLivemarkFolder(PRInt32 aFolderId)
+nsLivemarkService::ReloadLivemarkFolder(PRInt64 aFolderId)
 {
   nsresult rv = NS_OK;
   for (PRUint32 i = 0; i < mLivemarks.Length(); i++) {

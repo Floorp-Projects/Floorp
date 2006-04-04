@@ -41,7 +41,7 @@
 
 interface nsIURI;
 
-[scriptable, uuid(5dd95266-3ddd-460d-8f80-092664d88a36)]
+[scriptable, uuid(d8f9a86e-c37b-11da-9b41-b622a1ef5492)]
 interface nsILivemarkService : nsIRemoteContainer
 {
   /**
@@ -68,5 +68,5 @@ interface nsILivemarkService : nsIRemoteContainer
 	 * Reloads the livemark with this folder ID, whether or not it's expired.
 	 * @param folderID		The ID of the folder to be reloaded
 	 */
-  void reloadLivemarkFolder(in PRInt32 folderID);
+  void reloadLivemarkFolder(in PRInt64 folderID);
 };
