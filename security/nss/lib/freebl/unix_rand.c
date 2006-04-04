@@ -959,6 +959,9 @@ size_t RNG_FileUpdate(const char *fileName, size_t limit)
     unsigned char buffer[BUFSIZ];
     static size_t totalFileBytes = 0;
     
+    /* suppress valgrind warnings due to holes in struct stat */
+    memset(&stat_buf, 0, sizeof(stat_buf));
+
     if (stat((char *)fileName, &stat_buf) < 0)
 	return fileBytes;
     RNG_RandomUpdate(&stat_buf, sizeof(stat_buf));
