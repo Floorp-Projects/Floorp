@@ -113,6 +113,12 @@ public:
 
   NS_IMETHOD GetUserCancelled( PRBool &aCancel );      
 
+#ifdef MOZ_CAIRO_GFX
+   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) {
+       return NS_ERROR_NOT_IMPLEMENTED;
+   }
+#endif
+
 /**
  * Destructor for nsDeviceContextSpecBeOS, this will release the printrecord
  * @update  dc 2/16/98

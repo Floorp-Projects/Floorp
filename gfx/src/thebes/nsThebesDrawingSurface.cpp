@@ -49,7 +49,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
-# endif
+#endif
 
 #include <stdlib.h>
 

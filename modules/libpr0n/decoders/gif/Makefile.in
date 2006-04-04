@@ -60,3 +60,4 @@ CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp imgContainerGIF.cpp
 
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

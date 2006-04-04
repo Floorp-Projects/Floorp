@@ -50,6 +50,12 @@ REQUIRES += glitzglx
 endif
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),beos)
+EXPORTS	+=	gfxBeOSSurface.h gfxBeOSPlatform.h
+EXPORTS +=	gfxPangoFonts.h
+EXPORTS +=	gfxPDFSurface.h
+endif
+
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
 EXPORTS +=	gfxPlatformMac.h \
 		gfxQuartzSurface.h \

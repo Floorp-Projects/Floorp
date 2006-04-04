@@ -136,6 +136,10 @@ ifdef MOZ_ENABLE_GTK
 DEFINES += -DMOZ_ENABLE_GTK
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT), beos)
+LOCAL_INCLUDES += -I$(topsrcdir)/gfx/src/beos
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
 LOCAL_INCLUDES += -I$(topsrcdir)/gfx/src/windows
 endif

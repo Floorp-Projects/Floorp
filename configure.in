@@ -3988,6 +3988,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-xlib" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-mac" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
@@ -3999,7 +4000,7 @@ MOZ_ARG_HEADER(Toolkit Options)
         if test "$no_x" != "yes"; then
             AC_MSG_ERROR([Toolkit must be xlib, gtk, gtk2 or qt.])
         else
-            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT.])
+            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT or cairo-$_PLATFORM_DEFAULT_TOOLKIT (if supported).])
         fi
     fi
 
@@ -4087,6 +4088,13 @@ cairo-gtk2)
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS) $(MOZ_CAIRO_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS) $(MOZ_CAIRO_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
+    ;;
+cairo-beos)
+    MOZ_WIDGET_TOOLKIT=beos
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_CAIRO_GFX=1
+    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_CAIRO_LIBS)'
     ;;
 cairo-xlib)
     MOZ_WIDGET_TOOLKIT=xlib
@@ -4744,10 +4752,17 @@ then
         AC_MSG_WARN([Pango is required for cairo gfx builds, assuming --enable-pango])
         MOZ_ENABLE_PANGO=1
     fi
+fi
 
+if test "$MOZ_ENABLE_PANGO" && test "$MOZ_ENABLE_CAIRO_GFX"
+then
     AC_DEFINE(MOZ_ENABLE_PANGO)
     dnl PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.10.0 pangocairo >= 1.10.0)
-    PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.6.0 pangoft2 >= 1.6.0 pangoxft >= 1.6.0)
+    if test "$MOZ_X11"; then
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.6.0 pangoft2 >= 1.6.0 pangoxft >= 1.6.0)
+    else
+        PKG_CHECK_MODULES(MOZ_PANGO, pango >= 1.6.0 pangoft2 >= 1.6.0)
+    fi
 
     AC_SUBST(MOZ_ENABLE_PANGO)
     AC_SUBST(MOZ_PANGO_CFLAGS)
@@ -6855,7 +6870,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
            fi
        fi
    else
-      PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
+      PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION freetype2 fontconfig)
       MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
       MOZ_CAIRO_LIBS=$CAIRO_LIBS
    fi

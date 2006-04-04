@@ -41,6 +41,10 @@
 #define PANGO_ENABLE_BACKEND
 #define PANGO_ENABLE_ENGINE
 
+#ifdef XP_BEOS
+#define THEBES_USE_PANGO_CAIRO
+#endif
+
 #include "prtypes.h"
 #include "prlink.h"
 #include "gfxTypes.h"
@@ -133,6 +137,8 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
                                       const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
 {
+    g_type_init();
+
     nsStringArray familyArray;
 
     ForEachFont (FontCallback, &familyArray);
@@ -178,6 +184,8 @@ static void InitPangoLib()
     if (initialized)
         return;
     initialized = PR_TRUE;
+
+    g_type_init();
 
     PRLibrary* lib = PR_LoadLibrary("libpango-1.0.so");
     if (!lib)
