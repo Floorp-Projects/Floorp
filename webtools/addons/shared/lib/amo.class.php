@@ -347,8 +347,13 @@ class AMO_Object
                 p.previewuri
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
-            INNER JOIN applications TA ON v.AppID = TA.AppID
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+                    ON vv.mxvid = v.vid AND vv.id = v.id
+            INNER JOIN applications a ON a.appid = v.appid
             INNER JOIN os o ON v.OSID = o.OSID
             INNER JOIN reviews r ON m.ID = r.ID
             INNER JOIN previews p ON p.ID = m.ID
@@ -405,7 +410,14 @@ class AMO_Object
                 p.previewuri
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
+            FROM
+                main m
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+                    ON vv.mxvid = v.vid AND vv.id = v.id
             INNER JOIN applications TA ON v.AppID = TA.AppID
             INNER JOIN os o ON v.OSID = o.OSID
             INNER JOIN reviews r ON m.ID = r.ID
@@ -454,7 +466,12 @@ class AMO_Object
                 p.previewuri
             FROM
                 main m
-            INNER JOIN version v ON m.ID = v.ID
+            INNER JOIN version v ON m.id = v.id
+            INNER JOIN (
+                SELECT v.id, v.appid, v.osid, max(v.vid) as mxvid 
+                FROM version v       
+                WHERE approved = 'YES' group by v.id, v.appid, v.osid) as vv 
+                    ON vv.mxvid = v.vid AND vv.id = v.id
             INNER JOIN applications TA ON v.AppID = TA.AppID
             INNER JOIN os o ON v.OSID = o.OSID
             INNER JOIN reviews r ON m.ID = r.ID
