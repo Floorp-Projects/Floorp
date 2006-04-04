@@ -125,17 +125,15 @@
               button = document.createElementNS(XULNS, "toolbarbutton");
               button.setAttribute("type", "menu");
               button.setAttribute("container", "true");
-              if (PlacesController.nodeIsRemoteContainer(child)) {
-                if (asContainer(child).remoteContainerType == "@mozilla.org/browser/livemark-service;1") {
-                  button.setAttribute("livemark", "true");
-                  var folder = asFolder(child).folderId;
-                  var folderURI = this._bms.getFolderURI(folder);
-                  var anno =
-                    Cc["@mozilla.org/browser/annotation-service;1"].
-                    getService(Ci.nsIAnnotationService);
-                  var siteURI = anno.getAnnotationString(folderURI, "livemark/siteURI");
-                  button.setAttribute("siteURI", siteURI);
-                }
+              if (PlacesController.nodeIsLivemarkContainer(child)) {
+                button.setAttribute("livemark", "true");
+                var folder = asFolder(child).folderId;
+                var folderURI = this._bms.getFolderURI(folder);
+                var anno =
+                  Cc["@mozilla.org/browser/annotation-service;1"].
+                  getService(Ci.nsIAnnotationService);
+                var siteURI = anno.getAnnotationString(folderURI, "livemark/siteURI");
+                button.setAttribute("siteURI", siteURI);
               }
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");

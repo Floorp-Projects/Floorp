@@ -118,5 +118,5 @@ private:
   // Livemarks are updated on a timer.
   nsCOMPtr<nsITimer> mTimer;
   static void FireTimer(nsITimer* aTimer, void* aClosure);
-  nsresult UpdateLivemarkChildren(PRInt32 aLivemarkIndex);
+  nsresult UpdateLivemarkChildren(PRInt32 aLivemarkIndex, PRBool aForceUpdate);
 };

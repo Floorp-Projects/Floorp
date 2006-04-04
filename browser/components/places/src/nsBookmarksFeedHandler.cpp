@@ -853,10 +853,12 @@ nsLivemarkLoadListener::IsLinkValid(const PRUnichar *aURI)
 
 /*
  * Update the child elements of a livemark; take care of cache checking,
- * channel setup and firing off the async load and parse.
+ * channel setup and firing off the async load and parse.  If aForceUpdate
+ * is true, the livemark will be updated whether or not it has expired; this
+ * is intended for user "Update Livemark" commands.
  */
 nsresult
-nsLivemarkService::UpdateLivemarkChildren(PRInt32 aLivemarkIndex)
+nsLivemarkService::UpdateLivemarkChildren(PRInt32 aLivemarkIndex, PRBool aForceUpdate)
 {
   nsresult rv;
 
@@ -870,17 +872,21 @@ nsLivemarkService::UpdateLivemarkChildren(PRInt32 aLivemarkIndex)
   mLivemarks[aLivemarkIndex]->locked = PR_TRUE;
 
   // Check the TTL/expiration on this.  If there isn't one,
-  // then we assume it's never been loaded.
+  // then we assume it's never been loaded.  We perform this
+  // check even when the update is being forced, in case the
+  // livemark has somehow never been loaded.
   PRTime exprTime;
   rv = mAnnotationService->GetAnnotationInt64(mLivemarks[aLivemarkIndex]->feedURI,
                                               NS_LITERAL_CSTRING(LMANNO_EXPIRATION),
                                               &exprTime);
   if (rv == NS_OK) {
-    PRTime nowTime = PR_Now();
-    if (LL_CMP(exprTime, >, nowTime)) {
-      // No need to refresh yet.
-      mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
-      return rv;
+    if (! aForceUpdate) {
+      PRTime nowTime = PR_Now();
+      if (LL_CMP(exprTime, >, nowTime)) {
+        // No need to refresh yet.
+        mLivemarks[aLivemarkIndex]->locked = PR_FALSE;
+        return rv;
+      }
     }
   } else {
     // This livemark has never been loaded, since it has no expire time.
