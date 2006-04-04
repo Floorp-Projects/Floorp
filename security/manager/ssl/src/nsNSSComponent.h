@@ -25,6 +25,7 @@
  *   Doug Turner <dougt@netscape.com>
  *   Brian Ryner <bryner@brianryner.com>
  *   Kai Engert <kaie@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,6 +64,7 @@
 #include "prlock.h"
 #include "nsICryptoHash.h"
 #include "hasht.h"
+#include "nsNSSCallbacks.h"
 
 #include "nsNSSHelper.h"
 
@@ -177,6 +179,8 @@ private:
 
 struct PRLock;
 class nsNSSShutDownList;
+class nsSSLThread;
+class nsCertVerificationThread;
 
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISignatureVerifier,
@@ -269,6 +273,10 @@ private:
   static int mInstanceCount;
   nsNSSShutDownList *mShutdownObjectList;
   SmartCardThreadList *mThreadList;
+  PRBool mIsNetworkDown;
+  nsSSLThread *mSSLThread;
+  nsCertVerificationThread *mCertVerificationThread;
+  nsNSSHttpInterface mHttpForNSS;
 };
 
 class PSMContentListener : public nsIURIContentListener,
