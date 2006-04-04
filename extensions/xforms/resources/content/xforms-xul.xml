@@ -78,7 +78,7 @@
   <binding id="xformswidget-label"
            extends="chrome://xforms/content/xforms.xml#xformswidget-label-base">
     <content>
-      <xul:deck anonid="contentswitcher" flex="1">
+      <xul:deck anonid="contentswitcher" flex="1" selectedIndex="1">
         <xul:label anonid="implicitcontent"/>
         <xul:label><children/></xul:label>
       </xul:deck>
@@ -92,6 +92,7 @@
               getAnonymousElementByAttribute(this, 'anonid', 'contentswitcher'),
             _implicitContent: this.ownerDocument.
               getAnonymousElementByAttribute(this, 'anonid', 'implicitcontent'),
+            __proto__: this,
 
             set value(val) {
               if (val != null) {
@@ -101,6 +102,27 @@
                 this._implicitContent.textContent = '';
                 this._contentSwitcher.selectedIndex = 1;
               }
+            },
+
+            get textValue() {
+              if (this._contentSwitcher.selectedIndex == '0')
+                return this._implicitContent.textContent;
+              return this.textContent;
+            },
+            get nodeValue() {
+              var fragment = this.ownerDocument.createDocumentFragment();
+
+              var container = null;
+              if (this._contentSwitcher.selectedIndex == '0')
+                container = this._implicitContent;
+              else
+                container = this;
+
+              for (var node = container.firstChild; node; node = node.nextSibling) {
+                fragment.appendChild(node.cloneNode(true));
+              }
+              var rep = new XMLSerializer().serializeToString(fragment);
+              return fragment;
             }
           };
         </body>

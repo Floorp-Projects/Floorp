@@ -1,0 +1,619 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Alexander Surkov.
+   - Portions created by the Initial Developer are Copyright (C) 2006
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Alexander Surkov <surkov@dc.baikal.ru>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- SELECT CONTROLS FOR XUL
+  This file contains xforms select and xforms select1 controls implementations
+  for XUL.
+-->
+
+<bindings id="xformsBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xforms="http://www.w3.org/2002/xforms"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<!-- SELECT, SELECT1 CONTROLS
+  The section contains xforms select and select1 controls implementations for
+  XUL. All controls are inherited from interface bindings realized in
+  select.xml file.
+-->
+
+  <binding id="xformswidget-select"
+           extends="chrome://xforms/content/select.xml#xformswidget-select-base">
+    <content>
+      <xul:hbox flex="1">
+        <children includes="label"/>
+        <xul:box anonid="control" xbl:inherits="style, accesskey"
+                 class="xf-value" flex="1"/>
+      </xul:hbox>
+      <children/>
+    </content>
+
+  </binding>
+
+
+  <!-- The following bindings do a trick. When appearance attribute is changed
+    then we should call nsIXFormsDelegate.widgetAttached() method. If we'll have
+    separate binding for each appearance attribute value then it will be happen
+    automatically.
+  -->
+  <binding id="xformswidget-select-minimal"
+           extends="#xformswidget-select"/>
+
+  <binding id="xformswidget-select-compact"
+           extends="#xformswidget-select"/>
+
+  <binding id="xformswidget-select-full"
+           extends="#xformswidget-select"/>
+
+
+<!-- CONTROL WIDGETS FOR SELECT CONTROLS
+  The section contains underlying widgets implementations needed for xforms
+  select controls. All underlying widgets implement the interface what base
+  widget for xforms select controls ask for. You can find interface description
+  in 'select.xml' file.
+-->
+
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='MINIMAL'
+    XXX: Widget is not implemented.
+  -->
+
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='COMPACT' -->
+  <binding id="controlwidget-select-compact"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content>
+      <xul:listbox xbl:inherits="style, accesskey, disabled=readonly"
+                   rows="5" flex="1"
+                   seltype="multiple"
+                   anonid="control"/>
+    </content>
+
+    <implementation>
+      <property name="selectedIndex"
+                onget="return this.control.selectedIndex;"
+                onset="this.control.selectedIndex = val;"/>
+
+      <method name="removeAllItems">
+        <body>
+          // removeItemAt fires 'select' event event if 'suppressonselect'
+          // attribute is specified, we shouldn't listen the event (bug 312149)
+
+          this.suppress = true;
+          for (var i = this.control.childNodes.length-1; i >= 0; i--) {
+             this.control.removeItemAt(i);
+          }
+          this.suppress = false;
+        </body>
+      </method>
+      <field name="suppress">false</field>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var item = this.ownerDocument.createElementNS(this.XUL_NS, "listitem");
+          item.setAttribute("value", aValue);
+          if (aLabel) {
+            // since label node can contains textnodes then we use
+            // 'description' element as container for label node.
+            var description = this.ownerDocument.
+              createElementNS(this.XUL_NS, "description");
+            description.appendChild(aLabel.cloneNode(true));
+            item.appendChild(description);
+          }
+
+          // XXX: Group supporting isn't implemented
+          this.control.appendChild(item);
+
+          return item;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          // XXX: Group supporting isn't implemented
+          return null;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          // there are cases when 'listitem' binding isn't created yet,
+          // therefore we use setTimeout
+
+          window.setTimeout(
+            function(list, item) {
+              list.setAttribute("suppressonselect", "true");
+              list.addItemToSelection(item);
+              list.removeAttribute("suppressonselect");
+            },
+            0,
+            this.control, aItem
+          );
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          this.control.setAttribute("suppressonselect", "true");
+          this.control.removeItemFromSelection(aItem);
+          this.control.removeAttribute("suppressonselect");
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.selected;
+        </body>
+      </method>
+
+      <constructor>
+        // 'select' event is not always handled when handler is added by using
+        // xbl:handler element.
+        var selectHandler = {
+          control: this,
+          handleEvent: function() {
+            if (!this.control.suppress) {
+              this.control.updateInstanceData(true);
+            }
+          }
+        };
+        this.addEventListener("select", selectHandler, false);
+      </constructor>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        this.dispatchDOMUIEvent("DOMFocusIn");
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        this.updateInstanceData(false);
+        this.dispatchDOMUIEvent("DOMFocusOut");
+      </handler>
+
+      <!--
+        XXX: Since xforms:label can include arbitrary elements then 'focus',
+          'blur' and 'command' events should be listen from 'xul:listbox'
+          element only.
+      -->
+    </handlers>
+  </binding>
+
+
+  <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
+  <binding id="controlwidget-select-full"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content>
+      <xul:vbox xbl:inherits="orient" anonid="control"/>
+    </content>
+
+    <implementation>
+      <!-- XXX: Property 'selectedIndex' is not implemented -->
+      <property name="selectedIndex"
+                onget="throw new Error(this.selectedIndexErrorMsg);"
+                onset="throw new Error(this.selectedIndexErrorMsg);"/>
+
+      <field name="selectedIndexErrorMsg">
+      <![CDATA[
+        "<xforms:select appearance='full'/>: 'selectedIndex' property isn't implemented."
+      ]]>
+      </field>
+
+      <method name="removeAllItems">
+        <body>
+          for (var i = this.control.childNodes.length; i > 0; i--) {
+            this.control.removeChild(this.control.childNodes[i-1]);
+          }
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var box = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
+          box.setAttribute("align", "center");
+
+          var checkbox = this.ownerDocument.createElementNS(this.XUL_NS, "checkbox");
+          checkbox.setAttribute("value", aValue);
+          checkbox.setAttribute("anonid", "wcontrol");
+          if (this.readonly)
+            checkbox.setAttribute("disabled", "true");
+
+          box.appendChild(checkbox);
+          if (aLabel) {
+            // since label node can contains textnodes then we use
+            // 'description' element as container for label node.
+            var description = this.ownerDocument.
+              createElementNS(this.XUL_NS, "description");
+            description.appendChild(aLabel.cloneNode(true));
+            box.appendChild(description);
+          }
+
+          if (aGroup) {
+            aGroup.appendChild(box);
+          } else {
+            this.control.appendChild(box);
+          }
+
+          return box;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          var mainBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
+
+          var labelBox = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
+          if (aLabel) {
+            labelBox.className = "select-choice-label";
+            labelBox.appendChild(aLabel.cloneNode(true));
+          }
+          mainBox.appendChild(labelBox);
+
+          var contentBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
+          contentBox.className = "select-choice-content";
+          mainBox.appendChild(contentBox);
+
+          if (aGroup) {
+            aGroup.appendChild(mainBox);
+          } else {
+            this.control.appendChild(mainBox);
+          }
+
+          return contentBox;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.firstChild.checked = true;
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          aItem.firstChild.checked = false;
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.firstChild.checked;
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
+          this.updateInstanceData(true);
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
+          this.updateInstanceData(false);
+      </handler>
+
+      <!--
+        XXX: We need to send DOMFocusIn/DOMFocusOut events
+        XXX: When incremental='false' then model data should be updated on 
+          'blur' event for xforms:select only
+      -->
+    </handlers>
+
+  </binding>
+
+
+<!-- CONTROL WIDGETS FOR SELECT1 CONTROLS
+  The section contains underlying widgets implementations needed for xforms
+  select1 controls. All underlying widgets implement the interface what base
+  widget for xforms select1 controls ask for. You can find interface description
+  in 'select.xml' file.
+-->
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='MINIMAL' -->
+  <binding id="controlwidget-select1-minimal"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content>
+      <xul:menulist xbl:inherits="style, accesskey, disabled=readonly"
+                    anonid="control" flex="1">
+        <xul:menupopup/>
+      </xul:menulist>
+    </content>
+
+    <implementation>
+      <property name="selectedIndex"
+                onget="return this.control.selectedIndex;"
+                onset="this.control.selectedIndex = val;"/>
+
+      <method name="removeAllItems">
+        <body>
+          var popup = this.control.menupopup;
+          while (popup.hasChildNodes()) {
+            popup.removeChild(popup.lastChild);
+          }
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var item = this.ownerDocument.createElementNS(this.XUL_NS, "menuitem");
+          item.setAttribute("value", aValue);
+          if (aLabel) {
+            // XXX: We should use node instead of its text content to add a
+            // label. But we cannot put node into menuitem, therefore we now
+            // use label text and set @label for menulist.
+            item.setAttribute("label", aLabel.textContent);
+          }
+
+          // XXX: Group supporting isn't implemented
+          this.control.menupopup.appendChild(item);
+          return item;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          // XXX: Group supporting isn't implemented
+          return null;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          this.control.selectedItem = aItem;
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          if (this.control.selectedItem == aItem)
+            this.control.selectedItem = null;
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.getAttribute("selected") == "true";
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="focus" phase="capturing">
+        this.dispatchDOMUIEvent("DOMFocusIn");
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        this.updateInstanceData(false);
+        this.dispatchDOMUIEvent("DOMFocusOut");
+      </handler>
+
+      <handler event="command">
+        this.updateInstanceData(true);
+      </handler>
+
+      <!--
+        XXX: Since xforms:label can include arbitrary elements then 'focus',
+          'blur' and 'command' events should be listen from 'xul:menulist'
+          element only. The described problem is not actual now. Note we will
+          get it when we will use node instead of text content for a label.
+      -->
+    </handlers>
+  </binding>
+
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='COMPACT' -->
+  <binding id="controlwidget-select1-compact"
+           extends="#controlwidget-select-compact">
+    <content>
+      <xul:listbox xbl:inherits="style, accesskey, disabled=readonly"
+                   rows="5" anonid="control"/>
+    </content>
+  </binding>
+
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='FULL' -->
+  <binding id="controlwidget-select1-full"
+           extends="chrome://xforms/content/select.xml#controlwidget-base">
+
+    <content>
+      <xul:radiogroup anonid="control"/>
+    </content>
+
+    <implementation>
+      <!-- XXX: Property 'selectedIndex' is not implemented -->
+      <property name="selectedIndex"
+                onget="throw new Error(this.selectedIndexErrorMsg);"
+                onset="throw new Error(this.selectedIndexErrorMsg);"/>
+
+      <field name="selectedIndexErrorMsg">
+      <![CDATA[
+        "<xforms:select1 appearance='full'/>: 'selectedIndex' property isn't implemented."
+      ]]>
+      </field>
+
+      <method name="removeAllItems">
+        <body>
+          for (var i = this.control.childNodes.length; i > 0; i--) {
+             this.control.removeChild(this.control.childNodes[i-1]);
+          }
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var box = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
+          box.setAttribute("align", "center");
+
+          var radio = this.ownerDocument.createElementNS(this.XUL_NS, "radio");
+          radio.setAttribute("value", aValue);
+          radio.setAttribute("anonid", "wcontrol");
+          if (this.readonly)
+            radio.setAttribute("disabled", "true");
+
+          box.appendChild(radio);
+          if (aLabel) {
+            // since label node can contains textnodes then we use
+            // 'description' element as container for label node.
+            var description = this.ownerDocument.
+              createElementNS(this.XUL_NS, "description");
+            description.appendChild(aLabel.cloneNode(true));
+            box.appendChild(description);
+          }
+
+          if (aGroup) {
+            aGroup.appendChild(box);
+          } else {
+            this.control.appendChild(box);
+          }
+
+          return box;
+        </body>
+      </method>
+
+      <method name="appendGroup">
+        <parameter name="aLabel"/>
+        <parameter name="aGroup"/>
+        <body>
+          var mainBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
+
+          var labelBox = this.ownerDocument.createElementNS(this.XUL_NS, "hbox");
+          if (aLabel) {
+            labelBox.className = "select-choice-label";
+            labelBox.appendChild(aLabel.cloneNode(true));
+          }
+          mainBox.appendChild(labelBox);
+
+          var contentBox = this.ownerDocument.createElementNS(this.XUL_NS, "vbox");
+          contentBox.className = "select-choice-content";
+          mainBox.appendChild(contentBox);
+
+          if (aGroup) {
+            aGroup.appendChild(mainBox);
+          } else {
+            this.control.appendChild(mainBox);
+          }
+
+          return contentBox;
+        </body>
+      </method>
+
+      <method name="addItemToSelection">
+        <parameter name="aItem"/>
+        <body>
+          // there are a cases when 'radio' binding isn't created yet, therefore
+          // we use setTimeout.
+          window.setTimeout(
+            function(list, item) {
+              list.selectedItem = item;
+            },
+            0,
+            this.control, aItem.firstChild
+          );
+        </body>
+      </method>
+
+      <method name="removeItemFromSelection">
+        <parameter name="aItem"/>
+        <body>
+          if (aItem.firstChild.selected)
+            this.control.selectedItem = null;
+        </body>
+      </method>
+
+      <method name="isItemSelected">
+        <parameter name="aItem"/>
+        <body>
+          return aItem.firstChild.selected;
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        if (event.originalTarget.getAttribute("anonid") == "wcontrol")
+          this.updateInstanceData(true);
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget.getAttribute("anonid") == "control")
+          this.updateInstanceData(false);
+      </handler>
+
+      <!--
+        XXX: need to send DOMFocusIn/DOMFocusOut events
+        XXX: when incremental='false' then model data should be updated on
+          'blur' event for xforms:select1 only
+      -->
+    </handlers>
+  </binding>
+</bindings>

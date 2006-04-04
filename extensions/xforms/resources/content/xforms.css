@@ -65,11 +65,14 @@ xul|*:root repeatitem,
 xul|*:root contextcontainer,
 xul|*:root group,
 xul|*:root switch,
-xul|*:root case,
+xul|*:root case {
+  display: -moz-box;
+}
+
 xul|*:root select1 item,
 xul|*:root select1 itemset,
 xul|*:root select1 choices {
-  display: -moz-box;
+  display: none;
 }
 
 contextcontainer-inline {
@@ -335,30 +338,64 @@ html|*:root label {
 xul|*:root label {
   -moz-binding: url('chrome://xforms/content/xforms-xul.xml#xformswidget-label');
 }
-xul|*:root input label, xul|*:root secret label, xul|*:root textarea label {
+xul|*:root input label, xul|*:root secret label, xul|*:root textarea label,
+xul|*:root select > label, xul|*:root select1 > label {
   padding-top: 4px;
 }
 
-/* select widgets */
-select1 {
-  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
+/* case widgets */
+case {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-case');
 }
 
-select1 itemset,
-select itemset {
+case > html|div.-moz-xforms-case-container {
+  display: inherit;
+}
+
+/* select, select1 widgets */
+
+  /* itemset widget */
+select1 itemset, select itemset {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-itemset');
 }
 
-/* Most of the select1 specific CSS is copied from forms.css */
-
-select1 item {
+  /* select1 appearance='minimal' (default) */
+html|*:root select1 {
+  -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
+}
+html|*:root select1 item {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1-item');
   white-space : nowrap;
 }
 
+xul|*:root select1 {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-minimal');
+}
+xul|*:root select1 xul|box {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-minimal');
+}
 
-html|input.-moz-xforms-date-dropdown,
-html|input.-moz-xforms-select1-dropdown {
+  /* select1 appearance='compact' */
+xul|*:root select1[appearance="compact"] {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-compact');
+}
+xul|*:root select1[appearance="compact"] xul|box{
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-compact');
+}
+
+  /* select1 appearance='full' */
+xul|*:root select1[appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-full');
+}
+xul|*:root select1[appearance="full"] xul|box {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-full');
+}
+
+/* select1[appearance='minimal'] for xhtml styles (most of the select1 specific
+CSS is copied from forms.css) */
+
+html|*:root html|input.-moz-xforms-date-dropdown,
+html|*:root html|input.-moz-xforms-select1-dropdown {
   width: 12px;
   height: 1.3em;
   white-space: nowrap;
@@ -375,15 +412,15 @@ html|input.-moz-xforms-select1-dropdown {
   margin-top: -1px !important;
 }
 
-html|input.-moz-xforms-select1-dropdown::-moz-focus-inner {
+html|*:root html|input.-moz-xforms-select1-dropdown::-moz-focus-inner {
   border: 0 !important;
 }
 
-html|input.-moz-xforms-select1-dropdown:active:hover {
+html|*:root html|input.-moz-xforms-select1-dropdown:active:hover {
   border-style: outset;
 }
 
-html|input.-moz-xforms-select1-input {
+html|*:root html|input.-moz-xforms-select1-input {
   border: 1px dotted transparent;
   margin-right: 0px;
   padding: 0px;
@@ -393,12 +430,12 @@ html|input.-moz-xforms-select1-input {
   line-height: normal !important;
 }
 
-html|input.-moz-xforms-select1-input:focus {
+html|*:root html|input.-moz-xforms-select1-input:focus {
   border: 1px dotted black;
 }
 
-html|span.-moz-date-container,
-html|span.-moz-select1-container {
+html|*:root html|span.-moz-date-container,
+html|*:root html|span.-moz-select1-container {
   margin: 0px;
   margin-bottom: 1px;
   border-color: ThreeDFace;
@@ -420,7 +457,7 @@ html|span.-moz-select1-container {
   padding-top: 1px;
 }
 
-html|div.-moz-xforms-select1-popup {
+html|*:root html|div.-moz-xforms-select1-popup {
   border-width: 1px;
   top: 0px;
   left: 0px;
@@ -437,12 +474,12 @@ html|div.-moz-xforms-select1-popup {
   cursor: default;
 }
 
-item[_moz_active] {
+html|*:root item[_moz_active] {
   color: HighlightText;
   background: Highlight;
 }
 
-choices > label {
+html|*:root select1[appearance='minimal'] choices > label {
   display: block;
   font: -moz-list;
   line-height: normal !important;
@@ -453,43 +490,63 @@ choices > label {
   text-indent: 0;
 }
 
-choices > item,  choices > itemset, choices > choices{
+html|*:root select1[appearance='minimal'] choices > item,
+html|*:root select1[appearance='minimal'] choices > itemset,
+html|*:root select1[appearance='minimal'] choices > choices {
   padding-left: 20px;
   font-style: normal;
   font-weight: normal;
 }
 
-case {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-case');
-}
-
-case > html|div.-moz-xforms-case-container {
-  display: inherit;
-}
-
-/* select */
+  /* select appearance="compact" (default) */
 html|*:root select {
   -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-compact');
 }
 html|*:root select html|span[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#widget-select-compact');
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select-compact');
 }
 
+xul|*:root select {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-compact');
+}
+xul|*:root select xul|box[anonid="control"] {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select-compact');
+}
+
+  /* select appearance="full" */
 html|*:root select[appearance="full"] {
   -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-full');
 }
 html|*:root select[appearance="full"] html|span[anonid="control"] {
-  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#widget-select-full');
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select-full');
 }
 
-select html|div.select-choice-label {
+xul|*:root select[appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-full');
+}
+xul|*:root select[appearance="full"] xul|box {
+  -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select-full');
+}
+
+  /* select, select1 styles*/
+select *|*.select-choice-label, select1 *|*.select-choice-label {
   font: -moz-list;
   font-style: italic;
   font-weight: bold;
 }
 
-select html|div.select-choice-content {
+select *|*.select-choice-content, select1 *|*.select-choice-content {
   padding-left: 10px;
+}
+
+xul|*:root select1[appearance="full"] xul|box xul|radiogroup:focus xul|radio[selected] + label,
+xul|*:root select[appearance="full"] xul|box xul|checkbox:focus + label {
+  outline: 1px dotted invert;
+}
+
+xul|*:root select, xul|*:root select1 {
+  display: -moz-box;
+  margin: 2px 4px;
 }
 
 /* upload widgets */

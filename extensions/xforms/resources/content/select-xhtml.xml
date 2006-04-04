@@ -92,14 +92,10 @@
   controls. All underlying widgets implements the interface what base widget
   for xforms select controls ask for. You can find interface description in
   'select.xml' file.
-
-  Thease control widgets are also capable of being bound to directly rather than
-  just through xforms select widgets. We are supporting the use of a readonly
-  attribute on elements that bind this way.
 -->
 
   <!-- CONTROL WIDGET FOR SELECT APPEARANCE='COMPACT' -->
-  <binding id="widget-select-compact"
+  <binding id="controlwidget-select-compact"
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
     <content>
@@ -108,19 +104,6 @@
     </content>
 
     <implementation>
-      <property name="readonly">
-        <getter>
-          return this.getAttribute("readonly" == "true") ? true : false;
-        </getter>
-        <setter>
-          if (val) {
-            this.setAttribute("readonly", "true");
-          } else {
-            this.removeAttribute("readonly");
-          }
-        </setter>
-      </property>
-
       <property name="selectedIndex"
                 onget="return this.control.selectedIndex;"
                 onset="this.control.selectedIndex = val;"/>
@@ -188,24 +171,9 @@
       <method name="isItemSelected">
         <parameter name="aItem"/>
         <body>
-          if (aItem.selected) {
-            return true;
-          }
-          return false;
+          return aItem.selected;
         </body>
       </method>
-
-      <field name="_control">null</field>
-      <property name="control" readonly="true">
-        <getter>
-          if (!this._control) {
-            this._control =
-              document.getAnonymousElementByAttribute(this, "anonid", "control");
-          }
-          return this._control;
-        </getter>
-      </property>
-
     </implementation>
 
     <handlers>
@@ -233,27 +201,14 @@
 
 
   <!-- CONTROL WIDGET FOR SELECT APPEARANCE='FULL' -->
-  <binding id="widget-select-full"
+  <binding id="controlwidget-select-full"
            extends="chrome://xforms/content/select.xml#controlwidget-base">
 
-    <content orient="vertical"/>
+    <content>
+      <html:div anonid="control"/>
+    </content>
 
     <implementation>
-
-      <property name="readonly">
-        <getter>
-          return this.getAttribute("readonly") == "true" ? true : false;
-        </getter>
-        <setter>
-          <![CDATA[
-          if (val) {
-            this.setAttribute("readonly", "true");
-          } else {
-            this.removeAttribute("readonly");
-          }
-          ]]>
-        </setter>
-      </property>
 
       <!-- XXX: not implemented -->
       <property name="selectedIndex"
@@ -284,7 +239,7 @@
           input.setAttribute("type", "checkbox");
           input.setAttribute("value", aValue);
           input.setAttribute("anonid", "wcontrol");
-          if (this.readonly) 
+          if (this.readonly)
             input.setAttribute("disabled", "true");
 
           div.appendChild(input);
@@ -344,23 +299,9 @@
       <method name="isItemSelected">
         <parameter name="aItem"/>
         <body>
-          if (aItem.firstChild.checked) 
-            return true;
-          return false;
+          return aItem.firstChild.checked;
         </body>
       </method>
-
-      <field name="_control">null</field>
-      <property name="control" readonly="true">
-        <getter>
-          if (!this._control) {
-            this._control = this;
-          }
-
-          return this._control;
-        </getter>
-      </property>
-
     </implementation>
 
     <handlers>

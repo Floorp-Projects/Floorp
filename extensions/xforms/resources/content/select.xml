@@ -768,9 +768,63 @@
     underlying controls implement functionality asked for by object returned by
     getControlElement() method of xforms select widgets. Examples of the widget
     using you can find in 'select-xhtml.xml' file.
+
+    All inherited widgets from this one should be also capable of being bound to
+    directly rather than just through xforms select widgets. We are supporting
+    the use of a readonly attribute on elements that bind this way.
   -->
   <binding id="controlwidget-base">
     <implementation>
+      <!-- Return parent xf:select/xf:select1 control. -->
+      <property name="parentControl" readonly="true">
+        <getter>
+          <![CDATA[
+          // returns 'select' or 'select1' parent control
+          if (!this._parentControl) {
+            var root = this.ownerDocument.documentElement;
+            for (var node = this.parentNode; node != root; node = node.parentNode) {
+              if (node.namespaceURI == this.XFORMS_NS &&
+                  (node.localName == "select" || node.localName == "select1")) {
+                this._parentControl = node;
+                break;
+              }
+            }
+          }
+          return this._parentControl;
+          ]]>
+        </getter>
+      </property>
+      <field name="_parentControl">null</field>
+
+      <!-- Return native control widget. -->
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control) {
+            this._control =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._control;
+        </getter>
+      </property>
+      <field name="_control">null</field>
+
+      <!-- Set readonly state. The state is used to enable/disable native
+        control widget during select items adding.
+      -->
+      <property name="readonly">
+        <getter>
+          return this.getAttribute("readonly") == "true" ? true : false;
+        </getter>
+        <setter>
+          if (val) {
+            this.setAttribute("readonly", "true");
+          } else {
+            this.removeAttribute("readonly");
+          }
+        </setter>
+      </property>
+
+      <!-- Update instance data to native control widget value. -->
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
@@ -787,32 +841,13 @@
         </body>
       </method>
 
+      <!-- Dispatch event to parent control. -->
       <method name="dispatchDOMUIEvent">
         <parameter name="aType"/>
         <body>
           this.parentControl.dispatchDOMUIEvent(aType);
         </body>
       </method>
-
-      <property name="parentControl" readonly="true">
-        <getter>
-          <![CDATA[
-          // returns 'select' or 'select1' parent control
-          if (!this._parentControl) {
-            var root = this.ownerDocument.documentElement;
-            for (var node = this.parentNode; node != root; node = node.parentNode) {
-              if (node.namespaceURI == this.XFORMS_NS && 
-                  (node.localName == "select" || node.localName == "select1")) {
-                this._parentControl = node;
-                break;
-              }
-            }
-          }
-          return this._parentControl;
-          ]]>
-        </getter>
-      </property>
-      <field name="_parentControl">null</field>
 
       <property name="XFORMS_NS" readonly="true"
                 onget="return 'http://www.w3.org/2002/xforms';"/>
