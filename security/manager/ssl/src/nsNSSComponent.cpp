@@ -26,7 +26,6 @@
  *   Mitch Stoltz <mstoltz@netscape.com>
  *   Brian Ryner <bryner@brianryner.com>
  *   Kai Engert <kaie@netscape.com>
- *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,8 +44,6 @@
 #include "nsNSSComponent.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSIOLayer.h"
-#include "nsSSLThread.h"
-#include "nsCertVerificationThread.h"
 #include "nsNSSEvent.h"
 
 #include "nsNetUtil.h"
@@ -292,34 +289,15 @@ nsNSSComponent::nsNSSComponent()
   mTimer = nsnull;
   mCrlTimerLock = nsnull;
   mObserversRegistered = PR_FALSE;
-
-  nsSSLIOLayerHelpers::Init();
   
   NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
   hashTableCerts = nsnull;
   mShutdownObjectList = nsNSSShutDownList::construct();
-  mIsNetworkDown = PR_FALSE;
-  mSSLThread = new nsSSLThread();
-  mCertVerificationThread = new nsCertVerificationThread();
 }
 
 nsNSSComponent::~nsNSSComponent()
 {
-  if (mSSLThread)
-  {
-    mSSLThread->requestExit();
-    delete mSSLThread;
-    mSSLThread = nsnull;
-  }
-  
-  if (mCertVerificationThread)
-  {
-    mCertVerificationThread->requestExit();
-    delete mCertVerificationThread;
-    mCertVerificationThread = nsnull;
-  }
-
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor\n"));
 
   if(mUpdateTimerInitialized == PR_TRUE){
@@ -341,7 +319,7 @@ nsNSSComponent::~nsNSSComponent()
   // All cleanup code requiring services needs to happen in xpcom_shutdown
 
   ShutdownNSS();
-  nsSSLIOLayerHelpers::Cleanup();
+  nsSSLIOLayerFreeTLSIntolerantSites();
   --mInstanceCount;
   delete mShutdownObjectList;
 
@@ -1477,9 +1455,6 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       // Set up OCSP //
       setOCSPOptions(mPrefBranch);
 
-      mHttpForNSS.initTable();
-      mHttpForNSS.registerHttpClient();
-
       InstallLoadableRoots();
 
       LaunchSmartCardThreads();
@@ -1524,7 +1499,6 @@ nsNSSComponent::ShutdownNSS()
     mNSSInitialized = PR_FALSE;
 
     PK11_SetPasswordFunc((PK11PasswordFunc)nsnull);
-    mHttpForNSS.unregisterHttpClient();
 
     if (mPrefBranch) {
       nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(mPrefBranch);
@@ -1556,14 +1530,6 @@ nsNSSComponent::Init()
   nsresult rv = NS_OK;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
-
-  if (!mutex || !mShutdownObjectList || 
-      !mSSLThread || !mCertVerificationThread)
-  {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS init, out of memory in constructor\n"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   rv = InitializePIPNSSBundle();
   if (NS_FAILED(rv)) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to create pipnss bundle.\n"));
@@ -1778,8 +1744,13 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
   return NS_OK;
 }
 
+#define DEBUG_PSM_PROFILE
+
+#ifdef DEBUG_PSM_PROFILE
 #define PROFILE_CHANGE_NET_TEARDOWN_TOPIC "profile-change-net-teardown"
 #define PROFILE_CHANGE_NET_RESTORE_TOPIC "profile-change-net-restore"
+#endif
+
 #define PROFILE_APPROVE_CHANGE_TOPIC "profile-approve-change"
 #define PROFILE_CHANGE_TEARDOWN_TOPIC "profile-change-teardown"
 #define PROFILE_CHANGE_TEARDOWN_VETO_TOPIC "profile-change-teardown-veto"
@@ -1791,6 +1762,10 @@ NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
                         const PRUnichar *someData)
 {
+#ifdef DEBUG
+  static PRBool isNetworkDown = PR_FALSE;
+#endif
+
   if (nsCRT::strcmp(aTopic, PROFILE_APPROVE_CHANGE_TOPIC) == 0) {
     if (mShutdownObjectList->isUIActive()) {
       ShowAlert(ai_crypto_ui_active);
@@ -1826,7 +1801,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving profile change topic\n"));
-    NS_ASSERTION(mIsNetworkDown, "nsNSSComponent relies on profile manager to wait for synchronous shutdown of all network activity");
+#ifdef DEBUG
+    NS_ASSERTION(isNetworkDown, "nsNSSComponent relies on profile manager to wait for synchronous shutdown of all network activity");
+#endif
 
     PRBool needsCleanup = PR_TRUE;
 
@@ -1941,22 +1918,17 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       }
     }
   }
+
+#ifdef DEBUG
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network teardown topic\n"));
-    if (mSSLThread)
-      mSSLThread->requestExit();
-    if (mCertVerificationThread)
-      mCertVerificationThread->requestExit();
-    mIsNetworkDown = PR_TRUE;
+    isNetworkDown = PR_TRUE;
   }
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_RESTORE_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("receiving network restore topic\n"));
-    delete mSSLThread;
-    mSSLThread = new nsSSLThread();
-    delete mCertVerificationThread;
-    mCertVerificationThread = new nsCertVerificationThread();
-    mIsNetworkDown = PR_FALSE;
+    isNetworkDown = PR_FALSE;
   }
+#endif
 
   return NS_OK;
 }
@@ -2047,8 +2019,10 @@ nsNSSComponent::RegisterObservers()
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_AFTER_CHANGE_TOPIC, PR_FALSE);
     observerService->AddObserver(this, SESSION_LOGOUT_TOPIC, PR_FALSE);
+#ifdef DEBUG
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, PR_FALSE);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_RESTORE_TOPIC, PR_FALSE);
+#endif
   }
   return NS_OK;
 }
@@ -2396,8 +2370,8 @@ PSMContentDownloader::OnDataAvailable(nsIRequest* request,
   do {
     err = aIStream->Read(mByteData+mBufferOffset,
                          aLength, &amt);
-    if (NS_FAILED(err)) return err;
     if (amt == 0) break;
+    if (NS_FAILED(err)) return err;
     
     aLength -= amt;
     mBufferOffset += amt;

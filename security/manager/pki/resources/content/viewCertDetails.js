@@ -22,7 +22,6 @@
  *   Bob Lord <lord@netscape.com>
  *   Ian McGreer <mcgreer@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
- *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
-const nsIX509Cert3 = Components.interfaces.nsIX509Cert3;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
@@ -123,13 +121,6 @@ function setWindowName()
   AddCertChain("treesetDump", chain, "dump_");
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
-  
-  if (cert instanceof nsIX509Cert3)
-  {
-    cert.requestUsagesArrayAsync(
-            getProxyOnUIThread(new listener(),
-                               Components.interfaces.nsICertVerificationListener));
-  }
 }
 
  
@@ -190,44 +181,14 @@ function addAttributeFromCert(nodeName, value)
   node.setAttribute('value',value)
 }
 
-
-
-function listener() {
-}
-
-listener.prototype.QueryInterface =
-  function(iid) {
-    if (iid.equals(Components.interfaces.nsISupports) ||
-        iid.equals(Components.interfaces.nsICertVerificationListener))
-        return this;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  }
-
-listener.prototype.notify =
-  function(cert, result) {
-    DisplayVerificationData(cert, result);
-  }
-
-function DisplayVerificationData(cert, result)
+function DisplayGeneralDataFromCert(cert)
 {
-  if (!result || !cert)
-    return; // no results could be produced
-
-  if (!(cert instanceof Components.interfaces.nsIX509Cert))
-    return;
-
   //  Verification and usage
   var verifystr = "";
   var o1 = {};
   var o2 = {};
   var o3 = {};
-
-  if (!(result instanceof Components.interfaces.nsICertVerificationResult))
-    return;
-
-  result.getUsagesArrayResult(o1, o2, o3);
-
+  cert.getUsagesArray(false, o1, o2, o3); // do not ignore OCSP when checking
   var verifystate = o1.value;
   var count = o2.value;
   var usageList = o3.value;
@@ -256,10 +217,7 @@ function DisplayVerificationData(cert, result)
       AddUsage(usageList[i],verifyInfoBox);
     }
   }
-}
 
-function DisplayGeneralDataFromCert(cert)
-{
   //  Common Name
   addAttributeFromCert('commonname', cert.commonName);
   //  Organization
@@ -304,22 +262,4 @@ function updateCertDump()
     asn1Tree.loadASN1Structure(cert.ASN1Structure);
   }
   displaySelected();
-}
-
-function getProxyOnUIThread(aObject, aInterface) {
-    var eventQSvc = Components.
-            classes["@mozilla.org/event-queue-service;1"].
-            getService(Components.interfaces.nsIEventQueueService);
-
-    var uiQueue = eventQSvc.
-            getSpecialEventQueue(Components.interfaces.
-            nsIEventQueueService.UI_THREAD_EVENT_QUEUE);
-
-    var proxyMgr = Components.
-            classes["@mozilla.org/xpcomproxy;1"].
-            getService(Components.interfaces.nsIProxyObjectManager);
-
-    return proxyMgr.getProxyForObject(uiQueue,
-            aInterface, aObject, 5);
-    // 5 == PROXY_ALWAYS | PROXY_SYNC
 }
