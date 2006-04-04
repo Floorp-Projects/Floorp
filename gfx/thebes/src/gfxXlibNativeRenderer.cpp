@@ -105,7 +105,7 @@ gfxXlibNativeRenderer::Draw(Display* dpy, gfxContext* ctx, int width, int height
 
     if (output) {
         if (result.surface) {
-            output->mSurface = new gfxUnknownSurface(result.surface);
+            output->mSurface = gfxASurface::Wrap(result.surface);
             if (!output->mSurface) {
                 cairo_surface_destroy (result.surface);
                 return NS_ERROR_OUT_OF_MEMORY;

@@ -38,6 +38,8 @@
 #include "gfxWindowsSurface.h"
 #include "nsString.h"
 
+#include <cairo-win32.h>
+
 THEBES_IMPL_REFCOUNTING(gfxWindowsSurface)
 
 gfxWindowsSurface::gfxWindowsSurface(HWND wnd) :
@@ -68,6 +70,15 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long 
     mDC = cairo_win32_surface_get_dc(CairoSurface());
 }
 
+
+gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
+    mOwnsDC(PR_FALSE), mWnd(nsnull)
+{
+    mDC = cairo_win32_surface_get_dc(csurf);
+
+    Init(csurf, PR_TRUE);
+}
+
 gfxWindowsSurface::~gfxWindowsSurface()
 {
     Destroy();
@@ -79,7 +90,6 @@ gfxWindowsSurface::~gfxWindowsSurface()
             ::DeleteDC(mDC);
     }
 }
-
 
 static char*
 GetACPString(const nsAString& aStr)

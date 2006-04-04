@@ -65,6 +65,15 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
     Init(surf);
 }
 
+gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf)
+{
+    mWidth = -1;
+    mHeight = -1;
+    mCGContext = nsnull;
+
+    Init(csurf, PR_TRUE);
+}
+
 gfxQuartzSurface::~gfxQuartzSurface()
 {
     //printf ("--- ~gfxQuartzSurface[%p] %p %p\n", this, CairoSurface(), mCGContext);

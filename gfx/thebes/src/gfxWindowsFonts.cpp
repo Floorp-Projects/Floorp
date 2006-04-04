@@ -48,6 +48,13 @@
 
 #define NSToCoordRound(x) (floor((x) + 0.5))
 
+inline HDC GetDCFromSurface(gfxASurface *aSurface) {
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
+        NS_ERROR("gfxWindowsTextRun::MeasureOrDrawFast: Context target is not win32!");
+        return nsnull;
+    }
+    return NS_STATIC_CAST(gfxWindowsSurface*, aSurface)->GetDC();
+}
 
 /**********************************************************************
  *
@@ -492,11 +499,8 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         return -1;
     }
 
-    nsRefPtr<gfxASurface> surf = aContext->CurrentGroupSurface();
-    if (!surf)
-        surf = aContext->CurrentSurface();
-
-    HDC aDC = cairo_win32_surface_get_dc(surf->CairoSurface());
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
+    HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
 
     const char *aCString;
@@ -601,9 +605,10 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 
         cairo_show_glyphs(cr, cglyphs, numGlyphs);
 
+        free(cglyphs);
+
         if (dxBuf != stackBuf)
             free(dxBuf);
-        free(cglyphs);
     }
 
     free(glyphs);
@@ -625,11 +630,8 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
                                           PRInt32 aX, PRInt32 aY,
                                           const PRInt32 *aSpacing)
 {
-    nsRefPtr<gfxASurface> surf = aContext->CurrentGroupSurface();
-    if (!surf)
-        surf = aContext->CurrentSurface();
-
-    HDC aDC = cairo_win32_surface_get_dc(surf->CairoSurface());
+    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
+    HDC aDC = GetDCFromSurface(surf);
     NS_ASSERTION(aDC, "No DC");
 
     const nsAString& theString = (mIsASCII) ? NS_STATIC_CAST(const nsAString&, NS_ConvertASCIItoUTF16(mCString)) : mString;

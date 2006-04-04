@@ -53,6 +53,7 @@ public:
     gfxQuartzSurface(CGContextRef context,
                      int width, int height,
                      PRBool y_grows_down = PR_TRUE);
+    gfxQuartzSurface(cairo_surface_t *csurf);
 
     virtual ~gfxQuartzSurface();
 
