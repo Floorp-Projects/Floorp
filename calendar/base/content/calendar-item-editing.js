@@ -145,7 +145,7 @@ function modifyEventWithDialog(item)
             (originalItem.calendar.uri.equals(calendar.uri)))
             doTransaction('modify', item, item.calendar, originalItem, null);
         else {
-            doTransaction('move', item, item.calendar, originalItem, null);
+            doTransaction('move', item, calendar, originalItem, null);
         }
     }
 
