@@ -709,9 +709,9 @@ LRESULT WINAPI nsDragService::HiddenWndProc(HWND aWnd, UINT aMsg, WPARAM awParam
       // Get From path (where the file is comming from)
       WCHAR szPathFrom[MAX_PATH + 1];
       WCHAR szPathTo[MAX_PATH + 1];
-      nsToolkit::mSHGetPathFromIDList(ppidl[0], szPathFrom);
+      ::SHGetPathFromIDListW(ppidl[0], szPathFrom);
       // Get To path (where the file is going to)
-      nsToolkit::mSHGetPathFromIDList(ppidl[1], szPathTo);
+      ::SHGetPathFromIDListW(ppidl[1], szPathTo);
 
       // first is from where the file is coming
       // and the second is where the file is going

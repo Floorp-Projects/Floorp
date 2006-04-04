@@ -46,8 +46,6 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 
-#include "aimm.h"
-
 struct MethodInfo;
 class nsIEventQueue;
 class MouseTrailer;
@@ -106,39 +104,11 @@ protected:
 public:
     static HINSTANCE mDllInstance;
     // OS flag
-    static PRBool    mIsNT;
     static PRBool    mIsWinXP;
-    static PRBool    mUseImeApiW;
-    static PRBool    mW2KXP_CP936;
 
     static PRBool InitVersionInfo();
     static void Startup(HINSTANCE hModule);
     static void Shutdown();
-
-    // Active Input Method support
-    static IActiveIMMApp *gAIMMApp;
-    static PRInt32       gAIMMCount;
-
-    // Ansi API support
-    static HMODULE              mShell32Module;
-    static NS_DefWindowProc     mDefWindowProc;
-    static NS_CallWindowProc    mCallWindowProc;
-    static NS_SetWindowLong     mSetWindowLong;
-    static NS_GetWindowLong     mGetWindowLong;
-    static NS_SendMessage       mSendMessage;
-    static NS_DispatchMessage   mDispatchMessage;
-    static NS_GetMessage        mGetMessage;
-    static NS_PeekMessage       mPeekMessage;
-    static NS_GetOpenFileName   mGetOpenFileName;
-    static NS_GetSaveFileName   mGetSaveFileName;
-    static NS_GetClassName      mGetClassName;
-    static NS_CreateWindowEx    mCreateWindowEx;
-    static NS_RegisterClass     mRegisterClass;
-    static NS_UnregisterClass   mUnregisterClass;
-    static NS_SHGetPathFromIDList mSHGetPathFromIDList;
-#ifndef WINCE
-    static NS_SHBrowseForFolder   mSHBrowseForFolder;
-#endif
 
     static MouseTrailer *gMouseTrailer;
 };
@@ -188,234 +158,6 @@ private:
     nsCOMPtr<nsITimer>    mTimer;
 };
 
-//-------------------------------------------------------------------------
-//
-// Native IMM wrapper
-//
-//-------------------------------------------------------------------------
-class nsIMM
-{
-  //prototypes for DLL function calls...
-  typedef LONG (CALLBACK *GetCompStrPtr)       (HIMC, DWORD, LPVOID, DWORD);
-  typedef LONG (CALLBACK *GetContextPtr)       (HWND);
-  typedef LONG (CALLBACK *RelContextPtr)       (HWND, HIMC);
-  typedef LONG (CALLBACK *NotifyIMEPtr)        (HIMC, DWORD, DWORD, DWORD);
-  typedef LONG (CALLBACK *SetCandWindowPtr)    (HIMC, LPCANDIDATEFORM);
-  typedef LONG (CALLBACK *SetCompWindowPtr)    (HIMC, LPCOMPOSITIONFORM);
-  typedef LONG (CALLBACK *GetCompWindowPtr)    (HIMC, LPCOMPOSITIONFORM);
-  typedef LONG (CALLBACK *GetPropertyPtr)      (HKL, DWORD);
-  typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
-  typedef BOOL (CALLBACK *GetOpenStatusPtr)    (HIMC);
-  typedef BOOL (CALLBACK *SetOpenStatusPtr)    (HIMC, BOOL);
-  typedef HIMC (CALLBACK *AssociateContextPtr) (HWND, HIMC);
-public:
-
-  static nsIMM& LoadModule();
-
-  nsIMM(const char* aModuleName="IMM32.DLL");
-  ~nsIMM();
-
-  LONG GetCompositionStringA(HIMC aIMC, DWORD aIndex,
-                             LPVOID aBuf, DWORD aBufLen);
-  LONG GetCompositionStringW(HIMC aIMC, DWORD aIndex,
-                             LPVOID aBuf, DWORD aBufLen);
-  LONG GetContext(HWND aWnd);
-  LONG ReleaseContext(HWND aWnd, HIMC aIMC);
-  LONG NotifyIME(HIMC aIMC, DWORD aAction, DWORD aIndex, DWORD aValue);
-  LONG SetCandidateWindow(HIMC aIMC, LPCANDIDATEFORM aCandidateForm);
-  LONG SetCompositionWindow(HIMC aIMC, LPCOMPOSITIONFORM aCompositionForm);
-  LONG GetCompositionWindow(HIMC aIMC,LPCOMPOSITIONFORM aCompositionForm);
-  LONG GetProperty(HKL aKL, DWORD aIndex);
-  LONG GetDefaultIMEWnd(HWND aWnd);
-  BOOL GetOpenStatus(HIMC aIMC);
-  BOOL SetOpenStatus(HIMC aIMC, BOOL aStatus);
-  HIMC AssociateContext(HWND aWnd, HIMC aIMC);
-private:
-
-  HINSTANCE           mInstance;
-  GetCompStrPtr       mGetCompositionStringA;
-  GetCompStrPtr       mGetCompositionStringW;
-  GetContextPtr       mGetContext;
-  RelContextPtr       mReleaseContext;
-  NotifyIMEPtr        mNotifyIME;
-  SetCandWindowPtr    mSetCandiateWindow;
-  SetCompWindowPtr    mSetCompositionWindow;
-  GetCompWindowPtr    mGetCompositionWindow;
-  GetPropertyPtr      mGetProperty;
-  GetDefaultIMEWndPtr mGetDefaultIMEWnd;
-  GetOpenStatusPtr    mGetOpenStatus;
-  SetOpenStatusPtr    mSetOpenStatus;
-  AssociateContextPtr mAssociateContext;
-};
-
-//-------------------------------------------------------------------------
-//
-// Macro for Active Input Method Manager (AIMM) support.
-// Use AIMM method instead of Win32 Imm APIs.
-//
-//-------------------------------------------------------------------------
-#define NS_IMM_GETCOMPOSITIONSTRINGA(hIMC, dwIndex, pBuf, \
-                                     dwBufLen, compStrLen) \
-{ \
-  compStrLen = 0; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionStringA(hIMC, dwIndex, \
-                                               dwBufLen, &(compStrLen), \
-                                               pBuf); \
- else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    compStrLen = \
-      theIMM.GetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
- } \
-}
-
-#define NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, pBuf, \
-                                     dwBufLen, compStrLen) \
-{ \
-  compStrLen = 0; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionStringW(hIMC, dwIndex, \
-                                               dwBufLen, &(compStrLen), \
-                                               pBuf); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    compStrLen = \
-      theIMM.GetCompositionStringW(hIMC, dwIndex, pBuf, dwBufLen); \
-  } \
-}
-
-#define NS_IMM_GETCONTEXT(hWnd, hIMC) \
-{ \
-  hIMC = NULL; \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetContext(hWnd, &(hIMC)); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    hIMC = (HIMC)theIMM.GetContext(hWnd);  \
-  } \
-}
-
-#define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->ReleaseContext(hWnd, hIMC); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.ReleaseContext(hWnd, hIMC); \
-  } \
-}
-
-#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue, bRtn) \
-{ \
-  bRtn = TRUE; \
-  if (nsToolkit::gAIMMApp) { \
-    bRtn = (nsToolkit::gAIMMApp->NotifyIME(hIMC, dwAction, \
-                                           dwIndex, dwValue) == S_OK); \
-  }\
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    (theIMM.NotifyIME(hIMC, dwAction, dwIndex, dwValue)); \
-  } \
-}
-
-#define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetCandidateWindow(hIMC, candForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.SetCandidateWindow(hIMC, candForm); \
-  } \
-}
-
-#define NS_IMM_SETCOMPOSITIONWINDOW(hIMC, compForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetCompositionWindow(hIMC, compForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.SetCompositionWindow(hIMC, compForm); \
-  } \
-}
-
-#define NS_IMM_GETCOMPOSITIONWINDOW(hIMC, compForm) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetCompositionWindow(hIMC, compForm); \
-  else { \
-    nsIMM &theIMM = nsIMM::LoadModule(); \
-    theIMM.GetCompositionWindow(hIMC, compForm); \
-  } \
-}
-
-#define NS_IMM_GETPROPERTY(hKL, dwIndex, dwProp) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetProperty(hKL, dwIndex, &(dwProp)); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    dwProp = (DWORD)theIMM.GetProperty(hKL, dwIndex);  \
-  } \
-}
-
-#define NS_IMM_GETDEFAULTIMEWND(hWnd, phDefWnd) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->GetDefaultIMEWnd(hWnd, phDefWnd); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    *(phDefWnd) = (HWND)theIMM.GetDefaultIMEWnd(hWnd);  \
-  } \
-}
-
-#define NS_IMM_GETOPENSTATUS(hIMC, bRtn) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    bRtn = nsToolkit::gAIMMApp->GetOpenStatus(hIMC); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    bRtn = theIMM.GetOpenStatus(hIMC);  \
-  } \
-}
-
-#define NS_IMM_SETOPENSTATUS(hIMC, bOpen) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetOpenStatus(hIMC, bOpen); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    theIMM.SetOpenStatus(hIMC, bOpen);  \
-  } \
-}
-
-#define NS_IMM_ASSOCIATECONTEXT(hWnd, hIMC, phOldIMC) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->AssociateContext(hWnd, hIMC, phOldIMC); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    *(phOldIMC) = theIMM.AssociateContext(hWnd, hIMC);  \
-  } \
-}
-
-//-------------------------------------------------------------------------
-//
-// Macro for Input Method A/W conversion.
-//
-// On Windows 2000, ImmGetCompositionStringA() doesn't work well using IME of
-// different code page.  (See BUG # 29606)
-// And ImmGetCompositionStringW() doesn't work on Windows 9x.
-//
-//-------------------------------------------------------------------------
-
-#define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, cBuf, dwBufLen, lRtn) \
-{ \
-  if (nsToolkit::mUseImeApiW) { \
-    NS_IMM_GETCOMPOSITIONSTRINGW(hIMC, dwIndex, cBuf, dwBufLen, lRtn); \
-  } else { \
-    NS_IMM_GETCOMPOSITIONSTRINGA(hIMC, dwIndex, cBuf, dwBufLen, lRtn); \
-  } \
-}
 
 //-------------------------------------------------------------------------
 //
@@ -425,6 +167,11 @@ private:
 //-------------------------------------------------------------------------
 
 #ifndef WM_IME_REQUEST
+#define WM_IME_REQUEST                  0x0288
+#endif    // #ifndef WM_IME_REQUEST
+
+#ifndef IMR_RECONVERTSTRING
+#define IMR_RECONVERTSTRING             0x0004
 typedef struct tagRECONVERTSTRING {
   DWORD dwSize;
   DWORD dwVersion;
@@ -435,7 +182,10 @@ typedef struct tagRECONVERTSTRING {
   DWORD dwTargetStrLen;
   DWORD dwTargetStrOffset;
 } RECONVERTSTRING, FAR * LPRECONVERTSTRING;
+#endif    // #ifndef IMR_RECONVERTSTRING
 
+#ifndef IMR_QUERYCHARPOSITION
+#define IMR_QUERYCHARPOSITION           0x0006
 typedef struct tagIMECHARPOSITION {
   DWORD dwSize;
   DWORD dwCharPos;
@@ -443,19 +193,14 @@ typedef struct tagIMECHARPOSITION {
   UINT  cLineHeight;
   RECT  rcDocument;
 } IMECHARPOSITION, *PIMECHARPOSITION;
-
-#define IMR_RECONVERTSTRING             0x0004
-#define IMR_QUERYCHARPOSITION           0x0006
-#define WM_IME_REQUEST                  0x0288
-#endif    // #ifndef WM_IME_REQUEST
+#endif    // #ifndef IMR_QUERYCHARPOSITION
 
 //-------------------------------------------------------------------------
 //
-// from http://msdn.microsoft.com/library/specs/msime.h
+// from http://msdn.microsoft.com/library/en-us/dnime/html/msime.asp
 //
 //-------------------------------------------------------------------------
 
-#define RWM_RECONVERT       TEXT("MSIMEReconvert")
 #define RWM_MOUSE           TEXT("MSIMEMouseOperation")
 
 #define IMEMOUSE_NONE       0x00    // no mouse button was pushed
@@ -464,13 +209,5 @@ typedef struct tagIMECHARPOSITION {
 #define IMEMOUSE_MDOWN      0x04
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
-
-//-------------------------------------------------------------------------
-//
-// from http://www.justsystem.co.jp/tech/atok/api12_04.html#4_11
-//
-//-------------------------------------------------------------------------
-
-#define MSGNAME_ATOK_RECONVERT TEXT("Atok Message for ReconvertString")
 
 #endif  // TOOLKIT_H

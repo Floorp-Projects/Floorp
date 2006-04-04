@@ -62,14 +62,7 @@ private:
 
   nsIScreen* CreateNewScreenObject ( void* inScreen ) ;
 
-  PRBool mHasMultiMonitorAPIs;
   PRUint32 mNumberOfScreens;
-
-    // function pointers for multi-monitor API system calls that we use. Not
-    // valid unless |mHasMultiMonitorAPIs| is true
-  FARPROC mGetMonitorInfoProc;
-  FARPROC mMonitorFromRectProc;
-  FARPROC mEnumDisplayMonitorsProc;
 
     // cache the screens to avoid the memory allocations
   nsAutoVoidArray mScreenList;

@@ -48,40 +48,16 @@
 #include "nsScreenWin.h"
 
 
-// needed because there are unicode/ansi versions of this routine
-// and we need to make sure we get the correct one.
-#ifdef UNICODE
-#define GetMonitorInfoQuoted "GetMonitorInfoW"
-#else
-#define GetMonitorInfoQuoted "GetMonitorInfoA"
-#endif
-
-
-#if _MSC_VER >= 1200
-typedef BOOL (WINAPI *GetMonitorInfoProc)(HMONITOR inMon, LPMONITORINFO ioInfo); 
-#endif
 
 
 nsScreenWin :: nsScreenWin ( void* inScreen )
-  : mScreen(inScreen), mHasMultiMonitorAPIs(PR_FALSE),
-      mGetMonitorInfoProc(nsnull)
+  : mScreen(inScreen)
 {
 #ifdef DEBUG
   HDC hDCScreen = ::GetDC(nsnull);
   NS_ASSERTION(hDCScreen,"GetDC Failure");
   NS_ASSERTION ( ::GetDeviceCaps(hDCScreen, TECHNOLOGY) == DT_RASDISPLAY, "Not a display screen");
   ::ReleaseDC(nsnull,hDCScreen);
-#endif
-   
-#if _MSC_VER >= 1200
-  // figure out if we can call the multiple monitor APIs that are only
-  // available on Win98/2000.
-  HMODULE lib = GetModuleHandle("user32.dll");
-  if ( lib ) {
-    mGetMonitorInfoProc = GetProcAddress ( lib, GetMonitorInfoQuoted );
-    if ( mGetMonitorInfoProc )
-      mHasMultiMonitorAPIs = PR_TRUE;
-  }
 #endif
 
   // nothing else to do. I guess we could cache a bunch of information
@@ -105,11 +81,10 @@ nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
 {
   BOOL success = FALSE;
 #if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+  if ( mScreen ) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
+    success = ::GetMonitorInfoW( (HMONITOR)mScreen, &info );
     if ( success ) {
       *outLeft = info.rcMonitor.left;
       *outTop = info.rcMonitor.top;
@@ -138,11 +113,10 @@ nsScreenWin :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 {
   BOOL success = FALSE;
 #if _MSC_VER >= 1200
-  if ( mScreen && mHasMultiMonitorAPIs ) {
-    GetMonitorInfoProc proc = (GetMonitorInfoProc)mGetMonitorInfoProc;
+  if ( mScreen ) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = (*proc)( (HMONITOR)mScreen, &info );
+    success = ::GetMonitorInfoW( (HMONITOR)mScreen, &info );
     if ( success ) {
       *outLeft = info.rcWork.left;
       *outTop = info.rcWork.top;
