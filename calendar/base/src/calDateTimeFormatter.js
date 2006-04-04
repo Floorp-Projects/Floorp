@@ -140,6 +140,9 @@ function formatDateWithoutYear(aDate) {
 
 calDateTimeFormatter.prototype.formatTime =
 function formatTime(aDate) {
+    if (aDate.isDate)
+        return this.mDateStringBundle.GetStringFromName("AllDay");
+
     return this.mDateService.FormatTime("",
                                         nsIScriptableDateFormat.timeFormatNoSeconds,
                                         aDate.hour,

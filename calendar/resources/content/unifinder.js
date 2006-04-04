@@ -467,8 +467,11 @@ var treeView =
             var eventEndDate = calendarEvent.endDate.clone();
             // XXX reimplement
             //var eventEndDate = getCurrentNextOrPreviousRecurrence( calendarEvent );
-            if (calendarEvent.startDate.isDate) // display enddate is ical enddate - 1
+            if (calendarEvent.startDate.isDate) {
+               // display enddate is ical enddate - 1
                eventEndDate.day = eventEndDate.day - 1;
+               eventEndDate.normalize();
+            }
             return formatUnifinderEventDateTime(eventEndDate);         
 
          case "unifinder-search-results-tree-col-categories":
