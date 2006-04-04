@@ -955,7 +955,18 @@ nsXFormsModelElement::GetInstanceDocument(const nsAString& aInstanceID,
   NS_ENSURE_ARG_POINTER(aDocument);
 
   *aDocument = FindInstanceDocument(aInstanceID).get();  // transfer reference
-  return *aDocument ? NS_OK : NS_ERROR_FAILURE;
+
+  if (*aDocument) {
+    return NS_OK;
+  }
+  
+  const nsPromiseFlatString& flat = PromiseFlatString(aInstanceID);
+  const PRUnichar *strings[] = { flat.get() };
+  nsXFormsUtils::ReportError(aInstanceID.IsEmpty() ?
+                               NS_LITERAL_STRING("defInstanceNotFound") :
+                               NS_LITERAL_STRING("instanceNotFound"),
+                             strings, 1, mElement, nsnull);
+  return NS_ERROR_DOM_NOT_FOUND_ERR;
 }
 
 NS_IMETHODIMP
