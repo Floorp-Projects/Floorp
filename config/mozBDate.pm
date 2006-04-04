@@ -87,23 +87,22 @@ sub UpdateBuildNumber($$) {
         return;
     }
 
-    if ($official) {
-        &write_number($outfile, $build_number);
-    } else {
+    if (!$official) {
+	$build_number = "0000000000";
+    }
 
-        my $old_num = -1;
-        
-        # Only overwrite file if contents are not already set to 0
-        if ( -e $outfile ) {
-            open(OLD, "<$outfile") || die "$outfile: $!\n";
-            $old_num = <OLD>;
-            chomp($old_num);
-            close(OLD);
-        }
+    my $old_num = "";
     
-        if ($old_num != 0) {
-            &write_number($outfile, "0000000000");
-        }
+    # Only overwrite file if contents are not already set to 0
+    if ( -e $outfile ) {
+        open(OLD, "<$outfile") || die "$outfile: $!\n";
+        $old_num = <OLD>;
+        chomp($old_num);
+        close(OLD);
+    }
+
+    if ($old_num ne $build_number) {
+        &write_number($outfile, $build_number);
     }
     return;
 }
