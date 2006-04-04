@@ -268,6 +268,11 @@ protected:
                                     PRUint32             aOffset,
                                     PRUint32             aLength,
                                     DeleteTextTxn      **aTxn);
+
+  nsresult CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
+                                       PRUint32              aOffset,
+                                       nsIEditor::EDirection aDirection,
+                                       DeleteTextTxn       **aTxn);
 	
   NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
                                    PRUint32    aOffset,

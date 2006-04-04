@@ -5023,6 +5023,36 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
   return result;
 }
 
+nsresult
+nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
+                                      PRUint32              aOffset,
+                                      nsIEditor::EDirection aDirection,
+                                      DeleteTextTxn       **aTxn)
+{
+  NS_ASSERTION(aDirection == eNext || aDirection == ePrevious,
+               "invalid direction");
+  nsAutoString data;
+  aData->GetData(data);
+  PRUint32 segOffset, segLength = 1;
+  if (aDirection == eNext) {
+    segOffset = aOffset;
+    if (IS_HIGH_SURROGATE(data[segOffset]) &&
+        segOffset + 1 < data.Length() &&
+        IS_LOW_SURROGATE(data[segOffset+1])) {
+      // delete both halves of the surrogate pair
+      ++segLength;
+    }
+  } else {
+    segOffset = aOffset - 1;
+    if (IS_LOW_SURROGATE(data[segOffset]) &&
+        segOffset > 0 &&
+        IS_HIGH_SURROGATE(data[segOffset-1])) {
+      ++segLength;
+      --segOffset;
+    }
+  }
+  return CreateTxnForDeleteText(aData, segOffset, segLength, aTxn);
+}
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior are not implemented
 NS_IMETHODIMP
@@ -5030,6 +5060,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
                                            nsIEditor::EDirection aAction,
                                            EditAggregateTxn     *aTxn)
 {
+  NS_ASSERTION(aAction == eNext || aAction == ePrevious, "invalid action");
+
   // get the node and offset of the insertion point
   nsCOMPtr<nsIDOMNode> node;
   nsresult result = aRange->GetStartContainer(getter_AddRefs(node));
@@ -5080,7 +5112,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         if (0<length)
         {
           DeleteTextTxn *txn;
-          result = CreateTxnForDeleteText(priorNodeAsText, length-1, 1, &txn);
+          result = CreateTxnForDeleteCharacter(priorNodeAsText, length,
+                                               ePrevious, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_RELEASE(txn);
@@ -5118,7 +5151,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
         if (0<length)
         {
           DeleteTextTxn *txn;
-          result = CreateTxnForDeleteText(nextNodeAsText, 0, 1, &txn);
+          result = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext, &txn);
           if (NS_SUCCEEDED(result)) {
             aTxn->AppendChild(txn);
             NS_RELEASE(txn);
@@ -5145,11 +5178,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
   {
     if (nodeAsText)
     { // we have text, so delete a char at the proper offset
-      if (nsIEditor::ePrevious==aAction) {
-        offset --;
-      }
       DeleteTextTxn *txn;
-      result = CreateTxnForDeleteText(nodeAsText, offset, 1, &txn);
+      result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction, &txn);
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
         NS_RELEASE(txn);
@@ -5173,16 +5203,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
                                              do_QueryInterface(selectedNode);
         if (selectedNodeAsText)
         { // we are deleting from a text node, so do a text deletion
-          PRInt32 begin = 0;    // default for forward delete
+          PRUint32 position = 0;    // default for forward delete
           if (ePrevious==aAction)
           {
-            PRUint32 length=0;
-            selectedNodeAsText->GetLength(&length);
-            if (0<length)
-              begin = length-1;
+            selectedNodeAsText->GetLength(&position);
           }
           DeleteTextTxn *delTextTxn;
-          result = CreateTxnForDeleteText(selectedNodeAsText, begin, 1, &delTextTxn);
+          result = CreateTxnForDeleteCharacter(selectedNodeAsText, position,
+                                               aAction, &delTextTxn);
           if (NS_FAILED(result))  { return result; }
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delTextTxn);
