@@ -55,7 +55,6 @@ SDK_XPIDLSRCS = \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
     nsIX509Cert.idl \
-    nsIX509Cert3.idl \
     nsIX509CertDB.idl \
     nsIX509CertValidity.idl \
     $(NULL)
@@ -83,7 +82,6 @@ XPIDLSRCS = \
     nsICMSEncoder.idl \
     nsICMSMessageErrors.idl \
     nsICMSMessage.idl \
-    nsICMSMessage2.idl \
     nsINSSCertCache.idl \
     nsIOCSPResponder.idl \
     nsIPK11Token.idl \

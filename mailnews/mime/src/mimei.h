@@ -342,6 +342,20 @@ extern char *mime_find_content_type_of_part(const char *part, MimeObject *obj);
 extern int mime_parse_url_options(const char *url, MimeDisplayOptions *);
 
 #ifdef ENABLE_SMIME
+/* Given a part ID, looks through the MimeObject tree for a sub-part whose ID
+   number matches; if one is found, and if it represents a PKCS7-encrypted
+   object, returns information about the security status of that object.
+
+   `part' is not a URL -- it's of the form "1.3.5" and is interpreted relative
+   to the `obj' argument.
+ */
+extern void mime_find_security_info_of_part(const char *part, MimeObject *obj,
+									  nsICMSMessage **cms_encrypt_content_info_return,
+									     nsICMSMessage **cms_sign_content_info_return,
+											char **sender_email_addr_return,
+											PRInt32 *decode_error_return,
+											PRInt32 *verify_error_return);
+
 
 /* Asks whether the given object is one of the cryptographically signed
    or encrypted objects that we know about.  (MimeMessageClass uses this

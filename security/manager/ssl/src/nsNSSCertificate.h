@@ -21,7 +21,6 @@
  * Contributor(s):
  *   Ian McGreer <mcgreer@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
- *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +41,6 @@
 
 #include "nsIX509Cert.h"
 #include "nsIX509Cert2.h"
-#include "nsIX509Cert3.h"
 #include "nsIX509CertDB.h"
 #include "nsIX509CertList.h"
 #include "nsIASN1Object.h"
@@ -58,7 +56,6 @@ class nsIASN1Sequence;
 /* Certificate */
 class nsNSSCertificate : public nsIX509Cert,
                          public nsIX509Cert2,
-                         public nsIX509Cert3,
                          public nsISMimeCert,
                          public nsNSSShutDownObject
 {
@@ -66,7 +63,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERT
   NS_DECL_NSIX509CERT2
-  NS_DECL_NSIX509CERT3
   NS_DECL_NSISMIMECERT
 
   nsNSSCertificate(CERTCertificate *cert);
