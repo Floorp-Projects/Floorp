@@ -309,7 +309,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   if (length <= 0) return 0;
 
   uint32 linequotelevel = 0;
-  char *linep = line;
+  const char *linep = line;
   // Space stuffed?
   if(' ' == *linep) {
     linep++;
@@ -376,8 +376,8 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
                         Mozilla, but not GlyphSubstitution, because other UAs
                         might not be able to display the glyphs. */
       }
-
-      nsDependentCString inputStr(linep, length - (linep - line));
+      
+      const nsDependentCSubstring& inputStr = Substring(linep, linep + (length - (linep - line)));
 
       // For 'SaveAs', |line| is in |mailCharset|.
       // convert |line| to UTF-16 before 'html'izing (calling ScanTXT())
@@ -389,7 +389,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
           ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
         mailCharset = inlinetext->charset;
         if (mailCharset && *mailCharset) {
-          rv = nsMsgI18NConvertToUnicode(mailCharset, inputStr, lineSource);
+          rv = nsMsgI18NConvertToUnicode(mailCharset, nsPromiseFlatCString(inputStr), lineSource);
           NS_ENSURE_SUCCESS(rv, -1);
         }
         else // this probably never happens...
