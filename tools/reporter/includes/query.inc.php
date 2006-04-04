@@ -261,11 +261,11 @@ class query
          ************/
         $sql_where = 'WHERE ';
         foreach($this->where as $where_child){
-            // we make sure to use quote() here to escape any evil
+            // we make sure to use quote() here to escape any evil on the value.  The others are sane
             $sql_where .= $where_child[0].' '.$where_child[1].' '.$db->quote($where_child[2]).' AND ';
         }
 
-        // Dates aar special
+        // Dates are special
         // if the user didn't delete the default YYYY-MM-DD mask, we do it for them
         if (isset($_GET['report_file_date_start']) && $_GET['report_file_date_start'] == 'YYYY-MM-DD'){
             $_GET['report_file_date_start'] = null;
@@ -305,22 +305,25 @@ class query
                                            FROM product
                                            WHERE product.product_family = ".$db->quote($this->product_family)." ");
              $sql_product_family = "";
-             if($prodFamQuery){
-                 $prodFamCount = 0;
-                 while(!$prodFamQuery->EOF){
-                     if($prodFamCount > 0){
-                         $sql_product_family .= ' OR ';
-                     }
-                     $sql_product_family .= 'report.report_product = '.$db->quote($prodFamQuery->fields['product_value']).' ';
-                     $prodFamCount++;
-                     $prodFamQuery->MoveNext();
-                 }
+             if(!$prodFamQuery){
+                 trigger_error("A database error occured.", E_USER_ERROR);
+      	         return false;
+             }
 
-                 // If we had results, wrap it in ()
+             $prodFamCount = 0;
+             while(!$prodFamQuery->EOF){
                  if($prodFamCount > 0){
-                     $sql_product_family = ' AND ( '.$sql_product_family;
-                     $sql_product_family .= ')';
+                     $sql_product_family .= ' OR ';
                  }
+                 $sql_product_family .= 'report.report_product = '.$db->quote($prodFamQuery->fields['product_value']).' ';
+                 $prodFamCount++;
+                 $prodFamQuery->MoveNext();
+             }
+
+             // If we had results, wrap it in ()
+             if($prodFamCount > 0){
+                 $sql_product_family = ' AND ( '.$sql_product_family;
+                 $sql_product_family .= ')';
              }
              $sql_where .= $sql_product_family;
 	 }
@@ -356,6 +359,7 @@ class query
         $dbQuery = $db->SelectLimit($sql,$this->show,$start,$inputarr=false);
 
         if (!$dbQuery){
+           trigger_error("A database error occured.", E_USER_ERROR);
 	   return false;
 	}
         $this->resultSet = array();
@@ -371,6 +375,7 @@ class query
   	 	                     FROM report, host
  	                     	     $sql_where");
         if(!$totalCount){
+            trigger_error("A database error occured.", E_USER_ERROR);
 	    return false;
  	}
  	$this->totalResults = $totalCount->fields['total'];
@@ -386,6 +391,7 @@ class query
             $listQuery = $db->SelectLimit($listQuerySQL,2001,0,$inputarr=false);
 
             if(!$listQuery){
+                trigger_error("A database error occured.", E_USER_ERROR);
                 return false;
             }
             $this->reportList = array();
@@ -398,6 +404,7 @@ class query
     }
 
     function continuityParams($omit = null){
+print "doing continuity params";
         reset($this->where);
         $standard = '';
         
@@ -476,6 +483,7 @@ class query
         $column[$columnCount]['text'] = 'Detail';
         $columnCount++;
 
+        $contParams = $this->continuityParams(array('ascdesc'));
         foreach($this->selected as $selectedChild){
             if(!($selectedChild['field'] == 'report_id' && $this->artificialReportID)){
                 $column[$columnCount]['text'] = $selectedChild['title'];
@@ -489,7 +497,7 @@ class query
                 }
 
                 if((isset($this->count)) || !isset($this->count)){
-                    $column[$columnCount]['url'] = '?'.$this->continuityParams(array('ascdesc')).'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                    $column[$columnCount]['url'] = '?'.$contParams.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
                 }
                 $columnCount++;
             }
