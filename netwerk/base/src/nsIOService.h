@@ -41,7 +41,7 @@
 #include "necko-config.h"
 
 #include "nsString.h"
-#include "nsIIOService.h"
+#include "nsIIOService2.h"
 #include "nsVoidArray.h"
 #include "nsPISocketTransportService.h" 
 #include "nsPIDNSService.h" 
@@ -58,6 +58,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIContentSniffer.h"
 #include "nsCategoryCache.h"
+#include "nsINetworkLinkService.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -74,7 +75,7 @@ static const char gScheme[][sizeof("resource")] =
 class nsIPrefBranch;
 class nsIPrefBranch2;
 
-class nsIOService : public nsIIOService
+class nsIOService : public nsIIOService2
                   , public nsIObserver
                   , public nsINetUtil
                   , public nsSupportsWeakReference
@@ -82,6 +83,7 @@ class nsIOService : public nsIIOService
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIIOSERVICE
+    NS_DECL_NSIIOSERVICE2
     NS_DECL_NSIOBSERVER
     NS_DECL_NSINETUTIL
 
@@ -112,6 +114,8 @@ private:
     nsIOService() NS_HIDDEN;
     ~nsIOService() NS_HIDDEN;
 
+    NS_HIDDEN_(nsresult) TrackNetworkLinkStatusForOffline();
+
     NS_HIDDEN_(nsresult) GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
                                                   PRUint32 start=0,
@@ -127,10 +131,12 @@ private:
 private:
     PRPackedBool                         mOffline;
     PRPackedBool                         mOfflineForProfileChange;
+    PRPackedBool                         mManageOfflineStatus;
     nsCOMPtr<nsPISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsPIDNSService>             mDNSService;
     nsCOMPtr<nsIProtocolProxyService2>   mProxyService;
     nsCOMPtr<nsIEventQueueService>       mEventQueueService;
+    nsCOMPtr<nsINetworkLinkService>      mNetworkLinkService;
     
     // Cached protocol handlers
     nsWeakPtr                            mWeakHandler[NS_N(gScheme)];
