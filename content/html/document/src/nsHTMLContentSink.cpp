@@ -2788,14 +2788,10 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 
   CloseHeadContext(); // do this just in case if the HEAD was left open!
 
+  // Need to keep track of whether OpenContainer changes mFrameset
+  nsGenericHTMLElement* oldFrameset = mFrameset;
   nsresult rv = mCurrentContext->OpenContainer(aNode);
-  PRBool isFirstFrameset = PR_FALSE;
-  if (NS_SUCCEEDED(rv) && !mFrameset &&
-      (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
-    mFrameset =
-      mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-    isFirstFrameset = PR_TRUE;
-  }
+  PRBool isFirstFrameset = NS_SUCCEEDED(rv) && mFrameset != oldFrameset;
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
