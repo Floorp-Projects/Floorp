@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Ian McGreer <mcgreer@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,6 +49,7 @@
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
 #include "nsIX509Cert.h"
+#include "nsIX509Cert3.h"
 #include "nsISMimeCert.h"
 #include "nsNSSASN1Object.h"
 #include "nsString.h"
@@ -64,6 +66,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsISupportsPrimitives.h"
 #include "nsUnicharUtils.h"
+#include "nsCertVerificationThread.h"
 
 #include "nspr.h"
 extern "C" {
@@ -88,8 +91,9 @@ static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 /* nsNSSCertificate */
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSCertificate, nsIX509Cert,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSCertificate, nsIX509Cert,
                                                 nsIX509Cert2,
+                                                nsIX509Cert3,
                                                 nsISMimeCert)
 
 nsNSSCertificate*
@@ -1050,6 +1054,26 @@ nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
     return NS_ERROR_OUT_OF_MEMORY;
   *_count = 0;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::RequestUsagesArrayAsync(nsICertVerificationListener *aResultListener)
+{
+  if (!aResultListener)
+    return NS_ERROR_FAILURE;
+  
+  nsCertVerificationJob *job = new nsCertVerificationJob;
+  if (!job)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  job->mCert = this;
+  job->mListener = aResultListener;
+
+  nsresult rv = nsCertVerificationThread::addJob(job);
+  if (NS_FAILED(rv))
+    delete job;
+
+  return rv;
 }
 
 NS_IMETHODIMP

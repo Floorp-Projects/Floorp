@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -54,6 +55,65 @@
 #include "nsNSSShutDown.h"
 
 class nsIChannel;
+class nsSSLThread;
+
+/*
+ * This class is used to store SSL socket I/O state information,
+ * that is not being executed directly, but defered to 
+ * the separate SSL thread.
+ */
+class nsSSLSocketThreadData
+{
+public:
+  nsSSLSocketThreadData();
+  ~nsSSLSocketThreadData();
+
+  PRBool ensure_buffer_size(PRInt32 amount);
+  
+  enum ssl_state { 
+    ssl_idle,          // not in use by SSL thread, no activity pending
+    ssl_pending_write, // waiting for SSL thread to complete writing
+    ssl_pending_read,  // waiting for SSL thread to complete reading
+    ssl_writing_done,  // SSL write completed, results are ready
+    ssl_reading_done   // SSL read completed, results are ready
+  };
+  
+  ssl_state mSSLState;
+
+  // Used to transport I/O error codes between SSL thread
+  // and initial caller thread.
+  PRErrorCode mPRErrorCode;
+
+  // A buffer used to transfer I/O data between threads
+  char *mSSLDataBuffer;
+  PRInt32 mSSLDataBufferAllocatedSize;
+
+  // The amount requested to read or write by the caller.
+  PRInt32 mSSLRequestedTransferAmount;
+
+  // A pointer into our buffer, to the first byte
+  // that has not yet been delivered to the caller.
+  // Necessary, as the caller of the read function
+  // might request smaller chunks.
+  const char *mSSLRemainingReadResultData;
+  
+  // The caller previously requested to read or write.
+  // As the initial request to read or write is defered,
+  // the caller might (in theory) request smaller chunks
+  // in subsequent calls.
+  // This variable stores the amount of bytes successfully
+  // transfered, that have not yet been reported to the caller.
+  PRInt32 mSSLResultRemainingBytes;
+
+  // When defering SSL read/write activity to another thread,
+  // we switch the SSL level file descriptor of the original
+  // layered file descriptor to a pollable event,
+  // so we can wake up the original caller of the I/O function
+  // as soon as data is ready.
+  // This variable is used to save the SSL level file descriptor,
+  // to allow us to restore the original file descriptor layering.
+  PRFileDesc *mReplacedSSLFileDesc;
+};
 
 class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
@@ -103,7 +163,9 @@ public:
 
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
-
+  
+  PRStatus CloseSocketAndDestroy();
+  
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
@@ -122,9 +184,39 @@ protected:
   nsCOMPtr<nsISSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
+
+  nsSSLSocketThreadData *mThreadData;
+
 private:
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
+
+friend class nsSSLThread;
+};
+
+class nsCStringHashSet;
+
+class nsSSLIOLayerHelpers
+{
+public:
+  static nsresult Init();
+  static void Cleanup();
+
+  static PRDescIdentity nsSSLIOLayerIdentity;
+  static PRIOMethods nsSSLIOLayerMethods;
+
+  static PRLock *mutex;
+  static nsCStringHashSet *mTLSIntolerantSites;
+  
+  static PRBool rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo);
+
+  static void addIntolerantSite(const nsCString &str);
+  static PRBool isKnownAsIntolerantSite(const nsCString &str);
+  
+  static PRFileDesc *mSharedPollableEvent;
+  static nsNSSSocketInfo *mSocketOwningPollableEvent;
+  
+  static PRBool mPollableEventCurrentlySet;
 };
 
 nsresult nsSSLIOLayerNewSocket(PRInt32 family,
