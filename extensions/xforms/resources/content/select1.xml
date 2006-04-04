@@ -138,6 +138,21 @@
         </getter>
       </property>
 
+      <property name="incremental" readonly="true">
+        <getter>
+        <![CDATA[
+          // default is true
+          var incremental = true;
+
+          if (this.getAttribute("incremental") == "false") {
+            incremental = false;
+          }
+
+          return incremental;
+        ]]>
+        </getter>
+      </property>
+
       <method name="updateInputField">
         <body>
           <![CDATA[
@@ -153,10 +168,8 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-          if (this.selectionOpen && !this._selected) {
-            if (this.getAttribute("incremental") != "false") {
-              this._handleSelection();
-            }
+          if (this.selectionOpen && !this._selected && this.incremental) {
+            this._handleSelection();
           } else {
             this.togglePopup();
           }
@@ -174,7 +187,9 @@
               this.togglePopup();
               if (open && this._selected) {
                 this.updateInputField();
-                this._handleSelection();
+                if (this.incremental) {
+                  this._handleSelection();
+                }
 
                 // need to keep the xforms-select and xforms-deselect event
                 // dispatching after _handleSelection.  That function might
@@ -205,7 +220,7 @@
                 }
               }
 
-              if (!this.popupOpen && this.getAttribute("incremental") != "false") {
+              if (!this.popupOpen && this.incremental) {
                 if (this._selected) {
                   this.updateInputField();
                 }
@@ -268,7 +283,7 @@
                 this._selected.setActive(false);
                 this._selected = null;
               }
-              if (this.getAttribute("incremental") != "false") {
+              if (this.incremental) {
                 this._handleSelection();
               }
             }
@@ -431,7 +446,9 @@
 
             if (this._selected) {
               this.updateInputField();
-              this._handleSelection();
+              if (this.incremental) {
+                this._handleSelection();
+              }
 
               // need to keep the xforms-select and xforms-deselect event
               // dispatching after _handleSelection.  That function might
@@ -859,7 +876,7 @@
             // about making sure the bound node is in sync if @incremental is
             // false.  Otherwise the bound node is already up to date so might
             // as well return.
-            if (this.getAttribute("incremental") != "false") {
+            if (this.incremental) {
               return;
             }
           }
