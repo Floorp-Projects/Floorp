@@ -80,8 +80,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 #define kTextControl_Wrap_Off  "OFF"
 
 
-MOZ_DECL_CTOR_COUNTER(nsFormControlHelper)
-
 nsFormControlHelper::nsFormControlHelper()
 {
   MOZ_COUNT_CTOR(nsFormControlHelper);

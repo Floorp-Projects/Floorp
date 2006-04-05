@@ -175,7 +175,6 @@ nsGfxRadioControlFrame::PaintRadioButtonFromStyle(
                               aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayRadioButtonFromStyle)
 class nsDisplayRadioButtonFromStyle : public nsDisplayItem {
 public:
   nsDisplayRadioButtonFromStyle(nsGfxRadioControlFrame* aFrame)

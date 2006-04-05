@@ -554,7 +554,6 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
  * Table row backgrounds can extend beyond the row frame bounds, when
  * the row contains row-spanning cells.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayTableRowBackground)
 class nsDisplayTableRowBackground : public nsDisplayItem {
 public:
   nsDisplayTableRowBackground(nsTableRowFrame* aFrame) : nsDisplayItem(aFrame) {

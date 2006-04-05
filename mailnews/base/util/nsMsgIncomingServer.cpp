@@ -84,8 +84,6 @@
 
 #define REL_FILE_PREF_SUFFIX NS_LITERAL_CSTRING("-rel")
 
-MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
-
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_rootFolder(0),
     m_prefBranch(0),

@@ -94,9 +94,6 @@
    set holds a cache of the last value asked for, and can simply resume the
    search from there.  */
 
-MOZ_DECL_CTOR_COUNTER(nsMsgKeySet)
-
-
 nsMsgKeySet::nsMsgKeySet(/* MSG_NewsHost* host*/)
 {
 	MOZ_COUNT_CTOR(nsMsgKeySet);

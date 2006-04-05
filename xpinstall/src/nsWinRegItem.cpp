@@ -45,8 +45,6 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinRegItem)
-
 nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, const nsAString& sub, const nsAString& valname, const nsAString& val, PRInt32 *aReturn)
 : nsInstallObject(regObj->InstallObject())
 {

@@ -106,7 +106,6 @@ nsTreeColFrame::Destroy(nsPresContext* aPresContext)
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayXULTreeColSplitterTarget)
 class nsDisplayXULTreeColSplitterTarget : public nsDisplayItem {
 public:
   nsDisplayXULTreeColSplitterTarget(nsIFrame* aFrame) : nsDisplayItem(aFrame) {

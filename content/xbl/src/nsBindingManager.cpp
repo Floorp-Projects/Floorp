@@ -104,8 +104,6 @@ private:
   nsVoidArray* mElements;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList)
-
 nsAnonymousContentList::nsAnonymousContentList(nsVoidArray* aElements)
   : mElements(aElements)
 {

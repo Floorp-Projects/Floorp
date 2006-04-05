@@ -267,8 +267,6 @@ NS_IMPL_ISUPPORTS_INHERITED5(nsFastLoadFileReader,
                              nsISeekableStream,
                              nsIFastLoadFileReader)
 
-MOZ_DECL_CTOR_COUNTER(nsFastLoadFileReader)
-
 nsresult
 nsFastLoadFileReader::ReadHeader(nsFastLoadHeader *aHeader)
 {
@@ -1225,8 +1223,6 @@ NS_IMPL_ISUPPORTS_INHERITED4(nsFastLoadFileWriter,
                              nsIFastLoadFileControl,
                              nsIFastLoadWriteControl,
                              nsISeekableStream)
-
-MOZ_DECL_CTOR_COUNTER(nsFastLoadFileWriter)
 
 struct nsIDMapEntry : public PLDHashEntryHdr {
     NSFastLoadID    mFastID;            // 1 + nsFastLoadFooter::mIDMap index

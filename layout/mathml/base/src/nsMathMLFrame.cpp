@@ -728,7 +728,6 @@ nsMathMLFrame::MapAttributesIntoCSS(nsPresContext* aPresContext,
 }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLBoundingMetrics)
 class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
 public:
   nsDisplayMathMLBoundingMetrics(nsIFrame* aFrame, const nsRect& aRect)
@@ -773,7 +772,6 @@ nsMathMLFrame::DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
 }
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLBar)
 class nsDisplayMathMLBar : public nsDisplayItem {
 public:
   nsDisplayMathMLBar(nsIFrame* aFrame, const nsRect& aRect)

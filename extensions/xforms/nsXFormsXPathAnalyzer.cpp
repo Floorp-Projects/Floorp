@@ -45,8 +45,6 @@
 //#define DEBUG_XF_ANALYZER
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsXFormsXPathAnalyzer)
-
 nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIXFormsXPathEvaluator  *aEvaluator,
                                              nsIDOMNode               *aResolver)
   : mEvaluator(aEvaluator), mResolver(aResolver)

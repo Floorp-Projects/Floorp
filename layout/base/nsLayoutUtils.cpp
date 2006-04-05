@@ -639,7 +639,6 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
  * A simple display item that just renders a solid color across the entire
  * visible area.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplaySolidColor)
 class nsDisplaySolidColor : public nsDisplayItem {
 public:
   nsDisplaySolidColor(nsIFrame* aFrame, nscolor aColor)

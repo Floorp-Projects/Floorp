@@ -85,8 +85,6 @@ static void assignEntryID(LPENTRYID& aTarget, LPENTRYID aSource, ULONG aByteCoun
     }
 }
 
-MOZ_DECL_CTOR_COUNTER(nsMapiEntry)
-
 nsMapiEntry::nsMapiEntry(void)
 : mByteCount(0), mEntryId(NULL)
 {
@@ -246,8 +244,6 @@ void nsMapiEntry::Dump(void) const
     PRINTF(("\n")) ;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsMapiEntryArray)
-
 nsMapiEntryArray::nsMapiEntryArray(void)
 : mEntries(NULL), mNbEntries(0)
 {
@@ -268,8 +264,6 @@ void nsMapiEntryArray::CleanUp(void)
         mNbEntries = 0 ;
     }
 }
-
-MOZ_DECL_CTOR_COUNTER(nsAbWinHelper)
 
 PRUint32 nsAbWinHelper::mEntryCounter = 0 ;
 // There seems to be a deadlock/auto-destruction issue

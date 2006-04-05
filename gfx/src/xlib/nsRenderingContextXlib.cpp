@@ -109,8 +109,6 @@ public:
   nsCOMPtr<nsIFontMetrics> mFontMetrics;
 };
 
-MOZ_DECL_CTOR_COUNTER(GraphicsState)
-
 GraphicsState::GraphicsState() :
   mMatrix(nsnull),
   mColor(NS_RGB(0, 0, 0)),

@@ -170,8 +170,6 @@ nsTextTransformer::Shutdown()
 
 #define MAX_UNIBYTE 127
 
-MOZ_DECL_CTOR_COUNTER(nsTextTransformer)
-
 nsTextTransformer::nsTextTransformer(nsPresContext* aPresContext)
   : mFrag(nsnull),
     mOffset(0),

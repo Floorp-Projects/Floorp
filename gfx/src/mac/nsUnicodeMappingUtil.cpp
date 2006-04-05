@@ -63,8 +63,6 @@ int PR_CALLBACK nsUnicodeMappingUtil::PrefChangedCallback( const char* aPrefName
 	return 0;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsUnicodeMappingUtil)
-
 nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 {
 	Init();

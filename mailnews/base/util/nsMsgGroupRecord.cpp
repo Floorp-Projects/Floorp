@@ -110,8 +110,6 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* partname,
 	return result;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsMsgGroupRecord)
-
 nsMsgGroupRecord::nsMsgGroupRecord(nsMsgGroupRecord* parent, const char* partname,
 								 PRInt64 aTime, PRInt32 uniqueid, PRInt32 fileoffset,
 								 char delimiter /* = '.' */)

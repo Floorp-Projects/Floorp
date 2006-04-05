@@ -139,8 +139,6 @@ void nsMapiAddressBook::FreeMapiLibrary(void)
     }
 }
 
-MOZ_DECL_CTOR_COUNTER(nsMapiAddressBook)
-
 nsMapiAddressBook::nsMapiAddressBook(void)
 : nsAbWinHelper()
 {

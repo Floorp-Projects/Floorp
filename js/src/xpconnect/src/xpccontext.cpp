@@ -57,8 +57,6 @@ XPCContext::newXPCContext(XPCJSRuntime* aRuntime,
     return new XPCContext(aRuntime, aJSContext);
 }
 
-MOZ_DECL_CTOR_COUNTER(XPCContext)
-
 XPCContext::XPCContext(XPCJSRuntime* aRuntime,
                        JSContext* aJSContext)
     :   mRuntime(aRuntime),

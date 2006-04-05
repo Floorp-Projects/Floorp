@@ -44,8 +44,6 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinProfile)
-
 nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsString& file )
   : mFilename(folder)
 {

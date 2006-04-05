@@ -153,8 +153,6 @@ nsHashKey::Write(nsIObjectOutputStream* aStream) const
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHashtable)
-
 nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   : mLock(NULL), mEnumerating(PR_FALSE)
 {

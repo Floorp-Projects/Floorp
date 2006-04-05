@@ -181,8 +181,6 @@ nsCSSToken::AppendToString(nsString& aBuffer)
   }
 }
 
-MOZ_DECL_CTOR_COUNTER(nsCSSScanner)
-
 nsCSSScanner::nsCSSScanner()
   : mInputStream(nsnull)
   , mReadPointer(nsnull)

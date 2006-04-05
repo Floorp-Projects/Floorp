@@ -717,7 +717,6 @@ nsImageLoadingContent::StringToURI(const nsAString& aSpec,
 /**
  * Struct used to dispatch events
  */
-MOZ_DECL_CTOR_COUNTER(ImageEvent)
 
 class ImageEvent : public PLEvent
 {

@@ -657,8 +657,6 @@ SecondsFromPRTime(PRTime prTime) {
   return seconds;
 }
 
-MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
-
 si_SignonDataStruct::si_SignonDataStruct()
   : isPassword(PR_FALSE)
 {
@@ -668,8 +666,6 @@ si_SignonDataStruct::~si_SignonDataStruct()
 {
   MOZ_COUNT_DTOR(si_SignonDataStruct);
 }
-
-MOZ_DECL_CTOR_COUNTER(si_SignonUserStruct)
 
 class si_SignonUserStruct {
 public:
@@ -688,8 +684,6 @@ public:
   nsVoidArray signonData_list; // elements are si_SignonDataStruct
 };
 
-MOZ_DECL_CTOR_COUNTER(si_SignonURLStruct)
-
 class si_SignonURLStruct {
 public:
   si_SignonURLStruct() : passwordRealm(NULL), chosen_user(NULL)
@@ -704,8 +698,6 @@ public:
   si_SignonUserStruct* chosen_user; /* this is a state variable */
   nsVoidArray signonUser_list;
 };
-
-MOZ_DECL_CTOR_COUNTER(si_Reject)
 
 class si_Reject {
 public:

@@ -69,7 +69,6 @@
 #include "nsLineBox.h"
 #include "nsDisplayList.h"
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayTextDecoration)
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
   nsDisplayTextDecoration(nsHTMLContainerFrame* aFrame, PRUint8 aDecoration,

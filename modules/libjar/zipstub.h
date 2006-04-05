@@ -118,6 +118,5 @@ typedef PRUint8             PRPackedBool;
 #define NS_WildCardValid(a)       NON_SXP
 #define NS_WildCardMatch(a,b,c)   PR_FALSE
 
-#define MOZ_DECL_CTOR_COUNTER(x)
 #define MOZ_COUNT_CTOR(x)
 #define MOZ_COUNT_DTOR(x)

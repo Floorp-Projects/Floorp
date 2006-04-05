@@ -360,8 +360,6 @@ void nsCSSValuePair::AppendToString(nsAString& aString,
 
 // --- nsCSSValueListRect -----------------
 
-MOZ_DECL_CTOR_COUNTER(nsCSSValueListRect)
-
 nsCSSValueListRect::nsCSSValueListRect(void)
   : mTop(nsnull),
     mRight(nsnull),

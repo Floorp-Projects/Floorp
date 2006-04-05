@@ -174,8 +174,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsView)
-
 nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 {
   MOZ_COUNT_CTOR(nsView);

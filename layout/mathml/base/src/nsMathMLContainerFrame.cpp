@@ -126,7 +126,6 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLError)
 class nsDisplayMathMLError : public nsDisplayItem {
 public:
   nsDisplayMathMLError(nsIFrame* aFrame)

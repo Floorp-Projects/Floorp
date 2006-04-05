@@ -53,8 +53,6 @@
 
 ////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(DeepTreeStackItem)
-
 struct DeepTreeStackItem 
 {
   DeepTreeStackItem()  { MOZ_COUNT_CTOR(DeepTreeStackItem); }

@@ -40,8 +40,6 @@
 #include "nsXFormsXPathNode.h"
 #include "nsCOMPtr.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXFormsXPathNode)
-
 nsXFormsXPathNode::nsXFormsXPathNode(nsXFormsXPathNode* aParent, PRBool aContinue)
   : mChild(nsnull), mEndIndex(-100), mCon(aContinue), mIsIndex(PR_FALSE)
 {

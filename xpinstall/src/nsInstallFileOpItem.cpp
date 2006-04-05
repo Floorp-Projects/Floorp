@@ -63,8 +63,6 @@ static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsInstallFileOpItem)
-
 nsInstallFileOpItem::nsInstallFileOpItem(nsInstall*     aInstallObj,
                                          PRInt32        aCommand,
                                          nsIFile*       aTarget,

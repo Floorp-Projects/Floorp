@@ -59,8 +59,6 @@ XPathCompilerException(const char      *aMsg,
 }
 
 
-MOZ_DECL_CTOR_COUNTER(nsXFormsXPathParser)
-
 nsXFormsXPathParser::nsXFormsXPathParser()
     : mUsesDynamicFunc(PR_FALSE), mHead(nsnull), mAnalyzeStackPointer(nsnull)
 {

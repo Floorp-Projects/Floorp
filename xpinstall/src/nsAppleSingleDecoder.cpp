@@ -57,9 +57,6 @@ using namespace std;
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
-#ifdef MOZILLA_CLIENT
-  MOZ_DECL_CTOR_COUNTER(nsAppleSingleDecoder)
-#endif
 
 nsAppleSingleDecoder::nsAppleSingleDecoder(const FSRef *inRef, FSRef *outRef)
 : mInRef(NULL), 

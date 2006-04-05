@@ -200,7 +200,6 @@ static PLDHashTableOps PrimaryFrameMapOps = {
 
 // XXXldb This seems too complicated for what I think it's doing, and it
 // should also be using pldhash rather than plhash to use less memory.
-MOZ_DECL_CTOR_COUNTER(UndisplayedNode)
 
 class UndisplayedNode {
 public:
@@ -1571,8 +1570,6 @@ CompareKeys(void* key1, void* key2)
 }
 
 //----------------------------------------------------------------------
-
-MOZ_DECL_CTOR_COUNTER(UndisplayedMap)
 
 nsFrameManagerBase::UndisplayedMap::UndisplayedMap(PRUint32 aNumBuckets)
 {

@@ -352,7 +352,6 @@ nsTableCellFrame::PaintCellBackground(nsIRenderingContext& aRenderingContext,
   PaintBackground(aRenderingContext, aDirtyRect, aPt);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayTableCellBackground)
 class nsDisplayTableCellBackground : public nsDisplayItem {
 public:
   nsDisplayTableCellBackground(nsTableCellFrame* aFrame) : nsDisplayItem(aFrame) {

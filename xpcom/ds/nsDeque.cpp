@@ -73,8 +73,6 @@
 #define modasgn(x,y) if (x<0) x+=y; x%=y
 #define modulus(x,y) ((x<0)?(x+y)%(y):(x)%(y))
 
-MOZ_DECL_CTOR_COUNTER(nsDeque)
-
 /**
  * Standard constructor
  * @param deallocator, called by Erase and ~nsDeque

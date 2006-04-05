@@ -46,8 +46,6 @@
 
 class nsIXPConnectJSObjectHolder;
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImpl)
-
 class nsXBLProtoImpl
 {
 public:

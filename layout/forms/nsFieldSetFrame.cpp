@@ -163,7 +163,6 @@ nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
   return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayFieldSetBorderBackground)
 class nsDisplayFieldSetBorderBackground : public nsDisplayItem {
 public:
   nsDisplayFieldSetBorderBackground(nsFieldSetFrame* aFrame)

@@ -54,8 +54,6 @@
 
 static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
 
-MOZ_DECL_CTOR_COUNTER(nsInstallExecute)
-
 // Chop the command-line up in place into an array of arguments
 //   by replacing spaces in the command-line string with null
 //   terminators and pointing the array elements to the 

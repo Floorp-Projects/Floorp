@@ -51,8 +51,6 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 
-MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
-
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent)
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);

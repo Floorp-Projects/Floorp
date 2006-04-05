@@ -47,8 +47,6 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(EmptyEnumeratorImpl)
-
 EmptyEnumeratorImpl::EmptyEnumeratorImpl(void)
 {
     MOZ_COUNT_CTOR(EmptyEnumeratorImpl);

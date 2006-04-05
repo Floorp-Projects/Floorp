@@ -1895,8 +1895,6 @@ cleanup:
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsZipArchive)
-
 nsZipArchive::nsZipArchive()
   : kMagic(ZIP_MAGIC), kArenaBlockSize(1*1024)
 #ifdef STANDALONE
@@ -1947,13 +1945,9 @@ nsZipItem::~nsZipItem()
 // nsZipReadState
 //------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsZipReadState)
-
 //------------------------------------------
 // nsZipFind constructor and destructor
 //------------------------------------------
-
-MOZ_DECL_CTOR_COUNTER(nsZipFind)
 
 nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, PRBool aRegExp)
 : kMagic(ZIPFIND_MAGIC),

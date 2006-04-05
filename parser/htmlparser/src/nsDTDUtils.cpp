@@ -47,11 +47,6 @@
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
 
-MOZ_DECL_CTOR_COUNTER(nsEntryStack)
-MOZ_DECL_CTOR_COUNTER(nsDTDContext)
-MOZ_DECL_CTOR_COUNTER(nsTokenAllocator)
-MOZ_DECL_CTOR_COUNTER(CNodeRecycler)
- 
 /**************************************************************************************
   A few notes about how residual style handling is performed:
    

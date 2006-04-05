@@ -64,7 +64,6 @@
 /* ------------------------------------ */
 /* --------- nsXFormsMDGNode ---------- */
 /* ------------------------------------ */
-MOZ_DECL_CTOR_COUNTER(nsXFormsMDGNode)
 
 nsXFormsMDGNode::nsXFormsMDGNode(nsIDOMNode             *aNode,
                                  const ModelItemPropName aType)
@@ -122,7 +121,6 @@ nsXFormsMDGNode::MarkClean()
 /* ------------------------------------ */
 /* -------- nsXFormsMDGEngine --------- */
 /* ------------------------------------ */
-MOZ_DECL_CTOR_COUNTER(nsXFormsMDGEngine)
 
 nsXFormsMDGEngine::nsXFormsMDGEngine()
 : mNodesInGraph(0)

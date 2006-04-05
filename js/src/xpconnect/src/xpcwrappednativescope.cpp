@@ -129,8 +129,6 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
     return scope;
 }
 
-MOZ_DECL_CTOR_COUNTER(XPCWrappedNativeScope)
-
 XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
                                              JSObject* aGlobal)
     :   mRuntime(ccx.GetRuntime()),

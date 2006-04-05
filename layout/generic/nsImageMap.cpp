@@ -96,8 +96,6 @@ public:
   PRPackedBool mHasFocus;
 };
 
-MOZ_DECL_CTOR_COUNTER(Area)
-
 Area::Area(nsIContent* aArea)
   : mArea(aArea)
 {

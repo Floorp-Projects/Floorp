@@ -566,8 +566,6 @@ NS_IMETHODIMP DeviceContextImpl::SetUseAltDC(PRUint8 aValue, PRBool aOn)
 
 /////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(nsFontCache)
-
 nsFontCache::nsFontCache()
 {
   MOZ_COUNT_CTOR(nsFontCache);

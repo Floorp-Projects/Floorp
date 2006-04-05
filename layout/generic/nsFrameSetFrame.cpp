@@ -1626,7 +1626,6 @@ nsHTMLFramesetBorderFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBorder)
 class nsDisplayFramesetBorder : public nsDisplayItem {
 public:
   nsDisplayFramesetBorder(nsHTMLFramesetBorderFrame* aFrame)
@@ -1828,7 +1827,6 @@ nsHTMLFramesetBlankFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayFramesetBlank)
 class nsDisplayFramesetBlank : public nsDisplayItem {
 public:
   nsDisplayFramesetBlank(nsIFrame* aFrame) : nsDisplayItem(aFrame) {

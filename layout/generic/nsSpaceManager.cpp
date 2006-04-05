@@ -108,8 +108,6 @@ PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
 /////////////////////////////////////////////////////////////////////////////
 // nsSpaceManager
 
-MOZ_DECL_CTOR_COUNTER(nsSpaceManager)
-
 nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   : mFrame(aFrame),
     mLowestTop(NSCOORD_MIN),
@@ -1272,8 +1270,6 @@ nsSpaceManager::ClearFloats(nscoord aY, PRUint8 aBreakType)
 /////////////////////////////////////////////////////////////////////////////
 // FrameInfo
 
-MOZ_DECL_CTOR_COUNTER(nsSpaceManager::FrameInfo)
-
 nsSpaceManager::FrameInfo::FrameInfo(nsIFrame* aFrame, const nsRect& aRect)
   : mFrame(aFrame), mRect(aRect), mNext(0)
 {
@@ -1289,8 +1285,6 @@ nsSpaceManager::FrameInfo::~FrameInfo()
 
 /////////////////////////////////////////////////////////////////////////////
 // BandRect
-
-MOZ_DECL_CTOR_COUNTER(BandRect)
 
 nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
                                    nscoord    aTop,

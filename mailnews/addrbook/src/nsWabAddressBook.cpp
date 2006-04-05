@@ -91,8 +91,6 @@ void nsWabAddressBook::FreeWabLibrary(void)
     }
 }
 
-MOZ_DECL_CTOR_COUNTER(nsWabAddressBook)
-
 nsWabAddressBook::nsWabAddressBook(void)
 : nsAbWinHelper()
 {

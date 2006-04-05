@@ -40,8 +40,6 @@
 #include "nsXFormsXPathScanner.h"
 #include "nsXFormsXPathXMLUtil.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXFormsXPathScanner)
-
 nsXFormsXPathScanner::nsXFormsXPathScanner()
 {
   MOZ_COUNT_CTOR(nsXFormsXPathScanner);

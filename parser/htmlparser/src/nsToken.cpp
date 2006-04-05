@@ -38,11 +38,6 @@
 #include "nsToken.h"
 #include "nsScanner.h"
 
-
-#ifdef MATCH_CTOR_DTOR    
-MOZ_DECL_CTOR_COUNTER(CToken)
-#endif
-
 static int TokenCount=0;
 static int DelTokenCount=0;
 

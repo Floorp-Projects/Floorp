@@ -44,8 +44,6 @@
 // ******************** nsCopySource ******************
 // 
 
-MOZ_DECL_CTOR_COUNTER(nsCopySource)
-
 nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsCopySource);
@@ -76,8 +74,6 @@ void nsCopySource::AddMessage(nsIMsgDBHdr* aMsg)
 
 // ************ nsCopyRequest *****************
 // 
-
-MOZ_DECL_CTOR_COUNTER(nsCopyRequest)
 
 nsCopyRequest::nsCopyRequest() :
     m_requestType(nsCopyMessagesType),

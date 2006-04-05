@@ -82,8 +82,6 @@
 
 #define B_BORDER              0xfff
 
-MOZ_DECL_CTOR_COUNTER(nsCSSDeclaration)
-
 nsCSSDeclaration::nsCSSDeclaration() 
   : mOrder(eCSSProperty_COUNT_no_shorthands, 8),
     mData(nsnull),

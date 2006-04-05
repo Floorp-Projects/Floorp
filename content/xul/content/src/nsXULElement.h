@@ -110,8 +110,6 @@ static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
  */
 
-MOZ_DECL_CTOR_COUNTER(nsXULPrototypeAttribute)
-
 class nsXULPrototypeAttribute
 {
 public:

@@ -273,7 +273,6 @@ nsTextBoxFrame::UpdateAttributes(nsPresContext*  aPresContext,
 
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayXULTextBox)
 class nsDisplayXULTextBox : public nsDisplayItem {
 public:
   nsDisplayXULTextBox(nsTextBoxFrame* aFrame) : nsDisplayItem(aFrame) {

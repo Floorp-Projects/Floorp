@@ -134,8 +134,6 @@ enum RDFContentSinkParseMode {
     eRDFContentSinkParseMode_Date
 };
 
-MOZ_DECL_CTOR_COUNTER(RDFContentSinkImpl::NameSpaceEntry)
-
 typedef
 NS_STDCALL_FUNCPROTO(nsresult,
                      nsContainerTestFn,
