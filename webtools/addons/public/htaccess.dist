@@ -14,6 +14,12 @@ php_value auto_append_file finish.php
 RewriteEngine On
 RewriteBase /YOURPATH/public/htdocs
 
+# Rewrites to be compatible with older versions of addons.
+RewriteRule ^update/VersionCheck.php(.*)$ update.php$1
+RewriteRule ^extensions/moreinfo.php(.*)$ addon.php$1
+RewriteRule ^themes/moreinfo.php(.*)$ addon.php$1
+RewriteRule ^rss/index.php(.*)$ rss.php$1
+
 # Compatiblity for v1 of extensions.  The hardcoded URL's in the old
 # browsers need this to get to the right pages: (the strings are the GUIDs)
 # Old example URL:
