@@ -3129,7 +3129,7 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 {
     nsIPrincipal *sysprin = nsnull;
     if (gScriptSecMan)
-        sysprin = gScriptSecMan->mSystemPrincipal;
+        NS_ADDREF(sysprin = gScriptSecMan->mSystemPrincipal);
     return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
 }
 
