@@ -45,9 +45,10 @@
 #include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathResult.h"
 #include "nsDeque.h"
-#include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"
 #include "nsDOMError.h"
+#include "nsIDOMElement.h"
+#include "nsXFormsModelElement.h"
 
 #ifdef DEBUG
 //#  define DEBUG_XF_MDG
@@ -136,7 +137,7 @@ nsXFormsMDGEngine::~nsXFormsMDGEngine()
 }
 
 nsresult
-nsXFormsMDGEngine::Init(nsIModelElementPrivate *aModel)
+nsXFormsMDGEngine::Init(nsXFormsModelElement *aModel)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (mNodeStates.Init() && mNodeToMDG.Init()) {
@@ -555,7 +556,11 @@ nsXFormsMDGEngine::Rebuild()
 #endif
 
   if (mGraph.Count() != mNodesInGraph) {
-    NS_WARNING("XForms: There are loops in the MDG\n");
+    nsCOMPtr<nsIDOMElement> modelElement;
+    if (mModel) {
+      modelElement = mModel->GetDOMElement();
+    }
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("MDGLoopError"), modelElement);
     rv = NS_ERROR_ABORT;
   }
 

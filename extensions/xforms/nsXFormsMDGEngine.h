@@ -50,9 +50,9 @@
 
 #include "nsXFormsTypes.h"
 #include "nsXFormsNodeState.h"
-#include "nsIModelElementPrivate.h"
 
 class nsIDOMNSXPathExpression;
+class nsXFormsModelElement;
 
 /**
  * Data structure for nodes in the graph.
@@ -174,7 +174,7 @@ protected:
   nsVoidArray mGraph;
 
   /** The model that created the MDG */
-  nsIModelElementPrivate *mModel;
+  nsXFormsModelElement *mModel;
   
   /**
    * Nodes that are marked as changed, and should be included in recalculation
@@ -343,7 +343,7 @@ public:
    *
    * @param aModel           The model that created this MDGEngine instance.
    */
-  nsresult Init(nsIModelElementPrivate *aModel);
+  nsresult Init(nsXFormsModelElement *aModel);
 
   /**
    * Insert new MIP (Model Item Property) into graph.

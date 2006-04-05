@@ -887,10 +887,8 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     *aHandled = PR_FALSE;
   }
 
-#ifdef DEBUG
-  if (NS_FAILED(rv))
-    printf("nsXFormsModelElement::HandleDefault() failed!\n");
-#endif
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                   "nsXFormsModelElement::HandleDefault() failed!\n");
 
   return rv;
 }
@@ -2250,6 +2248,14 @@ nsXFormsModelElement::Startup()
   sModelPropsList[eModel_calculate] = nsXFormsAtoms::calculate;
   sModelPropsList[eModel_constraint] = nsXFormsAtoms::constraint;
   sModelPropsList[eModel_p3ptype] = nsXFormsAtoms::p3ptype;
+}
+
+already_AddRefed<nsIDOMElement>
+nsXFormsModelElement::GetDOMElement()
+{
+  nsIDOMElement* element = nsnull;
+  NS_IF_ADDREF(element = mElement);
+  return element;
 }
 
 static void

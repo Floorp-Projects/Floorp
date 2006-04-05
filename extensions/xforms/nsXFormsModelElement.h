@@ -269,6 +269,12 @@ public:
 
   static nsresult NeedsPostRefresh(nsIXFormsControl* aControl);
   static void CancelPostRefresh(nsIXFormsControl* aControl);
+
+  /**
+   * Returns the DOM element for the model.
+   */
+  already_AddRefed<nsIDOMElement> GetDOMElement();
+
 private:
 
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
