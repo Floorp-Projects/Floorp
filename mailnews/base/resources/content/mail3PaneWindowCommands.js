@@ -327,9 +327,12 @@ var DefaultController =
         return (GetNumSelectedMessages() > 0);
       case "cmd_markAsJunk":
       case "cmd_markAsNotJunk":
-      case "cmd_recalculateJunkScore":
         // can't do news on junk yet.
         return (GetNumSelectedMessages() > 0 && !isNewsURI(GetFirstSelectedMessage()));
+      case "cmd_recalculateJunkScore":
+        if (GetNumSelectedMessages() > 0)
+          gDBView.getCommandStatus(nsMsgViewCommandType.runJunkControls, enabled, checkStatus);
+        return enabled.value;
       case "cmd_markAsShowRemote":
         return (GetNumSelectedMessages() > 0 && checkMsgHdrPropertyIsNot("remoteContentPolicy", kAllowRemoteContent));
       case "cmd_markAsNotPhish":

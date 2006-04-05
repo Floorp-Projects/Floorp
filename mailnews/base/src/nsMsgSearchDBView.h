@@ -60,6 +60,7 @@ public:
                         nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater);
   NS_IMETHOD Close();
   NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  NS_IMETHOD GetCommandStatus(nsMsgViewCommandTypeValue command, PRBool *selectable_p, nsMsgViewCommandCheckStateValue *selected_p);
   NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue command);
   NS_IMETHOD DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsgFolder *destFolder);
   NS_IMETHOD GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr);

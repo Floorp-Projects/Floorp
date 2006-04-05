@@ -277,6 +277,16 @@ nsresult nsMsgSearchDBView::GetFolders(nsISupportsArray **aFolders)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgSearchDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, PRBool *selectable_p, nsMsgViewCommandCheckStateValue *selected_p)
+{
+  if (command != nsMsgViewCommandType::runJunkControls)
+    return nsMsgDBView::GetCommandStatus(command, selectable_p, selected_p);
+
+  *selectable_p = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsMsgSearchDBView::DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsgFolder *destFolder)
 {
