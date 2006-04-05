@@ -44,10 +44,35 @@
 #include "nsILoadGroup.h"
 #include "nsIObserver.h"
 
-// Constants for livemark annotations
+/**
+ * This annotation's value is a string containing the URI of the
+ * source feed for the given livemark.  It should be attached to the URI
+ * of the livemark container.
+ */
 #define LMANNO_FEEDURI     "livemark/feedURI"
+
+/**
+ * This annotation's value is a string containing the URI of the
+ * website associated with the source feed for the given livemark.
+ * It should be attached to the URI of the livemark container.
+ */
 #define LMANNO_SITEURI     "livemark/siteURI"
+
+/**
+ * This annotation's value is an Int64 representing the time
+ * (in milliseconds since January 1, 1970 GMT) when a
+ * livemark feed should expire and thus have its associated livemark
+ * refreshed.  It should be attached to the URI of the livemark's
+ * source feed.
+ */
 #define LMANNO_EXPIRATION  "livemark/expiration"
+
+/**
+ * This annotation's value is a string containing the URI of the
+ * syndication feed which was this source for a livemark item.
+ * It should be attached to the URI of a livemark item (that is, a
+ * child of a livemark container).
+ */
 #define LMANNO_BMANNO      "livemark/bookmarkFeedURI"
 
 class nsLivemarkService : public nsILivemarkService, public nsIObserver
@@ -110,7 +135,6 @@ private:
   nsCOMPtr<nsIURI> mIconURI;
 
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
-  nsCOMPtr<nsINavBookmarksService> mBookmarksService;
 
   // The list of livemarks is stored in this array
   nsTArray< nsRefPtr<LivemarkInfo> > mLivemarks;
@@ -119,4 +143,5 @@ private:
   nsCOMPtr<nsITimer> mTimer;
   static void FireTimer(nsITimer* aTimer, void* aClosure);
   nsresult UpdateLivemarkChildren(PRInt32 aLivemarkIndex, PRBool aForceUpdate);
+  PRInt32 GetLivemarkIndex(PRInt64 folderID);
 };
