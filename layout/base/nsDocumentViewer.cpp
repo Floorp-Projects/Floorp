@@ -848,12 +848,24 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       NS_ENSURE_SUCCESS(rv, rv);
       Hide();
 
+#ifdef NS_PRINT_PREVIEW
       if (mIsPageMode) {
         nsCOMPtr<nsIDeviceContext> devctx;
         nsCOMPtr<nsIDeviceContextSpec> devspec;
         nsCOMPtr<nsIDeviceContextSpecFactory> factory = do_CreateInstance(kDeviceContextSpecFactoryCID);
+        // XXX CRASHES ON OOM. YUM. WOULD SOMEONE PLEASE FIX ME.
+        //     PERHAPS SOMEONE SHOULD HAVE REVIEWED THIS CODE.
+        // XXX I have no idea how critical this code is, so i'm not fixing it.
+        //     In fact I'm just adding a line that makes this block
+        //     get compiled *less* often.
         // mWindow has been initialized by preceding call to MakeWindow
         factory->CreateDeviceContextSpec(mWindow, mPresContext->GetPrintSettings(), *getter_AddRefs(devspec), PR_FALSE);
+        // XXX CRASHES ON OOM under at least
+        // nsPrintJobFactoryPS::CreatePrintJob. WOULD SOMEONE PLEASE FIX ME.
+        //     PERHAPS SOMEONE SHOULD HAVE REVIEWED THIS CODE.
+        // XXX I have no idea how critical this code is, so i'm not fixing it.
+        //     In fact I'm just adding a line that makes this block
+        //     get compiled *less* often.
         mDeviceContext->GetDeviceContextFor(devspec, *getter_AddRefs(devctx));
         mDeviceContext->SetAltDevice(devctx);
         mDeviceContext->SetUseAltDC(kUseAltDCFor_SURFACE_DIM, PR_TRUE);
@@ -863,6 +875,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
         mPresContext->SetPageSize(nsSize(pageWidth, pageHeight));
         mPresContext->SetIsRootPaginatedDocument(PR_TRUE);
       }
+#endif
     }
   }
 
