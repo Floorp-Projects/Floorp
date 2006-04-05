@@ -83,28 +83,12 @@ nsXFormsSchemaValidator::ValidateString(const nsAString & aValue,
 }
 
 PRBool
-nsXFormsSchemaValidator::ValidateNode(nsIDOMNode* aElement,
-                                      const nsAString & aType,
-                                      const nsAString & aNamespace)
+nsXFormsSchemaValidator::Validate(nsIDOMNode* aElement)
 {
   PRBool isValid = PR_FALSE;
   NS_ENSURE_TRUE(mSchemaValidator, isValid);
 
-  if (aNamespace.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-    // XXX: currently, we will only support validating a lone node.  When
-    // we get complex type support, we should load the schema for the xforms
-    // types and use ValidateAgainstType like below.
-    nsAutoString nodeValue;
-    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aElement);
-    domNode3->GetTextContent(nodeValue);
-
-    isValid = ValidateString(nodeValue, aType, aNamespace);
-  } else {
-    nsCOMPtr<nsISchemaType> type;
-    if (GetType(aType, aNamespace, getter_AddRefs(type))) {
-      mSchemaValidator->ValidateAgainstType(aElement, type, &isValid);
-    }
-  }
+  mSchemaValidator->Validate(aElement, &isValid);
 
   return isValid;
 }

@@ -1518,6 +1518,62 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::ValidateDocument(nsIDOMDocument *aInstanceDocument,
+                                       PRBool         *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG(aInstanceDocument);
+
+  /*
+    This will process the instance document and check for schema validity.  It
+    will mark nodes in the document with their schema types using nsIProperty
+    until it hits a structural schema validation error.  So if the instance
+    document's XML structure is invalid, don't expect type properties to be
+    set.
+
+    Note that if the structure is fine but some simple types nodes (nodes
+    that contain text only) are invalid (say one has a empty nodeValue but
+    should be a date), the schema validator will continue processing and add
+    the type properties.  Schema validation will return false at the end.
+  */
+
+  nsCOMPtr<nsIDOMElement> element;
+  nsresult rv = aInstanceDocument->GetDocumentElement(getter_AddRefs(element));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool isValid = PR_FALSE;
+
+  // get namespace from node
+  nsAutoString nsuri;
+  element->GetNamespaceURI(nsuri);
+
+  nsCOMPtr<nsISchemaCollection> schemaColl = do_QueryInterface(mSchemas);
+  NS_ENSURE_STATE(schemaColl);
+
+  nsCOMPtr<nsISchema> schema;
+  schemaColl->GetSchema(nsuri, getter_AddRefs(schema));
+  if (schema) {
+    nsXFormsSchemaValidator validator;
+    validator.LoadSchema(schema);
+    // Validate will validate the node and its subtree, as per the schema
+    // specification.
+    isValid = validator.Validate(element);
+  } else {
+    // no schema found for the instance document's namespace.
+    nsCOMPtr<nsIDOMNode> instanceElement;
+    nsXFormsUtils::GetInstanceNodeForData(element,
+                                          getter_AddRefs(instanceElement));
+    const PRUnichar *strings[] = { nsuri.get() };
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("noSchemaForInstance"),
+                               strings, 1, instanceElement, nsnull);
+    rv = NS_ERROR_UNEXPECTED;
+  }
+
+  *aResult = isValid;
+  return rv;
+}
+
 /*
  *  SUBMIT_SERIALIZE_NODE   - node is to be serialized
  *  SUBMIT_SKIP_NODE        - node is not to be serialized
@@ -1588,6 +1644,21 @@ nsXFormsModelElement::GetTypeFromNode(nsIDOMNode *aInstanceData,
   // If there was no type information on the node itself, check for a type
   // bound to the node via \<xforms:bind\>
   if (!typeVal && !mNodeToType.Get(aInstanceData, &typeVal)) {
+    // check if schema validation left us a nsISchemaType*
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aInstanceData);
+
+    if (content) {
+      nsISchemaType *type;
+      nsCOMPtr<nsIAtom> myAtom = do_GetAtom("xsdtype");
+
+      type = NS_STATIC_CAST(nsISchemaType *, content->GetProperty(myAtom));
+      if (type) {
+        type->GetName(aType);
+        type->GetTargetNamespace(aNSUri);
+        return NS_OK;
+      }
+    }
+
     // No type information found
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -1930,6 +2001,37 @@ nsXFormsModelElement::MaybeNotifyCompletion()
     nsXFormsModelElement *model =
         NS_STATIC_CAST(nsXFormsModelElement *, models->ElementAt(i));
     nsXFormsUtils::DispatchEvent(model->mElement, eEvent_ModelConstructDone);
+  }
+
+  // validate the instance documents becauar we want schemaValidation to add
+  // schema type properties from the schema file unto our instance document
+  // elements.  We don't care about the validation results.
+  if (mInstanceDocuments) {
+    PRUint32 instCount;
+    mInstanceDocuments->GetLength(&instCount);
+    if (instCount) {
+      nsCOMPtr<nsIDOMDocument> document;
+
+      for (PRUint32 i = 0; i < instCount; ++i) {
+        nsIInstanceElementPrivate* instEle = mInstanceDocuments->GetInstanceAt(i);
+        nsCOMPtr<nsIXFormsNSInstanceElement> NSInstEle(instEle);
+        NSInstEle->GetInstanceDocument(getter_AddRefs(document));
+        NS_ASSERTION(document, "nsIXFormsNSInstanceElement::GetInstanceDocument returned null?!");
+
+        if (document) {
+          PRBool isValid = PR_FALSE;
+          ValidateDocument(document, &isValid);
+
+          if (!isValid) {
+            nsCOMPtr<nsIDOMElement> instanceElement;
+            instEle->GetElement(getter_AddRefs(instanceElement));
+
+            nsXFormsUtils::ReportError(NS_LITERAL_STRING("instDocumentInvalid"),
+                                       instanceElement);
+          }
+        }
+      }
+    }
   }
 
   nsXFormsModelElement::ProcessDeferredBinds(domDoc);

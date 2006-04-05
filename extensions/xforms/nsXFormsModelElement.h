@@ -349,7 +349,10 @@ private:
   NS_HIDDEN_(nsresult) HandleUnload(nsIDOMEvent *aEvent);
 
   NS_HIDDEN_(nsresult) RefreshSubTree(nsXFormsControlListItem *aCurrent,
-                                      PRBool                    aForceRebind);
+                                      PRBool                   aForceRebind);
+
+  NS_HIDDEN_(nsresult) ValidateDocument(nsIDOMDocument *aInstanceDocument,
+                                        PRBool         *aResult);
 
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;

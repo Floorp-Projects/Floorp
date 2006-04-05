@@ -64,15 +64,12 @@ public:
                         const nsAString & aNamespace);
 
   /**
-   * Validates a node against a namespace and schema type
+   * Validates a node and its subtree against the loaded schema(s)
    *
    * @param aElement          Node to validate
-   * @param aType             Type
-   * @param aNamespace        Namespace
    * @return                  Whether the string is valid or not
    */
-  PRBool ValidateNode(nsIDOMNode* aElement, const nsAString & aType,
-                      const nsAString & aNamespace);
+  PRBool Validate(nsIDOMNode* aElement);
 
   /**
    * Returns a nsISchemaType given an type and namespace
