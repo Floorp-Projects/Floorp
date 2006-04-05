@@ -1148,7 +1148,10 @@ static void InitUnicodeSupport(void)
         _pr_useUnicode = PR_FALSE;
     }
 #ifdef DEBUG
-    /* In debug builds, allow explicit use of ANSI methods for testing. */
+    /*
+     * In debug builds, allow explicit use of ANSI methods to simulate
+     * a Win9x environment for testing purposes.
+     */
     if (getenv("WINAPI_USE_ANSI"))
         _pr_useUnicode = PR_FALSE;
 #endif

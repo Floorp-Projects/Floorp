@@ -157,9 +157,7 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
 #define NEED_LEADING_UNDERSCORE
 #endif
 
-#ifdef WIN32
-#define PR_LD_PATHW  0x400  /* for PR_LibSpec_PathnameU */
-#endif
+#define PR_LD_PATHW 0x8000  /* for PR_LibSpec_PathnameU */
 
 /************************************************************************/
 
@@ -809,12 +807,14 @@ static PRLibrary*
 pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 {
     PRLibrary *lm;
-    PRLibrary* result;
+    PRLibrary* result = NULL;
     PRInt32 oserr;
 #ifdef WIN32
     char utf8name_stack[MAX_PATH];
-    PRUnichar wname_stack[MAX_PATH];
+    char *utf8name_malloc = NULL;
     char *utf8name = utf8name_stack;
+    PRUnichar wname_stack[MAX_PATH];
+    PRUnichar *wname_malloc = NULL;
     PRUnichar *wname = wname_stack;
     int len;
 #endif
@@ -831,7 +831,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     } else {
         int wlen = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
         if (wlen > MAX_PATH)
-            wname = PR_Malloc(wlen);
+            wname = wname_malloc = PR_Malloc(wlen);
         if (wname == NULL ||
             !MultiByteToWideChar(CP_ACP, 0,  name, -1, wname, wlen)) {
             oserr = _MD_ERRNO();
@@ -840,7 +840,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     }
     len = pr_ConvertUTF16toUTF8(wname, NULL, 0);
     if (len > MAX_PATH)
-        utf8name = PR_Malloc(len);
+        utf8name = utf8name_malloc = PR_Malloc(len);
     if (utf8name == NULL ||
         !pr_ConvertUTF16toUTF8(wname, utf8name, len)) {
         oserr = _MD_ERRNO();
@@ -1111,10 +1111,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
         DLLErrorInternal(oserr);  /* sets error text */
     }
 #ifdef WIN32
-    if (utf8name && utf8name != utf8name_stack) 
-        PR_Free(utf8name);
-    if (!(flags & PR_LD_PATHW) && wname && wname != wname_stack)
-        PR_Free(wname);
+    if (utf8name_malloc) 
+        PR_Free(utf8name_malloc);
+    if (wname_malloc)
+        PR_Free(wname_malloc);
 #endif
     PR_ExitMonitor(pr_linker_lock);
     return result;
@@ -1130,9 +1130,8 @@ static PRStatus
 pr_ConvertSingleCharToUTF8(PRUint32 usv, PRUint16 offset, int bufLen,
                            int *utf8Len, char * *buf)
 {
-    /* XXX No error checking. Add it for debug build */
     char* p = *buf;
-    /*if (!bufLen || !*buf) { */
+    PR_ASSERT(!bufLen || *buf);
     if (!bufLen) {
         *utf8Len += offset;
         return PR_SUCCESS;

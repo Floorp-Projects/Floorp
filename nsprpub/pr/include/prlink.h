@@ -119,8 +119,8 @@ NSPR_API(PRLibrary*) PR_LoadLibrary(const char *name);
 ** A code fragment can be specified by name or by an integer index.
 **
 ** Right now PRLibSpec supports four types of library specification:
-** a pathname in the native charset, a Mac code fragment by name,
-** a Mac code fragment by index, and a UTF-16 pathname.
+** a pathname in the native character encoding, a Mac code fragment
+** by name, a Mac code fragment by index, and a UTF-16 pathname.
 */
 
 typedef enum PRLibSpecType {
@@ -165,7 +165,7 @@ typedef struct PRLibSpec {
 #define PR_LD_NOW    0x2  /* equivalent to RTLD_NOW on Unix */
 #define PR_LD_GLOBAL 0x4  /* equivalent to RTLD_GLOBAL on Unix */
 #define PR_LD_LOCAL  0x8  /* equivalent to RTLD_LOCAL on Unix */
-/*                 0x400     reserved for NSPR internal use */
+/*                0x8000     reserved for NSPR internal use */
 
 /*
 ** Load the specified library, in the manner specified by 'flags'.
