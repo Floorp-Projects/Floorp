@@ -268,29 +268,52 @@ calTransaction.prototype = {
 
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.nsITransaction))
+            !aIID.equals(Components.interfaces.nsITransaction) &&
+            !aIID.equals(Component.interfaces.calIOperationListener))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
         return this;
     },
 
+    onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+        if (aStatus == Components.results.NS_OK) {
+            if (aOperationType == Components.interfaces.calIOperationListener.ADD ||
+                aOperationType ==Components.interfaces.calIOperationListener.MODIFY) {
+                // Add/Delete return the original item as detail for success
+                this.mItem = aDetail;
+            }
+        } else {
+            Components.utils.reportError("Severe error in internal transaction code!\n" +
+                                         aDetail + '\n'+
+                                         "Please report this to the developers.\n");
+        }
+        if (this.mListener) {
+            this.mListener.onOperationComplete(aCalendar, aStatus, aOperationType, aId, aDetail);
+        }
+    },
+    onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
+        if (this.mListener) {
+            this.mListener.onGetResult(aCalendar, aStatus, aItemType, aDetail, aCount, aItems);
+        }
+    },
+
     doTransaction: function () {
         switch (this.mAction) {
             case 'add':
-                this.mCalendar.addItem(this.mItem, this.mListener);
+                this.mCalendar.addItem(this.mItem, this);
                 break;
             case 'modify':
                 this.mCalendar.modifyItem(this.mItem, this.mOldItem,
-                                          this.mListener);
+                                          this);
                 break;
             case 'delete':
-                this.mCalendar.deleteItem(this.mItem, this.mListener);
+                this.mCalendar.deleteItem(this.mItem, this);
                 break;
             case 'move':
                 this.mOldCalendar = this.mOldItem.calendar;
-                this.mOldCalendar.deleteItem(this.mOldItem, this.mListener);
-                this.mCalendar.addItem(this.mItem, this.mListener);
+                this.mOldCalendar.deleteItem(this.mOldItem, this);
+                this.mCalendar.addItem(this.mItem, this);
                 break;
         }
     },
