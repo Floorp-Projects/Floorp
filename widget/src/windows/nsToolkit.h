@@ -46,6 +46,8 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 
+#include <imm.h>
+
 struct MethodInfo;
 class nsIEventQueue;
 class MouseTrailer;
