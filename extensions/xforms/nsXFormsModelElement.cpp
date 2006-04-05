@@ -1518,7 +1518,7 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXFormsModelElement::ValidateDocument(nsIDOMDocument *aInstanceDocument,
                                        PRBool         *aResult)
 {
