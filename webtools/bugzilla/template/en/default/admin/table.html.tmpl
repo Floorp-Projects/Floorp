@@ -104,17 +104,17 @@
         [%# Is the override for this row? %]
         [% IF override.match_value == row.${override.match_field} %]
 
-          [% contentlink = override.contentlink 
+          [% SET contentlink = override.contentlink 
              IF override.override_contentlink %]
-          [% content = override.content
+          [% SET content = override.content
              IF override.override_content %]
-          [% content_use_field = override.content_use_field
+          [% SET content_use_field = override.content_use_field
              IF override.override_content_use_field %]
-          [% align = override.align
+          [% SET align = override.align
              IF override.override_align %]
-          [% allow_html_content = override.allow_html_content
+          [% SET allow_html_content = override.allow_html_content
              IF override.override_allow_html_content %]
-          [% yesno_field = override.yesno_field
+          [% SET yesno_field = override.yesno_field
              IF override.override_yesno_field %]
 
           [% LAST %]
