@@ -352,7 +352,7 @@ public:
                                   AttrValuesArray* aValues,
                                   nsCaseTreatment aCaseSensitive) const
   {
-    return -1;
+    return ATTR_MISSING;
   }
 
   /**
@@ -612,8 +612,9 @@ public:
   }
 
   /**
-   * Returns PR_TRUE if there is a chance that the content node has a
-   * frame, PR_FALSE otherwise.
+   * @returns PR_TRUE if there is a chance that the content node has a
+   *                  frame.
+   * @returns PR_FALSE otherwise.
    */
   virtual PRBool MayHaveFrame() const
   {
@@ -657,6 +658,10 @@ public:
    * For HTML textarea, select, applet, and object elements, returns
    * PR_TRUE if all children have been added OR if the element was not
    * created by the parser. Returns PR_TRUE for all other elements.
+   * @returns PR_FALSE if the element was created by the parser and
+   *                   it is an HTML textarea, select, applet, or object
+   *                   element and not all children have been added.
+   * @returns PR_TRUE otherwise.
    */
   virtual PRBool IsDoneAddingChildren()
   {
@@ -756,14 +761,12 @@ public:
   /**
    * List the content (and anything it contains) out to the given
    * file stream. Use aIndent as the base indent during formatting.
-   * Returns NS_OK unless a file error occurs.
    */
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
    * Dump the content (and anything it contains) out to the given
    * file stream. Use aIndent as the base indent during formatting.
-   * Returns NS_OK unless a file error occurs.
    */
   virtual void DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,
                            PRBool aDumpAll = PR_TRUE) const = 0;
