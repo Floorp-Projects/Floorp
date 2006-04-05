@@ -198,7 +198,9 @@ endif
 endif
 
 ifdef MOZ_ENABLE_CAIRO_GFX
+STATIC_LIBS += thebes
 COMPONENT_LIBS += gkgfxthebes
+
 else # Platform-specific GFX layer
   ifeq (windows,$(MOZ_GFX_TOOLKIT))
   COMPONENT_LIBS += gkgfxwin

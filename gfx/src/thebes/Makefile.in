@@ -89,7 +89,6 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LIBS	= gkgfx thebes
@@ -138,12 +137,12 @@ LOCAL_INCLUDES	= \
 
 EXTRA_DSO_LDOPTS += \
 		$(EXTRA_DSO_LIBS) \
+		../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
-
 
 include $(topsrcdir)/config/rules.mk
 
