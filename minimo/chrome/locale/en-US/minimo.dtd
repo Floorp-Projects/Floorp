@@ -25,6 +25,8 @@
 <!ENTITY toggleFullScreen.label       "Toggle Full Screen">
 <!ENTITY toggleSSR.label              "Toggle Single Column Mode">
 
+<!ENTITY openFrameInTab.label         "View Frame In New Tab">
+
 <!ENTITY textSizePlus.label           "Text Size +">
 <!ENTITY textSizeMinus.label          "Text Size -">
 

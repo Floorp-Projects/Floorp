@@ -863,6 +863,14 @@ function MenuNavPopupShowing () {
 
 }
 
+function isContentFrame(aFocusedWindow)
+{
+  if (!aFocusedWindow)
+    return false;
+  
+  return (aFocusedWindow.top == window.content);
+}
+
 function BrowserContentAreaPopupShowing () {
 
   var selectedRange=gBrowser.selectedBrowser.contentDocument.getSelection();
@@ -899,6 +907,17 @@ function BrowserContentAreaPopupShowing () {
   } else {
     document.getElementById("link_as_new_tab").hidden=true;
   }
+
+  /*
+   * Open Frame in new tab
+   */
+
+  var frameItem = document.getElementById("open_frame_in_tab");
+  if (!content || !content.frames.length || !isContentFrame(document.commandDispatcher.focusedWindow))
+    frameItem.setAttribute("hidden", "true");
+  else
+    frameItem.removeAttribute("hidden");
+
 }
 
 /* Bookmarks */ 
@@ -1120,6 +1139,13 @@ function DoToggleSoftwareKeyboard()
   }
   catch(ex) { alert(ex); }
 }
+
+function OpenFrameInTab()
+{
+  var url = document.popupNode.ownerDocument.location.href;
+  BrowserOpenURLasTab(url);
+}
+
 
 function DoFullScreen()
 {
