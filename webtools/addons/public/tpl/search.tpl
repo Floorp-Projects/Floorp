@@ -122,7 +122,7 @@ Next Page &raquo;
     {/if}
 
     <p class="first">By <a href="{$config.webpath}/{$app}/{$results[r]->UserID}/author/">{$results[r]->UserName}</a></p>
-    <p class="first">{$results[r]->Description}</p>
+    <p class="first">{$results[r]->Description|nl2br}</p>
     <div class="baseline">Last Update:  {$results[r]->DateUpdated|date_format} | Downloads Last 7 Days: {$results[r]->downloadcount} | Total Downloads: {$results[r]->TotalDownloads}</DIV>
 </div>
 {/section}

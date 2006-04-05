@@ -16,7 +16,7 @@ released on {$addon->VersionDateAdded|date_format}
 </p>
 
 
-<p>{$addon->Description}</p>
+<p>{$addon->Description|nl2br}</p>
 
 <p class="requires">
 Works with:
@@ -83,6 +83,9 @@ Works with:
     <div class="install-other">
         <a href="{$config.webpath}/{$app}/{$addon->ID}/history">Other Versions</a>
     </div>
+
+<h2>Developer Comments</h2>
+<p>{$addon->devomments|nl2br}</p>
 
 <h3 id="user-comments">User Comments</h3>
 
