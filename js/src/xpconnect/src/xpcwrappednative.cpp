@@ -2176,7 +2176,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
         const nsXPTType& type = paramInfo.GetType();
         nsXPTCVariant* dp = &dispatchParams[i];
-        jsval v;
+        jsval v = JSVAL_NULL;
+        AUTO_MARK_JSVAL(ccx, &v);
         JSUint32 array_count;
         nsXPTType datum_type;
         PRBool isArray = type.IsArray();

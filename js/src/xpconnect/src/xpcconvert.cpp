@@ -1623,7 +1623,8 @@ XPCConvert::NativeArray2JS(XPCCallContext& ccx,
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
     JSUint32 i;
-    jsval current;
+    jsval current = JSVAL_NULL;
+    AUTO_MARK_JSVAL(ccx, &current);
 
 #define POPULATE(_t)                                                         \
     PR_BEGIN_MACRO                                                           \

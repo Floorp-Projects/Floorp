@@ -1196,7 +1196,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         nsXPTType datum_type;
         JSUint32 array_count;
         PRBool isArray = type.IsArray();
-        jsval val;
+        jsval val = JSVAL_NULL;
+        AUTO_MARK_JSVAL(ccx, &val);
         PRBool isSizedString = isArray ?
                 JS_FALSE :
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||

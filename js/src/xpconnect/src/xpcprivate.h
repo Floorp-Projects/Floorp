@@ -3455,8 +3455,13 @@ DEFINE_AUTO_MARKING_ARRAY_PTR_TYPE(AutoMarkingNativeInterfacePtrArrayPtr,
 // these and bind them to rooted things so immediately that this just is not
 // needed.
 
-#define AUTO_MARK_JSVAL(ccx, val) \
-    XPCMarkableJSVal _val(val); AutoMarkingJSVal _automarker(ccx, &_val)
+#define AUTO_MARK_JSVAL_HELPER2(tok, line) tok##line
+#define AUTO_MARK_JSVAL_HELPER(tok, line) AUTO_MARK_JSVAL_HELPER2(tok, line)
+
+#define AUTO_MARK_JSVAL(ccx, val)                                            \
+    XPCMarkableJSVal AUTO_MARK_JSVAL_HELPER(_val_,__LINE__)(val);            \
+    AutoMarkingJSVal AUTO_MARK_JSVAL_HELPER(_automarker_,__LINE__)           \
+    (ccx, &AUTO_MARK_JSVAL_HELPER(_val_,__LINE__))
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /***************************************************************************/

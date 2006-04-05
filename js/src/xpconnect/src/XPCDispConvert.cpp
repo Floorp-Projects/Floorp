@@ -402,7 +402,8 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
         err = NS_ERROR_OUT_OF_MEMORY;
         return JS_FALSE;
     }
-    // Devine the type of our array
+    AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(array));
+    // Divine the type of our array
     VARTYPE vartype;
     if((src.vt & VT_ARRAY) != 0)
     {
@@ -413,7 +414,8 @@ JSBool XPCDispConvert::COMArrayToJSArray(XPCCallContext& ccx,
         if(FAILED(SafeArrayGetVartype(src.parray, &vartype)))
             return JS_FALSE;
     }
-    jsval val;
+    jsval val = JSVAL_NULL;
+    AUTO_MARK_JSVAL(ccx, &val);
     for(long index = lbound; index <= ubound; ++index)
     {
         HRESULT hr;

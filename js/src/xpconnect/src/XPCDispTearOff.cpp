@@ -302,6 +302,7 @@ STDMETHODIMP XPCDispatchTearOff::Invoke(DISPID dispIdMember, REFIID riid,
                 msg += name;
                 return Error(E_FAIL, msg.get());
             }
+            AUTO_MARK_JSVAL(ccx, &val);
             obj = GetJSObject();
             if(!obj)
                 return Error(E_FAIL, "The JS wrapper did not return a JS object");
