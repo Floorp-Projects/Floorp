@@ -4856,6 +4856,9 @@ nsDocShell::CreateAboutBlankContentViewer()
 
   mCreatingDocument = PR_TRUE;
 
+  // mContentViewer->PermitUnload may release |this| docshell.
+  nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
+  
   if (mContentViewer) {
     // We've got a content viewer already. Make sure the user
     // permits us to discard the current document and replace it
@@ -6494,6 +6497,12 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             return NS_OK;
         }
     }
+    
+    // mContentViewer->PermitUnload can destroy |this| docShell, which
+    // causes the next call of CanSavePresentation to crash. 
+    // Hold onto |this| until we return, to prevent a crash from happening. 
+    // (bug#331040)
+    nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
     // Check if the page doesn't want to be unloaded. The javascript:
     // protocol handler deals with this for javascript: URLs.

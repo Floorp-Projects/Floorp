@@ -1150,14 +1150,14 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
   event.target = mDocument;
   nsresult rv = NS_OK;
 
+  // In evil cases we might be destroyed while handling the
+  // onbeforeunload event, don't let that happen. (see also bug#331040)
+  nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+
   {
     // Never permit popups from the beforeunload handler, no matter
     // how we get here.
     nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-    // In evil cases we might be destroyed while handling the
-    // onbeforeunload event, don't let that happen.
-    nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
 
     mInPermitUnload = PR_TRUE;
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
