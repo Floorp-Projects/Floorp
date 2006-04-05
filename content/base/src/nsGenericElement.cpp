@@ -3017,13 +3017,6 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
   }
   else {
     // Not inserting a fragment but rather a single node.
-    nsIContent* bindingParent = newContent->GetBindingParent();
-    if (bindingParent == newContent ||
-        (bindingParent && bindingParent == newContent->GetParent())) {
-      // We can't deal with this so just bail
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-
     PRBool newContentIsXUL = newContent->IsContentOfType(eXUL);
 
     // Remove the element from the old parent if one exists
@@ -3038,8 +3031,13 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     }
     if (oldParent) {
       PRInt32 removeIndex = oldParent->IndexOf(newContent);
-      NS_ASSERTION(removeIndex >= 0 &&
-                   !(oldParent == container && removeIndex == insPos),
+
+      if (removeIndex < 0) {
+        // newContent is anonymous.  We can't deal with this, so just bail
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      }
+      
+      NS_ASSERTION(!(oldParent == container && removeIndex == insPos),
                    "invalid removeIndex");
 
       nsMutationGuard guard;
