@@ -60,10 +60,10 @@ REQUIRES	= xpcom \
 		  mork \
 		  widget \
 		  dom \
-          	  uriloader \
-          	  mimetype \
-          	  webbrowserpersist \
-          	  progressDlg \
+		  uriloader \
+		  mimetype \
+		  webbrowserpersist \
+		  progressDlg \
 		  pref \
 		  docshell \
 		  webshell \
@@ -73,8 +73,8 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsModule.cpp
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
+	../windowds/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
+	../intl/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -86,7 +86,7 @@ LOCAL_INCLUDES	= \
 ifeq ($(OS_ARCH),WINNT)
 
 SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+	../winhooks/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
