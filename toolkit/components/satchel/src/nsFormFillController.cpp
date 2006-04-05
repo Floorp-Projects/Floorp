@@ -625,8 +625,21 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   keyEvent->GetKeyCode(&k);
   switch (k) {
   case nsIDOMKeyEvent::DOM_VK_DELETE:
+#ifndef XP_MACOSX
     mController->HandleDelete(&cancel);
     break;
+#else
+    {
+      PRBool isShift = PR_FALSE;
+      keyEvent->GetShiftKey(&isShift);
+
+      if (isShift) {
+        mController->HandleDelete(&cancel);
+        break;
+      }
+    }
+    // fall through
+#endif
   case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
     mController->HandleText(PR_FALSE);
     break;

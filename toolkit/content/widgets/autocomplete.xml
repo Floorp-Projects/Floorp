@@ -420,10 +420,11 @@
               this.mEnterEvent = aEvent;
               cancel = this.mController.handleEnter();
               break;
+            case KeyEvent.DOM_VK_DELETE:
 #ifdef XP_MACOSX
             case KeyEvent.DOM_VK_BACK_SPACE:
+              if (aEvent.shiftKey)
 #endif
-            case KeyEvent.DOM_VK_DELETE:
               cancel = this.mController.handleDelete();
               break;
             case KeyEvent.DOM_VK_DOWN:
