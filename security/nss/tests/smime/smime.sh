@@ -92,7 +92,7 @@ smime_init()
 
 smime_sign()
 {
-  HASH_CMD=-H ${HASH}
+  HASH_CMD="-H ${HASH}"
   SIG=sig.${HASH}
 
   echo "$SCRIPTNAME: Signing Detached Message {$HASH} ------------------"
