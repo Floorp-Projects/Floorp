@@ -458,8 +458,6 @@ NS_NewEmptyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsFrame(aContext);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsFrame)
-
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
@@ -772,7 +770,6 @@ nsFrame::DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn)
   return selType;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplaySelectionOverlay)
 class nsDisplaySelectionOverlay : public nsDisplayItem {
 public:
   nsDisplaySelectionOverlay(nsFrame* aFrame, PRInt16 aSelectionValue)
@@ -6179,8 +6176,6 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
 // Start Display Reflow
 #ifdef DEBUG
 
-MOZ_DECL_CTOR_COUNTER(DR_cookie)
-
 DR_cookie::DR_cookie(nsPresContext*          aPresContext,
                      nsIFrame*                aFrame, 
                      const nsHTMLReflowState& aReflowState,
@@ -6266,8 +6261,6 @@ void DR_RulePart::Destroy()
   delete this;
 }
 
-MOZ_DECL_CTOR_COUNTER(DR_Rule)
-
 struct DR_Rule 
 {
   DR_Rule() : mLength(0), mTarget(nsnull), mDisplay(PR_FALSE) {
@@ -6291,8 +6284,6 @@ void DR_Rule::AddPart(nsIAtom* aFrameType)
   mTarget = newPart;
   mLength++;
 }
-
-MOZ_DECL_CTOR_COUNTER(DR_FrameTypeInfo)
 
 struct DR_FrameTypeInfo
 {
@@ -6322,8 +6313,6 @@ DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType,
   MOZ_COUNT_CTOR(DR_FrameTypeInfo);
 }
 
-MOZ_DECL_CTOR_COUNTER(DR_FrameTreeNode)
-
 struct DR_FrameTreeNode
 {
   DR_FrameTreeNode(nsIFrame* aFrame, DR_FrameTreeNode* aParent) : mFrame(aFrame), mParent(aParent), mDisplay(0), mIndent(0)
@@ -6343,8 +6332,6 @@ struct DR_FrameTreeNode
 };
 
 // DR_State implementation
-
-MOZ_DECL_CTOR_COUNTER(DR_State)
 
 DR_State::DR_State() 
 : mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), 

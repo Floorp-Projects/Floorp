@@ -44,8 +44,6 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 
-MOZ_DECL_CTOR_COUNTER(CParserContext)
-
 CParserContext::CParserContext(nsScanner* aScanner, 
                                void *aKey, 
                                eParserCommands aCommand,

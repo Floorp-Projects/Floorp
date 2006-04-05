@@ -2055,7 +2055,6 @@ nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
   return index;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayComboboxFocus)
 class nsDisplayComboboxFocus : public nsDisplayItem {
 public:
   nsDisplayComboboxFocus(nsComboboxControlFrame* aFrame)

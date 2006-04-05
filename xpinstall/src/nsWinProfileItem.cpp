@@ -42,8 +42,6 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinProfileItem)
-
 nsWinProfileItem::nsWinProfileItem(nsWinProfile* profileObj, 
                                    nsString sectionName,
                                    nsString keyName,

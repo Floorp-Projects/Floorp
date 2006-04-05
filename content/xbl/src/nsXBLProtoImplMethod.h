@@ -46,8 +46,6 @@
 #include "nsString.h"
 #include "nsXBLProtoImplMember.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXBLParameter)
-
 struct nsXBLParameter {
   nsXBLParameter* mNext;
   char* mName;
@@ -64,8 +62,6 @@ struct nsXBLParameter {
     delete mNext;
   }
 };
-
-MOZ_DECL_CTOR_COUNTER(nsXBLUncompiledMethod)
 
 struct nsXBLUncompiledMethod {
   nsXBLParameter* mParameters;

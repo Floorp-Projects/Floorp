@@ -141,8 +141,6 @@ private:
    * Struct used to manage the image observers.
    */
   struct ImageObserver {
-    MOZ_DECL_CTOR_COUNTER(ImageObserver)
-    
     ImageObserver(imgIDecoderObserver* aObserver) :
       mObserver(aObserver),
       mNext(nsnull)

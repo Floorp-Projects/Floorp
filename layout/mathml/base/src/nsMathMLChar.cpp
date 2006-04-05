@@ -216,8 +216,6 @@ GetStretchyDirection(PRUnichar aChar)
 
 // -----------------------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsGlyphTable)
-
 class nsGlyphTable {
 public:
   nsGlyphTable(const nsString& aPrimaryFontName)
@@ -647,8 +645,6 @@ DHASH_WRAPPER(nsBaseFontHashtable, nsBaseFontEntry, PRInt32)
 // glyph tables that are associated to fonts currently installed on the
 // user' system. The class is an XPCOM shutdown observer to allow us to
 // free its allocated data at shutdown
-
-MOZ_DECL_CTOR_COUNTER(nsGlyphTableList)
 
 class nsGlyphTableList : public nsIObserver
 {
@@ -1923,7 +1919,6 @@ nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLSelectionRect)
 class nsDisplayMathMLSelectionRect : public nsDisplayItem {
 public:
   nsDisplayMathMLSelectionRect(nsIFrame* aFrame, const nsRect& aRect)
@@ -1954,7 +1949,6 @@ void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->FillRect(mRect + aBuilder->ToReferenceFrame(mFrame));
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLCharBackground)
 class nsDisplayMathMLCharBackground : public nsDisplayItem {
 public:
   nsDisplayMathMLCharBackground(nsIFrame* aFrame, const nsRect& aRect,
@@ -1989,7 +1983,6 @@ void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
                                         PR_TRUE);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLCharForeground)
 class nsDisplayMathMLCharForeground : public nsDisplayItem {
 public:
   nsDisplayMathMLCharForeground(nsIFrame* aFrame, nsMathMLChar* aChar,
@@ -2019,7 +2012,6 @@ void nsDisplayMathMLCharForeground::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 #ifdef NS_DEBUG
-MOZ_DECL_CTOR_COUNTER(nsDisplayMathMLCharDebug)
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
 public:
   nsDisplayMathMLCharDebug(nsIFrame* aFrame, const nsRect& aRect)

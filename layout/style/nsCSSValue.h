@@ -290,8 +290,6 @@ public:
              nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 #endif
 
-  MOZ_DECL_CTOR_COUNTER(nsCSSValue::Array)
-
   struct Array {
 
     // return |Array| with reference count of zero
@@ -382,8 +380,6 @@ public:
     Array(const Array& aOther); // not to be implemented
   };
 
-  MOZ_DECL_CTOR_COUNTER(nsCSSValue::URL)
-
   struct URL {
     // Caller must delete this object immediately if the allocation of
     // |mString| fails.
@@ -424,8 +420,6 @@ public:
   protected:
     nsrefcnt mRefCnt;
   };
-
-  MOZ_DECL_CTOR_COUNTER(nsCSSValue::Image)
 
   struct Image : public URL {
     // Not making the constructor and destructor inline because that would

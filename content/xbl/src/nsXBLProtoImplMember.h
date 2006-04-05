@@ -52,8 +52,6 @@ class nsIScriptContext;
 struct JSRuntime;
 class nsIJSRuntimeService;
 
-MOZ_DECL_CTOR_COUNTER(nsXBLTextWithLineNumber)
-
 struct nsXBLTextWithLineNumber
 {
   PRUnichar* mText;

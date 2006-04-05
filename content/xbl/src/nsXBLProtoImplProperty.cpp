@@ -49,8 +49,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplProperty)
-
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
                                                const PRUnichar* aGetter, 
                                                const PRUnichar* aSetter,

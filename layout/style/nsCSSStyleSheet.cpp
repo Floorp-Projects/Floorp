@@ -607,8 +607,6 @@ nsCSSStyleSheetInner::RebuildNameSpaces()
 // CSS Style Sheet
 //
 
-MOZ_DECL_CTOR_COUNTER(nsCSSStyleSheet)
-
 nsCSSStyleSheet::nsCSSStyleSheet()
   : nsICSSStyleSheet(),
     mRefCnt(0),

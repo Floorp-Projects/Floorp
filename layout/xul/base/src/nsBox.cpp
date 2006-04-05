@@ -238,8 +238,6 @@ void Coelesced()
 PRBool nsBox::gGotTheme = PR_FALSE;
 nsITheme* nsBox::gTheme = nsnull;
 
-MOZ_DECL_CTOR_COUNTER(nsBox)
-
 nsBox::nsBox()
 {
   MOZ_COUNT_CTOR(nsBox);

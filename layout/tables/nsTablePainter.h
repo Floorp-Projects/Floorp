@@ -168,7 +168,6 @@ class TableBackgroundPainter
 
     struct TableBackgroundData;
     friend struct TableBackgroundData;
-    MOZ_DECL_CTOR_COUNTER(TableBackgroundData)
     struct TableBackgroundData {
       nsIFrame*                 mFrame;
       /** mRect is the rect of mFrame in the current coordinate system */
@@ -243,6 +242,5 @@ class TableBackgroundPainter
     float                mP2t;         //pixels to twips
 
 };
-MOZ_DECL_CTOR_COUNTER(TableBackgroundPainter)
 
 #endif

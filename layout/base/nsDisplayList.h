@@ -716,7 +716,6 @@ private:
  * custom display item class could be, and fractionally slower. However it does
  * save code size. We use this for infrequently-used item types.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayGeneric)
 class nsDisplayGeneric : public nsDisplayItem {
 public:
   typedef void (* PaintCallback)(nsIFrame* aFrame, nsIRenderingContext* aCtx,
@@ -751,7 +750,6 @@ protected:
 /**
  * The standard display item to paint the CSS borders of a frame.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayBorder)
 class nsDisplayBorder : public nsDisplayItem {
 public:
   nsDisplayBorder(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
@@ -771,7 +769,6 @@ public:
 /**
  * The standard display item to paint the CSS background of a frame.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayBackground)
 class nsDisplayBackground : public nsDisplayItem {
 public:
   nsDisplayBackground(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
@@ -796,7 +793,6 @@ public:
 /**
  * The standard display item to paint the CSS outline of a frame.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayOutline)
 class nsDisplayOutline : public nsDisplayItem {
 public:
   nsDisplayOutline(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
@@ -818,7 +814,6 @@ public:
 /**
  * A class that lets you receive events within the frame bounds but never paints.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayEventReceiver)
 class nsDisplayEventReceiver : public nsDisplayItem {
 public:
   nsDisplayEventReceiver(nsIFrame* aFrame) : nsDisplayItem(aFrame) {
@@ -926,7 +921,6 @@ protected:
  * The standard display item to paint a stacking context with translucency
  * set by the stacking context root frame's 'opacity' style.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayOpacity)
 class nsDisplayOpacity : public nsDisplayWrapList {
 public:
   nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList);

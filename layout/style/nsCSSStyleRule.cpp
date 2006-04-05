@@ -87,8 +87,6 @@
 #define NS_IF_DELETE(ptr)   \
   if (ptr) { delete ptr; ptr = nsnull; }
 
-MOZ_DECL_CTOR_COUNTER(nsAtomList)
-
 nsAtomList::nsAtomList(nsIAtom* aAtom)
   : mAtom(aAtom),
     mNext(nsnull)
@@ -133,8 +131,6 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
   }
   return PR_FALSE;
 }
-
-MOZ_DECL_CTOR_COUNTER(nsAtomStringList)
 
 nsAtomStringList::nsAtomStringList(nsIAtom* aAtom, const PRUnichar* aString)
   : mAtom(aAtom),
@@ -190,8 +186,6 @@ PRBool nsAtomStringList::Equals(const nsAtomStringList* aOther) const
                                         nsDependentString(aOther->mString),
                                         nsCaseInsensitiveStringComparator())));
 }
-
-MOZ_DECL_CTOR_COUNTER(nsAttrSelector)
 
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   : mNameSpace(aNameSpace),
@@ -261,8 +255,6 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   }
   return PR_FALSE;
 }
-
-MOZ_DECL_CTOR_COUNTER(nsCSSSelector)
 
 nsCSSSelector::nsCSSSelector(void)
   : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
@@ -746,8 +738,6 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
 
 // -- nsCSSSelectorList -------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsCSSSelectorList)
-
 nsCSSSelectorList::nsCSSSelectorList(void)
   : mSelectors(nsnull),
     mWeight(0),
@@ -952,8 +942,6 @@ protected:
     return mDOMDeclaration.mRule;
   }
 };
-
-MOZ_DECL_CTOR_COUNTER(DOMCSSDeclarationImpl)
 
 DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
   : mRule(aRule)

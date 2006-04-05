@@ -586,7 +586,6 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIAtom*        aListName,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplaySVG)
 class nsDisplaySVG : public nsDisplayItem {
 public:
   nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : nsDisplayItem(aFrame) {

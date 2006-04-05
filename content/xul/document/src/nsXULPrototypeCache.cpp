@@ -710,11 +710,9 @@ class nsXULFastLoadFileIO : public nsIFastLoadFileIO
   public:
     nsXULFastLoadFileIO(nsIFile* aFile)
       : mFile(aFile) {
-        MOZ_COUNT_CTOR(nsXULFastLoadFileIO);
     }
 
     virtual ~nsXULFastLoadFileIO() {
-        MOZ_COUNT_DTOR(nsXULFastLoadFileIO);
     }
 
     NS_DECL_ISUPPORTS
@@ -727,7 +725,6 @@ class nsXULFastLoadFileIO : public nsIFastLoadFileIO
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULFastLoadFileIO, nsIFastLoadFileIO)
-MOZ_DECL_CTOR_COUNTER(nsXULFastLoadFileIO)
 
 
 NS_IMETHODIMP

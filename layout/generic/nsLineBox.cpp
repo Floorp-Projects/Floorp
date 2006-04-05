@@ -57,8 +57,6 @@ static PRInt32 ctorCount;
 PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsLineBox)
-
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
   : mFirstChild(aFrame),
     mBounds(0, 0, 0, 0),
@@ -816,8 +814,6 @@ nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsFloatCacheList)
-
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsFloatCacheList::nsFloatCacheList() :
   mHead(nsnull)
@@ -896,8 +892,6 @@ nsFloatCacheList::Remove(nsFloatCache* aElement)
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsFloatCacheFreeList)
-
 #ifdef NS_BUILD_REFCNT_LOGGING
 nsFloatCacheFreeList::nsFloatCacheFreeList() :
   mTail(nsnull)
@@ -962,8 +956,6 @@ nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 }
 
 //----------------------------------------------------------------------
-
-MOZ_DECL_CTOR_COUNTER(nsFloatCache)
 
 nsFloatCache::nsFloatCache()
   : mPlaceholder(nsnull),

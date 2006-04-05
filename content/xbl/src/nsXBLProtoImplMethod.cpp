@@ -51,8 +51,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplMethod)
-
 nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
   nsXBLProtoImplMember(aName), 
   mUncompiledMethod(nsnull)

@@ -386,7 +386,6 @@ nsImageBoxFrame::UpdateLoadFlags()
     mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayXULImage)
 class nsDisplayXULImage : public nsDisplayItem {
 public:
   nsDisplayXULImage(nsImageBoxFrame* aFrame) : nsDisplayItem(aFrame) {

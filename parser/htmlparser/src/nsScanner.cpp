@@ -79,8 +79,6 @@ const int   kBufsize=1;
 const int   kBufsize=64;
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsScanner)
-
 /**
  *  Use this constructor if you want i/o to be based on 
  *  a single string you hand in during construction.

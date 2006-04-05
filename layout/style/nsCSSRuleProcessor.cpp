@@ -719,8 +719,6 @@ nsCSSRuleProcessor::~nsCSSRuleProcessor()
 
 NS_IMPL_ISUPPORTS1(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
-MOZ_DECL_CTOR_COUNTER(RuleProcessorData)
-
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
                                      nsIContent* aContent, 
                                      nsRuleWalker* aRuleWalker,

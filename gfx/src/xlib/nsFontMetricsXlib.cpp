@@ -3161,8 +3161,6 @@ nsFontXlib::IsFreeTypeFont(void)
 }
 #endif /* MOZ_ENABLE_FREETYPE2 */
 
-MOZ_DECL_CTOR_COUNTER(nsFontXlib)
-
 nsFontXlib::nsFontXlib()
 {
   MOZ_COUNT_CTOR(nsFontXlib);

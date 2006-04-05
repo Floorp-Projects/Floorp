@@ -142,8 +142,6 @@ public:
   nsAutoString      mTitle;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsMenuEntry)
-
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [declaration]
 

@@ -50,8 +50,6 @@
 #define HOVER    "hover"
 #define FOCUS    "focus"
 
-MOZ_DECL_CTOR_COUNTER(nsButtonFrameRenderer)
-
 nsButtonFrameRenderer::nsButtonFrameRenderer()
 {
   MOZ_COUNT_CTOR(nsButtonFrameRenderer);
@@ -93,7 +91,6 @@ nsButtonFrameRenderer::isDisabled()
                                        nsHTMLAtoms::disabled);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayButtonBorderBackground)
 class nsDisplayButtonBorderBackground : public nsDisplayItem {
 public:
   nsDisplayButtonBorderBackground(nsButtonFrameRenderer* aRenderer)
@@ -116,7 +113,6 @@ private:
   nsButtonFrameRenderer* mBFR;
 };
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayButtonForeground)
 class nsDisplayButtonForeground : public nsDisplayItem {
 public:
   nsDisplayButtonForeground(nsButtonFrameRenderer* aRenderer)

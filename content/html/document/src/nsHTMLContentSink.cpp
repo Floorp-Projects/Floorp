@@ -1008,8 +1008,6 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(SinkContext)
-
 SinkContext::SinkContext(HTMLContentSink* aSink)
   : mSink(aSink),
     mNotifyLevel(0),

@@ -1338,7 +1338,6 @@ nsTableFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   return nsnull;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayTableBorderBackground)
 class nsDisplayTableBorderBackground : public nsDisplayItem {
 public:
   nsDisplayTableBorderBackground(nsTableFrame* aFrame) : nsDisplayItem(aFrame) {

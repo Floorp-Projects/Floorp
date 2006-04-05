@@ -43,8 +43,6 @@
 
 /* Public Methods */
 
-MOZ_DECL_CTOR_COUNTER(nsWinReg)
-
 nsWinReg::nsWinReg(nsInstall* suObj)
 {
     MOZ_COUNT_CTOR(nsWinReg);

@@ -1262,7 +1262,6 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
  * image itself, and hence receive events just as if the image itself
  * received events.
  */
-MOZ_DECL_CTOR_COUNTER(nsDisplayImage)
 class nsDisplayImage : public nsDisplayItem {
 public:
   nsDisplayImage(nsImageFrame* aFrame, imgIContainer* aImage)

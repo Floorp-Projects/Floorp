@@ -150,8 +150,6 @@ static PRBool InUnconstrainedTableCell(const nsHTMLReflowState& aBlockReflowStat
 
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsLineLayout)
-
 nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
                            nsSpaceManager* aSpaceManager,
                            const nsHTMLReflowState* aOuterReflowState,

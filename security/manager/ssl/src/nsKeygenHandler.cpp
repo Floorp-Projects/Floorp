@@ -176,18 +176,15 @@ done:
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsKeygenFormProcessor, nsIFormProcessor)
-MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor)
 
 nsKeygenFormProcessor::nsKeygenFormProcessor()
 { 
-   MOZ_COUNT_CTOR(nsKeygenFormProcessor);
    m_ctx = new PipUIContext();
 
 } 
 
 nsKeygenFormProcessor::~nsKeygenFormProcessor()
 {
-  MOZ_COUNT_DTOR(nsKeygenFormProcessor);
 }
 
 NS_METHOD

@@ -50,8 +50,6 @@
 
 GdkRegion *nsGCCache::copyRegion = NULL;
 
-MOZ_DECL_CTOR_COUNTER(nsGCCache)
-
 nsGCCache::nsGCCache()
 {
   MOZ_COUNT_CTOR(nsGCCache);

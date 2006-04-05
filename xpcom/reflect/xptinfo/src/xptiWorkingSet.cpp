@@ -115,8 +115,6 @@ static const struct PLDHashTableOps NameTableOps =
 
 /***************************************************************************/
 
-MOZ_DECL_CTOR_COUNTER(xptiWorkingSet)
-
 xptiWorkingSet::xptiWorkingSet(nsISupportsArray* aDirectories)
     : mFileCount(0),
       mMaxFileCount(0),

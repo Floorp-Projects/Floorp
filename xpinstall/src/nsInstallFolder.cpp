@@ -137,8 +137,6 @@ struct DirectoryTable DirectoryTable[] =
 };
 
 
-MOZ_DECL_CTOR_COUNTER(nsInstallFolder)
-
 nsInstallFolder::nsInstallFolder()
 {
     MOZ_COUNT_CTOR(nsInstallFolder);

@@ -47,8 +47,6 @@
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplField)
-
 nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
   : nsXBLProtoImplMember(aName),
     mFieldText(nsnull),

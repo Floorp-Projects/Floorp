@@ -173,7 +173,6 @@ nsBulletFrame::DidSetStyleContext()
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayBullet)
 class nsDisplayBullet : public nsDisplayItem {
 public:
   nsDisplayBullet(nsBulletFrame* aFrame) : nsDisplayItem(aFrame) {

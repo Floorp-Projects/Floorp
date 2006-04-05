@@ -51,8 +51,6 @@
 #include "nsIDOMInstallVersion.h"
 #include "nsNativeCharsetUtils.h"
 
-MOZ_DECL_CTOR_COUNTER(nsInstallLogComment)
-
 nsInstallLogComment::nsInstallLogComment( nsInstall* inInstall,
                                           const nsAString& inFileOpCommand,
                                           const nsAString& inComment,

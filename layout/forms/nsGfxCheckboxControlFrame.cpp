@@ -167,7 +167,6 @@ static void PaintCheckMarkFromStyle(nsIFrame* aFrame,
     ->PaintCheckBoxFromStyle(*aCtx, aPt, aDirtyRect);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayCheckMark)
 class nsDisplayCheckMark : public nsDisplayItem {
 public:
   nsDisplayCheckMark(nsGfxCheckboxControlFrame* aFrame)

@@ -596,8 +596,6 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
   return WrapEachDisplayItem(aBuilder, aLists.Outlines(), this);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayOpacity)
-  
 nsDisplayOpacity::nsDisplayOpacity(nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aFrame, aList), mNeedAlpha(PR_TRUE) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
@@ -725,8 +723,6 @@ PRBool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem*
   mList.AppendToBottom(&NS_STATIC_CAST(nsDisplayOpacity*, aItem)->mList);
   return PR_TRUE;
 }
-
-MOZ_DECL_CTOR_COUNTER(nsDisplayClip)
 
 nsDisplayClip::nsDisplayClip(nsIFrame* aFrame, nsDisplayItem* aItem,
     const nsRect& aRect)

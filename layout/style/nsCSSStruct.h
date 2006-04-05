@@ -193,8 +193,6 @@ struct nsCSSRect {
   static const side_type sides[4];
 };
 
-MOZ_DECL_CTOR_COUNTER(nsCSSValuePair)
-
 struct nsCSSValuePair {
   nsCSSValuePair()
   {

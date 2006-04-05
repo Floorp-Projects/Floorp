@@ -105,9 +105,6 @@ HasPctValue(const nsIFrame* aFrame)
 
 /* ---------- BasicTableLayoutStrategy ---------- */
 
-MOZ_DECL_CTOR_COUNTER(BasicTableLayoutStrategy)
-
-
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool aIsNavQuirks)
 {
   MOZ_COUNT_CTOR(BasicTableLayoutStrategy);

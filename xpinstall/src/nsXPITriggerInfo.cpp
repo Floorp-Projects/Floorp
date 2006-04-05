@@ -53,7 +53,6 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //
 // nsXPITriggerItem
 //
-MOZ_DECL_CTOR_COUNTER(nsXPITriggerItem)
 
 nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
                                     const PRUnichar* aURL,
@@ -176,8 +175,6 @@ nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
 //
 // nsXPITriggerInfo
 //
-
-MOZ_DECL_CTOR_COUNTER(nsXPITriggerInfo)
 
 nsXPITriggerInfo::nsXPITriggerInfo()
   : mCx(0), mCbval(JSVAL_NULL)

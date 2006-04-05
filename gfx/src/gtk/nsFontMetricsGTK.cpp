@@ -2783,8 +2783,6 @@ nsFontGTK::IsFreeTypeFont(void)
   return PR_FALSE;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsFontGTK)
-
 nsFontGTK::nsFontGTK()
 {
   MOZ_COUNT_CTOR(nsFontGTK);

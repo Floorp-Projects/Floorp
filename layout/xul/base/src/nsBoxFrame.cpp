@@ -1369,7 +1369,6 @@ nsBoxFrame::GetDebugPref(nsPresContext* aPresContext)
     gDebug = nsContentUtils::GetBoolPref("xul.debug.box");
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayXULDebug)
 class nsDisplayXULDebug : public nsDisplayItem {
 public:
   nsDisplayXULDebug(nsIFrame* aFrame) : nsDisplayItem(aFrame) {

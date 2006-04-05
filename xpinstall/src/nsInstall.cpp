@@ -165,8 +165,6 @@ NS_SoftwareUpdateRequestAutoReg()
 
 
 
-MOZ_DECL_CTOR_COUNTER(nsInstallInfo)
-
 nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              nsIFile*           aFile,
                              const PRUnichar*   aURL,
@@ -230,8 +228,6 @@ nsInstallInfo::~nsInstallInfo()
 
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
-
-MOZ_DECL_CTOR_COUNTER(nsInstall)
 
 nsInstall::nsInstall(nsIZipReader * theJARFile)
 {

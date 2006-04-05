@@ -229,8 +229,6 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 
 // Implementation /////////////////////////////////////////////////////////////////
 
-MOZ_DECL_CTOR_COUNTER(nsXBLPrototypeBinding)
-
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding()
 : mImplementation(nsnull),

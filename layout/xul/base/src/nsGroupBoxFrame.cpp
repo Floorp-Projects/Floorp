@@ -100,7 +100,6 @@ NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsGroupBoxFrame(aPresShell, aContext);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsDisplayXULGroupBackground)
 class nsDisplayXULGroupBackground : public nsDisplayItem {
 public:
   nsDisplayXULGroupBackground(nsGroupBoxFrame* aFrame) : nsDisplayItem(aFrame) {
