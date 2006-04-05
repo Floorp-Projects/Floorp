@@ -20053,6 +20053,8 @@ fi # COMPILE_ENVIRONMENT
 
 
 
+
+
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
 	$CFLAGS`
@@ -20177,7 +20179,7 @@ if test "$MOZ_X11"; then
                 _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $XCFLAGS"
     cat > conftest.$ac_ext <<EOF
-#line 20181 "configure"
+#line 20183 "configure"
 #include "confdefs.h"
 
         #include <stdio.h>
@@ -20193,7 +20195,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:20197: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:20199: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
@@ -20944,6 +20946,7 @@ s%@MOZ_APP_VERSION@%$MOZ_APP_VERSION%g
 s%@FIREFOX_VERSION@%$FIREFOX_VERSION%g
 s%@THUNDERBIRD_VERSION@%$THUNDERBIRD_VERSION%g
 s%@SEAMONKEY_VERSION@%$SEAMONKEY_VERSION%g
+s%@MOZ_PKG_SPECIAL@%$MOZ_PKG_SPECIAL%g
 s%@MOZILLA_OFFICIAL@%$MOZILLA_OFFICIAL%g
 s%@BUILD_OFFICIAL@%$BUILD_OFFICIAL%g
 s%@MOZ_MILESTONE_RELEASE@%$MOZ_MILESTONE_RELEASE%g
