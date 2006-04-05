@@ -52,6 +52,8 @@ MOZ_APP_NAME	= @MOZ_APP_NAME@
 MOZ_APP_DISPLAYNAME = @MOZ_APP_DISPLAYNAME@
 MOZ_APP_VERSION = @MOZ_APP_VERSION@
 
+MOZ_PKG_SPECIAL = @MOZ_PKG_SPECIAL@
+
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
 bindir		= @bindir@
