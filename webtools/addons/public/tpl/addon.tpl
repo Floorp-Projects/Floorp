@@ -84,8 +84,10 @@ Works with:
         <a href="{$config.webpath}/{$app}/{$addon->ID}/history">Other Versions</a>
     </div>
 
+{if $addon->devcomments}
 <h2>Developer Comments</h2>
-<p>{$addon->devomments|nl2br}</p>
+<p>{$addon->devcomments|nl2br}</p>
+{/if}
 
 <h3 id="user-comments">User Comments</h3>
 
