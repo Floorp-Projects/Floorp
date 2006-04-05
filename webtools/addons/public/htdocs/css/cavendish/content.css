@@ -440,3 +440,12 @@
 #comments-sort {
     float: right;
 }
+
+.disclaimer {
+    text-align: center;
+    color: #ccc;
+    font-size: x-small;
+    width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}

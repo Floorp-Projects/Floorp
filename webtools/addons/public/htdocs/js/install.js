@@ -32,16 +32,36 @@ function getPlatformName()
 }
 
 function install( aEvent, extName, iconURL)  {   
-    var p = new XMLHttpRequest();
-    p.open("GET", "/core/install.php?uri="+aEvent.target.href, false);
-    p.send(null);
 
-    var params = new Array();
-    params[extName] = {
-        URL: aEvent.target.href,
-        IconURL: iconURL,
-        toString: function () { return this.URL; }
-    };
-    InstallTrigger.install(params);
+    if (aEvent.target.href.match(/^.+\.xpi$/)) {
+
+        var params = new Array();
+
+        params[extName] = {
+            URL: aEvent.target.href,
+            IconURL: iconURL,
+            toString: function () { return this.URL; }
+        };
+
+        InstallTrigger.install(params);
+
+        try {
+            var p = new XMLHttpRequest();
+            p.open("GET", "/install.php?uri="+aEvent.target.href, true);
+            p.send(null);
+        } catch(e) { }
+
+        return false;
+    }
+}
+
+function installTheme( aEvent, extName) {
+    InstallTrigger.installChrome(InstallTrigger.SKIN,aEvent.target.href,extName);
+
+    try {
+        var p = new XMLHttpRequest();
+        p.open("GET", "/install.php?uri="+aEvent.target.href, true);
+        p.send(null);
+    } catch(e) { }
     return false;
 }
