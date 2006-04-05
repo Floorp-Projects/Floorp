@@ -600,6 +600,8 @@
            click, so that drags work correctly. -->
       <handler event="mousedown" clickcount="1">
       <![CDATA[
+         if (this.parentNode.disabled)
+           return;
          if (((!event.ctrlKey || !this.parentNode.pageUpOrDownMovesSelection) &&
              !event.shiftKey && !event.metaKey) ||
              this.parentNode.view.selection.single) {
@@ -645,6 +647,8 @@
            except this item. -->
       <handler event="click" button="0" clickcount="1">
       <![CDATA[
+        if (this.parentNode.disabled)
+          return;
         var row = {};
         var col = {};
         var obj = {};
@@ -703,6 +707,8 @@
       <!-- double-click -->
       <handler event="click" clickcount="2">
       <![CDATA[
+        if (this.parentNode.disabled)
+          return;
         var b = this.parentNode.treeBoxObject;
         var row = b.view.selection.currentIndex;
         if (row == -1 || !b.view.isContainer(row))
