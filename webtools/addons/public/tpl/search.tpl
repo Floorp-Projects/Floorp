@@ -77,6 +77,7 @@
 <!-- end search-options -->
 </div>
 
+<input type="hidden" name="app" value="{$app}"/>
 </form>
 
 </div>

@@ -35,6 +35,7 @@
           <option value="E">Extensions</option>
           <option value="T">Themes</option>
     </select>
+    <input type="hidden" name="app" value="{$app}"/>
     <input type="submit" value="Go"/>
     </div>
 </form>
