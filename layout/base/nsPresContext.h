@@ -89,10 +89,6 @@ struct nsStyleBackground;
 class nsIRenderingContext;
 #endif
 
-#define NS_IPRESCONTEXT_IID   \
-{ 0xa7f3a964, 0xbbea, 0x4559, \
- { 0x9a, 0x5c, 0x4e, 0x3b, 0x90, 0x38, 0x13, 0x68 } }
-
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
   eWidgetType_Checkbox	= 2,
