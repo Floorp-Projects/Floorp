@@ -627,7 +627,8 @@ nsXBLBinding::GenerateAnonymousContent()
       if (value.IsEmpty()) {
         nsAutoString value2;
         content->GetAttr(namespaceID, name, value2);
-        mBoundElement->SetAttr(namespaceID, name, value2, PR_FALSE);
+        mBoundElement->SetAttr(namespaceID, name, attrName->GetPrefix(),
+                               value2, PR_FALSE);
       }
     }
 

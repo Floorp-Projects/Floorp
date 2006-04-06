@@ -380,7 +380,7 @@ nsPlainTextSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
 
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                          PRBool aHasChildren,
+                                          nsIDOMElement *aOriginalElement,
                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);

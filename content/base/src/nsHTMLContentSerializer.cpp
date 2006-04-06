@@ -636,7 +636,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                            PRBool aHasChildren,
+                                            nsIDOMElement *aOriginalElement,
                                             nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
@@ -720,7 +720,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if (mIsCopying && name == nsHTMLAtoms::li) {
-    mIsFirstChildOfOL = IsFirstChildOfOL(aElement);
+    mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
     if (mIsFirstChildOfOL){
       // If OL is parent of this LI, serialize attributes in different manner.
       SerializeLIValueAttribute(aElement, aStr);

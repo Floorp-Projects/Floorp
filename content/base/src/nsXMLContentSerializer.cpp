@@ -576,7 +576,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                           PRBool aHasChildren,
+                                           nsIDOMElement *aOriginalElement,
                                            nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
@@ -629,12 +629,12 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
         }
         else {
           // Default NS attribute does not have prefix (and the name is "xmlns")
-          PushNameSpaceDecl(EmptyString(), uriStr, aElement);
+          PushNameSpaceDecl(EmptyString(), uriStr, aOriginalElement);
         }
       }
       else {
         attrName->ToString(nameStr);
-        PushNameSpaceDecl(nameStr, uriStr, aElement);
+        PushNameSpaceDecl(nameStr, uriStr, aOriginalElement);
       }
     }
   }
@@ -643,7 +643,8 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     
   MaybeAddNewline(aStr);
 
-  addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, PR_FALSE);
+  addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI, aOriginalElement,
+                            PR_FALSE);
   // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
   if (!tagPrefix.IsEmpty()) {
@@ -662,7 +663,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       // Serialize namespace decl
       SerializeAttr(xmlnsStr, tagPrefix, tagNamespaceURI, aStr, PR_TRUE);
     }
-    PushNameSpaceDecl(tagPrefix, tagNamespaceURI, aElement);
+    PushNameSpaceDecl(tagPrefix, tagNamespaceURI, aOriginalElement);
   }
 
   // Now serialize each of the attributes
@@ -688,7 +689,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     addNSAttr = PR_FALSE;
     if (kNameSpaceID_XMLNS != namespaceID) {
       nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, uriStr);
-      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aElement, PR_TRUE);
+      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aOriginalElement, PR_TRUE);
     }
     
     content->GetAttr(namespaceID, attrName, valueStr);
@@ -714,12 +715,14 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       NS_ASSERTION(!prefixStr.IsEmpty(),
                    "Namespaced attributes must have a prefix");
       SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, PR_TRUE);
-      PushNameSpaceDecl(prefixStr, uriStr, aElement);
+      PushNameSpaceDecl(prefixStr, uriStr, aOriginalElement);
     }
   }
 
   // We don't output a separate end tag for empty element
-  if (!aHasChildren) {
+  PRBool hasChildren;
+  if (NS_FAILED(aOriginalElement->HasChildNodes(&hasChildren)) ||
+      !hasChildren) {
     AppendToString(NS_LITERAL_STRING("/>"), aStr);    
     MaybeFlagNewline(aElement);
   } else {
