@@ -623,6 +623,7 @@ protected:
                                         const nsAString & aContextStr,
                                         const nsAString & aInfoStr,
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
+                                        PRUint32 *outFragLength,
                                         PRInt32 *outRangeStartHint,
                                         PRInt32 *outRangeEndHint);
   nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack,
