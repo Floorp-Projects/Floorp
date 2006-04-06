@@ -93,7 +93,7 @@ static JSConstDoubleSpec math_constants[] = {
 };
 
 static JSClass math_class = {
-    "Math",
+    js_Math_str,
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
@@ -153,6 +153,21 @@ math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (!js_ValueToNumber(cx, argv[1], &y))
         return JS_FALSE;
+#if !JS_USE_FDLIBM_MATH && defined(_MSC_VER)
+    /*
+     * MSVC's atan2 does not yield the result demanded by ECMA when both x
+     * and y are infinite.
+     * - The result is a multiple of pi/4.
+     * - The sign of x determines the sign of the result.
+     * - The sign of y determines the multiplicator, 1 or 3.
+     */
+    if (JSDOUBLE_IS_INFINITE(x) && JSDOUBLE_IS_INFINITE(y)) {
+        z = fd_copysign(M_PI / 4, x);
+        if (y < 0)
+            z *= 3;
+        return js_NewDoubleValue(cx, z, rval);
+    }
+#endif
     z = fd_atan2(x, y);
     return js_NewNumberValue(cx, z, rval);
 }
@@ -290,6 +305,11 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      */
     if (!JSDOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
         *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
+    }
+    /* pow(x, +-0) is always 1, even for x = NaN. */
+    if (y == 0) {
+        *rval = JSVAL_ONE;
         return JS_TRUE;
     }
 #endif
@@ -483,7 +503,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 {
     JSObject *Math;
 
-    Math = JS_DefineObject(cx, obj, "Math", &math_class, NULL, 0);
+    Math = JS_DefineObject(cx, obj, js_Math_str, &math_class, NULL, 0);
     if (!Math)
         return NULL;
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
