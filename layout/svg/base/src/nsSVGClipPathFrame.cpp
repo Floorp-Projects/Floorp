@@ -137,11 +137,15 @@ NS_GetSVGClipPathFrame(nsISVGClipPathFrame **aResult,
     NS_WARNING("No document for this content!");
     return NS_ERROR_FAILURE;
   }
-  nsIPresShell *aPresShell = myDoc->GetShellAt(0);
+  nsIPresShell *presShell = myDoc->GetShellAt(0);
+  if (!presShell) {
+    NS_WARNING("no presshell");
+    return NS_ERROR_FAILURE;
+  }
 
   // Find the referenced frame
   nsIFrame *cpframe;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, aPresShell)))
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, presShell)))
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = cpframe->GetType();

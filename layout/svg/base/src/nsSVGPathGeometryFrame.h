@@ -56,6 +56,7 @@ class nsIDOMSVGMatrix;
 class nsISVGRendererRegion;
 class nsISVGMarkerFrame;
 class nsISVGFilterFrame;
+struct nsSVGMarkerProperty;
 
 typedef nsFrame nsSVGPathGeometryFrameBase;
 
@@ -144,6 +145,10 @@ private:
   void GetMarkerFrames(nsISVGMarkerFrame **markerStart,
                        nsISVGMarkerFrame **markerMid,
                        nsISVGMarkerFrame **markerEnd);
+  void GetMarkerFromStyle(nsISVGMarkerFrame   **aResult,
+                          nsSVGMarkerProperty *property,
+                          nsIURI              *aURI);
+  void UpdateMarkerProperty();
 
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
