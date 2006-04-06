@@ -71,6 +71,7 @@ CPPSRCS		= \
 LIBS = \
 		$(DEPTH)/modules/libreg/standalone/$(LIB_PREFIX)mozregsa_s.$(LIB_SUFFIX) \
 		$(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/zlib/standalone/$(LIB_PREFIX)mozz_s.$(LIB_SUFFIX) \
 		../../libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
 		$(NULL)
 
