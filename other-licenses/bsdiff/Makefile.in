@@ -50,7 +50,7 @@ HOST_CSRCS = bsdiff.c
 HOST_LIBS += $(DIST)/lib/$(LIB_PREFIX)bz2.$(LIB_SUFFIX)
 
 ifeq (WINNT,$(OS_ARCH))
-EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
+HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/mozapps/update/src/updater
