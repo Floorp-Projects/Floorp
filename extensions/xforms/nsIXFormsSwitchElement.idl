@@ -43,16 +43,21 @@ interface nsIDOMElement;
 /**
  * Interface implemented by the switch element.
  */
-[uuid(edeb1e48-5d5c-4091-8021-5975310caa66)]
+[scriptable, uuid(42af102c-4c96-4534-9ea7-20a23fddbf60)]
 interface nsIXFormsSwitchElement : nsISupports
 {
   /**
-   * Used by case elements to select or deselect themselves.
+   * Select or deselect a given case element.
    *
-   * @param aCase             The case element
-   * @param aValue            The value of the selected attribute.
+   * @param caseEl            The case element
+   * @param value             Select (true) or deselect (false)
    */
-  void setSelected(in nsIDOMElement aCase, in boolean aValue);
+  void setSelected(in nsIDOMElement caseEl, in boolean value);
+
+  /**
+   * Retrieve the currently selected case element.
+   */
+  readonly attribute nsIDOMElement selected;
 };
 
 

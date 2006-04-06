@@ -232,6 +232,17 @@ nsXFormsSwitchElement::FindFirstSelectedCase(nsIDOMElement* aDeselected)
   return result;
 }
 
+// nsIXFormsSwitchElement
+
+NS_IMETHODIMP
+nsXFormsSwitchElement::GetSelected(nsIDOMElement **aCase)
+{
+  NS_ENSURE_ARG_POINTER(aCase);
+  NS_IF_ADDREF(*aCase = mSelected);
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsXFormsSwitchElement::SetSelected(nsIDOMElement *aCase, PRBool aValue)
 {
@@ -291,6 +302,8 @@ nsXFormsSwitchElement::SetSelected(nsIDOMElement *aCase, PRBool aValue)
   }
   return NS_OK;
 }
+
+// nsXFormsSwitchElement
 
 void
 nsXFormsSwitchElement::SetFocus(nsIDOMElement* aDeselected,
@@ -379,6 +392,8 @@ nsXFormsSwitchElement::CaseChanged(nsIDOMNode* aCase, PRBool aRemoved)
     }
   }
 }
+
+// nsIXFormsControl
 
 NS_IMETHODIMP
 nsXFormsSwitchElement::IsEventTarget(PRBool *aOK)
