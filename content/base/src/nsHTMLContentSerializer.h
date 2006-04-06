@@ -65,7 +65,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                         PRInt32 aEndOffset,
                         nsAString& aStr);
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                PRBool aHasChildren,
+                                nsIDOMElement *aOriginalElement,
                                 nsAString& aStr);
   
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,

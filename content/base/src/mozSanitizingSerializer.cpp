@@ -243,7 +243,7 @@ mozSanitizingHTMLSerializer::AppendText(nsIDOMText* aText,
 
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                                PRBool aHasChildren,
+                                                nsIDOMElement *aOriginalElement,
                                                 nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
