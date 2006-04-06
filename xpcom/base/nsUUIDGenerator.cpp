@@ -36,18 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
 #include <windows.h>
 #include <objbase.h>
+#elif defined(XP_MACOSX)
+#include <CoreFoundation/CoreFoundation.h>
 #else
 #include <stdlib.h>
+#include "prrng.h"
 #endif
 
-#include <nsMemory.h>
+#include "nsMemory.h"
 
 #include "nsUUIDGenerator.h"
-
-#include "prrng.h"
 
 NS_IMPL_ISUPPORTS1(nsUUIDGenerator, nsIUUIDGenerator)
 
@@ -59,7 +60,7 @@ nsUUIDGenerator::nsUUIDGenerator()
 nsresult
 nsUUIDGenerator::Init()
 {
-#ifndef XP_WIN
+#if !defined(XP_WIN) && !defined(XP_MACOSX)
     /* initialize random number generator using NSPR random noise */
     unsigned int seed;
 
@@ -87,7 +88,7 @@ nsUUIDGenerator::Init()
         return NS_ERROR_FAILURE;
 #endif
 
-#endif /* non XP_WIN */
+#endif /* non XP_WIN and non XP_MACOSX */
 
     mInitialized = PR_TRUE;
     return NS_OK;
@@ -119,11 +120,20 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
             return rv;
     }
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
     HRESULT hr = CoCreateGuid((GUID*)id);
     if (NS_FAILED(hr))
         return NS_ERROR_FAILURE;
-#else /* non-windows; generate randomness using random(). */
+#elif defined(XP_MACOSX)
+    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+    if (!uuid)
+        return NS_ERROR_FAILURE;
+
+    CFUUIDBytes bytes = CFUUIDGetUUIDBytes(uuid);
+    memcpy(id, &bytes, sizeof(nsID));
+
+    CFRelease(uuid);
+#else /* not windows or OS X; generate randomness using random(). */
     PRSize bytesLeft = sizeof(nsID);
     while (bytesLeft > 0) {
         long rval = random();
