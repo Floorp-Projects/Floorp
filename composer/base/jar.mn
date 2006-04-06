@@ -14,7 +14,6 @@ composer.jar:
 	content/composer/dialogs/openLocation.xul		(content/composer/dialogs/openLocation.xul)
 	content/composer/EditorContent.css				(content/composer/EditorContent.css)
 	content/composer/EditorOverride.css				(content/composer/EditorOverride.css)
-	content/composer/images/tag-anchor.gif			(content/composer/images/tag-anchor.gif)
 	content/composer/mainCore.js					(content/composer/mainCore.js)
 	content/composer/utils/dgid.js					(content/composer/utils/dgid.js)
 	content/composer/utils/global.js				(content/composer/utils/global.js)
