@@ -37,53 +37,91 @@
   h2 = "This lets you edit the groups available to put users in."
 %]
 
+[% edit_contentlink = "editgroups.cgi?action=changeform&amp;group=%%id%%" %]
+[% del_contentlink = "editgroups.cgi?action=del&amp;group=%%id%%" %]
 
-<table border="1">
-  <tr>
-    <th>Name</th>
-    <th>Description</th>
-    <th>User RegExp</th>
-    <th>Use For [% terms.Bugs %]</th>
-    <th>Type</th>
-    <th>Action</th>
-  </tr>
+[% columns =
+  [{name               => 'name'
+    heading            => 'Name'
+    contentlink        => edit_contentlink
+   }
+   {name               => 'description'
+    heading            => 'Description'
+   }
+   {name               => 'userregexp'
+    heading            => 'User RegExp'
+   }
+   {name               => 'use_for'
+    heading            => "Use For $terms.Bugs"
+    align              => 'center'
+   }
+   {name               => 'type'
+    heading            => 'Type'
+    align              => 'center'
+   }
+   {name               => 'action'
+    heading            => 'Action'
+   }
+  ]
+%]
 
-  [% FOREACH group = groups %]
-    <tr>
-      <td>
-        <a href="editgroups.cgi?action=changeform&amp;group=[% group.id FILTER url_quote %]">
-          [% group.name FILTER html %]</a>
-      </td>
-      <td>[% group.description FILTER html %]</td>
-      <td>[% group.userregexp FILTER html %]&nbsp;</td>
+[% overrides.use_for = [ {
+     match_value => "0"
+     match_field => 'use_for'
+     override_content => 1
+     content => "&nbsp;"
+   },
+   {
+     match_value => "1"
+     match_field => 'use_for'
+     override_content => 1
+     content => "X"
+   }]
+   overrides.userregexp = [ {
+     match_value => ""
+     match_field => 'userregexp'
+     override_content => 1
+     content => "&nbsp;"
+   }]
+   overrides.action = [ {
+     match_value => "0"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "&nbsp;"
+   },
+   {
+     match_value => "1"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "Delete"
+     override_contentlink => 1
+     contentlink => del_contentlink
+   }]
+   overrides.type = [ {
+     match_value => "0"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "system"
+   },
+   {
+     match_value => "1"
+     match_field => 'isbuggroup'
+     override_content => 1
+     content => "user"
+   }]
+%] 
 
-      <td align="center">
-        [% IF (group.isactive != 0) && (group.isbuggroup) %]
-          X
-        [% ELSE %]
-          &nbsp;
-        [% END %]
-      </td>
+[% FOREACH group = groups %]
+  [% group.use_for = (group.isactive != 0) && (group.isbuggroup) %]
+[% END %]
 
-      <td align="center">
-        [% (group.isbuggroup) ? "user" : "system" %]
-      </td>
+[% PROCESS admin/table.html.tmpl
+  columns = columns
+  data    = groups
+  overrides = overrides
+%]
 
-      <td align="center" valign="middle">
-        [% IF (group.isbuggroup) %]
-          <a href="editgroups.cgi?action=del&amp;group=[% group.id FILTER url_quote %]">Delete</a>
-        [% ELSE %]
-          &nbsp;
-        [% END %]
-      </td>
-    </tr>
-  [% END %]
-
-  <tr>
-    <td colspan="5"></td>
-    <td><a href="editgroups.cgi?action=add">Add Group</a></td>
-  </tr>
-</table>
+<p><a href="editgroups.cgi?action=add">Add Group</a></p>
 
 <p>
   <b>Name</b> is what is used with the UserInGroup() function in any
