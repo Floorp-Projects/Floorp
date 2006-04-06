@@ -1406,11 +1406,18 @@ nsXFormsModelElement::InstanceLoadStarted()
 NS_IMETHODIMP
 nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
 {
-  --mPendingInstanceCount;
   if (!aSuccess) {
+    // This will leave mPendingInstanceCount in an invalid state, which is
+    // exactly what we want, because this is a fatal error, and processing
+    // should stop. If we decrease mPendingInstanceCount, the model would
+    // finish construction, which is wrong.
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadError"), mElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
-  } else if (IsComplete()) {
+    return NS_OK;
+  }
+
+  --mPendingInstanceCount;
+  if (IsComplete()) {
     nsresult rv = FinishConstruction();
     if (NS_SUCCEEDED(rv)) {
       MaybeNotifyCompletion();
