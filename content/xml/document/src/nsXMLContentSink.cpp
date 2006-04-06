@@ -1046,6 +1046,12 @@ NS_IMETHODIMP
 nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, 
                                      PRUint32 aLength)
 {
+  // XSLT doesn't differentiate between text and cdata and wants adjacent
+  // textnodes merged, so add as text.
+  if (mXSLTProcessor) {
+    return AddText(aData, aLength);
+  }
+
   FlushText();
   
   if (mInTitle) {
@@ -1356,7 +1362,8 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
       amount = aLength;
     }
     if (0 == amount) {
-      if (mConstrainSize) {
+      // XSLT wants adjacent textnodes merged.
+      if (mConstrainSize && !mXSLTProcessor) {
         nsresult rv = FlushText();
         if (NS_OK != rv) {
           return rv;
