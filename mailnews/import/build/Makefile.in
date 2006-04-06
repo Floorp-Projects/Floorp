@@ -124,13 +124,11 @@ LOCAL_INCLUDES += -I$(srcdir)/../oexpress \
 endif
 endif
 
-EXTRA_DSO_LIBS += mozreg_s
-
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	../../base/util/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
-	$(EXTRA_DSO_LIBS) \
+	$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
