@@ -42,7 +42,10 @@ use diagnostics;
 use vars qw(
 	    $tr_dbh
 	    $litmus_dbh
+            $force
 	    );
+
+GetOptions('force' => \$force);
 
 END {
   if ($tr_dbh) { $tr_dbh->disconnect; }
@@ -138,7 +141,8 @@ foreach my $id (keys %$testgroups) {
       # If the corresponding test has been update in both Litmus _and_ 
       # Testrunner, warn the user, give them enough info to easily fix the
       # problem manually, and continue to the next testcase without updating.
-      if ($testcase->{'version'} > $testcase->{'testrunner_case_version'} and
+      if (!$force and
+	  $testcase->{'version'} > $testcase->{'testrunner_case_version'} and
           $tr_testcase->{'case_version'} > $testcase->{'testrunner_case_version'}) {
         print "# Testcase update collision detected.\n";
         print "# Litmus testcase ID#: " . $testcase->{'test_id'} . "; TR case ID#: " . $tr_testcase->{'case_id'} . "\n";
