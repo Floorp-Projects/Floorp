@@ -65,8 +65,10 @@ tabeditor {
 #MainToolbar toolbarbutton:hover:active {
   -moz-image-region: rect(32px 32px 64px 0);
 }
-#MainToolbar toolbarbutton[disabled="true"] {
-  -moz-image-region: rect(64px 32px 96px 0);
+#MainToolbar toolbarbutton[disabled="true"],
+#MainToolbar toolbarbutton[disabled="true"]:hover,
+#MainToolbar toolbarbutton[disabled="true"]:hover:active {
+  -moz-image-region: rect(64px 32px 96px 0) ! important;
 }
 
 #newButton {
