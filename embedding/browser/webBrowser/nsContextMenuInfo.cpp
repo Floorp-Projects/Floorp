@@ -293,6 +293,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode *aDOMNode, imgIRequest *
 nsresult
 nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIRequest **aRequest)
 {
+  NS_ENSURE_ARG_POINTER(aDOMNode);
 
   nsCOMPtr<nsIDOMNode> domNode = aDOMNode;
   nsCOMPtr<nsIDOMNode> parentNode;
