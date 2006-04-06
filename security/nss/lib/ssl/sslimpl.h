@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.46 2006/03/22 19:18:30 rrelyea%redhat.com Exp $ */
+/* $Id: sslimpl.h,v 1.47 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -1223,6 +1223,7 @@ extern SECStatus ssl3_CreateRSAStepDownKeys(sslSocket *ss);
 
 #ifdef NSS_ENABLE_ECC
 extern SECStatus ssl3_CreateECDHEphemeralKeys(sslSocket *ss);
+extern void ssl3_FilterECCipherSuitesByServerCerts(sslSocket *ss);
 #endif /* NSS_ENABLE_ECC */
 
 extern SECStatus ssl3_CipherPrefSetDefault(ssl3CipherSuite which, PRBool on);
