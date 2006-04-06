@@ -145,14 +145,14 @@ if (Param("commentoncreate") && !trim($cgi->param('comment'))) {
 # If bug_file_loc is "http://", the default, use an empty value instead.
 $cgi->param('bug_file_loc', '') if $cgi->param('bug_file_loc') eq 'http://';
 
-my $sql_product = SqlQuote($cgi->param('product'));
-my $sql_component = SqlQuote($cgi->param('component'));
 
 # Default assignee is the component owner.
 if (!UserInGroup("editbugs") || $cgi->param('assigned_to') eq "") {
-    SendSQL("SELECT initialowner FROM components " .
-            "WHERE id = $component_id");
-    $cgi->param(-name => 'assigned_to', -value => FetchOneColumn());
+    my $initialowner = $dbh->selectrow_array(q{SELECT initialowner
+                                                 FROM components
+                                                WHERE id = ?},
+                                               undef, $component_id);
+    $cgi->param(-name => 'assigned_to', -value => $initialowner);
 } else {
     $cgi->param(-name => 'assigned_to',
                 -value => DBNameToIdAndCheck(trim($cgi->param('assigned_to'))));
@@ -177,9 +177,10 @@ if (Param("useqacontact")) {
     my $qa_contact;
     if (!UserInGroup("editbugs") || !defined $cgi->param('qa_contact')
         || trim($cgi->param('qa_contact')) eq "") {
-        SendSQL("SELECT initialqacontact FROM components " .
-                "WHERE id = $component_id");
-        $qa_contact = FetchOneColumn();
+        ($qa_contact) = $dbh->selectrow_array(q{SELECT initialqacontact 
+                                                  FROM components 
+                                                 WHERE id = ?},
+                                                undef, $component_id);
     } else {
         $qa_contact = DBNameToIdAndCheck(trim($cgi->param('qa_contact')));
     }
@@ -198,15 +199,24 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
 } else {
     # Default to UNCONFIRMED if we are using it, NEW otherwise
     $cgi->param(-name => 'bug_status', -value => 'UNCONFIRMED');
-    SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
-    if (!FetchOneColumn()) {   
+    my $votestoconfirm = $dbh->selectrow_array(q{SELECT votestoconfirm 
+                                                   FROM products 
+                                                  WHERE id = ?},
+                                                 undef, $product_id);
+
+    if (!$votestoconfirm) {
         $cgi->param(-name => 'bug_status', -value => "NEW");
     }
 }
 
+trick_taint($product);
+
 if (!defined $cgi->param('target_milestone')) {
-    SendSQL("SELECT defaultmilestone FROM products WHERE name=$sql_product");
-    $cgi->param(-name => 'target_milestone', -value => FetchOneColumn());
+    my $defaultmilestone = $dbh->selectrow_array(q{SELECT defaultmilestone
+                                                     FROM products
+                                                    WHERE name = ?},
+                                                    undef, $product);
+    $cgi->param(-name => 'target_milestone', -value => $defaultmilestone);
 }
 
 if (!Param('letsubmitterchoosepriority')) {
@@ -329,20 +339,25 @@ if (UserInGroup("editbugs")) {
 }
 
 # get current time
-SendSQL("SELECT NOW()");
-my $timestamp = FetchOneColumn();
-my $sql_timestamp = SqlQuote($timestamp);
+my $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
 # Build up SQL string to add bug.
 # creation_ts will only be set when all other fields are defined.
-my $sql = "INSERT INTO bugs " . 
-  "(" . join(",", @used_fields) . ", reporter, delta_ts, " .
-  "estimated_time, remaining_time, deadline) " .
-  "VALUES (";
+
+my @fields_values;
 
 foreach my $field (@used_fields) {
-    $sql .= SqlQuote($cgi->param($field)) . ",";
+    my $value = $cgi->param($field);
+    trick_taint($value);
+    push (@fields_values, $value);
 }
+
+my $sql_used_fields = join(", ", @used_fields);
+my $sql_placeholders = "?, " x scalar(@used_fields);
+
+my $query = qq{INSERT INTO bugs ($sql_used_fields, reporter, delta_ts,
+                                 estimated_time, remaining_time, deadline)
+               VALUES ($sql_placeholders ?, ?, ?, ?, ?)};
 
 $comment =~ s/\r\n?/\n/g;     # Get rid of \r.
 $comment = trim($comment);
@@ -350,32 +365,41 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= $user->id . ", $sql_timestamp, ";
+push (@fields_values, $user->id);
+push (@fields_values, $timestamp);
+
+my $est_time = 0;
+my $deadline;
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
     defined $cgi->param('estimated_time')) {
 
-    my $est_time = $cgi->param('estimated_time');
+    $est_time = $cgi->param('estimated_time');
     Bugzilla::Bug::ValidateTime($est_time, 'estimated_time');
-    $sql .= SqlQuote($est_time) . "," . SqlQuote($est_time) . ",";
-} else {
-    $sql .= "0, 0, ";
+    trick_taint($est_time);
+
 }
+
+push (@fields_values, $est_time, $est_time);
 
 if ((UserInGroup(Param("timetrackinggroup"))) && ($cgi->param('deadline'))) {
     validate_date($cgi->param('deadline'))
       || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
                                          format => 'YYYY-MM-DD'});
-    $sql .= SqlQuote($cgi->param('deadline'));  
-} else {
-    $sql .= "NULL";
+    $deadline = $cgi->param('deadline');
+    trick_taint($deadline);
 }
 
-$sql .= ")";
+push (@fields_values, $deadline);
 
 # Groups
 my @groupstoadd = ();
+my $sth_othercontrol = $dbh->prepare(q{SELECT othercontrol
+                                         FROM group_control_map
+                                        WHERE group_id = ?
+                                          AND product_id = ?});
+
 foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
     if ($cgi->param($b)) {
         my $v = substr($b, 4);
@@ -391,9 +415,8 @@ foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
         }
         my ($permit) = $user->in_group_id($v);
         if (!$permit) {
-            SendSQL("SELECT othercontrol FROM group_control_map
-                     WHERE group_id = $v AND product_id = $product_id");
-            my ($othercontrol) = FetchSQLData();
+            my $othercontrol = $dbh->selectrow_array($sth_othercontrol, 
+                                                     undef, ($v, $product_id));
             $permit = (($othercontrol == CONTROLMAPSHOWN)
                        || ($othercontrol == CONTROLMAPDEFAULT));
         }
@@ -403,13 +426,19 @@ foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
     }
 }
 
-SendSQL("SELECT DISTINCT groups.id, groups.name, " .
-        "membercontrol, othercontrol, description " .
-        "FROM groups LEFT JOIN group_control_map " .
-        "ON group_id = id AND product_id = $product_id " .
-        " WHERE isbuggroup != 0 AND isactive != 0 ORDER BY description");
-while (MoreSQLData()) {
-    my ($id, $groupname, $membercontrol, $othercontrol ) = FetchSQLData();
+my $groups = $dbh->selectall_arrayref(q{
+                 SELECT DISTINCT groups.id, groups.name, membercontrol,
+                                 othercontrol, description
+                            FROM groups
+                       LEFT JOIN group_control_map 
+                              ON group_id = id
+                             AND product_id = ?
+                           WHERE isbuggroup != 0
+                             AND isactive != 0
+                        ORDER BY description}, undef, $product_id);
+
+foreach my $group (@$groups) {
+    my ($id, $groupname, $membercontrol, $othercontrol) = @$group;
     $membercontrol ||= 0;
     $othercontrol ||= 0;
     # Add groups required
@@ -428,15 +457,16 @@ $dbh->bz_lock_tables('bugs WRITE', 'bug_group_map WRITE', 'longdescs WRITE',
                      'user_group_map READ', 'group_group_map READ',
                      'keyworddefs READ', 'fielddefs READ');
 
-SendSQL($sql);
+$dbh->do($query, undef, @fields_values);
 
 # Get the bug ID back.
 my $id = $dbh->bz_last_key('bugs', 'bug_id');
 
 # Add the group restrictions
+my $sth_addgroup = $dbh->prepare(q{
+            INSERT INTO bug_group_map (bug_id, group_id) VALUES (?, ?)});
 foreach my $grouptoadd (@groupstoadd) {
-    SendSQL("INSERT INTO bug_group_map (bug_id, group_id)
-             VALUES ($id, $grouptoadd)");
+    $sth_addgroup->execute($id, $grouptoadd);
 }
 
 # Add the initial comment, allowing for the fact that it may be private
@@ -445,40 +475,43 @@ if (Param("insidergroup") && UserInGroup(Param("insidergroup"))) {
     $privacy = $cgi->param('commentprivacy') ? 1 : 0;
 }
 
-SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) 
-         VALUES ($id, " . SqlQuote($user->id) . ", $sql_timestamp, " .
-        SqlQuote($comment) . ", $privacy)");
+trick_taint($comment);
+$dbh->do(q{INSERT INTO longdescs (bug_id, who, bug_when, thetext,isprivate)
+           VALUES (?, ?, ?, ?, ?)}, undef, ($id, $user->id, $timestamp,
+                                            $comment, $privacy));
 
 # Insert the cclist into the database
+my $sth_cclist = $dbh->prepare(q{INSERT INTO cc (bug_id, who) VALUES (?,?)});
 foreach my $ccid (keys(%ccids)) {
-    SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
+    $sth_cclist->execute($id, $ccid);
 }
 
 my @all_deps;
+my $sth_addkeyword = $dbh->prepare(q{
+            INSERT INTO keywords (bug_id, keywordid) VALUES (?, ?)});
 if (UserInGroup("editbugs")) {
     foreach my $keyword (@keywordlist) {
-        SendSQL("INSERT INTO keywords (bug_id, keywordid) 
-                 VALUES ($id, $keyword)");
+        $sth_addkeyword->execute($id, $keyword);
     }
     if (@keywordlist) {
         # Make sure that we have the correct case for the kw
-        SendSQL("SELECT name FROM keyworddefs WHERE id IN ( " .
-                join(',', @keywordlist) . ")");
-        my @list;
-        while (MoreSQLData()) {
-            push (@list, FetchOneColumn());
-        }
-        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp," .
-                " keywords = " . SqlQuote(join(', ', @list)) .
-                " WHERE bug_id = $id");
+        my $kw_ids = join(', ', @keywordlist);
+        my $list = $dbh->selectcol_arrayref(q{
+                                    SELECT name 
+                                      FROM keyworddefs 
+                                     WHERE id IN ($kw_ids)});
+        my $kw_list = join(', ', @$list);
+        $dbh->do(q{UPDATE bugs 
+                      SET delta_ts = ?, keywords = ? 
+                    WHERE bug_id = ?}, undef, ($timestamp, $kw_list, $id));
     }
     if ($cgi->param('dependson') || $cgi->param('blocked')) {
         foreach my $pair (["blocked", "dependson"], ["dependson", "blocked"]) {
             my ($me, $target) = @{$pair};
-
+            my $sth_dep = $dbh->prepare(qq{
+                        INSERT INTO dependencies ($me, $target) VALUES (?, ?)});
             foreach my $i (@{$deps{$target}}) {
-                SendSQL("INSERT INTO dependencies ($me, $target) values " .
-                        "($id, $i)");
+                $sth_dep->execute($id, $i);
                 push(@all_deps, $i); # list for mailing dependent bugs
                 # Log the activity for the other bug:
                 LogActivityEntry($i, $me, "", $id, $user->id, $timestamp);
