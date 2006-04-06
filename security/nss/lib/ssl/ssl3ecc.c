@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.4 2005/12/14 01:49:39 wtchang%redhat.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.5 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
 
 #ifdef NSS_ENABLE_ECC
 
@@ -68,14 +68,6 @@
 #include "blapi.h"
 
 #include <stdio.h>
-
-/*
-    line 297: implicit function declaration: ssl3_InitPendingCipherSpec
-    line 305: implicit function declaration: ssl3_AppendHandshakeHeader
-    line 311: implicit function declaration: ssl3_AppendHandshakeVariable
-    line 356: implicit function declaration: ssl3_ConsumeHandshakeVariable
-*/
-
 
 #ifndef PK11_SETATTRS
 #define PK11_SETATTRS(x,id,v,l) (x)->type = (id); \
@@ -229,7 +221,6 @@ ssl3_ComputeECDHKeyHash(SECItem ec_params, SECItem server_ecpoint,
     PRINT_BUF(95, (NULL, "ECDHkey hash: MD5 result", hashes->md5, MD5_LENGTH));
     PRINT_BUF(95, (NULL, "ECDHkey hash: SHA1 result", hashes->sha, SHA1_LENGTH));
 
-done:
     if (hashBuf != buf && hashBuf != NULL)
     	PORT_Free(hashBuf);
     return rv;
@@ -650,6 +641,140 @@ loser:
     return SECFailure;
 }
 
+/* Lists of ECC cipher suites for searching and disabling. */
+
+static const ssl3CipherSuite ecdh_suites[] = {
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_RSA_WITH_NULL_SHA,
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+static const ssl3CipherSuite ecdh_ecdsa_suites[] = {
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+static const ssl3CipherSuite ecdh_rsa_suites[] = {
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_RSA_WITH_NULL_SHA,
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+static const ssl3CipherSuite ecdhe_ecdsa_suites[] = {
+    TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_NULL_SHA,
+    TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+static const ssl3CipherSuite ecdhe_rsa_suites[] = {
+    TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_NULL_SHA,
+    TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+/* List of all ECC cipher suites */
+static const ssl3CipherSuite ecSuites[] = {
+    TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_NULL_SHA,
+    TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+    TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_NULL_SHA,
+    TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_RSA_WITH_NULL_SHA,
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,
+    0 /* end of list marker */
+};
+
+/* On this socket, Disable the ECC cipher suites in the argument's list */
+SECStatus
+ssl3_DisableECCSuites(sslSocket * ss, const ssl3CipherSuite * suite)
+{
+    for (; *suite; ++suite) {
+	SECStatus rv      = ssl3_CipherPrefSet(ss, *suite, PR_FALSE);
+
+	PORT_Assert(rv == SECSuccess); /* else is coding error */
+    }
+    return SECSuccess;
+}
+
+/* Look at the server certs configured on this socket, and disable any
+ * ECC cipher suites that are not supported by those certs.
+ */
+void
+ssl3_FilterECCipherSuitesByServerCerts(sslSocket * ss)
+{
+    CERTCertificate * svrCert;
+
+    svrCert = ss->serverCerts[kt_rsa].serverCert;
+    if (!svrCert) {
+	ssl3_DisableECCSuites(ss, ecdhe_rsa_suites);
+    }
+
+    svrCert = ss->serverCerts[kt_ecdh].serverCert;
+    if (!svrCert) {
+	ssl3_DisableECCSuites(ss, ecdh_suites);
+	ssl3_DisableECCSuites(ss, ecdhe_ecdsa_suites);
+    } else {
+	SECOidTag sigTag = SECOID_GetAlgorithmTag(&svrCert->signature);
+
+	switch (sigTag) {
+	case SEC_OID_PKCS1_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_MD4_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+	    ssl3_DisableECCSuites(ss, ecdh_ecdsa_suites);
+	    break;
+	case SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SIGNATURE_RECOMMENDED_DIGEST:
+	case SEC_OID_ANSIX962_ECDSA_SIGNATURE_SPECIFIED_DIGEST:
+	    ssl3_DisableECCSuites(ss, ecdh_rsa_suites);
+	    break;
+	default:
+	    ssl3_DisableECCSuites(ss, ecdh_suites);
+	    break;
+	}
+    }
+}
 
 #endif /* NSS_ENABLE_ECC */
-

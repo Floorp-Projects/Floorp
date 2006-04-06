@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.83 2006/03/22 19:18:30 rrelyea%redhat.com Exp $ */
+/* $Id: ssl3con.c,v 1.84 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -5358,6 +5358,11 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	}
     }
 
+#ifdef NSS_ENABLE_ECC
+    /* Disable any ECC cipher suites for which we have no cert. */
+    ssl3_FilterECCipherSuitesByServerCerts(ss);
+#endif
+
     /* Look for a matching cipher suite. */
     j = ssl3_config_match_init(ss);
     if (j <= 0) {		/* no ciphers are working/supported by PK11 */
@@ -5718,7 +5723,10 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length)
 
     PRINT_BUF(60, (ss, "client random:", &ss->ssl3.hs.client_random.rand[0],
 		   SSL3_RANDOM_LENGTH));
-
+#ifdef NSS_ENABLE_ECC
+    /* Disable any ECC cipher suites for which we have no cert. */
+    ssl3_FilterECCipherSuitesByServerCerts(ss);
+#endif
     i = ssl3_config_match_init(ss);
     if (i <= 0) {
     	errCode = PORT_GetError();	/* error code is already set. */
