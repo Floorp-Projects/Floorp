@@ -45,7 +45,7 @@
 
 <h2 class="clear-both">Additional Resources</h2>
 <ul>
-<li><img src="{$config.webpath}/search-engines-static/rollyo.jpg"/> <a href="http://www.rollyo.com/firefox_search.html"><strong>Rollyo: Roll Your Own Firefox Search Engine!</strong><br/>Create a personal search engine that provides relevant results from a hand selected list of sites.</a></li>
+<li><img src="{$config.webpath}/search-engines-static/rollyo.jpg" alt=""/> <a href="http://www.rollyo.com/firefox_search.html"><strong>Rollyo: Roll Your Own Firefox Search Engine!</strong><br/>Create a personal search engine that provides relevant results from a hand selected list of sites.</a></li>
 <li><a href="http://mycroft.mozdev.org/">Browse through more search engines at mycroft.mozdev.org.</a></li>
 <li><a href="{$config.webpath}/extensions/moreinfo.php?id=1563">Use the SearchPluginHacks extension to remove a Search Engine.</a></li>
 </ul>
