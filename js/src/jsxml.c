@@ -3787,7 +3787,7 @@ DeleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSXML *xml, *kid, *parent;
     JSBool isIndex;
     JSXMLArray *array;
-    uint32 length, index, deleteCount;
+    uint32 length, index, kidIndex, deleteCount;
     JSXMLQName *nameqn;
     jsid funid;
     JSObject *nameobj, *kidobj;
@@ -3822,9 +3822,10 @@ DeleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     if (!DeleteProperty(cx, parent->object, id, vp))
                         return JS_FALSE;
                 } else {
-                    index = XMLARRAY_FIND_MEMBER(&parent->xml_kids, kid, NULL);
-                    JS_ASSERT(index != XML_NOT_FOUND);
-                    if (!IndexToIdVal(cx, index, &id))
+                    kidIndex = XMLARRAY_FIND_MEMBER(&parent->xml_kids, kid,
+                                                    NULL);
+                    JS_ASSERT(kidIndex != XML_NOT_FOUND);
+                    if (!IndexToIdVal(cx, kidIndex, &id))
                         return JS_FALSE;
                     if (!DeleteByIndex(cx, parent, id, vp))
                         return JS_FALSE;
