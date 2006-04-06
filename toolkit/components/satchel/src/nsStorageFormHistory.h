@@ -80,6 +80,10 @@ class nsIFormHistoryPrivate : public nsISupports
   nsCOMPtr<mozIStorageConnection> mDBConn;
 };
 
+#ifndef MOZILLA_1_8_BRANCH
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormHistoryPrivate, NS_IFORMHISTORYPRIVATE_IID)
+#endif
+
 class nsFormHistory : public nsIFormHistory,
                       public nsIFormHistoryPrivate,
                       public nsIObserver,
