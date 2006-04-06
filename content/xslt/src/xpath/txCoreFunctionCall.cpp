@@ -56,7 +56,7 @@ struct txFunctionDescriptor
 
 // This must be ordered in the same order as txCoreFunctionCall::eType.
 // If you change one, change the other.
-static const txFunctionDescriptor const descriptTable[] =
+static const txFunctionDescriptor descriptTable[] =
 {
     { 1, 1, Expr::NUMBER_RESULT,  &txXPathAtoms::count }, // COUNT
     { 1, 1, Expr::NODESET_RESULT, &txXPathAtoms::id }, // ID
