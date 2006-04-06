@@ -36,79 +36,112 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Represents a AdditiveExpr, an binary expression that
- * performs an additive operation between it's lvalue and rvalue:
- *  +   : addition
- *  -   : subtraction
-**/
-
 #include "txExpr.h"
-#include "txExprResult.h"
+#include <math.h>
 #include "txIXPathContext.h"
 
-/**
- * Evaluates this Expr based on the given context node and processor state
- * @param context the context node for evaluation of this Expr
- * @param ps the ContextState containing the stack information needed
- * for evaluation
- * @return the result of the evaluation
-**/
 nsresult
-AdditiveExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
     nsRefPtr<txAExprResult> exprRes;
-    nsresult rv = rightExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    nsresult rv = mRightExpr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
     double rightDbl = exprRes->numberValue();
 
-    rv = leftExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    rv = mLeftExpr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
     double leftDbl = exprRes->numberValue();
-
     double result = 0;
-    switch ( op ) {
-        case SUBTRACTION:
+
+    switch (mOp) {
+        case ADD:
+            result = leftDbl + rightDbl;
+            break;
+
+        case SUBTRACT:
             result = leftDbl - rightDbl;
             break;
-        default:
-            result = leftDbl + rightDbl;
+
+        case DIVIDE:
+            if (rightDbl == 0) {
+#if defined(XP_WIN)
+                /* XXX MSVC miscompiles such that (NaN == 0) */
+                if (Double::isNaN(rightDbl))
+                    result = Double::NaN;
+                else
+#endif
+                if (leftDbl == 0 || Double::isNaN(leftDbl))
+                    result = Double::NaN;
+                else if (Double::isNeg(leftDbl) ^ Double::isNeg(rightDbl))
+                    result = Double::NEGATIVE_INFINITY;
+                else
+                    result = Double::POSITIVE_INFINITY;
+            }
+            else
+                result = leftDbl / rightDbl;
+            break;
+
+        case MODULUS:
+            if (rightDbl == 0) {
+                result = Double::NaN;
+            }
+            else {
+#if defined(XP_WIN)
+                /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+                if (!Double::isInfinite(leftDbl) && Double::isInfinite(rightDbl))
+                    result = leftDbl;
+                else
+#endif
+                result = fmod(leftDbl, rightDbl);
+            }
+            break;
+
+        case MULTIPLY:
+            result = leftDbl * rightDbl;
             break;
     }
 
     return aContext->recycler()->getNumberResult(result, aResult);
 } //-- evaluate
 
-TX_IMPL_EXPR_STUBS_2(AdditiveExpr, NUMBER_RESULT, leftExpr, rightExpr)
+TX_IMPL_EXPR_STUBS_2(txNumberExpr, NUMBER_RESULT, mLeftExpr, mRightExpr)
 
 PRBool
-AdditiveExpr::isSensitiveTo(ContextSensitivity aContext)
+txNumberExpr::isSensitiveTo(ContextSensitivity aContext)
 {
-    return leftExpr->isSensitiveTo(aContext) ||
-           rightExpr->isSensitiveTo(aContext);
+    return mLeftExpr->isSensitiveTo(aContext) ||
+           mRightExpr->isSensitiveTo(aContext);
 }
 
 #ifdef TX_TO_STRING
 void
-AdditiveExpr::toString(nsAString& str)
+txNumberExpr::toString(nsAString& str)
 {
-    if ( leftExpr ) leftExpr->toString(str);
-    else str.AppendLiteral("null");
+    mLeftExpr->toString(str);
 
-    switch ( op ) {
-        case SUBTRACTION:
-            str.AppendLiteral(" - ");
-            break;
-        default:
+    switch (mOp) {
+        case ADD:
             str.AppendLiteral(" + ");
             break;
+        case SUBTRACT:
+            str.AppendLiteral(" - ");
+            break;
+        case DIVIDE:
+            str.AppendLiteral(" div ");
+            break;
+        case MODULUS:
+            str.AppendLiteral(" mod ");
+            break;
+        case MULTIPLY:
+            str.AppendLiteral(" * ");
+            break;
     }
-    if ( rightExpr ) rightExpr->toString(str);
-    else str.AppendLiteral("null");
+
+    mRightExpr->toString(str);
 
 }
 #endif

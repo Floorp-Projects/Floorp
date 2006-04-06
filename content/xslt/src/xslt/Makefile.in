@@ -101,12 +101,10 @@ CPPSRCS = \
         txUnknownHandler.cpp \
         txCurrentFunctionCall.cpp \
         txDocumentFunctionCall.cpp \
-        txElementAvailableFnCall.cpp \
         txFormatNumberFunctionCall.cpp \
-        txFunctionAvailableFnCall.cpp \
         txGenerateIdFunctionCall.cpp \
         txKeyFunctionCall.cpp \
-        txSystemPropertyFunctionCall.cpp
+        txXSLTEnvironmentFunctionCall.cpp
 
 ifdef MOZ_XSLT_STANDALONE
 CPPSRCS += txHTMLOutput.cpp	\

@@ -44,7 +44,7 @@
 
 #include "txExprParser.h"
 #include "txExprLexer.h"
-#include "txFunctionLib.h"
+#include "txExpr.h"
 #include "txStack.h"
 #include "txAtoms.h"
 #include "txError.h"
@@ -151,7 +151,7 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
         }
         else {
             if (!concat) {
-                concat = new StringFunctionCall(StringFunctionCall::CONCAT);
+                concat = new txCoreFunctionCall(txCoreFunctionCall::CONCAT);
                 NS_ENSURE_TRUE(concat, NS_ERROR_OUT_OF_MEMORY);
 
                 rv = concat->addParam(expr.forget());
@@ -233,12 +233,21 @@ txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left, nsAutoPtr<Expr>& right,
 
     Expr* expr = nsnull;
     switch (op->mType) {
-        //-- additive ops
+        //-- math ops
         case Token::ADDITION_OP :
-            expr = new AdditiveExpr(left, right, AdditiveExpr::ADDITION);
+            expr = new txNumberExpr(left, right, txNumberExpr::ADD);
             break;
         case Token::SUBTRACTION_OP:
-            expr = new AdditiveExpr(left, right, AdditiveExpr::SUBTRACTION);
+            expr = new txNumberExpr(left, right, txNumberExpr::SUBTRACT);
+            break;
+        case Token::DIVIDE_OP :
+            expr = new txNumberExpr(left, right, txNumberExpr::DIVIDE);
+            break;
+        case Token::MODULUS_OP :
+            expr = new txNumberExpr(left, right, txNumberExpr::MODULUS);
+            break;
+        case Token::MULTIPLY_OP :
+            expr = new txNumberExpr(left, right, txNumberExpr::MULTIPLY);
             break;
 
         //-- case boolean ops
@@ -274,19 +283,6 @@ txExprParser::createBinaryExpr(nsAutoPtr<Expr>& left, nsAutoPtr<Expr>& right,
                                       RelationalExpr::GREATER_OR_EQUAL);
             break;
 
-        //-- multiplicative ops
-        case Token::DIVIDE_OP :
-            expr = new MultiplicativeExpr(left, right,
-                                          MultiplicativeExpr::DIVIDE);
-            break;
-        case Token::MODULUS_OP :
-            expr = new MultiplicativeExpr(left, right,
-                                          MultiplicativeExpr::MODULUS);
-            break;
-        case Token::MULTIPLY_OP :
-            expr = new MultiplicativeExpr(left, right,
-                                          MultiplicativeExpr::MULTIPLY);
-            break;
         default:
             NS_NOTREACHED("operator tokens should be already checked");
             return NS_ERROR_UNEXPECTED;
@@ -459,97 +455,12 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
                                getter_AddRefs(lName), namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (namespaceID == kNameSpaceID_None) {
-        PRBool isOutOfMem = PR_TRUE;
-        if (lName == txXPathAtoms::boolean) {
-            fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_BOOLEAN);
-        }
-        else if (lName == txXPathAtoms::concat) {
-            fnCall = new StringFunctionCall(StringFunctionCall::CONCAT);
-        }
-        else if (lName == txXPathAtoms::contains) {
-            fnCall = new StringFunctionCall(StringFunctionCall::CONTAINS);
-        }
-        else if (lName == txXPathAtoms::count) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::COUNT);
-        }
-        else if (lName == txXPathAtoms::_false) {
-            fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_FALSE);
-        }
-        else if (lName == txXPathAtoms::id) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::ID);
-        }
-        else if (lName == txXPathAtoms::lang) {
-            fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_LANG);
-        }
-        else if (lName == txXPathAtoms::last) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LAST);
-        }
-        else if (lName == txXPathAtoms::localName) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LOCAL_NAME);
-        }
-        else if (lName == txXPathAtoms::name) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAME);
-        }
-        else if (lName == txXPathAtoms::namespaceUri) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
-        }
-        else if (lName == txXPathAtoms::normalizeSpace) {
-            fnCall = new StringFunctionCall(StringFunctionCall::NORMALIZE_SPACE);
-        }
-        else if (lName == txXPathAtoms::_not) {
-            fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_NOT);
-        }
-        else if (lName == txXPathAtoms::position) {
-            fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::POSITION);
-        }
-        else if (lName == txXPathAtoms::startsWith) {
-            fnCall = new StringFunctionCall(StringFunctionCall::STARTS_WITH);
-        }
-        else if (lName == txXPathAtoms::string) {
-            fnCall = new StringFunctionCall(StringFunctionCall::STRING);
-        }
-        else if (lName == txXPathAtoms::stringLength) {
-            fnCall = new StringFunctionCall(StringFunctionCall::STRING_LENGTH);
-        }
-        else if (lName == txXPathAtoms::substring) {
-            fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING);
-        }
-        else if (lName == txXPathAtoms::substringAfter) {
-            fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_AFTER);
-        }
-        else if (lName == txXPathAtoms::substringBefore) {
-            fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_BEFORE);
-        }
-        else if (lName == txXPathAtoms::sum) {
-            fnCall = new NumberFunctionCall(NumberFunctionCall::SUM);
-        }
-        else if (lName == txXPathAtoms::translate) {
-            fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);
-        }
-        else if (lName == txXPathAtoms::_true) {
-            fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_TRUE);
-        }
-        else if (lName == txXPathAtoms::number) {
-            fnCall = new NumberFunctionCall(NumberFunctionCall::NUMBER);
-        }
-        else if (lName == txXPathAtoms::round) {
-            fnCall = new NumberFunctionCall(NumberFunctionCall::ROUND);
-        }
-        else if (lName == txXPathAtoms::ceiling) {
-            fnCall = new NumberFunctionCall(NumberFunctionCall::CEILING);
-        }
-        else if (lName == txXPathAtoms::floor) {
-            fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
-        }
-        else {
-            // didn't find functioncall here, fnCall should be null
-            isOutOfMem = PR_FALSE;
-        }
-        if (!fnCall && isOutOfMem) {
-            NS_ERROR("XPath FunctionLib failed on out-of-memory");
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+    txCoreFunctionCall::eType type;
+    if (namespaceID == kNameSpaceID_None &&
+        txCoreFunctionCall::getTypeFromAtom(lName, type)) {
+        // It is a known built-in function.
+        fnCall = new txCoreFunctionCall(type);
+        NS_ENSURE_TRUE(fnCall, NS_ERROR_OUT_OF_MEMORY);
     }
     // check extension functions and xslt
     if (!fnCall) {

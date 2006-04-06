@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "txFunctionLib.h"
+#include "txExpr.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
@@ -44,10 +44,6 @@
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
 **/
-
-FunctionCall::FunctionCall()
-{
-}
 
 /**
  * Destructor

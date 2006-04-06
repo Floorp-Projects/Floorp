@@ -43,7 +43,6 @@
 #include "txExpandedNameMap.h"
 #include "txList.h"
 #include "txXSLTPatterns.h"
-#include "txXSLTFunctions.h"
 #include "nsVoidArray.h"
 
 class txInstruction;
@@ -52,6 +51,7 @@ class txTemplateItem;
 class txVariableItem;
 class txStripSpaceItem;
 class txAttributeSetItem;
+class txDecimalFormat;
 
 class txStylesheet
 {

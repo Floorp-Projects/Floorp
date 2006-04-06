@@ -64,26 +64,23 @@ REQUIRES +=	  dom \
 		  $(NULL)
 endif
 
-CPPSRCS = txAdditiveExpr.cpp \
+CPPSRCS = \
         txBooleanExpr.cpp \
-        txBooleanFunctionCall.cpp \
         txBooleanResult.cpp \
+        txCoreFunctionCall.cpp \
         txExpr.cpp \
         txExprLexer.cpp \
         txExprParser.cpp \
         txFilterExpr.cpp \
         txFunctionCall.cpp \
         txLocationStep.cpp \
-        txMultiplicativeExpr.cpp \
-        txNodeSetFunctionCall.cpp \
-        txNumberFunctionCall.cpp \
+        txNumberExpr.cpp \
         txNumberResult.cpp \
         txPathExpr.cpp \
         txPredicatedNodeTest.cpp \
         txPredicateList.cpp \
         txRelationalExpr.cpp \
         txRootExpr.cpp \
-        txStringFunctionCall.cpp \
         txStringResult.cpp \
         txErrorExpr.cpp \
         txLiteralExpr.cpp \
