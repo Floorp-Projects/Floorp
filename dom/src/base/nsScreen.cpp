@@ -42,10 +42,10 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDeviceContext.h"
-#include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsIDocumentViewer.h"
 #include "nsDOMClassInfo.h"
+#include "nsIBaseWindow.h"
+#include "nsIWidget.h"
 
 
 //
@@ -201,21 +201,23 @@ nsScreen::GetDeviceContext()
   if(!mDocShell)
     return nsnull;
 
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-
-  nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-  if(!docViewer)
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
+  if (!baseWindow)
     return nsnull;
 
-  nsCOMPtr<nsPresContext> presContext;
-  docViewer->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIWidget> widget;
+  baseWindow->GetMainWidget(getter_AddRefs(widget));
+  if (!widget)
+    return nsnull;
 
-  nsIDeviceContext* context = nsnull;
-  if(presContext)
-    context = presContext->DeviceContext();
+  // nsIWidget::GetDeviceContext addrefs, this method doesn't.
+  // Release before returning the pointer.
+  nsIDeviceContext *dc = widget->GetDeviceContext();
+  if (!dc)
+    return nsnull;
 
-  return context;
+  dc->Release();
+  return dc;
 }
 
 nsresult
