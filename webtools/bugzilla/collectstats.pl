@@ -126,6 +126,7 @@ sub collect_stats {
     my $product = shift;
     my $when = localtime (time);
     my $product_id = get_product_id($product) unless $product eq '-All-';
+    my $dbh = Bugzilla->dbh;
 
     die "Unknown product $product" unless ($product_id or $product eq '-All-');
 
@@ -137,26 +138,35 @@ sub collect_stats {
     my $exists = -f $file;
 
     if (open DATA, ">>$file") {
-        push my @row, &today;
-
-        foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
-            if( $product eq "-All-" ) {
-                SendSQL("SELECT COUNT(bug_status) FROM bugs WHERE bug_status='$status'");
-            } else {
-                SendSQL("SELECT COUNT(bug_status) FROM bugs WHERE bug_status='$status' AND product_id=$product_id");
-            }
-
-            push @row, FetchOneColumn();
+        push (my @row, &today);
+        my $status_sql = q{SELECT COUNT(*) 
+                             FROM bugs 
+                            WHERE bug_status = ?};
+        
+        my $reso_sql   = q{SELECT COUNT(*) 
+                             FROM bugs 
+                            WHERE resolution = ?};
+        
+        if ($product ne '-All-') {
+            $status_sql .= q{ AND product_id = ?};
+            $reso_sql   .= q{ AND product_id = ?};
         }
-
+        
+        my $sth_status = $dbh->prepare($status_sql);
+        my $sth_reso   = $dbh->prepare($reso_sql);
+        
+        my @values ;
+        foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
+            @values = ($status);
+            push (@values, $product_id) if ($product ne '-All-');
+            my $count = $dbh->selectrow_array($sth_status, undef, @values);
+            push(@row, $count);
+        }
         foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
-            if( $product eq "-All-" ) {
-                SendSQL("SELECT COUNT(resolution) FROM bugs WHERE resolution='$resolution'");
-            } else {
-                SendSQL("SELECT COUNT(resolution) FROM bugs WHERE resolution='$resolution' AND product_id=$product_id");
-            }
-
-            push @row, FetchOneColumn();
+            @values = ($resolution);
+            push (@values, $product_id) if ($product ne '-All-');
+            my $count = $dbh->selectrow_array($sth_reso, undef, @values);
+            push(@row, $count);
         }
 
         if (! $exists) {
@@ -219,7 +229,7 @@ sub calculate_dupes {
         }
 
         $count{$dupe_of}++;
-    }   
+    }
 
     # Now we collapse the dupe tree by iterating over %count until
     # there is no further change.
@@ -271,29 +281,32 @@ sub regenerate_stats {
 
     my $and_product = "";
     my $from_product = "";
-                    
+
+    my @values = ();
     if ($product ne '-All-') {
-        $and_product = " AND products.name = " . SqlQuote($product);
-        $from_product = "INNER JOIN products " .
-                        "ON bugs.product_id = products.id";
-    }          
-              
+        $and_product = q{AND products.name = ?};
+        $from_product = q{INNER JOIN products 
+                          ON bugs.product_id = products.id};
+        push (@values, $product);
+    }
+
     # Determine the start date from the date the first bug in the
     # database was created, and the end date from the current day.
     # If there were no bugs in the search, return early.
-    SendSQL("SELECT " . $dbh->sql_to_days('creation_ts') . " AS start, " .
-                        $dbh->sql_to_days('current_date') . " AS end, " .
-                        $dbh->sql_to_days("'1970-01-01'") . 
-            " FROM bugs $from_product WHERE " .
-            $dbh->sql_to_days('creation_ts') . " IS NOT NULL " .
-            $and_product .
-            " ORDER BY start " . $dbh->sql_limit(1));
-    
-    my ($start, $end, $base) = FetchSQLData();
+    my $query = q{SELECT } .
+                $dbh->sql_to_days('creation_ts') . q{ AS start, } . 
+                $dbh->sql_to_days('current_date') . q{ AS end, } . 
+                $dbh->sql_to_days("'1970-01-01'") . 
+                 qq{ FROM bugs $from_product 
+                   WHERE } . $dbh->sql_to_days('creation_ts') . 
+                         qq{ IS NOT NULL $and_product 
+                ORDER BY start } . $dbh->sql_limit(1);
+    my ($start, $end, $base) = $dbh->selectrow_array($query, undef, @values);
+
     if (!defined $start) {
         return;
     }
- 
+
     if (open DATA, ">$file") {
         DATA->autoflush(1);
         print DATA <<FIN;
@@ -314,16 +327,17 @@ FIN
 
             # Get a list of bugs that were created the previous day, and
             # add those bugs to the list of bugs for this product.
-            SendSQL("SELECT bug_id FROM bugs $from_product " .
-                    " WHERE bugs.creation_ts < " . $dbh->sql_from_days($day - 1) .
-                    " AND bugs.creation_ts >= " . $dbh->sql_from_days($day - 2) .
-                    $and_product .
-                    " ORDER BY bug_id");
-            
-            my @row;        
-            while (@row = FetchSQLData()) {
-                push @bugs, $row[0];
-            }
+            $query = qq{SELECT bug_id 
+                          FROM bugs $from_product 
+                         WHERE bugs.creation_ts < } . 
+                         $dbh->sql_from_days($day - 1) . 
+                         q{ AND bugs.creation_ts >= } . 
+                         $dbh->sql_from_days($day - 2) . 
+                        $and_product . q{ ORDER BY bug_id};
+
+            my $bug_ids = $dbh->selectcol_arrayref($query, undef, @values);
+
+            push(@bugs, @$bug_ids);
 
             # For each bug that existed on that day, determine its status
             # at the beginning of the day.  If there were no status
@@ -344,51 +358,45 @@ FIN
             foreach (@logresolutions) {
                 $bugcount{$_} = 0;
             }
+            # Get information on bug states and resolutions.
+            $query = qq{SELECT bugs_activity.removed 
+                          FROM bugs_activity 
+                    INNER JOIN fielddefs 
+                            ON bugs_activity.fieldid = fielddefs.fieldid 
+                         WHERE fielddefs.name = ? 
+                           AND bugs_activity.bug_id = ? 
+                           AND bugs_activity.bug_when >= } . 
+                           $dbh->sql_from_days($day) . 
+                    " ORDER BY bugs_activity.bug_when " . 
+                          $dbh->sql_limit(1);
+
+            my $sth_bug = $dbh->prepare($query);
+            my $sth_status = $dbh->prepare(q{SELECT bug_status 
+                                               FROM bugs 
+                                              WHERE bug_id = ?});
             
+            my $sth_reso = $dbh->prepare(q{SELECT resolution 
+                                             FROM bugs 
+                                            WHERE bug_id = ?});
+
             for my $bug (@bugs) {
-                # First, get information on various bug states.
-                SendSQL("SELECT bugs_activity.removed " .
-                        "  FROM bugs_activity " .
-                    "INNER JOIN fielddefs " .
-                        "    ON bugs_activity.fieldid = fielddefs.fieldid " .
-                        " WHERE fielddefs.name = 'bug_status' " .
-                        "   AND bugs_activity.bug_id = $bug " .
-                        "   AND bugs_activity.bug_when >= " . $dbh->sql_from_days($day) .
-                     " ORDER BY bugs_activity.bug_when " .
-                        $dbh->sql_limit(1));
-                
-                my $status;
-                if (@row = FetchSQLData()) {
-                    $status = $row[0];
-                } else {
-                    SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $bug");
-                    $status = FetchOneColumn();
-                }
-                
-                if (defined $bugcount{$status}) {
-                    $bugcount{$status}++;
+                my $status = $dbh->selectrow_array($sth_bug, undef, 
+                                                       'bug_status', $bug);
+                unless ($status) {
+                    $status = $dbh->selectrow_array($sth_status, undef, $bug);
                 }
 
-                # Next, get information on various bug resolutions.
-                SendSQL("SELECT bugs_activity.removed " .
-                        "  FROM bugs_activity " .
-                    "INNER JOIN fielddefs " .
-                        "    ON bugs_activity.fieldid = fielddefs.fieldid " .
-                        " WHERE fielddefs.name = 'resolution' " .
-                        "   AND bugs_activity.bug_id = $bug " .
-                        "   AND bugs_activity.bug_when >= " . $dbh->sql_from_days($day) .
-                     " ORDER BY bugs_activity.bug_when " . 
-                        $dbh->sql_limit(1));
-                        
-                if (@row = FetchSQLData()) {
-                    $status = $row[0];
-                } else {
-                    SendSQL("SELECT resolution FROM bugs WHERE bug_id = $bug");
-                    $status = FetchOneColumn();
-                }
-                
                 if (defined $bugcount{$status}) {
                     $bugcount{$status}++;
+                }
+                my $resolution = $dbh->selectrow_array($sth_bug, undef, 
+                                                         'resolution', $bug);
+                unless ($resolution) {
+                    $resolution = $dbh->selectrow_array($sth_reso, undef, $bug);
+                }
+                
+                if (defined $bugcount{$resolution}) {
+                    $bugcount{$resolution}++;
                 }
             }
 

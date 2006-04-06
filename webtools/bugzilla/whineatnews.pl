@@ -32,6 +32,7 @@ use lib '.';
 
 require "globals.pl";
 
+use Bugzilla;
 use Bugzilla::BugMail;
 use Bugzilla::Util;
 
@@ -39,20 +40,23 @@ use Bugzilla::Util;
 exit unless Param('whinedays') >= 1;
 
 my $dbh = Bugzilla->dbh;
-SendSQL("SELECT bug_id, short_desc, login_name " .
-        "FROM bugs INNER JOIN profiles ON userid = assigned_to " .
-        "WHERE (bug_status = 'NEW' OR bug_status = 'REOPENED') " .
-        "AND " . $dbh->sql_to_days('NOW()') . " - " .
-                 $dbh->sql_to_days('delta_ts') . " > " .
-                 Param('whinedays') . " " .
-        "ORDER BY bug_id");
+my $query = q{SELECT bug_id, short_desc, login_name
+                FROM bugs
+          INNER JOIN profiles
+                  ON userid = assigned_to
+               WHERE (bug_status = ? OR bug_status = ?)
+                 AND } . $dbh->sql_to_days('NOW()') . " - " .
+                       $dbh->sql_to_days('delta_ts') . " > " .
+                       Param('whinedays') .
+          " ORDER BY bug_id";
 
 my %bugs;
 my %desc;
-my @row;
 
-while (@row = FetchSQLData()) {
-    my ($id, $desc, $email) = (@row);
+my $slt_bugs = $dbh->selectall_arrayref($query, undef, 'NEW', 'REOPENED');
+
+foreach my $bug (@$slt_bugs) {
+    my ($id, $desc, $email) = @$bug;
     if (!defined $bugs{$email}) {
         $bugs{$email} = [];
     }
