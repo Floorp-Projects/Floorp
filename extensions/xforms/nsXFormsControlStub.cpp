@@ -320,12 +320,18 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
 }
 
 nsresult
-nsXFormsControlStubBase::BindToModel()
+nsXFormsControlStubBase::BindToModel(PRBool aSetBoundNode)
 {
   nsCOMPtr<nsIModelElementPrivate> oldModel(mModel);
 
   nsCOMPtr<nsIXFormsControl> parentControl;
-  mModel = nsXFormsUtils::GetModel(mElement, getter_AddRefs(parentControl));
+  nsCOMPtr<nsIDOMNode> boundNode;
+  mModel = nsXFormsUtils::GetModel(mElement, getter_AddRefs(parentControl),
+                                   kElementFlags,
+                                   getter_AddRefs(boundNode));
+  if (aSetBoundNode) {
+    mBoundNode.swap(boundNode);
+  }
 
   return MaybeAddToModel(oldModel, parentControl);
 }
@@ -632,8 +638,7 @@ nsXFormsControlStubBase::GetContext(nsAString      &aModelID,
   if (aContextNode) {
     if (mBoundNode) {
       // We are bound to a node: This is the context node
-      CallQueryInterface(mBoundNode, aContextNode); // addrefs
-      NS_ASSERTION(*aContextNode, "could not QI context node from bound node?");
+      NS_ADDREF(*aContextNode = mBoundNode);
     } else if (mModel) {
       // We are bound to a model: The document element of its default instance
       // document is the context node

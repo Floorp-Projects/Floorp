@@ -207,12 +207,15 @@ public:
    * @param aElement          The element
    * @param aParentControl    The parent control setting the context
    * @param aElementFlags     Flags describing characteristics of aElement
+   * @param aContextNode      The context node
    * @return                  The model
    */
   static NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>)
     GetModel(nsIDOMElement     *aElement,
              nsIXFormsControl **aParentControl = nsnull,
-             PRUint32           aElementFlags = ELEMENT_WITH_MODEL_ATTR);
+             PRUint32           aElementFlags = ELEMENT_WITH_MODEL_ATTR,
+             nsIDOMNode       **aContextNode = nsnull);
+
 
   /**
    * Evaluate a 'bind' or |aBindingAttr| attribute on |aElement|.

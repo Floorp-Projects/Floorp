@@ -240,11 +240,15 @@ protected:
   void RemoveIndexListeners();
 
   /**
-   * Binds the control to the model. Does _not_ set mBoundNode, etc. Just sets
-   * mModel, and handle attaching to the model (including reattaching from any
-   * old model).
+   * Binds the control to the model. Just sets mModel, and handle attaching to
+   * the model (including reattaching from any old model).
+   *
+   * @note It can also set the mBoundNode, but does not do a proper node
+   * binding, as in setting up dependencies, attaching index() listeners, etc.
+   *
+   * @param aSetBoundNode     Set mBoundNode too?
    */
-  nsresult BindToModel();
+  nsresult BindToModel(PRBool aSetBoundNode = PR_FALSE);
 
   /**
    * Forces a rebinding to the model.

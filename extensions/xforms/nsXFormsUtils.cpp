@@ -367,7 +367,8 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
 /* static */ already_AddRefed<nsIModelElementPrivate>
 nsXFormsUtils::GetModel(nsIDOMElement     *aElement,
                         nsIXFormsControl **aParentControl,
-                        PRUint32           aElementFlags)
+                        PRUint32           aElementFlags,
+                        nsIDOMNode       **aContextNode)
 
 {
   nsCOMPtr<nsIModelElementPrivate> model;
@@ -385,9 +386,13 @@ nsXFormsUtils::GetModel(nsIDOMElement     *aElement,
 
   NS_ENSURE_TRUE(model, nsnull);
 
+  if (aContextNode) {
+    NS_IF_ADDREF(*aContextNode = contextNode);
+  }
+
   nsIModelElementPrivate *result = nsnull;
   if (model)
-    CallQueryInterface(model, &result);  // addrefs
+    NS_ADDREF(result = model);
   return result;
 }
 

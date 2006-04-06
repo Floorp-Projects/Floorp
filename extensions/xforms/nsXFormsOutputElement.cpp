@@ -75,19 +75,25 @@ public:
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
+  NS_IMETHOD GetBoundNode(nsIDOMNode **aBoundNode);
 
   // nsIXFormsDelegate
   NS_IMETHOD GetValue(nsAString& aValue); 
+  NS_IMETHOD GetHasBoundNode(PRBool *aHasBoundNode);
 
-  nsXFormsOutputElement() :
-    nsXFormsDelegateStub(NS_LITERAL_STRING("output")) {}
-
+  nsXFormsOutputElement();
 
 private:
-  PRBool   mHasBinding;
-  nsString mValue;
-  PRBool   mValueIsDirty;
+  PRPackedBool   mHasBinding;
+  PRPackedBool   mValueIsDirty;
+  nsString       mValue;
 };
+
+nsXFormsOutputElement::nsXFormsOutputElement()
+  : nsXFormsDelegateStub(NS_LITERAL_STRING("output")),
+    mHasBinding(PR_FALSE), mValueIsDirty(PR_TRUE)
+{
+}
 
 // nsIXFormsControl
 
@@ -101,21 +107,24 @@ nsXFormsOutputElement::Bind()
 
   if (!mHasParent)
     return NS_OK;
-  
-  nsresult rv = mElement->HasAttribute(NS_LITERAL_STRING("ref"), &mHasBinding);
+
+  PRBool tmp;
+  nsresult rv = mElement->HasAttribute(NS_LITERAL_STRING("ref"), &tmp);
   NS_ENSURE_SUCCESS(rv, rv);
+  mHasBinding = tmp;
   if (!mHasBinding) {
-    rv = mElement->HasAttribute(NS_LITERAL_STRING("bind"), &mHasBinding);
+    rv = mElement->HasAttribute(NS_LITERAL_STRING("bind"), &tmp);
     NS_ENSURE_SUCCESS(rv, rv);
+    mHasBinding = tmp;
 
     if (!mHasBinding) {
-      // If output only has a value attribute, it can't have a bound node.
-      // In an effort to streamline this a bit, we'll just get mModel here and
-      // add output to the deferred bind list if necessary.  This should be all
-      // that we need from the services that ProcessNodeBinding provides.
-      // ProcessNodeBinding is called during ::Refresh (via GetValue) so we just
-      // need a few things set up before ::Refresh gets called (usually right
-      // after ::Bind)
+      // If output only has a value attribute, it can't have a proper single
+      // node binding.  In an effort to streamline this a bit, we'll just bind
+      // to the model here and add output to the deferred bind list if
+      // necessary.  This should be all that we need from the services that
+      // ProcessNodeBinding provides.  ProcessNodeBinding is called during
+      // ::Refresh (via GetValue) so we just need a few things set up before
+      // ::Refresh gets called (usually right after ::Bind)
   
       nsCOMPtr<nsIDOMDocument> domDoc;
       mElement->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -123,7 +132,7 @@ nsXFormsOutputElement::Bind()
         nsXFormsModelElement::DeferElementBind(domDoc, this);
       }
   
-      return BindToModel();
+      return BindToModel(PR_TRUE);
     }
   }
 
@@ -158,6 +167,20 @@ nsXFormsOutputElement::Refresh()
 {
   mValueIsDirty = PR_TRUE;
   return nsXFormsDelegateStub::Refresh();
+}
+
+NS_IMETHODIMP
+nsXFormsOutputElement::GetBoundNode(nsIDOMNode **aBoundNode)
+{
+  return mHasBinding ? nsXFormsDelegateStub::GetBoundNode(aBoundNode) : NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsOutputElement::GetHasBoundNode(PRBool *aHasBoundNode)
+{
+  NS_ENSURE_ARG_POINTER(aHasBoundNode);
+  *aHasBoundNode = (mBoundNode && mHasBinding) ? PR_TRUE : PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
