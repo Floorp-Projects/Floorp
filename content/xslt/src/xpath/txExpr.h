@@ -323,8 +323,6 @@ protected:
 
     txList params;
 
-    FunctionCall();
-
     /*
      * Evaluates the given Expression and converts its result to a number.
      */
@@ -351,27 +349,58 @@ protected:
 #endif
 };
 
-
-/**
- * Represents an AttributeValueTemplate
-**/
-class AttributeValueTemplate: public Expr {
-
+class txCoreFunctionCall : public FunctionCall
+{
 public:
 
-    AttributeValueTemplate();
+    // This must be ordered in the same order as descriptTable in
+    // txCoreFunctionCall.cpp. If you change one, change the other.
+    enum eType {
+        COUNT = 0,         // count()
+        ID,                // id()
+        LAST,              // last()
+        LOCAL_NAME,        // local-name()
+        NAMESPACE_URI,     // namespace-uri()
+        NAME,              // name()
+        POSITION,          // position()
 
-    virtual ~AttributeValueTemplate();
+        CONCAT,            // concat()
+        CONTAINS,          // contains()
+        NORMALIZE_SPACE,   // normalize-space()
+        STARTS_WITH,       // starts-with()
+        STRING,            // string()
+        STRING_LENGTH,     // string-length()
+        SUBSTRING,         // substring()
+        SUBSTRING_AFTER,   // substring-after()
+        SUBSTRING_BEFORE,  // substring-before()
+        TRANSLATE,         // translate()
 
-    /**
-     * Adds the given Expr to this AttributeValueTemplate
-    **/
-    void addExpr(Expr* expr);
+        NUMBER,            // number()
+        ROUND,             // round()
+        FLOOR,             // floor()
+        CEILING,           // ceiling()
+        SUM,               // sum()
 
-    TX_DECL_EXPR;
+        BOOLEAN,           // boolean()
+        _FALSE,            // false()
+        LANG,              // lang()
+        _NOT,              // not()
+        _TRUE              // true()
+    };
+
+    /*
+     * Creates a txCoreFunctionCall of the given type
+     */
+    txCoreFunctionCall(eType aType) : mType(aType)
+    {
+    }
+
+    TX_DECL_FUNCTION;
+
+    static PRBool getTypeFromAtom(nsIAtom* aName, eType& aType);
 
 private:
-    List expressions;
+    eType mType;
 };
 
 
@@ -705,8 +734,8 @@ public:
     TX_DECL_EXPR;
 
 private:
-    short op;
     nsAutoPtr<Expr> leftExpr, rightExpr;
+    short op;
 }; //-- BooleanExpr
 
 /**
@@ -717,28 +746,26 @@ private:
  * div  : divide
  *
 **/
-class MultiplicativeExpr : public Expr {
+class txNumberExpr : public Expr {
 
 public:
 
-    //-- MultiplicativeExpr Types
-    //-- LF, changed from static const short to enum
-    enum _MultiplicativeExprType { DIVIDE = 1, MULTIPLY, MODULUS };
+    enum eOp { ADD, SUBTRACT, DIVIDE, MULTIPLY, MODULUS };
 
-     MultiplicativeExpr(nsAutoPtr<Expr>& aLeftExpr,
-                        nsAutoPtr<Expr>& aRightExpr,
-                        short aOp)
-         : op(aOp),
-           leftExpr(aLeftExpr),
-           rightExpr(aRightExpr)
+    txNumberExpr(nsAutoPtr<Expr>& aLeftExpr,
+               nsAutoPtr<Expr>& aRightExpr,
+               eOp aOp)
+        : mLeftExpr(aLeftExpr),
+          mRightExpr(aRightExpr),
+          mOp(aOp)
     {
     }
 
     TX_DECL_EXPR;
 
 private:
-    short op;
-    nsAutoPtr<Expr> leftExpr, rightExpr;
+    nsAutoPtr<Expr> mLeftExpr, mRightExpr;
+    eOp mOp;
 }; //-- MultiplicativeExpr
 
 /**

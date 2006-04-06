@@ -966,21 +966,25 @@ txStylesheetCompilerState::resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
             return NS_OK;
         }
         if (aName == txXSLTAtoms::systemProperty) {
-            aFunction = new SystemPropertyFunctionCall(mElementContext->mMappings);
+            aFunction = new txXSLTEnvironmentFunctionCall(
+                txXSLTEnvironmentFunctionCall::SYSTEM_PROPERTY,
+                mElementContext->mMappings);
             NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
     
             return NS_OK;
         }
         if (aName == txXSLTAtoms::elementAvailable) {
-            aFunction =
-                new ElementAvailableFunctionCall(mElementContext->mMappings);
+            aFunction = new txXSLTEnvironmentFunctionCall(
+                txXSLTEnvironmentFunctionCall::ELEMENT_AVAILABLE,
+                mElementContext->mMappings);
             NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
     
             return NS_OK;
         }
         if (aName == txXSLTAtoms::functionAvailable) {
-            aFunction =
-                new FunctionAvailableFunctionCall(mElementContext->mMappings);
+            aFunction = new txXSLTEnvironmentFunctionCall(
+                txXSLTEnvironmentFunctionCall::FUNCTION_AVAILABLE,
+                mElementContext->mMappings);
             NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
     
             return NS_OK;

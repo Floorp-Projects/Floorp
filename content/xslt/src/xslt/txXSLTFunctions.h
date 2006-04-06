@@ -41,12 +41,12 @@
 #include "txExpr.h"
 #include "txXMLUtils.h"
 #include "nsAutoPtr.h"
+#include "txNamespaceMap.h"
 
 class txPattern;
 class txStylesheet;
 class txKeyValueHashKey;
 class txExecutionState;
-class txNamespaceMap;
 
 /**
  * The definition for the XSLT document() function
@@ -157,23 +157,6 @@ public:
 };
 
 /**
- * The definition for the XSLT unparsed-entity-uri() function
-**/
-class UnparsedEntityUriFunctionCall : public FunctionCall {
-
-public:
-
-    /**
-     * Creates a new unparsed-entity-uri() function call
-    **/
-    UnparsedEntityUriFunctionCall();
-
-    TX_DECL_FUNCTION;
-
-private:
-};
-
-/**
  * The definition for the XSLT generate-id() function
 **/
 class GenerateIdFunctionCall : public FunctionCall {
@@ -188,71 +171,26 @@ public:
     TX_DECL_FUNCTION;
 };
 
+
 /**
- * The definition for the XSLT system-property() function
-**/
-class SystemPropertyFunctionCall : public FunctionCall {
-
+ * A system-property(), element-available() or function-available() function.
+ */
+class txXSLTEnvironmentFunctionCall : public FunctionCall
+{
 public:
+    enum eType { SYSTEM_PROPERTY, ELEMENT_AVAILABLE, FUNCTION_AVAILABLE };
 
-    /**
-     * Creates a new system-property() function call
-     * aNode is the Element in the stylesheet containing the 
-     * Expr and is used for namespaceID resolution
-    **/
-    SystemPropertyFunctionCall(txNamespaceMap* aMappings);
+    txXSLTEnvironmentFunctionCall(eType aType, txNamespaceMap* aMappings)
+        : mType(aType),
+          mMappings(aMappings)
+    {
+    }
 
     TX_DECL_FUNCTION;
 
 private:
-    /*
-     * resolve namespaceIDs with this node
-     */
-    nsRefPtr<txNamespaceMap> mMappings;
-};
-
-/**
- * The definition for the XSLT element-available() function
-**/
-class ElementAvailableFunctionCall : public FunctionCall {
-
-public:
-
-    /**
-     * Creates a new element-available() function call
-     * aNode is the Element in the stylesheet containing the 
-     * Expr and is used for namespaceID resolution
-    **/
-    ElementAvailableFunctionCall(txNamespaceMap* aMappings);
-
-    TX_DECL_FUNCTION;
-
-private:
-    /*
-     * resolve namespaceIDs with this node
-     */
-    nsRefPtr<txNamespaceMap> mMappings;
-};
-
-/**
- * The definition for the XSLT function-available() function
-**/
-class FunctionAvailableFunctionCall : public FunctionCall {
-
-public:
-
-    /**
-     * Creates a new function-available() function call
-    **/
-    FunctionAvailableFunctionCall(txNamespaceMap* aMappings);
-
-    TX_DECL_FUNCTION;
-
-private:
-    /*
-     * resolve namespaceIDs with this node
-     */
-    nsRefPtr<txNamespaceMap> mMappings;
+    eType mType;
+    nsRefPtr<txNamespaceMap> mMappings; // Used to resolve prefixes
 };
 
 #endif
