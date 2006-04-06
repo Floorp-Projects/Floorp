@@ -38,6 +38,9 @@
 {elseif $smarty.get.app eq "mozilla"}
     {assign var="app" value="mozilla"}
         <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
+{elseif $smarty.get.app eq "seamonkey"}
+    {assign var="app" value="mozilla"}
+        <h1><a href="{$config.webpath}/?app=mozilla" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-suite.gif" width="370" height="54" alt="Mozilla Suite Add-ons Beta"></a></h1>
 {else}
     {assign var="app" value="firefox"}
         <h1><a href="{$config.webpath}/?app=firefox" title="Return to home page" accesskey="1"><img src="{$config.webpath}/images/title-firefox.gif" width="276" height="54" alt="Firefox Add-ons Beta"></a></h1>

@@ -492,5 +492,31 @@ class AMO_Object
 
         return $this->db->record;
      }
+
+    /**
+     * Get the name of an application from the GUID
+     *
+     * @param string $guid
+     * @return string name of the application
+     */
+     function getAppNameFromGuid($app) {
+
+         $_app = mysql_real_escape_string($app);
+
+         $this->db->query("
+                 SELECT 
+                     `AppName`
+                 FROM 
+                     `applications`
+                 WHERE
+                     GUID='{$_app}'
+                 LIMIT 1
+                 ", SQL_INIT, SQL_ASSOC);
+
+         // Our DB class makes me a sad panda :(
+         $throwaway =  $this->db->record;
+
+         return $throwaway['AppName'];
+     }
 }
 ?>
