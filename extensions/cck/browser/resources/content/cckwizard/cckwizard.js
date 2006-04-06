@@ -361,6 +361,12 @@ function prefCheckOKButton()
 
 function OnPrefOK()
 {
+  if ((document.getElementById('prefname').value == "browser.startup.homepage") && 
+      (document.getElementById('prefvalue').value.length > 0)) {
+    gPromptService.alert(window, "",
+                         "You cannot set the browser.startup.homepage here, you can only lock it.");
+    return false;
+  }
   listbox = this.opener.document.getElementById('prefList');
   var listitem;
   if (window.name == 'newpref') {
