@@ -579,9 +579,17 @@ nsImageMac::LockImagePixels(PRBool aMaskPixels)
           PRUint8 alpha = *tmp++;
           mAlphaBits[alphaRowStart + x] = alpha;
           PRUint32 offset = rowStart + COMPS_PER_PIXEL * x;
-          mImageBits[offset + 1] = ((PRUint32) *tmp++) * 255 / alpha;
-          mImageBits[offset + 2] = ((PRUint32) *tmp++) * 255 / alpha;
-          mImageBits[offset + 3] = ((PRUint32) *tmp++) * 255 / alpha;
+          if (alpha) {
+            mImageBits[offset + 1] = ((PRUint32) *tmp++) * 255 / alpha;
+            mImageBits[offset + 2] = ((PRUint32) *tmp++) * 255 / alpha;
+            mImageBits[offset + 3] = ((PRUint32) *tmp++) * 255 / alpha;
+          }
+          else {
+            tmp += 3;
+            mImageBits[offset + 1] =
+             mImageBits[offset + 2] =
+             mImageBits[offset + 3] = 0;
+          }
         }
       }
       break;
