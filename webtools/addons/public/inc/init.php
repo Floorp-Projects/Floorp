@@ -115,6 +115,7 @@ $sql = array();  // Trusted for SQL.  Items in this array must be trusted throug
  * If app is not a valid format, not set or just empty, set it to firefox.
  */
 $compileId = (!empty($_GET['app']) && ctype_alpha($_GET['app'])) ? $_GET['app'] : 'firefox';
+$app = $compileId;
 
 
 

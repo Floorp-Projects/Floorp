@@ -21,6 +21,7 @@ class AddOn extends AMO_Object {
     var $devcomments;
     var $db;
     var $tpl;
+    var $installFunc;
 
     // AddOn author metadata.
     var $UserID;
@@ -90,6 +91,7 @@ class AddOn extends AMO_Object {
         $this->getUserInfo();
         $this->getAppVersions();
         $this->getOsVersions();
+        $this->installFunc = $this->Type == 'T' ? 'installTheme' : 'install';
     }
     
     /**

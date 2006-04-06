@@ -2,6 +2,7 @@
 <div class="key-point">
 
 <form action="{$smarty.server.PHP_SELF}" method="get" class="amo-form">
+<input type="hidden" name="app" value="{$app}"/>
 
 <div>
 <input type="text" name="q" value="{$clean.q}" maxlength="32"/><input class="amo-submit" type="submit" value="Search"/> 

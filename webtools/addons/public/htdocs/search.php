@@ -12,8 +12,15 @@ $cacheId = md5($_SERVER['QUERY_STRING']);
 startProcessing('search.tpl',$cacheId,$compileId,'nonav');
 require_once('includes.php');
 
+// Instantiate AMO_Object so we can get our categories and platforms.
+$amo = new AMO_Object();
+$appSelectList = $amo->getApps();
+
 // Array to store our page information.
 $page = array();
+
+// App.
+$clean['app'] = isset($app) ? $app : 'firefox';
 
 // Category.
 if (isset($_GET['cat'])&&ctype_digit($_GET['cat'])) {
@@ -43,8 +50,20 @@ if (isset($_GET['date'])&&$_GET['date']!='null'&&ctype_alpha($_GET['date'])) {
 }
 
 // Application.
-if (isset($_GET['appfilter'])&&$_GET['appfilter']!='null'&&is_numeric($_GET['appfilter'])) {
+if (isset($_GET['appfilter'])&&$_GET['appfilter']!='null'&&(ctype_alpha($_GET['appfilter'])||is_numeric($_GET['appfilter']))) {
+
     $clean['appfilter'] = $_GET['appfilter'];
+
+    if (!is_numeric($clean['appfilter'])) {
+        foreach ($appSelectList as $id=>$name) {
+            if (strtolower($clean['appfilter']) == strtolower($name)) {
+                $clean['appfilter'] = $id;
+                break;
+            }
+        }
+    }
+
+
 }
 
 // Query.
@@ -83,9 +102,6 @@ $page['right'] = $page['left'] + $clean['perpage'];
 foreach ($clean as $key=>$val) {
     $sql[$key] = mysql_real_escape_string($val);
 }
-
-// Instantiate AMO_Object so we can get our categories and platforms.
-$amo = new AMO_Object();
 
 $dates = array(
     'day'  => 'Today',
@@ -143,8 +159,9 @@ if (!empty($sql['platform'])) {
     $where .= " version.OSID = '{$sql['platform']}' AND ";
 }
 
-if (!empty($sql['app'])) {
+if (!empty($sql['appfilter'])) {
     $select .= " INNER JOIN applications ON version.AppID = applications.AppID ";
+
     $where .= " applications.AppID = '{$sql['appfilter']}' AND ";
 }
 
@@ -202,7 +219,7 @@ if (!empty($sql['sort'])) {
 
 $where .= ' 1 ';
 
-$limit = " LIMIT {$page['left']}, {$page['right']} ";
+$limit = " LIMIT {$page['left']}, {$sql['perpage']} ";
 
 $query = $selectTop.$select.$where.$orderby.$limit;
 
@@ -234,10 +251,8 @@ if ( count($rawResults) == 1) {
     header('Location: https://'.$_SERVER['HTTP_HOST'].WEB_PATH.'/addon.php?id='.$rawResults[0]);
     exit;
 } else {
-    for ($i=$page['left'];$i<$page['right'];$i++) {
-        if (isset($rawResults[$i])) {
-            $results[] = new Addon($rawResults[$i]);
-        }
+    foreach($rawResults as $id) {
+        $results[] = new Addon($id);
     }
 }
 
@@ -264,7 +279,7 @@ $tpl->assign(
         'clean'         => $clean,
         'cats'          => $amo->getCats(),
         'platforms'     => $amo->getPlatforms(),
-        'apps'          => $amo->getApps(),
+        'apps'          => $appSelectList,
         'dates'         => $dates,
         'sort'          => $sort,
         'perpage'       => $perpage,

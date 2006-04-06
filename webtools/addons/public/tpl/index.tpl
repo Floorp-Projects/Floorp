@@ -43,9 +43,9 @@
 <div class="front-section-left">
     <h2><img src="{$config.webpath}/images/title-browse.gif" width="168" height="22" alt="Browse By Category"></h2>
     <ul>
-    <li><a href="{$config.webpath}/search.php?app={$app}&amp;sort=downloads">Most Popular Add-ons</a></li>
-    <li><a href="{$config.webpath}/search.php?app={$app}&amp;sort=rating">Highest Rated Add-ons</a></li>
-    <li><a href="{$config.webpath}/search.php?app={$app}&amp;sort=newest">Recently Added</a></li>
+    <li><a href="{$config.webpath}/search.php?app={$app}&amp;appfilter={$app}&amp;sort=downloads">Most Popular Add-ons</a></li>
+    <li><a href="{$config.webpath}/search.php?app={$app}&amp;appfilter={$app}&amp;sort=rating">Highest Rated Add-ons</a></li>
+    <li><a href="{$config.webpath}/search.php?app={$app}&amp;appfilter={$app}&amp;sort=newest">Recently Added</a></li>
     </ul>
 </div>
 

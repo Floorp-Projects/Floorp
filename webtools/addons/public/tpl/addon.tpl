@@ -48,9 +48,9 @@ Works with:
                 document.writeln("<div>");
 
                 if (installs[platform]) {ldelim}
-                        document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                        document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return {$addon->installFunc}(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
                 {rdelim} else if ("{$key|escape}" == "ALL") {ldelim}
-                        document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return install(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                        document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return {$addon->installFunc}(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
                 {rdelim} else  {ldelim}
                     document.writeln("<strong>{$addon->Name|escape}</strong> is not available for " + platform + ".");
                 {rdelim}
@@ -66,7 +66,7 @@ Works with:
                     {foreach key=key item=item from=$addon->OsVersions}
                         {if $item.URI}
                             <div>
-                                <a href="{$item.URI|escape}" onclick="return install(event,'{$item.AppName|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png');" title="Install for {$item.OSName|escape} {$item.Version|escape} (Right-Click to Download)">
+                                <a href="{$item.URI|escape}" onclick="return {$addon->installFunc}(event,'{$item.AppName|escape} {$item.Version|escape}', '{$config.webpath}/images/default.png');" title="Install for {$item.OSName|escape} {$item.Version|escape} (Right-Click to Download)">
                                     {if $multiDownloadLinks}
                                         {$item.OSName|escape}
                                     {else}
