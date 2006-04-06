@@ -229,9 +229,9 @@ $vars->{'title_tag'} = "bug_processed";
 # negatives, but never false positives, and should catch the majority of cases.
 # It only works at all in the single bug case.
 if (defined $cgi->param('id')) {
-    SendSQL("SELECT delta_ts FROM bugs WHERE bug_id = " .
-            $cgi->param('id'));
-    my $delta_ts = FetchOneColumn();
+    my $delta_ts = $dbh->selectrow_array(
+        q{SELECT delta_ts FROM bugs WHERE bug_id = ?},
+        undef, $cgi->param('id'));
     
     if (defined $cgi->param('delta_ts') && $cgi->param('delta_ts') ne $delta_ts)
     {
@@ -285,10 +285,10 @@ sub CheckonComment {
 # and bug groups if so.
 my $oldproduct = '';
 if (defined $cgi->param('id')) {
-    SendSQL("SELECT name FROM products INNER JOIN bugs " .
-            "ON products.id = bugs.product_id WHERE bug_id = " .
-            $cgi->param('id'));
-    $oldproduct = FetchSQLData();
+    $oldproduct = $dbh->selectrow_array(
+        q{SELECT name FROM products INNER JOIN bugs
+        ON products.id = bugs.product_id WHERE bug_id = ?},
+        undef, $cgi->param('id'));
 }
 
 if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct) 
@@ -376,9 +376,10 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
                 if ($mok) {
                     $defaults{'target_milestone'} = $cgi->param('target_milestone');
                 } else {
-                    SendSQL("SELECT defaultmilestone FROM products " .
-                            "WHERE name = " . SqlQuote($prod));
-                    $defaults{'target_milestone'} = FetchOneColumn();
+                    $defaults{'target_milestone'} = $dbh->selectrow_array(
+                        q{SELECT defaultmilestone FROM products 
+                        WHERE name = ?}, undef, $prod);
+;
                 }
             }
             else {
@@ -504,11 +505,11 @@ sub CheckCanChangeField {
     # $reporterid, $ownerid and $qacontactid are caches of the results of
     # the call to find out the assignee, reporter and qacontact of the current bug.
     if ($lastbugid != $bugid) {
-        SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs
-                 WHERE bug_id = $bugid");
-        ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
+        ($reporterid, $ownerid, $qacontactid) = $dbh->selectrow_array(
+            q{SELECT reporter, assigned_to, qa_contact FROM bugs
+            WHERE bug_id = ? }, undef, $bugid);
         $lastbugid = $bugid;
-    }    
+    }
     # END DO_NOT_CHANGE
 
     # Allow the assignee to change anything else.
@@ -574,8 +575,8 @@ sub DuplicateUserConfirm {
     my $dupe = $cgi->param('id');
     my $original = $cgi->param('dup_id');
     
-    SendSQL("SELECT reporter FROM bugs WHERE bug_id = $dupe");
-    my $reporter = FetchOneColumn();
+    my $reporter = $dbh->selectrow_array(
+        q{SELECT reporter FROM bugs WHERE bug_id = ?}, undef, $dupe);
     my $rep_user = Bugzilla::User->new($reporter);
 
     if ($rep_user->can_see_bug($original)) {
@@ -583,8 +584,9 @@ sub DuplicateUserConfirm {
         return;
     }
 
-    SendSQL("SELECT cclist_accessible FROM bugs WHERE bug_id = $original");
-    $vars->{'cclist_accessible'} = FetchOneColumn();
+    $vars->{'cclist_accessible'} = $dbh->selectrow_array(
+        q{SELECT cclist_accessible FROM bugs WHERE bug_id = ?},
+        undef, $original);
     
     # Once in this part of the subroutine, the user has not been auto-validated
     # and the duper has not chosen whether or not to add to CC list, so let's
@@ -734,8 +736,9 @@ if ($action eq Param('move-button-text')) {
 }
 
 
-$::query = "update bugs\nset";
+$::query = "UPDATE bugs SET";
 $::comma = "";
+my @values;
 umask(0);
 
 sub _remove_remaining_time {
@@ -778,7 +781,7 @@ sub ChangeStatus {
             # When reopening, we need to check whether the bug was ever
             # confirmed or not
             $::query .= "bug_status = CASE WHEN everconfirmed = 1 THEN " .
-                         SqlQuote($str) . " ELSE 'UNCONFIRMED' END";
+                        $dbh->quote($str) . " ELSE 'UNCONFIRMED' END";
         } elsif (is_open_state($str)) {
             # Note that we cannot combine this with the above branch - here we
             # need to check if bugs.bug_status is open, (since we don't want to
@@ -805,12 +808,12 @@ sub ChangeStatus {
             # This also relies on the fact that confirming and accepting have
             # already called DoConfirm before this is called
 
-            my @open_state = map(SqlQuote($_), BUG_STATE_OPEN);
+            my @open_state = map($dbh->quote($_), BUG_STATE_OPEN);
             my $open_state = join(", ", @open_state);
 
             # If we are changing everconfirmed to 1, we have to take this change
             # into account and the new bug status is given by $str.
-            my $cond = SqlQuote($str);
+            my $cond = $dbh->quote($str);
             # If we are not setting everconfirmed, the new bug status depends on
             # the actual value of everconfirmed, which is bug-specific.
             unless ($everconfirmed) {
@@ -820,7 +823,8 @@ sub ChangeStatus {
             $::query .= "bug_status = CASE WHEN bug_status IN($open_state) THEN " .
                                       $cond . " ELSE bug_status END";
         } else {
-            $::query .= "bug_status = " . SqlQuote($str);
+            $::query .= "bug_status = ?";
+            push(@values, $str);
         }
         # If bugs are reassigned and their status is "UNCONFIRMED", they
         # should keep this status instead of "NEW" as suggested here.
@@ -835,7 +839,9 @@ sub ChangeResolution {
         || $str ne $cgi->param('dontchange'))
     {
         DoComma();
-        $::query .= "resolution = " . SqlQuote($str);
+        $::query .= "resolution = ?";
+        trick_taint($str);
+        push(@values, $str);
         # We define this variable here so that customized installations
         # may set rules based on the resolution in CheckCanChangeField.
         $cgi->param('resolution', $str);
@@ -852,10 +858,11 @@ sub ChangeResolution {
 my @groupAdd = ();
 my @groupDel = ();
 
-SendSQL("SELECT groups.id, isactive FROM groups " .
-        "WHERE id IN($grouplist) " .
-        "AND isbuggroup = 1");
-while (my ($b, $isactive) = FetchSQLData()) {
+my $groups = $dbh->selectall_arrayref(
+    qq{SELECT groups.id, isactive FROM groups
+        WHERE id IN($grouplist) AND isbuggroup = 1});
+foreach my $group (@$groups) {
+    my ($b, $isactive) = @$group;
     # The multiple change page may not show all groups a bug is in
     # (eg product groups when listing more than one product)
     # Only consider groups which were present on the form. We can't do this
@@ -878,7 +885,10 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
         if (!$cgi->param('dontchange')
             || $cgi->param($field) ne $cgi->param('dontchange')) {
             DoComma();
-            $::query .= "$field = " . SqlQuote(trim($cgi->param($field)));
+            $::query .= "$field = ?";
+            my $value = trim($cgi->param($field));
+            trick_taint($value);
+            push(@values, $value);
         }
     }
 }
@@ -890,7 +900,10 @@ foreach my $field (Bugzilla->custom_field_names) {
             || $cgi->param($field) ne $cgi->param('dontchange')))
     {
         DoComma();
-        $::query .= "$field = " . SqlQuote(trim($cgi->param($field)));
+        $::query .= "$field = ?";
+        my $value = $cgi->param($field);
+        trick_taint($value);
+        push(@values, $value);
     }
 }
 
@@ -905,9 +918,10 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
                      {product => $cgi->param('product')});
       
     DoComma();
+    $::query .= "product_id = ?";
+    push(@values, $prod_id);
     @newprod_ids = ($prod_id);
     $prod_changed = 1;
-    $::query .= "product_id = $prod_id";
 } else {
     @newprod_ids = @{$dbh->selectcol_arrayref("SELECT DISTINCT product_id
                                                FROM bugs 
@@ -932,7 +946,8 @@ if ($cgi->param('component') ne $cgi->param('dontchange')) {
     
     $cgi->param('component_id', $comp_id);
     DoComma();
-    $::query .= "component_id = $comp_id";
+    $::query .= "component_id = ?";
+    push(@values, $comp_id);
 }
 
 # If this installation uses bug aliases, and the user is changing the alias,
@@ -949,12 +964,12 @@ if (Param("usebugaliases") && defined $cgi->param('alias')) {
         # Otherwise, if the field contains a value, update the record 
         # with that value.
         DoComma();
-        $::query .= "alias = ";
         if ($alias ne "") {
             ValidateBugAlias($alias, $idlist[0]);
-            $::query .= $dbh->quote($alias);
+            $::query .= "alias = ?";
+            push(@values, $alias);
         } else {
-            $::query .= "NULL";
+            $::query .= "alias = NULL";
         }
     }
 }
@@ -965,20 +980,21 @@ if (Param("usebugaliases") && defined $cgi->param('alias')) {
 # and cc list can see the bug even if they are not members of all groups 
 # to which the bug is restricted.
 if (defined $cgi->param('id')) {
-    SendSQL("SELECT group_id FROM bug_group_map WHERE bug_id = " .
-            $cgi->param('id'));
-    my ($havegroup) = FetchSQLData();
+    my ($havegroup) = $dbh->selectrow_array(
+        q{SELECT group_id FROM bug_group_map WHERE bug_id = ?},
+        undef, $cgi->param('id'));
     if ( $havegroup ) {
         DoComma();
         $cgi->param('reporter_accessible',
                     $cgi->param('reporter_accessible') ? '1' : '0');
-        $::query .= 'reporter_accessible = ' .
-                    $cgi->param('reporter_accessible');
+        $::query .= "reporter_accessible = ?";
+        push(@values, $cgi->param('reporter_accessible'));
 
         DoComma();
         $cgi->param('cclist_accessible',
                     $cgi->param('cclist_accessible') ? '1' : '0');
-        $::query .= 'cclist_accessible = ' . $cgi->param('cclist_accessible');
+        $::query .= "cclist_accessible = ?";
+        push(@values, $cgi->param('cclist_accessible'));
     }
 }
 
@@ -1090,7 +1106,8 @@ if (defined $cgi->param('qa_contact')
         $qacontact_checked = 1;
         DoComma();
         if($qacontact) {
-            $::query .= "qa_contact = $qacontact";
+            $::query .= "qa_contact = ?";
+            push(@values, $qacontact);
         }
         else {
             $::query .= "qa_contact = NULL";
@@ -1174,8 +1191,9 @@ SWITCH: for ($cgi->param('knob')) {
         } else {
             ThrowUserError("reassign_to_empty");
         }
+        $::query .= "assigned_to = ?";
+        push(@values, $assignee);
         $assignee_checked = 1;
-        $::query .= "assigned_to = $assignee";
         last SWITCH;
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
@@ -1300,21 +1318,25 @@ if (UserInGroup(Param('timetrackinggroup'))) {
             my $er_time = trim($cgi->param($field));
             if ($er_time ne $cgi->param('dontchange')) {
                 DoComma();
-                $::query .= "$field = " . SqlQuote($er_time);
+                $::query .= "$field = ?";
+                trick_taint($er_time);
+                push(@values, $er_time);
             }
         }
     }
 
     if (defined $cgi->param('deadline')) {
         DoComma();
-        $::query .= "deadline = ";
         if ($cgi->param('deadline')) {
             validate_date($cgi->param('deadline'))
               || ThrowUserError('illegal_date', {date => $cgi->param('deadline'),
                                                  format => 'YYYY-MM-DD'});
-            $::query .= SqlQuote($cgi->param('deadline'));
+            $::query .= "deadline = ?";
+            my $deadline = $cgi->param('deadline');
+            trick_taint($deadline);
+            push(@values, $deadline);
         } else {
-            $::query .= "NULL" ;
+            $::query .= "deadline = NULL";
         }
     }
 }
@@ -1325,9 +1347,9 @@ my $delta_ts;
 
 sub SnapShotBug {
     my ($id) = (@_);
-    SendSQL("SELECT delta_ts, " . join(',', @::log_columns) .
-            " FROM bugs WHERE bug_id = $id");
-    my @row = FetchSQLData();
+    my @row = $dbh->selectrow_array(q{SELECT delta_ts, } .
+                join(',', @::log_columns).q{ FROM bugs WHERE bug_id = ?},
+                undef, $id);
     $delta_ts = shift @row;
 
     return @row;
@@ -1336,12 +1358,10 @@ sub SnapShotBug {
 
 sub SnapShotDeps {
     my ($i, $target, $me) = (@_);
-    SendSQL("SELECT $target FROM dependencies WHERE $me = $i ORDER BY $target");
-    my @list;
-    while (MoreSQLData()) {
-        push(@list, FetchOneColumn());
-    }
-    return join(',', @list);
+    my $list = $dbh->selectcol_arrayref(qq{SELECT $target FROM dependencies
+                                        WHERE $me = ? ORDER BY $target},
+                                        undef, $i);
+    return join(',', @$list);
 }
 
 
@@ -1350,14 +1370,14 @@ my $bug_changed;
 
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me, $timestamp) = (@_);
-    my $sql_timestamp = SqlQuote($timestamp);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
         my ($removed, $added) = diff_strings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added,$whoid,$timestamp);
         # update timestamp on target bug so midairs will be triggered
-        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $i");
+        $dbh->do(q{UPDATE bugs SET delta_ts = ? WHERE bug_id = ?},
+                 undef, $timestamp, $i);
         $bug_changed = 1;
         return 1;
     }
@@ -1451,14 +1471,16 @@ foreach my $id (@idlist) {
                                            FROM components
                                            WHERE components.id = ?',
                                            undef, $new_comp_id);
-        $query .= ", assigned_to = $assignee";
+        $query .= ", assigned_to = ?";
+        push(@values, $assignee);
         if (Param("useqacontact")) {
             $qacontact = $dbh->selectrow_array('SELECT initialqacontact
                                                 FROM components
                                                 WHERE components.id = ?',
                                                 undef, $new_comp_id);
             if ($qacontact) {
-                $query .= ", qa_contact = $qacontact";
+                $query .= ", qa_contact = ?";
+                push(@values, $qacontact);
             }
             else {
                 $query .= ", qa_contact = NULL";
@@ -1617,9 +1639,7 @@ foreach my $id (@idlist) {
     # Start updating the relevant database entries
     #
 
-    SendSQL("select now()");
-    $timestamp = FetchOneColumn();
-    my $sql_timestamp = SqlQuote($timestamp);
+    $timestamp = $dbh->selectrow_array(q{SELECT NOW()});
 
     my $work_time;
     if (UserInGroup(Param('timetrackinggroup'))) {
@@ -1649,46 +1669,51 @@ foreach my $id (@idlist) {
         # For delete, we just delete things on the list.
         my $changed = 0;
         if ($keywordaction eq "makeexact") {
-            SendSQL("DELETE FROM keywords WHERE bug_id = $id");
+            $dbh->do(q{DELETE FROM keywords WHERE bug_id = ?},
+                     undef, $id);
             $changed = 1;
         }
+        my $sth_delete = $dbh->prepare(q{DELETE FROM keywords
+                                               WHERE bug_id = ?
+                                                 AND keywordid = ?});
+        my $sth_insert =
+            $dbh->prepare(q{INSERT INTO keywords (bug_id, keywordid)
+                                 VALUES (?, ?)});
         foreach my $keyword (@keywordlist) {
             if ($keywordaction ne "makeexact") {
-                SendSQL("DELETE FROM keywords
-                         WHERE bug_id = $id AND keywordid = $keyword");
+                $sth_delete->execute($id, $keyword);
                 $changed = 1;
             }
             if ($keywordaction ne "delete") {
-                SendSQL("INSERT INTO keywords 
-                         (bug_id, keywordid) VALUES ($id, $keyword)");
+                $sth_insert->execute($id, $keyword);
                 $changed = 1;
             }
         }
         if ($changed) {
-            SendSQL("SELECT keyworddefs.name 
-                     FROM keyworddefs INNER JOIN keywords
-                       ON keyworddefs.id = keywords.keywordid
-                     WHERE keywords.bug_id = $id
-                     ORDER BY keyworddefs.name");
-            my @list;
-            while (MoreSQLData()) {
-                push(@list, FetchOneColumn());
-            }
+            my $list = $dbh->selectcol_arrayref(
+                q{SELECT keyworddefs.name
+                    FROM keyworddefs
+              INNER JOIN keywords 
+                      ON keyworddefs.id = keywords.keywordid
+                   WHERE keywords.bug_id = ?
+                ORDER BY keyworddefs.name},
+                undef, $id);
             $dbh->do("UPDATE bugs SET keywords = ? WHERE bug_id = ?",
-                     undef, join(', ', @list), $id);
+                     undef, join(', ', @$list), $id);
         }
     }
-    $query .= " where bug_id = $id";
-
+    $query .= " WHERE bug_id = ?";
+    push(@values, $id);
+    
     if ($::comma ne "") {
-        SendSQL($query);
+        $dbh->do($query, undef, @values);
     }
 
     # Check for duplicates if the bug is [re]open or its resolution is changed.
-    SendSQL("SELECT resolution FROM bugs WHERE bug_id = $id");
-    my $resolution = FetchOneColumn();
+    my $resolution = $dbh->selectrow_array(
+        q{SELECT resolution FROM bugs WHERE bug_id = ?}, undef, $id);
     if ($resolution ne 'DUPLICATE') {
-        SendSQL("DELETE FROM duplicates WHERE dupe = $id");
+        $dbh->do(q{DELETE FROM duplicates WHERE dupe = ?}, undef, $id);
     }
 
     my $newproduct_id = $oldhash{'product_id'};
@@ -1698,12 +1723,16 @@ foreach my $id (@idlist) {
 
     my %groupsrequired = ();
     my %groupsforbidden = ();
-    SendSQL("SELECT id, membercontrol 
-             FROM groups LEFT JOIN group_control_map
-             ON id = group_id
-             AND product_id = $newproduct_id WHERE isactive != 0");
-    while (MoreSQLData()) {
-        my ($group, $control) = FetchSQLData();
+    my $group_controls =
+        $dbh->selectall_arrayref(q{SELECT id, membercontrol
+                                     FROM groups
+                                LEFT JOIN group_control_map
+                                       ON id = group_id
+                                      AND product_id = ?
+                                    WHERE isactive != 0},
+        undef, $newproduct_id);
+    foreach my $group_control (@$group_controls) {
+        my ($group, $control) = @$group_control;
         $control ||= 0;
         unless ($control > &::CONTROLMAPNA)  {
             $groupsforbidden{$group} = 1;
@@ -1715,25 +1744,27 @@ foreach my $id (@idlist) {
 
     my @groupAddNames = ();
     my @groupAddNamesAll = ();
+    my $sth = $dbh->prepare(q{INSERT INTO bug_group_map (bug_id, group_id)
+                                   VALUES (?, ?)});
     foreach my $grouptoadd (@groupAdd, keys %groupsrequired) {
         next if $groupsforbidden{$grouptoadd};
         push(@groupAddNamesAll, GroupIdToName($grouptoadd));
         if (!BugInGroupId($id, $grouptoadd)) {
             push(@groupAddNames, GroupIdToName($grouptoadd));
-            SendSQL("INSERT INTO bug_group_map (bug_id, group_id) 
-                     VALUES ($id, $grouptoadd)");
+            $sth->execute($id, $grouptoadd);
         }
     }
     my @groupDelNames = ();
     my @groupDelNamesAll = ();
+    $sth = $dbh->prepare(q{DELETE FROM bug_group_map
+                                 WHERE bug_id = ? AND group_id = ?});
     foreach my $grouptodel (@groupDel, keys %groupsforbidden) {
         push(@groupDelNamesAll, GroupIdToName($grouptodel));
         next if $groupsrequired{$grouptodel};
         if (BugInGroupId($id, $grouptodel)) {
             push(@groupDelNames, GroupIdToName($grouptodel));
         }
-        SendSQL("DELETE FROM bug_group_map 
-                 WHERE bug_id = $id AND group_id = $grouptodel");
+        $sth->execute($id, $grouptodel);
     }
 
     my $groupDelNames = join(',', @groupDelNames);
@@ -1752,25 +1783,30 @@ foreach my $id (@idlist) {
         || defined $cgi->param('masscc')) {
         # Get the current CC list for this bug
         my %oncc;
-        SendSQL("SELECT who FROM cc WHERE bug_id = $id");
-        while (MoreSQLData()) {
-            $oncc{FetchOneColumn()} = 1;
+        my $cc_list = $dbh->selectcol_arrayref(
+            q{SELECT who FROM cc WHERE bug_id = ?}, undef, $id);
+        foreach my $who (@$cc_list) {
+            $oncc{$who} = 1;
         }
 
         my (@added, @removed) = ();
- 
+
+        my $sth_insert = $dbh->prepare(q{INSERT INTO cc (bug_id, who)
+                                              VALUES (?, ?)});
         foreach my $pid (keys %cc_add) {
             # If this person isn't already on the cc list, add them
             if (! $oncc{$pid}) {
-                SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $pid)");
+                $sth_insert->execute($id, $pid);
                 push (@added, $cc_add{$pid});
                 $oncc{$pid} = 1;
             }
         }
+        my $sth_delete = $dbh->prepare(q{DELETE FROM cc
+                                          WHERE bug_id = ? AND who = ?});
         foreach my $pid (keys %cc_remove) {
             # If the person is on the cc list, remove them
             if ($oncc{$pid}) {
-                SendSQL("DELETE FROM cc WHERE bug_id = $id AND who = $pid");
+                $sth_delete->execute($id, $pid);
                 push (@removed, $cc_remove{$pid});
                 $oncc{$pid} = 0;
             }
@@ -1826,9 +1862,13 @@ foreach my $id (@idlist) {
             my @keys = keys(%snapshot);
             if (@keys) {
                 my $oldsnap = SnapShotDeps($id, $target, $me);
-                SendSQL("delete from dependencies where $me = $id");
+                $dbh->do(qq{DELETE FROM dependencies WHERE $me = ?},
+                         undef, $id);
+                my $sth =
+                    $dbh->prepare(qq{INSERT INTO dependencies ($me, $target)
+                                          VALUES (?, ?)});
                 foreach my $i (@{$deps{$target}}) {
-                    SendSQL("insert into dependencies ($me, $target) values ($id, $i)");
+                    $sth->execute($id, $i);
                 }
                 foreach my $k (@keys) {
                     LogDependencyActivity($k, $snapshot{$k}, $me, $target, $timestamp);
@@ -1858,22 +1898,24 @@ foreach my $id (@idlist) {
         # - The control map value for the new product and this group
         # - Is the user in this group?
         # - Is the bug in this group?
-        SendSQL("SELECT DISTINCT groups.id, isactive, " .
-                "oldcontrolmap.membercontrol, newcontrolmap.membercontrol, " .
-                "CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END, " .
-                "CASE WHEN bug_group_map.group_id IS NOT NULL " .
-                "THEN 1 ELSE 0 END " .
-                "FROM groups " .
-                "LEFT JOIN group_control_map AS oldcontrolmap " .
-                "ON oldcontrolmap.group_id = groups.id " .
-                "AND oldcontrolmap.product_id = " . $oldhash{'product_id'} .
-                " LEFT JOIN group_control_map AS newcontrolmap " .
-                "ON newcontrolmap.group_id = groups.id " .
-                "AND newcontrolmap.product_id = $newproduct_id " .
-                "LEFT JOIN bug_group_map " .
-                "ON bug_group_map.group_id = groups.id " .
-                "AND bug_group_map.bug_id = $id "
-            );
+        my $groups = $dbh->selectall_arrayref(
+            qq{SELECT DISTINCT groups.id, isactive,
+                               oldcontrolmap.membercontrol,
+                               newcontrolmap.membercontrol,
+                      CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END,
+                      CASE WHEN bug_group_map.group_id IS NOT NULL
+                                THEN 1 ELSE 0 END
+                 FROM groups
+            LEFT JOIN group_control_map AS oldcontrolmap
+                   ON oldcontrolmap.group_id = groups.id
+                  AND oldcontrolmap.product_id = ?
+            LEFT JOIN group_control_map AS newcontrolmap
+                   ON newcontrolmap.group_id = groups.id
+                  AND newcontrolmap.product_id = ?
+            LEFT JOIN bug_group_map
+                   ON bug_group_map.group_id = groups.id
+                  AND bug_group_map.bug_id = ?},
+            undef, $oldhash{'product_id'}, $newproduct_id, $id);
         my @groupstoremove = ();
         my @groupstoadd = ();
         my @defaultstoremove = ();
@@ -1881,9 +1923,9 @@ foreach my $id (@idlist) {
         my @allgroups = ();
         my $buginanydefault = 0;
         my $buginanychangingdefault = 0;
-        while (MoreSQLData()) {
-            my ($groupid, $isactive, $oldcontrol, $newcontrol, 
-            $useringroup, $bugingroup) = FetchSQLData();
+        foreach my $group (@$groups) {
+            my ($groupid, $isactive, $oldcontrol, $newcontrol,
+                   $useringroup, $bugingroup) = @$group;
             # An undefined newcontrol is none.
             $newcontrol = CONTROLMAPNA unless $newcontrol;
             $oldcontrol = CONTROLMAPNA unless $oldcontrol;
@@ -1932,17 +1974,21 @@ foreach my $id (@idlist) {
         # Now actually update the bug_group_map.
         my @DefGroupsAdded = ();
         my @DefGroupsRemoved = ();
+        my $sth_insert =
+            $dbh->prepare(q{INSERT INTO bug_group_map (bug_id, group_id)
+                                 VALUES (?, ?)});
+        my $sth_delete = $dbh->prepare(q{DELETE FROM bug_group_map
+                                               WHERE bug_id = ?
+                                                 AND group_id = ?});
         foreach my $groupid (@allgroups) {
             my $thisadd = grep( ($_ == $groupid), @groupstoadd);
             my $thisdel = grep( ($_ == $groupid), @groupstoremove);
             if ($thisadd) {
                 push(@DefGroupsAdded, GroupIdToName($groupid));
-                SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES " .
-                        "($id, $groupid)");
+                $sth_insert->execute($id, $groupid);
             } elsif ($thisdel) {
                 push(@DefGroupsRemoved, GroupIdToName($groupid));
-                SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id " .
-                        "AND group_id = $groupid");
+                $sth_delete->execute($id, $groupid);
             }
         }
         if ((@DefGroupsAdded) || (@DefGroupsRemoved)) {
@@ -2043,7 +2089,8 @@ foreach my $id (@idlist) {
     Bugzilla::Flag::process($id, undef, $timestamp, $cgi);
 
     if ($bug_changed) {
-        SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp WHERE bug_id = $id");
+        $dbh->do(q{UPDATE bugs SET delta_ts = ? WHERE bug_id = ?},
+                 undef, $timestamp, $id);
     }
     $dbh->bz_unlock_tables();
 
@@ -2059,23 +2106,22 @@ foreach my $id (@idlist) {
                   undef, $cgi->param('id'));
 
         # Check to see if Reporter of this bug is reporter of Dupe 
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
-                $cgi->param('id'));
-        my $reporter = FetchOneColumn();
-        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " .
-                "$duplicate and reporter = $reporter");
-        my $isreporter = FetchOneColumn();
-        SendSQL("SELECT who FROM cc WHERE bug_id = " .
-                " $duplicate and who = $reporter");
-        my $isoncc = FetchOneColumn();
+        my $reporter = $dbh->selectrow_array(
+            q{SELECT reporter FROM bugs WHERE bug_id = ?}, undef, $id);
+        my $isreporter = $dbh->selectrow_array(
+            q{SELECT reporter FROM bugs WHERE bug_id = ? AND reporter = ?},
+            undef, $duplicate, $reporter);
+        my $isoncc = $dbh->selectrow_array(q{SELECT who FROM cc
+                                           WHERE bug_id = ? AND who = ?},
+                                           undef, $duplicate, $reporter);
         unless ($isreporter || $isoncc
                 || !$cgi->param('confirm_add_duplicate')) {
             # The reporter is oblivious to the existence of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter),
                              $whoid,$timestamp);
-            SendSQL("INSERT INTO cc (who, bug_id) " .
-                    "VALUES ($reporter, $duplicate)");
+            $dbh->do(q{INSERT INTO cc (who, bug_id) VALUES (?, ?)},
+                     undef, $reporter, $duplicate);
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 
         AppendComment($duplicate, $whoid,
@@ -2083,8 +2129,8 @@ foreach my $id (@idlist) {
                       " has been marked as a duplicate of this bug. ***",
                       0, $timestamp);
 
-        SendSQL("INSERT INTO duplicates VALUES ($duplicate, " .
-                $cgi->param('id') . ")");
+        $dbh->do(q{INSERT INTO duplicates VALUES (?, ?)}, undef,
+                 $duplicate, $cgi->param('id'));
     }
 
     # Now all changes to the DB have been made. It's time to email
