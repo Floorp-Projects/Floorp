@@ -109,7 +109,9 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-LIBS		= $(DIST)/lib/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX)
+LIBS		= \
+	$(DEPTH)/profile/dirserviceprovider/standalone/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 ifdef NS_TRACE_MALLOC
 LIBS		+= $(DIST)/lib/$(LIB_PREFIX)tracemalloc.$(LIB_SUFFIX)
@@ -121,12 +123,12 @@ LIBS		+= \
 
 ifdef GRE_BUILD
 LIBS += \
-		 $(DIST)/lib/$(LIB_PREFIX)embed_base_standalone.$(LIB_SUFFIX) \
-		 $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		 $(DEPTH)/embedding/base/standalone/$(LIB_PREFIX)embed_base_standalone.$(LIB_SUFFIX) \
+		 $(XPCOM_STANDALONE_GLUE_LDOPTS) \
 		 $(NULL)
 else
 LIBS += \
-		 $(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+		 $(DEPTH)/embedding/base/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 		 $(XPCOM_LIBS) \
 		 $(NULL)
 ifdef BUILD_STATIC_LIBS
