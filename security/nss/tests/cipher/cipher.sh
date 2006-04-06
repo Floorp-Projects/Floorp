@@ -75,7 +75,7 @@ cipher_init()
 
   mkdir -p ${CIPHERDIR}
 
-  cd ${CIPHERTESTDIR}
+  cd ${CIPHERDIR}
   P_CIPHER=.
   if [ -n "${MULTIACCESS_DBM}" ]; then
     P_CIPHER="multiaccess:${D_CIPHER}"
@@ -101,8 +101,8 @@ cipher_main()
              outOff=0
              while [ $outOff -lt 8 ]
              do
-                 echo "bltest -T -m $PARAM -d . -1 $inOff -2 $outOff"
-                 bltest -T -m $PARAM -d . -1 $inOff -2 $outOff
+                 echo "bltest -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff"
+                 bltest -T -m $PARAM -d $CIPHERTESTDIR -1 $inOff -2 $outOff
                  if [ $? -ne 0 ]; then
                      failedStr="$failedStr[$inOff:$outOff]"
                  fi
