@@ -1008,6 +1008,17 @@ function DoBrowserRSS(sKey) {
   }  
 }
 
+function DoBrowserGM(xmlRef) {
+  
+  try { 
+      
+    gBrowser.selectedTab = gBrowser.addTab('chrome://minimo/content/moduleview/moduleload.xhtml?url='+xmlRef);
+    
+    browserInit(gBrowser.selectedTab);
+  } catch (e) {
+    
+  }  
+}
 
 /* Toolbar specific code - to be removed from here */ 
 
@@ -1244,6 +1255,11 @@ function URLBarEntered()
 
     if(gURLBar.value.substring(0,4)=="rss:") {
       DoBrowserRSS(gURLBar.value.split("rss:")[1]);
+      return;
+    }
+    
+    if(gURLBar.value.substring(0,3)=="gm:") {
+      DoBrowserGM(gURLBar.value.split("gm:")[1]);
       return;
     }
     
