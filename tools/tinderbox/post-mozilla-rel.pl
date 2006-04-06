@@ -1289,13 +1289,16 @@ sub main {
   }
 
   if ($Settings::BuildLocales) {
-    # Check for existing mar tool.
-    my $mar_tool = "$srcdir/modules/libmar/tool/mar";
-    if (! -f $mar_tool) {
-      TinderUtils::run_shell_command "make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar";
-      # mar tool should exist now.
+
+    # Check for existing mar tool (only on non-Aviary branches).
+    if (not $Settings::CompareLocalesAviary) {
+      my $mar_tool = "$srcdir/modules/libmar/tool/mar";
       if (! -f $mar_tool) {
-	TinderUtils::print_log "Failed to build $mar_tool\n";
+        TinderUtils::run_shell_command "make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar";
+        # mar tool should exist now.
+        if (! -f $mar_tool) {
+          TinderUtils::print_log "Failed to build $mar_tool\n";
+        }
       }
     }
 
