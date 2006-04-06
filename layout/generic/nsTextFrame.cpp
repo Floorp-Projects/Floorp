@@ -4786,7 +4786,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       PRBool found = PR_FALSE;
       PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
-      PRBool wordSelectEatSpaceAfter = tx.GetWordSelectEatSpaceAfter();
+      PRBool wordSelectEatSpaceAfter = aPos->mDirection == eDirNext && tx.GetWordSelectEatSpaceAfter();
       
       PRBool selectable;
       PRUint8 selectStyle;
@@ -4810,37 +4810,31 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
                              PR_FALSE, aPos->mIsKeyboardSelect) &&
             (aPos->mStartOffset - contentLen >= mContentOffset) ){
-            if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
+            if ((wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS){
               aPos->mContentOffset = aPos->mStartOffset - contentLen;
-              //check for whitespace next.
-              if (isWhitespace && aPos->mContentOffset <= mContentOffset)
-              {
-                keepSearching = PR_FALSE;//reached the beginning of a word
-                aPos->mEatingWS = PR_FALSE;//if no real word then
-              }
-              else{
+              keepSearching = PR_TRUE;
+              if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                aPos->mEatingWS = PR_TRUE;
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+#endif // IBMBIDI
+              while (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
+                                    &isWhitespace, PR_FALSE,
+                                    aPos->mIsKeyboardSelect)){
+                if (wordSelectEatSpaceAfter ? !isWhitespace : aPos->mEatingWS)
+                  break;
+                if (aPos->mStartOffset - contentLen <= mContentOffset)
+                  goto TryNextFrame;
+                aPos->mContentOffset -= contentLen;
+                if (wordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                  aPos->mEatingWS = PR_TRUE;
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
 #endif // IBMBIDI
-                while (isWhitespace &&
-                       tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
-                                      &isWhitespace, PR_FALSE,
-                                      aPos->mIsKeyboardSelect)){
-                  aPos->mContentOffset -= contentLen;
-                  aPos->mEatingWS = PR_TRUE;
-#ifdef IBMBIDI
-                  wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
-#endif // IBMBIDI
-                }
-                aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
-                keepSearching = aPos->mContentOffset <= mContentOffset;
-                if (!isWhitespace){
-                  if (!keepSearching)
-                    found = PR_TRUE;
-                  else
-                    aPos->mEatingWS = PR_TRUE;
-                }
               }
+              keepSearching = aPos->mContentOffset <= mContentOffset;
+              if (!keepSearching)
+                found = PR_TRUE;
             }
             else {
               aPos->mContentOffset = mContentLength + mContentOffset;
@@ -4906,7 +4900,7 @@ TryNextFrame:
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
         aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
-        if (wordSelectEatSpaceAfter && aPos->mDirection == eDirNext && aPos->mEatingWS) {
+        if (wordSelectEatSpaceAfter && aPos->mEatingWS) {
           //If we want to stop at beginning of the next word
           //GetFrameFromDirction should not return NS_ERROR_FAILURE at end of line
           aPos->mEatingWS = PR_FALSE;
