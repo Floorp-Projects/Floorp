@@ -154,15 +154,15 @@ const char js_parseFloat_str[] = "parseFloat";
 const char js_parseInt_str[]   = "parseInt";
 
 static JSFunctionSpec number_functions[] = {
-    {"isNaN",           num_isNaN,              1,0,0},
-    {"isFinite",        num_isFinite,           1,0,0},
-    {"parseFloat",      num_parseFloat,         1,0,0},
-    {"parseInt",        num_parseInt,           2,0,0},
+    {js_isNaN_str,          num_isNaN,              1,0,0},
+    {js_isFinite_str,       num_isFinite,           1,0,0},
+    {js_parseFloat_str,     num_parseFloat,         1,0,0},
+    {js_parseInt_str,       num_parseInt,           2,0,0},
     {0,0,0,0,0}
 };
 
 JSClass js_NumberClass = {
-    "Number",
+    js_Number_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
