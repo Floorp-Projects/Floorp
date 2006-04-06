@@ -60,5 +60,6 @@
 &configLocation.label;
 <label>&prefValue.label;</label>
 <textbox flex="1" id="prefvalue" onchange="prefCheckOKButton();" onkeyup="prefCheckOKButton();"/>
+<checkbox id="lockPref" label="Lock Preference"/>
 </vbox>
 </dialog>

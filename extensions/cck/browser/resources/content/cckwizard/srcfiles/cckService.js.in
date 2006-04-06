@@ -53,7 +53,7 @@ CCKService.prototype={
 ,
   // nsIObserver implementation 
   observe: function(subject, topic, data) {
-    // dump(SERVICE_NAME+" notified of "+subject+","+topic+","+data); //DDEBUG
+    //dump(SERVICE_NAME+" notified of "+subject+","+topic+","+data); //DDEBUG
     
     switch(topic) {
       case "xpcom-shutdown":
@@ -61,6 +61,9 @@ CCKService.prototype={
         break;
       case "profile-after-change":
         this.init();
+        break;
+      case "profile-before-change":
+        this.uninit();
         break;
     }
   }
@@ -70,6 +73,7 @@ CCKService.prototype={
     Components.interfaces.nsIObserverService);
     osvr.addObserver(this,"xpcom-shutdown",false);
     osvr.addObserver(this,"profile-after-change",false);
+    osvr.addObserver(this,"profile-before-change",false);
   }
 ,
   unregister: function() {
@@ -77,6 +81,7 @@ CCKService.prototype={
       Components.interfaces.nsIObserverService);
     osvr.removeObserver(this,"xpcom-shutdown");
     osvr.removeObserver(this,"profile-after-change");
+    osvr.removeObserver(this,"profile-before-change");
   }
 ,
   _inited: false
@@ -105,6 +110,7 @@ CCKService.prototype={
     }
     
     var cckinited;
+
     try {
       OrgName = bundle.GetStringFromName("OrganizationName");
       cckinited = prefbranch.getBoolPref("cck." + OrgName + ".initialized");
@@ -177,7 +183,8 @@ CCKService.prototype={
     const nsX509CertDBContractID = "@mozilla.org/security/x509certdb;1";
     var certDB = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB2);
 
-    for (var i=1; i<=5; i++) {
+    var i = 1;
+    do {
       try {
         CertName = bundle.GetStringFromName("Cert" + i);
       } catch (ex) {
@@ -201,7 +208,9 @@ CCKService.prototype={
         if (!cert.isPerm )
           certDB.addCertFromBase64(cert, "C,C,C", "");
       }
-    }
+      i++;
+    } while (CertName && CertName.length)
+
 
     var popupAllowedSites;
     try {
@@ -230,6 +239,20 @@ CCKService.prototype={
         } catch (ex) {}
       }
     }
+    
+    var i = 1;
+    do {
+      try {
+        prefName = bundle.GetStringFromName("LockPref" + i);
+      } catch (ex) {
+        prefName = "";
+      }
+      if (prefName && prefName.length) {
+        prefbranch.lockPref(prefName);
+      }
+      i++;
+    } while (prefName && prefName.length);
+  
 
     /* Only do bookmarks if we haven't been inited to avoid duplicated */
     if (!cckinited) {
@@ -280,6 +303,51 @@ CCKService.prototype={
       prefbranch.setBoolPref("cck." + OrgName + ".initialized", true);
     }
   }
+,
+  uninit: function() {
+    var prefbranch;
+    try {
+      prefbranch=Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    } catch (ex) {
+      return;
+    }
+    var sbs;
+    var bundle;
+    try {
+      sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService	);
+      bundle = sbs.createBundle("chrome://cck/content/cck.properties");
+    } catch (ex) {
+      return;
+    }  
+
+    id = bundle.GetStringFromName("id");
+
+    var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                         .getService(Components.interfaces.nsIRDFService);
+    var extensionDS= Components.classes["@mozilla.org/extensions/manager;1"]
+	                             .getService(Components.interfaces.nsIExtensionManager).datasource;
+    var extension = rdfs.GetResource("urn:mozilla:item:" + id);  
+
+    var opTypeArc = rdfs.GetResource("http://www.mozilla.org/2004/em-rdf#opType");
+
+    var opType = extensionDS.GetTarget(extension, opTypeArc, true);
+    opType = opType.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    if ((opType == "needs-uninstall") || (opType == "needs-uninstall")) {
+      var i = 1;
+      do {
+        try {
+          prefName = bundle.GetStringFromName("LockPref" + i);
+        } catch (ex) {
+          prefName = "";
+        }
+        if (prefName && prefName.length) {
+          prefbranch.unlockPref(prefName);
+        }
+        i++;
+      } while (prefName && prefName.length);
+    }
+  }  
 }
 
 function addBookmarks(bundle, BMSVC, prefix, folder, location)
