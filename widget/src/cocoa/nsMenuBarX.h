@@ -98,6 +98,8 @@ public:
     // |NSMenuItem|s target Objective-C objects
     static NativeMenuItemTarget* sNativeEventTarget;
     
+    static NSWindow* sEventTargetWindow;
+    
     NS_DECL_ISUPPORTS
     NS_DECL_NSICHANGEMANAGER
     NS_DECL_NSIMENUCOMMANDDISPATCHER

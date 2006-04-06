@@ -76,7 +76,7 @@ nsMenuItemX::nsMenuItemX()
 
 nsMenuItemX::~nsMenuItemX()
 {
-  [mNativeMenuItem release];
+  [mNativeMenuItem autorelease];
   mManager->Unregister(mContent);
 }
 
