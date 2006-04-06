@@ -83,9 +83,15 @@ if ($c->param("editingTestcases") &&
     $edittest->steps($c->param("steps_edit_$editid"));
     $edittest->expected_results($c->param("results_edit_$editid"));
     
-    if ($c->param("communityenabled_$editid")) {
-      $edittest->communityenabled(1);
+    if ($c->param("enabled_$editid")) {
+      $edittest->enabled(1);
+      if ($c->param("communityenabled_$editid")) {
+        $edittest->communityenabled(1);
+      } else {
+        $edittest->communityenabled(0);
+      }
     } else {
+      $edittest->enabled(0);
       $edittest->communityenabled(0);
     }
     my $r_bug_id = $c->param("regression_bug_id_$editid");
