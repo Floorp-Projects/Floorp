@@ -47,8 +47,7 @@
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToUTF8.h"
 
-
-#if 0
+#ifdef ALERT_DBG
 void DisplayLastError(const char * msg)
 {
   int flags = MB_APPLMODAL | MB_TOPMOST | MB_SETFOREGROUND;
@@ -180,6 +179,7 @@ static CsCpMap theCsCPMap[] = {
   {"us-ascii", 20127},     
   {"windows-1250", 1250},      
   {"windows-1251", 1251},      
+  {"windows-1252", 1252},      
   {"windows-1253", 1253},      
   {"windows-1254", 1254},      
   {"windows-1255", 1255},      
@@ -243,26 +243,24 @@ WinCEUConvAdapter::Convert(const char * aSrc,
     return NS_ERROR_FAILURE;
   
   int count = MultiByteToWideChar(mCodepage,
-                                  MB_PRECOMPOSED,
+                                  0,
                                   aSrc,
                                   *aSrcLength,
                                   aDest,
                                   *aDestLength);
   
-#ifdef WINCE
   if (count == 0 && GetLastError() == ERROR_INVALID_PARAMETER)
   {
     // fall back on the current system Windows "ANSI" code page
     count = MultiByteToWideChar(CP_ACP,
-                                MB_PRECOMPOSED,
+                                0,
                                 aSrc,
                                 *aSrcLength,
                                 aDest,
                                 *aDestLength);
   }
-#endif
   
-#if 0
+#ifdef ALERT_DBG
   if (count == 0)
     DisplayLastError("MultiByteToWideChar");
 #endif
@@ -287,7 +285,6 @@ WinCEUConvAdapter::GetMaxLength(const char * aSrc,
                                   NULL,
                                   NULL);
   
-#ifdef WINCE
   if (count == 0 && GetLastError() == ERROR_INVALID_PARAMETER)
   {
     // fall back on the current system Windows "ANSI" code page
@@ -299,9 +296,8 @@ WinCEUConvAdapter::GetMaxLength(const char * aSrc,
                                 NULL,
                                 NULL);
   }
-#endif
   
-#if 0  
+#ifdef ALERT_DBG  
   if (count == 0)
     DisplayLastError("MultiByteToWideChar (0)");
 #endif
@@ -329,7 +325,7 @@ WinCEUConvAdapter::Convert(const PRUnichar * aSrc,
   
   char * defaultChar = "?";
   int count = WideCharToMultiByte(mCodepage,
-                                  WC_COMPOSITECHECK | WC_SEPCHARS | WC_DEFAULTCHAR,
+                                  0,
                                   aSrc,
                                   *aSrcLength,
                                   aDest,
@@ -337,7 +333,7 @@ WinCEUConvAdapter::Convert(const PRUnichar * aSrc,
                                   defaultChar,
                                   NULL);
   
-#if 0
+#ifdef ALERT_DBG
   if (count == 0)
     DisplayLastError("WideCharToMultiByte");
 #endif
@@ -352,6 +348,7 @@ WinCEUConvAdapter::Convert(const PRUnichar * aSrc,
 NS_IMETHODIMP
 WinCEUConvAdapter::Finish(char * aDest, PRInt32 * aDestLength)
 {
+  *aDestLength = 0;
   return NS_OK;
 }
 
@@ -363,7 +360,7 @@ WinCEUConvAdapter::GetMaxLength(const PRUnichar * aSrc,
   if (mCodepage == -1)
     return NS_ERROR_FAILURE;
   
-  int count = WideCharToMultiByte(CP_ACP,
+  int count = WideCharToMultiByte(mCodepage,
                                   0,
                                   aSrc,
                                   aSrcLength,
@@ -371,7 +368,7 @@ WinCEUConvAdapter::GetMaxLength(const PRUnichar * aSrc,
                                   NULL,
                                   NULL,
                                   NULL);
-#if 0
+#ifdef ALERT_DBG
   if (count == 0)
     DisplayLastError("WideCharToMultiByte (0)");
 #endif
