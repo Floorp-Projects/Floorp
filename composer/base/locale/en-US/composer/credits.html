@@ -1,0 +1,404 @@
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Thunderbird Credits.
+#
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
+#   David Baron <dbaron@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or 
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+<html>
+  <head>
+    <title>Mozilla Thunderbird Credits</title>
+
+    <style>
+    <!--
+      * {
+        cursor: default;
+        -moz-user-select: none;
+      }
+      
+      #titleBox {
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        right: 0px;
+        bottom: auto;
+        z-index: 999;
+      }
+      
+      #footerBox {
+        position: fixed;
+        left: 0px;
+        top: auto;
+        right: 0px;
+        bottom: 0px;
+        z-index: 999;
+      }
+      
+      #creditsBox {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        overflow: hidden;
+        z-index: 1;
+        height: 275px;
+        width: 280px;
+        margin-left: 10px;
+        margin-right: 10px;
+        font-family: Arial, sans-serif;
+        font-size: medium;
+      }
+      
+      h3 {
+        font-weight: bold;
+        font-size: small;
+        text-align: center;
+        margin: 15px 0px 5px 0px;
+      }
+      
+      .creditsGroup {
+        margin-bottom: 1px;
+      }
+      
+      .credit {
+        text-align: center;
+        margin: 0px;
+      }
+      .credit > h4 {
+        margin: 0px;
+      }
+      
+      .footnote {
+        font-size: x-small;
+        text-align: justify;
+      }
+      
+      h2.title {
+        margin-bottom: 2px;
+      }
+      
+      .motto {
+        font-style: italic;
+        padding-left: 10px;
+      }
+      
+      a {
+        color: blue;
+        text-decoration: underline;
+      }
+      .minititle {
+        font-variant: small-caps;
+      }
+    --> 
+    </style>
+    
+    <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
+    <script type="application/x-javascript">
+    <!--
+    
+      var gCreditsInterval = -1;
+
+      function uninit()
+      {
+        if (gCreditsInterval > -1) 
+          clearInterval(gCreditsInterval);
+      }
+
+      function init()
+      {
+        var cb = document.getElementById("creditsBox");
+        cb.scrollTop = 0;
+        setTimeout("runCredits()", 3000);
+      }
+      
+      function runCredits()
+      {
+        gCreditsInterval = setInterval("creditsCallback()", 1);  
+      }
+      
+      function creditsCallback()
+      {
+        var cb = document.getElementById("creditsBox");
+        var newtop = cb.scrollTop + 1;
+        cb.scrollTop = newtop;
+        if (cb.scrollTop != newtop) {
+          // we're at the bottom
+          clearInterval(gCreditsInterval);
+          setTimeout(function() { cb.scrollTop = 0 }, 3000);
+        }
+      }
+    
+    //-->
+    </script>
+  </head>
+  <body onload="init();" onunload="uninit();">
+    <div id="titleBox">
+      <img src="chrome://nvu/content/about-credits.png"><br>
+      <img src="chrome://nvu/content/about-header.png">
+    </div>
+    
+    <div id="creditsBox">
+        <br>
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>
+        <div align="center">
+          <h2 class="title">N<span class="minititle">vu</span></h2>
+          <span class="motto">(pronounced N-view)</span>
+        </div>
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+
+        <div class="creditsGroup">
+          <h3>Main support</h3>
+          <div class="credit"><img src="chrome://nvu/content/linspire.gif"></div>
+        </div>
+        <br>  
+        <br>  
+        <div class="creditsGroup">
+          <h3>Engineering</h3>
+          <div class="credit"><img src="chrome://nvu/content/DI.png"></div>
+        </div>
+        <br>  
+        <br>  
+
+        <div class="creditsGroup">
+          <h3>Engineering Lead</h3>
+          <div class="credit">Daniel Glazman</div>
+                  
+          <h3>Special Thanks To</h3>
+          <div class="credit">
+            Neil Marshall<br>
+            Andrew Fedoniouk<br>
+            Neil Rashbrook<br>
+            Darin Fisher<br>
+            Doug Turner<br>
+            Philippe Goetz</br>
+            Boris Zbarsky<br>
+            Robert Accettura<br>
+            Ludovic Hirlimann<br>
+            Neil Deakin and the Mozdev Group<br>
+            Benjamin Smedberg<br>
+            R.J. Keller<br>
+            Kamal Deep Singh Sahambi<br>
+            Michael Pyne<br>
+            <em>Idefix</em> in Nvu forums<br>
+            Robert Cheramy
+          </div>
+        </div>
+
+        <div class="creditsGroup">
+          <h3>Localizations</h3>
+          <div class="credit">
+            <h4>fr-FR</h4>
+            Sébastien Desvignes<br>
+            Cédric Corazza<br>
+            Flore Allemandou<br>
+            the Frenchmozilla team
+          </div>
+          <div class="credit">
+            <h4>ru-RU</h4>
+            Alexey Gubanov<br>
+            Alexander Slovesnik<br>
+            Yury Merkulov<br>
+            Vlad Merzhevich<br>
+            Miroslav Skaldov
+          </div>
+          <div class="credit">
+            <h4>nl-NL</h4>
+            Gert-Paul van der Beek<br>
+            Marcel Herda<br>
+            Martijn Ras<br>
+            Martijn Weisbeek
+          </div>
+          <div class="credit">
+            <h4>it-IT</h4>
+            Andrea Sanavia<br>
+            Marco Ratini<br>
+            Carlo Gandolfi<br>
+            Ricardo Fusaroli<br>
+            Claudia Mongini<br>
+            MozillaItalia.org team 
+          </div>
+          <div class="credit">
+            <h4>de-DE</h4>
+            Thorsten Fritz<br>
+            Marcel Herda<br>
+            Peter Weilbacher
+          </div>
+          <div class="credit">
+            <h4>fi-FI</h4>
+            Jussi Bergström<br>
+            The Finnish Mozilla l10n Team
+          </div>
+          <div class="credit">
+            <h4>zh-TW</h4>
+            Hung-Te Lin<br>
+            Po-Chiang Chao
+          </div>
+          <div class="credit">
+            <h4>pl-PL</h4>
+            Stanis&#322;aw&#160;Ma&#322;olepszy<br>
+            Zbigniew Braniecki<br>
+            Marek St&#281;pie&#324;<br>
+            Piotr Pielach<br>
+            Piotr Komoda<br>
+            Irek Chmielowiec<br>
+            Pawe&#322; Chmielewski<br>
+            Wadim Dziedzic<br>
+            Piotr Chyli&#324;ski
+          </div>
+          <div class="credit">
+            <h4>jp-JP</h4>
+            &#12418;&#12392;&#12402;&#12371;
+          </div>
+          <div class="credit">
+            <h4>hu-HU</h4>
+            Tímár András<br>
+            Gazdag András
+          </div>
+          <div class="credit">
+            <h4>es-ES</h4>
+            The NAVE Project
+          </div>
+          <div class="credit">
+            <h4>ca-AD</h4>
+            Gerard Farràs i Ballabriga<br>
+            Softcatala
+          </div>
+          <div class="credit">
+            <h4>cs-CZ</h4>
+            Pavel Petric<br>
+            Pavel Cvrcek<br>
+            Adam Hauner
+          </div>
+          <div class="credit">
+            <h4>da-DK</h4>
+            Kim Ludvigsen<br>
+            Det danske Mozilla-team
+          </div>
+        </div>
+        <div class="creditsGroup">
+          <h3>Brand Identity</h3>
+          <div class="credit">Ingolfur Haraldsson</div>
+          
+          <h3>Web Design</h3>
+          <div class="credit">Ingolfur Haraldsson</div>
+        </div>
+
+        <div class="creditsGroup">        
+          <h3>Quality Assurance</h3>
+          <div class="credit">Georgi Damyanov<br>
+          Mark Sepeda</div>
+
+          <h3>Special Thanks To</h3>
+          <div class="credit">Linspire Insiders</div>
+        </div>
+
+          <h3>Build and Release</h3>
+          <div class="credit">
+            Daniel Glazman<br>
+            Jeremy Norris<br>
+            Brian Thomason
+          </div>
+          
+        <div class="creditsGroup">
+          <h3>Project Management</h3>
+          <div class="credit">
+            Tom Welch<br>
+            Daniel Glazman<br>
+          </div>
+            
+          <h3>Marketing Lead</h3>
+          <div class="credit">Tom Welch</div>
+        </div>
+        
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <p align="center">Based on Mozilla Firefox 1.0
+        <p align="center">Powered by Gecko&trade;
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        <br>  
+        
+        <p class="footnote">
+          Mozilla is Copyright &copy;1998-2004 by its contributors, 
+          according to terms set out in the Mozilla Public License and Netscape 
+          Public License. All Rights Reserved. For full Mozilla credits, type
+          "about:credits" into Mozilla's Location bar.</p>
+
+        <p class="footnote">
+          Portions of this software are Copyright &copy;1994 The Regents of the 
+          University of California. All Rights Reserved.</p>
+
+        <p class="footnote">
+          This software may contain portions that are Copyright &copy;1998-2004 
+          SupportSoft, Inc. All Rights Reserved.</p>
+
+        <p class="footnote">
+          <small>U.S. GOVERNMENT END USERS. The Software is a "commercial item," 
+          as that term is defined in 48 C.F.R. 2.101 (Oct. 1995), consisting of 
+          "commercial computer software" and "commercial computer software 
+          documentation," as such terms are used in 48 C.F.R. 12.212 (Sept. 1995). 
+          Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 
+          227.7202-4 (June 1995), all U.S. Government End Users acquire the 
+          Software with only those rights set forth herein.</small></p>
+
+        <br>  
+        <br>  
+        <br>  
+    </div>    
+    
+    <div id="footerBox">
+      <img src="chrome://nvu/content/about-footer.png">
+    </div>
+
+  </body>
+</html>
+
