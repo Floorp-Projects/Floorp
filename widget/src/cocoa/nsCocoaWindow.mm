@@ -38,6 +38,7 @@
 
 #include "nsCocoaWindow.h"
 
+#include "nsCOMPtr.h"
 #include "nsIServiceManager.h"    // for drag and drop
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
@@ -48,7 +49,12 @@
 #include "nsGUIEvent.h"
 #include "nsMacResources.h"
 #include "nsIRollupListener.h"
-#import  "nsChildView.h"
+#include  "nsChildView.h"
+#include "nsIAppShell.h"
+#include "nsIAppShellService.h"
+#include "nsIBaseWindow.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIXULWindow.h"
 
 #include "nsIEventQueueService.h"
 
@@ -58,6 +64,11 @@ static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // externs defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
+
+#define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
+
+// call getHiddenWindowNativeMenu, don't use this directly
+static nsIMenuBar* gHiddenWindowMenuBar = nsnull;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
@@ -139,6 +150,48 @@ nsCocoaWindow::~nsCocoaWindow()
     [mWindow autorelease];
     [mDelegate autorelease];
   }
+}
+
+
+static nsIMenuBar* GetHiddenWindowMenuBar()
+{
+  if (gHiddenWindowMenuBar)
+    return gHiddenWindowMenuBar;
+  
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+  if (!appShell) {
+    NS_WARNING("Couldn't get AppShellService in order to get hidden window ref");
+    return NULL;
+  }
+  
+  nsCOMPtr<nsIXULWindow> hiddenWindow;
+  appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+  if (!hiddenWindow) {
+    NS_WARNING("Couldn't get hidden window from appshell");
+    return NULL;
+  }
+  
+  nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
+  baseHiddenWindow = do_GetInterface(hiddenWindow);
+  if (!baseHiddenWindow) {
+    NS_WARNING("Couldn't get nsIBaseWindow from hidden window (nsIXULWindow)");
+    return NULL;
+  }
+  
+  nsCOMPtr<nsIWidget> hiddenWindowWidget;
+  if (NS_FAILED(baseHiddenWindow->GetMainWidget(getter_AddRefs(hiddenWindowWidget)))) {
+    NS_WARNING("Couldn't get nsIWidget from hidden window (nsIBaseWindow)");
+    return NULL;
+  }
+  
+  nsIWidget* hiddenWindowWidgetNoCOMPtr = hiddenWindowWidget;
+  nsIMenuBar* geckoMenuBar = NS_STATIC_CAST(nsCocoaWindow*, hiddenWindowWidgetNoCOMPtr)->GetMenuBar();  
+  
+  if (geckoMenuBar) {
+    gHiddenWindowMenuBar = geckoMenuBar;
+  }
+  
+  return gHiddenWindowMenuBar;
 }
 
 
@@ -397,14 +450,16 @@ nsCocoaWindow::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
-    if (bState)
-        [mWindow orderFront:NULL];
-    else
-        [mWindow orderOut:NULL];
-    
-    mVisible = bState;
-
-    return NS_OK;
+  if (bState) {
+    [mWindow orderFront:NULL];
+  }
+  else {
+    [mWindow orderOut:NULL];
+  }
+  
+  mVisible = bState;
+  
+  return NS_OK;
 }
 
 
@@ -737,8 +792,10 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
   nsIMenuBar* myMenuBar = mGeckoWindow->GetMenuBar();
-  if (myMenuBar)
+  if (myMenuBar) {
+    // printf("painting window menu bar due to window becoming main\n");
     myMenuBar->Paint();
+  }
   
   nsGUIEvent guiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
   guiEvent.time = PR_IntervalNow();
@@ -752,6 +809,12 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
   // roll up any popups
   if (gRollupListener != nsnull && gRollupWidget != nsnull)
     gRollupListener->Rollup();
+  
+  nsCOMPtr<nsIMenuBar> hiddenWindowMenuBar = GetHiddenWindowMenuBar();
+  if (hiddenWindowMenuBar) {
+    // printf("painting hidden window menu bar due to nsCocoaWindow::Show(false)\n");
+    hiddenWindowMenuBar->Paint();
+  }
   
   // tell Gecko that we lost focus
   nsGUIEvent guiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);

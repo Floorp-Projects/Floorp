@@ -74,6 +74,7 @@ NS_IMPL_ISUPPORTS6(nsMenuBarX, nsIMenuBar, nsIMenuListener, nsIDocumentObserver,
 NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
+NSWindow* nsMenuBarX::sEventTargetWindow = nil;
 
 
 nsMenuBarX::nsMenuBarX()
@@ -97,7 +98,7 @@ nsMenuBarX::~nsMenuBarX()
     mDocument->RemoveObserver(observer);
   }
   
-  [mRootMenu release];
+  [mRootMenu autorelease];
 }
 
 nsEventStatus 
@@ -809,7 +810,8 @@ NS_IMETHODIMP nsMenuBarX::Paint()
     [[mRootMenu itemAtIndex:0] setSubmenu:sApplicationMenu];
   }
   
-  [NSApp setMainMenu:mRootMenu];  
+  [NSApp setMainMenu:mRootMenu];
+  nsMenuBarX::sEventTargetWindow = (NSWindow*)mParent->GetNativeData(NS_NATIVE_WINDOW);
   return NS_OK;
 }
 
@@ -1135,6 +1137,12 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
 // called when some menu item in this menu gets hit
 -(IBAction)menuItemHit:(id)sender
 {
+  // just abort if we don't have a target window for events
+  if (!nsMenuBarX::sEventTargetWindow) {
+    NS_WARNING("No target window for keyboard events!");
+    return;
+  }
+  
   MenuRef senderMenuRef = _NSGetCarbonMenu([sender menu]);
   int senderCarbonMenuItemIndex = [[sender menu] indexOfItem:sender] + 1;
   
@@ -1159,7 +1167,7 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
   if (err == noErr) {
     err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
     if (err == noErr) {
-      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[[NSApp keyWindow] windowRef]));
+      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[nsMenuBarX::sEventTargetWindow windowRef]));
       NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
     }
   }
