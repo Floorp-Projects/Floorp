@@ -83,8 +83,8 @@ endif
 
 
 SHARED_LIBRARY_LIBS += \
-	$(foreach lib,$(STATIC_LIBS),$(DEPTH)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
-	$(foreach component,$(COMPONENT_LIBS),$(DEPTH)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
+	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
+	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
 	$(NULL)
 
 ifdef MOZ_JAVAXPCOM
