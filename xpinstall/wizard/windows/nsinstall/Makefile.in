@@ -45,12 +45,13 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= nsinstall$(BIN_SUFFIX)
 RESFILE		= nsinstall.res
 REQUIRES	= $(ZLIB_REQUIRES)
-EXTRA_DSO_LIBS	= mozz_s
 USE_STATIC_LIBS = 1
 
 CPPSRCS		= nsinstall.cpp 
 
-LIBS		= $(EXTRA_DSO_LIBS)
+LIBS = \
+	$(DEPTH)/modules/zlib/standalone/$(LIB_PREFIX)mozz_s.$(LIB_SUFFIX) \
+	$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)
 ifdef GNU_CC
