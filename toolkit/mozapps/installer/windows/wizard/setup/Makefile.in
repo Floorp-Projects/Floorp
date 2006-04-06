@@ -50,11 +50,11 @@ REQUIRES	= \
 		xpnet \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= \
-		mozregsa_s \
-		jar50_s \
-		mozz_s \
-		xpnet_s \
+LIBS = \
+		$(DEPTH)/modules/libreg/standalone/$(LIB_PREFIX)mozregsa_s.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/zlib/standalone/$(LIB_PREFIX)mozz_s.$(LIB_SUFFIX) \
+		$(DEPTH)/xpinstall/wizard/libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 USE_STATIC_LIBS = 1
@@ -75,8 +75,6 @@ CPPSRCS		= \
 		xpnetHook.cpp \
 		nsEscape.cpp \
 		$(NULL)
-
-LIBS		= $(EXTRA_DSO_LIBS)
 
 LOCAL_INCLUDES	= -I$(srcdir) -I$(srcdir)/../uninstall
 

@@ -68,7 +68,7 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
+	$(DEPTH)/profile/dirserviceprovider/standalone/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
 
