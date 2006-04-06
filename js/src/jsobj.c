@@ -69,6 +69,10 @@
 
 #include "jsdbgapi.h"   /* whether or not JS_HAS_OBJ_WATCHPOINT */
 
+#if JS_HAS_XML_SUPPORT
+#include "jsxml.h"
+#endif
+
 #ifdef JS_THREADSAFE
 #define NATIVE_DROP_PROPERTY js_DropProperty
 
@@ -4087,6 +4091,7 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
              uintN argc, jsval *argv, jsval *rval)
 {
     JSErrorReporter older;
+    jsid id;
     jsval fval;
     JSBool ok;
     int stackDummy;
@@ -4102,14 +4107,24 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
      * behave properly.
      */
     older = JS_SetErrorReporter(cx, NULL);
-    if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), &fval)) {
-        JS_ClearPendingException(cx);
-        ok = JS_TRUE;
-    } else if (!JSVAL_IS_PRIMITIVE(fval)) {
-        ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
-    } else {
-        ok = JS_TRUE;
+    id = ATOM_TO_JSID(atom);
+    fval = JSVAL_VOID;
+#if JS_HAS_XML_SUPPORT
+    if (OBJECT_IS_XML(cx, obj)) {
+        JSXMLObjectOps *ops;
+
+        ops = (JSXMLObjectOps *) obj->map->ops;
+        obj = ops->getMethod(cx, obj, id, &fval);
+        ok = (obj != NULL);
+    } else
+#endif
+    {
+        ok = OBJ_GET_PROPERTY(cx, obj, id, &fval);
     }
+    if (!ok)
+        JS_ClearPendingException(cx);
+    ok = JSVAL_IS_PRIMITIVE(fval) ||
+         js_InternalCall(cx, obj, fval, argc, argv, rval);
     JS_SetErrorReporter(cx, older);
     return ok;
 }
