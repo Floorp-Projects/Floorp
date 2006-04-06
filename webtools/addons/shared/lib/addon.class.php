@@ -89,6 +89,7 @@ class AddOn extends AMO_Object {
         $this->getCurrentVersion();
         $this->getMainPreview();
         $this->getUserInfo();
+        $this->getAuthors();
         $this->getAppVersions();
         $this->getOsVersions();
         $this->installFunc = $this->Type == 'T' ? 'installTheme' : 'install';
@@ -219,6 +220,7 @@ class AddOn extends AMO_Object {
      * Retrieve user information.
      *
      * @todo have this function set a User object instead
+     * @deprecated (clouserw) - use getAuthors() instead
      */ 
     function getUserInfo() {
         // Gather addons metadata, user info.
@@ -241,6 +243,41 @@ class AddOn extends AMO_Object {
         if (!empty($this->db->record)) {
             $this->setVars($this->db->record);
         }
+    }
+
+    /**
+     * Retrieve user information.
+     *
+     * @todo have this function set a User object instead
+     */ 
+    function getAuthors() {
+        // Gather addons metadata, user info.
+        $this->db->query("
+            SELECT 
+                userprofiles.UserID,
+                userprofiles.UserName,
+                userprofiles.UserEmail,
+                userprofiles.UserWebsite,
+                userprofiles.UserEmailHide
+            FROM 
+                main 
+            INNER JOIN authorxref ON authorxref.ID = main.ID
+            INNER JOIN userprofiles ON userprofiles.UserID = authorxref.UserID
+            WHERE 
+                main.ID = '{$this->ID}'
+        ", SQL_ALL, SQL_ASSOC);
+
+        foreach ($this->db->record as $var => $val) {
+                $_final[$val['UserID']] = array (
+                    'UserID'        => $val['UserID'],
+                    'UserName'      => $val['UserName'],
+                    'UserEmail'     => $val['UserEmail'],
+                    'UserWebsite'   => $val['UserWebsite'],
+                    'UserEmailHide' => $val['UserEmailHide']
+                );
+        }
+
+        $this->setVar('Authors',$_final);
     }
 
     /**
