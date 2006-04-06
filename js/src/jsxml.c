@@ -7021,6 +7021,7 @@ static JSFunctionSpec xml_methods[] = {
     {js_text_str,             xml_text,                  0,0,GENERIC_MASK},
     {js_toString_str,         xml_toString,              0,0,GENERIC_MASK},
     {js_toXMLString_str,      xml_toXMLString,           0,0,GENERIC_MASK},
+    {js_toSource_str,         xml_toXMLString,           0,0,GENERIC_MASK},
     {js_valueOf_str,          xml_valueOf,               0,0,GENERIC_MASK},
     {0,0,0,0,0}
 };
