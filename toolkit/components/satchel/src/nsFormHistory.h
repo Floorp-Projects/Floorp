@@ -50,14 +50,14 @@
 #include "nsIServiceManager.h"
 #include "nsToolkitCompsCID.h"
 
-class nsFormHistory : public nsIFormHistory,
+class nsFormHistory : public nsIFormHistory2,
                       public nsIObserver,
                       public nsIFormSubmitObserver,
                       public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFORMHISTORY
+  NS_DECL_NSIFORMHISTORY2
   NS_DECL_NSIOBSERVER
   
   // nsIFormSubmitObserver
@@ -70,7 +70,7 @@ public:
   static nsFormHistory *GetInstance()
     {
       if (!gFormHistory) {
-        nsCOMPtr<nsIFormHistory> fh = do_GetService(NS_FORMHISTORY_CONTRACTID);
+        nsCOMPtr<nsIFormHistory2> fh = do_GetService(NS_FORMHISTORY_CONTRACTID);
       }
       return gFormHistory;
     }

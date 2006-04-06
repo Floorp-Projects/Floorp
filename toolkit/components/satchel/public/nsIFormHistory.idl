@@ -50,7 +50,7 @@ interface nsIFile;
  */
 
 [scriptable, uuid(a61f0a62-ae0a-4382-b474-d259442ca80c)]
-interface nsIFormHistory : nsISupports
+interface nsIFormHistory2 : nsISupports
 {
   /**
    * Returns true if the form history has any entries.
@@ -103,5 +103,5 @@ interface nsIFormHistoryImporter : nsISupports
    *                  supplied since the importer is invoked during
    *                  form history initialization.
    */
-  void importFormHistory(in nsIFile file, in nsIFormHistory formHistory);
+  void importFormHistory(in nsIFile file, in nsIFormHistory2 formHistory);
 };

@@ -72,18 +72,19 @@ CPPSRCS += dlldeps-xul.cpp
 endif
 
 # dependent libraries
-STATIC_LIBS = \
-	xulapp_s \
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
-STATIC_LIBS += gtkembedmoz
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/embedding/browser/gtk/src/$(LIB_PREFIX)gtkembedmoz.$(LIB_SUFFIX)
 endif
 
 
-SHARED_LIBRARY_LIBS = \
-	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
-	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
+SHARED_LIBRARY_LIBS += \
+	$(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
+	$(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
 	$(NULL)
 
 ifdef MOZ_JAVAXPCOM
@@ -97,7 +98,8 @@ LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
 else
 LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
 endif
-STATIC_LIBS += javaxpcom
+SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/extensions/java/xpcom/src/$(LIB_PREFIX)javaxpcom.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
