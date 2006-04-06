@@ -62,6 +62,7 @@ our \$tr_name = "";
 our \$tr_user = "";
 our \$tr_pass = "";
 
+our \$bugzilla_auth_enabled = 1;
 our \$bugzilla_db = "bugzilla";
 our \$bugzilla_host = "localhost";
 our \$bugzilla_user = "litmus";

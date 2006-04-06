@@ -40,6 +40,12 @@ use Memoize;
 
 use base 'Litmus::DBI';
 
+BEGIN {
+unless ($Litmus::Config::bugzilla_auth_enabled) {
+	return 1;
+}
+}
+
 my $dsn = "dbi:mysql:$Litmus::Config::bugzilla_db:$Litmus::Config::bugzilla_host";
 
 Litmus::BugzillaDBI->set_db('Main',
