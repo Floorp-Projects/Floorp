@@ -775,6 +775,16 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 }
 
 
+- (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)proposedFrameSize
+{
+  // roll up any popups
+  if (gRollupListener != nsnull && gRollupWidget != nsnull)
+    gRollupListener->Rollup();
+  
+  return proposedFrameSize;
+}
+
+
 - (void)windowDidResize:(NSNotification *)aNotification
 {
   if (mGeckoWindow->IsResizing())

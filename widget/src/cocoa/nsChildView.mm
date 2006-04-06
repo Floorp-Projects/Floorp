@@ -2556,6 +2556,18 @@ nsChildView::GetThebesSurface()
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
+  // make sure this view is not in the rollup widget
+  // the fastest way to do this is by comparing native window pointers
+  if (gRollupWidget != nsnull) {
+    NSWindow *ourNativeWindow = [self getNativeWindow];
+    NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (ourNativeWindow != rollupNativeWindow) {
+      // roll up any popups
+      if (gRollupListener != nsnull)
+        gRollupListener->Rollup();
+    }
+  }
+  
   // if the command and alt keys are held down, initiate hand scrolling
   if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
     [self startHandScroll: theEvent];
