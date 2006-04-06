@@ -294,9 +294,10 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
     PRInt32 x0 = aTileRect.x - aSXOffset;
     PRInt32 y0 = aTileRect.y - aSYOffset;
 
-    // Let's figure out if this really is repeating, or if we're just drawing a subrect
-    if (aTileRect.width > mWidth ||
-        aTileRect.height > mHeight)
+    // Let's figure out if this really needs to repeat,
+    // or if we're just drawing a subrect
+    if (aSXOffset + aTileRect.width > mWidth ||
+        aSYOffset + aTileRect.height > mHeight)
     {
         reallyRepeating = PR_TRUE;
     } else {
