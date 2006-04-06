@@ -333,7 +333,7 @@ CCKService.prototype={
 
     var opType = extensionDS.GetTarget(extension, opTypeArc, true);
     opType = opType.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-    if ((opType == "needs-uninstall") || (opType == "needs-uninstall")) {
+    if ((opType == "needs-uninstall") || (opType == "needs-disable") || (opType == "needs-upgrade")) {
       var i = 1;
       do {
         try {
