@@ -68,8 +68,8 @@ LOCAL_INCLUDES = \
 	-I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)storage_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX) \
+	../src/$(LIB_PREFIX)storage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/db/sqlite3/src/$(LIB_PREFIX)sqlite3_s.$(LIB_SUFFIX) \
 	$(NULL)
  
 EXTRA_DSO_LDOPTS += \

@@ -49,13 +49,6 @@ REQUIRES	= \
 		xpnet \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= \
-		mozregsa_s \
-		jar50_s \
-		mozz_s \
-		xpnet_s \
-		$(NULL)
-
 USE_STATIC_LIBS = 1
 
 CSRCS		= \
@@ -75,7 +68,11 @@ CPPSRCS		= \
 		nsEscape.cpp \
 		$(NULL)
 
-LIBS		= $(EXTRA_DSO_LIBS)
+LIBS = \
+		$(DEPTH)/modules/libreg/standalone/$(LIB_PREFIX)mozregsa_s.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/libjar/standalone/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
+		../../libxpnet/src/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
+		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir) -I$(srcdir)/../uninstall
 
