@@ -59,7 +59,7 @@
         <xul:hbox class="tabbrowser-strip chromeclass-toolbar">
 
           <xul:tabs flex="1" class="tabbrowser-tabs" anonid="EditorTabs" closebutton="true"
-                    setfocus="false"/>
+                    setfocus="false" onselect="onTabSelected(event)"/>
         </xul:hbox>
         <xul:tabpanels anonid="EditorTabpanels" selectedIndex="0" flex="1"
                        style="border: red solid thick; background-color: gray ! important"/>
@@ -330,6 +330,15 @@
             }
             return null;
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="onTabSelected">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          window.updateCommands("navigation");
         ]]>
         </body>
       </method>
