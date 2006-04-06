@@ -7524,32 +7524,51 @@ js_GetFunctionNamespace(JSContext *cx, jsval *vp)
     /* An invalid URI, for internal use only, guaranteed not to collide. */
     static const char anti_uri[] = "@mozilla.org/js/function";
 
+    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
     rt = cx->runtime;
     obj = rt->functionNamespaceObject;
     if (!obj) {
-        atom = js_Atomize(cx, js_function_str, 8, 0);
-        JS_ASSERT(atom);
-        prefix = ATOM_TO_STRING(atom);
+        JS_LOCK_GC(rt);
+        obj = rt->functionNamespaceObject;
+        if (!obj) {
+            JS_UNLOCK_GC(rt);
+            atom = js_Atomize(cx, js_function_str, 8, 0);
+            JS_ASSERT(atom);
+            prefix = ATOM_TO_STRING(atom);
 
-        atom = js_Atomize(cx, anti_uri, sizeof anti_uri - 1, ATOM_PINNED);
-        if (!atom)
-            return JS_FALSE;
-        rt->atomState.lazy.functionNamespaceURIAtom = atom;
+            /*
+             * Note that any race to atomize anti_uri here is resolved by
+             * the atom table code, such that at most one atom for anti_uri
+             * is created.  We store in rt->atomState.lazy unconditionally,
+             * since we are guaranteed to overwrite either null or the same
+             * atom pointer.
+             */
+            atom = js_Atomize(cx, anti_uri, sizeof anti_uri - 1, ATOM_PINNED);
+            if (!atom)
+                return JS_FALSE;
+            rt->atomState.lazy.functionNamespaceURIAtom = atom;
 
-        uri = ATOM_TO_STRING(atom);
-        obj = js_NewXMLNamespaceObject(cx, prefix, uri, JS_FALSE);
-        if (!obj)
-            return JS_FALSE;
+            uri = ATOM_TO_STRING(atom);
+            obj = js_NewXMLNamespaceObject(cx, prefix, uri, JS_FALSE);
+            if (!obj)
+                return JS_FALSE;
 
-        /*
-         * Avoid entraining any in-scope Object.prototype.  The loss of
-         * Namespace.prototype is not detectable, as there is no way to
-         * refer to this instance in scripts.  When used to qualify method
-         * names, its prefix and uri references are copied to the QName.
-         */
-        OBJ_SET_PROTO(cx, obj, NULL);
-        OBJ_SET_PARENT(cx, obj, NULL);
-        rt->functionNamespaceObject = obj;
+            /*
+             * Avoid entraining any in-scope Object.prototype.  The loss of
+             * Namespace.prototype is not detectable, as there is no way to
+             * refer to this instance in scripts.  When used to qualify method
+             * names, its prefix and uri references are copied to the QName.
+             */
+            OBJ_SET_PROTO(cx, obj, NULL);
+            OBJ_SET_PARENT(cx, obj, NULL);
+
+            JS_LOCK_GC(rt);
+            if (!rt->functionNamespaceObject)
+                rt->functionNamespaceObject = obj;
+            else
+                obj = rt->functionNamespaceObject;
+        }
+        JS_UNLOCK_GC(rt);
     }
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
@@ -7730,36 +7749,68 @@ js_GetAnyName(JSContext *cx, jsval *vp)
     JSRuntime *rt;
     JSObject *obj;
     JSXMLQName *qn;
+    JSBool ok;
 
+    /* Optimize by avoiding JS_LOCK_GC(rt) for the common case. */
     rt = cx->runtime;
     obj = rt->anynameObject;
     if (!obj) {
-        qn = js_NewXMLQName(cx, rt->emptyString, rt->emptyString,
-                            ATOM_TO_STRING(rt->atomState.starAtom));
-        if (!qn)
-            return JS_FALSE;
+        JS_LOCK_GC(rt);
+        obj = rt->anynameObject;
+        if (!obj) {
+            JS_UNLOCK_GC(rt);
 
-        obj = js_NewObject(cx, &js_AnyNameClass, NULL, NULL);
-        if (!obj || !JS_SetPrivate(cx, obj, qn)) {
-            cx->newborn[GCX_OBJECT] = NULL;
-            return JS_FALSE;
-        }
-        qn->object = obj;
-        METER(xml_stats.qnameobj);
-        METER(xml_stats.liveqnameobj);
+            /*
+             * Protect multiple newborns created below, in the do-while(0)
+             * loop used to ensure that we leave this local root scope.
+             */
+            if (!js_EnterLocalRootScope(cx))
+                return JS_FALSE;
 
-        /*
-         * Avoid entraining any in-scope Object.prototype.  This loses the
-         * default toString inheritance, but no big deal: we want a better
-         * custom one for clearer diagnostics.
-         */
-        if (!JS_DefineFunction(cx, obj, js_toString_str, anyname_toString,
-                               0, 0)) {
-            return JS_FALSE;
+            do {
+                qn = js_NewXMLQName(cx, rt->emptyString, rt->emptyString,
+                                    ATOM_TO_STRING(rt->atomState.starAtom));
+                if (!qn) {
+                    ok = JS_FALSE;
+                    break;
+                }
+
+                obj = js_NewObject(cx, &js_AnyNameClass, NULL, NULL);
+                if (!obj || !JS_SetPrivate(cx, obj, qn)) {
+                    cx->newborn[GCX_OBJECT] = NULL;
+                    ok = JS_FALSE;
+                    break;
+                }
+                qn->object = obj;
+                METER(xml_stats.qnameobj);
+                METER(xml_stats.liveqnameobj);
+
+                /*
+                 * Avoid entraining any Object.prototype found via cx's scope
+                 * chain or global object.  This loses the default toString,
+                 * but no big deal: we want to customize toString anyway for
+                 * clearer diagnostics.
+                 */
+                if (!JS_DefineFunction(cx, obj, js_toString_str,
+                                       anyname_toString, 0, 0)) {
+                    ok = JS_FALSE;
+                    break;
+                }
+                OBJ_SET_PROTO(cx, obj, NULL);
+                JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
+            } while (0);
+
+            js_LeaveLocalRootScopeWithResult(cx, OBJECT_TO_JSVAL(obj));
+            if (!ok)
+                return JS_FALSE;
+
+            JS_LOCK_GC(rt);
+            if (!rt->anynameObject)
+                rt->anynameObject = obj;
+            else
+                obj = rt->anynameObject;
         }
-        OBJ_SET_PROTO(cx, obj, NULL);
-        JS_ASSERT(!OBJ_GET_PARENT(cx, obj));
-        rt->anynameObject = obj;
+        JS_UNLOCK_GC(rt);
     }
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
