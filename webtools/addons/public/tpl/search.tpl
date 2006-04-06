@@ -111,7 +111,7 @@ Next Page &raquo;
 
 {section name=r loop=$results}
 <div class="item">
-    <div class="rating" title="4.67 Stars out of 5">Rating: {$results[r]->Rating}</div>
+    <div class="rating" title="{$results[r]->Rating} out of 5">Rating: {$results[r]->Rating}</div>
     <h2 class="first"><a href="{$config.webpath}/{$app}/{$results[r]->ID}/">{$results[r]->Name} {$results[r]->Version}</a></h2>
 
     {if $results[r]->PreviewURI}
