@@ -1712,15 +1712,16 @@ SearchService.prototype = {
     // Check whether aDir is the user profile dir
     var isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
 
-    var files = aDir.directoryEntries;
+    var files = aDir.directoryEntries
+                    .QueryInterface(Ci.nsIDirectoryEnumerator);
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 
     while (files.hasMoreElements()) {
-      var file = files.getNext().QueryInterface(Ci.nsILocalFile);
+      var file = files.nextFile;
 
       // Ignore hidden and empty files, and directories
-      if (!file.isFile() || file.isHidden() || file.fileSize == 0)
+      if (file.fileSize == 0 || !file.isFile() || file.isHidden())
         continue;
 
       var fileURL = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
@@ -1812,33 +1813,37 @@ SearchService.prototype = {
       }
     } catch (ex) { LOG("_convertSherlockFile: Error setting icon: " + ex); }
 
-    var oldFile = aEngine._file;
+    var oldSherlockFile = aEngine._file;
 
     // Back up the old file
     try {
-      var backupDir = oldFile.parent;
+      var backupDir = oldSherlockFile.parent;
       backupDir.append("searchplugins-backup");
+
       if (!backupDir.exists())
         backupDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
 
-      oldFile.copyTo(backupDir, null);
+      oldSherlockFile.copyTo(backupDir, null);
     } catch (ex) {
       // Just bail. Engines that can't be backed up won't be converted, but
       // engines that aren't converted are loaded as readonly.
-      LOG("_convertSherlockFile: Couldn't back up " + oldFile.path + ".");
+      LOG("_convertSherlockFile: Couldn't back up " + oldSherlockFile.path);
       return;
     }
 
     // Rename the file, but don't clobber existing files
-    var newFile = oldFile.parent.clone();
-    newFile.append(aBaseName + "." + XML_FILE_EXT);
+    var newXMLFile = oldSherlockFile.parent.clone();
+    newXMLFile.append(aBaseName + "." + XML_FILE_EXT);
 
-    if (!newFile.exists())
-      oldFile.moveTo(null, aBaseName + "." + XML_FILE_EXT);
-    else {
-      newFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-      oldFile.moveTo(null, newFile.leafName);
+    if (newXMLFile.exists()) {
+      // There is an existing file with this name, create a unique file
+      newXMLFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
     }
+
+    // Rename the .src file to .xml
+    oldSherlockFile.moveTo(null, newXMLFile.leafName);
+
+    aEngine._file = newXMLFile;
 
     // Write the converted engine to disk
     aEngine._serializeToFile();
