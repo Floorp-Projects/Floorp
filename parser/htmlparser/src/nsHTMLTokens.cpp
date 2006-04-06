@@ -770,7 +770,7 @@ CTextToken::ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
   // the document.
 
   static const PRUnichar terminalChars[] = {
-    PRUnichar('&'), PRUnichar('<'),
+    PRUnichar('\r'), PRUnichar('\n'), PRUnichar('&'), PRUnichar('<'),
     PRUnichar(0)
   };
   static const nsReadEndCondition theEndCondition(terminalChars);
