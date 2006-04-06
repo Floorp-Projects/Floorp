@@ -55,18 +55,21 @@
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsISVGRendererCanvas.h"
+#include "nsSVGValue.h"
 #include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 
 class nsSVGMarkerFrame : public nsSVGDefsFrame,
+                         public nsSVGValue,
                          public nsISVGMarkerFrame
 {
 protected:
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
+  virtual ~nsSVGMarkerFrame();
   NS_IMETHOD InitSVG();
 
 public:
@@ -76,6 +79,10 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
+  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
 
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
@@ -131,6 +138,7 @@ private:
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGMarkerFrame)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsISVGMarkerFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 
@@ -152,11 +160,15 @@ NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
     NS_WARNING("No document for this content!");
     return NS_ERROR_FAILURE;
   }
-  nsIPresShell *aPresShell = myDoc->GetShellAt(0);
+  nsIPresShell *presShell = myDoc->GetShellAt(0);
+  if (!presShell) {
+    NS_WARNING("no presshell");
+    return NS_ERROR_FAILURE;
+  }
 
   // Find the referenced frame
   nsIFrame *marker;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, aURI, aContent, aPresShell)))
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, aURI, aContent, presShell)))
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = marker->GetType();
@@ -165,6 +177,13 @@ NS_GetSVGMarkerFrame(nsISVGMarkerFrame **aResult,
 
   *aResult = (nsSVGMarkerFrame *)marker;
   return NS_OK;
+}
+
+nsSVGMarkerFrame::~nsSVGMarkerFrame()
+{
+  WillModify();
+  // Notify the world that we're dying
+  DidModify(mod_die);
 }
 
 NS_IMETHODIMP
@@ -249,7 +268,8 @@ nsSVGMarkerFrame::AttributeChanged(PRInt32         aNameSpaceID,
        aAttribute == nsGkAtoms::markerHeight ||
        aAttribute == nsGkAtoms::orient ||
        aAttribute == nsGkAtoms::viewBox)) {
-    // XXX: marker frame should be a nsSVGValue and call DidModify() here
+    WillModify();
+    DidModify();
     return NS_OK;
   }
 

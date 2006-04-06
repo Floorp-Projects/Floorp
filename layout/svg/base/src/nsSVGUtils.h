@@ -82,6 +82,8 @@ class nsIAtom;
 #define NS_STATE_SVG_FILTERED         0x00800000
 #define NS_STATE_SVG_MASKED           0x01000000
 
+#define NS_STATE_SVG_HAS_MARKERS      0x02000000
+
 class nsSVGUtils
 {
 public:
@@ -256,6 +258,14 @@ public:
   
   static void
   HitTestChildren(nsIFrame *aFrame, float x, float y, nsIFrame **aResult);
+
+  /* Add observation of an nsISVGValue to an nsISVGValueObserver */
+  static void
+  AddObserver(nsISupports *aObserver, nsISupports *aTarget);
+
+  /* Remove observation of an nsISVGValue from an nsISVGValueObserver */
+  static void
+  RemoveObserver(nsISupports *aObserver, nsISupports *aTarget);
 
   /*
    * Returns the CanvasTM of the indicated frame, whether it's a

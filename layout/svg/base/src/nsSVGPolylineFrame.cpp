@@ -42,7 +42,6 @@
 #include "nsIDOMSVGPoint.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
-#include "nsSVGMarkerFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsINameSpaceManager.h"

@@ -44,7 +44,6 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
-#include "nsSVGMarkerFrame.h"
 #include "nsISupports.h"
 #include "nsLayoutAtoms.h"
 #include "nsISVGPathFlatten.h"

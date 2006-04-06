@@ -775,11 +775,8 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   return nsnull;
 }
 
-// ************************************************************
-// Effect helper functions
-
-static void
-AddObserver(nsISupports *aObserver, nsISupports *aTarget)
+void
+nsSVGUtils::AddObserver(nsISupports *aObserver, nsISupports *aTarget)
 {
   nsISVGValueObserver *observer = nsnull;
   nsISVGValue *v = nsnull;
@@ -789,8 +786,8 @@ AddObserver(nsISupports *aObserver, nsISupports *aTarget)
     v->AddObserver(observer);
 }
 
-static void
-RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
+void
+nsSVGUtils::RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
 {
   nsISVGValueObserver *observer = nsnull;
   nsISVGValue *v = nsnull;
@@ -800,12 +797,17 @@ RemoveObserver(nsISupports *aObserver, nsISupports *aTarget)
     v->RemoveObserver(observer);
 }
 
+// ************************************************************
+// Effect helper functions
+
 static void
 FilterPropertyDtor(void *aObject, nsIAtom *aPropertyName,
                    void *aPropertyValue, void *aData)
 {
-  nsSVGFilterProperty *property = (nsSVGFilterProperty *)aPropertyValue;
-  RemoveObserver((nsIFrame *)aObject, property->mFilter);
+  nsSVGFilterProperty *property = NS_STATIC_CAST(nsSVGFilterProperty *,
+                                                 aPropertyValue);
+  nsSVGUtils::RemoveObserver(NS_STATIC_CAST(nsIFrame *, aObject),
+                                            property->mFilter);
   delete property;
 }
 
@@ -830,8 +832,12 @@ AddEffectProperties(nsIFrame *aFrame)
     nsISVGFilterFrame *filter;
     NS_GetSVGFilterFrame(&filter, style->mFilter, aFrame->GetContent());
     if (filter) {
-      AddObserver(aFrame, filter);
+      nsSVGUtils::AddObserver(aFrame, filter);
       nsSVGFilterProperty *property = new nsSVGFilterProperty;
+      if (!property) {
+        NS_ERROR("Could not create filter property");
+        return;
+      }
       property->mFilter = filter;
       filter->GetInvalidationRegion(aFrame, getter_AddRefs(property->mFilterRegion));
       aFrame->SetProperty(nsGkAtoms::filter, property, FilterPropertyDtor);
