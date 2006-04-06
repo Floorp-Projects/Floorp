@@ -62,6 +62,21 @@ extern nsIWidget         * gRollupWidget;
 NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
 
+// get the highest point on any screen
+static float HighestPointOnAnyScreen()
+{
+  float highestScreenPoint = 0.0;
+  NSArray* allScreens = [NSScreen screens];
+  for (unsigned int i = 0; i < [allScreens count]; i++) {
+    NSRect currScreenFrame = [[allScreens objectAtIndex:i] frame];
+    float currScreenHighestPoint = currScreenFrame.origin.y + currScreenFrame.size.height;
+    if (currScreenHighestPoint > highestScreenPoint)
+      highestScreenPoint = currScreenHighestPoint;
+  }
+  return highestScreenPoint;
+}
+
+
 /*
  * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
  * system with (0,0) in the top-left of the screen. Cocoa rects
@@ -71,23 +86,29 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
  */
 static NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 {
-  // first we get the highest point on all screens
-  float highestScreenPoint = 0.0;
-  NSArray* allScreens = [NSScreen screens];
-  for (unsigned int i = 0; i < [allScreens count]; i++) {
-    NSRect currScreenFrame = [[allScreens objectAtIndex:i] frame];
-    float currScreenHighestPoint = currScreenFrame.origin.y + currScreenFrame.size.height;
-    if (currScreenHighestPoint > highestScreenPoint)
-      highestScreenPoint = currScreenHighestPoint;
-  }
-
   // We only need to change the Y coordinate by starting with the screen
   // height, subtracting the gecko Y coordinate, and subtracting the
   // height.
   return NSMakeRect(geckoRect.x,
-                    highestScreenPoint - geckoRect.y - geckoRect.height,
+                    HighestPointOnAnyScreen() - geckoRect.y - geckoRect.height,
                     geckoRect.width,
                     geckoRect.height);
+}
+
+
+/*
+ * See explanation for geckoRectToCocoaRect, guess what this does...
+ */
+static nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
+{
+  // We only need to change the Y coordinate by starting with the screen
+  // height, subtracting the gecko Y coordinate, and subtracting the
+  // height.
+  
+  return nsRect((nscoord)cocoaRect.origin.x,
+                (nscoord)(HighestPointOnAnyScreen() - (cocoaRect.origin.y + cocoaRect.size.height)),
+                (nscoord)cocoaRect.size.width,
+                (nscoord)cocoaRect.size.height);
 }
 
 
@@ -522,9 +543,17 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
   return NS_OK;
 }
 
-
+// We return the origin for the entire window (title bar and all) but
+// the size of the content area. I have no idea why it was originally done
+// this way, but it matches Carbon and makes things work nicely.
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
+  nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
+  aRect.x = windowFrame.x;
+  aRect.y = windowFrame.y;
+  aRect.width = mBounds.width;
+  aRect.height = mBounds.height;
+  // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
   return NS_OK;
 }
 
