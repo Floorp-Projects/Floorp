@@ -62,8 +62,6 @@ LIBXUL_LIBRARY	= 1
 
 PACKAGE_FILE = base.pkg
 
-EXTRA_DSO_LIBS 	= mozreg_s
-
 REQUIRES	= xpcom \
 		  string \
 		  jar \
@@ -152,8 +150,7 @@ endif
 LOCAL_INCLUDES	= -I$(srcdir)/../public
 
 EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(EXTRA_DSO_LIBS) \
+		$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
