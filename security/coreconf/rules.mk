@@ -380,10 +380,12 @@ WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 # debuggers under Windows & OS/2 to find source files automatically
 
 ifeq (,$(filter-out OS2 AIX,$(OS_TARGET)))
+# OS/2 and AIX
 NEED_ABSOLUTE_PATH := 1
 PWD := $(shell pwd)
-endif
 
+else
+# Windows
 ifeq (,$(filter-out _WIN%,$(NS_USE_GCC)_$(OS_TARGET)))
 NEED_ABSOLUTE_PATH := 1
 PWD := $(shell pwd)
@@ -392,13 +394,14 @@ ifndef USE_MSYS
 PWD := $(subst \,/,$(shell cygpath -w $(PWD)))
 endif
 endif
+
+else
+# everything else
+PWD = $(shell pwd)
+endif
 endif
 
-ifdef NEED_ABSOLUTE_PATH
 abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(PWD)/$(1)))
-else
-abspath = $(1)
-endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
