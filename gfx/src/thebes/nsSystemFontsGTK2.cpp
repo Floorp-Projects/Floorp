@@ -192,9 +192,9 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
 
     g_free(fontname);
 
-    aFont->name.Assign(PRUnichar('"'));
-    aFont->name.AppendWithConversion(pango_font_description_get_family(desc));
-    aFont->name.Append(PRUnichar('"'));
+    NS_NAMED_LITERAL_STRING(quote, "\"");
+    NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
+    aFont->name = quote + family + quote;
 
     aFont->weight = pango_font_description_get_weight(desc);
 
