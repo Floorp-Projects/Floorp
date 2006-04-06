@@ -347,5 +347,14 @@ class AMO_Auth extends AMO_Object{
 
         return true;
     }
+    /**
+     * This will remove the username cookie
+     */
+    function removeUsernameCookie()
+    {
+        setcookie('amo_user', '', time() - 3600, '/', false);
+
+        return true;
+    }
 }
 ?>

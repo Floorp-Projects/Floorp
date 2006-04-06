@@ -12,6 +12,8 @@ require_once 'includes.php';
 
 session_start();
 
+$_auth->removeUsernameCookie();
+
 session_destroy();
 
 // Assign template variables.
