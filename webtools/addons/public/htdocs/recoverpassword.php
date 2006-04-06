@@ -12,6 +12,10 @@ require_once 'includes.php';
 
 $bad_input = false;
 $success   = false;
+
+// Give us a default value if it exists
+$email_value = array_key_exists('email', $_GET) ? $_GET['email'] : '';
+
 if (array_key_exists('email', $_POST) && !empty($_POST['email'])) {
     $user = user::getUserByEmail($_POST['email']);
     if ($user === false) {
@@ -22,9 +26,9 @@ if (array_key_exists('email', $_POST) && !empty($_POST['email'])) {
         $user->sendPasswordRecoveryEmail();
         $success = true;
     }
+    //override the get string
+    $email_value = $_POST['email'];
 }
-
-$email_value = array_key_exists('email', $_POST) ? $_POST['email'] : '';
 
 // Assign template variables.
 $tpl->assign(

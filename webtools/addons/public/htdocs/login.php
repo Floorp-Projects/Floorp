@@ -54,10 +54,13 @@ if (!empty($_POST['username']) && !empty($_POST['password'])) {
     }
 }
 
+$email_value = array_key_exists('username', $_POST) ? $_POST['username'] : '';
+
 // Assign template variables.
 $tpl->assign(
     array(  'title'       => 'Firefox Add-ons Login',
             'currentTab'  => null,
+            'email'       => $email_value,
             'login_error' => $login_error
             )
 );
