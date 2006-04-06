@@ -121,8 +121,8 @@ elsif ($action eq 'begin-sudo') {
             && ($token_data eq 'sudo_prepared'))
     {
         ThrowUserError('sudo_preparation_required', 
-                       { target_login => $cgi->param('target_login'),
-                               reason => $cgi->param('reason')});
+                       { target_login => scalar $cgi->param('target_login'),
+                               reason => scalar $cgi->param('reason')});
     }
     Bugzilla::Token::DeleteToken($cgi->param('token'));
 
