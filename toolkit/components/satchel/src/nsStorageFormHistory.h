@@ -84,7 +84,7 @@ class nsIFormHistoryPrivate : public nsISupports
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormHistoryPrivate, NS_IFORMHISTORYPRIVATE_IID)
 #endif
 
-class nsFormHistory : public nsIFormHistory,
+class nsFormHistory : public nsIFormHistory2,
                       public nsIFormHistoryPrivate,
                       public nsIObserver,
                       public nsIFormSubmitObserver,
@@ -92,7 +92,7 @@ class nsFormHistory : public nsIFormHistory,
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIFORMHISTORY
+  NS_DECL_NSIFORMHISTORY2
   NS_DECL_NSIOBSERVER
   
   // nsIFormSubmitObserver
@@ -104,7 +104,7 @@ public:
   static nsFormHistory* GetInstance()
     {
       if (!gFormHistory) {
-        nsCOMPtr<nsIFormHistory> fh = do_GetService(NS_FORMHISTORY_CONTRACTID);
+        nsCOMPtr<nsIFormHistory2> fh = do_GetService(NS_FORMHISTORY_CONTRACTID);
       }
       return gFormHistory;
     }
