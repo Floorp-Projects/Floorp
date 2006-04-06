@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -56,6 +57,7 @@
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMComment.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -138,11 +140,15 @@ static NS_DEFINE_CID(kCParserCID,     NS_PARSER_CID);
 // private clipboard data flavors for html copy/paste
 #define kHTMLContext   "text/_moz_htmlcontext"
 #define kHTMLInfo      "text/_moz_htmlinfo"
+#define kInsertCookie  "_moz_Insert Here_moz_"
+
+#define NS_FOUND_TARGET NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR, 3)
 
 // some little helpers
 static PRInt32 FindPositiveIntegerAfterString(const char *aLeadingString, nsCString &aCStr);
 static nsresult RemoveFragComments(nsCString &theStr);
 static void RemoveBodyAndHead(nsIDOMNode *aNode);
+static nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemoveMarker);
 
 static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 {
@@ -280,29 +286,17 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsIDOMNode> fragmentAsNode;
   PRInt32 rangeStartHint, rangeEndHint;
+  PRUint32 fragLength;
 
-  nsAutoString contextStr;
-  contextStr.Assign(aContextStr);
-
-#ifdef MOZ_THUNDERBIRD
-  // See Bug #228920 --> editor / parser has trouble inserting single cell data from Excel.
-  // The details are in the bug. Until we figure out why the parser is not building the right 
-  // document structure for the single cell paste case, we can explicitly check for just such  
-  // a condition and work around it. By setting the contextStr to an empty string we end up 
-  // pasting just the cell text which is what we want anyway. 
-  // A paste from an excel cell always starts with a new line, two spaces and then the td tag
-  if (StringBeginsWith(aInputString, NS_LITERAL_STRING("\n  <td"))) 
-    contextStr.Truncate();
-#endif
-
-  res = CreateDOMFragmentFromPaste(aInputString, contextStr, aInfoStr, 
+  res = CreateDOMFragmentFromPaste(aInputString, aContextStr, aInfoStr, 
                                             address_of(fragmentAsNode),
-                                            &rangeStartHint, &rangeEndHint);
+                                            &fragLength, &rangeStartHint,
+                                            &rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMNode> targetNode, streamStartParent, streamEndParent, tempNode;
-  PRInt32 targetOffset=0, streamStartOffset=0, streamEndOffset=0, k;
-  
+  PRInt32 targetOffset=0, streamStartOffset=0, streamEndOffset=0;
+
   if (!aDestNode)
   {
     // if caller didn't provide the destination/target node,
@@ -316,30 +310,42 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
     targetNode = aDestNode;
     targetOffset = aDestOffset;
   }
-  
-  // fetch the start parent/offset by walking down the leading edge of 
-  // the fragmentAsNode tree (rangeStartHint # of times)
-  streamStartParent = fragmentAsNode;
-  for (k = 0; k < rangeStartHint; k++)
+
+  streamStartOffset = 0;
+  res = FindTargetNode(fragmentAsNode, getter_AddRefs(streamStartParent), PR_TRUE);
+  if (res == NS_FOUND_TARGET)
   {
-    streamStartParent->GetFirstChild(getter_AddRefs(tempNode));
-    if (!tempNode) return NS_ERROR_FAILURE;
-    streamStartParent = tempNode;
+    res = NS_OK;
+    streamEndOffset = fragLength;
+    streamEndParent = streamStartParent;
   }
-  // streamStartOffset is just always zero at this point
-  
-  // fetch the end parent/offset by walking down the trailing edge of 
-  // the fragmentAsNode tree (rangeEndHint # of times)
-  streamEndParent = fragmentAsNode;
-  for (k = 0; k < rangeEndHint; k++)
+  else
   {
-    streamEndParent->GetLastChild(getter_AddRefs(tempNode));
-    if (!tempNode) return NS_ERROR_FAILURE;
-    streamEndParent = tempNode;
+    NS_ENSURE_SUCCESS(res, res);
+
+    // Fall back to using the hints.
+    PRInt32 k;
+    streamStartParent = fragmentAsNode;
+    for (k = 0; k < rangeStartHint; k++)
+    {
+      streamStartParent->GetLastChild(getter_AddRefs(tempNode));
+      if (!tempNode) return NS_ERROR_FAILURE;
+      streamStartParent = tempNode;
+    }
+
+    // Fall back to finding the deepest last child.
+    streamEndParent = fragmentAsNode;
+    for (k = 0; k < rangeEndHint; k++)
+    {
+      streamEndParent->GetLastChild(getter_AddRefs(tempNode));
+      if (!tempNode) return NS_ERROR_FAILURE;
+      streamEndParent = tempNode;
+    }
+
+    // StreamEndOffset is just always after last child of streamEndParent at this point
+    res = GetLengthOfDOMNode(streamEndParent, (PRUint32&)streamEndOffset);
+    if (NS_FAILED(res)) return res;
   }
-  // streamEndOffset is just always after last child of streamEndParent at this point
-  res = GetLengthOfDOMNode(streamEndParent, (PRUint32&)streamEndOffset);
-  if (NS_FAILED(res)) return res;
 
   PRBool doContinue = PR_TRUE;
 
@@ -1205,8 +1211,9 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
  
   // create context string
   nsCAutoString contextUTF8(Substring(aCfhtml, startHTML, startFragment - startHTML) +
+                            NS_LITERAL_CSTRING("<!--" kInsertCookie "-->") +
                             Substring(aCfhtml, endFragment, endHTML - endFragment));
-  
+
   // validate startFragment
   // make sure it's not in the middle of a HTML tag
   // see bug #228879 for more details
@@ -2431,11 +2438,83 @@ void RemoveBodyAndHead(nsIDOMNode *aNode)
   }
 }
 
+/**
+ * This function finds the target node that we will be pasting into. aStart is
+ * the context that we're given and aResult will be the target. Initially,
+ * *aResult must be NULL.
+ *
+ * The target for a paste is found by either finding the node that contains
+ * the magical comment node containing kInsertCookie or, failing that, the
+ * firstChild of the firstChild (until we reach a leaf).
+ */
+nsresult FindTargetNode(nsIDOMNode *aStart, nsIDOMNode **aResult, PRBool aRemoveMarker)
+{
+  if (!aStart)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> child, tmp;
+
+  nsresult rv = aStart->GetFirstChild(getter_AddRefs(child));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!child)
+  {
+    // If the current result is NULL, then aStart is a leaf, and is the
+    // fallback result.
+    if (!*aResult)
+      NS_ADDREF(*aResult = aStart);
+
+    return NS_OK;
+  }
+
+  do
+  {
+    // Is this child the magical cookie?
+    nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(child);
+    if (comment)
+    {
+      nsAutoString data;
+      rv = comment->GetData(data);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (data.EqualsLiteral(kInsertCookie))
+      {
+        // Yes it is! Return an error so we bubble out and short-circuit the
+        // search.
+        NS_IF_RELEASE(*aResult);
+        NS_ADDREF(*aResult = aStart);
+
+        if (aRemoveMarker)
+        {
+          // Note: it doesn't matter if this fails.
+          aStart->RemoveChild(child, getter_AddRefs(tmp));
+        }
+
+        return NS_FOUND_TARGET;
+      }
+    }
+
+    // Note: Don't use NS_ENSURE_* here since we return a failure result to
+    // inicate that we found the magical cookie and we don't want to spam the
+    // console.
+    rv = FindTargetNode(child, aResult, aRemoveMarker);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = child->GetNextSibling(getter_AddRefs(tmp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    child = tmp;
+  } while (child);
+
+  return NS_OK;
+}
 
 nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
                                                   const nsAString & aContextStr,
                                                   const nsAString & aInfoStr,
                                                   nsCOMPtr<nsIDOMNode> *outFragNode,
+                                                  PRUint32 *outFragLength,
                                                   PRInt32 *outRangeStartHint,
                                                   PRInt32 *outRangeEndHint)
 {
@@ -2466,15 +2545,11 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     NS_ENSURE_SUCCESS(res, res);
     
     RemoveBodyAndHead(contextAsNode);
-    
-    // cache the deepest leaf in the context
-    tmp = contextAsNode;
-    while (tmp)
-    {
-      contextDepth++;
-      contextLeaf = tmp;
-      contextLeaf->GetFirstChild(getter_AddRefs(tmp));
-    }
+
+    res = FindTargetNode(contextAsNode, getter_AddRefs(contextLeaf), PR_FALSE);
+    if (res == NS_FOUND_TARGET)
+      res = NS_OK;
+    NS_ENSURE_SUCCESS(res, res);
   }
  
   // get the tagstack for the context
@@ -2484,13 +2559,16 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     FreeTagStackStrings(tagStack);
     return res;
   }
+  contextDepth = tagStack.Count();
   // create fragment for pasted html
   res = ParseFragment(aInputString, tagStack, doc, outFragNode);
   FreeTagStackStrings(tagStack);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(*outFragNode, NS_ERROR_FAILURE);
-      
+
   RemoveBodyAndHead(*outFragNode);
+
+  GetLengthOfDOMNode(*outFragNode, NS_STATIC_CAST(PRUint32 &, *outFragLength));
   
   if (contextAsNode)
   {
@@ -2500,10 +2578,10 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
     // no longer have fragmentAsNode in tree
     contextDepth--;
   }
- 
+
   res = StripFormattingNodes(*outFragNode, PR_TRUE);
   NS_ENSURE_SUCCESS(res, res);
- 
+
   // get the infoString contents
   nsAutoString numstr1, numstr2;
   if (!aInfoStr.IsEmpty())
@@ -2550,7 +2628,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
   NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
 
   fragSink->SetTargetDocument(aTargetDocument);
-  
+
   // parse the fragment
   parser->SetContentSink(sink);
   if (bContext)
