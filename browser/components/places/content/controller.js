@@ -2184,6 +2184,8 @@ function PlacesBaseTransaction() {
 PlacesBaseTransaction.prototype = {
   bookmarks: Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
              getService(Ci.nsINavBookmarksService),
+  livemarks: Cc["@mozilla.org/browser/livemark-service;1"].
+             getService(Ci.nsILivemarkService),
   LOG: LOG,
   redoTransaction: function PIT_redoTransaction() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
@@ -2552,5 +2554,51 @@ PlacesEditBookmarkKeywordTransaction.prototype = {
 
   undoTransaction: function PEBKT_undoTransaction() {
     this.bookmarks.setKeywordForURI(this._uri, this._oldKeyword);
+  }
+};
+
+/**
+ * Edit a live bookmark's site URI.
+ */
+function PlacesEditLivemarkSiteURITransaction(folderId, uri) {
+  this._folderId = folderId;
+  this._newURI = uri;
+  this._oldURI = null;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditLivemarkSiteURITransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PELSUT_doTransaction() {
+    this._oldURI = this.livemarks.getSiteURI(this._folderId);
+    this.livemarks.setSiteURI(this._folderId, this._newURI);
+  },
+
+  undoTransaction: function PELSUT_undoTransaction() {
+    this.livemarks.setSiteURI(this._folderId, this._oldURI);
+  }
+};
+
+/**
+ * Edit a live bookmark's feed URI.
+ */
+function PlacesEditLivemarkFeedURITransaction(folderId, uri) {
+  this._folderId = folderId;
+  this._newURI = uri;
+  this._oldURI = null;
+  this.redoTransaction = this.doTransaction;
+}
+PlacesEditLivemarkFeedURITransaction.prototype = {
+  __proto__: PlacesBaseTransaction.prototype,
+
+  doTransaction: function PELFUT_doTransaction() {
+    this._oldURI = this.livemarks.getFeedURI(this._folderId);
+    this.livemarks.setFeedURI(this._folderId, this._newURI);
+    this.livemarks.reloadLivemarkFolder(this._folderId);
+  },
+
+  undoTransaction: function PELFUT_undoTransaction() {
+    this.livemarks.setFeedURI(this._folderId, this._oldURI);
+    this.livemarks.reloadLivemarkFolder(this._folderId);
   }
 };

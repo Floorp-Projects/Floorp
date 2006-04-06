@@ -89,18 +89,32 @@ var BookmarkPropertiesPanel = {
     return this.__ios;
   },
 
+  /**
+   * The Live Bookmark service for dealing with syndication feed folders.
+   */
+  __livemarks: null,
+  get _livemarks() {
+    if (!this.__livemarks) {
+      this.__livemarks =
+        Cc["@mozilla.org/browser/livemark-service;1"].
+        getService(Ci.nsILivemarkService);
+    }
+    return this.__livemarks;
+  },
+
   _bookmarkURI: null,
   _bookmarkTitle: "",
   _dialogWindow: null,
   _parentWindow: null,
   _controller: null,
-  MAX_INDENT_DEPTH: 6, // maximum indentation level of "tag" display
 
   EDIT_BOOKMARK_VARIANT: 0,
   ADD_BOOKMARK_VARIANT: 1,
   EDIT_HISTORY_VARIANT: 2,
   EDIT_FOLDER_VARIANT:  3,
   ADD_MULTIPLE_BOOKMARKS_VARIANT: 4,
+  ADD_LIVEMARK_VARIANT: 5,
+  EDIT_LIVEMARK_VARIANT: 6,
 
   /**
    * The variant identifier for the current instance of the dialog.
@@ -121,6 +135,8 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
       return false;
     default:
       return true;
@@ -135,6 +151,7 @@ var BookmarkPropertiesPanel = {
   _identifierIsFolderID: function BPP__identifierIsFolderID() {
     switch(this._variant) {
     case this.EDIT_FOLDER_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
       return true;
     default:
       return false;
@@ -161,6 +178,8 @@ var BookmarkPropertiesPanel = {
     case this.EDIT_HISTORY_VARIANT:
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
       return false;
     default:
       return true;
@@ -174,6 +193,8 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
       return false;
     default:
       return true;
@@ -189,9 +210,25 @@ var BookmarkPropertiesPanel = {
     case this.EDIT_HISTORY_VARIANT:
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
       return false;
     default:
       return true;
+    }
+  },
+
+  /**
+   * Returns true if the livemark feed and site URI fields are visible.
+   */
+
+  _areLivemarkURIsVisible: function BPP__areLivemarkURIsVisible() {
+    switch(this._variant) {
+    case this.ADD_LIVEMARK_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
+      return true;
+    default:
+      return false;
     }
   },
 
@@ -232,6 +269,7 @@ var BookmarkPropertiesPanel = {
   _getAcceptLabel: function BPP__getAcceptLabel() {
     switch(this._variant) {
     case this.ADD_BOOKMARK_VARIANT:
+    case this.ADD_LIVEMARK_VARIANT:
       return this._strings.getString("dialogAcceptLabelAdd");
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
       return this._strings.getString("dialogAcceptLabelAddMulti");
@@ -254,6 +292,8 @@ var BookmarkPropertiesPanel = {
       return this._strings.getString("dialogTitleFolderEdit");
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
       return this._strings.getString("dialogTitleAddMulti");
+    case this.ADD_LIVEMARK_VARIANT:
+      return this._strings.getString("dialogTitleAddLivemark");
     default:
       return this._strings.getString("dialogTitleBookmarkEdit");
     }
@@ -271,6 +311,7 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
     case this.EDIT_FOLDER_VARIANT:
+    case this.EDIT_LIVEMARK_VARIANT:
       return "single";
     default:
       return "multiple";
@@ -316,8 +357,14 @@ var BookmarkPropertiesPanel = {
       return this.ADD_MULTIPLE_BOOKMARKS_VARIANT;
     }
     else { /* Assume "edit" */
-      if (typeof(identifier) == "number")
-        return this.EDIT_FOLDER_VARIANT;
+      if (typeof(identifier) == "number") {
+        if (this._livemarks.isLivemark(identifier)) {
+          return this.EDIT_LIVEMARK_VARIANT;
+        }
+        else {
+          return this.EDIT_FOLDER_VARIANT;
+        }
+      }
 
       if (this._bms.isBookmarked(identifier)) {
         return this.EDIT_BOOKMARK_VARIANT;
@@ -411,6 +458,29 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
+   * This is a shorter form of getElementById for the dialog document.
+   * Given a XUL element ID from the dialog, returns the corresponding
+   * DOM element.
+   *
+   * @param  XUL element ID
+   * @returns corresponding DOM element, or null if none found
+   */
+
+  _element: function BPP__element(id) {
+    return this._dialogWindow.document.getElementById(id);
+  },
+
+  /**
+   * Hides the XUL element with the given ID.
+   *
+   * @param  string ID of the XUL element to hide
+   */
+
+  _hide: function BPP__hide(id) {
+    this._element(id).setAttribute("hidden", "true");
+  },
+
+  /**
    * This method fills in the data values for the fields in the dialog.
    */
   _populateProperties: function BPP__populateProperties() {
@@ -433,9 +503,9 @@ var BookmarkPropertiesPanel = {
         "true";
     }
 
-    var nurl = document.getElementById("editURLBar");
+    var nurl = this._element("editURLBar");
 
-    var titlebox = document.getElementById("editTitleBox");
+    var titlebox = this._element("editTitleBox");
 
     titlebox.value = this._bookmarkTitle;
 
@@ -449,28 +519,36 @@ var BookmarkPropertiesPanel = {
         nurl.setAttribute("disabled", "true");
     }
     else {
-      var locationRow = document.getElementById("locationRow");
-      locationRow.setAttribute("hidden", "true");
+      this._hide("locationRow");
+    }
+
+    if (this._areLivemarkURIsVisible()) {
+      if (this._identifierIsFolderID()) {
+        var feedURI = this._livemarks.getFeedURI(this._folderId);
+        if (feedURI)
+          this._element("editLivemarkFeedLocationBox").value = feedURI.spec;
+        var siteURI = this._livemarks.getSiteURI(this._folderId);
+        if (siteURI)
+          this._element("editLivemarkSiteLocationBox").value = siteURI.spec;
+      }
+    } else {
+      this._hide("livemarkFeedLocationRow");
+      this._hide("livemarkSiteLocationRow");
     }
 
     if (this._isShortcutVisible()) {
-      var shortcutbox =
-        this._dialogWindow.document.getElementById("editShortcutBox");
+      var shortcutbox = this._element("editShortcutBox");
       shortcutbox.value = this._bms.getKeywordForURI(this._bookmarkURI);
     }
     else {
-      var shortcutRow =
-        this._dialogWindow.document.getElementById("shortcutRow");
-      shortcutRow.setAttribute("hidden", "true");
+      this._hide("shortcutRow");
     }
 
     if (this._isFolderEditable()) {
       this._folderTree.selectFolders([this._bms.bookmarksRoot]);
     }
     else {
-      var folderRow =
-        this._dialogWindow.document.getElementById("folderRow");
-      folderRow.setAttribute("hidden", "true");
+      this._hide("folderRow");
     }
   },
 
@@ -536,13 +614,70 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
+   * This method checks the current state of the input fields in the
+   * dialog, and if any of them are in an invalid state, it will disable
+   * the submit button.  This method should be called after every
+   * significant change to the input.
+   */
+  validateChanges: function BPP_validateChanges() {
+    this._dialogWindow.document.documentElement.getButton("accept").disabled =
+      !this._inputIsValid();
+  },
+
+  /**
+   * This method checks to see if the input fields are in a valid state.
+   *
+   * @returns  true if the input is valid, false otherwise
+   */
+  _inputIsValid: function BPP__inputIsValid() {
+    // When in multiple select mode, it's possible to deselect all rows,
+    // but you have to file your bookmark in at least one folder.
+    if (this._isFolderEditable()) {
+      if (this._folderTree.getSelectionNodes().length == 0)
+        return false;
+    }
+
+    if (this._isURIEditable() && !this._containsValidURI("editURLBar"))
+      return false;
+
+    // Feed Location has to be a valid URI;
+    // Site Location has to be a valid URI or empty
+    if (this._areLivemarkURIsVisible()) {
+      if (!this._containsValidURI("editLivemarkFeedLocationBox"))
+        return false;
+      if (!this._containsValidURI("editLivemarkSiteLocationBox") &&
+          (this._element("editLivemarkSiteLocationBox").value.length > 0))
+        return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Determines whether the XUL textbox with the given ID contains a
+   * string that can be converted into an nsIURI.
+   *
+   * @param textboxID the ID of the textbox element whose contents we'll test
+   *
+   * @returns true if the textbox contains a valid URI string, false otherwise
+   */
+  _containsValidURI: function BPP__containsValidURI(textboxID) {
+    try {
+      var uri = this._uri(this._element(textboxID).value);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  },
+
+  /**
    * Save any changes that might have been made while the properties dialog
    * was open.
    */
-  _saveChanges: function PBD_saveChanges() {
+  _saveChanges: function BPP__saveChanges() {
     var transactions = [];
-    var urlbox = this._dialogWindow.document.getElementById("editURLBar");
-    var titlebox = this._dialogWindow.document.getElementById("editTitleBox");
+    var urlbox = this._element("editURLBar");
+    var titlebox = this._element("editTitleBox");
     var newURI = this._bookmarkURI;
     if (this._identifierIsURI() && this._isURIEditable())
       newURI = this._uri(urlbox.value);
@@ -588,13 +723,34 @@ var BookmarkPropertiesPanel = {
     if (this._identifierIsURI())
       transactions.push(
         new PlacesEditItemTitleTransaction(newURI, titlebox.value));
-    else if (this._identifierIsFolderID())
+    else if (this._identifierIsFolderID()) {
+      if (this._areLivemarkURIsVisible()) {
+        if (this._identifierIsFolderID()) {
+          var feedURIString =
+            this._element("editLivemarkFeedLocationBox").value;
+          var feedURI = this._uri(feedURIString);
+          transactions.push(
+            new PlacesEditLivemarkFeedURITransaction(this._folderId, feedURI));
+
+          // Site Location is empty, we can set its URI to null
+          var siteURI = null;
+          var siteURIString =
+            this._element("editLivemarkSiteLocationBox").value;
+          if (siteURIString.length > 0)
+            siteURI = this._uri(siteURIString);
+          transactions.push(
+            new PlacesEditLivemarkSiteURITransaction(this._folderId, siteURI));
+        }
+      }
+
+
       transactions.push(
         new PlacesEditFolderTitleTransaction(this._folderId, titlebox.value));
+    }
 
     if (this._isShortcutVisible()) {
       var shortcutbox =
-        this._dialogWindow.document.getElementById("editShortcutBox");
+        this._element("editShortcutBox");
       transactions.push(
         new PlacesEditBookmarkKeywordTransaction(this._bookmarkURI,
                                                  shortcutbox.value));
