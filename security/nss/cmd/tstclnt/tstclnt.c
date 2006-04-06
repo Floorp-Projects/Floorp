@@ -797,7 +797,8 @@ int main(int argc, char **argv)
     }
 
     pollset[SSOCK_FD].fd        = s;
-    pollset[SSOCK_FD].in_flags  = clientSpeaksFirst ? 0 : PR_POLL_READ;
+    pollset[SSOCK_FD].in_flags  = PR_POLL_EXCEPT |
+                                  (clientSpeaksFirst ? 0 : PR_POLL_READ);
     pollset[STDIN_FD].fd        = PR_GetSpecialFD(PR_StandardInput);
     pollset[STDIN_FD].in_flags  = PR_POLL_READ;
     npds                 = 2;
