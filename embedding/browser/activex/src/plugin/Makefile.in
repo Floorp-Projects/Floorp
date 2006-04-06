@@ -219,7 +219,7 @@ endif
 # XPConnect links to XPCOM and the shared activex lib
 ifdef XPC_IDISPATCH_SUPPORT
 EXTRA_DSO_LDOPTS += \
-    $(DIST)/lib/$(LIB_PREFIX)ax_common_s.$(LIB_SUFFIX) \
+    ../common/$(LIB_PREFIX)ax_common_s.$(LIB_SUFFIX) \
     $(MOZ_JS_LIBS) \
     $(XPCOM_LIBS) \
     $(NULL)
