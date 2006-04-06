@@ -19,7 +19,7 @@
         <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label="" xbl:inherits="label=buttonlabelextra1,accesskey=buttonaccesskeyextra1"/>
         <xul:spacer flex="1"/>
         <xul:button dlgtype="cancel" class="dialog-button" xbl:inherits="label=buttonlabelcancel,accesskey=buttonaccesskeycancel"/>
-        <xul:button dlgtype="accept" class="dialog-button" xbl:inherits="label=buttonlabelaccept,accesskey=buttonaccesskeyaccept"/>
+        <xul:button dlgtype="accept" class="dialog-button" xbl:inherits="label=buttonlabelaccept,accesskey=buttonaccesskeyaccept,disabled=buttondisabledaccept"/>
       </xul:hbox>
     </content>
 
