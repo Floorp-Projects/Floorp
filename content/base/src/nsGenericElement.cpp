@@ -1072,6 +1072,25 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
   if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
+
+    // If the namespace of the element is null then setting a non-null prefix
+    // isn't allowed.
+    if (mNodeInfo->NamespaceID() == kNameSpaceID_None) {
+      return NS_ERROR_DOM_NAMESPACE_ERR;
+    }
+  }
+
+  // If the namespace of the element is the XML namespace then setting a prefix
+  // other than xml isn't allowed, if the namespace of the element is not the
+  // XML namespace then setting the prefix to xml isn't allowed.
+  // If the namespace of the element is the XMLNS namespace then setting a
+  // prefix other than xmlns isn't allowed, if the namespace of the element is
+  // not the XMLNS namespace then setting the prefix to xmlns isn't allowed.
+  if (((mNodeInfo->NamespaceID() == kNameSpaceID_XML) !=
+       (prefix == nsGkAtoms::xml)) ||
+      ((mNodeInfo->NamespaceID() == kNameSpaceID_XMLNS) !=
+       (prefix == nsGkAtoms::xmlns))) {
+    return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 
   nsCOMPtr<nsINodeInfo> newNodeInfo;
