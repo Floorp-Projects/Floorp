@@ -308,7 +308,7 @@
         <body><![CDATA[
           this._formHistSvc =
                    Components.classes["@mozilla.org/satchel/form-history;1"]
-                             .getService(Components.interfaces.nsIFormHistory);
+                             .getService(Components.interfaces.nsIFormHistory2);
           this._prefBranch =
                     Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch);

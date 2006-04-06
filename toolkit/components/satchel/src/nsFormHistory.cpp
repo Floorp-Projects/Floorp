@@ -76,7 +76,7 @@ static void SwapBytes(PRUnichar* aDest, const PRUnichar* aSrc, PRUint32 aLen)
 static const char *kFormHistoryFileName = "formhistory.dat";
 
 NS_INTERFACE_MAP_BEGIN(nsFormHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIFormHistory)
+  NS_INTERFACE_MAP_ENTRY(nsIFormHistory2)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -145,7 +145,7 @@ nsFormHistory::FormHistoryEnabled()
 
 
 ////////////////////////////////////////////////////////////////////////
-//// nsIFormHistory
+//// nsIFormHistory2
 
 NS_IMETHODIMP
 nsFormHistory::GetHasEntries(PRBool *aHasEntries)

@@ -133,7 +133,7 @@ nsFormHistoryResult::RemoveValueAt(PRInt32 aRowIndex, PRBool aRemoveFromDB)
 #define PREF_FORMFILL_ENABLE "enable"
 
 NS_INTERFACE_MAP_BEGIN(nsFormHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIFormHistory)
+  NS_INTERFACE_MAP_ENTRY(nsIFormHistory2)
   NS_INTERFACE_MAP_ENTRY(nsIFormHistoryPrivate)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
@@ -197,7 +197,7 @@ nsFormHistory::FormHistoryEnabled()
 
 
 ////////////////////////////////////////////////////////////////////////
-//// nsIFormHistory
+//// nsIFormHistory2
 
 NS_IMETHODIMP
 nsFormHistory::GetHasEntries(PRBool *aHasEntries)
@@ -512,7 +512,7 @@ static const char * const gColumnNames[] = {
 
 struct FormHistoryImportClosure
 {
-  FormHistoryImportClosure(nsMorkReader *aReader, nsIFormHistory *aFormHistory)
+  FormHistoryImportClosure(nsMorkReader *aReader, nsIFormHistory2 *aFormHistory)
     : reader(aReader), formHistory(aFormHistory), byteOrderColumn(-1),
       swapBytes(PR_FALSE)
   {
@@ -523,7 +523,7 @@ struct FormHistoryImportClosure
 
   // Back pointers to the reader and history we're operating on
   const nsMorkReader *reader;
-  nsIFormHistory *formHistory;
+  nsIFormHistory2 *formHistory;
 
   // Indexes of the columns that we care about
   PRInt32 columnIndexes[kColumnCount];
@@ -604,7 +604,7 @@ NS_IMPL_ISUPPORTS1(nsFormHistoryImporter, nsIFormHistoryImporter)
 
 NS_IMETHODIMP
 nsFormHistoryImporter::ImportFormHistory(nsIFile *aFile,
-                                         nsIFormHistory *aFormHistory)
+                                         nsIFormHistory2 *aFormHistory)
 {
   // Check that the file exists before we try to open it
   PRBool exists;

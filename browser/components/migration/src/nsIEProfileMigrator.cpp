@@ -1018,7 +1018,7 @@ nsIEProfileMigrator::GetUserNameAndPass(unsigned char* data, unsigned long len, 
 //   fieldName3:StringData    value1\0value2\0value3\0
 //
 // Walk each non-URI prefixed key in IE's PStore section, split the value provided
-// into chunks (\0 delimited) and use nsIFormHistory's |addEntry| method to add
+// into chunks (\0 delimited) and use nsIFormHistory2's |addEntry| method to add
 // an entry for the fieldName prefix and each value. 
 //
 // "Quite Easily Done". ;-)
@@ -1074,7 +1074,7 @@ nsIEProfileMigrator::CopyFormData(PRBool aReplace)
 nsresult
 nsIEProfileMigrator::AddDataToFormHistory(const nsAString& aKey, PRUnichar* aData, unsigned long aCount)
 {
-  nsCOMPtr<nsIFormHistory> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
+  nsCOMPtr<nsIFormHistory2> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
   if (!formHistory)
     return NS_ERROR_OUT_OF_MEMORY;
 

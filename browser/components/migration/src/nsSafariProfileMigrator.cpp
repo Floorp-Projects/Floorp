@@ -1107,7 +1107,7 @@ nsSafariProfileMigrator::CopyFormData(PRBool aReplace)
     Boolean hasSearchStrings = ::CFDictionaryContainsKey(safariPrefs,
                                                          CFSTR("RecentSearchStrings"));
     if (hasSearchStrings) {
-      nsCOMPtr<nsIFormHistory> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
+      nsCOMPtr<nsIFormHistory2> formHistory(do_GetService("@mozilla.org/satchel/form-history;1"));
       if (formHistory) {
         CFArrayRef strings = (CFArrayRef)::CFDictionaryGetValue(safariPrefs,
                                                                 CFSTR("RecentSearchStrings"));
