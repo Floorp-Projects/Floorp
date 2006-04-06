@@ -87,10 +87,6 @@ CPPSRCS		= \
 		$(NULL)
 
 
-SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 EXTRA_DSO_LIBS	= gkgfx thebes
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
@@ -138,6 +134,7 @@ LOCAL_INCLUDES	= \
 EXTRA_DSO_LDOPTS += \
 		$(EXTRA_DSO_LIBS) \
 		../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+		$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \

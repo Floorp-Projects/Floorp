@@ -83,8 +83,8 @@ OS_LIBS		+= $(call EXPAND_LIBNAME, comctl32 comdlg32 shell32 gdi32 imm32)
 endif
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
+		../windows/$(LIB_PREFIX)widget_windows.$(LIB_SUFFIX) \
+		../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
