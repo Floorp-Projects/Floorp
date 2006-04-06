@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com>
+ *   Ben Turner <mozilla@songbirdnest.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -402,13 +403,12 @@ static int AppendNewAsyncMessage(AsyncOsFile* aFile, PRUint32 aOp,
                                  const char *aData);
 static int AsyncWriteError = SQLITE_OK; // set on write error
 
-// locking
-// serializes access to the queue, AsyncThreadedMode = false means
+// threading
+// serializes access to the queue, AsyncWriteThreadInstance = nsnull means
 // single-threaded mode
-PRBool AsyncThreadedMode = PR_FALSE;
+static nsIThread* AsyncWriteThreadInstance = nsnull;
 static PRLock* AsyncQueueLock = nsnull;
 static PRCondVar* AsyncQueueCondition = nsnull; // set when queue has something in it
-static PRCondVar* AsyncCompleteCondition = nsnull; // set when we are done processing
 
 // pointers to the original sqlite file I/O routines
 static int (*sqliteOrigOpenReadWrite)(const char*, OsFile**, int*) = nsnull;
@@ -505,24 +505,21 @@ mozStorageService::InitStorageAsyncIO()
   if (! AsyncQueueCondition)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // AsyncCompleteCondition
-  AsyncCompleteCondition = PR_NewCondVar(AsyncQueueLock);
-  if (! AsyncCompleteCondition)
-    return NS_ERROR_OUT_OF_MEMORY;
-
 #ifndef SINGLE_THREADED
   // start the writer thread
-  nsCOMPtr<nsIThread> runner;
   nsCOMPtr<nsIRunnable> thread = new AsyncWriteThread(this);
   if (! thread)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  AsyncThreadedMode = PR_TRUE;
-  nsresult rv = NS_NewThread(getter_AddRefs(runner), thread);
+  nsresult rv = NS_NewThread(&AsyncWriteThreadInstance,
+                             thread,
+                             0,
+                             PR_JOINABLE_THREAD);
   if (NS_FAILED(rv)) {
-    AsyncThreadedMode = PR_FALSE;
+    AsyncWriteThreadInstance = nsnull;
     return rv;
   }
+  NS_ADDREF(AsyncWriteThreadInstance);
 #endif
 
   return NS_OK;
@@ -542,23 +539,25 @@ mozStorageService::InitStorageAsyncIO()
 nsresult
 mozStorageService::FinishAsyncIO()
 {
-  nsAutoLock lock(AsyncQueueLock);
+  {
+    nsAutoLock lock(AsyncQueueLock);
 
-  if (! AsyncThreadedMode)
-    return NS_OK; // single-threaded mode, nothing to do
+    if (!AsyncWriteThreadInstance)
+      return NS_OK; // single-threaded mode, nothing to do
 
-  // this will tell the writer to exit and signal AsyncCompleteCondition when
-  // the message queue is empty.
-  AsyncWriterHaltWhenIdle = PR_TRUE;
+    // this will tell the writer to exit when the message queue is empty.
+    AsyncWriterHaltWhenIdle = PR_TRUE;
 
-  // this will wake up the writer thread when we release the lock
-  PR_NotifyAllCondVar(AsyncQueueCondition);
+    // this will wake up the writer thread when we release the lock
+    PR_NotifyAllCondVar(AsyncQueueCondition);
+  }
 
-  // now we wait for the writer thread to finish
-  PR_WaitCondVar(AsyncCompleteCondition, PR_INTERVAL_NO_TIMEOUT);
+  // now we join with the writer thread
+  AsyncWriteThreadInstance->Join();
 
-  // go into single-threaded mode
-  AsyncThreadedMode = PR_FALSE;
+  // release the thread and enter single-threaded mode
+  NS_RELEASE(AsyncWriteThreadInstance);
+  AsyncWriteThreadInstance = nsnull;
 
   return NS_OK;
 }
@@ -574,10 +573,6 @@ void
 mozStorageService::FreeLocks()
 {
   // Destroy the condition variables
-  if (AsyncCompleteCondition) {
-    PR_DestroyCondVar(AsyncCompleteCondition);
-    AsyncCompleteCondition = nsnull;
-  }
   if (AsyncQueueCondition) {
     PR_DestroyCondVar(AsyncQueueCondition);
     AsyncQueueCondition = nsnull;
@@ -694,7 +689,7 @@ AppendAsyncMessage(AsyncMessage* aMessage)
 
   // The writer thread might have been idle because there was nothing on the
   // write-op queue for it to do. So wake it up.
-  if (AsyncThreadedMode) {
+  if (AsyncWriteThreadInstance) {
     PR_NotifyCondVar(AsyncQueueCondition);
     PR_Unlock(AsyncQueueLock);
   } else {
@@ -1418,8 +1413,7 @@ ProcessAsyncMessages()
       nsAutoLock lock(AsyncQueueLock);
       while ((message = AsyncQueueFirst) == 0) {
         if (AsyncWriterHaltWhenIdle) {
-          // The only time we break out of the loop is when the lock is undone
-          PR_NotifyCondVar(AsyncCompleteCondition);
+          // We've been asked to stop, so exit the thread
           return;
         } else {
           // This will unlock AsyncQueueLock and wait for the condition to
@@ -1437,7 +1431,6 @@ ProcessAsyncMessages()
       if (rc != SQLITE_OK) {
         AsyncWriteError = rc;
         NS_NOTREACHED("FILE ERROR");
-        PR_NotifyCondVar(AsyncCompleteCondition);
         return;
       }
 
