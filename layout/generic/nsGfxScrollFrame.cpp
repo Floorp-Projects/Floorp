@@ -781,6 +781,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     return rv;
   
   PlaceScrollArea(state);
+  mInner.ScrollToRestoredPosition();
 
   if (!mInner.mSupppressScrollbarUpdate) {
     PRBool didHaveHScrollbar = mInner.mHasHorizontalScrollbar;
@@ -805,7 +806,6 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
                               oldScrollAreaBounds, state.mScrollPortRect);
     }
   }
-  ScrollToRestoredPosition();
 
   aDesiredSize.width = state.mInsideBorderSize.width +
     state.mComputedBorder.LeftRight();
@@ -1539,7 +1539,7 @@ nsGfxScrollFrameInner::ScrollToRestoredPosition()
     // if our position is greater than the scroll position, scroll.
     // remember that we could be incrementally loading so we may enter
     // and scroll many times.
-    if (y > cy || x > cx) {
+    if (y != cy || x != cx) {
       scrollingView->ScrollTo(x, y, 0);
       // scrollpostion goes from twips to pixels. this fixes any roundoff
       // problems.
