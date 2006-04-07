@@ -49,7 +49,7 @@
 #include "nsGUIEvent.h"
 #include "nsMacResources.h"
 #include "nsIRollupListener.h"
-#include  "nsChildView.h"
+#include "nsChildView.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
@@ -64,11 +64,12 @@ static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 // externs defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
+extern BOOL                gSomeMenuBarPainted;
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
 // call getHiddenWindowNativeMenu, don't use this directly
-static nsIMenuBar* gHiddenWindowMenuBar = nsnull;
+static nsIMenuBar* gHiddenWindowMenuBar;
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsCocoaWindow, Inherited)
 
@@ -728,6 +729,12 @@ NS_IMETHODIMP nsCocoaWindow::SetMenuBar(nsIMenuBar *aMenuBar)
   if (mMenuBar)
     mMenuBar->SetParent(nsnull);
   mMenuBar = aMenuBar;
+  
+  // We paint the hidden window menu bar if no other menu bar has been painted
+  // yet so that some reasonable menu bar is displayed when the app starts up.
+  if (!gSomeMenuBarPainted && mMenuBar && (GetHiddenWindowMenuBar() == mMenuBar))
+    mMenuBar->Paint();
+  
   return NS_OK;
 }
 
