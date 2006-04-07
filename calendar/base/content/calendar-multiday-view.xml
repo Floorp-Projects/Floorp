@@ -1015,6 +1015,8 @@
 
           var newStart;
           var newEnd;
+          var startTZ;
+          var endTZ;
 
           if (dragState.dragType == "new") {
               newStart = col.mDate.clone();
@@ -1024,6 +1026,19 @@
           } else {
               newStart = dragState.dragOccurrence.startDate.clone();
               newEnd = dragState.dragOccurrence.endDate.clone();
+
+              // Our views are pegged to the default timezone.  If the event
+              // isn't also in the timezone, we're going to need to do some
+              // tweaking.  We could just do this for every eventm but
+              // getInTimezone is slow, so it's much better to only do this
+              // when the timezones actually differ from the view's.
+              if (this.mTimezone != newStart.timezone ||
+                  this.mTimezone != newEnd.timezone) {
+                  startTZ = newStart.timezone;
+                  endTZ = newEnd.timezone;
+                  newStart = newStart.getInTimezone(col.calendarView.mTimezone);
+                  newEnd = newEnd.getInTimezone(col.calendarView.mTimezone);
+              }
           }
 
           if (dragState.dragType == "modify-start" ||
@@ -1057,6 +1072,14 @@
               newStart.normalize();
               newEnd.addDuration(duration);
               newEnd.normalize();
+          }
+
+          // If we tweaked tzs, put times back in their original ones
+          if (startTZ) {
+              newStart = newStart.getInTimezone(startTZ);
+          }
+          if (endTZ) {
+              newEnd = newEnd.getInTimezone(endTZ);
           }
 
           if (dragState.dragType == "new") {
