@@ -13,7 +13,7 @@ while minimizing the size of the application itself.</p>
 {/section}
 </ul>
 
-<h2><a href="{$config.webpath}/rss/{$app}/extensions/popular/"><img class="rss" src="{$config.webpath}/images/rss.png" alt=""/>Top Extensions</h2>
+<h2><a href="{$config.webpath}/rss/{$app}/extensions/popular/"><img class="rss" src="{$config.webpath}/images/rss.png" alt=""/>Top Extensions</a></h2>
 <ul>
 {section name=pe loop=$popularExtensions step=1 start=0}
 <li><a href="{$config.webpath}/{$app}/{$popularExtensions[pe].ID}/">{$popularExtensions[pe].name}</a> ({$popularExtensions[pe].dc} downloads)</li>

@@ -33,12 +33,12 @@
 
         <div>
         <label class="amo-label-large" for="email">E-Mail Address:</label>
-        <input id="email" name="email" type="text" value="{$email_value|escape}"/>
+        <input id="email" name="email" type="text" value="{$email_value|escape}" size="40"/>
         </div>
 
         <div>
         <label class="amo-label-large" for="emailconfirm">Confirm E-Mail:</label>
-        <input id="emailconfirm" name="emailconfirm" type="text" value="{$emailconfirm_value|escape}"/>
+        <input id="emailconfirm" name="emailconfirm" type="text" value="{$emailconfirm_value|escape}" size="40"/>
         </div>
 
         <p>How do you want to be known to visitors of Mozilla Update? This is your "author
@@ -51,7 +51,7 @@
 
         <div>
         <label class="amo-label-large" for="name">Your Name:</label>
-        <input id="name" name="name" type="text" value="{$name_value|escape}"/>
+        <input id="name" name="name" type="text" value="{$name_value|escape}" size="40"/>
         </div>
 
         <p>If you have a website, enter the URL here. (including the http:// ) Your website
@@ -61,7 +61,7 @@
 
         <div>
         <label class="amo-label-large" for="website">Your Website:</label>
-        <input id="website" name="website" type="text" value="{$website_value|escape}"/>
+        <input id="website" name="website" type="text" value="{$website_value|escape}" size="40"/>
         </div>
 
         {if $error_password_empty}
@@ -73,12 +73,12 @@
         
         <div>
         <label class="amo-label-large" for="password">Password:</label>
-        <input id="password" name="password" type="password" />
+        <input id="password" name="password" type="password" size="40"/>
         </div>
 
         <div>
         <label class="amo-label-large" for="passwordconfirm">Confirm Password:</label>
-        <input id="passwordconfirm" name="passwordconfirm" type="password" />
+        <input id="passwordconfirm" name="passwordconfirm" type="password" size="40"/>
         </div>
 
         <p>Review what you entered above. If everything's correct, click the "Join Mozilla
