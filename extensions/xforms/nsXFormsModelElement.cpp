@@ -1549,8 +1549,6 @@ nsXFormsModelElement::ValidateDocument(nsIDOMDocument *aInstanceDocument,
   nsresult rv = aInstanceDocument->GetDocumentElement(getter_AddRefs(element));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool isValid = PR_FALSE;
-
   // get namespace from node
   nsAutoString nsuri;
   element->GetNamespaceURI(nsuri);
@@ -1560,25 +1558,19 @@ nsXFormsModelElement::ValidateDocument(nsIDOMDocument *aInstanceDocument,
 
   nsCOMPtr<nsISchema> schema;
   schemaColl->GetSchema(nsuri, getter_AddRefs(schema));
-  if (schema) {
-    nsXFormsSchemaValidator validator;
-    validator.LoadSchema(schema);
-    // Validate will validate the node and its subtree, as per the schema
-    // specification.
-    isValid = validator.Validate(element);
-  } else {
-    // no schema found for the instance document's namespace.
-    nsCOMPtr<nsIDOMNode> instanceElement;
-    nsXFormsUtils::GetInstanceNodeForData(element,
-                                          getter_AddRefs(instanceElement));
-    const PRUnichar *strings[] = { nsuri.get() };
-    nsXFormsUtils::ReportError(NS_LITERAL_STRING("noSchemaForInstance"),
-                               strings, 1, instanceElement, nsnull);
-    rv = NS_ERROR_UNEXPECTED;
+  if (!schema) {
+    // No schema found, so nothing to validate
+    *aResult = PR_TRUE;
+    return NS_OK;
   }
+  
+  nsXFormsSchemaValidator validator;
+  validator.LoadSchema(schema);
+  // Validate will validate the node and its subtree, as per the schema
+  // specification.
+  *aResult = validator.Validate(element);
 
-  *aResult = isValid;
-  return rv;
+  return NS_OK;
 }
 
 /*
