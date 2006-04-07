@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PANGO_ENABLE_BACKEND
+#define PANGO_ENABLE_ENGINE
+ 
 // for strtod()
 #include <stdlib.h>
 
@@ -50,10 +53,15 @@
 #include <pango/pango.h>
 #include <pango/pangox.h>
 #include <pango/pango-fontmap.h>
+#include <pango/pango-font.h>
+#include <pango/pangoxft.h>
 
+#include <fontconfig/fontconfig.h>
 #include "nsSystemFontsGTK2.h"
 
 static PRInt32 GetXftDPI(void);
+
+static PRInt32 GetDPIFromPangoFont();
 
 // Glue to avoid build/runtime dependencies on Pango > 1.6
 
@@ -203,10 +211,23 @@ nsSystemFontsGTK2::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
     // |size| is now either pixels or pango-points (not Mozilla-points!)
 
     if (!MOZ_pango_font_description_get_size_is_absolute(desc)) {
-        // |size| is in pango-points, so convert to pixels
+        // |size| is in pango-points, so convert to pixels. Try to get
+        // |the "Xft DPI" that's sometimes advertized by X.
         PRInt32 dpi = GetXftDPI();
+        if (dpi == 0) {
+            // No luck.  Try getting a DPI from a pango font.
+            dpi = GetDPIFromPangoFont();
+        }
+
         if (dpi != 0) {
             size *= float(dpi) / 72.0f;
+        } else {
+            // Better to assume that pango points are equal in size to mozilla
+            // points than to assume that pango points are equal to pixels.
+            // This is a little silly since we divide by aPixelsToTwips only to
+            // multiply by it later, but this keeps the code simple and this
+            // case is rare.
+            size = NSFloatPointsToTwips(size) / aPixelsToTwips;
         }
     }
 
@@ -233,6 +254,68 @@ GetXftDPI(void)
   }
 
   return 0;
+}
+
+/* static */
+PRInt32
+GetDPIFromPangoFont()
+{
+#ifndef THEBES_USE_PANGO_CAIRO
+    PangoContext* ctx = pango_xft_get_context(GDK_DISPLAY(), 0);
+    gdk_pango_context_set_colormap(ctx, gdk_rgb_get_cmap());
+#else
+    PangoContext* ctx =
+        pango_cairo_font_map_create_context(
+          PANGO_CAIRO_FONT_MAP(pango_cairo_font_map_get_default()));
+#endif
+
+    if (!ctx) {
+        return 0;
+    }
+
+    double dblDPI = 0.0f;
+    GList *items = nsnull;
+    PangoItem *item = nsnull;
+    PangoFcFont *fcfont = nsnull;
+    
+    PangoAttrList *al = pango_attr_list_new();
+
+    if (!al) {
+        goto cleanup;
+    }
+
+    // Just using the string "a" because we need _some_ text.
+    items = pango_itemize(ctx, "a", 0, 1, al, NULL);
+
+    if (!items) {
+        goto cleanup;
+    }
+
+    item = (PangoItem*)items->data;
+
+    if (!item) {
+        goto cleanup;
+    }
+
+    fcfont = PANGO_FC_FONT(item->analysis.font);
+
+    if (!fcfont) {
+        goto cleanup;
+    }
+
+    FcPatternGetDouble(fcfont->font_pattern, FC_DPI, 0, &dblDPI);
+
+ cleanup:   
+    if (al)
+        pango_attr_list_unref(al);
+    if (item)
+        pango_item_free(item);
+    if (items)
+        g_list_free(items);
+    if (ctx)
+        g_object_unref(ctx);
+
+    return PRInt32(dblDPI);
 }
 
 nsresult
