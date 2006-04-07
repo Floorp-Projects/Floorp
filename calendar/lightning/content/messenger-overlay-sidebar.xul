@@ -50,10 +50,9 @@
 
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 
-<?xml-stylesheet href="chrome://calendar/content/calendar-multiday-view.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/calendar-month-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/calendar-view-bindings.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/calendar-views.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-decorated-views.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/calendar-view-core.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
