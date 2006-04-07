@@ -990,7 +990,11 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   } else if (command == @selector(moveToEndOfDocument:)) {
     [self selectRowAt:[mTableView numberOfRows]-1];
     [self completeSelectedResult];
-  } else if (command == @selector(insertTab:)) {
+  } else if (command == @selector(complete:)) {
+      [self selectRowBy:1];
+      [self completeSelectedResult];
+      return YES;
+  } else if (command == @selector(insertTab:))  {
     if ([mPopupWin isVisible]) {
       [self selectRowBy:1];
       [self completeSelectedResult];
