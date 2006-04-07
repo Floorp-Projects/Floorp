@@ -222,6 +222,8 @@ class AMO_Object
                 v.approved = 'yes' AND
                 a.GUID = '{$app}' AND
                 m.type = '{$type}'
+            GROUP BY
+                m.ID
             ORDER BY
                 v.dateupdated DESC , downloadcount DESC, rating DESC
             LIMIT 
@@ -313,6 +315,8 @@ class AMO_Object
                 v.approved = 'yes' AND
                 a.GUID = '{$app}' AND
                 m.type = '{$type}'
+            GROUP BY
+                m.ID
             ORDER BY
                 m.downloadcount DESC, m.rating DESC, v.dateupdated DESC 
             LIMIT 
@@ -334,7 +338,7 @@ class AMO_Object
 
         // Return most popular addons.
         $this->db->query("
-            SELECT DISTINCT
+            SELECT
                 m.id, 
                 m.name, 
                 m.downloadcount,
@@ -397,7 +401,7 @@ class AMO_Object
 
         // Return most popular addons.
         $this->db->query("
-            SELECT DISTINCT
+            SELECT
                 m.id, 
                 m.name, 
                 m.downloadcount,
@@ -453,7 +457,7 @@ class AMO_Object
         // Yes, rand(now()) is a random (hehe) way to do it.
         // I'm open to suggestions.
         $this->db->query("
-            SELECT DISTINCT
+            SELECT
                 m.id, 
                 m.name, 
                 m.downloadcount,
