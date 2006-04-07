@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.84 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.85 2006/04/07 06:24:07 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -2291,7 +2291,19 @@ ssl3_HandleAlert(sslSocket *ss, sslBuffer *buf)
     case internal_error: 	error = SSL_ERROR_INTERNAL_ERROR_ALERT;   break;
     case user_canceled: 	error = SSL_ERROR_USER_CANCELED_ALERT;    break;
     case no_renegotiation: 	error = SSL_ERROR_NO_RENEGOTIATION_ALERT; break;
-    default: 			error = SSL_ERROR_RX_UNKNOWN_ALERT; 	  break;
+
+    /* Alerts for TLS client hello extensions */
+    case unsupported_extension: 
+			error = SSL_ERROR_UNSUPPORTED_EXTENSION_ALERT;    break;
+    case certificate_unobtainable: 
+			error = SSL_ERROR_CERTIFICATE_UNOBTAINABLE_ALERT; break;
+    case unrecognized_name: 
+			error = SSL_ERROR_UNRECOGNIZED_NAME_ALERT;        break;
+    case bad_certificate_status_response: 
+			error = SSL_ERROR_BAD_CERT_STATUS_RESPONSE_ALERT; break;
+    case bad_certificate_hash_value: 
+			error = SSL_ERROR_BAD_CERT_HASH_VALUE_ALERT;      break;
+    default: 		error = SSL_ERROR_RX_UNKNOWN_ALERT;               break;
     }
     if (level == alert_fatal) {
 	ss->sec.uncache(ss->sec.ci.sid);
@@ -2421,7 +2433,7 @@ ssl3_HandleChangeCipherSpecs(sslSocket *ss, sslBuffer *buf)
 
     ss->ssl3.prSpec  = ss->ssl3.crSpec;
     ss->ssl3.crSpec  = prSpec;
-    ss->ssl3.hs.ws         = wait_finished;
+    ss->ssl3.hs.ws   = wait_finished;
 
     SSL_TRC(3, ("%d: SSL3[%d] Set Current Read Cipher Suite to Pending",
 		SSL_GETPID(), ss->fd ));
@@ -2788,7 +2800,7 @@ ssl3_AppendHandshake(sslSocket *ss, const void *void_src, PRInt32 bytes)
     return SECSuccess;
 }
 
-static SECStatus
+SECStatus
 ssl3_AppendHandshakeNumber(sslSocket *ss, PRInt32 num, PRInt32 lenSize)
 {
     SECStatus rv;
@@ -2893,7 +2905,7 @@ ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRInt32 bytes, SSL3Opaque **b,
  * Thus, the largest value that may be sent this way is 0x7fffffff.
  * On error, an alert has been sent, and a generic error code has been set.
  */
-static PRInt32
+PRInt32
 ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRInt32 bytes, SSL3Opaque **b,
 			    PRUint32 *length)
 {
@@ -3265,6 +3277,7 @@ ssl3_SendClientHello(sslSocket *ss)
     int              length;
     int              num_suites;
     int              actual_count = 0;
+    PRInt32          total_exten_len = 0;
 
     SSL_TRC(3, ("%d: SSL3[%d]: send client_hello handshake", SSL_GETPID(),
 		ss->fd));
@@ -3400,6 +3413,21 @@ ssl3_SendClientHello(sslSocket *ss)
     if (!num_suites)
     	return SECFailure;	/* ssl3_config_match_init has set error code. */
 
+    if (ss->opt.enableTLS) {
+	PRUint32 maxBytes = 65535; /* 2^16 - 1 */
+	PRInt32  extLen;
+
+	extLen = ssl3_CallHelloExtensionSenders(ss, PR_FALSE, maxBytes, NULL);
+	if (extLen < 0) {
+	    return SECFailure;
+	}
+	maxBytes        -= extLen;
+	total_exten_len += extLen;
+
+	if (total_exten_len > 0)
+	    total_exten_len += 2;
+    }
+
     /* how many suites are permitted by policy and user preference? */
     num_suites = count_cipher_suites(ss, ss->ssl3.policy, PR_TRUE);
     if (!num_suites)
@@ -3408,7 +3436,7 @@ ssl3_SendClientHello(sslSocket *ss)
     length = sizeof(SSL3ProtocolVersion) + SSL3_RANDOM_LENGTH +
 	1 + ((sid == NULL) ? 0 : sid->u.ssl3.sessionIDLength) +
 	2 + num_suites*sizeof(ssl3CipherSuite) +
-	1 + compressionMethodsCount;
+	1 + compressionMethodsCount + total_exten_len;
 
     rv = ssl3_AppendHandshakeHeader(ss, client_hello, length);
     if (rv != SECSuccess) {
@@ -3481,6 +3509,24 @@ ssl3_SendClientHello(sslSocket *ss)
 	    return rv;	/* err set by ssl3_AppendHandshake* */
 	}
     }
+
+    if (total_exten_len) {
+	PRUint32 maxBytes = total_exten_len - 2;
+	PRInt32  extLen;
+
+	rv = ssl3_AppendHandshakeNumber(ss, maxBytes, 2);
+	if (rv != SECSuccess) {
+	    return rv;	/* err set by AppendHandshake. */
+	}
+
+	extLen = ssl3_CallHelloExtensionSenders(ss, PR_TRUE, maxBytes, NULL);
+	if (extLen < 0) {
+	    return SECFailure;
+	}
+	maxBytes -= extLen;
+	PORT_Assert(!maxBytes);
+    }
+
 
     rv = ssl3_FlushHandshake(ss, 0);
     if (rv != SECSuccess) {
@@ -5331,10 +5377,23 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	goto loser;		/* malformed */
     }
 
-    /* It's OK for length to be non-zero here.
-     * Non-zero length means that some new protocol revision has extended
-     * the client hello message.
-     */
+    /* Handle TLS hello extensions, for SSL3 & TLS */
+    if (length) {
+	/* Get length of hello extensions */
+	PRInt32 extension_length;
+	extension_length = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
+        if (extension_length < 0) {
+	    goto loser;				/* alert already sent */
+	}
+	if (extension_length != length) {
+	    ssl3_DecodeError(ss);		/* send alert */
+	    goto loser;
+    	}
+	rv = ssl3_HandleClientHelloExtensions(ss, &b, &length);
+	if (rv != SECSuccess) {
+	    goto loser;		/* malformed */
+	}
+    }
 
     desc = handshake_failure;
 
@@ -5815,7 +5874,9 @@ ssl3_SendServerHello(sslSocket *ss)
 {
     sslSessionID *sid;
     SECStatus     rv;
+    PRUint32      maxBytes = 65535;
     PRUint32      length;
+    PRInt32       extensions_len = 0;
 
     SSL_TRC(3, ("%d: SSL3[%d]: send server_hello handshake", SSL_GETPID(),
 		ss->fd));
@@ -5830,9 +5891,15 @@ ssl3_SendServerHello(sslSocket *ss)
     }
 
     sid = ss->sec.ci.sid;
+
+    extensions_len = ssl3_CallHelloExtensionSenders(ss, PR_FALSE, maxBytes,
+					       &ss->serverExtensionSenders[0]);
+    if (extensions_len > 0)
+    	extensions_len += 2; /* Add sizeof total extension length */
+
     length = sizeof(SSL3ProtocolVersion) + SSL3_RANDOM_LENGTH + 1 +
              ((sid == NULL) ? 0: SSL3_SESSIONID_BYTES) +
-	     sizeof(ssl3CipherSuite) + 1;
+	     sizeof(ssl3CipherSuite) + 1 + extensions_len;
     rv = ssl3_AppendHandshakeHeader(ss, server_hello, length);
     if (rv != SECSuccess) {
 	return rv;	/* err set by AppendHandshake. */
@@ -5869,6 +5936,22 @@ ssl3_SendServerHello(sslSocket *ss)
     rv = ssl3_AppendHandshakeNumber(ss, ss->ssl3.hs.compression, 1);
     if (rv != SECSuccess) {
 	return rv;	/* err set by AppendHandshake. */
+    }
+    if (extensions_len) {
+	PRInt32 sent_len;
+
+    	extensions_len -= 2;
+	rv = ssl3_AppendHandshakeNumber(ss, extensions_len, 2);
+	if (rv != SECSuccess) 
+	    return rv;	/* err set by ssl3_SetupPendingCipherSpec */
+	sent_len = ssl3_CallHelloExtensionSenders(ss, PR_TRUE, extensions_len,
+					   &ss->serverExtensionSenders[0]);
+        PORT_Assert(sent_len == extensions_len);
+	if (sent_len != extensions_len) {
+	    if (sent_len >= 0)
+	    	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    return SECFailure;
+	}
     }
     rv = ssl3_SetupPendingCipherSpec(ss);
     if (rv != SECSuccess) {

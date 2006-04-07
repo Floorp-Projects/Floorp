@@ -40,9 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.5 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
-
-#ifdef NSS_ENABLE_ECC
+/* $Id: ssl3ecc.c,v 1.6 2006/04/07 06:24:07 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -68,6 +66,8 @@
 #include "blapi.h"
 
 #include <stdio.h>
+
+#ifdef NSS_ENABLE_ECC
 
 #ifndef PK11_SETATTRS
 #define PK11_SETATTRS(x,id,v,l) (x)->type = (id); \
@@ -778,3 +778,168 @@ ssl3_FilterECCipherSuitesByServerCerts(sslSocket * ss)
 }
 
 #endif /* NSS_ENABLE_ECC */
+
+/* Format an SNI extension, using the name from the socket's URL,
+ * unless that name is a dotted decimal string.
+ */
+PRInt32 
+ssl3_SendServerNameIndicationExtension(
+			sslSocket * ss,
+			PRBool      append,
+			PRUint32    maxBytes)
+{
+    PRUint32 len, span;
+    /* must have a hostname */
+    if (!ss || !ss->url || !ss->url[0])
+    	return 0;
+    /* must have at lest one character other than [0-9\.] */
+    len  = PORT_Strlen(ss->url);
+    span = strspn(ss->url, "0123456789.");
+    if (len == span) {
+    	/* is a dotted decimal IP address */
+	return 0;
+    }
+    if (append && maxBytes >= len + 9) {
+	SECStatus rv;
+	/* extension_type */
+	rv = ssl3_AppendHandshakeNumber(ss,       0, 2); 
+	if (rv != SECSuccess) return 0;
+	/* length of extension_data */
+	rv = ssl3_AppendHandshakeNumber(ss, len + 5, 2); 
+	if (rv != SECSuccess) return 0;
+	/* length of server_name_list */
+	rv = ssl3_AppendHandshakeNumber(ss, len + 3, 2);
+	if (rv != SECSuccess) return 0;
+	/* Name Type (host_name) */
+	rv = ssl3_AppendHandshake(ss,       "\0",    1);
+	if (rv != SECSuccess) return 0;
+	/* HostName (length and value) */
+	rv = ssl3_AppendHandshakeVariable(ss, ss->url, len, 2);
+	if (rv != SECSuccess) return 0;
+    }
+    return len + 9;
+}
+
+/* handle an incoming SNI extension, by ignoring it. */
+SECStatus
+ssl3_HandleServerNameIndicationExtension(sslSocket * ss, PRUint16 ex_type, 
+                                         SECItem *data)
+{
+    /* For now, we ignore this, as if we didn't understand it. :-)  */
+    return SECSuccess;
+}
+
+/* Table of handlers for received TLS hello extensions, one per extension.
+ * In the second generation, this table will be dynamic, and functions
+ * will be registered here.
+ */
+static const ssl3HelloExtensionHandler handlers[] = {
+    {  0, &ssl3_HandleServerNameIndicationExtension    },
+    /* ECC handlers will be added here */
+    { -1, NULL }
+};
+
+/* Table of functions to format TLS hello extensions, one per extension.
+ * This static table is for the formatting of client hello extensions.
+ * The server's table of hello senders is dynamic, in the socket struct,
+ * and sender functions are registered there.
+ */
+static const 
+ssl3HelloExtensionSender clientHelloSenders[MAX_EXTENSION_SENDERS] = {
+    {  0, &ssl3_SendServerNameIndicationExtension    },
+    /* ECC senders will be added here */
+    { -1, NULL }
+};
+
+/* go through hello extensions in buffer "b".
+ * For each one, find the extension handler in the table above, and 
+ * if present, invoke that handler.  
+ * ignore any externsions with unknown extensions types.
+ */
+SECStatus 
+ssl3_HandleClientHelloExtensions(sslSocket *ss, 
+                                 SSL3Opaque **b, 
+				 PRUint32 *length)
+{
+    while (*length) {
+	const ssl3HelloExtensionHandler * handler;
+	SECStatus rv;
+	PRInt32   extension_type;
+	SECItem   extension_data;
+
+	/* Get the extension's type field */
+	extension_type = ssl3_ConsumeHandshakeNumber(ss, 2, b, length);
+	if (extension_type < 0)  /* failure to decode extension_type */
+	    return SECFailure;   /* alert already sent */
+
+	/* get the data for this extension, so we can pass it or skip it. */
+	rv = ssl3_ConsumeHandshakeVariable(ss, &extension_data, 2, b, length);
+	if (rv != SECSuccess)
+	    return rv;
+
+	/* find extension_type in table of Client Hello Extension Handlers */
+	for (handler = handlers; handler->ex_type >= 0; handler++) {
+	    if (handler->ex_type == extension_type)
+	        break;
+	}
+
+	/* if found,  Call this handler */
+	if (handler->ex_type == extension_type) {
+	    rv = (*handler->ex_handler)(ss, (PRUint16)extension_type, 
+	                                             &extension_data);
+	    /* Ignore this result */
+	    /* Essentially, treat all bad extensions as unrecognized types. */
+	}
+    }
+    return SECSuccess;
+}
+
+/* Add a callback function to the table of senders of server hello extensions.
+ */
+SECStatus 
+ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
+				        ssl3HelloExtensionSenderFunc cb)
+{
+    int i;
+    ssl3HelloExtensionSender *sender = &ss->serverExtensionSenders[0];
+
+    for (i = 0; i < MAX_EXTENSION_SENDERS; ++i, ++sender) {
+        if (!sender->ex_sender) {
+	    sender->ex_type   = ex_type;
+	    sender->ex_sender = cb;
+	    return SECSuccess;
+	}
+	/* detect duplicate senders */
+	PORT_Assert(sender->ex_type != ex_type);
+	if (sender->ex_type == ex_type) {
+	    /* duplicate */
+	    break;
+	}
+    }
+    PORT_Assert(i < MAX_EXTENSION_SENDERS); /* table needs to grow */
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+    return SECFailure;
+}
+
+/* call each of the extension senders and return the accumulated length */
+PRInt32
+ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
+                               const ssl3HelloExtensionSender *sender)
+{
+    PRInt32 total_exten_len = 0;
+    int i;
+
+    if (!sender)
+    	sender = &clientHelloSenders[0];
+
+    for (i = 0; i < MAX_EXTENSION_SENDERS; ++i, ++sender) {
+	if (sender->ex_sender) {
+	    PRInt32 extLen = (*sender->ex_sender)(ss, append, maxBytes);
+	    if (extLen < 0)
+	    	return -1;
+	    maxBytes        -= extLen;
+	    total_exten_len += extLen;
+	}
+    }
+    return total_exten_len;
+}
