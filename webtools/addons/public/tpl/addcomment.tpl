@@ -11,7 +11,7 @@ released on {$addon->VersionDateAdded|date_format}
 </p>
 
 {if $c_added_comment}
-<p>You comment has been added successfully.</p>
+<p>Your comment has been added successfully.</p>
 <ul>
 <li><a href="addon.php?id={$addon->ID}">Return to {$addon->Name|escape}</a></li>
 </ul>

@@ -54,9 +54,9 @@ Next Page &raquo;
 {section name=comments loop=$addon->Comments}
 <li>
 <div class="opinions-vote">{$addon->Comments[comments].CommentVote}<span class="opinions-caption">out of 5</span></div>
-<h4 class="opinions-title">{$addon->Comments[comments].CommentTitle}</h4>
-<p class="opinions-info">by {$addon->Comments[comments].CommentName}, {$addon->Comments[comments].CommentDate|date_format}</p>
-<p class="opinions-text">{$addon->Comments[comments].CommentNote}</p>
+<h4 class="opinions-title">{$addon->Comments[comments].CommentTitle|strip_tags}</h4>
+<p class="opinions-info">by {$addon->Comments[comments].CommentName|strip_tags}, {$addon->Comments[comments].CommentDate|date_format}</p>
+<p class="opinions-text">{$addon->Comments[comments].CommentNote|strip_tags}</p>
 <p class="opinions-helpful"><strong>{$addon->Comments[comments].helpful_yes}</strong> out of <strong>{$addon->Comments[comments].helpful_total}</strong> viewers found this comment helpful<br>
 Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=yes">Yes</a> &#124; <a href="{$config.webpath}/ratecomment.php?aid={$addon->ID}&amp;cid={$addon->Comments[comments].CommentID}&amp;r=no">No</a></p>
 </li>
