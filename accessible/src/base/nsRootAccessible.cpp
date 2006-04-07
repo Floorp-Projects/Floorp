@@ -87,15 +87,8 @@
 #include "nsIAccessibleHyperText.h"
 #endif
 
-NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
-NS_INTERFACE_MAP_END_INHERITING(nsDocAccessible)
-
-NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible)
-NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
+NS_IMPL_ISUPPORTS_INHERITED1(nsRootAccessible, nsDocAccessible,
+                             nsIDOMEventListener)
 
 
 //-----------------------------------------------------
@@ -224,76 +217,59 @@ nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
   NS_IF_ADDREF(*aChromeTarget);
 }
 
+const char* const docEvents[] = {
+  // capture DOM focus events 
+  "focus",
+  // capture Form change events 
+  "select",
+  // capture NameChange events (fired whenever name changes, immediately after, whether focus moves or not)
+  "NameChange",
+  // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
+  "ValueChange",
+  // capture AlertActive events (fired whenever alert pops up)
+  "AlertActive",
+  // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
+  "OpenStateChange",
+  // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
+  "CheckboxStateChange",
+  // add ourself as a RadioStateChange Listener ( custom event fired in in nsHTMLInputElement.cpp  & radio.xml)
+  "RadioStateChange",
+  "popupshown",
+  "popuphiding",
+  "DOMMenuInactive",
+  "DOMMenuItemActive",
+  "DOMMenuBarActive",
+  "DOMMenuBarInactive",
+  "DOMContentLoaded"
+};
+
+const char* const chromeEvents[] = {
+  "pagehide",
+  "pageshow"
+};
+
 nsresult nsRootAccessible::AddEventListeners()
 {
   // use AddEventListener from the nsIDOMEventTarget interface
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) { 
-    // capture DOM focus events 
-    nsresult rv = target->AddEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // capture Form change events 
-    rv = target->AddEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // capture NameChange events (fired whenever name changes, immediately after, whether focus moves or not)
-    rv = target->AddEventListener(NS_LITERAL_STRING("NameChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // capture ValueChange events (fired whenever value changes, immediately after, whether focus moves or not)
-    rv = target->AddEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // capture AlertActive events (fired whenever alert pops up)
-    rv = target->AddEventListener(NS_LITERAL_STRING("AlertActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // add ourself as a OpenStateChange listener (custom event fired in tree.xml)
-    rv = target->AddEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // add ourself as a CheckboxStateChange listener (custom event fired in nsHTMLInputElement.cpp)
-    rv = target->AddEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // add ourself as a RadioStateChange Listener ( custom event fired in in nsHTMLInputElement.cpp  & radio.xml)
-    rv = target->AddEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = target->AddEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = target->AddEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = target->AddEventListener(NS_LITERAL_STRING("DOMContentLoaded"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    for (const char* const* e = docEvents,
+                   * const* e_end = docEvents + NS_ARRAY_LENGTH(docEvents);
+         e < e_end; ++e) {
+      nsresult rv = target->AddEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
   NS_ASSERTION(target, "No chrome event handler for document");
   if (target) {
-    nsresult rv = target->AddEventListener(NS_LITERAL_STRING("pagehide"), 
-                                           NS_STATIC_CAST(nsIDOMXULListener*, this), 
-                                           PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-    target->AddEventListener(NS_LITERAL_STRING("pageshow"), 
-                             NS_STATIC_CAST(nsIDOMXULListener*, this), 
-                             PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+    for (const char* const* e = chromeEvents,
+                   * const* e_end = chromeEvents + NS_ARRAY_LENGTH(chromeEvents);
+         e < e_end; ++e) {
+      nsresult rv = target->AddEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   if (!mCaretAccessible)
@@ -314,31 +290,22 @@ nsresult nsRootAccessible::RemoveEventListeners()
 {
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mDocument));
   if (target) { 
-    target->RemoveEventListener(NS_LITERAL_STRING("focus"), NS_STATIC_CAST(nsIDOMFocusListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("select"), NS_STATIC_CAST(nsIDOMFormListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("NameChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("ValueChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("AlertActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("OpenStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("CheckboxStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("popupshown"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("DOMContentLoaded"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    for (const char* const* e = docEvents,
+                   * const* e_end = docEvents + NS_ARRAY_LENGTH(docEvents);
+         e < e_end; ++e) {
+      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   GetChromeEventHandler(getter_AddRefs(target));
   if (target) {
-    target->RemoveEventListener(NS_LITERAL_STRING("pagehide"), 
-                                NS_STATIC_CAST(nsIDOMXULListener*, this), 
-                                PR_TRUE);
-    target->RemoveEventListener(NS_LITERAL_STRING("pageshow"), 
-                                NS_STATIC_CAST(nsIDOMXULListener*, this), 
-                                PR_TRUE);
+    for (const char* const* e = chromeEvents,
+                   * const* e_end = chromeEvents + NS_ARRAY_LENGTH(chromeEvents);
+         e < e_end; ++e) {
+      nsresult rv = target->RemoveEventListener(NS_ConvertASCIItoUTF16(*e), this, PR_TRUE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   if (mCaretAccessible) {
@@ -922,70 +889,6 @@ void nsRootAccessible::FireFocusCallback(nsITimer *aTimer, void *aClosure)
   NS_ASSERTION(rootAccessible, "How did we get here without a root accessible?");
   rootAccessible->FireCurrentFocusEvent();
 }
-
-// ------- nsIDOMFocusListener Methods (1) -------------
-
-NS_IMETHODIMP nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
-{ 
-  return HandleEvent(aEvent);
-}
-
-NS_IMETHODIMP nsRootAccessible::Blur(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
-// ------- nsIDOMFormListener Methods (5) -------------
-
-NS_IMETHODIMP nsRootAccessible::Submit(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
-NS_IMETHODIMP nsRootAccessible::Reset(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
-NS_IMETHODIMP nsRootAccessible::Change(nsIDOMEvent* aEvent)
-{
-  // get change events when the form elements changes its state, checked->not,
-  // deleted text, new text, change in selection for list/combo boxes
-  // this may be the event that we have the individual Accessible objects
-  // handle themselves -- have list/combos figure out the change in selection
-  // have textareas and inputs fire a change of state etc...
-  return NS_OK;   // Ignore form change events in MSAA
-}
-
-// gets Select events when text is selected in a textarea or input
-NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) 
-{
-  return HandleEvent(aEvent);
-}
-
-// gets Input events when text is entered or deleted in a textarea or input
-NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
-
-// ------- nsIDOMXULListener Methods (8) ---------------
-
-NS_IMETHODIMP nsRootAccessible::PopupShowing(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::PopupHiding(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::Close(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::Command(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
 
 NS_IMETHODIMP nsRootAccessible::Shutdown()
 {

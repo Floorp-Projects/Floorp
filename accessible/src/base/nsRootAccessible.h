@@ -54,9 +54,7 @@ class nsIAccessibleEventListener;
 const PRInt32 SCROLL_HASH_START_SIZE = 6;
 
 class nsRootAccessible : public nsDocAccessibleWrap,
-                         public nsIDOMFocusListener,
-                         public nsIDOMFormListener,
-                         public nsIDOMXULListener
+                         public nsIDOMEventListener
 {
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -71,27 +69,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
 
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-    // ----- nsIDOMFocusListener --------------------------
-    NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-    NS_IMETHOD Blur(nsIDOMEvent* aEvent);
-
-    // ----- nsIDOMFormListener ---------------------------
-    NS_IMETHOD Submit(nsIDOMEvent* aEvent);
-    NS_IMETHOD Reset(nsIDOMEvent* aEvent);
-    NS_IMETHOD Change(nsIDOMEvent* aEvent);
-    NS_IMETHOD Select(nsIDOMEvent* aEvent);
-    NS_IMETHOD Input(nsIDOMEvent* aEvent);
-
-    // ----- nsIDOMXULListener ---------------------------
-    NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
-    NS_IMETHOD PopupShown(nsIDOMEvent* aEvent);
-    NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
-    NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent);
-    NS_IMETHOD Close(nsIDOMEvent* aEvent);
-    NS_IMETHOD Command(nsIDOMEvent* aEvent);
-    NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
-    NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
 
     // nsIAccessibleDocument
     NS_IMETHOD GetCaretAccessible(nsIAccessible **aAccessibleCaret);
