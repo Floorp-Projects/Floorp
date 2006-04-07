@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.47 2006/04/06 04:40:49 nelson%bolyard.com Exp $ */
+/* $Id: sslimpl.h,v 1.48 2006/04/07 06:24:07 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -175,6 +175,8 @@ typedef enum { SSLAppOpRead = 0,
 /* This makes the cert cache entry exactly 4k. */
 #define SSL_MAX_CACHED_CERT_LEN		4060
 
+#define MAX_EXTENSION_SENDERS		3
+
 #define NUM_MIXERS                      9
 
 #ifndef BPB
@@ -217,6 +219,38 @@ typedef sslSessionID *(*sslSessionIDLookupFunc)(const PRIPv6Addr    *addr,
 						unsigned int   sidLen,
                                                 CERTCertDBHandle * dbHandle);
 
+/* registerable callback function that either appends extension to buffer
+ * or returns length of data that it would have appended.
+ */
+typedef PRInt32 (*ssl3HelloExtensionSenderFunc)(sslSocket *ss, PRBool append,
+						PRUint32 maxBytes);
+
+/* registerable callback function that handles a received extension, 
+ * of the given type.
+ */
+typedef SECStatus (* ssl3HelloExtensionHandlerFunc)(sslSocket *ss,
+						    PRUint16   ex_type,
+                                                    SECItem *  data);
+
+/* row in a table of hello extension senders */
+typedef struct {
+    PRInt32                      ex_type;
+    ssl3HelloExtensionSenderFunc ex_sender;
+} ssl3HelloExtensionSender;
+
+/* row in a table of hello extension handlers */
+typedef struct {
+    PRInt32                       ex_type;
+    ssl3HelloExtensionHandlerFunc ex_handler;
+} ssl3HelloExtensionHandler;
+
+extern SECStatus 
+ssl3_RegisterServerHelloExtensionSender(sslSocket *ss, PRUint16 ex_type,
+				        ssl3HelloExtensionSenderFunc cb);
+
+extern PRInt32
+ssl3_CallHelloExtensionSenders(sslSocket *ss, PRBool append, PRUint32 maxBytes,
+                               const ssl3HelloExtensionSender *sender);
 
 /* Socket ops */
 struct sslSocketOpsStr {
@@ -911,6 +945,9 @@ struct sslSocketStr {
     sslHandshakeFunc nextHandshake;			/*firstHandshakeLock*/
     sslHandshakeFunc securityHandshake;			/*firstHandshakeLock*/
 
+    /* registered callbacks that send server hello extensions */
+    ssl3HelloExtensionSender serverExtensionSenders[MAX_EXTENSION_SENDERS];
+
     /* the following variable is only used with socks or other proxies. */
     char *           peerID;	/* String uniquely identifies target server. */
 
@@ -1277,9 +1314,13 @@ extern SECStatus ssl3_AppendHandshake(sslSocket *ss, const void *void_src,
 			PRInt32 bytes);
 extern SECStatus ssl3_AppendHandshakeHeader(sslSocket *ss, 
 			SSL3HandshakeType t, PRUint32 length);
+extern SECStatus ssl3_AppendHandshakeNumber(sslSocket *ss, PRInt32 num, 
+			PRInt32 lenSize);
 extern SECStatus ssl3_AppendHandshakeVariable( sslSocket *ss, 
 			const SSL3Opaque *src, PRInt32 bytes, PRInt32 lenSize);
 extern SECStatus ssl3_ConsumeHandshake(sslSocket *ss, void *v, PRInt32 bytes, 
+			SSL3Opaque **b, PRUint32 *length);
+extern PRInt32   ssl3_ConsumeHandshakeNumber(sslSocket *ss, PRInt32 bytes, 
 			SSL3Opaque **b, PRUint32 *length);
 extern SECStatus ssl3_ConsumeHandshakeVariable(sslSocket *ss, SECItem *i, 
 			PRInt32 bytes, SSL3Opaque **b, PRUint32 *length);
@@ -1288,6 +1329,14 @@ extern SECStatus ssl3_SignHashes(SSL3Hashes *hash, SECKEYPrivateKey *key,
 extern SECStatus ssl3_VerifySignedHashes(SSL3Hashes *hash, 
 			CERTCertificate *cert, SECItem *buf, PRBool isTLS, 
 			void *pwArg);
+
+/* functions that append extensions to hello messages. */
+extern PRInt32   ssl3_SendServerNameIndicationExtension( sslSocket * ss,
+			PRBool append, PRUint32 maxBytes);
+
+/* call the registered extension handlers. */
+extern SECStatus ssl3_HandleClientHelloExtensions(sslSocket *ss, 
+			SSL3Opaque **b, PRUint32 *length);
 
 /* Construct a new NSPR socket for the app to use */
 extern PRFileDesc *ssl_NewPRSocket(sslSocket *ss, PRFileDesc *fd);
