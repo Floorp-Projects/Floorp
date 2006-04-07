@@ -232,8 +232,11 @@ static void LoadExtraSharedLibs()
                         arrayOfLibs[i][PL_strlen(arrayOfLibs[i])] = ':'; //restore ":" in sonameList
                 }
             }
-            for (p = &sonameListToSave[PL_strlen(sonameListToSave) - 1]; *p == ':'; p--)
-                *p = 0; //delete tail ":" delimiters
+
+            // Check whether sonameListToSave is a empty String, Bug: 329205
+            if (sonameListToSave[0]) 
+                for (p = &sonameListToSave[PL_strlen(sonameListToSave) - 1]; *p == ':'; p--)
+                    *p = 0; //delete tail ":" delimiters
 
             if (!prefSonameListIsSet || PL_strcmp(sonameList, sonameListToSave)) {
                 // if user specified some bogus soname I overwrite it here,
