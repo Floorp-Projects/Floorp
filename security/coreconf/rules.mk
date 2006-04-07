@@ -397,7 +397,7 @@ endif
 
 else
 # everything else
-PWD = $(shell pwd)
+PWD := $(shell pwd)
 endif
 endif
 
