@@ -979,6 +979,13 @@ private:
   nsUpdateType mUpdateType;
 };
 
+#define MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line) tok##line
+#define MOZ_AUTO_DOC_UPDATE_PASTE(tok,line) \
+  MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line)
+#define MOZ_AUTO_DOC_UPDATE(doc,type,notify) \
+  mozAutoDocUpdate MOZ_AUTO_DOC_UPDATE_PASTE(_autoDocUpdater_, __LINE__) \
+  (doc,type,notify)
+
 // XXX These belong somewhere else
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
