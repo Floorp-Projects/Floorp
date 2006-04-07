@@ -208,6 +208,21 @@ nsThebesImage::LockImagePixels(PRBool aMaskPixels)
 {
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
+    if (mOptSurface && !mImageSurface) {
+        // Recover the pixels
+        mImageSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32,
+                                            mWidth, mHeight);
+        if (!mImageSurface)
+            return NS_ERROR_OUT_OF_MEMORY;
+        nsRefPtr<gfxContext> context = new gfxContext(mImageSurface);
+        if (!context) {
+            mImageSurface = nsnull;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        context->SetOperator(gfxContext::OPERATOR_SOURCE);
+        context->SetSource(mOptSurface);
+        context->Paint();
+    }
     return NS_OK;
 }
 
@@ -216,6 +231,10 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
 {
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
+    if (mImageSurface && mOptSurface) {
+        // Don't need the pixel data anymore
+        mImageSurface = nsnull;
+    }
     return NS_OK;
 }
 
