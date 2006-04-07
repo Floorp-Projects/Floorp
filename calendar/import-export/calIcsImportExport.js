@@ -156,7 +156,7 @@ function ics_exportToStream(aStream, aCount, aItems) {
                        .getService(Components.interfaces.calIICSService);
     var calComp = icssrv.createIcalComponent("VCALENDAR");
     calComp.version = "2.0";
-    calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
+    calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN";
     
     for each (item in aItems) {
         calComp.addSubcomponent(item.icalComponent);
