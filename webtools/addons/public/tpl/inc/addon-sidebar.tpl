@@ -10,7 +10,7 @@
     <li><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add a Comment</a></li>
     <li><a href="{$config.webpath}/{$app}/{$addon->ID}/history/">Version History</a></li>
     {if $addon->Authors|@count > 1}
-        <li><span>About the Authors:</span>
+        <li><span>About the Authors</span>
             <ul>
                 {foreach key=key item=item from=$addon->Authors}
                     <li><a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a></li>
