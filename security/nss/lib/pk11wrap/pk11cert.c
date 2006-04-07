@@ -796,6 +796,8 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     NSSToken *token = PK11Slot_GetNSSToken(slot);
     SECItem *keyID = pk11_mkcertKeyID(cert);
     char *emailAddr = NULL;
+    nssCertificateStoreTrace lockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    nssCertificateStoreTrace unlockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
 
     if (keyID == NULL) {
 	goto loser;
@@ -815,9 +817,10 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
     if (c->object.cryptoContext) {
 	/* Delete the temp instance */
 	NSSCryptoContext *cc = c->object.cryptoContext;
-	nssCertificateStore_Lock(cc->certStore);
+	nssCertificateStore_Lock(cc->certStore, &lockTrace);
 	nssCertificateStore_RemoveCertLOCKED(cc->certStore, c);
-	nssCertificateStore_Unlock(cc->certStore);
+	nssCertificateStore_Unlock(cc->certStore, &lockTrace, &unlockTrace);
+        nssCertificateStore_Check(&lockTrace, &unlockTrace);
 	c->object.cryptoContext = NULL;
 	cert->istemp = PR_FALSE;
 	cert->isperm = PR_TRUE;

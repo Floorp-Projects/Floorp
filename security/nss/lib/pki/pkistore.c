@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.26 $ $Date: 2005/06/27 21:50:06 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.27 $ $Date: 2006/04/07 05:49:04 $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -313,18 +313,41 @@ nssCertificateStore_RemoveCertLOCKED (
 
 NSS_IMPLEMENT void
 nssCertificateStore_Lock (
-  nssCertificateStore *store
+  nssCertificateStore *store, nssCertificateStoreTrace* out
 )
 {
+#ifdef DEBUG
+    PORT_Assert(out);
+    out->store = store;
+    out->lock = store->lock;
+    out->locked = PR_TRUE;
+    PZ_Lock(out->lock);
+#else
     PZ_Lock(store->lock);
+#endif
 }
 
 NSS_IMPLEMENT void
 nssCertificateStore_Unlock (
-  nssCertificateStore *store
+  nssCertificateStore *store, nssCertificateStoreTrace* in,
+  nssCertificateStoreTrace* out
 )
 {
+#ifdef DEBUG
+    PORT_Assert(in);
+    PORT_Assert(out);
+    out->store = store;
+    out->lock = store->lock;
+    out->unlocked = PR_TRUE;
+
+    PORT_Assert(in->store == out->store);
+    PORT_Assert(in->lock == out->lock);
+    PORT_Assert(in->locked);
+
+    PZ_Unlock(out->lock);
+#else
     PZ_Unlock(store->lock);
+#endif
 }
 
 static NSSCertificate **

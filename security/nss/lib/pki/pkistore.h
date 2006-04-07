@@ -38,7 +38,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.7 $ $Date: 2005/01/20 02:25:49 $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.8 $ $Date: 2006/04/07 05:49:04 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -95,14 +95,36 @@ nssCertificateStore_RemoveCertLOCKED
   NSSCertificate *cert
 );
 
+struct nssCertificateStoreTraceStr {
+    nssCertificateStore* store;
+    PZLock* lock;
+    PRBool locked;
+    PRBool unlocked;
+};
+
+typedef struct nssCertificateStoreTraceStr nssCertificateStoreTrace;
+
+static void nssCertificateStore_Check(nssCertificateStoreTrace* a,
+				      nssCertificateStoreTrace* b) {
+    PORT_Assert(a->locked);
+    PORT_Assert(b->unlocked);
+
+    PORT_Assert(!a->unlocked);
+    PORT_Assert(!b->locked);
+
+    PORT_Assert(a->lock == b->lock);
+    PORT_Assert(a->store == b->store);
+};
+
 NSS_EXTERN void
 nssCertificateStore_Lock (
-  nssCertificateStore *store
+  nssCertificateStore *store, nssCertificateStoreTrace* out
 );
 
 NSS_EXTERN void
 nssCertificateStore_Unlock (
-  nssCertificateStore *store
+  nssCertificateStore *store, nssCertificateStoreTrace* in,
+  nssCertificateStoreTrace* out
 );
 
 NSS_EXTERN NSSCertificate **
