@@ -361,12 +361,13 @@ function prefCheckOKButton()
 
 function OnPrefOK()
 {
-  if ((document.getElementById('prefname').value == "browser.startup.homepage") && 
+  if (((document.getElementById('prefname').value == "browser.startup.homepage") || (document.getElementById('prefname').value == "browser.throbber.url")) && 
       (document.getElementById('prefvalue').value.length > 0)) {
     gPromptService.alert(window, "",
-                         "You cannot set the browser.startup.homepage here, you can only lock it.");
+                         "You cannot set this value here, you can only lock it.");
     return false;
   }
+  
   listbox = this.opener.document.getElementById('prefList');
   var listitem;
   if (window.name == 'newpref') {
@@ -1275,12 +1276,25 @@ function CCKWriteProperties(destdir)
   fos.close();
 }
 
+function prefIsLocked(prefname)
+{
+  listbox = document.getElementById("prefList");
+  for (var i=0; i < listbox.getRowCount(); i++) {
+    listitem = listbox.getItemAtIndex(i);
+    if (prefname == listitem.label)
+      if (listitem.cck['lock'] == "true")
+        return true;
+  }
+
+}
+
 function CCKWriteDefaultJS(destdir)
 {
-  var throbber1 = 'pref("browser.throbber.url",            "chrome://cck/content/cck.properties");\n';
-  var homepage1 = 'pref("browser.startup.homepage",        "chrome://cck/content/cck.properties");\n';
-  var homepage2 = 'pref("browser.startup.homepage_reset",  "chrome://cck/content/cck.properties");\n';
-  var homepage3 = 'pref("startup.homepage_override_url",   "chrome://cck/content/cck.properties");\n';  
+  var throbber1 = 'pref("browser.throbber.url",            "';
+  var homepage1 = 'pref("browser.startup.homepage",        "';
+  var homepage2 = 'pref("startup.homepage_override_url",   "chrome://cck/content/cck.properties");\n';
+  var chromeurl =   "chrome://cck/content/cck.properties";
+  var prefend = '");\n';
   var useragent1begin = 'pref("general.useragent.vendorComment", "CK-';
   var useragent2begin = 'pref("general.useragent.extra.cck", "(CK-';
 
@@ -1297,16 +1311,28 @@ function CCKWriteDefaultJS(destdir)
   var logobuttonurl = document.getElementById("AnimatedLogoURL").value;
   if (logobuttonurl && (logobuttonurl.length > 0)) {
     fos.write(throbber1, throbber1.length);
+    if (prefIsLocked("browser.throbber.url")) {
+      fos.write(logobuttonurl, logobuttonurl.length);
+    } else {
+      fos.write(chromeurl, chromeurl.length);
+    }
+    fos.write(prefend, prefend.length);
   }
 
   var browserstartuppage = document.getElementById("HomePageURL").value;
   var overrideurl = document.getElementById('HomePageOverrideURL').value;
   if (browserstartuppage && (browserstartuppage.length > 0)) {
     fos.write(homepage1, homepage1.length);
+    if (prefIsLocked("browser.throbber.url")) {
+      fos.write(browserstartuppage, browserstartuppage.length);
+    } else {    
+      fos.write(chromeurl, chromeurl.length);
+    }
+    fos.write(prefend, prefend.length);
+
     fos.write(homepage2, homepage2.length);
-    fos.write(homepage3, homepage3.length);    
   } else if (overrideurl && overrideurl.length) {
-    fos.write(homepage3, homepage3.length);    
+    fos.write(homepage2, homepage2.length);
   }
   
   var useragent = document.getElementById("OrganizationName").value;
