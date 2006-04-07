@@ -42,6 +42,7 @@
 #include "nsIMetricsService.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsIPropertyBag;
 
