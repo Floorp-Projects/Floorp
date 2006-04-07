@@ -38,30 +38,29 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* Multiday view */
-calendar-event-column { 
-  border-left: 1px solid #999999;
-  border-top: 1px solid #999999;
-}
-
-calendar-event-column[selected="true"] { 
-  background: #ffe79c !important;
-}
-
-calendar-header-container[selected="true"] { 
-  background: #ffe79c !important;
-}
-
+calendar-event-column,
 calendar-header-container { 
-  border-left: 1px solid #999999;
-  border-top: 1px solid #999999;
+  background: #FFFFFF;
+  border-left: 1px solid #3F7D91;
+  border-top: 1px solid #3F7D91;
+}
+
+calendar-event-column[today="true"],
+calendar-header-container[today="true"] {
+  background: #dfeaf4;
+}
+
+calendar-event-column[selected="true"],
+calendar-header-container[selected="true"] { 
+  background: #ffe79c;
 }
 
 .calendar-event-column-linebox[orient="horizontal"] {
-  border-right: 1px solid #aaaaaa;
+  border-right: 1px solid #3F7D91;
 }
 
 .calendar-event-column-linebox[orient="vertical"] {
-  border-bottom: 1px solid #aaaaaa;
+  border-bottom: 1px solid #3F7D91;
 }
 
 .fgdragbox {
@@ -152,16 +151,18 @@ calendar-event-gripbar[parentorient="horizontal"] {
   font-weight: bold;
 }
 
-.calendar-time-bar-box-odd {
-  border-top: 1px solid #999999;
-  border-left: 1px solid #999999;
-  background: #dddddd;
+.calendar-time-bar-box-odd,
+.calendar-time-bar-box-even {
+  color: #3F7D91;
+  background: #E7EEEC;
+  text-align: right;
+  border-top: 1px solid #3F7D91;
+  border-left: 1px solid #3F7D91;
 }
 
-.calendar-time-bar-box-even {
-  border-top: 1px solid #999999;
-  border-left: 1px solid #999999;
-  background: #dddddd;
+calendar-multiday-view {
+  background: #FFFFFF;
+  padding: 2px;
 }
 
 calendar-multiday-view[hidden="true"] { 
@@ -169,7 +170,10 @@ calendar-multiday-view[hidden="true"] {
 }
 
 .calendar-day-label-box { 
-  background: #dddddd;
+  color: #3F7D91;
+  background: #E7EEEC;
+  border-top: 1px solid #3F7D91;
+  border-left: 1px solid #3F7D91;
 }
 
 .calendar-day-label-date {
@@ -184,6 +188,10 @@ calendar-multiday-view[hidden="true"] {
 }
 
 /* Month View */
+calendar-month-view {
+  background: #FFFFFF;
+  padding: 2px;
+}
 
 .calendar-month-view-grid-column {
   min-width: 1px;
@@ -196,29 +204,39 @@ calendar-multiday-view[hidden="true"] {
 }
 
 calendar-month-day-box { 
-  border: 1px solid #999999;
+  border: 1px solid #3F7D91;
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-.calendar-month-day-box-odd {
-  background: #dddddd !important;
-}
-
 .calendar-month-day-box-even {
-  background: white;
+  background: #FFFFFF;
 }
 
-.calendar-month-day-box-weekend { 
-  background: #eeeeee;
+.calendar-month-day-box-weekend {
+  background: #FFF9E7;
 }
 
-calendar-month-day-box[selected="true"] { 
-  background: #ffe79c !important;
+.calendar-month-day-box-odd {
+  background: #E7EEEC;
+}
+
+.calendar-month-day-box-even[today="true"],
+.calendar-month-day-box-weekend[today="true"],
+.calendar-month-day-box-odd[today="true"] {
+  background: #dfeaf4;
+  border: 2px solid #1D7AB5 !important;
+}
+
+.calendar-month-day-box-even[selected="true"],
+.calendar-month-day-box-weekend[selected="true"],
+.calendar-month-day-box-odd[selected="true"] {
+  background: #ffe79c;
+  border: 1px solid #1D7AB5;
 }
 
 .calendar-month-day-box-date-label { 
-  color: #556;
+  color: #3F7D91;;
   font-weight: bold;
   margin-bottom: 0px;
   margin-top: 0px;
@@ -226,8 +244,7 @@ calendar-month-day-box[selected="true"] {
 
 calendar-month-day-box-item { 
   margin: 1px;
-  padding: 0px;
-  padding-left: 1px;
+  padding: 0px 1px 0px 1px;
 }
 
 calendar-month-day-box-item[selected="true"] { 
@@ -243,6 +260,15 @@ calendar-month-day-box-item[selected="true"] {
 .calendar-event-box-container {
   padding: 0px;
   padding-left: 2px;
+}
+
+calendar-month-view-column-header {
+  color: #3F7D91;
+  background: #E7EEEC;
+  font-weight:bold;
+  border-left: 1px solid #3F7D91;
+  border-right: 1px solid #3F7D91;
+  border-top: 1px solid #3F7D91;
 }
 
 .calendar-month-view-column-header-label {

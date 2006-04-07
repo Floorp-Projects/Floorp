@@ -41,20 +41,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*--------------------------------------------------------------------
- *   Top bar, with name, image and buttons
- *-------------------------------------------------------------------*/
-#calendar-deck{
-    overflow:auto;
-}
-
-/*--------------------------------------------------------------------
- *   Top bar, with name, image and buttons
+ *   MAIN view deck - contains nav buttons and views
  *-------------------------------------------------------------------*/
 
-#calendar-controls-box
-{
-   min-height              : 33px;
-   max-height              : 33px;
+#view-deck {
+  background: #FFFFFF;
+  padding: 0px;
 }
 
 
@@ -495,6 +487,14 @@ toolbar[printpreview="true"] {
 /*--------------------------------------------------------------------
  * View controls
  *-------------------------------------------------------------------*/
+
+calendar-navigation-buttons { 
+  padding: 0px 0px 2px 0px;
+}
+
+.title-label-box button {
+  background-color: transparent;
+}
 
 .nav-buttons{
     list-style-image: url("chrome://calendar/skin/prevnextarrow.png");

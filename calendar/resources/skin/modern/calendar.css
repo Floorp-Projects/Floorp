@@ -40,11 +40,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*--------------------------------------------------------------------
- *   Top bar, with name, image and buttons
- *-------------------------------------------------------------------*/
-#calendar-deck{
-    overflow:auto;
+#view-deck {
+  background: #FFFFFF;
+  padding: 0px;
 }
 
 #calendar-bar > .toolbar-holder > .toolbar-primary-icon {                       
@@ -515,6 +513,14 @@ toolbar[printpreview="true"] {
 /*--------------------------------------------------------------------
  * View controls
  *-------------------------------------------------------------------*/
+
+calendar-navigation-buttons { 
+  padding: 0px 0px 2px 0px;
+}
+
+.title-label-box button {
+  background-color: transparent;
+}
 
 .nav-buttons{
     list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
