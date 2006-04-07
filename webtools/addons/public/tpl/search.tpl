@@ -123,7 +123,13 @@ Next Page &raquo;
     </p>
     {/if}
 
-    <p class="first">By <a href="{$config.webpath}/{$app}/{$results[r]->UserID}/author/">{$results[r]->UserName}</a></p>
+    <p class="first">By 
+
+{foreach key=key item=item from=$results[r]->Authors}
+    <a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a>,
+{/foreach}
+
+    </p>
     <p class="first">{$results[r]->Description|nl2br}</p>
     <div class="baseline">Last Update:  {$results[r]->DateUpdated|date_format} | Downloads Last 7 Days: {$results[r]->downloadcount} | Total Downloads: {$results[r]->TotalDownloads}</DIV>
 </div>

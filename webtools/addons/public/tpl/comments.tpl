@@ -2,7 +2,10 @@
 <h2><strong>{$addon->Name}</strong> &raquo; Comments</h2>
 <p class="first">
 <strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,
-by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName}</a>,
+by 
+{foreach key=key item=item from=$addon->Authors}
+    <a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a>,
+{/foreach}
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
