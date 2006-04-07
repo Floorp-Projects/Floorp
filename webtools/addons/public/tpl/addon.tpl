@@ -51,9 +51,9 @@ Works with:
                 document.writeln("<div>");
 
                 if (installs[platform]) {ldelim}
-                        document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return {$addon->installFunc}(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                        document.writeln("<a id=\"install-link\" href=\"" + installs[platform]+ "\" onclick=\"return {$addon->installFunc}(event,'{$addon->Name|escape} {$addon->Version|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
                 {rdelim} else if ("{$key|escape}" == "ALL") {ldelim}
-                        document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return {$addon->installFunc}(event,'{$item.AppName|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
+                        document.writeln("<a id=\"install-link\" href=\"{$item.URI|escape}\" onclick=\"return {$addon->installFunc}(event,'{$addon->Name|escape} {$addon->Version|escape}', '{$config.webpath}/images/default.png');\" title=\"Install for " + platform + " (Right-Click to Download)\">Install Now for " + platform + "</a> ({$item.Size|escape} <abbr title=\"Kilobytes\">KB</abbr>)");
                 {rdelim} else  {ldelim}
                     document.writeln("<strong>{$addon->Name|escape}</strong> is not available for " + platform + ".");
                 {rdelim}
