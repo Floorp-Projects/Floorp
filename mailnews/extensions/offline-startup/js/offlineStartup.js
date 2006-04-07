@@ -39,9 +39,10 @@ const kDebug               = false;
 const kBundleURI         = "chrome://messenger/locale/offlineStartup.properties";
 const kOfflineStartupPref = "offline.startup_state";
 var gStartingUp = true;
-var gOfflineStartupMode; //0 = remember last state, 1 = ask me, 2 == online, 3 == offline
+var gOfflineStartupMode; //0 = remember last state, 1 = ask me, 2 == online, 3 == offline, 4 = automatic
 const kRememberLastState = 0;
 const kAskForOnlineState = 1;
+const kAlwaysOnline = 2;
 const kAlwaysOffline = 3;
 ////////////////////////////////////////////////////////////////////////
 //
@@ -61,12 +62,12 @@ var nsOfflineStartup =
     debug("onProfileStartup");
 
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
+                              .getService(Components.interfaces.nsIIOService2);
     if (gStartingUp)
     {
       gStartingUp = false;
       // if checked, the "work offline" checkbox overrides
-      if (ioService.offline) {
+      if (ioService.offline && !ioService.manageOfflineStatus) {
         debug("already offline!");
         return;
       }
@@ -78,10 +79,17 @@ var nsOfflineStartup =
 
     if (gOfflineStartupMode == kAlwaysOffline)
     {
+      ioService.manageOfflineStatus = false;
       ioService.offline = true;
+    }
+    else if (gOfflineStartupMode == kAlwaysOnline)
+    {
+      ioService.manageOfflineStatus = false;
+      ioService.offline = false;
     }
     else if (gOfflineStartupMode == kRememberLastState)
     {
+      ioService.manageOfflineStatus = false;
       ioService.offline = !prefs.getBoolPref("network.online");
     }
     else if (gOfflineStartupMode == kAskForOnlineState)
@@ -105,8 +113,8 @@ var nsOfflineStartup =
         (promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING),
         button0Text, button1Text, null, null, checkVal);
       debug ("result = " + result + "\n");
-      if (result == 1)
-        ioService.offline = true;
+      ioService.manageOfflineStatus = false;
+      ioService.offline = result == 1;
     }
   },
 
@@ -167,8 +175,7 @@ var nsOfflineStartupModule =
 
   registerSelf: function(aCompMgr, aFileSpec, aLocation, aType)
   {
-    if (kDebug)
-      dump("*** Registering nsOfflineStartupModule (a JavaScript Module)\n");
+    debug("*** Registering nsOfflineStartupModule (a JavaScript Module)\n");
 
     aCompMgr = aCompMgr.QueryInterface(
                  Components.interfaces.nsIComponentRegistrar);
