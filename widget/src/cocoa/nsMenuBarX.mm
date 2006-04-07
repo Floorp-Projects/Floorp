@@ -75,7 +75,7 @@ NSMenu* nsMenuBarX::sApplicationMenu = nsnull;
 EventHandlerUPP nsMenuBarX::sCommandEventHandler = nsnull;
 NativeMenuItemTarget* nsMenuBarX::sNativeEventTarget = nil;
 NSWindow* nsMenuBarX::sEventTargetWindow = nil;
-
+BOOL gSomeMenuBarPainted = NO;
 
 nsMenuBarX::nsMenuBarX()
 : mNumMenus(0), mParent(nsnull), mIsMenuBarAdded(PR_FALSE), mCurrentCommandID(1), mDocument(nsnull)
@@ -812,6 +812,9 @@ NS_IMETHODIMP nsMenuBarX::Paint()
   
   [NSApp setMainMenu:mRootMenu];
   nsMenuBarX::sEventTargetWindow = (NSWindow*)mParent->GetNativeData(NS_NATIVE_WINDOW);
+
+  gSomeMenuBarPainted = YES;
+  
   return NS_OK;
 }
 
