@@ -65,6 +65,7 @@
 #define HEADER_FROM							            "From"
 #define HEADER_STATUS							            "Status"
 #define HEADER_LINES						            "Lines"
+#define HEADER_LIST_POST                    "List-Post"
 #define HEADER_MAIL_FOLLOWUP_TO				      "Mail-Followup-To"
 #define HEADER_MAIL_REPLY_TO				       "Mail-Reply-To"
 #define HEADER_MESSAGE_ID					          "Message-ID"

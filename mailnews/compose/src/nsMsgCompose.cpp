@@ -1751,6 +1751,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         default: break;
         case nsIMsgCompType::Reply :
         case nsIMsgCompType::ReplyAll:
+        case nsIMsgCompType::ReplyToList:
         case nsIMsgCompType::ReplyToGroup:
         case nsIMsgCompType::ReplyToSender:
         case nsIMsgCompType::ReplyToSenderAndGroup:
@@ -2196,8 +2197,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     if (!mCiteReference.IsEmpty())
       compose->SetCiteReference(mCiteReference);
 
-    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll || type == nsIMsgCompType::ReplyToSender ||
-                     type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup) && mQuoteOriginal)
+    if (mHeaders && (type == nsIMsgCompType::Reply ||
+                     type == nsIMsgCompType::ReplyAll ||
+                     type == nsIMsgCompType::ReplyToList ||
+                     type == nsIMsgCompType::ReplyToSender ||
+                     type == nsIMsgCompType::ReplyToGroup ||
+                     type == nsIMsgCompType::ReplyToSenderAndGroup) &&
+        mQuoteOriginal)
     {
       nsCOMPtr<nsIMsgCompFields> compFields;
       compose->GetCompFields(getter_AddRefs(compFields));
@@ -2213,6 +2219,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         nsAutoString followUpTo;
         nsAutoString messageId;
         nsAutoString references;
+        nsAutoString listPost;
         nsXPIDLCString outCString;
         PRBool needToRemoveDup = PR_FALSE;
         if (!mMimeConverter)
@@ -2257,6 +2264,29 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
 
           needToRemoveDup = PR_TRUE;
         }
+
+        mHeaders->ExtractHeader(HEADER_LIST_POST, PR_TRUE, getter_Copies(outCString));
+        if (!outCString.IsEmpty())
+          mMimeConverter->DecodeMimeHeader(outCString, listPost, charset);
+
+        if (type == nsIMsgCompType::ReplyToList && ! listPost.IsEmpty())
+        {
+          nsString::const_iterator mailtoStart, mailtoEnd;
+          listPost.BeginReading(mailtoStart);
+          listPost.EndReading(mailtoEnd);
+          nsAutoString mailtoText(NS_LITERAL_STRING("<mailto:"));
+          PRBool mailtoFound = FindInReadable(mailtoText, mailtoStart, mailtoEnd);
+          
+          // Strip off the leading "<mailto:" and trailing ">"
+          if (mailtoFound && listPost.Equals(mailtoStart.get()) &&
+              listPost.RFindChar('>') == listPost.Length() - 1)
+          {
+            listPost.Cut(0, mailtoText.Length());
+            listPost.Cut(listPost.Length() - 1, 1);
+
+            compFields->SetTo(listPost);
+          }
+        }
               
         mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
@@ -2294,7 +2324,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           mMimeConverter->DecodeMimeHeader(outCString, references, charset);
         }
         
-        if (! ((type == nsIMsgCompType::ReplyAll) && ! mailFollowupTo.IsEmpty()))
+        if (! ((type == nsIMsgCompType::ReplyAll) && ! mailFollowupTo.IsEmpty()) &&
+            ! ((type == nsIMsgCompType::ReplyToList) && ! listPost.IsEmpty()))
         {
           if (! mailReplyTo.IsEmpty())
           { // handle Mail-Reply-To (http://cr.yp.to/proto/replyto.html)
@@ -2796,6 +2827,7 @@ NS_IMETHODIMP nsMsgCompose::RememberQueuedDisposition()
   // the header that we then look at when we actually send the message.
   if (mType == nsIMsgCompType::Reply || 
     mType == nsIMsgCompType::ReplyAll ||
+    mType == nsIMsgCompType::ReplyToList ||
     mType == nsIMsgCompType::ReplyToGroup ||
     mType == nsIMsgCompType::ReplyToSender ||
     mType == nsIMsgCompType::ReplyToSenderAndGroup ||
@@ -2834,6 +2866,7 @@ nsresult nsMsgCompose::ProcessReplyFlags()
   // for this URI.
   if (mType == nsIMsgCompType::Reply || 
       mType == nsIMsgCompType::ReplyAll ||
+      mType == nsIMsgCompType::ReplyToList ||
       mType == nsIMsgCompType::ReplyToGroup ||
       mType == nsIMsgCompType::ReplyToSender ||
       mType == nsIMsgCompType::ReplyToSenderAndGroup ||
@@ -3745,6 +3778,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
     case nsIMsgCompType::New :
     case nsIMsgCompType::Reply :        /* should not happen! but just in case */
     case nsIMsgCompType::ReplyAll :       /* should not happen! but just in case */
+    case nsIMsgCompType::ReplyToList :    /* should not happen! but just in case */
     case nsIMsgCompType::ForwardAsAttachment :  /* should not happen! but just in case */
     case nsIMsgCompType::ForwardInline :
     case nsIMsgCompType::NewsPost :

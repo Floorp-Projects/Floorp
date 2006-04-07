@@ -258,7 +258,10 @@ function ComposeMessage(type, format, folder, messageArray)
       var messageIDScheme = messageID ? messageID.split(":")[0] : "";
       if (messageIDScheme && (messageIDScheme == 'http' || messageIDScheme == 'https') &&  "openComposeWindowForRSSArticle" in this) 
         openComposeWindowForRSSArticle(messageID, hdr, type); 
-      else if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
+      else if (type == msgComposeType.Reply ||
+                type == msgComposeType.ReplyAll ||
+                type == msgComposeType.ReplyToList ||
+                type == msgComposeType.ForwardInline ||
                 type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
                 type == msgComposeType.ReplyToSenderAndGroup ||
                 type == msgComposeType.Template || type == msgComposeType.Draft)
