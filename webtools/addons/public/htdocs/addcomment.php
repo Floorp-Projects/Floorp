@@ -70,8 +70,8 @@ if (isset($_POST['c_submit'])) {
         $_c_id         = mysql_real_escape_string($addon->ID);
         $_c_user_id    = mysql_real_escape_string($_auth->getId());
         $_c_rating     = mysql_real_escape_string($_POST['c_rating']);
-        $_c_title      = mysql_real_escape_string($_POST['c_title']);
-        $_c_comments   = mysql_real_escape_string($_POST['c_comments']);
+        $_c_title      = mysql_real_escape_string(strip_tags($_POST['c_title']));
+        $_c_comments   = mysql_real_escape_string(strip_tags($_POST['c_comments']));
         $_c_commentip  = mysql_real_escape_string($_SERVER['REMOTE_ADDR']);
 
         $_sql = "INSERT INTO `feedback`
