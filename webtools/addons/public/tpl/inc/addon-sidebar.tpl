@@ -9,9 +9,9 @@
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/comments/">Comments</a></li>
             <li><a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}">Add a Comment</a></li>
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/history/">Version History</a></li>
-        </ul>
 
             {if $addon->Authors|@count > 1}
+                </ul>
                 <li><span>About the Authors</span>
                     <ul>
                         {foreach key=key item=item from=$addon->Authors}
@@ -21,6 +21,7 @@
                 </li>
             {else}
                 <li><a href="{$config.webpath}/{$app}/{$addon->UserID}/author">About the Author</a></li>
+                </ul>
             {/if}
     </li>
     <li><span>Find Similar Add-ons</span>
