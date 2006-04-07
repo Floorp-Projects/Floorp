@@ -204,10 +204,17 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
     char *val;
 
     mHeaders.ParseHeaderLine(line, &hdr, &val);
+    // leading and trailing LWS has been removed from |val|
 
     // handle some special case headers...
-    if (hdr == nsHttp::Content_Length)
-        PR_sscanf(val, "%lld", &mContentLength);
+    if (hdr == nsHttp::Content_Length) {
+        PRInt64 len;
+        // permit only a single value here.
+        if (nsHttp::ParseInt64(val, &len))
+            mContentLength = len;
+        else
+            LOG(("invalid content-length!\n"));
+    }
     else if (hdr == nsHttp::Content_Type) {
         LOG(("ParseContentType [type=%s]\n", val));
         PRBool dummy;
@@ -470,7 +477,7 @@ nsHttpResponseHead::Reset()
 
     mVersion = NS_HTTP_VERSION_1_1;
     mStatus = 200;
-    mContentLength = LL_MaxUint();
+    mContentLength = LL_MAXUINT;
     mCacheControlNoStore = PR_FALSE;
     mCacheControlNoCache = PR_FALSE;
     mPragmaNoCache = PR_FALSE;
@@ -567,9 +574,8 @@ nsHttpResponseHead::TotalEntitySize()
         return -1;
 
     PRInt64 size;
-    PRInt32 items = PR_sscanf(slash, "%lld", &size);
-    if (items <= 0)
-        size = LL_MaxUint();
+    if (!nsHttp::ParseInt64(slash, &size))
+        size = LL_MAXUINT;
     return size;
 }
 
