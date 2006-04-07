@@ -144,6 +144,15 @@ struct nsHttp
         return ResolveAtom(PromiseFlatCString(s).get());
     }
 
+    // returns true if the specified token [start,end) is valid per RFC 2616
+    // section 2.2
+    static PRBool IsValidToken(const char *start, const char *end);
+
+    static inline PRBool IsValidToken(const nsCString &s) {
+        const char *start = s.get();
+        return IsValidToken(start, start + s.Length());
+    }
+
     // find the first instance (case-insensitive comparison) of the given
     // |token| in the |input| string.  the |token| is bounded by elements of
     // |separators| and may appear at the beginning or end of the |input|

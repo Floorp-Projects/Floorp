@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 ci et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -132,65 +133,55 @@ void
 nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
 {
     //
-    // Augmented BNF (from section 4.2 of RFC 2616 w/ modifications):
+    // BNF from section 4.2 of RFC 2616:
     //
-    //   message-header = field-name field-sep [ field-value ]
+    //   message-header = field-name ":" [ field-value ]
     //   field-name     = token
-    //   field-sep      = LWS ( ":" | "=" | SP | HT )
     //   field-value    = *( field-content | LWS )
     //   field-content  = <the OCTETs making up the field-value
     //                     and consisting of either *TEXT or combinations
     //                     of token, separators, and quoted-string>
     //
-    // Here, we allow a greater set of possible header value separators
-    // for compatibility with the vast number of broken web servers (mostly
-    // lame CGI scripts).  NN4 and IE are similarly tolerant.
-    //
-    //
-    // Examples:
-    //  
-    //   Header: Value
-    //   Header :Value
-    //   Header Value
-    //   Header=Value
-    //
+    
+    // We skip over mal-formed headers in the hope that we'll still be able to
+    // do something useful with the response.
 
     char *p = (char *) strchr(line, ':');
-    if (!p)
-        p = net_FindCharInSet(line, " \t=");
-
-    if (p) {
-        // ignore whitespace between header name and colon
-        char *p2 = net_FindCharInSet(line, p, HTTP_LWS);
-        *p2 = 0; // null terminate header name
-
-        nsHttpAtom atom = nsHttp::ResolveAtom(line);
-        if (atom) {
-            // skip over whitespace
-            p = net_FindCharNotInSet(++p, HTTP_LWS);
-
-            // trim trailing whitespace - bug 86608
-            p2 = net_RFindCharNotInSet(p, HTTP_LWS);
-            *++p2 = 0; // null terminate header value; if all chars
-                       // starting at |p| consisted of LWS, then p2
-                       // would have pointed at |p-1|, so the prefix
-                       // increment is always valid.
-
-            // assign return values
-            if (hdr) *hdr = atom;
-            if (val) *val = p;
-
-            // assign response header
-            SetHeader(atom, nsDependentCString(p, p2 - p), PR_TRUE);
-        }
-        else
-            LOG(("unknown header; skipping\n"));
+    if (!p) {
+        LOG(("malformed header [%s]: no colon\n", line));
+        return;
     }
-    else
-        LOG(("malformed header\n"));
 
-    // We ignore mal-formed headers in the hope that we'll still be able
-    // to do something useful with the response.
+    // make sure we have a valid token for the field-name
+    if (!nsHttp::IsValidToken(line, p)) {
+        LOG(("malformed header [%s]: field-name not a token\n", line));
+        return;
+    }
+    
+    *p = 0; // null terminate field-name
+
+    nsHttpAtom atom = nsHttp::ResolveAtom(line);
+    if (!atom) {
+        LOG(("failed to resolve atom [%s]\n", line));
+        return;
+    }
+
+    // skip over whitespace
+    p = net_FindCharNotInSet(++p, HTTP_LWS);
+
+    // trim trailing whitespace - bug 86608
+    char *p2 = net_RFindCharNotInSet(p, HTTP_LWS);
+
+    *++p2 = 0; // null terminate header value; if all chars starting at |p|
+               // consisted of LWS, then p2 would have pointed at |p-1|, so
+               // the prefix increment is always valid.
+
+    // assign return values
+    if (hdr) *hdr = atom;
+    if (val) *val = p;
+
+    // assign response header
+    SetHeader(atom, nsDependentCString(p, p2 - p), PR_TRUE);
 }
 
 void

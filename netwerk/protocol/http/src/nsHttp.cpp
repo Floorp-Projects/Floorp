@@ -215,6 +215,56 @@ nsHttp::ResolveAtom(const char *str)
     return atom;
 }
 
+//
+// From section 2.2 of RFC 2616, a token is defined as:
+//
+//   token          = 1*<any CHAR except CTLs or separators>
+//   CHAR           = <any US-ASCII character (octets 0 - 127)>
+//   separators     = "(" | ")" | "<" | ">" | "@"
+//                  | "," | ";" | ":" | "\" | <">
+//                  | "/" | "[" | "]" | "?" | "="
+//                  | "{" | "}" | SP | HT
+//   CTL            = <any US-ASCII control character
+//                    (octets 0 - 31) and DEL (127)>
+//   SP             = <US-ASCII SP, space (32)>
+//   HT             = <US-ASCII HT, horizontal-tab (9)>
+//
+static const char kValidTokenMap[128] = {
+    0, 0, 0, 0, 0, 0, 0, 0, //   0
+    0, 0, 0, 0, 0, 0, 0, 0, //   8
+    0, 0, 0, 0, 0, 0, 0, 0, //  16
+    0, 0, 0, 0, 0, 0, 0, 0, //  24
+
+    0, 1, 0, 1, 1, 1, 1, 1, //  32
+    0, 0, 1, 1, 0, 1, 1, 0, //  40
+    1, 1, 1, 1, 1, 1, 1, 1, //  48
+    1, 1, 0, 0, 0, 0, 0, 0, //  56
+
+    0, 1, 1, 1, 1, 1, 1, 1, //  64
+    1, 1, 1, 1, 1, 1, 1, 1, //  72
+    1, 1, 1, 1, 1, 1, 1, 1, //  80
+    1, 1, 1, 0, 0, 0, 1, 1, //  88
+
+    1, 1, 1, 1, 1, 1, 1, 1, //  96
+    1, 1, 1, 1, 1, 1, 1, 1, // 104
+    1, 1, 1, 1, 1, 1, 1, 1, // 112
+    1, 1, 1, 0, 1, 0, 1, 0  // 120
+};
+PRBool
+nsHttp::IsValidToken(const char *start, const char *end)
+{
+    if (start == end)
+        return PR_FALSE;
+
+    for (; start != end; ++start) {
+        const unsigned char idx = *start;
+        if (idx > 127 || !kValidTokenMap[idx])
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 const char *
 nsHttp::FindToken(const char *input, const char *token, const char *seps)
 {
