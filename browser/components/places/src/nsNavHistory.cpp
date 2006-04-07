@@ -3121,7 +3121,7 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
 
     if (aQuery->AnnotationIsNot())
       aClause->AppendLiteral("NOT ");
-    aClause->AppendLiteral("EXISTS (SELECT anno_id FROM moz_anno anno WHERE anno.page = h.id AND anno.name = ");
+    aClause->AppendLiteral("EXISTS (SELECT anno_id FROM moz_anno anno JOIN moz_anno_name annoname ON anno.name_id = annoname.name_id WHERE anno.page = h.id AND annoname.name = ");
     aClause->Append(paramString);
     aClause->AppendLiteral(") ");
     // annotation-based queries don't get the common conditions, so you get

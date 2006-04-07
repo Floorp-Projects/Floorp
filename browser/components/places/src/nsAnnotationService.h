@@ -91,6 +91,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationNames;
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationFromURI;
+  nsCOMPtr<mozIStorageStatement> mDBGetAnnotationNameID;
+  nsCOMPtr<mozIStorageStatement> mDBAddAnnotationName;
   nsCOMPtr<mozIStorageStatement> mDBAddAnnotation;
   nsCOMPtr<mozIStorageStatement> mDBRemoveAnnotation;
 
@@ -115,6 +117,8 @@ protected:
                               PRInt32 aFlags, PRInt32 aExpiration,
                               mozIStorageStatement** aStatement);
   void CallSetObservers(nsIURI* aURI, const nsACString& aName);
+
+  static nsresult MigrateFromAlpha1(mozIStorageConnection* aDBConn);
 };
 
 #endif /* nsAnnotationService_h___ */
