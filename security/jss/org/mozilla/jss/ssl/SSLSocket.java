@@ -1113,6 +1113,12 @@ public class SSLSocket extends java.net.Socket {
     public final static int SSL3_DH_ANON_WITH_DES_CBC_SHA          = 0x001a;
     public final static int SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA     = 0x001b;
 
+    /**
+     * @deprecated As of NSS 3.11, FORTEZZA is no longer supported.
+     * SSL3_FORTEZZA_DMS_WITH_NULL_SHA, SSL3_FORTEZZA_DMS_WITH_RC4_128_SHA
+     * and SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA are placeholders for
+     * backward compatibility.
+     */
     public final static int SSL3_FORTEZZA_DMS_WITH_NULL_SHA        = 0x001c;
     public final static int SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA= 0x001d;
     public final static int SSL3_FORTEZZA_DMS_WITH_RC4_128_SHA     = 0x001e;

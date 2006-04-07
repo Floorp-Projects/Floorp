@@ -59,6 +59,10 @@ public class SSLSecurityStatus {
     final public int STATUS_OFF      = 0;
     final public int STATUS_ON_HIGH  = 1;
     final public int STATUS_ON_LOW   = 2;
+    /**
+     * @deprecated As of NSS 3.11, FORTEZZA is no longer supported.
+     * STATUS_FORTEZZA is a placeholder for backward compatibility.
+     */
     final public int STATUS_FORTEZZA = 3;
 
 	/**
@@ -159,6 +163,9 @@ public class SSLSecurityStatus {
     /**
      * Get a pretty string to show to a user, summarizing the contents
      * of this object
+     *
+     * @deprecated As of NSS 3.11, FORTEZZA is no longer supported.
+     * This is just a placeholder for backward compatibility.
      */
     public String toString() {
 	String statusString;

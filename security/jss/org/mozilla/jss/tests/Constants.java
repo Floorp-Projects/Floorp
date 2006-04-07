@@ -42,7 +42,7 @@ import org.mozilla.jss.ssl.*;
  * Holds immutable values for JSS Tests.
  *
  * @author  Sandeep.Konchady@Sun.COM
- * @version
+ * @version 1.0
  */
 public class Constants {
     
@@ -83,10 +83,6 @@ public class Constants {
         SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA,
         SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA,
         SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA,
-        // Don't bother with FORTEZZA Ciphers.
-        SSLSocket.SSL3_FORTEZZA_DMS_WITH_NULL_SHA,
-        SSLSocket.SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,
-        SSLSocket.SSL3_FORTEZZA_DMS_WITH_RC4_128_SHA,
         SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
         SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA,
         // These are TLS Ciphers.
@@ -140,9 +136,6 @@ public class Constants {
         "SSLSocket.SSL3_DH_ANON_EXPORT_WITH_DES40_CBC_SHA",
         "SSLSocket.SSL3_DH_ANON_WITH_DES_CBC_SHA",
         "SSLSocket.SSL3_DH_ANON_WITH_3DES_EDE_CBC_SHA",
-        "SSLSocket.SSL3_FORTEZZA_DMS_WITH_NULL_SHA",
-        "SSLSocket.SSL3_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA",
-        "SSLSocket.SSL3_FORTEZZA_DMS_WITH_RC4_128_SHA",
         "SSLSocket.SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA",
         "SSLSocket.SSL_RSA_FIPS_WITH_DES_CBC_SHA",
         "SSLSocket.TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA",

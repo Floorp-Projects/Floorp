@@ -178,6 +178,10 @@ public final class KeyType {
                 );
 
     //////////////////////////////////////////////////////////////
+    /**
+     * @deprecated As of NSS 3.11, FORTEZZA is no longer supported.
+     * This is just a placeholder for backward compatibility.
+     */
     static public final KeyType
     FORTEZZA = new KeyType(new Algorithm[0], "FORTEZZA");
 
