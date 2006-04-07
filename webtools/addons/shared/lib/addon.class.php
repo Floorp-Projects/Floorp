@@ -292,23 +292,23 @@ class AddOn extends AMO_Object {
         // Set order by.
         switch ($orderBy) {
             case 'ratinghigh':
-                $_orderBySql = " ORDER BY CommentVote desc ";
+                $_orderBySql = " ORDER BY CommentVote desc, helpful_yes desc ";
                 break;
             case 'ratinglow':
                 $_orderBySql = " ORDER BY CommentVote asc ";
                 break;
             case 'dateoldest':
-                $_orderBySql = " ORDER BY CommentDate asc ";
+                $_orderBySql = " ORDER BY CommentDate asc, helpful_yes desc ";
                 break;
+            default:
             case 'datenewest':
-                $_orderBySql = " ORDER BY CommentDate desc ";
+                $_orderBySql = " ORDER BY CommentDate desc, helpful_yes desc ";
                 break;
             case 'leasthelpful':
-                $_orderBySql = " ORDER BY helpful_no desc, helpful_yes asc ";
+                $_orderBySql = " ORDER BY helpful_no desc, helpful_yes asc, CommentDate desc ";
                 break;
             case 'mosthelpful':
-            default:
-                $_orderBySql = " ORDER BY helpful_yes desc ";
+                $_orderBySql = " ORDER BY helpful_yes desc, CommentDate desc ";
                 break;
         }
     

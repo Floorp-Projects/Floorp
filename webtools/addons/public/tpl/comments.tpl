@@ -20,12 +20,12 @@ released on {$addon->VersionDateAdded|date_format}
 
 <label>Sort by</label>
 <select id="orderby" name="orderby">
-<option value="mosthelpful"{if $orderby eq "mosthelpful" or !$orderby} selected="selected"{/if}>Most Helpful</option>
-<option value="ratinghigh"{if $orderby eq "ratinghigh"} selected="selected"{/if}>Highest Rated</option>
-<option value="datenewest"{if $orderby eq "datenewest"} selected="selected"{/if}>Newest</option>
-<option value="dateoldest"{if $orderby eq "dateoldest"} selected="selected"{/if}>Oldest</option>
-<option value="ratinglow"{if $orderby eq "ratinglow"} selected="selected"{/if}>Lowest Rated</option>
-<option value="leasthelpful"{if $orderby eq "leasthelpful"} selected="selected"{/if}>Least Helpful</option>
+<option value="datenewest"{if $page.orderby eq "datenewest" or !$page.orderby} selected="selected"{/if}>Newest</option>
+<option value="mosthelpful"{if $page.orderby eq "mosthelpful"} selected="selected"{/if}>Most Helpful</option>
+<option value="ratinghigh"{if $page.orderby eq "ratinghigh"} selected="selected"{/if}>Highest Rated</option>
+<option value="dateoldest"{if $page.orderby eq "dateoldest"} selected="selected"{/if}>Oldest</option>
+<option value="ratinglow"{if $page.orderby eq "ratinglow"} selected="selected"{/if}>Lowest Rated</option>
+<option value="leasthelpful"{if $page.orderby eq "leasthelpful"} selected="selected"{/if}>Least Helpful</option>
 </select>
 <input class="amo-submit" type="submit" value="Go"/></div>
 </form>
@@ -33,7 +33,7 @@ released on {$addon->VersionDateAdded|date_format}
 <div class="pages">
 <div class="prev">
 {if $page.left}
-<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}&amp;orderby={$page.orderby}">&laquo; Previous Page</a>
 {else}
 &laquo; Previous Page
 {/if}
@@ -41,7 +41,7 @@ released on {$addon->VersionDateAdded|date_format}
 
 <div class="next">
 {if $page.next}
-<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}&amp;orderby={$page.orderby}">Next Page &raquo;</a>
 {else}
 Next Page &raquo;
 {/if}

@@ -24,13 +24,13 @@ $page['left'] = (isset($_GET['left'])) ? intval($_GET['left']) : 0;
 $page['right'] = $page['left'] + 10;
 
 // Order by.
-$orderby = (!empty($_GET['orderby'])&&ctype_alpha($_GET['orderby'])) ? $_GET['orderby'] : "";
+$page['orderby'] = (!empty($_GET['orderby'])&&ctype_alpha($_GET['orderby'])) ? $_GET['orderby'] : "";
 
 startProcessing('comments.tpl',$clean['id'],$compileId);
 require_once('includes.php');
 
 $addon = new AddOn($sql['id']);
-$addon->getComments($page['left'],10,$orderby);
+$addon->getComments($page['left'],10,$page['orderby']);
 
 // Get our result count.
 $db->query("SELECT FOUND_ROWS()", SQL_INIT);
@@ -60,7 +60,6 @@ $tpl->assign(
             'title'     => $addon->Name.' Comments',
             'content'   => 'comments.tpl',
             'sidebar'   => 'inc/addon-sidebar.tpl',
-            'page'      => $page,
-            'orderby'   => $orderby)
+            'page'      => $page)
 );
 ?>
