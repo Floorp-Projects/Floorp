@@ -34,6 +34,9 @@ $amo = new AMO_Object();
 if (preg_match('/^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i',$_app)) {
     $newestThemes  = $amo->getNewestAddonsByGuid($_app,'T',10);
     $popularThemes = $amo->getPopularAddonsByGuid($_app,'T',10);
+    /* This is a bit of a cheesy hack because of the way the templates are written.
+     * It's looking for the name of the app in $_GET, so here we are...(clouserw)*/
+    $_GET['app']       = strtolower($amo->getAppNameFromGuid($_app));
 } else {
     $newestThemes  = $amo->getNewestAddons($clean['app'],'T',10);
     $popularThemes = $amo->getPopularAddons($clean['app'],'T',10);
