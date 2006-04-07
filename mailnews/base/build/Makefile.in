@@ -104,6 +104,7 @@ endif
 
 EXTRA_DSO_LDOPTS = \
 		$(DEPTH)/rdf/util/src/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
