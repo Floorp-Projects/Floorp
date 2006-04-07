@@ -11,7 +11,8 @@
             <li><a href="{$config.webpath}/{$app}/{$addon->ID}/history/">Version History</a></li>
 
             {if $addon->Authors|@count > 1}
-                </ul>
+                    </ul>
+                </li>
                 <li><span>About the Authors</span>
                     <ul>
                         {foreach key=key item=item from=$addon->Authors}
@@ -20,10 +21,10 @@
                     </ul>
                 </li>
             {else}
-                <li><a href="{$config.webpath}/{$app}/{$addon->UserID}/author">About the Author</a></li>
-                </ul>
+                    <li><a href="{$config.webpath}/{$app}/{$addon->UserID}/author">About the Author</a></li>
+                    </ul>
+                </li>
             {/if}
-    </li>
     <li><span>Find Similar Add-ons</span>
         <ul>
             {section name=cats loop=$addon->AddonCats}
