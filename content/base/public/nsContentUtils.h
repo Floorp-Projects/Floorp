@@ -896,6 +896,13 @@ private:
   nsresult mResult;
 };
 
+#define NS_AUTO_GCROOT_PASTE2(tok,line) tok##line
+#define NS_AUTO_GCROOT_PASTE(tok,line) \
+  NS_AUTO_GCROOT_PASTE2(tok,line)
+#define NS_AUTO_GCROOT(ptr, result) \ \
+  nsAutoGCRoot NS_AUTO_GCROOT_PASTE(_autoGCRoot_, __LINE__) \
+  (ptr, result)
+
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                      \
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
     foundInterface =                                                          \
