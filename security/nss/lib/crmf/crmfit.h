@@ -140,7 +140,7 @@ struct CRMFCertRequestStr {
      * are not part of the encoding.
      */
     PRArenaPool *poolp;
-    long         requestID; /* This is the value that will be encoded into
+    PRUint32     requestID; /* This is the value that will be encoded into
 			     * the certReqId field.
 			     */
 };                                   

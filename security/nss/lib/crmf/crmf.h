@@ -208,7 +208,7 @@ extern SECStatus CRMF_CertReqMsgSetCertRequest(CRMFCertReqMsg  *inCertReqMsg,
  *    A pointer to the new Certificate Request.  A NULL return value
  *    indicates an error in creating the Certificate Request.
  */
-extern CRMFCertRequest *CRMF_CreateCertRequest (long inRequestID);
+extern CRMFCertRequest *CRMF_CreateCertRequest (PRUint32 inRequestID);
 
 /*
  * FUNCTION: CRMF_DestroyCertRequest
