@@ -1,4 +1,4 @@
-
+<div class="rating" title="{$addon->Rating} out of 5">Rating: {$addon->Rating}</div>
 <h2><strong>{$addon->Name}</strong> &raquo; Comments</h2>
 <p class="first">
 <strong><a href="{$config.webpath}/{$app}/{$addon->ID}/">{$addon->Name} {$addon->Version}</a></strong>,

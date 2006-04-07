@@ -1,3 +1,4 @@
+<div class="rating" title="{$addon->Rating} out of 5">Rating: {$addon->Rating}</div>
 <h2><strong>{$addon->Name}</strong> &raquo; Add a Comment</h2>
 
 <p class="first">
