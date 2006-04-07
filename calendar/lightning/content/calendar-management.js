@@ -223,7 +223,7 @@ var ltnCalendarViewController = {
             event.recurrenceInfo.removeOccurrenceAt(itemToDelete.recurrenceId);
             doTransaction('modify', event, event.calendar, itemToDelete.parentItem, null);
         } else {
-            doTransaction('delete', aOccurrence, aOccurrence.calendar, null, null);
+            doTransaction('delete', itemToDelete, itemToDelete.calendar, null, null);
         }
     }
 };
