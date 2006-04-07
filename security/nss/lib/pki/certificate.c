@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.56 $ $Date: 2005/07/08 17:06:15 $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.57 $ $Date: 2006/04/07 05:49:04 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -120,6 +120,10 @@ nssCertificate_Destroy (
   NSSCertificate *c
 )
 {
+    nssCertificateStoreTrace lockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    nssCertificateStoreTrace unlockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    PRBool locked = PR_FALSE;
+
     if (c) {
 	PRUint32 i;
 	nssDecodedCert *dc = c->decoding;
@@ -130,7 +134,8 @@ nssCertificate_Destroy (
 
 	/* --- LOCK storage --- */
 	if (cc) {
-	    nssCertificateStore_Lock(cc->certStore);
+	    nssCertificateStore_Lock(cc->certStore, &lockTrace);
+            locked = PR_TRUE;
 	} else {
 	    nssTrustDomain_LockCertCache(td);
 	}
@@ -138,7 +143,10 @@ nssCertificate_Destroy (
 	    /* --- remove cert and UNLOCK storage --- */
 	    if (cc) {
 		nssCertificateStore_RemoveCertLOCKED(cc->certStore, c);
-		nssCertificateStore_Unlock(cc->certStore);
+		nssCertificateStore_Unlock(cc->certStore, &lockTrace,
+                                           &unlockTrace);
+                nssCertificateStore_Check(&lockTrace, &unlockTrace);
+
 	    } else {
 		nssTrustDomain_RemoveCertFromCacheLOCKED(td, c);
 		nssTrustDomain_UnlockCertCache(td);
@@ -153,11 +161,17 @@ nssCertificate_Destroy (
 	} else {
 	    /* --- UNLOCK storage --- */
 	    if (cc) {
-		nssCertificateStore_Unlock(cc->certStore);
+		nssCertificateStore_Unlock(cc->certStore,
+					   &lockTrace,
+					   &unlockTrace);
+		nssCertificateStore_Check(&lockTrace, &unlockTrace);
 	    } else {
 		nssTrustDomain_UnlockCertCache(td);
 	    }
 	}
+    }
+    if (locked) {
+        nssCertificateStore_Check(&lockTrace, &unlockTrace);
     }
     return PR_SUCCESS;
 }

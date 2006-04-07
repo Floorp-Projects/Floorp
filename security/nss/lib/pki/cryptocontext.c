@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.14 $ $Date: 2005/01/20 02:25:49 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cryptocontext.c,v $ $Revision: 1.15 $ $Date: 2006/04/07 05:49:04 $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -84,6 +84,12 @@ nssCryptoContext_Create (
     }
     rvCC->td = td;
     rvCC->arena = arena;
+    rvCC->certStore = nssCertificateStore_Create(rvCC->arena);
+    if (!rvCC->certStore) {
+	nssArena_Destroy(arena);
+	return NULL;
+    }
+
     return rvCC;
 }
 
@@ -93,11 +99,14 @@ NSSCryptoContext_Destroy (
 )
 {
     PRStatus status = PR_SUCCESS;
+    PORT_Assert(cc->certStore);
     if (cc->certStore) {
 	status = nssCertificateStore_Destroy(cc->certStore);
 	if (status == PR_FAILURE) {
 	    return status;
 	}
+    } else {
+	status = PR_FAILURE;
     }
     nssArena_Destroy(cc->arena);
     return status;
@@ -140,11 +149,9 @@ NSSCryptoContext_ImportCertificate (
 )
 {
     PRStatus nssrv;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
-	cc->certStore = nssCertificateStore_Create(cc->arena);
-	if (!cc->certStore) {
-	    return PR_FAILURE;
-	}
+	return PR_FAILURE;
     }
     nssrv = nssCertificateStore_Add(cc->certStore, c);
     if (nssrv == PR_SUCCESS) {
@@ -190,11 +197,9 @@ nssCryptoContext_ImportTrust (
 )
 {
     PRStatus nssrv;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
-	cc->certStore = nssCertificateStore_Create(cc->arena);
-	if (!cc->certStore) {
-	    return PR_FAILURE;
-	}
+	return PR_FAILURE;
     }
     nssrv = nssCertificateStore_AddTrust(cc->certStore, trust);
 #if 0
@@ -212,11 +217,9 @@ nssCryptoContext_ImportSMIMEProfile (
 )
 {
     PRStatus nssrv;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
-	cc->certStore = nssCertificateStore_Create(cc->arena);
-	if (!cc->certStore) {
-	    return PR_FAILURE;
-	}
+	return PR_FAILURE;
     }
     nssrv = nssCertificateStore_AddSMIMEProfile(cc->certStore, profile);
 #if 0
@@ -238,6 +241,7 @@ NSSCryptoContext_FindBestCertificateByNickname (
 {
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -264,6 +268,7 @@ NSSCryptoContext_FindCertificatesByNickname (
 )
 {
     NSSCertificate **rvCerts;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -282,6 +287,7 @@ NSSCryptoContext_FindCertificateByIssuerAndSerialNumber (
   NSSDER *serialNumber
 )
 {
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -302,6 +308,7 @@ NSSCryptoContext_FindBestCertificateBySubject (
 {
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -328,6 +335,7 @@ nssCryptoContext_FindCertificatesBySubject (
 )
 {
     NSSCertificate **rvCerts;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -385,6 +393,7 @@ NSSCryptoContext_FindCertificateByEncodedCertificate (
   NSSBER *encodedCertificate
 )
 {
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -404,6 +413,8 @@ NSSCryptoContext_FindBestCertificateByEmail (
 {
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
+
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -430,6 +441,7 @@ NSSCryptoContext_FindCertificatesByEmail (
 )
 {
     NSSCertificate **rvCerts;
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -546,6 +558,7 @@ nssCryptoContext_FindTrustForCertificate (
   NSSCertificate *cert
 )
 {
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }
@@ -558,6 +571,7 @@ nssCryptoContext_FindSMIMEProfileForCertificate (
   NSSCertificate *cert
 )
 {
+    PORT_Assert(cc->certStore);
     if (!cc->certStore) {
 	return NULL;
     }

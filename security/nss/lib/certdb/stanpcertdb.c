@@ -155,6 +155,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     NSSCryptoContext *context;
     nssCryptokiObject *permInstance;
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
+    nssCertificateStoreTrace lockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+    nssCertificateStoreTrace unlockTrace = {NULL, NULL, PR_FALSE, PR_FALSE};
+
     context = c->object.cryptoContext;
     if (!context) {
 	PORT_SetError(SEC_ERROR_ADDING_CERT); 
@@ -170,9 +173,10 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
     }
     /* Delete the temp instance */
-    nssCertificateStore_Lock(context->certStore);
+    nssCertificateStore_Lock(context->certStore, &lockTrace);
     nssCertificateStore_RemoveCertLOCKED(context->certStore, c);
-    nssCertificateStore_Unlock(context->certStore);
+    nssCertificateStore_Unlock(context->certStore, &lockTrace, &unlockTrace);
+    nssCertificateStore_Check(&lockTrace, &unlockTrace);
     c->object.cryptoContext = NULL;
     /* Import the perm instance onto the internal token */
     slot = PK11_GetInternalKeySlot();
