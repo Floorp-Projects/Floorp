@@ -45,6 +45,7 @@
 use strict;
 use Getopt::Mixed "nextOption";
 use File::Temp qw/ tempfile tempdir /;
+use POSIX qw(sys_wait_h);
 
 my $os_type = &get_os_type;
 my $unixish = (($os_type ne "WIN") && ($os_type ne "MAC"));
@@ -69,15 +70,17 @@ my $opt_shell_path = "";
 my $opt_java_path = "";
 my $opt_bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=";
 my $opt_console_failures = 0;
+my $opt_console_failures_line = 0;
 my $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
+my $opt_timeout = 3600;
 my $opt_enable_narcissus = 0;
 my $opt_narcissus_path = "";
 
 # command line option definition
 my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
-  "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
-  "o=s opt>o p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u " .
+  "h help>h i j=s javapath>j k confail>k K linefail>K l=s list>l L=s neglist>L " .
+  "o=s opt>o p=s testpath>p s=s shellpath>s t trace>t T=s timeout>T u=s lxrurl>u " .
   "x noexitmunge>x n:s narcissus>n";
 
 if ($os_type eq "MAC") {
@@ -108,6 +111,8 @@ if ($unixish) {
     # so don't even pretend to let the user continue.
     $SIG{INT} = 'int_handler';
 }
+
+my $current_test;
 
 &main;
 
@@ -185,6 +190,8 @@ sub execute_tests {
             return;
         }
 
+        $current_test = $test;
+
         # Append the shell.js files to the shell_command if they're there.
         # (only check for their existance if the suite or test_dir has changed
         # since the last time we looked.)
@@ -214,14 +221,37 @@ sub execute_tests {
 
         my $jsout;
         (undef, $jsout) = tempfile();
-        system "$command > $jsout $redirect_command";
-        open (OUTPUT, "$jsout") or
-           die "failed to open temporary file $jsout: $!\n";
-        @output = <OUTPUT>;
-        close (OUTPUT);
-        unlink "$jsout";
 
-        @output = grep (!/js\>/, @output);
+        #XXX cloned from tinderbox. See sub kill_process
+        my $pid = fork; # Fork a child process to run the test
+        unless ($pid) {
+            open STDOUT, ">$jsout";
+            open STDERR, ">&STDOUT";
+            select STDOUT; $| = 1; # make STDOUT unbuffered
+            select STDERR; $| = 1; # make STDERR unbuffered
+            exec $command;
+            die "Could not exec $command";
+        }
+
+        # XXX: timeout code modified from code in 
+        # lxr.mozilla.org/mozilla/source/tools/tinderbox/build-seamonkey-util.pl
+        my $timed_out = 0;
+        my $dumped_core = 0;
+        my $loop_count = 0;
+
+        while (++$loop_count < $opt_timeout) {
+            my $wait_pid = waitpid($pid, POSIX::WNOHANG());
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
+            last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or 
+                     $wait_pid == -1;
+            sleep 1;
+        }
+
+        if ($loop_count >= $opt_timeout) {
+            kill_process($pid);
+            $timed_out = 1;
+        }
 
         if ($opt_exit_munge == 1) {
             # signal information in the lower 8 bits, exit code above that
@@ -232,6 +262,14 @@ sub execute_tests {
             $got_exit = $?;
             $exit_signal = 0;
         }
+
+        open (OUTPUT, "$jsout") or
+           die "failed to open temporary file $jsout: $!\n";
+        @output = <OUTPUT>;
+        close (OUTPUT);
+        unlink "$jsout";
+
+        @output = grep (!/js\>/, @output);
 
         $failure_lines = "";
         $bug_number = "";
@@ -271,7 +309,11 @@ sub execute_tests {
             @output = ("Testcase produced no output!");
         }
 
-        if ($got_exit != $expected_exit) {
+        if ($timed_out) {
+            # test was terminated due to timeout
+            &report_failure ($test, "TIMED OUT ($opt_timeout seconds)\n");
+        }
+        elsif ($got_exit != $expected_exit) {
             # full testcase output dumped on mismatched exit codes,
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
@@ -432,6 +474,11 @@ sub parse_args {
             &dd ("opt: displaying failures on console.");
             $opt_console_failures=1;
 
+        } elsif ($option eq "K") {
+            &dd ("opt: displaying failures on console as single line.");
+            $opt_console_failures=1;
+            $opt_console_failures_line=1;
+
         } elsif ($option eq "l" || (($option eq "") && ($lastopt eq "l"))) {
             $option = "l";
             &dd ("opt: adding test list '$value'.");
@@ -478,6 +525,10 @@ sub parse_args {
             &dd ("opt: turning off exit munging.");
             $opt_exit_munge = 0;
 
+        } elsif ($option eq "T") {
+            $opt_timeout = $value;
+            &dd ("opt: setting timeout to $opt_timeout.");
+
         } elsif ($option eq "n") {
             &dd ("opt: enabling narcissus.");
             $opt_enable_narcissus = 1;
@@ -521,6 +572,7 @@ sub usage {
        "(-h|--help)               Print this message.\n" .
        "(-j|--javapath)           Location of java executable.\n" .
        "(-k|--confail)            Log failures to console (also.)\n" . 
+       "(-K|--linefail)           Log failures to console as single line (also.)\n" . 
        "(-l|--list) <file> ...    List of tests to execute.\n" . 
        "(-L|--neglist) <file> ... List of tests to skip.\n" . 
        "(-o|--opt) <options>      Options to pass to the JavaScript engine.\n" .
@@ -528,6 +580,8 @@ sub usage {
        "(-p|--testpath) <path>    Root of the test suite. (default is ./)\n" .
        "(-s|--shellpath) <path>   Location of JavaScript shell.\n" .
        "(-t|--trace)              Trace script execution.\n" .
+       "(-T|--timeout) <seconds>  Time in seconds before the test is terminated.\n" .
+       "                          (default is 3600).\n" .
        "(-u|--lxrurl) <url>       Complete URL to tests subdirectory on lxr.\n" .
        "                          (default is $opt_lxr_url)\n" .
        "(-x|--noexitmunge)        Don't do exit code munging (try this if it\n" .
@@ -1286,7 +1340,14 @@ sub report_failure {
     $test =~ s/\:/\//g;
 
     if ($opt_console_failures) {
-        if($bug_number) {
+        if ($opt_console_failures_line) {
+            my $linemessage = $message;
+            $linemessage =~ s/[\n\r]+/ /mg;
+            $bug_number = "none" unless $bug_number;
+            print STDERR ("test: $test bug: $bug_number result: FAILED " .
+                          "type: shell " .
+                          " description: $linemessage\n");
+        } elsif($bug_number) {
             print STDERR ("*-* Testcase $test failed:\nBug Number $bug_number".
                           "\n$message\n");
         } else {
@@ -1352,3 +1413,33 @@ sub int_handler {
     }
 
 }
+
+# XXX: These functions were pulled from 
+# lxr.mozilla.org/mozilla/source/tools/tinderbox/build-seamonkey-util.pl
+# need a general reusable library of routines for use in all test programs.
+
+sub kill_process {
+    my ($target_pid) = @_;
+    my $start_time = time;
+
+    # Try to kill and wait 10 seconds, then try a kill -9
+    my $sig;
+    for $sig ('TERM', 'KILL') {
+        print "kill $sig $target_pid\n";
+        kill $sig => $target_pid;
+        my $interval_start = time;
+        while (time - $interval_start < 10) {
+            # the following will work with 'cygwin' perl on win32, but not 
+            # with 'MSWin32' (ActiveState) perl
+            my $pid = waitpid($target_pid, POSIX::WNOHANG());
+            if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
+                my $secs = time - $start_time;
+                $secs = $secs == 1 ? '1 second' : "$secs seconds";
+                return;
+            }
+            sleep 1;
+        }
+    }
+    die "Unable to kill process: $target_pid";
+}
+
