@@ -519,7 +519,6 @@ mozStorageService::InitStorageAsyncIO()
     AsyncWriteThreadInstance = nsnull;
     return rv;
   }
-  NS_ADDREF(AsyncWriteThreadInstance);
 #endif
 
   return NS_OK;
