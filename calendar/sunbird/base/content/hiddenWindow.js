@@ -36,9 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* 'new_todo_command', 
-*/
-
 #ifdef XP_MACOSX
 function hiddenWindowStartup()
 {
@@ -46,7 +43,7 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['new_command', 'new_calendar_command', 
+  var disabledItems = ['new_command', 'new_todo_command', 'new_calendar_command', 
                        'modify_command', 'close_calendar_command', 'send_event_command', 
                        'print_command', 'cut_command', 'copy_command', 'paste_command', 
                        'delete_command', 'delete_todo_command', 'select_all_command', 
@@ -57,13 +54,14 @@ function hiddenWindowStartup()
                        'publish_events_command', 'modify_todo_command', 
                        'edit_calendar_command', 
                        'delete_calendar_command', 'find_new_calendar_command', 
-                       'reload_remote_calendars', 'publish_calendar'];
+                       'reload_remote_calendars', 'publish_calendar',
+                       'minimizeWindowCmd', 'zoomWindowCmd'];
   for (var id in disabledItems) 
   {
     var broadcaster = document.getElementById(disabledItems[id]);
     if (broadcaster)
       broadcaster.setAttribute("disabled", "true");
-  };
+  }
 }
 
 // Mac OS X "Window" menu functions
