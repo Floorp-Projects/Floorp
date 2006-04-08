@@ -239,8 +239,8 @@
     </vbox>
     <vbox>
     <button id="downloadLanguagePacks" 
-            label="&downloadContentPacks.label;" 
-            accesskey="&downloadContentPacks.accesskey;" 
+            label="&downloadLanguagePacks.label;" 
+            accesskey="&downloadLanguagePacks.accesskey;" 
             oncommand="DownloadRegionPacks()"/>
     </vbox>
   </hbox>
