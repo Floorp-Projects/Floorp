@@ -157,7 +157,7 @@ Next Page &raquo;
 {else}
 
 <h2>Addon Search</h2>
-<p class="first">There are currently no results.  Please use the options at the left to begin a search or try adjusting your search terms.</p>
+<p class="first">There are currently no results.  Please use the options above to adjust your search terms.</p>
 
 {/if}
 
