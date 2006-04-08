@@ -251,6 +251,10 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         if (principal) {
             nsCOMPtr<nsIURI> uri;
             rv = principal->GetURI(getter_AddRefs(uri));
+            if (!uri) {
+                rv = NS_ERROR_NOT_AVAILABLE;
+            }
+            
             if (NS_SUCCEEDED(rv)) {
                 nsCAutoString spec;
                 uri->GetSpec(spec);
