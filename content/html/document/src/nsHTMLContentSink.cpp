@@ -1145,6 +1145,12 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
                   mStackPos, 
                   mSink);
 
+  if (mStackPos <= 0) {
+    NS_ERROR("container w/o parent");
+
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
   if (mStackPos + 1 > mStackSize) {
     rv = GrowStack();
@@ -1165,6 +1171,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
+  ++mStackPos;
 
   // XXX Need to do this before we start adding attributes.
   if (nodeType == eHTMLTag_style) {
@@ -1221,23 +1228,15 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   rv = mSink->AddAttributes(aNode, content);
   MaybeSetForm(content, nodeType, mSink);
 
-  if (mStackPos <= 0) {
-    NS_ERROR("container w/o parent");
+  nsGenericHTMLElement* parent = mStack[mStackPos - 2].mContent;
 
-    return NS_ERROR_FAILURE;
-  }
-
-  nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
-
-  if (mStack[mStackPos - 1].mInsertionPoint != -1) {
+  if (mStack[mStackPos - 2].mInsertionPoint != -1) {
     parent->InsertChildAt(content,
-                          mStack[mStackPos - 1].mInsertionPoint++,
+                          mStack[mStackPos - 2].mInsertionPoint++,
                           PR_FALSE);
   } else {
     parent->AppendChildTo(content, PR_FALSE);
   }
-
-  mStackPos++;
 
   NS_ENSURE_SUCCESS(rv, rv);
 
