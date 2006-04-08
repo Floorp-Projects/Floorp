@@ -5,7 +5,7 @@ by <a href="{$config.webpath}/{$app}/{$addon->UserID}/author/">{$addon->UserName
 released on {$addon->VersionDateAdded|date_format}
 </p>
 
-<p><strong>Thanks for your input!</strong></p>
+<p><strong>Thanks for your input!</strong> Your rating will appear shortly.</p>
 <p>You have successfully rated the following comment as <strong>{$clean.helpful}</strong>:</p>
 <div id="comment-rate">
 <h3>{$comment.CommentTitle}</h3>
