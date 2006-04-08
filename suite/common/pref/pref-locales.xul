@@ -61,7 +61,7 @@
 
     function SwitchContentPack()
     {
-      var oldContentPack = parent.hPrefWindow.getPref( "string", "general.useragent.contentlocale");
+      var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
       var newContentPack;
 
       try {
