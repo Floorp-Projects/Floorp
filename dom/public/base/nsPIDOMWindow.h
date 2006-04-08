@@ -71,8 +71,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xca692511, 0x8558, 0x4307, \
-  { 0x84, 0xdb, 0x77, 0x28, 0xec, 0xed, 0xb1, 0xd2 } }
+{ 0xad6640fb, 0x575e, 0x4bfe, \
+ { 0x92, 0x92, 0xe6, 0x36, 0xfb, 0xee, 0xff, 0x3d } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -384,6 +384,7 @@ public:
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener,
                                PRBool aOriginalOpener) = 0;
 
+  virtual void EnsureSizeUpToDate() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
