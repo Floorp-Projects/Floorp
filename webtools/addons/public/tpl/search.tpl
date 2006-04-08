@@ -126,7 +126,7 @@ Next Page &raquo;
     <p class="first">By 
 
 {foreach key=key item=item from=$results[r]->Authors}
-    <a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a>,
+        <a href="{$config.webpath}/{$app}/{$item.UserID|escape}/author/">{$item.UserName|escape}</a>{if $item != end($results[r]->Authors)},{/if}
 {/foreach}
 
     </p>
