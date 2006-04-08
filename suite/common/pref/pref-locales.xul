@@ -67,6 +67,7 @@
       //Switch the Content pack if necessary
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
       var newContentPack;
+      var shouldRemoveFaslFile;
 
       try {
         var listbox = document.getElementById("contentPackList");
@@ -86,6 +87,7 @@
         try {
           var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newContentPack, true);
+          shouldRemoveFaslFile = true;
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
         }
@@ -115,6 +117,7 @@
         try {
           var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
           chromeRegistry.selectLocale(newLanguagePack, true);
+          shouldRemoveFaslFile = true;
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
         }
@@ -122,6 +125,27 @@
           return false;
         }
       }
+
+      // If we changed locale, we need to destroy the fastload file so that it
+      // will load the language strings from the new locale jars. No one should
+      // have the fastload file open at this moment, so the remove should succeed.
+      // (XXX actually there is a small window where this is possible, in which 
+      // case we're screwed).
+      // XXX This should really be done in the chrome registry itself, not be in
+      // front-end code, but this patch is only to get this mostly working for 1.1b
+      // The code below must die before 1.1final!!
+      if (shouldRemoveFaslFile) {
+        try {
+          const XUL_FASTLOAD_FILE_BASENAME = "XUL";
+          var faslService = Components.classes['@mozilla.org/fast-load-service;1']
+            .getService(Components.interfaces.nsIFastLoadService);
+          var faslFile = faslService.newFastLoadFile(XUL_FASTLOAD_FILE_BASENAME);
+          faslFile.remove(false);
+        } catch(e) {
+          dump("remove of fastload file failed: " + e);
+        }
+      }
+
     }
 
     function SelectContentPack()
