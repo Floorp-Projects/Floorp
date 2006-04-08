@@ -125,7 +125,7 @@
         sortResource="http://www.mozilla.org/rdf/chrome#name"
         preftype="localizedstring" prefstring="general.useragent.contentlocale" 
         prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
-        multiple="false" onselect="SelectContentPack();"
+        seltype="false" onselect="SelectContentPack();"
         sortDirection="ascending">
     <treecolgroup>
       <treecol flex="1"/>
