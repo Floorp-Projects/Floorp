@@ -2,9 +2,9 @@
 <div class="key-point">
 
 <form action="{$smarty.server.PHP_SELF}" method="get" class="amo-form">
-<input type="hidden" name="app" value="{$app}"/>
 
 <div>
+<input type="hidden" name="app" value="{$app}"/>
 <input type="text" name="q" value="{$clean.q}" maxlength="32"/><input class="amo-submit" type="submit" value="Search"/> 
 <div id="show-search-options"><a href="javascript:toggle('hide-search-options','show-search-options','inline');show('search-options','inline');">Show Options</a></div>
 <div id="hide-search-options"><a href="javascript:toggle('show-search-options','hide-search-options','inline');hide('search-options');">Hide Options</a></div>
@@ -76,9 +76,9 @@
 <p><input class="amo-submit" type="submit" value="Search"/></p>
 
 <!-- end search-options -->
+<input type="hidden" name="app" value="{$app}"/>
 </div>
 
-<input type="hidden" name="app" value="{$app}"/>
 </form>
 
 </div>
