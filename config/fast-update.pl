@@ -25,10 +25,11 @@ my $maxdirs=5;
 my $rootdir = "";
 my $hours = 0;
 my $dir = '';
+my $dirlocal = 0;
 
-&GetOptions('d=s' => \$dir, 'h=s' => \$hours, 'm=s' => \$module, 'r=s' => \$branch);
+&GetOptions('d=s' => \$dir, 'h=s' => \$hours, 'm=s' => \$module, 'r=s' => \$branch, 'l' => \$dirlocal);
 
-#print "dir = ($dir), hours = ($hours), module = ($module), branch = ($branch)\n";
+#print "dir = ($dir), hours = ($hours), module = ($module), branch = ($branch), dirlocal = ($dirlocal)\n";
 if ($dir) {
   chdir '..';
   chdir $dir;
@@ -106,6 +107,7 @@ print "Contacting bonsai for updates to ${module} ";
 print "on the ${branch} branch " if ($branch);
 print "in the last ${hours} hours ";
 print "within the $rootdir directory..\n" if ($rootdir);
+print "\n" unless ($rootdir);
 #print "url = $url\n";
 
 # first try wget, then try lynx, then try curl
@@ -167,7 +169,8 @@ foreach $dir (sort @dirlist) {
 
       if ($dir eq $rootdir) {
         $strippeddir = ".";
-      } else {
+      } elsif (!$dirlocal) {
+        # for local-only updates, skip all sub-dirs
         $strippeddir = substr($dir,(length $rootdir) + 1 );
       }
 
@@ -183,7 +186,7 @@ foreach $dir (sort @dirlist) {
 
 my $status = 0;
 if (scalar(@uniquedirs)) {
-  print "Updating tree..($#uniquedirs directories)\n";
+  print "Updating tree... (" . scalar(@uniquedirs) . " directories)\n";
   my $i=0;
   my $dirlist = "";
   foreach $dir (sort @uniquedirs) {

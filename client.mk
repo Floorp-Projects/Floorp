@@ -114,8 +114,10 @@ AVAILABLE_PROJECTS = \
   macbrowser \
   $(NULL)
 
+# Trailing / on top-level mozilla dir required to stop fast-update thinking
+# it is a module name.
 MODULES_NS_core :=                              \
-  mozilla                                       \
+  mozilla/                                      \
   mozilla/js                                    \
   mozilla/js/src                                \
   mozilla/js/jsd                                \

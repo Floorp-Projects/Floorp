@@ -13,6 +13,7 @@ my $start_time = time();
 my $branch;
 my @modules;
 my @dirs;
+my $dirlocal = 0;
 
 print "$0: (".join(')(',@ARGV).")\n";
 while (scalar(@ARGV)) {
@@ -30,6 +31,11 @@ while (scalar(@ARGV)) {
   elsif ($val eq '-r') {
     $branch = shift @ARGV;
     #print "branch = $branch\n";
+    next;
+  }
+  elsif ($val eq '-l') {
+    $dirlocal = 1;
+    #print "dirlocal = $dirlocal\n";
     next;
   }
   elsif ($val =~ /^-/) {
@@ -57,12 +63,12 @@ if (!$branch) {
 
 my $status = 0;
 foreach my $mod (@modules) {
-  my $cmd = "config/fast-update.pl -r $branch -m $mod";
+  my $cmd = "config/fast-update.pl -r $branch -m $mod" . ($dirlocal ? " -l" : "");
   #print "system \"$cmd\"\n";
   $status |= system $cmd;
 }
 foreach my $d (@dirs) {
-  my $cmd = "config/fast-update.pl -r $branch -d $d -m all";
+  my $cmd = "config/fast-update.pl -r $branch -d $d -m all" . ($dirlocal ? " -l" : "");
   #print "system \"$cmd\"\n";
   $status |= system $cmd;
 }
