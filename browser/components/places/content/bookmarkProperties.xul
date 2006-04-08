@@ -50,26 +50,7 @@
                   <label value="&bookmark.property.location;" align="middle"/>
                 </hbox>
               </vbox>
-              <textbox id="editURLBar" size="10"
-                       onchange="BookmarkPropertiesPanel.validateChanges()"/>
-            </row>
-            <row id="livemarkFeedLocationRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&livemark.property.feed_uri;" align="middle"/>
-                </hbox>
-              </vbox>
-              <textbox id="editLivemarkFeedLocationBox"
-                       onchange="BookmarkPropertiesPanel.validateChanges()"/>
-            </row>
-            <row id="livemarkSiteLocationRow">
-              <vbox align="end">
-                <hbox align="center" flex="1">
-                  <label value="&livemark.property.site_uri;" align="middle"/>
-                </hbox>
-              </vbox>
-              <textbox id="editLivemarkSiteLocationBox"
-                       onchange="BookmarkPropertiesPanel.validateChanges()"/>
+              <textbox id="editURLBar" size="10"/>
             </row>
             <row id="shortcutRow">
               <vbox align="end">
@@ -92,8 +73,7 @@
                       type="places" 
                       place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
                       hidecolumnpicker="true"
-                      seltype="multiple"
-                      onselect="BookmarkPropertiesPanel.validateChanges()">
+                      seltype="multiple">
                   <treecols>
                     <treecol id="title"
                              flex="1" 
