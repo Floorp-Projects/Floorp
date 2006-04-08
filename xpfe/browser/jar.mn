@@ -66,10 +66,8 @@ en-US.jar:
         locale/en-US/navigator/turboDialog.dtd              (resources/locale/en-US/turboDialog.dtd)
         locale/en-US/navigator/turboMenu.properties         (resources/locale/en-US/turboMenu.properties)
         locale/en-US/navigator/mailNavigatorOverlay.dtd     (resources/locale/en-US/mailNavigatorOverlay.dtd)
-
-US.jar:
-*       locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
-        locale/US/navigator-region/region.properties        (resources/locale/en-US/region.properties)
+*       locale/en-US/navigator-region/contents.rdf          (resources/locale/en-US/contents-region.rdf)
+        locale/en-US/navigator-region/region.properties     (resources/locale/en-US/region.properties)
 
 en-mac.jar:
 *       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/mac/contents-platform.rdf)

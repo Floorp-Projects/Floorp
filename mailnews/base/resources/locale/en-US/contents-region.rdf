@@ -4,23 +4,20 @@
 
   <!-- list all the locale being supplied by this package -->
   <RDF:Seq about="urn:mozilla:locale:root">
-    <RDF:li resource="urn:mozilla:locale:US"/>
+    <RDF:li resource="urn:mozilla:locale:en-US"/>
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:locale:US"
-        chrome:author="mozilla.org"
-        chrome:name="US"
-        chrome:previewURL="http://www.mozilla.org/locales/US.gif">
+  <RDF:Description about="urn:mozilla:locale:en-US">
     <chrome:packages>
-      <RDF:Seq about="urn:mozilla:locale:US:packages">
-        <RDF:li resource="urn:mozilla:locale:US:messenger-region"/>
+      <RDF:Seq about="urn:mozilla:locale:en-US:packages">
+        <RDF:li resource="urn:mozilla:locale:en-US:messenger-region"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
 
   <!-- Version Information.  State that we work only with major version of this
        package. -->
-  <RDF:Description about="urn:mozilla:locale:US:messenger-region"
+  <RDF:Description about="urn:mozilla:locale:en-US:messenger-region"
 #expand 	chrome:localeVersion="__MOZILLA_REGION_VERSION__"/>
 </RDF:RDF>
