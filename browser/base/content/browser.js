@@ -6613,17 +6613,12 @@ var BookmarksEventHandler = {
 
         var button = target.parentNode;
         if (button.getAttribute("livemark") == "true") {
-          // Live bookmarks aren't required to have site URIs
-          if (button.hasAttribute("siteURI")) {
-            var openHomePage = document.createElement("menuitem");
-            openHomePage.setAttribute(
-              "siteURI", button.getAttribute("siteURI"));
-            openHomePage.setAttribute(
-              "label",
+          var openHomePage = document.createElement("menuitem");
+          openHomePage.setAttribute("siteURI", button.getAttribute("siteURI"));
+          openHomePage.setAttribute("label",
               strings.getFormattedString("menuOpenLivemarkOrigin.label",
                                          [button.getAttribute("label")]));
-            target.appendChild(openHomePage);
-          }
+          target.appendChild(openHomePage);
         }
 
         var openInTabs = document.createElement("menuitem");
