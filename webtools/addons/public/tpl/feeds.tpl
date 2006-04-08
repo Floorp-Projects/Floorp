@@ -1,4 +1,4 @@
-<div id="mBody/">
+<div id="mBody">
 <h1>Mozilla Add-ons Feeds</h1>
 <p>You can use the following feeds to always know what's going on with Mozilla Add-ons.  Here are your choices:</p>
 <ul>
