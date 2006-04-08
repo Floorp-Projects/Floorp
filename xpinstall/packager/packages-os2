@@ -16,9 +16,6 @@ bin/.autoreg
 ; en-US 
 ; If you add a new directory you must explicitly call addDirectory in langenus.jst
 bin/chrome/en-US.jar
-bin/chrome/en-mac.jar
-bin/chrome/en-unix.jar
-bin/chrome/en-win.jar
 bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/searchplugins/*

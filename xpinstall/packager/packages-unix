@@ -14,9 +14,6 @@ bin/.autoreg
 ;
 ; en-US
 bin/chrome/en-US.jar
-bin/chrome/en-mac.jar
-bin/chrome/en-unix.jar
-bin/chrome/en-win.jar
 bin/defaults/profile/en-US/*
 bin/defaults/messenger/en-US/*
 bin/defaults/isp/en-US/movemail.rdf

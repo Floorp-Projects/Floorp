@@ -117,24 +117,17 @@ en-US.jar:
 *   locale/en-US/global-region/region.dtd           (resources/locale/en-US/region.dtd)
     locale/en-US/global-region/region.properties    (resources/locale/en-US/region.properties)
     locale/en-US/global-region/builtinURLs.rdf      (resources/locale/en-US/builtinURLs.rdf) 
-
-
-en-win.jar:
-*   locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/win/contents-platform.rdf)
-    locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/win/platformDialogOverlay.dtd)
-    locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/win/platformKeys.properties)
-    locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/win/wizard.properties)
- 
-en-unix.jar:
-*   locale/en-US/global-platform/contents.rdf 		(resources/locale/en-US/unix/contents-platform.rdf)
-    locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/unix/platformDialogOverlay.dtd)
-    locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/unix/platformKeys.properties)
-    locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/unix/wizard.properties)
-    locale/en-US/global-platform/printjoboptions.dtd       (resources/locale/en-US/unix/printjoboptions.dtd)
-
-en-mac.jar:
-*   locale/en-US/global-platform/contents.rdf		(resources/locale/en-US/mac/contents-platform.rdf)
-    locale/en-US/global-platform/platformDialogOverlay.dtd (resources/locale/en-US/mac/platformDialogOverlay.dtd)
-    locale/en-US/global-platform/platformKeys.properties   (resources/locale/en-US/mac/platformKeys.properties)
-    locale/en-US/global-platform/wizard.properties         (resources/locale/en-US/mac/wizard.properties)
+*   locale/en-US/global-platform/win/contents.rdf               (resources/locale/en-US/win/contents-platform.rdf)
+    locale/en-US/global-platform/win/platformDialogOverlay.dtd  (resources/locale/en-US/win/platformDialogOverlay.dtd)
+    locale/en-US/global-platform/win/platformKeys.properties    (resources/locale/en-US/win/platformKeys.properties)
+    locale/en-US/global-platform/win/wizard.properties          (resources/locale/en-US/win/wizard.properties)
+*   locale/en-US/global-platform/unix/contents.rdf              (resources/locale/en-US/unix/contents-platform.rdf)
+    locale/en-US/global-platform/unix/platformDialogOverlay.dtd (resources/locale/en-US/unix/platformDialogOverlay.dtd)
+    locale/en-US/global-platform/unix/platformKeys.properties   (resources/locale/en-US/unix/platformKeys.properties)
+    locale/en-US/global-platform/unix/wizard.properties         (resources/locale/en-US/unix/wizard.properties)
+    locale/en-US/global-platform/unix/printjoboptions.dtd       (resources/locale/en-US/unix/printjoboptions.dtd)
+*   locale/en-US/global-platform/mac/contents.rdf               (resources/locale/en-US/mac/contents-platform.rdf)
+    locale/en-US/global-platform/mac/platformDialogOverlay.dtd  (resources/locale/en-US/mac/platformDialogOverlay.dtd)
+    locale/en-US/global-platform/mac/platformKeys.properties    (resources/locale/en-US/mac/platformKeys.properties)
+    locale/en-US/global-platform/mac/wizard.properties          (resources/locale/en-US/mac/wizard.properties)
 #endif

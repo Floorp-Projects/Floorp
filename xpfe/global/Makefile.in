@@ -68,8 +68,8 @@ build.dtd: build.dtd.in $(DEPTH)/config/build_number
 
 ifndef MOZ_XUL_APP
 libs realchrome::
-	@$(REGCHROME) locale en-US/global-platform en-$(CHROME_PLATFORM).jar
+	@$(REGCHROME) locale en-US/global-platform/$(CHROME_PLATFORM) en-US.jar
 
 install::
-	@$(REGCHROME_INSTALL) locale en-US/global-platform en-$(CHROME_PLATFORM).jar
+	@$(REGCHROME_INSTALL) locale en-US/global-platform/$(CHROME_PLATFORM) en-US.jar
 endif

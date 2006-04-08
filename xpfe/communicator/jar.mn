@@ -74,16 +74,10 @@ en-US.jar:
 *   locale/en-US/branding/brand.properties                      (resources/locale/en-US/brand.properties)
 *   locale/en-US/communicator-region/contents.rdf               (resources/locale/en-US/contents-region.rdf)
     locale/en-US/communicator-region/region.properties          (resources/locale/en-US/region.properties)
-
-en-win.jar:
-*   locale/en-US/communicator-platform/contents.rdf		(resources/locale/en-US/win/contents-platform.rdf)
-    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/win/platformCommunicatorOverlay.dtd)
-
-en-unix.jar:
-*   locale/en-US/communicator-platform/contents.rdf	(resources/locale/en-US/unix/contents-platform.rdf)
-    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/unix/platformCommunicatorOverlay.dtd)
-
-en-mac.jar:
-*   locale/en-US/communicator-platform/contents.rdf		(resources/locale/en-US/mac/contents-platform.rdf)
-    locale/en-US/communicator-platform/platformCommunicatorOverlay.dtd (resources/locale/en-US/mac/platformCommunicatorOverlay.dtd)
+*   locale/en-US/communicator-platform/win/contents.rdf                     (resources/locale/en-US/win/contents-platform.rdf)
+    locale/en-US/communicator-platform/win/platformCommunicatorOverlay.dtd  (resources/locale/en-US/win/platformCommunicatorOverlay.dtd)
+*   locale/en-US/communicator-platform/unix/contents.rdf                    (resources/locale/en-US/unix/contents-platform.rdf)
+    locale/en-US/communicator-platform/unix/platformCommunicatorOverlay.dtd (resources/locale/en-US/unix/platformCommunicatorOverlay.dtd)
+*   locale/en-US/communicator-platform/mac/contents.rdf                     (resources/locale/en-US/mac/contents-platform.rdf)
+    locale/en-US/communicator-platform/mac/platformCommunicatorOverlay.dtd  (resources/locale/en-US/mac/platformCommunicatorOverlay.dtd)
 #endif
