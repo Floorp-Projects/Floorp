@@ -30,12 +30,6 @@
       onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul'); "
       headertitle="&lHeader;">
 
-  <stringbundle id="bundle_contentPack"
-                src="chrome://content-packs/locale/contentpacks.properties"/>
-
-  <stringbundle id="bundle_brand"
-                src="chrome://global/locale/brand.properties"/>
-
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["contentPackList", "languagePackList"];
@@ -94,21 +88,13 @@
           chromeRegistry.selectLocale(newContentPack, true);
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
-          var contentBundle = document.getElementById("bundle_contentPack");
-          var brandBundle = document.getElementById("bundle_brand");
-          var alertText = contentBundle.getString("contentAlert");
-          alertText = alertText.replace(/%brand%/g, brandBundle.getString("brandShortName"));
-          var titleText = contentBundle.GetStringFromName("languageTitle");
-          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-          promptService.alert(window, titleText, alertText);
         }
         catch(e) {
           return false;
         }
       }
 
-      ///Switch the Language pack if necessary
+      //Switch the Language pack if necessary
       var oldLanguagePack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.locale");
       var newLanguagePack;
 
