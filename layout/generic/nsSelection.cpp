@@ -522,6 +522,8 @@ private:
   PRPackedBool mMouseDownState;   //for drag purposes
   PRPackedBool mMouseDoubleDownState; //has the doubleclick down happened
   PRPackedBool mDesiredXSet;
+  
+  PRInt8 mCaretMovementStyle;
 };
 
 class nsSelectionIterator : public nsIBidirectionalEnumerator
@@ -1260,6 +1262,7 @@ nsSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
   mDesiredXSet = PR_FALSE;
   mLimiter = aLimiter;
   mScrollView = nsnull;
+  mCaretMovementStyle = nsContentUtils::GetIntPref("bidi.edit.caret_movement_style", 2);
   return NS_OK;
 }
 
@@ -1376,10 +1379,13 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
   nsCOMPtr<nsIDOMNode> parentNode;
   nsPeekOffsetStruct pos;
 
+  PRBool visualMovement = mCaretMovementStyle == 1 ||
+    (mCaretMovementStyle == 2 && !aContinueSelection); 
+  
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   pos.SetData(mShell, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,
-              PR_TRUE, PR_TRUE, mLimiter != nsnull, PR_TRUE);
+              PR_TRUE, PR_TRUE, mLimiter != nsnull, PR_TRUE, visualMovement);
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
   
