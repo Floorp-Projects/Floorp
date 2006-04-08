@@ -75,10 +75,6 @@ function Startup()
   var defaultLanguage;
   var languageList = document.getElementById("langList");
   var selectedLanguage = window.arguments.length ? window.arguments[0] : null;
-  
-  var defaultRegion;
-  var regionList = document.getElementById("regionList");
-  var selectedRegion = window.arguments.length ? window.arguments[1] : null;
 
   //get pref defaults
   try
@@ -88,7 +84,6 @@ function Startup()
                                .getService(Components.interfaces.nsIPrefService)
                                .getBranch("general.useragent.");
     defaultLanguage = prefBranch.getComplexValue("locale", nsIPrefLocalizedString).data;
-    defaultRegion = prefBranch.getComplexValue("contentlocale", nsIPrefLocalizedString).data;
   }
 
   catch(e) 
@@ -98,12 +93,6 @@ function Startup()
   if (!SelectListItem(languageList, selectedLanguage))
     if (!SelectListItem(languageList, defaultLanguage))
       languageList.selectedIndex = 0;
-
-
-  //persist previous user selection, highlight a default otherwise
-  if (!SelectListItem(regionList, selectedRegion))
-    if (!SelectListItem(regionList, defaultRegion))
-      regionList.selectedIndex = 1;
 
 }
 
@@ -120,18 +109,6 @@ function onAccept()
 
     if (langStore)
       langStore.setAttribute("data", langName);
-  }
-
-  //cache region on the parent window
-  var regionList = document.getElementById("regionList");
-  selectedItem = regionList.selectedItem;
-
-  if (selectedItem) {
-    var regionName = selectedItem.getAttribute("value");
-    var regionStore = opener.document.getElementById("profileRegion");
-
-    if (regionStore)
-      regionStore.setAttribute("data", regionName);
   }
 
   return true;

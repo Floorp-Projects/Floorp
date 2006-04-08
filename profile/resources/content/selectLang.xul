@@ -1,7 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://communicator/skin/"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
+<!DOCTYPE dialog [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % selectLangDTD SYSTEM "chrome://communicator/locale/profile/selectLang.dtd">
+%selectLangDTD;
+]>
 
 <dialog title="&langSelBox.title.label;"
         style="width: 22em;"
@@ -21,33 +26,14 @@
           sortDirection="ascending">
       
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+        <!-- This rule eliminates (obsolete) region packs from the language pack list -->
         <rule chrome:localeType="region"/>
-        <rule>
+        <!-- This rule displays only up to date language packs based on the localeVersion -->
+        <rule chrome:localeVersion="&lang.version;">
           <listitem id="treechildren" uri="..." 
                     label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
         </rule>
       </template>
     </listbox>
-
-    <separator class="thin" />
-
-    <label value="&regionList.txt.label;" control="regionList"/>
-
-    <separator class="thin" />
- 
-    <menulist id="regionList" flex="1">
-      <menupopup
-            datasources="rdf:chrome"  ref="urn:mozilla:locale:root" 
-            sortResource="http://www.mozilla.org/rdf/chrome#name"
-            sortDirection="ascending">
-        <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-          <rule chrome:localeType="region">
-            <menuitem class="standard" uri="rdf:*" 
-              label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-              value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-          </rule>
-        </template>
-      </menupopup>
-    </menulist>             
 </dialog>        
