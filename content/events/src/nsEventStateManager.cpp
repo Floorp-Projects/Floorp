@@ -1389,7 +1389,8 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   // fire off a timer to track click-hold
-  CreateClickHoldTimer ( aPresContext, inDownFrame, inDownEvent );
+  if (nsContentUtils::GetBoolPref("ui.click_hold_context_menus", PR_TRUE))
+    CreateClickHoldTimer ( aPresContext, inDownFrame, inDownEvent );
 #endif
 }
 
