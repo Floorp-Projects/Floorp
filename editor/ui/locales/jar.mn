@@ -54,8 +54,6 @@
   locale/@AB_CD@/editor/EditorSaveAsCharset.dtd              (%chrome/dialogs/EditorSaveAsCharset.dtd)
   locale/@AB_CD@/editor/EditorPublish.dtd                    (%chrome/dialogs/EditorPublish.dtd)
   locale/@AB_CD@/editor/EditorPublishProgress.dtd            (%chrome/dialogs/EditorPublishProgress.dtd)
-
-US.jar:
-* locale/US/editor-region/contents.rdf                       (generic/chrome/region/contents.rdf)
-  locale/US/editor-region/region.properties                  (%chrome/region/region.properties)
+* locale/@AB_CD@/editor-region/contents.rdf                  (generic/chrome/region/contents.rdf)
+  locale/@AB_CD@/editor-region/region.properties             (%chrome/region/region.properties)
 #endif

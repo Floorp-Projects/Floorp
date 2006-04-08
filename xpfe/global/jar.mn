@@ -113,12 +113,10 @@ en-US.jar:
     locale/en-US/global/fontpackage.dtd             (resources/locale/en-US/fontpackage.dtd)
     locale/en-US/global/fontpackage.properties      (resources/locale/en-US/fontpackage.properties)
     locale/en-US/global/tree.dtd                    (resources/locale/en-US/tree.dtd)
-
-US.jar:
-*   locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
-*   locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)
-    locale/US/global-region/region.properties       (resources/locale/en-US/region.properties)
-    locale/US/global-region/builtinURLs.rdf         (resources/locale/en-US/builtinURLs.rdf) 
+*   locale/en-US/global-region/contents.rdf         (resources/locale/en-US/contents-region.rdf) 
+*   locale/en-US/global-region/region.dtd           (resources/locale/en-US/region.dtd)
+    locale/en-US/global-region/region.properties    (resources/locale/en-US/region.properties)
+    locale/en-US/global-region/builtinURLs.rdf      (resources/locale/en-US/builtinURLs.rdf) 
 
 
 en-win.jar:
