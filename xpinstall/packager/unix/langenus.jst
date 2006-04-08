@@ -9,12 +9,10 @@ logComment("initInstall: platformNode=" + platformNode);
 
 // --- LOCALIZATION NOTE: translate only these ---
 var prettyName = "English (US) Language Pack";
-var langcode = "en";
-var chromeNode = langcode + "-US";
+var chromeNode = "en-US";
 // --- END LOCALIZABLE RESOURCES ---
 var regName    = "locales/mozilla/" + chromeNode;
 var chromeName = chromeNode + ".jar";
-var platformName = langcode + "-" + platformNode + ".jar";
 var localeName = "locale/" + chromeNode + "/";
 
 err = initInstall(prettyName, regName, "$Version$"); 
@@ -50,7 +48,6 @@ if (verifyDiskSpace(fProgram, srDest))
     {
         // register chrome
         var cf = getFolder(fProgram, "chrome/"+chromeName);
-        var pf = getFolder(fProgram, "chrome/"+platformName);
 
         registerChrome(chromeType, cf, localeName + "global/");
         registerChrome(chromeType, cf, localeName + "communicator/");
@@ -77,9 +74,9 @@ if (verifyDiskSpace(fProgram, srDest))
         registerChrome(chromeType, cf, localeName + "messenger-region/");
         registerChrome(chromeType, cf, localeName + "navigator-region/");
 
-        registerChrome(chromeType, pf, localeName + "global-platform/");
-        registerChrome(chromeType, pf, localeName + "communicator-platform/");
-        registerChrome(chromeType, pf, localeName + "navigator-platform/");
+        registerChrome(chromeType, cf, localeName + "global-platform/" + platformNode + "/");
+        registerChrome(chromeType, cf, localeName + "communicator-platform/" + platformNode + "/");
+        registerChrome(chromeType, cf, localeName + "navigator-platform/" + platformNode + "/");
 
         err = performInstall(); 
         logComment("performInstall() returned: " + err);

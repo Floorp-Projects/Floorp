@@ -81,6 +81,15 @@ comm.jar:
     content/communicator/pref/pref-cookies.xul                  (prefwindow/resources/content/pref-cookies.xul)
     content/communicator/pref/pref-images.xul                   (prefwindow/resources/content/pref-images.xul)
     content/communicator/pref/pref-popups.xul                   (prefwindow/resources/content/pref-popups.xul)
+#ifdef XP_MACOSX
+#    content/communicator/pref/platformPrefOverlay.xul           (prefwindow/resources/content/mac/platformPrefOverlay.xul)
+#else
+#ifdef XP_WIN32
+    content/communicator/pref/platformPrefOverlay.xul           (prefwindow/resources/content/win/platformPrefOverlay.xul)
+#else
+    content/communicator/pref/platformPrefOverlay.xul           (prefwindow/resources/content/unix/platformPrefOverlay.xul)
+#endif
+#endif
     content/communicator/related/related-panel.xul              (related/resources/related-panel.xul)
     content/communicator/related/related-panel.js               (related/resources/related-panel.js)
     content/communicator/search/search-editor.js                (search/resources/search-editor.js)
@@ -166,6 +175,9 @@ en-US.jar:
     locale/en-US/communicator/pref/autocomplete-autofill-off.gif (prefwindow/resources/locale/en-US/autocomplete-autofill-off.gif)
     locale/en-US/communicator/pref/autocomplete-showpopup.gif   (prefwindow/resources/locale/en-US/autocomplete-showpopup.gif)
     locale/en-US/communicator/pref/autocomplete-showsearch.gif  (prefwindow/resources/locale/en-US/autocomplete-showsearch.gif)
+    locale/en-US/communicator-platform/mac/pref/platformPrefOverlay.dtd  (prefwindow/resources/locale/en-US/mac/platformPrefOverlay.dtd)
+    locale/en-US/communicator-platform/unix/pref/platformPrefOverlay.dtd (prefwindow/resources/locale/en-US/unix/platformPrefOverlay.dtd)
+    locale/en-US/communicator-platform/win/pref/platformPrefOverlay.dtd  (prefwindow/resources/locale/en-US/win/platformPrefOverlay.dtd)
     locale/en-US/communicator/search/internetresults.dtd        (search/resources/locale/en-US/internetresults.dtd)
     locale/en-US/communicator/search/search-editor.dtd          (search/resources/locale/en-US/search-editor.dtd)
     locale/en-US/communicator/search/search-editor.properties   (search/resources/locale/en-US/search-editor.properties)
@@ -185,6 +197,7 @@ en-US.jar:
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                   (find/resources/locale/en-US/finddialog.properties)
+    locale/en-US/global-platform/win/nsWindowsHooks.properties  (winhooks/locale/en-US/nsWindowsHooks.properties)
 *   locale/en-US/cookie/contents.rdf                            (cookie/locale/en-US/contents.rdf)
     locale/en-US/cookie/cookieAcceptDialog.properties           (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.properties)
     locale/en-US/cookie/cookieAcceptDialog.dtd                  (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.dtd)
@@ -199,9 +212,6 @@ toolkit.jar:
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
-
-en-win.jar:
-    locale/en-US/global-platform/nsWindowsHooks.properties      (winhooks/locale/en-US/nsWindowsHooks.properties)
 #endif
 
 toolkit.jar:

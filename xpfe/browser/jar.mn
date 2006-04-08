@@ -68,19 +68,13 @@ en-US.jar:
         locale/en-US/navigator/mailNavigatorOverlay.dtd     (resources/locale/en-US/mailNavigatorOverlay.dtd)
 *       locale/en-US/navigator-region/contents.rdf          (resources/locale/en-US/contents-region.rdf)
         locale/en-US/navigator-region/region.properties     (resources/locale/en-US/region.properties)
-
-en-mac.jar:
-*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/mac/contents-platform.rdf)
-        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/mac/platformNavigationBindings.dtd)
-        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/mac/navigator.properties)
-
-en-unix.jar:
-*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/unix/contents-platform.rdf)
-        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/unix/platformNavigationBindings.dtd)
-        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/unix/navigator.properties)
-
-en-win.jar:
-*       locale/en-US/navigator-platform/contents.rdf        (resources/locale/en-US/win/contents-platform.rdf)
-        locale/en-US/navigator-platform/platformNavigationBindings.dtd (resources/locale/en-US/win/platformNavigationBindings.dtd)
-        locale/en-US/navigator-platform/navigator.properties (resources/locale/en-US/win/navigator.properties)
+*       locale/en-US/navigator-platform/mac/contents.rdf                    (resources/locale/en-US/mac/contents-platform.rdf)
+        locale/en-US/navigator-platform/mac/platformNavigationBindings.dtd  (resources/locale/en-US/mac/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/mac/navigator.properties            (resources/locale/en-US/mac/navigator.properties)
+*       locale/en-US/navigator-platform/unix/contents.rdf                   (resources/locale/en-US/unix/contents-platform.rdf)
+        locale/en-US/navigator-platform/unix/platformNavigationBindings.dtd (resources/locale/en-US/unix/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/unix/navigator.properties           (resources/locale/en-US/unix/navigator.properties)
+*       locale/en-US/navigator-platform/win/contents.rdf                    (resources/locale/en-US/win/contents-platform.rdf)
+        locale/en-US/navigator-platform/win/platformNavigationBindings.dtd  (resources/locale/en-US/win/platformNavigationBindings.dtd)
+        locale/en-US/navigator-platform/win/navigator.properties            (resources/locale/en-US/win/navigator.properties)
 #endif

@@ -137,7 +137,7 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/editor/editorNavigatorOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/global-region/region.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/utilityOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/help/helpMenuOverlay.dtd
-jar:resource:///chrome/en-win.jar!/locale/en-US/global-platform/platformGlobalOverlay.dtd
+jar:resource:///chrome/en-US.jar!/locale/en-US/global-platform/win/platformGlobalOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/viewZoomOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/tasksOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/messenger/mailTasksOverlay.dtd
@@ -204,10 +204,10 @@ jar:resource:///chrome/toolkit.jar!/content/global/autocomplete.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/textbox.xml
 jar:resource:///chrome/toolkit.jar!/content/global/bindings/outliner.xml
 jar:resource:///chrome/en-US.jar!/locale/en-US/navigator/navigator.properties
-jar:resource:///chrome/en-win.jar!/locale/en-US/navigator-platform/navigator.properties
+jar:resource:///chrome/en-US.jar!/locale/en-US/navigator-platform/win/navigator.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/necko/necko.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/bookmarks/bookmarks.properties
-jar:resource:///chrome/en-win.jar!/locale/en-US/global-platform/platformKeys.properties
+jar:resource:///chrome/en-US.jar!/locale/en-US/global-platform/win/platformKeys.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/utilityOverlay.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/navigator-region/region.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/viewZoomOverlay.properties

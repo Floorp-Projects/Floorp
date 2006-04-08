@@ -36,6 +36,25 @@ sub foreignPlatformFile
    return 0;
 }
 
+sub foreignPlatformPath
+{
+   my ($jarpath) = @_;
+   
+   if (!$win32 && index($jarpath, "-platform/win") != -1) {
+     return 1;
+   }
+   
+   if (!$unix && index($jarpath, "-platform/unix") != -1) {
+     return 1; 
+   }
+
+   if (!$macos && index($jarpath, "-platform/mac") != -1) {
+     return 1;
+   }
+
+   return 0;
+}
+
 #print "add-chrome $installedChromeFile $disableJarPackaging $chromeType $pkgName $jarFileName\n";
 
 my $nofilelocks = 0;
@@ -73,7 +92,7 @@ if ($jarFileName =~ /(.*)\.jar/) {
     $jarFileName = $1;
 }
 
-if (!foreignPlatformFile($jarFileName)) {
+if (!foreignPlatformFile($jarFileName) && !foreignPlatformPath($pkgName)) {
 
 my $line;
 if ($disableJarPackaging) {
