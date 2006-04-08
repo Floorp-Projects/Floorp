@@ -665,6 +665,7 @@
         oncommand="MsgSaveAsFile();"/>
     <menuitem id="threadPaneContext-printpreview"
         label="&contextPrintPreview.label;"
+        accesskey="&contextPrintPreview.accesskey;"
         oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="threadPaneContext-print"
         label="&contextPrint.label;"
@@ -1012,6 +1013,7 @@
         oncommand="MsgSaveAsFile();"/>
     <menuitem id="messagePaneContext-printpreview"
         label="&contextPrintPreview.label;"
+        accesskey="&contextPrintPreview.accesskey;"
         oncommand="PrintEnginePrintPreview();"/>
     <menuitem id="messagePaneContext-print"
         label="&contextPrint.label;"

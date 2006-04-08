@@ -93,9 +93,9 @@
 <!ENTITY settingsOfflineCmd.label "Offline Settings...">
 <!ENTITY settingsOfflineCmd.accesskey "e">
 <!ENTITY downloadSelectedCmd.label "Get Selected Messages">
-<!ENTITY downloadSelectedCmd.accesskey "M">
+<!ENTITY downloadSelectedCmd.accesskey "t">
 <!ENTITY downloadFlaggedCmd.label "Get Flagged Messages">
-<!ENTITY downloadFlaggedCmd.accesskey "F">
+<!ENTITY downloadFlaggedCmd.accesskey "G">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.key "p">
@@ -500,11 +500,11 @@
 <!ENTITY contextEditAsNew.label "Edit As New...">
 <!ENTITY contextEditAsNew.accesskey "E">
 <!ENTITY contextReplySender.label "Reply to Sender Only">
-<!ENTITY contextReplySender.accesskey "R">
+<!ENTITY contextReplySender.accesskey "O">
 <!ENTITY contextReplyNewsgroup.label "Reply to Newsgroup">
 <!ENTITY contextReplyNewsgroup.accesskey "y">
 <!ENTITY contextReplyAll.label "Reply to All">
-<!ENTITY contextReplyAll.accesskey "A">
+<!ENTITY contextReplyAll.accesskey "R">
 <!ENTITY contextForward.label "Forward">
 <!ENTITY contextForward.accesskey "F">
 <!ENTITY contextForwardAsAttachment.label "Forward as Attachments">
@@ -518,6 +518,7 @@
 <!ENTITY contextPrint.label "Print...">
 <!ENTITY contextPrint.accesskey "P">
 <!ENTITY contextPrintPreview.label "Print Preview">
+<!ENTITY contextPrintPreview.accesskey "v">
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
 <!ENTITY contextAddSenderToAddressBook.accesskey "B">
 <!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">
