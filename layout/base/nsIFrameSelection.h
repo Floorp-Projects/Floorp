@@ -97,7 +97,8 @@ struct nsPeekOffsetStruct
                PRBool aPreferLeft,
                PRBool aJumpLines,
                PRBool aScrollViewStop,
-               PRBool aIsKeyboardSelect)
+               PRBool aIsKeyboardSelect,
+               PRBool aVisual)
       {
        mShell=aShell;
        mDesiredX=aDesiredX;
@@ -109,6 +110,7 @@ struct nsPeekOffsetStruct
        mJumpLines = aJumpLines;
        mScrollViewStop = aScrollViewStop;
        mIsKeyboardSelect = aIsKeyboardSelect;
+       mVisual = aVisual;
       }
   nsIPresShell *mShell;
   nscoord mDesiredX;
@@ -124,6 +126,7 @@ struct nsPeekOffsetStruct
   PRBool mJumpLines;
   PRBool mScrollViewStop;
   PRBool mIsKeyboardSelect;
+  PRBool mVisual;
 };
 
 class nsIScrollableView;

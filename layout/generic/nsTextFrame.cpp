@@ -4515,7 +4515,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // one "on the left" - the first frame on the next
   // line.
   //
-  // Note:
+  // Note (for visual caret movement):
   // eDirPrevious means 'left-then-up' if the containing block is LTR, 
   // 'right-then-up' if it is RTL.
   // eDirNext means 'right-then-down' if the containing block is LTR, 
@@ -4524,7 +4524,8 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   // previous paragraph", and eDirNext means "go to the visual beginning of 
   // the next paragraph"
 
-  PRBool isReverseDirection = (NS_GET_EMBEDDING_LEVEL(this) & 1) != (NS_GET_BASE_LEVEL(this) & 1);
+  PRBool isReverseDirection = aPos->mVisual ?
+    (NS_GET_EMBEDDING_LEVEL(this) & 1) != (NS_GET_BASE_LEVEL(this) & 1) : PR_FALSE;
   PRBool movementIsInFrameDirection = 
     ((aPos->mDirection == eDirNext) && !isReverseDirection) ||
     ((aPos->mDirection == eDirPrevious) && isReverseDirection);

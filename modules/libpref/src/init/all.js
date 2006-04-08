@@ -932,6 +932,11 @@ pref("bidi.characterset", 1);
 // on the first keypress and delete the character on a second keypress
 pref("bidi.edit.delete_immediately", false);
 
+// Bidi caret movement style:
+// 0 = logical
+// 1 = visual
+// 2 = visual, but logical during selection
+pref("bidi.edit.caret_movement_style", 2);
 
 // used for double-click word selection behavior. Win will override.
 pref("layout.word_select.eat_space_to_next_word", false);
