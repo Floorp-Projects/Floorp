@@ -59,21 +59,13 @@
       parent.hPrefWindow.registerOKCallbackFunc( SwitchPacks );
     }
 
-    
-
-
     function SwitchPacks()
     {
       //Switch the Content pack if necessary
       var oldContentPack = parent.hPrefWindow.getPref( "localizedstring", "general.useragent.contentlocale");
       var newContentPack;
-      var shouldRemoveFaslFile;
-
-      //change scope to avoid redeclaration per JS strict warnings
       var selectedItem;
-      var observerService;
-      var chromeRegistry;
-
+      var shouldRemoveFaslFile;
 
       try {
         var listbox = document.getElementById("contentPackList");
@@ -91,11 +83,9 @@
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
-          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
-          chromeRegistry.selectLocale(newContentPack, true);
+          parent.hPrefWindow.chromeRegistry.selectLocale(newContentPack, true);
           shouldRemoveFaslFile = true;
-          observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-          observerService.notifyObservers(null, "locale-selected", null);
+          parent.hPrefWindow.observerService.notifyObservers(null, "locale-selected", null);
         }
         catch(e) {}
       }
@@ -119,11 +109,9 @@
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
-          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
-          chromeRegistry.selectLocale(newLanguagePack, true);
+          parent.hPrefWindow.chromeRegistry.selectLocale(newLanguagePack, true);
           shouldRemoveFaslFile = true;
-          observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-          observerService.notifyObservers(null, "locale-selected", null);
+          parent.hPrefWindow.observerService.notifyObservers(null, "locale-selected", null);
         }
         catch(e) {}
       }
@@ -143,47 +131,57 @@
             .getService(Components.interfaces.nsIFastLoadService);
           var faslFile = faslService.newFastLoadFile(XUL_FASTLOAD_FILE_BASENAME);
           faslFile.remove(false);
-        } catch(e) {
-          dump("remove of fastload file failed: " + e);
-        }
+        } catch(e) {}
       }
-
+	    return true;
     }
 
-    function SelectContentPack()
+    function SelectPack(listbox, button)
     {
-      var listbox = document.getElementById("contentPackList");
-      var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
+      var list = document.getElementById(listbox);
+      var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
 
       if (selectedItem) {
-        var classType = selectedItem.getAttribute("class");
-        if (classType == "outofdate") {
-           //Make it so that out of date content packs cannot be selected by the user
-           listbox.removeItemFromSelection(selectedItem);
-        }
-        else {
-           var regionName = selectedItem.getAttribute("value");
-           listbox.setAttribute("prefvalue", regionName);
-        }
+        var uninstallButton = document.getElementById(button);
+        var packID = selectedItem.getAttribute("value");
+
+        //current chrome providers cannot be unistalled
+        uninstallButton.disabled = (packID == parent.hPrefWindow.getPref("localizedstring", list.getAttribute("prefstring")));
+
+        //out-of-date packs cannot become chrome providers
+        if (selectedItem.getAttribute("class") == "outofdate") 
+          list.setAttribute("prefvalue", parent.hPrefWindow.getPref("localizedstring", list.getAttribute("prefstring")));
+        else
+          list.setAttribute("prefvalue", packID);
       }
     }
 
-    function SelectLanguagePack()
+    function UninstallPack(listbox)
     {
-      var listbox = document.getElementById("languagePackList");
-      var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
+      var list = document.getElementById(listbox);
+      var selectedContentItem = list.selectedItems[0];
+      var packName = selectedContentItem.getAttribute("value");
 
-      if (selectedItem) {
-        var classType = selectedItem.getAttribute("class");
-        if (classType == "outofdate") {
-           //Make it so that out of date language packs cannot be selected by the user
-           listbox.removeItemFromSelection(selectedItem);
-        }
-        else {
-           var languageName = selectedItem.getAttribute("value");
-           listbox.setAttribute("prefvalue", languageName);
-        }
+      try {
+        //uninstall from global chrome
+        parent.hPrefWindow.chromeRegistry.uninstallLocale(packName, false);
+
+        //uninstall from profile-bound chrome
+        parent.hPrefWindow.chromeRegistry.uninstallLocale(packName, true);
       }
+      catch(e) {}
+      
+      if (packName == list.getAttribute("prefvalue"))
+        list.setAttribute("prefvalue", parent.hPrefWindow.getPref("localizedstring", list.getAttribute("prefstring")));
+
+      //removed items cannot become chrome providers
+      var listSelection = list.getElementsByAttribute("value", list.getAttribute("prefvalue"));
+      
+      //find and select the list item corresponding to the current chrome provider
+      if (listSelection.length)
+        list.selectedItem = listSelection[0];
+      else
+        list.selectedIndex = 0;
     }
 
     function DownloadRegionPacks()
@@ -195,40 +193,10 @@
 
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <!-- Content (aka region) pack listbox -->
-  <description>&contentIntro.label;</description>
-  <separator class="thin"/>
-  <description>&installedContentPacks.label;</description>
-  <listbox id="contentPackList" flex="1" rows="2" 
-        ref="urn:mozilla:locale:root" datasources="rdf:chrome"
-        sortResource="http://www.mozilla.org/rdf/chrome#name"
-        preftype="localizedstring" prefstring="general.useragent.contentlocale" 
-        prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
-        seltype="false" onselect="SelectContentPack();"
-        sortDirection="ascending">
-
-    <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-      
-      <!-- This rule displays only up to date content packs based on the localeVersion -->
-      <rule chrome:localeType="region" chrome:localeVersion="&content.version;">
-        <listitem uri="..." translation="true" nselected="false"
-                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-      </rule>
-
-      <!-- This rule "falls through" to match obsolete content packs -->
-      <rule chrome:localeType="region">
-        <listitem uri="..." translation="true" nselected="false" class="outofdate"
-                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName &update.label;"
-                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-      </rule>
-    
-    </template>
-  </listbox>
-
   <!-- Language pack listbox -->
   <description>&languageIntro.label;</description>
   <separator class="thin"/>
+
   <description>&installedLanguagePacks.label;</description>
   <listbox id="languagePackList" flex="1" rows="3" 
         ref="urn:mozilla:locale:root" 
@@ -239,7 +207,7 @@
         prefattribute="prefvalue" 
         wsm_attributes="value"
         seltype="false" 
-        onselect="SelectLanguagePack();"
+        onselect="SelectPack('languagePackList', 'uninstallLanguagePack');"
         sortDirection="ascending">
     <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
 
@@ -262,16 +230,71 @@
     </template>
   </listbox>
 
+  <hbox>
+    <vbox>
+      <button id="uninstallLanguagePack" 
+              label="&uninstallLanguagePack.label;" 
+              accesskey="&uninstallLanguagePack.accesskey;" 
+              oncommand="UninstallPack('languagePackList')"/>
+    </vbox>
+    <vbox>
+    <button id="downloadLanguagePacks" 
+            label="&downloadContentPacks.label;" 
+            accesskey="&downloadContentPacks.accesskey;" 
+            oncommand="DownloadRegionPacks()"/>
+    </vbox>
+  </hbox>
+
+  <!-- Content (aka region) pack listbox -->
   <separator class="thin"/>
+  <description>&contentIntro.label;</description>
+
+  <description>&installedContentPacks.label;</description>
+  <listbox id="contentPackList" flex="1" rows="3" 
+        ref="urn:mozilla:locale:root" datasources="rdf:chrome"
+        sortResource="http://www.mozilla.org/rdf/chrome#name"
+        preftype="localizedstring" prefstring="general.useragent.contentlocale" 
+        prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
+        seltype="false"         
+        onselect="SelectPack('contentPackList', 'uninstallContentPack');"
+        sortDirection="ascending">
+
+    <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
+      
+      <!-- This rule displays only up to date content packs based on the localeVersion -->
+      <rule chrome:localeType="region" chrome:localeVersion="&content.version;">
+        <listitem uri="..." translation="true" nselected="false"
+                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+      </rule>
+
+      <!-- This rule "falls through" to match obsolete content packs -->
+      <rule chrome:localeType="region">
+        <listitem uri="..." translation="true" nselected="false" class="outofdate"
+                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName &update.label;"
+                  value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+      </rule>
+    
+    </template>
+  </listbox>
 
   <hbox>
-    <spacer flex="1"/>
+    <vbox>
+      <button id="uninstallContentPack" 
+              label="&uninstallContentPack.label;" 
+              accesskey="&uninstallContentPack.accesskey;" 
+              oncommand="UninstallPack('contentPackList')"/>
+    </vbox>
+    <vbox>
     <button id="downloadContentPacks" 
             label="&downloadContentPacks.label;" 
             accesskey="&downloadContentPacks.accesskey;" 
             oncommand="DownloadRegionPacks()"/>
+    </vbox>
   </hbox>
 
   <separator class="thin"/>
   <description>&restartOnLangChange.label;</description>
+  <separator class="thin"/>
+
 </page>

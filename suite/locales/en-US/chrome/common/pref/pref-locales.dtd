@@ -8,3 +8,7 @@
 <!ENTITY downloadContentPacks.accesskey "d">
 <!ENTITY downloadContentPacks.label     "Download More...">
 <!ENTITY update.label                   "(needs update)">
+<!ENTITY uninstallContentPack.accesskey "u">
+<!ENTITY uninstallContentPack.label     "Uninstall">
+<!ENTITY uninstallLanguagePack.accesskey "n">
+<!ENTITY uninstallLanguagePack.label     "Uninstall">
