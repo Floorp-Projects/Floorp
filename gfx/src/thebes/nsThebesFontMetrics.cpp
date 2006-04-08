@@ -286,7 +286,7 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
 
     textrun->SetRightToLeft(mIsRTL);
 
-    aWidth = ROUND_TO_TWIPS(textrun->MeasureString(aContext->Thebes()));
+    aWidth = ROUND_TO_TWIPS(textrun->Measure(aContext->Thebes()));
 
     return NS_OK;
 }
@@ -306,7 +306,7 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 
     textrun->SetRightToLeft(mIsRTL);
 
-    aWidth = ROUND_TO_TWIPS(textrun->MeasureString(aContext->Thebes()));
+    aWidth = ROUND_TO_TWIPS(textrun->Measure(aContext->Thebes()));
 
     return NS_OK;
 
@@ -366,7 +366,14 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
 
     textrun->SetRightToLeft(mIsRTL);
 
-    textrun->DrawString(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+    if (aSpacing) {
+        nsTArray<gfxFloat> spacing(aLength);
+        for (PRUint32 i = 0; i < aLength; ++i)
+            spacing.AppendElement(aSpacing[i] * app2dev);
+        textrun->SetSpacing(spacing);
+    }
+
+    textrun->Draw(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
 }
@@ -389,7 +396,14 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
     textrun->SetRightToLeft(mIsRTL);
 
-    textrun->DrawString(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+    if (aSpacing) {
+        nsTArray<gfxFloat> spacing(aLength);
+        for (PRUint32 i = 0; i < aLength; ++i)
+            spacing.AppendElement(aSpacing[i] * app2dev);
+        textrun->SetSpacing(spacing);
+    }
+
+    textrun->Draw(aContext->Thebes(), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
 
     return NS_OK;
 }

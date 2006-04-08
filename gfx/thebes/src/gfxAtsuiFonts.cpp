@@ -366,7 +366,7 @@ gfxAtsuiTextRun::~gfxAtsuiTextRun()
 }
 
 void
-gfxAtsuiTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
+gfxAtsuiTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 {
     cairo_t *cr = aContext->GetCairo();
     nsRefPtr<gfxAtsuiFont> atsuiFont = mGroup->GetFontAt(0);
@@ -415,7 +415,7 @@ gfxAtsuiTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
 }
 
 gfxFloat
-gfxAtsuiTextRun::MeasureString(gfxContext *aContext)
+gfxAtsuiTextRun::Measure(gfxContext *aContext)
 {
     OSStatus status;
     ATSTrapezoid trap;
@@ -438,3 +438,16 @@ gfxAtsuiTextRun::MeasureString(gfxContext *aContext)
     //fprintf (stderr, "measured: %f\n", f);
     return f;
 }
+
+void
+gfxAtsuiTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
+{
+    // XXX implement me!
+}
+
+const nsTArray<gfxFloat> *const
+gfxAtsuiTextRun::GetSpacing() const
+{
+    return nsnull;
+}
+

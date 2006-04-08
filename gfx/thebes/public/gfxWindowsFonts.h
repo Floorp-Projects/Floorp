@@ -136,23 +136,22 @@ public:
     gfxWindowsTextRun(const nsACString& aString, gfxWindowsFontGroup *aFontGroup);
     ~gfxWindowsTextRun();
 
-    virtual void DrawString(gfxContext *aContext, gfxPoint pt);
-    virtual gfxFloat MeasureString(gfxContext *aContext);
+    virtual void Draw(gfxContext *aContext, gfxPoint pt);
+    virtual gfxFloat Measure(gfxContext *aContext);
+
+    virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
+    virtual const nsTArray<gfxFloat> *const GetSpacing() const;
 
 private:
     gfxWindowsFont *FindFallbackFont(HDC aDC,
                                      const PRUnichar *aString, PRUint32 aLength,
                                      gfxWindowsFont *aFont);
 
-    PRInt32 MeasureOrDrawFast(gfxContext *aContext,
-                              PRBool aDraw,
-                              PRInt32 aX, PRInt32 aY,
-                              const PRInt32 *aSpacing);
-    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw,
-                                   PRInt32 aX, PRInt32 aY,
-                                   const PRInt32 *aSpacing);
+    PRInt32 MeasureOrDrawFast(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
+    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext, PRBool aDraw, gfxPoint pt);
 
     gfxWindowsFontGroup *mGroup;
+    nsTArray<gfxFloat> mSpacing;
 
     // These should probably be in a union
     const nsAString& mString;

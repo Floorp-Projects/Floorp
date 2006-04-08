@@ -654,7 +654,7 @@ gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
 }
 
 void
-gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
+gfxPangoTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 {
     gfxMatrix mat = aContext->CurrentMatrix();
 
@@ -677,7 +677,7 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
     EnsurePangoLayout(aContext);
 
 #if 0
-    MeasureString(aContext);
+    Measure(aContext);
     if (mWidth != -1) {
         aContext->Save();
         aContext->SetColor(gfxRGBA(1.0, 0.0, 0.0, 0.5));
@@ -710,7 +710,7 @@ gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
 }
 
 gfxFloat
-gfxPangoTextRun::MeasureString (gfxContext *aContext)
+gfxPangoTextRun::Measure(gfxContext *aContext)
 {
     if (mWidth == -1) {
         EnsurePangoLayout(aContext);
@@ -720,6 +720,17 @@ gfxPangoTextRun::MeasureString (gfxContext *aContext)
     return mWidth/FLOAT_PANGO_SCALE;
 }
 
+void
+gfxPangoTextRun::SetSpacing(const nsTArray<gfxFloat> &spacingArray)
+{
+    // XXX implement me!
+}
+
+const nsTArray<gfxFloat> *const
+gfxPangoTextRun::GetSpacing() const
+{
+    return nsnull;
+}
 
 /**
  ** language group helpers

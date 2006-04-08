@@ -413,19 +413,19 @@ gfxWindowsTextRun::~gfxWindowsTextRun()
 }
 
 void
-gfxWindowsTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
+gfxWindowsTextRun::Draw(gfxContext *aContext, gfxPoint pt)
 {
-    PRInt32 ret = MeasureOrDrawFast(aContext, PR_TRUE, pt.x, pt.y, nsnull);
+    PRInt32 ret = MeasureOrDrawFast(aContext, PR_TRUE, pt);
     if (ret != -1) {
         return;
     }
 
-    MeasureOrDrawUniscribe(aContext, PR_TRUE, pt.x, pt.y, nsnull);
+    MeasureOrDrawUniscribe(aContext, PR_TRUE, pt);
 }
 
 //#define TIME_MEASURE 1
 gfxFloat
-gfxWindowsTextRun::MeasureString(gfxContext *aContext)
+gfxWindowsTextRun::Measure(gfxContext *aContext)
 {
 #ifdef TIME_MEASURE
     if (mIsASCII) {
@@ -436,24 +436,36 @@ gfxWindowsTextRun::MeasureString(gfxContext *aContext)
         printf("%s\n", foo.get());
 
         QueryPerformanceCounter(&start);
-        ret = MeasureOrDrawAscii(aContext, PR_FALSE, 0, 0, nsnull);
+        ret = MeasureOrDrawAscii(aContext, PR_FALSE, gfxPoint(0,0));
         QueryPerformanceCounter(&end);
         printf("ascii: %d\n", end.QuadPart - start.QuadPart);
 
         QueryPerformanceCounter(&start);
-        ret = MeasureOrDrawUniscribe(aContext, PR_FALSE, 0, 0, nsnull);
+        ret = MeasureOrDrawUniscribe(aContext, PR_FALSE, gfxPoint(0,0));
         QueryPerformanceCounter(&end);
         printf("utf16: %d\n\n", end.QuadPart - start.QuadPart);
 
         return ret;
     }
 #else
-    PRInt32 ret = MeasureOrDrawFast(aContext, PR_FALSE, 0, 0, nsnull);
+    PRInt32 ret = MeasureOrDrawFast(aContext, PR_FALSE, gfxPoint(0,0));
     if (ret != -1) {
         return ret;
     }
 #endif
-    return MeasureOrDrawUniscribe(aContext, PR_FALSE, 0, 0, nsnull);
+    return MeasureOrDrawUniscribe(aContext, PR_FALSE, gfxPoint(0,0));
+}
+
+void
+gfxWindowsTextRun::SetSpacing(const nsTArray<gfxFloat>& spacingArray)
+{
+    mSpacing = spacingArray;
+}
+
+const nsTArray<gfxFloat> *const
+gfxWindowsTextRun::GetSpacing() const
+{
+    return &mSpacing;
 }
 
 gfxWindowsFont *
@@ -490,8 +502,7 @@ gfxWindowsTextRun::FindFallbackFont(HDC aDC, const PRUnichar *aString, PRUint32 
 PRInt32
 gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
                                      PRBool aDraw,
-                                     PRInt32 aX, PRInt32 aY,
-                                     const PRInt32 *aSpacing)
+                                     gfxPoint pt)
 {
     PRInt32 length = 0;
 
@@ -597,9 +608,14 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
         double offset = 0;
         for (PRInt32 k = 0; k < numGlyphs; k++) {
             cglyphs[k].index = glyphs[k];
-            cglyphs[k].x = aX + offset;
-            cglyphs[k].y = aY;
-            offset += NSToCoordRound(dxBuf[k] * cairoToPixels);
+            cglyphs[k].x = pt.x + offset;
+            cglyphs[k].y = pt.y;
+
+            if (!mSpacing.IsEmpty()) {
+                offset += mSpacing[k];
+            } else {
+                offset += dxBuf[k] * cairoToPixels;
+            }
         }
 
         SetWorldTransform(aDC, &savedxform);
@@ -628,8 +644,7 @@ gfxWindowsTextRun::MeasureOrDrawFast(gfxContext *aContext,
 PRInt32
 gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
                                           PRBool aDraw,
-                                          PRInt32 aX, PRInt32 aY,
-                                          const PRInt32 *aSpacing)
+                                          gfxPoint pt)
 {
     nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
     HDC aDC = GetDCFromSurface(surf);
@@ -839,8 +854,9 @@ TRY_AGAIN_JUST_PLACE:
             if (!aDraw) {
                 length += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC) * cairoToPixels);
             } else {
-                PRInt32 *spacing = 0;
+                PRInt32 *spacing = nsnull;
                 PRInt32 justTotal = 0;
+#if 0
                 if (aSpacing) {
                     PRUint32 j;
                     /* need to correct for layout/gfx spacing mismatch */
@@ -885,18 +901,22 @@ TRY_AGAIN_JUST_PLACE:
 #endif
                     }
                 }
-
+#endif
                 cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
-                PRInt32 offset = 0;
+                gfxFloat offset = 0;
+                PRInt32 m = items[i].iCharPos;
                 for (PRInt32 k = 0; k < numGlyphs; k++) {
                     cglyphs[k].index = glyphs[k];
-                    cglyphs[k].x = aX + offset + NSToCoordRound(offsets[k].du * cairoToPixels);
-                    cglyphs[k].y = aY + NSToCoordRound(offsets[k].dv * cairoToPixels);
-                    offset += NSToCoordRound(advance[k] * cairoToPixels);
+                    cglyphs[k].x = pt.x + offset + (offsets[k].du * cairoToPixels);
+                    cglyphs[k].y = pt.y + (offsets[k].dv * cairoToPixels);
 
-                    /* XXX this needs some testing */
-                    if (aSpacing)
-                        offset += spacing[k] * cairoToPixels;
+                    if (!mSpacing.IsEmpty()) {
+                        // XXX We need to convert char index to cluster index.
+                        // But we cannot do it until nsTextFrame is refactored.
+                        offset += mSpacing[m++];
+                    } else {
+                        offset += advance[k] * cairoToPixels;
+                    }
                 }
 #if 0
                 /* Draw using ScriptTextOut() */
@@ -914,7 +934,7 @@ TRY_AGAIN_JUST_PLACE:
                 xform.eDy  = dm[5];
                 SetWorldTransform (aDC, &xform);
 
-                ScriptTextOut(aDC, currentFont->ScriptCache(), aX, aY, 0, NULL, &items->a,
+                ScriptTextOut(aDC, currentFont->ScriptCache(), pt.x, pt.y, 0, NULL, &items->a,
                               NULL, 0, glyphs, numGlyphs,
                               advance, NULL, offsets);
 
@@ -944,8 +964,13 @@ TRY_AGAIN_JUST_PLACE:
 #endif
                 free(cglyphs);
 
-                aX += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC + justTotal) * cairoToPixels);
-                free(spacing);
+                pt.x += offset;
+                //NSToCoordRound((abc.abcA + abc.abcB + abc.abcC + justTotal) * cairoToPixels);
+
+#if 0
+                if (spacing)
+                    free(spacing);
+#endif
             }
             free(offsets);
             free(advance);
