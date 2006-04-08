@@ -152,7 +152,7 @@
   <separator class="thin"/>
 
   <hbox>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button id="downloadContentPacks" 
             label="&downloadContentPacks.label;" 
             accesskey="&downloadContentPacks.accesskey;" 
