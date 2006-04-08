@@ -2715,8 +2715,17 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
     rv = ProcessPseudoFrame(presContext, pseudoFrames.mRowGroup, aHighestFrame);
     if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
     if (pseudoFrames.mColGroup.mFrame) {
+      nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
-                              aHighestFrame);
+                              colGroupHigh);
+      if (aHighestFrame) {
+        // table frames are special they can have two types of pseudo frames
+        // that need to be processed in one pass, we suffer here from having
+        // the colgroup and the rowgroup on the same childlist
+        // we sort this out inside nsTableFrame
+        colGroupHigh->SetNextSibling(aHighestFrame); 
+      }
+      aHighestFrame = colGroupHigh;
       if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
@@ -2741,8 +2750,18 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
       if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mColGroup.mFrame) {
+      nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
-                              aHighestFrame);
+                              colGroupHigh);
+      if (aHighestFrame &&
+          nsLayoutAtoms::tableRowGroupFrame == aHighestFrame->GetType() ) {
+        // table frames are special they can have two types of pseudo frames
+        // that need to be processed in one pass, we suffer here from having
+        // the colgroup and the rowgroup on the same childlist
+        // we sort this out inside nsTableFrame
+        colGroupHigh->SetNextSibling(aHighestFrame); 
+      }
+      aHighestFrame = colGroupHigh;
       if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
@@ -2767,8 +2786,17 @@ ProcessPseudoFrames(nsFrameConstructorState& aState,
       if (nsLayoutAtoms::tableRowGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mColGroup.mFrame) {
+      nsIFrame* colGroupHigh;
       rv = ProcessPseudoFrame(presContext, pseudoFrames.mColGroup,
-                              aHighestFrame);
+                              colGroupHigh);
+      if (aHighestFrame && nsLayoutAtoms::tableRowGroupFrame == aHighestFrame->GetType() ) {
+        // table frames are special they can have two types of pseudo frames
+        // that need to be processed in one pass, we suffer here from having
+        // the colgroup and the rowgroup on the same childlist
+        // we sort this out inside nsTableFrame
+        colGroupHigh->SetNextSibling(aHighestFrame); 
+      }
+      aHighestFrame = colGroupHigh;
       if (nsLayoutAtoms::tableColGroupFrame == aHighestType) return rv;
     }
     if (pseudoFrames.mTableOuter.mFrame) {
