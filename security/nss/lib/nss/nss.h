@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.47 2006/02/22 21:22:54 christophe.ravel.bugs%sun.com Exp $ */
+/* $Id: nss.h,v 1.48 2006/04/08 05:11:55 nelson%bolyard.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -57,7 +57,6 @@ SEC_BEGIN_PROTOS
 #define NSS_VMINOR   12
 #define NSS_VPATCH   0
 #define NSS_BETA     PR_TRUE
-
 
 /*
  * Return a boolean that indicates whether the underlying library
@@ -183,6 +182,31 @@ extern SECStatus NSS_Initialize(const char *configdir,
  * initialize NSS without a creating cert db's, key db's, or secmod db's.
  */
 SECStatus NSS_NoDB_Init(const char *configdir);
+
+/*
+ * Allow applications and libraries to register with NSS so that they are called
+ * when NSS shuts down.
+ *
+ * void *appData application specific data passed in by the application at 
+ * NSS_RegisterShutdown() time.
+ * void *nssData is NULL in this release, but is reserved for future versions of 
+ * NSS to pass some future status information * back to the shutdown function. 
+ *
+ * If the shutdown function returns SECFailure,
+ * Shutdown will still complete, but NSS_Shutdown() will return SECFailure.
+ */
+typedef SECStatus (*NSS_ShutdownFunc)(void *appData, void *nssData);
+
+/*
+ * Register a shutdown function.
+ */
+SECStatus NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
+
+/*
+ * Remove an existing shutdown function (you may do this if your library is
+ * complete and going away, but NSS is still running).
+ */
+SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
 
 /* 
  * Close the Cert, Key databases.
