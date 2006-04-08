@@ -1,5 +1,5 @@
 
-<!ENTITY lHeader                        "Language and Content Packs">
+<!ENTITY pref.contentpacks.title        "Language and Content Packs">
 <!ENTITY contentIntro.label             "Selecting a new content pack changes items in the Sidebar, and changes the default home page, certain bookmarks, and other items. You will not lose bookmarks and other items that you have customized when you switch content packs.">
 <!ENTITY languageIntro.label            "Selecting a new language pack changes the language for text that appears in dialog boxes, menus, toolbars and button labels.">
 <!ENTITY restartOnLangChange.label      "Changes to content or language packs take effect when you restart &brandShortName;.">
