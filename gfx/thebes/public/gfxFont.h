@@ -202,12 +202,14 @@ class NS_EXPORT gfxTextRun {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
-    virtual void DrawString(gfxContext *aContext,
-                            gfxPoint pt) = 0;
-
+    virtual void Draw(gfxContext *aContext, gfxPoint pt) = 0;
     // returns length in pixels
-    virtual gfxFloat MeasureString(gfxContext *aContext) = 0;
+    virtual gfxFloat Measure(gfxContext *aContext) = 0;
 
+    virtual void SetSpacing(const nsTArray<gfxFloat> &spacing) = 0;
+    virtual const nsTArray<gfxFloat> *const GetSpacing() const = 0;
+
+    // defaults to FALSE
     virtual void SetRightToLeft(PRBool aIsRTL) { mIsRTL = aIsRTL; }
     virtual PRBool IsRightToLeft() const { return mIsRTL; }
 

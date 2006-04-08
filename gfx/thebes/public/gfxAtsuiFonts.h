@@ -103,8 +103,11 @@ public:
     gfxAtsuiTextRun(const nsAString& aString, gfxAtsuiFontGroup *aFontGroup);
     ~gfxAtsuiTextRun();
 
-    virtual void DrawString(gfxContext *aContext, gfxPoint pt);
-    virtual gfxFloat MeasureString(gfxContext *aContext);
+    virtual void Draw(gfxContext *aContext, gfxPoint pt);
+    virtual gfxFloat Measure(gfxContext *aContext);
+
+    virtual void SetSpacing(const nsTArray<gfxFloat>& spacingArray);
+    virtual const nsTArray<gfxFloat> *const GetSpacing() const;
 
 private:
     nsString mString;

@@ -732,5 +732,4 @@ nsThebesDeviceContext::FindScreen(nsIScreen** outScreen)
 #endif
 
     mScreenManager->GetPrimaryScreen(outScreen);
-
 }
