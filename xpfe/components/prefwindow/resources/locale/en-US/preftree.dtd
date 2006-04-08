@@ -5,6 +5,7 @@
 <!ENTITY fonts.label "Fonts">
 <!ENTITY colors.label "Colors">
 <!ENTITY themes.label "Themes">
+<!ENTITY locales.label "Languages">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
 <!ENTITY history.label "History">

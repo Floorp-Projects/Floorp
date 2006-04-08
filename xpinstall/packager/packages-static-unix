@@ -16,19 +16,14 @@ bin/.autoreg
 bin/chrome/en-US.jar
 bin/chrome/en-unix.jar
 bin/chrome/en-win.jar
-
-[regus]
-;
-; US
-bin/chrome/US.jar
-bin/defaults/profile/US/*
-bin/defaults/messenger/US/*
-bin/defaults/isp/US/movemail.rdf
+bin/defaults/profile/en-US/*
+bin/defaults/messenger/en-US/*
+bin/defaults/isp/en-US/movemail.rdf
 bin/searchplugins/*
 
 [deflenus]
 ;
-; default files for US
+; default files for en-US
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/panels.rdf
 bin/defaults/profile/localstore.rdf
@@ -212,7 +207,6 @@ bin/copmonents/imgicon.xpt
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
-bin/chrome/content-packs.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/installed-chrome.txt

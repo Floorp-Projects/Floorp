@@ -15,7 +15,7 @@ locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/forms/
 skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/forms/
 skin,install,select,classic/1.0 
 content,install,url,jar:resource:/chrome/embed.jar!/content/global-region/
-locale,install,url,jar:resource:/chrome/embed.jar!/locale/US/global-region/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global-region/
 content,install,url,jar:resource:/chrome/embed.jar!/content/global-platform/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global-platform/
 content,install,url,jar:resource:/chrome/embed.jar!/content/cookie/

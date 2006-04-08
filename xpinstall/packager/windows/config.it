@@ -254,13 +254,12 @@ C6=Component Chatzilla
 C7=Component Venkman
 C8=Component US English Profile Defaults
 C9=Component En US lang pack
-C10=Component US region pack
-C11=Component DOM Inspector
-C12=Component SRoaming
-C13=Component RPT
+C10=Component DOM Inspector
+C11=Component SRoaming
+C12=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C14=Component QFA
+C13=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -283,13 +282,12 @@ C6=Component Chatzilla
 C7=Component Venkman
 C8=Component US English Profile Defaults
 C9=Component En US lang pack
-C10=Component US region pack
-C11=Component DOM Inspector
-C12=Component SRoaming
-C13=Component RPT
+C10=Component DOM Inspector
+C11=Component SRoaming
+C12=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C14=Component QFA
+C13=Component QFA
 
 
 
@@ -748,18 +746,6 @@ $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
-
-[Component US region pack]
-;*** LOCALIZE ME BABY ***
-Description Short=US region pack
-;*** LOCALIZE ME BABY ***
-Description Long=Regional content for US users
-Archive=regus.xpi
-$InstallSize$:regus
-$InstallSizeSystem$
-$InstallSizeArchive$:regus.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\US.jar
 
 [Component QFA]
 Description Short=Quality Feedback Agent

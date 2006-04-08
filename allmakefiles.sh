@@ -933,8 +933,10 @@ MAKEFILES_suite="
 suite/Makefile
 suite/app/Makefile
 suite/branding/Makefile
+suite/common/Makefile
 suite/components/Makefile
 suite/components/xulappinfo/Makefile
+suite/locales/Makefile
 "
 
 MAKEFILES_xulrunner="
@@ -1435,10 +1437,6 @@ for extension in $MOZ_EXTENSIONS; do
         access-builtin ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/access-builtin/Makefile
             extensions/access-builtin/accessproxy/Makefile
-            " ;;
-        content-packs ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/content-packs/Makefile
-            extensions/content-packs/resources/Makefile
             " ;;
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cookie/Makefile
@@ -2071,7 +2069,6 @@ MAKEFILES_zlib="modules/zlib/standalone/Makefile"
         commandhandler) add_makefiles "$MAKEFILES_commandhandler" ;;
         composer) add_makefiles "$MAKEFILES_composer" ;;
         content) add_makefiles "$MAKEFILES_content" ;;
-        content-packs) add_makefiles "$MAKEFILES_content_packs" ;;
         cookie) add_makefiles "$MAKEFILES_cookie" ;;
         docshell) add_makefiles "$MAKEFILES_docshell" ;;
         dom) add_makefiles "$MAKEFILES_dom" ;;

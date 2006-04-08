@@ -13,6 +13,7 @@ bin/.autoreg
 [langenus]
 ;
 ; en-US 
+; If you add a new directory you must explicitly call addDirectory in langenus.jst
 bin\chrome\en-US.jar
 bin\chrome\en-mac.jar
 bin\chrome\en-unix.jar
@@ -21,20 +22,13 @@ bin\chrome\en-US\*
 bin\chrome\en-win\*
 bin\chrome\en-unix\*
 bin\chrome\en-mac\*
-
-[regus]
-;
-; US
-; If you add a new directory you must explicitly call addDirectory in regus.jst
-bin\chrome\US.jar
-bin\chrome\US\*
-bin\defaults\profile\US\*
-bin\defaults\messenger\US\*
+bin\defaults\profile\en-US\*
+bin\defaults\messenger\en-US\*
 bin\searchplugins\*
 
 [deflenus]
 ;
-; default files for US
+; default files for en-US
 bin\defaults\profile\bookmarks.html
 bin\defaults\profile\panels.rdf
 bin\defaults\profile\localstore.rdf

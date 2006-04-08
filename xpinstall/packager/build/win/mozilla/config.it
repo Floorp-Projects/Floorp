@@ -177,10 +177,9 @@ C2=Component PSM
 C3=Component Uninstaller
 C4=Component US English Profile Defaults
 C5=Component En US lang pack
-C6=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+C6=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -200,11 +199,10 @@ C5=Component Chatzilla
 C6=Component Venkman
 C7=Component US English Profile Defaults
 C8=Component En US lang pack
-C9=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+C9=Component DOM Inspector
+C10=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -226,11 +224,10 @@ C5=Component Chatzilla
 C6=Component Venkman
 C7=Component US English Profile Defaults
 C8=Component En US lang pack
-C9=Component US region pack
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+C9=Component DOM Inspector
+C10=Component QFA
 
 
 
@@ -620,18 +617,6 @@ $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\Chrome\en-US.jar
-
-[Component US region pack]
-;*** LOCALIZE ME BABY ***
-Description Short=US region pack
-;*** LOCALIZE ME BABY ***
-Description Long=Regional content for US users
-Archive=regus.xpi
-$InstallSize$:regus
-$InstallSizeSystem$
-$InstallSizeArchive$:regus.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Chrome\US.jar
 
 [Component QFA]
 Description Short=Quality Feedback Agent
