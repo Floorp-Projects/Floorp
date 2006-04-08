@@ -94,7 +94,6 @@ MakeXpiFile("chatzilla");
 MakeXpiFile("talkback");
 MakeXpiFile("deflenus");
 MakeXpiFile("langenus");
-MakeXpiFile("regus");
 MakeXpiFile("venkman");
 MakeXpiFile("inspector");
 MakeXpiFile("spellcheck");
