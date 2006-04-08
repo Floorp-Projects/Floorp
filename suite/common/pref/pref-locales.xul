@@ -10,7 +10,7 @@
    implied. See the License for the specific language governing
    rights and limitations under the License.
 
-  Contributor(s):  J. M. Betak <loadrunner@betak.net>
+  Contributor(s):   J.Betak     <jbetak@netscape.com>
                     Josh Soref  <timeless@mac.com>
   -->
 
@@ -69,10 +69,16 @@
       var newContentPack;
       var shouldRemoveFaslFile;
 
+      //change scope to avoid redeclaration per JS strict warnings
+      var selectedItem;
+      var observerService;
+      var chromeRegistry;
+
+
       try {
         var listbox = document.getElementById("contentPackList");
         if (listbox) {
-         var selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
+          selectedItem = listbox.selectedItems.length ? listbox.selectedItems[0] : null;
           if (selectedItem) {
              newContentPack = selectedItem.getAttribute("value");
           }
@@ -85,15 +91,13 @@
       if (newContentPack && (newContentPack != oldContentPack))
       {
         try {
-          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
+          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
           chromeRegistry.selectLocale(newContentPack, true);
           shouldRemoveFaslFile = true;
-          var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+          observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
         }
-        catch(e) {
-          return false;
-        }
+        catch(e) {}
       }
 
       //Switch the Language pack if necessary
@@ -103,7 +107,7 @@
       try {
         var languageList = document.getElementById("languagePackList");
         if (languageList) {
-         var selectedItem = languageList.selectedItems.length ? languageList.selectedItems[0] : null;
+          selectedItem = languageList.selectedItems.length ? languageList.selectedItems[0] : null;
           if (selectedItem) {
              newLanguagePack = selectedItem.getAttribute("value");
           }
@@ -115,15 +119,13 @@
       if (newLanguagePack && (newLanguagePack != oldLanguagePack))
       {
         try {
-          var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIXULChromeRegistry);
+          chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
           chromeRegistry.selectLocale(newLanguagePack, true);
           shouldRemoveFaslFile = true;
-          var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+          observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
           observerService.notifyObservers(null, "locale-selected", null);
         }
-        catch(e) {
-          return false;
-        }
+        catch(e) {}
       }
 
       // If we changed locale, we need to destroy the fastload file so that it
