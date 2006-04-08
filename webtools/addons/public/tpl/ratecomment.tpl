@@ -14,4 +14,4 @@ released on {$addon->VersionDateAdded|date_format}
 </p>
 </div>
 
-<p>&laquo; <a href="./addon.php?id={$addon->ID}">Return to information about{$addon->Name}</a></p>
+<p>&laquo; <a href="./addon.php?id={$addon->ID}">Return to information about {$addon->Name}</a></p>
