@@ -134,7 +134,7 @@ pref("accessibility.typeaheadfind.linksonly", true);
 pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
-pref("accessibility.typeaheadfind.soundURL", "default");
+pref("accessibility.typeaheadfind.soundURL", "beep");
 pref("accessibility.typeaheadfind.enablesound", true);
 
 pref("browser.history_expire_days", 9);
@@ -1502,8 +1502,6 @@ pref("font.size.fixed.zh-HK", 16);
 
 pref("browser.urlbar.clickAtEndSelects", false);
 
-pref("accessibility.typeaheadfind.soundURL", "beep");
-
 // Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
 // Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
 pref("ui.key.menuAccessKey", 0);
@@ -1825,9 +1823,6 @@ pref("browser.urlbar.clickSelectsAll", false);
 // 1 focuses text controls, 2 focuses other form elements, 4 adds links.
 // Leave this at the default, 7, to match mozilla1.0-era user expectations.
 // pref("accessibility.tabfocus", 1);
-
-// Beep instead of playing sound in Linux, at least until nsISound is fixed:
-pref("accessibility.typeaheadfind.soundURL", "beep");
 
 // override double-click word selection behavior.
 pref("layout.word_select.stop_at_punctuation", false);
