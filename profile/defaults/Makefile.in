@@ -59,10 +59,10 @@ FILES := \
 
 libs:: $(FILES)
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
-	$(INSTALL) $^ $(DIST)/bin/defaults/profile/US
+	$(INSTALL) $^ $(DIST)/bin/defaults/profile/$(AB_CD)
 
 install:: $(FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/US
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/$(AB_CD)
 
 

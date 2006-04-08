@@ -52,9 +52,9 @@ FILES := $(addprefix $(srcdir)/, $(FILES))
 
 libs::
 	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/chrome
-	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US/chrome
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/$(AB_CD)/chrome
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/chrome
-	$(NSINSTALL)  -t $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/US/chrome
+	$(NSINSTALL)  -t $(IFLAGS1) $(FILES) $(DESTDIR)$(mozappdir)/defaults/profile/$(AB_CD)/chrome
 
