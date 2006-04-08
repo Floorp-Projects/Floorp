@@ -245,4 +245,7 @@
             accesskey="&downloadContentPacks.accesskey;" 
             oncommand="DownloadRegionPacks()"/>
   </hbox>
+
+  <separator class="thin"/>
+  <description>&restartOnLangChange.label;</description>
 </page>
