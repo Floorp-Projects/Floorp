@@ -240,6 +240,7 @@ public:
                                   PRBool aClearScopeHint);
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindowInternal *aOpener,
                                            PRBool aOriginalOpener);
+  virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -402,7 +403,6 @@ protected:
                            const nsAString &aPopupWindowFeatures);
 
   void FlushPendingNotifications(mozFlushType aType);
-  void EnsureSizeUpToDate();
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
