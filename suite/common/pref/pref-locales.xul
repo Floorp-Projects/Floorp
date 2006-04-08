@@ -17,7 +17,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
  
-<!DOCTYPE window [
+<!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
