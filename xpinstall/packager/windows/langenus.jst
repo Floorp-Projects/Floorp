@@ -2,9 +2,8 @@
 var srDest;
 var err;
 var fProgram;
-var platformNode;
 
-platformNode = getPlatform();
+var platformNode = getPlatform();
 logComment("initInstall: platformNode=" + platformNode);
 // end
 // end - OS type detection
@@ -69,11 +68,16 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(chromeType, cf, localeName + "autoconfig/");
     registerChrome(chromeType, cf, localeName + "cookie/");
     registerChrome(chromeType, cf, localeName + "wallet/");
-    registerChrome(chromeType, cf, localeName + "content-packs/");
     registerChrome(chromeType, cf, localeName + "help/");
     registerChrome(chromeType, cf, localeName + "pippki/");
     registerChrome(chromeType, cf, localeName + "pipnss/");
     registerChrome(chromeType, cf, localeName + "p3p/");
+
+    registerChrome(chromeType, cf, localeName + "global-region/");
+    registerChrome(chromeType, cf, localeName + "communicator-region/");
+    registerChrome(chromeType, cf, localeName + "editor-region/");
+    registerChrome(chromeType, cf, localeName + "messenger-region/");
+    registerChrome(chromeType, cf, localeName + "navigator-region/");
 
     registerChrome(chromeType, pf, localeName + "global-platform/");
     registerChrome(chromeType, pf, localeName + "communicator-platform/");

@@ -7,7 +7,7 @@ var fm = {
   "chrome://communicator/content/pref/pref-fonts.xul": "appearance_pref_fonts", 
   "chrome://communicator/content/pref/pref-colors.xul": "appearance_pref_colors", 
   "chrome://communicator/content/pref/pref-themes.xul": "appearance_pref_themes", 
-  "chrome://content-packs/content/pref-contentpacks.xul": "appearance_pref_content_packs",
+  "chrome://communicator/content/pref/pref-locales.xul": "appearance_pref_locales",
   "chrome://communicator/content/pref/pref-navigator.xul": "navigator_pref_navigator",
   "chrome://communicator/content/pref/pref-history.xul": "navigator_pref_history",
   "chrome://communicator/content/pref/pref-languages.xul": "navigator_pref_languages",

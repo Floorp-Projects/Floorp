@@ -1577,9 +1577,9 @@
          nc:link="cs_nav_prefs_appearance.xhtml#colors"/>
      </rdf:li>
      <rdf:li>
-       <rdf:Description ID="preferences:content_packs"
-         nc:name="content packs preferences"
-         nc:link="cs_nav_prefs_appearance.xhtml#languages_content"/>
+       <rdf:Description ID="preferences:locales"
+         nc:name="User Interface languages preferences"
+         nc:link="cs_nav_prefs_appearance.xhtml#locales"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:cookies"

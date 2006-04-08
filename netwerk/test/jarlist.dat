@@ -134,7 +134,7 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/contentAreaCommands.
 jar:resource:///chrome/en-US.jar!/locale/en-US/messenger/mailNavigatorOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/messenger/mailOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/editor/editorNavigatorOverlay.dtd
-jar:resource:///chrome/US.jar!/locale/US/global-region/region.dtd
+jar:resource:///chrome/en-US.jar!/locale/en-US/global-region/region.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/utilityOverlay.dtd
 jar:resource:///chrome/en-US.jar!/locale/en-US/help/helpMenuOverlay.dtd
 jar:resource:///chrome/en-win.jar!/locale/en-US/global-platform/platformGlobalOverlay.dtd
@@ -209,7 +209,7 @@ jar:resource:///chrome/en-US.jar!/locale/en-US/necko/necko.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/bookmarks/bookmarks.properties
 jar:resource:///chrome/en-win.jar!/locale/en-US/global-platform/platformKeys.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/utilityOverlay.properties
-jar:resource:///chrome/US.jar!/locale/US/navigator-region/region.properties
+jar:resource:///chrome/en-US.jar!/locale/en-US/navigator-region/region.properties
 jar:resource:///chrome/en-US.jar!/locale/en-US/communicator/viewZoomOverlay.properties
-jar:resource:///chrome/US.jar!/locale/US/communicator-region/region.properties
-jar:resource:///chrome/US.jar!/locale/US/global-region/builtinURLs.rdf
+jar:resource:///chrome/en-US.jar!/locale/en-US/communicator-region/region.properties
+jar:resource:///chrome/en-US.jar!/locale/en-US/global-region/builtinURLs.rdf

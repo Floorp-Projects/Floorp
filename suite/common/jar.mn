@@ -1,0 +1,7 @@
+comm.jar:
+##ifdef MOZ_XUL_APP
+#% content communicator %content/communicator/ xpcnativewrappers=yes
+##else
+#* content/communicator/contents.rdf                        (contents.rdf)
+##endif
+  content/communicator/pref/pref-locales.xul               (pref/pref-locales.xul)

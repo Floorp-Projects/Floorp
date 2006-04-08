@@ -1,0 +1,9 @@
+#filter substitution
+
+@AB_CD@.jar:
+##ifdef MOZ_XUL_APP
+#% locale communicator @AB_CD@ %locale/@AB_CD@/communicator/
+##else
+#* locale/@AB_CD@/communicator/contents.rdf                         (generic/chrome/common/contents.rdf)
+##endif
+  locale/@AB_CD@/communicator/pref/pref-locales.dtd                (%chrome/common/pref/pref-locales.dtd)
