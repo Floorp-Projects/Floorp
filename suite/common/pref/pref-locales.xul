@@ -192,7 +192,7 @@
   <description>&languageIntro.label;</description>
   <separator class="thin"/>
 
-  <description>&installedLanguagePacks.label;</description>
+  <label control="languagePackList">&installedLanguagePacks.label;</label>
   <listbox id="languagePackList" flex="1" rows="3" 
         ref="urn:mozilla:locale:root" 
         datasources="rdf:chrome"
@@ -244,7 +244,7 @@
   <separator class="thin"/>
   <description>&contentIntro.label;</description>
 
-  <description>&installedContentPacks.label;</description>
+  <label control="contentPackList">&installedContentPacks.label;</label>
   <listbox id="contentPackList" flex="1" rows="3" 
         ref="urn:mozilla:locale:root" datasources="rdf:chrome"
         sortResource="http://www.mozilla.org/rdf/chrome#name"
