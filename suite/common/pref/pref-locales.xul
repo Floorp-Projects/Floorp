@@ -41,18 +41,18 @@
       var regionName = contentList.getAttribute("prefvalue");
       var regionElements = contentList.getElementsByAttribute("value", regionName);
 
-      if (regionElements.length) {
-        contentList.selectItem(regionElements[0]);
+      if (regionElements.item(0)) {
+        contentList.selectItem(regionElements.item(0));
       } else {
         contentList.selectedIndex = 0;
       }
 
       var languageList = document.getElementById( "languagePackList" );
       var languageName = languageList.getAttribute("prefvalue");
-      var languageElements =languageList.getElementsByAttribute("value", languageName);
+      var languageElements = languageList.getElementsByAttribute("value", languageName);
 
-      if (languageElements.length) {
-        languageList.selectItem(languageElements[0]);
+      if (languageElements.item(0)) {
+        languageList.selectItem(languageElements.item(0));
       } else {
         languageList.selectedIndex = 0;
       }
@@ -105,7 +105,7 @@
           faslFile.remove(false);
         } catch(e) {}
       }
-	    return true;
+      return true;
     }
 
     function SelectPack(listbox, button)
@@ -150,8 +150,8 @@
       var listSelection = list.getElementsByAttribute("value", list.getAttribute("prefvalue"));
       
       //find and select the list item corresponding to the current chrome provider
-      if (listSelection.length)
-        list.selectedItem = listSelection[0];
+      if (listSelection.item(0))
+        list.selectedItem = listSelection.item(0);
       else
         list.selectedIndex = 0;
     }
