@@ -19,5 +19,5 @@
 <!ENTITY button.choosefolder.accesskey  "C">
 <!ENTITY button.usedefault.label        "Use Default Folder">
 <!ENTITY button.usedefault.accesskey    "U">
-<!ENTITY button.langSelection.label     "Region Selection...">
-<!ENTITY button.langSelection.accesskey "R">
+<!ENTITY button.langSelection.label     "Select Language...">
+<!ENTITY button.langSelection.accesskey "L">
