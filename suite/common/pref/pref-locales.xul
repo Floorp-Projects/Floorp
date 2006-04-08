@@ -64,10 +64,10 @@
         if (tree) {
          var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
           if (selectedItem) {
-            var newContentPack = selectedItem.firstChild.firstChild.getAttribute("value");
+             newContentPack = selectedItem.firstChild.firstChild.getAttribute("value");
           }
         } else {
-          var newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackTree" ).prefvalue;
+          newContentPack = parent.hPrefWindow.wsm.dataManager.getItemData( "chrome://communicator/content/pref/pref-content.xul", "contentPackTree" ).prefvalue;
         }
       }
       catch (e) {}
