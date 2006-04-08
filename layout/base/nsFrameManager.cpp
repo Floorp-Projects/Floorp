@@ -1226,9 +1226,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           localContent->IsContentOfType(nsIContent::eELEMENT) &&
           !aFrame->IsLeaf()) {
         // Check for a new :before pseudo and an existing :before
-        // frame, but only if the frame is the first-in-flow.
-        nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
-        if (!prevInFlow) {
+        // frame, but only if the frame is the first continuation.
+        nsIFrame* prevContinuation = aFrame->GetPrevContinuation();
+        if (!prevContinuation) {
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
           if (!nsLayoutUtils::GetBeforeFrame(aFrame) &&
@@ -1252,10 +1252,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           localContent->IsContentOfType(nsIContent::eELEMENT) &&
           !aFrame->IsLeaf()) {
         // Check for new :after content, but only if the frame is the
-        // last-in-flow.
-        nsIFrame* nextInFlow = aFrame->GetNextContinuation();
+        // last continuation.
+        nsIFrame* nextContinuation = aFrame->GetNextContinuation();
 
-        if (!nextInFlow) {
+        if (!nextContinuation) {
           // Getting the :after frame is more expensive than getting the pseudo
           // context, so get the pseudo context first.
           if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
