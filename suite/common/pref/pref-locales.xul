@@ -140,7 +140,7 @@
         var uninstallButton = document.getElementById(button);
         var packID = selectedItem.getAttribute("value");
 
-        //current chrome providers cannot be unistalled
+        //current chrome providers cannot be uninstalled
         uninstallButton.disabled = (packID == parent.hPrefWindow.getPref("localizedstring", list.getAttribute("prefstring")));
 
         //out-of-date packs cannot become chrome providers
