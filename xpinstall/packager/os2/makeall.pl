@@ -224,7 +224,6 @@ if(!(-d "$gDirStageProduct"))
                    "chatzilla",
                    "deflenus",
                    "langenus",
-                   "regus",
                    "venkman",
                    "inspector",
                    "reporter");
