@@ -62,6 +62,25 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 </li>
 {/section}
 </ul>
+
+<div class="pages">
+<div class="prev">
+{if $page.left}
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+{else}
+&laquo; Previous Page
+{/if}
+</div>
+
+<div class="next">
+{if $page.next}
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+{else}
+Next Page &raquo;
+{/if}
+</div>
+</div>
+
 {else}
 <p>There are no comments yet for this addon.  <a href="{$config.webpath}/addcomment.php?aid={$addon->ID}&amp;app={$app}"></a></p>
 {/if}
