@@ -156,7 +156,8 @@ if (!empty($sql['cat'])) {
 }
 
 if (!empty($sql['platform'])) {
-    $where .= " version.OSID = '{$sql['platform']}' AND ";
+    // OSID=1 is 'ALL' in the db
+    $where .= " (version.OSID = '{$sql['platform']}' OR version.OSID = '1' )AND ";
 }
 
 if (!empty($sql['appfilter'])) {
