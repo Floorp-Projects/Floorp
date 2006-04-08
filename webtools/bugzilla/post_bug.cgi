@@ -496,7 +496,7 @@ if (UserInGroup("editbugs")) {
     if (@keywordlist) {
         # Make sure that we have the correct case for the kw
         my $kw_ids = join(', ', @keywordlist);
-        my $list = $dbh->selectcol_arrayref(q{
+        my $list = $dbh->selectcol_arrayref(qq{
                                     SELECT name 
                                       FROM keyworddefs 
                                      WHERE id IN ($kw_ids)});
