@@ -888,6 +888,8 @@ VFY_VerifyDigestWithAlgorithmID;
 ;+    global:
 SEC_ASN1EncodeUnsignedInteger;
 SEC_RegisterDefaultHttpClient;
+NSS_RegisterShutdown;
+NSS_UnregisterShutdown;
 ;+    local:
 ;+       *;
 ;+};

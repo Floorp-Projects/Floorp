@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.71 2006/02/16 00:06:24 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: nssinit.c,v 1.72 2006/04/08 05:11:55 nelson%bolyard.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -396,6 +396,11 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
 static PRBool nss_IsInitted = PR_FALSE;
 
 extern SECStatus secoid_Init(void);
+static SECStatus nss_InitShutdownList(void);
+
+#ifdef DEBUG
+static CERTCertificate dummyCert;
+#endif
 
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
@@ -412,7 +417,6 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *lcertPrefix = NULL;
     char *lkeyPrefix = NULL;
     char *lsecmodName = NULL;
-    CERTCertificate dummyCert;
 
     if (nss_IsInitted) {
 	return SECSuccess;
@@ -486,6 +490,9 @@ loser:
 	    return SECFailure;
 	}
 	if (STAN_LoadDefaultNSS3TrustDomain() != PR_SUCCESS) {
+	    return SECFailure;
+	}
+	if (nss_InitShutdownList() != SECSuccess) {
 	    return SECFailure;
 	}
 	CERT_SetDefaultCertDB((CERTCertDBHandle *)
@@ -595,28 +602,201 @@ NSS_NoDB_Init(const char * configdir)
 			PR_FALSE,PR_FALSE,PR_FALSE);
 }
 
+
+#define NSS_SHUTDOWN_STEP 10
+
+struct NSSShutdownFuncPair {
+    NSS_ShutdownFunc	func;
+    void		*appData;
+};
+
+static struct NSSShutdownListStr {
+    PZLock		*lock;
+    int			maxFuncs;
+    int			numFuncs;
+    struct NSSShutdownFuncPair	*funcs;
+} nssShutdownList = { 0 };
+
+/*
+ * find and existing shutdown function
+ */
+static int 
+nss_GetShutdownEntry(NSS_ShutdownFunc sFunc, void *appData)
+{
+    int count, i;
+    count = nssShutdownList.numFuncs;
+    /* expect the list to be short, just do a linear search */
+    for (i=0; i < count; i++) {
+	if ((nssShutdownList.funcs[i].func == sFunc) &&
+	    (nssShutdownList.funcs[i].appData == appData)){
+	    return i;
+	}
+    }
+    return -1;
+}
+    
+/*
+ * register a callback to be called when NSS shuts down
+ */
+SECStatus
+NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
+{
+    int i;
+
+    if (!nss_IsInitted) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+    if (sFunc == NULL) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+
+    PORT_Assert(nssShutdownList.lock);
+    PZ_Lock(nssShutdownList.lock);
+
+    /* make sure we don't have a duplicate */
+    i = nss_GetShutdownEntry(sFunc, appData);
+    if (i > 0) {
+	PZ_Unlock(nssShutdownList.lock);
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+    /* find an empty slot */
+    i = nss_GetShutdownEntry(NULL, NULL);
+    if (i > 0) {
+	nssShutdownList.funcs[i].func = sFunc;
+	nssShutdownList.funcs[i].appData = appData;
+	PZ_Unlock(nssShutdownList.lock);
+	return SECFailure;
+    }
+    if (nssShutdownList.maxFuncs == nssShutdownList.numFuncs) {
+	struct NSSShutdownFuncPair *funcs = 
+		(struct NSSShutdownFuncPair *)PORT_Realloc
+		(nssShutdownList.funcs, 
+		(nssShutdownList.maxFuncs + NSS_SHUTDOWN_STEP) 
+		*sizeof(struct NSSShutdownFuncPair));
+	if (!funcs) {
+	    return SECFailure;
+	}
+	nssShutdownList.funcs = funcs;
+	nssShutdownList.maxFuncs += NSS_SHUTDOWN_STEP;
+    }
+    nssShutdownList.funcs[nssShutdownList.numFuncs++].func = sFunc;
+    nssShutdownList.funcs[nssShutdownList.numFuncs++].appData = appData;
+    PZ_Unlock(nssShutdownList.lock);
+    return SECSuccess;
+}
+
+/*
+ * unregister a callback so it won't get called on shutdown.
+ */
+SECStatus
+NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData)
+{
+    int i;
+    if (!nss_IsInitted) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+
+    PORT_Assert(nssShutdownList.lock);
+    PZ_Lock(nssShutdownList.lock);
+    i = nss_GetShutdownEntry(sFunc, appData);
+    if (i > 0) {
+	nssShutdownList.funcs[i].func = NULL;
+	nssShutdownList.funcs[i].appData = NULL;
+    }
+    PZ_Unlock(nssShutdownList.lock);
+
+    if (i < 0) {
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	return SECFailure;
+    }
+    return SECSuccess;
+}
+
+/*
+ * bring up and shutdown the shutdown list
+ */
+static SECStatus
+nss_InitShutdownList(void)
+{
+    nssShutdownList.lock = PZ_NewLock(nssILockOther);
+    if (nssShutdownList.lock == NULL) {
+	return SECFailure;
+    }
+    nssShutdownList.funcs = PORT_ZNewArray(struct NSSShutdownFuncPair, 
+				           NSS_SHUTDOWN_STEP);
+    if (nssShutdownList.funcs == NULL) {
+	PZ_DestroyLock(nssShutdownList.lock);
+    	nssShutdownList.lock = NULL;
+	return SECFailure;
+    }
+    nssShutdownList.maxFuncs = NSS_SHUTDOWN_STEP;
+    nssShutdownList.numFuncs = 0;
+
+    return SECSuccess;
+}
+
+static SECStatus
+nss_ShutdownShutdownList(void)
+{
+    SECStatus rv = SECSuccess;
+    int i;
+
+    /* call all the registerd functions first */
+    for (i=0; i < nssShutdownList.numFuncs; i++) {
+	struct NSSShutdownFuncPair *funcPair = &nssShutdownList.funcs[i];
+	if (funcPair->func) {
+	    if ((*funcPair->func)(funcPair->appData,NULL) != SECSuccess) {
+		rv = SECFailure;
+	    }
+	}
+    }
+
+    nssShutdownList.numFuncs = 0;
+    nssShutdownList.maxFuncs = 0;
+    PORT_Free(nssShutdownList.funcs);
+    nssShutdownList.funcs = NULL;
+    if (nssShutdownList.lock) {
+	PZ_DestroyLock(nssShutdownList.lock);
+    }
+    nssShutdownList.lock = NULL;
+    return rv;
+}
+
+
 extern const NSSError NSS_ERROR_BUSY;
 
 SECStatus
 NSS_Shutdown(void)
 {
+    SECStatus shutdownRV = SECSuccess;
     SECStatus rv;
     PRStatus status;
 
+    rv = nss_ShutdownShutdownList();
+    if (rv != SECSuccess) {
+	shutdownRV = SECFailure;
+    }
     ShutdownCRLCache();
     SECOID_Shutdown();
     status = STAN_Shutdown();
     cert_DestroySubjectKeyIDHashTable();
     rv = SECMOD_Shutdown();
+    if (rv != SECSuccess) {
+	shutdownRV = SECFailure;
+    }
     pk11sdr_Shutdown();
     if (status == PR_FAILURE) {
 	if (NSS_GetError() == NSS_ERROR_BUSY) {
 	    PORT_SetError(SEC_ERROR_BUSY);
 	}
-	rv = SECFailure;
+	shutdownRV = SECFailure;
     }
     nss_IsInitted = PR_FALSE;
-    return rv;
+    return shutdownRV;
 }
 
 PRBool
