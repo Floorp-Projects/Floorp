@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_DIR	= $(DIST)/bin/defaults/isp
-EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/US
+EXPORT_DIR_L10N	= $(DIST)/bin/defaults/isp/$(AB_CD)
 
 EXPORT_RESOURCE_FILES = \
 		$(NULL)
@@ -64,6 +64,6 @@ libs:: $(EXPORT_RESOURCE_FILES)
 
 install:: $(EXPORT_RESOURCE_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/US
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/$(AB_CD)
 endif
 

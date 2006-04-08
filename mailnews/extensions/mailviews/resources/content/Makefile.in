@@ -46,7 +46,7 @@ MODULE       = mailview
 PACKAGE_FILE = mailviewdef.pkg
 
 EXPORT_DIR	= $(DIST)/bin/defaults/messenger
-EXPORT_L10N_DIR	= $(EXPORT_DIR)/US
+EXPORT_L10N_DIR	= $(EXPORT_DIR)/$(AB_CD)
 
 EXPORT_RESOURCE_FILES	= \
 			mailViews.dat \
@@ -63,5 +63,5 @@ libs:: $(EXPORT_RESOURCE_FILES)
 
 install:: $(EXPORT_RESOURCE_FILES)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger/US
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/messenger/$(AB_CD)
 
