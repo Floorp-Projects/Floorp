@@ -83,7 +83,7 @@
           var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService(Components.interfaces.nsIChromeRegistry);
           chromeRegistry.selectLocale(newContentPack, true);
           var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-          observerService.Notify(null, "locale-selected", null);
+          observerService.notifyObservers(null, "locale-selected", null);
           var contentBundle = document.getElementById("bundle_contentPack");
           var brandBundle = document.getElementById("bundle_brand");
           var alertText = contentBundle.getString("contentAlert");
