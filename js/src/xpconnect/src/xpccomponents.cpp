@@ -2268,7 +2268,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         NS_ADDREF(sop);
     } else {
-        if (JSVAL_IS_OBJECT(argv[0])) {
+        if (!JSVAL_IS_PRIMITIVE(argv[0])) {
             nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
             xpc->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(argv[0]),
                                             getter_AddRefs(wrapper));
