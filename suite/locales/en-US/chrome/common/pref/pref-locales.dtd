@@ -1,4 +1,5 @@
 
 <!ENTITY lHeader                        "Content Packs">
-<!ENTITY contentIntro.label             "Selecting a new content pack changes the browser Home Page, the content of toolbars, the Search menu, My Sidebar and other items. Note: changing content packs requires you to restart Mozilla.">
+<!ENTITY contentIntro.label             "Selecting a new content pack changes items in My Sidebar and the Search menu, and changes the home page, certain bookmarks, and other items. You will not lose bookmarks and other items that you have customized when you switch content packs. You must restart for a new content pack to take effect.">
 <!ENTITY installedContentPacks.label    "Installed content packs:">
+
