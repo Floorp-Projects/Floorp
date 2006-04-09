@@ -1577,8 +1577,9 @@ nsresult
 nsDownloadsDataSource::LoadDataSource()
 {
   nsCOMPtr<nsIFile> downloadsFile;
-  NS_GetSpecialDirectory(NS_APP_DOWNLOADS_50_FILE, getter_AddRefs(downloadsFile));
-    
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_DOWNLOADS_50_FILE, getter_AddRefs(downloadsFile));
+  if (NS_FAILED(rv)) return rv;
+
   nsCAutoString downloadsDB;
   NS_GetURLSpecFromFile(downloadsFile, downloadsDB);
 
