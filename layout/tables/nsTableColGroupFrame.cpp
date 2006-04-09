@@ -177,6 +177,17 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
+  if (!mFrames.IsEmpty()) {
+    // We already have child frames which means we've already been
+    // initialized
+    NS_NOTREACHED("unexpected second call to SetInitialChildList");
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (aListName) {
+    // All we know about is the unnamed principal child list
+    NS_NOTREACHED("unknown frame list");
+    return NS_ERROR_INVALID_ARG;
+  } 
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (!tableFrame)
     return NS_ERROR_NULL_POINTER;
