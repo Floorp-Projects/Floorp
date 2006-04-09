@@ -189,7 +189,11 @@ public:
   nsSize mContentArea;
 
   // Placeholders for continuation out-of-flow frames that need to
-  // move to our next in flow are placed here during reflow.
+  // move to our next in flow are placed here during reflow. At the end of reflow
+  // they move to the end of the overflow lines.
+  // Their out-of-flows are not in any child list during reflow, but are added
+  // to the overflow-out-of-flow list when the placeholders are appended to
+  // the overflow lines.
   nsFrameList mOverflowPlaceholders;
 
   //----------------------------------------
