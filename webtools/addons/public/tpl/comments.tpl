@@ -66,7 +66,7 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 <div class="pages">
 <div class="prev">
 {if $page.left}
-<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}">&laquo; Previous Page</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.previous}&amp;orderby={$page.orderby}">&laquo; Previous Page</a>
 {else}
 &laquo; Previous Page
 {/if}
@@ -74,7 +74,7 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 
 <div class="next">
 {if $page.next}
-<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}">Next Page &raquo;</a>
+<a href="{$config.webpath}/comments.php?app={$app}&amp;{$page.url}&amp;left={$page.next}&amp;orderby={$page.orderby}">Next Page &raquo;</a>
 {else}
 Next Page &raquo;
 {/if}
