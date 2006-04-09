@@ -236,7 +236,11 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
   *aDecision = nsIContentPolicy::ACCEPT;
 
   NS_ENSURE_ARG_POINTER(aContentLocation);
-  NS_ENSURE_ARG_POINTER(aRequestingLocation);
+
+  // NOTE: Not using NS_ENSURE_ARG_POINTER because this is a legitimate case
+  // that can happen, and it shouldn't print a warning message.
+  if (!aRequestingLocation)
+    return NS_ERROR_INVALID_POINTER;
 
 #ifndef MOZ_THUNDERBIRD
   // Go find out if we are dealing with mailnews. Anything else
