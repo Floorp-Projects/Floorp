@@ -51,14 +51,18 @@
         <![CDATA[
 #ifdef XP_WIN
           var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
-          return lfw.getVersionInfoField("FileDescription"); 
-#else
+          try {
+            return lfw.getVersionInfoField("FileDescription"); 
+          }
+          catch (e) {
+            // fall through to the filename
+          }
+#endif
           // XXXben - Read the bundle name on OS X.
           var ios = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
           var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);
           return url.fileName;
-#endif
         ]]>
         </body>
       </method>

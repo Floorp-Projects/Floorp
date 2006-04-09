@@ -283,15 +283,20 @@ var gDownloadActionsWindow = {
   _getDisplayNameForFile: function (aFile)
   {
 #ifdef XP_WIN
-    if (aFile instanceof Components.interfaces.nsILocalFileWin)
-      return aFile.getVersionInfoField("FileDescription"); 
-#else
+    if (aFile instanceof Components.interfaces.nsILocalFileWin) {
+      try {
+        return aFile.getVersionInfoField("FileDescription"); 
+      }
+      catch (e) {
+        // fall through to the filename
+      }
+    }
+#endif
     // XXXben - Read the bundle name on OS X.
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
     var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);
     return url.fileName;
-#endif
   },  
   
   _loadMIMERegistryData: function ()
