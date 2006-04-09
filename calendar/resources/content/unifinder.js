@@ -55,6 +55,11 @@ var gCalendarEventTreeClicked = false; //set this to true when the calendar even
 
 var gEventArray = new Array();
 
+// Store the start and enddate, because the providers can't be trusted when
+// dealing with all-day events. So we need to filter later. See bug 306157
+var gStartDate;
+var gEndDate;
+
 var kDefaultTimezone;
 
 function resetAllowSelection()
@@ -681,12 +686,12 @@ function refreshEventTree( eventArray )
          EndDate = StartDate;
          break;
    }
-   var s = StartDate ? jsDateToDateTime(StartDate).getInTimezone(calendarDefaultTimezone()) : null;
-   var e = EndDate ? jsDateToDateTime(EndDate).getInTimezone(calendarDefaultTimezone()) : null;
+   gStartDate = StartDate ? jsDateToDateTime(StartDate).getInTimezone(calendarDefaultTimezone()) : null;
+   gEndDate = EndDate ? jsDateToDateTime(EndDate).getInTimezone(calendarDefaultTimezone()) : null;
    if (StartDate && EndDate) {
        filter |= ccalendar.ITEM_FILTER_CLASS_OCCURRENCES;
    }
-   ccalendar.getItems (filter, 0, s, e, refreshListener);
+   ccalendar.getItems (filter, 0, gStartDate, gEndDate, refreshListener);
 
 }
 
@@ -718,6 +723,18 @@ function refreshEventTreeInternal(eventArray)
    } else {
        gEventArray = eventArray;
    }
+   
+   // Extra check to see if the events are in the daterange. Some providers
+   // are broken when looking at all-day events.
+   function dateFilter(event) {
+       // Using .compare on the views start and end, not on the events dates,
+       // because .compare uses the timezone of the datetime it is called on.
+       // The view's timezone is what is important here.
+       return ((!gEndDate || gEndDate.compare(event.startDate) >= 0) &&
+               (!gStartDate || gStartDate.compare(event.endDate) < 0));
+   }
+   gEventArray = gEventArray.filter(dateFilter);
+   
 
    treeView.rowCount = gEventArray.length;
       
