@@ -179,7 +179,7 @@
         preftype="localizedstring" 
         prefstring="general.useragent.locale" 
         prefattribute="prefvalue" 
-        wsm_attributes="value"
+        wsm_attributes="prefvalue"
         seltype="false" 
         onselect="SelectPack('languagePackList', 'uninstallLanguagePack');"
         sortDirection="ascending">
