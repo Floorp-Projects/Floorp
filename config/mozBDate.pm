@@ -93,7 +93,7 @@ sub UpdateBuildNumber($$) {
 
     my $old_num = "";
     
-    # Only overwrite file if contents are not already set to 0
+    # Don't overwrite $outfile if its contents won't change
     if ( -e $outfile ) {
         open(OLD, "<$outfile") || die "$outfile: $!\n";
         $old_num = <OLD>;
