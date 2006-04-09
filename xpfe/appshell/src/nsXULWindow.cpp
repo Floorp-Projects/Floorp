@@ -1332,33 +1332,17 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
 
 NS_IMETHODIMP nsXULWindow::LoadWindowClassFromXUL()
 {
-  if (mWindow->GetWindowClass(nsnull)==NS_ERROR_NOT_IMPLEMENTED)
-    return NS_OK;
-
   nsCOMPtr<nsIDOMElement> docShellElement;
   GetWindowDOMElement(getter_AddRefs(docShellElement));
   NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
-  nsAutoString windowClass;
+  nsAutoString windowType;
 
   docShellElement->GetAttribute(NS_LITERAL_STRING("windowtype"),
-                                windowClass);
+                                windowType);
 
-  if (!windowClass.IsEmpty())
-  {
-    PRBool persistPosition;
-    PRBool persistSize;
-    PRBool persistSizeMode;
-
-    if (NS_SUCCEEDED(
-         mContentTreeOwner->
-           GetPersistence(&persistPosition, &persistSize, &persistSizeMode)
-        ) && !persistPosition && !persistSize && !persistSizeMode)
-      windowClass.AppendLiteral("-jsSpamPopupCrap");
-
-    char *windowClass_cstr = ToNewCString(windowClass);
-    mWindow->SetWindowClass(windowClass_cstr);
-    nsMemory::Free(windowClass_cstr);
+  if (!windowType.IsEmpty()) {
+    mWindow->SetWindowClass(NS_LITERAL_STRING("Mozilla"), windowType);
   }
 
   return NS_OK;
