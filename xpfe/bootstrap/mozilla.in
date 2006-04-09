@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.11 2006/04/08 03:00:42 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.12 2006/04/09 01:02:54 ajschult%verizon.net Exp $
 ## 
 ## Usage:
 ##
@@ -100,7 +100,6 @@ MRE_HOME=%MREDIR%
 found=0
 progname="$0"
 curdir=`dirname "$progname"`
-progbase=`basename "$progname"`
 run_moz="$curdir/run-mozilla.sh"
 if test -x "$run_moz"; then
   dist_bin="$curdir"
@@ -144,18 +143,19 @@ if [ "$OSTYPE" = "beos" ]; then
 fi
 
 # Open a new tab/window in an existing instance if we can find one.
-if "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" 'ping()' 2>/dev/null >/dev/null; then
+appname="%MOZ_APP_NAME%"
+if [ -z "$MOZ_NO_REMOTE" ] && "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" 'ping()' 2>/dev/null >/dev/null; then
   if [ $# -eq 0 ]; then
     # No command line args. Open new window.
-    exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "xfeDoCommand(openBrowser)"
+    exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openBrowser)"
   fi
 
   case "$1" in
     -mail)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" 'xfeDoCommand(openInbox)'
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" 'xfeDoCommand(openInbox)'
       ;;
     -compose)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" 'xfeDoCommand(composeMessage)'
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" 'xfeDoCommand(composeMessage)'
       ;;
     -*) 
       # There's an argument we don't recognize, so don't try to use a running 
@@ -176,7 +176,7 @@ if "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" 'ping()' 2>/dev/null >/de
         _optLast="file://${_optLast}"
       fi
 
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "openURL(${_optLast})"
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "openURL(${_optLast})"
       ;;
   esac
 fi
@@ -185,7 +185,7 @@ fi
 
 script_args=""
 debugging=0
-MOZILLA_BIN="${progbase}-bin"
+MOZILLA_BIN="%MOZILLA-BIN%"
 
 if [ "$OSTYPE" = "beos" ]; then
   mimeset -F "$MOZILLA_BIN"
