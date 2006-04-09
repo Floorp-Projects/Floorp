@@ -299,13 +299,13 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
   nsresult rv;
   nsCAutoString alias;
 
-  nsCStringArray* array = new nsCStringArray;
-  if (!array)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
+
+  nsCStringArray* array = new nsCStringArray;
+  if (!array)
+    return NS_ERROR_OUT_OF_MEMORY;
   
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   catman->EnumerateCategory(PromiseFlatCString(aCategory).get(), 
