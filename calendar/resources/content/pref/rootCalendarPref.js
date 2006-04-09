@@ -61,9 +61,6 @@ calendarPrefObserver.prototype =
         switch( prefName )
         {
             case "calendar.week.start":
-                if (this.CalendarPreferences.calendarWindow.currentView != null) {
-                  this.CalendarPreferences.calendarWindow.currentView.refresh();
-                }
                 if (this.CalendarPreferences.calendarWindow.miniMonth != null) {
                   this.CalendarPreferences.calendarWindow.miniMonth.refreshDisplay(true);
                 }

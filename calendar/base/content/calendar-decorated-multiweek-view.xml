@@ -107,8 +107,8 @@
                        break;
 
                    case "calendar.week.start":
-                       viewElem = document.getAnonymousElementByAttribute(
-                                  this.calView, "anonid", "view-element");
+                       var viewElem = document.getAnonymousElementByAttribute(
+                                      this.calView, "anonid", "view-element");
                        viewElem.weekStartOffset = subj.getIntPref(pref);
 
                        if (!this.calView.startDay || !this.calView.endDay) {
@@ -184,9 +184,12 @@
 
                     // Get the first date that should be shown.  This is the
                     // start of the week of the day that we're centering around
-                    // adjusted for the number of previous weeks we're supposed
-                    // to display
+                    // adjusted for the day the week starts on and the number
+                    // of previous weeks we're supposed to display.
                     var d1 = aDate.startOfWeek.clone();
+                    if (aDate.weekday < viewElement.weekStartOffset) {
+                        d1.day -= 7;
+                    }
                     d1.day -= 7*calBranch.getIntPref("previousweeks.inview");
                     d1.normalize();
 
@@ -200,6 +203,7 @@
                     if (this.mWorkdaysOnly) {
                         this.removeNonWorkdays();
                     }
+
                     viewElement.selectedDay = aDate;
                     this.setNavLabels(aDate);
                 ]]></body>
