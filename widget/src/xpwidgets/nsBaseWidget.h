@@ -116,8 +116,8 @@ public:
   NS_IMETHOD              SetModal(PRBool aModal); 
   NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
                             PRBool *aForWindow);
-  NS_IMETHOD              GetWindowClass(char *aClass);
-  NS_IMETHOD              SetWindowClass(char *aClass);
+  NS_IMETHOD              SetWindowClass(const nsAString& aName,
+                            const nsAString& xulWinType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
   NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
