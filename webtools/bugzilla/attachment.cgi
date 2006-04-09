@@ -1069,7 +1069,11 @@ sub insert
       SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, " . 
               join(", ", map("$fields[$_] = $newvalues[$_]", (0..3))) . 
               " WHERE bug_id = $bugid");
-      
+
+      # If the bug was a dupe, we have to remove its entry from the
+      # 'duplicates' table.
+      $dbh->do('DELETE FROM duplicates WHERE dupe = ?', undef, $bugid);
+
       # We store email addresses in the bugs_activity table rather than IDs.
       $oldvalues[0] = $oldvalues[4];
       $newvalues[0] = $newvalues[4];
