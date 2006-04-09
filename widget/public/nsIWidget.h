@@ -980,16 +980,9 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
 
     /**
-     * Gets the window class
-     * implemented in gtk
+     * Classify the window for the window manager. Mostly for X11.
      */
-    NS_IMETHOD GetWindowClass(char *aClass) = 0;
-
-    /**
-     * Sets the window class
-     * implemented in gtk
-     */
-    NS_IMETHOD SetWindowClass(char *aClass) = 0;
+    NS_IMETHOD SetWindowClass(const nsAString& aName, const nsAString& xulWinType) = 0;
 
     /**
      * Enables/Disables system capture of any and all events that would cause a
