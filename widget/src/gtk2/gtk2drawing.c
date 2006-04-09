@@ -653,6 +653,20 @@ moz_gtk_scrollbar_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
         scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
     else
         scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
+        
+    /* Some theme engines (i.e., ClearLooks) check the scrollbar's allocation
+       to determine where it should paint rounded corners on the buttons.
+       We need to trick them into drawing the buttons the way we want them. */
+
+    GTK_WIDGET(scrollbar)->allocation.x = rect->x;
+    GTK_WIDGET(scrollbar)->allocation.y = rect->y;
+    GTK_WIDGET(scrollbar)->allocation.width = 2 * rect->width;
+    GTK_WIDGET(scrollbar)->allocation.height = 2 * rect->height;
+
+    if (type == GTK_ARROW_DOWN)
+        GTK_WIDGET(scrollbar)->allocation.y -= rect->height;
+    else if (type == GTK_ARROW_RIGHT)
+        GTK_WIDGET(scrollbar)->allocation.x -= rect->width;
 
     style = GTK_WIDGET(scrollbar)->style;
 
