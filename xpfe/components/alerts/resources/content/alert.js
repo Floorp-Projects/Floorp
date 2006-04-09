@@ -85,7 +85,8 @@ function onAlertLoad()
 
   // work around a bug where sizeToContent() leaves a border outside of the content
   var contentDim = document.getElementById("alertBox").boxObject;
-  window.resizeTo(contentDim.width, contentDim.height);
+  if (window.innerWidth == contentDim.width + 1)
+    --window.innerWidth;
 
   gFinalHeight = window.outerHeight;
 
