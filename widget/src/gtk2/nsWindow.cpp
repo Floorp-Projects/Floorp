@@ -2564,6 +2564,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         }
         else if (mWindowType == eWindowType_popup) {
             mShell = gtk_window_new(GTK_WINDOW_POPUP);
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Popup", "Mozilla");
             if (topLevelParent) {
                 gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                             topLevelParent);
@@ -2579,6 +2580,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         else { // must be eWindowType_toplevel
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             SetDefaultIcon();
+            gtk_window_set_wmclass(GTK_WINDOW(mShell), "Toplevel", "Mozilla");
 
             // each toplevel window gets its own window group
             mWindowGroup = gtk_window_group_new();
@@ -2782,6 +2784,56 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 #endif
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::SetWindowClass(const nsAString& aName,
+                         const nsAString &xulWinType)
+{
+  if (!mShell)
+    return NS_ERROR_FAILURE;
+
+  XClassHint *class_hint = XAllocClassHint();
+  if (!class_hint)
+    return NS_ERROR_OUT_OF_MEMORY;
+  const char *role = NULL;
+  class_hint->res_name = ToNewCString(xulWinType);
+  if (!class_hint->res_name) {
+    XFree(class_hint);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  class_hint->res_class = ToNewCString(aName);
+  if (!class_hint->res_class) {
+    nsMemory::Free(class_hint->res_name);
+    XFree(class_hint);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Parse res_name into a name and role. Characters other than
+  // [A-Za-z0-9_-] are converted to '_'. Anything after the first
+  // colon is assigned to role; if there's no colon, assign the
+  // whole thing to both role and res_name.
+  for (char *c = class_hint->res_name; *c; c++) {
+    if (':' == *c) {
+      *c = 0;
+      role = c + 1;
+    }
+    else if (!isascii(*c) || (!isalnum(*c) && ('_' != *c) && ('-' != *c)))
+      *c = '_';
+  }
+  class_hint->res_name[0] = toupper(class_hint->res_name[0]);
+  if (!role) role = class_hint->res_name;
+
+  gdk_window_set_role(GTK_WIDGET(mShell)->window, role);
+  // Can't use gtk_window_set_wmclass() for this; it prints
+  // a warning & refuses to make the change.
+  XSetClassHint(GDK_DISPLAY(),
+                GDK_WINDOW_XWINDOW(GTK_WIDGET(mShell)->window),
+                class_hint);
+  nsMemory::Free(class_hint->res_class);
+  nsMemory::Free(class_hint->res_name);
+  XFree(class_hint);
+  return NS_OK;
 }
 
 void
