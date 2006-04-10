@@ -3782,6 +3782,36 @@ nsNavHistoryResultTreeViewer::ComputeShowSessions()
 }
 
 
+// nsNavHistoryResultTreeViewer::GetRowSessionStatus
+
+nsNavHistoryResultTreeViewer::SessionStatus
+nsNavHistoryResultTreeViewer::GetRowSessionStatus(PRInt32 row)
+{
+  NS_ASSERTION(row >= 0 && row < PRInt32(mVisibleElements.Length()),
+               "Invalid row!");
+
+  nsNavHistoryResultNode *node = mVisibleElements[row];
+  if (! node->IsVisit())
+    return Session_None; // not a visit, so there are no sessions
+  nsNavHistoryVisitResultNode* visit = node->GetAsVisit();
+
+  if (visit->mSessionId != 0) {
+    if (row == 0) {
+      return Session_Start;
+    } else {
+      nsNavHistoryResultNode* previousNode = mVisibleElements[row - 1];
+      if (previousNode->IsVisit() &&
+          visit->mSessionId != previousNode->GetAsVisit()->mSessionId) {
+        return Session_Start;
+      } else {
+        return Session_Continue;
+      }
+    }
+  }
+  return Session_None;
+}
+
+
 // nsNavHistoryResultTreeViewer::BuildVisibleList
 //
 //    Call to completely rebuild the list of visible items. Note if there is no
@@ -4589,22 +4619,19 @@ NS_IMETHODIMP nsNavHistoryResultTreeViewer::GetRowProperties(PRInt32 row,
   // Next handle properties for session information.
   if (! mShowSessions)
     return NS_OK; // don't need to bother to compute session boundaries
-  if (! node->IsVisit())
-    return NS_OK; // not a visit, so there are no sessions
 
-  nsNavHistoryVisitResultNode* visit = node->GetAsVisit();
-  if (visit->mSessionId != 0) {
-    if (row == 0) {
+  switch (GetRowSessionStatus(row))
+  {
+    case Session_Start:
       properties->AppendElement(nsNavHistory::sSessionStartAtom);
-    } else {
-      nsNavHistoryResultNode* previousNode = mVisibleElements[row - 1];
-      if (previousNode->IsVisit() &&
-          visit->mSessionId != previousNode->GetAsVisit()->mSessionId) {
-        properties->AppendElement(nsNavHistory::sSessionStartAtom);
-      } else {
-        properties->AppendElement(nsNavHistory::sSessionContinueAtom);
-      }
-    }
+      break;
+    case Session_Continue:
+      properties->AppendElement(nsNavHistory::sSessionContinueAtom);
+      break;
+    case Session_None:
+      break;
+    default: 
+      NS_NOTREACHED("Invalid session type");
   }
   return NS_OK;
 }
@@ -4910,7 +4937,10 @@ NS_IMETHODIMP nsNavHistoryResultTreeViewer::GetCellText(PRInt32 row,
         // information I know how to use. Only show this for URI-based items.
         _retval.Truncate(0);
       } else {
-        return FormatFriendlyTime(node->mTime, _retval);
+        if (GetRowSessionStatus(row) != Session_Continue)
+          return FormatFriendlyTime(node->mTime, _retval);
+        _retval.Truncate(0);
+        break;
       }
       break;
     }
@@ -5147,7 +5177,7 @@ nsNavHistoryResultTreeViewer::FormatFriendlyTime(PRTime aTime,
    * To enable, you'll need to put these in places.properties:
    *   0MinutesAgo=<1 minute ago
    *   1MinutesAgo=1 minute ago
-   *   XMinutesAgo=%s minutes ago
+   *   XMinutesAgo=%S minutes ago
 
   static const PRInt64 minuteThreshold = (PRInt64)1000000 * 60 * 60;
   if (ago > -10000000 && ago < minuteThreshold) {
