@@ -379,7 +379,7 @@ private:
     PLDHashTableEnumeratorImpl(); /* no implementation */
 
     ~PLDHashTableEnumeratorImpl();
-    NS_IMETHODIMP ReleaseElements();
+    void ReleaseElements();
 
     nsVoidArray   mElements;
     PRInt32       mCount, mCurrent;
@@ -442,14 +442,14 @@ NS_IMPL_ISUPPORTS3(PLDHashTableEnumeratorImpl,
 
 PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
 {
-    (void) ReleaseElements();
+    ReleaseElements();
 
     // Destroy the Lock
     if (mMonitor)
         nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
-NS_IMETHODIMP
+void
 PLDHashTableEnumeratorImpl::ReleaseElements()
 {
     for (PRInt32 i = 0; i < mCount; i++) {
@@ -457,7 +457,6 @@ PLDHashTableEnumeratorImpl::ReleaseElements()
                                                     mElements[i]);
         NS_IF_RELEASE(supports);
     }
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1353,8 +1352,7 @@ nsComponentManagerImpl::WritePersistentRegistry()
     rv = mCategoryManager->WriteCategoryManagerToRegistry(fd);
 
 out:
-    if (fd)
-        PR_Close(fd);
+    PR_Close(fd);
 
     // don't create the file is there was a problem????
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1468,7 +1466,7 @@ nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass)
  *
  * Again, no attempt is made at storing the factory.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::FindFactory(const nsCID &aClass,
                                     nsIFactory **aFactory)
 {
@@ -1504,7 +1502,7 @@ nsComponentManagerImpl::FindFactory(const char *contractID,
  * Given a classID, this finds the singleton ClassObject that implements the CID.
  * Returns an interface of type aIID off the singleton classobject.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
                                        void **aResult)
 {
@@ -1536,7 +1534,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
 }
 
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
@@ -1571,7 +1569,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
  * Mapping function from a ContractID to a classID. Directly talks to the registry.
  *
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass)
 {
     NS_PRECONDITION(aContractID != nsnull, "null ptr");
@@ -1612,7 +1610,7 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
  *
  * NOTE: Since this isn't heavily used, we aren't caching this.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
                                           char* *aClassName,
                                           char* *aContractID)
@@ -1675,7 +1673,7 @@ nsComponentManagerImpl::RemovePendingCID(const nsCID &aClass)
  * to the implementation aClass using the factory. The factory is immediately
  * released and not held onto for any longer.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
                                        nsISupports *aDelegate,
                                        const nsIID &aIID,
@@ -1756,7 +1754,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
  * This is only a convenience routine that turns around can calls the
  * CreateInstance() with classid and iid.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                    nsISupports *aDelegate,
                                                    const nsIID &aIID,
@@ -2294,7 +2292,7 @@ nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* ser
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
                                                 char **aRegistryName)
 {
@@ -2360,7 +2358,7 @@ nsComponentManagerImpl::RegistryLocationForFile(nsIFile* aFile,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
                                                 nsIFile **aSpec)
 {
@@ -2439,7 +2437,7 @@ nsComponentManagerImpl::FileForRegistryLocation(const nsCString &aLocation,
  * location, but we just slam it into the cache here.  And we don't call the
  * loader's OnRegister function, either.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
                                         const char *aClassName,
                                         const char *aContractID,
@@ -2507,7 +2505,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           const char *aClassName,
                                           const char *aContractID,
@@ -2515,17 +2513,17 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           PRBool aReplace,
                                           PRBool aPersist)
 {
+    NS_ENSURE_ARG_POINTER(aPersistentDescriptor);
     return RegisterComponentCommon(aClass, aClassName,
                                    aContractID,
                                    aContractID ? strlen(aContractID) : 0,
                                    aPersistentDescriptor,
-                                   aPersistentDescriptor ?
-                                   strlen(aPersistentDescriptor) : 0,
+                                   strlen(aPersistentDescriptor),
                                    aReplace, aPersist,
                                    nativeComponentType);
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   const char *aClassName,
                                                   const char *aContractID,
@@ -2535,11 +2533,12 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   PRBool aPersist,
                                                   const char *aType)
 {
+    NS_ENSURE_ARG_POINTER(aLocation);
     return RegisterComponentCommon(aClass, aClassName,
                                    aContractID,
                                    aContractID ? strlen(aContractID) : 0,
                                    aLocation,
-                                   aLocation ? strlen(aLocation) : 0,
+                                   strlen(aLocation),
                                    aReplace, aPersist,
                                    aType);
 }
@@ -2547,7 +2546,7 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
 /*
  * Register a component, using whatever they stuck in the nsIFile.
  */
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               const char *aClassName,
                                               const char *aContractID,
@@ -2570,7 +2569,7 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
     return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              const char *aClassName,
                                              const char *aContractID,
@@ -2584,7 +2583,7 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
 
 /*
  * Add a component to the known universe of components.
-
+ *
  * Once we enter this function, we own aRegistryName, and must free it
  * or hand it to nsFactoryEntry.  Common exit point ``out'' helps keep us
  * sane.
@@ -2843,7 +2842,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID &aClass,
     return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *registryName)
 {
@@ -2851,7 +2850,7 @@ nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
                                                 nsIFile *aLibrarySpec)
 {
@@ -2859,7 +2858,7 @@ nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::FreeLibraries(void)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2881,7 +2880,7 @@ nsComponentManagerImpl::FreeLibraries(void)
  *
  */
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
     return AutoRegister(inDirSpec);
@@ -3124,7 +3123,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
     }
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 /* unused */,
                                                 nsIFile *component)
 {
@@ -3167,7 +3166,7 @@ nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 /* unused */,
     return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
                                      PRBool *aRegistered)
 {
@@ -3180,7 +3179,7 @@ nsComponentManagerImpl::IsRegistered(const nsCID &aClass,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 {
     NS_ASSERTION(aEnumerator != nsnull, "null ptr");
@@ -3204,7 +3203,7 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
 {
     NS_ASSERTION(aEnumerator != nsnull, "null ptr");
