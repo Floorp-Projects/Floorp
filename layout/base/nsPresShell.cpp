@@ -6074,7 +6074,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
     PRBool isHandlingUserInput = PR_FALSE;
 
-    if (aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) {
+    if (NS_IS_TRUSTED_EVENT(aEvent)) {
       switch (aEvent->message) {
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
