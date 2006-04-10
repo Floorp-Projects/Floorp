@@ -85,7 +85,6 @@ ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
 DIRS += \
         related \
-        prefwindow \
         console \
         updates \
         autocomplete \
