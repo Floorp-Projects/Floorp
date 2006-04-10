@@ -385,10 +385,6 @@ MAKE_DIRS		+= $(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
 
-ifneq ($(XPIDLSRCS),)
-GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
-endif
-
 #
 # Tags: emacs (etags), vi (ctags)
 # TAG_PROGRAM := ctags -L -

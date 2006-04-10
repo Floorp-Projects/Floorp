@@ -105,6 +105,8 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE += _img_list
+
 export::
 	@echo "$(MOZ_IMG_DECODERS)" > tmp_img_list
 	@if `cmp -s _img_list tmp_img_list`; then \
