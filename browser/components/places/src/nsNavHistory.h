@@ -73,6 +73,7 @@
 #include "nsINavBookmarksService.h"
 #include "nsMaybeWeakPtr.h"
 
+#include "nsNavHistoryExpire.h"
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
 
@@ -166,9 +167,11 @@ public:
                        PRBool aAutoCreate);
 
   /**
-   * Returns a pointer to the storage connection used by history. This connection
-   * object is also used by the annotation service and bookmarks, so that
-   * things can be grouped into transactions across these components.
+   * Returns a pointer to the storage connection used by history. This
+   * connection object is also used by the annotation service and bookmarks, so
+   * that things can be grouped into transactions across these components.
+   *
+   * NOT ADDREFed.
    *
    * This connection can only be used in the thread that created it the
    * history service!
@@ -394,7 +397,6 @@ protected:
   PRBool FindLastVisit(nsIURI* aURI, PRInt64* aVisitID,
                        PRInt64* aSessionID);
   PRBool IsURIStringVisited(const nsACString& url);
-  nsresult VacuumDB(PRTime aTimeAgo);
   nsresult LoadPrefs();
 
   // Current time optimization
@@ -402,6 +404,10 @@ protected:
   PRBool mNowValid;
   nsCOMPtr<nsITimer> mExpireNowTimer;
   static void expireNowTimerCallback(nsITimer* aTimer, void* aClosure);
+
+  // expiration
+  friend class nsNavHistoryExpire;
+  nsNavHistoryExpire mExpire;
 
 #ifdef LAZY_ADD
   // lazy add committing

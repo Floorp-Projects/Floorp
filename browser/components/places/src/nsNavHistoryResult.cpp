@@ -2205,6 +2205,19 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI *aURI, PRUint32 aWhat,
 }
 
 
+// nsNavHistoryQueryResultNode::OnPageExpired
+//
+//    Do nothing. Perhaps we want to handle this case. If so, add the call to
+//    the result to enumerate the history observers.
+
+NS_IMETHODIMP
+nsNavHistoryQueryResultNode::OnPageExpired(nsIURI* aURI, PRTime aVisitTime,
+                                           PRBool aWholeEntry)
+{
+  return NS_OK;
+}
+
+
 // nsNavHistoryQueryResultNode bookmark observers
 //
 //    These are the bookmark observer functions for query nodes. They listen
@@ -3712,6 +3725,20 @@ nsNavHistoryResult::OnPageChanged(nsIURI *aURI,
   ENUMERATE_HISTORY_OBSERVERS(OnPageChanged(aURI, aWhat, aValue));
   return NS_OK;
 }
+
+
+// nsNavHistoryResult;:OnPageExpired (nsINavHistoryObserver)
+//
+//    Don't do anything when pages expire. Perhaps we want to find the item
+//    to delete it.
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnPageExpired(nsIURI* aURI, PRTime aVisitTime,
+                                  PRBool aWholeEntry)
+{
+  return NS_OK;
+}
+
 
 // nsNavHistoryResultTreeViewer ************************************************
 
