@@ -6421,7 +6421,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 
     // Get the script global object from the document.
 
-    native_parent = doc->GetScopeObject();
+    native_parent = doc->GetScriptGlobalObject();
 
     if (!native_parent) {
       // No global object reachable from this document, use the
