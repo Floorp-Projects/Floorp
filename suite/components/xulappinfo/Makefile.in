@@ -54,6 +54,8 @@ XPIDLSRCS	= nsIXULAppInfo.idl
 
 EXTRA_PP_COMPONENTS = xulappinfo.js
 
+GARBAGE += nsIXULAppInfo.idl
+
 include $(topsrcdir)/config/rules.mk
 
 nsIXULAppInfo.idl: $(topsrcdir)/toolkit/xre/nsIXULAppInfo.idl
