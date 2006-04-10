@@ -205,8 +205,7 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -241,7 +240,7 @@ public:
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -354,8 +353,7 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -377,7 +375,7 @@ public:
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);

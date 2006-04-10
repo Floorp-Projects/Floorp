@@ -77,7 +77,6 @@ public:
   nsIFrame* GetFirstChild() { return mAbsoluteFrames.FirstChild(); }
   
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                               nsPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
   nsresult AppendFrames(nsIFrame*      aDelegatingFrame,
@@ -124,8 +123,7 @@ public:
                          nscoord                  aContainingBlockWidth,
                          nscoord                  aContainingBlockHeight);
 
-  void DestroyFrames(nsIFrame*       aDelegatingFrame,
-                     nsPresContext* aPresContext);
+  void DestroyFrames(nsIFrame* aDelegatingFrame);
 
   PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
 

@@ -146,8 +146,7 @@ public:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
   NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
@@ -159,7 +158,7 @@ public:
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   virtual PRBool IsContainingBlock() const;
   virtual PRBool IsFloatContainingBlock() const;

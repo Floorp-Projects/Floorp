@@ -111,12 +111,11 @@ nsMathMLTokenFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsMathMLTokenFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                        nsIAtom*        aListName,
+nsMathMLTokenFrame::SetInitialChildList(nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
   // First, let the base class do its work
-  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aListName, aChildList);
   if (NS_FAILED(rv))
     return rv;
 
@@ -130,8 +129,10 @@ nsMathMLTokenFrame::SetInitialChildList(nsPresContext* aPresContext,
     childFrame = childFrame->GetNextSibling();
   }
 
-  SetQuotes(aPresContext);
-  ProcessTextData(aPresContext);
+  nsPresContext* presContext = GetPresContext();
+
+  SetQuotes(presContext);
+  ProcessTextData(presContext);
   return rv;
 }
 

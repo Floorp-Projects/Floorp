@@ -60,12 +60,11 @@ public:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   virtual PRBool IsLeaf() const;

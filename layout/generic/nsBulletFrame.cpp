@@ -92,8 +92,8 @@ nsBulletFrame::~nsBulletFrame()
 {
 }
 
-NS_IMETHODIMP
-nsBulletFrame::Destroy(nsPresContext* aPresContext)
+void
+nsBulletFrame::Destroy()
 {
   // Stop image loading first
   if (mImageRequest) {
@@ -105,7 +105,7 @@ nsBulletFrame::Destroy(nsPresContext* aPresContext)
     NS_REINTERPRET_CAST(nsBulletListener*, mListener.get())->SetFrame(nsnull);
 
   // Let base class do the rest
-  return nsFrame::Destroy(aPresContext);
+  nsFrame::Destroy();
 }
 
 #ifdef NS_DEBUG

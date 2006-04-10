@@ -150,8 +150,7 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
   virtual nsIAtom* GetType() const;
@@ -232,7 +231,7 @@ protected:
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 
     virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 
   
-    NS_IMETHOD  Destroy(nsPresContext* aPresContext);
+    virtual void Destroy();
 
     nsSize mPrefSize;
     nsSize mMinSize;
@@ -243,8 +242,7 @@ protected:
     nsCOMPtr<nsIBoxLayout> mLayoutManager;
 
 protected:
-    nsresult RegUnregAccessKey(nsPresContext* aPresContext,
-                               PRBool aDoReg);
+    nsresult RegUnregAccessKey(PRBool aDoReg);
 
   NS_HIDDEN_(void) CheckBoxOrder(nsBoxLayoutState& aState);
 

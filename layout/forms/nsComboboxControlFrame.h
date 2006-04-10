@@ -124,11 +124,10 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
   virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                               nsIAtom*        aListName,
-                               nsIFrame*       aChildList);
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
   virtual nsIFrame* GetContentInsertionFrame();

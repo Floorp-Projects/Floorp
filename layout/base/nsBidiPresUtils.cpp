@@ -373,7 +373,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
     } // if (runLength <= 0)
 
     if (nsLayoutAtoms::directionalFrame == frameType) {
-      frame->Destroy(aPresContext);
+      frame->Destroy();
       frame = nsnull;
       ++lineOffset;
     }
@@ -880,7 +880,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   for (PRInt32 index = aFirstIndex + 1; index <= aLastIndex; index++) {
     nsIFrame* frame = (nsIFrame*) mLogicalFrames[index];
     if (nsLayoutAtoms::directionalFrame == frame->GetType()) {
-      frame->Destroy(aPresContext);
+      frame->Destroy();
       ++aOffset;
     }
     else {

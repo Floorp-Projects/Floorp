@@ -239,7 +239,7 @@ public:
                            nsIAtom*        aAttribute); 
 
   /** @see nsIFrame::Destroy */
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
@@ -286,8 +286,7 @@ public:
   /** Initialize the table frame with a set of children.
     * @see nsIFrame::SetInitialChildList 
     */
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   /** return the first child belonging to the list aListName. 

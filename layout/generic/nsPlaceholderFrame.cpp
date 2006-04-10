@@ -80,16 +80,16 @@ nsPlaceholderFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::Destroy(nsPresContext* aPresContext)
+void
+nsPlaceholderFrame::Destroy()
 {
-  nsIPresShell* shell = aPresContext->GetPresShell();
+  nsIPresShell* shell = GetPresContext()->GetPresShell();
   if (shell && mOutOfFlowFrame) {
     NS_ASSERTION(!shell->FrameManager()->GetPlaceholderFrameFor(mOutOfFlowFrame),
                  "Placeholder relationship should have been torn down");
   }
 
-  return nsSplittableFrame::Destroy(aPresContext);
+  nsSplittableFrame::Destroy();
 }
 
 nsIAtom*

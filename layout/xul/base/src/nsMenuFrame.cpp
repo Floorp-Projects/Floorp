@@ -260,9 +260,8 @@ nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
 }
 
 NS_IMETHODIMP
-nsMenuFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                               nsIAtom*        aListName,
-                                               nsIFrame*       aChildList)
+nsMenuFrame::SetInitialChildList(nsIAtom*        aListName,
+                                 nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
   if (nsLayoutAtoms::popupList == aListName) {
@@ -285,7 +284,7 @@ nsMenuFrame::SetInitialChildList(nsPresContext* aPresContext,
           frames.RemoveFrame(frame);
           mPopupFrames.AppendFrame(this, frame);
           nsIFrame* first = frames.FirstChild();
-          rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
+          rv = nsBoxFrame::SetInitialChildList(aListName, first);
           return rv;
         }
       }
@@ -293,7 +292,7 @@ nsMenuFrame::SetInitialChildList(nsPresContext* aPresContext,
     }
 
     // Didn't find it.
-    rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
   }
   return rv;
 }
@@ -324,12 +323,12 @@ nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
   }
 
    // Cleanup frames in popup child list
-  mPopupFrames.DestroyFrames(aPresContext);
+  mPopupFrames.DestroyFrames();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMenuFrame::Destroy(nsPresContext* aPresContext)
+void
+nsMenuFrame::Destroy()
 {
   // Kill our timer if one is active. This is not strictly necessary as
   // the pointer to this frame will be cleared from the mediator, but
@@ -352,8 +351,8 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
   }
 
   UngenerateMenu();
-  DestroyPopupFrames(aPresContext);
-  return nsBoxFrame::Destroy(aPresContext);
+  DestroyPopupFrames(GetPresContext());
+  nsBoxFrame::Destroy();
 }
 
 NS_IMETHODIMP
@@ -1839,9 +1838,8 @@ nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
 
   if (mPopupFrames.ContainsFrame(aOldFrame)) {
     // Go ahead and remove this frame.
-    nsPresContext* presContext = GetPresContext();
-    mPopupFrames.DestroyFrame(presContext, aOldFrame);
-    nsBoxLayoutState state(presContext);
+    mPopupFrames.DestroyFrame(aOldFrame);
+    nsBoxLayoutState state(GetPresContext());
     rv = MarkDirtyChildren(state);
   } else {
     rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);

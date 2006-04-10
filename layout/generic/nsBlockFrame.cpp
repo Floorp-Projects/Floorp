@@ -282,34 +282,36 @@ nsBlockFrame::~nsBlockFrame()
 {
 }
 
-NS_IMETHODIMP
-nsBlockFrame::Destroy(nsPresContext* aPresContext)
+void
+nsBlockFrame::Destroy()
 {
-  mAbsoluteContainer.DestroyFrames(this, aPresContext);
+  mAbsoluteContainer.DestroyFrames(this);
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
   if (mBullet && HaveOutsideBullet()) {
-    mBullet->Destroy(aPresContext);
+    mBullet->Destroy();
     mBullet = nsnull;
   }
 
-  mFloats.DestroyFrames(aPresContext);
+  mFloats.DestroyFrames();
+  
+  nsPresContext* presContext = GetPresContext();
 
-  nsLineBox::DeleteLineList(aPresContext, mLines);
+  nsLineBox::DeleteLineList(presContext, mLines);
 
   // destroy overflow lines now
   nsLineList* overflowLines = RemoveOverflowLines();
   if (overflowLines) {
-    nsLineBox::DeleteLineList(aPresContext, *overflowLines);
+    nsLineBox::DeleteLineList(presContext, *overflowLines);
   }
 
   {
     nsAutoOOFFrameList oofs(this);
-    oofs.mList.DestroyFrames(aPresContext);
+    oofs.mList.DestroyFrames();
     // oofs is now empty and will remove the frame list property
   }
 
-  return nsBlockFrameSuper::Destroy(aPresContext);
+  nsBlockFrameSuper::Destroy();
 }
 
 NS_IMETHODIMP
@@ -3259,7 +3261,7 @@ nsBlockFrame::UndoSplitPlaceholders(nsBlockReflowState& aState,
     nsSplittableFrame::RemoveFromFlow(placeholder);
     nsIFrame* savePlaceholder = placeholder; 
     placeholder = NS_STATIC_CAST(nsPlaceholderFrame*, placeholder->GetNextSibling());
-    savePlaceholder->Destroy(aState.mPresContext);
+    savePlaceholder->Destroy();
   }
 }
 
@@ -5480,14 +5482,14 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   }
 
   // Try to destroy if it's in mFloats.
-  if (mFloats.DestroyFrame(GetPresContext(), aFloat)) {
+  if (mFloats.DestroyFrame(aFloat)) {
     return line;
   }
 
   // Try our overflow list
   {
     nsAutoOOFFrameList oofs(this);
-    if (oofs.mList.DestroyFrame(GetPresContext(), aFloat)) {
+    if (oofs.mList.DestroyFrame(aFloat)) {
       return line_end;
     }
   }
@@ -5495,7 +5497,7 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
   // If this is during reflow, it could be the out-of-flow frame for a
   // placeholder in our block reflow state's mOverflowPlaceholders. But that's
   // OK; it's not part of any child list, so we can just go ahead and delete it.
-  aFloat->Destroy(GetPresContext());
+  aFloat->Destroy();
   return line_end;
 }
 
@@ -5619,7 +5621,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
     block->mAbsoluteContainer.RemoveFrame(block,
                                           block->mAbsoluteContainer.GetChildListName(),
                                           aFrame);
-    aFrame->Destroy(aFrame->GetPresContext());
+    aFrame->Destroy();
   }
   else {
     // This also destroys the frame.
@@ -5688,7 +5690,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
     if (overflowPlaceholders && overflowPlaceholders->RemoveFrame(aDeletedFrame)) {
       nsIFrame* nif = aDeletedFrame->GetNextInFlow();
       if (aDestroyFrames) {
-        aDeletedFrame->Destroy(presContext);
+        aDeletedFrame->Destroy();
       } else {
         aDeletedFrame->SetNextSibling(nsnull);
       }
@@ -5782,7 +5784,7 @@ found_frame:;
     printf(" prevSibling=%p deletedNextContinuation=%p\n", prevSibling, deletedNextContinuation);
 #endif
     if (aDestroyFrames) {
-      aDeletedFrame->Destroy(presContext);
+      aDeletedFrame->Destroy();
     } else {
       aDeletedFrame->SetNextSibling(nsnull);
     }
@@ -6713,23 +6715,23 @@ nsBlockFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
+nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
 
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
+    mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   }
   else if (nsLayoutAtoms::floatList == aListName) {
     mFloats.SetFrames(aChildList);
   }
   else {
+    nsPresContext* presContext = GetPresContext();
 
     // Lookup up the two pseudo style contexts
     if (nsnull == GetPrevInFlow()) {
-      nsRefPtr<nsStyleContext> firstLetterStyle = GetFirstLetterStyle(aPresContext);
+      nsRefPtr<nsStyleContext> firstLetterStyle = GetFirstLetterStyle(presContext);
       if (nsnull != firstLetterStyle) {
         mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
 #ifdef NOISY_FIRST_LETTER
@@ -6765,7 +6767,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
           break;
       }
 
-      nsIPresShell *shell = aPresContext->PresShell();
+      nsIPresShell *shell = presContext->PresShell();
 
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
         ResolvePseudoStyleFor(mContent, pseudoElement, mStyleContext);

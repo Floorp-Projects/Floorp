@@ -150,7 +150,7 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                          const nsRect&           aDirtyRect,
@@ -175,8 +175,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);

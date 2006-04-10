@@ -415,7 +415,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
         childFrame->SetParentBorderColor(borderColor);
         result = frame->Init(child, this, nsnull);
         if (NS_FAILED(result)) {
-          frame->Destroy(aPresContext);
+          frame->Destroy();
           return result;
         }
 
@@ -427,7 +427,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
         result = frame->Init(child, this, nsnull);
         if (NS_FAILED(result)) {
-          frame->Destroy(aPresContext);
+          frame->Destroy();
           return result;
         }
 
@@ -468,7 +468,7 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
     result = blankFrame->Init(mContent, this, nsnull);
     if (NS_FAILED(result)) {
-      blankFrame->Destroy(aPresContext);
+      blankFrame->Destroy();
       return result;
     }
    

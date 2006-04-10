@@ -90,11 +90,11 @@ nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 {
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::Destroy(nsPresContext *aPresContext)
+void
+nsHTMLButtonControlFrame::Destroy()
 {
-  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  return nsHTMLContainerFrame::Destroy(aPresContext);
+  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsHTMLContainerFrame::Destroy();
 }
 
 NS_IMETHODIMP
@@ -253,7 +253,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   if (eReflowReason_Initial == aReflowState.reason) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   }
 
 #if 0
