@@ -76,6 +76,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetRole(PRUint32 *_retval)
 NS_IMETHODIMP nsHTMLTextFieldAccessibleWrap::GetExtState(PRUint32 *aState)
 {
   nsresult rv;
+  nsAccessibleWrap::GetExtState(aState);
+
   nsCOMPtr<nsIDOMHTMLInputElement> htmlFormElement(do_QueryInterface(mDOMNode, &rv));
   if (NS_SUCCEEDED(rv) && htmlFormElement) {
     nsAutoString typeString;

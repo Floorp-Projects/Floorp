@@ -146,6 +146,17 @@ NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetRole(PRUint32 *aRole)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULTextFieldAccessibleWrap::GetExtState(PRUint32 *aExtState)
+{
+  nsAccessibleWrap::GetExtState(aExtState);
+
+  PRUint32 state;
+  nsXULTextFieldAccessible::GetState(&state);
+  if (!(state & STATE_READONLY))
+    *aExtState |= EXT_STATE_EDITABLE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULTextFieldAccessibleWrap::Shutdown()
 {
   nsAccessibleEditableText::ShutdownEditor();
