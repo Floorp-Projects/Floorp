@@ -1152,6 +1152,7 @@ embedding/components/profilesharingsetup/src/Makefile
 
     MAKEFILES_libpr0n="
         modules/libpr0n/Makefile
+        modules/libpr0n/build/Makefile
         modules/libpr0n/public/Makefile
         modules/libpr0n/src/Makefile
         modules/libpr0n/decoders/Makefile
