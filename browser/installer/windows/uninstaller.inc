@@ -6,15 +6,15 @@
 #ifdef OFFICIAL_BRANDING
 #define BRAND_PRODUCT_NAME Mozilla Firefox
 #else
-#define BRAND_PRODUCT_NAME Deer Park Alpha 2
+#define BRAND_PRODUCT_NAME Minefield
 #endif
 
 #ifdef OFFICIAL_BRANDING
 #define UNINST_RUNNING Mozilla Firefox is detected to be currently running.  Please quit Mozilla Firefox before continuing.  Click OK to exit Mozilla Firefox automatically and proceed with uninstallation.
 #define UNINST_SHUTDOWN Shutting down Mozilla Firefox.  Please wait...
 #else
-#define UNINST_RUNNING Deer Park Alpha 2 is detected to be currently running.  Please quit Deer Park Alpha 2 before continuing.  Click OK to exit Deer Park Alpha 2 automatically and proceed with uninstallation.
-#define UNINST_SHUTDOWN Shutting down Deer Park Alpha 2.  Please wait...
+#define UNINST_RUNNING Minefield is detected to be currently running.  Please quit Minefield before continuing.  Click OK to exit Minefield automatically and proceed with uninstallation.
+#define UNINST_SHUTDOWN Shutting down Minefield.  Please wait...
 #endif
 #define UNINST_FONT MS Sans Serif
 #define UNINST_FONTSIZE 8
@@ -32,7 +32,7 @@
 #ifdef OFFICIAL_BRANDING
 #define UNINST_TITLE Mozilla Firefox Uninstaller
 #else
-#define UNINST_TITLE Deer Park Alpha 2 Uninstaller
+#define UNINST_TITLE Minefield Uninstaller
 #endif
 #define UNINST_MESSAGE0 Are you sure you want to completely remove %s and all of its components?
 #define BTN_UNINST &Uninstall
@@ -70,7 +70,7 @@
 #ifdef OFFICIAL_BRANDING
 #define MSG_INSTALLATION_PATH_WITHIN_WINDIR Uninstall has detected that the installation path of Mozilla Firefox is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
 #else
-#define MSG_INSTALLATION_PATH_WITHIN_WINDIR Uninstall has detected that the installation path of Deer Park Alpha 2 is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
+#define MSG_INSTALLATION_PATH_WITHIN_WINDIR Uninstall has detected that the installation path of Minefield is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
 #endif
 
 #unfilter emptyLines
