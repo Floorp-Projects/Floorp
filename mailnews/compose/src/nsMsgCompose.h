@@ -97,7 +97,9 @@ private:
 
   PRInt32                       mWhatHolder;
 
-  nsresult                      LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData);
+  nsresult                      LoadDataFromFile(nsFileSpec& fSpec,
+                                                 nsString &sigData,
+                                                 PRBool aAllowUTF8 = PR_TRUE);
 
 /*
   nsresult                      GetCompFields(nsMsgCompFields **aCompFields) 

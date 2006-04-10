@@ -106,6 +106,13 @@ NS_MSG_BASE const char *nsMsgI18NGetAcceptLanguage(void);
 NS_MSG_BASE const char * nsMsgI18NFileSystemCharset(void);
 
 /**
+ * Return charset name of text file (OS dependent).
+ *
+ * @param aCharset    [OUT] Text file charset name.
+ */
+NS_MSG_BASE void nsMsgI18NTextFileCharset(nsACString& aCharset);
+
+/**
  * Convert from unicode to target charset.
  *
  * @param charset     [IN] Charset name.

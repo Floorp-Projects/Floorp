@@ -3498,7 +3498,8 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
 }
 
 nsresult
-nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
+nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData,
+                               PRBool aAllowUTF8)
 {
   PRInt32       readSize;
   PRInt32       nGot;
@@ -3534,9 +3535,17 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   nsCAutoString sigEncoding(nsMsgI18NParseMetaCharset(&fSpec));
   PRBool removeSigCharset = !sigEncoding.IsEmpty() && m_composeHTML;
 
-  //default to platform encoding for signature files w/o meta charset
-  if (sigEncoding.IsEmpty())
-    sigEncoding.Assign(nsMsgI18NFileSystemCharset());
+  if (sigEncoding.IsEmpty()) {
+    if (aAllowUTF8 && IsUTF8(nsDependentCString(readBuf))) {
+      sigEncoding.Assign("UTF-8");
+    }
+    else {
+      //default to platform encoding for plain text files w/o meta charset
+      nsCAutoString textFileCharset;
+      nsMsgI18NTextFileCharset(textFileCharset);
+      sigEncoding.Assign(textFileCharset);
+    }
+  }
 
   if (NS_FAILED(ConvertToUnicode(sigEncoding.get(), readBuf, sigData)))
     CopyASCIItoUTF16(readBuf, sigData);

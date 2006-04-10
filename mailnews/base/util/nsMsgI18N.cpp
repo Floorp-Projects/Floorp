@@ -216,6 +216,21 @@ const char * nsMsgI18NFileSystemCharset()
 	return fileSystemCharset.get();
 }
 
+// Charset used by the text file.
+void nsMsgI18NTextFileCharset(nsACString& aCharset)
+{
+  nsresult rv;
+  nsCOMPtr <nsIPlatformCharset> platformCharset =
+    do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = platformCharset->GetCharset(kPlatformCharsetSel_PlainTextInFile,
+                                     aCharset);
+  }
+
+  if (NS_FAILED(rv))
+    aCharset.Assign("ISO-8859-1");
+}
+
 // MIME encoder, output string should be freed by PR_FREE
 // XXX : fix callers later to avoid allocation and copy
 char * nsMsgI18NEncodeMimePartIIStr(const char *header, PRBool structured, const char *charset, PRInt32 fieldnamelen, PRBool usemime) 
