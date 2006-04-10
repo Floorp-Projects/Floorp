@@ -253,13 +253,13 @@ JSObjectViewer.prototype =
   
   openTreeItem: function(aItem)
   {
-    var kids = aItem.getElementsByTagName("treechildren");
-    if (kids.length == 0) {
-      kids = document.createElement("treechildren");
-      aItem.appendChild(kids);
+    var treechildren = aItem.getElementsByTagName("treechildren").item(0);
+    if (!treechildren) {
+      treechildren = document.createElement("treechildren");
+      aItem.appendChild(treechildren);
     }
     
-    this.buildPropertyTree(kids, aItem.__JSValue__);
+    this.buildPropertyTree(treechildren, aItem.__JSValue__);
   },
   
   onCreateContext: function(aPopup)
