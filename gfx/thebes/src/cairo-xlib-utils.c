@@ -254,8 +254,10 @@ _draw_with_xlib_direct (cairo_t *cr,
     
     /* Check that the offset is supported */  
     if (!(capabilities & CAIRO_XLIB_DRAWING_SUPPORTS_OFFSET) &&
-        (offset_x != 0 || offset_y != 0))
+        (offset_x != 0 || offset_y != 0)) {
+        CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: unsupported offset\n");
         return False;
+    }
     
     /* Check that the target surface is an xlib surface. Do this late because
        we might complete early above when when the object to be drawn is
