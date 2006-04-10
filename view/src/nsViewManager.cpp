@@ -1930,12 +1930,11 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
 NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 {
   nsView* child = NS_STATIC_CAST(nsView*, aChild);
-
-  NS_PRECONDITION(nsnull != child, "null ptr");
+  NS_ENSURE_ARG_POINTER(child);
 
   nsView* parent = child->GetParent();
 
-  if ((nsnull != parent) && (nsnull != child))
+  if (nsnull != parent)
     {
       UpdateView(child, NS_VMREFRESH_NO_SYNC);
       parent->RemoveChild(child);
