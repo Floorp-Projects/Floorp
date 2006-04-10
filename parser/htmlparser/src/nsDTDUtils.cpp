@@ -555,9 +555,7 @@ nsCParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
 
 
     nsTagEntry* theEntry=mStack.EntryAt(mStack.mCount-1);
-    if(theEntry) {
-      aChildStyleStack=theEntry->mStyles;
-    }
+    aChildStyleStack=theEntry->mStyles;
 
     result=mStack.Pop();
     theEntry->mParent=0;
