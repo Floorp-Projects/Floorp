@@ -269,7 +269,7 @@ calTransaction.prototype = {
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
             !aIID.equals(Components.interfaces.nsITransaction) &&
-            !aIID.equals(Component.interfaces.calIOperationListener))
+            !aIID.equals(Components.interfaces.calIOperationListener))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
