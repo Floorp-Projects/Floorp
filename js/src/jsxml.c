@@ -7764,7 +7764,8 @@ js_GetAnyName(JSContext *cx, jsval *vp)
              * Protect multiple newborns created below, in the do-while(0)
              * loop used to ensure that we leave this local root scope.
              */
-            if (!js_EnterLocalRootScope(cx))
+            ok = js_EnterLocalRootScope(cx);
+            if (!ok)
                 return JS_FALSE;
 
             do {
