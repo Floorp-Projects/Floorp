@@ -284,8 +284,6 @@ nsFrameManager::Destroy()
 {
   NS_ASSERTION(mPresShell, "Frame manager already shut down.");
 
-  nsPresContext *presContext = mPresShell->GetPresContext();
-  
   // Destroy the frame hierarchy.
   mPresShell->SetIgnoreFrameDestruction(PR_TRUE);
 
@@ -295,7 +293,7 @@ nsFrameManager::Destroy()
   nsFrameManager::ClearPlaceholderFrameMap();
 
   if (mRootFrame) {
-    mRootFrame->Destroy(presContext);
+    mRootFrame->Destroy();
     mRootFrame = nsnull;
   }
   

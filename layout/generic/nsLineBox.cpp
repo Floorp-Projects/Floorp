@@ -343,7 +343,7 @@ nsLineBox::DeleteLineList(nsPresContext* aPresContext, nsLineList& aLines)
     // view.
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
       nsIFrame* nextChild = child->GetNextSibling();
-      child->Destroy(aPresContext);
+      child->Destroy();
       child = nextChild;
     }
 

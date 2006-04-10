@@ -62,7 +62,7 @@ public:
   ~nsFrameList() {
   }
 
-  void DestroyFrames(nsPresContext* aPresContext);
+  void DestroyFrames();
 
   void SetFrames(nsIFrame* aFrameList) {
     mFirstChild = aFrameList;
@@ -95,7 +95,7 @@ public:
   // Take aFrame out of the frame list and then destroy it. This also
   // disconnects aFrame from the sibling list. This will return
   // PR_FALSE if aFrame is nsnull or if aFrame is not in the list.
-  PRBool DestroyFrame(nsPresContext* aPresContext, nsIFrame* aFrame);
+  PRBool DestroyFrame(nsIFrame* aFrame);
 
   void InsertFrame(nsIFrame* aParent,
                    nsIFrame* aPrevSibling,

@@ -74,8 +74,7 @@ NS_NewAreaFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFl
 // If you make changes to this function, check its counterparts 
 // in nsBoxFrame and nsTextBoxFrame
 nsresult
-nsAreaFrame::RegUnregAccessKey(nsPresContext* aPresContext,
-                               PRBool aDoReg)
+nsAreaFrame::RegUnregAccessKey(PRBool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)
@@ -101,7 +100,7 @@ nsAreaFrame::RegUnregAccessKey(nsPresContext* aPresContext,
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsIEventStateManager *esm = aPresContext->EventStateManager();
+  nsIEventStateManager *esm = GetPresContext()->EventStateManager();
   nsresult rv;
 
   PRUint32 key = accessKey.First();
@@ -128,16 +127,15 @@ nsAreaFrame::Init(nsIContent*      aContent,
     return rv;
 
   // register access key
-  return RegUnregAccessKey(GetPresContext(), PR_TRUE);
+  return RegUnregAccessKey(PR_TRUE);
 }
 
-NS_IMETHODIMP
-nsAreaFrame::Destroy(nsPresContext* aPresContext)
+void
+nsAreaFrame::Destroy()
 {
   // unregister access key
-  RegUnregAccessKey(aPresContext, PR_FALSE);
-
-  return nsBlockFrame::Destroy(aPresContext);
+  RegUnregAccessKey(PR_FALSE);
+  nsBlockFrame::Destroy();
 } 
 
 NS_IMETHODIMP
@@ -151,7 +149,7 @@ nsAreaFrame::AttributeChanged(PRInt32 aNameSpaceID,
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr
   if (aAttribute == nsXULAtoms::accesskey || aAttribute == nsXULAtoms::control)
-    RegUnregAccessKey(GetPresContext(), PR_TRUE);
+    RegUnregAccessKey(PR_TRUE);
 
   return rv;
 }

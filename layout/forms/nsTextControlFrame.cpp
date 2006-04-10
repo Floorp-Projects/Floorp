@@ -1051,7 +1051,7 @@ SuppressEventHandlers(nsPresContext* aPresContext)
 }
 
 void
-nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
+nsTextControlFrame::PreDestroy()
 {
   // notify the editor that we are going away
   if (mEditor)
@@ -1076,7 +1076,7 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
   
   // Clean up the controller
 
-  if (!SuppressEventHandlers(aPresContext))
+  if (!SuppressEventHandlers(GetPresContext()))
   {
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
@@ -1117,7 +1117,7 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
 
 //unregister self from content
   mTextListener->SetFrame(nsnull);
-  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  nsFormControlFrame::RegUnRegAccessKey(NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mTextListener)
   {
     nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
@@ -1146,22 +1146,22 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
   mDidPreDestroy = PR_TRUE; 
 }
 
-NS_IMETHODIMP 
-nsTextControlFrame::Destroy(nsPresContext* aPresContext)
+void
+nsTextControlFrame::Destroy()
 {
   nsContentUtils::UnregisterPrefCallback(PREF_DEFAULT_SPELLCHECK,
                                          nsTextControlFrame::RealTimeSpellCallback, this);
   if (!mDidPreDestroy) {
-    PreDestroy(aPresContext);
+    PreDestroy();
   }
-  return nsBoxFrame::Destroy(aPresContext);
+  nsBoxFrame::Destroy();
 }
 
 void 
-nsTextControlFrame::RemovedAsPrimaryFrame(nsPresContext* aPresContext)
+nsTextControlFrame::RemovedAsPrimaryFrame()
 {
   if (!mDidPreDestroy) {
-    PreDestroy(aPresContext);
+    PreDestroy();
   }
   else NS_ASSERTION(PR_FALSE, "RemovedAsPrimaryFrame called after PreDestroy");
 }
@@ -1831,7 +1831,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
 
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, this, PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(this, PR_TRUE);
   }
 
   nsresult rv = nsStackFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -2828,11 +2828,10 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
 
 
 NS_IMETHODIMP
-nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                  nsIAtom*        aListName,
-                                  nsIFrame*       aChildList)
+nsTextControlFrame::SetInitialChildList(nsIAtom*        aListName,
+                                        nsIFrame*       aChildList)
 {
-  nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
   if (mEditor)
     mEditor->PostCreate();
   //look for scroll view below this frame go along first child list
@@ -2863,7 +2862,7 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     // XXXbryner do we need to check for a null presshell here?
-    if (!aPresContext->GetPresShell())
+    if (!GetPresContext()->GetPresShell())
       return NS_ERROR_FAILURE;
   }
 

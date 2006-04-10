@@ -89,8 +89,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
   
-  NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
-                                 nsIAtom*        aListName,
+  NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD Reflow(nsPresContext*          aCX,
@@ -105,7 +104,7 @@ public:
   NS_IMETHOD DidReflow(nsPresContext*           aPresContext, 
                        const nsHTMLReflowState*  aReflowState, 
                        nsDidReflowStatus         aStatus);
-  NS_IMETHOD Destroy(nsPresContext *aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,

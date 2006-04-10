@@ -157,7 +157,7 @@ nsGfxButtonControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     
       // initialize the text frame
       newFrame->Init(content, parentFrame, nsnull);
-      newFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
+      newFrame->SetInitialChildList(nsnull, nsnull);
       rv = NS_OK;
     }
   }

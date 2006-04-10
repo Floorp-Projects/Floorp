@@ -66,8 +66,7 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsPresContext* aPresContext,
-                      nsIAtom*        aListName,
+  SetInitialChildList(nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   virtual nsresult

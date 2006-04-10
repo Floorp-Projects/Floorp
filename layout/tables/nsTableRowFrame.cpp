@@ -287,7 +287,7 @@ nsTableRowFrame::RemoveFrame(nsIAtom*        aListName,
       tableFrame->SetNeedStrategyInit(PR_TRUE);
 
       // Remove the frame and destroy it
-      mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+      mFrames.DestroyFrame(aOldFrame);
 
       // XXX This could probably be optimized with much effort
       tableFrame->SetNeedStrategyInit(PR_TRUE);

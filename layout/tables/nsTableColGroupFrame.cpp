@@ -173,8 +173,7 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame,
 
 // don't set mColCount here, it is done in AddColsToTable
 NS_IMETHODIMP
-nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                          nsIAtom*        aListName,
+nsTableColGroupFrame::SetInitialChildList(nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
   if (!mFrames.IsEmpty()) {
@@ -197,7 +196,7 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
     tableFrame->CreateAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
                                          PR_FALSE, nsnull, &firstChild);
     if (firstChild) {
-      SetInitialChildList(aPresContext, aListName, firstChild);
+      SetInitialChildList(aListName, firstChild);
     }
     return NS_OK; 
   }
@@ -281,7 +280,7 @@ nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
     colIndex = aChild.GetColIndex();
     nextChild = aChild.GetNextSibling();
   }
-  if (mFrames.DestroyFrame(GetPresContext(), (nsIFrame*)&aChild)) {
+  if (mFrames.DestroyFrame((nsIFrame*)&aChild)) {
     mColCount--;
     if (aResetSubsequentColIndices) {
       if (nextChild) { // reset inside this and all following colgroups
@@ -327,7 +326,7 @@ nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
     nsTableFrame::AppendDirtyReflowCommand(tableFrame);
   }
   else {
-    mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+    mFrames.DestroyFrame(aOldFrame);
   }
 
   return NS_OK;

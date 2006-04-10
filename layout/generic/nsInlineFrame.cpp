@@ -252,7 +252,7 @@ nsInlineFrame::RemoveFrame(nsIAtom*        aListName,
       // remove the frame from its parents list and generate a reflow
       // command.
       nsIFrame* oldFrameNextContinuation = aOldFrame->GetNextContinuation();
-      parent->mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+      parent->mFrames.DestroyFrame(aOldFrame);
       aOldFrame = oldFrameNextContinuation;
       if (aOldFrame) {
         parent = NS_STATIC_CAST(nsInlineFrame*, aOldFrame->GetParent());
@@ -1011,24 +1011,23 @@ NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   return new (aPresShell) nsPositionedInlineFrame(aContext);
 }
 
-NS_IMETHODIMP
-nsPositionedInlineFrame::Destroy(nsPresContext* aPresContext)
+void
+nsPositionedInlineFrame::Destroy()
 {
-  mAbsoluteContainer.DestroyFrames(this, aPresContext);
-  return nsInlineFrame::Destroy(aPresContext);
+  mAbsoluteContainer.DestroyFrames(this);
+  nsInlineFrame::Destroy();
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                             nsIAtom*        aListName,
+nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
                                              nsIFrame*       aChildList)
 {
   nsresult  rv;
 
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    rv = mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
+    rv = mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   } else {
-    rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
   }
 
   return rv;

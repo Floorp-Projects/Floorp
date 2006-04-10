@@ -62,7 +62,7 @@ public:
                    nsIFrame*        aParent,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD Destroy(nsPresContext* aPresContext);
+  virtual void Destroy();
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
@@ -72,8 +72,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  void UpdateAttributes(nsPresContext*  aPresContext,
-                        nsIAtom*         aAttribute,
+  void UpdateAttributes(nsIAtom*         aAttribute,
                         PRBool&          aResize,
                         PRBool&          aRedraw);
 
@@ -113,8 +112,7 @@ protected:
                    nsSize&              aSize,
                    nscoord&             aAscent);
 
-  nsresult RegUnregAccessKey(nsPresContext* aPresContext,
-                             PRBool          aDoReg);
+  nsresult RegUnregAccessKey(PRBool aDoReg);
 
 private:
 
