@@ -246,7 +246,7 @@ sub packit {
   }
   chomp($builddir);
 
-  mkdir($stagedir, 0775);
+  TinderUtils::run_shell_command "mkdir -p $stagedir";
 
   if (do_installer()) {
     if (is_windows()) {
@@ -260,7 +260,7 @@ sub packit {
     }
     TinderUtils::print_log "INSTALLER_URL is " . $ENV{INSTALLER_URL} . "\n";
 
-    mkdir($package_location, 0775);
+    TinderUtils::run_shell_command "mkdir -p $package_location";
 
     # the Windows installer scripts currently require Activestate Perl.
     # Put it ahead of cygwin perl in the path.
@@ -365,8 +365,7 @@ sub packit {
         TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/windows-xpi/";
       }
     } elsif (is_mac()) {
-      system("mkdir -p $package_location");
-      system("mkdir -p $stagedir");
+      TinderUtils::run_shell_command "mkdir -p $package_location";
 
       # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
       # .../*.dmg if it exists.
@@ -537,7 +536,7 @@ sub update_create_package {
     # We're making an update.
     TinderUtils::print_log "\nGenerating complete update...\n";
     my $temp_stagedir = "$stagedir/build.$$";
-    system("mkdir -p $temp_stagedir");
+    TinderUtils::run_shell_command "mkdir -p $temp_stagedir";
 
     my $up_temp_stagedir = $temp_stagedir;
     my $up_distdir = $distdir;
@@ -751,6 +750,8 @@ sub packit_l10n {
 
   map { /([a-z-]+)/i; $_ = $1 } @locales;
 
+  run_locale_shell_command "mkdir -p $stagedir";
+
   TinderUtils::print_log "Building following locales: @locales\n";
 
   my $start_time = TinderUtils::adjust_start_time(time());
@@ -776,7 +777,7 @@ sub packit_l10n {
         die "Can't make installer for this platform.\n";
       }
   
-      mkdir($package_location, 0775);
+      run_locale_shell_command "mkdir -p $package_location";
   
       # the Windows installer scripts currently require Activestate Perl.
       # Put it ahead of cygwin perl in the path.
@@ -810,7 +811,6 @@ sub packit_l10n {
         #my $dos_stagedir = `cygpath -w $stagedir`;
         #chomp ($dos_stagedir);
       }
-      mkdir($stagedir, 0775);
   
       if (is_windows()) {
         if ($Settings::stub_installer && $tinderstatus ne 'busted' ) {
@@ -837,8 +837,7 @@ sub packit_l10n {
         if ($status != 0) {
           $tinderstatus = 'busted';
         }
-        system("mkdir -p $package_location");
-        system("mkdir -p $stagedir");
+        run_locale_shell_command "mkdir -p $package_location";
 
         # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
         # .../*.dmg if it exists.
