@@ -846,6 +846,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
     frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
     frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
     frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
+    frame->AddStateBits(NS_FRAME_IS_BIDI);
     aFrameIndex++;
     aFrame = frame;
   }
@@ -889,6 +890,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
       frame->SetProperty(nsLayoutAtoms::embeddingLevel, NS_INT32_TO_PTR(embeddingLevel));
       frame->SetProperty(nsLayoutAtoms::baseLevel, NS_INT32_TO_PTR(baseLevel));
       frame->SetProperty(nsLayoutAtoms::charType, NS_INT32_TO_PTR(charType));
+      frame->AddStateBits(NS_FRAME_IS_BIDI);
       while (frame) {
         nsIFrame* prev = frame->GetPrevContinuation();
         if (prev) {
