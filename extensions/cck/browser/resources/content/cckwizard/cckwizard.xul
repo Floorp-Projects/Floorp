@@ -346,7 +346,7 @@
 
   <wizardpage label="&customizePrefs.label;">
     <groupbox>
-      <caption label="&customizePrefs.label;"/>
+      <caption label="&prefs.label;"/>
       <description>&customizePrefs.description;</description>
       <box flex="1" class="ccklist" id="prefList" new="onNewPreference();" edit="onEditPreference();"/>
     </groupbox>
@@ -361,8 +361,12 @@
   </wizardpage>
 
   <wizardpage label="&customizeCerts.label;">
-    <description>&customizeCerts.warning;</description>
-    <box class="ccklist" id="certList" new="onNewCert();" edit="onEditCert();"/>
+    <groupbox>
+      <caption label="&certs.label;"/>
+      <description>&customizeCerts.description;</description>
+      <description>&customizeCerts.warning;</description>
+      <box class="ccklist" id="certList" new="onNewCert();" edit="onEditCert();"/>
+    </groupbox>
   </wizardpage>
   
   <wizardpage label="&customizeProxy.label;">

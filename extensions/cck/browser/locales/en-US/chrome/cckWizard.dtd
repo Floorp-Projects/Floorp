@@ -51,6 +51,7 @@
 
 <!ENTITY  hidden.label                  "Do not show this extension in the extension manager.">
 <!ENTITY  locked.label                  "Prevent the uninstall of this extension (it can still be disabled).">
+
 <!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
 
 <!ENTITY  orgName.error                 "Company Identifier is required and cannot contain any spaces.">
@@ -175,11 +176,13 @@
 
 
 <!ENTITY  customizeCerts.label          "Customize Certificates">
-<!ENTITY  customizeCerts.warning       "You may select certificates to be preinstalled (PEM format only).<html:br/><html:br/>
-                                        <html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
-                                        ship a browser outside of your company or institution and call it Firefox.
-                                        This feature is intended primarily for corporate and institutional users
-                                        that will be deploying Firefox inside their organization.</html:b>">
+<!ENTITY  customizeCerts.description    "Use the buttons below to select certificates to be preinstalled (PEM format only).">
+<!ENTITY  customizeCerts.warning        "<html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
+                                         ship a browser outside of your company or institution and call it Firefox.
+                                         This feature is intended primarily for corporate and institutional users
+                                         that will be deploying Firefox inside their organization.</html:b>">
+
+<!ENTITY  certs.label                   "Certificates">                                         
 
 <!ENTITY  customizeProxy.label          "Customize Proxy Configurations">
 
