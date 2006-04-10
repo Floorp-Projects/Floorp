@@ -737,13 +737,25 @@
             folder = root;
           else
             folder = findFolder(insertionPoint.folderId, root);
+          
+          // Since we find the folder manually, using findFolder instead of 
+          // PlacesController.getFolderContents, the folder is not opened for
+          // us. We need to do that ourselves (and remember if it was closed,
+          // so that we can close it again later).
+          var folderWasOpen = folder.containerOpen;
+          folder.containerOpen = true;
 
           var index = insertionPoint.index;
           if (insertionPoint.index == -1 || insertionPoint.index >= folder.childCount)
             index = folder.childCount - 1;
           NS_ASSERT(index < folder.childCount, 
                     "index out of range: " + index + " > " + folder);
-          return index > -1 ? folder.getChild(index) : null;
+          var insertionNode = index > -1 ? folder.getChild(index) : null;
+          
+          // Now close the folder again, if it was before.
+          folder.containerOpen = folderWasOpen;
+          
+          return insertionNode;
         ]]></body>
       </method>
       
@@ -767,7 +779,7 @@
           if (node)
             return this.getResultView().treeIndexForNode(node);
           else if (insertionPoint.orientation == NHRVO.DROP_ON)
-            return Ci.nsINavHistoryResult.INDEX_INVISIBLE;
+            return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
           return -1;
         ]]></body>
       </method>
@@ -813,7 +825,6 @@
         
           var selection = this._self.view.selection;
           var rc = selection.getRangeCount();
-          
           var selectionAbove = 0;
           for (var i = 0; i < rc; ++i) {
             var min = { }, max = { };
@@ -864,16 +875,6 @@
           
           var sourceView = this._getSourceView();
           
-          // Determine how many items will be visibly inserted in the target 
-          // view after the drop operation completes. This can be zero if all 
-          // items are dropped into a closed folder.
-          var session = this._getCurrentSession();
-          var visibleInsertCount = session.numDropItems;
-          if (orientation == NHRVO.DROP_ON &&
-              this._self.view.isContainer(index) && 
-              !this._self.view.isContainerOpen(index)) 
-            visibleInsertCount = 0;
-          
           // We are responsible for translating the |index| and |orientation| 
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
@@ -886,8 +887,7 @@
             // disappear above it, causing its index to be incorrect. 
             this._adjustInsertionPoint(ip);
           }
-          PlacesControllerDragHelper.onDrop(sourceView, this._self, ip, 
-                                            visibleInsertCount);
+          PlacesControllerDragHelper.onDrop(sourceView, this._self, ip);
         },
         
         onToggleOpenState: function VO_onToggleOpenState(index) { },
