@@ -15,7 +15,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
         width="700" height="500" screenX="10" screenY="10"
-        persist="width height screenX screenY sizeMode">
+        persist="width height screenX screenY sizemode">
   
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
