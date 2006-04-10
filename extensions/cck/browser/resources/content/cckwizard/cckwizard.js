@@ -687,8 +687,7 @@ function CreateCCK()
 
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    if (listitem.value)
-      CCKCopyFile(listitem.value, destdir);
+    CCKCopyFile(listitem.label, destdir);
   }
 
 /* copy/create contents.rdf if 1.0 */
@@ -1263,13 +1262,11 @@ function CCKWriteProperties(destdir)
 
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
-    if (listitem.value) {
-      var file = Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(Components.interfaces.nsILocalFile);
-      file.initWithPath(listitem.value);
-      var line = "Cert"+ i + "=" + file.leafName + "\n";
-      cos.writeString(str);
-    }
+    var file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    file.initWithPath(listitem.label);
+    str = "Cert"+ i + "=" + file.leafName + "\n";
+    cos.writeString(str);
   }
 
   cos.close();
