@@ -3269,6 +3269,10 @@ nsNavHistoryResult::AddEverythingObserver(nsNavHistoryQueryResultNode* aNode)
       history->AddObserver(this, PR_TRUE);
       mIsHistoryObserver = PR_TRUE;
   }
+  if (mEverythingObservers.IndexOf(aNode) != mEverythingObservers.NoIndex) {
+    NS_NOTREACHED("Attempting to register an observer twice!");
+    return;
+  }
   mEverythingObservers.AppendElement(aNode);
 }
 
@@ -3291,6 +3295,10 @@ nsNavHistoryResult::AddBookmarkObserver(nsNavHistoryFolderResultNode* aNode,
     mIsBookmarksObserver = PR_TRUE;
   }
   FolderObserverList* list = BookmarkObserversForId(aFolder, PR_TRUE);
+  if (list->IndexOf(aNode) != list->NoIndex) {
+    NS_NOTREACHED("Attempting to register an observer twice!");
+    return;
+  }
   list->AppendElement(aNode);
 }
 
