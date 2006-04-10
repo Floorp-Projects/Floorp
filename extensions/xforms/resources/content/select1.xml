@@ -684,6 +684,7 @@
               this.inputField.value = "";
               this._selected.setActive(false);
               this._selected = null;
+              this.refreshWidth();
               return false;
             }
 
@@ -700,14 +701,16 @@
                 if (envelope.nodeType == Node.ELEMENT_NODE) {
                   textNode = envelope.firstChild;
                   if (newValue == textNode.nodeValue) {
-                    // value in instance data already selected.  Nothin' left
-                    // to do.
+                    // Value in instance data already selected. Need to only
+                    // refresh the width.
+                    this.refreshWidth();
                     return true;
                   }
                 } else {
                   if (newValue == contentEnvelope.nodeValue) {
-                    // value in instance data already selected.  Nothin' left
-                    // to do.
+                    // Value in instance data already selected. Need to only
+                    // refresh the width.
+                    this.refreshWidth();
                     return true;
                   }
                 }
