@@ -2016,11 +2016,12 @@ nsLocalFile::SetModDate(PRInt64 aLastModifiedTime, const PRUnichar *filePath)
     st.wMilliseconds    = pret.tm_usec/1000;
 
     nsresult rv = NS_OK;
-    if (    0 != SystemTimeToFileTime(&st, &lft) 
-         || 0 != LocalFileTimeToFileTime(&lft, &ft) 
-         || 0 != SetFileTime(file, NULL, &ft, &ft) )
+    // is at least one of theese fails...
+    if (!(SystemTimeToFileTime(&st, &lft) != 0 &&
+          LocalFileTimeToFileTime(&lft, &ft) != 0 &&
+          SetFileTime(file, NULL, &ft, &ft) != 0))
     {
-        rv = ConvertWinError(GetLastError());
+      rv = ConvertWinError(GetLastError());
     }
 
     CloseHandle(file);
