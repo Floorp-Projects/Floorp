@@ -77,14 +77,14 @@
 //=============================//
 
 //-----------------------------------------------------
-// construction 
+// construction
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
   nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
   mEditor(nsnull), mScrollPositionChangedTicks(0), mIsContentLoaded(PR_FALSE)
 {
   // Because of the way document loading happens, the new nsIWidget is created before
-  // the old one is removed. Since it creates the nsDocAccessible, for a brief moment 
+  // the old one is removed. Since it creates the nsDocAccessible, for a brief moment
   // there can be 2 nsDocAccessible's for the content area, although for 2 different
   // pres shells.
 
@@ -100,7 +100,7 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
       }
     }
   }
-  
+
   PutCacheEntry(gGlobalDocAccessibleCache, mWeakShell, this);
 
   // XXX aaronl should we use an algorithm for the initial cache size?
@@ -137,8 +137,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBlockAccessible)
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsBlockAccessible)
 NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
 
-NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName) 
-{ 
+NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName)
+{
   nsresult rv = NS_OK;
   aName.Truncate();
   if (mRoleMapEntry) {
@@ -180,7 +180,7 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
       }
     }
   }
-  
+
   return NS_OK;
 }
 
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
   }
   nsAccessible::GetState(aState);
   *aState |= STATE_FOCUSABLE;
-  
+
   if (!mIsContentLoaded) {
     *aState |= STATE_BUSY;
   }
@@ -224,12 +224,12 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
 
   if (!isEditable) {
     // Use STATE_READONLY when we're not in an editor pane
-    *aState |= STATE_READONLY; 
+    *aState |= STATE_READONLY;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild) 
+NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 {
   if (!gLastFocusedNode) {
     *aFocusedChild = nsnull;
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsDocAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 // ------- nsIAccessibleDocument Methods (5) ---------------
 
 NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
-{ 
+{
   if (!mDocument) {
     return NS_ERROR_FAILURE; // Document has been shut down
   }
@@ -256,7 +256,7 @@ NS_IMETHODIMP nsDocAccessible::GetURL(nsAString& aURL)
   if (webNav) {
     nsCOMPtr<nsIURI> pURI;
     webNav->GetCurrentURI(getter_AddRefs(pURI));
-    if (pURI) 
+    if (pURI)
       pURI->GetSpec(theURL);
   }
   CopyUTF8toUTF16(theURL, aURL);
@@ -306,7 +306,7 @@ NS_IMETHODIMP nsDocAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAStr
   if (mDocument) {
     nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
         do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
-    if (nameSpaceManager) 
+    if (nameSpaceManager)
       return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
   }
   return NS_ERROR_FAILURE;
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsDocAccessible::GetParent(nsIAccessible **aParent)
       nsIContent *ownerContent = parentDoc->FindContentForSubDocument(mDocument);
       nsCOMPtr<nsIDOMNode> ownerNode(do_QueryInterface(ownerContent));
       if (ownerNode) {
-        nsCOMPtr<nsIAccessibilityService> accService = 
+        nsCOMPtr<nsIAccessibilityService> accService =
           do_GetService("@mozilla.org/accessibilityService;1");
         if (accService) {
           // XXX aaronl: ideally we would traverse the presshell chain
@@ -447,7 +447,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
   }
 
   return rv;
-}  
+}
 
 
 NS_IMETHODIMP nsDocAccessible::Destroy()
@@ -486,7 +486,7 @@ nsIFrame* nsDocAccessible::GetFrame()
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
 
   nsIFrame* root = nsnull;
-  if (shell) 
+  if (shell)
     root = shell->GetRootFrame();
 
   return root;
@@ -555,7 +555,7 @@ nsresult nsDocAccessible::AddEventListeners()
 
   if (isContent) {
     CheckForEditor();
-  
+
     if (!mEditor) {
       // We're not an editor yet, but we might become one
       nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
@@ -635,7 +635,7 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsDocAccessible *docAcc = NS_REINTERPRET_CAST(nsDocAccessible*, aClosure);
 
-  if (docAcc && docAcc->mScrollPositionChangedTicks && 
+  if (docAcc && docAcc->mScrollPositionChangedTicks &&
       ++docAcc->mScrollPositionChangedTicks > 2) {
     // Whenever scroll position changes, mScrollPositionChangeTicks gets reset to 1
     // We only want to fire accessibilty scroll event when scrolling stops or pauses
@@ -689,7 +689,7 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionWillChange(nsIScrollableView *aView
 
 NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nsIScrollableView *aScrollableView, nscoord aX, nscoord aY)
 {
-  // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes, 
+  // Start new timer, if the timer cycles at least 1 full cycle without more scroll position changes,
   // then the ::Notify() method will fire the accessibility event for scroll position changes
   const PRUint32 kScrollPosCheckWait = 50;
   if (mScrollWatchTimer) {
@@ -699,7 +699,7 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nsIScrollableView *aScrol
     mScrollWatchTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mScrollWatchTimer) {
       mScrollWatchTimer->InitWithFuncCallback(ScrollTimerCallback, this,
-                                              kScrollPosCheckWait, 
+                                              kScrollPosCheckWait,
                                               nsITimer::TYPE_REPEATING_SLACK);
     }
   }
@@ -826,7 +826,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       // This affects whether the accessible supports nsIAccessibleSelectable.
       // COM says we cannot change what interfaces are supported on-the-fly,
       // so invalidate this object. A new one will be created on demand.
-      if (aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial, 
+      if (aContent->HasAttr(kNameSpaceID_XHTML2_Unofficial,
                             nsAccessibilityAtoms::role)) {
         // The multiselect and other waistate attributes only take affect
         // when XHTML2:role is present
@@ -837,7 +837,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
 
   // Fire after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change.
-  // Otherwise, assistive technology 
+  // Otherwise, assistive technology
   // will retrieve the wrong state/value/selection info.
   if (eventType) {
     // The attribute change occured on an accessible node
@@ -905,11 +905,11 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
 {
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
-    if (!mFireEventTimer) {
-      // Do not yet have a timer going for firing another event.
-      mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
-      NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
-    }
+  if (!mFireEventTimer) {
+    // Do not yet have a timer going for firing another event.
+    mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
+    NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
+  }
   if (numQueuedEvents == 0) {
     isTimerStarted = PR_FALSE;
   }
@@ -994,7 +994,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent
       // children when they override Shutdown()
 
       // Don't shutdown our doc object!
-      if (accessNode != NS_STATIC_CAST(nsIAccessNode*, this)) { 
+      if (accessNode != NS_STATIC_CAST(nsIAccessNode*, this)) {
         if (aChangeEvent != nsIAccessibleEvent::EVENT_SHOW) {
           nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(accessNode));
           if (accessible) {
@@ -1170,8 +1170,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode, 
+NS_IMETHODIMP
+nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
                                             nsIAccessible **aAccessible)
 {
   // Find a pre-existing accessible in parent chain of DOM nodes, or return null
