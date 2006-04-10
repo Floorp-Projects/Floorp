@@ -110,6 +110,25 @@ toolbar *, #appcontent *, * {
    margin-right:3px ! important;
 }
 
+
+/* Tab browser close button override */ 
+
+/* This was modified fro the xul.css code. New trunk has a close button in each tab. 
+   The following CSS forces all the tab close button to go away, it does not matter the condition
+   of tht tabs element ( tiny attribute, etc ). 
+   */
+   
+.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs > .tabbrowser-tab .tab-close-button-placeholder,
+.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs > .tabbrowser-tab .tab-close-button-placeholder {
+  display: none;
+}
+ 
+.tabbrowser-tabs > .tabbrowser-tab[selected="true"] > .tab-close-button {
+  display: -moz-box;  
+}
+
 /* Lock... */
 
 #lock-icon.security-na {
@@ -318,4 +337,5 @@ caption {
  *  This should not exist...
  */ 
 window { width: 240px ; height: 320px; }
+
 
