@@ -172,7 +172,7 @@ sub mail_locale_finished_message {
 
 sub stagesymbols {
   my $builddir = shift;
-  TinderUtils::run_shell_command "make -C $builddir deliver";
+  TinderUtils::run_shell_command("make -C $builddir deliver");
 }
 
 sub makefullsoft {
@@ -189,32 +189,32 @@ sub makefullsoft {
   my $fullsofttag = " ";
   $fullsofttag = " -r $Settings::BuildTag"
         unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
-  TinderUtils::run_shell_command "cd $srcdir && cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
+  TinderUtils::run_shell_command("cd $srcdir && cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft");
   if ($Settings::ObjDir ne '') {
-    TinderUtils::run_shell_command "mkdir $builddir/fullsoft && cd $builddir/fullsoft && $srcdir/build/autoconf/make-makefile -d ..";
+    TinderUtils::run_shell_command("mkdir $builddir/fullsoft && cd $builddir/fullsoft && $srcdir/build/autoconf/make-makefile -d ..");
   }
   else {
-    TinderUtils::run_shell_command "cd $builddir/fullsoft && $builddir/build/autoconf/make-makefile -d ..";
+    TinderUtils::run_shell_command("cd $builddir/fullsoft && $builddir/build/autoconf/make-makefile -d ..");
   }
-  TinderUtils::run_shell_command "make -C $builddir/fullsoft";
+  TinderUtils::run_shell_command("make -C $builddir/fullsoft");
   if ($Settings::BinaryName ne 'Camino') {
-    TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
+    TinderUtils::run_shell_command("make -C $builddir/fullsoft fullcircle-push");
   }
   else {
     # Something completely different
-    TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'";
+    TinderUtils::run_shell_command("make -C $builddir/fullsoft fullcircle-push UPLOAD_FILES='`find -X $builddir/dist/Camino.app -type f -perm -111 -exec file {} \\; | grep \": Mach-O\" | sed \"s/: Mach-O.*//\" | xargs`'");
   }
   if (is_mac()) {
     if ($Settings::BinaryName eq 'Camino') {
-      TinderUtils::run_shell_command "rsync -a --copy-unsafe-links $builddir/dist/bin/components/*qfa* $builddir/dist/bin/components/talkback $builddir/dist/Camino.app/Contents/MacOS/components";
+      TinderUtils::run_shell_command("rsync -a --copy-unsafe-links $builddir/dist/bin/components/*qfa* $builddir/dist/bin/components/talkback $builddir/dist/Camino.app/Contents/MacOS/components");
     }
     else {
-      TinderUtils::run_shell_command "make -C $builddir/$Settings::mac_bundle_path";
+      TinderUtils::run_shell_command("make -C $builddir/$Settings::mac_bundle_path");
     }
 
     if ($Settings::MacUniversalBinary) {
       # Regenerate universal binary, now including Talkback
-      TinderUtils::run_shell_command "$Settings::Make -C $Settings::Topsrcdir -f $Settings::moz_client_mk $Settings::MakeOverrides postflight_all";
+      TinderUtils::run_shell_command("$Settings::Make -C $Settings::Topsrcdir -f $Settings::moz_client_mk $Settings::MakeOverrides postflight_all");
     }
   }
 }
@@ -246,7 +246,7 @@ sub packit {
   }
   chomp($builddir);
 
-  TinderUtils::run_shell_command "mkdir -p $stagedir";
+  TinderUtils::run_shell_command("mkdir -p $stagedir");
 
   if (do_installer()) {
     if (is_windows()) {
@@ -258,9 +258,9 @@ sub packit {
     } else {
       die "Can't make installer for this platform.\n";
     }
-    TinderUtils::print_log "INSTALLER_URL is " . $ENV{INSTALLER_URL} . "\n";
+    TinderUtils::print_log("INSTALLER_URL is " . $ENV{INSTALLER_URL} . "\n");
 
-    TinderUtils::run_shell_command "mkdir -p $package_location";
+    TinderUtils::run_shell_command("mkdir -p $package_location");
 
     # the Windows installer scripts currently require Activestate Perl.
     # Put it ahead of cygwin perl in the path.
@@ -272,7 +272,7 @@ sub packit {
 
     # one of the operations we care about saving status of
     if ($Settings::sea_installer || $Settings::stub_installer) {
-      $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
+      $status = TinderUtils::run_shell_command("make -C $packaging_dir installer");
     } else {
       $status = 0;
     }
@@ -292,10 +292,10 @@ sub packit {
 
     if (is_windows() || is_os2()) {
       if ($Settings::stub_installer) {
-        TinderUtils::run_shell_command "cp $package_location/stub/*.exe $stagedir/";
+        TinderUtils::run_shell_command("cp $package_location/stub/*.exe $stagedir/");
       }
       if ($Settings::sea_installer) {
-        TinderUtils::run_shell_command "cp $package_location/sea/*.exe $stagedir/";
+        TinderUtils::run_shell_command("cp $package_location/sea/*.exe $stagedir/");
       }
 
       # If mozilla/dist/install/*.msi exists, copy it to the staging
@@ -303,7 +303,7 @@ sub packit {
       my @msi = grep { -f $_ } <${package_location}/*.msi>;
       if ( scalar(@msi) gt 0 ) {
         my $msi_files = join(' ', @msi);
-        TinderUtils::run_shell_command "cp $msi_files $stagedir/";
+        TinderUtils::run_shell_command("cp $msi_files $stagedir/");
       }
 
       if ($push_raw_xpis) {
@@ -318,54 +318,54 @@ sub packit {
         my $save_7zip = $ENV{MOZ_INSTALLER_USE_7ZIP};
         $ENV{MOZ_PACKAGE_MSI} = "";
         $ENV{MOZ_INSTALLER_USE_7ZIP} = "";
-        TinderUtils::run_shell_command "make -C $packaging_dir installer";
+        TinderUtils::run_shell_command("make -C $packaging_dir installer");
         $ENV{MOZ_PACKAGE_MSI} = $save_msi;
         $ENV{MOZ_INSTALLER_USE_7ZIP} = $save_7zip;
-        TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
+        TinderUtils::run_shell_command("cp -r $package_location/xpi $stagedir/windows-xpi");
       }
     } elsif (is_linux()) {
       if ($Settings::stub_installer) {
-        TinderUtils::run_shell_command "cp $package_location/stub/*.tar.* $stagedir/";
+        TinderUtils::run_shell_command("cp $package_location/stub/*.tar.* $stagedir/");
       }
       if ($Settings::sea_installer) {
-        TinderUtils::run_shell_command "cp $package_location/sea/*.tar.* $stagedir/";
+        TinderUtils::run_shell_command("cp $package_location/sea/*.tar.* $stagedir/");
       }
       if ($push_raw_xpis) {
         my $xpi_loc = $package_location;
         if ($Settings::package_creation_path eq "/xpinstall/packager") {
           $xpi_loc = "$xpi_loc/raw";
         }
-        TinderUtils::run_shell_command "cp -r $xpi_loc/xpi $stagedir/linux-xpi";
+        TinderUtils::run_shell_command("cp -r $xpi_loc/xpi $stagedir/linux-xpi");
       }
     }
   } # do_installer
 
   my $lightningXpi = "$builddir/dist/xpi-stage/lightning.xpi";
   if (-e $lightningXpi) {
-    TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi";
-    TinderUtils::run_shell_command "cp -r $lightningXpi $stagedir/linux-xpi";
+    TinderUtils::run_shell_command("mkdir -p $stagedir/linux-xpi");
+    TinderUtils::run_shell_command("cp -r $lightningXpi $stagedir/linux-xpi");
   }
 
   if ($Settings::archive) {
-    TinderUtils::run_shell_command "make -C $packaging_dir";
+    TinderUtils::run_shell_command("make -C $packaging_dir");
 
     my(@xforms_xpi);
     if ($Settings::BuildXForms) {
-      TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
-      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
+      TinderUtils::run_shell_command("cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..");
+      TinderUtils::run_shell_command("make -C $builddir/extensions/xforms");
 
       @xforms_xpi = grep { -f $_ } <${builddir}/dist/xpi-stage/xforms.xpi>;
     }
 
     if (is_windows()) {
-      TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
+      TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
-        TinderUtils::run_shell_command "mkdir -p $stagedir/windows-xpi/" if ( ! -e "$stagedir/windows-xpi/" );
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/windows-xpi/";
+        TinderUtils::run_shell_command("mkdir -p $stagedir/windows-xpi/") if ( ! -e "$stagedir/windows-xpi/" );
+        TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/windows-xpi/");
       }
     } elsif (is_mac()) {
-      TinderUtils::run_shell_command "mkdir -p $package_location";
+      TinderUtils::run_shell_command("mkdir -p $package_location");
 
       # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
       # .../*.dmg if it exists.
@@ -377,34 +377,34 @@ sub packit {
 
       if ( scalar(@dmg) gt 0 ) {
         my $dmg_files = join(' ', @dmg);
-        TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
-        TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
+        TinderUtils::print_log("Copying $dmg_files to $stagedir/\n");
+        TinderUtils::run_shell_command("cp $dmg_files $stagedir/");
       } else {
-        TinderUtils::print_log "No files to copy\n";
+        TinderUtils::print_log("No files to copy\n");
       }
 
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
-        TinderUtils::run_shell_command "mkdir -p $stagedir/mac-xpi/" if ( ! -e "$stagedir/mac-xpi/" );
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/mac-xpi/";
+        TinderUtils::run_shell_command("mkdir -p $stagedir/mac-xpi/") if ( ! -e "$stagedir/mac-xpi/" );
+        TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/mac-xpi/");
       }
     } elsif (is_os2()) {
-      TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
+      TinderUtils::run_shell_command("cp $package_location/../*.zip $stagedir/");
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
-        TinderUtils::run_shell_command "mkdir -p $stagedir/os2-xpi/" if ( ! -e "$stagedir/os2-xpi/" );
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/os2-xpi/";
+        TinderUtils::run_shell_command("mkdir -p $stagedir/os2-xpi/") if ( ! -e "$stagedir/os2-xpi/" );
+        TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/os2-xpi/");
       }
     } else {
       my $archive_loc = "$package_location/..";
       if ($Settings::package_creation_path eq "/xpinstall/packager") {
         $archive_loc = "$archive_loc/dist";
       }
-      TinderUtils::run_shell_command "cp $archive_loc/*.tar.* $stagedir/";
+      TinderUtils::run_shell_command("cp $archive_loc/*.tar.* $stagedir/");
       if ( scalar(@xforms_xpi) gt 0 ) {
         my $xforms_xpi_files = join(' ', @xforms_xpi);
-        TinderUtils::run_shell_command "mkdir -p $stagedir/linux-xpi/" if ( ! -e "$stagedir/linux-xpi/" );
-        TinderUtils::run_shell_command "cp $xforms_xpi_files $stagedir/linux-xpi/";
+        TinderUtils::run_shell_command("mkdir -p $stagedir/linux-xpi/") if ( ! -e "$stagedir/linux-xpi/" );
+        TinderUtils::run_shell_command("cp $xforms_xpi_files $stagedir/linux-xpi/");
       }
     }
   }
@@ -496,7 +496,7 @@ sub update_create_package {
     if ( defined($Settings::update_product) ) {
         $update_product = $Settings::update_product;
     } else {
-        TinderUtils::print_log "update_product is undefined, skipping update generation.\n";
+        TinderUtils::print_log("update_product is undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
@@ -504,7 +504,7 @@ sub update_create_package {
     if ( defined($Settings::update_version) ) {
         $update_version = $Settings::update_version;
     } else {
-        TinderUtils::print_log "update_version is undefined, skipping update generation.\n";
+        TinderUtils::print_log("update_version is undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
@@ -512,7 +512,7 @@ sub update_create_package {
     if ( defined($Settings::update_platform) ) {
         $update_platform = $Settings::update_platform;
     } else {
-        TinderUtils::print_log "update_platform is undefined, skipping update generation.\n";
+        TinderUtils::print_log("update_platform is undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
@@ -520,7 +520,7 @@ sub update_create_package {
     if ( defined($Settings::update_appv) ) {
         $update_appv = $Settings::update_appv;
     } else {
-        TinderUtils::print_log "update_appv is undefined, skipping update generation.\n";
+        TinderUtils::print_log("update_appv is undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
@@ -528,15 +528,15 @@ sub update_create_package {
     if ( defined($Settings::update_extv) ) {
         $update_extv = $Settings::update_extv;
     } else {
-        TinderUtils::print_log "update_extv is undefined, skipping update generation.\n";
+        TinderUtils::print_log("update_extv is undefined, skipping update generation.\n");
         $status = 1;
         goto NOUPDATE;
     }
 
     # We're making an update.
-    TinderUtils::print_log "\nGenerating complete update...\n";
+    TinderUtils::print_log("\nGenerating complete update...\n");
     my $temp_stagedir = "$stagedir/build.$$";
-    TinderUtils::run_shell_command "mkdir -p $temp_stagedir";
+    TinderUtils::run_shell_command("mkdir -p $temp_stagedir");
 
     my $up_temp_stagedir = $temp_stagedir;
     my $up_distdir = $distdir;
@@ -550,7 +550,7 @@ sub update_create_package {
       chomp($up_distdir);
     }
 
-    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$up_temp_stagedir DIST=$up_distdir AB_CD=$locale";
+    TinderUtils::run_shell_command("make -C $objdir/tools/update-packaging full-update STAGE_DIR=$up_temp_stagedir DIST=$up_distdir AB_CD=$locale");
 
     my $update_file = "update.mar";
     my @updatemar;
@@ -560,32 +560,32 @@ sub update_create_package {
       $update_file = $updatemar[0];
       $update_file =~ s:^$temp_stagedir/(.*)$:$1:g;
     } else {
-      TinderUtils::print_log "No MAR file found matching '$update_glob', update generation failed.\n";
+      TinderUtils::print_log("No MAR file found matching '$update_glob', update generation failed.\n");
       $status = 1;
       goto NOUPDATE;
     }
 
-    TinderUtils::run_shell_command "rsync -av $temp_stagedir/$update_file $stagedir/";
+    TinderUtils::run_shell_command("rsync -av $temp_stagedir/$update_file $stagedir/");
 
     my $update_path = "$stagedir/$update_file";
     my $update_fullurl = "$url/$update_file";
 
     if ( ! -f $update_path ) {
-      TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
+      TinderUtils::print_log("Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n");
       $status = 1;
       goto NOUPDATE;
     }
 
-    TinderUtils::run_shell_command "rm -rf $temp_stagedir";
+    TinderUtils::run_shell_command("rm -rf $temp_stagedir");
 
     if ( -f $update_path ) {
       # Make update dist directory.
-      TinderUtils::run_shell_command "mkdir -p $objdir/dist/update/";
-      TinderUtils::print_log "\nGathering complete update info...\n";
+      TinderUtils::run_shell_command("mkdir -p $objdir/dist/update/");
+      TinderUtils::print_log("\nGathering complete update info...\n");
 
       my $buildid = get_buildid( dist => $distdir );;
 
-      TinderUtils::print_log "Got build ID $buildid.\n";
+      TinderUtils::print_log("Got build ID $buildid.\n");
       # Gather stats for update file.
       update_create_stats( update => $update_path,
                            type => "complete",
@@ -600,38 +600,38 @@ sub update_create_package {
 
       # Only push the build schema 0 data if this is a trunk build.
       if ( 0 and $update_version eq "trunk" ) {
-          TinderUtils::print_log "\nPushing first-gen update info...\n";
+          TinderUtils::print_log("\nPushing first-gen update info...\n");
           my $path = "/opt/aus2/incoming/0";
           $path = "$path/$update_product/$update_platform";
 
-          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt";
+          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
+          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt");
       } else {
-          TinderUtils::print_log "\nNot pushing first-gen update info...\n";
+          TinderUtils::print_log("\nNot pushing first-gen update info...\n");
       }
 
       # Push the build schema 1 data.
       if ( 0 ) {
-          TinderUtils::print_log "\nPushing second-gen update info...\n";
+          TinderUtils::print_log("\nPushing second-gen update info...\n");
           my $path = "/opt/aus2/incoming/1";
           $path = "$path/$update_product/$update_version/$update_platform";
 
-          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt";
+          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
+          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt");
       }
 
       # Push the build schema 2 data.
       if ( $Settings::update_pushinfo ) {
-          TinderUtils::print_log "\nPushing third-gen update info...\n";
+          TinderUtils::print_log("\nPushing third-gen update info...\n");
           my $path = "/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
-          TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt";
+          TinderUtils::run_shell_command("ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path");
+          TinderUtils::run_shell_command("scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt");
       }
 
-      TinderUtils::print_log "\nCompleted pushing update info...\n";
-      TinderUtils::print_log "\nUpdate build completed.\n\n";
+      TinderUtils::print_log("\nCompleted pushing update info...\n");
+      TinderUtils::print_log("\nUpdate build completed.\n\n");
     }
 
     NOUPDATE:
@@ -729,19 +729,19 @@ sub packit_l10n {
   my ($srcdir, $objdir, $packaging_dir, $package_location, $url, $stagedir, $cachebuild) = @_;
   my $status = 0;
 
-  TinderUtils::print_log "Starting l10n builds\n";
+  TinderUtils::print_log("Starting l10n builds\n");
 
   foreach my $wgeturl (keys(%Settings::WGetFiles)) {
     my $status = TinderUtils::run_shell_command_with_timeout("wget -nv --output-document \"$Settings::WGetFiles{$wgeturl}\" $wgeturl",
                                                              $Settings::WGetTimeout);
     if ($status->{exit_value} != 0) {
-      TinderUtils::print_log "Error: wget failed or timed out.\n";
+      TinderUtils::print_log("Error: wget failed or timed out.\n");
       return (("busted"));
     }
   }
 
   unless (open(ALL_LOCALES, "<$srcdir/$Settings::LocaleProduct/locales/all-locales")) {
-      TinderUtils::print_log "Error: Couldn't read $srcdir/$Settings::LocaleProduct/locales/all-locales.\n";
+      TinderUtils::print_log("Error: Couldn't read $srcdir/$Settings::LocaleProduct/locales/all-locales.\n");
       return (("testfailed"));
   }
 
@@ -752,12 +752,12 @@ sub packit_l10n {
 
   run_locale_shell_command "mkdir -p $stagedir";
 
-  TinderUtils::print_log "Building following locales: @locales\n";
+  TinderUtils::print_log("Building following locales: @locales\n");
 
   my $start_time = TinderUtils::adjust_start_time(time());
   foreach my $locale (@locales) {
       mail_locale_started_message($start_time, $locale);
-      TinderUtils::print_log "$locale...";
+      TinderUtils::print_log("$locale...");
 
       my $logfile = "$Settings::DirName-$locale.log";
       my $tinderstatus = 'success';
@@ -849,10 +849,10 @@ sub packit_l10n {
 
         if ( scalar(@dmg) gt 0 ) {
           my $dmg_files = join(' ', @dmg);
-          TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
-          TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
+          TinderUtils::print_log("Copying $dmg_files to $stagedir/\n");
+          TinderUtils::run_shell_command("cp $dmg_files $stagedir/");
         } else {
-          TinderUtils::print_log "No files to copy\n";
+          TinderUtils::print_log("No files to copy\n");
         }
 
         if ($tinderstatus eq 'success') {
@@ -907,14 +907,14 @@ sub packit_l10n {
     close LOCLOG;
 
     mail_locale_finished_message($start_time, $tinderstatus, $logfile, $locale);
-    TinderUtils::print_log "$tinderstatus.\n";
+    TinderUtils::print_log("$tinderstatus.\n");
 
   } # foreach
 
   # remove en-US files since we're building that on a different system
-  TinderUtils::run_shell_command "rm -f $stagedir/*en-US* $stagedir/*-xpi";
+  TinderUtils::run_shell_command("rm -f $stagedir/*en-US* $stagedir/*-xpi");
 
-  TinderUtils::print_log "locales completed.\n";
+  TinderUtils::print_log("locales completed.\n");
 
     # need to reverse status, since it's a "unix" truth value, where 0 means 
     # success
@@ -944,7 +944,7 @@ sub pushit {
   my @cmds;
 
   unless ( -d $upload_directory) {
-    TinderUtils::print_log "No $upload_directory to upload\n";
+    TinderUtils::print_log("No $upload_directory to upload\n");
     return 0;
   }
 
@@ -1026,8 +1026,8 @@ sub pushit {
   print UPLOAD_SCRIPT "exit 0\n";
   close(UPLOAD_SCRIPT);
 
-  TinderUtils::run_shell_command "chmod 755 $upload_script_filename";
-  TinderUtils::run_shell_command "./$upload_script_filename";
+  TinderUtils::run_shell_command("chmod 755 $upload_script_filename");
+  TinderUtils::run_shell_command("./$upload_script_filename");
 
   chdir($oldwd);
 
@@ -1070,7 +1070,7 @@ sub returnStatus{
   # build-seamonkey-util.pl expects an array, if no package is uploaded,
   # a single-element array with 'busted', 'testfailed', or 'success' works.
   my ($logtext, @status) = @_;
-  TinderUtils::print_log "$logtext\n";
+  TinderUtils::print_log("$logtext\n");
   return @status;
 }
 
@@ -1100,13 +1100,13 @@ sub PreBuild {
   # (3) subsumes (2), so there's no need to check for (2) explicitly.
 
   if (!$Settings::OfficialBuildMachinery) {
-    TinderUtils::print_log "Configured to release hourly builds only\n";
+    TinderUtils::print_log("Configured to release hourly builds only\n");
     $cachebuild = 0;
   }
   elsif ( -e "last-built" ) {
     my $last = (stat "last-built")[9];
-    TinderUtils::print_log "Most recent nightly build: " .
-      localtime($last) . "\n";
+    TinderUtils::print_log("Most recent nightly build: " .
+      localtime($last) . "\n");
 
     # Figure out the most recent past time that's at
     # $Settings::build_hour.
@@ -1117,8 +1117,8 @@ sub PreBuild {
     if ($most_recent_build_hour > $now) {
       $most_recent_build_hour -= 86400; # subtract a day
     }
-    TinderUtils::print_log "Most recent build hour:    " .
-      localtime($most_recent_build_hour) . "\n";
+    TinderUtils::print_log("Most recent build hour:    " .
+      localtime($most_recent_build_hour) . "\n");
 
     # If that time is older than last-built, then it's time for a new
     # nightly.
@@ -1126,8 +1126,7 @@ sub PreBuild {
   } else {
     # No last-built file.  Either it's the first build or somebody
     # removed it to trigger a respin.
-    TinderUtils::print_log
-      "No record of generating a nightly build.\n";
+    TinderUtils::print_log("No record of generating a nightly build.\n");
     $cachebuild = 1;
   }
 
@@ -1145,7 +1144,7 @@ sub PreBuild {
       close BLAH;
     }
 
-    TinderUtils::print_log "starting nightly release build\n";
+    TinderUtils::print_log("Starting nightly release build\n");
     # clobber the tree if set to do so
     $Settings::clean_objdir = 1 if !defined($Settings::clean_objdir);
     $Settings::clean_srcdir = 1 if !defined($Settings::clean_srcdir);
@@ -1156,20 +1155,20 @@ sub PreBuild {
     if ($Settings::clean_objdir) {
       my $objdir = 'mozilla/'.$Settings::ObjDir;
       if ( -d $objdir) {
-        TinderUtils::run_shell_command "rm -rf $objdir";
+        TinderUtils::run_shell_command("rm -rf $objdir");
       }
     }
     if ($Settings::clean_srcdir) {
       if ( -d "mozilla") {
-        TinderUtils::run_shell_command "rm -rf mozilla";
+        TinderUtils::run_shell_command("rm -rf mozilla");
         $cachebuild = 1;
       }
     }
     if ( -d "l10n" ) {
-      TinderUtils::run_shell_command "rm -rf l10n";
+      TinderUtils::run_shell_command("rm -rf l10n");
     }
   } else {
-    TinderUtils::print_log "starting non-release build\n";
+    TinderUtils::print_log("Starting non-release build\n");
   }
 }
 
@@ -1177,7 +1176,7 @@ sub PreBuild {
 sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
-  TinderUtils::print_log "Post-Build packaging/uploading commencing.\n";
+  TinderUtils::print_log("Post-Build packaging/uploading commencing.\n");
 
   chdir $mozilla_build_dir;
 
@@ -1186,9 +1185,9 @@ sub main {
     chomp($mozilla_build_dir); # remove whitespace
   
     if ( -e $mozilla_build_dir ) {
-      TinderUtils::print_log "Using cygnified $mozilla_build_dir to make packages in.\n";
+      TinderUtils::print_log("Using cygnified $mozilla_build_dir to make packages in.\n");
     } else {
-      TinderUtils::print_log "No cygnified $mozilla_build_dir to make packages in.\n";
+      TinderUtils::print_log("No cygnified $mozilla_build_dir to make packages in.\n");
       return (("testfailed")) ;
     }
   }
@@ -1202,11 +1201,11 @@ sub main {
     }
   }
   unless ( -e $objdir) {
-    TinderUtils::print_log "No $objdir to make packages in.\n";
+    TinderUtils::print_log("No $objdir to make packages in.\n");
     return (("testfailed")) ;
   }
 
-  TinderUtils::run_shell_command "rm -f $objdir/dist/bin/codesighs";
+  TinderUtils::run_shell_command("rm -f $objdir/dist/bin/codesighs");
 
   # set up variables with default values
   # need to modify the settings from tinder-config.pl
@@ -1249,10 +1248,10 @@ sub main {
 
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
-    TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/LICENSE";
-    TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/mail/LICENSE.txt";
-    TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/README.txt";
-    TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/browser/EULA";
+    TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/LICENSE");
+    TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/mail/LICENSE.txt");
+    TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/README.txt");
+    TinderUtils::run_shell_command("unix2dos $mozilla_build_dir/mozilla/browser/EULA");
   }
 
   my($package_dir, $store_name, $local_build_dir);
@@ -1260,7 +1259,7 @@ sub main {
   my $pretty_build_name = shorthost() . "-" . $Settings::milestone;
 
   if ($cachebuild) {
-    TinderUtils::print_log "uploading nightly release build\n";
+    TinderUtils::print_log("Uploading nightly release build\n");
     $store_name = $buildid;
     $package_dir = "$datestamp";
     $url_path         = $url_path . "/" . $package_dir;
@@ -1293,10 +1292,10 @@ sub main {
     if (not $Settings::CompareLocalesAviary) {
       my $mar_tool = "$srcdir/modules/libmar/tool/mar";
       if (! -f $mar_tool) {
-        TinderUtils::run_shell_command "make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar";
+        TinderUtils::run_shell_command("make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar");
         # mar tool should exist now.
         if (! -f $mar_tool) {
-          TinderUtils::print_log "Failed to build $mar_tool\n";
+          TinderUtils::print_log("Failed to build $mar_tool\n");
         }
       }
     }
@@ -1318,17 +1317,17 @@ sub main {
 
   if ( -e "$store_home/packages" ) {
     # remove old storage directory
-    TinderUtils::print_log "Found old storage directory.  Removing.\n";
-    TinderUtils::run_shell_command "rm -rf $store_home/packages";
+    TinderUtils::print_log("Found old storage directory.  Removing.\n");
+    TinderUtils::run_shell_command("rm -rf $store_home/packages");
   }
 
   # save the current build in the appropriate store directory
-  TinderUtils::run_shell_command "mkdir -p $store_home/packages";
-  TinderUtils::run_shell_command "rsync -avz $local_build_dir/ $store_home/packages/";
+  TinderUtils::run_shell_command("mkdir -p $store_home/packages");
+  TinderUtils::run_shell_command("rsync -avz $local_build_dir/ $store_home/packages/");
 
   if ($cachebuild) { 
     # remove saved builds older than a week and save current build
-    TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -maxdepth 1 -prune -mtime +7 -print | xargs rm -rf";
+    TinderUtils::run_shell_command("find $mozilla_build_dir -type d -name \"200*-*\" -maxdepth 1 -prune -mtime +7 -print | xargs rm -rf");
   }
 
   unless (pushit(server => $Settings::ssh_server, remote_path => $ftp_path, package_name => $package_dir,
