@@ -215,8 +215,6 @@ static const PRUnichar sHTMLTagUnicodeName_select[] =
   {'s', 'e', 'l', 'e', 'c', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_small[] =
   {'s', 'm', 'a', 'l', 'l', '\0'};
-static const PRUnichar sHTMLTagUnicodeName_sound[] =
-  {'s', 'o', 'u', 'n', 'd', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_spacer[] =
   {'s', 'p', 'a', 'c', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_span[] =
