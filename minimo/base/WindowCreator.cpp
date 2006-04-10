@@ -70,38 +70,30 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
 
 	if (!mAppShell)
         return NS_ERROR_NOT_INITIALIZED;
+
+    unsigned long x, y;
+    GetScreenSize(&x, &y);
     
     nsCOMPtr<nsIXULWindow> newWindow;
-#if 0
-    if (aParent) {
-      nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
-      
-      if (xulParent)
-        xulParent->CreateNewWindow(aChromeFlags, mAppShell, getter_AddRefs(newWindow));
-    }
-    else
-#endif
-    { 
-      nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-      if (!appShell)
-        return NS_ERROR_FAILURE;
-      
-      nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
-      
-      unsigned long x, y;
-      GetScreenSize(&x, &y);
-      
-      appShell->CreateTopLevelWindow(xulParent, // get rid of if you undef above 
-                                     0, 
-                                     aChromeFlags,
-                                     x,
-                                     y,
-                                     mAppShell, 
-                                     getter_AddRefs(newWindow));
-    }
+    
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+    if (!appShell)
+      return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+    
+    
+    appShell->CreateTopLevelWindow(xulParent, // get rid of if you undef above 
+                                   0, 
+                                   aChromeFlags,
+                                   x,
+                                   y,
+                                   mAppShell, 
+                                   getter_AddRefs(newWindow));
 
     // if anybody gave us anything to work with, use it
-    if (newWindow) {
+    if (newWindow) 
+    {
       newWindow->SetContextFlags(aContextFlags);
       nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newWindow));
       if (thing)
