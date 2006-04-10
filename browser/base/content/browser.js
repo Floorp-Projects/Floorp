@@ -900,6 +900,7 @@ function delayedStartup()
   toolbar._init();
   var menu = document.getElementById("bookmarksMenuPopup");
   menu._init();
+  PlacesMenuDNDController.init();
   window.controllers.appendController(PlacesController);
 #endif
 
@@ -6313,62 +6314,38 @@ var FeedHandler = {
 
 #ifdef MOZ_PLACES
 
-function BookmarkAllTabsCommand() {
-}
-BookmarkAllTabsCommand.prototype = {
-  get enabled() {
-    return getBrowser().tabContainer.childNodes.length > 1;
-  },
-
-  execute: function BATC_execute() {
-    var tabURIs = this._getUniqueTabInfo(getBrowser());
-    PlacesController.showAddMultiBookmarkUI(tabURIs);
-  },
-
-  /**
-   * This function returns a list of nsIURI objects characterizing the
-   * tabs currently open in the given browser.  The URIs will appear in the
-   * list in the order in which their corresponding tabs appeared.  However,
-   * only the first instance of each URI will be returned.
-   *
-   * @param aTabBrowser  the tabBrowser to get the contents of
-   *
-   * @returns a list of nsIURI objects representing unique locations open
-   */
-  _getUniqueTabInfo: function BATC__getUniqueTabInfo(aTabBrowser) {
-    var tabList = [];
-    var seenURIs = [];
-
-    const activeBrowser = aTabBrowser.selectedBrowser;
-    const browsers = aTabBrowser.browsers;
-    for (var i = 0; i < browsers.length; ++i) {
-      var webNav = browsers[i].webNavigation;
-       var uri = webNav.currentURI;
-
-       // skip redundant entries
-       if (uri.spec in seenURIs)
-         continue;
-
-       // add to the set of seen URIs
-       seenURIs[uri.spec] = true;
-
-       tabList.push(uri);
-    }
-    return tabList;
-  }
-};
-BookmarkAllTabsCommand.NAME = "Browser:BookmarkAllTabs";
-
+/**
+ * This is a generic command controller for browser commands. Features can
+ * register commands with this controller and the events that should trigger
+ * updates to their state. Each command object must implement this interface:
+ * 
+ * readonly attribute boolean enabled; // true if the command is enabled
+ * void execute(); // performs the command
+ */
 var BrowserController = {
   EVENT_TABCHANGE: "tabchange",
   
+  /**
+   * A hash of command-name->command-objects
+   */
   commands: { },
+  
+  /**
+   * A hash of event-name->array-of-command-names
+   */
   events: { },
+  
+  /**
+   * See nsIController.idl
+   */
   supportsCommand: function BC_supportsCommand(command) {
     //LOG("BrowserController.supportsCommand: " + command);
     return command in this.commands;
   },
 
+  /**
+   * See nsIController.idl
+   */
   isCommandEnabled: function BC_isCommandEnabled(command) {
     //LOG("BrowserController.isCommandEnabled: " + command);
     NS_ASSERT(this.supportsCommand(command), 
@@ -6376,6 +6353,9 @@ var BrowserController = {
     return this.commands[command].enabled;
   },
   
+  /**
+   * See nsIController.idl
+   */
   doCommand: function BC_doCommand(command) {
     //LOG("BrowserController.doCommand: " + command);
     NS_ASSERT(this.supportsCommand(command), 
@@ -6383,6 +6363,9 @@ var BrowserController = {
     this.commands[command].execute();
   },
   
+  /**
+   * See nsIController.idl
+   */
   onEvent: function BC_onEvent(event) {
     if (event in this.events) {
       var commandsForEvent = this.events[event];
@@ -6392,258 +6375,8 @@ var BrowserController = {
   }
 };
 window.controllers.appendController(BrowserController);
-BrowserController.commands[BookmarkAllTabsCommand.NAME] = 
-  new BookmarkAllTabsCommand();
-BrowserController.events[BrowserController.EVENT_TABCHANGE] = 
-  [BookmarkAllTabsCommand.NAME];
 
-var PlacesCommandHook = {
-  /**
-   * Adds a bookmark to the page loaded in the current tab. 
-   */
-  bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
-    var selectedBrowser = getBrowser().selectedBrowser;
-    PlacesController.showAddBookmarkUI(selectedBrowser.currentURI);
-  },
-  
-  /**
-   * Adds a folder with bookmarks to all of the currently open tabs in this 
-   * window.
-   */
-  bookmarkCurrentPages: function PCH_bookmarkCurrentPages() {
-  },
-
-  /**
-   * Get the description associated with a document, as specified in a <META> 
-   * element.
-   * @param   doc
-   *          A DOM Document to get a description for
-   * @returns A description string if a META element was discovered with a 
-   *          "description" or "httpequiv" attribute, empty string otherwise.
-   */
-  _getDescriptionFromDocument: function PCH_getDescriptionFromDocument(doc) {
-    var metaElements = doc.getElementsByTagName("META");
-    for (var i = 0; i < metaElements.length; ++i) {
-      if (metaElements[i].localName.toLowerCase() == "description" || 
-          metaElements[i].httpEquiv.toLowerCase() == "description") {
-        return metaElements[i].content;
-        break;
-      }
-    }
-    return "";
-  },
-  
-  /**
-   * Adds a Live Bookmark to a feed associated with the current page. 
-   * @param   url
-   *          The nsIURI of the page the feed was attached to
-   */
-  addLiveBookmark: function PCH_addLiveBookmark(url) {
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
-    var feedURI = ios.newURI(url, null, null);
-    
-    var browser = gBrowser.selectedBrowser;
-    
-    // TODO: implement description annotation
-    //var description = this._getDescriptionFromDocument(doc);
-    var title = browser.contentDocument.title;
-
-    // TODO: add dialog for filing/confirmation
-    var bms = PlacesController.bookmarks;
-    var livemarks = PlacesController.livemarks;
-    livemarks.createLivemark(bms.toolbarRoot, title, browser.currentURI, 
-                             feedURI, -1);
-  },
-
-  /**
-   * Opens the Places Organizer. 
-   * @param   place
-   *          The place to select in the organizer window (a place: URI) 
-   */
-  showPlacesOrganizer: function PCH_showPlacesOrganizer(place) {
-    var wm = 
-        Cc["@mozilla.org/appshell/window-mediator;1"].
-        getService(Ci.nsIWindowMediator);
-    var organizer = wm.getMostRecentWindow("Places:Organizer");
-    if (!organizer) {
-      // No currently open places window, so open one with the specified mode.
-      openDialog("chrome://browser/content/places/places.xul", 
-                 "", "dialog=no,resizable", place);
-    }
-    else {
-      // Set the mode on an existing places window. 
-      organizer.selectPlaceURI(place);
-      organizer.focus();
-    }
-  },
-  
-  /**
-   * Update the state of the tagging icon, depending on whether or not the 
-   * current page is bookmarked. 
-   */
-  updateTagButton: function PCH_updateTagButton() {
-    var bookmarkButton = document.getElementById("places-bookmark");
-    if (!bookmarkButton) 
-      return;
-      
-    var strings = document.getElementById("placeBundle");
-    var currentLocation = getBrowser().selectedBrowser.webNavigation.currentURI;
-    if (PlacesController.bookmarks.isBookmarked(currentLocation)) {
-      bookmarkButton.label = strings.getString("locationStatusBookmarked");
-      bookmarkButton.setAttribute("bookmarked", "true");
-    } else {
-      bookmarkButton.label = strings.getString("locationStatusNotBookmarked");
-      bookmarkButton.removeAttribute("bookmarked");
-    }
-  },
-
-  /**
-   * This method should be called when the bookmark button is clicked.
-   */
-  onBookmarkButtonClick: function PCH_onBookmarkButtonClick() {
-    var currentURI = getBrowser().selectedBrowser.webNavigation.currentURI;
-    PlacesController.showAddBookmarkUI(currentURI);
-  }
-};
-
-// Functions for the history menu.
-var HistoryMenu = {
-
-  /**
-   * Updates the history menu with the session history of the current tab.
-   * This function is called every time the history menu is shown.
-   * @param menu 
-   *        XULNode for the history menu
-   */
-  update: function PHM_update(menu) {
-    FillHistoryMenu(menu, "history", document.getElementById("endTabHistorySeparator"));
-  },
-
-  /**
-   * Shows the places search page.
-   * (Will be fully implemented when there is a places search page.)
-   */
-  showPlacesSearch: function PHM_showPlacesSearch() {
-    // XXX The places view needs to be updated before this
-    // does something different than show history.
-    PlacesCommandHook.showPlacesOrganizer(ORGANIZER_ROOT_HISTORY);
-  }
-};
-
-/**
- * Functions for handling events in the Bookmarks Toolbar and menu.
- */
-var BookmarksEventHandler = {  
-  /**
-   * Handler for click event for an item in the bookmarks toolbar or menu.
-   * Menus and submenus from the folder buttons bubble up to this handler.
-   * Only handle middle-click; left-click is handled in the onCommand function.
-   * When items are middle-clicked, open them in tabs.
-   * If the click came through a menu, close the menu.
-   * @param event DOMEvent for the click
-   */
-  onClick: function BT_onClick(event) {
-    // Only handle middle-clicks.
-    if (event.button != 1)
-      return;
-    
-    PlacesController.openLinksInTabs();
-    
-    // If this event bubbled up from a menu or menuitem,
-    // close the menus.
-    if (event.target.localName == "menu" ||
-        event.target.localName == "menuitem") {
-      var node = event.target.parentNode;
-      while (node && 
-             (node.localName == "menu" || 
-              node.localName == "menupopup")) {
-        if (node.localName == "menupopup")
-          node.hidePopup();
-        
-        node = node.parentNode;
-      }
-    }
-  },
-  
-  /**
-   * Handler for command event for an item in the bookmarks toolbar.
-   * Menus and submenus from the folder buttons bubble up to this handler.
-   * Opens the item.
-   * @param event 
-   *        DOMEvent for the command
-   */
-  onCommand: function BM_onCommand(event) {
-    // If this is the special "Open in Tabs" menuitem, load all the menuitems in tabs.
-    if (event.target.hasAttribute("openInTabs"))
-      PlacesController.openLinksInTabs();
-    else if (event.target.hasAttribute("siteURI"))
-      openUILink(event.target.getAttribute("siteURI"), event);
-    // If this is a normal bookmark, just load the bookmark's URI.
-    else
-      PlacesController.mouseLoadURI(event);
-  },
-  
-  /**
-   * Handler for popupshowing event for an item in bookmarks toolbar or menu.
-   * If the item isn't the main bookmarks menu, add an "Open in Tabs" menuitem
-   * to the bottom of the popup.
-   * @param event 
-   *        DOMEvent for popupshowing
-   */
-  onPopupShowing: function BM_onPopupShowing(event) {
-    var target = event.target;
-
-    if (target.localName == "menupopup" && target.id != "bookmarksMenuPopup") {
-      // Show "Open in Tabs" menuitem if there are at least
-      // two menuitems with places result nodes.
-      var numNodes = 0;
-      var currentChild = target.firstChild;
-      while (currentChild && numNodes < 2) {
-        if (currentChild.node && currentChild.localName == "menuitem")
-          numNodes++;
-        currentChild = currentChild.nextSibling;
-      }
-      if (numNodes >= 2) {
-        var separator = document.createElement("menuseparator");
-        target.appendChild(separator);
-
-        var strings = document.getElementById("placeBundle");
-
-        var button = target.parentNode;
-        if (button.getAttribute("livemark") == "true") {
-          var openHomePage = document.createElement("menuitem");
-          openHomePage.setAttribute("siteURI", button.getAttribute("siteURI"));
-          openHomePage.setAttribute("label",
-              strings.getFormattedString("menuOpenLivemarkOrigin.label",
-                                         [button.getAttribute("label")]));
-          target.appendChild(openHomePage);
-        }
-
-        var openInTabs = document.createElement("menuitem");
-        openInTabs.setAttribute("openInTabs", "true");
-        openInTabs.setAttribute("label", strings.getString("menuOpenInTabs.label"));
-        target.appendChild(openInTabs);
-      }
-    }
-  },
-  
-  /**
-   * Handler for dragover event for an item in the bookmarks menu.
-   * If this is the top-level bookmarks menu, open the menu so that
-   * items can be dropped into it.
-   * @param event 
-   *        DOMEvent for the dragover.
-   */
-  onDragOver: function BM_onDragOver(event) {
-    if (event.target.id == "bookmarksMenu") {
-      // If this is the bookmarks menu, tell its menupopup child to show.
-      event.target.lastChild.showPopup(event.target.lastChild);
-    }
-  }
-};
-
+#include browser-places.js
 #include ../../../toolkit/content/debug.js
 
 #endif

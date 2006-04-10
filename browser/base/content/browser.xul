@@ -294,7 +294,8 @@
                context="placesContext" asyncinit="true" 
                onclick="BookmarksEventHandler.onClick(event);"
                oncommand="BookmarksEventHandler.onCommand(event);"
-               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
+               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               ondragexit="PlacesMenuDNDController.onDragExit(event);"/>
       </toolbaritem>
       <toolbarbutton id="places-bookmark" 
                      label="&location.status.not_bookmarked;" 
