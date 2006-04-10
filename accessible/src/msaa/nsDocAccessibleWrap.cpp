@@ -335,7 +335,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireAnchorJumpEvent()
   // the can only relate events back to their internal model if it's a leaf.
   // There is usually an accessible for the focus node, but if it's an empty text node
   // we have to move forward in the document to get one
-  if (!mIsContentLoaded) {
+  if (!mIsContentLoaded || !mDocument) {
     return NS_OK;
   }
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
