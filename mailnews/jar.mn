@@ -1,5 +1,6 @@
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 messenger.jar:
+# XXX we need to provide new chrome registry versions of these contents.rdf
 *   content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
 *   content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
     content/messenger/addressbook/pref-addressing.xul                          (addrbook/prefs/resources/content/pref-addressing.xul)
@@ -296,4 +297,3 @@ en-US.jar:
 *   locale/en-US/messenger-region/contents.rdf                          (base/resources/locale/en-US/contents-region.rdf)
     locale/en-US/messenger-region/region.properties                     (base/resources/locale/en-US/region.properties)
 #endif
-
