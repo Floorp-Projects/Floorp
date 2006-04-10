@@ -573,7 +573,7 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
     if (aExtState & nsIAccessible::EXT_STATE_VERTICAL)
         atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
 
-    if (aState & nsIAccessible::EXT_STATE_EDITABLE)
+    if (aExtState & nsIAccessible::EXT_STATE_EDITABLE)
         atk_state_set_add_state (state_set, ATK_STATE_EDITABLE);
 }
 
