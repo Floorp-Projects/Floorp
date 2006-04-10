@@ -140,6 +140,8 @@
 <!ENTITY cmd.new_folder.label
   "New Folder...">
 <!ENTITY cmd.new_folder.accesskey
+  "o">
+<!ENTITY cmd.context_new_folder.accesskey
   "F">
 <!ENTITY cmd.new_separator.label
   "New Separator">
