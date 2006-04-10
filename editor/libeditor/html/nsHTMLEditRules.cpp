@@ -930,11 +930,18 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   return NS_OK;
 }
 
+nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils, nsIDOMNode* aNode) {
+  nsAutoString direction;
+  aHTMLCSSUtils->GetComputedProperty(aNode, nsEditProperty::cssDirection, direction);
+  return direction.EqualsLiteral("rtl") ?
+    nsEditProperty::cssMarginRight : nsEditProperty::cssMarginLeft;
+}
+
 NS_IMETHODIMP 
 nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 {
   if (!aCanIndent || !aCanOutdent)
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   *aCanIndent = PR_TRUE;    
   *aCanOutdent = PR_FALSE;
 
@@ -968,10 +975,11 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
       break;
     }
     else if (useCSS) {
-      // we are in CSS mode, indentation is done using the margin-left property
+      // we are in CSS mode, indentation is done using the margin-left (or margin-right) property
+      nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
       nsAutoString value;
       // retrieve its specified value
-      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, nsEditProperty::cssMarginLeft, value);
+      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, marginProperty, value);
       float f;
       nsCOMPtr<nsIAtom> unit;
       // get its number part and its unit
@@ -3914,8 +3922,9 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
         }
         else if (useCSS)
         {
+          nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, curNode);
           nsAutoString value;
-          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(n, nsEditProperty::cssMarginLeft, value);
+          mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(n, marginProperty, value);
           float f;
           nsIAtom * unit;
           mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, &unit);
@@ -8570,9 +8579,10 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
   NS_ASSERTION(element, "not an element node");
 
   if (element) {
+    nsIAtom* marginProperty = MarginPropertyAtomForIndent(mHTMLEditor->mHTMLCSSUtils, element);    
     nsAutoString value;
     nsresult res;
-    mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, nsEditProperty::cssMarginLeft, value);
+    mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, marginProperty, value);
     float f;
     nsIAtom * unit;
     mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, &unit);
@@ -8609,10 +8619,10 @@ nsHTMLEditRules::RelativeChangeIndentationOfElementNode(nsIDOMNode *aNode, PRInt
       nsAutoString newValue;
       newValue.AppendFloat(f);
       newValue.Append(unitString);
-      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, nsEditProperty::cssMarginLeft, newValue, PR_FALSE);
+      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, marginProperty, newValue, PR_FALSE);
     }
     else {
-      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, nsEditProperty::cssMarginLeft, value, PR_FALSE);
+      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, marginProperty, value, PR_FALSE);
       if (nsHTMLEditUtils::IsDiv(aNode)) {
         // we deal with a DIV ; let's see if it is useless and if we can remove it
         nsCOMPtr<nsIDOMNamedNodeMap> attributeList;
