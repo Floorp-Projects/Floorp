@@ -1,17 +1,6 @@
 <commandset id="placesCommands" 
             commandupdater="true" events="focus,select,mousedown,click,keypress" 
             oncommandupdate="PlacesController.onCommandUpdate()">
-  <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
-           oncommand="PlacesSearchBox.focus();"/>
-  <command id="placesCmd_export" 
-           label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
-           disabled="true"/>
-  <command id="placesCmd_import" 
-           label="&cmd.import.label;" accesskey="&cmd.import.accesskey;"
-           oncommand="PlacesOrganizer.importBookmarks();"/>
-  <command id="placesCmd_search:save"/>
-  <command id="placesCmd_search:moreCriteria"
-           oncommand="PlacesQueryBuilder.toggle();"/>
   <command id="placesCmd_select:all" 
            label="&cmd.select_all.label;" accesskey="&cmd.select_all.accesskey;"
            oncommand="PlacesController.selectAll();"/>
@@ -76,10 +65,4 @@
              disabled="true"/>
   </commandset>
 </commandset>
-
-<broadcasterset id="placesGroupingBroadcasters">
-  <broadcaster id="placesBC_grouping:off"/>
-  <broadcaster id="placesBC_grouping:on"/>
-  <broadcaster id="placesBC_grouping:separator"/>
-</broadcasterset>
 

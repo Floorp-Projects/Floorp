@@ -7,34 +7,34 @@
       <column flex="0"/>
     </columns>
     <rows id="advancedSearchRows">
-      <row id="advancedSearch1Row" flex="1">
-        <menulist id="advancedSearch1Subject" flex="1">
+      <row id="advancedSearch0Row" flex="1" hidden="true">
+        <menulist id="advancedSearch0Subject" flex="1">
           <menupopup>
             <menuitem value="keyword"
                       label="&advancedSearch.subj_keyword.label;"
                       selected="true"
                       rowid="1"
-                      id="advancedSearch1SubjectKeyword"
+                      id="advancedSearch0SubjectKeyword"
                       oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._keywordSearch);"/>
             <menuitem value="visited"
                       label="&advancedSearch.subj_visited.label;"
                       rowid="1"
-                      id="advancedSearch1SubjectVisited"
+                      id="advancedSearch0SubjectVisited"
                       oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._timeSearch);"/>
             <menuitem value="location"
                       label="&advancedSearch.subj_location.label;"
                       rowid="1"
-                      id="advancedSearch1SubjectLocation"
+                      id="advancedSearch0SubjectLocation"
                       oncommand="PlacesQueryBuilder.showSearch(this.getAttribute('rowid'), PlacesQueryBuilder._locationSearch);"/>
           </menupopup>
         </menulist>
 
         <hbox flex="1" align="center">
-          <menulist id="advancedSearch1LocationMenulist"
+          <menulist id="advancedSearch0LocationMenulist"
                     oncommand="PlacesQueryBuilder.doSearch();"
                     hidden="true">
             <menupopup>
-              <menuitem id="advancedSearch1LocationMenuSelected"
+              <menuitem id="advancedSearch0LocationMenuSelected"
                         value="startswith"
                         label="&advancedSearch.location_startswith.label;"
                         selected="true"/>
@@ -45,10 +45,10 @@
             </menupopup>
           </menulist>
 
-          <menulist id="advancedSearch1TimeMenulist" hidden="true">
+          <menulist id="advancedSearch0TimeMenulist" hidden="true">
             <menupopup>
               <menuitem value="on"
-                        id="advancedSearch1TimeDefault"
+                        id="advancedSearch0TimeDefault"
                         label="&advancedSearch.time_is.label;"
                         selected="true"
                         rowid="1"
@@ -69,27 +69,27 @@
           </menulist>
           <textbox type="timed"
                    timeout="50"
-                   id="advancedSearch1Textbox"
+                   id="advancedSearch0Textbox"
                    flex="1"
                    oncommand="PlacesQueryBuilder.doSearch();"/>
 
           <textbox type="timed"
                    timeout="50"
-                   id="advancedSearch1TimePicker"
+                   id="advancedSearch0TimePicker"
                    hidden="true" flex="1"
                    rowid="1"
                    oncommand="PlacesQueryBuilder.onDateTyped(event, this.getAttribute('rowid'));"
                    onclick="PlacesQueryBuilder.handleTimePickerClick(event, this.getAttribute('rowid'));"/>
-          <popup id="advancedSearch1DatePopup"
+          <popup id="advancedSearch0DatePopup"
                  onpopupshowing="this.setAttribute('showing', true);"
                  onpopuphidden="this.removeAttribute('showing');">
-            <vbox id="advancedSearch1Calendar"
+            <vbox id="advancedSearch0Calendar"
                   class="history-calendar"
                   rowid="1"
                   onselectionchanged="return PlacesQueryBuilder.onCalendarChanged(event, event.target.getAttribute('rowid'));"/>
           </popup>
 
-          <menulist id="advancedSearch1TimeMenulist2"
+          <menulist id="advancedSearch0TimeMenulist2"
                     oncommand="PlacesQueryBuilder.doSearch();"
                     hidden="true">
             <menupopup>
@@ -104,15 +104,14 @@
           </menulist>
 
         </hbox>              
-        <button id="advancedSearch1Plus"
-                label="&advancedSearch.plus.label;"
-                class="no-margin-button"
-                oncommand="PlacesQueryBuilder.addRow();"/>
-        <button id="advancedSearch1Minus"
-                disabled="true"
+        <button id="advancedSearch0Minus"
                 label="&advancedSearch.minus.label;"
-                class="no-margin-button"
-                oncommand="PlacesQueryBuilder.removeRow();"/>
+                class="small"
+                oncommand="PlacesQueryBuilder.removeRow(event.target.parentNode);"/>
+        <button id="advancedSearch0Plus"
+                label="&advancedSearch.plus.label;"
+                class="small"
+                command="placesCmd_search:moreCriteria"/>
       </row>
     </rows>
   </grid>
