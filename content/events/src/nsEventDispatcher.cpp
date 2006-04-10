@@ -457,8 +457,8 @@ nsEventTargetChainItem::HandleEventTargetChain(nsEventChainPostVisitor& aVisitor
   }
 
   // Bubble
+  aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
   if (!(aVisitor.mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE)) {
-    aVisitor.mEvent->flags &= ~NS_EVENT_FLAG_CAPTURE;
     item = item->mParent;
     while (item) {
       nsISupports* newTarget = item->GetNewTarget();

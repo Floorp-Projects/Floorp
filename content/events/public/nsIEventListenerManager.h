@@ -53,8 +53,8 @@ struct JSObject;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0xdbd8fcee, 0xb93e, 0x42f3, \
-  { 0x9d, 0xe5, 0xf9, 0x90, 0xfc, 0x66, 0xb7, 0x5a } }
+{ 0x68588aa5, 0x41e6, 0x4642, \
+  { 0xac, 0x8e, 0x7d, 0x43, 0x9c, 0x7d, 0x2a, 0xaa } }
 
 
 class nsIEventListenerManager : public nsISupports {
@@ -152,18 +152,6 @@ public:
                          nsEvent* aEvent,
                          const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent) = 0;
-
-  /**
-  * Changes script listener of specified event types from bubbling
-  * listeners to capturing listeners.
-  * @param event types */
-  NS_IMETHOD CaptureEvent(PRInt32 aEventTypes) = 0;
-
-  /**
-  * Changes script listener of specified event types from capturing
-  * listeners to bubbling listeners.
-  * @param event types */
-  NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes) = 0;
 
   /**
   * Tells the event listener manager that its target (which owns it) is

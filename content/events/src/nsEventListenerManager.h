@@ -66,7 +66,6 @@ typedef struct {
   PRUint16 mGroupFlags;
   PRUint8  mSubType;
   PRUint8  mHandlerIsString;
-  PRUint8  mSubTypeCapture;
 } nsListenerStruct;
 
 //These define the internal type of the EventListenerManager
@@ -154,9 +153,6 @@ public:
                                         nsISupports *aObject,
                                         nsIAtom* aName, PRBool *aDidCompile);
 
-  NS_IMETHOD CaptureEvent(PRInt32 aEventTypes);
-  NS_IMETHOD ReleaseEvent(PRInt32 aEventTypes);
-
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsEvent* aEvent, 
                          nsIDOMEvent** aDOMEvent,
@@ -239,7 +235,6 @@ protected:
                                nsIDOMEventGroup* aEvtGrp);
   void ReleaseListeners(nsVoidArray** aListeners);
   nsresult RemoveAllListeners();
-  nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
   nsresult FixContextMenuEvent(nsPresContext* aPresContext,

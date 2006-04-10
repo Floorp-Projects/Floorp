@@ -104,7 +104,14 @@ interface nsIDOMNSEvent : nsISupports
    */
   [noscript] readonly attribute nsIDOMEventTarget  tmpRealOriginalTarget;
 
+  /**
+   * @deprecated Use nsIDOMEvent::stopPropagation.
+   */
   void                      preventBubble();
+
+  /**
+   * @deprecated Use nsIDOMEvent::stopPropagation.
+   */
   void                      preventCapture();
 
   readonly attribute boolean isTrusted;

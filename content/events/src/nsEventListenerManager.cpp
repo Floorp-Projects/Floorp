@@ -750,7 +750,6 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     ls->mListener.Set(aListener, participant);
     ls->mFlags = aFlags;
     ls->mSubType = aSubType;
-    ls->mSubTypeCapture = NS_EVENT_BITS_NONE;
     ls->mHandlerIsString = 0;
     ls->mGroupFlags = group;
     listeners->AppendElement((void*)ls);
@@ -1610,35 +1609,20 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
-  if (aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
-    // If we're not in the capture phase we must *NOT* have capture flags
-    // set.  Compiled script handlers are one or the other, not both.
-    if (aPhaseFlags & NS_EVENT_FLAG_BUBBLE && !aPhaseFlags & NS_EVENT_FLAG_INIT) {
-      if (aListenerStruct->mSubTypeCapture & aSubType) {
-        return result;
-      }
-    }
-    // If we're in the capture phase we must have capture flags set.
-    else if (aPhaseFlags & NS_EVENT_FLAG_CAPTURE && !aPhaseFlags & NS_EVENT_FLAG_INIT) {
-      if (!(aListenerStruct->mSubTypeCapture & aSubType)) {
-        return result;
-      }
-    }
-    if (aListenerStruct->mHandlerIsString & aSubType) {
+  if ((aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) &&
+      (aListenerStruct->mHandlerIsString & aSubType)) {
+    nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListener);
+    if (jslistener) {
+      nsAutoString eventString;
+      if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+        nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
 
-      nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListener);
-      if (jslistener) {
-        nsAutoString eventString;
-        if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-          nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
-
-          result = CompileEventHandlerInternal(jslistener->GetEventContext(),
-                                               jslistener->GetEventScope(),
-                                               jslistener->GetEventTarget(),
-                                               atom, aListenerStruct,
-                                               aCurrentTarget,
-                                               aSubType);
-        }
+        result = CompileEventHandlerInternal(jslistener->GetEventContext(),
+                                             jslistener->GetEventScope(),
+                                             jslistener->GetEventTarget(),
+                                             atom, aListenerStruct,
+                                             aCurrentTarget,
+                                             aSubType);
       }
     }
   }
@@ -1674,9 +1658,6 @@ nsEventListenerManager::HandleEvent(nsPresContext* aPresContext,
     return ret;
   }
 
-  if (aFlags & NS_EVENT_FLAG_INIT) {
-    aFlags |= (NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE);
-  }
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
   if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
     aEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
@@ -1780,151 +1761,6 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
 {
   return nsEventDispatcher::CreateEvent(aPresContext, aEvent,
                                         aEventType, aDOMEvent);
-}
-
-/**
-* Captures all events designated for descendant objects at the current level.
-* @param an event listener
-*/
-
-NS_IMETHODIMP
-nsEventListenerManager::CaptureEvent(PRInt32 aEventTypes)
-{
-  return FlipCaptureBit(aEventTypes, PR_TRUE);
-}             
-
-/**
-* Releases all events designated for descendant objects at the current level.
-* @param an event listener
-*/
-
-NS_IMETHODIMP
-nsEventListenerManager::ReleaseEvent(PRInt32 aEventTypes)
-{
-  return FlipCaptureBit(aEventTypes, PR_FALSE);
-}
-
-nsresult
-nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
-                                       PRBool aInitCapture)
-{
-  // This method exists for Netscape 4.x event handling compatibility.
-  // New events do not need to be added here.
-
-  EventArrayType arrayType = eEventArrayType_None;
-  PRUint8 bits = 0;
-
-  if (aEventTypes & nsIDOMNSEvent::MOUSEDOWN) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::MOUSEUP) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_MOUSEUP; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::MOUSEOVER) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_MOUSEOVER; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::MOUSEOUT) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_MOUSEOUT; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::MOUSEMOVE) {
-    arrayType = eEventArrayType_MouseMotion;
-    bits = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::CLICK) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_CLICK; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::DBLCLICK) {
-    arrayType = eEventArrayType_Mouse;
-    bits = NS_EVENT_BITS_MOUSE_DBLCLICK; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::KEYDOWN) {
-    arrayType = eEventArrayType_Key;
-    bits = NS_EVENT_BITS_KEY_KEYDOWN; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::KEYUP) {
-    arrayType = eEventArrayType_Key;
-    bits = NS_EVENT_BITS_KEY_KEYUP; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::KEYPRESS) {
-    arrayType = eEventArrayType_Key;
-    bits = NS_EVENT_BITS_KEY_KEYPRESS; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::DRAGDROP) {
-    arrayType = eEventArrayType_Drag;
-    bits = NS_EVENT_BITS_DRAG_ENTER; 
-  }
-  /*if (aEventTypes & nsIDOMNSEvent::MOUSEDRAG) {
-    arrayType = kIDOMMouseListenerarrayType;
-    bits = NS_EVENT_BITS_MOUSE_MOUSEDOWN; 
-  }*/
-  if (aEventTypes & nsIDOMNSEvent::FOCUS) {
-    arrayType = eEventArrayType_Focus;
-    bits = NS_EVENT_BITS_FOCUS_FOCUS; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::BLUR) {
-    arrayType = eEventArrayType_Focus;
-    bits = NS_EVENT_BITS_FOCUS_BLUR; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::SELECT) {
-    arrayType = eEventArrayType_Form;
-    bits = NS_EVENT_BITS_FORM_SELECT; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::CHANGE) {
-    arrayType = eEventArrayType_Form;
-    bits = NS_EVENT_BITS_FORM_CHANGE; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::RESET) {
-    arrayType = eEventArrayType_Form;
-    bits = NS_EVENT_BITS_FORM_RESET; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::SUBMIT) {
-    arrayType = eEventArrayType_Form;
-    bits = NS_EVENT_BITS_FORM_SUBMIT; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::LOAD) {
-    arrayType = eEventArrayType_Load;
-    bits = NS_EVENT_BITS_LOAD_LOAD; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::UNLOAD) {
-    arrayType = eEventArrayType_Load;
-    bits = NS_EVENT_BITS_LOAD_UNLOAD; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::ABORT) {
-    arrayType = eEventArrayType_Load;
-    bits = NS_EVENT_BITS_LOAD_ABORT; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::ERROR) {
-    arrayType = eEventArrayType_Load;
-    bits = NS_EVENT_BITS_LOAD_ERROR; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::RESIZE) {
-    arrayType = eEventArrayType_Paint;
-    bits = NS_EVENT_BITS_PAINT_RESIZE; 
-  }
-  if (aEventTypes & nsIDOMNSEvent::SCROLL) {
-    arrayType = eEventArrayType_Scroll;
-    bits = NS_EVENT_BITS_PAINT_RESIZE; 
-  }
-
-  if (arrayType != eEventArrayType_None) {
-    nsListenerStruct *ls = FindJSEventListener(arrayType);
-
-    if (ls) {
-      if (aInitCapture)
-        ls->mSubTypeCapture |= bits;
-      else
-        ls->mSubTypeCapture &= ~bits;
-
-      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
-    }
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

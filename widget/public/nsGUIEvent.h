@@ -104,7 +104,7 @@ class nsIDOMEventTarget;
 // listener flags and event flags, but only some of them. You've been
 // warned!
 #define NS_EVENT_FLAG_NONE                0x0000
-#define NS_EVENT_FLAG_INIT                0x0001
+#define NS_EVENT_FLAG_TRUSTED             0x0001
 #define NS_EVENT_FLAG_BUBBLE              0x0002
 #define NS_EVENT_FLAG_CAPTURE             0x0004
 #define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
@@ -119,15 +119,8 @@ class nsIDOMEventTarget;
 
 #define NS_PRIV_EVENT_UNTRUSTED_PERMITTED 0x8000
 
-#define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
-#define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
-
-// Flags for internalAppFlags
-
-#define NS_APP_EVENT_FLAG_NONE      0x00000000
-
-// True if the event came from a trusted source
-#define NS_APP_EVENT_FLAG_TRUSTED   0x00000001
+#define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
+#define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 
 #define NS_EVENT_TYPE_NULL                   0
 
@@ -387,9 +380,7 @@ protected:
       message(msg),
       refPoint(0, 0),
       time(0),
-      flags(0),
-      internalAppFlags(isTrusted ? NS_APP_EVENT_FLAG_TRUSTED :
-                       NS_APP_EVENT_FLAG_NONE),
+      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
   }
@@ -400,9 +391,7 @@ public:
       message(msg),
       refPoint(0, 0),
       time(0),
-      flags(0),
-      internalAppFlags(isTrusted ? NS_APP_EVENT_FLAG_TRUSTED :
-                       NS_APP_EVENT_FLAG_NONE),
+      flags(isTrusted ? NS_EVENT_FLAG_TRUSTED : NS_EVENT_FLAG_NONE),
       userType(0)
   {
   }
@@ -410,17 +399,15 @@ public:
   // See event struct types
   PRUint8     eventStructType;
   // See GUI MESSAGES,
-  PRUint32    message;              
+  PRUint32    message;
   // In widget relative coordinates, not modified by layout code.
-  nsPoint     refPoint;               
+  nsPoint     refPoint;
   // Elapsed time, in milliseconds, from the time the system was
   // started to the time the message was created
-  PRUint32    time;      
+  PRUint32    time;
   // Flags to hold event flow stage and capture/bubble cancellation
-  // status
+  // status. This is used also to indicate whether the event is trusted.
   PRUint32    flags;
-  // Flags for indicating more event state for Mozilla applications.
-  PRUint32    internalAppFlags;
   // Additional type info for user defined events
   nsHashKey*  userType;
   // Event targets, needed by DOM Events
@@ -992,7 +979,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_PLUGIN_ACTIVATE))
 
 #define NS_IS_TRUSTED_EVENT(event) \
-  (((event)->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED) != 0)
+  (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
 
 // Mark an event as being dispatching.
 #define NS_MARK_EVENT_DISPATCH_STARTED(event) \

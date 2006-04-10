@@ -54,6 +54,7 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIScriptError.h"
 
 static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -258,9 +259,9 @@ NS_IMETHODIMP
 nsDOMEvent::SetTrusted(PRBool aTrusted)
 {
   if (aTrusted) {
-    mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_TRUSTED;
+    mEvent->flags |= NS_EVENT_FLAG_TRUSTED;
   } else {
-    mEvent->internalAppFlags &= ~NS_APP_EVENT_FLAG_TRUSTED;
+    mEvent->flags &= ~NS_EVENT_FLAG_TRUSTED;
   }
 
   return NS_OK;
@@ -315,21 +316,44 @@ nsDOMEvent::StopPropagation()
   return NS_OK;
 }
 
+static void
+ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                            const char* aWarning)
+{
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aEvent->currentTarget);
+  if (node) {
+    doc = node->GetOwnerDoc();
+  } else {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aEvent->currentTarget);
+    if (window) {
+      doc = do_QueryInterface(window->GetExtantDocument());
+    }
+  }
+
+  nsAutoString type;
+  aDOMEvent->GetType(type);
+  const PRUnichar *strings[] = { type.get() };
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning,
+                                  strings, NS_ARRAY_LENGTH(strings),
+                                  doc ? doc->GetDocumentURI() : nsnull,
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM Events");
+}
+
 NS_IMETHODIMP
 nsDOMEvent::PreventBubble()
 {
-  if (mEvent->flags & NS_EVENT_FLAG_BUBBLE || mEvent->flags & NS_EVENT_FLAG_INIT) {
-    mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
-  }
+  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventBubbleWarning");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::PreventCapture()
 {
-  if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
-    mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
-  }
+  ReportUseOfDeprecatedMethod(mEvent, this, "UseOfPreventCaptureWarning");
   return NS_OK;
 }
 

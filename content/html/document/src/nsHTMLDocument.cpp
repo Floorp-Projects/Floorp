@@ -122,6 +122,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIScriptElement.h"
+#include "nsIScriptError.h"
 #include "nsArray.h"
 
 #include "nsIPrompt.h"
@@ -2933,28 +2934,37 @@ nsHTMLDocument::GetSelection(nsAString& aReturn)
   return rv;
 }
 
+static void
+ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
+{
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning,
+                                  nsnull, 0,
+                                  NS_STATIC_CAST(nsIDocument*, aDoc)->
+                                    GetDocumentURI(),
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "HTML Document");
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::CaptureEvents(PRInt32 aEventFlags)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_TRUE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return manager->CaptureEvent(aEventFlags);
+  ReportUseOfDeprecatedMethod(this, "UseOfCaptureEventsWarning");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::ReleaseEvents(PRInt32 aEventFlags)
 {
-  nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(PR_FALSE, getter_AddRefs(manager));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return manager ? manager->ReleaseEvent(aEventFlags) : NS_OK;
+  ReportUseOfDeprecatedMethod(this, "UseOfReleaseEventsWarning");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
 {
-  //XXX Not the best solution -joki
+  ReportUseOfDeprecatedMethod(this, "UseOfRouteEventWarning");
   return NS_OK;
 }
 
