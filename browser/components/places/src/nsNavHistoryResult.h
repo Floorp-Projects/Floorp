@@ -762,6 +762,8 @@ protected:
   // row style.
   PRBool mShowSessions;
   void ComputeShowSessions();
+  enum SessionStatus { Session_None, Session_Start, Session_Continue };
+  SessionStatus GetRowSessionStatus(PRInt32 row);
 
   // This list is used to map rows to nodes.
   typedef nsTArray< nsCOMPtr<nsNavHistoryResultNode> > VisibleList;
