@@ -905,12 +905,12 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
 {
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
-  if (numQueuedEvents == 0) {
     if (!mFireEventTimer) {
       // Do not yet have a timer going for firing another event.
       mFireEventTimer = do_CreateInstance("@mozilla.org/timer;1");
       NS_ENSURE_TRUE(mFireEventTimer, NS_ERROR_OUT_OF_MEMORY);
     }
+  if (numQueuedEvents == 0) {
     isTimerStarted = PR_FALSE;
   }
   else if (!aAllowDupes) {
@@ -920,6 +920,9 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
     for (PRInt32 index = 0; index < numQueuedEvents; index ++) {
       nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
       NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
+      if (!accessibleEvent) {
+        continue;
+      }
       PRUint32 eventType;
       accessibleEvent->GetEventType(&eventType);
       if (eventType == aEvent) {
