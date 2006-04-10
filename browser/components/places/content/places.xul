@@ -93,7 +93,7 @@
       <menu id="fileMenu" label="&file.label;" accesskey="&file.accesskey;">
         <menupopup>
           <menuitem id="fileNewBookmark" command="placesCmd_new:bookmark"/>
-          <menuitem id="fileNewFolder" command="placesCmd_new:folder"/>
+          <menuitem id="fileNewFolder" command="placesCmd_new:folder" accesskey="&cmd.new_folder.accesskey;"/>
           <menuitem id="fileNewSeparator" command="placesCmd_new:separator"/>
           <menuseparator/>
           <menuitem id="fileImport" command="placesCmd_import"/>
@@ -186,7 +186,7 @@
           </menupopup>
         </button>
       </textbox>
-      <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder"/>
+      <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder" accesskey="&cmd.new_folder.accesskey;"/>
       <toolbarbutton id="toolbarDelete" command="placesCmd_edit:delete"/>
       <spacer flex="1"/>
       <toolbarbutton id="toolbarGroupOff" type="radio" group="grouping" 

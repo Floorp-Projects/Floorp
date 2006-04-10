@@ -16,7 +16,7 @@
             selection="link"/>
   <menuseparator id="placesContext_openSeparator"
             selection="link|links|folder"/>
-  <menuitem id="placesContext_new:folder" command="placesCmd_new:folder"
+  <menuitem id="placesContext_new:folder" command="placesCmd_new:folder" accesskey="&cmd.context_new_folder.accesskey;"
             selection="mutable"/>
   <menuitem id="placesContext_new:separator" command="placesCmd_new:separator"
             selection="mutable"/>
