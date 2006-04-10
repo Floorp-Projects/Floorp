@@ -40,6 +40,26 @@
              oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
   </commandset>
 #include commands.inc
+  <commandset id="organizerCommandSet">
+    <command id="placesCmd_find" 
+             label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
+             oncommand="PlacesSearchBox.focus();"/>
+    <command id="placesCmd_export" 
+             label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
+             disabled="true"/>
+    <command id="placesCmd_import" 
+             label="&cmd.import.label;" accesskey="&cmd.import.accesskey;"
+             oncommand="PlacesOrganizer.importBookmarks();"/>
+    <command id="placesCmd_search:save"/>
+    <command id="placesCmd_search:moreCriteria"
+             oncommand="PlacesQueryBuilder.addRow();"/>
+  </commandset>
+
+  <broadcasterset id="placesGroupingBroadcasters">
+    <broadcaster id="placesBC_grouping:off"/>
+    <broadcaster id="placesBC_grouping:on"/>
+    <broadcaster id="placesBC_grouping:separator"/>
+  </broadcasterset>
 
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
@@ -152,7 +172,7 @@
       </menu>
     </menubar>
     <toolbar>
-      <textbox id="searchFilter" flex="1" style="width: 0px;" timeout="500"
+      <textbox id="searchFilter" style="width: 23em;" timeout="500"
                oncommand="PlacesOrganizer.search(this.value);" 
                collection="all" persist="collection"
                onfocus="PlacesSearchBox.onFocus();" onblur="PlacesSearchBox.onBlur();">
@@ -169,14 +189,14 @@
       <toolbarbutton id="toolbarNewFolder" command="placesCmd_new:folder"/>
       <toolbarbutton id="toolbarDelete" command="placesCmd_edit:delete"/>
       <spacer flex="1"/>
-      <toolbarbutton id="toolbarGroup" type="radio" group="grouping" 
+      <toolbarbutton id="toolbarGroupOff" type="radio" group="grouping" 
                      observes="placesBC_grouping:off"/>
-      <toolbarbutton id="toolbarGroup" type="radio" group="grouping" 
+      <toolbarbutton id="toolbarGroupOn" type="radio" group="grouping" 
                      observes="placesBC_grouping:on" />
     </toolbar>
   </toolbox>
   <hbox flex="1" id="placesView">
-    <tree id="placesList" class="placesTree" flex="1" type="places" 
+    <tree id="placesList" class="placesTree" type="places" 
           place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
           hidecolumnpicker="true" context="placesContext"
           onselect="PlacesOrganizer.onPlaceSelected(event);"

@@ -80,36 +80,6 @@ var PlacesOrganizer = {
   
   
   /**
-   * Fill the header with information about what view is being displayed.
-   */
-  _setHeader: function PP__setHeader(type, text) {
-    var bundle = document.getElementById("placeBundle");
-    var key = null;
-    var isSearch = false;
-    switch(type) {
-      case "showing":
-        key = "headerTextShowing";
-        break;
-      case "results":
-        isSearch = true;
-        key = "headerTextResultsFor";
-        break;
-      case "advanced":
-        isSearch = true;
-        key = "headerTextAdvancedSearch";
-        break;
-    }
-    var showingPrefix = document.getElementById("showingPrefix");
-    showingPrefix.setAttribute("value", bundle.getString(key));
-    
-    var contentTitle = document.getElementById("contentTitle");
-    contentTitle.setAttribute("value", text);
-    
-    var searchModifiers = document.getElementById("searchModifiers");
-    searchModifiers.hidden = !isSearch;
-  },  
-  
-  /**
    * Run a search for the specified text, over the collection specified by
    * the dropdown arrow. The default is all bookmarks and history, but can be
    * localized to the active collection. 
@@ -121,13 +91,40 @@ var PlacesOrganizer = {
     case "collection":
       var folder = this._content.getResult().root.QueryInterface(Ci.nsINavHistoryFolderResultNode).folderId;
       this._content.applyFilter(filterString, true, folder);
-      this._setHeader("results", filterString);
+      this.setHeaderText(this.HEADER_TYPE_SEARCH, filterString);
       break;
     case "all":
       this._content.filterString = filterString;
-      this._setHeader("results", filterString);
+      this.setHeaderText(this.HEADER_TYPE_SEARCH, filterString);
       break;
     }
+  },
+  
+  HEADER_TYPE_SHOWING: 1,
+  HEADER_TYPE_SEARCH: 2,
+  HEADER_TYPE_ADVANCED_SEARCH: 3,
+  
+  /**
+   * Updates the text shown in the heading banner above the content view. 
+   * @param   type
+   *          The type of information being shown - normal (built-in history or
+   *          other query, bookmark folder), search results from the toolbar
+   *          search box, or advanced search.
+   * @param   text
+   *          The text (if any) to display
+   */
+  setHeaderText: function PO_setHeaderText(type, text) {
+    NS_ASSERT(type == 1 || type == 2 || type == 3, "Invalid Header Type");
+    var bundle = document.getElementById("placeBundle");
+    var prefix = document.getElementById("showingPrefix");
+    prefix.setAttribute("value", bundle.getString("headerTextPrefix" + type));
+    
+    var contentTitle = document.getElementById("contentTitle");
+    contentTitle.setAttribute("value", text);
+    
+    // Hide the advanced search controls when the user hasn't searched
+    var searchModifiers = document.getElementById("searchModifiers");
+    searchModifiers.hidden = type == this.HEADER_TYPE_SHOWING;
   },
   
   /**
@@ -141,8 +138,11 @@ var PlacesOrganizer = {
     this._content.place = node.uri;
     
     Groupers.setGroupingOptions();
+    
+    // Make sure the query builder is hidden.
+    PlacesQueryBuilder.hide();
 
-    this._setHeader("showing", node.title);
+    this.setHeaderText(this.HEADER_TYPE_SHOWING, node.title);
   },
   
   /**
@@ -261,8 +261,18 @@ var PlacesSearchBox = {
     searchFilter.value = searchDefault;
     searchFilter.setAttribute("empty", "true");
     searchFilter.focus();
+  },
+  
+  /**
+   * Gets or sets the text shown in the Places Search Box 
+   */
+  get value() {
+    return document.getElementById("searchFilter").value;
+  },
+  set value(value) {
+    document.getElementById("searchFilter").value = value;
+    return value;
   }
-
 };
 
 /**
@@ -270,8 +280,15 @@ var PlacesSearchBox = {
  */
 var PlacesQueryBuilder = {
 
-  _numRows: 1,
-  _maxRows: 4,
+  _numRows: 0,
+  
+  /**
+   * The maximum number of terms that can be added. 
+   * XXXben - this should be generated dynamically based on the contents of a 
+   *          list of terms searchable through this widget, rather than being
+   *          a hard coded number.
+   */
+  _maxRows: 3,
   
   _keywordSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectKeyword",
@@ -312,8 +329,8 @@ var PlacesQueryBuilder = {
     // Initialize advanced search
     this._nextSearch = {
       "keyword": this._timeSearch,
-      "visited": this._hostSearch,
-      "location": this._locationSearch
+      "visited": this._locationSearch,
+      "location": null
     };
     
     this._queryBuilders = {
@@ -325,96 +342,151 @@ var PlacesQueryBuilder = {
     this._dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
                           getService(Ci.nsIScriptableDateFormat);
   },
-
-  toggle: function PQB_toggle() {
+  
+  /**
+   * Hides the query builder, and the match rule UI if visible.
+   */
+  hide: function PQB_hide() {
     var advancedSearch = document.getElementById("advancedSearch");
-    if (advancedSearch.collapsed) {
-      // Need to expand the advanced search box and initialize it.
-      
-      // Should have one row, containing a keyword search with
-      // the keyword from the basic search box pre-filled.
-      while (this._numRows > 1)
-        this.removeRow();
-      this.showSearch(1, this._keywordSearch);
-      var searchbox = document.getElementById("searchFilter");
-      var keywordbox = document.getElementById("advancedSearch1Textbox");
-      keywordbox.value = searchbox.value;
-      advancedSearch.collapsed = false;
-      
-      // Update the +/- button and the header.
-      var button = document.getElementById("moreCriteria");
-      var placeBundle = document.getElementById("placeBundle");
-      button.label = placeBundle.getString("lessCriteria.label");
-      PlacesOrganizer._setHeader("advanced", "");
-    }
-    else {
-      // Need to collapse the advanced search box.
-      advancedSearch.collapsed = true;
-      
-      // Update the +/- button
-      var button = document.getElementById("moreCriteria");
-      var placeBundle = document.getElementById("placeBundle");
-      button.label = placeBundle.getString("moreCriteria.label");
-    }
+    // Need to collapse the advanced search box.
+    advancedSearch.collapsed = true;
+    
+    var matchUI = document.getElementById("titlebarMatch");
+    matchUI.hidden = true;
   },
   
-  setRowId: function PQB_setRowId(element, rowId) {
+  /**
+   * Shows the query builder
+   */
+  show: function PQB_show() {
+    var advancedSearch = document.getElementById("advancedSearch");
+    advancedSearch.collapsed = false;
+  },
+
+  /**
+   * Includes the rowId in the id attribute of an element in a row newly 
+   * created from the template row.
+   * @param   element
+   *          The element whose id attribute needs to be updated.
+   * @param   rowId
+   *          The index of the new row.
+   */
+  _setRowId: function PQB__setRowId(element, rowId) {
     if (element.id)
-      element.id = element.id.replace("advancedSearch1", "advancedSearch" + rowId);
-    if (element.hasAttribute('rowid'))
-      element.setAttribute('rowid', rowId);
-    for (var i = 0; i < element.childNodes.length; i++) {
-      this.setRowId(element.childNodes[i], rowId);
+      element.id = element.id.replace("advancedSearch0", "advancedSearch" + rowId);
+    if (element.hasAttribute("rowid"))
+      element.setAttribute("rowid", rowId);
+    for (var i = 0; i < element.childNodes.length; ++i) {
+      this._setRowId(element.childNodes[i], rowId);
     }
   },
   
-  updateUIForRowChange: function PQB_updateUIForRowChange() {
+  _updateUIForRowChange: function PQB__updateUIForRowChange() {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var matchUI = document.getElementById("titlebarMatch");
     matchUI.hidden = (this._numRows <= 1);
-    PlacesOrganizer._setHeader("advanced", this._numRows <= 1 ? "" : ",");
+    const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
+    PlacesOrganizer.setHeaderText(asType, this._numRows <= 1 ? "" : ",");
     
-    // Disable the + buttons if there are max advanced search rows
-    // Disable the - button is there is only one advanced search row
-    for (var i = 1; i <= this._numRows; i++) {
-      var plus = document.getElementById("advancedSearch" + i + "Plus");
-      plus.disabled = (this._numRows >= this._maxRows);
-      var minus = document.getElementById("advancedSearch" + i + "Minus");
-      minus.disabled = (this._numRows == 1);
-    }
+    // Update the "can add more criteria" command to make sure various +
+    // buttons are disabled.
+    var command = document.getElementById("placesCmd_search:moreCriteria");
+    if (this._numRows >= this._maxRows)
+      command.setAttribute("disabled", "true");
+    else
+      command.removeAttribute("disabled");
   },
   
+  /**
+   * Adds a row to the view, prefilled with the next query subject. If the 
+   * query builder is not visible, it will be shown.
+   */
   addRow: function PQB_addRow() {
+    // Limits the number of rows that can be added based on the maximum number
+    // of search query subjects.
     if (this._numRows >= this._maxRows)
       return;
     
+    // Clone the template row and unset the hidden attribute.
     var gridRows = document.getElementById("advancedSearchRows");
     var newRow = gridRows.firstChild.cloneNode(true);
+    newRow.hidden = false;
 
+    // Determine what the search type is based on the last visible row. If this
+    // is the first row, the type is "keyword search". Otherwise, it's the next
+    // in the sequence after the one defined by the previous visible row's 
+    // Subject selector, as defined in _nextSearch.
     var searchType = this._keywordSearch;
     var lastMenu = document.getElementById("advancedSearch" +
                                            this._numRows +
                                            "Subject");
-    if (lastMenu && lastMenu.selectedItem) {
+    if (this._numRows > 0 && lastMenu && lastMenu.selectedItem) {
       searchType = this._nextSearch[lastMenu.selectedItem.value];
     }
-    
-    this._numRows++;
-    this.setRowId(newRow, this._numRows);
-    this.showSearch(this._numRows, searchType);
+    // There is no "next" search type. We are here in error. 
+    if (!searchType)
+      return;
+    // We don't insert into the document until _after_ the searchType is 
+    // determined, since this will interfere with the computation.
     gridRows.appendChild(newRow);
-    this.updateUIForRowChange();
+    this._setRowId(newRow, ++this._numRows);
+    
+    // Ensure the Advanced Search container is visible, if this is the first 
+    // row being added.
+    var advancedSearch = document.getElementById("advancedSearch");
+    if (advancedSearch.collapsed) {
+      this.show();
+      
+      // Update the header.
+      const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
+      PlacesOrganizer.setHeaderText(asType, "");
+      
+      // Pre-fill the search terms field with the value from the one on the 
+      // toolbar.
+      // For some reason, setting.value here synchronously does not appear to 
+      // work.
+      var searchTermsField = document.getElementById("advancedSearch1Textbox");
+      if (searchTermsField)
+        setTimeout(function() { searchTermsField.value = PlacesSearchBox.value; }, 10);
+      
+      // Call ourselves again to add a second row so that the user is presented
+      // with more than just "Keyword Search" which they already performed from
+      // the toolbar.
+      this.addRow();
+      return;
+    }      
+
+    this.showSearch(this._numRows, searchType);
+    this._updateUIForRowChange();
   },
   
-  removeRow: function PQB_removeRow() {
-    if (this._numRows <= 1)
-      return;
-
-    var row = document.getElementById("advancedSearch" + this._numRows + "Row");
+  /**
+   * Remove a row from the set of terms
+   * @param   row
+   *          The row to remove. If this is null, the last row will be removed.
+   * If there are no more rows, the query builder will be hidden.
+   */
+  removeRow: function PQB_removeRow(row) {
+    if (!row)
+      row = document.getElementById("advancedSearch" + this._numRows + "Row");
     row.parentNode.removeChild(row);
-    this._numRows--;
+    --this._numRows;
     
-    this.updateUIForRowChange();
+    if (this._numRows < 1) {
+      this.hide();
+      
+      // Re-do the original toolbar-search-box search that the user used to
+      // spawn the advanced UI... this effectively "reverts" the UI to the
+      // point it was in before they began monkeying with advanced search.
+      const sType = PlacesOrganizer.HEADER_TYPE_SEARCH;
+      PlacesOrganizer.setHeaderText(sType, PlacesSearchBox.value);
+      
+      PlacesOrganizer.search(PlacesSearchBox.value);
+      return;
+    }
+
+    this.doSearch();
+    this._updateUIForRowChange();
   },
   
   onDateTyped: function PQB_onDateTyped(event, row) {
@@ -433,7 +505,7 @@ var PlacesQueryBuilder = {
       var mid = dateArr.length / 2;
       var dateStr0 = dateArr[0];
       var dateStr1 = dateArr[mid];
-      for (var i = 1; i < mid; i++) {
+      for (var i = 1; i < mid; ++i) {
         dateStr0 += "-" + dateArr[i];
         dateStr1 += "-" + dateArr[i + mid];
       }
@@ -573,7 +645,20 @@ var PlacesQueryBuilder = {
       var ios = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
       var spec = document.getElementById(prefix + "Textbox").value;
-      query.uri = ios.newURI(spec, null, null);
+      try {
+        query.uri = ios.newURI(spec, null, null);
+      }
+      catch (e) {
+        // Invalid input can cause newURI to barf, that's OK, tack "http://" 
+        // onto the front and try again to see if the user omitted it
+        try {
+          query.uri = ios.newURI("http://" + spec, null, null);
+        }
+        catch (e) {
+          // OK, they have entered something which can never match. This should
+          // not happen.
+        }
+      }
     }
   },
   
@@ -623,22 +708,31 @@ var PlacesQueryBuilder = {
     var queries = [];
     if (queryType == "and")
       queries.push(PlacesController.history.getNewQuery());
-    for (var i = 1; i <= this._numRows; i++) {
+    var updated = 0;
+    for (var i = 1; updated < this._numRows; ++i) {
       var prefix = "advancedSearch" + i;
       
-      // If the queries are being AND-ed, put all the rows in one query.
-      // If they're being OR-ed, add a separate query for each row.
-      var query;
-      if (queryType == "and")
-        query = queries[0];
-      else
-        query = PlacesController.history.getNewQuery();
-      
-      var querySubject = document.getElementById(prefix + "Subject").value;
-      this._queryBuilders[querySubject](query, prefix);
-      
-      if (queryType == "or")
-        queries.push(query);
+      // The user can remove rows from the middle and start of the list, not 
+      // just from the end, so we need to make sure that this row actually
+      // exists before attempting to construct a query for it.
+      var querySubjectElement = document.getElementById(prefix + "Subject");
+      if (querySubjectElement) {
+        // If the queries are being AND-ed, put all the rows in one query.
+        // If they're being OR-ed, add a separate query for each row.
+        var query;
+        if (queryType == "and")
+          query = queries[0];
+        else
+          query = PlacesController.history.getNewQuery();
+        
+        var querySubject = querySubjectElement.value;
+        this._queryBuilders[querySubject](query, prefix);
+        
+        if (queryType == "or")
+          queries.push(query);
+          
+        ++updated;
+      }
     }
     
     // Make sure we're getting uri results, not visits
