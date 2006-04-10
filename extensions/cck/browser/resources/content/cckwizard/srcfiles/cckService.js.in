@@ -253,6 +253,36 @@ CCKService.prototype={
       i++;
     } while (prefName && prefName.length);
   
+    id = bundle.GetStringFromName("id");
+
+    var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                         .getService(Components.interfaces.nsIRDFService);
+    var extensionDS= Components.classes["@mozilla.org/extensions/manager;1"]
+	                             .getService(Components.interfaces.nsIExtensionManager).datasource;
+    var extension = rdfs.GetResource("urn:mozilla:item:" + id);  
+
+    /* if hidden is set, set it */
+    try {
+      hidden = bundle.GetStringFromName("hidden");
+    } catch (ex) {
+      hidden = "";
+    }
+    if (hidden == "true") {
+      var predicate = rdfs.GetResource("http://www.mozilla.org/2004/em-rdf#hidden");
+      var target = rdfs.GetLiteral("true");
+      extensionDS.Assert(extension, predicate, target, true);
+    }
+    /* if locked is set, set it */
+    try {
+      locked = bundle.GetStringFromName("locked");
+    } catch (ex) {
+      locked = "";
+    }
+    if (locked == "true") {
+      var predicate = rdfs.GetResource("http://www.mozilla.org/2004/em-rdf#locked");
+      var target = rdfs.GetLiteral("true");
+      extensionDS.Assert(extension, predicate, target, true);
+    }
 
     /* Only do bookmarks if we haven't been inited to avoid duplicated */
     if (!cckinited) {
@@ -347,6 +377,29 @@ CCKService.prototype={
         i++;
       } while (prefName && prefName.length);
     }
+    /* if hidden is set, unset it */
+    try {
+      hidden = bundle.GetStringFromName("hidden");
+    } catch (ex) {
+      hidden = "";
+    }
+    if (hidden == "true") {
+      var predicate = rdfs.GetResource("http://www.mozilla.org/2004/em-rdf#hidden");
+      var target = rdfs.GetLiteral("false");
+      extensionDS.Assert(extension, predicate, target, true);
+    }
+    /* if locked is set, unset it */
+    try {
+      locked = bundle.GetStringFromName("locked");
+    } catch (ex) {
+      locked = "";
+    }
+    if (locked == "true") {
+      var predicate = rdfs.GetResource("http://www.mozilla.org/2004/em-rdf#locked");
+      var target = rdfs.GetLiteral("false");
+      extensionDS.Assert(extension, predicate, target, true);
+    }
+    
   }  
 }
 

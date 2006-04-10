@@ -49,6 +49,8 @@
 
 <!ENTITY  filename.label                "Filename:">
 
+<!ENTITY  hidden.label                  "Do not show this extension in the extension manager.">
+<!ENTITY  locked.label                  "Prevent the uninstall of this extension (it can still be disabled).">
 <!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
 
 <!ENTITY  orgName.error                 "Company Identifier is required and cannot contain any spaces.">

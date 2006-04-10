@@ -168,6 +168,26 @@
            <label>.xpi</label>
          </hbox>
        </row>
+       <row align="center">
+         <vbox align="right">
+         </vbox>
+         <hbox align="center">
+         </hbox>
+       </row>
+       <row align="center">
+         <vbox align="right">
+         </vbox>
+         <hbox align="center">
+           <checkbox id="hidden" label="&hidden.label;"/>
+         </hbox>
+       </row>
+       <row align="center">
+         <vbox align="right">
+         </vbox>
+         <hbox align="center">
+           <checkbox id="locked" label="&locked.label;"/>
+         </hbox>
+       </row>
      </rows>
    </grid>
  </wizardpage>

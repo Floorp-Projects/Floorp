@@ -1172,6 +1172,19 @@ function CCKWriteProperties(destdir)
   str = str.replace(/%InstallAllowedSites%/g, document.getElementById("InstallAllowedSites").value);
   cos.writeString(str);
   
+  if (document.getElementById("hidden").checked)
+  {
+    str = "hidden=true\n";
+    cos.writeString(str);
+  }
+
+  if (document.getElementById("locked").checked)
+  {
+    str = "locked=true\n";
+    cos.writeString(str);
+  }
+
+  
 /* Add toolbar/bookmark stuff at end */
   str = document.getElementById('ToolbarFolder1').value;
   if (str && str.length) {
@@ -1988,7 +2001,13 @@ function CCKReadConfigFile(srcdir)
     } catch (e) {
     }
     i++;
-  }  
+  }
+
+  var hidden = document.getElementById("hidden");
+  hidden.checked = configarray["hidden"];
+
+  var locked = document.getElementById("locked");
+  locked.checked = configarray["locked"];
 
   var proxyitem = document.getElementById("shareAllProxies");
   proxyitem.checked = configarray["shareAllProxies"];
