@@ -2109,7 +2109,7 @@ function toggleProxySettings()
   var ports = [ftpPort,gopherPort,sslPort];
   var allFields = [ftp,gopher,ssl,ftpPort,gopherPort,sslPort,socks,socksPort,socksVersion,socksVersion4,socksVersion5];
 
-  if (document.getElementById("shareAllProxies").checked) {
+  if ((document.getElementById("shareAllProxies").checked) || document.getElementById("ProxyType").value != "1") {
     for (i = 0; i < allFields.length; i++)
       allFields[i].setAttribute("disabled", "true");
   } else {
