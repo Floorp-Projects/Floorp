@@ -173,7 +173,7 @@
 
 
 <!ENTITY  customizeCerts.label          "Customize Certificates">
-<!ENTITY  customizeCerts.warning       "You may select certificates to be preinstalled.<html:br/><html:br/>
+<!ENTITY  customizeCerts.warning       "You may select certificates to be preinstalled (PEM format only).<html:br/><html:br/>
                                         <html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
                                         ship a browser outside of your company or institution and call it Firefox.
                                         This feature is intended primarily for corporate and institutional users
