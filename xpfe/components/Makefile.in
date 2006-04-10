@@ -125,15 +125,15 @@ ifeq ($(OS_ARCH),WINNT)
 DIRS += winhooks
 endif
 
+# build2 should be last
+DIRS += build2
+
+endif
+
 ifndef MOZ_XUL_APP
 ifdef MOZ_ENABLE_XREMOTE
 TOOL_DIRS += xremote
 endif
-endif
-
-# build2 should be last
-DIRS += build2
-
 endif
 
 include $(topsrcdir)/config/rules.mk
