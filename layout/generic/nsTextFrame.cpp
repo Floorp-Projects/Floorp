@@ -4599,15 +4599,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   switch (aPos->mAmount){
     case eSelectNoAmount:
     {
-      // Transform text from content into renderable form
-      nsIDocument* doc = mContent->GetDocument();
-      if (!doc) {
-        return NS_OK;
-      }
-      nsTextTransformer tx(aPresContext);
-      PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
-
-      if (textLength)//if no renderable length, you can't park here.
+      if (!IsEmpty()) //if no renderable length, you can't park here.
       {
         aPos->mContentOffset = aPos->mStartOffset;
         result = NS_OK;
