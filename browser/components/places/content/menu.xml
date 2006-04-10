@@ -449,7 +449,8 @@
           if (timer == this._overFolder.closeTimer) {
             // Only close the submenu if the mouse isn't being dragged over any
             // of its child menus.
-            var draggingOverChild = this._draggingOverChildNode(this._overFolder.node);
+            var draggingOverChild = 
+              PlacesControllerDragHelper.draggingOverChildNode(this._overFolder.node);
             if (draggingOverChild)
               this._overFolder.node = null;
             this._clearOverFolder();
@@ -463,7 +464,7 @@
           
           // Timer to close this menu after the drag exit.
           if (timer == this._closeMenuTimer) {
-            if (!this._draggingOverChildNode(this._self)) {
+            if (!PlacesControllerDragHelper.draggingOverChildNode(this._self)) {
               this._self.hidePopupAndChildPopups();
               // Close any parent menus that aren't being dragged over;
               // otherwise they'll stay open because they couldn't close
@@ -471,19 +472,6 @@
               this._closeParentMenus();
             }
           }
-        },
-        
-        // Helper function that determines if the mouse is currently being dragged
-        // over a child node of this menu.  This is necessary so that the menu
-        // doesn't close while the mouse is dragging over one of its submenus.
-        _draggingOverChildNode: function TBV_DO_draggingOverChildNode(node) {
-          var currentNode = PlacesControllerDragHelper.currentDropTarget;
-          while (currentNode) {
-            if (currentNode == node)
-              return true;
-            currentNode = currentNode.parentNode;
-          }
-          return false;
         },
         
         // Helper function to close all parent menus of this menu,
@@ -494,7 +482,7 @@
           while(parent) {
             if (parent.nodeName == "menupopup" &&
                 parent.getAttribute("type") == "places") {
-              if (this._draggingOverChildNode(parent.parentNode))
+              if (PlacesControllerDragHelper.draggingOverChildNode(parent.parentNode))
                 break;
               parent.hidePopup();
             }
@@ -640,8 +628,7 @@
           if (dropPoint == null)
             return;
           PlacesController.activeView = this._self;
-          PlacesControllerDragHelper.onDrop(null, this._self,
-                                            dropPoint.ip, 1);
+          PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
           this._self._rebuild();
         },
         

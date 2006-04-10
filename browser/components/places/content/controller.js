@@ -109,6 +109,9 @@ function InsertionPoint(folderId, index, orientation) {
   this.index = index;
   this.orientation = orientation;
 }
+InsertionPoint.prototype.toString = function IP_toString() {
+  return "[object InsertionPoint(folder:" + this.folderId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
+};
 
 /**
  * Manages grouping options for a particular view type. 
@@ -2064,6 +2067,28 @@ var PlacesController = {
  * Drop functions are passed the view that is being dropped on. 
  */
 var PlacesControllerDragHelper = {
+
+  /**
+   * Determines if the mouse is currently being dragged over a child node of
+   * this menu. This is necessary so that the menu doesn't close while the
+   * mouse is dragging over one of its submenus
+   * @param   node
+   *          The container node
+   * @returns true if the user is dragging over a node within the hierarchy of
+   *          the container, false otherwise.
+   */
+  draggingOverChildNode: function PCDH_draggingOverChildNode(node) {
+    var currentNode = this.currentDropTarget;
+    while (currentNode) {
+      if (currentNode == node)
+        return true;
+      currentNode = currentNode.parentNode;
+    }
+    return false;
+  },
+        
+  
+
   /**
    * DOM Element currently being dragged over
    */
@@ -2112,6 +2137,8 @@ var PlacesControllerDragHelper = {
   /** 
    * Creates a Transeferable object that can be filled with data of types
    * supported by a view. 
+   * @param   session
+   *          The active drag session
    * @param   view
    *          An object implementing the AVI that supplies a list of 
    *          supported droppable content types
@@ -2120,7 +2147,7 @@ var PlacesControllerDragHelper = {
    * @returns An object implementing nsITransferable that can receive data
    *          dropped onto a view. 
    */
-  _initTransferable: function PCDH__initTransferable(view, orientation) {
+  _initTransferable: function PCDH__initTransferable(session, view, orientation) {
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
@@ -2128,8 +2155,10 @@ var PlacesControllerDragHelper = {
       var types = view.peerDropTypes;
     else
       types = view.childDropTypes;    
-    for (var j = 0; j < types.length; ++j)
-      xferable.addDataFlavor(types[j]);
+    for (var i = 0; i < types.length; ++i) {
+      if (session.isDataFlavorSupported(types[i]));
+        xferable.addDataFlavor(types[i]);
+    }
     return xferable;
   },
   
@@ -2141,19 +2170,12 @@ var PlacesControllerDragHelper = {
    *          The AVI-implementing object that received the drop. 
    * @param   insertionPoint
    *          The insertion point where the items should be dropped
-   * @param   visibleInsertCount
-   *          The number of visible items to be inserted. This can be zero
-   *          even when items are dropped because this is how many items will
-   *          be _visible_ in the resulting tree. 
-   *          XXXben this parameter appears to be unused! check call sites.
-   *                 check d&d feedback.
    */
-  onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint, 
-                               visibleInsertCount) {
+  onDrop: function PCDH_onDrop(sourceView, targetView, insertionPoint) {
     var session = this.getSession();
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
-    var xferable = this._initTransferable(targetView, 
+    var xferable = this._initTransferable(session, targetView, 
                                           insertionPoint.orientation);
     var dropCount = session.numDropItems;
     for (var i = dropCount - 1; i >= 0; --i) {
@@ -2242,6 +2264,7 @@ PlacesAggregateTransaction.prototype = {
  * Create a new Folder
  */
 function PlacesCreateFolderTransaction(name, container, index) {
+  NS_ASSERT(index >= -1, "invalid insertion index");
   this._name = name;
   this.container = container;
   this._index = index;
@@ -2277,6 +2300,7 @@ PlacesCreateFolderTransaction.prototype = {
  * Create a new Item
  */
 function PlacesCreateItemTransaction(uri, container, index) {
+  NS_ASSERT(index >= -1, "invalid insertion index");
   this._uri = uri;
   this.container = container;
   this._index = index;
@@ -2300,6 +2324,7 @@ PlacesCreateItemTransaction.prototype = {
  * Create a new Separator
  */
 function PlacesCreateSeparatorTransaction(container, index) {
+  NS_ASSERT(index >= -1, "invalid insertion index");
   this.container = container;
   this._index = index;
   this._id = null;
@@ -2323,6 +2348,7 @@ PlacesCreateSeparatorTransaction.prototype = {
  */
 function PlacesMoveFolderTransaction(id, oldContainer, oldIndex, newContainer, newIndex) {
   NS_ASSERT(!isNaN(id + oldContainer + oldIndex + newContainer + newIndex), "Parameter is NaN!");
+  NS_ASSERT(newIndex >= -1, "invalid insertion index");
   this._id = id;
   this._oldContainer = oldContainer;
   this._oldIndex = oldIndex;

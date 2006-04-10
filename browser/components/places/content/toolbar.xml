@@ -559,6 +559,17 @@
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           }
           xferData.data = PlacesController.getTransferData(dragAction.action);
+#ifdef XP_WIN
+          // Support folder dragging on the personal toolbar when the user 
+          // holds the "alt" key while they drag (Ctrl+drag has another 
+          // meaning - Copy). This does not appear to work at all on Linux.
+          if (event.target.localName == "toolbarbutton" &&
+              event.target.getAttribute("type") == "menu") {
+            if (!event.shiftKey && !event.altKey && !event.ctrlKey)
+              return false;
+            event.target.firstChild.hidePopup();
+          }
+#endif
         },
         
         canDrop: function TBV_DO_canDrop(event, session) {
@@ -617,8 +628,7 @@
           if (dropPoint == null)
             return;
           PlacesController.activeView = this._self;
-          PlacesControllerDragHelper.onDrop(null, this._self,
-                                            dropPoint.ip, 1);
+          PlacesControllerDragHelper.onDrop(null, this._self, dropPoint.ip);
         },
         
         onDragExit: function TBV_DO_onDragExit(event, session) {
@@ -692,8 +702,7 @@
         document.commandDispatcher.updateCommands("mousedown");
       ]]></handler>
       <handler event="draggesture"><![CDATA[
-        if (event.target.localName == "toolbarbutton" && 
-            !event.target.hasAttribute("type"))
+        if (event.target.localName == "toolbarbutton")
           nsDragAndDrop.startDrag(event, this._DNDObserver);
       ]]></handler>
       <handler event="dragover"><![CDATA[

@@ -441,7 +441,10 @@
 #else
   <menu id="bookmarksMenu" 
         label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;"
-        ondragover="BookmarksEventHandler.onDragOver(event);">
+        ondragenter="PlacesMenuDNDController.onBookmarksMenuDragEnter(event);"
+        ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDropHandler);"
+        ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDropHandler);"
+        ondragexit="PlacesMenuDNDController.onDragExit(event);">
     <menupopup id="bookmarksMenuPopup"
                type="places" asyncinit="true"
                place="place:&amp;folder=2&amp;group=3&amp;expandQueries=1"
