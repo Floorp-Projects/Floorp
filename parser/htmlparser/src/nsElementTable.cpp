@@ -1036,17 +1036,6 @@ const nsHTMLElement gHTMLElements[] = {
   },
   {
     
-    /*tag*/                             eHTMLTag_sound,
-    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
-    /*autoclose starttags and endtags*/ 0,0,0,0,
-    /*parent,incl,exclgroups*/          (kFlowEntity|kHeadMisc), kNone, kNone,  // Added kFlowEntity|kHeadMisc & kNonContainer in
-    /*special props, prop-range*/       kNonContainer,kDefaultPropRange,        // Ref. to Bug 25749
-    /*special parents,kids,skip*/       0,0,eHTMLTag_unknown,
-    /*contain-func*/                    0
-  },
-  {
-    
     /*tag*/                             eHTMLTag_spacer,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
