@@ -409,7 +409,7 @@ sub print_ci {
     print "<TD width=45%><a href='cvsview2.cgi?subdir=$url_dir" .
         "&files=$url_file\&command=DIRECTORY&branch=$::query_branch" .
         "&root=" . $ci->[$::CI_REPOSITORY] . "'\n" .
-        " onclick=\"return js_file_menu($ci->[$::CI_REPOSITORY], '$url_dir'," .
+        " onclick=\"return js_file_menu('$ci->[$::CI_REPOSITORY]', '$url_dir'," .
         "'$url_file','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
 #     if( (length $ci->[$::CI_FILE]) + (length $ci->[$::CI_DIR])  > 30 ){
 #         $d = $ci->[$::CI_DIR];
