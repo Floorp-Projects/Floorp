@@ -323,9 +323,14 @@ class AddOn extends AMO_Object {
                 CommentVote,
                 `helpful-yes` as helpful_yes,
                 `helpful-no` as helpful_no,
-                `helpful-yes` + `helpful-no` as helpful_total
+                `helpful-yes` + `helpful-no` as helpful_total,
+                UserName
             FROM
                 feedback
+            LEFT JOIN
+                userprofiles
+            ON
+                userprofiles.UserID = feedback.UserID
             WHERE
                 ID = '{$this->ID}' AND
                 CommentVote IS NOT NULL
