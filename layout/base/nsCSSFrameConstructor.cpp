@@ -5274,7 +5274,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       mPresShell->SetAnonymousContentFor(aContent, nsnull);
 
       InitializeSelectFrame(aState, listFrame, scrolledFrame, aContent,
-                            comboboxFrame, aStyleContext, PR_TRUE, aFrameItems);
+                            comboboxFrame, listStyle, PR_TRUE, aFrameItems);
 
         // Set flag so the events go to the listFrame not child frames.
         // XXX: We should replace this with a real widget manager similar
