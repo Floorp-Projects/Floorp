@@ -1775,6 +1775,12 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   nsresult rv;
   
+  nsIDocument *oldOwnerDocument = GetOwnerDoc();
+  nsIDocument *newOwnerDocument;
+  nsNodeInfoManager* nodeInfoManager;
+
+  // XXXbz sXBL/XBL2 issue!
+
   // Finally, set the document
   if (aDocument) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
@@ -1789,38 +1795,42 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Being added to a document.
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
 
-    // check the document on the nodeinfo to see whether we need a
-    // new nodeinfo
-    // XXXbz sXBL/XBL2 issue!
-    nsIDocument *ownerDocument = GetOwnerDoc();
-    if (aDocument != ownerDocument) {
-      if (ownerDocument && HasProperties()) {
-        // Copy UserData to the new document.
-        ownerDocument->CopyUserData(this, aDocument);
+    newOwnerDocument = aDocument;
+    nodeInfoManager = newOwnerDocument->NodeInfoManager();
+  } else {
+    newOwnerDocument = aParent->GetOwnerDoc();
+    nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
+  }
 
-        // Remove all properties.
-        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-      }
+  // Handle a change in our owner document.
 
-      // get a new nodeinfo
-      nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
-      if (nodeInfoManager) {
-        nsCOMPtr<nsINodeInfo> newNodeInfo;
-        rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                          mNodeInfo->GetPrefixAtom(),
-                                          mNodeInfo->NamespaceID(),
-                                          getter_AddRefs(newNodeInfo));
-        NS_ENSURE_SUCCESS(rv, rv);
-        NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
-        mNodeInfo.swap(newNodeInfo);
-      }
+  if (oldOwnerDocument) {
+    if (newOwnerDocument && HasProperties()) {
+      // Copy UserData to the new document.
+      oldOwnerDocument->CopyUserData(this, newOwnerDocument);
+    }
 
-      // set a new nodeinfo on attribute nodes
-      nsDOMSlots *slots = GetExistingDOMSlots();
-      if (slots && slots->mAttributeMap) {
-        rv = slots->mAttributeMap->SetOwnerDocument(aDocument);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    // Remove all properties.
+    oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+  }
+
+  if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
+    rv = nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
+                                      mNodeInfo->GetPrefixAtom(),
+                                      mNodeInfo->NamespaceID(),
+                                      getter_AddRefs(newNodeInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
+    mNodeInfo.swap(newNodeInfo);
+  }
+
+  if (newOwnerDocument && newOwnerDocument != oldOwnerDocument) {
+    // set a new nodeinfo on attribute nodes
+    nsDOMSlots *slots = GetExistingDOMSlots();
+    if (slots && slots->mAttributeMap) {
+      rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -2428,7 +2438,7 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   
   NS_PRECONDITION(aKid && aKid->GetParent() == aParent &&
                   aKid == container->GetChildAt(aIndex) &&
-                  container->IndexOf(aKid) == aIndex, "Bogus aKid");
+                  container->IndexOf(aKid) == (PRInt32)aIndex, "Bogus aKid");
 
   mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
 
@@ -3104,9 +3114,8 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
 
 /* static */
 nsresult
-nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild,
-                                nsIContent* aParent, nsIDocument* aDocument,
-                                nsIDOMNode** aReturn)
+nsGenericElement::doRemoveChild(nsIDOMNode* aOldChild, nsIContent* aParent,
+                                nsIDocument* aDocument, nsIDOMNode** aReturn)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
   NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
@@ -3776,7 +3785,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
   mNodeInfo->GetQualifiedName(buf);
   fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
 
-  fprintf(out, "@%p", this);
+  fprintf(out, "@%p", (void *)this);
 
   PRUint32 index, attrcount = mAttrsAndChildren.AttrCount();
   for (index = 0; index < attrcount; index++) {

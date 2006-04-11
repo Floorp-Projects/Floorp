@@ -102,7 +102,7 @@ public:
   // the actual ownerDocument of aContent may not yet be aNewDocument.
   // XXXbz but then if it gets wrapped after we do this call but before its
   // ownerDocument actually changes, things will break...
-  static nsresult ReparentContentWrapper(nsIContent *aContent,
+  static nsresult ReparentContentWrapper(nsIContent *aNode,
                                          nsIContent *aNewParent,
                                          nsIDocument *aNewDocument,
                                          nsIDocument *aOldDocument);
@@ -790,7 +790,7 @@ private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,
                                            JSObject *aOldGlobal,
-                                           JSObject *parent_obj);
+                                           JSObject *aNewGlobal);
 
   static nsresult EnsureStringBundle(PropertiesFile aFile);
 

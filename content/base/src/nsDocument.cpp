@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -2118,6 +2119,13 @@ nsDocument::GetScriptGlobalObject() const
    return mScriptGlobalObject;
 }
 
+nsIScriptGlobalObject*
+nsDocument::GetScopeObject()
+{
+  nsCOMPtr<nsIScriptGlobalObject> scope(do_QueryReferent(mScopeObject));
+  return scope;
+}
+
 void
 nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 {
@@ -2145,6 +2153,20 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
+
+  // The scope object is immutable, only set it once.
+  if (!mScopeObject) {
+    mScopeObject = do_GetWeakReference(aScriptGlobalObject);
+  }
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIScriptGlobalObject> scope = do_QueryReferent(mScopeObject);
+
+    NS_ASSERTION(!aScriptGlobalObject || aScriptGlobalObject == scope,
+                 "script global and scope mismatch!");
+  }
+#endif
 
   if (mScriptGlobalObject) {
     // Go back to using the docshell for the layout history state

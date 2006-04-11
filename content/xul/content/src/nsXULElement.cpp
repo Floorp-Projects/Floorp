@@ -800,56 +800,70 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
     mParentPtrBits = new_bits;
 
+    nsIDocument *oldOwnerDocument = GetOwnerDoc();
+    nsIDocument *newOwnerDocument;
+    nsNodeInfoManager* nodeInfoManager;
+
+    // XXXbz sXBL/XBL2 issue!
+
     // Finally, set the document
-    if (aDocument && aDocument != GetCurrentDoc()) {
+    if (aDocument) {
         // Notify XBL- & nsIAnonymousContentCreator-generated
-        // anonymous content that the document is changing.
-        // XXXbz ordering issues here?  Probably not, since ChangeDocumentFor
-        // is just pretty broken anyway....  Need to get it working.
+        // anonymous content that the document is changing.  XXXbz
+        // ordering issues here?  Probably not, since
+        // ChangeDocumentFor is just pretty broken anyway....  Need to
+        // get it working.
+
         // XXXbz XBL doesn't handle this (asserts), and we don't really want
         // to be doing this during parsing anyway... sort this out.    
         //    aDocument->BindingManager()->ChangeDocumentFor(this, nsnull,
         //                                                   aDocument);
-        
+
         // Being added to a document.
         mParentPtrBits |= PARENT_BIT_INDOCUMENT;
 
-        // check the document on the nodeinfo to see whether we need a
-        // new nodeinfo
-        // XXXbz sXBL/XBL2 issue!
-        nsIDocument *ownerDocument = GetOwnerDoc();
-        if (aDocument != ownerDocument) {
-            if (ownerDocument && HasProperties()) {
-                // Copy UserData to the new document.
-                ownerDocument->CopyUserData(this, aDocument);
+        newOwnerDocument = aDocument;
+        nodeInfoManager = newOwnerDocument->NodeInfoManager();
+    } else {
+        newOwnerDocument = aParent->GetOwnerDoc();
+        nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
+    }
 
-                // Remove all properties.
-                ownerDocument->PropertyTable()->
-                  DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
-            }
+    // Handle a change in our owner document.
 
-            // get a new nodeinfo
-            nsNodeInfoManager* nodeInfoManager = aDocument->NodeInfoManager();
-            if (nodeInfoManager) {
-                nsCOMPtr<nsINodeInfo> newNodeInfo;
-                nsresult rv =
-                    nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
-                                                 mNodeInfo->GetPrefixAtom(),
-                                                 mNodeInfo->NamespaceID(),
-                                                 getter_AddRefs(newNodeInfo));
-                NS_ENSURE_SUCCESS(rv, rv);
-                NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
-                mNodeInfo.swap(newNodeInfo);
-            }
-
-            // set a new nodeinfo on attribute nodes
-            nsDOMSlots *slots = GetExistingDOMSlots();
-            if (slots && slots->mAttributeMap) {
-              rv = slots->mAttributeMap->SetOwnerDocument(aDocument);
-              NS_ENSURE_SUCCESS(rv, rv);
-            }
+    if (oldOwnerDocument) {
+        if (newOwnerDocument && HasProperties()) {
+            // Copy UserData to the new document.
+            oldOwnerDocument->CopyUserData(this, aDocument);
         }
 
+        // Remove all properties.
+        oldOwnerDocument->PropertyTable()->
+            DeleteAllPropertiesFor(NS_STATIC_CAST(nsINode*, this));
+    }
+
+    if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
+        nsCOMPtr<nsINodeInfo> newNodeInfo;
+        nsresult rv =
+            nodeInfoManager->GetNodeInfo(mNodeInfo->NameAtom(),
+                                         mNodeInfo->GetPrefixAtom(),
+                                         mNodeInfo->NamespaceID(),
+                                         getter_AddRefs(newNodeInfo));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ASSERTION(newNodeInfo, "GetNodeInfo lies");
+        mNodeInfo.swap(newNodeInfo);
+    }
+
+    if (newOwnerDocument && newOwnerDocument != oldOwnerDocument) {
+        // set a new nodeinfo on attribute nodes
+        nsDOMSlots *slots = GetExistingDOMSlots();
+        if (slots && slots->mAttributeMap) {
+            rv = slots->mAttributeMap->SetOwnerDocument(newOwnerDocument);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    if (aDocument) {
         // we need to (re-)initialize several attributes that are dependant on
         // the document. Do that now.
         // XXXbz why do we have attributes depending on the current document?

@@ -698,6 +698,12 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
   mParentPtrBits = new_bits;
 
+  nsIDocument *oldOwnerDocument = GetOwnerDoc();
+  nsIDocument *newOwnerDocument;
+  nsNodeInfoManager* nodeInfoManager;
+
+  // XXXbz sXBL/XBL2 issue!
+
   // Set document
   if (aDocument) {
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
@@ -705,38 +711,43 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       aDocument->SetBidiEnabled(PR_TRUE);
     }
 
-    nsIDocument *ownerDocument = GetOwnerDoc();
-    if (aDocument != ownerDocument) {
-      if (ownerDocument && CouldHaveProperties()) {
-        // Copy UserData to the new document.
-        ownerDocument->CopyUserData(this, aDocument);
+    newOwnerDocument = aDocument;
+    nodeInfoManager = newOwnerDocument->NodeInfoManager();
+  } else {
+    newOwnerDocument = aParent->GetOwnerDoc();
+    nodeInfoManager = aParent->NodeInfo()->NodeInfoManager();
+  }
 
-        // Remove all properties.
-        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-      }
-
-      // get a new nodeinfo
-      nsNodeInfoManager *nodeInfoManager = aDocument->NodeInfoManager();
-      nsCOMPtr<nsINodeInfo> newNodeInfo;
-      // optimize common cases
-      nsIAtom* name = mNodeInfo->NameAtom();
-      if (name == nsLayoutAtoms::textTagName) {
-        newNodeInfo = nodeInfoManager->GetTextNodeInfo();
-        NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-      }
-      else if (name == nsLayoutAtoms::commentTagName) {
-        newNodeInfo = nodeInfoManager->GetCommentNodeInfo();
-        NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
-      }
-      else {
-        rv = nodeInfoManager->GetNodeInfo(name,
-                                          mNodeInfo->GetPrefixAtom(),
-                                          mNodeInfo->NamespaceID(),
-                                          getter_AddRefs(newNodeInfo));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-      mNodeInfo.swap(newNodeInfo);
+  if (oldOwnerDocument) {
+    if (newOwnerDocument && CouldHaveProperties()) {
+      // Copy UserData to the new document.
+      oldOwnerDocument->CopyUserData(this, newOwnerDocument);
     }
+
+    // Remove all properties.
+    oldOwnerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+  }
+
+  if (mNodeInfo->NodeInfoManager() != nodeInfoManager) {
+    nsCOMPtr<nsINodeInfo> newNodeInfo;
+    // optimize common cases
+    nsIAtom* name = mNodeInfo->NameAtom();
+    if (name == nsLayoutAtoms::textTagName) {
+      newNodeInfo = nodeInfoManager->GetTextNodeInfo();
+      NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+    }
+    else if (name == nsLayoutAtoms::commentTagName) {
+      newNodeInfo = nodeInfoManager->GetCommentNodeInfo();
+      NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
+    }
+    else {
+      rv = nodeInfoManager->GetNodeInfo(name,
+                                        mNodeInfo->GetPrefixAtom(),
+                                        mNodeInfo->NamespaceID(),
+                                        getter_AddRefs(newNodeInfo));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    mNodeInfo.swap(newNodeInfo);
   }
 
   NS_POSTCONDITION(aDocument == GetCurrentDoc(), "Bound to wrong document");
