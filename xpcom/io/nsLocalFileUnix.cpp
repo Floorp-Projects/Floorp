@@ -1586,7 +1586,12 @@ nsLocalFile::Load(PRLibrary **_retval)
 
     NS_TIMELINE_START_TIMER("PR_LoadLibrary");
 
-    *_retval = PR_LoadLibrary(mPath.get());
+    PRLibSpec ls = {
+        PR_LibSpec_Pathname,
+        mPath.get()
+    };
+
+    *_retval = PR_LoadLibraryWithFlags(ls, PR_LD_NOW);
 
     NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
     NS_TIMELINE_MARK_TIMER1("PR_LoadLibrary", mPath.get());
