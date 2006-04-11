@@ -2231,12 +2231,10 @@ si_RememberSignonData
     }
 
     if (j<signonData->Count()) {
-      data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
-
-      if (si_OkToSave(passwordRealm, legacyRealm, data2->value, window)) {
+      if (si_OkToSave(passwordRealm, legacyRealm, data->value, window)) {
         // remove legacy password entry if found
-        if (legacyRealm && si_CheckForUser(legacyRealm, data2->value)) {
-          si_RemoveUser(legacyRealm, data2->value, PR_TRUE, PR_FALSE, PR_TRUE);
+        if (legacyRealm && si_CheckForUser(legacyRealm, data->value)) {
+          si_RemoveUser(legacyRealm, data->value, PR_TRUE, PR_FALSE, PR_TRUE);
         }
         Wallet_GiveCaveat(window, nsnull);
         for (j=0; j<signonData->Count(); j++) {
