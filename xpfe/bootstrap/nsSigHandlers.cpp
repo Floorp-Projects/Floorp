@@ -90,6 +90,7 @@ void abnormal_exit_handler(int signum)
   if (    (signum == SIGSEGV)
        || (signum == SIGILL)
        || (signum == SIGABRT)
+       || (signum == SIGFPE)
      )
   {
     printf("prog = %s\npid = %d\nsignal = %s\n", 
@@ -177,11 +178,13 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGSEGV, abnormal_exit_handler);
   signal(SIGILL,  abnormal_exit_handler);
   signal(SIGABRT, abnormal_exit_handler);
+  signal(SIGFPE,  abnormal_exit_handler);
 
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
   signal(SIGSEGV, ah_crap_handler);
   signal(SIGILL, ah_crap_handler);
   signal(SIGABRT, ah_crap_handler);
+  signal(SIGFPE, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
