@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,7 +40,6 @@
 #include <winresrc.h>
 #include <dlgs.h>
 
-IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "res/select.cur"
 IDC_GRAB                CURSOR  DISCARDABLE     "res/grab.cur"
 IDC_GRABBING            CURSOR  DISCARDABLE     "res/grabbing.cur"
 IDC_CELL                CURSOR  DISCARDABLE     "res/cell.cur"
