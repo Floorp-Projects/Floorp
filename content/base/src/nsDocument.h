@@ -712,6 +712,19 @@ protected:
   // Dispatch an event to the ScriptGlobalObject for this document
   void DispatchEventToWindow(nsEvent *aEvent);
 
+  // Copy |mObservers| to an nsCOMArray in preparation so we can notify
+  // the list of observers set up at one point in time.
+  void CopyObserversTo(nsCOMArray<nsIDocumentObserver>& aDestination);
+
+#define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                          \
+  do {                                                                        \
+    nsCOMArray<nsIDocumentObserver> observers_;                               \
+    CopyObserversTo(observers_);                                              \
+    for (PRInt32 i_ = observers_.Count() - 1; i_ >= 0; --i_) {                \
+      observers_[i_] -> func_ params_ ;                                       \
+    }                                                                         \
+  } while (0)
+
 #ifdef DEBUG
   void VerifyRootContentState();
 #endif

@@ -310,16 +310,7 @@ nsXULDocument::~nsXULDocument()
     // Notify our observers here, we can't let the nsDocument
     // destructor do that for us since some of the observers are
     // deleted by the time we get there.
-
-    PRInt32 i;
-    for (i = mObservers.Count() - 1; i >= 0; --i) {
-        // XXX Should this be a kungfudeathgrip?!!!!
-        nsIDocumentObserver* observer =
-            NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
-
-        observer->DocumentWillBeDestroyed(this);
-    }
-
+    NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentWillBeDestroyed, (this));
     mObservers.Clear();
 
     // In case we failed somewhere early on and the forward observer
@@ -1018,11 +1009,9 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
     }
 
     // Now notify external observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute,
-                                   aModType);
-    }
+    NS_DOCUMENT_NOTIFY_OBSERVERS(AttributeChanged,
+                                 (this, aElement, aNameSpaceID,
+                                  aAttribute, aModType));
 
     // See if there is anything we need to persist in the localstore.
     //
@@ -2958,10 +2947,7 @@ nsXULDocument::ResumeWalk()
         if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
             gXULCache->WritePrototype(mMasterPrototype);
 
-        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
-            observer->EndLoad(this);
-        }
+        NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
         DispatchContentLoadedEvents();
 
