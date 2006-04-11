@@ -1230,13 +1230,9 @@ PR_ParseTimeString(
                                 else
                                   tmp_hour = (rest[0]-'0');
 
-                                while (*rest && *rest != ':')
-                                  rest++;
-                                rest++;
-
                                 /* move over the colon, and parse minutes */
 
-                                end = rest + 1;
+                                rest = ++end;
                                 while (*end >= '0' && *end <= '9')
                                   end++;
 
