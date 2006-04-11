@@ -12,7 +12,7 @@
 ** This header file defines the interface that the SQLite library
 ** presents to client programs.
 **
-** @(#) $Id: sqlite.h.in,v 1.163 2006/02/16 18:16:37 drh Exp $
+** @(#) $Id: sqlite3.h,v 1.4 2006/02/22 20:47:51 brettw%gmail.com Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -1486,6 +1486,19 @@ int sqlite3_bind_parameter_indexes(
     int **pIndexes
 );
 void sqlite3_free_parameter_indexes(int *pIndexes);
+
+/*
+** Preload the databases into the pager cache, up to the maximum size of the
+** pager cache.
+**
+** For a database to be loaded successfully, the pager must be active. That is,
+** there must be an open statement on that database. See sqlite3pager_loadall
+**
+** There might be many databases attached to the given connection. We iterate
+** them all and try to load them. If none are loadable successfully, we return
+** an error. Otherwise, we return OK.
+*/
+int sqlite3Preload(sqlite3* db);
 
 #ifdef __cplusplus
 }  /* End of the 'extern "C"' block */

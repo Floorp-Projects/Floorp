@@ -27,6 +27,9 @@
 #include "sqliteInt.h"
 #include <ctype.h>
 
+#include "pager.h"
+#include "btree.h"
+
 /*
 ** This routine is called when a new SQL statement is beginning to
 ** be parsed.  Initialize the pParse structure as needed.
@@ -3218,4 +3221,30 @@ KeyInfo *sqlite3IndexKeyinfo(Parse *pParse, Index *pIdx){
     pKey = 0;
   }
   return pKey;
+}
+
+
+/* See declaration in sqlite3.h for information */
+int sqlite3Preload(sqlite3* db)
+{
+  Pager* pPager;
+  Btree* pBt;
+  int rc;
+  int i;
+  int dbsLoaded = 0;
+
+  for (i = 0; i < db->nDb; i ++) {
+    pBt = db->aDb[i].pBt;
+    if (! pBt)
+      continue;
+    pPager = sqlite3BtreePager(pBt);
+    if (pPager) {
+      rc = sqlite3pager_loadall(pPager);
+      if (rc == SQLITE_OK)
+        dbsLoaded ++;
+    }
+  }
+  if (dbsLoaded == 0)
+    return SQLITE_ERROR;
+  return SQLITE_OK;
 }
