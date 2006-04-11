@@ -506,7 +506,7 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
 PRInt32
 nsXTFElementWrapper::IntrinsicState() const
 {
-  return mIntrinsicState;
+  return nsXTFElementWrapperBase::IntrinsicState() | mIntrinsicState;
 }
 
 nsresult
