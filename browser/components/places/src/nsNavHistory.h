@@ -343,7 +343,6 @@ protected:
   nsCOMPtr<mozIStorageService> mDBService;
   nsCOMPtr<mozIStorageConnection> mDBConn;
 
-  //nsCOMPtr<mozIStorageStatement> mDBGetVisitPageInfo; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfo;   // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
@@ -367,6 +366,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBUrlToUrlResult; // kGetInfoIndex_* results
 
   nsresult InitDB(PRBool *aDoImport);
+  nsresult InitStatements();
 
 #ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
