@@ -3479,6 +3479,18 @@ nsDocShell::Destroy()
     // Fire unload event before we blow anything away.
     (void) FirePageHideNotification(PR_TRUE);
 
+    // Note: mContentListener can be null if Init() failed and we're being
+    // called from the destructor.
+    if (mContentListener) {
+        mContentListener->DropDocShellreference();
+        mContentListener->SetParentContentListener(nsnull);
+        // Note that we do NOT set mContentListener to null here; that
+        // way if someone tries to do a load in us after this point
+        // the nsDSURIContentListener will block it.  All of which
+        // means that we should do this before calling Stop(), of
+        // course.
+    }
+
     // Stop any URLs that are currently being loaded...
     Stop(nsIWebNavigation::STOP_ALL);
 
@@ -3519,13 +3531,6 @@ nsDocShell::Destroy()
 
     mSessionHistory = nsnull;
     SetTreeOwner(nsnull);
-
-    // Note: mContentListener can be null if Init() failed and we're being
-    // called from the destructor.
-    if (mContentListener) {
-        mContentListener->DropDocShellreference();
-        mContentListener->SetParentContentListener(nsnull);
-    }
 
     // required to break ref cycle
     mSecurityUI = nsnull;
