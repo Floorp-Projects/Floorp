@@ -443,6 +443,8 @@ public:
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
+  virtual nsIScriptGlobalObject* GetScopeObject();
+
   /**
    * Return the window containing the document (the outer window).
    */
@@ -741,6 +743,11 @@ protected:
   // document can get its script context and scope. This is the
   // *inner* window object.
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
+
+  // Weak reference to the scope object (aka the script global object)
+  // that, unlike mScriptGlobalObject, is never unset once set. This
+  // is a weak reference to avoid leaks due to circular references.
+  nsWeakPtr mScopeObject;
 
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;

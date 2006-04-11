@@ -91,8 +91,9 @@ class nsIDocumentObserver;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xb657335d, 0x43db, 0x41f3, \
-  { 0x8c, 0xc0, 0xe2, 0x29, 0x88, 0xb5, 0x99, 0x69 } }
+{ 0xfa567fd5, 0x5220, 0x436c, \
+  { 0xbe, 0x76, 0xdd, 0x1a, 0x78, 0xfb, 0x8c, 0x1a } }
+
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -476,6 +477,14 @@ public:
    */
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+
+  /**
+   * Get the object that is used as the scope for all of the content
+   * wrappers whose owner document is this document. Unlike the script
+   * global object, this never changes once it's set. Use this object
+   * when you're trying to find a content wrapper in XPConnect.
+   */
+  virtual nsIScriptGlobalObject* GetScopeObject() = 0;
 
   /**
    * Return the window containing the document (the outer window).
