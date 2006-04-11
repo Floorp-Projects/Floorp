@@ -2944,7 +2944,7 @@ ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
                                     GetDocumentURI(),
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "HTML Document");
+                                  "DOM Events");
 }
 
 NS_IMETHODIMP

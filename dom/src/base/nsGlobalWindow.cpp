@@ -3824,7 +3824,7 @@ ReportUseOfDeprecatedMethod(nsGlobalWindow* aWindow, const char* aWarning)
                                   doc ? doc->GetDocumentURI() : nsnull,
                                   EmptyString(), 0, 0,
                                   nsIScriptError::warningFlag,
-                                  "DOM Window");
+                                  "DOM Events");
 }
 
 NS_IMETHODIMP
