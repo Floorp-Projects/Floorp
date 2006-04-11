@@ -1661,18 +1661,6 @@ if test "${enable_64bit+set}" = set; then
    if test "$enableval" = "yes"; then
 	    USE_64=1 ; export USE_64
       fi
-else
-
-        arch=`uname -m`
-        case $arch in
-             x86_64|ppc64|ia64|s390x) USE_64=1 ; export USE_64 ;;
-             sun4u) instr_set=`optisa \`isalist\``
-                    case $instr_set in
-                         sparcv9*) USE_64=1 ; export USE_64 ;;
-                    esac
-             ;;
-        esac
-
 fi;
 
 # Check whether --enable-mdupdate or --disable-mdupdate was given.

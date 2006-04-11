@@ -200,18 +200,7 @@ AC_ARG_ENABLE(64bit,
     [ if test "$enableval" = "yes"; then
 	    USE_64=1 ; export USE_64
       fi ],
-    [
-dnl if the user specified nothing, just guess based on machine type
-        arch=`uname -m`
-        case $arch in
-             x86_64|ppc64|ia64|s390x) USE_64=1 ; export USE_64 ;;
-             sun4u) instr_set=`optisa \`isalist\``
-                    case $instr_set in
-                         sparcv9*) USE_64=1 ; export USE_64 ;;
-                    esac
-             ;;
-        esac
-    ])
+    [])
 
 AC_ARG_ENABLE(mdupdate,
     [  --enable-mdupdate       Enable use of certain compilers' mdupdate feature],
