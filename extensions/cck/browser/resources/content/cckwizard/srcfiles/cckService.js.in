@@ -205,8 +205,7 @@ CCKService.prototype={
         cert = cert.replace(/-----BEGIN CERTIFICATE-----[\r\n]/, "");
         cert = cert.replace(/-----END CERTIFICATE-----[\r\n]/, "");
         cert = cert.replace(/[\r\n]/g, "");
-        if (!cert.isPerm )
-          certDB.addCertFromBase64(cert, "C,C,C", "");
+        certDB.addCertFromBase64(cert, "C,C,C", "");
       }
       i++;
     } while (CertName && CertName.length)
