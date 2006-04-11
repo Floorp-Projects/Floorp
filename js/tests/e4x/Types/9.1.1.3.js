@@ -123,7 +123,7 @@ correct =
 </BODY>;
 
 delete x..HR;
-TEST(6, correct, x);
+TEST(6, correct.toXMLString(), x.toXMLString());
 
 x = 
 <BODY>
