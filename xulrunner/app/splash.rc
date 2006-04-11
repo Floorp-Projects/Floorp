@@ -62,9 +62,6 @@ END
 // files into a single .rc file, and then use that to build the single .res
 // file for the .exe.
 
-// We need this cursor for versions of Windows that don't support IDC_HAND,
-// namely Win95 and NT4.
-#define IDC_SELECTANCHOR                4100
 #define IDC_GRAB                        4101
 #define IDC_GRABBING                    4102
 #define IDC_CELL                        4103
@@ -76,7 +73,6 @@ END
 #define IDC_ROWRESIZE                   4109
 #define IDC_VERTICALTEXT                4110
 
-IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\select.cur"
 IDC_GRAB                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grab.cur"
 IDC_GRABBING            CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grabbing.cur"
 IDC_CELL                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\cell.cur"
