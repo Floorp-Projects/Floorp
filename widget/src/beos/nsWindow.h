@@ -336,15 +336,6 @@ private:
 	bool                 fWheelDispatched;
 };
 
-//
-// A child window is a window with different style
-//
-class ChildWindow : public nsWindow 
-{
-public:
-	                        ChildWindow() {};
-	virtual PRBool          IsChild() { return(PR_TRUE); };
-};
 #if defined(BeIME)
 class nsIMEBeOS 
 {

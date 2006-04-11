@@ -23,6 +23,7 @@
  *   John C. Griggs <johng@corel.com>
  *   Dan Rosen <dr@netscape.com>
  *   Paul Ashford <arougthopher@lizardland.net>
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,8 @@
 #include "nsWidgetsCID.h"
 
 #include "nsWindow.h"
+#include "nsPopupWindow.h"
+#include "nsChildView.h"
 #include "nsAppShell.h"
 #include "nsSound.h"
 #include "nsToolkit.h"
@@ -69,7 +72,8 @@
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPopupWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
@@ -95,10 +99,14 @@ static const nsModuleComponentInfo components[] =
     NS_WINDOW_CID,
     "@mozilla.org/widgets/window/beos;1",
     nsWindowConstructor },
+  { "BeOS Popup nsWindow",
+    NS_POPUP_CID,
+    "@mozilla.org/widgets/popup/beos;1",
+    nsPopupWindowConstructor },
   { "BeOS Child nsWindow",
     NS_CHILD_CID,
-    "@mozilla.org/widgets/child_window/beos;1",
-    ChildWindowConstructor },
+    "@mozilla.org/widgets/view/beos;1",
+    nsChildViewConstructor },
   { "BeOS AppShell",
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/beos;1",
