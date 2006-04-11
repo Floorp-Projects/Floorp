@@ -2786,26 +2786,37 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     }
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_OK;
-    // Create the fixup object if necessary
-    if (!sURIFixup) {
-        // No fixup service so try and create a URI and see what happens
-        nsAutoString uriString(aURI);
-        // Cleanup the empty spaces that might be on each end.
-        uriString.Trim(" ");
-        // Eliminate embedded newlines, which single-line text fields now allow:
-        uriString.StripChars("\r\n");
-        NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
-        rv = NS_NewURI(getter_AddRefs(uri), uriString);
-    } else {
-        // Call the fixup object
+    // Create a URI from our string; if that succeeds, we want to
+    // change aLoadFlags to not include the ALLOW_THIRD_PARTY_FIXUP
+    // flag.
+
+    NS_ConvertUTF16toUTF8 uriString(aURI);
+    // Cleanup the empty spaces that might be on each end.
+    uriString.Trim(" ");
+    // Eliminate embedded newlines, which single-line text fields now allow:
+    uriString.StripChars("\r\n");
+    NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
+
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    if (uri) {
+        aLoadFlags = aLoadFlags & ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    }
+    
+    if (sURIFixup) {
+        // Call the fixup object.  This will clobber the rv from NS_NewURI
+        // above, but that's fine with us.  Note that we need to do this even
+        // if NS_NewURI returned a URI, because fixup handles nested URIs, etc
+        // (things like view-source:mozilla.org for example).
         PRUint32 fixupFlags = 0;
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
         }
-        rv = sURIFixup->CreateFixupURI(NS_ConvertUTF16toUTF8(aURI), fixupFlags,
+        rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,
                                        getter_AddRefs(uri));
     }
+    // else no fixup service so just use the URI we created and see
+    // what happens
 
     if (NS_ERROR_MALFORMED_URI == rv) {
         DisplayLoadError(rv, uri, aURI);
