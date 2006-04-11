@@ -41,7 +41,7 @@ switch (strtolower($rsslist)) {
         /**
          * @TODO change this to dateapproved once the db has this in it.
          */
-        $rssOrderBy = 'v.dateupdated desc, m.name asc';
+        $rssOrderBy = 'm.dateadded desc, m.name asc';
         break;
 }
 
