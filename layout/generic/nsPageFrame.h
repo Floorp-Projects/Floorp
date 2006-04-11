@@ -49,10 +49,6 @@ class nsPageFrame : public nsContainerFrame {
 public:
   friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  // nsIFrame
-  NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
-                                  nsIFrame*       aChildList);
-
   NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
@@ -83,10 +79,6 @@ public:
   virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
 
   virtual void SetSharedPageData(nsSharedPageData* aPD);
-
-// XXX Part of Temporary fix for Bug 127263
-  static  void   SetCreateWidget(PRBool aDoCreateWidget)  { mDoCreateWidget = aDoCreateWidget; }
-  static  PRBool GetCreateWidget()                        { return mDoCreateWidget; }
 
   void PaintPrintPreviewBackground(nsIRenderingContext& aRenderingContext,
                                    nsPoint aPt);
@@ -141,9 +133,6 @@ protected:
   nsMargin    mMargin;
 
   nsSharedPageData* mPD;
-
-// XXX Part of Temporary fix for Bug 127263
-  static PRBool mDoCreateWidget;
 };
 
 
