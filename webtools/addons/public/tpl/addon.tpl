@@ -20,7 +20,7 @@ released on {$addon->VersionDateAdded|date_format}
 </p>
 
 
-<p>{$addon->Description|nl2br}</p>
+<p>{$addon->Description|strip_tags|nl2br}</p>
 
 <p class="requires">
 Works with:
@@ -88,9 +88,20 @@ Works with:
         <a href="{$config.webpath}/{$app}/{$addon->ID}/history">Other Versions</a>
     </div>
 
+    {if $addon->isThunderbirdAddon}
+    <div class="install-thunderbird">
+        <p>How to Install in Thunderbird:</p>
+        <ol>
+        <li>Right-Click the link above and choose "Save Link As..." to Download and save the file to your hard disk.</li>
+        <li>In Mozilla Thunderbird, open the extension manager (Tools Menu/Extensions)</li>
+        <li>Click the Install button, and locate/select the file you downloaded and click "OK"</li>
+        </ol>
+    </div>
+    {/if}
+
 {if $addon->devcomments}
 <h2>Developer Comments</h2>
-<p>{$addon->devcomments|nl2br|strip_tags}</p>
+<p>{$addon->devcomments|strip_tags|nl2br}</p>
 {/if}
 
 <h3 id="user-comments">User Comments</h3>

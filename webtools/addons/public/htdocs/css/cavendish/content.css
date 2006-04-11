@@ -449,3 +449,17 @@
     margin-left: auto;
     margin-right: auto;
 }
+
+.install-thunderbird {
+    background-color: #eee;
+    border: 1px solid #ccc;
+    margin: .5em 0;
+    padding: .5em;
+}
+
+.install-thunderbird p {
+    font-weight: bold;
+    color: blue;
+    margin: 0;
+    padding: 0;
+}

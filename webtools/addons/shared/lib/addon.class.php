@@ -22,6 +22,7 @@ class AddOn extends AMO_Object {
     var $db;
     var $tpl;
     var $installFunc;
+    var $isThunderbirdAddon;
 
     // AddOn author metadata.
     var $UserID;
@@ -400,6 +401,13 @@ class AddOn extends AMO_Object {
         ", SQL_ALL, SQL_ASSOC);
 
         foreach ($this->db->record as $var => $val) {
+
+            // If we find Thunderbird in here somewhere, set the isThunderbirdAddon flag to true.
+            // This is so we can trigger install instructions under the install box in the template.
+            if ($val['AppName'] == 'Thunderbird') {
+                $this->isThunderbirdAddon = true;
+            }
+        
             $_key = "{$val['AppName']} {$val['MinAppVer']} - {$val['MaxAppVer']}";
 
             // We've already got at least one hit, just add the OS
