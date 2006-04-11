@@ -85,6 +85,8 @@ CPPSRCS		= \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
+		nsPopupWindow.cpp \
+		nsChildView.cpp \
 		nsScreenBeOS.cpp \
 		nsScreenManagerBeOS.cpp \
 		nsDeviceContextSpecFactoryB.cpp \

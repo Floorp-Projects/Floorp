@@ -471,21 +471,16 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 {
 
 	//Do as little as possible for invisible windows, why are these needed?
-	if (mWindowType == eWindowType_invisible)
+	if (aInitData->mWindowType == eWindowType_invisible)
 		return NS_ERROR_FAILURE;
 		
-	nsIWidget *baseParent = 
-	                        (aInitData->mWindowType == eWindowType_dialog ||
-	                         aInitData->mWindowType == eWindowType_toplevel ||
-	                         aInitData->mWindowType == eWindowType_invisible) ?
-	                        nsnull : aParent;
+	NS_ASSERTION(aInitData->mWindowType == eWindowType_dialog
+		|| aInitData->mWindowType == eWindowType_toplevel,
+		"The windowtype is not handled by this class.");
 
-	NS_ASSERTION(aInitData->mWindowType != eWindowType_popup || 
-		!aParent, "Popups should not be hooked into nsIWidget hierarchy");
+	mIsTopWidgetWindow = PR_TRUE;
 	
-	mIsTopWidgetWindow = (nsnull == baseParent);
-	
-	BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
+	BaseCreate(nsnull, aRect, aHandleEventFunction, aContext,
 	           aAppShell, aToolkit, aInitData);
 
 	mListenForResizes = aNativeParent ? PR_TRUE : aInitData->mListenForResizes;
@@ -514,150 +509,94 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		else
 		{
 			// Native parent dispatch
-			MethodInfo info(this, this, nsSwitchToUIThread::CREATE_NATIVE, 5, args);
+			MethodInfo info(this, this, nsSwitchToUIThread::CREATE_NATIVE, 7, args);
 			toolkit->CallMethod(&info);
 		}
 		return NS_OK;
 	}
 
 	mParent = aParent;
-	// Useful shortcut, wondering if we can use it also in GetParent() instead nsIWidget* type mParent.
+	// Useful shortcut, wondering if we can use it also in GetParent() instead
+	// nsIWidget* type mParent.
 	mWindowParent = (nsWindow *)aParent;
 	SetBounds(aRect);
 
-	BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
-
 	// Default mode for window, everything switched off.
-	uint32 flags = B_NOT_RESIZABLE | B_NOT_MINIMIZABLE | B_NOT_ZOOMABLE | B_NOT_CLOSABLE | B_ASYNCHRONOUS_CONTROLS;
+	uint32 flags = B_NOT_RESIZABLE | B_NOT_MINIMIZABLE | B_NOT_ZOOMABLE
+		| B_NOT_CLOSABLE | B_ASYNCHRONOUS_CONTROLS;
 	window_look look = B_NO_BORDER_WINDOW_LOOK;
-	switch (mWindowType)
- 	{
-		//handle them as childviews until I know better. Shame on me.
-		case eWindowType_java:
-		case eWindowType_plugin:
-			NS_NOTYETIMPLEMENTED("Java and plugin windows not yet implemented properly trying childview"); // to be implemented
- 			//These fall thru and behave just like child for the time being. They may require special implementation.
-		case eWindowType_child:
- 		{
- 			//NS_NATIVE_GRAPHIC maybe?
- 			//Parent may be a BView if we embed.
-			BView *parent= (BView *) (aParent ? aParent->GetNativeData(NS_NATIVE_WIDGET) :  aNativeParent);
-			//There seems to be three of these on startup,
-			//but I believe that these are because of bugs in 
-			//other code as they existed before rewriting this
-			//function.
-			NS_PRECONDITION(parent, "Childviews without parents don't get added to anything.");
-			// A childview that is never added to a parent is very strange.
-			if (!parent)
-				return NS_ERROR_FAILURE;
 
-			mView = new nsViewBeOS(this, winrect, "Child view", 0, B_WILL_DRAW);
-#if defined(BeIME)
-			mView->SetFlags(mView->Flags() | B_INPUT_METHOD_AWARE);
-#endif	
-			bool mustUnlock = parent->Parent() && parent->LockLooper();
- 			parent->AddChild(mView);
-			if (mustUnlock) parent->UnlockLooper();
-			DispatchStandardEvent(NS_CREATE);
-			return NS_OK;
- 		}
+	//eBorderStyle_default is to ask the OS to handle it as it sees best.
+	//eBorderStyle_all is same as top_level window default.
+	if (eBorderStyle_default == mBorderStyle || eBorderStyle_all & mBorderStyle)
+	{
+		//(Firefox prefs doesn't go this way, so apparently it wants titlebar, zoom, 
+		//resize and close.)
 
-		case eWindowType_popup:
-		case eWindowType_dialog:
-		case eWindowType_toplevel:
- 		{
-			//eBorderStyle_default is to ask the OS to handle it as it sees best.
-			//eBorderStyle_all is same as top_level window default.
-			if (eBorderStyle_default == mBorderStyle || eBorderStyle_all & mBorderStyle)
- 			{
-				//(Firefox prefs doesn't go this way, so apparently it wants titlebar, zoom, resize and close.)
-
-				//Look and feel for others are set ok at init.
-				if (eWindowType_toplevel==mWindowType)
- 				{
-					look = B_TITLED_WINDOW_LOOK;
-					flags = B_ASYNCHRONOUS_CONTROLS;
- 				}
-			}
-			else
-			{
-				if (eBorderStyle_border & mBorderStyle)
-					look = B_MODAL_WINDOW_LOOK;
- 
-				if (eBorderStyle_resizeh & mBorderStyle)
- 				{
-					//Resize demands at least border
-					look = B_MODAL_WINDOW_LOOK;
-					flags &= !B_NOT_RESIZABLE;
- 				}
-
-				//We don't have titlebar menus, so treat like title as it demands titlebar.
-				if (eBorderStyle_title & mBorderStyle || eBorderStyle_menu & mBorderStyle)
-					look = B_TITLED_WINDOW_LOOK;
-
-				if (eBorderStyle_minimize & mBorderStyle)
-					flags &= !B_NOT_MINIMIZABLE;
-
-				if (eBorderStyle_maximize & mBorderStyle)
-					flags &= !B_NOT_ZOOMABLE;
-
-				if (eBorderStyle_close & mBorderStyle)
-					flags &= !B_NOT_CLOSABLE;
-			}
-
-			//popups always avoid focus and don't force the user to another workspace.
-			if (eWindowType_popup==mWindowType)
-				flags |= B_AVOID_FOCUS | B_NO_WORKSPACE_ACTIVATION;
-
-			nsWindowBeOS * w = new nsWindowBeOS(this, winrect, "", look, mBWindowFeel, flags);
-			if (!w)
-				return NS_ERROR_OUT_OF_MEMORY;
-
-			mView = new nsViewBeOS(this, w->Bounds(), "Toplevel view", B_FOLLOW_ALL, (mWindowType == eWindowType_popup ? B_WILL_DRAW: 0));
- 
-			if (!mView)
-				return NS_ERROR_OUT_OF_MEMORY;
-	
-			w->AddChild(mView);
-			// I'm wondering if we can move part of that code to above
-			if (eWindowType_dialog == mWindowType && mWindowParent) 
-			{
-				nsWindow *topparent = mWindowParent;
-				while(topparent->mWindowParent)
-					topparent = topparent->mWindowParent;
-				// may be got via mView and mView->Window() of topparent explicitly	
-				BWindow* subsetparent = (BWindow *)topparent->GetNativeData(NS_NATIVE_WINDOW);
-				if (subsetparent)
-				{
-					mBWindowFeel = B_FLOATING_SUBSET_WINDOW_FEEL;
-					w->SetFeel(mBWindowFeel);
-					w->AddToSubset(subsetparent);
-				}
-			} 
-			else if (eWindowType_popup == mWindowType  && aNativeParent)
-			{
-				// Due poor BeOS capability to control windows hierarchy/z-order we use this workaround
-				// to show eWindowType_popup (e.g. drop-downs) over floating (subset) parent window.
-				if (((BView *)aNativeParent)->Window() &&  ((BView *)aNativeParent)->Window()->IsFloating())
-				{
-					mBWindowFeel = B_FLOATING_ALL_WINDOW_FEEL;
-					w->SetFeel(mBWindowFeel);
-				}
-			}
-			
-			DispatchStandardEvent(NS_CREATE);
-			return NS_OK;
-		}
-		case eWindowType_invisible:
-		case eWindowType_sheet:
-			break;
-		default:
+		//Look and feel for others are set ok at init.
+		if (eWindowType_toplevel==mWindowType)
 		{
-			printf("UNKNOWN or not handled windowtype!!!\n");
+			look = B_TITLED_WINDOW_LOOK;
+			flags = B_ASYNCHRONOUS_CONTROLS;
 		}
 	}
+	else
+	{
+		if (eBorderStyle_border & mBorderStyle)
+			look = B_MODAL_WINDOW_LOOK;
 
-	return NS_ERROR_FAILURE;
+		if (eBorderStyle_resizeh & mBorderStyle)
+		{
+			//Resize demands at least border
+			look = B_MODAL_WINDOW_LOOK;
+			flags &= !B_NOT_RESIZABLE;
+		}
+
+		//We don't have titlebar menus, so treat like title as it demands titlebar.
+		if (eBorderStyle_title & mBorderStyle || eBorderStyle_menu & mBorderStyle)
+			look = B_TITLED_WINDOW_LOOK;
+
+		if (eBorderStyle_minimize & mBorderStyle)
+			flags &= !B_NOT_MINIMIZABLE;
+
+		if (eBorderStyle_maximize & mBorderStyle)
+			flags &= !B_NOT_ZOOMABLE;
+
+		if (eBorderStyle_close & mBorderStyle)
+			flags &= !B_NOT_CLOSABLE;
+	}
+
+	nsWindowBeOS * w = new nsWindowBeOS(this, 
+		BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1),
+		"", look, mBWindowFeel, flags);
+	if (!w)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	mView = new nsViewBeOS(this, w->Bounds(), "Toplevel view", B_FOLLOW_ALL, 0);
+
+	if (!mView)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	w->AddChild(mView);
+	// I'm wondering if we can move part of that code to above
+	if (eWindowType_dialog == mWindowType && mWindowParent) 
+	{
+		nsWindow *topparent = mWindowParent;
+		while (topparent->mWindowParent)
+			topparent = topparent->mWindowParent;
+		// may be got via mView and mView->Window() of topparent explicitly	
+		BWindow* subsetparent = (BWindow *)
+			topparent->GetNativeData(NS_NATIVE_WINDOW);
+		if (subsetparent)
+		{
+			mBWindowFeel = B_FLOATING_SUBSET_WINDOW_FEEL;
+			w->SetFeel(mBWindowFeel);
+			w->AddToSubset(subsetparent);
+		}
+	} 
+	
+	DispatchStandardEvent(NS_CREATE);
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -805,73 +744,30 @@ NS_METHOD nsWindow::Show(PRBool bState)
 {
 	if (!mEnabled)
 		return NS_OK;
-	if (mView && mView->LockLooper())
+		
+
+	if (!mView || !mView->LockLooper())
+		return NS_OK;
+		
+	//We need to do the IsHidden() checks
+	//because BeOS counts no of Hide()
+	//and Show() checks. BeBook:
+	// If Hide() is called more than once, you'll need to call Show()
+	// an equal number of times for the window to become visible again.
+	if (bState == PR_FALSE)
 	{
-		switch (mWindowType)
-		{
-			case eWindowType_popup:
-			{
-				if (PR_FALSE == bState)
-				{
-					// XXX BWindow::Hide() is needed ONLY for popups. No need to hide views for popups
-					if (mView->Window() && !mView->Window()->IsHidden())
-						mView->Window()->Hide();
-				}
-				else
-				{
-						if (mView->Window())
-						{
-							// bring menu to current workspace - Bug 310293
-							mView->Window()->SetWorkspaces(B_CURRENT_WORKSPACE);
-							if (mView->Window()->IsHidden())
-								mView->Window()->Show();
-						}
-				}
-				break;
-			}
-
-			case eWindowType_child:
-			{
-				// XXX No BWindow deals for children
-				if (PR_FALSE == bState)
-				{
-					if (!mView->IsHidden())
-						mView->Hide();
-				}
-				else
-				{
-					if (mView->IsHidden())
-						mView->Show();              
-				}
-				break;
-			}
-
-			case eWindowType_dialog:
-			case eWindowType_toplevel:
-			{
-				if (bState == PR_FALSE)
-				{
-					if (mView->Window() && !mView->Window()->IsHidden())
-						mView->Window()->Hide();
-				}
-				else
-				{
-					if (mView->Window() && mView->Window()->IsHidden())
-						mView->Window()->Show();
-				}
-				break;
-			}
-			
-			default: // toplevel and dialog
-			{
-				NS_ASSERTION(false, "Unhandled Window Type in nsWindow::Show()!");
-				break;
-			}
-		} //end switch	
-
-		mView->UnlockLooper();
-		mIsVisible = bState;	
+		if (mView->Window() && !mView->Window()->IsHidden())
+			mView->Window()->Hide();
 	}
+	else
+	{
+		if (mView->Window() && mView->Window()->IsHidden())
+			mView->Window()->Show();
+	}
+
+	mView->UnlockLooper();
+	mIsVisible = bState;	
+	
 	return NS_OK;
 }
 //-------------------------------------------------------------------------
