@@ -121,8 +121,9 @@ PYXPCOM_EXPORT PRBool PyXPCOM_FormatGivenException(nsCString &streamout,
                                 PyObject *exc_typ, PyObject *exc_val,
                                 PyObject *exc_tb);
 
-// A couple of logging/error functions.  These probably end up
-// being written to the console service.
+// A couple of logging/error functions.  These now end up being written
+// via the logging module, and via handlers added by the xpcom package,
+// then are written to the JSConsole and the ConsoleService.
 
 // Log a warning for the user - something at runtime
 // they may care about, but nothing that prevents us actually
@@ -620,6 +621,10 @@ public:
 	CEnterLeaveXPCOMFramework() {PyXPCOM_AcquireGlobalLock();}
 	~CEnterLeaveXPCOMFramework() {PyXPCOM_ReleaseGlobalLock();}
 };
+
+// Initialize Python and do anything else necessary to get a function
+// Python environment going...
+PYXPCOM_EXPORT void PyXPCOM_EnsurePythonEnvironment(void);
 
 // Python thread-lock stuff.  Free-threading patches use different semantics, but
 // these are abstracted away here...
