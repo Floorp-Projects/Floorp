@@ -215,9 +215,8 @@ PYXPCOM_EXPORT void PyXPCOM_LogError(const char *fmt, ...)
 	PR_vsnprintf(buff, sizeof(buff), fmt, marker);
 	// If we have a Python exception, also log that:
 	nsCAutoString streamout(buff);
-	if (PyXPCOM_FormatCurrentException(streamout)) {
-		LogMessage(LOGGER_ERROR, streamout);
-	}
+	PyXPCOM_FormatCurrentException(streamout);
+	LogMessage(LOGGER_ERROR, streamout);
 }
 
 PYXPCOM_EXPORT void PyXPCOM_LogWarning(const char *fmt, ...)
