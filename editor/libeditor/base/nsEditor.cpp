@@ -336,9 +336,6 @@ nsEditor::PostCreate()
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
   
-  // Call ResetInputState() for initialization
-  ForceCompositionEnd();
-
   return NS_OK;
 }
 
@@ -2235,18 +2232,6 @@ nsEditor::ForceCompositionEnd()
 NS_IMETHODIMP
 nsEditor::NotifyIMEOnFocus()
 {
-  nsCOMPtr<nsIKBStateControl> kb;
-  nsresult res = GetKBStateControl(getter_AddRefs(kb));
-  if (NS_FAILED(res))
-    return res;
-
-  if (!kb)
-    return NS_OK;
-
-  res = kb->CancelIMEComposition();
-  if (NS_FAILED(res))
-    kb->ResetInputState();
-
   return NS_OK;
 }
 

@@ -372,6 +372,10 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
+  if (!imeEditor)
+    return NS_OK;
+  imeEditor->ForceCompositionEnd();
   return NS_OK;
 }
 
@@ -1081,7 +1085,6 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
     // the input focus is leaving first
     nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor);
     if (imeEditor) {
-      imeEditor->ForceCompositionEnd();
       imeEditor->NotifyIMEOnBlur();
     }
 

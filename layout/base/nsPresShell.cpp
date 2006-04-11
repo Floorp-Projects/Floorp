@@ -1836,6 +1836,12 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return NS_OK;
 
+  if (mPresContext) {
+    // We need to notify the destroying the nsPresContext to ESM for
+    // suppressing to use from ESM.
+    mPresContext->EventStateManager()->NotifyDestroyPresContext(mPresContext);
+  }
+
   {
     nsCOMPtr<nsIObserverService> os =
       do_GetService("@mozilla.org/observer-service;1");
