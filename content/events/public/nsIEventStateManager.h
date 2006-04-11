@@ -52,10 +52,10 @@ class imgIContainer;
 /*
  * Event state manager interface.
  */
-// {1dbe2518-06a1-461c-a1fd-dfbfb0ac0635}
+// {14E5E066-E60A-446b-965F-A9ECAA7098F3}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0x1dbe2518, 0x6a1, 0x461c, \
-  { 0xa1, 0xfd, 0xdf, 0xbf, 0xb0, 0xac, 0x6, 0x35 } }
+{ 0x14e5e066, 0xe60a, 0x446b, \
+  { 0x96, 0x5f, 0xa9, 0xec, 0xaa, 0x70, 0x98, 0xf3 } }
 
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
@@ -143,6 +143,8 @@ public:
 
   // Method for moving the focus forward/back.
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
+
+  NS_IMETHOD NotifyDestroyPresContext(nsPresContext* aPresContext) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)

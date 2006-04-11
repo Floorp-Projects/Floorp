@@ -1701,11 +1701,6 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     PRUint32      eventType;
     nsEventStatus status;
 
-#ifdef USE_XIM
-    if (gIMEFocusWindow)
-        gIMEFocusWindow->ResetInputStateInternal();
-#endif
-
     // If you double click in GDK, it will actually generate a single
     // click event before sending the double click event, and this is
     // different than the DOM spec.  GDK puts this in the queue
@@ -4641,7 +4636,7 @@ nsWindow::IMEDestroyContext(void)
     if (!mIMEData) {
         // Clear reference to this.
         if (IMEComposingWindow() == this)
-            CancelIMECompositionInternal();
+            CancelIMEComposition();
         if (gIMEFocusWindow == this)
             gIMEFocusWindow = nsnull;
         return;
@@ -4902,13 +4897,6 @@ nsWindow::IMEFilterEvent(GdkEventKey *aEvent)
 NS_IMETHODIMP
 nsWindow::ResetInputState()
 {
-    // We should not implement this until bug 327003 is fixed.
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsWindow::ResetInputStateInternal()
-{
     nsWindow *win = IMEComposingWindow();
     if (win) {
         GtkIMContext *im = IMEGetContext();
@@ -4928,7 +4916,7 @@ nsWindow::ResetInputStateInternal()
             pango_attr_list_unref(feedback_list);
     }
 
-    CancelIMECompositionInternal();
+    CancelIMEComposition();
 
     return NS_OK;
 }
@@ -4963,8 +4951,10 @@ nsWindow::SetIMEEnabled(PRBool aState)
 
     if (focusedIm && focusedIm == window->mIMEData->mContext) {
         // Release current IME focus if IME is enabled.
-        if (window->mIMEData->mEnabled)
+        if (window->mIMEData->mEnabled) {
+            focusedWin->ResetInputState();
             focusedWin->IMELoseFocus();
+        }
 
         window->mIMEData->mEnabled = aState;
 
@@ -4973,7 +4963,7 @@ nsWindow::SetIMEEnabled(PRBool aState)
         focusedWin->IMESetFocus();
     } else {
         if (window->mIMEData->mEnabled)
-            ResetInputStateInternal();
+            ResetInputState();
         window->mIMEData->mEnabled = aState;
     }
 
@@ -4991,19 +4981,12 @@ nsWindow::GetIMEEnabled(PRBool* aState)
 NS_IMETHODIMP
 nsWindow::CancelIMEComposition()
 {
-    // We should not implement this until bug 327003 is fixed.
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsWindow::CancelIMECompositionInternal()
-{
     GtkIMContext *im = IMEGetContext();
     if (!im)
         return NS_OK;
 
     NS_ASSERTION(!gIMESuppressCommit,
-                 "CancelIMECompositionInternal is already called!");
+                 "CancelIMEComposition is already called!");
     gIMESuppressCommit = PR_TRUE;
     gtk_im_context_reset(im);
     gIMESuppressCommit = PR_FALSE;

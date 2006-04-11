@@ -227,7 +227,10 @@ nsPresContext::~nsPresContext()
   SetShell(nsnull);
 
   if (mEventManager) {
-    mEventManager->SetPresContext(nsnull);   // unclear if this is needed, but can't hurt
+    // unclear if these are needed, but can't hurt
+    mEventManager->NotifyDestroyPresContext(this);
+    mEventManager->SetPresContext(nsnull);
+
     NS_RELEASE(mEventManager);
   }
 

@@ -326,9 +326,6 @@ public:
     NS_IMETHOD GetIMEEnabled(PRBool* aState);
     NS_IMETHOD CancelIMEComposition();
 
-    nsresult ResetInputStateInternal();
-    nsresult CancelIMECompositionInternal();
-
 #endif
 
    void                ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
