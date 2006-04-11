@@ -83,9 +83,6 @@ public:
   nsIView*                 mRootView;
 
   nsIContent*      mContent;
-  nsIFrame*        mSeqFrame;
-  PRInt32          mPageNum;
-  nsRect           mRect;
   PrintObjectType  mFrameType;
   
   nsVoidArray      mKids;
@@ -94,7 +91,6 @@ public:
   PRPackedBool     mDontPrint;
   PRPackedBool     mPrintAsIs;
   PRPackedBool     mSharedPresShell;
-  PRPackedBool     mIsHidden;         // Indicates PO is hidden, not reflowed, not shown
   PRPackedBool     mInvisible;        // Indicates PO is set to not visible by CSS
 
   PRUnichar*       mDocTitle;

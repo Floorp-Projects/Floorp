@@ -61,10 +61,15 @@ public:
 
   nsSize      mReflowSize;
   nsMargin    mReflowMargin;
-  nsSize      mShadowSize;       // shadow of page in PrintPreview
-  nsMargin    mDeadSpaceMargin;  // Extra dead space around outside of Page in PrintPreview
-  nsMargin    mExtraMargin;      // Extra Margin between the printable area and the edge of the page
-  nsMargin    mEdgePaperMargin;  // In twips, gap between the Margin and edge of page
+  // shadow of page in PrintPreview; drawn around bottom and right edges
+  nsSize      mShadowSize;
+  // Extra Margin between the device area and the edge of the page;
+  // approximates unprintable area
+  nsMargin    mExtraMargin;
+  // Margin for headers and footers; it defaults to 4/100 of an inch on UNIX 
+  // and 0 elsewhere; I think it has to do with some inconsistency in page size
+  // computations
+  nsMargin    mEdgePaperMargin;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsIPrintOptions> mPrintOptions;
@@ -114,7 +119,6 @@ public:
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
   NS_IMETHOD DoPageEnd();
-  NS_IMETHOD SetOffset(nscoord aX, nscoord aY) { mOffsetX = aX; mOffsetY = aY; return NS_OK; }
 
   /**
    * Get the "type" of the frame
@@ -160,9 +164,6 @@ protected:
   PRInt32      mFromPageNum;
   PRInt32      mToPageNum;
   PRPackedBool mPrintThisPage;
-
-  nscoord      mOffsetX;
-  nscoord      mOffsetY;
 
   nsSize       mSize;
   nsSharedPageData* mPageData; // data shared by all the nsPageFrames

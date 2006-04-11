@@ -1633,12 +1633,6 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
     }
 }
 
-inline PRBool
-ShouldScrollRootView(nsPresContext* aPresContext)
-{
-  return (aPresContext->Type() == nsPresContext::eContext_PrintPreview);
-}
-
 static nsIFrame*
 GetParentFrameToScroll(nsPresContext* aPresContext, nsIFrame* aFrame)
 {
@@ -1659,38 +1653,6 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   PRBool aScrollHorizontal,
                                   PRBool aScrollPage)
 {
-  nsIScrollableView* scrollView = nsnull;
-  PRBool scrollRootView = ShouldScrollRootView(aPresContext);
-
-  if (scrollRootView) {
-    // Get root scroll view
-    nsIViewManager* vm = aPresContext->GetViewManager();
-    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-    vm->GetRootScrollableView(&scrollView);
-    if (!scrollView) {
-      // We don't have root scrollable view in current document.
-      // Maybe, this is sub frame on Print Preview.
-      // Let's pass to parent document.
-      nsIFrame* newFrame = nsnull;
-      nsCOMPtr<nsPresContext> newPresContext = nsnull;
-      nsresult rv = GetParentScrollingView(aEvent, aPresContext, newFrame,
-                                           *getter_AddRefs(newPresContext));
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_TRUE(newFrame && newPresContext, NS_ERROR_FAILURE);
-      return DoScrollText(newPresContext, newFrame, aEvent, aNumLines,
-                          aScrollHorizontal, aScrollPage);
-    }
-    // find target frame that is root scrollable content
-    nsIFrame* targetFrame = aTargetFrame;
-    for ( ;targetFrame; targetFrame = targetFrame->GetParent()) {
-      nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(targetFrame);
-      if (svp && scrollView == svp->GetScrollableView())
-        break;
-    }
-    NS_ENSURE_TRUE(targetFrame, NS_ERROR_FAILURE);
-    aTargetFrame = targetFrame;
-  }
-
   nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
     GetFocusedContent(getter_AddRefs(targetContent));
@@ -1738,24 +1700,23 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       target->DispatchEvent(event, &defaultActionEnabled);
       if (!defaultActionEnabled)
         return NS_OK;
-      if (!scrollRootView) {
-        // Re-resolve |aTargetFrame| in case it was destroyed by the
-        // DOM event handler above, bug 257998.
-        aTargetFrame =
-          aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent);
-        if (!aTargetFrame) {
-          // Without a frame we can't do the normal ancestor search for a view
-          // to scroll. Don't fall through to the "passToParent" code at the end
-          // because that will likely scroll the wrong view (in an enclosing
-          // document).
-          return NS_OK;
-        }
+      // Re-resolve |aTargetFrame| in case it was destroyed by the
+      // DOM event handler above, bug 257998.
+      aTargetFrame =
+        aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent);
+      if (!aTargetFrame) {
+        // Without a frame we can't do the normal ancestor search for a view
+        // to scroll. Don't fall through to the "passToParent" code at the end
+        // because that will likely scroll the wrong view (in an enclosing
+        // document).
+        return NS_OK;
       }
     }
   }
 
+  nsIScrollableView* scrollView;
   nsIFrame* scrollFrame = aTargetFrame;
-  PRBool passToParent = !scrollRootView;
+  PRBool passToParent = PR_TRUE;
 
   for (; scrollFrame && passToParent;
        scrollFrame = GetParentFrameToScroll(aPresContext, scrollFrame)) {
@@ -1775,7 +1736,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
         (aScrollHorizontal ? ss.mHorizontal : ss.mVertical)) {
       continue;
     }
-    
+
     // Check if the scrollable view can be scrolled any further.
     nscoord lineHeight;
     scrollView->GetLineHeight(&lineHeight);
@@ -1828,14 +1789,11 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     nsresult rv;
     nsIFrame* newFrame = nsnull;
     nsCOMPtr<nsPresContext> newPresContext;
-
     rv = GetParentScrollingView(aEvent, aPresContext, newFrame,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
       return DoScrollText(newPresContext, newFrame, aEvent, aNumLines,
                           aScrollHorizontal, aScrollPage);
-    else
-      return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
@@ -1871,7 +1829,8 @@ nsEventStateManager::GetParentScrollingView(nsInputEvent *aEvent,
       break;
     }
   }
-  NS_ENSURE_TRUE(pPresShell, NS_ERROR_FAILURE);
+  if (!pPresShell)
+    return NS_ERROR_FAILURE;
 
   /* now find the content node in our parent docshell's document that
      corresponds to our docshell */

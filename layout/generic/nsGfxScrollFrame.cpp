@@ -1468,6 +1468,11 @@ nsGfxScrollFrameInner::ScrollbarStyles
 nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
   ScrollbarStyles result;
+
+  if (mNeverHasVerticalScrollbar && mNeverHasHorizontalScrollbar) {
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+  }
+
   if (mIsRoot) {
     nsPresContext *presContext = mOuter->GetPresContext();
     result = presContext->GetViewportOverflowOverride();
@@ -1609,10 +1614,10 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
 
   // Don't create scrollbars if we're printing/print previewing
   // Get rid of this code when printing moves to its own presentation
-  if (presContext->IsPaginated()) {
+  if (!presContext->IsDynamic()) {
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
-    if (!mIsRoot) {
+    if (!(mIsRoot && presContext->HasPaginatedScrolling())) {
       mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
       return;
     }

@@ -89,7 +89,6 @@ nsSharedPageData::nsSharedPageData() :
   mReflowSize(0,0),
   mReflowMargin(0,0,0,0),
   mShadowSize(0,0),
-  mDeadSpaceMargin(0,0,0,0),
   mExtraMargin(0,0,0,0),
   mEdgePaperMargin(0,0,0,0),
   mPageContentXMost(0),
@@ -135,8 +134,6 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
     // now get the default font form the print options
     mPageData->mPrintOptions->GetDefaultFont(*mPageData->mHeadFootFont);
   }
-  mOffsetX       = 0;
-  mOffsetY       = 0;
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
@@ -207,6 +204,8 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
+  NS_PRECONDITION(aPresContext->IsRootPaginatedDocument(),
+                  "A Page Sequence is only for real pages");
   DO_GLOBAL_REFLOW_COUNT("nsSimplePageSequenceFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
@@ -219,6 +218,9 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.width   = mSize.width;
     aDesiredSize.ascent  = aDesiredSize.height;
     aDesiredSize.descent = 0;
+    aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
+                                        aDesiredSize.height);
+    FinishAndStoreOverflow(&aDesiredSize);
     return NS_OK;
   }
 
@@ -249,11 +251,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   // and if this Document is in the upper left hand corner
   // we need to suppress the top margin or it will reflow too small
 
-  PRBool suppressMargins = !aPresContext->IsRootPaginatedDocument();
   nsSize pageSize = aPresContext->GetPageSize();
 
   mPageData->mReflowSize = pageSize;
-  mPageData->mReflowMargin = suppressMargins ? nsMargin(0,0,0,0) : mMargin;
+  mPageData->mReflowMargin = mMargin;
 
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
@@ -269,11 +270,9 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nscoord  deadSpaceGap;
   GetDeadSpaceValue(&deadSpaceGap);
 
-  nsMargin deadSpaceMargin(0,0,0,0);
   nsMargin extraMargin(0,0,0,0);
   nsSize   shadowSize(0,0);
-  if (aPresContext->IsScreen() && !suppressMargins) {
-    deadSpaceMargin.SizeTo(deadSpaceGap, deadSpaceGap, deadSpaceGap, deadSpaceGap);
+  if (aPresContext->IsScreen()) {
     extraMargin.SizeTo(extraGap, extraGap, extraGap, extraGap);
     nscoord fourPixels = aPresContext->IntScaledPixelsToTwips(4);
     shadowSize.SizeTo(fourPixels, fourPixels);
@@ -281,12 +280,15 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
   mPageData->mShadowSize      = shadowSize;
   mPageData->mExtraMargin     = extraMargin;
-  mPageData->mDeadSpaceMargin = deadSpaceMargin;
 
-  nscoord x = deadSpaceMargin.left;
-  nscoord y = deadSpaceMargin.top;// Running y-offset for each page
+  const nscoord x = deadSpaceGap;
+  nscoord y = deadSpaceGap;// Running y-offset for each page
 
   nsSize reflowPageSize(0,0);
+
+  nsSize availSize(pageSize.width + shadowSize.width + extraMargin.LeftRight(),
+                   pageSize.height + shadowSize.height +
+                   extraMargin.TopBottom());
 
   // See if it's an incremental reflow command
   if (!aPresContext->IsDynamic() &&
@@ -295,17 +297,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     // in fact, all we want is the initial reflow
     y = mRect.height;
   } else {
-    // XXX Part of Temporary fix for Bug 127263
-    nsPageFrame::SetCreateWidget(PR_TRUE);
-
     nsReflowReason  reflowReason = aReflowState.reason;
-
-    nsSize availSize(pageSize.width + deadSpaceMargin.right + 
-                     deadSpaceMargin.left + shadowSize.width +
-                     extraMargin.right + extraMargin.left,
-                     pageSize.height + deadSpaceMargin.top +
-                     deadSpaceMargin.bottom + shadowSize.height +
-                     extraMargin.top + extraMargin.bottom);
 
     // Tile the pages vertically
     nsHTMLReflowMetrics kidSize(nsnull);
@@ -331,17 +323,6 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
       y += kidSize.height;
-
-      // XXX Temporary fix for Bug 127263
-      // This tells the nsPageFrame class to stop creating clipping widgets
-      // once we reach the 32k boundary for positioning
-      if (nsPageFrame::GetCreateWidget()) {
-        float t2p;
-        t2p = aPresContext->TwipsToPixels();
-        nscoord xp = NSTwipsToIntPixels(x, t2p);
-        nscoord yp = NSTwipsToIntPixels(y, t2p);
-        nsPageFrame::SetCreateWidget(xp < 0x8000 && yp < 0x8000);
-      }
 
       // Leave a slight gap between the pages
       y += deadSpaceGap;
@@ -404,14 +385,13 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Return our desired size
-  aDesiredSize.height  = y;
-  aDesiredSize.width   = reflowPageSize.width+deadSpaceMargin.right+shadowSize.width+extraMargin.right+extraMargin.left;
+  aDesiredSize.height  = y; // includes page heights and dead space
+  aDesiredSize.width   = x + availSize.width + deadSpaceGap;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
   aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width,
                                       aDesiredSize.height);
-
   FinishAndStoreOverflow(&aDesiredSize);
 
   // cache the size so we can set the desired size 
@@ -519,8 +499,6 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
   // Only set them if they are not null
   if (aDocTitle) mPageData->mDocTitle = aDocTitle;
   if (aDocURL) mPageData->mDocURL   = aDocURL;
-
-  aPrintSettings->GetMarginInTwips(mMargin);
 
   aPrintSettings->GetStartPageRange(&mFromPageNum);
   aPrintSettings->GetEndPageRange(&mToPageNum);
@@ -776,11 +754,10 @@ nsSimplePageSequenceFrame::PrintNextPage()
       NS_ASSERTION(view, "no page view");
 
       PR_PL(("SeqFr::Paint -> %p PageNo: %d  View: %p", pf, mPageNum, view));
-      PR_PL((" At: %d,%d\n", mMargin.left+mOffsetX, mMargin.top+mOffsetY));
 
       vm->SetViewContentTransparency(view, PR_FALSE);
 
-      vm->Display(view, mOffsetX, mOffsetY, clipRect);
+      vm->Display(view, 0, 0, clipRect);
 
       if (mSelectionHeight > -1 && selectionY < mSelectionHeight) {
         selectionY += height;

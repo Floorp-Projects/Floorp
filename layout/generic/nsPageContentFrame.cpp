@@ -129,6 +129,8 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsPresContext*   aPresContext,
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.height = aReflowState.availableHeight;
   }
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

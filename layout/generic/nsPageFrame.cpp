@@ -92,9 +92,6 @@ extern PRLogModuleInfo * kLayoutPrintingLogMod;
 #define PR_PL(_p1)
 #endif
 
-// XXX Part of Temporary fix for Bug 127263
-PRBool nsPageFrame::mDoCreateWidget = PR_TRUE;
-
 nsIFrame*
 NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -108,22 +105,6 @@ nsPageFrame::nsPageFrame(nsStyleContext* aContext)
 
 nsPageFrame::~nsPageFrame()
 {
-}
-
-
-NS_IMETHODIMP
-nsPageFrame::SetInitialChildList(nsIAtom*        aListName,
-                                 nsIFrame*       aChildList)
-{
-  nsIView* view = aChildList->GetView();
-  if (view && mDoCreateWidget) {
-    if (GetPresContext()->Type() == nsPresContext::eContext_PrintPreview &&
-        view->GetNearestWidget(nsnull)) {
-      view->CreateWidget(kCChildCID);  
-    }
-  }
-
-  return nsContainerFrame::SetInitialChildList(aListName, aChildList);
 }
 
 NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
@@ -195,8 +176,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
 
     // calc location of frame
-    nscoord xc = mPD->mReflowMargin.left + mPD->mDeadSpaceMargin.left + mPD->mExtraMargin.left;
-    nscoord yc = mPD->mReflowMargin.top + mPD->mDeadSpaceMargin.top + mPD->mExtraMargin.top;
+    nscoord xc = mPD->mReflowMargin.left + mPD->mExtraMargin.left;
+    nscoord yc = mPD->mReflowMargin.top + mPD->mExtraMargin.top;
 
     // Get the child's desired size
     ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, xc, yc, 0, aStatus);
@@ -209,13 +190,6 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
         aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
       aDesiredSize.height = aReflowState.availableHeight;
     }
-
-    nsIView* view = frame->GetView();
-    if (view) {
-      nsRegion region(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
-      view->GetViewManager()->SetViewChildClipRegion(view, &region);
-    }
-
     NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
                  !frame->GetNextInFlow(), "bad child flow list");
   }
@@ -227,6 +201,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
     aDesiredSize.height = aReflowState.availableHeight;
   }
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
   PR_PL(("PageFrame::Reflow %p ", this));
   PR_PL(("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight));
 
@@ -345,8 +321,6 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
       break;
   } // switch
 
-  NS_ASSERTION(x >= 0, "x can't be less than zero");
-  x = PR_MAX(x, 0);
   return x;
 }
 
