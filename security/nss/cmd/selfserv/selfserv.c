@@ -600,6 +600,8 @@ terminateWorkerThreads(void)
     while (threadCount > 0) {
 	PZ_WaitCondVar(threadCountChangeCv, PR_INTERVAL_NO_TIMEOUT);
     }
+    /* The worker threads empty the jobQ before they terminate. */
+    PORT_Assert(PR_CLIST_IS_EMPTY(&jobQ));
     PZ_Unlock(qLock); 
 
     DESTROY_CONDVAR(jobQNotEmptyCv);
@@ -824,11 +826,8 @@ handle_fdx_connection(
 cleanup:
     if (ssl_sock) {
 	PR_Close(ssl_sock);
-    } else
-    {
-        if (tcp_sock) {
-	    PR_Close(tcp_sock);
-        }
+    } else if (tcp_sock) {
+	PR_Close(tcp_sock);
     }
 
     VLOG(("selfserv: handle_fdx_connection: exiting"));
@@ -1178,6 +1177,8 @@ handle_connection(
 cleanup:
     if (ssl_sock) {
         PR_Close(ssl_sock);
+    } else if (tcp_sock) {
+        PR_Close(tcp_sock);
     }
     if (local_file_fd)
 	PR_Close(local_file_fd);
