@@ -179,8 +179,8 @@ nsXFormsSwitchElement::DoneAddingChildren()
   if (!mElement)
     return NS_OK;
 
-  mAddingChildren = PR_FALSE;
   Init();
+  mAddingChildren = PR_FALSE;
   return NS_OK;
 }
 
@@ -194,7 +194,13 @@ nsXFormsSwitchElement::Init(nsIDOMElement* aDeselected)
   nsCOMPtr<nsIXFormsCaseElement> selected(do_QueryInterface(mSelected));
   if (selected) {
     nsresult rv = selected->SetSelected(PR_TRUE);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to select case");
+
+    // it is ok to fail if Init is called during the initialization phase since
+    // XBL might not have attached on the xf:case, yet.
+    // nsXFormsCaseElement::SetSelected will fail if it cannot QI the case
+    // element to nsIXFormsCaseElementUI.
+    NS_WARN_IF_FALSE(mAddingChildren || NS_SUCCEEDED(rv),
+                     "Failed to select case");
   }
 }
 
