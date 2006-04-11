@@ -5377,7 +5377,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
       widgetData.mWindowType  = eWindowType_popup;
       widgetData.mBorderStyle = eBorderStyle_default;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) || defined(XP_BEOS) 
       static NS_DEFINE_IID(kCPopUpCID,  NS_POPUP_CID);
       view->CreateWidget(kCPopUpCID, &widgetData, nsnull);
 #else

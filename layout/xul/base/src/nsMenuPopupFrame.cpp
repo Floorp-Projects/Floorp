@@ -231,7 +231,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
     tag = parentContent->Tag();
   widgetData.mDropShadow = !(tag && tag == nsXULAtoms::menulist);
   
-#if defined(XP_MACOSX) 
+#if defined(XP_MACOSX) || defined(XP_BEOS)
   static NS_DEFINE_IID(kCPopupCID,  NS_POPUP_CID);
   aView->CreateWidget(kCPopupCID, &widgetData, nsnull, PR_TRUE, PR_TRUE, 
                       eContentTypeUI);
