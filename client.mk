@@ -227,6 +227,9 @@ MODULES_suite :=                                \
 
 LOCALES_suite :=                                \
   $(LOCALES_toolkit)                            \
+  suite                                         \
+  editor/ui                                     \
+  extensions/reporter                           \
   $(NULL)
 
 BOOTSTRAP_suite :=                              \
