@@ -64,7 +64,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
-#include "nsICmdLineHandler.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
@@ -2430,24 +2429,31 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                     if (wwatch)
                     {
                         nsCOMPtr<nsIDOMWindow> newWindow;
-            nsCOMPtr<nsISupportsArray> suppArray;
-            rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
-            if (!suppString) return rv;
-            rv = suppString->SetData(url);
-            if (NS_FAILED(rv)) return rv;
-            suppArray->AppendElement(suppString);
-    
-            nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));    
-            if (NS_FAILED(rv)) return rv;
-   
-            nsXPIDLCString chromeUrl;
-            rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrl));
-            if (NS_FAILED(rv)) return rv;
+                        nsCOMPtr<nsISupportsArray> suppArray;
+                        rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
+                        if (NS_FAILED(rv)) return rv;
 
-            wwatch->OpenWindow(0, chromeUrl, "_blank", "chrome,dialog=no,all", 
-                               suppArray, getter_AddRefs(newWindow));
+                        nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
+                        if (!suppString) return rv;
+
+                        rv = suppString->SetData(url);
+                        if (NS_FAILED(rv)) return rv;
+
+                        suppArray->AppendElement(suppString);
+
+                        nsXPIDLCString chromeUrl;
+                        nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+                        if (NS_SUCCEEDED(rv))
+                        {
+                            prefs->GetCharPref("browser.chromeURL", getter_Copies(chromeUrl));
+                        }
+                        if (chromeUrl.IsEmpty())
+                        {
+                            chromeUrl.AssignLiteral("chrome://navigator/content/navigator.xul");
+                        }
+                        wwatch->OpenWindow(0, chromeUrl, "_blank",
+                                           "chrome,dialog=no,all", suppArray,
+                                           getter_AddRefs(newWindow));
                     }
                 }
             }
