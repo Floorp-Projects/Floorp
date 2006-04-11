@@ -4522,7 +4522,7 @@ suite)
 
 browser)
   MOZ_APP_NAME=firefox
-  MOZ_APP_DISPLAYNAME=DeerPark
+  MOZ_APP_DISPLAYNAME=Minefield
   MOZ_XUL_APP=1
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
