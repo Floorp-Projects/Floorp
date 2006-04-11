@@ -30,3 +30,8 @@ change, they need to be changed in sqlite3file.h as well.
 
 -- Vlad Vukicevic <vladimir@pobox.com> 02/2006
 
+You also need to apply preload-cache.patch. This patch provides the preload
+functionality used by mozIStorageConnection.preload to fill the cache with
+pages from the disk.
+
+-- Brett Wilson <brettw@gmail.com> 04/2006
