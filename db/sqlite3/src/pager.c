@@ -2526,6 +2526,20 @@ int sqlite3pager_release_memory(int nReq){
 ** or journal files.
 */
 int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
+  /* This just passes through to our modified version with a NULL data pointer */
+  return sqlite3pager_get2(pPager, pgno, ppPage, 0);
+}
+
+
+/*
+** This is an internal version of pager_get that takes an extra parameter of
+** data to use to fill the page with. This allows more efficient filling for
+** preloaded data. If this extra parameter is NULL, we'll go to the file.
+**
+** See sqlite3pager_loadall which uses this function.
+*/
+int sqlite3pager_get2(Pager *pPager, Pgno pgno, void **ppPage,
+                      unsigned char* pDataToFill) {
   PgHdr *pPg;
   int rc;
 
@@ -2615,6 +2629,7 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
     }
   }
   if( pPg==0 ){
+//printf("CACHE MISS %d\n", pgno);
     /* The requested page is not in the page cache. */
     int h;
     TEST_INCR(pPager->nMiss);
@@ -2681,29 +2696,36 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
     if( sqlite3pager_pagecount(pPager)<(int)pgno || MEMDB ){
       memset(PGHDR_TO_DATA(pPg), 0, pPager->pageSize);
     }else{
-      assert( MEMDB==0 );
-      rc = sqlite3OsSeek(pPager->fd, (pgno-1)*(i64)pPager->pageSize);
-      if( rc==SQLITE_OK ){
-        rc = sqlite3OsRead(pPager->fd, PGHDR_TO_DATA(pPg),
-                              pPager->pageSize);
-      }
-      TRACE3("FETCH %d page %d\n", PAGERID(pPager), pPg->pgno);
-      CODEC(pPager, PGHDR_TO_DATA(pPg), pPg->pgno, 3);
-      if( rc!=SQLITE_OK ){
-        i64 fileSize;
-        int rc2 = sqlite3OsFileSize(pPager->fd, &fileSize);
-        if( rc2!=SQLITE_OK || fileSize>=pgno*pPager->pageSize ){
-	  /* An IO error occured in one of the the sqlite3OsSeek() or
-          ** sqlite3OsRead() calls above. */
-          pPg->pgno = 0;
-          sqlite3pager_unref(PGHDR_TO_DATA(pPg));
-          return rc;
-        }else{
-          clear_simulated_io_error();
-          memset(PGHDR_TO_DATA(pPg), 0, pPager->pageSize);
+      if (pDataToFill) {
+        /* Just copy from the given memory */
+        memcpy(PGHDR_TO_DATA(pPg), pDataToFill, pPager->pageSize);
+        CODEC(pPager, PGHDR_TO_DATA(pPg), pPg->pgno, 3);
+      } else {
+        /* Load from disk */
+        assert( MEMDB==0 );
+        rc = sqlite3OsSeek(pPager->fd, (pgno-1)*(i64)pPager->pageSize);
+        if( rc==SQLITE_OK ){
+          rc = sqlite3OsRead(pPager->fd, PGHDR_TO_DATA(pPg),
+                                pPager->pageSize);
         }
-      }else{
-        TEST_INCR(pPager->nRead);
+        TRACE3("FETCH %d page %d\n", PAGERID(pPager), pPg->pgno);
+        CODEC(pPager, PGHDR_TO_DATA(pPg), pPg->pgno, 3);
+        if( rc!=SQLITE_OK ){
+          i64 fileSize;
+          int rc2 = sqlite3OsFileSize(pPager->fd, &fileSize);
+          if( rc2!=SQLITE_OK || fileSize>=pgno*pPager->pageSize ){
+            /* An IO error occured in one of the the sqlite3OsSeek() or
+            ** sqlite3OsRead() calls above. */
+            pPg->pgno = 0;
+            sqlite3pager_unref(PGHDR_TO_DATA(pPg));
+            return rc;
+          }else{
+            clear_simulated_io_error();
+            memset(PGHDR_TO_DATA(pPg), 0, pPager->pageSize);
+          }
+        }else{
+          TEST_INCR(pPager->nRead);
+        }
       }
     }
 
@@ -2720,6 +2742,7 @@ int sqlite3pager_get(Pager *pPager, Pgno pgno, void **ppPage){
     pPg->pageHash = pager_pagehash(pPg);
 #endif
   }else{
+//printf("hit %d\n", pgno);
     /* The requested page is in the page cache. */
     TEST_INCR(pPager->nHit);
     page_ref(pPg);
@@ -3777,6 +3800,70 @@ int sqlite3pager_movepage(Pager *pPager, void *pData, Pgno pgno){
   return SQLITE_OK;
 }
 #endif
+
+
+/**
+ * Addition for Mozilla: This will attempt to populate the database cache with
+ * the first N bytes of the file, where N is the total size of the cache.
+ * Because we can load this as one chunk from the disk, this is much faster
+ * than loading a subset of the pages one at a time in random order.
+ *
+ * The pager must be initialized before this function is called. This means a
+ * statement must be open that has initialized the pager and is keeping the
+ * cache in memory.
+ */
+int sqlite3pager_loadall(Pager* pPager)
+{
+  int i;
+  int rc;
+  int loadSize;
+  int loadPages;
+  unsigned char* fileData;
+
+  if (pPager->dbSize < 0 || pPager->pageSize < 0) {
+    /* pager not initialized, this means a statement is not open */
+    return SQLITE_MISUSE;
+  }
+
+  /* compute sizes */
+  if (pPager->mxPage < pPager->dbSize)
+    loadPages = pPager->mxPage;
+  else
+    loadPages = pPager->dbSize;
+  loadSize = loadPages * pPager->pageSize;
+
+  rc = sqlite3OsSeek(pPager->fd, 0);
+  if (rc != SQLITE_OK)
+    return rc;
+
+  /* load the file as one chunk */
+  fileData = sqliteMallocRaw(loadSize);
+  if (! fileData)
+    return SQLITE_NOMEM;
+  rc = sqlite3OsRead(pPager->fd, fileData, loadSize);
+  if (rc != SQLITE_OK) {
+    sqliteFree(fileData);
+    return rc;
+  }
+
+  /* Copy the data to each page. Note that the page numbers we pass to _get
+   * are one-based, 0 is a marker for no page. We also need to check that we
+   * haven't loaded more pages than the cache can hold total. There may have
+   * already been a few pages loaded before, so we may fill the cache before
+   * loading all of the pages we want to.
+   */
+  for (i = 1; i <= loadPages && pPager->nPage < pPager->mxPage; i ++) {
+    void *pPage;
+    rc = sqlite3pager_get2(pPager, 1, &pPage,
+                           &fileData[(i-1)*(i64)pPager->pageSize]);
+    if (rc != SQLITE_OK)
+      break;
+    sqlite3pager_unref(pPage);
+  }
+  sqliteFree(fileData);
+  return SQLITE_OK;
+}
+
 
 #if defined(SQLITE_DEBUG) || defined(SQLITE_TEST)
 /*
