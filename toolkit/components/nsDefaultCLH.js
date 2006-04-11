@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Daniel Glazman <daniel.glazman@disruptive-innovations.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,9 +52,11 @@ const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
  * This file provides a generic default command-line handler.
  *
  * It opens the chrome window specified by the pref "toolkit.defaultChromeURI"
- * the arguments passed to the window are the nsICommandLine instance.
+ * with the flags specified by the pref "toolkit.defaultChromeFlags"
+ * or "chrome,dialog=no,all" is it is not available.
+ * The arguments passed to the window are the nsICommandLine instance.
  *
- * It doesn't do anything if the pref is unset.
+ * It doesn't do anything if the pref "toolkit.defaultChromeURI" is unset.
  */
 
 var nsDefaultCLH = {
@@ -97,10 +100,16 @@ var nsDefaultCLH = {
     try {
       var chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
 
+      var flags = "chrome,dialog=no,all";
+      try {
+        flags = prefs.getCharPref("toolkit.defaultChromeFeatures");
+      }
+      catch (e) { }
+
       var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                             .getService(nsIWindowWatcher);
       wwatch.openWindow(null, chromeURI, "_blank",
-                        "chrome,dialog=no,all", cmdLine);
+                        flags, cmdLine);
     }
     catch (e) { }
   },
