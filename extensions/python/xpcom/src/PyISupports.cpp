@@ -73,7 +73,6 @@ Py_nsISupports::Py_nsISupports(nsISupports *punk, const nsIID &iid, PyTypeObject
 	m_iid = iid;
 	// refcnt of object managed by caller.
 	PR_AtomicIncrement(&cInterfaces);
-	PyXPCOM_DLLAddRef();
 	_Py_NewReference(this);
 }
 
@@ -81,7 +80,6 @@ Py_nsISupports::~Py_nsISupports()
 {
 	SafeRelease(this);	
 	PR_AtomicDecrement(&cInterfaces);
-	PyXPCOM_DLLRelease();
 }
 
 /*static*/ nsISupports *

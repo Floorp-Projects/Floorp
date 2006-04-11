@@ -142,8 +142,6 @@ PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 #endif // DEBUG_LIFETIMES
 	Py_XINCREF(instance); // instance should never be NULL - but what's an X between friends!
 
-	PyXPCOM_DLLAddRef();
-
 #ifdef DEBUG_FULL
 	LogF("PyGatewayBase: created %s", m_pPyObject ? m_pPyObject->ob_type->tp_name : "<NULL>");
 #endif
@@ -169,7 +167,6 @@ PyG_Base::~PyG_Base()
 		p->m_pBase = nsnull;
 		m_pWeakRef = nsnull;
 	}
-	PyXPCOM_DLLRelease();
 }
 
 // Get the correct interface pointer for this object given the IID.
