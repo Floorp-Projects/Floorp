@@ -1253,7 +1253,12 @@ NS_IMETHODIMP nsLocalFile::Load(PRLibrary **_retval)
   if (NS_FAILED(rv))
     return rv;
 
-  *_retval = PR_LoadLibrary(path.get());
+  PRLibSpec ls = {
+    PR_LibSpec_Pathname,
+    path.get()
+  };
+
+  *_retval = PR_LoadLibraryWithFlags(ls, PR_LD_NOW);
 
   NS_TIMELINE_STOP_TIMER("PR_LoadLibrary");
   NS_TIMELINE_MARK_TIMER1("PR_LoadLibrary", path.get());
