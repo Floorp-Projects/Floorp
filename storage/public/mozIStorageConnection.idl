@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Brett Wilson <brettw@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,7 +50,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(4c459c8a-f548-42b7-8d7e-42ea1aed3876)]
+[scriptable, uuid(77015f88-bfc2-4669-b1c3-cc19fb07cd4e)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
@@ -192,4 +193,20 @@ interface mozIStorageConnection : nsISupports {
   void createFunction(in string aFunctionName,
                       in long aNumArguments,
                       in mozIStorageFunction aFunction);
+
+  /**
+   * This is used to preload the database cache. It loads pages from the
+   * start of the database file until the memory cache (specified by
+   * "PRAGMA cache_size=") is full or the entire file is read.
+   *
+   * The cache MUST be active on the database for this to work. This means
+   * that you must have a transaction open on the connection, or have a
+   * transaction open on another connection that shares the same pager cache.
+   * This cached data will go away when the transaction is closed.
+   *
+   * This preload operation can dramatically speed up read operations because
+   * the data is loaded as one large block. Normally, pages are read in on
+   * demand, which can cause many disk seeks.
+   */
+  void preload();
 };
