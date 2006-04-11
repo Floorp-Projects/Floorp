@@ -1278,7 +1278,7 @@ function CCKWriteProperties(destdir)
     var file = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
     file.initWithPath(listitem.label);
-    str = "Cert"+ i + "=" + file.leafName + "\n";
+    str = "Cert"+ (i+1) + "=" + file.leafName + "\n";
     cos.writeString(str);
   }
 
