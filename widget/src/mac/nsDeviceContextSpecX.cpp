@@ -57,7 +57,7 @@
  *  @update   dc 12/02/98
  */
 nsDeviceContextSpecX::nsDeviceContextSpecX()
-: mPrintSession(0)
+: mPrintSession(NULL)
 , mPageFormat(kPMNoPageFormat)
 , mPrintSettings(kPMNoPrintSettings)
 , mSavedPort(0)
@@ -71,6 +71,8 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
  */
 nsDeviceContextSpecX::~nsDeviceContextSpecX()
 {
+  if (mPrintSession)
+    ::PMRelease(mPrintSession);
   ClosePrintManager();
 }
 
@@ -91,6 +93,8 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool	aIsPrintP
   rv = printSettingsX->GetNativePrintSession(&mPrintSession);
   if (NS_FAILED(rv))
     return rv;  
+  ::PMRetain(mPrintSession);
+
   rv = printSettingsX->GetPMPageFormat(&mPageFormat);
   if (NS_FAILED(rv))
     return rv;
