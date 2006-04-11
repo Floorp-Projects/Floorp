@@ -91,9 +91,6 @@
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
 
-#ifdef NS_PRINTING
-#include "nsIWebBrowserPrint.h"
-#endif
 // For Accessibility
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -255,33 +252,22 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
           contentParent = (nsIFrame*)value;
     }
 
-    nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
+    rv = nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   nsIView* view = GetView();
-  NS_ASSERTION(view, "We should always have a view now");
 
   if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
       && !view->HasWidget()) {
     view->CreateWidget(kCChildCID);
   }
 
-  // determine if we are a printcontext
-  PRBool shouldCreateDoc;
-
-  if (aPresContext->Medium() == nsLayoutAtoms::print) {
-    if (aPresContext->Type() == nsPresContext::eContext_PrintPreview) {
-      // for print preview we want to create the view and widget but
-      // we do not want to load the document, it is already loaded.
-      rv = CreateViewAndWidget(eContentTypeContent);
-      NS_ENSURE_SUCCESS(rv,rv);
-    }
-
-    shouldCreateDoc = PR_FALSE;
+  if (!aPresContext->IsDynamic()) {
+    // We let the printing code take care of loading the document; just
+    // create a widget for it to use
+    rv = CreateViewAndWidget(eContentTypeContent);
+    NS_ENSURE_SUCCESS(rv,rv);
   } else {
-    shouldCreateDoc = PR_TRUE;
-  }
-
-  if (shouldCreateDoc) {
     rv = ShowDocShell();
     NS_ENSURE_SUCCESS(rv,rv);
     mDidCreateDoc = PR_TRUE;
@@ -396,13 +382,10 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.width += border.left + border.right;
     aDesiredSize.height += border.top + border.bottom;
   }
-  
-  // might not have an inner view yet during printing
-  if (mInnerView) {
-    nsIViewManager* vm = mInnerView->GetViewManager();
-    vm->MoveViewTo(mInnerView, offset.x, offset.y);
-    vm->ResizeView(mInnerView, nsRect(0, 0, innerSize.width, innerSize.height), PR_TRUE);
-  }
+
+  nsIViewManager* vm = mInnerView->GetViewManager();
+  vm->MoveViewTo(mInnerView, offset.x, offset.y);
+  vm->ResizeView(mInnerView, nsRect(nsPoint(0, 0), innerSize), PR_TRUE);
 
   if (aDesiredSize.mComputeMEW) {   
     nscoord defaultAutoWidth = NSIntPixelsToTwips(300, aPresContext->ScaledPixelsToTwips());

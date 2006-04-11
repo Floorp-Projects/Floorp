@@ -156,16 +156,9 @@ public:
   nsPrintObject* FindSmallestSTF();
 
   PRBool   PrintDocContent(nsPrintObject* aPO, nsresult& aStatus);
-  nsresult DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting,
-                   PRBool& aDonePrinting);
+  nsresult DoPrint(nsPrintObject * aPO);
 
-  enum ePrintFlags {
-    eSetPrintFlag = 1U,
-    eSetHiddenFlag = 2U
-  };
-  void SetPrintPO(nsPrintObject* aPO, PRBool aPrint,
-                  PRBool aIsHidden = PR_FALSE,
-                  PRUint32 aFlags = eSetPrintFlag);
+  void SetPrintPO(nsPrintObject* aPO, PRBool aPrint);
 
   void TurnScriptingOn(PRBool aDoTurnOn);
   PRBool CheckDocumentForPPCaching();
@@ -181,10 +174,9 @@ public:
   void BuildDocTree(nsIDocShellTreeNode * aParentNode,
                     nsVoidArray *         aDocList,
                     nsPrintObject *         aPO);
-  nsresult ReflowDocList(nsPrintObject * aPO, PRBool aSetPixelScale,
-                         PRBool aDoCalcShrink);
+  nsresult ReflowDocList(nsPrintObject * aPO, PRBool aSetPixelScale);
 
-  nsresult ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink);
+  nsresult ReflowPrintObject(nsPrintObject * aPO);
 
   void CheckForChildFrameSets(nsPrintObject* aPO);
 
@@ -273,11 +265,6 @@ public:
 
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
 
-  void SetDialogParent(nsIDOMWindow* aDOMWin)
-  {
-    mDialogParentWin = aDOMWin;
-  }
-
   // These calls also update the DocViewer
   void SetIsPrinting(PRBool aIsPrinting);
   PRBool GetIsPrinting()
@@ -358,11 +345,6 @@ protected:
 
   static void MapContentToWebShells(nsPrintObject* aRootPO, nsPrintObject* aPO);
 
-  static nsresult MapSubDocFrameLocations(nsPrintObject* aPO);
-
-  static nsresult CalcPageFrameLocation(nsIPresShell*  aPresShell,
-                                        nsPrintObject* aPO);
-
   static void SetPrintAsIs(nsPrintObject* aPO, PRBool aAsIs = PR_TRUE);
 
   // Static member variables
@@ -373,7 +355,6 @@ protected:
   nsIDocumentViewer*      mDocViewer;      // [WEAK] it owns me!
   nsISupports*            mContainer;      // [WEAK] it owns me!
   nsIDeviceContext*       mDeviceContext;  // not ref counted
-  nsPresContext*         mPresContext;    // not ref counted
   nsCOMPtr<nsIWidget>     mWindow;      
   
   nsPrintData*            mPrt;
@@ -387,7 +368,6 @@ protected:
   nsPrintData*            mOldPrtPreview;
 
   nsCOMPtr<nsIDocument>   mDocument;
-  nsCOMPtr<nsIDOMWindow>  mDialogParentWin;
 
   PRBool                      mIsCachingPresentation;
   CachedPresentationObj*      mCachedPresObj;

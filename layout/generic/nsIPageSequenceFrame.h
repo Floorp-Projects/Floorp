@@ -83,7 +83,6 @@ public:
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage) = 0;
 
   NS_IMETHOD DoPageEnd() = 0;
-  NS_IMETHOD SetOffset(nscoord aX, nscoord aY) = 0;
   NS_IMETHOD SetSelectionHeight(nscoord aYOffset, nscoord aHeight) = 0;
 
   NS_IMETHOD SetTotalNumPages(PRInt32 aTotal) = 0;

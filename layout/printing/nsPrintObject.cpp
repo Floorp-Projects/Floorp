@@ -41,10 +41,9 @@
 //-- nsPrintObject Class Impl
 //---------------------------------------------------
 nsPrintObject::nsPrintObject() :
-  mFrameType(eFrame), mRootView(nsnull), mContent(nsnull), mSeqFrame(nsnull),
-  mPageNum(-1), mRect(0,0,0,0), mParent(nsnull), mHasBeenPrinted(PR_FALSE),
-  mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
-  mSharedPresShell(PR_FALSE), mIsHidden(PR_FALSE), mInvisible(PR_FALSE),
+  mFrameType(eFrame), mRootView(nsnull), mContent(nsnull), mParent(nsnull),
+  mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE), mPrintAsIs(PR_FALSE),
+  mSharedPresShell(PR_FALSE), mInvisible(PR_FALSE),
   mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0)
 {
 }
