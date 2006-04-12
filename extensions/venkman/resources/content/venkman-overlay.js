@@ -42,3 +42,41 @@ function start_venkman()
 {
     toOpenWindowByType("mozapp:venkman", "chrome://venkman/content/venkman.xul");
 }
+
+const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
+const nsIXULAppInfo = Components.interfaces.nsIXULAppInfo;
+
+function isThunderbird()
+{
+    var cls = Components.classes[XULAPPINFO_CONTRACTID];
+    if (!cls)
+        return false;
+
+    var appinfo;
+    try
+    {
+        // This throws when it gets upset.
+        appinfo = cls.getService(nsIXULAppInfo);
+    }
+    catch(ex) {}
+
+    if (!appinfo)
+        return false;
+
+    return (appinfo.ID == "{3550f703-e582-4d05-9a08-453d09bdfdc6}");
+}
+
+function killOffThunderbirdItem()
+{
+    document.removeEventListener("load", killOffThunderbirdItem, true);
+
+    // If we're not on Thunderbird, we need to nuke the "tb-venkman-menu-tb"
+    // item, which we overlay on "taskPopup".
+    if (!isThunderbird())
+    {
+        var element = document.getElementById("tb-venkman-menu-tb");
+        if (element)
+            element.parentNode.removeChild(element);
+    }
+}
+document.addEventListener("load", killOffThunderbirdItem, true);

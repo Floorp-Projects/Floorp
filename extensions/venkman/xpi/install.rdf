@@ -14,6 +14,24 @@
 			</Description>
 		</em:targetApplication>
 		
+		<!-- target: Mozilla Thunderbird, version 0.9 to 3.0 -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+				<em:minVersion>0.9</em:minVersion>
+				<em:maxVersion>3.0</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+		
+		<!-- target: Flock, version 1.0 -->
+		<em:targetApplication>
+			<Description>
+				<em:id>{a463f10c-3994-11da-9945-000d60ca027b}</em:id>
+				<em:minVersion>1.0</em:minVersion>
+				<em:maxVersion>1.0+</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+		
 		<!-- front-end metadata -->
 		<em:name>JavaScript Debugger</em:name>
 		<em:description></em:description>

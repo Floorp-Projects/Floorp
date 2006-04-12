@@ -49,7 +49,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:venkman"
-        chrome:displayName="JavaScript Debugger 0.9.86"
+        chrome:displayName="JavaScript Debugger 0.9.87"
         chrome:author="mozilla.org"
 #expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:name="venkman">

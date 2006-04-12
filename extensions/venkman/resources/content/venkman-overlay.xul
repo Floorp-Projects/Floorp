@@ -79,4 +79,11 @@
       label="&vnkMenu.label;" accesskey="&vnkMenu.accesskey;"/>
 </menupopup>
 
+<!-- Thunderbird -->
+<menupopup id="taskPopup">
+  <menuitem id="tb-venkman-menu-tb" oncommand="start_venkman()" 
+      insertafter="javaScriptConsole,devToolsSeparator"
+      label="&vnkMenu.label;" accesskey="&vnkMenu.accesskey;"/>
+</menupopup>
+
 </overlay>
