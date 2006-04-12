@@ -301,6 +301,9 @@
             mMessage: "",
             mTotalProgress: 0,
 
+            // count of open requests (should always be 0 or 1)
+            mRequestCount: 0,
+
             onProgressChange : function (aWebProgress, aRequest,
                                          aCurSelfProgress, aMaxSelfProgress,
                                          aCurTotalProgress, aMaxTotalProgress)
@@ -327,6 +330,21 @@
 
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
+
+              if (aStateFlags & nsIWebProgressListener.STATE_START) {
+                this.mRequestCount++;
+              }
+              else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+                const NS_ERROR_UNKNOWN_HOST = 2152398878;
+                if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
+                  // to prevent bug 235825: wait for the request handled
+                  // by the automatic keyword resolver
+                  return;
+                }
+                // since we (try to) only handle STATE_STOP of the last request,
+                // the count of open requests should now be 0
+                this.mRequestCount = 0;
+              }
 
               if (aStateFlags & nsIWebProgressListener.STATE_START &&
                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
