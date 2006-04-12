@@ -835,7 +835,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     } else {
         int wlen = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
         if (wlen > MAX_PATH)
-            wname = wname_malloc = PR_Malloc(wlen);
+            wname = wname_malloc = PR_Malloc(wlen * sizeof(PRUnichar));
         if (wname == NULL ||
             !MultiByteToWideChar(CP_ACP, 0,  name, -1, wname, wlen)) {
             oserr = _MD_ERRNO();
