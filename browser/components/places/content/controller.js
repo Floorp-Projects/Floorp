@@ -1760,10 +1760,10 @@ var PlacesController = {
       for (var i = 0; i < cc; ++i) {
         var node = children.getChild(i);
         if (self.nodeIsFolder(node)) {
-          var folderId = asFolder(node).folderId;
-          var title = self.bookmarks.getFolderTitle(folderId);
+          var nodeFolderId = asFolder(node).folderId;
+          var title = self.bookmarks.getFolderTitle(nodeFolderId);
           txn = new PlacesCreateFolderTransaction(title, -1, index);
-          txn.childTransactions = getChildTransactions(folderId);
+          txn.childTransactions = getChildTransactions(nodeFolderId);
         }
         else if (self.nodeIsURI(node) || self.nodeIsQuery(node)) {
           txn = self._getItemCopyTransaction(self._uri(node.uri), -1, 
