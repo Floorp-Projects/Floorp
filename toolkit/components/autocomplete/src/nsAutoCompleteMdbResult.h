@@ -41,7 +41,7 @@
 #include "nsIAutoCompleteResult.h"
 #include "nsIAutoCompleteResultTypes.h"
 #include "nsString.h"
-#include "nsIMutableArray.h"
+#include "nsCOMArray.h"
 #include "mdb.h"
 
 class nsAutoCompleteMdbResult : public nsIAutoCompleteMdbResult2
