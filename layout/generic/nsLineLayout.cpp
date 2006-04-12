@@ -2839,7 +2839,9 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
             if (numSpaces > 0) {
               FrameJustificationState state = { numSpaces, numLetters, remainingWidth, 0, 0, 0, 0, 0 };
 
-              ApplyFrameJustification(psd, &state);
+              // Apply the justification, and make sure to update our linebox
+              // width to account for it.
+              aLineBounds.width += ApplyFrameJustification(psd, &state);
             }
           }
         }

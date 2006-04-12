@@ -527,7 +527,11 @@ protected:
     nscoord mWidthForSpacesProcessed;
     nscoord mWidthForLettersProcessed;
   };
-  nscoord ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState* aState);
+
+  // Apply justification.  The return value is the amount by which the width of
+  // the span corresponding to aPSD got increased due to justification.
+  nscoord ApplyFrameJustification(PerSpanData* aPSD,
+                                  FrameJustificationState* aState);
 
 
 #ifdef DEBUG
