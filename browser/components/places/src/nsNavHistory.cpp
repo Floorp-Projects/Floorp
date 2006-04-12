@@ -1444,8 +1444,8 @@ nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsFollowedBookmark(nsIURI* aURI)
 {
-  // if history expiration is set to 0 days it is disabled, so don't add
-  if (mExpireDays == 0)
+  // don't add when history is disabled
+  if (IsHistoryDisabled())
     return NS_OK;
 
   nsCAutoString uriString;
@@ -2476,8 +2476,8 @@ nsNavHistory::HidePage(nsIURI *aURI)
 NS_IMETHODIMP
 nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 {
-  // if history expiration is set to 0 days it is disabled, so don't add
-  if (mExpireDays == 0)
+  // don't add when history is disabled
+  if (IsHistoryDisabled())
     return NS_OK;
 
   nsCAutoString uriString;
@@ -2506,8 +2506,8 @@ NS_IMETHODIMP
 nsNavHistory::AddURI(nsIURI *aURI, PRBool aRedirect,
                      PRBool aToplevel, nsIURI *aReferrer)
 {
-  // if history expiration is set to 0 days it is disabled, so don't add
-  if (mExpireDays == 0)
+  // don't add when history is disabled
+  if (IsHistoryDisabled())
     return NS_OK;
 
   PRTime now = PR_Now();
@@ -2693,8 +2693,8 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
 NS_IMETHODIMP
 nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 {
-  // if history expiration is set to 0 days it is disabled, we can optimize
-  if (mExpireDays == 0) {
+  // if history is disabled, we can optimize
+  if (IsHistoryDisabled()) {
     *_retval = PR_FALSE;
     return NS_OK;
   }
