@@ -47,9 +47,12 @@ html|*:root contextcontainer,
 html|*:root group,
 html|*:root switch,
 html|*:root case,
-html|*:root select1 item,
-html|*:root select1 itemset,
-html|*:root select1 choices {
+html|*:root select1:not([appearance]) item,
+html|*:root select1[appearance='minimal'] item,
+html|*:root select1:not([appearance]) itemset,
+html|*:root select1[appearance='minimal'] itemset,
+html|*:root select1:not([appearance]) choices,
+html|*:root select1[appearance='minimal'] choices {
   display: block;
 }
 
@@ -69,19 +72,19 @@ xul|*:root case {
   display: -moz-box;
 }
 
-xul|*:root select1 item,
-xul|*:root select1 itemset,
-xul|*:root select1 choices {
-  display: none;
-}
-
 contextcontainer-inline {
   display: inline;
 }
 
-select item,
-select itemset,
-select choices {
+select item, xul|*:root select1 item,
+html|*:root select1[appearance='compact'] item,
+html|*:root select1[appearance='full'] item,
+select itemset, xul|*:root select1 itemset,
+html|*:root select1[appearance='compact'] itemset,
+html|*:root select1[appearance='full'] itemset,
+select choices, xul|*:root select1 choices,
+html|*:root select1[appearance='compact'] choices,
+html|*:root select1[appearance='full'] choices {
   display: none;
 }
 
@@ -360,10 +363,12 @@ select1 itemset, select itemset {
 }
 
   /* select1 appearance='minimal' (default) */
-html|*:root select1 {
+html|*:root select1:not([appearance]),
+html|*:root select1[appearance='minimal'] {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
 }
-html|*:root select1 item {
+html|*:root select1:not([appearance]) item,
+html|*:root select1[appearance='minimal'] item {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1-item');
   white-space : nowrap;
 }
@@ -371,23 +376,37 @@ html|*:root select1 item {
 xul|*:root select1 {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-minimal');
 }
-xul|*:root select1 xul|box {
+xul|*:root select1 xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-minimal');
 }
 
   /* select1 appearance='compact' */
+html|*:root select1[appearance="compact"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-compact');
+}
+html|*:root select1[appearance="compact"] html|span[anonid="control"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select1-compact');
+}
+
 xul|*:root select1[appearance="compact"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-compact');
 }
-xul|*:root select1[appearance="compact"] xul|box{
+xul|*:root select1[appearance="compact"] xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-compact');
 }
 
   /* select1 appearance='full' */
+html|*:root select1[appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#xformswidget-select-full');
+}
+html|*:root select1[appearance="full"] html|span[anonid="control"] {
+  -moz-binding: url('chrome://xforms/content/select-xhtml.xml#controlwidget-select1-full');
+}
+
 xul|*:root select1[appearance="full"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-full');
 }
-xul|*:root select1[appearance="full"] xul|box {
+xul|*:root select1[appearance="full"] xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select1-full');
 }
 
@@ -479,6 +498,7 @@ html|*:root item[_moz_active] {
   background: Highlight;
 }
 
+html|*:root select1:not([appearance]) choices > label,
 html|*:root select1[appearance='minimal'] choices > label {
   display: block;
   font: -moz-list;
@@ -490,8 +510,11 @@ html|*:root select1[appearance='minimal'] choices > label {
   text-indent: 0;
 }
 
+html|*:root select1:not([appearance]) choices > item
 html|*:root select1[appearance='minimal'] choices > item,
+html|*:root select1:not([appearance]) choices > itemset,
 html|*:root select1[appearance='minimal'] choices > itemset,
+html|*:root select1:not([appearance]) choices > choices,
 html|*:root select1[appearance='minimal'] choices > choices {
   padding-left: 20px;
   font-style: normal;
@@ -524,7 +547,7 @@ html|*:root select[appearance="full"] html|span[anonid="control"] {
 xul|*:root select[appearance="full"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#xformswidget-select-full');
 }
-xul|*:root select[appearance="full"] xul|box {
+xul|*:root select[appearance="full"] xul|box[anonid="control"] {
   -moz-binding: url('chrome://xforms/content/select-xul.xml#controlwidget-select-full');
 }
 

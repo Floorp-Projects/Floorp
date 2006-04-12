@@ -51,12 +51,12 @@
           xmlns:xforms="http://www.w3.org/2002/xforms">
 
 
-<!-- SELECT CONTROLS
-  The section contains xforms select controls implementations for XHTML. All
-  controls are inherited from interface bindings realized in select.xml.
+<!-- SELECT/SELECT1 CONTROLS
+  The section contains xforms select/select1 controls implementations for XHTML.
+  All controls are inherited from interface bindings realized in select.xml.
 -->
 
-  <!-- SELECT APPEARANCE='COMPACT' : <DEFAULT> -->
+  <!-- SELECT/SELECT1 APPEARANCE='COMPACT' : <DEFAULT> -->
   <binding id="xformswidget-select-compact"
            extends="chrome://xforms/content/select.xml#xformswidget-select-base">
     <content>
@@ -70,7 +70,7 @@
     </content>
   </binding>
 
-  <!-- SELECT APPEARANCE='FULL' -->
+  <!-- SELECT/SELECT1 APPEARANCE='FULL' -->
   <binding id="xformswidget-select-full"
            extends="chrome://xforms/content/select.xml#xformswidget-select-base">
     <content>
@@ -87,11 +87,18 @@
   </binding>
 
 
+<!-- CONTROL WIDGETS FOR SELECT/SELECT1 CONTROLS
+  All control widgets are underlying controls for select/select1 and serve to
+  realize functionality needed for select/select1 work in XHTML context. Thease
+  widgets are inherited from 'controlwidget-base' binding and implement the
+  interface what base widget for xforms select/select1 controls ask for. You can
+  find interface description in 'select.xml' file.
+-->
+
+
 <!-- CONTROL WIDGETS FOR SELECT CONTROLS
   The section contains underlying widgets implementations needed for select
-  controls. All underlying widgets implements the interface what base widget
-  for xforms select controls ask for. You can find interface description in
-  'select.xml' file.
+  controls.
 -->
 
   <!-- CONTROL WIDGET FOR SELECT APPEARANCE='COMPACT' -->
@@ -315,13 +322,75 @@
           this.updateInstanceData(false);
       </handler>
 
-      <!-- 
+      <!--
         XXX: need to send DOMFocusIn/DOMFocusOut events
         XXX: when incremental='false' then model data should be updated on 
         'blur' event for xforms:select only
       -->
 
     </handlers>
+  </binding>
 
+
+<!-- CONTROL WIDGETS FOR SELECT1 CONTROLS
+  The section contains underlying widgets implementations needed for select1
+  controls.
+-->
+
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='MINIMAL'
+    Now select1 appearance='minimal' control is implemented in select1.xml
+    as separate widget.
+  -->
+
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='COMPACT' -->
+  <binding id="controlwidget-select1-compact"
+           extends="#controlwidget-select-compact">
+    <content>
+      <html:select xbl:inherits="style, accesskey, disabled=readonly"
+                   class="xf-value" size="5" anonid="control"/>
+    </content>
+  </binding>
+
+
+  <!-- CONTROL WIDGET FOR SELECT1 APPEARANCE='FULL' -->
+  <binding id="controlwidget-select1-full"
+           extends="#controlwidget-select-full">
+
+    <content>
+      <html:form anonid="control"/>
+    </content>
+
+    <implementation>
+      <method name="appendItem">
+        <parameter name="aLabel"/>
+        <parameter name="aValue"/>
+        <parameter name="aGroup"/>
+        <body>
+          var div = document.createElementNS(this.XHTML_NS, "div");
+
+          var input = document.createElementNS(this.XHTML_NS, "input");
+          input.setAttribute("type", "radio");
+          input.setAttribute("value", aValue);
+          input.setAttribute("name", "radioControlForXFormsSelect1");
+          input.setAttribute("anonid", "wcontrol");
+          if (this.readonly)
+            input.setAttribute('disabled', 'true');
+          div.appendChild(input);
+
+          if (aLabel)
+            div.appendChild(aLabel.cloneNode(true));
+
+          if (aGroup) {
+            aGroup.appendChild(div);
+          } else {
+            this.control.appendChild(div);
+          }
+
+          return div;
+        </body>
+      </method>
+    </implementation>
   </binding>
 </bindings>
