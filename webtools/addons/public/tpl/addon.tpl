@@ -142,7 +142,7 @@ Was this comment helpful? <a href="{$config.webpath}/ratecomment.php?aid={$addon
 <li>Total Downloads: {$addon->TotalDownloads} &nbsp;&#8212;&nbsp; Downloads this Week: {$addon->downloadcount}</li>
 <li>See <a href="{$config.webpath}/{$app}/{$addon->ID}/history/">all previous releases</a> of this addon.</li>
 {if $addon->Homepage}
-<li>View the <a href="{$addon->Homepage}">Author's homepage</a> for this addon.</li>
+<li>View the <a href="{$addon->Homepage}">Addon's homepage</a>.</li>
 {/if}
 </ul>
 
