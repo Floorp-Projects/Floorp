@@ -47,6 +47,12 @@
 #include <stdio.h>
 #include <direct.h>
 
+#ifdef WINCE
+char *_getdcwd(int drive, char *buffer, int maxlen)
+{
+  return _getcwd(buffer, maxlen);
+}
+#endif
 
 static inline void ConvertArg(LPCWSTR str, nsCAutoString &cstr,
                               const char* (&ptr))
@@ -119,12 +125,18 @@ UINT WINAPI nsGetWindowsDirectoryW(LPWSTR aPathW, UINT aSize)
 
 DWORD WINAPI nsGetTempPathW(DWORD aLen, LPWSTR aPathW)
 {
+#ifdef WINCE
+    char *pathA = "\\temp";
+    DWORD len = NS_ConvertAtoW(pathA, aLen, aPathW);
+    return len-1;
+#else
     char pathA[MAX_PATH];
     DWORD len;
     if (aPathW && GetTempPathA(MAX_PATH, pathA) < MAX_PATH &&
         (len = NS_ConvertAtoW(pathA, aLen, aPathW)))
         return len - 1; // terminating null is not included
     return 0;
+#endif
 }
 
 
@@ -144,7 +156,7 @@ DWORD WINAPI nsGetEnvironmentVariableW(LPCWSTR aName, LPWSTR aValue, DWORD aSize
         return 0;
     char *buf = value.BeginWriting();
     DWORD len;
-    if (!(len = GetEnvironmentVariableA(nameA.get(), buf, sizeA)))
+    if (!(len = GetEnvironmentVariableA((char*)nameA.get(), buf, sizeA)))
         return 0;
 
     if (len > sizeA) {
@@ -152,7 +164,7 @@ DWORD WINAPI nsGetEnvironmentVariableW(LPCWSTR aName, LPWSTR aValue, DWORD aSize
             if (!SetLengthAndCheck(value, len))
                 return 0;
             buf = value.BeginWriting();
-            len = GetEnvironmentVariableA(nameA.get(), buf, len);
+            len = GetEnvironmentVariableA((char*)nameA.get(), buf, len);
         }
         else 
             // sizeA >= maxValueLen and still failed. 
@@ -226,6 +238,8 @@ BOOL WINAPI nsMoveFileW(LPCWSTR aSrc, LPCWSTR aDest)
     return MoveFileA(pSrc, pDest);
 }
 
+// To work around the problem with misconfigured tinderboxes (bug 331433)
+#ifndef WINCE
 #if defined(_MSC_VER) && _MSC_VER <= 0x1200
 #define GetFileVersionInfoA(aPath, aHandle, aLen, aData) \
   GetFileVersionInfoA((LPSTR)aPath, aHandle, aLen, aData)
@@ -233,6 +247,7 @@ BOOL WINAPI nsMoveFileW(LPCWSTR aSrc, LPCWSTR aDest)
   GetFileVersionInfoSizeA((LPSTR)aPath, aHandle)
 #define GetFileVersionInfoW ((nsGetFileVersionInfo)GetFileVersionInfoW)
 #define GetFileVersionInfoSizeW ((nsGetFileVersionInfoSize)GetFileVersionInfoSizeW)
+#endif
 #endif
 
 BOOL WINAPI nsGetFileVersionInfoW(LPCWSTR aPath, DWORD aHandle, DWORD aLen,
@@ -539,6 +554,35 @@ int nsChmodW(const wchar_t *aPath, int aMode)
 }
 
 
+#ifdef WINCE
+PRBool                     nsWinAPIs::sUseUnicode        = 0;
+nsSHGetPathFromIDList      nsWinAPIs::mSHGetPathFromIDList = nsSHGetPathFromIDListW;
+nsGetSystemDirectory       nsWinAPIs::mGetSystemDirectory = GetSystemDirectoryW;
+nsGetWindowsDirectory      nsWinAPIs::mGetWindowsDirectory = GetWindowsDirectoryW;
+nsGetTempPath              nsWinAPIs::mGetTempPath = GetTempPathW;
+nsGetEnvironmentVariable   nsWinAPIs::mGetEnvironmentVariable = GetEnvironmentVariableW;
+nsCreateDirectory          nsWinAPIs::mCreateDirectory = CreateDirectoryW;
+nsCreateFile               nsWinAPIs::mCreateFile = CreateFileW;
+nsShellExecute             nsWinAPIs::mShellExecute = ShellExecuteW;
+nsCopyFile                 nsWinAPIs::mCopyFile = CopyFileW;
+nsMoveFile                 nsWinAPIs::mMoveFile = MoveFileW;
+nsGetFileVersionInfo       nsWinAPIs::mGetFileVersionInfo = nsGetFileVersionInfoW;
+nsGetFileVersionInfoSize   nsWinAPIs::mGetFileVersionInfoSize = nsGetFileVersionInfoSizeW;
+nsGetFileAttributes        nsWinAPIs::mGetFileAttributes = GetFileAttributesW;
+nsGetFileAttributesEx      nsWinAPIs::mGetFileAttributesEx = nsGetFileAttributesExW;
+nsGetFileAttributesExA     nsWinAPIs::mGetFileAttributesExA = NULL;
+nsGetShortPathName         nsWinAPIs::mGetShortPathName = nsGetShortPathNameW;    
+nsGetDiskFreeSpace         nsWinAPIs::mGetDiskFreeSpace = nsGetDiskFreeSpaceW;     
+nsGetDiskFreeSpaceEx       nsWinAPIs::mGetDiskFreeSpaceEx = nsGetDiskFreeSpaceExW;
+nsGetModuleFileName        nsWinAPIs::mGetModuleFileName = GetModuleFileNameW;
+nsGetCwd                   nsWinAPIs::mGetCwd = nsGetCwdW; 
+nsGetDCwd                  nsWinAPIs::mGetDCwd = nsGetDCwdW; 
+nsFopen                    nsWinAPIs::mFopen = nsFopenW;
+nsRemove                   nsWinAPIs::mRemove = nsRmdirW;
+nsRmdir                    nsWinAPIs::mRmdir = nsRmdirW;
+nsChmod                    nsWinAPIs::mChmod = nsChmodW;
+
+#else
 PRBool nsWinAPIs::sUseUnicode        = -1;  // not yet initialized
 
 // All but three APIs are initialized to 'W' versions. 
@@ -576,6 +620,8 @@ nsRemove                   nsWinAPIs::mRemove = _wremove;
 nsRmdir                    nsWinAPIs::mRmdir = _wrmdir;
 nsChmod                    nsWinAPIs::mChmod = _wchmod;
 
+#endif
+
 // This is a dummy variable to make sure that WinAPI is initialized 
 // at the very start. Note that |sDummy| must be defined AFTER
 // all the function pointers for Win APIs are defined. Otherwise,
@@ -585,6 +631,7 @@ PRBool nsWinAPIs::sDummy = nsWinAPIs::GlobalInit();
 PRBool
 nsWinAPIs::GlobalInit()
 {
+#ifndef WINCE
     // Find out if we are running on a unicode enabled version of Windows
     OSVERSIONINFOA osvi = {0};
     osvi.dwOSVersionInfoSize = sizeof(osvi);
@@ -646,6 +693,7 @@ nsWinAPIs::GlobalInit()
                      mGetDiskFreeSpaceEx, "failed to get proc. addresses");
     }
 
+#endif // WINCE
     return PR_TRUE;
 }
 
