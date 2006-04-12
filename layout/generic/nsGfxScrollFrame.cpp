@@ -1469,12 +1469,13 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 {
   ScrollbarStyles result;
 
-  if (mNeverHasVerticalScrollbar && mNeverHasHorizontalScrollbar) {
+  nsPresContext* presContext = mOuter->GetPresContext();
+  if (!presContext->IsDynamic() &&
+      !(mIsRoot && presContext->HasPaginatedScrolling())) {
     return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
   }
 
   if (mIsRoot) {
-    nsPresContext *presContext = mOuter->GetPresContext();
     result = presContext->GetViewportOverflowOverride();
 
     nsCOMPtr<nsISupports> container = presContext->GetContainer();
