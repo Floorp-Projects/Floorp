@@ -2049,29 +2049,40 @@ SearchService.prototype = {
   }
 };
 
-var gModule = {
-  _classID: Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}"),
-  _className: "Browser Search Service",
-  _contractID: "@mozilla.org/browser/search-service;1",
+const kClassID    = Components.ID("{7319788a-fe93-4db3-9f39-818cf08f4256}");
+const kClassName  = "Browser Search Service";
+const kContractID = "@mozilla.org/browser/search-service;1";
 
-  registerSelf: function (componentManager, fileSpec, location, type) {
-    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    componentManager.registerFactoryLocation(this._classID,
-                                             this._className,
-                                             this._contractID,
-                                             fileSpec, location, type);
-  },
-
-  getClassObject: function (componentManager, cid, iid) {
-    if (!iid.equals(Ci.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-    return this;
-  },
-
+// nsIFactory
+const kFactory = {
   createInstance: function (outer, iid) {
     if (outer != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return (new SearchService()).QueryInterface(iid);
+  }
+};
+
+// nsIModule
+const gModule = {
+  registerSelf: function (componentManager, fileSpec, location, type) {
+    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
+    componentManager.registerFactoryLocation(kClassID,
+                                             kClassName,
+                                             kContractID,
+                                             fileSpec, location, type);
+  },
+
+  unregisterSelf: function(componentManager, fileSpec, location) {
+    componentManager.QueryInterface(Ci.nsIComponentRegistrar);
+    componentManager.unregisterFactoryLocation(kClassID, fileSpec);
+  },
+
+  getClassObject: function (componentManager, cid, iid) {
+    if (!cid.equals(kClassID))
+      throw Cr.NS_ERROR_NO_INTERFACE;
+    if (!iid.equals(Ci.nsIFactory))
+      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    return kFactory;
   },
 
   canUnload: function (componentManager) {
