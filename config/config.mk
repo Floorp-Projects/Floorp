@@ -661,7 +661,7 @@ endif
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 ifdef MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS
-ELF_DYNSTR_GC 	= $(DIST)/bin/elf-dynstr-gc
+ELF_DYNSTR_GC 	= $(DEPTH)/config/elf-dynstr-gc
 endif
 endif
 endif
