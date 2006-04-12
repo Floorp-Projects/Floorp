@@ -102,6 +102,19 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         esac
     }
 
+    detect_core()
+    {
+        [ ! -f $CORELIST_FILE ] && touch $CORELIST_FILE
+        mv $CORELIST_FILE ${CORELIST_FILE}.old
+        coreStr=`find $HOSTDIR -type f -name '*core*'`
+        res=0
+        if [ -n "$coreStr" ]; then
+            sum $coreStr > $CORELIST_FILE
+            res=`cat $CORELIST_FILE ${CORELIST_FILE}.old | sort | uniq -u | wc -l`
+        fi
+        return $res
+    }
+
 #html functions to give the resultfiles a consistant look
     html() #########################    write the results.html file
     {      # 3 functions so we can put targets in the output.log easier
@@ -109,11 +122,23 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     }
     html_passed()
     {
+        html_detect_core "$@" || return
         html "$* ${HTML_PASSED}"
     }
     html_failed()
     {
+        html_detect_core "$@" || return
         html "$* ${HTML_FAILED}"
+    }
+    html_detect_core()
+    {
+        detect_core
+        if [ $? -ne 0 ]; then
+            echo "$*. Core file is detected."
+            html "$* ${HTML_FAILED_CORE}"
+            return 1
+        fi
+        return 0
     }
     html_head()
     {
@@ -136,6 +161,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         fi
     }
     HTML_FAILED='</TD><TD bgcolor=red>Failed</TD><TR>'
+    HTML_FAILED_CORE='</TD><TD bgcolor=red>Failed Core</TD><TR>'
     HTML_PASSED='</TD><TD bgcolor=lightGreen>Passed</TD><TR>'
 
 
@@ -364,6 +390,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
     PWFILE=${TMP}/tests.pw.$$
     NOISE_FILE=${TMP}/tests_noise.$$
+    CORELIST_FILE=${TMP}/clist.$$
 
     FIPSPWFILE=${TMP}/tests.fipspw.$$
     FIPSBADPWFILE=${TMP}/tests.fipsbadpw.$$
