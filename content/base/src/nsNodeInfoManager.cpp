@@ -47,7 +47,6 @@
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
-#include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsLayoutAtoms.h"

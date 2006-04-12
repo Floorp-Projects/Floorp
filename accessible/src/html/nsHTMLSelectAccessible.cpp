@@ -49,7 +49,7 @@
 #include "nsIListControlFrame.h"
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -207,10 +207,9 @@ NS_IMETHODIMP nsHTMLSelectableAccessible::GetSelectedChildren(nsIArray **_retval
   if (!accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIMutableArray> selectedAccessibles;
-  NS_NewArray(getter_AddRefs(selectedAccessibles));
-  if (!selectedAccessibles)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIMutableArray> selectedAccessibles =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(selectedAccessibles);
   
   nsPresContext *context = GetPresContext();
   if (!context)

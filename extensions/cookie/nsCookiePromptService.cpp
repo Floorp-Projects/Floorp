@@ -43,7 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsIDialogParamBlock.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 /****************************************************************
  ************************ nsCookiePromptService *****************
@@ -78,8 +78,8 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   block->SetInt(nsICookieAcceptDialog::COOKIESFROMHOST, aCookiesFromHost);
   block->SetInt(nsICookieAcceptDialog::CHANGINGCOOKIE, aChangingCookie != PR_FALSE);
   
-  nsCOMPtr<nsIMutableArray> objects;
-  rv = NS_NewArray(getter_AddRefs(objects));
+  nsCOMPtr<nsIMutableArray> objects =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = objects->AppendElement(aCookie, PR_FALSE);

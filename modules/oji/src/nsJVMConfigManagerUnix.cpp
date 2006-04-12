@@ -42,6 +42,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsReadableUtils.h"
+#include "nsIMutableArray.h"
 #include "prprf.h"
 #include "nsNetCID.h"
 #include "nsIHttpProtocolHandler.h"
@@ -105,9 +106,9 @@ nsJVMConfigManagerUnix::GetJVMConfigList(nsIArray **_retval)
     ClearJVMConfigList();
     InitJVMConfigList();
 
-    nsCOMPtr<nsIMutableArray> array;
-    nsresult rv = NS_NewArray(getter_AddRefs(array));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIMutableArray> array =
+        do_CreateInstance(NS_ARRAY_CONTRACTID);
+    NS_ENSURE_STATE(array);
 
     if (mJVMConfigList.Count() > 0) {
         mJVMConfigList.Enumerate(AppendJVMConfig,

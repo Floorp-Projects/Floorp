@@ -41,6 +41,7 @@ XPCOM_GLUE_SRC_LCSRCS =          \
 XPCOM_GLUE_SRC_CSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCSRCS))
 
 XPCOM_GLUE_SRC_LCPPSRCS =        \
+  nsArrayUtils.cpp               \
   nsCOMPtr.cpp                   \
   nsCOMArray.cpp                 \
   nsCRTGlue.cpp                  \

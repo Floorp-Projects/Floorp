@@ -43,7 +43,8 @@
 #include "smime.h"
 #include "cms.h"
 #include "nsICMSMessageErrors.h"
-#include "nsArray.h"
+#include "nsIArray.h"
+#include "nsArrayUtils.h"
 #include "nsCertVerificationThread.h"
 
 #include "prlog.h"

@@ -52,7 +52,7 @@
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDOMElement.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
@@ -210,7 +210,9 @@ nsInspectorCSSUtils::GetBindingURLs(nsIDOMElement *aElement,
 {
     *aResult = nsnull;
 
-    nsCOMArray<nsIURI> urls;
+    nsCOMPtr<nsIMutableArray> urls = do_CreateInstance(NS_ARRAY_CONTRACTID);
+    if (!urls)
+        return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     NS_ASSERTION(content, "elements must implement nsIContent");
@@ -221,13 +223,12 @@ nsInspectorCSSUtils::GetBindingURLs(nsIDOMElement *aElement,
             ownerDoc->BindingManager()->GetBinding(content);
 
         while (binding) {
-            urls.AppendObject(binding->PrototypeBinding()->BindingURI());
+            urls->AppendElement(binding->PrototypeBinding()->BindingURI(),
+                                PR_FALSE);
             binding = binding->GetBaseBinding();
         }
     }
 
-    nsIMutableArray *mutableResult = nsnull;
-    nsresult rv = NS_NewArray(&mutableResult, urls);
-    *aResult = mutableResult;
-    return rv;
+    NS_ADDREF(*aResult = urls);
+    return NS_OK;
 }

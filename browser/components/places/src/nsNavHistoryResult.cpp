@@ -41,7 +41,7 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 
-#include "nsArray.h"
+#include "nsIArray.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsFaviconService.h"

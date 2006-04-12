@@ -38,7 +38,8 @@
 #include "nsIComponentManager.h"
 #include "secasn1.h"
 #include "nsReadableUtils.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 #include "nsXPCOMCID.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Sequence, nsIASN1Sequence, 

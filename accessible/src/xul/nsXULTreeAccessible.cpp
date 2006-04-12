@@ -42,7 +42,8 @@
 #include "nsITreeSelection.h"
 #include "nsITreeColumns.h"
 #include "nsXULTreeAccessibleWrap.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsComponentManagerUtils.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibleTable.h"
@@ -248,10 +249,9 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsIArray **_retval)
   mTreeView->GetSelection(getter_AddRefs(selection));
   if (!selection)
     return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIMutableArray> selectedAccessibles;
-  NS_NewArray(getter_AddRefs(selectedAccessibles));
-  if (!selectedAccessibles)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIMutableArray> selectedAccessibles =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(selectedAccessibles);
 
   PRInt32 rowIndex, rowCount;
   PRBool isSelected;

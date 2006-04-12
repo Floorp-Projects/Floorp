@@ -43,7 +43,7 @@
 #include "nsHTMLImageAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsIAccessibleHyperLink.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 class nsHTMLLinkAccessibleWrap : public nsHTMLLinkAccessible,
                                  public nsIAccessibleHyperLink

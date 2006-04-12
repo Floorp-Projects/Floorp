@@ -110,7 +110,6 @@ EXPORTS		= \
 		nsVariant.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
-		nsArray.h \
 		nsArrayEnumerator.h \
 		nsStringEnumerator.h \
 		nsAutoBuffer.h \
@@ -137,10 +136,11 @@ XPIDLSRCS	= \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsITimelineService.idl \
-		nsIArray.idl \
 		$(NULL)
 
 SDK_XPIDLSRCS   = \
+		nsIArray.idl               \
+		nsIMutableArray.idl        \
 		nsIObserverService.idl	   \
 		nsIObserver.idl		   \
 		nsIProperties.idl          \

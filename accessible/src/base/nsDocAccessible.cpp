@@ -40,7 +40,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibleEventData.h"
 #include "nsIAccessibilityService.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

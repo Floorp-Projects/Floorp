@@ -44,6 +44,7 @@
 #include "nsIDOMText.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsArrayUtils.h"
 
 // --------------------------------------------------------
 // nsHTMLLinkAccessibleWrap Accessible

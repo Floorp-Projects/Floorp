@@ -43,7 +43,7 @@
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCOMPtr.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertValidity.h"
 #include "nsPKCS12Blob.h"
@@ -678,8 +678,8 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   if (!nssChain)
     return NS_ERROR_FAILURE;
   /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsIMutableArray> array;
-  rv = NS_NewArray(getter_AddRefs(array));
+  nsCOMPtr<nsIMutableArray> array =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) { 
     goto done; 
   }
@@ -693,8 +693,8 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
 #else // workaround here
   CERTCertificate *cert = nsnull;
   /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsIMutableArray> array;
-  rv = NS_NewArray(getter_AddRefs(array));
+  nsCOMPtr<nsIMutableArray> array =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) { 
     goto done; 
   }

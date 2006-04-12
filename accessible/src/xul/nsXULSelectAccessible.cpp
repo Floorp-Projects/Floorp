@@ -39,7 +39,7 @@
 
 #include "nsXULSelectAccessible.h"
 #include "nsAccessibilityService.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIContent.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -130,10 +130,9 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **_retval)
   if (!accService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIMutableArray> selectedAccessibles;
-  NS_NewArray(getter_AddRefs(selectedAccessibles));
-  if (!selectedAccessibles)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIMutableArray> selectedAccessibles =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(selectedAccessibles);
 
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect(do_QueryInterface(mDOMNode));

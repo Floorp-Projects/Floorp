@@ -46,7 +46,7 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSCertHelper.h"
 #include "nsINSSCertCache.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 
@@ -424,9 +424,7 @@ nsCertTree::UpdateUIContents()
   if (!mTreeArray)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIMutableArray> newCell;
-  NS_NewArray(getter_AddRefs(newCell));
-  mCellText = newCell;
+  mCellText = do_CreateInstance(NS_ARRAY_CONTRACTID);
 
   PRUint32 j = 0;
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));

@@ -51,10 +51,12 @@
 #include "nsPK11TokenDB.h"
 #include "nsOCSPResponder.h"
 #include "nsReadableUtils.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 #include "nsNSSShutDown.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsComponentManagerUtils.h"
 
 #include "nspr.h"
 extern "C" {
@@ -465,11 +467,11 @@ nsNSSCertificateDB::ImportCertificates(PRUint8 * data, PRUint32 length,
     PORT_FreeArena(arena, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIMutableArray> array;
-  nsresult rv = NS_NewArray(getter_AddRefs(array));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIMutableArray> array =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &nsrv);
+  if (NS_FAILED(nsrv)) {
     PORT_FreeArena(arena, PR_FALSE);
-    return rv;
+    return nsrv;
   }
 
   // Now let's create some certs to work with
@@ -1171,10 +1173,10 @@ nsNSSCertificateDB::GetOCSPResponders(nsIArray ** aResponders)
 {
   nsNSSShutDownPreventionLock locker;
   SECStatus sec_rv;
-  nsCOMPtr<nsIMutableArray> respondersArray;
-  nsresult rv = NS_NewArray(getter_AddRefs(respondersArray));
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsCOMPtr<nsIMutableArray> respondersArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!respondersArray) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   sec_rv = PK11_TraverseSlotCerts(::GetOCSPResponders,

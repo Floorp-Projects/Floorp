@@ -64,7 +64,7 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartup.h"
 #include "nsIAppStartupNotifier.h"
-#include "nsIArray.h"
+#include "nsIMutableArray.h"
 #include "nsICategoryManager.h"
 #include "nsIChromeRegistry.h"
 #include "nsICommandLineRunner.h"

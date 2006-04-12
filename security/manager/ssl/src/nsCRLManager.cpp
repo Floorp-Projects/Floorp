@@ -47,7 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"
 #include "nsICertificateDialogs.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsNSSShutDown.h"
@@ -358,9 +358,9 @@ nsCRLManager::GetCrls(nsIArray ** aCrls)
   SECStatus sec_rv;
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;
-  nsCOMPtr<nsIMutableArray> crlsArray;
   nsresult rv;
-  rv = NS_NewArray(getter_AddRefs(crlsArray));
+  nsCOMPtr<nsIMutableArray> crlsArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }

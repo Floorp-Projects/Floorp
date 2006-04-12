@@ -42,7 +42,7 @@
 #ifndef __NS_APP_ROOT_ACCESSIBLE_H__
 #define __NS_APP_ROOT_ACCESSIBLE_H__
 
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIAccessibleDocument.h"
 #include "nsAccessibilityService.h"
 #include "nsAccessibleWrap.h"

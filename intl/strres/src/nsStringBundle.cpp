@@ -45,7 +45,7 @@
 #include "nsStringBundleTextOverride.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsArrayEnumerator.h"
 #include "nscore.h"
 #include "nsHashtable.h"
@@ -302,8 +302,8 @@ nsStringBundle::GetCombinedEnumeration(nsIStringBundleOverride* aOverrideStrings
   
   nsresult rv;
 
-  nsCOMPtr<nsIMutableArray> resultArray;
-  rv = NS_NewArray(getter_AddRefs(resultArray));
+  nsCOMPtr<nsIMutableArray> resultArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // first, append the override elements
