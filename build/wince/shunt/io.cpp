@@ -104,6 +104,72 @@ MOZCE_SHUNT_API int mozce_isatty(int inHandle)
 }
 
 
+
+/*
+ * Our static protocols entries.
+ */
+static struct protoent sProtos[] = {
+    { "tcp",    NULL,   IPPROTO_TCP },
+    { "udp",    NULL,   IPPROTO_UDP },
+    { "ip",     NULL,   IPPROTO_IP },
+    { "icmp",   NULL,   IPPROTO_ICMP },
+    { "ggp",    NULL,   IPPROTO_GGP },
+    { "pup",    NULL,   IPPROTO_PUP },
+    { "idp",    NULL,   IPPROTO_IDP },
+    { "nd",     NULL,   IPPROTO_ND },
+    { "raw",    NULL,   IPPROTO_RAW }
+};
+
+#define MAX_PROTOS (sizeof(sProtos) / sizeof(struct protoent))
+
+/*
+ * Wingetprotobyname
+ *
+ * As getprotobyname
+ */
+MOZCE_SHUNT_API struct protoent* mozce_getprotobyname(const char* inName)
+{
+    struct protoent* retval = NULL;
+
+    if(NULL != inName)
+    {
+        unsigned uLoop;
+
+        for(uLoop = 0; uLoop < MAX_PROTOS; uLoop++)
+        {
+            if(0 == _stricmp(inName, sProtos[uLoop].p_name))
+            {
+                retval = &sProtos[uLoop];
+                break;
+            }
+        }
+    }
+
+    return retval;
+}
+
+/*
+ * Wingetprotobynumber
+ *
+ * As getprotobynumber
+ */
+MOZCE_SHUNT_API struct protoent* mozce_getprotobynumber(int inNumber)
+{
+    struct protoent* retval = NULL;
+    unsigned uLoop;
+    
+    for(uLoop = 0; uLoop < MAX_PROTOS; uLoop++)
+    {
+        if(inNumber == sProtos[uLoop].p_proto)
+        {
+            retval = &sProtos[uLoop];
+            break;
+        }
+    }
+
+    return retval;
+
+}
 #if 0
 {
 #endif
