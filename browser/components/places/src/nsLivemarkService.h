@@ -75,6 +75,8 @@
  */
 #define LMANNO_BMANNO      "livemark/bookmarkFeedURI"
 
+class nsIRDFResource;
+
 class nsLivemarkService : public nsILivemarkService, public nsIObserver
 {
 public:
@@ -118,6 +120,16 @@ public:
     nsAutoRefCnt mRefCnt;
   };
 
+  nsCOMPtr<nsIRDFResource>       mLMRDF_type;
+  nsCOMPtr<nsIRDFResource>       mLMRSS09_channel;
+  nsCOMPtr<nsIRDFResource>       mLMRSS09_item;
+  nsCOMPtr<nsIRDFResource>       mLMRSS09_title;
+  nsCOMPtr<nsIRDFResource>       mLMRSS09_link;
+  nsCOMPtr<nsIRDFResource>       mLMRSS10_channel;
+  nsCOMPtr<nsIRDFResource>       mLMRSS10_items;
+  nsCOMPtr<nsIRDFResource>       mLMRSS10_title;
+  nsCOMPtr<nsIRDFResource>       mLMRSS10_link;
+  nsCOMPtr<nsIRDFResource>       mLMDC_date;
 private:
   static nsLivemarkService *sInstance;
 
@@ -144,4 +156,5 @@ private:
   static void FireTimer(nsITimer* aTimer, void* aClosure);
   nsresult UpdateLivemarkChildren(PRInt32 aLivemarkIndex, PRBool aForceUpdate);
   PRInt32 GetLivemarkIndex(PRInt64 folderID);
+
 };
