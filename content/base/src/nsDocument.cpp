@@ -183,14 +183,21 @@ nsUint32ToContentHashEntry::PutContent(nsIContent* aVal)
   }
 
   // If an element is already there, create a hashtable and both of these to it
-  if (GetContent()) {
-    nsIContent* oldVal = GetContent();
+  nsIContent* oldVal = GetContent();
+  if (oldVal) {
     nsresult rv = InitHashSet(&set);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsISupportsHashKey* entry = set->PutEntry(oldVal);
-    if (!entry)
+    if (!entry) {
+      // OOM - we can't insert aVal, but we can at least put oldVal back (even
+      // if we didn't, we'd still have to release oldVal so that we don't leak)
+      delete set;
+      SetContent(oldVal);
+      // SetContent adds another reference, so release the one we had
+      NS_RELEASE(oldVal);
       return NS_ERROR_OUT_OF_MEMORY;
+    }
     // The hashset adds its own reference, so release the one we had
     NS_RELEASE(oldVal);
 
