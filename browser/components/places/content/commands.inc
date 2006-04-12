@@ -10,13 +10,14 @@
              oncommand="PlacesController.copy();"/>
     <command id="placesCmd_show:info" 
              oncommand="PlacesController.showBookmarkPropertiesForSelection();"
-#ifdef XP_WIN
-             label="&cmd.show_infoWin.label;" 
-             accesskey="&cmd.show_infoWin.accesskey;"/>
-#else
+#ifdef XP_MACOSX
              label="&cmd.show_infoMac.label;" 
              accesskey="&cmd.show_infoMac.accesskey;"/>
+#else
+             label="&cmd.show_infoWin.label;" 
+             accesskey="&cmd.show_infoWin.accesskey;"/>
 #endif
+
   </commandset>
   <commandset>
     <command id="placesCmd_edit:cut" 
