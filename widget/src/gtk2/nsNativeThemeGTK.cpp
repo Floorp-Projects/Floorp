@@ -454,17 +454,11 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
   GdkRectangle gdk_clip = mGDKClip;
   gdk_clip.x += offsetX;
   gdk_clip.y += offsetY;
-  if (numClipRects > 0) {
-    NS_ASSERTION(numClipRects == 1, "gfxXlibNativeRenderer cheated on us");
-    GdkRectangle extraClip = {clipRects->x, clipRects->y,
-                              clipRects->width, clipRects->height};
-    if (!gdk_rectangle_intersect(&gdk_clip, &extraClip, &gdk_clip))
-      return NS_OK;
-  }
   
   GdkDisplay* gdkDpy = gdk_x11_lookup_xdisplay(dpy);
   if (!gdkDpy)
     return NS_ERROR_FAILURE;
+
   GdkPixmap* gdkPixmap = gdk_pixmap_lookup_for_display(gdkDpy, drawable);
   if (gdkPixmap) {
     g_object_ref(G_OBJECT(gdkPixmap));
@@ -483,6 +477,7 @@ ThemeRenderer::NativeDraw(Display* dpy, Drawable drawable, Visual* visual,
     }
   }
 
+  NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
   moz_gtk_widget_paint(mGTKWidgetType, gdkPixmap, &gdk_rect, &gdk_clip, &mState,
                        mFlags);
 
@@ -592,8 +587,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
   // This is the rectangle that will actually be drawn, in appunits
   nsRect drawingRect(aClipRect);
   nsIntMargin extraSize;
-  // remember whether the widget might draw outside its given clip rect
-  PRBool overDrawing = GetExtraSizeForWidget(aWidgetType, &extraSize);
+  GetExtraSizeForWidget(aWidgetType, &extraSize);
   // inflate drawing rect to account for the overdraw
   nsMargin extraSizeInTwips(NSToCoordRound(extraSize.left*p2t),
                             NSToCoordRound(extraSize.top*p2t),
@@ -615,13 +609,13 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
     oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
   }
 
-  // We do not support clip lists (because we can't currently tweak the actual
-  // Gdk GC used), and we require the use of the default display and visual
+  // We require the use of the default display and visual
   // because I'm afraid that otherwise the GTK theme may explode.
+  // Some themes (e.g. Clearlooks) just don't clip properly to any
+  // clip rect we provide, so we cannot advertise support for clipping within the
+  // widget bounds. The gdk_clip is just advisory here, meanining "you don't
+  // need to draw outside this rect if you don't feel like it!"
   PRUint32 rendererFlags = gfxXlibNativeRenderer::DRAW_SUPPORTS_OFFSET;
-  if (!overDrawing) {
-    rendererFlags |= gfxXlibNativeRenderer::DRAW_SUPPORTS_CLIP_RECT;
-  }
   GdkRectangle gdk_rect = ConvertToGdkRect(aRect - drawingRect.TopLeft(), t2p);
   GdkRectangle gdk_clip = ConvertToGdkRect(aClipRect - drawingRect.TopLeft(), t2p);
   ThemeRenderer renderer(state, gtkWidgetType, flags, gdk_rect, gdk_clip);

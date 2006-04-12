@@ -55,15 +55,22 @@
 #define CAIRO_XLIB_DRAWING_NOTE(m) do {} while (0)
 #endif
 
-static cairo_surface_t *_get_current_target (cairo_t *cr, double *dx, double *dy)
+static cairo_surface_t *_get_current_target (cairo_t *cr,
+                                             double *device_offset_x,
+                                             double *device_offset_y)
 {
-    cairo_surface_t *target = cairo_get_group_target (cr, dx, dy);
-    if (target == NULL) {
-        target = cairo_get_target (cr);
-        *dx = 0.0;
-        *dy = 0.0;
-    }
-    return target;
+    cairo_surface_t *target = cairo_get_target (cr);
+    double group_device_offset_x, group_device_offset_y;
+    cairo_surface_t *group_target =
+        cairo_get_group_target (cr, &group_device_offset_x, &group_device_offset_y);
+
+    cairo_surface_get_device_offset (target, device_offset_x, device_offset_y);
+    if (group_target == NULL)
+        return target;
+
+    *device_offset_x += group_device_offset_x;
+    *device_offset_y += group_device_offset_y;
+    return group_target;
 }
 
 static cairo_user_data_key_t pixmap_free_key;
@@ -224,8 +231,8 @@ _draw_with_xlib_direct (cairo_t *cr,
     }
     /* Check that the matrix translation offsets (adjusted for
        device offset) are integers */
-    if (!_convert_coord_to_short (matrix.x0 - device_offset_x, &offset_x) ||
-        !_convert_coord_to_short (matrix.y0 - device_offset_y, &offset_y)) {
+    if (!_convert_coord_to_short (matrix.x0 + device_offset_x, &offset_x) ||
+        !_convert_coord_to_short (matrix.y0 + device_offset_y, &offset_y)) {
         CAIRO_XLIB_DRAWING_NOTE("TAKING SLOW PATH: non-integer offset\n");
         return False;
     }
