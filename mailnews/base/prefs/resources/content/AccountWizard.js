@@ -218,7 +218,7 @@ function FinishAccount()
     // transfer all attributes from the accountdata
     finishAccount(gCurrentAccount, accountData);
     
-    setupCopiesAndFoldersServer(gCurrentAccount, getCurrentServerIsDeferred(pageData));
+    setupCopiesAndFoldersServer(gCurrentAccount, getCurrentServerIsDeferred(pageData), accountData);
 
     if (!serverIsNntp(pageData))
         EnableCheckMailAtStartUpIfNeeded(gCurrentAccount);
@@ -609,7 +609,7 @@ function verifyLocalFoldersAccount()
 
 }
 
-function setupCopiesAndFoldersServer(account, accountIsDeferred)
+function setupCopiesAndFoldersServer(account, accountIsDeferred, accountData)
 {
   try {
     var server = account.incomingServer;
@@ -636,7 +636,7 @@ function setupCopiesAndFoldersServer(account, accountIsDeferred)
       copiesAndFoldersServer = am.localFoldersServer;
     }
 	  
-    setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer);
+    setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer, accountData);
 
   } catch (ex) {
     // return false (meaning we did not setupCopiesAndFoldersServer)
@@ -647,7 +647,7 @@ function setupCopiesAndFoldersServer(account, accountIsDeferred)
   return true;
 }
 
-function setDefaultCopiesAndFoldersPrefs(identity, server)
+function setDefaultCopiesAndFoldersPrefs(identity, server, accountData)
 {
 	dump("finding folders on server = " + server.hostName + "\n");
 
@@ -690,10 +690,17 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
         var folderDelim = "/";
 
         /* we use internal names known to everyone like Sent, Templates and Drafts */
+        /* if folder names were already given in isp rdf, we use them,
+           otherwise we use internal names known to everyone like Sent, Templates and Drafts */
+	
+        var draftFolder = (accountData.identity && accountData.identity.draftFolder ? accountData.identity.draftFolder : "Drafts");
+	    var stationeryFolder = (accountData.identity && accountData.identity.stationeryFolder ? accountData.identity.stationeryFolder : "Templates");
+	    var fccFolder = (accountData.identity && accountData.identity.fccFolder ? accountData.identity.fccFolder : "Sent");
 
-        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + "Drafts";
-        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + "Templates";
-        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + "Sent";
+        identity.draftFolder = msgFolder.server.serverURI+ folderDelim + draftFolder;
+        identity.stationeryFolder = msgFolder.server.serverURI+ folderDelim + stationeryFolder;
+        identity.fccFolder = msgFolder.server.serverURI+ folderDelim + fccFolder;
+                
     }
     else {
         // these hex values come from nsMsgFolderFlags.h
@@ -710,9 +717,9 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
     }
 	
-    identity.fccFolderPickerMode = gDefaultSpecialFolderPickerMode;
-    identity.draftsFolderPickerMode = gDefaultSpecialFolderPickerMode;
-    identity.tmplFolderPickerMode = gDefaultSpecialFolderPickerMode;
+    identity.fccFolderPickerMode = (accountData.identity && accountData.identity.fccFolder ? 1 : gDefaultSpecialFolderPickerMode);
+    identity.draftsFolderPickerMode = (accountData.identity && accountData.identity.draftFolder ? 1 : gDefaultSpecialFolderPickerMode);
+    identity.tmplFolderPickerMode = (accountData.identity && accountData.identity.stationeryFolder ? 1 : gDefaultSpecialFolderPickerMode);
 }
 
 function AccountExists(userName,hostName,serverType)
