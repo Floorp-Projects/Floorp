@@ -1,0 +1,27 @@
+# Yahoo! Answers Plug-in for Mozilla
+#
+# Created by Udi Falkson <udif@yahoo-inc.com>
+# Last Edited April 6, 2006
+# Last updated April 6, 2006
+
+<SEARCH
+    version = "1.0" 
+   name="Yahoo! Answers"
+   description="Yahoo! Answers Search"
+   searchForm="http://answers.yahoo.com/search/search_result"
+   method="GET"
+   action="http://answers.yahoo.com/search/search_result" 
+   queryCharset="utf-8"
+>
+
+<input name="p" user>
+<input name="ei" value="UTF-8">
+
+<browser
+    alsomatch="http://answers.yahoo.com/search/search_result"
+    update="https://addons.mozilla.org/searchplugins/updates/yanswers.src"
+    updateIcon="https://addons.mozilla.org/searchplugins/updates/yanswers.gif"
+    updateCheckDays="3"
+>
+
+</search>
