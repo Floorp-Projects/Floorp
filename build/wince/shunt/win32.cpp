@@ -873,16 +873,27 @@ MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize)
 MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCSTR inLongPath, LPSTR outShortPath, DWORD inBufferSize)
 {
     MOZCE_PRECHECK
-
+        
 #ifdef DEBUG
-    mozce_printf("-- mozce_GetShortPathName called\n");
+   mozce_printf("mozce_GetShortPathName called\n");
 #endif
-
+    
     DWORD retval = strlen(inLongPath);
+    strncpy(outShortPath, inLongPath, inBufferSize);
+    return ((retval > inBufferSize) ? inBufferSize : retval);
+}
 
-	strncpy(outShortPath, inLongPath, inBufferSize);
-
-    return retval;
+MOZCE_SHUNT_API DWORD mozce_GetShortPathNameW(LPCWSTR inLongPath, LPWSTR outShortPath, DWORD inBufferSize)
+{
+    MOZCE_PRECHECK
+        
+#ifdef DEBUG
+   mozce_printf("mozce_GetShortPathNameW called\n");
+#endif
+    
+    DWORD retval = wcslen(inLongPath);
+    wcsncpy(outShortPath, inLongPath, inBufferSize);
+    return ((retval > inBufferSize) ? inBufferSize : retval);
 }
 
 MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffer, DWORD nSize)
@@ -891,6 +902,21 @@ MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCSTR lpName, LPCSTR lpBuffe
 
 #ifdef DEBUG
     mozce_printf("-- mozce_GetEnvironmentVariable called\n");
+#endif
+
+    DWORD retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
+}
+
+MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_GetEnvironmentVariableW called\n");
 #endif
 
     DWORD retval = 0;
@@ -1100,6 +1126,29 @@ MOZCE_SHUNT_API HINSTANCE mozce_ShellExecute(HWND hwnd,
     return (HINSTANCE) info.hProcess;
 }
 
+MOZCE_SHUNT_API HINSTANCE mozce_ShellExecuteW(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd)
+{
+   MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_ShellExecuteW called\n");
+#endif
+
+    SHELLEXECUTEINFO info;
+    info.cbSize = sizeof(SHELLEXECUTEINFO);
+    info.fMask  = SEE_MASK_NOCLOSEPROCESS;
+    info.hwnd   = hwnd;
+    info.lpVerb = lpOperation;
+    info.lpFile = lpFile;
+    info.lpParameters = lpParameters;
+    info.lpDirectory  = lpDirectory;
+    info.nShow  = nShowCmd;
+    
+    BOOL b = ShellExecuteEx(&info);
+
+    return (HINSTANCE) info.hProcess;
+}
+
 struct lconv s_locale_conv =
 {
     ".",   /* decimal_point */
@@ -1133,6 +1182,60 @@ MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
 #endif
     return &s_locale_conv;
 }
+
+MOZCE_SHUNT_API BOOL mozce_CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe, LPSECURITY_ATTRIBUTES lpPipeAttributes, DWORD nSize)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_CreatePipe called\n");
+#endif
+    return FALSE;
+}
+
+MOZCE_SHUNT_API DWORD_PTR mozce_SetThreadAffinityMask(HANDLE hThread, DWORD_PTR dwThreadAffinityMask)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_SetThreadAffinityMask called\n");
+#endif
+    return 0;
+}
+
+MOZCE_SHUNT_API BOOL mozce_GetProcessAffinityMask(HANDLE hProcess, PDWORD_PTR lpProcessAffinityMask, PDWORD_PTR lpSystemAffinityMask)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_GetProcessAffinityMask called\n");
+#endif
+    return FALSE;
+}
+
+
+MOZCE_SHUNT_API HANDLE mozce_OpenFileMapping(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCTSTR lpName)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_OpenFileMapping called\n");
+#endif
+    return 0;
+}
+
+MOZCE_SHUNT_API UINT mozce_GetDriveType(const char* lpRootPathName)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_GetDriveType called\n");
+#endif
+
+    return 0;
+}
+
+
 
 MOZCE_SHUNT_API BOOL mozce_AlphaBlend(
                                       HDC hdcDest,                 // handle to destination DC
@@ -1201,6 +1304,86 @@ MOZCE_SHUNT_API BOOL mozce_AlphaBlend(
     
     return true;
     
+}
+
+
+MOZCE_SHUNT_API BOOL mozce_SetHandleInformation(HANDLE hObject, DWORD dwMask, DWORD dwFlags)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_SetHandleInformation called\n");
+#endif
+
+    int retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
+}
+
+MOZCE_SHUNT_API BOOL mozce_GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_GetHandleInformation called\n");
+#endif
+
+    int retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
+}
+
+
+MOZCE_SHUNT_API BOOL mozce_LockFile(HANDLE hFile, DWORD dwFileOffsetLow, DWORD dwFileOffsetHigh,
+                                    DWORD nNumberOfBytesToLockLow, DWORD nNumberOfBytesToLockHigh)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_LockFile called\n");
+#endif
+
+    int retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
+}
+
+MOZCE_SHUNT_API BOOL mozce_UnlockFile(HANDLE hFile, DWORD dwFileOffsetLow, DWORD dwFileOffsetHigh,
+                                    DWORD nNumberOfBytesToLockLow, DWORD nNumberOfBytesToLockHigh)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_UnlockFile called\n");
+#endif
+
+    int retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
+}
+
+MOZCE_SHUNT_API BOOL mozce_GetDiskFreeSpaceA(LPCTSTR lpRootPathName, LPDWORD lpSectorsPerCluster, 
+                                            LPDWORD lpBytesPerSector, LPDWORD lpNumberOfFreeClusters, LPDWORD lpTotalNumberOfClusters)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_GetDiskFreeSpace called\n");
+#endif
+
+    int retval = 0;
+
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+
+    return retval;
 }
 
 #if 0

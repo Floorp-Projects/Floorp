@@ -44,6 +44,7 @@
 #define __mozce_internal_h
 
 #include <windows.h>
+#include <winsock2.h>
 
 #include "mozce_defs.h"
 
