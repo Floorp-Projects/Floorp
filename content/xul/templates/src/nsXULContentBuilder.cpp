@@ -167,12 +167,6 @@ protected:
     CloseContainer(nsIContent* aElement);
 
     /**
-     * Check if an attribute should not be copied to generated content.
-     */
-    PRBool
-    IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
-
-    /**
      * Build content from a template for a given result. This will be called
      * recursively or on demand and will be called for every node in the
      * generated content tree. See the method defintion below for details
@@ -188,6 +182,21 @@ protected:
                              nsTemplateMatch* aMatch,
                              nsIContent** aContainer,
                              PRInt32* aNewIndexInContainer);
+
+    /**
+     * Copy the attributes from the template node to the node generated
+     * from it, performing any substitutions.
+     *
+     * @param aTemplateNode node within template
+     * @param aRealNode generated node to set attibutes upon
+     * @param aResult result to look up variable->value bindings in
+     * @param aNotify true to notify of DOM changes
+     */
+    nsresult
+    CopyAttributesToElement(nsIContent* aTemplateNode,
+                            nsIContent* aRealNode,
+                            nsIXULTemplateResult* aResult,
+                            PRBool aNotify);
 
     /**
      * Add any necessary persistent attributes (persist="...") from the
@@ -488,26 +497,6 @@ nsXULContentBuilder::Uninit(PRBool aIsFinal)
     mTemplateMap.Clear();
 
     nsXULTemplateBuilder::Uninit(aIsFinal);
-}
-
-PRBool
-nsXULContentBuilder::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
-{
-    // XXX Note that we patently ignore namespaces. This is because
-    // HTML elements lie and tell us that their attributes are
-    // _always_ in the HTML namespace. Urgh.
-
-    // never copy the ID attribute
-    if (aAttribute == nsXULAtoms::id) {
-        return PR_TRUE;
-    }
-    // never copy {}:uri attribute
-    else if (aAttribute == nsXULAtoms::uri) {
-        return PR_TRUE;
-    }
-    else {
-        return PR_FALSE;
-    }
 }
 
 nsresult
@@ -819,33 +808,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // template to incrementally build content.
             mTemplateMap.Put(realKid, tmplKid);
 
-            // Copy all attributes from the template to the new
-            // element.
-            PRUint32 numAttribs = tmplKid->GetAttrCount();
-
-            for (PRUint32 attr = 0; attr < numAttribs; attr++) {
-                const nsAttrName* name = tmplKid->GetAttrNameAt(attr);
-                PRInt32 attribNameSpaceID = name->NamespaceID();
-                nsIAtom* attribName = name->LocalName();
-
-                if (! IsIgnoreableAttribute(attribNameSpaceID, attribName)) {
-                    // Create a buffer here, because there's a
-                    // chance that an attribute in the template is
-                    // going to be an RDF URI, which is usually
-                    // longish.
-                    PRUnichar attrbuf[128];
-                    nsFixedString attribValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-                    tmplKid->GetAttr(attribNameSpaceID, attribName, attribValue);
-                    if (!attribValue.IsEmpty()) {
-                        nsAutoString value;
-                        rv = SubstituteText(aChild, attribValue, value);
-                        if (NS_FAILED(rv)) return rv;
-
-                        rv = realKid->SetAttr(attribNameSpaceID, attribName, value, PR_FALSE);
-                        if (NS_FAILED(rv)) return rv;
-                    }
-                }
-            }
+            rv = CopyAttributesToElement(tmplKid, realKid, aChild, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
 
             // Add any persistent attributes
             if (isGenerationElement) {
@@ -921,6 +885,58 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
     return NS_OK;
 }
 
+nsresult
+nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
+                                             nsIContent* aRealNode,
+                                             nsIXULTemplateResult* aResult,
+                                             PRBool aNotify)
+{
+    nsresult rv;
+
+    // Copy all attributes from the template to the new element
+    PRUint32 numAttribs = aTemplateNode->GetAttrCount();
+
+    for (PRUint32 attr = 0; attr < numAttribs; attr++) {
+        const nsAttrName* name = aTemplateNode->GetAttrNameAt(attr);
+        PRInt32 attribNameSpaceID = name->NamespaceID();
+        nsIAtom* attribName = name->LocalName();
+
+        // XXXndeakin ignore namespaces until bug 321182 is fixed
+        if (attribName != nsXULAtoms::id && attribName != nsXULAtoms::uri) {
+            // Create a buffer here, because there's a chance that an
+            // attribute in the template is going to be an RDF URI, which is
+            // usually longish.
+            PRUnichar attrbuf[128];
+            nsFixedString attribValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
+            aTemplateNode->GetAttr(attribNameSpaceID, attribName, attribValue);
+            if (!attribValue.IsEmpty()) {
+                nsAutoString value;
+                rv = SubstituteText(aResult, attribValue, value);
+                if (NS_FAILED(rv))
+                    return rv;
+
+                // if the string is empty after substitutions, remove the
+                // attribute
+                if (!value.IsEmpty()) {
+                    rv = aRealNode->SetAttr(attribNameSpaceID,
+                                            attribName,
+                                            value,
+                                            aNotify);
+                }
+                else {
+                    rv = aRealNode->UnsetAttr(attribNameSpaceID,
+                                              attribName,
+                                              aNotify);
+                }
+
+                if (NS_FAILED(rv))
+                    return rv;
+            }
+        }
+    }
+
+    return NS_OK;
+}
 
 nsresult
 nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
@@ -1001,44 +1017,12 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                               nsIContent* aRealElement,
                                               nsIXULTemplateResult* aResult)
 {
-    nsresult rv;
-
     // check all attributes on the template node; if they reference a resource,
     // update the equivalent attribute on the content node
-
-    const nsAttrName* name;
-    PRUint32 loop;
-    for (loop = 0; (name = aTemplateNode->GetAttrNameAt(loop)); ++loop) {
-
-        PRInt32 attribNameSpaceID = name->NamespaceID();
-        nsIAtom* attribName = name->LocalName();
-
-        // See if it's one of the attributes that we unilaterally
-        // ignore. If so, on to the next one...
-        if (IsIgnoreableAttribute(attribNameSpaceID, attribName))
-            continue;
-
-        nsAutoString attribValue;
-        aTemplateNode->GetAttr(attribNameSpaceID, attribName, attribValue);
-
-        // XXXndeakin original code had a check here to ensure the attribute
-        //            would have been affected by the changes
-
-        nsAutoString newvalue;
-        SubstituteText(aResult, attribValue, newvalue);
-
-        if (!newvalue.IsEmpty()) {
-            aRealElement->SetAttr(attribNameSpaceID,
-                                  attribName,
-                                  newvalue,
-                                  PR_TRUE);
-        }
-        else {
-            aRealElement->UnsetAttr(attribNameSpaceID,
-                                    attribName,
-                                    PR_TRUE);
-        }
-    }
+    nsresult rv;
+    rv = CopyAttributesToElement(aTemplateNode, aRealElement, aResult, PR_TRUE);
+    if (NS_FAILED(rv))
+        return rv;
 
     // See if we've generated kids for this node yet. If we have, then
     // recursively sync up template kids with content kids
