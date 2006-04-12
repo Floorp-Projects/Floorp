@@ -1198,7 +1198,7 @@ sub ValidateBugAlias {
 
     # Make sure the alias is unique.
     my $query = "SELECT bug_id FROM bugs WHERE alias = ?";
-    if (detaint_natural($curr_id)) {
+    if ($curr_id && detaint_natural($curr_id)) {
         $query .= " AND bug_id != $curr_id";
     }
     my $id = $dbh->selectrow_array($query, undef, $alias); 
