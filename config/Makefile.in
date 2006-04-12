@@ -179,9 +179,6 @@ ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 elf-dynstr-gc: elf-dynstr-gc.c Makefile Makefile.in
 	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -o $@ $< $(LDFLAGS) $(GLIB_LIBS) 
-
-export:: elf-dynstr-gc
-	$(INSTALL) -m 555 elf-dynstr-gc $(DIST)/bin
 endif
 endif
 
