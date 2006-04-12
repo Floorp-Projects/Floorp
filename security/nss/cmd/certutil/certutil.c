@@ -70,7 +70,8 @@
 #include "nss.h"
 
 #define MIN_KEY_BITS		512
-#define MAX_KEY_BITS		2048
+/* MAX_KEY_BITS should agree with MAX_RSA_MODULUS in freebl */
+#define MAX_KEY_BITS		8192
 #define DEFAULT_KEY_BITS	1024
 
 #define GEN_BREAK(e) rv=e; break;
