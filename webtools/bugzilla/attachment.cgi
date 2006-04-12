@@ -53,7 +53,6 @@ use Bugzilla::Attachment;
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
-my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -130,7 +129,8 @@ exit;
 sub validateID
 {
     my $param = @_ ? $_[0] : 'id';
-
+    my $dbh = Bugzilla->dbh;
+    
     # If we're not doing interdiffs, check if id wasn't specified and
     # prompt them with a page that allows them to choose an attachment.
     # Happens when calling plain attachment.cgi from the urlbar directly
@@ -151,12 +151,15 @@ sub validateID
      || ThrowUserError("invalid_attach_id", { attach_id => $cgi->param($param) });
   
     # Make sure the attachment exists in the database.
-    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $attach_id");
-    MoreSQLData()
-      || ThrowUserError("invalid_attach_id", { attach_id => $attach_id });
+    my ($bugid, $isprivate) = $dbh->selectrow_array(
+                                    "SELECT bug_id, isprivate 
+                                     FROM attachments 
+                                     WHERE attach_id = ?",
+                                     undef, $attach_id);
+    ThrowUserError("invalid_attach_id", { attach_id => $attach_id }) 
+        unless $bugid;
 
     # Make sure the user is authorized to access this attachment's bug.
-    (my $bugid, my $isprivate) = FetchSQLData();
 
     ValidateBugID($bugid);
     if ($isprivate && Param("insidergroup")) {
@@ -199,28 +202,32 @@ sub validateContext
 sub validateCanEdit
 {
     my ($attach_id) = (@_);
-
+    my $dbh = Bugzilla->dbh;
+    
     # People in editbugs can edit all attachments
     return if UserInGroup("editbugs");
 
     # Bug 97729 - the submitter can edit their attachments
-    SendSQL("SELECT attach_id FROM attachments WHERE " .
-            "attach_id = $attach_id AND submitter_id = " . Bugzilla->user->id);
+    my ($ref) = $dbh->selectrow_array("SELECT attach_id FROM attachments 
+                                       WHERE attach_id = ? 
+                                       AND submitter_id = ?",
+                                       undef, ($attach_id, Bugzilla->user->id));
 
-    FetchSQLData()
-      || ThrowUserError("illegal_attachment_edit",
-                        { attach_id => $attach_id });
+
+   $ref || ThrowUserError("illegal_attachment_edit",{ attach_id => $attach_id });
 }
 
 sub validateCanChangeAttachment 
 {
     my ($attachid) = @_;
-    SendSQL("SELECT product_id
+    my $dbh = Bugzilla->dbh;
+    my ($productid) = $dbh->selectrow_array(
+            "SELECT product_id
              FROM attachments
              INNER JOIN bugs
              ON bugs.bug_id = attachments.bug_id
-             WHERE attach_id = $attachid");
-    my $productid = FetchOneColumn();
+             WHERE attach_id = ?", undef, $attachid);
+
     Bugzilla->user->can_edit_product($productid)
       || ThrowUserError("illegal_attachment_edit",
                         { attach_id => $attachid });
@@ -229,10 +236,12 @@ sub validateCanChangeAttachment
 sub validateCanChangeBug
 {
     my ($bugid) = @_;
-    SendSQL("SELECT product_id
+    my $dbh = Bugzilla->dbh;
+    my ($productid) = $dbh->selectrow_array(
+            "SELECT product_id
              FROM bugs 
-             WHERE bug_id = $bugid");
-    my $productid = FetchOneColumn();
+             WHERE bug_id = ?", undef, $bugid);
+
     Bugzilla->user->can_edit_product($productid)
       || ThrowUserError("illegal_attachment_edit_bug",
                         { bug_id => $bugid });
@@ -391,7 +400,8 @@ sub validateFilename
 sub validateObsolete
 {
   my @obsolete_ids = ();
-
+  my $dbh = Bugzilla->dbh;
+  
   # Make sure the attachment id is valid and the user has permissions to view
   # the bug to which it is attached.
   foreach my $attachid ($cgi->param('obsolete')) {
@@ -401,14 +411,14 @@ sub validateObsolete
     detaint_natural($attachid)
       || ThrowCodeError("invalid_attach_id_to_obsolete", $vars);
   
-    SendSQL("SELECT bug_id, isobsolete, description 
-             FROM attachments WHERE attach_id = $attachid");
+    my ($bugid, $isobsolete, $description) = $dbh->selectrow_array(
+            "SELECT bug_id, isobsolete, description 
+             FROM attachments WHERE attach_id = ?", undef, $attachid);
 
     # Make sure the attachment exists in the database.
-    MoreSQLData()
-      || ThrowUserError("invalid_attach_id", $vars);
+    ThrowUserError("invalid_attach_id", $vars) unless $bugid;
 
-    my ($bugid, $isobsolete, $description) = FetchSQLData();
+
 
     $vars->{'description'} = $description;
     
@@ -473,12 +483,13 @@ sub view
 {
     # Retrieve and validate parameters
     my ($attach_id) = validateID();
-
+    my $dbh = Bugzilla->dbh;
+    
     # Retrieve the attachment content and its content type from the database.
-    SendSQL("SELECT mimetype, filename, thedata FROM attachments " .
+    my ($contenttype, $filename, $thedata) = $dbh->selectrow_array(
+            "SELECT mimetype, filename, thedata FROM attachments " .
             "INNER JOIN attach_data ON id = attach_id " .
-            "WHERE attach_id = $attach_id");
-    my ($contenttype, $filename, $thedata) = FetchSQLData();
+            "WHERE attach_id = ?", undef, $attach_id);
    
     # Bug 111522: allow overriding content-type manually in the posted form
     # params.
@@ -591,7 +602,8 @@ sub interdiff
 sub get_unified_diff
 {
   my ($id) = @_;
-
+  my $dbh = Bugzilla->dbh;
+  
   # Bring in the modules we need
   require PatchReader::Raw;
   require PatchReader::FixPatchRoot;
@@ -600,12 +612,12 @@ sub get_unified_diff
   require File::Temp;
 
   # Get the patch
-  SendSQL("SELECT bug_id, description, ispatch, thedata " . 
+  my ($bugid, $description, $ispatch, $thedata) = $dbh->selectrow_array(
+          "SELECT bug_id, description, ispatch, thedata " . 
           "FROM attachments " .
           "INNER JOIN attach_data " .
           "ON id = attach_id " .
-          "WHERE attach_id = $id");
-  my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
+          "WHERE attach_id = ?", undef, $id);
   if (!$ispatch) {
     $vars->{'attach_id'} = $id;
     ThrowCodeError("must_be_patch");
@@ -732,12 +744,13 @@ sub diff
   my ($attach_id) = validateID();
   my $format = validateFormat('html', 'raw');
   my $context = validateContext();
-
+  my $dbh = Bugzilla->dbh;
+  
   # Get patch data
-  SendSQL("SELECT bug_id, description, ispatch, thedata FROM attachments " .
+  my ($bugid, $description, $ispatch, $thedata) = $dbh->selectrow_array(
+          "SELECT bug_id, description, ispatch, thedata FROM attachments " .
           "INNER JOIN attach_data ON id = attach_id " .
-          "WHERE attach_id = $attach_id");
-  my ($bugid, $description, $ispatch, $thedata) = FetchSQLData();
+          "WHERE attach_id = ?", undef, $attach_id);
 
   # If it is not a patch, view normally
   if (!$ispatch)
@@ -764,9 +777,14 @@ sub diff
       # Get list of attachments on this bug.
       # Ignore the current patch, but select the one right before it
       # chronologically.
-      SendSQL("SELECT attach_id, description FROM attachments WHERE bug_id = $bugid AND ispatch = 1 ORDER BY creation_ts DESC");
+      my $sth = $dbh->prepare("SELECT attach_id, description 
+                               FROM attachments 
+                               WHERE bug_id = ? 
+                               AND ispatch = 1 
+                               ORDER BY creation_ts DESC");
+      $sth->execute($bugid);
       my $select_next_patch = 0;
-      while (my ($other_id, $other_desc) = FetchSQLData()) {
+      while (my ($other_id, $other_desc) = $sth->fetchrow_array) {
         if ($other_id eq $attach_id) {
           $select_next_patch = 1;
         } else {
@@ -803,38 +821,33 @@ sub viewall
     if (Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
         $privacy = "AND isprivate < 1 ";
     }
-    SendSQL("SELECT attach_id, " .
-            $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
-            mimetype, description, ispatch, isobsolete, isprivate, 
-            LENGTH(thedata)
+  my $attachments = $dbh->selectall_arrayref(
+           "SELECT attach_id AS attachid, " .
+            $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . " AS date,
+            mimetype AS contenttype, description, ispatch, isobsolete, isprivate, 
+            LENGTH(thedata) AS datasize
             FROM attachments 
             INNER JOIN attach_data
             ON attach_id = id
-            WHERE bug_id = $bugid $privacy 
-            ORDER BY attach_id");
-  my @attachments; # the attachments array
-  while (MoreSQLData())
-  {
-    my %a; # the attachment hash
-    ($a{'attachid'}, $a{'date'}, $a{'contenttype'},
-     $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'},
-     $a{'datasize'}) = FetchSQLData();
-    $a{'isviewable'} = isViewable($a{'contenttype'});
-    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},
-                                          'is_active' => 1 });
+            WHERE bug_id = ? $privacy 
+            ORDER BY attach_id", {'Slice'=>{}}, $bugid);
 
-    # Add the hash representing the attachment to the array of attachments.
-    push @attachments, \%a;
+  foreach my $a (@{$attachments})
+  {
+    
+    $a->{'isviewable'} = isViewable($a->{'contenttype'});
+    $a->{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a->{'attachid'},
+                                          'is_active' => 1 });
   }
 
   # Retrieve the bug summary (for displaying on screen) and assignee.
-  SendSQL("SELECT short_desc, assigned_to FROM bugs " .
-          "WHERE bug_id = $bugid");
-  my ($bugsummary, $assignee_id) = FetchSQLData();
+  my ($bugsummary, $assignee_id) = $dbh->selectrow_array(
+          "SELECT short_desc, assigned_to FROM bugs " .
+          "WHERE bug_id = ?", undef, $bugid);
 
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'bugid'} = $bugid;
-  $vars->{'attachments'} = \@attachments;
+  $vars->{'attachments'} = $attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
 
@@ -852,41 +865,36 @@ sub enter
   my $bugid = $cgi->param('bugid');
   ValidateBugID($bugid);
   validateCanChangeBug($bugid);
-
+  my $dbh = Bugzilla->dbh;
+  
   # Retrieve the attachments the user can edit from the database and write
   # them into an array of hashes where each hash represents one attachment.
   my $canEdit = "";
   if (!UserInGroup("editbugs")) {
       $canEdit = "AND submitter_id = " . Bugzilla->user->id;
   }
-  SendSQL("SELECT attach_id, description, isprivate
+  my $attachments = $dbh->selectall_arrayref(
+          "SELECT attach_id AS id, description, isprivate
            FROM attachments
-           WHERE bug_id = $bugid 
+           WHERE bug_id = ? 
            AND isobsolete = 0 $canEdit
-           ORDER BY attach_id");
-  my @attachments; # the attachments array
-  while ( MoreSQLData() ) {
-    my %a; # the attachment hash
-    ($a{'id'}, $a{'description'}, $a{'isprivate'}) = FetchSQLData();
-
-    # Add the hash representing the attachment to the array of attachments.
-    push @attachments, \%a;
-  }
+           ORDER BY attach_id",{'Slice' =>{}}, $bugid);
 
   # Retrieve the bug summary (for displaying on screen) and assignee.
-  SendSQL("SELECT short_desc, assigned_to FROM bugs 
-           WHERE bug_id = $bugid");
-  my ($bugsummary, $assignee_id) = FetchSQLData();
+  my ($bugsummary, $assignee_id) = $dbh->selectrow_array(
+          "SELECT short_desc, assigned_to FROM bugs 
+           WHERE bug_id = ?", undef, $bugid);
 
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'bugid'} = $bugid;
-  $vars->{'attachments'} = \@attachments;
+  $vars->{'attachments'} = $attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
 
-  SendSQL("SELECT product_id, component_id FROM bugs
-           WHERE bug_id = $bugid");
-  my ($product_id, $component_id) = FetchSQLData();
+  my ($product_id, $component_id)= $dbh->selectrow_array(
+          "SELECT product_id, component_id FROM bugs
+           WHERE bug_id = ?", undef, $bugid);
+           
   my $flag_types = Bugzilla::FlagType::match({'target_type'  => 'attachment',
                                               'product_id'   => $product_id,
                                               'component_id' => $component_id});
@@ -904,7 +912,6 @@ sub enter
 # Insert a new attachment into the database.
 sub insert
 {
-    my $dbh = Bugzilla->dbh;
     my $userid = Bugzilla->user->id;
 
     # Retrieve and validate parameters
@@ -919,13 +926,14 @@ sub insert
     my $isurl;
     validateIsPatch();
     validateDescription();
-  
+    my $dbh = Bugzilla->dbh; 
+    
     if (($attachurl =~ /^(http|https|ftp):\/\/\S+/) 
          && !(defined $cgi->upload('data'))) {
         $filename = '';
         $data = $attachurl;
         $isurl = 1;
-        $contenttype = SqlQuote('text/plain');
+        $contenttype = 'text/plain';
         $cgi->param('ispatch', 0);
         $cgi->delete('bigfile');
     } else {
@@ -934,7 +942,11 @@ sub insert
         # we now check the content type for image/bmp in validateData()
         validateContentType() unless $cgi->param('ispatch');
         $data = validateData();
-        $contenttype = SqlQuote($cgi->param('contenttype'));
+        $contenttype = $cgi->param('contenttype');
+
+        # These are inserted using placeholders so no need to panic
+        trick_taint($filename);
+        trick_taint($contenttype);
         $isurl = 0;
     }
 
@@ -963,22 +975,21 @@ sub insert
     Bugzilla::FlagType::validate($cgi, $bugid, -1);
 
     # Escape characters in strings that will be used in SQL statements.
-    my $sql_filename = SqlQuote($filename);
-    my $description = SqlQuote($cgi->param('description'));
+    my $description = $cgi->param('description');
+    trick_taint($description);
     my $isprivate = $cgi->param('isprivate') ? 1 : 0;
 
   # Figure out when the changes were made.
   my ($timestamp) = Bugzilla->dbh->selectrow_array("SELECT NOW()"); 
-  my $sql_timestamp = SqlQuote($timestamp); 
-
+  
   # Insert the attachment into the database.
-  my $sth = $dbh->prepare("INSERT INTO attachments
-      (bug_id, creation_ts, filename, description,
-       mimetype, ispatch, isurl, isprivate, submitter_id) 
-      VALUES ($bugid, $sql_timestamp, $sql_filename,
-              $description, $contenttype, " . $cgi->param('ispatch') . ",
-              $isurl, $isprivate, $userid)");
-  $sth->execute();
+  my $sth = $dbh->do(
+        "INSERT INTO attachments
+            (bug_id, creation_ts, filename, description,
+             mimetype, ispatch, isurl, isprivate, submitter_id) 
+         VALUES (?,?,?,?,?,?,?,?,?)", undef, ($bugid, $timestamp, $filename,
+              $description, $contenttype, $cgi->param('ispatch'),
+              $isurl, $isprivate, $userid));
   # Retrieve the ID of the newly created attachment record.
   my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
 
@@ -1031,14 +1042,14 @@ sub insert
   foreach my $obsolete_id (@obsolete_ids) {
       # If the obsolete attachment has request flags, cancel them.
       # This call must be done before updating the 'attachments' table.
-      Bugzilla::Flag::CancelRequests($bugid, $obsolete_id, $sql_timestamp);
+      Bugzilla::Flag::CancelRequests($bugid, $obsolete_id, $dbh->quote($timestamp));
 
-      SendSQL("UPDATE attachments SET isobsolete = 1 " . 
-              "WHERE attach_id = $obsolete_id");
-      SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+      $dbh->do("UPDATE attachments SET isobsolete = 1 " . 
+              "WHERE attach_id = ?", undef, $obsolete_id);
+      $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                           fieldid, removed, added) 
-              VALUES ($bugid, $obsolete_id, $userid, $sql_timestamp, $fieldid,
-                      '0', '1')");
+              VALUES (?,?,?,?,?,?,?)", undef, 
+              $bugid, $obsolete_id, $userid, $timestamp, $fieldid, 0, 1);
   }
 
   # Assign the bug to the user, if they are allowed to take it
@@ -1050,26 +1061,26 @@ sub insert
                     "login_name");
       
       # Get the old values, for the bugs_activity table
-      SendSQL("SELECT " . join(", ", @fields) . " " .
+      my @oldvalues = $dbh->selectrow_array(
+              "SELECT " . join(", ", @fields) . " " .
               "FROM bugs " .
               "INNER JOIN profiles " .
               "ON profiles.userid = bugs.assigned_to " .
-              "WHERE bugs.bug_id = $bugid");
+              "WHERE bugs.bug_id = ?", undef, $bugid);
       
-      my @oldvalues = FetchSQLData();
       my @newvalues = ($userid, "ASSIGNED", "", 1, Bugzilla->user->login);
       
       # Make sure the person we are taking the bug from gets mail.
       $owner = $oldvalues[4];  
                   
-      @oldvalues = map(SqlQuote($_), @oldvalues);
-      @newvalues = map(SqlQuote($_), @newvalues);
+      @oldvalues = map($dbh->quote($_), @oldvalues);
+      @newvalues = map($dbh->quote($_), @newvalues);
                
       # Update the bug record. Note that this doesn't involve login_name.
-      SendSQL("UPDATE bugs SET delta_ts = $sql_timestamp, " . 
+      $dbh->do("UPDATE bugs SET delta_ts = ?, " . 
               join(", ", map("$fields[$_] = $newvalues[$_]", (0..3))) . 
-              " WHERE bug_id = $bugid");
-
+              " WHERE bug_id = ?", undef, ($timestamp, $bugid));
+      
       # If the bug was a dupe, we have to remove its entry from the
       # 'duplicates' table.
       $dbh->do('DELETE FROM duplicates WHERE dupe = ?', undef, $bugid);
@@ -1079,13 +1090,15 @@ sub insert
       $newvalues[0] = $newvalues[4];
       
       # Add the changes to the bugs_activity table
+      my $sth = $dbh->prepare("INSERT INTO bugs_activity 
+                                 (bug_id, who, bug_when, fieldid, removed, added)
+                          VALUES (?,?,?,?,?,?)"); 
+
       for (my $i = 0; $i < 4; $i++) {
           if ($oldvalues[$i] ne $newvalues[$i]) {
               my $fieldid = get_field_id($fields[$i]);
-              SendSQL("INSERT INTO bugs_activity " .
-                      "(bug_id, who, bug_when, fieldid, removed, added) " .
-                      "VALUES ($bugid, $userid, $sql_timestamp, " .
-                      "$fieldid, $oldvalues[$i], $newvalues[$i])");
+              $sth->execute($bugid, $userid, $timestamp, 
+                            $fieldid, $oldvalues[$i], $newvalues[$i]);
           }
       }      
   }   
@@ -1167,7 +1180,6 @@ sub edit {
 # Users cannot edit the content of the attachment itself.
 sub update
 {
-  my $dbh = Bugzilla->dbh;
   my $userid = Bugzilla->user->id;
 
     # Retrieve and validate parameters
@@ -1180,6 +1192,7 @@ sub update
     validateContentType() unless $cgi->param('ispatch');
     validateIsObsolete();
     validatePrivate();
+    my $dbh = Bugzilla->dbh;
 
     # The order of these function calls is important, as both Flag::validate
     # and FlagType::validate assume User::match_field has ensured that the
@@ -1205,19 +1218,22 @@ sub update
 
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
-  SendSQL("SELECT description, mimetype, filename, ispatch, isobsolete, isprivate
-           FROM attachments WHERE attach_id = $attach_id");
   my ($olddescription, $oldcontenttype, $oldfilename, $oldispatch,
-      $oldisobsolete, $oldisprivate) = FetchSQLData();
+      $oldisobsolete, $oldisprivate) = $dbh->selectrow_array(
+      "SELECT description, mimetype, filename, ispatch, isobsolete, isprivate
+       FROM attachments WHERE attach_id = ?", undef, $attach_id);
 
   # Quote the description and content type for use in the SQL UPDATE statement.
-  my $quoteddescription = SqlQuote($cgi->param('description'));
-  my $quotedcontenttype = SqlQuote($cgi->param('contenttype'));
-  my $quotedfilename = SqlQuote($cgi->param('filename'));
+  my $description = $cgi->param('description');
+  my $contenttype = $cgi->param('contenttype');
+  my $filename = $cgi->param('filename');
+  # we can detaint this way thanks to placeholders
+  trick_taint($description);
+  trick_taint($contenttype);
+  trick_taint($filename);
 
   # Figure out when the changes were made.
-  SendSQL("SELECT NOW()");
-  my $timestamp = FetchOneColumn();
+  my ($timestamp) = $dbh->selectrow_array("SELECT NOW()");
     
   # Update flags.  We have to do this before committing changes
   # to attachments so that we can delete pending requests if the user
@@ -1226,62 +1242,66 @@ sub update
   Bugzilla::Flag::process($bugid, $attach_id, $timestamp, $cgi);
 
   # Update the attachment record in the database.
-  SendSQL("UPDATE  attachments 
-           SET     description = $quoteddescription ,
-                   mimetype = $quotedcontenttype ,
-                   filename = $quotedfilename ,
-                   ispatch = " . $cgi->param('ispatch') . ",
-                   isobsolete = " . $cgi->param('isobsolete') . ",
-                   isprivate = " . $cgi->param('isprivate') . "
-           WHERE   attach_id = $attach_id
-         ");
+  $dbh->do("UPDATE  attachments 
+            SET     description = ?,
+                    mimetype    = ?,
+                    filename    = ?,
+                    ispatch     = ?,
+                    isobsolete  = ?,
+                    isprivate   = ?
+            WHERE   attach_id   = ?",
+            undef, ($description, $contenttype, $filename,
+            $cgi->param('ispatch'), $cgi->param('isobsolete'), 
+            $cgi->param('isprivate'), $attach_id));
 
   # Record changes in the activity table.
-  my $sql_timestamp = SqlQuote($timestamp);
   if ($olddescription ne $cgi->param('description')) {
-    my $quotedolddescription = SqlQuote($olddescription);
     my $fieldid = get_field_id('attachments.description');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $quotedolddescription, $quoteddescription)");
+              VALUES (?,?,?,?,?,?,?)",
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $olddescription, $description));
   }
   if ($oldcontenttype ne $cgi->param('contenttype')) {
-    my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = get_field_id('attachments.mimetype');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $quotedoldcontenttype, $quotedcontenttype)");
+              VALUES (?,?,?,?,?,?,?)",
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $oldcontenttype, $contenttype));
   }
   if ($oldfilename ne $cgi->param('filename')) {
-    my $quotedoldfilename = SqlQuote($oldfilename);
     my $fieldid = get_field_id('attachments.filename');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $quotedoldfilename, $quotedfilename)");
+              VALUES (?,?,?,?,?,?,?)", 
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $oldfilename, $filename));
   }
   if ($oldispatch ne $cgi->param('ispatch')) {
     my $fieldid = get_field_id('attachments.ispatch');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $oldispatch, " . $cgi->param('ispatch') . ")");
+              VALUES (?,?,?,?,?,?,?)",
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $oldispatch, $cgi->param('ispatch')));
   }
   if ($oldisobsolete ne $cgi->param('isobsolete')) {
     my $fieldid = get_field_id('attachments.isobsolete');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $oldisobsolete, " . $cgi->param('isobsolete') . ")");
+              VALUES (?,?,?,?,?,?,?)",
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $oldisobsolete, $cgi->param('isobsolete')));
   }
   if ($oldisprivate ne $cgi->param('isprivate')) {
     my $fieldid = get_field_id('attachments.isprivate');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
+    $dbh->do("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when,
                                         fieldid, removed, added)
-             VALUES ($bugid, $attach_id, $userid, $sql_timestamp, $fieldid,
-                     $oldisprivate, " . $cgi->param('isprivate') . ")");
+              VALUES (?,?,?,?,?,?,?)",
+              undef, ($bugid, $attach_id, $userid, $timestamp, $fieldid,
+                     $oldisprivate, $cgi->param('isprivate')));
   }
   
   # Unlock all database tables now that we are finished updating the database.
