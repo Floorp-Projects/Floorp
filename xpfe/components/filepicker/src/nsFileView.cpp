@@ -42,7 +42,7 @@
 #include "nsITreeSelection.h"
 #include "nsITreeColumns.h"
 #include "nsITreeBoxObject.h"
-#include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -53,10 +53,162 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
+#include "nsIAutoCompleteResult.h"
+#include "nsIAutoCompleteSearch.h"
 #include "nsISimpleEnumerator.h"
+#include "nsAutoPtr.h"
 #include "nsIMutableArray.h"
 
 #include "nsWildCard.h"
+
+#define NS_FILECOMPLETE_CID { 0xcb60980e, 0x18a5, 0x4a77, \
+                            { 0x91, 0x10, 0x81, 0x46, 0x61, 0x4c, 0xa7, 0xf0 } }
+#define NS_FILECOMPLETE_CONTRACTID "@mozilla.org/autocomplete/search;1?name=file"
+
+class nsFileResult : public nsIAutoCompleteResult
+{
+public:
+  // aSearchString is the text typed into the autocomplete widget
+  // aSearchParam is the picker's currently displayed directory
+  nsFileResult(const nsAString& aSearchString, const nsAString& aSearchParam);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTOCOMPLETERESULT
+
+  nsStringArray mValues;
+  nsAutoString mSearchString;
+  PRInt32 mSlashPos;
+  PRUint16 mSearchResult;
+};
+
+NS_IMPL_ISUPPORTS1(nsFileResult, nsIAutoCompleteResult)
+
+nsFileResult::nsFileResult(const nsAString& aSearchString,
+                           const nsAString& aSearchParam):
+  mSearchString(aSearchString),
+  mSlashPos(mSearchString.RFindChar('/'))
+{
+  if (aSearchString.IsEmpty())
+    mSearchResult = RESULT_IGNORED;
+  else {
+    mSearchResult = RESULT_FAILURE;
+    nsCOMPtr<nsILocalFile> directory;
+    nsDependentSubstring parent(Substring(mSearchString, 0, mSlashPos + 1));
+    if (mSlashPos != kNotFound)
+      NS_NewLocalFile(parent, PR_TRUE, getter_AddRefs(directory));
+    if (!directory) {
+      if (NS_FAILED(NS_NewLocalFile(aSearchParam, PR_TRUE, getter_AddRefs(directory))))
+        return;
+      if (mSlashPos > 0)
+        directory->AppendRelativePath(Substring(mSearchString, 0, mSlashPos));
+    }
+    nsCOMPtr<nsISimpleEnumerator> dirEntries;
+    if (NS_FAILED(directory->GetDirectoryEntries(getter_AddRefs(dirEntries))))
+      return;
+    mSearchResult = RESULT_NOMATCH;
+    PRBool hasMore = PR_FALSE;
+    nsDependentSubstring prefix(Substring(mSearchString, mSlashPos + 1));
+    while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> nextItem;
+      dirEntries->GetNext(getter_AddRefs(nextItem));
+      nsCOMPtr<nsILocalFile> nextFile(do_QueryInterface(nextItem));
+      nsAutoString fileName;
+      nextFile->GetLeafName(fileName);
+      if (StringBeginsWith(fileName, prefix)) {
+        fileName.Insert(parent, 0);
+        mValues.AppendString(fileName);
+        if (mSearchResult == RESULT_NOMATCH && fileName.Equals(mSearchString))
+          mSearchResult = RESULT_IGNORED;
+        else
+          mSearchResult = RESULT_SUCCESS;
+      }
+    }
+    mValues.Sort();
+  }
+}
+
+NS_IMETHODIMP nsFileResult::GetSearchString(nsAString & aSearchString)
+{
+  aSearchString.Assign(mSearchString);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetSearchResult(PRUint16 *aSearchResult)
+{
+  NS_ENSURE_ARG_POINTER(aSearchResult);
+  *aSearchResult = mSearchResult;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetDefaultIndex(PRInt32 *aDefaultIndex)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultIndex);
+  *aDefaultIndex = -1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetErrorDescription(nsAString & aErrorDescription)
+{
+  aErrorDescription.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetMatchCount(PRUint32 *aMatchCount)
+{
+  NS_ENSURE_ARG_POINTER(aMatchCount);
+  *aMatchCount = mValues.Count();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetValueAt(PRInt32 index, nsAString & aValue)
+{
+  mValues.StringAt(index, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetCommentAt(PRInt32 index, nsAString & aComment)
+{
+  aComment.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::GetStyleAt(PRInt32 index, nsAString & aStyle)
+{
+  aStyle.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFileResult::RemoveValueAt(PRInt32 rowIndex, PRBool removeFromDb)
+{
+  return NS_OK;
+}
+
+class nsFileComplete : public nsIAutoCompleteSearch
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTOCOMPLETESEARCH
+};
+
+NS_IMPL_ISUPPORTS1(nsFileComplete, nsIAutoCompleteSearch)
+
+NS_IMETHODIMP
+nsFileComplete::StartSearch(const nsAString& aSearchString,
+                            const nsAString& aSearchParam,
+                            nsIAutoCompleteResult *aPreviousResult,
+                            nsIAutoCompleteObserver *aListener)
+{
+  NS_ENSURE_ARG_POINTER(aListener);
+  nsRefPtr<nsFileResult> result = new nsFileResult(aSearchString, aSearchParam);
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+  return aListener->OnSearchResult(this, result);
+}
+
+NS_IMETHODIMP
+nsFileComplete::StopSearch()
+{
+  return NS_OK;
+}
 
 #define NS_FILEVIEW_CID { 0xa5570462, 0x1dd1, 0x11b2, \
                          { 0x9d, 0x19, 0xdf, 0x30, 0xa2, 0x7f, 0xbd, 0xc4 } }
@@ -104,10 +256,13 @@ protected:
 };
 
 // Factory constructor
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileComplete)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFileView, Init)
 
 static const nsModuleComponentInfo components[] =
 {
+  { "nsFileComplete", NS_FILECOMPLETE_CID,
+    NS_FILECOMPLETE_CONTRACTID, nsFileCompleteConstructor },
   { "nsFileView", NS_FILEVIEW_CID,
     NS_FILEVIEW_CONTRACTID, nsFileViewConstructor }
 };
@@ -190,6 +345,11 @@ nsFileView::SetShowOnlyDirectories(PRBool aOnlyDirs)
   } else {
     // Run the filter again to get the file list back
     FilterFiles();
+
+    SortArray(mFilteredFiles);
+    if (mReverseSort)
+      ReverseArray(mFilteredFiles);
+
     if (mTree)
       mTree->RowCountChanged(dirCount, mTotalRows - dirCount);
   }

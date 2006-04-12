@@ -52,7 +52,8 @@
         this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
-        this.searchSessions = this.getAttribute("searchSessions");
+        this.initSearchSessions();
+        this.initAutoCompleteSearch();
         
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.resultsPopup)
@@ -82,35 +83,46 @@
                 onget="return this.getAttribute('focused') == 'true';"/>
 
       <!-- space-delimited string of search session types to use -->
-      <property name="searchSessions" onget="return this.getAttribute('searchSessions')">
-        <setter><![CDATA[
-          val = val ? val : "";
-          var list = val.split(" ");
-          this.mSessions = {};
-          this.mListeners = {};
-          this.mLastResults = {};
-          this.mLastStatus = {};
+      <property name="searchSessions" readonly="true" onget="return this.getAttribute('searchSessions')"/>
 
-          for (var i in list) {
+      <method name="initSearchSessions">
+        <body><![CDATA[
+          var list = this.getAttribute("searchSessions").split(" ");
+          for (var i = 0; i < list.length; i++) {
             var name = list[i];
             if (name != "") {
               var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
               try {
                 var session =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
+                this.addSession(session, name);
               } catch (e) {
-                dump("### ERROR - unable to create search session \"" + session + "\".\n");
-                break;
+                dump("### ERROR - unable to create search session \"" + name + "\".\n");
               }
-              this.mSessions[name] = session;
-              this.mListeners[name] = new (this.mAutoCompleteListener)(name);
-              this.mLastResults[name] = null;
-              this.mLastStatus[name] = null;
-              ++this.sessionCount;
             }
           }
-        ]]></setter>
-      </property>
+        ]]></body>
+      </method>
+
+      <method name="initAutoCompleteSearch">
+        <body><![CDATA[
+          var list = this.getAttribute("autocompletesearch").split(" ");
+          for (var i = 0; i < list.length; i++) {
+            var name = list[i];
+            if (name != "") {
+              var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
+              try {
+                var search =
+                  Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSearch);
+                var session = new (this.mAutoCompleteSession)(search);
+                this.addSession(session, name);
+              } catch (e) {
+                dump("### ERROR - unable to create search \"" + name + "\".\n");
+              }
+            }
+          }
+        ]]></body>
+      </method>
 
       <!-- the number of sessions currently in use -->
       <field name="sessionCount">0</field>
@@ -282,10 +294,10 @@
 
       <!-- =================== PRIVATE PROPERTIES =================== -->
 
-      <field name="mSessions">null</field>
-      <field name="mListeners">null</field>
-      <field name="mLastResults">null</field>
-      <field name="mLastStatus">null</field>
+      <field name="mSessions">({})</field>
+      <field name="mListeners">({})</field>
+      <field name="mLastResults">({})</field>
+      <field name="mLastStatus">({})</field>
       <field name="mLastKeyCode">null</field>
       <field name="mAutoCompleteTimer">0</field>
       <field name="mMenuOpen">false</field>
@@ -300,14 +312,81 @@
       <field name="oninit">null</field>
       <field name="mDefaultMatchFilled">false</field>
 
+      <field name="mAutoCompleteSession"><![CDATA[
+        var session = function(aSession) { this.session = aSession };
+        session.prototype = {
+          session: null,
+          param: this,
+          onStartLookup: function(aSearchString, aPreviousSearchResult, aListener) {
+            this.session.startSearch(aSearchString,
+                         this.param.getAttribute("autocompletesearchparam"),
+                         aPreviousSearchResult && aPreviousSearchResult.lastResult,
+                         aListener);
+          },
+          onStopLookup: function() {
+            this.session.stopSearch();
+          },
+          onAutoComplete: function() {
+          }
+        };
+        session;
+      ]]></field>
+
       <field name="mAutoCompleteListener"><![CDATA[
-        var listener = function(aSession) { this.sessionName = aSession };
+        var listener = function(aName) { this.sessionName = aName };
         listener.prototype = {
           param: this,
           sessionName: null,
+          lastResult: null,
+          lastItems: [],
           onAutoComplete: function(aResults, aStatus) 
           {
             this.param.processResults(this.sessionName, aResults, aStatus);
+          },
+          onSearchResult: function(aSearch, aResult)
+          {
+            this.lastResult = aResult;
+            this.lastItems = new Array(aResult.matchCount);
+            const nsIAutoCompleteStatus = Components.interfaces.nsIAutoCompleteStatus;
+            var status = nsIAutoCompleteStatus.failed;
+            if (aResult.errorDescription) {
+              status = nsIAutoCompleteStatus.failureItems;
+              this.lastItems = [{
+                value: aResult.errorDescription,
+                comment: null,
+                className: null,
+                param: null
+              }];
+            }
+            else if (aResult.searchResult == aResult.RESULT_IGNORED)
+              status = nsIAutoCompleteStatus.ignored;
+            else if (aResult.searchResult == aResult.RESULT_NOMATCH)
+              status = nsIAutoCompleteStatus.nomatch;
+            else if (aResult.searchResult == aResult.RESULT_SUCCESS)
+              status = nsIAutoCompleteStatus.matchFound;
+            this.param.processResults(this.sessionName, {
+              searchString: aResult.searchString,
+              items: this,
+              defaultItemIndex: aResult.defaultIndex,
+              param: null,
+              lastResult: aResult
+            }, status);
+          },
+          Count: function() {
+            return this.lastItems.length;
+          },
+          QueryElementAt: function(aIndex, aIID) {
+            if (aIndex < 0 || aIndex >= this.lastItems.length)
+              return null;
+            if (!this.lastItems[aIndex]) {
+              this.lastItems[aIndex] = {
+                value: this.lastResult.getValueAt(aIndex),
+                comment: this.lastResult.getCommentAt(aIndex),
+                className: this.lastResult.getStyleAt(aIndex),
+                param: null
+              }
+            }
+            return this.lastItems[aIndex];
           }
         };
         listener;
@@ -414,13 +493,15 @@
       <!-- add a session by reference -->
       <method name="addSession">
         <parameter name="aSession"/>
+        <parameter name="aName"/>
         <body><![CDATA[
           ++this.sessionCount;
-          var name = "anon_"+this.sessionCount;
+          var name = aName || "anon_"+this.sessionCount;
           this.mSessions[name] = aSession;
           this.mListeners[name] = new (this.mAutoCompleteListener)(name);
           this.mLastResults[name] = null;
           this.mLastStatus[name] = null;
+          return this.mSessions[name];
         ]]></body>
       </method>
 
