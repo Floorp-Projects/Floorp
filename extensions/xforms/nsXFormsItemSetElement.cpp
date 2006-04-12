@@ -47,7 +47,6 @@
 #include "nsIDocument.h"
 #include "nsXFormsUtils.h"
 #include "nsXFormsModelElement.h"
-#include "nsArray.h"
 #include "nsIXFormsControlBase.h"
 #include "nsIXFormsControl.h"
 #include "nsIXFormsItemSetUIElement.h"

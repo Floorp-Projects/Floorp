@@ -45,7 +45,6 @@
 #include "nsString.h"
 #include "nsXFormsUtils.h"
 #include "nsIXFormsValueElement.h"
-#include "nsArray.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
 #include "nsIXTFBindableElementWrapper.h"

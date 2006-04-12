@@ -73,7 +73,6 @@
 #include "nsXFormsXPathParser.h"
 #include "nsXFormsXPathNode.h"
 #include "nsIDOMNSXPathExpression.h"
-#include "nsArray.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"

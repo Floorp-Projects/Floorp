@@ -73,7 +73,6 @@
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
 #include "nsAutoPtr.h"
-#include "nsArray.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsDOMError.h"
