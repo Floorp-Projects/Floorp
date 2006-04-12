@@ -2705,6 +2705,9 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w
                                     NSPoint* localEventLocation,
                                     nsChildView* receiver)
 {
+  if (!receiver || !localEventLocation)
+    return NS_ERROR_INVALID_ARG;
+  
   nsEventStatus status;
   nsMouseEvent event(isTrusted, msg, w, aReason);
   event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
