@@ -438,7 +438,7 @@ DEFINES += \
 endif
 
 ifdef WINCE
-DEFINES += -D_BUILD_NSPR_STATIC_
+DEFINES += -D_NSPR_BUILD_
 endif
 
 endif
