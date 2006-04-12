@@ -311,7 +311,7 @@ function selectOnOK()
                                                  [file.path]);
           
           promptService = Components.classes[NS_PROMPTSERVICE_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-          var rv = promptService.confirm(window, title, message);
+          var rv = promptService.confirm(window, confirmTitle, message);
           if (rv) {
             ret = nsIFilePicker.returnReplace;
             retvals.directory = file.parent.path;
@@ -725,11 +725,11 @@ function gotoDirectory(directory) {
 
   window.setCursor("auto");
 
-  treeView.QueryInterface(nsITreeView).selection.clearSelection();
   if (filePickerMode == nsIFilePicker.modeGetFolder) {
     textInput.value = "";
   }
   textInput.focus();
+  textInput.setAttribute("autocompletesearchparam", directory.path);
   sfile = directory;
 }
 

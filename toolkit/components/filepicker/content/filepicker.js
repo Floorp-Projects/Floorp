@@ -753,6 +753,7 @@ function gotoDirectory(directory) {
     textInput.value = "";
   }
   textInput.focus();
+  textInput.setAttribute("autocompletesearchparam", directory.path);
   sfile = directory;
 }
 

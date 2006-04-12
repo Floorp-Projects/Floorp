@@ -101,6 +101,7 @@
     <row align="center">
       <label value="&textInput.label;" id="textInputLabel" control="textInput" accesskey="&textInput.accesskey;"/>
       <textbox id="textInput" flex="1" oninput="doEnabling()" 
+               type="autocomplete" autocompletesearch="file"
                onfocus="onTextFieldFocus();"/>
     </row>
     <row id="filterBox" hidden="true" align="center">

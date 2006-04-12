@@ -60,6 +60,7 @@ REQUIRES	= \
 		dom \
 		string \
 		locale \
+		autocomplete \
 		$(NULL)
 
 CPPSRCS		= \
