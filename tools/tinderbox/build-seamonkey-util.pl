@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.316 $ ';
+$::UtilsVersion = '$Revision: 1.317 $ ';
 
 package TinderUtils;
 
@@ -398,7 +398,9 @@ sub SetupEnv {
         $ENV{BUILD_OFFICIAL}   = 1;
         $ENV{MOZILLA_OFFICIAL} = 1;
       if ($Settings::OS =~ /^WIN/) {
-          $ENV{MOZ_DEBUG_SYMBOLS}      = 1;
+        if ($Settings::shiptalkback) {
+            $ENV{MOZ_DEBUG_SYMBOLS}      = 1;
+        }
 #          $ENV{MOZ_PROFILE}      = 1;
 #          $ENV{PDBFILE}      = "NONE";
       }
