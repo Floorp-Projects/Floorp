@@ -2075,12 +2075,15 @@ nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
   nsAutoString kwd(aKeyword);
   ToLowerCase(kwd);
 
-  if (kwd.IsEmpty()) {
-    // delete any existing keyword for the given URI
-    rv = history->GetUrlIdFor(aURI, &pageId, PR_FALSE);
-    if (! pageId)
-      return NS_OK; // URL not found: no keyword
+  // When we are clearing a keyword, don't force URI creation. If they give
+  // us a brand new URI and an empty keyword, there is obviously nothing to do
+  PRBool forceURICreation = ! kwd.IsEmpty();
+  rv = history->GetUrlIdFor(aURI, &pageId, forceURICreation);
+  if (! pageId)
+    return NS_OK; // no keyword & URL not found: nothing to do
 
+  if (aURI) {
+    // delete any existing keyword for the given URI, only create the ID if
     rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
         "DELETE FROM moz_keywords WHERE page_id = ?1"),
       getter_AddRefs(statement));
@@ -2090,14 +2093,8 @@ nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
 
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    return transaction.Commit();
-  } else if (! aURI) {
-    // delete any existing URIs associated with the given keyword
-    rv = history->GetUrlIdFor(aURI, &pageId, PR_FALSE);
-    if (! pageId)
-      return NS_OK; // URL not found: no keyword
-
+  }
+  if (! kwd.IsEmpty()) {
     rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
         "DELETE FROM moz_keywords WHERE keyword = ?1"),
       getter_AddRefs(statement));
@@ -2107,14 +2104,13 @@ nsNavBookmarks::SetKeywordForURI(nsIURI* aURI, const nsAString& aKeyword)
 
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
-
-    return transaction.Commit();
   }
 
-  // otherwise, we have a URI/keyword pair and want to create it...
+  // when either is empty, that was asking us to clear the value, and we're done
+  if (! aURI || kwd.IsEmpty())
+    return transaction.Commit();
 
-  rv = history->GetUrlIdFor(aURI, &pageId, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // otherwise, we have a URI/keyword pair and want to create it...
 
   // this statement will overwrite any old keyword with that value since the
   // keyword column is unique and we use "OR REPLACE" conflict resolution
