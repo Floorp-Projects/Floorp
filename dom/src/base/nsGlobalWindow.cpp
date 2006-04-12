@@ -5503,21 +5503,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   nsresult rv = NS_OK;
 
   if (!aUrl.IsEmpty()) {
-    // fix bug 35076
-    // Escape all non ASCII characters in the url.
-    // Earlier, this code used to call Escape() and would escape characters like
-    // '?', '&', and '=' in the url.  This caused bug 174628.
-    if (IsASCII(aUrl)) {
-      AppendUTF16toUTF8(aUrl, url);
-    }
-    else {
-      nsXPIDLCString dest;
-      rv = ConvertCharset(aUrl, getter_Copies(dest));
-      if (NS_SUCCEEDED(rv))
-        NS_EscapeURL(dest, esc_AlwaysCopy | esc_OnlyNonASCII, url);      
-      else
-        AppendUTF16toUTF8(aUrl, url);
-    }
+    AppendUTF16toUTF8(aUrl, url);
 
     /* Check whether the URI is allowed, but not for dialogs --
        see bug 56851. The security of this function depends on
