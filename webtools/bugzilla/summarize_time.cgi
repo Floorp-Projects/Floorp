@@ -207,7 +207,7 @@ sub include_tt_details {
 
 sub sqlize_dates {
     my ($start_date, $end_date) = @_;
-    my $date_bits;
+    my $date_bits = "";
     my @date_values;
     if ($start_date) {
         # we've checked, trick_taint is fine
