@@ -190,11 +190,11 @@ nsHTTPIndex::OnFTPControlLog(PRBool server, const char *msg)
 
     JSContext* jscontext = NS_REINTERPRET_CAST(JSContext*,
                                                context->GetNativeContext());
+    NS_ENSURE_TRUE(jscontext, NS_OK);
 
     JSObject* global = JS_GetGlobalObject(jscontext);
+    NS_ENSURE_TRUE(global, NS_OK);
 
-    if (!jscontext || !global) return NS_OK;
-    
     jsval params[2];
 
     nsString unicodeMsg;
