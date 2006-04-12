@@ -1571,7 +1571,7 @@ ifndef NO_INSTALL
 	  $(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(JAR_MANIFEST) | \
 	  $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl \
-	    -d $(MAKE_JARS_TARGET) -j $(DESTDIR)$(mozappdir)/chrome \
+	    -d $(MAKE_JARS_TARGET)/chrome -j $(DESTDIR)$(mozappdir)/chrome \
 	    $(MAKE_JARS_FLAGS) -- "$(XULPPFLAGS) $(DEFINES) $(ACDEFINES)"; \
 	fi
 endif
