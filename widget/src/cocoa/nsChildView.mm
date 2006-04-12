@@ -2556,6 +2556,7 @@ nsChildView::GetThebesSurface()
 
 - (void)mouseDown:(NSEvent *)theEvent
 {
+  BOOL popupRolledUp = NO;
   // make sure this view is not in the rollup widget
   // the fastest way to do this is by comparing native window pointers
   if (gRollupWidget != nsnull) {
@@ -2563,10 +2564,18 @@ nsChildView::GetThebesSurface()
     NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
     if (ourNativeWindow != rollupNativeWindow) {
       // roll up any popups
-      if (gRollupListener != nsnull)
+      if (gRollupListener != nsnull) {
         gRollupListener->Rollup();
+        popupRolledUp = YES;
+      }
     }
   }
+    
+  // If we rolled up a popup, we don't want to pass the click down to gecko.
+  // This happens e.g. when you click a popupmenubutton (the menu opens), then click 
+  // on the popupmenubutton a second time, which should hide the menu.
+  if (popupRolledUp)
+    return;
   
   // if the command and alt keys are held down, initiate hand scrolling
   if ([ChildView areHandScrollModifiers:[theEvent modifierFlags]]) {
