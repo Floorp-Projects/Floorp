@@ -68,7 +68,9 @@ ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
 
-ifndef MOZ_THUNDERBIRD
+ifdef MOZ_THUNDERBIRD
+DIRS += autocomplete/public
+else
 DIRS +=	\
 	cookie \
 	$(NULL)
@@ -99,10 +101,12 @@ DIRS += \
 
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
-endif # MOZ_XUL_APP
+else # MOZ_XUL_APP
 
 ifdef MOZ_SUITE
 DIRS += autocomplete/public
 endif
+
+endif # MOZ_XUL_APP
 
 include $(topsrcdir)/config/rules.mk
