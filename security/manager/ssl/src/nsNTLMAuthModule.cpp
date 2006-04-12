@@ -963,6 +963,6 @@ static void md5sum(const PRUint8 *input, PRUint32 inputLen, PRUint8 *result)
         PK11_DigestFinal(ctxt, result, &resultLen, resultLen);
       }
     }
+    PK11_DestroyContext(ctxt, PR_TRUE);
   }
-  PK11_DestroyContext(ctxt, PR_TRUE);
 }
