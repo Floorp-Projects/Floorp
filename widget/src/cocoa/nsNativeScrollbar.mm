@@ -43,8 +43,12 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"
+#include "nsIRollupListener.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar)
+
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
 
 inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
 {
@@ -678,7 +682,13 @@ nsNativeScrollbar::UpdateScroller()
 //
 - (IBAction)scroll:(NSScroller*)sender
 {
-  if ( mGeckoChild )
+  // roll up popup windows if there are any
+  if (gRollupListener && gRollupWidget &&
+      gRollupWidget->GetNativeData(NS_NATIVE_WINDOW) != [self getNativeWindow]) {
+    gRollupListener->Rollup();
+  }
+  
+  if (mGeckoChild)
     mGeckoChild->DoScroll([sender hitPart]);
 }
 
