@@ -389,6 +389,33 @@ nsresult
 nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
                                              PRBool aForceReload)
 {
+  nsCOMPtr<nsIURI> page(aPage);
+
+  // don't load favicons when history is disabled
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
+  if (history->IsHistoryDisabled()) {
+    // history is disabled - check to see if this favicon could be for a
+    // bookmark
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIURI> bookmarkURI;
+    nsresult rv = bookmarks->GetBookmarkedURIFor(aPage,
+                                                 getter_AddRefs(bookmarkURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (! bookmarkURI) {
+      // page is not bookmarked, don't save favicon
+      return NS_OK;
+    }
+
+    // page is bookmarked, set the URI to be the bookmark, the bookmark URI
+    // might be different than our input URI if there was a redirect, so
+    // always use the bookmark URI here to avoid setting the favicon for
+    // non-bookmarked pages.
+    page = bookmarkURI;
+  }
+
   // check the failed favicon cache
   PRBool previouslyFailed;
   nsresult rv = IsFailedFavicon(aFavicon, &previouslyFailed);
@@ -401,10 +428,8 @@ nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
   }
 
   // filter out bad URLs
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_FAILURE);
   PRBool canAdd;
-  rv = history->CanAddURI(aPage, &canAdd);
+  rv = history->CanAddURI(page, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (! canAdd)
     return NS_OK; // ignore favicons for this url
@@ -414,7 +439,7 @@ nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
   // but that's prohibitive for now. This workaround just refuses to save the
   // favicon in this case.
   PRBool pageEqualsFavicon;
-  rv = aPage->Equals(aFavicon, &pageEqualsFavicon);
+  rv = page->Equals(aFavicon, &pageEqualsFavicon);
   NS_ENSURE_SUCCESS(rv, rv);
   if (pageEqualsFavicon)
     return NS_OK;
@@ -464,17 +489,17 @@ nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
     // database write in these cases.
     nsCOMPtr<nsIURI> oldFavicon;
     PRBool faviconsEqual;
-    if (NS_SUCCEEDED(GetFaviconForPage(aPage, getter_AddRefs(oldFavicon))) &&
+    if (NS_SUCCEEDED(GetFaviconForPage(page, getter_AddRefs(oldFavicon))) &&
         NS_SUCCEEDED(aFavicon->Equals(oldFavicon, &faviconsEqual)) &&
         faviconsEqual)
       return NS_OK; // already set
 
     // This will associate the favicon URL with the page.
-    rv = SetFaviconUrlForPageInternal(aPage, aFavicon, &hasData, &expiration);
+    rv = SetFaviconUrlForPageInternal(page, aFavicon, &hasData, &expiration);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    SendFaviconNotifications(aPage, aFavicon);
-    UpdateBookmarkRedirectFavicon(aPage, aFavicon);
+    SendFaviconNotifications(page, aFavicon);
+    UpdateBookmarkRedirectFavicon(page, aFavicon);
     return NS_OK;
   }
 
@@ -486,7 +511,7 @@ nsFaviconService::DoSetAndLoadFaviconForPage(nsIURI* aPage, nsIURI* aFavicon,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStreamListener> listener =
-    new FaviconLoadListener(this, aPage, aFavicon, channel);
+    new FaviconLoadListener(this, page, aFavicon, channel);
   NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
   nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
     do_QueryInterface(listener, &rv);
