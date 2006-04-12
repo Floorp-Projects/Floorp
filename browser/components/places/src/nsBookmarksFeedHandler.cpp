@@ -42,7 +42,7 @@
 
 #include "nsLivemarkService.h"
 #include "nsArrayEnumerator.h"
-#include "nsArray.h"
+#include "nsIArray.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"

@@ -40,7 +40,7 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleWin32Object.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"

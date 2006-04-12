@@ -40,7 +40,7 @@
 #include <stdio.h>
 
 #include "nsError.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIFile.h"
 
 #include "mozIStorageFunction.h"
@@ -119,7 +119,7 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
     sqlite3_trace (mDBConn, tracefunc, nsnull);
 #endif
 
-    rv = NS_NewArray(getter_AddRefs(mFunctions));
+    mFunctions = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

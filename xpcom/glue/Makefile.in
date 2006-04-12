@@ -70,6 +70,7 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		pldhash.h \
+		nsArrayUtils.h \
 		nsBaseHashtable.h \
 		nsCOMArray.h \
 		nsCRTGlue.h \

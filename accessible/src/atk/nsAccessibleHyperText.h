@@ -42,7 +42,7 @@
 #include "nsAccessibleText.h"
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleText.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsTextAccessible.h"
 
 class nsAccessibleHyperText : public nsIAccessibleHyperText,

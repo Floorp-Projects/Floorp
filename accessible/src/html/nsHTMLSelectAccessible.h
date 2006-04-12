@@ -47,6 +47,8 @@
 #include "nsIDOMNode.h"
 #include "nsIAccessibilityService.h"
 
+class nsIMutableArray;
+
 /**
   *  Selects, Listboxes and Comboboxes, are made up of a number of different
   *  widgets, some of which are shared between the two. This file contains

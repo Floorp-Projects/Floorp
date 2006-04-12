@@ -46,6 +46,7 @@
 #include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsIServiceManager.h"
+#include "nsArrayUtils.h"
 
 /*
  * nsAccessibleHyperText supports both nsIAccessibleHyperText and nsIAccessibleText.
@@ -67,7 +68,7 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aShell));
   if (shell) {
-    NS_NewArray(getter_AddRefs(mTextChildren));
+    mTextChildren = do_CreateInstance(NS_ARRAY_CONTRACTID);
     if (mTextChildren) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(aDomNode));
       nsIFrame *frame = shell->GetPrimaryFrameFor(content);

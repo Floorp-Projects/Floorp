@@ -46,7 +46,7 @@
 #include "nsILDAPOperation.h"
 #include "nsILDAPMessageListener.h"
 #include "nsString.h"
-#include "nsIArray.h"
+#include "nsIMutableArray.h"
 
 // 97a479d0-9a44-47c6-a17a-87f9b00294bb
 #define NS_LDAPOPERATION_CID \

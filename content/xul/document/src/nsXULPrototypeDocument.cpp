@@ -67,7 +67,6 @@
 #include "nsIScriptError.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
-#include "nsArray.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 

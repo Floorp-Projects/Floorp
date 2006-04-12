@@ -45,7 +45,6 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
-#include "nsArray.h"
 
 class nsJVMConfigManagerUnix : public nsIJVMConfigManager
 {

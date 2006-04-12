@@ -38,7 +38,8 @@
 #include "nsCOMPtr.h"
 
 #include "nsString.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
 #include "nsUnicharUtils.h"

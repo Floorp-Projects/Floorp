@@ -54,7 +54,7 @@
 #include "nsQuickSort.h"
 #include "nsIAtom.h"
 #include "nsISimpleEnumerator.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 #include "nsWildCard.h"
 
@@ -351,7 +351,9 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
   PRUint32 dirCount;
   mDirList->Count(&dirCount);
 
-  nsCOMArray<nsIFile> fileArray;
+  nsCOMPtr<nsIMutableArray> fileArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(fileArray);
 
   for (PRInt32 range = 0; range < numRanges; ++range) {
     PRInt32 rangeBegin, rangeEnd;
@@ -368,13 +370,11 @@ nsFileView::GetSelectedFiles(nsIArray** aFiles)
       }
 
       if (curFile)
-        fileArray.AppendObject(curFile);
+        fileArray->AppendElement(curFile, PR_FALSE);
     }
   }
 
-  nsIMutableArray* outArray;
-  NS_NewArray(&outArray, fileArray);  // addrefs, return the reference
-  *aFiles = outArray;
+  NS_ADDREF(*aFiles = fileArray);
   return NS_OK;
 }
 

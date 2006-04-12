@@ -64,7 +64,7 @@
 #include "nsIMsgHdr.h"
 #include "nsTraceRefcnt.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsIPop3IncomingServer.h"
 #include "nsINntpIncomingServer.h"
 #include "nsTextFormatter.h"
@@ -735,9 +735,9 @@ nsMsgFolderDataSource::GetAllCmds(nsIRDFResource* source,
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIMutableArray> cmds;
-  NS_NewArray(getter_AddRefs(cmds));
-  if (!cmds) return rv;
+  nsCOMPtr<nsIMutableArray> cmds =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(cmds);
 
   cmds->AppendElement(kNC_Delete, PR_FALSE);
   cmds->AppendElement(kNC_ReallyDelete, PR_FALSE);

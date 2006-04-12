@@ -56,7 +56,7 @@ PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 #include "nsLocalFile.h"
 #include "nsIEnumerator.h"
 #include "nsITimelineService.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 //
 // Short overview:
@@ -180,10 +180,9 @@ nsFT2FontCatalog::GetFontCatalogEntries(const nsACString & aFamilyName,
   GetFontNames(aFamilyName, aLanguage, aWeight, aWidth, aSlant, aSpacing, fc);
   nsCOMPtr<nsITrueTypeFontCatalogEntry> aFce;
   nsCOMPtr<nsISupports> genericFce;
-  nsCOMPtr<nsIMutableArray> entries;
-  NS_NewArray(getter_AddRefs(entries));
-  if (!entries)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIMutableArray> entries =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(entries);
   
   int i;
   for (i = 0; i < fc->numFonts; i++) {

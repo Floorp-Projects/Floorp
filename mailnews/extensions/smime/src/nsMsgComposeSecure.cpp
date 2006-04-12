@@ -56,7 +56,7 @@
 #include "nsIMsgCompFields.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 // String bundle for smime. Class static.
 nsCOMPtr<nsIStringBundle> nsMsgComposeSecure::mSMIMEBundle = nsnull;
@@ -887,7 +887,7 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
   NS_ENSURE_SUCCESS(res,res);
 
-  res = NS_NewArray(getter_AddRefs(mCerts));
+  mCerts = do_CreateInstance(NS_ARRAY_CONTRACTID, &res);
   if (NS_FAILED(res)) {
     return res;
   }

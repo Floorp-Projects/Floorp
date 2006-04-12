@@ -546,7 +546,7 @@ NS_IMETHODIMP nsAppRootAccessible::Init()
     else
         MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
 
-    rv = NS_NewArray(getter_AddRefs(mChildren));
+    mChildren = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     return rv;
 }
 

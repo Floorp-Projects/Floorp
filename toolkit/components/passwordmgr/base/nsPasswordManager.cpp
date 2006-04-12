@@ -49,7 +49,7 @@
 #include "nsIPrefBranch2.h"
 #include "prmem.h"
 #include "nsIStringBundle.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
 #include "nsIWebProgress.h"
@@ -71,6 +71,7 @@
 #include "nsIPK11TokenDB.h"
 #include "nsIPK11Token.h"
 #include "nsUnicharUtils.h"
+#include "nsCOMArray.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -465,8 +466,9 @@ NS_IMETHODIMP
 nsPasswordManager::GetEnumerator(nsISimpleEnumerator** aEnumerator)
 {
   // Build an array out of the hashtable
-  nsCOMPtr<nsIMutableArray> signonArray;
-  NS_NewArray(getter_AddRefs(signonArray));
+  nsCOMPtr<nsIMutableArray> signonArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(signonArray);
 
   mSignonTable.EnumerateRead(BuildArrayEnumerator, signonArray);
 
@@ -490,8 +492,9 @@ NS_IMETHODIMP
 nsPasswordManager::GetRejectEnumerator(nsISimpleEnumerator** aEnumerator)
 {
   // Build an array out of the hashtable
-  nsCOMPtr<nsIMutableArray> rejectArray;
-  NS_NewArray(getter_AddRefs(rejectArray));
+  nsCOMPtr<nsIMutableArray> rejectArray =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(rejectArray);
 
   mRejectTable.EnumerateRead(BuildRejectArrayEnumerator, rejectArray);
 

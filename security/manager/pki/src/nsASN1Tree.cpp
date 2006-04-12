@@ -38,7 +38,8 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsCRT.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, 
                                                  nsITreeView)

@@ -43,7 +43,7 @@
 #include "nsString.h"
 #include "nsIASN1Sequence.h"
 #include "nsIASN1PrintableItem.h"
-#include "nsIArray.h"
+#include "nsIMutableArray.h"
 
 //
 // Read comments in nsIX509Cert.idl for a description of the desired

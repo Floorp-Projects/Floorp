@@ -49,7 +49,7 @@
 #include "nsISupportsArray.h"
 #include "nsIConsoleService.h"
 #include "nsIAuthPrompt.h"
-#include "nsIArray.h"
+#include "nsIMutableArray.h"
 
 // 964665d0-1dd1-11b2-aeae-897834fb00b9
 //

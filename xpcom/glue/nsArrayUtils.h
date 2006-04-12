@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is XPCOM Array implementation.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Alec Flett <alecf@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,42 +35,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#ifndef __nsDialogParamBlock_h
-#define __nsDialogParamBlock_h
 
-#include "nsIDialogParamBlock.h"
-#include "nsIMutableArray.h"
+#ifndef nsArrayUtils_h__
+#define nsArrayUtils_h__
+
 #include "nsCOMPtr.h"
+#include "nsIArray.h"
 
-// {4E4AAE11-8901-46cc-8217-DAD7C5415873}
-#define NS_DIALOGPARAMBLOCK_CID \
- {0x4e4aae11, 0x8901, 0x46cc, {0x82, 0x17, 0xda, 0xd7, 0xc5, 0x41, 0x58, 0x73}}
+// helper class for do_QueryElementAt
+class NS_COM_GLUE nsQueryArrayElementAt : public nsCOMPtr_helper
+  {
+    public:
+      nsQueryArrayElementAt(nsIArray* aArray, PRUint32 aIndex,
+                            nsresult* aErrorPtr)
+          : mArray(aArray),
+            mIndex(aIndex),
+            mErrorPtr(aErrorPtr)
+        {
+          // nothing else to do here
+        }
 
-class nsString;
+      virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const;
 
-class nsDialogParamBlock: public nsIDialogParamBlock
-{
-public: 	
-  nsDialogParamBlock();
-  virtual ~nsDialogParamBlock();
-   
-  NS_DECL_NSIDIALOGPARAMBLOCK
-  NS_DECL_ISUPPORTS	
+    private:
+      nsIArray*  mArray;
+      PRUint32   mIndex;
+      nsresult*  mErrorPtr;
+  };
 
-private:
-
-  enum {kNumInts = 8, kNumStrings = 16};
-
-  nsresult InBounds(PRInt32 inIndex, PRInt32 inMax) {
-    return inIndex >= 0 && inIndex < inMax ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
+inline
+const nsQueryArrayElementAt
+do_QueryElementAt(nsIArray* aArray, PRUint32 aIndex, nsresult* aErrorPtr = 0)
+  {
+    return nsQueryArrayElementAt(aArray, aIndex, aErrorPtr);
   }
-  
-  PRInt32 mInt[kNumInts];
-  PRInt32 mNumStrings;
-  nsString* mString;
-  nsCOMPtr<nsIMutableArray> mObjects;	
-};
 
-#endif
-
+#endif // nsArrayUtils_h__

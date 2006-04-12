@@ -90,7 +90,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsITimer.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -2259,10 +2259,9 @@ NS_IMETHODIMP nsAccessible::GetSelectedChildren(nsIArray **aSelectedAccessibles)
 {
   *aSelectedAccessibles = nsnull;
 
-  nsCOMPtr<nsIMutableArray> selectedAccessibles;
-  NS_NewArray(getter_AddRefs(selectedAccessibles));
-  if (!selectedAccessibles)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIMutableArray> selectedAccessibles =
+    do_CreateInstance(NS_ARRAY_CONTRACTID);
+  NS_ENSURE_STATE(selectedAccessibles);
 
   nsCOMPtr<nsIAccessible> selected = this;
   while ((selected = GetNextWithState(selected, STATE_SELECTED)) != nsnull) {

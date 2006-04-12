@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsString.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 #include "nsIGenericFactory.h"
 

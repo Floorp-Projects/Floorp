@@ -45,7 +45,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
-#include "nsIArray.h"
+#include "nsIMutableArray.h"
 #include "pldhash.h"
 #include "nsIX509CertDB.h"
 

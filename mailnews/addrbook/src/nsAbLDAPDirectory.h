@@ -45,7 +45,7 @@
 #include "nsIAbDirectorySearch.h"
 #include "nsAbDirSearchListener.h"
 #include "nsIAbLDAPDirectory.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsHashtable.h"
 
 class nsAbLDAPDirectory :
