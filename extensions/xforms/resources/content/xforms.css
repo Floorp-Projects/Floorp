@@ -140,6 +140,8 @@ range {
 }
 
 /* input widgets */
+
+  /* input */
 html|*:root input {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input');
 }
@@ -148,6 +150,7 @@ xul|*:root input {
   -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input');
 }
 
+  /* input type="xsd:boolean" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-boolean');
 }
@@ -156,19 +159,16 @@ xul|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
   -moz-binding: url('chrome://xforms/content/input-xul.xml#xformswidget-input-boolean');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
-  -moz-binding: url('chrome://xforms/content/input.xml#xformswidget-input-date');
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
-  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date-full');
-}
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"]
-    html|span[mozType|calendar] {
+  /* input type="xsd:date" */
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|span[mozType|calendar] {
   -moz-binding: url('chrome://xforms/content/widgets-xhtml.xml#calendar-full');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="dropmarker"] {
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date');
+}
+
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="dropmarker"] {
   min-width:27px;
   min-height: 1.3em;
   background-image: url(chrome://xforms/content/calendar.png) !important;
@@ -176,76 +176,19 @@ input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="d
   background-repeat: no-repeat !important;
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|div[anonid="picker"],
-html|span[mozType|calendar] html|table {
-  border: 1px outset black !important;
-  background-color: -moz-Field;
-  font: -moz-list;
-  text-align: start;
+  /* input type="xsd:date", appearance="full" */
+html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#date"][appearance="full"] {
+  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-date-full');
 }
 
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td,
-html|span[mozType|calendar] html|td {
-  border: 1px solid transparent;
-  text-align: center;
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.prevMonth,
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.nextMonth,
-html|span[mozType|calendar] html|td.prevMonth,
-html|span[mozType|calendar] html|td.nextMonth {
-  color: GrayText;
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.prevMonth:hover,
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.nextMonth:hover,
-html|span[mozType|calendar] html|td.prevMonth:hover,
-html|span[mozType|calendar] html|td.nextMonth:hover {
-  background-color: grey;
-  cursor: pointer;
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.currentMonth,
-html|span[mozType|calendar] html|td.currentMonth {
-  color: black;
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.currentMonth:hover,
-html|span[mozType|calendar] html|td.currentMonth:hover{
-  color: HighlightText;
-  background-color: Highlight;
-  cursor: pointer;
-}
-
-input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|div[anonid="picker"] html|td[tabindex="0"],
-html|span[mozType|calendar] html|td[selected] {
-  border: 1px solid black;
-}
-
-html|input.-moz-date-back-button {
-  width: 20px;
-  background-image: url("chrome://global/skin/arrow/arrow-lft.gif") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-}
-
-html|input.-moz-date-fwd-button {
-  width: 20px;
-  background-image: url("chrome://global/skin/arrow/arrow-rit.gif") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-}
-
+  /* input type="xsd:gMonth" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gMonth"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-month');
 }
 
+  /* input type="xsd:gDay" */
 html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
   -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-day');
-}
-
-html|*:root input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
-  -moz-binding: url('chrome://xforms/content/input-xhtml.xml#xformswidget-input-year');
 }
 
 /* secret widgets */

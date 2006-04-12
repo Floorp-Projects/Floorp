@@ -184,6 +184,310 @@
   </binding>
 
 
+  <!-- INPUT: DATE -->
+  <binding id="xformswidget-input-date"
+           extends="chrome://xforms/content/input.xml#xformswidget-input-base">
+    <content>
+      <children includes="label"/>
+      <html:input anonid="control" xbl:inherits="accesskey" size="10"
+                  class="xf-value"/>
+      <html:input type="button" anonid="dropmarker"
+                  title="&xforms.datepicker.title;"/>
+      <html:span mozType:calendar="true" anonid="picker"
+                 style="position:absolute; display:none;"/>
+      <children/>
+    </content>
+
+    <implementation>
+      <method name="getControlElement">
+        <body>
+          return {
+            __proto__: this.inputField,
+            pickerButton: this.dropmarker,
+
+            set readonly(val) {
+              if (val) {
+                this.setAttribute('disabled', 'disabled');
+                this.pickerButton.setAttribute('disabled', 'disabled');
+              } else {
+                this.removeAttribute('disabled');
+                this.pickerButton.removeAttribute('disabled');
+              }
+            }
+          };
+        </body>
+      </method>
+
+      <!-- Show date picker when it is hidden and hide when it is shown. -->
+      <method name="togglePicker">
+        <body>
+          if (this._isPickerVisible)
+            this.hidePicker(true);
+          else
+            this.showPicker();
+        </body>
+      </method>
+
+      <!-- Show date picker -->
+      <method name="showPicker">
+        <body>
+        <![CDATA[
+          if (this._isPickerVisible || this.accessors.isReadonly()) {
+            return;
+          }
+
+          // show the picker
+          this.picker.style.display = "block";
+          this._isPickerVisible = true;
+
+          // refresh the picker
+          this.picker.value = this.inputField.value;
+
+          // move the picker, aligning it's right side with the calendar
+          // button's right side
+          var dropmarkerBox = this.ownerDocument.
+            getBoxObjectFor(this.dropmarker);
+          var pickerWidth = this.ownerDocument.
+            getBoxObjectFor(this.picker).width;
+
+          // we use window.innerWidth because XHTML documents are not always
+          // 100% width, and innerWidth will always give use the browser size
+          var windowWidth = this.ownerDocument.defaultView.innerWidth;
+
+          var position = dropmarkerBox.x - pickerWidth + dropmarkerBox.width;
+
+          // reset position if it will bleed to the left or right
+          if (position < 0) {
+            position = 0;
+          } else if ((position + pickerWidth) > windowWidth) {
+            position = windowWidth - pickerWidth;
+          }
+
+          this.picker.style.left = position + "px";
+          this.picker.focus();
+
+          this.ownerDocument.
+            addEventListener("blur", this.hidePickerHandler, true);
+          this.ownerDocument.
+            addEventListener("focus", this.hidePickerHandler, true);
+        ]]>
+        </body>
+      </method>
+
+      <!-- Hide date picker -->
+      <method name="hidePicker">
+        <parameter name="aFocusInput"/>
+        <body>
+        <![CDATA[
+          if (!this._isPickerVisible)
+            return;
+
+          this.ownerDocument.
+            removeEventListener("blur", this.hidePickerHandler, true);
+          this.ownerDocument.
+            removeEventListener("focus", this.hidePickerHandler, true);
+
+          this.picker.style.display = "none";
+          this._isPickerVisible = false;
+
+          if (aFocusInput)
+            this.inputField.focus();
+        ]]>
+        </body>
+      </method>
+
+      <!--
+        'hidePickerHandler' object serves to hide date picker when date
+        picker looses a focus. When date picker is shown then
+        'hidePickerHandler' object is attached to the window to handle 'focus'
+        and 'blur' events as event listener. When date picker is hidden then
+        event listener 'hidePickerHandler' is removed.
+      -->
+      <property name="hidePickerHandler" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._hidePickerHandler) {
+            this._hidePickerHandler = {
+              inputElm: this,
+              dropmarkerElm: this.dropmarker,
+              pickerContent: this.ownerDocument.getAnonymousNodes(this.picker)[0],
+              inputContentNodes: this.ownerDocument.getAnonymousNodes(this),
+              ownerDocument: this.ownerDocument,
+
+              shouldHandleFocus: false,
+
+              handleEvent: function(aEvent) {
+                var target = aEvent.originalTarget;
+                switch (aEvent.type) {
+                case "blur":
+                  if (this.ownerDocument == target) {
+                    this.inputElm.hidePicker();
+                  } else {
+                    this.shouldHandleFocus =
+                      this.isPickerNode(target) || this.isInputNode(target);
+                  }
+                  break;
+                case "focus":
+                  if (this.shouldHandleFocus && target != this.dropmarkerElm &&
+                      !this.isPickerNode(target)) {
+                    this.inputElm.hidePicker();
+                  }
+                  break;
+                }
+              },
+
+              // Return true if aNode is a child of anonymous content of date
+              // picker.
+              isPickerNode: function(aNode) {
+                var walker = this.ownerDocument.createTreeWalker(
+                  this.pickerContent, NodeFilter.SHOW_ELEMENT, null, false);
+                var child = null;
+                while (child = walker.nextNode()) {
+                  if (child == aNode)
+                    return true;
+                }
+                return false;
+              },
+              // Return true if aNode is a child of anonymous content of input.
+              isInputNode: function(aNode) {
+                for (var i = 0; i < this.inputContentNodes.length; i++) {
+                  if (this.inputContentNodes[i] == aNode)
+                    return true;
+                }
+                return false;
+              }
+            };
+          }
+          return this._hidePickerHandler;
+        ]]>
+        </getter>
+      </property>
+      <field name="_hidePickerHandler">null</field>
+
+      <constructor>
+        // Add event handlers to update instance data when date picker value is
+        // changed.
+
+        // Add event handler on 'change' event.
+        var changePickerValueHandlerOnChange = {
+          inputElm: this,
+          handleEvent: function(event) {
+            this.inputElm.inputField.value = this.inputElm.picker.value;
+            this.inputElm.hidePicker(true);
+            this.inputElm.updateInstanceData(true);
+          }
+        };
+        this.picker.addEventListener("change", changePickerValueHandlerOnChange,
+                                     false);
+
+        // Add event handler on 'enter' key pressing.
+        var changePickerValueHandlerOnKeypress = {
+          inputElm: this,
+          pickerElm: this.picker,
+          handleEvent: function(event) {
+            if (event.keyCode != event.DOM_VK_RETURN ||
+                !this.pickerElm.isDayControl(event.originalTarget))
+              return;
+
+            var date = this.pickerElm.getDate();
+            if (date) {
+              this.inputElm.inputField.value = date.toLocaleFormat('%Y-%m-%d');
+              this.inputElm.hidePicker(true);
+              this.inputElm.updateInstanceData(true);
+            }
+          }
+        };
+        this.picker.addEventListener("keypress",
+                                     changePickerValueHandlerOnKeypress, false);
+      </constructor>
+
+      <!-- Input field control -->
+      <property name="inputField" readonly="true">
+        <getter>
+          if (!this._inputField) {
+            this._inputField =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._inputField;
+        </getter>
+      </property>
+      <field name="_inputField">null</field>
+
+      <!-- Date picker control -->
+      <property name="picker" readonly="true">
+        <getter>
+          if (!this._picker) {
+            this._picker =
+              document.getAnonymousElementByAttribute(this, "anonid", "picker");
+          }
+          return this._picker;
+        </getter>
+      </property>
+      <field name="_picker">null</field>
+
+      <!-- Dropmarker control used to open/hide date picker -->
+      <property name="dropmarker" readonly="true">
+        <getter>
+          if (!this._dropmarker) {
+            this._dropmarker =
+              document.getAnonymousElementByAttribute(this, "anonid", "dropmarker");
+          }
+          return this._dropmarker;
+        </getter>
+      </property>
+      <field name="_dropmarker">null</field>
+
+      <field name="_isPickerVisible">false</field>
+    </implementation>
+
+    <handlers>
+      <handler event="keypress" keycode="VK_ESCAPE">
+        this.hidePicker();
+      </handler>
+
+      <handler event="keypress" keycode="VK_RETURN">
+        var target = event.originalTarget;
+        if (target == this.inputField) {
+          this.dispatchDOMUIEvent('DOMActivate');
+        }
+      </handler>
+
+      <handler event="keypress">
+      <![CDATA[
+        if (event.keyCode == event.DOM_VK_F4 ||
+            event.altKey && (event.keyCode == event.DOM_VK_DOWN ||
+                             event.keyCode == event.DOM_VK_UP)) {
+          this.togglePicker();
+        }
+      ]]>
+      </handler>
+
+      <handler event="input">
+        this.updateInstanceData(true);
+      </handler>
+
+      <handler event="click">
+        if (event.originalTarget == this.dropmarker) {
+          this.togglePicker();
+        }
+      </handler>
+
+      <handler event="focus" phase="capturing">
+        if (event.originalTarget == this.inputField) {
+          this.dispatchDOMUIEvent('DOMFocusIn');
+        }
+      </handler>
+
+      <handler event="blur" phase="capturing">
+        if (event.originalTarget == this.inputField) {
+          this.updateInstanceData(false);
+          this.dispatchDOMUIEvent('DOMFocusOut');
+        }
+      </handler>
+    </handlers>
+  </binding>
+
+
   <!-- INPUT: <DATE, APPEARANCE='FULL' -->
   <binding id="xformswidget-input-date-full"
            extends="chrome://xforms/content/input.xml#xformswidget-input-base">

@@ -28,4 +28,5 @@ xforms.jar:
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)
 * skin/xforms/contents.rdf                     (resources/skin/contents.rdf)
+  skin/xforms/widgets-xhtml.css                (resources/skin/widgets-xhtml.css)
 
