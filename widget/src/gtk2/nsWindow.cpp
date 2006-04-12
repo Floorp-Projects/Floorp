@@ -1458,34 +1458,73 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 #ifdef MOZ_CAIRO_GFX
     PRBool translucent;
     GetWindowTranslucency(translucent);
-    GdkRectangle collapsedRect;
-    
+    nsIntRect boundsRect;
+    GdkPixmap* bufferPixmap = nsnull;
+    nsRefPtr<gfxXlibSurface> bufferPixmapSurface;
+
+    updateRegion->GetBoundingBox(&boundsRect.x, &boundsRect.y,
+                                 &boundsRect.width, &boundsRect.height);
+
     // do double-buffering and clipping here
-    nsRefPtr<gfxContext> ctx =
-      (gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-      
+    nsRefPtr<gfxContext> ctx
+        = (gfxContext*)rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     ctx->Save();
-      
-    // clip to Gdk region
     ctx->NewPath();
     if (translucent) {
-      // Collapse update area to the bounding box. This is so we only have to
-      // call UpdateTranslucentWindowAlpha once. After we have dropped
-      // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
-      // our private interface so we can rework things to avoid this.
-      updateRegion->GetBoundingBox(&collapsedRect.x, &collapsedRect.y,
-                                   &collapsedRect.width, &collapsedRect.height);
-      ctx->Rectangle(gfxRect(collapsedRect.x, collapsedRect.y,
-                             collapsedRect.width, collapsedRect.height));
+        // Collapse update area to the bounding box. This is so we only have to
+        // call UpdateTranslucentWindowAlpha once. After we have dropped
+        // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
+        // our private interface so we can rework things to avoid this.
+        ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
+                               boundsRect.width, boundsRect.height));
     } else {
-      for (r = rects; r < r_end; ++r) {
-        ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
-      }
+        for (r = rects; r < r_end; ++r) {
+            ctx->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
+        }
     }
     ctx->Clip();
-    
+
     // double buffer
-    ctx->PushGroup(translucent ? gfxContext::CONTENT_COLOR_ALPHA : gfxContext::CONTENT_COLOR);
+    if (translucent) {
+        ctx->PushGroup(gfxContext::CONTENT_COLOR_ALPHA);
+    } else {
+#ifdef MOZ_ENABLE_GLITZ
+        ctx->PushGroup(gfxContext::CONTENT_COLOR);
+#else        
+        // Instead of just doing PushGroup we're going to do a little dance
+        // to ensure that GDK creates the pixmap, so it doesn't go all
+        // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
+        // paint native themes
+        GdkDrawable* d = GDK_DRAWABLE(mDrawingarea->inner_window);
+        gint depth = gdk_drawable_get_depth(d);
+        bufferPixmap = gdk_pixmap_new(d, boundsRect.width, boundsRect.height, depth);
+        if (bufferPixmap) {
+            GdkVisual* visual = gdk_drawable_get_visual(GDK_DRAWABLE(bufferPixmap));
+            Visual* XVisual = gdk_x11_visual_get_xvisual(visual);
+            Display* display = gdk_x11_drawable_get_xdisplay(GDK_DRAWABLE(bufferPixmap));
+            Drawable drawable = gdk_x11_drawable_get_xid(GDK_DRAWABLE(bufferPixmap));
+            bufferPixmapSurface =
+                new gfxXlibSurface(display, drawable, XVisual,
+                                   boundsRect.width, boundsRect.height);
+            if (bufferPixmapSurface) {
+                bufferPixmapSurface->SetDeviceOffset(-boundsRect.x, -boundsRect.y);
+                nsCOMPtr<nsIRenderingContext> newRC;
+                nsresult rv = GetDeviceContext()->
+                    CreateRenderingContextInstance(*getter_AddRefs(newRC));
+                if (NS_FAILED(rv)) {
+                    bufferPixmapSurface = nsnull;
+                } else {
+                    rv = newRC->Init(GetDeviceContext(), bufferPixmapSurface);
+                    if (NS_FAILED(rv)) {
+                        bufferPixmapSurface = nsnull;
+                    } else {
+                        rc = newRC;
+                    }
+                }
+            }
+        }
+#endif
+    }
 #endif
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
@@ -1500,32 +1539,49 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 
 #ifdef MOZ_CAIRO_GFX
     if (status != nsEventStatus_eIgnore) {
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        if (!translucent) {
-            ctx->PopGroupToSource();
-            ctx->Paint();
-        } else {
+        if (translucent) {
             nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
+            ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
             ctx->SetPattern(pattern);
             ctx->Paint();
 
             nsRefPtr<gfxImageSurface> img =
                 new gfxImageSurface(gfxImageSurface::ImageFormatA8, 
-                                    collapsedRect.width, collapsedRect.height);
-            img->SetDeviceOffset(-collapsedRect.x, -collapsedRect.y);
+                                    boundsRect.width, boundsRect.height);
+            img->SetDeviceOffset(-boundsRect.x, -boundsRect.y);
             
             nsRefPtr<gfxContext> imgCtx = new gfxContext(img);
             imgCtx->SetPattern(pattern);
             imgCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
             imgCtx->Paint();
         
-            UpdateTranslucentWindowAlphaInternal(nsRect(collapsedRect.x, collapsedRect.y,
-                                                        collapsedRect.width, collapsedRect.height),
+            UpdateTranslucentWindowAlphaInternal(nsRect(boundsRect.x, boundsRect.y,
+                                                        boundsRect.width, boundsRect.height),
                                                  img->Data(), img->Stride());
+        } else {
+#ifdef MOZ_ENABLE_GLITZ
+            ctx->PopGroupToSource();
+            ctx->Paint();
+#else
+            if (bufferPixmapSurface) {
+                ctx->SetSource(bufferPixmapSurface);
+                ctx->Paint();
+            }
+#endif
         }
     } else {
         // ignore
-        ctx->PopGroup();
+        if (translucent) {
+            ctx->PopGroup();
+        } else {
+#ifdef MOZ_ENABLE_GLITZ
+            ctx->PopGroup();
+#endif
+        }
+    }
+
+    if (bufferPixmap) {
+        g_object_unref(G_OBJECT(bufferPixmap));
     }
 
     ctx->Restore();
