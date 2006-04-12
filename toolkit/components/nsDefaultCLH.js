@@ -52,7 +52,7 @@ const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
  * This file provides a generic default command-line handler.
  *
  * It opens the chrome window specified by the pref "toolkit.defaultChromeURI"
- * with the flags specified by the pref "toolkit.defaultChromeFlags"
+ * with the flags specified by the pref "toolkit.defaultChromeFeatures"
  * or "chrome,dialog=no,all" is it is not available.
  * The arguments passed to the window are the nsICommandLine instance.
  *
