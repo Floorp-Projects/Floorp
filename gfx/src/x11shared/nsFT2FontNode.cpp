@@ -61,7 +61,8 @@ void nsFT2FontNode::GetFontNames(const char* aPattern,
 #include "nsFreeType.h"
 #include "nsFontFreeType.h"
 #include "nsIServiceManager.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
+#include "nsArrayUtils.h"
 
 nsHashtable* nsFT2FontNode::mFreeTypeNodes = nsnull;
 PRBool       nsFT2FontNode::sInited = PR_FALSE;
