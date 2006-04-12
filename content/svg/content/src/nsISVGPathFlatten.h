@@ -84,15 +84,23 @@ public:
   }
 
   float Length() {
-    float xx, yy, length = 0;
-    for (PRUint32 i = 0; i < count; i++) {
-      if (type[i] == NS_SVGPATHFLATTEN_LINE) {
-        float dx = x[i] - xx;
-        float dy = y[i] - yy;
-        length += sqrt(dx*dx + dy*dy);
+    float length = 0;
+    if (count > 0) {
+      // Must initialize xx and yy before they're used in the loop below
+      float xx = x[0];
+      float yy = y[0];
+      // Loop from i=1 because dx and dy would always be zero for i==0 since xx
+      // and yy would then *be* x[0] and y[0]. Also the first segment *must*
+      // be a moveto (M) command, which also results in a dx and dy of zero.
+      for (PRUint32 i = 1; i < count; ++i) {
+        if (type[i] == NS_SVGPATHFLATTEN_LINE) {
+          float dx = x[i] - xx;
+          float dy = y[i] - yy;
+          length += sqrt(dx*dx + dy*dy);
+        }
+        xx = x[i];
+        yy = y[i];
       }
-      xx = x[i];
-      yy = y[i];
     }
     return length;
   }
