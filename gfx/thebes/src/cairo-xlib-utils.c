@@ -39,7 +39,14 @@
 
 #include "cairo-xlib.h"
 #include <stdlib.h>
+
+#if   HAVE_STDINT_H
 #include <stdint.h>
+#elif HAVE_INTTYPES_H
+#include <inttypes.h>
+#elif HAVE_SYS_INT_TYPES_H
+#include <sys/int_types.h>
+#endif
 
 #if 0
 #include <stdio.h>
