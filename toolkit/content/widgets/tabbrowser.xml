@@ -1605,8 +1605,8 @@
 
             var URI = this.getBrowserForTab(aEvent.target).currentURI;
             if (URI) {
-              aXferData.data.addDataForFlavour("text/unicode", URI.spec);
               aXferData.data.addDataForFlavour("text/x-moz-url", URI.spec + "\n" + aEvent.target.label);
+              aXferData.data.addDataForFlavour("text/unicode", URI.spec);
               aXferData.data.addDataForFlavour("text/html", '<a href="' + URI.spec + '">' + aEvent.target.label + '</a>');
             } else {
               aXferData.data.addDataForFlavour("text/unicode", "about:blank");
