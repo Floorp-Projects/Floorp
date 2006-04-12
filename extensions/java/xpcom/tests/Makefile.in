@@ -47,18 +47,17 @@ XPIDL_MODULE = javaxpcomtest
 # In order for XPCOM to reference these interfaces, they need to be compiled
 # into XPT files.
 XPIDLSRCS = \
-	IFoo.idl \
 	ITestParams.idl \
 	$(NULL)
 
 JAVA_SRCS = \
 	Foo.java \
 	TestArray.java \
-	TestProps.java \
-	TestQI.java \
 	TestJavaProxy.java \
-	TestParams.java \
 	$(NULL)
+#	TestProps.java \
+#	TestQI.java \
+#	TestParams.java \
 
 DIRS += dll
 
@@ -68,9 +67,7 @@ else
 SEP = :
 endif
 
-_JAVA_CLASSPATH = .$(SEP)./../build$(SEP)$(XPIDL_GEN_DIR)
-
-REBUILD_JAR = .rebuild_jar
+_JAVA_CLASSPATH = .$(SEP)./../interfaces/MozillaInterfaces.jar$(SEP)$(XPIDL_GEN_DIR)
 
 GARBAGE += *.class $(REBUILD_JAR)
 
@@ -81,9 +78,4 @@ include $(topsrcdir)/config/rules.mk
 	$(ELOG) $(CYGWIN_WRAPPER) $(JAVAC) $(JAVAC_FLAGS) \
 			-classpath $(_JAVA_CLASSPATH) -d . $(_VPATH_SRCS)
 
-# make sure to rebuild Java interfaces if our XPIDLSRCS change
-$(REBUILD_JAR): $(XPIDLSRCS)
-	@cd ../build; make clean; make
-	@touch $@
-
-libs:: $(REBUILD_JAR) $(JAVA_SRCS:.java=.class)
+libs:: $(JAVA_SRCS:.java=.class)
