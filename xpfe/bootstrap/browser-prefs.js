@@ -248,6 +248,9 @@ pref("dom.event.contextmenu.enabled",  true);
 //  2 - do nothing
 
 pref("browser.downloadmanager.behavior", 1);
+
+// Turn on click-and-hold contextual menus
+pref("ui.click_hold_context_menus", true);
 #endif
 
 #ifndef XP_MACOSX

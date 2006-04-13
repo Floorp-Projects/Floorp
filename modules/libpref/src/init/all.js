@@ -1352,7 +1352,7 @@ pref("intl.keyboard.per_window_layout", false);
 // Mac specific preference defaults
 pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
-pref("ui.click_hold_context_menus", true);
+pref("ui.click_hold_context_menus", false);
 
 // default font name (in UTF8)
 
