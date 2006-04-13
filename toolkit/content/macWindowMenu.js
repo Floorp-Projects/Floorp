@@ -35,11 +35,11 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
-
 function checkFocusedWindow()
 {
-  var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
+  var windowManagerDS =
+    Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
+              .getService(Components.interfaces.nsIWindowDataSource);
 
   var sep = document.getElementById("sep-window-list");
   // Using double parens to avoid warning
@@ -60,8 +60,9 @@ function toOpenWindow( aWindow )
 
 function ShowWindowFromResource( node )
 {
-  var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
-                        .getService(nsIWindowDataSource);
+  var windowManagerDS =
+    Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
+              .getService(Components.interfaces.nsIWindowDataSource);
 
   var desiredWindow = null;
   var url = node.getAttribute('id');
@@ -77,4 +78,3 @@ function zoomWindow()
   else
     window.restore();
 }
-

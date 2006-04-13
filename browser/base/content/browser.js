@@ -1123,6 +1123,10 @@ function nonBrowserWindowDelayedStartup()
 #ifndef MOZ_PLACES
   initServices();
   initBMService();
+#else
+  var menu = document.getElementById("bookmarksMenuPopup");
+  menu._init();
+  window.controllers.appendController(PlacesController);
 #endif
 
   // init global pref service
@@ -2891,7 +2895,13 @@ function FillHistoryMenu(aParent, aMenu, aInsertBefore)
     // Remove old entries if any
     deleteHistoryItems(aParent);
 
-    var sessionHistory = getWebNavigation().sessionHistory;
+    var webNav = getWebNavigation();
+    if (!webNav) {
+      // This is always the case for non-browser windows (and the hidden window)
+      // on OS X
+      return true;
+    }
+    var sessionHistory = webNav.sessionHistory;
 
     var count = sessionHistory.count;
     var index = sessionHistory.index;
