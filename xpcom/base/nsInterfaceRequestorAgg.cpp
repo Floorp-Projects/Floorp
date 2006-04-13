@@ -71,7 +71,7 @@ NS_NewInterfaceRequestorAggregation(nsIInterfaceRequestor *aFirst,
                                     nsIInterfaceRequestor **aResult)
 {
   *aResult = new nsInterfaceRequestorAgg(aFirst, aSecond);
-  if (!aResult)
+  if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
   return NS_OK;
