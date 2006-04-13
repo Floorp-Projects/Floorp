@@ -169,6 +169,26 @@ function sanitizeBookmarks() {
     document.getElementById("bookmarksSanitize").disabled=true;
 }
 
+function loadHomePageOptions() {
+ var win;
+ var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+ win = wm.getMostRecentWindow("navigator:browser");
+ if(!win) win = window.opener;
+ if (win) {
+   var homePageField = document.getElementById("browserStartupHomepage");
+   var newVal = "";
+   var tabbrowser = win.document.getElementById("content");
+   var l = tabbrowser.browsers.length;
+   for (var i = 0; i < l; i++) {
+     if (i)
+       newVal += "|";
+       newVal += tabbrowser.getBrowserAtIndex(i).webNavigation.currentURI.spec;
+   }
+   homePageField.value = newVal;
+  }
+}
+
 function downloadChooseFolder() {
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
