@@ -466,7 +466,7 @@ nsLivemarkService::SetFeedURI(PRInt64 aContainer, nsIURI *aFeedURI)
 
   // Now update our internal table
   PRInt32 livemarkIndex = GetLivemarkIndex(aContainer);
-  NS_ENSURE_TRUE(livemarkIndex == -1, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(livemarkIndex > -1, NS_ERROR_FAILURE);
 
   mLivemarks[livemarkIndex]->feedURI = aFeedURI;
 

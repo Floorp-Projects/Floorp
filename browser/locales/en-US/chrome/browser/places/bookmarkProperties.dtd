@@ -12,6 +12,10 @@
   "Folder List">
 <!ENTITY bookmark.property.parents
   "Visible In">
+<!ENTITY livemark.property.feed_uri
+  "Feed Location">
+<!ENTITY livemark.property.site_uri
+  "Site Location">
 <!ENTITY cmd.delete_bookmark.label
   "Delete Bookmark">
 <!ENTITY cmd.accept.edit
