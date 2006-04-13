@@ -10,6 +10,8 @@
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
+        this.history = PlacesController.history;
+        
         // Support an asyncinit attribute that causes the view to populate 
         // itself only after the window has been shown. This is to ensure we
         // do not regress browser window show time (Ts/Txul)
@@ -19,8 +21,6 @@
         }
         else
           this._init();
-        
-        this.history = PlacesController.history;
       ]]></constructor>
       
       <destructor><![CDATA[
@@ -148,7 +148,10 @@
             this._resultNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
           else
             return; // Nothing to do if this menu isn't a container.
-            
+          
+          // Keep track of whether to make submenus for children
+          var noSubmenus = (this.getAttribute("nosubmenus") == "true");
+          
           // Container should always be open while rebuilding.
           var wasOpen = this._resultNode.containerOpen;
           this._resultNode.containerOpen = true;
@@ -171,7 +174,7 @@
             for (var i = 0; i < cc; ++i) {
               var child = this._resultNode.getChild(i);
               var element = null;
-              if (PlacesController.nodeIsURI(child)) {
+              if (PlacesController.nodeIsURI(child) || noSubmenus) {
                 element = document.createElementNS(XULNS, "menuitem");
                 element.setAttribute("label", child.title);
                 element.setAttribute("url", child.uri);

@@ -10,3 +10,5 @@ browser.jar:
 *   content/browser/places/menu.xml                      (content/menu.xml)
     content/browser/places/tree.xml                      (content/tree.xml)
 *   content/browser/places/controller.js                 (content/controller.js)
+*   content/browser/places/placesPopup.xul               (content/placesPopup.xul)
+*   content/browser/places/placesPopup.js                (content/placesPopup.js)
