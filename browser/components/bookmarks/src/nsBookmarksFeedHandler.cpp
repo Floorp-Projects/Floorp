@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBookmarksService.h"
-#include "nsArrayEnumerator.h"
-#include "nsArray.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
