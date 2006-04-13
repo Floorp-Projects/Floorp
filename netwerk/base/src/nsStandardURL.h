@@ -274,6 +274,7 @@ private:
     static PRBool                       gInitialized;
     static PRBool                       gEscapeUTF8;
     static PRBool                       gAlwaysEncodeInUTF8;
+    static PRBool                       gEncodeQueryInUTF8;
     static PRBool                       gShowPunycode;
     static nsIPrefBranch               *gIDNWhitelistPrefBranch;
 };

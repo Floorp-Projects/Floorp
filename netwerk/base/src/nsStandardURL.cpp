@@ -64,6 +64,7 @@ nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
 PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
 PRBool nsStandardURL::gAlwaysEncodeInUTF8 = PR_TRUE;
+PRBool nsStandardURL::gEncodeQueryInUTF8 = PR_TRUE;
 PRBool nsStandardURL::gShowPunycode = PR_FALSE;
 nsIPrefBranch *nsStandardURL::gIDNWhitelistPrefBranch = nsnull;
 
@@ -138,6 +139,7 @@ end:
 #define NS_NET_PREF_ESCAPEUTF8         "network.standard-url.escape-utf8"
 #define NS_NET_PREF_ENABLEIDN          "network.enableIDN"
 #define NS_NET_PREF_ALWAYSENCODEINUTF8 "network.standard-url.encode-utf8"
+#define NS_NET_PREF_ENCODEQUERYINUTF8  "network.standard-url.encode-query-utf8"
 #define NS_NET_PREF_SHOWPUNYCODE       "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNWHITELIST       "network.IDN.whitelist."
 
@@ -256,8 +258,15 @@ nsSegmentEncoder::InitUnicodeEncoder()
     return PR_TRUE;
 }
 
+#define GET_SEGMENT_ENCODER_INTERNAL(name, useUTF8) \
+    nsSegmentEncoder name(useUTF8 ? nsnull : mOriginCharset.get())
+
 #define GET_SEGMENT_ENCODER(name) \
-    nsSegmentEncoder name(gAlwaysEncodeInUTF8 ? nsnull : mOriginCharset.get())
+    GET_SEGMENT_ENCODER_INTERNAL(name, gAlwaysEncodeInUTF8)
+
+#define GET_QUERY_ENCODER(name) \
+    GET_SEGMENT_ENCODER_INTERNAL(name, gAlwaysEncodeInUTF8 && \
+                                 gEncodeQueryInUTF8)
 
 //----------------------------------------------------------------------------
 // nsStandardURL <public>
@@ -302,10 +311,11 @@ nsStandardURL::InitGlobalObjects()
     nsCOMPtr<nsIPrefBranch2> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
     if (prefBranch) {
         nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
-        prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
+        prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE);
         prefBranch->AddObserver(NS_NET_PREF_ALWAYSENCODEINUTF8, obs.get(), PR_FALSE);
-        prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
-        prefBranch->AddObserver(NS_NET_PREF_SHOWPUNYCODE, obs.get(), PR_FALSE); 
+        prefBranch->AddObserver(NS_NET_PREF_ENCODEQUERYINUTF8, obs.get(), PR_FALSE);
+        prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE);
+        prefBranch->AddObserver(NS_NET_PREF_SHOWPUNYCODE, obs.get(), PR_FALSE);
 
         PrefsChanged(prefBranch, nsnull);
 
@@ -488,13 +498,14 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // appropriate encoding.
     {
         GET_SEGMENT_ENCODER(encoder);
+        GET_QUERY_ENCODER(queryEncoder);
         approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername);
         approxLen += encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword);
         approxLen += encoder.EncodeSegmentCount(spec, mDirectory, esc_Directory,     encDirectory, useEncDirectory);
         approxLen += encoder.EncodeSegmentCount(spec, mBasename,  esc_FileBaseName,  encBasename,  useEncBasename);
         approxLen += encoder.EncodeSegmentCount(spec, mExtension, esc_FileExtension, encExtension, useEncExtension);
         approxLen += encoder.EncodeSegmentCount(spec, mParam,     esc_Param,         encParam,     useEncParam);
-        approxLen += encoder.EncodeSegmentCount(spec, mQuery,     esc_Query,         encQuery,     useEncQuery);
+        approxLen += queryEncoder.EncodeSegmentCount(spec, mQuery, esc_Query,        encQuery,     useEncQuery);
         approxLen += encoder.EncodeSegmentCount(spec, mRef,       esc_Ref,           encRef,       useEncRef);
     }
 
@@ -834,11 +845,17 @@ nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             gEscapeUTF8 = val;
         LOG(("escape UTF-8 %s\n", gEscapeUTF8 ? "enabled" : "disabled"));
     }
-        
+
     if (PREF_CHANGED(NS_NET_PREF_ALWAYSENCODEINUTF8)) {
         if (GOT_PREF(NS_NET_PREF_ALWAYSENCODEINUTF8, val))
             gAlwaysEncodeInUTF8 = val;
         LOG(("encode in UTF-8 %s\n", gAlwaysEncodeInUTF8 ? "enabled" : "disabled"));
+    }
+
+    if (PREF_CHANGED(NS_NET_PREF_ENCODEQUERYINUTF8)) {
+        if (GOT_PREF(NS_NET_PREF_ENCODEQUERYINUTF8, val))
+            gEncodeQueryInUTF8 = val;
+        LOG(("encode query in UTF-8 %s\n", gEncodeQueryInUTF8 ? "enabled" : "disabled"));
     }
 
     if (PREF_CHANGED(NS_NET_PREF_SHOWPUNYCODE)) {
@@ -2194,7 +2211,7 @@ nsStandardURL::SetQuery(const nsACString &input)
     // encode query if necessary
     nsCAutoString buf;
     PRBool encoded;
-    GET_SEGMENT_ENCODER(encoder);
+    GET_QUERY_ENCODER(encoder);
     encoder.EncodeSegmentCount(query, URLSegment(0, queryLen), esc_Query,
                                buf, encoded);
     if (encoded) {
