@@ -170,17 +170,15 @@ nsLivemarkService::Init()
 
   pRDF->GetResource(NS_LITERAL_CSTRING(DC_NAMESPACE_URI "date"),
                     getter_AddRefs(mLMDC_date));
-  
+
   // Initialize the list of livemarks from the list of URIs
   // that have a feed uri annotation.
-  nsIURI ** pLivemarks;
-  PRUint32 numLivemarks;
-  rv = mAnnotationService->GetPagesWithAnnotation(NS_LITERAL_CSTRING(LMANNO_FEEDURI),
-                                                  &numLivemarks,
-                                                  &pLivemarks);
+  nsCOMArray<nsIURI> pLivemarks;
+  rv = mAnnotationService->GetPagesWithAnnotationCOMArray(
+      NS_LITERAL_CSTRING(LMANNO_FEEDURI), &pLivemarks);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < numLivemarks; ++i) {
+  for (PRInt32 i = 0; i < pLivemarks.Count(); ++i) {
 
     // Get the feed URI from the annotation.
     nsAutoString feedURIString;
@@ -213,8 +211,6 @@ nsLivemarkService::Init()
     NS_ENSURE_TRUE(li, NS_ERROR_OUT_OF_MEMORY);
     NS_ENSURE_TRUE(mLivemarks.AppendElement(li), NS_ERROR_OUT_OF_MEMORY);
   }
-  if (numLivemarks > 0)
-    nsMemory::Free(pLivemarks);
 
   return rv;
 }
