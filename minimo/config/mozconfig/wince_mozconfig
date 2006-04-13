@@ -1,5 +1,5 @@
 mk_add_options MOZ_CO_TAG=MOZILLA_1_8_BRANCH
-mk_add_options NSPR_CO_TAG=NSPRPUB_PRE_4_2_WINCE_BRANCH
+mk_add_options NSPR_CO_TAG=NSPRPUB_WINCE_04122006_BRANCH
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-dir-minimo-8-opt
 
