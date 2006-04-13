@@ -54,6 +54,7 @@ const NS_APP_USER_SEARCH_DIR = "UsrSrchPlugns";
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
+const XPCOM_SHUTDOWN_TOPIC       = "xpcom-shutdown";
 
 const SEARCH_ENGINE_REMOVED      = "engine-removed";
 const SEARCH_ENGINE_ADDED        = "engine-added";
@@ -61,7 +62,13 @@ const SEARCH_ENGINE_CHANGED      = "engine-changed";
 const SEARCH_ENGINE_LOADED       = "engine-loaded";
 const SEARCH_ENGINE_CURRENT      = "engine-current";
 
-const XPCOM_SHUTDOWN_TOPIC       = "xpcom-shutdown";
+const SEARCH_TYPE_MOZSEARCH      = Ci.nsISearchEngine.TYPE_MOZSEARCH;
+const SEARCH_TYPE_OPENSEARCH     = Ci.nsISearchEngine.TYPE_OPENSEARCH;
+const SEARCH_TYPE_SHERLOCK       = Ci.nsISearchEngine.TYPE_SHERLOCK;
+
+const SEARCH_DATA_XML            = Ci.nsISearchEngine.DATA_XML;
+const SEARCH_DATA_TEXT           = Ci.nsISearchEngine.DATA_TEXT;
+
 
 // File extensions for search plugin description files
 const XML_FILE_EXT      = "xml";
@@ -755,16 +762,8 @@ function Engine(aLocation, aSourceDataType, aIsReadOnly) {
   this._urls = [];
 
   if (aLocation instanceof Ci.nsILocalFile) {
-    ENSURE(aLocation.exists(),
-           "Can't init an engine from a non-existent file!",
-           Cr.NS_ERROR_FAILURE);
-
     // we already have a file (e.g. loading engines from disk)
     this._file = aLocation;
-    this._getData();
-
-    // parse the data and set up fields accordingly
-    this._init();
   } else if (aLocation instanceof Ci.nsIURI) {
     this._uri = aLocation;
     switch (aLocation.scheme) {
@@ -773,12 +772,8 @@ function Engine(aLocation, aSourceDataType, aIsReadOnly) {
       case "data":
       case "file":
       case "resource":
-        // we have a URI, and no file
-        this._getDataFromURI(aLocation);
+        this._uri = aLocation;
         break;
-      case "javascript":
-        // Passing a javascript URI to addEngine causes a crash (bug 328697).
-        // Fall through...
       default:
         ERROR("Invalid URI passed to the nsISearchEngine constructor",
               Cr.NS_ERROR_INVALID_ARG);
@@ -824,14 +819,18 @@ Engine.prototype = {
    * engines, the data is just read directly from file and placed as an array
    * of lines in the engine's data field.
    */
-  _getData: function SRCH_ENG_getData() {
+  _initFromFile: function SRCH_ENG_initFromFile() {
+    ENSURE(this._file && this._file.exists(),
+           "File must exist before calling initFromFile!",
+           Cr.NS_ERROR_UNEXPECTED);
+  
     var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
 
     fileInStream.init(this._file, MODE_RDONLY, PERMS_FILE, false);
 
     switch (this._dataType) {
-      case Ci.nsISearchEngine.DATA_XML:
+      case SEARCH_DATA_XML:
 
         var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                         createInstance(Ci.nsIDOMParser);
@@ -841,7 +840,7 @@ Engine.prototype = {
 
         this._data = doc.documentElement;
         break;
-      case Ci.nsISearchEngine.DATA_TEXT:
+      case SEARCH_DATA_TEXT:
         fileInStream.QueryInterface(Ci.nsILineInputStream);
 
         var line = { value: "" };
@@ -862,8 +861,10 @@ Engine.prototype = {
         ERROR("Bogus engine _dataType: \"" + this._dataType + "\"",
               Cr.NS_ERROR_UNEXPECTED);
     }
-
     fileInStream.close();
+
+    // Now that the data is loaded, initialize the engine object
+    this._initFromData();
   },
 
   /**
@@ -871,16 +872,18 @@ Engine.prototype = {
    * @param   aURI
    *          The URL to transfer from.
    */
-  _getDataFromURI: function SRCH_ENG_getDataFromURI(aURI) {
-    ENSURE_ARG(aURI instanceof Ci.nsIURI, "Invalid URI for _getDataFromURI!");
+  _initFromURI: function SRCH_ENG_initFromURI() {
+    ENSURE_WARN(this._uri instanceof Ci.nsIURI,
+                "Must have URI when calling _initFromURI!",
+                Cr.NS_ERROR_UNEXPECTED);
 
-    LOG("_getDataFromURI: Downloading engine from: \"" + aURI.spec + "\".");
+    LOG("_initFromURI: Downloading engine from: \"" + this._uri.spec + "\".");
     var mimeType = "";
     switch (this._dataType) {
-      case Ci.nsISearchEngine.DATA_XML:
+      case SEARCH_DATA_XML:
         mimeType = "text/xml";
         break;
-      case Ci.nsISearchEngine.DATA_TEXT:
+      case SEARCH_DATA_TEXT:
         mimeType = "text/plain";
         break;
       default:
@@ -890,7 +893,7 @@ Engine.prototype = {
 
     this._req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                 createInstance(Ci.nsIXMLHttpRequest);
-    this._req.open("GET", aURI.spec, true);
+    this._req.open("GET", this._uri.spec, true);
     this._req.overrideMimeType(mimeType);
     this._req.setRequestHeader("Cache-Control", "no-cache");
 
@@ -935,10 +938,10 @@ Engine.prototype = {
     }
 
     switch (this._dataType) {
-      case Ci.nsISearchEngine.DATA_XML:
+      case SEARCH_DATA_XML:
         this._data = this._req.responseXML.documentElement;
         break;
-      case Ci.nsISearchEngine.DATA_TEXT:
+      case SEARCH_DATA_TEXT:
         this._data = this._req.responseText.split(/(\r\n|\n\r|\r|\n)/);
 
         // Filter out comments and whitespace-only lines.
@@ -953,7 +956,7 @@ Engine.prototype = {
     }
     try {
       // Initialize the engine from the obtained data
-      this._init();
+      this._initFromData();
     } catch (ex) {
       // Report an error to the user
       LOG("_onLoad: Failed to init engine!\n" + ex);
@@ -1013,20 +1016,20 @@ Engine.prototype = {
   /**
    * Initialize this Engine object from the collected data.
    */
-  _init: function SRCH_ENG_init() {
+  _initFromData: function SRCH_ENG_initFromData() {
 
     ENSURE_WARN(this._data, "Can't init an engine with no data!",
                 Cr.NS_ERROR_UNEXPECTED);
 
     // Find out what type of engine we are
     switch (this._dataType) {
-      case Ci.nsISearchEngine.DATA_XML:
+      case SEARCH_DATA_XML:
         if (checkNameSpace(this._data, [kMozSearchLocalName],
             [kMozSearchNS_10])) {
 
           LOG("_init: Initing MozSearch plugin from " + this._location);
 
-          this._type = Ci.nsISearchEngine.TYPE_MOZSEARCH;
+          this._type = SEARCH_TYPE_MOZSEARCH;
           this._parseAsMozSearch();
 
         } else if (checkNameSpace(this._data, [kOpenSearchLocalName],
@@ -1034,7 +1037,7 @@ Engine.prototype = {
 
           LOG("_init: Initing OpenSearch plugin from " + this._location);
 
-          this._type = Ci.nsISearchEngine.TYPE_OPENSEARCH;
+          this._type = SEARCH_TYPE_OPENSEARCH;
           this._parseAsOpenSearch();
 
         } else
@@ -1042,11 +1045,11 @@ Engine.prototype = {
                  Cr.NS_ERROR_FAILURE);
 
         break;
-      case Ci.nsISearchEngine.DATA_TEXT:
+      case SEARCH_DATA_TEXT:
         LOG("_init: Initing Sherlock plugin from " + this._location);
 
         // the only text-based format we support is Sherlock
-        this._type = Ci.nsISearchEngine.TYPE_SHERLOCK;
+        this._type = SEARCH_TYPE_SHERLOCK;
         this._parseAsSherlock();
     }
 
@@ -1727,46 +1730,48 @@ SearchService.prototype = {
       var fileURL = ios.newFileURI(file).QueryInterface(Ci.nsIURL);
       var fileExtension = fileURL.fileExtension.toLowerCase();
       var isWritable = isInProfile && file.isWritable();
-      var addedEngine = null;
 
-      LOG("_loadEngines: Looking at file: \"" + fileURL.fileName + "\"");
-      try {
-        switch (fileExtension) {
-          case XML_FILE_EXT:
-            // Create a new engine object, readonly if it's not in the profile
-            addedEngine = new Engine(file, Ci.nsISearchEngine.DATA_XML,
-                                     !isWritable);
-            LOG("_loadEngines: Done loading engine: " + fileURL.fileName);
-            this._addEngineToStore(addedEngine);
-            break;
-          case SHERLOCK_FILE_EXT:
-            addedEngine = new Engine(file, Ci.nsISearchEngine.DATA_TEXT,
-                                     !isWritable);
-            if (isInProfile && file.isWritable()) {
-              // Convert engines in the profile to the new format
-              try {
-                this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
-              } catch (ex) {
-                // If the engine couldn't be converted, mark it as read-only
-                addedEngine._readOnly = true;
-              }
-            } else {
-              // Try to find the engine's icon
-              var icon = this._findSherlockIcon(file, fileURL.fileBaseName);
-              if (icon)
-                addedEngine._iconURI = ios.newFileURI(icon);
-            }
-            this._addEngineToStore(addedEngine);
-            break;
-          default:
-            // Not an engine...
-            continue;
-        }
-      } catch (e) {
-        // skip...
-        LOG("_loadEngines: Failed to load search engine: \"" + fileURL.fileName
-            + "\". " + e);
+      var dataType;
+      switch (fileExtension) {
+        case XML_FILE_EXT:
+          dataType = SEARCH_DATA_XML;
+          break;
+        case SHERLOCK_FILE_EXT:
+          dataType = SEARCH_DATA_TEXT;
+          break;
+        default:
+          // Not an engine
+          continue;
       }
+
+      var addedEngine = null;
+      try {
+        addedEngine = new Engine(file, dataType, !isWritable);
+        addedEngine._initFromFile();
+      } catch (ex) {
+        LOG("_loadEngines: Failed to load " + file.path + "!\n" + ex);
+        continue;
+      }
+
+      // If we have a writable Sherlock plugin, try to convert it
+      if (fileExtension == SHERLOCK_FILE_EXT && isWritable) {
+        try {
+          this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
+        } catch (ex) {
+          LOG("_loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
+          // The engine couldn't be converted, mark it as read-only
+          addedEngine._readOnly = true;
+        }
+
+        // If the engine still doesn't have an icon, see if we can find one
+        if (!addedEngine._iconURI) {
+          var icon = this._findSherlockIcon(file, fileURL.fileBaseName);
+          if (icon)
+            addedEngine._iconURI = ios.newFileURI(icon);
+        }
+      }
+
+      this._addEngineToStore(addedEngine);
     }
   },
 
@@ -1940,8 +1945,7 @@ SearchService.prototype = {
     ENSURE(!this._engines[aName], "An engine with that name already exists!",
            Cr.NS_ERROR_FILE_ALREADY_EXISTS);
 
-    var engine = new Engine(getSanitizedFile(aName),
-                            Ci.nsISearchEngine.DATA_XML, false);
+    var engine = new Engine(getSanitizedFile(aName), SEARCH_DATA_XML, false);
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate);
     this._addEngineToStore(engine);
@@ -1951,6 +1955,7 @@ SearchService.prototype = {
     LOG("addEngine: Adding \"" + aEngineURL + "\".");
     try {
       var engine = new Engine(makeURI(aEngineURL), aType, false);
+      engine._initFromURI();
     } catch (ex) {
       LOG("addEngine: Error adding engine:\n" + ex);
       throw Cr.NS_ERROR_FAILURE;
