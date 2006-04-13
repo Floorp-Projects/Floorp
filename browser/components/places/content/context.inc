@@ -37,11 +37,11 @@
   <menuseparator id="placesContext_selectSeparator"
             selection="multiselect"/>
   <menuitem id="placesContext_reload" command="placesCmd_reload"
-            selection="livemark/feedURI|livemark/bookmarkFeedURI"/>
+            selection="livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
   <menuitem id="placesContext_sortby:name" command="placesCmd_sortby:name"
             selection="mutable"/>
   <menuseparator id="placesContext_sortSeparator"
-            selection="mutable|livemark/feedURI|livemark/bookmarkFeedURI"/>
+            selection="mutable|livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
   <menuitem id="placesContext_show:info" command="placesCmd_show:info"
             selection="link|folder|query"/>
 </popup>
