@@ -50,7 +50,7 @@
 
 #include "nsBookmarksService.h"
 #include "nsArrayEnumerator.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 #include "nsVoidArray.h"
 #include "nsIBrowserHandler.h"
 #include "nsIDOMWindow.h"
@@ -3052,8 +3052,8 @@ nsBookmarksService::GetParentChain(nsIRDFResource* aSource, nsIArray** aParents)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    nsCOMPtr<nsIMutableArray> parentArray;
-    rv = NS_NewArray(getter_AddRefs(parentArray));
+    nsCOMPtr<nsIMutableArray> parentArray =
+        do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_OUT_OF_MEMORY);
 
     nsCOMPtr<nsIRDFResource> source = aSource, parent;
