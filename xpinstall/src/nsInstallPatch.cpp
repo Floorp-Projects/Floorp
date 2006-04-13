@@ -409,7 +409,6 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
   nsresult rv;
   DIFFDATA	  *dd;
 	PRInt32		  status		   = GDIFF_ERR_MEM;
-	char 		    *tmpurl		   = NULL;
 	//nsFileSpec  *outFileSpec = new nsFileSpec; 
   //nsFileSpec  *tempSrcFile = new nsFileSpec;   // TODO: do you need to free?
   nsCOMPtr<nsIFile> outFileSpec;
@@ -660,12 +659,6 @@ cleanup:
         PR_FREEIF( dd->oldChecksum );
         PR_FREEIF( dd->newChecksum );
         PR_DELETE(dd);
-    }
-
-    if ( tmpurl != NULL ) {
-        //XP_FileRemove( tmpurl, xpURL );
-        tmpurl = NULL;
-        PR_DELETE( tmpurl );
     }
 
     if (tempSrcFile)
