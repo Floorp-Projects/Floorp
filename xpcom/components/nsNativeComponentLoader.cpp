@@ -46,7 +46,10 @@
  * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 
+/* Allow logging in the release build */
+#ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
+#endif
 
 #include "nsNativeComponentLoader.h"
 
