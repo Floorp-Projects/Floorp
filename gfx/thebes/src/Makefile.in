@@ -106,6 +106,7 @@ include $(topsrcdir)/config/rules.mk
 
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 ifdef MOZ_ENABLE_PANGO
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
