@@ -148,6 +148,8 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
             pBuf[outlen] = 0;
             *_retval = pBuf;
           }
+          else
+            PR_Free(pBuf);
         }
       }
       NS_RELEASE(decoder);
