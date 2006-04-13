@@ -152,6 +152,10 @@ nsNavHistoryExpire::OnQuit()
     return;
   }
 
+  // Need to cancel any pending timers so we don't try to expire during shutdown
+  if (mTimer)
+    mTimer->Cancel();
+
   // Handle degenerate runs:
   ExpireForDegenerateRuns();
 
