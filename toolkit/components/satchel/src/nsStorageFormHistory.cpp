@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Brett Wilson <brettw@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,6 +62,16 @@
 #include "mozStorageCID.h"
 #include "nsIAutoCompleteSimpleResult.h"
 #include "nsTArray.h"
+
+// The size of the database cache. This is the number of database PAGES that
+// can be cached in memory. Normally, pages are 1K unless the size has been
+// explicitly changed.
+//
+// 4MB should be much larger than normal form histories. Normal form histories
+// will be several hundered KB at most. If the form history is smaller, the
+// extra memory will never be allocated, so there is no penalty for larger
+// numbers. See StartCache
+#define DATABASE_CACHE_PAGES 4000
 
 // nsFormHistoryResult is a specialized autocomplete result class that knows
 // how to remove entries from the form history table.
@@ -374,13 +385,17 @@ nsFormHistory::OpenDatabase()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> formHistoryFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(formHistoryFile));
+  rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  formHistoryFile->Append(NS_LITERAL_STRING("formhistory.sqlite"));
   rv = mStorageService->OpenDatabase(formHistoryFile, getter_AddRefs(mDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // We execute many statements before the database cache is started to create
+  // the tables (which can not be done which the cache is locked in memory by
+  // the dummy statement--see StartCache). This transaction will keep the cache
+  // between these statements, which should improve startup performance because
+  // we won't have to keep requesting pages from the OS.
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
   PRBool exists;
   mDBConn->TableExists(NS_LITERAL_CSTRING("moz_formhistory"), &exists);
@@ -411,6 +426,12 @@ nsFormHistory::OpenDatabase()
                                 getter_AddRefs(mDBInsertNameValue));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // should commit before starting cache
+  transaction.Commit();
+
+  // ignore errors since the cache is not critical for operation
+  StartCache();
+
 #ifdef MOZ_MORKREADER
   if (!exists) {
     // Locate the old formhistory.dat file and import it.
@@ -429,6 +450,113 @@ nsFormHistory::OpenDatabase()
 
   return NS_OK;
 }
+
+
+nsresult
+nsFormHistory::GetDatabaseFile(nsIFile** aFile)
+{
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return (*aFile)->Append(NS_LITERAL_STRING("formhistory.sqlite"));
+}
+
+
+// nsFormHistory::StartCache
+//
+//    This function starts the dummy statement that locks the cache in memory.
+//    As long as there is an open connection sharing the same cache, the cache
+//    won't be expired. Therefore, we create a dummy table with some data in
+//    it, and open a statement over the data. As long as this statement is
+//    open, we can go fast.
+//
+//    This dummy statement prevents the schema from being modified. If you
+//    want to add or change a table or index schema, you must stop the dummy
+//    statement first. See nsNavHistory::StartDummyStatement for a slightly
+//    more detailed discussion.
+//
+//    Note that we should not use a transaction in this function since that
+//    will commit the dummy statement and everything will break.
+//
+//    This function also initializes the cache.
+
+nsresult
+nsFormHistory::StartCache()
+{
+  // do nothing if the dummy statement is already running
+  if (mDummyStatement)
+    return NS_OK;
+
+  // dummy database connection
+  nsCOMPtr<nsIFile> formHistoryFile;
+  nsresult rv = GetDatabaseFile(getter_AddRefs(formHistoryFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mStorageService->OpenDatabase(formHistoryFile,
+                                     getter_AddRefs(mDummyConnection));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the dummy table exists
+  PRBool tableExists;
+  rv = mDummyConnection->TableExists(NS_LITERAL_CSTRING("moz_dummy_table"), &tableExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (! tableExists) {
+    rv = mDummyConnection->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE TABLE moz_dummy_table (id INTEGER PRIMARY KEY)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // This table is guaranteed to have something in it and will keep the dummy
+  // statement open. If the table is empty, it won't hold the statement open.
+  // the PRIMARY KEY value on ID means that it is unique. The OR IGNORE means
+  // that if there is already a value of 1 there, this insert will be ignored,
+  // which is what we want so as to avoid growing the table infinitely.
+  rv = mDummyConnection->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("INSERT OR IGNORE INTO moz_dummy_table VALUES (1)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDummyConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT id FROM moz_dummy_table LIMIT 1"),
+    getter_AddRefs(mDummyStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // we have to step the dummy statement so that it will hold a lock on the DB
+  PRBool dummyHasResults;
+  rv = mDummyStatement->ExecuteStep(&dummyHasResults);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the cache size
+  nsCAutoString cacheSizePragma("PRAGMA cache_size=");
+  cacheSizePragma.AppendInt(DATABASE_CACHE_PAGES);
+  rv = mDummyConnection->ExecuteSimpleSQL(cacheSizePragma);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // preload the cache
+  rv = mDummyConnection->Preload();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+// nsFormHistory::StopCache
+//
+//    Call this before doing any schema modifying operations. You should
+//    start the dummy statement again to give good performance.
+//    See StartCache.
+
+nsresult
+nsFormHistory::StopCache()
+{
+  // do nothing if the dummy statement isn't running
+  if (! mDummyStatement)
+    return NS_OK;
+
+  nsresult rv = mDummyStatement->Reset();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mDummyStatement = nsnull;
+  return NS_OK;
+}
+
 
 nsresult
 nsFormHistory::AutoCompleteSearch(const nsAString &aInputName,
