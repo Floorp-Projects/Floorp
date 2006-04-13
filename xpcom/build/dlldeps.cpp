@@ -58,7 +58,6 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsSupportsArray.h"
-#include "nsArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsProxyRelease.h"
 #include "xpt_xdr.h"
