@@ -161,11 +161,6 @@ else
 _BN_OFFICIAL=
 endif
 
-ifdef MOZ_ENABLE_GTK2
-  GLIB_CFLAGS = $(MOZ_GTK2_CFLAGS)
-  GLIB_LIBS = $(MOZ_GTK2_LIBS)
-endif
-
 build_number: FORCE
 	$(PERL) -I$(srcdir) $(srcdir)/bdate.pl $@ $(_BN_OFFICIAL)
 
