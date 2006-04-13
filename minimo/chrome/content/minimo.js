@@ -1185,7 +1185,7 @@ function DoFullScreen()
 {
   gFullScreen = !gFullScreen;
   
-  document.getElementById("nav-bar").hidden = gFullScreen;
+  document.getElementById("mini-toolbars").hidden = gFullScreen;
   document.getElementById("browserleftbar").collapsed = gFullScreen;
   
   // Is this the simpler approach to count tabs? 
