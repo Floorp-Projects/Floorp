@@ -4,10 +4,11 @@
 <!ENTITY pref.offline.title               "Offline &amp; Disk Space">
 <!ENTITY pref.offline.caption             "Offline">
 <!ENTITY textStartUp                      "When starting up:">
-<!ENTITY radioRememberPrevState           "Remember previous online state">
-<!ENTITY radioRememberPrevState.accesskey "R">
-<!ENTITY radioAskMe                       "Ask me for online state at startup">
-<!ENTITY radioAskMe.accesskey             "A">
+<!ENTITY menuitemRememberPrevState        "Remember previous online state">
+<!ENTITY menuitemAskMe                    "Ask me for online state at startup">
+<!ENTITY menuitemAlwaysOnline             "Always start up online">
+<!ENTITY menuitemAlwaysOffline            "Always start up offline">
+<!ENTITY menuitemAutomatic                "Detect automatically (if available)">
 <!ENTITY textGoingOnline                  "Send unsent messages when going online?">
 <!ENTITY radioAutoSend                    "Yes">
 <!ENTITY radioAutoSend.accesskey          "Y">

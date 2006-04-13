@@ -73,14 +73,18 @@
 <groupbox>
   <caption label="&pref.offline.caption;"/>
 
-  <label value="&textStartUp;"/>
-    <radiogroup id="whenStartingUp" class="indent"
-                prefstring="offline.startup_state">
-      <radio value="0" label="&radioRememberPrevState;"
-             accesskey="&radioRememberPrevState.accesskey;"/>
-      <radio value="1" label="&radioAskMe;"
-             accesskey="&radioAskMe.accesskey;"/>
-    </radiogroup>
+  <hbox align="center">
+    <label value="&textStartUp;"/>
+    <menulist id="whenStartingUp" prefstring="offline.startup_state">
+      <menupopup>
+        <menuitem value="0" label="&menuitemRememberPrevState;"/>
+        <menuitem value="1" label="&menuitemAskMe;"/>
+        <menuitem value="2" label="&menuitemAlwaysOnline;"/>
+        <menuitem value="3" label="&menuitemAlwaysOffline;"/>
+        <menuitem value="4" label="&menuitemAutomatic;"/>
+      </menupopup>
+    </menulist>
+  </hbox>
 
   <separator/>
 
