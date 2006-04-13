@@ -121,7 +121,8 @@ public:
   // Database I/O
   nsresult OpenDatabase();
   nsresult CloseDatabase();
-  
+  nsresult GetDatabaseFile(nsIFile** aFile);
+
   static PRBool FormHistoryEnabled();
   static nsFormHistory *gFormHistory;
   static PRBool gFormHistoryEnabled;
@@ -134,6 +135,12 @@ public:
   nsCOMPtr<mozIStorageStatement> mDBFindEntryByName;
   nsCOMPtr<mozIStorageStatement> mDBSelectEntries;
   nsCOMPtr<mozIStorageStatement> mDBInsertNameValue;
+
+  // dummy statement (see StartCache)
+  nsresult StartCache();
+  nsresult StopCache();
+  nsCOMPtr<mozIStorageConnection> mDummyConnection;
+  nsCOMPtr<mozIStorageStatement> mDummyStatement;
 };
 
 #ifdef MOZ_MORKREADER
