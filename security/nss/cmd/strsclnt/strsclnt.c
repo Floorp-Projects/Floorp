@@ -153,6 +153,7 @@ static PRInt32 numUsed;
 static SSL3Statistics * ssl3stats;
 
 static int failed_already = 0;
+static PRBool disableSSL2     = PR_FALSE;
 static PRBool disableSSL3     = PR_FALSE;
 static PRBool disableTLS      = PR_FALSE;
 static PRBool bypassPKCS11    = PR_FALSE;
@@ -184,7 +185,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
- 	"          [-3BDNTovqs] [-2 filename] [-P fullhandshakespercentage | -N]\n"
+ 	"          [-23BDNTovqs] [-f filename] [-N | -P percentage]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
         "       -o flag is interpreted as follows:\n"
@@ -195,6 +196,7 @@ Usage(const char *progName)
 	"       -s means disable SSL socket locking\n"
 	"       -N means no session reuse\n"
 	"       -P means do a specified percentage of full handshakes (0-100)\n"
+        "       -2 means disable SSL2\n"
         "       -3 means disable SSL3\n"
         "       -T means disable TLS\n"
         "       -U means enable throttling up threads\n"
@@ -1194,6 +1196,12 @@ client_main(
 	errExit("SSL_OptionSet SSL_SECURITY");
     }
 
+    /* disabling SSL2 compatible hellos also disables SSL2 */
+    rv = SSL_OptionSet(model_sock, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
+    if (rv != SECSuccess) {
+	errExit("error enabling SSLv2 compatible hellos ");
+    }
+
     rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
     if (rv != SECSuccess) {
 	errExit("error enabling SSLv3 ");
@@ -1338,11 +1346,11 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:3BC:DNP:TUc:d:in:op:qst:vw:");
+    optstate = PL_CreateOptState(argc, argv, "23BC:DNP:TUc:d:f:in:op:qst:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
-	case '2': fileName = optstate->value; break;
+	case '2': disableSSL2 = PR_TRUE; break;
 
 	case '3': disableSSL3 = PR_TRUE; break;
 
@@ -1363,6 +1371,8 @@ main(int argc, char **argv)
 	case 'c': connections = PORT_Atoi(optstate->value); break;
 
 	case 'd': dir = optstate->value; break;
+
+	case 'f': fileName = optstate->value; break;
 
 	case 'i': ignoreErrors = PR_TRUE; break;
 
