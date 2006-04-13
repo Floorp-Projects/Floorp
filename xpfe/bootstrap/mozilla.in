@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.13 2006/04/12 02:53:55 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.14 2006/04/13 13:42:31 ajschult%verizon.net Exp $
 ## 
 ## Usage:
 ##
@@ -152,15 +152,12 @@ if [ $# -lt 3 ] && [ `expr "$2" : '-.*'` -eq 0 ] && [ -z "$MOZ_NO_REMOTE" ] &&
     exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openBrowser)"
   fi
 
-  if [ $# -eq 2 ]; then
-    extra=",$2";
-  fi
   case "$1" in
     -mail)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openInbox${extra})"
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(openInbox${2:+,$2})"
       ;;
     -compose)
-      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(composeMessage${extra})"
+      exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${appname}" "xfeDoCommand(composeMessage${2:+,$2})"
       ;;
     -*) 
       # There's an argument we don't recognize, so don't try to use a running 
