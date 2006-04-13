@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.48 2006/04/07 06:24:07 nelson%bolyard.com Exp $ */
+/* $Id: sslimpl.h,v 1.49 2006/04/13 23:08:18 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -178,6 +178,9 @@ typedef enum { SSLAppOpRead = 0,
 #define MAX_EXTENSION_SENDERS		3
 
 #define NUM_MIXERS                      9
+
+/* Mask of the 25 named curves we support. */
+#define SSL3_SUPPORTED_CURVES_MASK 0x3fffffe
 
 #ifndef BPB
 #define BPB 8 /* Bits Per Byte */
@@ -586,6 +589,9 @@ struct sslSessionIDStr {
             SSL3KEAType           exchKeyType;
 				  /* key type used in exchange algorithm,
 				   * and to wrap the sym wrapping key. */
+#ifdef NSS_ENABLE_ECC
+	    PRUint32              negotiatedECCurves;
+#endif /* NSS_ENABLE_ECC */
 
 	    /* The following values are NOT restored from the server's on-disk
 	     * session cache, but are restored from the client's cache.
@@ -711,6 +717,9 @@ const ssl3CipherSuiteDef *suite_def;
     PRBool                usedStepDownKey;  /* we did a server key exchange. */
     sslBuffer             msgState;    /* current state for handshake messages*/
                                        /* protected by recvBufLock */
+#ifdef NSS_ENABLE_ECC
+    PRUint32              negotiatedECCurves; /* bit mask */
+#endif /* NSS_ENABLE_ECC */
 } SSL3HandshakeState;
 
 
@@ -1260,7 +1269,8 @@ extern SECStatus ssl3_CreateRSAStepDownKeys(sslSocket *ss);
 
 #ifdef NSS_ENABLE_ECC
 extern SECStatus ssl3_CreateECDHEphemeralKeys(sslSocket *ss);
-extern void ssl3_FilterECCipherSuitesByServerCerts(sslSocket *ss);
+extern void      ssl3_FilterECCipherSuitesByServerCerts(sslSocket *ss);
+extern PRBool    ssl3_IsECCEnabled(sslSocket *ss);
 #endif /* NSS_ENABLE_ECC */
 
 extern SECStatus ssl3_CipherPrefSetDefault(ssl3CipherSuite which, PRBool on);

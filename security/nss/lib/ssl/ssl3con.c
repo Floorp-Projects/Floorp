@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.85 2006/04/07 06:24:07 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.86 2006/04/13 23:08:18 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -5377,24 +5377,6 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	goto loser;		/* malformed */
     }
 
-    /* Handle TLS hello extensions, for SSL3 & TLS */
-    if (length) {
-	/* Get length of hello extensions */
-	PRInt32 extension_length;
-	extension_length = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
-        if (extension_length < 0) {
-	    goto loser;				/* alert already sent */
-	}
-	if (extension_length != length) {
-	    ssl3_DecodeError(ss);		/* send alert */
-	    goto loser;
-    	}
-	rv = ssl3_HandleClientHelloExtensions(ss, &b, &length);
-	if (rv != SECSuccess) {
-	    goto loser;		/* malformed */
-	}
-    }
-
     desc = handshake_failure;
 
     if (sid != NULL) {
@@ -5422,26 +5404,42 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ssl3_FilterECCipherSuitesByServerCerts(ss);
 #endif
 
+#ifdef PARANOID
     /* Look for a matching cipher suite. */
     j = ssl3_config_match_init(ss);
     if (j <= 0) {		/* no ciphers are working/supported by PK11 */
     	errCode = PORT_GetError();	/* error code is already set. */
 	goto alert_loser;
     }
+#endif
+
     /* If we already have a session for this client, be sure to pick the
     ** same cipher suite we picked before.
     ** This is not a loop, despite appearances.
     */
     if (sid) do {
 	ssl3CipherSuiteCfg *suite = ss->cipherSuites;
+	/* Find the entry for the cipher suite used in the cached session. */
 	for (j = ssl_V3_SUITES_IMPLEMENTED; j > 0; --j, ++suite) {
 	    if (suite->cipher_suite == sid->u.ssl3.cipherSuite)
 		break;
 	}
-	if (!j)
+	PORT_Assert(j > 0);
+	if (j <= 0)
 	    break;
+#ifdef PARANOID
+	/* Double check that the cached cipher suite is still enabled,
+	 * implemented, and allowed by policy.  Might have been disabled.
+	 * The product policy won't change during the process lifetime.  
+	 * Implemented ("isPresent") shouldn't change for servers.
+	 */
 	if (!config_match(suite, ss->ssl3.policy, PR_TRUE))
 	    break;
+#else
+	if (!suite->enabled)
+	    break;
+#endif
+	/* Double check that the cached cipher suite is in the client's list */
 	for (i = 0; i < suites.len; i += 2) {
 	    if ((suites.data[i]     == MSB(suite->cipher_suite)) &&
 	        (suites.data[i + 1] == LSB(suite->cipher_suite))) {
@@ -5453,6 +5451,37 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	    }
 	}
     } while (0);
+
+    /* START A NEW SESSION */
+
+    /* Handle TLS hello extensions, for SSL3 & TLS, 
+     * only if we're not restarting a previous session.
+     */
+    if (length) {
+	/* Get length of hello extensions */
+	PRInt32 extension_length;
+	extension_length = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
+        if (extension_length < 0) {
+	    goto loser;				/* alert already sent */
+	}
+	if (extension_length != length) {
+	    ssl3_DecodeError(ss);		/* send alert */
+	    goto loser;
+    	}
+	rv = ssl3_HandleClientHelloExtensions(ss, &b, &length);
+	if (rv != SECSuccess) {
+	    goto loser;		/* malformed */
+	}
+    }
+
+#ifndef PARANOID
+    /* Look for a matching cipher suite. */
+    j = ssl3_config_match_init(ss);
+    if (j <= 0) {		/* no ciphers are working/supported by PK11 */
+    	errCode = PORT_GetError();	/* error code is already set. */
+	goto alert_loser;
+    }
+#endif
 
     /* Select a cipher suite.
     ** NOTE: This suite selection algorithm should be the same as the one in
@@ -7380,6 +7409,7 @@ xmit_loser:
 	sid->u.ssl3.cipherSuite = ss->ssl3.hs.cipher_suite;
 	sid->u.ssl3.compression = ss->ssl3.hs.compression;
 	sid->u.ssl3.policy      = ss->ssl3.policy;
+	sid->u.ssl3.negotiatedECCurves = ss->ssl3.hs.negotiatedECCurves;
 	sid->u.ssl3.exchKeyType = effectiveExchKeyType;
 	sid->version            = ss->version;
 	sid->authAlgorithm      = ss->sec.authAlgorithm;
@@ -8002,6 +8032,7 @@ ssl3_InitState(sslSocket *ss)
     ssl3_InitCipherSpec(ss, ss->ssl3.prSpec);
 
     ss->ssl3.hs.ws = (ss->sec.isServer) ? wait_client_hello : wait_server_hello;
+    ss->ssl3.hs.negotiatedECCurves = SSL3_SUPPORTED_CURVES_MASK;
     ssl_ReleaseSpecWriteLock(ss);
 
     /*
