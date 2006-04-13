@@ -40,6 +40,7 @@
 
 %{C++
 #include "nsTArray.h"
+#include "nsCOMArray.h"
 #include "nsString.h"
 %}
 
@@ -47,8 +48,9 @@ interface nsIURI;
 interface nsIVariant;
 
 [ptr] native CStringArray(nsTArray<nsCString>);
+[ptr] native URIArray(nsCOMArray<nsIURI>);
 
-[scriptable, uuid(4ff680af-643e-4144-809f-dc53f71d7def)]
+[scriptable, uuid(d41c9510-2377-4728-b275-bdad6a0521f8)]
 interface nsIAnnotationObserver : nsISupports
 {
     /**
@@ -229,6 +231,13 @@ interface nsIAnnotationService : nsISupports
     void getPagesWithAnnotation(in AUTF8String name,
       out PRUint32 resultCount,
       [retval, array, size_is(resultCount)] out nsIURI results);
+
+    /**
+     * COMArray version of getPagesWithAnnotation for easier memory
+     * management from C++ code;
+     */
+    [noscript] void GetPagesWithAnnotationCOMArray(in AUTF8String aName,
+                                                 in URIArray aResults);
 
     /**
      * Get the names of all annotations for this URI.
