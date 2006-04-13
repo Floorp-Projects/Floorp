@@ -1046,6 +1046,14 @@ function DoBrowserSB(sKey) {
   }  
 }
 
+function DoBrowserGM(xmlRef) {
+  try { 
+    gBrowser.selectedTab = gBrowser.addTab('chrome://minimo/content/moduleview/moduleload.xhtml?url='+xmlRef);
+    browserInit(gBrowser.selectedTab);
+  } catch (e) {   
+  }  
+}
+
 /* Toolbar specific code - to be removed from here */ 
 
 
