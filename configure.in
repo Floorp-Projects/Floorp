@@ -4748,7 +4748,7 @@ esac
 )
 
 MOZ_ARG_WITH_STRING(branding,
-[  --enable-branding Enable branding from the specified directory.],
+[  --with-branding=dir    Use branding from the specified directory.],
     MOZ_BRANDING_DIRECTORY=$withval)
 
 AC_SUBST(MOZ_BRANDING_DIRECTORY)
