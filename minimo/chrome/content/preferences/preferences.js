@@ -169,7 +169,7 @@ function sanitizeBookmarks() {
     document.getElementById("bookmarksSanitize").disabled=true;
 }
 
-function loadHomePageOptions() {
+function loadHomePageFromBrowser() {
  var win;
  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                      .getService(Components.interfaces.nsIWindowMediator);
@@ -188,6 +188,12 @@ function loadHomePageOptions() {
    homePageField.value = newVal;
   }
 }
+
+function loadHomePageBlank() {
+   var homePageField = document.getElementById("browserStartupHomepage");
+   homePageField.value = "about:blank";
+}
+
 
 function downloadChooseFolder() {
 
