@@ -633,7 +633,11 @@ pref("network.standard-url.escape-utf8", true);
 
 // This preference controls whether or not URLs are always encoded and sent as
 // UTF-8.
-pref("network.standard-url.encode-utf8", false);
+pref("network.standard-url.encode-utf8", true);
+
+// This preference controls whether or not queries are encoded and sent as
+// UTF-8.
+pref("network.standard-url.encode-query-utf8", false);
 
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
