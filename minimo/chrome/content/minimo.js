@@ -317,10 +317,11 @@ nsBrowserStatusHandler.prototype =
   
 /* moved this as global */ 
   
-  function MiniNavStartup()
+function MiniNavStartup()
 {
   var homepage = "http://www.mozilla.org";
-  
+  var homepages = null; 
+    
   try {
     
     gBrowser = document.getElementById("content");
@@ -368,11 +369,15 @@ nsBrowserStatusHandler.prototype =
       var page = gPref.getCharPref("browser.startup.homepage");
       var bookmarkstore = gPref.getCharPref("browser.bookmark.store");
       
-      if (page != null)
-      {
-        var fixedUpURI = gURIFixup.createFixupURI(page, 2 /*fixup url*/ );
-        homepage = fixedUpURI.spec;
+      if ( page.split("|").length > 1 ) {
+           homepages = page.split("|");
+      } else {
+        if (page != null) {
+            var fixedUpURI = gURIFixup.createFixupURI(page, 2 /*fixup url*/ );
+            homepage = fixedUpURI.spec;
+        }
       }
+
     } catch (ignore) {}
     
   } catch (e) {
@@ -385,7 +390,11 @@ nsBrowserStatusHandler.prototype =
                        "@mozilla.org/transfer;1",
                        new TransferItemFactory());
 
-  loadURI(homepage);
+  if(homepages) {
+    gBrowser.loadTabs(homepages,true,true); // force load in background.
+  } else {
+    loadURI(homepage);
+  }
   loadBookmarks(bookmarkstore);
   
   /*
