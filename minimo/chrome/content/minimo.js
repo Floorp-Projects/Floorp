@@ -794,9 +794,15 @@ function BrowserViewFind() {
  * Has to go through some other approach like a XML-based rule system. 
  * Those are constraints conditions and action. 
  **/
-
 function BrowserViewHomebar() {
-  document.getElementById("browserleftbar").collapsed=!document.getElementById("browserleftbar").collapsed;
+
+  var wholeHomebarState = document.getElementById("browserleftbar").collapsed;
+
+  document.getElementById("browserleftbar").collapsed = !wholeHomebarState;
+
+  if(!wholeHomebarState) { 
+    document.getElementById("homebarcontainer").style.display="block"; 
+  } 
 }
 
 /** 
