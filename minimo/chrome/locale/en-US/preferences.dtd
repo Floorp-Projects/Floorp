@@ -36,6 +36,8 @@
 <!ENTITY zoom.label                  "Zoom Controls">
 <!ENTITY zoomui.label                "User Interface">
 <!ENTITY zoomcontent.label           "Site Content">
+<!ENTITY loadHomePageCurrent.label   "Use Home Pages">
+<!ENTITY loadHomePageBlank.label     "Use Blank Page">
 
 <!-- Small Screen Settings --> 
 
