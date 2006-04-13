@@ -186,12 +186,15 @@ function loadHomePageFromBrowser() {
        newVal += tabbrowser.getBrowserAtIndex(i).webNavigation.currentURI.spec;
    }
    homePageField.value = newVal;
+   syncPref(homePageField);
+
   }
 }
 
 function loadHomePageBlank() {
    var homePageField = document.getElementById("browserStartupHomepage");
    homePageField.value = "about:blank";
+   syncPref(homePageField);
 }
 
 
