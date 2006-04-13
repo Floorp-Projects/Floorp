@@ -351,7 +351,10 @@ function execute(n, x) {
             execute(u, x);
         r = n.iterator;
         s = execute(n.object, x);
-        t = toObject(getValue(s), s, n.object);
+        v = getValue(s);
+
+        // ECMA erratum: allow for (i in null)
+        t = v && toObject(v, s, n.object);
         a = [];
         for (i in t)
             a.push(i);
