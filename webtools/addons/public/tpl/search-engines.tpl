@@ -23,12 +23,12 @@
 <dt><img src="{$config.webpath}/search-engines-static/linkedin.png" alt=""/> <a href="javascript:addEngine('linkedin','png','Web Services','0')">LinkedIn</a></dt><dd>Search your LinkedIn network for the people you need when you are on any Web site.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/lonelyplanet.png" alt=""/> <a href="javascript:addEngine('lonelyplanet','png','Travel','0')">Lonely Planet Online</a></dt><dd>Search through Lonely Planet's travel guides.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/marketwatch.gif" alt=""/> <a href="javascript:addEngine('marketwatch','gif','Business and Economy','4897')">MarketWatch</a></dt><dd>Stock quote look-up and financial information.</dd>
-<dt><img src="{$config.webpath}/search-engines-static/webster.gif" alt=""/> <a href="javascript:addEngine('webster','gif','Language dictionary','0')">Merriam-Webster</a></dt><dd>English dictionary search.</dd>
 </dl>
 </div>
 
 <div class="front-section">
 <dl>
+<dt><img src="{$config.webpath}/search-engines-static/webster.gif" alt=""/> <a href="javascript:addEngine('webster','gif','Language dictionary','0')">Merriam-Webster</a></dt><dd>English dictionary search.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/msn.png" alt=""/> <a href="javascript:addEngine('MSN','png','General','3796')">MSN</a></dt><dd>MSN search engine.</dd>
 <dt><img src="{$config.webpath}/search-engines-static/technorati.gif" alt=""/> <a href="javascript:addEngine('technorati-new','gif','Weblogs','2662')">Technorati</a></dt><dd>A real-time search engine that keeps track of what is going on in the blogosphere</dd>
 <dt><img src="{$config.webpath}/search-engines-static/weatherchannel.png" alt=""/> <a href="javascript:addEngine('weather','png','Weather','0')">Weather Channel</a></dt><dd>Enter city, state or zip code to find your weather information.</dd>
