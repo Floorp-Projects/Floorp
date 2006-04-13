@@ -61,17 +61,6 @@ var gShowBiDi = false;
 
 function toggleOfflineStatus()
 {
-  try {
-    // Stop automatic management of the offline status.
-    // XXX this is just to maintain the old behavior. Someone should
-    // figure out how they want automatic online/offline to work in
-    // Seamonkey and make it happen.
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-      getService(Components.interfaces.nsIIOService2);
-    ioService.manageOfflineStatus = false;
-  } catch (ex) {
-  }
-
   var checkfunc;
   try {
     checkfunc = document.getElementById("offline-status").getAttribute('checkfunc');
@@ -81,13 +70,14 @@ function toggleOfflineStatus()
   }
 
   var ioService = Components.classes[kIOServiceProgID]
-                            .getService(Components.interfaces.nsIIOService);
+                            .getService(Components.interfaces.nsIIOService2);
   if (checkfunc) {
     if (!eval(checkfunc)) {
       // the pre-offline check function returned false, so don't go offline
       return;
     }
   }
+  ioService.manageOfflineStatus = false;
   ioService.offline = !ioService.offline;
 }
 

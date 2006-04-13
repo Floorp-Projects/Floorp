@@ -228,14 +228,16 @@ function onStart()
     var offlineState = document.getElementById("offlineState");
     var ioService = Components.classes["@mozilla.org/network/io-service;1"].
                       getService(Components.interfaces.nsIIOService);
-    if (offlineState.checked != ioService.offline)
+    if (offlineState.checked != ioService.offline) {
+      ioService.manageOfflineState = false;
       ioService.offline = offlineState.checked;
+    }
   }
 
   var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
   if (!autoSelectLastProfile.hidden)
     profile.startWithLastUsedProfile = autoSelectLastProfile.checked;
-  
+
   try {
     profile.currentProfile = profilename;
   }
