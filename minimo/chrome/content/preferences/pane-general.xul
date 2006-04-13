@@ -68,14 +68,29 @@
                                              onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
                                 </box>
 
+                                <hbox class="box-prefpadding" flex="1">
+                                
+                                    <button id="browserSetHomePage" tabindex="11"
+                                             class='box-prefgroupitem'
+                                             label="&loadHomePageCurrent.label;" 
+                                             oncommand="loadHomePageFromBrowser();"/>
+			                        
+                                    <button id="browserSetHomePage2" tabindex="12"
+                                             class='box-prefgroupitem'
+                                             label="&loadHomePageBlank.label;" 
+                                             oncommand="loadHomePageBlank();"/>
+                                             
+                                </hbox>
+
                         </groupbox>
+                        
                         <groupbox  class='box-prefgroupitem' id='ssrimage-box'>
                                 <caption label="&sssCaption.label;"/>
 
                                 <vbox class="box-prefpadding">     
                    
                                 <checkbox id="enableImages" 
-                                              tabindex="11" 
+                                              tabindex="13" 
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               label="&imagesCheckbox.label;"
                                               preference="permissions.default.image" prefvalue=""
@@ -86,7 +101,7 @@
     
                                 <checkbox id="ssr"
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
-                                              tabindex="12" 
+                                              tabindex="14" 
                                               label="&useSSRCheckbox.label;"
                                               preference="ssr.enabled" 
                                               onclick="syncPref(this)" 
