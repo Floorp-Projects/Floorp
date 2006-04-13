@@ -51,31 +51,31 @@
         height="340"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
-      <vbox>
-        <label control="PrettyName">Name:</label>
-        <textbox id="PrettyName"/>
-        <label control="RootKey">&regRootKey.label;:</label>
-        <menulist id="RootKey">
-          <menupopup>
-            <menuitem label="HKEY_CLASSES_ROOT" value="HKEY_CLASSES_ROOT"/>
-            <menuitem label="HKEY_CURRENT_USER" value="HKEY_CURRENT_USER"/>
-            <menuitem label="HKEY_LOCAL_MACHINE" value="HKEY_LOCAL_MACHINE"/>
-          </menupopup>      
-        </menulist>
-        <label control="Key">&regKey.label;:</label>
-        <textbox id="Key"/>
-        <label control="Name">&regName.label;:</label>
-        <textbox id="Name"/>
-        <label control="NameValue1">&regNameValue.label;:</label>
-        <textbox id="NameValue"/>
-        <label control="Type">&regType.label;:</label>
-        <menulist id="Type">
-          <menupopup>
-            <menuitem label="REG_DWORD" value="REG_DWORD"/>
-            <menuitem label="REG_QWORD" value="REG_QWORD"/>
-            <menuitem label="REG_BINARY" value="REG_BINARY"/>
-            <menuitem label="REG_SZ" value="REG_SZ"/>
-          </menupopup>      
-        </menulist>
-      </vbox>
+  <vbox>
+    <label control="PrettyName">Name:</label>
+    <textbox id="PrettyName"/>
+    <label control="RootKey">&regRootKey.label;:</label>
+    <menulist id="RootKey">
+      <menupopup>
+        <menuitem label="HKEY_CLASSES_ROOT" value="HKEY_CLASSES_ROOT"/>
+        <menuitem label="HKEY_CURRENT_USER" value="HKEY_CURRENT_USER"/>
+        <menuitem label="HKEY_LOCAL_MACHINE" value="HKEY_LOCAL_MACHINE"/>
+      </menupopup>      
+    </menulist>
+    <label control="Key">&regKey.label;:</label>
+    <textbox id="Key"/>
+    <label control="Name">&regName.label;:</label>
+    <textbox id="Name"/>
+    <label control="NameValue1">&regNameValue.label;:</label>
+    <textbox id="NameValue"/>
+    <label control="Type">&regType.label;:</label>
+    <menulist id="Type">
+      <menupopup>
+        <menuitem label="REG_DWORD" value="REG_DWORD"/>
+        <menuitem label="REG_QWORD" value="REG_QWORD"/>
+        <menuitem label="REG_BINARY" value="REG_BINARY"/>
+        <menuitem label="REG_SZ" value="REG_SZ"/>
+      </menupopup>      
+    </menulist>
+  </vbox>
 </dialog>

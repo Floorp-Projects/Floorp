@@ -51,7 +51,7 @@
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 
-<vbox flex="1">
-<textbox multiline="true" id="showconfigy" flex="1"/>
-</vbox>
+  <vbox flex="1">
+    <textbox multiline="true" id="showconfigy" flex="1"/>
+  </vbox>
 </dialog>

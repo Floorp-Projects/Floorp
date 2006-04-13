@@ -51,12 +51,12 @@
         height="200"
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
-<vbox>
-<label>&bookmark.description;</label>
-<label>&bookmarkTitle.label;</label>
-<textbox flex="1" id="bookmarkname" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
-<label>&bookmarkURL.label;</label>
-<textbox flex="1" id="bookmarkurl" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
-<checkbox id="liveBookmark" label="Live Bookmark"/>
-</vbox>
+  <vbox>
+    <label>&bookmark.description;</label>
+    <label control="bookmarkname">&bookmarkTitle.label;</label>
+    <textbox flex="1" id="bookmarkname" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
+    <label control="bookmarkurl">&bookmarkURL.label;</label>
+    <textbox flex="1" id="bookmarkurl" onchange="bookmarkCheckOKButton();" onkeyup="bookmarkCheckOKButton();"/>
+    <checkbox id="liveBookmark" label="Live Bookmark"/>
+  </vbox>
 </dialog>

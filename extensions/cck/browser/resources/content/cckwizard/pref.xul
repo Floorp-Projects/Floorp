@@ -53,13 +53,12 @@
   <script src="chrome://cckwizard/content/cckwizard.js"/>
   <script type="application/x-javascript"   
   src="chrome://global/content/dialogOverlay.js" />
-<vbox>
-<label>&prefs.description;</label>
-<label>&prefName.label;</label>
-<textbox flex="1" id="prefname" onchange="prefCheckOKButton();" onkeyup="prefCheckOKButton();"/>
-&configLocation.label;
-<label>&prefValue.label;</label>
-<textbox flex="1" id="prefvalue" onchange="prefCheckOKButton();" onkeyup="prefCheckOKButton();"/>
-<checkbox id="lockPref" label="Lock Preference"/>
-</vbox>
+  <vbox>
+    <label>&prefs.description;</label>
+    <label control="prefname">&prefName.label;</label>
+    <textbox flex="1" id="prefname" onchange="prefCheckOKButton();" onkeyup="prefCheckOKButton();"/>
+    <label control="prefvalue">&prefValue.label;</label>
+    <textbox flex="1" id="prefvalue" onchange="prefCheckOKButton();" onkeyup="prefCheckOKButton();"/>
+    <checkbox id="lockPref" label="Lock Preference"/>
+  </vbox>
 </dialog>

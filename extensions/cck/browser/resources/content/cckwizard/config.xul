@@ -51,10 +51,10 @@
         >
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 
-  <label>&configName.label;</label>
+  <label control="cnc-name">&configName.label;</label>
   <vbox flex="1">
     <textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>
-    &configLocation.label;
+    <label control="cnc-location">&configLocation.label;</label>    
     <hbox>
       <textbox flex="1" id="cnc-location" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>
       <button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
