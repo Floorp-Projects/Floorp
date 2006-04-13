@@ -48,7 +48,8 @@ class nsString;
 class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0xd5231ce1, 0x1129, 0x4c31, {0x9b, 0xa6, 0xce, 0x6b, 0x6d, 0x57, 0xc7, 0xb9}}
+{ 0x589761bb, 0x9856, 0x42fe, \
+ { 0x9b, 0xf9, 0x6a, 0xdf, 0xf4, 0x92, 0x17, 0x05 } }
 
 typedef PRUint32 nsUpdateType;
 
@@ -87,18 +88,6 @@ public:
    * EndLoad is invoked, not after.
    */
   virtual void EndLoad(nsIDocument *aDocument) = 0;
-
-  /**
-   * Notify the observer that the document is being reflowed in
-   * the given presentation shell.
-   */
-  virtual void BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
-
-  /**
-   * Notify the observer that the document is done being reflowed in
-   * the given presentation shell.
-   */
-  virtual void EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
 
   /**
    * Notification that the content model has changed. This method is
@@ -339,10 +328,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\
     virtual void BeginLoad(nsIDocument* aDocument);                          \
     virtual void EndLoad(nsIDocument* aDocument);                            \
-    virtual void BeginReflow(nsIDocument* aDocument,                         \
-                             nsIPresShell* aShell);                          \
-    virtual void EndReflow(nsIDocument* aDocument,                           \
-                           nsIPresShell* aShell);                            \
     virtual void CharacterDataChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent,                  \
                                       PRBool aAppend);                       \
@@ -409,18 +394,6 @@ _class::BeginLoad(nsIDocument* aDocument)                                 \
 }                                                                         \
 void                                                                      \
 _class::EndLoad(nsIDocument* aDocument)                                   \
-{                                                                         \
-}
-
-#define NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(_class)                   \
-void                                                                      \
-_class::BeginReflow(nsIDocument* aDocument,                               \
-                    nsIPresShell* aShell)                                 \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::EndReflow(nsIDocument* aDocument,                                 \
-                  nsIPresShell* aShell)                                   \
 {                                                                         \
 }
 
