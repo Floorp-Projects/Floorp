@@ -200,7 +200,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(df93900d-7ef1-4c5f-8e44-a930aeaf1462)]
+[scriptable, uuid(860d786d-9bba-4011-a396-486a87af8f07)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -264,12 +264,12 @@ interface nsINavBookmarksService : nsISupports
    * parent and sets the container type.
    *  @param parent     The id of the parent folder
    *  @param name       The name of the new folder
-   *  @param index      The index to insert at, or -1 to append
    *  @param type       The type of container to insert
+   *  @param index      The index to insert at, or -1 to append
    *  @returns the ID of the newly-inserted folder
    */
   PRInt64 createContainer(in PRInt64 parent, in AString name,
-                          in PRInt32 index, in AString type);
+                          in AString type, in PRInt32 index);
 
   /**
    * Removes a folder from the bookmarks tree.

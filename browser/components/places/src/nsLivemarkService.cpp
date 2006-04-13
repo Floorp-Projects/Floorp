@@ -260,9 +260,9 @@ nsLivemarkService::CreateLivemark(PRInt64 aFolder,
 {
   // Create the livemark as a bookmark container
   nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  nsresult rv = bookmarks->CreateContainer(aFolder, aName, aIndex,
+  nsresult rv = bookmarks->CreateContainer(aFolder, aName,
                                            NS_LITERAL_STRING(NS_LIVEMARKSERVICE_CONTRACTID),
-                                           aNewLivemark);
+                                           aIndex, aNewLivemark);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the livemark URI
