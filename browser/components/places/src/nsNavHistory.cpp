@@ -432,6 +432,8 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   rv = mDBService->OpenDatabase(dbFile, getter_AddRefs(mDummyDBConn));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
   // Initialize the other places services' database tables. We do this before:
   //
   // - Starting the dummy statement, because once the dummy statement has
@@ -529,6 +531,9 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         NS_LITERAL_CSTRING("CREATE INDEX moz_historyvisit_pageindex ON moz_historyvisit (page_id)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // --- PUT SCHEMA-MODIFYING THINGS (like create table) ABOVE THIS LINE ---
 
