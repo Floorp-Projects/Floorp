@@ -665,7 +665,7 @@ interface nsINavHistoryResult : nsISupports
    * options for this result, so that re-using the current options/queries will
    * always give you the current view.
    */
-  void sortAll(in PRUint32 aSortingMode);
+  attribute PRUint32 sortingMode;
 
   /**
    * The viewer for this result (see comment for the class for how these

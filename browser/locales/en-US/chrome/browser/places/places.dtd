@@ -95,10 +95,14 @@
   "Undo">
 <!ENTITY cmd.edit_undo.accesskey
   "U">
+<!ENTITY cmd.edit_undo.key
+  "z">
 <!ENTITY cmd.edit_redo.label
   "Redo">
 <!ENTITY cmd.edit_redo.accesskey
   "R">
+<!ENTITY cmd.edit_redo.key
+  "y">
 <!ENTITY cmd.open.label
   "Open">
 <!ENTITY cmd.open.accesskey
@@ -174,7 +178,7 @@
 <!ENTITY col.url.label
   "Location">
 <!ENTITY col.lastvisit.label
-  "Last Visit Date">
+  "Visit Date">
 <!ENTITY col.visitcount.label
   "Visit Count">
 <!ENTITY search.label

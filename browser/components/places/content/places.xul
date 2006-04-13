@@ -1,5 +1,42 @@
 <?xml version="1.0"?>
 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Places Organizer.
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005-2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <beng@google.com>
+#   Annie Sullivan <annie.sullivan@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/organizer.css"?>
 
@@ -19,6 +56,8 @@
   
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
+  <script type="application/x-javascript"
+          src="chrome://browser/content/places/treeHelpers.js"/>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
   <!-- ew. -->
@@ -65,6 +104,11 @@
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
          oncommand="close();"/>
+
+    <key id="placesKey_edit:undo" key="&cmd.edit_undo.key;" modifiers="accel" 
+         command="cmd_undo"/>
+    <key id="placesKey_edit:redo" key="&cmd.edit_redo.key;" modifiers="accel" 
+         command="cmd_redo"/>
          
     <!-- Command Keys -->
     <key id="placesKey_find" command="placesCmd_find" key="&cmd.find.key;" modifiers="accel"/>
@@ -103,29 +147,36 @@
           <menuitem id="properties" command="placesCmd_show:info"/>
 #endif
           <menuseparator/>
-          <menuitem id="fileClose" 
+          <menuitem id="fileClose" key="placesKey_close" 
                     label="&file.close.label;" accesskey="&file.close.accesskey;" 
                     oncommand="close();"/>
         </menupopup>
       </menu>
       <menu id="editMenu" label="&edit.label;" accesskey="&edit.accesskey;">
         <menupopup>
-          <menuitem id="editUndo" command="cmd_undo"/>
-          <menuitem id="editRedo" command="cmd_redo"/>
+          <menuitem id="editUndo" command="cmd_undo" key="placesKey_edit:undo"/>
+          <menuitem id="editRedo" command="cmd_redo" key="placesKey_edit:redo"/>
           <menuseparator/>
-          <menuitem id="editCut" command="placesCmd_edit:cut"/>
-          <menuitem id="editCopy" command="placesCmd_edit:copy"/>
-          <menuitem id="editPaste" command="placesCmd_edit:paste"/>
-          <menuitem id="editDelete" command="placesCmd_edit:delete"/>
+          <menuitem id="editCut" command="placesCmd_edit:cut" 
+                    key="placesKey_edit:cut"/>
+          <menuitem id="editCopy" command="placesCmd_edit:copy" 
+                    key="placesKey_edit:copy"/>
+          <menuitem id="editPaste" command="placesCmd_edit:paste"
+                    key="placesKey_edit:paste"/>
+          <menuitem id="editDelete" command="placesCmd_edit:delete"
+                    key="placesKey_edit:delete"/>
           <menuseparator/>
-          <menuitem id="editSelectAll" command="placesCmd_select:all"/>
+          <menuitem id="editSelectAll" command="placesCmd_select:all"
+                    key="placesKey_select:all"/>
           <menuseparator/>
           <menuitem id="editSortByName" command="placesCmd_sortby:name"/>
           <menuseparator/>
-          <menuitem id="editFind" command="placesCmd_find"/>
+          <menuitem id="editFind" command="placesCmd_find"
+                    key="placesKey_find"/>
 #ifdef XP_MACOSX
           <menuseparator/>
-          <menuitem id="properties" command="placesCmd_show:info"/>
+          <menuitem id="properties" command="placesCmd_show:info"
+                    key="placesKey_show:info"/>
 #endif
         </menupopup>
       </menu>
@@ -133,7 +184,8 @@
             onpopupshowing="ViewMenu.populate(event);"
             oncommand="ViewMenu.setSortColumn(event.target, null);">
         <menupopup>
-          <menuitem id="viewReload" command="placesCmd_reload"/>
+          <menuitem id="viewReload" command="placesCmd_reload"
+                    key="placesKey_reload"/>
           <menuseparator/>
           <menuitem id="viewToolbar" type="checkbox"
                     label="&view.toolbar.label;" accesskey="&view.toolbar.accesskey;"/>
@@ -213,19 +265,20 @@
         <vbox flex="1">
           <hbox id="titlebar" align="center">
             <label id="showingPrefix"/>
-            <label id="contentTitle"/>
-            <hbox align="center" id="titlebarMatch" hidden="true">
-              <label value="&advancedSearch.match.label;"/>
-              <menulist id="advancedSearchType"
-                        oncommand="PlacesQueryBuilder.doSearch();">
-                <menupopup>
-                  <menuitem value="and" label="&advancedSearch.all.label;"/>
-                  <menuitem value="or" label="&advancedSearch.any.label;"/>
-                </menupopup>
-              </menulist>
-              <label value="&advancedSearch.rules.label;"/>
-            </hbox>
-            <spacer flex="1"/>
+            <deck id="titleDeck" flex="1">
+              <label id="contentTitle" flex="1" crop="right"/>
+              <hbox align="center" id="titlebarMatch" hidden="true">
+                <label value="&advancedSearch.match.label;"/>
+                <menulist id="advancedSearchType"
+                          oncommand="PlacesQueryBuilder.doSearch();">
+                  <menupopup>
+                    <menuitem value="and" label="&advancedSearch.all.label;"/>
+                    <menuitem value="or" label="&advancedSearch.any.label;"/>
+                  </menupopup>
+                </menulist>
+                <label value="&advancedSearch.rules.label;"/>
+              </hbox>
+            </deck>
             <hbox id="searchModifiers" hidden="true" align="center">
               <button id="saveSearch" class="small" 
                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
