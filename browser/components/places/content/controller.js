@@ -114,81 +114,6 @@ InsertionPoint.prototype.toString = function IP_toString() {
   return "[object InsertionPoint(folder:" + this.folderId + ",index:" + this.index + ",orientation:" + this.orientation + ")]";
 };
 
-/**
- * Manages grouping options for a particular view type. 
- * @param   pref
- *          The preference that stores these grouping options. 
- * @param   defaultGroupings
- *          The default groupings to be used for views of this type. 
- * @param   serializable
- *          An object bearing a serialize and deserialize method that
- *          read and write the object's string representation from/to
- *          preferences.
- * @constructor
- */
-function PrefHandler(pref, defaultValue, serializable) {
-  this._pref = pref;
-  this._defaultValue = defaultValue;
-  this._serializable = serializable;
-
-  this._pb = 
-    Cc["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch2);
-  this._pb.addObserver(this._pref, this, false);
-}
-PrefHandler.prototype = {
-  /**
-   * Clean up when the window is going away to avoid leaks. 
-   */
-  destroy: function PC_PH_destroy() {
-    this._pb.removeObserver(this._pref, this);
-  },
-
-  /** 
-   * Observes changes to the preferences.
-   * @param   subject
-   * @param   topic
-   *          The preference changed notification
-   * @param   data
-   *          The preference that changed
-   */
-  observe: function PC_PH_observe(subject, topic, data) {
-    if (topic == "nsPref:changed" && data == this._pref)
-      this._value = null;
-  },
-  
-  /**
-   * The cached value, null if it needs to be rebuilt from preferences.
-   */
-  _value: null,
-
-  /** 
-   * Get the preference value, reading from preferences if necessary. 
-   */
-  get value() { 
-    if (!this._value) {
-      if (this._pb.prefHasUserValue(this._pref)) {
-        var valueString = this._pb.getCharPref(this._pref);
-        this._value = this._serializable.deserialize(valueString);
-      }
-      else
-        this._value = this._defaultValue;
-    }
-    return this._value;
-  },
-  
-  /**
-   * Stores a value in preferences. 
-   * @param   value
-   *          The data to be stored. 
-   */
-  set value(value) {
-    if (value != this._value)
-      this._pb.setCharPref(this._pref, this._serializable.serialize(value));
-    return value;
-  }
-};
-
 function QI_node(node, iid) {
   var result = null;
   try {
@@ -1973,12 +1898,12 @@ var PlacesController = {
       addData(TYPE_X_MOZ_PLACE_SEPARATOR, psString);
     if (placeString)
       addData(TYPE_X_MOZ_PLACE, placeString);
+    if (mozURLString)
+      addData(TYPE_X_MOZ_URL, mozURLString);
     if (unicodeString)
       addData(TYPE_UNICODE, unicodeString);
     if (htmlString)
       addData(TYPE_HTML, htmlString);
-    if (mozURLString)
-      addData(TYPE_X_MOZ_URL, mozURLString);
     
     if (pcString || psString || placeString || unicodeString || htmlString || 
         mozURLString) {

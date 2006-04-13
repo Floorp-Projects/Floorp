@@ -436,9 +436,7 @@ var BookmarkPropertiesPanel = {
 
 
   /**
-   * This method initializes the folder tree.  It currently uses ._load()
-   * because the tree binding doesn't allow for the setting of query options
-   * to suppress non-assignable containers.
+   * This method initializes the folder tree. 
    */
 
   _initFolderTree: function BPP__initFolderTree() {
@@ -454,7 +452,7 @@ var BookmarkPropertiesPanel = {
     options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeReadOnlyFolders = true;
     options.excludeQueries = true;
-    this._folderTree._load([query], options);
+    this._folderTree.load([query], options);
   },
 
   /**

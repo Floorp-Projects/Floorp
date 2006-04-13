@@ -1,5 +1,42 @@
 <?xml version="1.0"?>
 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Places Tree View.
+#
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005-2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Ben Goodger <beng@google.com>
+#   Annie Sullivan <annie.sullivan@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** 
+
 <bindings id="placesTreeBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
@@ -47,44 +84,45 @@
           return options;
         ]]></body>
       </method>
-      
-      <property name="filterString">
-        <getter><![CDATA[
-          var queries = this.getResult().getQueries({ });
-          if (queries[i].hasSearchTerms)
-            return queries[i].searchTerms;
-          return null;
-        ]]></getter>
-        <setter><![CDATA[
-          var query = this.history.getNewQuery();
-          query.searchTerms = val;
-          
-          this._load([query], this.getBestOptions());
-          return val;
-        ]]></setter>
-      </property>
-      
+
       <method name="applyFilter">
         <parameter name="filterString"/>
         <parameter name="onlyBookmarks"/>
         <parameter name="folderRestrict"/>
+        <parameter name="optionsFilter"/>
         <body><![CDATA[ 
           // preserve grouping
-          var options = this.getResult().queryOptions;
-          if (!options)
-            options = this.history.getNewQueryOptions();
+          var queryNode = asQuery(this.getResult().root);
+          var options = queryNode.queryOptions.clone();
+          if (optionsFilter)
+            options = optionsFilter.filter(queryNode.getQueries({}), options, 
+                                           optionsFilter.historyHandler);
           
           var query = this.history.getNewQuery();
           query.searchTerms = filterString;
           query.onlyBookmarked = onlyBookmarks;
-          //if (onlyBookmarks)
-          //  query.setFolders(folderRestrict, folderRestrict.length);
-          this._load([query], this.getBestOptions());
+          
+          // If we're searching over everything, or this is not an exclusively
+          // bookmarks search, we need to make sure that we remove "group by
+          // folder" from the options list, because otherwise we will end up
+          // with _no_ results if the user searches while a bookmarks folder 
+          // is selected, since the options for the current view say group by
+          // folder and none of the results will match!
+          if (!onlyBookmarks) {
+            var groupings = options.getGroupingMode({});
+            function isFolderGrouping(grouping, index, ary) {
+              return grouping != Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER;
+            }
+            var folderGroupings = groupings.filter(isFolderGrouping);
+            options.setGroupingMode(folderGroupings, folderGroupings.length);            
+          }
+          if (onlyBookmarks)
+            query.setFolders(folderRestrict, folderRestrict.length);
+          this.load([query], options);
         ]]></body>
       </method>
       
-      <!-- XXXben I would like to remove this method from the "public" interface -->
-      <method name="_load">
+      <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[ 
@@ -222,7 +260,7 @@
           if (!optionsRef.value)
             optionsRef.value = this.history.getNewQueryOptions();
 
-          this._load(queriesRef.value, optionsRef.value);
+          this.load(queriesRef.value, optionsRef.value);
 
           return val;
         ]]></setter>
