@@ -125,7 +125,7 @@ ac_help="$ac_help
                           permission to use trademarks per
                           http://www.mozilla.org/foundation/trademarks/ ."
 ac_help="$ac_help
-  --enable-branding Enable branding from the specified directory."
+  --with-branding=dir    Use branding from the specified directory."
 ac_help="$ac_help
   --with-distribution-id=ID  Set distribution-specific id (default=org.mozilla)"
 ac_help="$ac_help
