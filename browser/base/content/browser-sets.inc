@@ -193,7 +193,7 @@
   <broadcasterset id="mainBroadcasterSet">
 #ifdef MOZ_PLACES
     <broadcaster id="viewHistoryPlaces" autoCheck="false" label="&historyButton.label;"
-                 oncommand="PlacesBrowserShim.showHistory();"/>
+                 oncommand="PlacesCommandHook.showPlacesPopup(event);"/>
 #else
     <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
