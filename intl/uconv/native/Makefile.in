@@ -54,10 +54,10 @@ REQUIRES	= xpcom \
 			  intl \
 			  $(NULL)
 
-ifdef XP_UNIX
-CPPSRCS		= nsNativeUConvService.cpp
-else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		= nsWinCEUConvService.cpp
+else
+CPPSRCS		= nsNativeUConvService.cpp
 endif
 
 XPIDLSRCS	= \
