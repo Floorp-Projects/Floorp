@@ -196,12 +196,13 @@
                   var bms =
                     Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                     getService(Ci.nsINavBookmarksService);
-                  var folderURI = bms.getFolderURI(folder);
-                  var anno =
-                    Cc["@mozilla.org/browser/annotation-service;1"].
-                    getService(Ci.nsIAnnotationService);
-                  var siteURI = anno.getAnnotationString(folderURI, "livemark/siteURI");
-                  element.setAttribute("siteURI", siteURI);
+                  var lms =
+                    Cc["@mozilla.org/browser/livemark-service;1"].
+                    getService(Ci.nsILivemarkService);
+                  var siteURI = lms.getSiteURI(folder);
+                  if (siteURI) {            
+                    element.setAttribute("siteURI", siteURI.spec);
+                  }
                 }
 
                 var popup = document.createElementNS(XULNS, "menupopup");

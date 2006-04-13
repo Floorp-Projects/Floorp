@@ -77,6 +77,9 @@
         this._anno =
           Cc["@mozilla.org/browser/annotation-service;1"].
           getService(Ci.nsIAnnotationService);
+        this._lms =
+          Cc["@mozilla.org/browser/livemark-service;1"].
+          getService(Ci.nsILivemarkService);
           
         this._bms.addObserver(this._observer, false);
         var t = this;
@@ -179,9 +182,10 @@
               if (PlacesController.nodeIsLivemarkContainer(child)) {
                 button.setAttribute("livemark", "true");
                 var folder = asFolder(child).folderId;
-                var folderURI = this._bms.getFolderURI(folder);
-                var siteURI = this._anno.getAnnotationString(folderURI, "livemark/siteURI");
-                button.setAttribute("siteURI", siteURI);
+                var siteURI = this._lms.getSiteURI(folder);
+                if (siteURI) {            
+                  button.setAttribute("siteURI", siteURI.spec);
+                }
               }
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");
@@ -733,7 +737,7 @@
             return function() { meth.apply(obj, arguments); }
           }
           setTimeout(hitch(this._self, this._self._rebuild), 1);
-        },
+        }
 
       })]]></field>
 
