@@ -1140,6 +1140,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
     nscoord maxPropTotal = 0;
     for (colX = 0; colX < numEffCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+      if (!colFrame) continue;
       nscoord rawProp = colFrame->GetWidth(MIN_PRO);
       if (rawProp > 0) {
         nscoord desWidth = colFrame->GetDesWidth();
