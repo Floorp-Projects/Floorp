@@ -800,13 +800,13 @@ getRoleCB(AtkObject *aAtkObj)
         }
 #ifndef ATK_ROLE_AUTOCOMPLETE
         else if (accRole == nsIAccessible::ROLE_AUTOCOMPLETE) {
-			accRole == ATK_ROLE_COMBO_BOX;
-		}
+          accRole = ATK_ROLE_COMBO_BOX;
+        }
 #endif
 #ifndef ATK_ROLE_CAPTION
         else if (accRole == nsIAccessible::ROLE_CAPTION) {
-			accRole == ATK_ROLE_LABEL;
-		}
+          accRole = ATK_ROLE_LABEL;
+        }
 #endif
         aAtkObj->role = NS_STATIC_CAST(AtkRole, accRole);
     }
