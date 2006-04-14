@@ -52,9 +52,17 @@ LIBXUL_LIBRARY	= 1
 PACKAGE_FILE = appcomps.pkg
 PACKAGE_VARS += MOZ_PHOENIX
 
+# don't build ALERTS_SERVICE for firefox, xulrunner or toolkit-based suite
+ifndef MOZ_PHOENIX
+ifndef MOZ_XULRUNNER
+# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),windows gtk gtk2))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
+endif
+endif
+endif
 endif
 
 REQUIRES	= xpcom \
@@ -114,8 +122,13 @@ SHARED_LIBRARY_LIBS += \
 	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
+	$(NULL)
+# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
+SHARED_LIBRARY_LIBS += \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
+endif
 endif
 
 ifdef ALERTS_SERVICE
