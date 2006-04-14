@@ -223,7 +223,7 @@
         </menupopup>
       </menu>
     </menubar>
-    <toolbar>
+    <toolbar class="chromeclass-toolbar">
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
                oncommand="PlacesOrganizer.search(this.value);" 
                collection="all" persist="collection"

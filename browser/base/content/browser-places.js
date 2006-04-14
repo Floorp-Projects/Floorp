@@ -222,7 +222,7 @@ var PlacesCommandHook = {
     if (!organizer) {
       // No currently open places window, so open one with the specified mode.
       openDialog("chrome://browser/content/places/places.xul", 
-                 "", "dialog=no,resizable", place);
+                 "", "chrome,toolbar=yes,dialog=no,resizable", place);
     }
     else {
       // Set the mode on an existing places window. 
