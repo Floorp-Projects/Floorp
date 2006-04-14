@@ -836,8 +836,7 @@ sub viewall
   {
     
     $a->{'isviewable'} = isViewable($a->{'contenttype'});
-    $a->{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a->{'attachid'},
-                                          'is_active' => 1 });
+    $a->{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a->{'attachid'} });
   }
 
   # Retrieve the bug summary (for displaying on screen) and assignee.
@@ -1151,8 +1150,7 @@ sub edit {
                                                'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
     $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'},
-                                                    'attach_id' => $attachment->id,
-                                                    'is_active' => 1 });
+                                                    'attach_id' => $attachment->id });
   }
   $vars->{'flag_types'} = $flag_types;
   $vars->{'any_flags_requesteeble'} = grep($_->{'is_requesteeble'}, @$flag_types);

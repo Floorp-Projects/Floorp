@@ -843,8 +843,7 @@ sub init {
              # negative conditions (f.e. "flag isn't review+").
              my $flags = "flags_$chartid";
              push(@supptables, "LEFT JOIN flags AS $flags " . 
-                               "ON bugs.bug_id = $flags.bug_id " .
-                               "AND $flags.is_active = 1");
+                               "ON bugs.bug_id = $flags.bug_id ");
              my $flagtypes = "flagtypes_$chartid";
              push(@supptables, "LEFT JOIN flagtypes AS $flagtypes " . 
                                "ON $flags.type_id = $flagtypes.id");
@@ -874,8 +873,7 @@ sub init {
          "^requestees.login_name," => sub {
              my $flags = "flags_$chartid";
              push(@supptables, "LEFT JOIN flags AS $flags " .
-                               "ON bugs.bug_id = $flags.bug_id " .
-                               "AND $flags.is_active = 1");
+                               "ON bugs.bug_id = $flags.bug_id ");
              push(@supptables, "LEFT JOIN profiles AS requestees_$chartid " .
                                "ON $flags.requestee_id = requestees_$chartid.userid");
              $f = "requestees_$chartid.login_name";
@@ -883,8 +881,7 @@ sub init {
          "^setters.login_name," => sub {
              my $flags = "flags_$chartid";
              push(@supptables, "LEFT JOIN flags AS $flags " .
-                               "ON bugs.bug_id = $flags.bug_id " .
-                               "AND $flags.is_active = 1");
+                               "ON bugs.bug_id = $flags.bug_id ");
              push(@supptables, "LEFT JOIN profiles AS setters_$chartid " .
                                "ON $flags.setter_id = setters_$chartid.userid");
              $f = "setters_$chartid.login_name";

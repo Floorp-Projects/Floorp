@@ -359,7 +359,6 @@ sub update {
                                                      AND (bugs.component_id = i.component_id
                                                           OR i.component_id IS NULL))
                                               WHERE flags.type_id = ?
-                                                AND flags.is_active = 1
                                                 AND i.type_id IS NULL',
                                              undef, $id);
     foreach my $flag_id (@$flag_ids) {
@@ -373,7 +372,6 @@ sub update {
                                       INNER JOIN flagexclusions AS e
                                               ON flags.type_id = e.type_id
                                            WHERE flags.type_id = ?
-                                             AND flags.is_active = 1
                                              AND (bugs.product_id = e.product_id
                                                   OR e.product_id IS NULL)
                                              AND (bugs.component_id = e.component_id
@@ -401,8 +399,7 @@ sub confirmDelete
 
   # check if we need confirmation to delete:
   
-  my $count = Bugzilla::Flag::count({ 'type_id' => $id,
-                                      'is_active' => 1 });
+  my $count = Bugzilla::Flag::count({ 'type_id' => $id });
   
   if ($count > 0) {
     $vars->{'flag_type'} = Bugzilla::FlagType::get($id);

@@ -304,14 +304,12 @@ sub flag_handler {
             return $err;
         }
 
-        my ($fid) = $dbh->selectrow_array("SELECT MAX(id) FROM flags") || 0;
         $dbh->do("INSERT INTO flags 
-                 (id, type_id, status, bug_id, attach_id, creation_date, 
-                  setter_id, requestee_id, is_active)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", undef,
-            ++$fid,     $ftypeid,      $status, $bugid, $attachid, $timestamp,
-            $setter_id, $requestee_id, 1
-        );
+                 (type_id, status, bug_id, attach_id, creation_date, 
+                  setter_id, requestee_id)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)", undef,
+            ($ftypeid, $status, $bugid, $attachid, $timestamp,
+            $setter_id, $requestee_id));
     }
     else {
         $err = "Dropping unknown $type flag: $name\n";

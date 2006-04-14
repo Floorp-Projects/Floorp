@@ -128,9 +128,6 @@ sub queue {
                  (Param('useqacontact') ? "OR
                  (bugs.qa_contact = $userid))" : ")");
     
-    # Non-deleted flags only
-    $query .= " AND flags.is_active = 1 ";
-    
     # Limit query to pending requests.
     $query .= " AND flags.status = '?' " unless $status;
 

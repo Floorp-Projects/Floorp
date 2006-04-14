@@ -3621,12 +3621,6 @@ if ($dbh->bz_column_info("user_group_map", "isderived")) {
     $dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
 }
 
-# 2004-07-03 - Make it possible to disable flags without deleting them
-# from the database. Bug 223878, jouni@heikniemi.net
-
-$dbh->bz_add_column('flags', 'is_active', 
-                    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 'TRUE'});
-
 # 2004-07-16 - Make it possible to have group-group relationships other than
 # membership and bless.
 if ($dbh->bz_column_info("group_group_map", "isbless")) {
@@ -4282,6 +4276,22 @@ $dbh->bz_add_column('fielddefs', 'custom',
 # 2005-12-07 altlst@sonic.net -- Bug 225221
 $dbh->bz_add_column('longdescs', 'comment_id',
                     {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
+# 2006-03-02 LpSolit@gmail.com - Bug 322285
+# Do not store inactive flags in the DB anymore.
+if ($dbh->bz_column_info('flags', 'id')->{'TYPE'} eq 'INT3') {
+    # We first have to remove all existing inactive flags.
+    if ($dbh->bz_column_info('flags', 'is_active')) {
+        $dbh->do('DELETE FROM flags WHERE is_active = 0');
+    }
+
+    # Now we convert the id column to the auto_increment format.
+    $dbh->bz_alter_column('flags', 'id',
+                          {TYPE => 'MEDIUMSERIAL', NOTNULL => 1, PRIMARYKEY => 1});
+
+    # And finally, we remove the is_active column.
+    $dbh->bz_drop_column('flags', 'is_active');
+}
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

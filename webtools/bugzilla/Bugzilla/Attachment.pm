@@ -373,8 +373,7 @@ sub flags {
     my $self = shift;
     return $self->{flags} if exists $self->{flags};
 
-    $self->{flags} = Bugzilla::Flag::match({ attach_id => $self->id,
-                                             is_active => 1 });
+    $self->{flags} = Bugzilla::Flag::match({ 'attach_id' => $self->id });
     return $self->{flags};
 }
 

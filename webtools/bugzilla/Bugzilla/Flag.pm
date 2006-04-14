@@ -94,7 +94,7 @@ database.  B<Used by get, match, sqlify_criteria and perlify_record>
 =cut
 
 my @base_columns = 
-  ("is_active", "id", "type_id", "bug_id", "attach_id", "requestee_id", 
+  ("id", "type_id", "bug_id", "attach_id", "requestee_id", 
    "setter_id", "status");
 
 =pod
@@ -284,11 +284,6 @@ sub validate {
         my $flag = get($id);
         $flag || ThrowCodeError("flag_nonexistent", { id => $id });
 
-        # Note that the deletedness of the flag (is_active or not) is not 
-        # checked here; we do want to allow changes to deleted flags in
-        # certain cases. Flag::modify() will revive the modified flags.
-        # See bug 223878 for details.
-
         # Make sure the user chose a valid status.
         grep($status eq $_, qw(X + - ?))
           || ThrowCodeError("flag_status_invalid", 
@@ -398,8 +393,7 @@ sub snapshot {
     my ($bug_id, $attach_id) = @_;
 
     my $flags = match({ 'bug_id'    => $bug_id,
-                        'attach_id' => $attach_id,
-                        'is_active' => 1 });
+                        'attach_id' => $attach_id });
     my @summaries;
     foreach my $flag (@$flags) {
         my $summary = $flag->{'type'}->{'name'} . $flag->{'status'};
@@ -466,7 +460,6 @@ sub process {
             AND (bugs.product_id = i.product_id OR i.product_id IS NULL)
             AND (bugs.component_id = i.component_id OR i.component_id IS NULL)
           WHERE bugs.bug_id = ?
-            AND flags.is_active = 1
             AND i.type_id IS NULL",
         undef, $bug_id);
 
@@ -478,7 +471,6 @@ sub process {
         WHERE bugs.bug_id = ?
         AND flags.bug_id = bugs.bug_id
         AND flags.type_id = e.type_id
-        AND flags.is_active = 1 
         AND (bugs.product_id = e.product_id OR e.product_id IS NULL)
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)",
         undef, $bug_id);
@@ -529,22 +521,15 @@ Creates a flag record in the database.
 sub create {
     my ($flag, $timestamp) = @_;
 
-    # Determine the ID for the flag record by retrieving the last ID used
-    # and incrementing it.
-    &::SendSQL("SELECT MAX(id) FROM flags");
-    $flag->{'id'} = (&::FetchOneColumn() || 0) + 1;
-    
-    # Insert a record for the flag into the flags table.
     my $attach_id =
       $flag->{target}->{attachment} ? $flag->{target}->{attachment}->{id}
                                     : "NULL";
     my $requestee_id = $flag->{'requestee'} ? $flag->{'requestee'}->id : "NULL";
-    &::SendSQL("INSERT INTO flags (id, type_id, 
-                                      bug_id, attach_id, 
-                                      requestee_id, setter_id, status, 
-                                      creation_date, modification_date)
-                VALUES ($flag->{'id'}, 
-                        $flag->{'type'}->{'id'}, 
+
+    &::SendSQL("INSERT INTO flags (type_id, bug_id, attach_id, 
+                                   requestee_id, setter_id, status, 
+                                   creation_date, modification_date)
+                VALUES ($flag->{'type'}->{'id'}, 
                         $flag->{'target'}->{'bug'}->{'id'}, 
                         $attach_id,
                         $requestee_id,
@@ -597,9 +582,6 @@ sub migrate {
 =item C<modify($cgi, $timestamp)>
 
 Modifies flags in the database when a user changes them.
-Note that modified flags are always set active (is_active = 1) -
-this will revive deleted flags that get changed through 
-attachment.cgi midairs. See bug 223878 for details.
 
 =back
 
@@ -681,8 +663,7 @@ sub modify {
                         SET    setter_id = " . $setter->id . ", 
                                requestee_id = NULL , 
                                status = '$status' , 
-                               modification_date = $timestamp ,
-                               is_active = 1
+                               modification_date = $timestamp
                         WHERE  id = $flag->{'id'}");
 
             # If the status of the flag was "?", we have to notify
@@ -722,8 +703,7 @@ sub modify {
                         SET    setter_id = " . $setter->id . ", 
                                requestee_id = $requestee_id , 
                                status = '$status' , 
-                               modification_date = $timestamp ,
-                               is_active = 1
+                               modification_date = $timestamp
                         WHERE  id = $flag->{'id'}");
 
             # Now update the flag object with its new values.
@@ -739,7 +719,6 @@ sub modify {
 
             notify($flag, "request/email.txt.tmpl");
         }
-        # The user unset the flag; set is_active = 0
         elsif ($status eq 'X') {
             clear($flag->{'id'});
         }
@@ -756,7 +735,7 @@ sub modify {
 
 =item C<clear($id)>
 
-Deactivate a flag.
+Remove a flag from the DB.
 
 =back
 
@@ -764,12 +743,10 @@ Deactivate a flag.
 
 sub clear {
     my ($id) = @_;
-    
+    my $dbh = Bugzilla->dbh;
+
     my $flag = get($id);
-    
-    &::PushGlobalSQLState();
-    &::SendSQL("UPDATE flags SET is_active = 0 WHERE id = $id");
-    &::PopGlobalSQLState();
+    $dbh->do('DELETE FROM flags WHERE id = ?', undef, $id);
 
     # If we cancel a pending request, we have to notify the requester
     # (if he wants to).
@@ -834,17 +811,16 @@ sub FormToNewFlags {
         # We are only interested in flags the user tries to create.
         next unless scalar(grep { $_ == $type_id } @type_ids);
 
-        # Get the number of active flags of this type already set for this target.
+        # Get the number of flags of this type already set for this target.
         my $has_flags = count(
             { 'type_id'     => $type_id,
               'target_type' => $target->{'type'},
               'bug_id'      => $target->{'bug'}->{'id'},
               'attach_id'   => $target->{'attachment'} ?
-                                 $target->{'attachment'}->{'id'} : undef,
-              'is_active'   => 1 });
+                                 $target->{'attachment'}->{'id'} : undef });
 
         # Do not create a new flag of this type if this flag type is
-        # not multiplicable and already has an active flag set.
+        # not multiplicable and already has a flag set.
         next if (!$flag_type->{'is_multiplicable'} && $has_flags);
 
         my $status = $cgi->param("flag_type-$type_id");
@@ -1032,7 +1008,6 @@ sub CancelRequests {
                                   LEFT JOIN attachments ON flags.attach_id = attachments.attach_id
                                   WHERE flags.attach_id = ?
                                   AND flags.status = '?'
-                                  AND flags.is_active = 1
                                   AND attachments.isobsolete = 0",
                                   undef, $attach_id);
 
@@ -1094,7 +1069,6 @@ sub sqlify_criteria {
         elsif ($field eq 'requestee_id') { push(@criteria, "requestee_id = $value") }
         elsif ($field eq 'setter_id')    { push(@criteria, "setter_id    = $value") }
         elsif ($field eq 'status')       { push(@criteria, "status       = '$value'") }
-        elsif ($field eq 'is_active')    { push(@criteria, "is_active    = $value") }
     }
     
     return @criteria;
@@ -1115,14 +1089,13 @@ Converts a row from the database into a Perl record.
 =cut
 
 sub perlify_record {
-    my ($exists, $id, $type_id, $bug_id, $attach_id, 
+    my ($id, $type_id, $bug_id, $attach_id, 
         $requestee_id, $setter_id, $status) = @_;
     
-    return undef unless defined($exists);
+    return undef unless $id;
     
     my $flag =
       {
-        exists    => $exists , 
         id        => $id ,
         type      => Bugzilla::FlagType::get($type_id) ,
         target    => get_target($bug_id, $attach_id) , 
@@ -1152,6 +1125,8 @@ sub perlify_record {
 =item Jouni Heikniemi <jouni@heikniemi.net>
 
 =item Kevin Benton <kevin.benton@amd.com>
+
+=item Frédéric Buclin <LpSolit@gmail.com>
 
 =back
 

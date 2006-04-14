@@ -453,7 +453,7 @@ if ($action eq 'search') {
         'SELECT COUNT(*) FROM email_setting WHERE user_id = ?',
         undef, $otherUserID);
     $vars->{'flags'}{'requestee'} = $dbh->selectrow_array(
-        'SELECT COUNT(*) FROM flags WHERE requestee_id = ? AND is_active = 1',
+        'SELECT COUNT(*) FROM flags WHERE requestee_id = ?',
         undef, $otherUserID);
     $vars->{'flags'}{'setter'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM flags WHERE setter_id = ?',

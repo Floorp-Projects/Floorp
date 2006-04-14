@@ -375,7 +375,7 @@ use constant ABSTRACT_SCHEMA => {
     # "flags" stores one record for each flag on each bug/attachment.
     flags => {
         FIELDS => [
-            id                => {TYPE => 'INT3', NOTNULL => 1,
+            id                => {TYPE => 'MEDIUMSERIAL', NOTNULL => 1,
                                   PRIMARYKEY => 1},
             type_id           => {TYPE => 'INT2', NOTNULL => 1},
             status            => {TYPE => 'char(1)', NOTNULL => 1},
@@ -385,8 +385,6 @@ use constant ABSTRACT_SCHEMA => {
             modification_date => {TYPE => 'DATETIME'},
             setter_id         => {TYPE => 'INT3'},
             requestee_id      => {TYPE => 'INT3'},
-            is_active         => {TYPE => 'BOOLEAN', NOTNULL => 1,
-                                  DEFAULT => 'TRUE'},
         ],
         INDEXES => [
             flags_bug_id_idx       => [qw(bug_id attach_id)],
