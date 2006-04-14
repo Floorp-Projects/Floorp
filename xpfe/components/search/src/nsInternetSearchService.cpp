@@ -2543,7 +2543,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 
   validateEngine(engine);
   
-  // if its a engine from a search category, then get its "#Name",
+  // if it's an engine from a search category, then get its "#Name",
   // and try to map from that back to the real engine reference
   if (isSearchCategoryEngineURI(engine))
   {
@@ -3186,7 +3186,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
     baseFilename = nsnull;
     if (!engine)  continue;
 
-    // if its a engine from a search category, then get its "#Name",
+    // if it's an engine from a search category, then get its "#Name",
     // and map from that back to the real engine reference; if an
     // error occurs, finish processing the rest of the engines,
     // don't just break/return out
@@ -3194,9 +3194,8 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
     {
       nsCOMPtr<nsIRDFResource>  trueEngine;
       rv = resolveSearchCategoryEngineURI(engine, getter_AddRefs(trueEngine));
-      if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE)) return(rv);
-      if (!trueEngine)  continue;
-
+      if (NS_FAILED(rv) || !trueEngine)
+        continue;
       engine = trueEngine;
     }
 
