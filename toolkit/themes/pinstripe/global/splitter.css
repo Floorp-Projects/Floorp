@@ -47,7 +47,7 @@
 splitter {
   -moz-box-align: center;
   -moz-box-pack: center;
-  cursor: e-resize;
+  cursor: ew-resize;
   min-width: 9px;
   min-height: 9px;
   background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;  
@@ -56,7 +56,7 @@ splitter {
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {
-  cursor: n-resize;
+  cursor: ns-resize;
   min-width: 0px;
   min-height: 9px;
   min-width: 9px;  
