@@ -668,6 +668,9 @@ function CreateCCK()
   CCKWriteConfigFile(destdir);
 
   destdir.append("jar");
+  try {
+    destdir.remove(true);
+  } catch(ex) {}
   destdir.append("content");
   destdir.append("cck");
   try {
@@ -701,6 +704,11 @@ function CreateCCK()
 
   destdir.initWithPath(currentconfigpath);
   destdir.append("xpi");
+  try {
+    destdir.remove(true);
+    destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+  } catch(ex) {}
+  CCKWriteConfigFile(destdir);
   destdir.append("chrome");
   try {
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
@@ -790,7 +798,7 @@ function CreateCCK()
   filename += ".xpi";
   
   CCKZip(filename, destdir,
-         "chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js");
+         "chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js", "cck.config");
 
   var bundle = document.getElementById("bundle_cckwizard");
 
