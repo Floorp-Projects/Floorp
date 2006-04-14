@@ -42,7 +42,7 @@
 #include "gfxTypes.h"
 #include "gfxFont.h"
 
-#include <Usp10.h>
+#include <usp10.h>
 #include <cairo-win32.h>
 
 

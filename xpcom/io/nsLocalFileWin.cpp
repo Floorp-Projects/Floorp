@@ -56,7 +56,7 @@
 #include "private/pprio.h"  // To get PR_ImportFile
 #include "prprf.h"
 #include "prmem.h"
-#include "nsHashkeys.h"
+#include "nsHashKeys.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"

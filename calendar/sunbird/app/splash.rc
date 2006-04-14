@@ -72,15 +72,15 @@ END
 #define IDC_ROWRESIZE                   4109
 #define IDC_VERTICALTEXT                4110
 
-IDC_GRAB                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grab.cur"
-IDC_GRABBING            CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grabbing.cur"
-IDC_CELL                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\cell.cur"
-IDC_COPY                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\copy.cur"
-IDC_ALIAS               CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\aliasb.cur"
-IDC_ZOOMIN              CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\zoom_in.cur"
-IDC_ZOOMOUT             CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
-IDC_COLRESIZE           CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\col_resize.cur"
-IDC_ROWRESIZE           CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\row_resize.cur"
-IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\vertical_text.cur"
+IDC_GRAB                CURSOR  DISCARDABLE     "../../widget/src/build/res/grab.cur"
+IDC_GRABBING            CURSOR  DISCARDABLE     "../../widget/src/build/res/grabbing.cur"
+IDC_CELL                CURSOR  DISCARDABLE     "../../widget/src/build/res/cell.cur"
+IDC_COPY                CURSOR  DISCARDABLE     "../../widget/src/build/res/copy.cur"
+IDC_ALIAS               CURSOR  DISCARDABLE     "../../widget/src/build/res/aliasb.cur"
+IDC_ZOOMIN              CURSOR  DISCARDABLE     "../../widget/src/build/res/zoom_in.cur"
+IDC_ZOOMOUT             CURSOR  DISCARDABLE     "../../widget/src/build/res/zoom_out.cur"
+IDC_COLRESIZE           CURSOR  DISCARDABLE     "../../widget/src/build/res/col_resize.cur"
+IDC_ROWRESIZE           CURSOR  DISCARDABLE     "../../widget/src/build/res/row_resize.cur"
+IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "../../widget/src/build/res/vertical_text.cur"
 
 #endif

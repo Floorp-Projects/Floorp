@@ -71,7 +71,7 @@ static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #include "nsSystemFontsWin.h"
 #include "gfxWindowsSurface.h"
 static nsSystemFontsWin *gSystemFonts = nsnull;
-#include <Usp10.h>
+#include <usp10.h>
 #elif defined(XP_BEOS)
 #include "nsSystemFontsBeOS.h"
 static nsSystemFontsBeOS *gSystemFonts = nsnull;

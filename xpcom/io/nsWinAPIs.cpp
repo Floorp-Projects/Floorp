@@ -40,7 +40,7 @@
 #include "nsWinAPIs.h"
 
 #include <windows.h>
-#include <WinError.h>
+#include <winerror.h>
 
 #include <io.h>
 #include <stdlib.h>
