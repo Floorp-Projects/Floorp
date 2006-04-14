@@ -48,9 +48,9 @@
 #include "nsRect.h"
 #include "nsIContent.h"
 #include "nsAutoPtr.h"
+#include "nsSVGElement.h"
 
 class nsSVGLength2;
-class nsSVGElement;
 
 class nsSVGFilterInstance
 {
