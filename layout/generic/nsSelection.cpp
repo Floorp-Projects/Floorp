@@ -257,6 +257,8 @@ public:
 
   nsresult     NotifySelectionListeners();
 
+  void DetachFromPresentation();
+
 private:
   friend class nsSelectionIterator;
   friend struct nsScrollSelectionIntoViewEvent;
@@ -952,7 +954,10 @@ nsSelection::~nsSelection()
 {
   PRInt32 i;
   for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
-    NS_IF_RELEASE(mDomSelections[i]);
+    if (mDomSelections[i]) {
+      mDomSelections[i]->DetachFromPresentation();
+      NS_RELEASE(mDomSelections[i]);
+    }
   }
 }
 
@@ -1601,6 +1606,8 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
 NS_IMETHODIMP
 nsTypedSelection::SetInterlinePosition(PRBool aHintRight)
 {
+  if (!mFrameSelection)
+    return NS_ERROR_NOT_INITIALIZED; // Can't do selection
   nsIFrameSelection::HINT hint;
   if (aHintRight)
     hint = nsIFrameSelection::HINTRIGHT;
@@ -1612,6 +1619,8 @@ nsTypedSelection::SetInterlinePosition(PRBool aHintRight)
 NS_IMETHODIMP
 nsTypedSelection::GetInterlinePosition(PRBool *aHintRight)
 {
+  if (!mFrameSelection)
+    return NS_ERROR_NOT_INITIALIZED; // Can't do selection
   nsIFrameSelection::HINT hint;
   nsresult rv = mFrameSelection->GetHint(&hint);
   if (hint == nsIFrameSelection::HINTRIGHT)
@@ -4270,6 +4279,10 @@ nsTypedSelection::nsTypedSelection()
 
 nsTypedSelection::~nsTypedSelection()
 {
+  DetachFromPresentation();
+}
+  
+void nsTypedSelection::DetachFromPresentation() {
   setAnchorFocusRange(-1);
 
   if (mAutoScrollTimer) {
@@ -4282,7 +4295,12 @@ nsTypedSelection::~nsTypedSelection()
     mScrollEventPosted = PR_FALSE;
   }
 
-  delete mCachedOffsetForFrame;
+  if (mCachedOffsetForFrame) {
+    delete mCachedOffsetForFrame;
+    mCachedOffsetForFrame = nsnull;
+  }
+
+  mFrameSelection = nsnull;
 }
 
 
@@ -5535,6 +5553,8 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
   if (!aParentNode)
     return NS_ERROR_INVALID_ARG;
+  if (!mFrameSelection)
+    return NS_ERROR_NOT_INITIALIZED; // Can't do selection
   mFrameSelection->InvalidateDesiredX();
   if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
     return NS_ERROR_FAILURE;
@@ -6051,6 +6071,9 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   // First, find the range containing the old focus point:
   if (!mAnchorFocusRange)
     return NS_ERROR_NOT_INITIALIZED;
+
+  if (!mFrameSelection)
+    return NS_ERROR_NOT_INITIALIZED; // Can't do selection
 
   nsresult res;
   if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
@@ -7283,6 +7306,8 @@ nsTypedSelection::DeleteFromDocument()
 NS_IMETHODIMP
 nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 {
+  if (!mFrameSelection)
+    return NS_ERROR_NOT_INITIALIZED; // Can't do selection
   nsresult result;
   nsCOMPtr<nsIDOMNode>  focusNode;
   nsCOMPtr<nsIContent> focusContent;
