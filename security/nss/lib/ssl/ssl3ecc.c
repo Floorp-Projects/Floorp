@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.7 2006/04/13 23:08:18 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.8 2006/04/14 00:43:19 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -59,6 +59,7 @@
 #include "prerror.h"
 #include "pratom.h"
 #include "prthread.h"
+#include "prinit.h"
 
 #include "pk11func.h"
 #include "secmod.h"
