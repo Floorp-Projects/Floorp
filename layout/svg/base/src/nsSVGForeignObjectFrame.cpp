@@ -66,6 +66,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsISVGRendererSurface.h"
+#include "nsSVGForeignObjectElement.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -92,50 +93,6 @@ nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
                NS_FRAME_REFLOW_ROOT);
 }
 
-nsresult nsSVGForeignObjectFrame::Init()
-{
-  nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(mContent);
-  NS_ASSERTION(foreignObject, "wrong content element");
-  
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    foreignObject->GetX(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no x");
-    if (!mX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    foreignObject->GetY(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no y");
-    if (!mY) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    foreignObject->GetWidth(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mWidth));
-    NS_ASSERTION(mWidth, "no width");
-    if (!mWidth) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    foreignObject->GetHeight(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mHeight));
-    NS_ASSERTION(mHeight, "no height");
-    if (!mHeight) return NS_ERROR_FAILURE;
-  }
-  
-  // XXX for some reason updating fails when done here. Why is this too early?
-  // anyway - we use a less desirable mechanism now of updating in paint().
-//  Update(); 
-  
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -146,22 +103,8 @@ NS_INTERFACE_MAP_BEGIN(nsSVGForeignObjectFrame)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectFrameBase)
 
-
 //----------------------------------------------------------------------
 // nsIFrame methods
-NS_IMETHODIMP
-nsSVGForeignObjectFrame::Init(
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow)
-{
-  nsresult rv;
-  rv = nsSVGForeignObjectFrameBase::Init(aContent, aParent, aPrevInFlow);
-
-  Init();
-
-  return rv;
-}
 
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Reflow(nsPresContext*          aPresContext,
@@ -511,10 +454,9 @@ nsSVGForeignObjectFrame::GetBBoxInternal(float* aX, float *aY, float* aWidth,
   if (!ctm)
     return;
   
-  mX->GetValue(aX);
-  mY->GetValue(aY);
-  mWidth->GetValue(aWidth);
-  mHeight->GetValue(aHeight);
+  nsSVGForeignObjectElement *fO = NS_STATIC_CAST(nsSVGForeignObjectElement*,
+                                                 mContent);
+  fO->GetAnimatedLengthValues(aX, aY, aWidth, aHeight, nsnull);
   
   TransformRect(aX, aY, aWidth, aHeight, ctm);
 }
@@ -664,11 +606,13 @@ nsSVGForeignObjectFrame::DoReflow()
   
   float twipsPerPx = GetTwipsPerPx();
   
-  NS_ENSURE_TRUE(mX && mY && mWidth && mHeight, nsnull);
+  nsSVGForeignObjectElement *fO = NS_STATIC_CAST(nsSVGForeignObjectElement*,
+                                                 mContent);
 
-  float width, height;
-  mWidth->GetValue(&width);
-  mHeight->GetValue(&height);
+  float width =
+    fO->mLengthAttributes[nsSVGForeignObjectElement::WIDTH].GetAnimValue(fO);
+  float height =
+    fO->mLengthAttributes[nsSVGForeignObjectElement::HEIGHT].GetAnimValue(fO);
 
   nsSize size(NSFloatPixelsToTwips(width, twipsPerPx),
               NSFloatPixelsToTwips(height, twipsPerPx));

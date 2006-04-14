@@ -34,32 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGFitToViewBox.h"
-#include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGAngle.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGRectElement.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
-#include "nsISVGRendererPathBuilder.h"
 #include "nsSVGDefsFrame.h"
-#include "nsISVGValue.h"
-#include "nsIDOMSVGMarkerElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsSVGValue.h"
-#include "nsSVGUtils.h"
 #include "nsSVGMatrix.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
+#include "nsSVGMarkerElement.h"
 
 class nsSVGMarkerFrame : public nsSVGDefsFrame,
                          public nsSVGValue,
@@ -114,18 +99,14 @@ public:
                nsSVGMark *aMark, float aStrokeWidth);
 
 private:
-  nsCOMPtr<nsIDOMSVGLength>              mRefX;
-  nsCOMPtr<nsIDOMSVGLength>              mRefY;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
-  nsCOMPtr<nsIDOMSVGLength>              mMarkerWidth;
-  nsCOMPtr<nsIDOMSVGLength>              mMarkerHeight;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mOrientType;
   nsCOMPtr<nsIDOMSVGAngle>               mOrientAngle;
   nsCOMPtr<nsIDOMSVGRect>                mViewBox;
 
   // stuff needed for callback
-  float mStrokeWidth, mX, mY, mAngle;
   nsSVGPathGeometryFrame *mMarkerParent;
+  float mStrokeWidth, mX, mY, mAngle;
 
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
@@ -191,38 +172,6 @@ nsSVGMarkerFrame::InitSVG()
 {
   nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(mContent);
   NS_ASSERTION(marker, "wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    marker->GetRefX(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mRefX));
-    NS_ASSERTION(mRefX, "no RefX");
-    if (!mRefX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    marker->GetRefY(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mRefY));
-    NS_ASSERTION(mRefY, "no RefY");
-    if (!mRefY) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    marker->GetMarkerWidth(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mMarkerWidth));
-    NS_ASSERTION(mMarkerWidth, "no markerWidth");
-    if (!mMarkerWidth) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    marker->GetMarkerHeight(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mMarkerHeight));
-    NS_ASSERTION(mMarkerHeight, "no markerHeight");
-    if (!mMarkerHeight) return NS_ERROR_FAILURE;
-  }
 
   {
     nsCOMPtr<nsIDOMSVGAnimatedAngle> angle;
@@ -367,6 +316,14 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
   mAngle = aMark->angle;
   mMarkerParent = aParent;
 
+  nsSVGMarkerElement *marker = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
+
+  nsRefPtr<nsSVGCoordCtxProvider> ctx;
+  ctx =
+    nsSVGUtils::GetCoordContextProvider(NS_STATIC_CAST(nsSVGElement*,
+                                                       aParent->GetContent()));
+  marker->SetParentCoordCtxProvider(ctx);
+
   if (GetStyleDisplay()->IsScrollableOverflow()) {
     aCanvas->PushClip();
 
@@ -393,8 +350,8 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 
       viewTransform->GetE(&x);
       viewTransform->GetF(&y);
-      mMarkerWidth->GetValue(&width);
-      mMarkerHeight->GetValue(&height);
+      width = marker->mLengthAttributes[nsSVGMarkerElement::MARKERWIDTH].GetAnimValue(ctx);
+      height = marker->mLengthAttributes[nsSVGMarkerElement::MARKERHEIGHT].GetAnimValue(ctx);
       aCanvas->SetClipRect(clipTransform, x, y, width, height);
     }
   }
@@ -414,6 +371,7 @@ nsSVGMarkerFrame::PaintMark(nsISVGRendererCanvas *aCanvas,
 
   mMarkerParent = nsnull;
   mInUse = PR_FALSE;
+  marker->SetParentCoordCtxProvider(nsnull);
 
   return NS_OK;
 }
@@ -436,6 +394,14 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
   mY = aMark->y;
   mAngle = aMark->angle;
   mMarkerParent = aParent;
+
+  nsSVGMarkerElement *marker = NS_STATIC_CAST(nsSVGMarkerElement*, mContent);
+
+  nsRefPtr<nsSVGCoordCtxProvider> ctx;
+  ctx =
+    nsSVGUtils::GetCoordContextProvider(NS_STATIC_CAST(nsSVGElement*,
+                                                       aParent->GetContent()));
+  marker->SetParentCoordCtxProvider(ctx);
 
   nsISVGRendererRegion *accu_region=nsnull;
   
@@ -463,6 +429,7 @@ NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)
   mMarkerParent = nsnull;
 
   mInUse = PR_FALSE;
+  marker->SetParentCoordCtxProvider(nsnull);
 
   return accu_region;
 }

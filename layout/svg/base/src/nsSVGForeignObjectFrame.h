@@ -62,7 +62,6 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
   NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGForeignObjectFrame(nsStyleContext* aContext);
-  nsresult Init();
   
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -71,10 +70,6 @@ private:
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
 public:
   // nsIFrame:  
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,

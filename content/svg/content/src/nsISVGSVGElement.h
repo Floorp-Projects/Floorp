@@ -51,7 +51,7 @@ class nsISVGEnum;
 // nsISVGSVGElement: private interface implemented by <svg>-elements
 
 #define NS_ISVGSVGELEMENT_IID \
-{ 0x968b7ff3, 0xcaa7, 0x4604, { 0x92, 0x98, 0x7a, 0x66, 0xee, 0x91, 0x83, 0xca } }
+{ 0x7f22b121, 0x9522, 0x4840, { 0xb1, 0x0e, 0x07, 0x48, 0xfa, 0xe1, 0xb3, 0xf8 } }
 
 class nsISVGSVGElement : public nsIDOMSVGSVGElement
 {
@@ -89,6 +89,11 @@ public:
   NS_IMETHOD_(float) GetPreviousScale()=0;
   NS_IMETHOD_(float) GetPreviousTranslate_x()=0;
   NS_IMETHOD_(float) GetPreviousTranslate_y()=0;
+
+  /**
+   * Our viewport or viewbox is changing - throw away the cached value.
+   */
+  NS_IMETHOD_(void) InvalidateViewBoxToViewport()=0;
 };
 
 #endif // __NS_ISVGSVGELEMENT__

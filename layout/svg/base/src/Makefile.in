@@ -120,6 +120,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../style \
 		-I$(srcdir)/../../../xul/base/src \
 		-I$(srcdir)/../../../../content/svg/content/src \
+		-I$(srcdir)/../../../../content/base/src \
 		$(NULL)
 
 libs::

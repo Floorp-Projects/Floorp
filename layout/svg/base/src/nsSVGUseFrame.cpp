@@ -34,18 +34,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGTransformable.h"
-#include "nsSVGDefsFrame.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsSVGLength.h"
 #include "nsSVGGFrame.h"
-#include "nsIDOMSVGUseElement.h"
-#include "nsISVGValue.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsSVGMatrix.h"
-#include "nsLayoutAtoms.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
+#include "nsIDOMSVGUseElement.h"
+#include "nsIDOMSVGTransformable.h"
+#include "nsSVGElement.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -57,8 +51,6 @@ class nsSVGUseFrame : public nsSVGUseFrameBase,
 
 protected:
   nsSVGUseFrame(nsStyleContext* aContext) : nsSVGUseFrameBase(aContext) {}
-
-  NS_IMETHOD InitSVG();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -95,11 +87,6 @@ public:
   NS_IMETHOD CreateFrameFor(nsPresContext *aPresContext,
                             nsIContent *aContent,
                             nsIFrame **aFrame);
-
-protected:
-
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
 };
 
 //----------------------------------------------------------------------
@@ -117,33 +104,6 @@ NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext
   }
 
   return new (aPresShell) nsSVGUseFrame(aContext);
-}
-
-NS_IMETHODIMP
-nsSVGUseFrame::InitSVG()
-{
-  nsresult rv = nsSVGUseFrameBase::InitSVG();
-  if (NS_FAILED(rv)) return rv;
- 
-  nsCOMPtr<nsIDOMSVGUseElement> UseElement = do_QueryInterface(mContent);
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    UseElement->GetX(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no x");
-    if (!mX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    UseElement->GetY(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no y");
-    if (!mY) return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 nsIAtom *
@@ -209,8 +169,9 @@ nsSVGUseFrame::GetCanvasTM()
 
   // x and y:
   float x, y;
-  mX->GetValue(&x);
-  mY->GetValue(&y);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x, &y, nsnull);
+
   nsCOMPtr<nsIDOMSVGMatrix> fini;
   currentTM->Translate(x, y, getter_AddRefs(fini));
 

@@ -104,6 +104,8 @@ public:
   already_AddRefed<nsSVGCoordCtx> GetContextY() { return mInner ? mInner->GetContextY() : nsnull; }
   already_AddRefed<nsSVGCoordCtx> GetContextUnspecified() { return mInner ? mInner->GetContextUnspecified() : nsnull; }
 
+  already_AddRefed<nsSVGCoordCtx> GetCtxByType(PRUint16 aCtxType);
+
 protected:
   void SetCoordCtxRect(nsIDOMSVGRect* ctxRect) { if(mInner) mInner->SetContextRect(ctxRect); }
   void SetCoordCtxMMPerPx(float mmPerPxX, float mmPerPxY) {

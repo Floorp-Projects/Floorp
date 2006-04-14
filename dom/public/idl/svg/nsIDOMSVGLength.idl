@@ -40,7 +40,7 @@
 
 interface nsIDOMSVGMatrix;
 
-[scriptable, uuid(10231b04-7482-4960-bada-3dced0d586fc)]
+[scriptable, uuid(2596325c-aed0-487e-96a1-0a6d589b9c6b)]
 interface nsIDOMSVGLength : nsISupports
 { 
   // Length Unit Types
@@ -66,10 +66,6 @@ interface nsIDOMSVGLength : nsISupports
   
   void newValueSpecifiedUnits(in unsigned short unitType, in float valueInSpecifiedUnits);
   void convertToSpecifiedUnits(in unsigned short unitType);
-  
-  // Mozilla extension, not part of W3 SVG DOM:
-  float getTransformedValue(in nsIDOMSVGMatrix matrix);
-  
 };
 
 

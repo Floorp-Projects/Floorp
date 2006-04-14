@@ -38,24 +38,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGEllipseElement.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
-#include "nsLayoutAtoms.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
+#include "nsIDOMSVGEllipseElement.h"
+#include "nsSVGElement.h"
 
 class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 {
   friend nsIFrame*
   NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
-  
   nsSVGEllipseFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
   /**
@@ -79,11 +70,6 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
-
-  nsCOMPtr<nsIDOMSVGLength> mCx;
-  nsCOMPtr<nsIDOMSVGLength> mCy;
-  nsCOMPtr<nsIDOMSVGLength> mRx;
-  nsCOMPtr<nsIDOMSVGLength> mRy;
 };
 
 //----------------------------------------------------------------------
@@ -103,58 +89,14 @@ NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCon
   return new (aPresShell) nsSVGEllipseFrame(aContext);
 }
 
-NS_IMETHODIMP
-nsSVGEllipseFrame::InitSVG()
-{
-  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDOMSVGEllipseElement> ellipse = do_QueryInterface(mContent);
-  NS_ASSERTION(ellipse,"wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    ellipse->GetCx(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mCx));
-    NS_ASSERTION(mCx, "no cx");
-    if (!mCx) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    ellipse->GetCy(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mCy));
-    NS_ASSERTION(mCy, "no cy");
-    if (!mCy) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    ellipse->GetRx(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mRx));
-    NS_ASSERTION(mRx, "no rx");
-    if (!mRx) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    ellipse->GetRy(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mRy));
-    NS_ASSERTION(mRy, "no ry");
-    if (!mRy) return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK; 
-}
+//----------------------------------------------------------------------
+// nsIFrame methods:
 
 nsIAtom *
 nsSVGEllipseFrame::GetType() const
 {
   return nsLayoutAtoms::svgEllipseFrame;
 }
-
-//----------------------------------------------------------------------
-// nsIFrame methods:
 
 NS_IMETHODIMP
 nsSVGEllipseFrame::AttributeChanged(PRInt32         aNameSpaceID,
@@ -180,12 +122,10 @@ nsSVGEllipseFrame::AttributeChanged(PRInt32         aNameSpaceID,
 /* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
 NS_IMETHODIMP nsSVGEllipseFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
-  float x,y,rx,ry;
+  float x, y, rx, ry;
 
-  mCx->GetValue(&x);
-  mCy->GetValue(&y);
-  mRx->GetValue(&rx);
-  mRy->GetValue(&ry);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x, &y, &rx, &ry, nsnull);
 
   // build ellipse from two arcs
   pathBuilder->Moveto(x-rx, y);

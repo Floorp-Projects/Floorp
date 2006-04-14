@@ -37,16 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGCircleElement.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
-#include "nsLayoutAtoms.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
+#include "nsIDOMSVGCircleElement.h"
+#include "nsSVGElement.h"
 
 class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
@@ -54,8 +47,6 @@ protected:
   friend nsIFrame*
   NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
-  
   nsSVGCircleFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
 public:
@@ -80,11 +71,6 @@ public:
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
-
-private:
-  nsCOMPtr<nsIDOMSVGLength> mCx;
-  nsCOMPtr<nsIDOMSVGLength> mCy;
-  nsCOMPtr<nsIDOMSVGLength> mR;
 };
 
 //----------------------------------------------------------------------
@@ -103,43 +89,6 @@ NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCont
 
   return new (aPresShell) nsSVGCircleFrame(aContext);
 }
-
-NS_IMETHODIMP
-nsSVGCircleFrame::InitSVG()
-{
-  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
-  if (NS_FAILED(rv)) return rv;
-
-  
-  nsCOMPtr<nsIDOMSVGCircleElement> circle = do_QueryInterface(mContent);
-  NS_ASSERTION(circle,"wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    circle->GetCx(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mCx));
-    NS_ASSERTION(mCx, "no cx");
-    if (!mCx) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    circle->GetCy(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mCy));
-    NS_ASSERTION(mCy, "no cy");
-    if (!mCy) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    circle->GetR(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mR));
-    NS_ASSERTION(mR, "no r");
-    if (!mR) return NS_ERROR_FAILURE;
-  }
-  
-  return NS_OK;
-}  
 
 nsIAtom *
 nsSVGCircleFrame::GetType() const
@@ -174,11 +123,10 @@ nsSVGCircleFrame::AttributeChanged(PRInt32         aNameSpaceID,
 /* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
 NS_IMETHODIMP nsSVGCircleFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
-  float x,y,r;
+  float x, y, r;
 
-  mCx->GetValue(&x);
-  mCy->GetValue(&y);
-  mR->GetValue(&r);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x, &y, &r, nsnull);
 
   // we should be able to build this as a single arc with startpoints
   // and endpoints infinitesimally separated. Let's use two arcs

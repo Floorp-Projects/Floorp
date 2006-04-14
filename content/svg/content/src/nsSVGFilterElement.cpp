@@ -34,70 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
 #include "nsSVGAtoms.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGLength.h"
-#include "nsIDOMSVGFilterElement.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGAnimatedInteger.h"
 #include "nsSVGEnum.h"
+#include "nsSVGFilterElement.h"
 
-typedef nsSVGGraphicElement nsSVGFilterElementBase;
-
-class nsSVGFilterElement : public nsSVGFilterElementBase,
-                           public nsIDOMSVGFilterElement,
-                           public nsSVGValue
+nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
 {
-protected:
-  friend nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGFilterElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGFilterElement();
-  nsresult Init();
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString &aValue) { return NS_OK; }
-  NS_IMETHOD GetValueString(nsAString& aValue) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFILTERELEMENT
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGFilterElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGFilterElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGFilterElementBase::)
-
-  // nsIContent
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify);
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
-
-protected:
-  
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mFilterUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPrimitiveUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResX;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResY;
+  { &nsGkAtoms::x, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::y, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
-
 NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -120,13 +75,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGFilterElementBase)
 nsSVGFilterElement::nsSVGFilterElement(nsINodeInfo *aNodeInfo)
   : nsSVGFilterElementBase(aNodeInfo)
 {
-
 }
-
-nsSVGFilterElement::~nsSVGFilterElement()
-{
-}
-
 
 nsresult
 nsSVGFilterElement::Init()
@@ -167,61 +116,6 @@ nsSVGFilterElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         -10.0f,
-                         nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         -10.0f,
-                         nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #REQUIRED  attrib: width
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         120.0f,
-                         nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #REQUIRED  attrib: height
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         120.0f,
-                         nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   // DOM property: filterResX , #IMPLIED attrib: filterRes
   {
     rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mFilterResX), 0);
@@ -250,33 +144,25 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGFilterElement)
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGFilterElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGFilterElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGFilterElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGFilterElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterUnits; */
@@ -384,4 +270,14 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return rv;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::LengthAttributesInfo
+nsSVGFilterElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }

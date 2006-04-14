@@ -38,16 +38,15 @@
 #include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGTextPathElement.h"
-#include "nsSVGLength.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsISVGTextContentMetrics.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGEnum.h"
 #include "nsDOMError.h"
+#include "nsSVGLength2.h"
 
 typedef nsSVGStylableElement nsSVGTextPathElementBase;
 
@@ -59,7 +58,6 @@ protected:
   friend nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
                                         nsINodeInfo *aNodeInfo);
   nsSVGTextPathElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGTextPathElement();
   nsresult Init();
   
 public:
@@ -80,20 +78,28 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
-  // nsSVGElement overrides
+
+  virtual LengthAttributesInfo GetLengthInfo();
+
   virtual PRBool IsEventName(nsIAtom* aName);
 
   already_AddRefed<nsISVGTextContentMetrics> GetTextContentMetrics();
 
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mStartOffset;
+  enum { STARTOFFSET };
+  nsSVGLength2 mLengthAttributes[1];
+  static LengthInfo sLengthInfo[1];
+
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMethod;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mSpacing;
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
 };
 
+nsSVGElement::LengthInfo nsSVGTextPathElement::sLengthInfo[1] =
+{
+  { &nsGkAtoms::startOffset, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+};
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(TextPath)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -117,14 +123,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTextPathElementBase)
 nsSVGTextPathElement::nsSVGTextPathElement(nsINodeInfo *aNodeInfo)
   : nsSVGTextPathElementBase(aNodeInfo)
 {
-
 }
 
-nsSVGTextPathElement::~nsSVGTextPathElement()
-{
-}
-
-  
 nsresult
 nsSVGTextPathElement::Init()
 {
@@ -145,17 +145,6 @@ nsSVGTextPathElement::Init()
   };
 
   // Create mapped properties:
-
-  // DOM property: nsIDOMSVGTextPathElement::startOffset, #IMPLIED attrib: startOffset
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length), 0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mStartOffset), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::startOffset, mStartOffset);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // DOM property: method, #IMPLIED attrib: method
   {
@@ -216,9 +205,7 @@ NS_IMETHODIMP nsSVGTextPathElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 
 NS_IMETHODIMP nsSVGTextPathElement::GetStartOffset(nsIDOMSVGAnimatedLength * *aStartOffset)
 {
-  *aStartOffset = mStartOffset;
-  NS_IF_ADDREF(*aStartOffset);
-  return NS_OK;
+  return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(aStartOffset, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration method; */
@@ -383,6 +370,13 @@ PRBool
 nsSVGTextPathElement::IsEventName(nsIAtom* aName)
 {
   return IsGraphicElementEventName(aName);
+}
+
+nsSVGElement::LengthAttributesInfo
+nsSVGTextPathElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
 
 //----------------------------------------------------------------------

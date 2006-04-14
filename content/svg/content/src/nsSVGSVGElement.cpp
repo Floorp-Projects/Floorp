@@ -37,18 +37,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
-#include "nsIDOMSVGFitToViewBox.h"
-#include "nsIDOMSVGLocatable.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGLength.h"
 #include "nsSVGAngle.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsSVGCoordCtxProvider.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
@@ -60,100 +55,27 @@
 #include "nsIWidget.h"
 #include "nsIFrame.h"
 #include "nsIScrollableView.h"
-#include "nsISVGSVGElement.h"
 #include "nsISVGSVGFrame.h" //XXX
 #include "nsSVGNumber.h"
 #include "nsSVGRect.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
-#include "nsIDOMSVGZoomAndPan.h"
 #include "nsSVGEnum.h"
 #include "nsISVGChildFrame.h"
 #include "nsGUIEvent.h"
 #include "nsSVGUtils.h"
+#include "nsSVGSVGElement.h"
 
-typedef nsSVGStylableElement nsSVGSVGElementBase;
-
-class nsSVGSVGElement : public nsSVGSVGElementBase,
-                        public nsISVGSVGElement, // : nsIDOMSVGSVGElement
-                        public nsIDOMSVGFitToViewBox,
-                        public nsIDOMSVGLocatable,
-                        public nsIDOMSVGZoomAndPan,
-                        public nsSVGCoordCtxProvider
+nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
 {
-protected:
-  friend nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                                      nsINodeInfo *aNodeInfo);
-  nsSVGSVGElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGSVGElement();
-  nsresult Init();
-  
-public:
-  // interfaces:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGSVGELEMENT
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
-  NS_DECL_NSIDOMSVGLOCATABLE
-  NS_DECL_NSIDOMSVGZOOMANDPAN
-  
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGSVGElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGSVGElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGSVGElementBase::)
-
-  // nsISVGSVGElement interface:
-  NS_IMETHOD SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx);
-  NS_IMETHOD GetCurrentScaleNumber(nsIDOMSVGNumber **aResult);
-  NS_IMETHOD GetZoomAndPanEnum(nsISVGEnum **aResult);
-  NS_IMETHOD SetCurrentScaleTranslate(float s, float x, float y);
-  NS_IMETHOD SetCurrentTranslate(float x, float y);
-  NS_IMETHOD_(void) RecordCurrentScaleTranslate();
-  NS_IMETHOD_(float) GetPreviousTranslate_x();
-  NS_IMETHOD_(float) GetPreviousTranslate_y();
-  NS_IMETHOD_(float) GetPreviousScale();
-
-  // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-protected:
-  // nsSVGElement overrides
-  PRBool IsEventName(nsIAtom* aName);
-
-  // implementation helpers:
-  void GetOffsetToAncestor(nsIContent* ancestor, float &x, float &y);
-
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
-  nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
-  nsCOMPtr<nsIDOMSVGMatrix>         mViewBoxToViewportTransform;
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-
-  // zoom and pan
-  // IMPORTANT: only RecordCurrentScaleTranslate should change the "mPreviousX"
-  // members below - see the comment in RecordCurrentScaleTranslate
-  nsCOMPtr<nsISVGEnum>              mZoomAndPan;
-  nsCOMPtr<nsIDOMSVGPoint>          mCurrentTranslate;
-  nsCOMPtr<nsIDOMSVGNumber>         mCurrentScale;
-  float                             mPreviousTranslate_x;
-  float                             mPreviousTranslate_y;
-  float                             mPreviousScale;
-  PRInt32                           mRedrawSuspendCount;
-  PRPackedBool                      mDispatchEvent;
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
-
 NS_IMPL_NS_NEW_SVG_ELEMENT(SVG)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -178,7 +100,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGSVGElementBase)
 // Implementation
 
 nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo)
-  : nsSVGSVGElementBase(aNodeInfo), mRedrawSuspendCount(0)
+  : nsSVGSVGElementBase(aNodeInfo), mCoordCtx(nsnull), mRedrawSuspendCount(0)
 {
 }
 
@@ -198,70 +120,13 @@ nsSVGSVGElement::Init()
 {
   nsresult rv = nsSVGSVGElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
-
-  
-  // nsIDOMSVGSVGElement attributes ------:
-  
-  // DOM property: width ,  #IMPLIED attrib: width
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  // DOM property: height , #IMPLIED attrib: height
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
   
   // nsIDOMSVGFitToViewBox attributes ------:
   
   // DOM property: viewBox , #IMPLIED attrib: viewBox
   {
     nsCOMPtr<nsIDOMSVGRect> viewbox;
-    nsCOMPtr<nsIDOMSVGLength> animWidth, animHeight;
-    mWidth->GetAnimVal(getter_AddRefs(animWidth));
-    mHeight->GetAnimVal(getter_AddRefs(animHeight));
-    rv = NS_NewSVGViewBox(getter_AddRefs(viewbox), animWidth, animHeight);
+    rv = NS_NewSVGRect(getter_AddRefs(viewbox));
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedRect(getter_AddRefs(mViewBox), viewbox);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -338,36 +203,28 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGSVGElement)
 NS_IMETHODIMP
 nsSVGSVGElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 /* attribute DOMString contentScriptType; */
@@ -807,18 +664,10 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
   nsresult rv = NS_OK;
 
   if (!mViewBoxToViewportTransform) {
-    float viewportWidth;
-    {
-      nsCOMPtr<nsIDOMSVGLength> l;
-      mWidth->GetAnimVal(getter_AddRefs(l));
-      l->GetValue(&viewportWidth);
-    }
-    float viewportHeight;
-    {
-      nsCOMPtr<nsIDOMSVGLength> l;
-      mHeight->GetAnimVal(getter_AddRefs(l));
-      l->GetValue(&viewportHeight);
-    }
+    float viewportWidth =
+      mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx);
+    float viewportHeight = 
+      mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx);
     
     float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
     {
@@ -835,7 +684,7 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       viewboxWidth = 1.0f;
       viewboxHeight = 1.0f;
     }
-    
+
     mViewBoxToViewportTransform =
       nsSVGUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                       viewboxX, viewboxY,
@@ -1004,11 +853,8 @@ nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
     nsCOMPtr<nsIDOMSVGMatrix> tmp;
     if (ancestorCount == 0) {
       // our immediate parent is an SVG element. get our 'x' and 'y' attribs
-      nsCOMPtr<nsIDOMSVGLength> length;
-      mX->GetAnimVal(getter_AddRefs(length));
-      length->GetValue(&x);
-      mY->GetAnimVal(getter_AddRefs(length));
-      length->GetValue(&y);
+      x = mLengthAttributes[X].GetAnimValue(mCoordCtx);
+      y = mLengthAttributes[Y].GetAnimValue(mCoordCtx);
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -1113,11 +959,8 @@ nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     nsCOMPtr<nsIDOMSVGMatrix> tmp;
     if (ancestorCount == 0) {
       // our immediate parent is an SVG element. get our 'x' and 'y' attribs
-      nsCOMPtr<nsIDOMSVGLength> length;
-      mX->GetAnimVal(getter_AddRefs(length));
-      length->GetValue(&x);
-      mY->GetAnimVal(getter_AddRefs(length));
-      length->GetValue(&y);
+      x = mLengthAttributes[X].GetAnimValue(mCoordCtx);
+      y = mLengthAttributes[Y].GetAnimValue(mCoordCtx);
     }
     else {
       // We have an SVG ancestor, but with non-SVG content between us
@@ -1203,41 +1046,21 @@ nsSVGSVGElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)
     NS_ERROR("null parent context");
     return NS_ERROR_FAILURE;
   }
+
+  mCoordCtx = parentCtx;
   
   // set parent's mmPerPx on our coord contexts:
   float mmPerPxX = nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX())->GetMillimeterPerPixel();
   float mmPerPxY = nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY())->GetMillimeterPerPixel();
   SetCoordCtxMMPerPx(mmPerPxX, mmPerPxY);
   
-  // set the parentCtx as context on our width/height/x/y:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
-    l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX()));
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox)) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
+    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
   }
 
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
-    l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY()));
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mWidth->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
-    l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX()));
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mHeight->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
-    l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY()));
-  }
-  
   return NS_OK;
 }
 
@@ -1507,4 +1330,48 @@ void nsSVGSVGElement::GetOffsetToAncestor(nsIContent* ancestor,
     x = point.x * context->TwipsToPixels();
     y = point.y * context->TwipsToPixels();
   }
+}
+
+//----------------------------------------------------------------------
+// nsISVGContent methods
+
+nsresult
+nsSVGSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                           PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::viewBox && mCoordCtx) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->SetX(0);
+    vb->SetY(0);
+    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
+    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
+  }
+
+  return nsSVGSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+void
+nsSVGSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGSVGElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
+
+  if (mCoordCtx && !HasAttr(kNameSpaceID_None, nsGkAtoms::viewBox) &&
+      (aAttrEnum == WIDTH || aAttrEnum == HEIGHT)) {
+    nsCOMPtr<nsIDOMSVGRect> vb;
+    mViewBox->GetAnimVal(getter_AddRefs(vb));
+    vb->SetWidth(mLengthAttributes[WIDTH].GetAnimValue(mCoordCtx));
+    vb->SetHeight(mLengthAttributes[HEIGHT].GetAnimValue(mCoordCtx));
+  }
+}
+
+nsSVGElement::LengthAttributesInfo
+nsSVGSVGElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }

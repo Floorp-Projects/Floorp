@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGElement.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGAnimatedNumber.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGLength.h"
@@ -43,7 +42,6 @@
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
-#include "nsSVGStylableElement.h"
 #include "nsISVGFilter.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGValue.h"
@@ -57,36 +55,14 @@
 #include "nsSVGNumber.h"
 #include "nsSVGAnimatedNumber.h"
 #include "nsISVGValueUtils.h"
+#include "nsSVGFilters.h"
 
-typedef nsSVGStylableElement nsSVGFEBase;
-
-class nsSVGFE : public nsSVGFEBase
-//, public nsIDOMSVGFilterPrimitiveStandardAttributes
+nsSVGElement::LengthInfo nsSVGFE::sLengthInfo[4] =
 {
-protected:
-  nsSVGFE(nsINodeInfo *aNodeInfo);
-  nsresult Init();
-
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     nsISVGValue::modificationType aModType);
-
-public:
-  // interfaces:
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
-
-protected:
-
-  // nsIDOMSVGFitlerPrimitiveStandardAttributes values
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
-  nsCOMPtr<nsIDOMSVGAnimatedString> mResult;
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
 //----------------------------------------------------------------------
@@ -110,56 +86,6 @@ nsSVGFE::Init()
 {
   nsresult rv = nsSVGFEBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
-
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #REQUIRED  attrib: width
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #REQUIRED  attrib: height
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // DOM property: result ,  #REQUIRED  attrib: result
   {
@@ -201,33 +127,25 @@ nsSVGFE::DidModifySVGObservable (nsISVGValue* observable,
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGFE::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGFE::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGFE::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGFE::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedString result; */
@@ -236,6 +154,28 @@ NS_IMETHODIMP nsSVGFE::GetResult(nsIDOMSVGAnimatedString * *aResult)
   *aResult = mResult;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+void
+nsSVGFE::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGFEBase::DidChangeLength(aAttrEnum, aDoSetAttr);
+
+  nsCOMPtr<nsISVGValue> value = do_QueryInterface(GetParent());
+  if (value) {
+    value->BeginBatchUpdate();
+    value->EndBatchUpdate();
+  }
+}
+
+nsSVGElement::LengthAttributesInfo
+nsSVGFE::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
 
 //---------------------Gaussian Blur------------------------
@@ -559,7 +499,7 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   mResult->GetAnimVal(result);
   instance->LookupRegion(input, &defaultRect);
 
-  instance->GetFilterSubregion(attrib, defaultRect, &rect);
+  instance->GetFilterSubregion(this, defaultRect, &rect);
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER GAUSS rect: %d,%d  %dx%d\n",
@@ -587,13 +527,15 @@ nsSVGFEGaussianBlurElement::Filter(nsSVGFilterInstance *instance)
   sourceImage->GetHeight(&height);
 
   float stdX, stdY;
-  nsCOMPtr<nsISVGLength> val;
+  nsSVGLength2 val;
+
   mStdDeviationX->GetAnimVal(&stdX);
-  NS_NewSVGLength(getter_AddRefs(val), stdX);
-  stdX = instance->GetPrimitiveX(val);
+  val.Init(nsSVGUtils::X, 0xff, stdX, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  stdX = instance->GetPrimitiveLength(&val);
+
   mStdDeviationY->GetAnimVal(&stdY);
-  NS_NewSVGLength(getter_AddRefs(val), stdY);
-  stdY = instance->GetPrimitiveY(val);
+  val.Init(nsSVGUtils::Y, 0xff, stdY, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  stdY = instance->GetPrimitiveLength(&val);
 
   gaussianBlur(sourceData, targetData, length, stride, rect, stdX, stdY);
   fixupTarget(sourceData, targetData, width, height, stride, rect);
@@ -752,7 +694,7 @@ nsSVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance)
   mResult->GetAnimVal(result);
   instance->LookupRegion(input, &defaultRect);
 
-  instance->GetFilterSubregion(attrib, defaultRect, &rect);
+  instance->GetFilterSubregion(this, defaultRect, &rect);
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER COMPONENT rect: %d,%d  %dx%d\n",
@@ -1488,7 +1430,7 @@ nsSVGFEMergeElement::Filter(nsSVGFilterInstance *instance)
     str->GetAnimVal(input);
     instance->LookupRegion(input, &defaultRect);
 
-    instance->GetFilterSubregion(attrib, defaultRect, &rect);
+    instance->GetFilterSubregion(this, defaultRect, &rect);
 
 #ifdef DEBUG_tor
     fprintf(stderr, "FILTER MERGE rect: %d,%d  %dx%d\n",
@@ -1877,7 +1819,7 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
   mResult->GetAnimVal(result);
   instance->LookupRegion(input, &defaultRect);
 
-  instance->GetFilterSubregion(attrib, defaultRect, &rect);
+  instance->GetFilterSubregion(this, defaultRect, &rect);
 
 #ifdef DEBUG_tor
   fprintf(stderr, "FILTER OFFSET rect: %d,%d  %dx%d\n",
@@ -1906,14 +1848,15 @@ nsSVGFEOffsetElement::Filter(nsSVGFilterInstance *instance)
 
   PRInt32 offsetX, offsetY;
   float flt;
-  nsCOMPtr<nsISVGLength> val;
-  mDx->GetAnimVal(&flt);
-  NS_NewSVGLength(getter_AddRefs(val), flt);
-  offsetX = instance->GetPrimitiveX(val);
-  mDy->GetAnimVal(&flt);
-  NS_NewSVGLength(getter_AddRefs(val), flt);
-  offsetY = instance->GetPrimitiveY(val);
+  nsSVGLength2 val;
 
+  mDx->GetAnimVal(&flt);
+  val.Init(nsSVGUtils::X, 0xff, flt, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  offsetX = (PRInt32) instance->GetPrimitiveLength(&val);
+
+  mDy->GetAnimVal(&flt);
+  val.Init(nsSVGUtils::Y, 0xff, flt, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
+  offsetY = (PRInt32) instance->GetPrimitiveLength(&val);
 
   for (PRInt32 y = rect.y; y < rect.y + rect.height; y++) {
     PRInt32 targetRow = y + offsetY;

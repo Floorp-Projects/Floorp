@@ -36,55 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
 #include "nsSVGAtoms.h"
-#include "nsIDOMSVGForeignObjectElem.h"
 #include "nsSVGLength.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
+#include "nsSVGForeignObjectElement.h"
 
-typedef nsSVGGraphicElement nsSVGForeignObjectElementBase;
-
-class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
-                                  public nsIDOMSVGForeignObjectElement
+nsSVGElement::LengthInfo nsSVGForeignObjectElement::sLengthInfo[4] =
 {
-protected:
-  friend nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult,
-                                                nsINodeInfo *aNodeInfo);
-  nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsSVGForeignObjectElement();
-  nsresult Init();
-
-public:
-  // interfaces:
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGFOREIGNOBJECTELEMENT
-
-  // xxx I wish we could use virtual inheritance
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGForeignObjectElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGForeignObjectElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGForeignObjectElementBase::)
-
-  // nsISVGContent specializations:
-  virtual void ParentChainChanged();
-
-  // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
-
-protected:
-  
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+  { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
 };
 
-
 NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -106,82 +73,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGForeignObjectElementBase)
 nsSVGForeignObjectElement::nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo)
   : nsSVGForeignObjectElementBase(aNodeInfo)
 {
-
-}
-
-nsSVGForeignObjectElement::~nsSVGForeignObjectElement()
-{
-}
-
-  
-nsresult
-nsSVGForeignObjectElement::Init()
-{
-  nsresult rv = nsSVGForeignObjectElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-  
-
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #REQUIRED  attrib: width
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #REQUIRED  attrib: height
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-
 NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGForeignObjectElement)
-
 
 //----------------------------------------------------------------------
 // nsIDOMSVGForeignObjectElement methods:
@@ -189,89 +86,26 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGForeignObjectElement)
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGForeignObjectElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGForeignObjectElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGForeignObjectElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGForeignObjectElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
-
-//----------------------------------------------------------------------
-// nsISVGContent methods
-
-void nsSVGForeignObjectElement::ParentChainChanged()
-{
-  // set new context information on our length-properties:
-  
-  nsCOMPtr<nsIDOMSVGSVGElement> dom_elem;
-  GetOwnerSVGElement(getter_AddRefs(dom_elem));
-  if (!dom_elem) return;
-
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(dom_elem);
-  NS_ASSERTION(ctx, "<svg> element missing interface");
-
-  // x:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // y:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
-
-  // width:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mWidth->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // height:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mHeight->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
-}  
 
 //----------------------------------------------------------------------
 // nsIContent methods
@@ -285,4 +119,14 @@ nsSVGForeignObjectElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGForeignObjectElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::LengthAttributesInfo
+nsSVGForeignObjectElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }

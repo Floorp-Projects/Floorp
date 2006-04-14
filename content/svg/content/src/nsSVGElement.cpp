@@ -66,11 +66,33 @@
 #include "nsNodeInfoManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIEventListenerManager.h"
+#include "nsSVGUtils.h"
+#include "nsSVGCoordCtxProvider.h"
+#include "nsSVGCoordCtx.h"
+#include "nsSVGLength2.h"
+#include <stdarg.h>
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo), mSuppressNotification(PR_FALSE)
 {
+}
 
+nsresult
+nsSVGElement::Init()
+{
+  // Set up length attributes - can't do this in the constructor
+  // because we can't do a virtual call at that point
+
+  LengthAttributesInfo info = GetLengthInfo();
+
+  for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+    info.mLengths[i].Init(info.mLengthInfo[i].mCtxType,
+                          i,
+                          info.mLengthInfo[i].mDefaultValue,
+                          info.mLengthInfo[i].mDefaultUnitType);
+  }
+
+  return NS_OK;
 }
 
 nsSVGElement::~nsSVGElement()
@@ -216,9 +238,22 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     return PR_TRUE;
   }
 
-  if (aAttribute == nsSVGAtoms::style && aNamespaceID == kNameSpaceID_None) {
-    nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, aResult);
-    return PR_TRUE;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsSVGAtoms::style) {
+      nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE,
+                                                aValue, aResult);
+      return PR_TRUE;
+    }
+
+    // Check for nsSVGLength2 attribute
+    LengthAttributesInfo info = GetLengthInfo();
+    for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+      if (aAttribute == *info.mLengthInfo[i].mName) {
+        info.mLengths[i].SetBaseValueString(aValue, this, PR_FALSE);
+        aResult.SetTo(aValue);
+        return PR_TRUE;
+      }
+    }
   }
 
   return nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
@@ -229,17 +264,32 @@ nsresult
 nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                         PRBool aNotify)
 {
-  // If this is an svg presentation attribute, remove rule to force an update
-  if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
-    mContentStyleRule = nsnull;
-  }
+  if (aNamespaceID == kNameSpaceID_None) {
+    // If this is an svg presentation attribute, remove rule to force an update
+    if (IsAttributeMapped(aName))
+      mContentStyleRule = nsnull;
 
-  if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    GetListenerManager(PR_FALSE, getter_AddRefs(manager));
-    if (manager) {
-      nsIAtom* eventName = GetEventNameForAttr(aName);
-      manager->RemoveScriptEventListener(eventName);
+    if (IsEventName(aName)) {
+      nsCOMPtr<nsIEventListenerManager> manager;
+      GetListenerManager(PR_FALSE, getter_AddRefs(manager));
+      if (manager) {
+        nsIAtom* eventName = GetEventNameForAttr(aName);
+        manager->RemoveScriptEventListener(eventName);
+      }
+    } else {
+      // Check if this is a length attribute going away
+      LengthAttributesInfo info = GetLengthInfo();
+      
+      for (PRUint32 i = 0; i < info.mLengthCount; i++) {
+        if (aName == *info.mLengthInfo[i].mName) {
+          info.mLengths[i].Init(info.mLengthInfo[i].mCtxType,
+                                i,
+                                info.mLengthInfo[i].mDefaultValue,
+                                info.mLengthInfo[i].mDefaultUnitType);
+          DidChangeLength(i, PR_FALSE);
+          break;
+        }
+      }
     }
   }
 
@@ -779,4 +829,78 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
     return nsLayoutAtoms::onSVGZoom;
 
   return aAttr;
+}
+
+nsSVGCoordCtx *
+nsSVGElement::GetCtxByType(PRUint16 aCtxType)
+{
+  nsCOMPtr<nsIDOMSVGSVGElement> svg;
+  GetOwnerSVGElement(getter_AddRefs(svg));
+
+  // outermost svg?
+  if (!svg)
+    return nsnull;
+
+  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(svg);
+
+  nsRefPtr<nsSVGCoordCtx> rv = ctx->GetCtxByType(aCtxType);
+
+  // ugh...
+  return rv.get();
+}
+
+nsSVGElement::LengthAttributesInfo
+nsSVGElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  LengthAttributesInfo info = GetLengthInfo();
+
+  NS_ASSERTION(info.mLengthCount > 0,
+               "DidChangeLength on element with no length attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mLengthCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mLengths[aAttrEnum].GetBaseValueString(newStr);
+
+  SetAttr(kNameSpaceID_None, *info.mLengthInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+void
+nsSVGElement::GetAnimatedLengthValues(float *aFirst, ...)
+{
+  LengthAttributesInfo info = GetLengthInfo();
+
+  NS_ASSERTION(info.mLengthCount > 0,
+               "GetAnimatedLengthValues on element with no length attribs");
+
+  nsCOMPtr<nsSVGCoordCtxProvider> ctx;
+
+  float *f = aFirst;
+  PRUint32 i = 0;
+
+  va_list args;
+  va_start(args, aFirst);
+
+  while (f && i < info.mLengthCount) {
+    if (!ctx) {
+      PRUint8 type = info.mLengths[i].GetSpecifiedUnitType();
+      if (type != nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER &&
+          type != nsIDOMSVGLength::SVG_LENGTHTYPE_PX)
+        ctx = nsSVGUtils::GetCoordContextProvider(this);
+    }
+    *f = info.mLengths[i++].GetAnimValue(ctx);
+    f = va_arg(args, float*);
+  }
+
+  va_end(args);
 }

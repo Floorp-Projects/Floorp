@@ -14,14 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
- *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,21 +34,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGRECT_H__
-#define __NS_SVGRECT_H__
+#ifndef __NS_SVGFILTERSELEMENT_H__
+#define __NS_SVGFILTERSELEMENT_H__
 
-#include "nsIDOMSVGRect.h"
+#include "nsSVGStylableElement.h"
+#include "nsSVGLength2.h"
 
-class nsIDOMSVGLength;
+typedef nsSVGStylableElement nsSVGFEBase;
 
-nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result,
-              float x=0.0f, float y=0.0f,
-              float width=0.0f, float height=0.0f);
+class nsSVGFE : public nsSVGFEBase
+//, public nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+  friend class nsSVGFilterInstance;
 
-nsresult
-NS_NewSVGReadonlyRect(nsIDOMSVGRect** result,
-                      float x=0.0f, float y=0.0f,
-                      float width=0.0f, float height=0.0f);
+protected:
+  nsSVGFE(nsINodeInfo *aNodeInfo);
+  nsresult Init();
 
-#endif //__NS_SVGRECT_H__
+  // nsISVGValueObserver interface:
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+
+public:
+  // interfaces:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
+
+  // nsSVGElement specializations:
+  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
+protected:
+
+  virtual LengthAttributesInfo GetLengthInfo();
+
+  // nsIDOMSVGFitlerPrimitiveStandardAttributes values
+  enum { X, Y, WIDTH, HEIGHT };
+  nsSVGLength2 mLengthAttributes[4];
+  static LengthInfo sLengthInfo[4];
+
+  nsCOMPtr<nsIDOMSVGAnimatedString> mResult;
+};
+
+#endif

@@ -67,7 +67,8 @@ nsSVGStylableElement::nsSVGStylableElement(nsINodeInfo *aNodeInfo)
 nsresult
 nsSVGStylableElement::Init()
 {
-  nsresult rv;
+  nsresult rv = nsSVGStylableElementBase::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Create mapped properties:
 
