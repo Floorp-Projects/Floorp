@@ -42,35 +42,13 @@
 @import url(chrome://communicator/skin/smileys.css);
 @import url(chrome://messenger/skin/messageQuotes.css);
 
-/* XXX Breaks the HTML rules below (.moz-class stuff), at least on Linux.
-   "html|.class" doesn't work.
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml"); 
-*/
-
-window {
-  overflow: auto;
-}
-
-html|html {
-  /* XXX Doesn't seem to work. (Same with "html|body".) */
-  background-color: window;
-}
+@namespace url("http://www.w3.org/1999/xhtml");
 
 mailattachcount {
   display: none;
 }
 
 /* :::: message header ::::: */
-
-header {
-  text-align: left;
-}
-
-headerdisplayname {
-  font-weight: bold;
-  white-space: pre;
-}
 
 .header-part1 {
   background-color: #EFEFEF;
@@ -169,4 +147,3 @@ span.moz-txt-formfeed {
 .moz-vcard-badge:focus {
   outline: none;
 }
-

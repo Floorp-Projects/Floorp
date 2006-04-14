@@ -39,30 +39,13 @@
   == Styles for the body of a mail message.
   ======================================================================= */
 
-/* XXX Breaks the HTML rules below (.moz-class stuff), at least on Linux.
-   "html|.class" doesn't work.
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml"); 
-*/
-
-window {
-  overflow: auto;
-}
+@namespace url("http://www.w3.org/1999/xhtml");
 
 mailattachcount {
   border: blue;
 }
 
 /* :::: message header ::::: */
-
-header {
-  text-align: left;
-}
-
-headerdisplayname {
-  font-weight: bold;
-  white-space: pre;
-}
 
 .header-part1 {
   background-color: #EFEFEF;
@@ -296,17 +279,18 @@ span.moz-smiley-s16 {
   outline: none;
 }
 
-
 /* Quote Levels Colors */
 
 blockquote[type=cite] {
    color: blue !important;
    border-color: blue !important;
 }
+
 blockquote[type=cite] > blockquote {
    color: green !important;
    border-color: green !important;
 }
+
 blockquote[type=cite] > blockquote > blockquote {
    color: maroon !important;
    border-color: maroon !important;

@@ -41,6 +41,8 @@
    == into skinnable images.
    ========================================================================== */
 
+@namespace url("http://www.w3.org/1999/xhtml");
+
 /* ::::: we also represent smilies inside of spans ::::: */
 
 span.moz-smiley-s1,
