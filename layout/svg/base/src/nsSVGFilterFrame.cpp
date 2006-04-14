@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGFilterFrame.h"
-#include "nsSVGFilterInstance.h"
 #include "nsIDocument.h"
 #include "nsISVGValueUtils.h"
 #include "nsISVGGeometrySource.h"
@@ -49,6 +48,7 @@
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterElement.h"
+#include "nsSVGFilterInstance.h"
 #include "nsSVGFilters.h"
 
 class nsSVGFilterFrame : public nsSVGDefsFrame,
