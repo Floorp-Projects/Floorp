@@ -84,8 +84,13 @@ endif
 
 clean clobber repackage::
 	rm -rf $(DIST)/$(APP_NAME).app
+	rm -rf embed-replacements.tmp
 
+# The embed-replacements rsync is done for both srcdir and objdir builds
+# to avoid adding CVS stuff to embed.jar.
 libs::
+	rsync -aC --delete $(srcdir)/embed-replacements/ embed-replacements.tmp
+	cd embed-replacements.tmp && $(ZIP) -r0DX ../../dist/Embed/chrome/embed.jar *
 	$(PBBUILD) -project Camino.xcode -target $(TARGET) -buildstyle $(BUILDSTYLE) $(PBBUILD_SETTINGS)
 
 libs repackage::
