@@ -56,7 +56,7 @@
 
 #include "nsReadableUtils.h"
 #include "nsISupportsPrimitives.h"
-#include "nsArray.h"
+#include "nsIMutableArray.h"
 
 //-----------------------------------------------------------------------------
 // static helper functions
@@ -1144,10 +1144,9 @@ nsLocalFile::GetFileTypes(nsIArray **_retval)
         return rv;
 
     // create an array that's scriptable
-    nsCOMPtr<nsIMutableArray> mutArray;
-    rv = NS_NewArray(getter_AddRefs(mutArray));
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIMutableArray> mutArray =
+        do_CreateInstance(NS_ARRAY_CONTRACTID);
+    NS_ENSURE_STATE(mutArray);
 
     PRInt32  cnt;
     PRUint32 lth;
