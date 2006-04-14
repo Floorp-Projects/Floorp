@@ -72,7 +72,6 @@ CPPSRCS		= \
 		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedEnumeration.cpp \
 		nsSVGAnimatedInteger.cpp \
-		nsSVGAnimatedLength.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumber.cpp \
 		nsSVGAnimatedNumberList.cpp \
@@ -99,6 +98,7 @@ CPPSRCS		= \
 		nsSVGGraphicElement.cpp \
 		nsSVGImageElement.cpp \
 		nsSVGLength.cpp \
+		nsSVGLength2.cpp \
 		nsSVGLengthList.cpp \
 		nsSVGLineElement.cpp \
 		nsSVGMarkerElement.cpp \

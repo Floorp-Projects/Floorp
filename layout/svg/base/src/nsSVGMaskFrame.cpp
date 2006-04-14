@@ -34,18 +34,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
-#include "nsIDOMSVGMaskElement.h"
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsISVGValueUtils.h"
-#include "nsIDOMSVGAnimatedLength.h"
 #include "nsSVGDefsFrame.h"
-#include "nsIDOMSVGLength.h"
 #include "nsISVGRendererSurface.h"
-#include "nsSVGUtils.h"
+#include "nsSVGMaskElement.h"
 
 typedef nsSVGDefsFrame nsSVGMaskFrameBase;
 
@@ -89,10 +84,6 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase,
  private:
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMaskUnits;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMaskContentUnits;
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
-  nsCOMPtr<nsIDOMSVGLength> mWidth;
-  nsCOMPtr<nsIDOMSVGLength> mHeight;
 
   nsISVGChildFrame *mMaskParent;
   nsCOMPtr<nsIDOMSVGMatrix> mMaskParentMatrix;
@@ -158,38 +149,6 @@ nsSVGMaskFrame::InitSVG()
   nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(mContent);
   NS_ASSERTION(mask, "wrong content element");
 
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    mask->GetX(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no X");
-    if (!mX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    mask->GetY(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no Y");
-    if (!mY) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    mask->GetWidth(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mWidth));
-    NS_ASSERTION(mWidth, "no Width");
-    if (!mWidth) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    mask->GetHeight(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mHeight));
-    NS_ASSERTION(mHeight, "no Height");
-    if (!mHeight) return NS_ERROR_FAILURE;
-  }
-
   mask->GetMaskUnits(getter_AddRefs(mMaskUnits));
 
   mask->GetMaskContentUnits(getter_AddRefs(mMaskContentUnits));
@@ -249,12 +208,19 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
   {
     nsIFrame *frame;
     CallQueryInterface(aParent, &frame);
-    nsCOMPtr<nsIContent> parent = frame->GetContent();
+    nsSVGElement *parent = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
 
     float x, y, width, height;
 
     PRUint16 units;
     mMaskUnits->GetAnimVal(&units);
+
+    nsSVGMaskElement *mask = NS_STATIC_CAST(nsSVGMaskElement*, mContent);
+    nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
+    tmpX = &mask->mLengthAttributes[nsSVGMaskElement::X];
+    tmpY = &mask->mLengthAttributes[nsSVGMaskElement::Y];
+    tmpWidth = &mask->mLengthAttributes[nsSVGMaskElement::WIDTH];
+    tmpHeight = &mask->mLengthAttributes[nsSVGMaskElement::HEIGHT];
 
     if (units == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
 
@@ -280,16 +246,16 @@ nsSVGMaskFrame::MaskPaint(nsISVGRendererCanvas* aCanvas,
 #endif
 
       bbox->GetX(&x);
-      x += nsSVGUtils::ObjectSpace(bbox, mX, nsSVGUtils::X);
+      x += nsSVGUtils::ObjectSpace(bbox, tmpX);
       bbox->GetY(&y);
-      y += nsSVGUtils::ObjectSpace(bbox, mY, nsSVGUtils::Y);
-      width = nsSVGUtils::ObjectSpace(bbox, mWidth, nsSVGUtils::X);
-      height = nsSVGUtils::ObjectSpace(bbox, mHeight, nsSVGUtils::Y);
+      y += nsSVGUtils::ObjectSpace(bbox, tmpY);
+      width = nsSVGUtils::ObjectSpace(bbox, tmpWidth);
+      height = nsSVGUtils::ObjectSpace(bbox, tmpHeight);
     } else {
-      x = nsSVGUtils::UserSpace(parent, mX, nsSVGUtils::X);
-      y = nsSVGUtils::UserSpace(parent, mY, nsSVGUtils::Y);
-      width = nsSVGUtils::UserSpace(parent, mWidth, nsSVGUtils::X);
-      height = nsSVGUtils::UserSpace(parent, mHeight, nsSVGUtils::Y);
+      x = nsSVGUtils::UserSpace(parent, tmpX);
+      y = nsSVGUtils::UserSpace(parent, tmpY);
+      width = nsSVGUtils::UserSpace(parent, tmpWidth);
+      height = nsSVGUtils::UserSpace(parent, tmpHeight);
     }
 
 #ifdef DEBUG_tor

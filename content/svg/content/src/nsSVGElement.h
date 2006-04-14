@@ -54,6 +54,9 @@
 #include "nsISVGContent.h"
 #include "nsICSSStyleRule.h"
 
+class nsSVGCoordCtx;
+class nsSVGLength2;
+
 class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIContent
                      public nsISVGValueObserver, 
                      public nsSupportsWeakReference, // :nsISupportsWeakReference
@@ -61,6 +64,7 @@ class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIContent
 {
 protected:
   nsSVGElement(nsINodeInfo *aNodeInfo);
+  nsresult Init();
   virtual ~nsSVGElement();
 
 public:
@@ -113,7 +117,12 @@ public:
   // implementation inherited from nsSupportsWeakReference
 
   // nsISVGContent
+  nsSVGCoordCtx *GetCtxByType(PRUint16 aCtxType);
+
   virtual void ParentChainChanged(); 
+  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
+  void GetAnimatedLengthValues(float *aFirst, ...);
   
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
@@ -133,6 +142,27 @@ protected:
   
   static PRBool IsGraphicElementEventName(nsIAtom* aName);
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
+
+  struct LengthInfo {
+    nsIAtom** mName;
+    float     mDefaultValue;
+    PRUint16  mDefaultUnitType;
+    PRUint8   mCtxType;
+  };
+
+  struct LengthAttributesInfo {
+    nsSVGLength2* mLengths;
+    LengthInfo*   mLengthInfo;
+    PRUint32      mLengthCount;
+
+    LengthAttributesInfo(nsSVGLength2 *aLengths,
+                         LengthInfo *aLengthInfo,
+                         PRUint32 aLengthCount) :
+      mLengths(aLengths), mLengthInfo(aLengthInfo), mLengthCount(aLengthCount)
+      {}
+  };
+
+  virtual LengthAttributesInfo GetLengthInfo();
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;

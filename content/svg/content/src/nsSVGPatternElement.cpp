@@ -36,83 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGLength.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGTransformList.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGEnum.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGAnimatedString.h"
-#include "nsIDOMSVGURIReference.h"
-#include "nsIDOMSVGPatternElement.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGAnimatedRect.h"
 #include "nsSVGRect.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
+#include "nsSVGPatternElement.h"
 
 //--------------------- Patterns ------------------------
 
-typedef nsSVGStylableElement nsSVGPatternElementBase;
-
-class nsSVGPatternElement : public nsSVGPatternElementBase,
-                            public nsIDOMSVGURIReference,
-                            public nsIDOMSVGFitToViewBox,
-                            public nsIDOMSVGPatternElement
+nsSVGElement::LengthInfo nsSVGPatternElement::sLengthInfo[4] =
 {
-protected:
-  friend nsresult NS_NewSVGPatternElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGPatternElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGPatternElement();
-  nsresult Init();
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // Pattern Element
-  NS_DECL_NSIDOMSVGPATTERNELEMENT
-
-  // URI Reference
-  NS_DECL_NSIDOMSVGURIREFERENCE
-
-  // FitToViewbox
-  NS_DECL_NSIDOMSVGFITTOVIEWBOX
-
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
-
-  // nsISVGContent specializations:
-  virtual void ParentChainChanged();
-
-  // nsIContent interface
-  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
-
-protected:
-  
-  // nsIDOMSVGPatternElement values
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPatternUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPatternContentUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> mPatternTransform;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
-
-  // nsIDOMSVGURIReference properties
-  nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-
-  // nsIDOMSVGFitToViewbox properties
-  nsCOMPtr<nsIDOMSVGAnimatedRect> mViewBox;
-  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Pattern)
@@ -139,13 +86,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPatternElementBase)
 nsSVGPatternElement::nsSVGPatternElement(nsINodeInfo* aNodeInfo)
   : nsSVGPatternElementBase(aNodeInfo)
 {
-
 }
-
-nsSVGPatternElement::~nsSVGPatternElement()
-{
-}
-
 
 nsresult
 nsSVGPatternElement::Init()
@@ -195,54 +136,6 @@ nsSVGPatternElement::Init()
                                         transformList);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::patternTransform, mPatternTransform);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #IMPLIED attrib: width
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #IMPLIED attrib: height
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -342,33 +235,25 @@ NS_IMETHODIMP nsSVGPatternElement::GetPatternTransform(nsIDOMSVGAnimatedTransfor
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGPatternElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGPatternElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGPatternElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGPatternElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 
@@ -385,18 +270,6 @@ nsSVGPatternElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
-
-void nsSVGPatternElement::ParentChainChanged()
-{
-  // Pattern length properties are relative to the target element
-  // (the one calling the pattern), so we don't set their
-  // contexts here.
-
-  // Do we need to recurse to child elements??
-}  
-
-//----------------------------------------------------------------------
 // nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
@@ -408,4 +281,14 @@ nsSVGPatternElement::IsAttributeMapped(const nsIAtom* name) const
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
     nsSVGPatternElementBase::IsAttributeMapped(name);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::LengthAttributesInfo
+nsSVGPatternElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }

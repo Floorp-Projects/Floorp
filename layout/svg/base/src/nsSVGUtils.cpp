@@ -75,6 +75,9 @@
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererSurface.h"
 #include "nsISVGContainerFrame.h"
+#include "nsSVGLength2.h"
+#include "nsGenericElement.h"
+#include "nsAttrValue.h"
 
 struct nsSVGFilterProperty {
   nsCOMPtr<nsISVGRendererRegion> mFilterRegion;
@@ -508,74 +511,39 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame,
 }
 
 float
-nsSVGUtils::ObjectSpace(nsIDOMSVGRect *rect,
-                        nsIDOMSVGLength *length,
-                        ctxDirection direction)
+nsSVGUtils::ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength)
 {
-  PRUint16 type;
   float fraction, axis;
 
-  length->GetUnitType(&type);
-  switch (direction) {
+  switch (aLength->GetCtxType()) {
   case X:
-    rect->GetWidth(&axis);
+    aRect->GetWidth(&axis);
     break;
   case Y:
-    rect->GetHeight(&axis);
+    aRect->GetHeight(&axis);
     break;
   case XY:
   {
     float width, height;
-    rect->GetWidth(&width);
-    rect->GetHeight(&height);
+    aRect->GetWidth(&width);
+    aRect->GetHeight(&height);
     axis = sqrt(width * width + height * height)/sqrt(2.0f);
   }
   }
 
-  if (type == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
-    length->GetValueInSpecifiedUnits(&fraction);
-    fraction /= 100.0;
+  if (aLength->GetSpecifiedUnitType() ==
+      nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE) {
+    fraction = aLength->GetAnimValInSpecifiedUnits() / 100;
   } else
-    length->GetValue(&fraction);
+    aLength->GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
 
   return fraction * axis;
 }
 
 float
-nsSVGUtils::UserSpace(nsIContent *content,
-                      nsIDOMSVGLength *length,
-                      ctxDirection direction)
+nsSVGUtils::UserSpace(nsSVGElement *aSVGElement, nsSVGLength2 *aLength)
 {
-  PRUint16 units;
-  float value;
-
-  length->GetUnitType(&units);
-  length->GetValueInSpecifiedUnits(&value);
-
-  nsCOMPtr<nsISVGLength> val;
-  NS_NewSVGLength(getter_AddRefs(val), value, units);
- 
-  nsCOMPtr<nsIDOMSVGElement> element = do_QueryInterface(content);
-  nsCOMPtr<nsIDOMSVGSVGElement> svg;
-  element->GetOwnerSVGElement(getter_AddRefs(svg));
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(svg);
-
-  if (ctx) {
-    switch (direction) {
-    case X:
-      val->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-      break;
-    case Y:
-      val->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-      break;
-    case XY:
-      val->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextUnspecified()));
-      break;
-    }
-  }
-
-  val->GetValue(&value);
-  return value;
+  return aLength->GetAnimValue(aSVGElement);
 }
 
 void
@@ -1137,4 +1105,17 @@ nsSVGUtils::HitTestChildren(nsIFrame *aFrame, float x, float y,
 
   if (*aResult && !HitTestClip(aFrame, x, y))
     *aResult = nsnull;
+}
+
+already_AddRefed<nsSVGCoordCtxProvider>
+nsSVGUtils::GetCoordContextProvider(nsSVGElement *aElement)
+{
+  nsCOMPtr<nsIDOMSVGSVGElement> owner;
+  aElement->GetOwnerSVGElement(getter_AddRefs(owner));
+
+  nsSVGCoordCtxProvider *ctx;
+  CallQueryInterface(owner, &ctx);
+
+  NS_IF_ADDREF(ctx);
+  return ctx;
 }

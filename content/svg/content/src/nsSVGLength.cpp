@@ -484,26 +484,6 @@ nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
   return NS_OK;
 }
 
-/* float getTransformedValue (in nsIDOMSVGMatrix matrix); */
-NS_IMETHODIMP
-nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
-                                 float *_retval)
-{
-// XXX we don't have enough information here. is it the length part of
-// a coordinate pair (in which case it should transform like a point)
-// or is it used like a vector-component (in which case it doesn't
-// translate)
-
-  // maybe we should remove this method since it isn't part of the spec?
-  // if not, null check when implementing - this method can be used by scripts!
-  // if (!matrix)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
-
-  NS_NOTYETIMPLEMENTED("nsSVGLength::GetTransformedValue");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 //----------------------------------------------------------------------
 // nsISVGLength methods:
 NS_IMETHODIMP

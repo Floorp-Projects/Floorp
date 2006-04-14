@@ -36,12 +36,7 @@
 
 #include "nsSVGFilterFrame.h"
 #include "nsSVGFilterInstance.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
 #include "nsIDocument.h"
-#include "nsISVGValue.h"
-#include "nsIDOMSVGFilterElement.h"
-#include "nsIDOMSVGAnimatedLength.h"
 #include "nsISVGValueUtils.h"
 #include "nsISVGGeometrySource.h"
 #include "nsSVGMatrix.h"
@@ -49,20 +44,12 @@
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGFilter.h"
-#include "nsSVGLength.h"
-#include "nsIDOMSVGSVGElement.h"
-#include "nsINameSpaceManager.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGDefsFrame.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGRect.h"
-#include "nsIDOMSVGAnimatedEnum.h"
-#include "nsSVGValue.h"
-#include "nsSVGPoint.h"
 #include "nsIDOMSVGAnimatedInteger.h"
 #include "nsSVGUtils.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
+#include "nsSVGFilterElement.h"
+#include "nsSVGFilters.h"
 
 class nsSVGFilterFrame : public nsSVGDefsFrame,
                          public nsSVGValue,
@@ -101,6 +88,11 @@ public:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable, 
                                     nsISVGValue::modificationType aModType);
 
+  // nsIFrame interface:
+  NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aModType);
+
   /**
    * Get the "type" of the frame
    *
@@ -114,10 +106,6 @@ private:
                          nsISVGChildFrame *aTarget);
   
 private:
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
-  nsCOMPtr<nsIDOMSVGLength> mWidth;
-  nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mFilterUnits;
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPrimitiveUnits;
   nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResX;
@@ -175,10 +163,6 @@ nsSVGFilterFrame::~nsSVGFilterFrame()
   // Notify the world that we're dying
   DidModify(mod_die);
 
-  NS_REMOVE_SVGVALUE_OBSERVER(mX);
-  NS_REMOVE_SVGVALUE_OBSERVER(mY);
-  NS_REMOVE_SVGVALUE_OBSERVER(mWidth);
-  NS_REMOVE_SVGVALUE_OBSERVER(mHeight);
   NS_REMOVE_SVGVALUE_OBSERVER(mFilterUnits);
   NS_REMOVE_SVGVALUE_OBSERVER(mPrimitiveUnits);
   NS_REMOVE_SVGVALUE_OBSERVER(mFilterResX);
@@ -206,6 +190,26 @@ nsSVGFilterFrame::DidModifySVGObservable(nsISVGValue* observable,
 }
 
 NS_IMETHODIMP
+nsSVGFilterFrame::AttributeChanged(PRInt32         aNameSpaceID,
+                                   nsIAtom*        aAttribute,
+                                   PRInt32         aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::x ||
+       aAttribute == nsGkAtoms::y ||
+       aAttribute == nsGkAtoms::width ||
+       aAttribute == nsGkAtoms::height)) {
+    WillModify();
+    DidModify();
+    return NS_OK;
+  }
+
+  return nsSVGDefsFrame::AttributeChanged(aNameSpaceID,
+                                          aAttribute, aModType);
+}
+
+
+NS_IMETHODIMP
 nsSVGFilterFrame::InitSVG()
 {
   nsresult rv = nsSVGDefsFrame::InitSVG();
@@ -214,42 +218,6 @@ nsSVGFilterFrame::InitSVG()
 
   nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(mContent);
   NS_ASSERTION(filter, "wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    filter->GetX(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no X");
-    if (!mX) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mX);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    filter->GetY(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no Y");
-    if (!mY) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mY);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    filter->GetWidth(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mWidth));
-    NS_ASSERTION(mWidth, "no Width");
-    if (!mWidth) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mWidth);
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    filter->GetHeight(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mHeight));
-    NS_ASSERTION(mHeight, "no Height");
-    if (!mHeight) return NS_ERROR_FAILURE;
-    NS_ADD_SVGVALUE_OBSERVER(mHeight);
-  }
 
   filter->GetFilterUnits(getter_AddRefs(mFilterUnits));
   NS_ADD_SVGVALUE_OBSERVER(mFilterUnits);
@@ -339,7 +307,7 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
 
   nsIFrame *frame;
   CallQueryInterface(aTarget, &frame);
-  nsIContent *target = frame->GetContent();
+  nsSVGElement *target = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
 
   aTarget->SetMatrixPropagation(PR_FALSE);
   aTarget->NotifyCanvasTMChanged(PR_TRUE);
@@ -351,21 +319,28 @@ nsSVGFilterFrame::FilterPaint(nsISVGRendererCanvas *aCanvas,
   nsCOMPtr<nsIDOMSVGRect> bbox;
   aTarget->GetBBox(getter_AddRefs(bbox));
 
+  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+  nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
+  tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];
+  tmpY = &filter->mLengthAttributes[nsSVGFilterElement::Y];
+  tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
+  tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
+
   if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
     if (!bbox)
       return NS_OK;
 
     bbox->GetX(&x);
-    x += nsSVGUtils::ObjectSpace(bbox, mX, nsSVGUtils::X);
+    x += nsSVGUtils::ObjectSpace(bbox, tmpX);
     bbox->GetY(&y);
-    y += nsSVGUtils::ObjectSpace(bbox, mY, nsSVGUtils::Y);
-    width = nsSVGUtils::ObjectSpace(bbox, mWidth, nsSVGUtils::X);
-    height = nsSVGUtils::ObjectSpace(bbox, mHeight, nsSVGUtils::Y);
+    y += nsSVGUtils::ObjectSpace(bbox, tmpY);
+    width = nsSVGUtils::ObjectSpace(bbox, tmpWidth);
+    height = nsSVGUtils::ObjectSpace(bbox, tmpHeight);
   } else {
-    x = nsSVGUtils::UserSpace(target, mX, nsSVGUtils::X);
-    y = nsSVGUtils::UserSpace(target, mY, nsSVGUtils::Y);
-    width = nsSVGUtils::UserSpace(target, mWidth, nsSVGUtils::X);
-    height = nsSVGUtils::UserSpace(target, mHeight, nsSVGUtils::Y);
+    x = nsSVGUtils::UserSpace(target, tmpX);
+    y = nsSVGUtils::UserSpace(target, tmpY);
+    width = nsSVGUtils::UserSpace(target, tmpWidth);
+    height = nsSVGUtils::UserSpace(target, tmpHeight);
   }
   
   PRInt32 filterResX = PRInt32(s1 * width + 0.5);
@@ -490,7 +465,8 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
 {
   *aRegion = nsnull;
 
-  nsIContent *targetContent = aTarget->GetContent();
+  nsSVGElement *targetContent =
+    NS_STATIC_CAST(nsSVGElement*, aTarget->GetContent());
   nsISVGChildFrame *svg;
 
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
@@ -518,21 +494,28 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget,
   nsCOMPtr<nsIDOMSVGRect> bbox;
   svg->GetBBox(getter_AddRefs(bbox));
 
+  nsSVGFilterElement *filter = NS_STATIC_CAST(nsSVGFilterElement*, mContent);
+  nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
+  tmpX = &filter->mLengthAttributes[nsSVGFilterElement::X];
+  tmpY = &filter->mLengthAttributes[nsSVGFilterElement::Y];
+  tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
+  tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
+
   if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
     if (!bbox)
       return NS_OK;
 
     bbox->GetX(&x);
-    x += nsSVGUtils::ObjectSpace(bbox, mX, nsSVGUtils::X);
+    x += nsSVGUtils::ObjectSpace(bbox, tmpX);
     bbox->GetY(&y);
-    y += nsSVGUtils::ObjectSpace(bbox, mY, nsSVGUtils::Y);
-    width = nsSVGUtils::ObjectSpace(bbox, mWidth, nsSVGUtils::X);
-    height = nsSVGUtils::ObjectSpace(bbox, mHeight, nsSVGUtils::Y);
+    y += nsSVGUtils::ObjectSpace(bbox, tmpY);
+    width = nsSVGUtils::ObjectSpace(bbox, tmpWidth);
+    height = nsSVGUtils::ObjectSpace(bbox, tmpHeight);
   } else {
-    x = nsSVGUtils::UserSpace(targetContent, mX, nsSVGUtils::X);
-    y = nsSVGUtils::UserSpace(targetContent, mY, nsSVGUtils::Y);
-    width = nsSVGUtils::UserSpace(targetContent, mWidth, nsSVGUtils::X);
-    height = nsSVGUtils::UserSpace(targetContent, mHeight, nsSVGUtils::Y);
+    x = nsSVGUtils::UserSpace(targetContent, tmpX);
+    y = nsSVGUtils::UserSpace(targetContent, tmpY);
+    width = nsSVGUtils::UserSpace(targetContent, tmpWidth);
+    height = nsSVGUtils::UserSpace(targetContent, tmpHeight);
   }
 
   svg->SetMatrixPropagation(PR_TRUE);
@@ -590,73 +573,54 @@ nsSVGFilterFrame::GetType() const
 // nsSVGFilterInstance
 
 float
-nsSVGFilterInstance::GetPrimitiveX(nsIDOMSVGLength *aLength)
+nsSVGFilterInstance::GetPrimitiveLength(nsSVGLength2 *aLength)
 {
   float value;
   if (mPrimitiveUnits == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX)
-    value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength, nsSVGUtils::X);
+    value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength);
   else
-    value = nsSVGUtils::UserSpace(mTarget, aLength, nsSVGUtils::X);
+    value = nsSVGUtils::UserSpace(mTarget, aLength);
 
-  return value * mFilterResX / mFilterWidth;
-}
-
-float
-nsSVGFilterInstance::GetPrimitiveY(nsIDOMSVGLength *aLength)
-{
-  float value;
-  if (mPrimitiveUnits == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX)
-    value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength, nsSVGUtils::Y);
-  else
-    value = nsSVGUtils::UserSpace(mTarget, aLength, nsSVGUtils::Y);
-
-  return value * mFilterResY / mFilterHeight;
-}
-
-float
-nsSVGFilterInstance::GetPrimitiveXY(nsIDOMSVGLength *aLength)
-{
-  float value;
-  if (mPrimitiveUnits == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX)
-    value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength, nsSVGUtils::XY);
-  else
-    value = nsSVGUtils::UserSpace(mTarget, aLength, nsSVGUtils::XY);
-
-  return value *
-    sqrt(float(mFilterResX * mFilterResX + mFilterResY * mFilterResY)) /
-    sqrt(mFilterWidth * mFilterWidth + mFilterHeight * mFilterHeight);
+  switch (aLength->GetCtxType()) {
+  case nsSVGUtils::X:
+    return value * mFilterResX / mFilterWidth;
+  case nsSVGUtils::Y:
+    return value * mFilterResY / mFilterHeight;
+  case nsSVGUtils::XY:
+  default:
+    return value *
+      sqrt(float(mFilterResX * mFilterResX + mFilterResY * mFilterResY)) /
+      sqrt(mFilterWidth * mFilterWidth + mFilterHeight * mFilterHeight);
+  }
 }
 
 void
 nsSVGFilterInstance::GetFilterSubregion(
-  nsIDOMSVGFilterPrimitiveStandardAttributes *aFilter,
+  nsIContent *aFilter,
   nsRect defaultRegion,
   nsRect *result)
 {
-  nsCOMPtr<nsIDOMSVGLength> svgX, svgY, svgWidth, svgHeight;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> val;
-  aFilter->GetX(getter_AddRefs(val));
-  val->GetBaseVal(getter_AddRefs(svgX));
-  aFilter->GetY(getter_AddRefs(val));
-  val->GetBaseVal(getter_AddRefs(svgY));
-  aFilter->GetWidth(getter_AddRefs(val));
-  val->GetBaseVal(getter_AddRefs(svgWidth));
-  aFilter->GetHeight(getter_AddRefs(val));
-  val->GetBaseVal(getter_AddRefs(svgHeight));
+  nsSVGFE *fE = NS_STATIC_CAST(nsSVGFE*, aFilter);
+  nsSVGLength2 *tmpX, *tmpY, *tmpWidth, *tmpHeight;
+
+  tmpX = &fE->mLengthAttributes[nsSVGFE::X];
+  tmpY = &fE->mLengthAttributes[nsSVGFE::Y];
+  tmpWidth = &fE->mLengthAttributes[nsSVGFE::WIDTH];
+  tmpHeight = &fE->mLengthAttributes[nsSVGFE::HEIGHT];
 
   float x, y, width, height;
 
   if (mPrimitiveUnits == 
       nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
-    x      = nsSVGUtils::ObjectSpace(mTargetBBox, svgX, nsSVGUtils::X);
-    y      = nsSVGUtils::ObjectSpace(mTargetBBox, svgY, nsSVGUtils::Y);
-    width  = nsSVGUtils::ObjectSpace(mTargetBBox, svgWidth, nsSVGUtils::X);
-    height = nsSVGUtils::ObjectSpace(mTargetBBox, svgHeight, nsSVGUtils::Y);
+    x      = nsSVGUtils::ObjectSpace(mTargetBBox, tmpX);
+    y      = nsSVGUtils::ObjectSpace(mTargetBBox, tmpY);
+    width  = nsSVGUtils::ObjectSpace(mTargetBBox, tmpWidth);
+    height = nsSVGUtils::ObjectSpace(mTargetBBox, tmpHeight);
   } else {
-    x      = nsSVGUtils::UserSpace(mTarget, svgX, nsSVGUtils::X);
-    y      = nsSVGUtils::UserSpace(mTarget, svgY, nsSVGUtils::Y);
-    width  = nsSVGUtils::UserSpace(mTarget, svgWidth, nsSVGUtils::X);
-    height = nsSVGUtils::UserSpace(mTarget, svgHeight, nsSVGUtils::Y);
+    x      = nsSVGUtils::UserSpace(mTarget, tmpX);
+    y      = nsSVGUtils::UserSpace(mTarget, tmpY);
+    width  = nsSVGUtils::UserSpace(mTarget, tmpWidth);
+    height = nsSVGUtils::UserSpace(mTarget, tmpHeight);
   }
 
 #ifdef DEBUG_tor

@@ -34,26 +34,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGGElement.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGAnimatedLength.h"
-#include "nsSVGLength.h"
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
-#include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGAnimatedString.h"
-#include "nsIDOMSVGUseElement.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGAnimatedString.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGSymbolElement.h"
 #include "nsIDocument.h"
-#include "nsIDOMMutationListener.h"
 #include "nsISupportsArray.h"
 #include "nsIPresShell.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsSVGGraphicElement.h"
+#include "nsIDOMSVGURIReference.h"
+#include "nsIDOMSVGUseElement.h"
+#include "nsIDOMMutationListener.h"
+#include "nsSVGLength2.h"
 
 #define NS_SVG_USE_ELEMENT_IMPL_CID \
 { 0xa95c13d3, 0xc193, 0x465f, {0x81, 0xf0, 0x02, 0x6d, 0x67, 0x05, 0x54, 0x58 } }
@@ -90,9 +89,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGUseElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGUseElementBase::)
 
-  // nsISVGContent specializations:
-  virtual void ParentChainChanged();
-
   // nsISVGValueObserver specializations:
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
                                      nsISVGValue::modificationType aModType);
@@ -116,17 +112,23 @@ public:
                             nsIContent *aContent,
                             nsIFrame **aFrame);
 
+  // nsSVGElement specializations:
+  virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+
 protected:
 
+  virtual LengthAttributesInfo GetLengthInfo();
+
+  void SyncWidthHeight(PRUint8 aAttrEnum);
   nsresult LookupHref(nsIDOMSVGElement **aElement);
   void TriggerReclone();
   void RemoveListeners();
 
+  enum { X, Y, WIDTH, HEIGHT };
+  nsSVGLength2 mLengthAttributes[4];
+  static LengthInfo sLengthInfo[4];
+
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
 
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;  // cloned tree
@@ -137,9 +139,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
 ////////////////////////////////////////////////////////////////////////
 // implementation
 
+nsSVGElement::LengthInfo nsSVGUseElement::sLengthInfo[4] =
+{
+  { &nsGkAtoms::x, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+  { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::X },
+  { &nsGkAtoms::height, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
+};
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Use)
-
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -182,57 +190,6 @@ nsSVGUseElement::Init()
 
   // Create mapped properties:
 
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #REQUIRED  attrib: width
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #REQUIRED  attrib: height
-  // XXX: enforce requiredness
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         100.0f, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-
   // DOM property: href , #REQUIRED attrib: xlink:href
   // XXX: enforce requiredness
   {
@@ -243,61 +200,6 @@ nsSVGUseElement::Init()
   }
 
   return rv;
-}
-
-//----------------------------------------------------------------------
-// nsISVGContent methods
-
-void nsSVGUseElement::ParentChainChanged()
-{
-  // set new context information on our length-properties:
-  
-  nsCOMPtr<nsIDOMSVGSVGElement> svg_elem;
-  GetOwnerSVGElement(getter_AddRefs(svg_elem));
-  if (!svg_elem) return;
-
-  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(svg_elem);
-  NS_ASSERTION(ctx, "<svg> element missing interface");
-
-  // x:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // y:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
-
-  // width:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mWidth->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
-  }
-
-  // height:
-  {
-    nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mHeight->GetAnimVal(getter_AddRefs(dom_length));
-    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
-    NS_ASSERTION(length, "svg length missing interface");
-    
-    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
-  }
 }
 
 //----------------------------------------------------------------------
@@ -351,33 +253,25 @@ nsSVGUseElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGUseElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGUseElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGUseElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGUseElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
 }
 
 //----------------------------------------------------------------------
@@ -426,26 +320,6 @@ nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
       rv = target->AddEventListener(NS_LITERAL_STRING("DOMCharacterDataModified"),
                                     this, PR_TRUE);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-    }
-  }
-
-  if (mClone) {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> l = do_QueryInterface(aObservable);
-    nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
-    nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
-
-    if (l && (symbol || svg)) {
-      if (l == mWidth) {
-        nsAutoString width;
-        GetAttr(kNameSpaceID_None, nsSVGAtoms::width, width);
-        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::width, width, PR_FALSE);
-      }
-
-      if (l == mHeight) {
-        nsAutoString height;
-        GetAttr(kNameSpaceID_None, nsSVGAtoms::height, height);
-        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::height, height, PR_FALSE);
-      }
     }
   }
 
@@ -656,6 +530,27 @@ nsSVGUseElement::CreateFrameFor(nsPresContext *aPresContext,
 //----------------------------------------------------------------------
 // implementation helpers
 
+void
+nsSVGUseElement::SyncWidthHeight(PRUint8 aAttrEnum)
+{
+  if (mClone && (aAttrEnum == WIDTH || aAttrEnum == HEIGHT)) {
+    nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
+    nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
+
+    if (symbol || svg) {
+      if (aAttrEnum == WIDTH) {
+        nsAutoString width;
+        GetAttr(kNameSpaceID_None, nsSVGAtoms::width, width);
+        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::width, width, PR_FALSE);
+      } else if (aAttrEnum == HEIGHT) {
+        nsAutoString height;
+        GetAttr(kNameSpaceID_None, nsSVGAtoms::height, height);
+        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::height, height, PR_FALSE);
+      }
+    }
+  }
+}
+
 nsresult
 nsSVGUseElement::LookupHref(nsIDOMSVGElement **aResult)
 {
@@ -727,4 +622,22 @@ nsSVGUseElement::RemoveListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("DOMCharacterDataModifed"),
                                 this, PR_TRUE);
   }
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+void
+nsSVGUseElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGUseElementBase::DidChangeLength(aAttrEnum, aDoSetAttr);
+
+  SyncWidthHeight(aAttrEnum);
+}
+
+nsSVGElement::LengthAttributesInfo
+nsSVGUseElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }

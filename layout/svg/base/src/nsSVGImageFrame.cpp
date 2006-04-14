@@ -35,10 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGImageElement.h"
-#include "nsIDOMSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGRendererSurface.h"
 #include "nsISVGRendererCanvas.h"
@@ -46,18 +42,13 @@
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGAnimPresAspRatio.h"
 #include "nsIDOMSVGPresAspectRatio.h"
-#include "imgIDecoderObserver.h"
-#include "imgIContainerObserver.h"
-#include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsIImage.h"
-#include "imgIRequest.h"
-#include "nsLayoutAtoms.h"
-#include "nsISVGValueUtils.h"
+#include "imgIDecoderObserver.h"
+#include "nsImageLoadingContent.h"
+#include "nsIDOMSVGImageElement.h"
+#include "nsSVGElement.h"
 #include "nsSVGUtils.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
 
 #define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
 
@@ -123,10 +114,6 @@ public:
 #endif
 
 private:
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
-  nsCOMPtr<nsIDOMSVGLength> mWidth;
-  nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGPreserveAspectRatio> mPreserveAspectRatio;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
@@ -178,42 +165,10 @@ nsSVGImageFrame::InitSVG()
   NS_ASSERTION(Rect,"wrong content element");
 
   {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    Rect->GetX(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no x");
-    if (!mX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    Rect->GetY(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no y");
-    if (!mY) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    Rect->GetWidth(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mWidth));
-    NS_ASSERTION(mWidth, "no width");
-    if (!mWidth) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    Rect->GetHeight(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mHeight));
-    NS_ASSERTION(mHeight, "no height");
-    if (!mHeight) return NS_ERROR_FAILURE;
-  }
-
-  {
     nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
     Rect->GetPreserveAspectRatio(getter_AddRefs(ratio));
     ratio->GetAnimVal(getter_AddRefs(mPreserveAspectRatio));
-    NS_ASSERTION(mHeight, "no preserveAspectRatio");
+    NS_ASSERTION(mPreserveAspectRatio, "no preserveAspectRatio");
     if (!mPreserveAspectRatio) return NS_ERROR_FAILURE;
   }
 
@@ -261,10 +216,8 @@ NS_IMETHODIMP nsSVGImageFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuil
 {
   float x, y, width, height;
 
-  mX->GetValue(&x);
-  mY->GetValue(&y);
-  mWidth->GetValue(&width);
-  mHeight->GetValue(&height);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
   /* In a perfect world, this would be handled by the DOM, and 
      return a DOM exception. */
@@ -316,18 +269,16 @@ nsSVGImageFrame::PaintSVG(nsISVGRendererCanvas* canvas)
     GetCanvasTM(getter_AddRefs(ctm));
 
     float x, y, width, height;
-    mX->GetValue(&x);
-    mY->GetValue(&y);
-    mWidth->GetValue(&width);
-    mHeight->GetValue(&height);
+    nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+    element->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     PRUint32 nativeWidth, nativeHeight;
     mSurface->GetWidth(&nativeWidth);
     mSurface->GetHeight(&nativeHeight);
 
-    nsCOMPtr<nsIDOMSVGImageElement> element = do_QueryInterface(mContent);
+    nsCOMPtr<nsIDOMSVGImageElement> image = do_QueryInterface(mContent);
     nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ratio;
-    element->GetPreserveAspectRatio(getter_AddRefs(ratio));
+    image->GetPreserveAspectRatio(getter_AddRefs(ratio));
 
     nsCOMPtr<nsIDOMSVGMatrix> trans, ctmXY, fini;
     trans = nsSVGUtils::GetViewBoxTransform(width, height,

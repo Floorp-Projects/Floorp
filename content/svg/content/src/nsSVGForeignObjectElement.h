@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
- *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,21 +36,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGRECT_H__
-#define __NS_SVGRECT_H__
+#ifndef __NS_SVGFOREIGNOBJECTELEMENT_H__
+#define __NS_SVGFOREIGNOBJECTELEMENT_H__
 
-#include "nsIDOMSVGRect.h"
+#include "nsSVGGraphicElement.h"
+#include "nsIDOMSVGForeignObjectElem.h"
+#include "nsSVGLength2.h"
 
-class nsIDOMSVGLength;
+typedef nsSVGGraphicElement nsSVGForeignObjectElementBase;
 
-nsresult
-NS_NewSVGRect(nsIDOMSVGRect** result,
-              float x=0.0f, float y=0.0f,
-              float width=0.0f, float height=0.0f);
+class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
+                                  public nsIDOMSVGForeignObjectElement
+{
+  friend class nsSVGForeignObjectFrame;
 
-nsresult
-NS_NewSVGReadonlyRect(nsIDOMSVGRect** result,
-                      float x=0.0f, float y=0.0f,
-                      float width=0.0f, float height=0.0f);
+protected:
+  friend nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult,
+                                                nsINodeInfo *aNodeInfo);
+  nsSVGForeignObjectElement(nsINodeInfo *aNodeInfo);
 
-#endif //__NS_SVGRECT_H__
+public:
+  // interfaces:
+  
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMSVGFOREIGNOBJECTELEMENT
+
+  // xxx I wish we could use virtual inheritance
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGForeignObjectElementBase::)
+  NS_FORWARD_NSIDOMELEMENT(nsSVGForeignObjectElementBase::)
+  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGForeignObjectElementBase::)
+
+  // nsIContent interface
+  NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
+
+protected:
+
+  virtual LengthAttributesInfo GetLengthInfo();
+  
+  enum { X, Y, WIDTH, HEIGHT };
+  nsSVGLength2 mLengthAttributes[4];
+  static LengthInfo sLengthInfo[4];
+};
+
+#endif

@@ -67,6 +67,10 @@ class nsISVGOuterSVGFrame;
 class nsIDOMSVGAnimatedPreserveAspectRatio;
 class nsISVGValueObserver;
 class nsIAtom;
+class nsSVGLength2;
+class nsSVGElement;
+class nsSVGCoordCtxProvider;
+class nsAttrValue;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -186,20 +190,14 @@ public:
   /* Computes the input length in terms of object space coordinates.
      Input: rect - bounding box
             length - length to be converted
-            direction - direction of length
   */
-  static float ObjectSpace(nsIDOMSVGRect *rect,
-                           nsIDOMSVGLength *length,
-                           ctxDirection direction);
+  static float ObjectSpace(nsIDOMSVGRect *aRect, nsSVGLength2 *aLength);
 
   /* Computes the input length in terms of user space coordinates.
      Input: content - object to be used for determining user space
             length - length to be converted
-            direction - direction of length
   */
-  static float UserSpace(nsIContent *content,
-                         nsIDOMSVGLength *length,
-                         ctxDirection direction);
+  static float UserSpace(nsSVGElement *aSVGElement, nsSVGLength2 *aLength);
 
   /* Tranforms point by the matrix.  In/out: x,y */
   static void
@@ -272,6 +270,12 @@ public:
    * child or container SVG frame.
    */
   static already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM(nsIFrame *aFrame);
+
+  /*
+   * Get element's coordinate context provider.
+   */
+  static already_AddRefed<nsSVGCoordCtxProvider>
+  GetCoordContextProvider(nsSVGElement *aElement);
 
 private:
   /*

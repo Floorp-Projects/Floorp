@@ -47,15 +47,17 @@
 #include "nsIDOMSVGFilters.h"
 #include "nsRect.h"
 #include "nsIContent.h"
+#include "nsAutoPtr.h"
+
+class nsSVGLength2;
+class nsSVGElement;
 
 class nsSVGFilterInstance
 {
 public:
-  float GetPrimitiveX(nsIDOMSVGLength *aLength);
-  float GetPrimitiveY(nsIDOMSVGLength *aLength);
-  float GetPrimitiveXY(nsIDOMSVGLength *aLength);
+  float GetPrimitiveLength(nsSVGLength2 *aLength);
 
-  void GetFilterSubregion(nsIDOMSVGFilterPrimitiveStandardAttributes *aFilter,
+  void GetFilterSubregion(nsIContent *aFilter,
                           nsRect defaultRegion,
                           nsRect *result);
 
@@ -66,7 +68,7 @@ public:
   void DefineRegion(const nsAString &aName, nsRect aRect);
 
   nsSVGFilterInstance(nsISVGRenderer *aRenderer,
-                      nsIContent *aTarget,
+                      nsSVGElement *aTarget,
                       nsIDOMSVGRect *aTargetBBox,
                       float aFilterX, float aFilterY,
                       float aFilterWidth, float aFilterHeight,
@@ -85,7 +87,7 @@ public:
 
 private:
   nsCOMPtr<nsISVGRenderer> mRenderer;
-  nsCOMPtr<nsIContent> mTarget;
+  nsRefPtr<nsSVGElement> mTarget;
   nsCOMPtr<nsIDOMSVGRect> mTargetBBox;
   float mFilterX, mFilterY, mFilterWidth, mFilterHeight;
   PRUint32 mFilterResX, mFilterResY;

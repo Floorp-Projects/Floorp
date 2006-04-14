@@ -166,7 +166,22 @@ nsSVGTextPathFrame::Init(nsIContent*      aContent,
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     tpath->GetStartOffset(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mStartOffset));
+
+    // XXX: Gross hack as stand-in until length lists converted
+#ifdef DEBUG_tor
+    fprintf(stderr,
+            "### Using nsSVGTextPathFrame mStartOffset hack - fix me\n");
+#endif
+    nsCOMPtr<nsIDOMSVGLength> offset;
+    length->GetAnimVal(getter_AddRefs(offset));
+    PRUint16 type;
+    float value;
+    offset->GetUnitType(&type);
+    offset->GetValueInSpecifiedUnits(&value);
+    nsCOMPtr<nsISVGLength> l;
+    NS_NewSVGLength(getter_AddRefs(l), value, type);
+    mStartOffset = l;
+
     NS_ASSERTION(mStartOffset, "no startOffset");
     if (!mStartOffset)
       return NS_ERROR_FAILURE;

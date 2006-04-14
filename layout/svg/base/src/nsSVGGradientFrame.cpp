@@ -38,41 +38,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGGenericContainerFrame.h"
-#include "nsSVGGradient.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
-#include "nsIDOMSVGStopElement.h"
-#include "nsGkAtoms.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedNumber.h"
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGTransformList.h"
-#include "nsIDOMSVGNumber.h"
-#include "nsIDOMSVGGradientElement.h"
-#include "nsIDOMSVGURIReference.h"
-#include "nsISVGValue.h"
-#include "nsISVGValueUtils.h"
-#include "nsStyleContext.h"
-#include "nsSVGValue.h"
-#include "nsNetUtil.h"
-#include "nsINameSpaceManager.h"
-#include "nsISVGChildFrame.h"
-#include "nsIDOMSVGRect.h"
 #include "nsSVGMatrix.h"
 #include "nsISVGGeometrySource.h"
 #include "nsISVGGradient.h"
 #include "nsIURI.h"
-#include "nsIContent.h"
-#include "nsSVGNumber.h"
 #include "nsIDOMSVGStopElement.h"
-#include "nsSVGUtils.h"
-#include "nsWeakReference.h"
-#include "nsISVGValueObserver.h"
-#include "nsContentUtils.h"
 #include "nsSVGDefsFrame.h"
+#include "nsSVGGradientElement.h"
 
 class nsSVGLinearGradientFrame;
 class nsSVGRadialGradientFrame;
@@ -208,7 +184,7 @@ protected:
   virtual ~nsSVGGradientFrame();
 
   // The graphic element our gradient is (currently) being applied to
-  nsCOMPtr<nsIContent>                   mSourceContent;
+  nsRefPtr<nsSVGElement>                 mSourceContent;
 
 private:
 
@@ -559,9 +535,10 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
     // need to get the parent
     nsIAtom *callerType = frame->GetType();
     if (callerType ==  nsGkAtoms::svgGlyphFrame)
-      mSourceContent = frame->GetContent()->GetParent();
+      mSourceContent = NS_STATIC_CAST(nsSVGElement*,
+                                      frame->GetContent()->GetParent());
     else
-      mSourceContent = frame->GetContent();
+      mSourceContent = NS_STATIC_CAST(nsSVGElement*, frame->GetContent());
     NS_ASSERTION(mSourceContent, "Can't get content for gradient");
   }
   else {
@@ -827,11 +804,8 @@ nsSVGLinearGradientFrame::GetX1(float *aX1)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> lGrad = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  lGrad->GetX1(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGLinearGradientElement *element =
+    NS_STATIC_CAST(nsSVGLinearGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -839,14 +813,18 @@ nsSVGLinearGradientFrame::GetX1(float *aX1)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aX1 = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::X);
+    *aX1 = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGLinearGradientElement::X1]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aX1);  // objectBoundingBox is the default anyway
+  *aX1 = element->mLengthAttributes[nsSVGLinearGradientElement::X1].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 nsresult
@@ -856,11 +834,8 @@ nsSVGLinearGradientFrame::GetY1(float *aY1)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> lGrad = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  lGrad->GetY1(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGLinearGradientElement *element =
+    NS_STATIC_CAST(nsSVGLinearGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -868,14 +843,18 @@ nsSVGLinearGradientFrame::GetY1(float *aY1)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aY1 = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::Y);
+    *aY1 = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGLinearGradientElement::Y1]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aY1);  // objectBoundingBox is the default anyway
+  *aY1 = element->mLengthAttributes[nsSVGLinearGradientElement::Y1].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -885,11 +864,8 @@ nsSVGLinearGradientFrame::GetX2(float *aX2)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> lGrad = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  lGrad->GetX2(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGLinearGradientElement *element =
+    NS_STATIC_CAST(nsSVGLinearGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -897,14 +873,18 @@ nsSVGLinearGradientFrame::GetX2(float *aX2)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aX2 = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::X);
+    *aX2 = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGLinearGradientElement::X2]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aX2);  // objectBoundingBox is the default anyway
+  *aX2 = element->mLengthAttributes[nsSVGLinearGradientElement::X2].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -914,11 +894,8 @@ nsSVGLinearGradientFrame::GetY2(float *aY2)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGLinearGradientElement> lGrad = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  lGrad->GetY2(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGLinearGradientElement *element =
+    NS_STATIC_CAST(nsSVGLinearGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -926,14 +903,18 @@ nsSVGLinearGradientFrame::GetY2(float *aY2)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aY2 = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::Y);
+    *aY2 = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGLinearGradientElement::Y2]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aY2);  // objectBoundingBox is the default anyway
+  *aY2 = element->mLengthAttributes[nsSVGLinearGradientElement::Y2].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 // -------------------------------------------------------------------------
@@ -981,11 +962,8 @@ nsSVGRadialGradientFrame::GetFx(float *aFx)
   if (!gradient)
     return GetCx(aFx);  // if fx isn't set, we must use cx
 
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  rGradElement->GetFx(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGRadialGradientElement *element =
+    NS_STATIC_CAST(nsSVGRadialGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -993,14 +971,18 @@ nsSVGRadialGradientFrame::GetFx(float *aFx)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aFx = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::X);
+    *aFx = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGRadialGradientElement::FX]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aFx);  // objectBoundingBox is the default anyway
+  *aFx = element->mLengthAttributes[nsSVGRadialGradientElement::FX].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1010,11 +992,8 @@ nsSVGRadialGradientFrame::GetFy(float *aFy)
   if (!gradient)
     return GetCy(aFy);  // if fy isn't set, we must use cy
 
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  rGradElement->GetFy(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGRadialGradientElement *element =
+    NS_STATIC_CAST(nsSVGRadialGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -1022,14 +1001,18 @@ nsSVGRadialGradientFrame::GetFy(float *aFy)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aFy = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::Y);
+    *aFy = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGRadialGradientElement::FY]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aFy);  // objectBoundingBox is the default anyway
+  *aFy = element->mLengthAttributes[nsSVGRadialGradientElement::FY].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1039,11 +1022,8 @@ nsSVGRadialGradientFrame::GetCx(float *aCx)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  rGradElement->GetCx(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGRadialGradientElement *element =
+    NS_STATIC_CAST(nsSVGRadialGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -1051,14 +1031,18 @@ nsSVGRadialGradientFrame::GetCx(float *aCx)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aCx = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::X);
+    *aCx = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGRadialGradientElement::CX]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aCx);  // objectBoundingBox is the default anyway
+  *aCx = element->mLengthAttributes[nsSVGRadialGradientElement::CX].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1068,11 +1052,8 @@ nsSVGRadialGradientFrame::GetCy(float *aCy)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  rGradElement->GetCy(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGRadialGradientElement *element =
+    NS_STATIC_CAST(nsSVGRadialGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -1080,14 +1061,18 @@ nsSVGRadialGradientFrame::GetCy(float *aCy)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aCy = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::Y);
+    *aCy = nsSVGUtils::UserSpace(mSourceContent,
+                                 &element->mLengthAttributes[nsSVGRadialGradientElement::CY]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aCy);  // objectBoundingBox is the default anyway
+  *aCy = element->mLengthAttributes[nsSVGRadialGradientElement::CY].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1097,11 +1082,8 @@ nsSVGRadialGradientFrame::GetR(float *aR)
   if (!gradient)
     gradient = mContent;  // use our gradient to get the correct default value
 
-  nsCOMPtr<nsIDOMSVGRadialGradientElement> rGradElement = do_QueryInterface(gradient);
-  nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-  rGradElement->GetR(getter_AddRefs(animLength));
-  nsCOMPtr<nsIDOMSVGLength> length;
-  animLength->GetAnimVal(getter_AddRefs(length));
+  nsSVGRadialGradientElement *element =
+    NS_STATIC_CAST(nsSVGRadialGradientElement*, gradient);
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransfrom, but we need to handle user
@@ -1109,14 +1091,18 @@ nsSVGRadialGradientFrame::GetR(float *aR)
 
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
-    *aR = nsSVGUtils::UserSpace(mSourceContent, length, nsSVGUtils::XY);
+    *aR = nsSVGUtils::UserSpace(mSourceContent,
+                                &element->mLengthAttributes[nsSVGRadialGradientElement::R]);
     return NS_OK;
   }
 
   NS_ASSERTION(gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX,
                "Unknown gradientUnits type");
 
-  return length->GetValue(aR);  // objectBoundingBox is the default anyway
+  *aR = element->mLengthAttributes[nsSVGRadialGradientElement::R].
+    GetAnimValue(NS_STATIC_CAST(nsSVGCoordCtxProvider*, nsnull));
+
+  return NS_OK;
 }
 
 // -------------------------------------------------------------------------

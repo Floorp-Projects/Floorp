@@ -38,26 +38,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGPathGeometryFrame.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGLength.h"
-#include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGLineElement.h"
-#include "nsIDOMSVGElement.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsISVGRendererPathBuilder.h"
 #include "nsISVGMarkable.h"
-#include "nsLayoutAtoms.h"
-#include "nsINameSpaceManager.h"
-#include "nsGkAtoms.h"
+#include "nsIDOMSVGLineElement.h"
+#include "nsSVGElement.h"
 
 class nsSVGLineFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable
 {
-protected:
   friend nsIFrame*
   NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
+  nsSVGLineFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
 
   /**
    * Get the "type" of the frame
@@ -73,9 +65,6 @@ protected:
   }
 #endif
 
-public:
-  nsSVGLineFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
-
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
@@ -90,14 +79,8 @@ public:
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }  
-
-  nsCOMPtr<nsIDOMSVGLength> mX1;
-  nsCOMPtr<nsIDOMSVGLength> mY1;
-  nsCOMPtr<nsIDOMSVGLength> mX2;
-  nsCOMPtr<nsIDOMSVGLength> mY2;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGLineFrame)
@@ -119,50 +102,6 @@ NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContex
   }
 
   return new (aPresShell) nsSVGLineFrame(aContext);
-}
-
-NS_IMETHODIMP
-nsSVGLineFrame::InitSVG()
-{
-  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDOMSVGLineElement> line = do_QueryInterface(mContent);
-  NS_ASSERTION(line,"wrong content element");
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    line->GetX1(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX1));
-    NS_ASSERTION(mX1, "no x1");
-    if (!mX1) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    line->GetY1(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY1));
-    NS_ASSERTION(mY1, "no y1");
-    if (!mY1) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    line->GetX2(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX2));
-    NS_ASSERTION(mX2, "no x2");
-    if (!mX2) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    line->GetY2(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY2));
-    NS_ASSERTION(mY2, "no y2");
-    if (!mY2) return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK; 
 }
 
 //----------------------------------------------------------------------
@@ -198,12 +137,10 @@ nsSVGLineFrame::AttributeChanged(PRInt32         aNameSpaceID,
 /* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
 NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
-  float x1,y1,x2,y2;
+  float x1, y1, x2, y2;
 
-  mX1->GetValue(&x1);
-  mY1->GetValue(&y1);
-  mX2->GetValue(&x2);
-  mY2->GetValue(&y2);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
 
   // move to start coordinates then draw line to end coordinates
   pathBuilder->Moveto(x1, y1);
@@ -217,12 +154,10 @@ NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuild
 
 void
 nsSVGLineFrame::GetMarkPoints(nsVoidArray *aMarks) {
-  float x1,y1,x2,y2;
+  float x1, y1, x2, y2;
 
-  mX1->GetValue(&x1);
-  mY1->GetValue(&y1);
-  mX2->GetValue(&x2);
-  mY2->GetValue(&y2);
+  nsSVGElement *element = NS_STATIC_CAST(nsSVGElement*, mContent);
+  element->GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nsnull);
 
   nsSVGMark *m1, *m2;
   m1 = new nsSVGMark();

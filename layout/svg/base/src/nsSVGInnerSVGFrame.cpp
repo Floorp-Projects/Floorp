@@ -37,29 +37,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsContainerFrame.h"
-#include "nsIDOMSVGGElement.h"
-#include "nsPresContext.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGOuterSVGFrame.h"
-#include "nsIDOMSVGSVGElement.h"
-#include "nsISVGSVGElement.h"
-#include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGAnimatedRect.h"
-#include "nsIDOMSVGFitToViewBox.h"
-#include "nsSVGLength.h"
-#include "nsISVGValue.h"
-#include "nsISVGValueObserver.h"
-#include "nsWeakReference.h"
 #include "nsSVGMatrix.h"
-#include "nsLayoutAtoms.h"
 #include "nsSVGFilterFrame.h"
-#include "nsISVGValueUtils.h"
-#include "nsSVGUtils.h"
-#include "nsSVGClipPathFrame.h"
-#include "nsISVGRendererSurface.h"
-#include "nsGkAtoms.h"
+#include "nsSVGSVGElement.h"
 
 typedef nsContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -147,10 +132,6 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
-
-  nsCOMPtr<nsIDOMSVGLength> mX;
-  nsCOMPtr<nsIDOMSVGLength> mY;
-
   nsCOMPtr<nsIDOMSVGMatrix> mOverrideCTM;
 
   PRPackedBool mPropagateTransform;
@@ -189,22 +170,6 @@ nsresult nsSVGInnerSVGFrame::Init()
   nsCOMPtr<nsISVGSVGElement> SVGElement = do_QueryInterface(mContent);
   NS_ASSERTION(SVGElement, "wrong content element");
   SVGElement->SetParentCoordCtxProvider(nsRefPtr<nsSVGCoordCtxProvider>(containerFrame->GetCoordContextProvider()));
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    SVGElement->GetX(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mX));
-    NS_ASSERTION(mX, "no x");
-    if (!mX) return NS_ERROR_FAILURE;
-  }
-
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> length;
-    SVGElement->GetY(getter_AddRefs(length));
-    length->GetAnimVal(getter_AddRefs(mY));
-    NS_ASSERTION(mY, "no y");
-    if (!mY) return NS_ERROR_FAILURE;
-  }
 
   return NS_OK;
 }
@@ -324,19 +289,10 @@ nsSVGInnerSVGFrame::PaintSVG(nsISVGRendererCanvas* canvas)
   canvas->PushClip();
 
   if (GetStyleDisplay()->IsScrollableOverflow()) {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> anim;
-    nsCOMPtr<nsIDOMSVGLength> val;
-    nsCOMPtr<nsISVGSVGElement> svg = do_QueryInterface(mContent);
+    nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
 
     float x, y, width, height;
-    mX->GetValue(&x);
-    mY->GetValue(&y);
-    svg->GetWidth(getter_AddRefs(anim));
-    anim->GetAnimVal(getter_AddRefs(val));
-    val->GetValue(&width);
-    svg->GetHeight(getter_AddRefs(anim));
-    anim->GetAnimVal(getter_AddRefs(val));
-    val->GetValue(&height);
+    svg->GetAnimatedLengthValues(&x, &y, &width, &height, nsnull);
 
     nsCOMPtr<nsIDOMSVGMatrix> clipTransform;
     if (!mPropagateTransform) {
@@ -601,8 +557,9 @@ nsSVGInnerSVGFrame::GetCanvasTM()
 
     // append the transform due to the 'x' and 'y' attributes:
     float x, y;
-    mX->GetValue(&x);
-    mY->GetValue(&y);
+    nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+    svg->GetAnimatedLengthValues(&x, &y, nsnull);
+
     nsCOMPtr<nsIDOMSVGMatrix> xyTM;
     parentTM->Translate(x, y, getter_AddRefs(xyTM));
 

@@ -39,6 +39,7 @@
 #include "nsSVGCoordCtxProvider.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueUtils.h"
+#include "nsSVGUtils.h"
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////
@@ -141,4 +142,22 @@ nsSVGCoordCtxHolder::GetContextUnspecified()
   nsSVGCoordCtx *rv = mCtxUnspec.get();
   NS_IF_ADDREF(rv);
   return rv;
+}
+
+already_AddRefed<nsSVGCoordCtx>
+nsSVGCoordCtxProvider::GetCtxByType(PRUint16 aCtxType)
+{
+  if (!mInner)
+    return nsnull;
+
+  switch (aCtxType) {
+  case nsSVGUtils::X:
+    return mInner->GetContextX();
+  case nsSVGUtils::Y:
+    return mInner->GetContextY();
+  case nsSVGUtils::XY:
+    return mInner->GetContextUnspecified();
+  }
+
+  return nsnull;
 }

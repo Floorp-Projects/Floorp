@@ -36,44 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#include "nsHTMLContainerFrame.h"
 #include "nsContainerFrame.h"
-#include "nsCSSRendering.h"
-#include "nsISVGSVGElement.h"
-#include "nsPresContext.h"
-#include "nsIDOMSVGAnimatedLength.h"
-#include "nsIDOMSVGLength.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsISVGValue.h"
-#include "nsHTMLParts.h"
 #include "nsReflowPath.h"
 #include "nsISVGRenderer.h"
 #include "nsISVGRendererRegion.h"
 #include "nsIServiceManager.h"
 #include "nsISVGRectangleSink.h"
-#include "nsISVGValueUtils.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGNumber.h"
-#include "nsSVGCoordCtxProvider.h"
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
 #include "nsIDeviceContext.h"
 #include "nsTransform2D.h"
 #endif
 #include "nsISVGEnum.h"
 #include "nsIDOMSVGPoint.h"
-#include "nsIDOMSVGZoomAndPan.h"
-#include "nsIDOMSVGAnimatedRect.h"
-#include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGRect.h"
-#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsDisplayList.h"
-#include "nsSVGUtils.h"
+#include "nsSVGSVGElement.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -447,34 +432,15 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   // width/height attributes will be valid.
   // Let's work out our desired dimensions.
 
-  float width;
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    SVGElement->GetWidth(getter_AddRefs(animLength));
-    NS_ENSURE_TRUE(animLength, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ENSURE_TRUE(length, NS_ERROR_FAILURE);
-    
-    length->GetValue(&width);
-    
-    aDesiredSize.width = (int)(width*twipsPerPx);
-  }
+  nsSVGSVGElement *svg = NS_STATIC_CAST(nsSVGSVGElement*, mContent);
+  svg->SetParentCoordCtxProvider(this);
+  float width =
+    svg->mLengthAttributes[nsSVGSVGElement::WIDTH].GetAnimValue(this);
+  float height =
+    svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].GetAnimValue(this);
 
-  float height;
-  {
-    nsCOMPtr<nsIDOMSVGAnimatedLength> animLength;
-    SVGElement->GetHeight(getter_AddRefs(animLength));
-    NS_ENSURE_TRUE(animLength, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMSVGLength> length;
-    animLength->GetAnimVal(getter_AddRefs(length));
-    NS_ENSURE_TRUE(length, NS_ERROR_FAILURE);
-    
-    length->GetValue(&height);
-    
-    aDesiredSize.height = (int)(height*twipsPerPx);
-  }
-  
+  aDesiredSize.width = (int)(width*twipsPerPx);
+  aDesiredSize.height = (int)(height*twipsPerPx);
 
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
@@ -483,6 +449,11 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  // tell our element that the viewbox to viewport transform needs refreshing,
+  // and set us up to draw
+  svg->InvalidateViewBoxToViewport();
+  NotifyViewportChange();
 
   UnsuspendRedraw();
   

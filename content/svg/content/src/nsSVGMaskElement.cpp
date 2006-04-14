@@ -34,51 +34,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGLength.h"
-#include "nsSVGAnimatedLength.h"
 #include "nsSVGEnum.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsIDOMSVGAnimatedEnum.h"
-#include "nsIDOMSVGMaskElement.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsSVGStylableElement.h"
 #include "nsSVGAtoms.h"
+#include "nsSVGMaskElement.h"
 
 //--------------------- Masks ------------------------
 
-typedef nsSVGStylableElement nsSVGMaskElementBase;
-
-class nsSVGMaskElement : public nsSVGMaskElementBase,
-                         public nsIDOMSVGMaskElement
+nsSVGElement::LengthInfo nsSVGMaskElement::sLengthInfo[4] =
 {
-protected:
-  friend nsresult NS_NewSVGMaskElement(nsIContent **aResult,
-                                         nsINodeInfo *aNodeInfo);
-  nsSVGMaskElement(nsINodeInfo* aNodeInfo);
-  virtual ~nsSVGMaskElement();
-  nsresult Init();
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // Mask Element
-  NS_DECL_NSIDOMSVGMASKELEMENT
-
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsSVGElement::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGElement::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGElement::)
-
-protected:
-  
-  // nsIDOMSVGMaskElement values
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMaskUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMaskContentUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
-  nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
+  { &nsGkAtoms::x, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::y, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+  { &nsGkAtoms::width, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
+  { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Mask)
@@ -103,13 +74,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGMaskElementBase)
 nsSVGMaskElement::nsSVGMaskElement(nsINodeInfo* aNodeInfo)
   : nsSVGMaskElementBase(aNodeInfo)
 {
-
 }
-
-nsSVGMaskElement::~nsSVGMaskElement()
-{
-}
-
 
 nsresult
 nsSVGMaskElement::Init()
@@ -150,54 +115,6 @@ nsSVGMaskElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: x ,  #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         -10.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: y ,  #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         -10.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: width ,  #IMPLIED attrib: width
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         120.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: height ,  #IMPLIED attrib: height
-  {
-    nsCOMPtr<nsISVGLength> length;
-    rv = NS_NewSVGLength(getter_AddRefs(length),
-                         120.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   return NS_OK;
 }
 
@@ -228,31 +145,33 @@ NS_IMETHODIMP nsSVGMaskElement::GetMaskContentUnits(nsIDOMSVGAnimatedEnumeration
 /* readonly attribute nsIDOMSVGAnimatedLength x; */
 NS_IMETHODIMP nsSVGMaskElement::GetX(nsIDOMSVGAnimatedLength * *aX)
 {
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
+  return mLengthAttributes[X].ToDOMAnimatedLength(aX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength y; */
 NS_IMETHODIMP nsSVGMaskElement::GetY(nsIDOMSVGAnimatedLength * *aY)
 {
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
+  return mLengthAttributes[Y].ToDOMAnimatedLength(aY, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength width; */
 NS_IMETHODIMP nsSVGMaskElement::GetWidth(nsIDOMSVGAnimatedLength * *aWidth)
 {
-  *aWidth = mWidth;
-  NS_IF_ADDREF(*aWidth);
-  return NS_OK;
+  return mLengthAttributes[WIDTH].ToDOMAnimatedLength(aWidth, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedLength height; */
 NS_IMETHODIMP nsSVGMaskElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 {
-  *aHeight = mHeight;
-  NS_IF_ADDREF(*aHeight);
-  return NS_OK;
+  return mLengthAttributes[HEIGHT].ToDOMAnimatedLength(aHeight, this);
+}
+
+//----------------------------------------------------------------------
+// nsSVGElement methods
+
+nsSVGElement::LengthAttributesInfo
+nsSVGMaskElement::GetLengthInfo()
+{
+  return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
+                              NS_ARRAY_LENGTH(sLengthInfo));
 }
