@@ -44,12 +44,15 @@
 #include "nsAlertsService.h"
 #endif
 
+#ifndef MOZ_SUITE
+// XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
 #endif
 
 #include "nsTypeAheadFind.h"
+#endif // MOZ_SUITE
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -60,12 +63,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 
+#ifndef MOZ_SUITE
+// XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init) 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
+#endif // MOZ_SUITE
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -86,6 +92,8 @@ static const nsModuleComponentInfo components[] =
     NS_ALERTSERVICE_CONTRACTID,
     nsAlertsServiceConstructor },
 #endif
+#ifndef MOZ_SUITE
+// XXX Suite isn't ready to include this just yet
 #ifdef MOZ_XPINSTALL
   { "Download Manager",
     NS_DOWNLOADMANAGER_CID,
@@ -101,6 +109,7 @@ static const nsModuleComponentInfo components[] =
     NS_TYPEAHEADFIND_CONTRACTID,
     nsTypeAheadFindConstructor
   },
+#endif // MOZ_SUITE
 };
 
 NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)

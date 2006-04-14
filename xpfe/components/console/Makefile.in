@@ -43,7 +43,11 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
 EXTRA_COMPONENTS = jsconsole-clhandler.js
+else
+EXTRA_COMPONENTS = $(topsrcdir)/toolkit/components/console/jsconsole-clhandler.js
+endif
 
 include $(topsrcdir)/config/rules.mk
 

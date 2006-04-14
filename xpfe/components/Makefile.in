@@ -86,16 +86,21 @@ ifndef MOZ_XULRUNNER
 DIRS += \
         related \
         console \
-        updates \
         autocomplete \
         bookmarks \
         download-manager \
         history \
         sidebar \
+        $(NULL)
+# XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+ifneq (11,$(MOZ_SUITE)$(MOZ_XUL_APP))
+DIRS += \
+        updates \
         startup \
         alerts \
         extensions \
         $(NULL)
+endif
 endif
 endif
 

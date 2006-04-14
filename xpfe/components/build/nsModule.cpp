@@ -52,16 +52,20 @@
 #include "nsDocShellCID.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
+// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
 #include "nsAppStartup.h"
 #include "nsCommandLineService.h"
 #include "nsUserInfo.h"
+#endif
 
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(ALERTS_SERVICE)
 #include "nsAlertsService.h"
 #endif
+
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(XP_WIN)
 #include "nsWindowsHooks.h"
 #include "nsUrlWidget.h"
@@ -97,15 +101,19 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
+// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
+#endif
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(ALERTS_SERVICE)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
+
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
@@ -194,6 +202,8 @@ static const nsModuleComponentInfo components[] = {
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
       nsGlobalHistoryConstructor },
+// XXX When Suite is a fully fledged xul app, this ifdef can be reduced.
+#if !defined(MOZ_SUITE) || !defined(MOZ_XUL_APP)
     { "App Startup Service",
       NS_SEAMONKEY_APPSTARTUP_CID,
       NS_APPSTARTUP_CONTRACTID,
@@ -209,6 +219,7 @@ static const nsModuleComponentInfo components[] = {
       NS_USERINFO_CONTRACTID,
       nsUserInfoConstructor
     },
+#endif
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
        RelatedLinksHandlerImplConstructor},
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
@@ -236,11 +247,11 @@ static const nsModuleComponentInfo components[] = {
     },
 #endif
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(ALERTS_SERVICE)
     { "nsAlertsService", NS_ALERTSSERVICE_CID,
       NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor },
 #endif
+#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
 #if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID,
       NS_IURLWIDGET_CONTRACTID, nsUrlWidgetConstructor },

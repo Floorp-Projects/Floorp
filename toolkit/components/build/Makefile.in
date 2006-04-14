@@ -102,16 +102,22 @@ SHARED_LIBRARY_LIBS = \
 	../startup/src/$(LIB_PREFIX)appstartup_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+ifndef MOZ_SUITE
+# XXX Suite isn't ready to build this just yet
 ifdef MOZ_XPINSTALL
 SHARED_LIBRARY_LIBS += ../downloads/src/$(LIB_PREFIX)download_s.$(LIB_SUFFIX)
+endif
 endif
 
 ifdef ALERTS_SERVICE
 SHARED_LIBRARY_LIBS += ../alerts/src/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX)
 endif
 
+ifndef MOZ_SUITE
+# XXX Suite isn't ready to build this just yet
 SHARED_LIBRARY_LIBS += ../typeaheadfind/src/$(LIB_PREFIX)fastfind_s.$(LIB_SUFFIX)
 EXTRA_DSO_LIBS = gkgfx
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \

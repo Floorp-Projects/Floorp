@@ -66,6 +66,11 @@ REQUIRES  = xpcom \
             appcomps \
             embed_base \
             $(NULL)
+
+ifdef MOZ_XUL_APP
+REQUIRES += alerts toolkitcomps
+endif
+
 CPPSRCS   = \
     nsDownloadManager.cpp \
     $(NULL)
