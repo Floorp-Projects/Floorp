@@ -643,7 +643,7 @@ ns4xPluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
 
   const NPPluginFuncs *callbacks = nsnull;
   mInst->GetCallbacks(&callbacks);
-  if(!callbacks && !callbacks->asfile)
+  if(!callbacks || !callbacks->asfile)
     return NS_ERROR_FAILURE;
   
   NPP npp;
