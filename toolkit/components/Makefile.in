@@ -43,7 +43,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# These component dirs are built for all apps (including seamonkey)
+# These component dirs are built for all apps (including suite)
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS += remote
@@ -54,8 +54,12 @@ endif
 ifdef MOZ_XUL_APP
 DIRS += \
 	alerts \
-	console \
 	filepicker \
+	$(NULL)
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
+DIRS += \
+	console \
 	typeaheadfind \
 	viewconfig \
 	$(NULL)
@@ -67,6 +71,7 @@ endif
 ifdef MOZ_VIEW_SOURCE
 DIRS +=	viewsource
 endif
+endif # MOZ_SUITE
 
 ifdef MOZ_THUNDERBIRD
 DIRS += autocomplete/public
@@ -75,6 +80,8 @@ DIRS +=	\
 	cookie \
 	$(NULL)
 
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
 ifdef MOZ_XUL
 DIRS += \
 	autocomplete \
@@ -83,8 +90,11 @@ DIRS += \
 	satchel \
 	$(NULL)
 endif # MOZ_XUL
+endif # MOZ_SUITE
 endif # MOZ_THUNDERBIRD
 
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
 ifdef MOZ_XUL
 DIRS += help
 endif
@@ -92,6 +102,7 @@ endif
 ifdef MOZ_XPINSTALL
 DIRS +=	downloads
 endif
+endif # MOZ_SUITE
 
 DIRS += \
 	commandlines \
@@ -101,12 +112,10 @@ DIRS += \
 
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
-else # MOZ_XUL_APP
+endif # MOZ_XUL_APP
 
 ifdef MOZ_SUITE
 DIRS += autocomplete/public
 endif
-
-endif # MOZ_XUL_APP
 
 include $(topsrcdir)/config/rules.mk
