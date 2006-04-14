@@ -46,6 +46,13 @@
 
 class nsSVGLength2
 {
+  // Needed to allow member classes access to our data.
+  // gcc/vc8 allow access without this.
+  struct DOMBaseVal;
+  struct DOMAnimVal;
+  friend struct DOMBaseVal;
+  friend struct DOMAnimVal;
+
 public:
   void Init(PRUint8 aCtxType = nsSVGUtils::XY,
             PRUint8 aAttrEnum = 0xff,

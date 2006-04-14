@@ -143,6 +143,9 @@ protected:
   static PRBool IsGraphicElementEventName(nsIAtom* aName);
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
+  // The following two structures should be protected, but VC6
+  // doesn't allow children of nsSVGElement to access them.
+public:
   struct LengthInfo {
     nsIAtom** mName;
     float     mDefaultValue;
@@ -162,6 +165,7 @@ protected:
       {}
   };
 
+protected:
   virtual LengthAttributesInfo GetLengthInfo();
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
