@@ -152,8 +152,8 @@ LOCAL_INCLUDES	= -I$(srcdir)/../public
 EXTRA_DSO_LDOPTS = \
 		$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NULL)
 
