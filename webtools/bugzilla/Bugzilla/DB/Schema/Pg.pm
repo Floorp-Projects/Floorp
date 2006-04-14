@@ -90,70 +90,53 @@ sub _initialize {
 } #eosub--_initialize
 #--------------------------------------------------------------------
 
-# Overridden because Pg has such weird ALTER TABLE problems.
-sub get_add_column_ddl {
-    my ($self, $table, $column, $definition, $init_value) = @_;
-
-    # So that we don't change the $definition for the caller.
-    my $def = dclone($definition);
-
-    my @statements;
-    my $specific = $self->{db_specific};
-
-    my $type = $def->{TYPE};
-    $type = $specific->{$type} if exists $specific->{$type};
-
-    # SERIAL Types need special handlings
-    # XXX This will create a column that doesn't look like a
-    #     "SERIAL" in a pg_dump, but functions identically.
-    if ($type =~ /serial/i) {
-        $type =~ s/serial/integer/i;
-        $def->{DEFAULT} = "nextval('${table}_${column}_seq')";
-        push(@statements, "CREATE SEQUENCE ${table}_${column}_seq");
-        # On Pg, you don't need UNIQUE if you're a PK--it creates
-        # two identical indexes otherwise.
-        $type =~ s/unique//i if $def->{PRIMARYKEY};
-    }
-
-    push(@statements, "ALTER TABLE $table ADD COLUMN $column $type");
-
-    my $default = $def->{DEFAULT};
-    if (defined $default) {
-        # Replace any abstract default value (such as 'TRUE' or 'FALSE')
-        # with its database-specific implementation.
-        $default = $specific->{$default} if exists $specific->{$default};
-        push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
-                         . " SET DEFAULT $default");
-    }
-
-    if (defined $init_value) {
-        push(@statements, "UPDATE $table SET $column = $init_value");
-    }
-
-    if ($def->{NOTNULL}) {
-        # Handle rows that were NULL when we added the column.
-        # We *must* have a DEFAULT. This check is usually handled
-        # at a higher level than this code, but I figure it can't
-        # hurt to have it here.
-        die "NOT NULL columns must have a DEFAULT or an init_value."
-            unless (exists $def->{DEFAULT} || defined $init_value);
-        push(@statements, "UPDATE $table SET $column = $default");
-        push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
-                         . " SET NOT NULL");
-    }
-
-    if ($def->{PRIMARYKEY}) {
-         push(@statements, "ALTER TABLE $table "
-                         . " ADD PRIMARY KEY ($column)");
-    }
-
-    return @statements;
-}
-
 sub get_rename_column_ddl {
     my ($self, $table, $old_name, $new_name) = @_;
 
     return ("ALTER TABLE $table RENAME COLUMN $old_name TO $new_name");
+}
+
+sub _get_alter_type_sql {
+    my ($self, $table, $column, $new_def, $old_def) = @_;
+    my @statements;
+
+    my $type = $new_def->{TYPE};
+    $type = $self->{db_specific}->{$type} 
+        if exists $self->{db_specific}->{$type};
+
+    if ($type =~ /serial/i && $old_def->{TYPE} !~ /serial/i) {
+        die("You cannot specify a DEFAULT on a SERIAL-type column.") 
+            if $new_def->{DEFAULT};
+        $type =~ s/serial/integer/i;
+    }
+
+    # On Pg, you don't need UNIQUE if you're a PK--it creates
+    # two identical indexes otherwise.
+    $type =~ s/unique//i if $new_def->{PRIMARYKEY};
+
+    push(@statements, "ALTER TABLE $table ALTER COLUMN $column
+                              TYPE $type");
+
+    if ($new_def->{TYPE} =~ /serial/i && $old_def->{TYPE} !~ /serial/i) {
+        push(@statements, "CREATE SEQUENCE ${table}_${column}_seq");
+        push(@statements, "SELECT setval('${table}_${column}_seq',
+                                         MAX($table.$column))");
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column 
+                           SET DEFAULT nextval('${table}_${column}_seq')");
+    }
+
+    # If this column is no longer SERIAL, we need to drop the sequence
+    # that went along with it.
+    if ($old_def->{TYPE} =~ /serial/i && $new_def->{TYPE} !~ /serial/i) {
+        push(@statements, "ALTER TABLE $table ALTER COLUMN $column 
+                           DROP DEFAULT");
+        # XXX Pg actually won't let us drop the sequence, even though it's
+        #     no longer in use. So we harmlessly leave behind a sequence
+        #     that does nothing.
+        #push(@statements, "DROP SEQUENCE ${table}_${column}_seq");
+    }
+
+    return @statements;
 }
 
 1;

@@ -1485,43 +1485,10 @@ sub get_alter_column_ddl {
     my $old_def = $self->get_column_abstract($table, $column);
     my $specific = $self->{db_specific};
 
-    my $typechange = 0;
     # If the types have changed, we have to deal with that.
     if (uc(trim($old_def->{TYPE})) ne uc(trim($new_def->{TYPE}))) {
-        $typechange = 1;
-        my $type = $new_def->{TYPE};
-        $type = $specific->{$type} if exists $specific->{$type};
-        # Make sure we can CAST from the old type to the new without an error.
-        push(@statements, "SELECT CAST($column AS $type) FROM $table LIMIT 1");
-        # Add a new temporary column of the new type
-        push(@statements, "ALTER TABLE $table ADD COLUMN ${column}_ALTERTEMP"
-                        . " $type");
-        # UPDATE the temp column to have the same values as the old column
-        push(@statements, "UPDATE $table SET ${column}_ALTERTEMP = " 
-                        . " CAST($column AS $type)");
-
-        # Some databases drop a whole index when a column is dropped,
-        # some only remove that column from an index. For consistency,
-        # we manually drop all indexes on the column before dropping the
-        # column.
-        my %col_idx = $self->get_indexes_on_column_abstract($table, $column);
-        foreach my $idx_name (keys %col_idx) {
-            push(@statements, $self->get_drop_index_ddl($table, $idx_name));
-        }
-
-        # DROP the old column
-        push(@statements, "ALTER TABLE $table DROP COLUMN $column");
-        # And rename the temp column to be the new one.
-        push(@statements, "ALTER TABLE $table RENAME COLUMN "
-                        . " ${column}_ALTERTEMP TO $column");
-
-        # And now, we have to regenerate any indexes that got
-        # dropped, except for the PK index which will be handled
-        # below.
-        foreach my $idx_name (keys %col_idx) {
-            push(@statements,
-                 $self->get_add_index_ddl($table, $idx_name, $col_idx{$idx_name}));
-        }
+        push(@statements, $self->_get_alter_type_sql($table, $column, 
+                                                     $new_def, $old_def));
     }
 
     my $default = $new_def->{DEFAULT};
@@ -1535,21 +1502,17 @@ sub get_alter_column_ddl {
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column"
                         . " DROP DEFAULT");
     }
-    # If we went from no default to a default, or we changed the default,
-    # or we have a default and we changed the data type of the field
+    # If we went from no default to a default, or we changed the default.
     elsif ( (defined $default && !defined $default_old) || 
-         ($default ne $default_old) ||
-         ($typechange && defined $new_def->{DEFAULT}) ) {
+            ($default ne $default_old) ) 
+    {
         $default = $specific->{$default} if exists $specific->{$default};
         push(@statements, "ALTER TABLE $table ALTER COLUMN $column "
                          . " SET DEFAULT $default");
     }
 
-    # If we went from NULL to NOT NULL
-    # OR if we changed the type and we are NOT NULL
-    if ( (!$old_def->{NOTNULL} && $new_def->{NOTNULL}) ||
-         ($typechange && $new_def->{NOTNULL}) ) 
-    {
+    # If we went from NULL to NOT NULL.
+    if (!$old_def->{NOTNULL} && $new_def->{NOTNULL}) {
         my $setdefault;
         # Handle any fields that were NULL before, if we have a default,
         $setdefault = $new_def->{DEFAULT} if exists $new_def->{DEFAULT};
@@ -1570,10 +1533,8 @@ sub get_alter_column_ddl {
                         . " DROP NOT NULL");
     }
 
-    # If we went from not being a PRIMARY KEY to being a PRIMARY KEY,
-    # or if we changed types and we are a PK.
-    if ( (!$old_def->{PRIMARYKEY} && $new_def->{PRIMARYKEY}) ||
-         ($typechange && $new_def->{PRIMARYKEY}) ) {
+    # If we went from not being a PRIMARY KEY to being a PRIMARY KEY.
+    if (!$old_def->{PRIMARYKEY} && $new_def->{PRIMARYKEY}) {
         push(@statements, "ALTER TABLE $table ADD PRIMARY KEY ($column)");
     }
     # If we went from being a PK to not being a PK
