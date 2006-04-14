@@ -80,8 +80,13 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 nss_build_all: build_coreconf build_nspr build_dbm all
 
+nss_clean_all: clobber_coreconf clobber_nspr clobber_dbm clobber
+
 build_coreconf:
 	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
+
+clobber_coreconf:
+	cd $(CORE_DEPTH)/coreconf ;  $(MAKE) clobber
 
 NSPR_CONFIG_STATUS = $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME)/config.status
 NSPR_CONFIGURE = $(CORE_DEPTH)/../nsprpub/configure
@@ -138,10 +143,14 @@ $(NSPR_CONFIG_STATUS): $(NSPR_CONFIGURE)
 build_nspr: $(NSPR_CONFIG_STATUS)
 	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE)
 
+clobber_nspr: $(NSPR_CONFIG_STATUS)
+	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE) clobber
+
 build_dbm:
 	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
 
-	
+clobber_dbm:
+	cd $(CORE_DEPTH)/dbm ; $(MAKE) clobber
 
 moz_import::
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
