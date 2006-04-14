@@ -354,7 +354,7 @@ function execute(n, x) {
         v = getValue(s);
 
         // ECMA erratum: allow for (i in null)
-        t = v && toObject(v, s, n.object);
+        t = (v === null) ? v : toObject(v, s, n.object);
         a = [];
         for (i in t)
             a.push(i);
