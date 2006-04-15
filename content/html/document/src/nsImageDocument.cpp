@@ -652,6 +652,11 @@ nsImageDocument::CheckOverflowing(PRBool changeState)
   nsRect visibleArea = context->GetVisibleArea();
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
+  if (!content) {
+    NS_WARNING("no body on image document!");
+    return NS_ERROR_FAILURE;
+  }
+
   nsRefPtr<nsStyleContext> styleContext =
     context->StyleSet()->ResolveStyleFor(content, nsnull);
 
