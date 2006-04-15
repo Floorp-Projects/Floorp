@@ -173,6 +173,7 @@ XCp.scope = {object: global, parent: null};
 XCp.thisObject = global;
 XCp.result = undefined;
 XCp.target = null;
+XCp.ecmaStrictMode = false;
 
 function Reference(base, propertyName, node) {
     this.base = base;
@@ -353,8 +354,8 @@ function execute(n, x) {
         s = execute(n.object, x);
         v = getValue(s);
 
-        // ECMA erratum: allow for (i in null)
-        t = (v === null) ? v : toObject(v, s, n.object);
+        // ECMA deviation to track extant browser JS implementation behavior.
+        t = (v == null && !x.ecmaStrictMode) ? v : toObject(v, s, n.object);
         a = [];
         for (i in t)
             a.push(i);
