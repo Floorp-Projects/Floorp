@@ -3,6 +3,8 @@
 <!DOCTYPE bindings [
   <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
   %globalDTD;
+  <!ENTITY % wizardDTD SYSTEM "chrome://global/locale/wizard.dtd">
+  %wizardDTD;
 ]>
 
 <bindings id="wizardBindings"
@@ -168,13 +170,19 @@
         
         this._pageStack = [];
         
-        // need to create string bundle manually instead of using <xul:stringbundle/>
-        // see bug 63370 for details
-        var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                              .getService(Components.interfaces.nsILocaleService);
-        var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-        var bundleURL = "chrome://global/locale/wizard.properties";
-        this._bundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
+        try {
+          // need to create string bundle manually instead of using <xul:stringbundle/>
+          // see bug 63370 for details
+          var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
+                                .getService(Components.interfaces.nsILocaleService);
+          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                      .getService(Components.interfaces.nsIStringBundleService);
+          var bundleURL = "chrome://global/locale/wizard.properties";
+          this._bundle = stringBundleService.createBundle(bundleURL);
+        } catch (e) {
+          // This fails in remote XUL, which has to provide titles for all pages
+          // see bug 142502
+        }
         
         // get anonymous content references
         this._wizardHeader = document.getAnonymousElementByAttribute(this, "anonid", "Header");
@@ -354,24 +362,6 @@
          var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
          if (btn) {
            btn.addEventListener("command", this["_"+aName+"Func"], false);
-           try {
-#ifdef XP_UNIX
-#ifdef XP_MACOSX
-             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-mac"));
-             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName+"-mac");
-#else
-             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName+"-unix"));
-             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName+"-unix");
-#endif
-#else
-             btn.setAttribute("label", this._bundle.GetStringFromName("button-"+aName));
-             var accesskey = this._bundle.GetStringFromName("accesskey-"+aName);
-#endif
-             if (accesskey)
-               btn.setAttribute("accesskey", accesskey);
-           }
-           catch (e) {
-           }
            this["_"+aName+"Button"] = btn;
          }
          return btn;
@@ -381,13 +371,13 @@
       <method name="_adjustWizardHeader">
         <body><![CDATA[
           var label = this.currentPage.getAttribute("label");
-          if (!label && this.onFirstPage)
+          if (!label && this.onFirstPage && this._bundle)
 #ifdef XP_MACOSX
             label = this._bundle.GetStringFromName("default-first-title-mac");
 #else
             label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
 #endif
-          else if (!label && this.onLastPage)
+          else if (!label && this.onLastPage && this._bundle)
 #ifdef XP_MACOSX
             label = this._bundle.GetStringFromName("default-last-title-mac");
 #else
@@ -483,14 +473,18 @@
       <xul:vbox flex="1">
         <xul:hbox class="wizard-buttons-btm">
           <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
-          <xul:button class="wizard-button" dlgtype="cancel"/>        
+          <xul:button label="&button-cancel-mac.label;" class="wizard-button" dlgtype="cancel"/>        
           <xul:spacer flex="1"/>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
+          <xul:button label="&button-back-mac.label;" accesskey="&button-back-mac.accesskey;"
+                      class="wizard-button wizard-nav-button" dlgtype="back"/>
           <xul:hbox class="wizard-label-box" align="center">
             <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
           </xul:hbox>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="hidden=lastpage" /> 
-          <xul:button class="wizard-button" dlgtype="finish" default="true" xbl:inherits="hidden=hidefinishbutton" />
+          <xul:button label="&button-next-mac.label;" accesskey="&button-next-mac.accesskey;"
+                      class="wizard-button wizard-nav-button" dlgtype="next"
+                      default="true" xbl:inherits="hidden=lastpage" />
+          <xul:button label="&button-finish-mac.label;" class="wizard-button"
+                      dlgtype="finish" default="true" xbl:inherits="hidden=hidefinishbutton" />
         </xul:hbox>
       </xul:vbox>
     </content>
@@ -527,20 +521,38 @@
           <xul:button class="wizard-button" dlgtype="extra1" hidden="true"/>
           <xul:spacer flex="1" anonid="spacer"/>
 #ifdef XP_UNIX
-          <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/>
+          <xul:button label="&button-cancel-unix.label;" class="wizard-button"
+                      dlgtype="cancel" icon="cancel"/>
           <xul:spacer style="width: 24px"/>
-#endif
-          <xul:button class="wizard-button" dlgtype="back" icon="go-back"/>
+          <xul:button label="&button-back-unix.label;" accesskey="&button-back-unix.accesskey;"
+                      class="wizard-button" dlgtype="back" icon="go-back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
             <xul:hbox>
-              <xul:button class="wizard-button" dlgtype="finish" default="true" flex="1"/> 
+              <xul:button label="&button-finish-unix.label;" class="wizard-button"
+                          dlgtype="finish" default="true" flex="1"/> 
             </xul:hbox>
             <xul:hbox>
-              <xul:button class="wizard-button" dlgtype="next" icon="go-forward" default="true" flex="1"/> 
+              <xul:button label="&button-next-unix.label;" accesskey="&button-next-unix.accesskey;"
+                          class="wizard-button" dlgtype="next" icon="go-forward" 
+                          default="true" flex="1"/> 
             </xul:hbox>
           </xul:deck>
-#ifndef XP_UNIX
-          <xul:button class="wizard-button" dlgtype="cancel" icon="cancel"/> 
+#else
+          <xul:button label="&button-back-win.label;" accesskey="&button-back-win.accesskey;"
+                      class="wizard-button" dlgtype="back" icon="go-back"/>
+          <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
+            <xul:hbox>
+              <xul:button label="&button-finish-win.label;" class="wizard-button"
+                          dlgtype="finish" default="true" flex="1"/> 
+            </xul:hbox>
+            <xul:hbox>
+              <xul:button label="&button-next-win.label;" accesskey="&button-next-win.accesskey;"
+                          class="wizard-button" dlgtype="next" icon="go-forward" 
+                          default="true" flex="1"/> 
+            </xul:hbox>
+          </xul:deck>
+          <xul:button label="&button-cancel-win.label;" class="wizard-button"
+                      dlgtype="cancel" icon="cancel"/> 
 #endif
         </xul:hbox>
       </xul:vbox>
