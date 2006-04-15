@@ -793,12 +793,13 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // First set the binding parent
     mBindingParent = aBindingParent;
     
-    // Now set the parent; make sure to preserve the bits we have
-    // stashed there Note that checking whether aParent == GetParent()
-    // is probably not worth it here.
-    PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
-    new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
-    mParentPtrBits = new_bits;
+    // Now set the parent
+    if (aParent) {
+        mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+    }
+    else {
+        mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
+    }
 
     nsIDocument *oldOwnerDocument = GetOwnerDoc();
     nsIDocument *newOwnerDocument;
@@ -964,12 +965,7 @@ nsXULElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     }
 
     // Unset things in the reverse order from how we set them in BindToTree
-    mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
-  
-    if (aNullParent) {
-        // Just mask it out
-        mParentPtrBits &= nsIContent::kParentBitMask;
-    }
+    mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
   
     mBindingParent = nsnull;
 

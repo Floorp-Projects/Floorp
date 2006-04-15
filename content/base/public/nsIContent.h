@@ -61,8 +61,8 @@ class nsAttrName;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xda0e2f6c, 0x6cd2, 0x4fdc, \
-  { 0x9b, 0x03, 0x35, 0xb5, 0x65, 0x09, 0xa6, 0xab } }
+{ 0xf967b2d6, 0xa81c, 0x492c, \
+  { 0x91, 0x4b, 0x53, 0x8c, 0x0c, 0x19, 0x37, 0x8c } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -77,8 +77,7 @@ public:
   // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
-    : nsINode(aNodeInfo),
-      mParentPtrBits(0)
+    : nsINode(aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
@@ -159,15 +158,6 @@ public:
   nsIDocument *GetCurrentDoc() const
   {
     return IsInDoc() ? GetOwnerDoc() : nsnull;
-  }
-
-  /**
-   * Get the parent content for this content.
-   * @return the parent, or null if no parent
-   */
-  nsIContent* GetParent() const
-  {
-    return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits & ~kParentBitMask);
   }
 
   /**
@@ -786,15 +776,6 @@ public:
   // the tabfocus bit field applies to xul elements.
   static PRBool sTabFocusModelAppliesToXUL;
 
-protected:
-  typedef PRWord PtrBits;
-
-  // Subclasses may use the 0x2 bit of mParentPtrBits to store other data
-  enum { PARENT_BIT_INDOCUMENT = 0x1 };
-  enum { kParentBitMask = 0x3 };
-
-  PtrBits      mParentPtrBits;
-  
 #endif // MOZILLA_INTERNAL_API
 };
 

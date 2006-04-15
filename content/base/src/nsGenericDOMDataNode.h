@@ -312,19 +312,17 @@ protected:
   nsTextFragment mText;
 
 private:
-  enum { PARENT_BIT_IS_IN_A_HASH = 0x2 };
-
   void SetBidiStatus();
 
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
 
   void SetIsInAHash()
   {
-    mParentPtrBits |= PARENT_BIT_IS_IN_A_HASH;
+    mText.SetExtraBit(PR_TRUE);
   }
   PRBool GetIsInAHash() const
   {
-    return (mParentPtrBits & PARENT_BIT_IS_IN_A_HASH);
+    return mText.GetExtraBit();
   }
 
   void SetHasRangeList()
