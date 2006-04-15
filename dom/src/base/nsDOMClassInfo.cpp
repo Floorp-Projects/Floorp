@@ -1433,25 +1433,46 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 nsresult
 nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
 {
-  nsCOMPtr<nsIExceptionService> xs =
-    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-  if (!xs)
-    return NS_ERROR_FAILURE;
+  do {
+    nsCOMPtr<nsIExceptionService> xs =
+      do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+    if (!xs) {
+      break;
+    }
 
-  nsCOMPtr<nsIExceptionManager> xm;
-  nsresult rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIExceptionManager> xm;
+    nsresult rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
+    if (NS_FAILED(rv)) {
+      break;
+    }
 
-  nsCOMPtr<nsIException> exception;
-  rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
+    nsCOMPtr<nsIException> exception;
+    rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
+    if (NS_FAILED(rv) || !exception) {
+      break;
+    }
 
-  jsval jv;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
-                  NS_GET_IID(nsIException), &jv, getter_AddRefs(holder));
-  NS_ENSURE_SUCCESS(rv, rv);
-  JS_SetPendingException(cx, jv);
+    jsval jv;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
+                    NS_GET_IID(nsIException), &jv, getter_AddRefs(holder));
+    if (NS_FAILED(rv) || JSVAL_IS_NULL(jv)) {
+      break;
+    }
+    JS_SetPendingException(cx, jv);
 
+    return NS_OK;
+  } while (0);
+
+  // XXX This probably wants to be localized, but that can fail in ways that
+  // are hard to report correctly.
+  JSString *str =
+    JS_NewStringCopyZ(cx, "An error occured throwing an exception");
+  if (!str) {
+    // JS_NewStringCopyZ reported the error for us.
+    return NS_OK; 
+  }
+  JS_SetPendingException(cx, STRING_TO_JSVAL(str));
   return NS_OK;
 }
 

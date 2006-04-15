@@ -367,12 +367,17 @@ nsXPCException::ToString(char **_retval)
             return rv;
     }
 
-    const char* msg = mMessage ? mMessage : defaultMsg;
+    const char* msg = mMessage ? mMessage : nsnull;
     const char* location = indicatedLocation ?
                                 indicatedLocation : defaultLocation;
     const char* resultName = mName;
-    if(!resultName && !NameAndFormatForNSResult(mResult, &resultName, nsnull))
+    if(!resultName && !NameAndFormatForNSResult(mResult, &resultName,
+                                                (!msg) ? &msg : nsnull))
+    {
+        if(!msg)
+            msg = defaultMsg;
         resultName = "<unknown>";
+    }
     const char* data = mData ? "yes" : "no";
 
     char* temp = JS_smprintf(format, msg, mResult, resultName, location, data);
