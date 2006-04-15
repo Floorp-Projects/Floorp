@@ -1004,12 +1004,9 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   BCData*     bcData   = nsnull;
   if (GetColCount() <= xPos) {
     NS_ASSERTION(xPos == GetColCount(), "program error");
-    if (aIsBottomRight) { // at the bottom right corner
-      bcData = &mBCInfo->mLowerRightCorner;
-    }
-    else  {               // at the right edge of the table
-      bcData = GetRightMostBorder(yPos);
-    }
+    // at the right edge of the table as we checked the corner before
+    NS_ASSERTION(!aIsBottomRight, "should be handled before");
+    bcData = GetRightMostBorder(yPos);
   }
   else {
     cellData = (BCCellData*)aCellMap.GetDataAt(*this, rgYPos, xPos, PR_FALSE);
@@ -1720,7 +1717,7 @@ PRInt32 nsCellMap::GetEffectiveColSpan(nsTableCellMap& aMap,
         // pay the price of looking up the cell's colspan here.
         if (!hitOverlap && data->IsOverlap()) {
           CellData* origData = GetDataAt(aMap, aRowIndex, aColIndex, PR_TRUE);
-          if (origData->IsOrig()) {
+          if (origData && origData->IsOrig()) {
             nsTableCellFrame* cellFrame = origData->GetCellFrame();
             if (cellFrame) {
               // possible change the number of colums to iterate
