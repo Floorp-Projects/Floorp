@@ -183,8 +183,6 @@ nsXMLProcessingInstruction::Clone(nsINodeInfo *aNodeInfo,
 void
 nsXMLProcessingInstruction::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 

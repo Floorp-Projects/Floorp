@@ -1864,8 +1864,6 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
 void
 nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
@@ -1894,8 +1892,6 @@ void
 nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,
                                   PRBool aDumpAll) const
 {
-   NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 

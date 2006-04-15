@@ -1574,8 +1574,6 @@ rdf_Indent(FILE* out, PRInt32 aIndent)
 void
 nsXULElement::List(FILE* out, PRInt32 aIndent) const
 {
-    NS_PRECONDITION(IsInDoc(), "bad content");
-
     PRUint32 i;
 
     rdf_Indent(out, aIndent);
