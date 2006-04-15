@@ -209,6 +209,14 @@ interface nsIZipReaderCache : nsISupports
 
     /**
      * Returns a (possibly shared) nsIZipReader for an nsIFile.
+     *
+     * If the zip reader for given file is not in the cache, a new zip reader
+     * is created, initialized, and opened (see nsIZipReader::init and 
+     * nsIZipReader::open). Otherwise the previously created zip reader is 
+     * returned.
+     *
+     * @note If someone called close() on the shared nsIZipReader, this method 
+     *       will return the closed zip reader.
      */
     nsIZipReader getZip(in nsIFile zipFile);
 };
