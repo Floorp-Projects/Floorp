@@ -237,7 +237,7 @@ optgroup {
 }
 
 optgroup > option {
-  padding-left: 20px;
+  -moz-padding-start: 20px;
   font-style: normal;
   font-weight: normal;
 }
