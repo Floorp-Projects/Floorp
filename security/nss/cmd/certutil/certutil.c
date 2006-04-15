@@ -1391,7 +1391,7 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
 		PRBool 			selfsign, 
 		unsigned int 		serialNumber,
 		int 			warpmonths,
-                int                     validitylength)
+                int                     validityMonths)
 {
     CERTCertificate *issuerCert = NULL;
     CERTValidity *validity;
@@ -1415,8 +1415,7 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
 	now = PR_ImplodeTime (&printableTime);
 	PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
     }
-    printableTime.tm_month += validitylength;
-    printableTime.tm_month += 3;
+    printableTime.tm_month += validityMonths;
     after = PR_ImplodeTime (&printableTime);
 
     /* note that the time is now in micro-second unit */
@@ -2190,7 +2189,7 @@ CreateCert(
 	SECOidTag hashAlgTag,
 	unsigned int serialNumber, 
 	int     warpmonths,
-	int     validitylength,
+	int     validityMonths,
 	const char *emailAddrs,
 	const char *dnsNames,
 	PRBool  ascii,
@@ -2225,7 +2224,7 @@ CreateCert(
 	}
 
 	subjectCert = MakeV1Cert (handle, certReq, issuerNickName, selfsign,
-				  serialNumber, warpmonths, validitylength);
+				  serialNumber, warpmonths, validityMonths);
 	if (subjectCert == NULL) {
 	    GEN_BREAK (SECFailure)
 	}
@@ -2368,7 +2367,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     int         publicExponent  = 0x010001;
     unsigned int serialNumber   = 0;
     int         warpmonths      = 0;
-    int         validitylength  = 0;
+    int         validityMonths  = 3;
     int         commandsEntered = 0;
     char        commandToRun    = '\0';
     secuPWData  pwdata          = { PW_NONE, 0 };
@@ -2577,8 +2576,8 @@ secuCommandFlag certutil_options[] =
 
     /*  -v validity period  */
     if (certutil.options[opt_Validity].activated) {
-	validitylength = PORT_Atoi(certutil.options[opt_Validity].arg);
-	if (validitylength < 0) {
+	validityMonths = PORT_Atoi(certutil.options[opt_Validity].arg);
+	if (validityMonths < 0) {
 	    PR_fprintf(PR_STDERR, "%s -v: incorrect validity period: \"%s\"\n",
 	               progName, certutil.options[opt_Validity].arg);
 	    return 255;
@@ -2995,7 +2994,7 @@ secuCommandFlag certutil_options[] =
 	rv = CreateCert(certHandle, 
 	                certutil.options[opt_IssuerName].arg,
 	                inFile, outFile, privkey, &pwdata, hashAlgTag,
-	                serialNumber, warpmonths, validitylength,
+	                serialNumber, warpmonths, validityMonths,
 		        certutil.options[opt_ExtendedEmailAddrs].arg,
 		        certutil.options[opt_ExtendedDNSNames].arg,
 	                certutil.options[opt_ASCIIForIO].activated,
