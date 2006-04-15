@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -51,6 +52,7 @@
  */
 
 #include "nsDOMScriptObjectFactory.h"
+#include "xpcexception.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIObserverService.h"
 #include "nsJSEnvironment.h"
@@ -82,6 +84,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_XPCONNECT);
   }
 }
 
@@ -193,9 +196,26 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
 #endif
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_XPATH);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_XPCONNECT);
     }
   }
 
+  return NS_OK;
+}
+
+static nsresult
+CreateXPConnectException(nsresult aResult, nsIException *aDefaultException,
+                         nsIException **_retval)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIXPCException> exception(
+      do_CreateInstance("@mozilla.org/js/xpc/Exception;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = exception->Initialize(nsnull, aResult, nsnull, nsnull, nsnull, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*_retval = exception);
   return NS_OK;
 }
 
@@ -214,6 +234,8 @@ nsDOMScriptObjectFactory::GetException(nsresult result,
 #endif
     case NS_ERROR_MODULE_DOM_XPATH:
       return NS_NewXPathException(result, aDefaultException, _retval);
+    case NS_ERROR_MODULE_XPCONNECT:
+      return CreateXPConnectException(result, aDefaultException, _retval);
     default:
       return NS_NewDOMException(result, aDefaultException, _retval);
   }
