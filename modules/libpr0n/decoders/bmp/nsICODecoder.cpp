@@ -207,7 +207,9 @@ NS_IMETHODIMP nsICODecoder::Flush()
   // Set Data here because some ICOs don't have a complete AND Mask
   // see bug 115357
   if (mDecodingAndMask) {
+#ifndef MOZ_CAIRO_GFX
     SetAlphaData();
+#endif
     SetImageData();
     mObserver->OnStopFrame(nsnull, mFrame);
   }
@@ -485,7 +487,11 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
               case 32:
               case 24:
                 while (lpos > 0) {
+#ifdef MOZ_CAIRO_GFX
+                  SetPixel(d, p[2], p[1], p[0], (mBIH.bpp == 32) ? p[3] : 0xff);
+#else
                   SetPixel(d, p[2], p[1], p[0]);
+#endif
                   p += 3;
                   --lpos;
                   if (mBIH.bpp == 32)
@@ -521,17 +527,26 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       mRow = (PRUint8*)malloc(rowSize);
       if (!mRow)
         return NS_ERROR_OUT_OF_MEMORY;
+#ifndef MOZ_CAIRO_GFX
       mAlphaBuffer = (PRUint8*)malloc(mDirEntry.mHeight*rowSize);
       if (!mAlphaBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
       memset(mAlphaBuffer, 0xff, mDirEntry.mHeight*rowSize);
+#endif
     }
 
     // Ensure memory has been allocated before decoding.
+#ifdef MOZ_CAIRO_GFX
+    NS_ASSERTION(mRow, "mRow is null");
+    NS_ASSERTION(mDecodedBuffer, "mDecodedBuffer is null");
+    if (!mRow || !mDecodedBuffer)
+      return NS_ERROR_FAILURE;
+#else
     NS_ASSERTION(mRow, "mRow is null");
     NS_ASSERTION(mAlphaBuffer, "mAlphaBuffer is null");
     if (!mRow || !mAlphaBuffer)
       return NS_ERROR_FAILURE;
+#endif
 
     PRUint32 toCopy;
     do {
@@ -550,6 +565,25 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         }
         if ((rowSize - mRowBytes) == 0) {
             mCurLine--;
+
+#ifdef MOZ_CAIRO_GFX
+            PRUint8* decoded =
+              mDecodedBuffer + (mCurLine * mDirEntry.mWidth * GFXBYTESPERPIXEL);
+#ifdef IS_LITTLE_ENDIAN
+            decoded += 3;
+#endif
+            PRUint8* decoded_end =
+              decoded + mDirEntry.mWidth * GFXBYTESPERPIXEL;
+            for (PRUint8* p = mRow, *p_end = mRow + rowSize; p < p_end; ++p) {
+              PRUint8 idx = *p;
+              for (PRUint8 bit = 0x80; bit && decoded<decoded_end; bit >>= 1) {
+                // We complement the value, since our method of storing
+                // transparency is opposite what Win32 uses in its masks.
+                *decoded = (idx & bit) ? 0x00 : 0xff;
+                decoded += 4;
+              }
+            }
+#else
             PRUint8* decoded = mAlphaBuffer+(mCurLine*rowSize);
             PRUint8* p = mRow;
             PRUint32 lpos = 0;
@@ -561,6 +595,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
               lpos++;
               p++;
             }
+#endif
             
             mRowBytes = 0;
         }
