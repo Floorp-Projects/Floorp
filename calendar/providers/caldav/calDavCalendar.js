@@ -151,7 +151,9 @@ calDavCalendar.prototype = {
 
     get mCalendarUri() { 
         calUri = this.mUri.clone();
-        calUri.spec += "/";
+        if (calUri.spec.charAt(calUri.spec.length-1) != '/') {
+            calUri.spec += "/";
+        }
         return calUri;
     },
 
