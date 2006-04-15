@@ -316,7 +316,9 @@ sub ProcessOneBug {
             $interestingchange = 0;
         }
         $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
-        if ($what eq 'bug_status' && &::is_open_state($old) ne &::is_open_state($new)) {
+        if ($what eq 'bug_status'
+            && Bugzilla::Bug::is_open_state($old) ne Bugzilla::Bug::is_open_state($new))
+        {
             $interestingchange = 1;
         }
         
