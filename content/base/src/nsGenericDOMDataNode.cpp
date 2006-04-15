@@ -676,7 +676,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                   (aParent->IsContentOfType(eXUL) && aDocument == nsnull) ||
                   aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
-  NS_PRECONDITION(!GetCurrentDoc(), "Already have a document.  Unbind first!");
+  NS_PRECONDITION(!GetCurrentDoc() && !IsInDoc(),
+                  "Already have a document.  Unbind first!");
   // Note that as we recurse into the kids, they'll have a non-null parent.  So
   // only assert if our parent is _changing_ while we have a parent.
   NS_PRECONDITION(!GetParent() || aParent == GetParent(),
@@ -694,9 +695,12 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsresult rv;
 
   // Set parent
-  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
-  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
-  mParentPtrBits = new_bits;
+  if (aParent) {
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+  }
+  else {
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
+  }
 
   nsIDocument *oldOwnerDocument = GetOwnerDoc();
   nsIDocument *newOwnerDocument;
@@ -763,10 +767,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
-  if (aNullParent) {
-    mParentPtrBits &= nsIContent::kParentBitMask;
-  }
+  mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
 }
 
 PRBool

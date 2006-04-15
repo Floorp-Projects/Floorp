@@ -949,18 +949,9 @@ nsGenericElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  nsIContent *parent = GetParent();
+  nsINode *parent = GetNodeParent();
   if (parent) {
     return CallQueryInterface(parent, aParentNode);
-  }
-
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc) {
-    // If we don't have a parent, but we're in the document, we must
-    // be the root node of the document. The DOM says that the root
-    // is the document.
-
-    return CallQueryInterface(doc, aParentNode);
   }
 
   *aParentNode = nsnull;
@@ -1766,12 +1757,13 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     slots->mBindingParent = aBindingParent; // Weak, so no addref happens.
   }
 
-  // Now set the parent; make sure to preserve the bits we have stashed there
-  // Note that checking whether aParent == GetParent() is probably not worth it
-  // here.
-  PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
-  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
-  mParentPtrBits = new_bits;
+  // Now set the parent
+  if (aParent) {
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+  }
+  else {
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
+  }
 
   nsresult rv;
   
@@ -1881,12 +1873,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   }
 
   // Unset things in the reverse order from how we set them in BindToTree
-  mParentPtrBits &= ~PARENT_BIT_INDOCUMENT;
-  
-  if (aNullParent) {
-    // Just mask it out
-    mParentPtrBits &= nsIContent::kParentBitMask;
-  }
+  mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
   
   nsDOMSlots *slots = GetExistingDOMSlots();
   if (slots) {
@@ -3049,15 +3036,8 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     PRBool newContentIsXUL = newContent->IsContentOfType(eXUL);
 
     // Remove the element from the old parent if one exists
-    nsINode* oldParent = newContent->GetParent();
-    if (!oldParent) {
-      oldParent = newContent->GetCurrentDoc();
+    nsINode* oldParent = newContent->GetNodeParent();
 
-      // See bug 53901. Crappy XUL sometimes lies about being in the document
-      if (oldParent && newContentIsXUL && oldParent->IndexOf(newContent) < 0) {
-        oldParent = nsnull;
-      }
-    }
     if (oldParent) {
       PRInt32 removeIndex = oldParent->IndexOf(newContent);
 

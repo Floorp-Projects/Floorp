@@ -59,8 +59,8 @@ class nsIPrincipal;
 // IID for the nsINode interface
 // ec67d9d2-be1e-41d8-b7d0-92f72a2667db
 #define NS_INODE_IID \
-{ 0xec67d9d2, 0xbe1e, 0x41d8, \
-  { 0xb7, 0xd0, 0x92, 0xf7, 0x2a, 0x26, 0x67, 0xdb } }
+{ 0x2ad78957, 0x52e8, 0x493a, \
+  { 0x8b, 0x5a, 0xe6, 0x91, 0xdc, 0xe3, 0x36, 0xe7 } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsINode_base : public nsIDOMGCParticipant {
@@ -80,7 +80,8 @@ public:
   // nsINode is that it exists with an IID, if that....
     
   nsINode(nsINodeInfo* aNodeInfo)
-    : mNodeInfo(aNodeInfo)
+    : mNodeInfo(aNodeInfo),
+      mParentPtrBits(0)
   {
   }
     
@@ -309,9 +310,39 @@ public:
   virtual nsresult GetEventListenerManager(PRBool aCreateIfNotFound,
                                            nsIEventListenerManager** aResult)
                                            = 0;
+
+  /**
+   * Get the parent nsIContent for this node.
+   * @return the parent, or null if no parent or the parent is not an nsIContent
+   */
+  nsIContent* GetParent() const
+  {
+    return NS_LIKELY(mParentPtrBits & PARENT_BIT_PARENT_IS_CONTENT) ?
+           NS_REINTERPRET_CAST(nsIContent*,
+                               mParentPtrBits & ~kParentBitMask) :
+           nsnull;
+  }
+
+  /**
+   * Get the parent nsINode for this node. This can be either an nsIContent,
+   * an nsIDocument or an nsIAttribute.
+   * @return the parent node
+   */
+  nsINode* GetNodeParent() const
+  {
+    return NS_REINTERPRET_CAST(nsINode*, mParentPtrBits & ~kParentBitMask);
+  }
+
 protected:
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
+
+  typedef PRUword PtrBits;
+
+  enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };
+  enum { kParentBitMask = 0x3 };
+
+  PtrBits mParentPtrBits;
 
 #endif // MOZILLA_INTERNAL_API
 };

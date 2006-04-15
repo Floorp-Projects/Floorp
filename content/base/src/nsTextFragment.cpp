@@ -117,7 +117,9 @@ nsTextFragment::ReleaseText()
   m1b = nsnull;
 
   // Set mState.mIs2b, mState.mInHeap, and mState.mLength = 0 with mAllBits;
+  PRBool tmp = mState.mExtraBit;
   mAllBits = 0;
+  mState.mExtraBit = tmp;
 }
 
 nsTextFragment&
@@ -136,7 +138,9 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
     }
 
     if (m1b) {
+      PRBool tmp = mState.mExtraBit;
       mAllBits = aOther.mAllBits;
+      mState.mExtraBit = tmp;
     }
   }
 
