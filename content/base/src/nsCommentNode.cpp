@@ -179,8 +179,6 @@ nsCommentNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 void
 nsCommentNode::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 

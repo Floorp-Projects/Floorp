@@ -233,8 +233,6 @@ nsTextNode::Clone(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 void
 nsTextNode::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
@@ -250,8 +248,6 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 void
 nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   if(aDumpAll) {
     PRInt32 index;
     for (index = aIndent; --index >= 0; ) fputs("  ", out);

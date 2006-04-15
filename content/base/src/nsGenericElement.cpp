@@ -3776,8 +3776,6 @@ nsGenericElement::GetAttrCount() const
 void
 nsGenericElement::List(FILE* out, PRInt32 aIndent) const
 {
-  NS_PRECONDITION(IsInDoc(), "bad content");
-
   PRInt32 indent;
   for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
