@@ -213,6 +213,8 @@ nsJAR::GetFile(nsIFile* *result)
 NS_IMETHODIMP
 nsJAR::Open()
 {
+  NS_ENSURE_TRUE(!mFd, NS_ERROR_ALREADY_INITIALIZED);
+
   nsresult rv;
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mZipFile, &rv);
   if (NS_FAILED(rv)) return rv;
