@@ -840,6 +840,10 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
                          PRBool aPeekOnly, PRBool* aIsReady, 
                          nsXBLBinding** aResult)
 {
+  NS_ASSERTION(aPeekOnly || aResult,
+               "Must have non-null out param if not just peeking to see "
+               "whether the binding is ready");
+  
   if (aResult)
     *aResult = nsnull;
 
