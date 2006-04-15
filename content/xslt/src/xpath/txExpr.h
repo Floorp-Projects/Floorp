@@ -725,9 +725,9 @@ public:
 
      BooleanExpr(nsAutoPtr<Expr>& aLeftExpr, nsAutoPtr<Expr>& aRightExpr,
                  short aOp)
-         : op(aOp),
-           leftExpr(aLeftExpr),
-           rightExpr(aRightExpr)
+         : leftExpr(aLeftExpr),
+           rightExpr(aRightExpr),
+           op(aOp)
     {
     }
 
