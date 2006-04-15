@@ -20,8 +20,6 @@
 <!ENTITY homeButton.tooltip             "Go to the Help Start Page">
 <!ENTITY printButton.label              "Print">
 <!ENTITY printButton.tooltip            "Print this page">
-<!ENTITY reloadCmd.label                "Reload">
-<!ENTITY reloadCmd.accesskey            "R">
 <!ENTITY closeWindow.commandkey         "W">
 
 <!ENTITY throbberItem.title             "Activity Indicator">
