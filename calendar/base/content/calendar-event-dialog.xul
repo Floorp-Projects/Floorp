@@ -190,7 +190,7 @@
 
               <rows>
                 <row align="center">
-                  <label value="&newevent.privacy.label;" class="label"/>
+                  <label value="&newevent.privacy.label;"/>
                   <menulist id="privacy-menulist" crop="none">
                     <menupopup>
                       <menuitem label="&newevent.public.label;" value="PUBLIC"/>
@@ -201,7 +201,7 @@
                 </row>
 
                 <row align="center">
-                  <label id="priority-label" class="label"
+                  <label id="priority-label"
                          value="&newtodo.priority.label;"/>
                   <menulist id="priority-levels">
                     <menupopup>
