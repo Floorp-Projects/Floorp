@@ -130,7 +130,6 @@
     <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
     <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
-    <key keycode="VK_F5" oncommand="reload();"/>
     <key id="key_closeWindow" key="&closeWindow.commandkey;"
          command="cmd_closeWindow" modifiers="accel"/>
     <key id="key_closeSearchSidebar" keycode="VK_ESCAPE"

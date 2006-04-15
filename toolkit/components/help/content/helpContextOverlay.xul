@@ -56,10 +56,6 @@
                 accesskey="&forwardButton.accesskey;"
                 observes="canGoForward"
                 oncommand="goForward()"/>
-      <menuitem id="context-reload"
-                label="&reloadCmd.label;"
-                accesskey="&reloadCmd.accesskey;"
-                oncommand="reload();"/>
       <menuseparator/>
       <menuitem id="context-copy"
                 label="&copyCmd.label;"
