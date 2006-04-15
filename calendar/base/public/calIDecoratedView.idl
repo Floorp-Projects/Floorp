@@ -70,7 +70,8 @@ interface calIDecoratedView : nsISupports
   readonly attribute AUTF8String observerID;
 
   /**
-   * The displayCalendar of the calICalendarView that is embedded
+   * The displayCalendar of the embedded calICalendarView.  This *must* be set
+   * prior to calling goToDay the first time.
    */
   attribute calICalendar displayCalender;
 

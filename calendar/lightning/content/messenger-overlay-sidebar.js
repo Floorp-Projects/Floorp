@@ -68,7 +68,21 @@ function ltnMinimonthPick(minimonth)
 
     if (document.getElementById("displayDeck").selectedPanel != 
         document.getElementById("calendar-view-box")) {
-        showCalendarView('month');
+        var view = currentView();
+
+        // We set the display calendar on the views in showCalendarView 
+        // the first time they are shown.
+        if (!view.displayCalendar) {
+            showCalendarView('month');
+            view.goToDay(cdt);
+            return;
+        }
+
+        // showCalendarView is going to use the value passed in to switch to
+        // foo-view, so strip off the -view part of the current view.
+        var viewID = view.getAttribute("id");
+        viewID = viewID.substring(0, viewID.indexOf('-'));
+        showCalendarView(viewID);
     }
 
     currentView().goToDay(cdt);
