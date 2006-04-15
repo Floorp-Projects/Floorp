@@ -12,14 +12,20 @@
         <field name="mOperationListener"><![CDATA[
         ({
             todoList: this,
+            mBatchCount: 0,
 
             onStartBatch: function onStartBatch()
             {
+              this.mBatchCount++;
               return;
             },
 
             onEndBatch: function onEndBatch()
             {
+              this.mBatchCount--;
+              if (this.mBatchCount == 0) {
+                  this.todoList.rebuildDisplay();
+              }
               return;
             },
 
@@ -30,23 +36,27 @@
 
             onAddItem: function onAddItem(aItem)
             {
-                if (!(aItem instanceof Components.interfaces.calITodo))
+                if (!(aItem instanceof Components.interfaces.calITodo) ||
+                    this.mBatchCount)
                     return;
                 this.todoList.addTodo(aItem);
             },
             
             onDeleteItem: function onDeleteItem(aItem)
             {
-                if (!(aItem instanceof Components.interfaces.calITodo))
+                if (!(aItem instanceof Components.interfaces.calITodo) ||
+                    this.mBatchCount)
                     return;
-                this.todoList.rebuildDisplay();
+                this.todoList.removeTodo(aItem);
             },
             
-            onModifyItem: function onModifyItem(aItem)
+            onModifyItem: function onModifyItem(aNewItem, aOldItem)
             {
-                if (!(aItem instanceof Components.interfaces.calITodo))
+                if (!(aNewItem instanceof Components.interfaces.calITodo) ||
+                    this.mBatchCount)
                     return;
-                this.todoList.rebuildDisplay();
+                this.todoList.removeTodo(aOldItem);
+                this.todoList.addTodo(aNewItem);
             },
 
             onAlarm: function onAlarm(aItem)
@@ -135,6 +145,20 @@
 
                 this.appendChild(newTodoElt);
                 newTodoElt.todo = aTodo;
+            ]]></body>
+        </method>
+
+        <method name="removeTodo">
+            <parameter name="aTodo"/>
+            <body><![CDATA[
+                // don't use for each, because the 'in' operator will return
+                // other properties of childNodes as well, which don't have .todo
+                for (var i=0; i < this.childNodes.length; i++) {
+                    var elem = this.childNodes[i];
+                    if (elem.todo.hasSameIds(aTodo)) {
+                        this.removeChild(elem);
+                    }
+                }
             ]]></body>
         </method>
 
