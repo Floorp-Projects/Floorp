@@ -619,8 +619,8 @@ nsAppStartup::CreateStartupState(PRInt32 aWindowWidth, PRInt32 aWindowHeight,
     
   for (PRUint32 i = 0; i < childCount; i++) {
     PRBool prefValue;
-    startupBranch->GetBoolPref(childArray[i], &prefValue);
-    if (prefValue) {
+    rv = startupBranch->GetBoolPref(childArray[i], &prefValue);
+    if (NS_SUCCEEDED(rv) && prefValue) {
       PRBool windowOpened;
       rv = LaunchTask(childArray[i], aWindowHeight, aWindowWidth, &windowOpened);
       if (NS_SUCCEEDED(rv) && windowOpened)
