@@ -2288,6 +2288,9 @@ nsresult
 nsJSEnvironment::Init()
 {
   if (sIsInitialized) {
+    if (!nsContentUtils::XPConnect())
+      return NS_ERROR_NOT_AVAILABLE;
+
     return NS_OK;
   }
 
