@@ -2281,7 +2281,20 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           delete (m_attachments[newLoc].mFileSpec);
           m_attachments[newLoc].mFileSpec =nsnull;
         }
-        m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL(url.get()) );
+        if (!NS_IsNativeUTF8())
+        {
+          // XXX : this is really hackish. 
+          // File URL is now in UTF-8 (bug 278161), but nsFileSpec still uses 
+          // the native encoding.
+          NS_UnescapeURL(url);
+          NS_ASSERTION(IsUTF8(url), "unescaped url must be in UTF-8");
+          nsCAutoString nativeUrl;
+          NS_CopyUnicodeToNative(NS_ConvertUTF8toUTF16(url), nativeUrl);
+          url.Truncate(); // NS_EscapeURL will append to |url|
+          NS_EscapeURL(nativeUrl.get(), -1, esc_FilePath | esc_AlwaysCopy,
+                       url);
+        }
+        m_attachments[newLoc].mFileSpec = new nsFileSpec(nsFileURL(url.get()));
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
         if (m_attachments[newLoc].mURL)
         {
