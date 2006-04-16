@@ -376,6 +376,13 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
 
   nsCOMPtr<nsIDOMWindow> postingWindow =
     do_QueryInterface(document->GetWindow());
+  // We can't find this document's window, cancel it.
+  if (!postingWindow)
+  {
+    NS_WARNING("If you see this and can explain why it should be allowed, note in Bug 332324");
+    *cancelSubmit = PR_TRUE;
+    return NS_OK;
+  }
 
   PRBool isChild;
   IsChildOfDomWindow(mWindow, postingWindow, &isChild);
