@@ -2395,6 +2395,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     NS_PRECONDITION(mVScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
+    // The current position may have become invalid due to min/max changes.
+    curPosY = PR_MAX(curPosY, minY);
+    curPosY = PR_MIN(curPosY, maxY);
     // Scrollbars assume zero is the minimum position, so translate for them.
     SetScrollbarEnabled(mVScrollbarBox, maxY - minY);
     SetCoordAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY - minY);
@@ -2416,6 +2419,9 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
     NS_PRECONDITION(mHScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     nscoord curPosX, curPosY;
     scrollable->GetScrollPosition(curPosX, curPosY);
+    // The current position may have become invalid due to min/max changes.
+    curPosX = PR_MAX(curPosX, minX);
+    curPosX = PR_MIN(curPosX, maxX);
     // Scrollbars assume zero is the minimum position, so translate for them.
     SetScrollbarEnabled(mHScrollbarBox, maxX - minX);
     SetCoordAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX - minX);
