@@ -47,6 +47,9 @@ MODULE		= libmar
 LIBRARY_NAME	= mar
 HOST_LIBRARY_NAME = hostmar
 FORCE_STATIC_LIB = 1
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+endif
 
 # This makefile just builds support for reading archives.
 

@@ -46,6 +46,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= libbz2
 LIBRARY_NAME	= bz2
 FORCE_STATIC_LIB= 1
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+endif
 
 # This is defined by the bzip2-1.0.3 Makefile.  It appears to be used to
 # configure GLIBC to support large files.  This isn't something we care about
