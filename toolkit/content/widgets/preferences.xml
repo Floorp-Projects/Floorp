@@ -490,16 +490,16 @@
     <resources>
       <stylesheet src="chrome://global/skin/preferences.css"/>
     </resources>
-    <content xul:dlgbuttons="accept,cancel" xul:persist="lastSelected screenX screenY"
-             xul:closebuttonlabel="&preferencesCloseButton.label;"
-             xul:closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+    <content dlgbuttons="accept,cancel" persist="lastSelected screenX screenY"
+             closebuttonlabel="&preferencesCloseButton.label;"
+             closebuttonaccesskey="&preferencesCloseButton.accesskey;"
              xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
              xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
              xhtml2:role="wairole:dialog"
 #ifdef XP_WIN
-             xul:title="&preferencesDefaultTitleWin.title;">
+             title="&preferencesDefaultTitleWin.title;">
 #else
-             xul:title="&preferencesDefaultTitleMac.title;">
+             title="&preferencesDefaultTitleMac.title;">
 #endif
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
                       xhtml2:role="wairole:list"/> <!-- Expose to accessibility APIs as a list -->
