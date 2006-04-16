@@ -44,6 +44,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mar
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+endif
 
 # The mar executable is output into dist/host/bin since it is something that
 # would only be used by our build system and should not itself be included in a

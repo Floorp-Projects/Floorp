@@ -60,6 +60,7 @@ LIBS += \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
 HAVE_PROGRESSUI = 1
 RCINCLUDE = updater.rc
 CPPSRCS += progressui_win.cpp
