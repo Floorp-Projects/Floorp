@@ -147,6 +147,14 @@ interface nsINavHistoryResultNode : nsISupports
    * in any way.
    */
   readonly attribute nsIWritablePropertyBag propertyBag;
+
+  /**
+   * When this item is in a bookmark folder (parent is of type folder), this is
+   * the index into that folder of this node. These indices start at 0 and
+   * increase in the order that they appear in the bookmark folder. For items
+   * that are not in a bookmark folder, this value is -1.
+   */
+  readonly attribute PRInt32 bookmarkIndex;
 };
 
 
@@ -958,6 +966,8 @@ interface nsINavHistoryQueryOptions : nsISupports
    *
    * Note: re-sorting is slower, as is sorting by title or when you have a
    * host name.
+   *
+   * For bookmark items, SORT_BY_NONE means sort by the natural bookmark order.
    */
   const PRUint32 SORT_BY_NONE = 0;
   const PRUint32 SORT_BY_TITLE_ASCENDING = 1;

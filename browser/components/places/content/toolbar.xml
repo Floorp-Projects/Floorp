@@ -460,10 +460,6 @@
           if (folder == this._self._bms.toolbarRoot)
             this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
-        onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
-          if (folder == this._self._bms.toolbarRoot)
-            this._numBatches ? this._batchedOperation = true : this.doRebuild();
-        },
         onItemChanged: function TB_O_onItemChanged(bookmark, property, value) {
           this._numBatches ? this._batchedOperation = true : this.doRebuild();
         },
