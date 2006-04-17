@@ -562,6 +562,15 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
     }
     if (!hasOid && m_dbFolderInfo)
     {
+      // set initial value for flags so we don't lose them.
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
+      if (msgHdr)
+      {
+        PRUint32 flags;
+        msgHdr->GetFlags(&flags);
+        (*offlineOp)->SetNewFlags(flags);
+      }
       PRInt32 newFlags;
       m_dbFolderInfo->OrFlags(MSG_FOLDER_FLAG_OFFLINEEVENTS, &newFlags);
     }
