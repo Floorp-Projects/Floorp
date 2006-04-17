@@ -276,21 +276,7 @@ static nsresult DoPPCConnection()
 {
     static HANDLE    gConnectionHandle = NULL;
 
-    DWORD status;
-    
-    if (gConnectionHandle)
-    {
-      ConnMgrConnectionStatus(gConnectionHandle, &status);
-      if (status == CONNMGR_STATUS_CONNECTED)
-        return NS_OK;
-
-      // Release it immediately since we currently only do
-      // sync connections.  the assumption here is that
-      // ConnMgrEstablishConnectionSync has to either return
-      // a failure or a connected connection.
-      ConnMgrReleaseConnection(gConnectionHandle, 0);
-    }
-
+    // Make the connection to the new network
     CONNMGR_CONNECTIONINFO conn_info;
     memset(&conn_info, 0, sizeof(CONNMGR_CONNECTIONINFO));
 
@@ -301,12 +287,32 @@ static nsresult DoPPCConnection()
     conn_info.bExclusive  = FALSE;
     conn_info.bDisabled   = FALSE;
 
-    if(ConnMgrEstablishConnectionSync(&conn_info, &gConnectionHandle, 25000, &status) != S_OK)
+    HANDLE tempConnectionHandle;
+    DWORD status;
+    HRESULT result = ConnMgrEstablishConnectionSync(&conn_info, 
+                                                    &tempConnectionHandle, 
+                                                    60000,
+                                                    &status);
+
+    if (result != S_OK)
+    {
       return NS_ERROR_FAILURE;
-    
+    }
+
     if (status != CONNMGR_STATUS_CONNECTED)
+    {
+      // could not connect to this network.  release the
+      // temp connection.
+      ConnMgrReleaseConnection(tempConnectionHandle, 0);
       return NS_ERROR_FAILURE;
-    
+    }
+
+    // At this point, we have a new connection, so release
+    // the old connection
+    if (gConnectionHandle)
+      ConnMgrReleaseConnection(gConnectionHandle, 0);
+      
+    gConnectionHandle = tempConnectionHandle;
     return NS_OK;
 }
 
