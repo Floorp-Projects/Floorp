@@ -252,7 +252,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   // It isn't really a part of XBL, but it helps speed things up.
   if (isXBLCommand && !isReceiverCommandElement) {
     // See if preventDefault has been set.  If so, don't execute.
-    PRBool preventDefault;
+    PRBool preventDefault = PR_FALSE;
     nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent(do_QueryInterface(aEvent));
     if (nsUIEvent)
       nsUIEvent->GetPreventDefault(&preventDefault);
