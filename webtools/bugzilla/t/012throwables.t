@@ -59,7 +59,7 @@ foreach my $include_path (@include_paths) {
         $file =~ s/\s.*$//; # nuke everything after the first space
         $file =~ s|\\|/|g if $^O eq 'MSWin32';  # convert \ to / in path if on windows
         $test_templates{$file} = () 
-            if $path =~ m#global/(code|user)-error\.html\.tmpl#;
+            if $file =~ m#global/(code|user)-error\.html\.tmpl#;
     }
 }
 
