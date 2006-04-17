@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1200,6 +1201,7 @@ public:
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
+  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret);
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
@@ -3093,6 +3095,14 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
   return NS_OK;
 }
 
+already_AddRefed<nsICaret> PresShell::SetCaret(nsICaret *aNewCaret)
+{
+  nsICaret *oldCaret = nsnull;
+  mCaret.swap(oldCaret);
+  mCaret = aNewCaret;
+  return oldCaret;
+}
+
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
   nsresult result = NS_OK;
@@ -3362,8 +3372,11 @@ static void UpdateViewProperties(nsPresContext* aPresContext, nsIViewManager* aV
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
-
   WillCauseReflow();
+
+  if (mCaret) {
+    mCaret->InvalidateOutsideCaret();
+  }
 
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (rootFrame) {
@@ -5136,6 +5149,9 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
   WillCauseReflow();
+  if (mCaret) {
+    mCaret->InvalidateOutsideCaret();
+  }
   mFrameConstructor->CharacterDataChanged(aContent, aAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -5232,11 +5248,10 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentRemoved");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
 
-  // XXX fix for bug 304383. Remove when bug 287813 is fixed?
+  // Make sure that the caret doesn't leave a turd where the child used to be.
   if (mCaret) {
-    nsIFrame* frame = GetPrimaryFrameFor(aChild);
-    if (frame && (frame->GetStateBits() & NS_FRAME_EXTERNAL_REFERENCE)) {
-      mCaret->EraseCaret();
+    if (mCaret->GetCaretContent() == aChild) {
+      mCaret->InvalidateOutsideCaret();
     }
   }
 
@@ -5505,7 +5520,7 @@ PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
     return NS_OK;
   }
   
-  nsDisplayListBuilder builder(rootFrame, PR_FALSE);
+  nsDisplayListBuilder builder(rootFrame, PR_FALSE, PR_FALSE);
   nsDisplayList list;
   nsIScrollableView* scrollingView = nsnull;
   mViewManager->GetRootScrollableView(&scrollingView);
@@ -5518,7 +5533,11 @@ PresShell::RenderOffscreen(nsRect aRect, PRBool aUntrusted,
     builder.SetIgnoreScrollFrame(GetRootScrollFrame());
   }
 
+  builder.EnterPresShell(rootFrame, r);
+
   rv = rootFrame->BuildDisplayListForStackingContext(&builder, r, &list);
+
+  builder.LeavePresShell(rootFrame, r);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRegion region(r);
@@ -5566,9 +5585,6 @@ PresShell::Paint(nsIView*             aView,
     }
     return NS_OK;
   }
-  
-  if (mCaret)
-    mCaret->EraseCaret();
 
   nsLayoutUtils::PaintFrame(aRenderingContext, frame, aDirtyRegion,
                             backgroundColor);
@@ -5810,7 +5826,7 @@ PresShell::HandleEvent(nsIView         *aView,
     nsPoint eventPoint
         = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
     nsIFrame* targetFrame =
-      targetFrame = nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
+        nsLayoutUtils::GetFrameForPoint(frame, eventPoint);
     if (targetFrame) {
       PresShell* shell =
           NS_STATIC_CAST(PresShell*, targetFrame->GetPresContext()->PresShell());
@@ -7421,7 +7437,7 @@ PresShellViewEventListener::WillRefreshRegion(nsIViewManager *aViewManager,
                                      nsIRegion *aRegion,
                                      PRUint32 aUpdateFlags)
 {
-  return HideCaret();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7433,7 +7449,7 @@ PresShellViewEventListener::DidRefreshRegion(nsIViewManager *aViewManager,
 {
   nsCSSRendering::DidPaint();
 
-  return RestoreCaretVisibility();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7443,7 +7459,7 @@ PresShellViewEventListener::WillRefreshRect(nsIViewManager *aViewManager,
                                    const nsRect *aRect,
                                    PRUint32 aUpdateFlags)
 {
-  return HideCaret();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7455,7 +7471,7 @@ PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
 {
   nsCSSRendering::DidPaint();
 
-  return RestoreCaretVisibility();
+  return NS_OK;
 }
 
 

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,6 +51,8 @@
 #include "nsISelection.h"
 #include "plarena.h"
 #include "nsLayoutUtils.h"
+#include "nsICaret.h"
+#include "nsTArray.h"
 
 #include <stdlib.h>
 
@@ -119,6 +122,8 @@ public:
    * is the origin of the reference coordinate system for this display list
    * @param aIsForEvents PR_TRUE if we're creating this list in order to
    * determine which frame is under the mouse position
+   * @param aBuildCaret whether or not we should include the caret in any
+   * display lists that we make.
    * @param aMovingFrame a frame whose subtree should be regarded as
    * moving; moving frames are not allowed to clip or cover (during
    * OptimizeVisibility) non-moving frames. E.g. when we're constructing
@@ -126,7 +131,7 @@ public:
    * operation, we specify the scrolled frame as the moving frame.
    */
   nsDisplayListBuilder(nsIFrame* aReferenceFrame, PRBool aIsForEvents,
-                       nsIFrame* aMovingFrame = nsnull);
+                       PRBool aBuildCaret, nsIFrame* aMovingFrame = nsnull);
   ~nsDisplayListBuilder();
   
   /**
@@ -193,6 +198,42 @@ public:
    * Get the scrollframe to ignore, if any.
    */
   nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
+  /**
+   * Display the caret if needed.
+   */
+  nsresult DisplayCaret(nsIFrame* aFrame, const nsRect& aDirtyRect,
+      const nsDisplayListSet& aLists) {
+    nsIFrame* frame = GetCaretFrame();
+    if (aFrame != frame) {
+      return NS_OK;
+    }
+    return frame->DisplayCaret(this, aDirtyRect, aLists);
+  }
+  /**
+   * Get the frame that the caret is supposed to draw in.
+   * If the caret is currently invisible, this will be null.
+   */
+  nsIFrame* GetCaretFrame() {
+    if (mBuildCaret) {
+      NS_ASSERTION(mCaretStates.Length() > 0, "Not enough presshells");
+      return mCaretStates[mCaretStates.Length() - 1];
+    }
+    return nsnull;
+  }
+  /**
+   * Get the caret associated with the current presshell.
+   */
+  nsICaret* GetCaret();
+  /**
+   * Notify the display list builder that we're entering a presshell.
+   * aReferenceFrame should be a frame in the new presshell and aDirtyRect
+   * should be the current dirty rect in aReferenceFrame's coordinate space.
+   */
+  void EnterPresShell(nsIFrame* aReferenceFrame, const nsRect& aDirtyRect);
+  /**
+   * Notify the display list builder that we're leaving a presshell.
+   */
+  void LeavePresShell(nsIFrame* aReferenceFrame, const nsRect& aDirtyRect);
   
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -231,6 +272,8 @@ private:
   nsIFrame*              mIgnoreScrollFrame;
   PLArenaPool            mPool;
   nsCOMPtr<nsISelection> mBoundingSelection;
+  nsTArray<nsIFrame *>   mCaretStates;
+  PRPackedBool           mBuildCaret;
   PRPackedBool           mEventDelivery;
   PRPackedBool           mIsBackgroundOnly;
   PRPackedBool           mIsAtRootOfPseudoStackingContext;
@@ -755,6 +798,30 @@ protected:
 #ifdef DEBUG
   const char*   mName;
 #endif
+};
+
+MOZ_DECL_CTOR_COUNTER(nsDisplayCaret)
+class nsDisplayCaret : public nsDisplayItem {
+public:
+  nsDisplayCaret(nsIFrame* aCaretFrame, nsICaret *aCaret)
+    : nsDisplayItem(aCaretFrame), mCaret(aCaret) {
+    MOZ_COUNT_CTOR(nsDisplayCaret);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayCaret() {
+    MOZ_COUNT_DTOR(nsDisplayCaret);
+  }
+#endif
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    // The caret returns a rect in the coordinates of mFrame.
+    return mCaret->GetCaretRect() + aBuilder->ToReferenceFrame(mFrame);
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+      const nsRect& aDirtyRect);
+  NS_DISPLAY_DECL_NAME("Caret");
+protected:
+  nsCOMPtr<nsICaret> mCaret;
 };
 
 /**

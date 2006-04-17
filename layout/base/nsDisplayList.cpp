@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,10 +56,11 @@
 #endif
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
-    PRBool aIsForEvents, nsIFrame* aMovingFrame)
+    PRBool aIsForEvents, PRBool aBuildCaret, nsIFrame* aMovingFrame)
     : mReferenceFrame(aReferenceFrame),
       mMovingFrame(aMovingFrame),
       mIgnoreScrollFrame(nsnull),
+      mBuildCaret(aBuildCaret),
       mEventDelivery(aIsForEvents),
       mIsAtRootOfPseudoStackingContext(PR_FALSE) {
   PL_InitArenaPool(&mPool, "displayListArena", 1024, sizeof(void*)-1);
@@ -75,11 +77,73 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                            getter_AddRefs(mBoundingSelection));
     }
   }
+
+  if (mIsBackgroundOnly) {
+    mBuildCaret = PR_FALSE;
+  }
 }
 
 nsDisplayListBuilder::~nsDisplayListBuilder() {
   PL_FreeArenaPool(&mPool);
   PL_FinishArenaPool(&mPool);
+}
+
+nsICaret *
+nsDisplayListBuilder::GetCaret() {
+  NS_ASSERTION(mCaretStates.Length() > 0, "Not enough presshells");
+
+  nsIFrame* frame = GetCaretFrame();
+  if (!frame) {
+    return nsnull;
+  }
+  nsIPresShell* shell = frame->GetPresContext()->PresShell();
+  nsCOMPtr<nsICaret> caret;
+  shell->GetCaret(getter_AddRefs(caret));
+
+  return caret;
+}
+
+void
+nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
+                                     const nsRect& aDirtyRect) {
+  if (!mBuildCaret) {
+    return;
+  }
+
+  nsIPresShell* shell = aReferenceFrame->GetPresContext()->PresShell();
+  nsCOMPtr<nsICaret> caret;
+  shell->GetCaret(getter_AddRefs(caret));
+  nsIFrame* frame = caret->GetCaretFrame();
+
+  nsLayoutUtils::MarkCaretSubtreeForPainting(this, aReferenceFrame,
+                                             frame, caret->GetCaretRect(),
+                                             aDirtyRect, PR_TRUE);
+
+  mCaretStates.AppendElement(frame);
+}
+
+void
+nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
+                                     const nsRect& aDirtyRect)
+{
+  if (!mBuildCaret) {
+    return;
+  }
+
+  // Pop the state off.
+  NS_ASSERTION(mCaretStates.Length() > 0, "Leaving too many PresShell");
+  nsICaret* caret = GetCaret();
+  if (caret) {
+    nsLayoutUtils::MarkCaretSubtreeForPainting(this, aReferenceFrame,
+                                               GetCaretFrame(),
+                                               caret->GetCaretRect(),
+                                               aDirtyRect, PR_FALSE);
+  } else {
+    NS_ASSERTION(GetCaretFrame() == nsnull,
+                 "GetCaret and LeavePresShell diagree");
+  }
+
+  mCaretStates.SetLength(mCaretStates.Length() - 1);
 }
 
 void*
@@ -456,6 +520,14 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void
+nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
+    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
+  // Note: Because we exist, we know that the caret is visible, so we don't
+  // need to check for the caret's visibility.
+  mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame));
+}
+
+void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsPoint offset = aBuilder->ToReferenceFrame(mFrame);
@@ -622,7 +694,6 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
   // depth of nested translucent elements. This will be fixed when we move to
   // cairo with support for real alpha channels in surfaces, so we don't have
   // to do this white/black hack anymore.
-  nsIViewManager* vm = mFrame->GetPresContext()->GetViewManager();
   float opacity = mFrame->GetStyleDisplay()->mOpacity;
 
   nsRect bounds;
@@ -661,6 +732,7 @@ void nsDisplayOpacity::Paint(nsDisplayListBuilder* aBuilder,
 
 #elif !defined(XP_MACOSX)
 
+  nsIViewManager* vm = mFrame->GetPresContext()->GetViewManager();
   nsIViewManager::BlendingBuffers* buffers =
       vm->CreateBlendingBuffers(aCtx, PR_FALSE, nsnull, mNeedAlpha, bounds);
   if (!buffers) {

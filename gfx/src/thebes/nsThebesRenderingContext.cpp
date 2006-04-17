@@ -670,28 +670,15 @@ nsThebesRenderingContext::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
     return NS_OK;
 }
 
-
-/**
- * XXX awful invert rect hack
- *             idea by mrbkap
- */
-static unsigned int gInvertRect = 0;
 NS_IMETHODIMP
 nsThebesRenderingContext::InvertRect(const nsRect& aRect)
 {
     gfxContext::GraphicsOperator lastOp = mThebes->CurrentOperator();
 
-    gfxRGBA newColor(0,0,0,1);
-    if (gInvertRect++ % 2)
-        newColor = gfxRGBA(1,1,1,1);
-    mThebes->Save();
-
-    mThebes->SetColor(newColor);
-    mThebes->SetOperator(gfxContext::OPERATOR_OVER);
+    mThebes->SetOperator(gfxContext::OPERATOR_XOR);
     nsresult rv = FillRect(aRect);
     mThebes->SetOperator(lastOp);
 
-    mThebes->Restore();
     return rv;
 }
 

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -73,34 +74,84 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    GetCaretVisible(PRBool *outMakeVisible);
     NS_IMETHOD    SetCaretVisible(PRBool intMakeVisible);
     NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-    NS_IMETHOD    GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *inDOMSel, nsRect* outCoordinates, PRBool* outIsCollapsed, nsIView **outView);
+    virtual PRBool GetCaretReadOnly()
+    {
+      return mReadOnly;
+    }
+    NS_IMETHOD    GetCaretCoordinates(EViewCoordinates aRelativeToType,
+                                      nsISelection *inDOMSel,
+                                      nsRect* outCoordinates,
+                                      PRBool* outIsCollapsed,
+                                      nsIView **outView);
     NS_IMETHOD    EraseCaret();
 
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
     NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
+    nsIFrame*     GetCaretFrame();
+    nsRect        GetCaretRect()
+    {
+      nsRect r;
+      r.UnionRect(mCaretRect, GetHookRect());
+      return r;
+    }
+    nsIContent*   GetCaretContent()
+    {
+      if (mDrawn)
+        return mLastContent;
+
+      return nsnull;
+    }
+
+    void      InvalidateOutsideCaret();
+
+    void      PaintCaret(nsDisplayListBuilder *aBuilder,
+                         nsIRenderingContext *aCtx,
+                         const nsPoint &aOffset);
 
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
-                              
+
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
   
-    NS_IMETHOD    GetCaretFrameForNodeOffset (nsIContent* aContentNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint, PRUint8 aBidiLevel,
-                                              nsIFrame** aReturnFrame, PRInt32* aReturnOffset);
+    NS_IMETHOD    GetCaretFrameForNodeOffset(nsIContent* aContentNode,
+                                             PRInt32 aOffset,
+                                             nsIFrameSelection::HINT aFrameHint,
+                                             PRUint8 aBidiLevel,
+                                             nsIFrame** aReturnFrame,
+                                             PRInt32* aReturnOffset);
   protected:
 
     void          KillTimer();
     nsresult      PrimeTimer();
-    
+
     nsresult      StartBlinking();
     nsresult      StopBlinking();
     
-    void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView);
-    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint, PRUint8 aBidiLevel);
+    void          GetViewForRendering(nsIFrame *caretFrame,
+                                      EViewCoordinates coordType,
+                                      nsPoint &viewOffset,
+                                      nsIView **outRenderingView,
+                                      nsIView **outRelativeView);
+    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode,
+                                         PRInt32 aOffset,
+                                         nsIFrameSelection::HINT aFrameHint,
+                                         PRUint8 aBidiLevel);
     PRBool        MustDrawCaret();
     void          DrawCaret();
     void          DrawCaretAfterBriefDelay();
-    void          GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    void          ToggleDrawnStatus() {   mDrawn = !mDrawn; }
+    nsresult      UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
+    nsresult      UpdateHookRect(nsPresContext* aPresContext);
+    static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
+                                  nsIFrame *aFrame);
+    nsRect        GetHookRect()
+    {
+#ifdef IBMBIDI
+      return mHookRect;
+#else
+      return nsRect();
+#endif
+    }
+    void          ToggleDrawnStatus() { mDrawn = !mDrawn; }
 
 protected:
 
@@ -120,12 +171,17 @@ protected:
     PRPackedBool          mReadOnly;          // it the caret in readonly state (draws differently)      
     PRPackedBool          mShowDuringSelection; // show when text is selected
 
-    nsRect                mCaretRect;         // the last caret rect
-    nsIView*              mLastCaretView;     // last view that we used for drawing. Cached so we can tell when we need to make a new RC
-    nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn in (by DrawAtPosition()/DrawCaret()),
-                                              // note that this can be different than where it was actually drawn (anon <BR> in text control)
+    nsRect                mCaretRect;         // the last caret rect, in the coodinates of the last frame.
+
+    nsCOMPtr<nsIContent>  mLastContent;       // store the content the caret was last requested to be drawn
+                                              // in (by DrawAtPosition()/DrawCaret()),
+                                              // note that this can be different than where it was
+                                              // actually drawn (anon <BR> in text control)
     PRInt32               mLastContentOffset; // the offset for the last request
-    nsIFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also mLastBidiLevel below
+
+    nsIFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
+                                              // mLastBidiLevel below
+
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret
     nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;  // Bidi keyboard object to set and query keyboard language

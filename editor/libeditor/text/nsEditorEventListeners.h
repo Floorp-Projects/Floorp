@@ -235,8 +235,8 @@ protected:
   nsWeakPtr  mPresShell;
   
   nsCOMPtr<nsICaret> mCaret;
+  nsCOMPtr<nsICaret> mOtherCaret;
   PRBool             mCaretDrawn;
-
 };
 
 /** editor Implementation of the FocusListener interface

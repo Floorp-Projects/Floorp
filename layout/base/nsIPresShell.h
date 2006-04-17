@@ -96,9 +96,8 @@ class nsISelection;
 template<class E> class nsCOMArray;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x998cde06, 0x5fa4, 0x4c8b, \
- { 0x94, 0x8d, 0xc7, 0x15, 0x74, 0x75, 0xab, 0x6f } }
-
+{ 0xa736d2fd, 0x0191, 0x42ea, \
+  { 0xb1, 0xb0, 0x80, 0x45, 0x1d, 0xfa, 0x03, 0x53 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -484,6 +483,11 @@ public:
    * Get the caret, if it exists. AddRefs it.
    */
   NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
+
+  /**
+   * Set the current caret to a new caret. Returns the old caret.
+   */
+  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret) = 0;
 
   /**
    * Should the images have borders etc.  Actual visual effects are determined

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -64,22 +65,13 @@
 #include "nsILookAndFeel.h"
 #include "nsBlockFrame.h"
 #include "nsISelectionController.h"
-
+#include "nsDisplayList.h"
 #include "nsCaret.h"
 
 // The bidi indicator hangs off the caret to one side, to show which
 // direction the typing is in. It needs to be at least 2x2 to avoid looking like 
 // an insignificant dot
 static const PRUint32 kMinBidiIndicatorPixels = 2;
-
-#if !defined(MOZ_WIDGET_GTK2)
-// Because of drawing issues, we currently always make a new RC. See bug 28068
-// Before removing this, stuff will need to be fixed and tested on all platforms.
-// For example, turning this off on Mac right now causes drawing problems on pages
-// with form elements.
-// Also turning this off caused problems on GTK1. See bug 254049.
-#define DONT_REUSE_RENDERING_CONTEXT
-#endif
 
 #ifdef IBMBIDI
 //-------------------------------IBM BIDI--------------------------------------
@@ -97,7 +89,6 @@ nsCaret::nsCaret()
 , mDrawn(PR_FALSE)
 , mReadOnly(PR_FALSE)
 , mShowDuringSelection(PR_FALSE)
-, mLastCaretView(nsnull)
 , mLastContentOffset(0)
 , mLastHint(nsIFrameSelection::HINTLEFT)
 #ifdef IBMBIDI
@@ -106,7 +97,6 @@ nsCaret::nsCaret()
 #endif
 {
 }
-
 
 //-----------------------------------------------------------------------------
 nsCaret::~nsCaret()
@@ -153,7 +143,8 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISelection> domSelection;
-  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection));
+  nsresult rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                                     getter_AddRefs(domSelection));
   if (NS_FAILED(rv))
     return rv;
   if (!domSelection)
@@ -187,13 +178,11 @@ NS_IMETHODIMP nsCaret::Init(nsIPresShell *inPresShell)
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP nsCaret::Terminate()
 {
-  // this doesn't erase the caret if it's drawn. Should it? We might not have a good
-  // drawing environment during teardown.
+  // this doesn't erase the caret if it's drawn. Should it? We might not have
+  // a good drawing environment during teardown.
   
   KillTimer();
   mBlinkTimer = nsnull;
-  
-  mRendContext = nsnull;
 
   // unregiser ourselves as a selection listener
   nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
@@ -204,7 +193,6 @@ NS_IMETHODIMP nsCaret::Terminate()
   mPresShell = nsnull;
 
   mLastContent = nsnull;
-  mLastCaretView = nsnull;
   
 #ifdef IBMBIDI
   mBidiKeyboard = nsnull;
@@ -276,7 +264,11 @@ NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsISelection *aDOMSel, nsRect *outCoordinates, PRBool *outIsCollapsed, nsIView **outView)
+NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType,
+                                           nsISelection *aDOMSel,
+                                           nsRect *outCoordinates,
+                                           PRBool *outIsCollapsed,
+                                           nsIView **outView)
 {
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
@@ -315,15 +307,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   if (NS_FAILED(err))
     return err;
     
-/*
-  // is this a text node?
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(focusNode);
-  // note that we only work with text nodes here, unlike when drawing the caret.
-  // this is because this routine is intended for IME support, which only cares about text.
-  if (!nodeAsText)
-    return NS_ERROR_UNEXPECTED;
-*/  
-  nsCOMPtr<nsIContent>contentNode = do_QueryInterface(focusNode);
+  nsCOMPtr<nsIContent> contentNode = do_QueryInterface(focusNode);
   if (!contentNode)
     return NS_ERROR_FAILURE;
 
@@ -350,10 +334,9 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return err;
   
   nsPoint   viewOffset(0, 0);
-  nsRect    clipRect;
   nsIView   *drawingView;     // views are not refcounted
 
-  GetViewForRendering(theFrame, aRelativeToType, viewOffset, clipRect, &drawingView, outView);
+  GetViewForRendering(theFrame, aRelativeToType, viewOffset, &drawingView, outView);
   if (!drawingView)
     return NS_ERROR_UNEXPECTED;
   // ramp up to make a rendering context for measuring text.
@@ -434,10 +417,55 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   presShell->GetCaretBidiLevel(&bidiLevel);
   
   // XXX we need to do more work here to get the correct hint.
-  return DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT, bidiLevel) ?
+  nsresult rv = DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT, bidiLevel) ?
     NS_OK : NS_ERROR_FAILURE;
+  ToggleDrawnStatus();
+  return rv;
 }
 
+nsIFrame * nsCaret::GetCaretFrame()
+{
+  // Return null if we're not drawn to prevent anybody from trying to draw us.
+  if (!mDrawn)
+    return nsnull;
+
+  // Recompute the frame that we're supposed to draw in to guarantee that
+  // we're not going to try to draw into a stale (dead) frame.
+  PRInt32 unused;
+  nsIFrame *frame = nsnull;
+  nsresult rv = GetCaretFrameForNodeOffset(mLastContent, mLastContentOffset,
+                                           mLastHint, mLastBidiLevel, &frame,
+                                           &unused);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  return frame;
+}
+
+void nsCaret::InvalidateOutsideCaret()
+{
+  nsIFrame *frame = GetCaretFrame();
+
+  // Only invalidate if we are not fully contained by our frame's rect.
+  if (frame && !frame->GetOverflowRect().Contains(GetCaretRect()))
+    InvalidateRects(mCaretRect, GetHookRect(), frame);
+}
+
+void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
+                         nsIRenderingContext *aCtx,
+                         const nsPoint &aOffset)
+{
+  NS_ASSERTION(mDrawn, "The caret shouldn't be drawing");
+
+  if (mReadOnly)
+    aCtx->SetColor(NS_RGBA(0x85, 0x85, 0x85, 0xff));
+  else
+    aCtx->SetColor(NS_RGBA(0x00, 0x00, 0x00, 0xff));
+
+  aCtx->InvertRect(mCaretRect + aOffset);
+  if (!GetHookRect().IsEmpty())
+    aCtx->InvertRect(GetHookRect() + aOffset);
+}
 
 #ifdef XP_MAC
 #pragma mark -
@@ -543,11 +571,11 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
                                 PRInt32                 aOffset,
                                 nsIFrameSelection::HINT aFrameHint,
                                 PRUint8                 aBidiLevel)
-{  
+{
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode)
     return PR_FALSE;
-      
+
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
@@ -569,32 +597,35 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     return PR_FALSE;
   }  
 
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!mDrawn)
   {
-    // save stuff so we can erase the caret later
+    // save stuff so we can figure out what frame we're in later.
     mLastContent = contentNode;
     mLastContentOffset = aOffset;
     mLastHint = aFrameHint;
     mLastBidiLevel = aBidiLevel;
 
     // If there has been a reflow, set the caret Bidi level to the level of the current frame
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
       presShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
   }
 
-  GetCaretRectAndInvert(theFrame, theFrameOffset);
+  rv = UpdateCaretRects(theFrame, theFrameOffset);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+  InvalidateRects(mCaretRect, mHookRect, theFrame);
 
   return PR_TRUE;
 }
 
 NS_IMETHODIMP 
-nsCaret::GetCaretFrameForNodeOffset (nsIContent*             aContentNode,
-                                     PRInt32                 aOffset,
-                                     nsIFrameSelection::HINT aFrameHint,
-                                     PRUint8                 aBidiLevel,
-                                     nsIFrame**              aReturnFrame,
-                                     PRInt32*                aReturnOffset)
+nsCaret::GetCaretFrameForNodeOffset(nsIContent*             aContentNode,
+                                    PRInt32                 aOffset,
+                                    nsIFrameSelection::HINT aFrameHint,
+                                    PRUint8                 aBidiLevel,
+                                    nsIFrame**              aReturnFrame,
+                                    PRInt32*                aReturnOffset)
 {
 
   //get frame selection and find out what frame to use...
@@ -612,7 +643,9 @@ nsCaret::GetCaretFrameForNodeOffset (nsIContent*             aContentNode,
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
-  nsresult rv = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset, aFrameHint, &theFrame, &theFrameOffset);
+  nsresult rv = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset,
+                                                      aFrameHint, &theFrame,
+                                                      &theFrameOffset);
   if (NS_FAILED(rv) || !theFrame)
     return NS_ERROR_FAILURE;
 
@@ -762,17 +795,20 @@ nsCaret::GetCaretFrameForNodeOffset (nsIContent*             aContentNode,
 
 
 //-----------------------------------------------------------------------------
-void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView)
+void nsCaret::GetViewForRendering(nsIFrame *caretFrame,
+                                  EViewCoordinates coordType,
+                                  nsPoint &viewOffset,
+                                  nsIView **outRenderingView,
+                                  nsIView **outRelativeView)
 {
-
   if (!caretFrame || !outRenderingView)
     return;
 
   // XXX by Masayuki Nakano:
-  // Our this code is not good. This is adhoc approach.
+  // This code is not good. This is adhoc approach.
   // Our best approach is to use the event fired widget related view.
   // But if we do so, we need large change for editor and this.
-  if (coordType == eIMECoordinates)
+  if (coordType == eIMECoordinates) {
 #if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN)
    // #59405 and #313918, on Mac and Windows, the coordinate for IME need to be
    // root view related.
@@ -782,91 +818,63 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
    // (nearest native window) related.
    coordType = eRenderingViewCoordinates; 
 #endif
+  }
 
   *outRenderingView = nsnull;
   if (outRelativeView)
     *outRelativeView = nsnull;
   
-  NS_ASSERTION(caretFrame, "Should have frame here");
+  NS_ASSERTION(caretFrame, "Should have a frame here");
  
   viewOffset.x = 0;
   viewOffset.y = 0;
   
-  nsPoint   withinViewOffset(0, 0);
+  nsPoint withinViewOffset(0, 0);
   // get the offset of this frame from its parent view (walks up frame hierarchy)
   nsIView* theView = nsnull;
   caretFrame->GetOffsetFromView(withinViewOffset, &theView);
-  if (theView == nsnull) return;
+  if (!theView)
+      return;
 
   if (outRelativeView && coordType == eClosestViewCoordinates)
     *outRelativeView = theView;
 
-  nsIView*    returnView = nsnull;    // views are not refcounted
+  // Note: views are not refcounted.
+  nsIView* returnView = nsIView::GetViewFor(theView->GetNearestWidget(nsnull));
   
-  // coorinates relative to the view we are going to use for drawing
-  if (coordType == eRenderingViewCoordinates)
-  {
-    nsIScrollableView*  scrollableView = nsnull;
-  
-    nsPoint             drawViewOffset(0, 0);         // offset to the view we are using to draw
-    
-    // walk up to the first view with a widget
-    do {
-      //is this a scrollable view?
-      if (!scrollableView)
-        scrollableView = theView->ToScrollableView();
+  // This gets uses the first view with a widget
+  if (coordType == eRenderingViewCoordinates) {
+    if (returnView) {
+      // Now adjust the view offset for this view.
+      withinViewOffset += theView->GetOffsetTo(returnView);
+      
+      // Account for the view's origin not lining up with the widget's
+      // (bug 190290)
+      withinViewOffset += returnView->GetPosition() -
+                          returnView->GetBounds().TopLeft();
+      viewOffset = withinViewOffset;
 
-      if (theView->HasWidget())
-      {
-        returnView = theView;
-        // account for the view's origin not lining up with the widget's (bug 190290)
-        drawViewOffset += theView->GetPosition() - theView->GetBounds().TopLeft();
-        break;
+      if (outRelativeView)
+        *outRelativeView = returnView;
+    }
+  }
+  else {
+    // window-relative coordinates. Done for us by the view.
+    withinViewOffset += theView->GetOffsetTo(nsnull);
+    viewOffset = withinViewOffset;
+
+    // Get the relative view for top level window coordinates
+    if (outRelativeView && coordType == eTopLevelWindowCoordinates) {
+      nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+      if (presShell) {
+        nsIViewManager* vm = presShell->GetViewManager();
+        if (vm) {
+          vm->GetRootView(*outRelativeView);
+        }
       }
-      drawViewOffset += theView->GetPosition();
-      theView = theView->GetParent();
-    } while (theView);
-    
-    viewOffset = withinViewOffset;
-    viewOffset += drawViewOffset;
-    
-    if (scrollableView)
-    {
-      nsRect  bounds = scrollableView->View()->GetBounds();
-      scrollableView->GetScrollPosition(bounds.x, bounds.y);
-      
-      bounds += drawViewOffset;   // offset to coords of returned view
-      outClipRect = bounds;
     }
-    else
-    {
-      NS_ASSERTION(returnView, "bulletproofing, see bug #24329");
-      if (returnView)
-        outClipRect = returnView->GetBounds();
-    }
-
-    if (outRelativeView)
-      *outRelativeView = returnView;
   }
-  else
-  {
-    // window-relative coordinates (walk right to the top of the view hierarchy)
-    // we don't do anything with clipping here
-    viewOffset = withinViewOffset;
 
-    do {
-      if (!returnView && theView->HasWidget())
-        returnView = theView;
-      // is this right?
-      viewOffset += theView->GetPosition();
-      
-      if (outRelativeView && coordType == eTopLevelWindowCoordinates)
-        *outRelativeView = theView;
-
-      theView = theView->GetParent();
-    } while (theView);
-  }
-  
   *outRenderingView = returnView;
 }
 
@@ -972,215 +980,132 @@ void nsCaret::DrawCaret()
   }
 
   DrawAtPositionWithHint(node, offset, hint, bidiLevel);
+  ToggleDrawnStatus();
 }
 
-void nsCaret::GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset)
+nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
   nsRect frameRect = aFrame->GetRect();
-  frameRect.x = 0;      // the origin is accounted for in GetViewForRendering()
+  frameRect.x = 0;
   frameRect.y = 0;
-  
-  nsPoint   viewOffset(0, 0);
-  nsRect    clipRect;
-  nsIView   *drawingView;
-  GetViewForRendering(aFrame, eRenderingViewCoordinates, viewOffset, clipRect, &drawingView, nsnull);
-  
-  if (!drawingView)
-    return;
-  
-  frameRect += viewOffset;
 
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (!presShell) return;
-  
+  if (!presShell) return NS_ERROR_FAILURE;
+
   nsPresContext *presContext = presShell->GetPresContext();
-
-  // if the view changed, or we don't have a rendering context, make one
-  // because of drawing issues, always make a new RC at the moment. See bug 28068
-  if (
-#ifdef DONT_REUSE_RENDERING_CONTEXT
-      PR_TRUE ||
-#endif
-      (mLastCaretView != drawingView) || !mRendContext)
-  {
-    mRendContext = nsnull;    // free existing one if we have one
-    
-    nsresult rv = presContext->DeviceContext()->
-      CreateRenderingContext(drawingView, *getter_AddRefs(mRendContext));
-
-    if (NS_FAILED(rv) || !mRendContext)
-      return;      
-  }
-
-  // push a known good state
-  mRendContext->PushState();
 
   // if we got a zero-height frame, it's probably a BR frame at the end of a non-empty line
   // (see BRFrame::Reflow). In that case, figure out a height. We have to do this
   // after we've got an RC.
   if (frameRect.height == 0)
   {
-      const nsStyleFont* fontStyle = aFrame->GetStyleFont();
-      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-      mRendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
+    nsIWidget *widget = aFrame->GetWindow();
+    if (!widget)
+      return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsIFontMetrics> fm;
-      mRendContext->GetFontMetrics(*getter_AddRefs(fm));
-      if (fm)
-      {
-        nscoord ascent, descent;
-        fm->GetMaxAscent(ascent);
-        fm->GetMaxDescent(descent);
-        frameRect.height = ascent + descent;
-        frameRect.y -= ascent; // BR frames sit on the baseline of the text, so we need to subtract
-                               // the ascent to account for the frame height.
-      }
+    nsCOMPtr<nsIRenderingContext> rendContext;
+    nsresult rv = presContext->DeviceContext()->
+      CreateRenderingContext(widget, *getter_AddRefs(rendContext));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!rendContext)
+      return NS_ERROR_UNEXPECTED;
+
+    const nsStyleFont* fontStyle = aFrame->GetStyleFont();
+    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    rendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
+
+    nsCOMPtr<nsIFontMetrics> fm;
+    rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    if (fm)
+    {
+      nscoord ascent, descent;
+      fm->GetMaxAscent(ascent);
+      fm->GetMaxDescent(descent);
+      frameRect.height = ascent + descent;
+      frameRect.y -= ascent; // BR frames sit on the baseline of the text, so we need to subtract
+      // the ascent to account for the frame height.
+    }
   }
-  
-  // views are not refcounted
-  mLastCaretView = drawingView;
 
-  if (!mDrawn)
-  {
-    nsPoint   framePos(0, 0);
-    nsRect    caretRect = frameRect;
-    nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-    nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
+  mCaretRect = frameRect;
+  nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+  nsCOMPtr<nsISelectionPrivate> privateSelection = do_QueryInterface(domSelection);
 
-    // if cache in selection is available, apply it, else refresh it
-    privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset, framePos);
+  nsPoint framePos;
 
-    caretRect += framePos;
+  // if cache in selection is available, apply it, else refresh it
+  privateSelection->GetCachedFrameOffset(aFrame, aFrameOffset, framePos);
 
-    caretRect.width = mCaretTwipsWidth;
+  mCaretRect += framePos;
+  mCaretRect.width = mCaretTwipsWidth;
 
-    // Check if the caret intersects with the right edge
-    // of the frame. If it does, and the frame's right edge
-    // is close to the right edge of the clipRect, we may
-    // need to adjust the caret's x position so that it
-    // remains visible.
+  return UpdateHookRect(presContext);
+}
 
-    nscoord caretXMost = caretRect.XMost();
-    nscoord frameXMost = frameRect.XMost();
+nsresult nsCaret::UpdateHookRect(nsPresContext* aPresContext)
+{
+  mHookRect.Empty();
 
-    if (caretXMost > frameXMost)
-    {
-      nscoord clipXMost  = clipRect.XMost();
-
-      if (caretRect.x == frameRect.x && caretRect.x <= clipXMost &&
-          caretXMost > clipXMost)
-      {
-        // The left side of the caret is attached to the left edge of
-        // the frame, and it is wider than the frame itself. It also
-        // overlaps the right edge of the clipRect so we need to nudge
-        // it to the left so that it remains visible.
-        //
-        // We usually hit this case when the caret is attached to a
-        // br frame (which is about 1 twip in width) that is positioned
-        // at the right edge of the content area because it is right aligned
-        // or the right margin pushed it beyond the width of the view port.
-
-        caretRect.x = clipXMost - caretRect.width;
-      }
-      else if (caretRect.x == frameXMost && frameXMost == clipXMost)
-      {
-        // The left side of the caret is attached to the right edge of
-        // the frame, but it's going to get clipped because it's positioned
-        // on the  right edge of the clipRect, so nudge it to the
-        // left so it remains visible.
-        //
-        // We usually hit this case when the caret is after the last
-        // character on the line, and the line exceeds the width of the
-        // view port.
-
-        caretRect.x = clipXMost - caretRect.width;
-      }
-    }
-
-    mCaretRect.IntersectRect(clipRect, caretRect);
 #ifdef IBMBIDI
-    // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
-    PRBool bidiEnabled;
-    nsRect hookRect;
-    PRBool isCaretRTL=PR_FALSE;
-    if (mBidiKeyboard)
-      mBidiKeyboard->IsLangRTL(&isCaretRTL);
-    if (isCaretRTL)
+  // Simon -- make a hook to draw to the left or right of the caret to show keyboard language direction
+  PRBool bidiEnabled;
+  PRBool isCaretRTL=PR_FALSE;
+  if (mBidiKeyboard)
+    mBidiKeyboard->IsLangRTL(&isCaretRTL);
+  if (isCaretRTL)
+  {
+    bidiEnabled = PR_TRUE;
+    aPresContext->SetBidiEnabled(bidiEnabled);
+  }
+  else
+    bidiEnabled = aPresContext->BidiEnabled();
+  if (bidiEnabled)
+  {
+    if (isCaretRTL != mKeyboardRTL)
     {
-      bidiEnabled = PR_TRUE;
-      presContext->SetBidiEnabled(bidiEnabled);
-    }
-    else
-      bidiEnabled = presContext->BidiEnabled();
-    if (bidiEnabled)
-    {
-      if (isCaretRTL != mKeyboardRTL)
+      /* if the caret bidi level and the keyboard language direction are not in
+       * synch, the keyboard language must have been changed by the
+       * user, and if the caret is in a boundary condition (between left-to-right and
+       * right-to-left characters) it may have to change position to
+       * reflect the location in which the next character typed will
+       * appear. We will call |SelectionLanguageChange| and exit
+       * without drawing the caret in the old position.
+       */ 
+      mKeyboardRTL = isCaretRTL;
+      nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
+      if (domSelection)
       {
-        /* if the caret bidi level and the keyboard language direction are not in
-         * synch, the keyboard language must have been changed by the
-         * user, and if the caret is in a boundary condition (between left-to-right and
-         * right-to-left characters) it may have to change position to
-         * reflect the location in which the next character typed will
-         * appear. We will call |SelectionLanguageChange| and exit
-         * without drawing the caret in the old position.
-         */ 
-        mKeyboardRTL = isCaretRTL;
-        nsCOMPtr<nsISelection> domSelection = do_QueryReferent(mDomSelectionWeak);
-        if (domSelection)
+        if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
         {
-          if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
-          {
-            mRendContext->PopState();
-#ifdef DONT_REUSE_RENDERING_CONTEXT
-            mRendContext = nsnull;
-#endif
-            return;
-          }
+          return NS_ERROR_FAILURE;
         }
       }
-      // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
-      // The height of the hook rectangle is the same as the width of the caret
-      // rectangle.
-      hookRect.SetRect(caretRect.x + ((isCaretRTL) ?
-                                       mBidiIndicatorTwipsSize * -1 :
-                                       caretRect.width),
-                       caretRect.y + mBidiIndicatorTwipsSize,
-                       mBidiIndicatorTwipsSize,
-                       caretRect.width);
-      mHookRect.IntersectRect(clipRect, hookRect);
     }
+    // If keyboard language is RTL, draw the hook on the left; if LTR, to the right
+    // The height of the hook rectangle is the same as the width of the caret
+    // rectangle.
+    mHookRect.SetRect(mCaretRect.x + ((isCaretRTL) ?
+                      mBidiIndicatorTwipsSize * -1 :
+                      mCaretRect.width),
+                      mCaretRect.y + mBidiIndicatorTwipsSize,
+                      mBidiIndicatorTwipsSize,
+                      mCaretRect.width);
+  }
 #endif //IBMBIDI
-  }
-  
-  if (mReadOnly)
-    mRendContext->SetColor(NS_RGB(85, 85, 85));   // we are drawing it; gray
-  else
-    mRendContext->SetColor(NS_RGB(255,255,255));
 
-  mRendContext->InvertRect(mCaretRect);
+  return NS_OK;
+}
 
-  // Ensure the buffer is flushed (Cocoa needs this), since we're drawing
-  // outside the normal painting process.
-  mRendContext->FlushRect(mCaretRect);
-
-#ifdef IBMBIDI
-  if (!mHookRect.IsEmpty()) // if Bidi support is disabled, the rectangle remains empty and won't be drawn
-    mRendContext->InvertRect(mHookRect);
-#endif
-
-  mRendContext->PopState();
-  
-  ToggleDrawnStatus();
-
-  if (mDrawn) {
-    aFrame->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
-  }
-
-#ifdef DONT_REUSE_RENDERING_CONTEXT
-  mRendContext = nsnull;
-#endif
+// static
+void nsCaret::InvalidateRects(const nsRect &aRect, const nsRect &aHook,
+                              nsIFrame *aFrame)
+{
+  NS_ASSERTION(aFrame, "Must have a frame to invalidate");
+  nsRect rect;
+  rect.UnionRect(aRect, aHook);
+  aFrame->Invalidate(rect, PR_FALSE);
 }
 
 #ifdef XP_MAC
