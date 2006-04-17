@@ -39,7 +39,7 @@
 
 NS_IMPL_ISUPPORTS1(nsSAXLocator, nsISAXLocator)
 
-nsSAXLocator::nsSAXLocator() : mColumnNumber(0), mLineNumber(0)
+nsSAXLocator::nsSAXLocator() : mLineNumber(0), mColumnNumber(0)
 {
 }
 
