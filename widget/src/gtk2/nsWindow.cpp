@@ -1415,13 +1415,93 @@ nsWindow::LoseFocus(void)
     LOGFOCUS(("  widget lost focus [%p]\n", (void *)this));
 }
 
+#ifdef DEBUG
+// Paint flashing code
+
+#define CAPS_LOCK_IS_ON \
+(gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+
+#define WANT_PAINT_FLASHING \
+(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+
+static GdkModifierType
+gdk_keyboard_get_modifiers()
+{
+  GdkModifierType m = (GdkModifierType) 0;
+
+  gdk_window_get_pointer(NULL, NULL, NULL, &m);
+
+  return m;
+}
+
+static void
+gdk_window_flash(GdkWindow *    aGdkWindow,
+                 unsigned int   aTimes,
+                 unsigned int   aInterval,  // Milliseconds
+                 GdkRegion *    aRegion)
+{
+  gint         x;
+  gint         y;
+  gint         width;
+  gint         height;
+  guint        i;
+  GdkGC *      gc = 0;
+  GdkColor     white;
+
+  gdk_window_get_geometry(aGdkWindow,
+                          NULL,
+                          NULL,
+                          &width,
+                          &height,
+                          NULL);
+
+  gdk_window_get_origin (aGdkWindow,
+                         &x,
+                         &y);
+
+  gc = gdk_gc_new(GDK_ROOT_PARENT());
+
+  white.pixel = WhitePixel(gdk_display,DefaultScreen(gdk_display));
+
+  gdk_gc_set_foreground(gc,&white);
+  gdk_gc_set_function(gc,GDK_XOR);
+  gdk_gc_set_subwindow(gc,GDK_INCLUDE_INFERIORS);
+  
+  gdk_region_offset(aRegion, x, y);
+  gdk_gc_set_clip_region(gc, aRegion);
+
+  /*
+   * Need to do this twice so that the XOR effect can replace 
+   * the original window contents.
+   */
+  for (i = 0; i < aTimes * 2; i++)
+  {
+    gdk_draw_rectangle(GDK_ROOT_PARENT(),
+                       gc,
+                       TRUE,
+                       x,
+                       y,
+                       width,
+                       height);
+
+    gdk_flush();
+    
+    PR_Sleep(PR_MillisecondsToInterval(aInterval));
+  }
+
+  gdk_gc_destroy(gc);
+
+  gdk_region_offset(aRegion, -x, -y);
+}
+#endif // DEBUG
+
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
     if (mIsDestroyed) {
         LOG(("Expose event on destroyed window [%p] window %p\n",
              (void *)this, (void *)aEvent->window));
-        return NS_OK;
+        return FALSE;
     }
 
     if (!mDrawingarea)
@@ -1490,7 +1570,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     } else {
 #ifdef MOZ_ENABLE_GLITZ
         ctx->PushGroup(gfxContext::CONTENT_COLOR);
-#else        
+#else // MOZ_ENABLE_GLITZ
         // Instead of just doing PushGroup we're going to do a little dance
         // to ensure that GDK creates the pixmap, so it doesn't go all
         // XGetGeometry on us in gdk_pixmap_foreign_new_for_display when we
@@ -1523,10 +1603,18 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
                 }
             }
         }
-#endif
+#endif // MOZ_ENABLE_GLITZ
     }
-#endif
+#endif // MOZ_CAIRO_GFX
 
+    // NOTE: Paint flashing region would be wrong for cairo, since
+    // cairo inflates the update region, etc.  So don't paint flash
+    // for cairo.
+#if !defined(MOZ_CAIRO_GFX) && defined(DEBUG)
+    if (WANT_PAINT_FLASHING && aEvent->window)
+        gdk_window_flash(aEvent->window, 1, 100, aEvent->region);
+#endif // !defined(MOZ_CAIRO_GFX) && defined(DEBUG)
+    
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
     event.refPoint.x = aEvent->area.x;
     event.refPoint.y = aEvent->area.y;
@@ -1562,12 +1650,12 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 #ifdef MOZ_ENABLE_GLITZ
             ctx->PopGroupToSource();
             ctx->Paint();
-#else
+#else // MOZ_ENABLE_GLITZ
             if (bufferPixmapSurface) {
                 ctx->SetSource(bufferPixmapSurface);
                 ctx->Paint();
             }
-#endif
+#endif // MOZ_ENABLE_GLITZ
         }
     } else {
         // ignore
@@ -1576,7 +1664,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         } else {
 #ifdef MOZ_ENABLE_GLITZ
             ctx->PopGroup();
-#endif
+#endif // MOZ_ENABLE_GLITZ
         }
     }
 
@@ -1585,7 +1673,7 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
     }
 
     ctx->Restore();
-#endif
+#endif // MOZ_CAIRO_GFX
 
     g_free(rects);
 
