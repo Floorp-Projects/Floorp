@@ -13320,6 +13320,11 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
         nsIFrame *placeholderFrame;
         mPresShell->GetPlaceholderFrameFor(fixedChild, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for fixed-pos frame");
+        NS_ASSERTION(placeholderFrame->GetType() ==
+                     nsLayoutAtoms::placeholderFrame,
+                     "Wrong type");
+        aState.mFrameManager->UnregisterPlaceholderFrame(
+          NS_STATIC_CAST(nsPlaceholderFrame*, placeholderFrame));
         nsIFrame* placeholderParent = placeholderFrame->GetParent();
         ::DeletingFrameSubtree(aState.mFrameManager, placeholderFrame);
         rv = aState.mFrameManager->RemoveFrame(placeholderParent, nsnull,
