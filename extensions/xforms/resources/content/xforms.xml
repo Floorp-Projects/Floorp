@@ -319,6 +319,97 @@
     </implementation>
   </binding>
 
+<!-- ALERT: <DEFAULT> -->
+  <binding id="inline-alert"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:div anonid="container" class="-moz-xforms-message-container">
+        <html:div anonid="inlineData" style="display: inherit;">
+          <children/>
+        </html:div>
+        <html:div anonid="bindingData" style="display: inherit;"/>
+      </html:div>
+    </content>
+
+    <implementation>
+
+      <field name="_inlineData">null</field>
+
+      <property name="inlineData" readonly="true">
+        <getter>
+          if (!this._inlineData) {
+            this._inlineData = document.
+              getAnonymousElementByAttribute(this, "anonid", "inlineData");
+          }
+          return this._inlineData;
+        </getter>
+      </property>
+
+      <field name="_bindingData">null</field>
+      <property name="bindingData" readonly="true">
+        <getter>
+          if (!this._bindingData) {
+            this._bindingData = document.
+              getAnonymousElementByAttribute(this, "anonid", "bindingData");
+          }
+          return this._bindingData;
+        </getter>
+      </property>
+
+      <method name="refresh">
+        <body>
+          if (this.accessors.hasBoundNode()) {
+            this.bindingData.textContent = this.stringValue;
+            this.inlineData.style.display = "none";
+            this.bindingData.style.display = "inherit";
+          } else {
+            this.bindingData.style.display = "none";
+            this.inlineData.style.display = "inherit";
+          }
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+<!-- MESSAGE: <DEFAULT>, reusing the content of inline-alert -->
+  <binding id="ephemeral-message"
+           extends="chrome://xforms/content/xforms.xml#inline-alert">
+    <implementation implements="nsIXFormsEphemeralMessageUI">
+
+      <field name="_container">null</field>
+
+      <property name="container" readonly="true">
+        <getter>
+          if (!this._container) {
+            this._container = document.
+              getAnonymousElementByAttribute(this, "anonid", "container");
+          }
+          return this._container;
+        </getter>
+      </property>
+
+      <method name="show">
+        <parameter name="x"/>
+        <parameter name="y"/>
+        <body>
+          this.container.style.visibility = "visible";
+          this.container.style.display = "inherit";
+          this.container.style.left = x + "px";
+          this.container.style.top = y + "px";
+          return true;
+        </body>
+      </method>
+
+      <method name="hide">
+        <body>
+          this.container.style.left = "0px";
+          this.container.style.top = "0px";
+          this.container.style.visibility = "hidden";
+          this.container.style.display = "none";
+        </body>
+      </method>
+    </implementation>
+  </binding>
 
   <!-- UPLOAD: <DEFAULT>
     The upload widget assumes successors bindings implement getElementControl()

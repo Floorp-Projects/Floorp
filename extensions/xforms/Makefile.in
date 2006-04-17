@@ -147,6 +147,7 @@ XPIDLSRCS	= \
 		nsIXFormsUploadElement.idl \
 		nsIXFormsUploadUIElement.idl \
 		nsIXFormsCopyElement.idl \
+		nsIXFormsEphemeralMessageUI.idl \
 		$(NULL)
 
 # XForms source files

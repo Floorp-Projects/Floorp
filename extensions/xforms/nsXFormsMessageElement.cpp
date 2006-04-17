@@ -38,11 +38,9 @@
 
 #include "nsXFormsAtoms.h"
 #include "nsXFormsStubElement.h"
+#include "nsXFormsDelegateStub.h"
 #include "nsXFormsActionElement.h"
 #include "nsIXFormsActionModuleElement.h"
-
-#include "nsIXTFXMLVisual.h"
-#include "nsIXTFXMLVisualWrapper.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOM3Node.h"
@@ -81,18 +79,10 @@
 #include "nsNetUtil.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIChannelEventSink.h"
-
-#define EPHEMERAL_STYLE \
-  "position:absolute;z-index:2147483647; \
-  background:inherit;color:inherit; \
-  border:inherit;visibility:visible;"
-
-#define EPHEMERAL_STYLE_HIDDEN \
-  "position:absolute;z-index:2147483647;visibility:hidden;"
+#include "nsIXFormsEphemeralMessageUI.h"
 
 #define MESSAGE_WINDOW_PROPERTIES \
   "location=false,scrollbars=yes,centerscreen"
-
 
 // Defining a simple dialog for modeless and modal messages.
 
@@ -129,7 +119,7 @@ class nsXFormsEventListener;
  *
  * @see http://www.w3.org/TR/xforms/slice10.html#action-info
  */
-class nsXFormsMessageElement : public nsXFormsXMLVisualStub,
+class nsXFormsMessageElement : public nsXFormsDelegateStub,
                                public nsIDOMEventListener,
                                public nsIXFormsActionModuleElement,
                                public nsIStreamListener,
@@ -142,13 +132,6 @@ public:
   // nsIXTFElement overrides
   NS_IMETHOD WillChangeDocument(nsIDOMDocument *aNewDocument);
   NS_IMETHOD OnDestroyed();
-  
-  // nsIXTFXMLVisual overrides
-  NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
-
-  // nsIXTFVisual overrides
-  NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
-  NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
   NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillChangeParent(nsIDOMElement *aNewParent);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aSrc);
@@ -188,7 +171,7 @@ public:
 
 
   nsXFormsMessageElement(MessageType aType) :
-    mType(aType), mElement(nsnull), mPosX(-1), mPosY(-1),
+    mType(aType), mPosX(-1), mPosY(-1), mDocument(nsnull),
     mStopType(eStopType_None) {}
 private:
   nsresult HandleEphemeralMessage(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent);
@@ -215,23 +198,20 @@ private:
    */
   void AddRemoveExternalResource(PRBool aAdd);
 
-  MessageType mType;
-
-  nsCOMPtr<nsIDOMElement> mVisualElement;
-  nsIDOMElement *mElement;
+  MessageType          mType;
 
   // The position of the ephemeral message
-  PRInt32 mPosX;
-  PRInt32 mPosY;
+  PRInt32              mPosX;
+  PRInt32              mPosY;
 
-  nsCOMPtr<nsITimer> mEphemeralTimer;
-  nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMPtr<nsITimer>   mEphemeralTimer;
+  nsIDOMDocument*      mDocument;
   nsCOMPtr<nsIChannel> mChannel;
   StopType mStopType;
 };
 
-NS_IMPL_ADDREF_INHERITED(nsXFormsMessageElement, nsXFormsXMLVisualStub)
-NS_IMPL_RELEASE_INHERITED(nsXFormsMessageElement, nsXFormsXMLVisualStub)
+NS_IMPL_ADDREF_INHERITED(nsXFormsMessageElement, nsXFormsDelegateStub)
+NS_IMPL_RELEASE_INHERITED(nsXFormsMessageElement, nsXFormsDelegateStub)
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsMessageElement)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
@@ -239,57 +219,7 @@ NS_INTERFACE_MAP_BEGIN(nsXFormsMessageElement)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsActionModuleElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-NS_INTERFACE_MAP_END_INHERITING(nsXFormsXMLVisualStub)
-
-// nsIXTFXMLVisual
-
-NS_IMETHODIMP
-nsXFormsMessageElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
-{
-  nsresult rv = nsXFormsXMLVisualStub::OnCreated(aWrapper);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_CHANGE_DOCUMENT |
-                                nsIXTFElement::NOTIFY_PARENT_CHANGED |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED);
-
-  nsCOMPtr<nsIDOMElement> node;
-  rv = aWrapper->GetElementNode(getter_AddRefs(node));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                          mType == eType_Alert
-                          ? NS_LITERAL_STRING("span")
-                          : NS_LITERAL_STRING("div"),
-                          getter_AddRefs(mVisualElement));
-  if (mVisualElement && mType != eType_Alert)
-      mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                   NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
-
-  return NS_OK;
-}
-
-// nsIXTFVisual
-
-NS_IMETHODIMP
-nsXFormsMessageElement::GetVisualContent(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mVisualElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsMessageElement::GetInsertionPoint(nsIDOMElement **aElement)
-{
-  NS_IF_ADDREF(*aElement = mVisualElement);
-  return NS_OK;
-}
+NS_INTERFACE_MAP_END_INHERITING(nsXFormsDelegateStub)
 
 // nsIXTFElement
 
@@ -319,16 +249,15 @@ nsXFormsMessageElement::WillChangeDocument(nsIDOMDocument *aNewDocument)
   }
 
   mDocument = aNewDocument;
-  return NS_OK;
+  return nsXFormsDelegateStub::WillChangeDocument(aNewDocument);
 }
 
 NS_IMETHODIMP
 nsXFormsMessageElement::OnDestroyed()
 {
-  mElement = nsnull;
-  mVisualElement = nsnull;
   mChannel = nsnull;
-  return NS_OK;
+  mDocument = nsnull;
+  return nsXFormsDelegateStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -397,12 +326,12 @@ NS_IMETHODIMP
 nsXFormsMessageElement::WillChangeParent(nsIDOMElement *aNewParent)
 {
   if (mType == eType_Normal)
-    return NS_OK;
+    return nsXFormsDelegateStub::WillChangeParent(aNewParent);
   
   nsCOMPtr<nsIDOMNode> parent;
   mElement->GetParentNode(getter_AddRefs(parent));
   if (!parent)
-    return NS_OK;
+    return nsXFormsDelegateStub::WillChangeParent(aNewParent);
 
   nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(parent));
   NS_ENSURE_STATE(targ);
@@ -419,14 +348,14 @@ nsXFormsMessageElement::WillChangeParent(nsIDOMElement *aNewParent)
     targ->RemoveEventListener(NS_LITERAL_STRING("xforms-binding-exception"),this, PR_TRUE);
   }
 
-  return NS_OK;
+  return nsXFormsDelegateStub::WillChangeParent(aNewParent);
 }
 
 NS_IMETHODIMP
 nsXFormsMessageElement::ParentChanged(nsIDOMElement *aNewParent)
 {
   if (mType == eType_Normal || !aNewParent)
-    return NS_OK;
+    return nsXFormsDelegateStub::ParentChanged(aNewParent);
 
   nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aNewParent));
   NS_ENSURE_STATE(targ);
@@ -444,7 +373,7 @@ nsXFormsMessageElement::ParentChanged(nsIDOMElement *aNewParent)
     targ->AddEventListener(NS_LITERAL_STRING("xforms-binding-exception"), this, PR_TRUE);
   }
 
-  return NS_OK;
+  return nsXFormsDelegateStub::ParentChanged(aNewParent);
 }
 
 NS_IMETHODIMP
@@ -461,7 +390,7 @@ nsXFormsMessageElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
     TestExternalFile();
   }
 
-  return NS_OK;
+  return nsXFormsDelegateStub::AttributeSet(aName, aValue);
 }
 
 NS_IMETHODIMP
@@ -477,7 +406,7 @@ nsXFormsMessageElement::AttributeRemoved(nsIAtom *aName)
     mStopType = eStopType_None;
   }
 
-  return NS_OK;
+  return nsXFormsDelegateStub::AttributeRemoved(aName);
 }
 
 NS_IMETHODIMP
@@ -597,21 +526,8 @@ nsXFormsMessageElement::HandleInlineAlert(nsIDOMEvent* aEvent)
     if (displayValue) {
       nsAutoString type;
       displayValue->GetStringValue(type);
-      if (type.EqualsLiteral("none"))
-        return PR_FALSE;
-
-      nsAutoString instanceData;
-      PRBool hasBinding = nsXFormsUtils::GetSingleNodeBindingValue(mElement,
-                                                                   instanceData);
-      if (hasBinding) {
-        nsCOMPtr<nsIDOM3Node> visualElement3(do_QueryInterface(mVisualElement));
-        if (visualElement3) {
-          visualElement3->SetTextContent(instanceData);
-        }
-      }
-      return PR_TRUE;
+      return !type.EqualsLiteral("none");
     }
-    
   }
   return PR_FALSE;
 }
@@ -644,10 +560,10 @@ nsXFormsMessageElement::HandleEphemeralMessage(nsIDOMDocument* aDoc,
           mEphemeralTimer = nsnull;
         }
         doc->UnsetProperty(nsXFormsAtoms::messageProperty);
-  
-        if (mVisualElement) {
-          mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                       NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
+
+        nsCOMPtr<nsIXFormsEphemeralMessageUI> ui(do_QueryInterface(mElement));
+        if (ui) {
+          ui->Hide();
         }
         ResetEphemeralPosition();
       }
@@ -692,15 +608,6 @@ nsXFormsMessageElement::HandleEphemeralMessage(nsIDOMDocument* aDoc,
         return NS_OK;
       }
 
-      nsAutoString instanceData;
-      PRBool hasBinding = nsXFormsUtils::GetSingleNodeBindingValue(mElement,
-                                                                   instanceData);
-      if (hasBinding) {
-        nsCOMPtr<nsIDOM3Node> visualElement3(do_QueryInterface(mVisualElement));
-        if (visualElement3) {
-          visualElement3->SetTextContent(instanceData);
-        }
-      }
       StartEphemeral();
     }
   }
@@ -935,17 +842,14 @@ nsXFormsMessageElement::ShowEphemeral()
   if (!mElement)
     return;
 
-  nsAutoString style;
-  style.AppendLiteral(EPHEMERAL_STYLE);
-  style.AppendLiteral("left:");
-  style.AppendInt(mPosX);
-  style.AppendLiteral("px;top:");
-  style.AppendInt(mPosY);
-  style.AppendLiteral("px;");
-  mVisualElement->SetAttribute(NS_LITERAL_STRING("style"), style);
+  nsCOMPtr<nsIXFormsEphemeralMessageUI> ui(do_QueryInterface(mElement));
+  if (ui) {
+    ui->Show(mPosX, mPosY);
+  }
+
   mEphemeralTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   if (mEphemeralTimer)
-    mEphemeralTimer->InitWithFuncCallback(sEphemeralCallbackHide, this, 
+    mEphemeralTimer->InitWithFuncCallback(sEphemeralCallbackHide, this,
                                           HIDE_EPHEMERAL_TIMEOUT,
                                           nsITimer::TYPE_ONE_SHOT);
 }
@@ -974,9 +878,10 @@ nsXFormsMessageElement::HideEphemeral()
   }
   doc->UnsetProperty(nsXFormsAtoms::messageProperty);
 
-  if (mVisualElement)
-    mVisualElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                 NS_LITERAL_STRING(EPHEMERAL_STYLE_HIDDEN));
+  nsCOMPtr<nsIXFormsEphemeralMessageUI> ui(do_QueryInterface(mElement));
+  if (ui) {
+    ui->Hide();
+  }
 
   mEphemeralTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   if (mEphemeralTimer)

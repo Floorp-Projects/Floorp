@@ -41,6 +41,17 @@
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 @namespace mozType url(http://www.mozilla.org/projects/xforms/2005/type);
 
+rebuild,
+recalculate,
+revalidate,
+refresh,
+model,
+instance,
+submission,
+bind {
+  display: none !important;
+}
+
 html|*:root repeat,
 html|*:root repeatitem,
 html|*:root contextcontainer,
@@ -88,17 +99,11 @@ html|*:root select1[appearance='full'] choices {
   display: none;
 }
 
-message[level="ephemeral"], hint {
-  background-color: InfoBackground;
-  color: InfoText;
-  padding: 2px 3px;
-  font: message-box;
-  border: 1px black solid;
-  visibility: hidden !important;
-  position: absolute !important;
+message, alert {
+  display: none;
 }
 
-action {
+action, message[level="ephemeral"], hint {
   position: absolute;
   z-index: 2147481647;
   visibility: hidden;
@@ -106,10 +111,38 @@ action {
   left: 0px;
   width: 0px;
   height: 0px;
+  display: block;
 }
 
 alert {
-  display: none;
+  -moz-binding: url('chrome://xforms/content/xforms.xml#inline-alert');
+}
+
+message[level="ephemeral"], hint {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#ephemeral-message');
+  background-color: InfoBackground;
+  color: InfoText;
+  border: 1px black solid;
+  padding: 2px 3px;
+  font: message-box;
+  position: absolute !important;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+message[level="ephemeral"] > html|div.-moz-xforms-message-container,
+hint > html|div.-moz-xforms-message-container {
+  background-color: inherit;
+  color: inherit;
+  border: inherit;
+  padding: inherit;
+  font: inherit;
+  position: inherit;
+  width: inherit;
+  height: inherit;
+  display: inherit;
+  z-index: 2147483647;
 }
 
 /* group */
