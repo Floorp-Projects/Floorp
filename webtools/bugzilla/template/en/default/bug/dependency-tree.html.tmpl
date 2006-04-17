@@ -24,7 +24,7 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% filtered_desc = blocked_tree.$bugid.summary FILTER html %]
+[% filtered_desc = blocked_tree.$bugid.short_desc FILTER html %]
 [% PROCESS global/header.html.tmpl
    title = "Dependency tree for $terms.Bug $bugid"
    h1    = "Dependency tree for 
@@ -76,7 +76,7 @@
   [% IF ids.size > 0 %]
     ([% IF maxdepth -%]Up to [% maxdepth %] level[% "s" IF maxdepth > 1 %] deep | [% END -%]
     <a href="buglist.cgi?bug_id=[% ids.join(",") %]">view as [% terms.bug %] list</a>
-    [% IF canedit && ids.size > 1 %]
+    [% IF user.groups.editbugs && ids.size > 1 %]
       | <a href="buglist.cgi?bug_id=[% ids.join(",") %]&amp;tweak=1">change several</a>
     [% END %])
     <ul class="tree">
@@ -92,12 +92,12 @@
 [% BLOCK display_tree %]
   [%# INTERFACE
     #   - bugid: the ID of the bug being displayed
-    #   - tree: a hash of bug objects
+    #   - tree: a hash of bug objects and of bug dependencies
     #%]
   [% bug = tree.$bugid %]
   <li>
-    [%- INCLUDE bullet bugid=bugid bug=bug -%]
-    <span class="summ[% "_deep" IF bug.dependencies.size %]" 
+    [%- INCLUDE bullet bugid=bugid tree=tree -%]
+    <span class="summ[% "_deep" IF tree.dependencies.$bugid.size %]" 
           id="[% bugid FILTER html %]" 
           [% IF global.seen.$bugid %]
             onMouseover="duplicatedover('[% bugid FILTER html %]')"
@@ -109,9 +109,9 @@
       <b><a title="Already displayed above; click to locate"
             onclick="duplicated('[% bugid FILTER html %]')"
             href="#b[% bugid %]">(*)</a></b>
-    [% ELSIF bug.dependencies.size %]
+    [% ELSIF tree.dependencies.$bugid.size %]
       <ul>
-        [% FOREACH depid = bug.dependencies %]
+        [% FOREACH depid = tree.dependencies.$bugid %]
           [% INCLUDE display_tree bugid=depid %]
         [% END %]
       </ul>
@@ -121,7 +121,7 @@
 [% END %]
 
 [% BLOCK bullet %]
-  [% IF bug.dependencies.size > 0 && ! global.seen.$bugid %]
+  [% IF tree.dependencies.$bugid.size && ! global.seen.$bugid %]
     [% extra_class = " b_open" %]
     [% extra_args = 'onclick="return doToggle(this, event)"' %] 
   [% END %]
@@ -132,21 +132,21 @@
 [% END %]
 
 [% BLOCK buglink %]
-  [% isclosed = !bug.open %]
+  [% isclosed = !bug.isopened %]
   [% FILTER closed(isclosed) -%]
     <a title="[% INCLUDE buginfo bug=bug %]"
        href="show_bug.cgi?id=[% bugid %]">
       <b>[%- bugid %]:</b>
-      <span class="summ_text">[%+ bug.summary FILTER html %]</span>
+      <span class="summ_text">[%+ bug.short_desc FILTER html %]</span>
       <span class="summ_info">[[% INCLUDE buginfo %]]</span>
     </a>
   [% END %]
 [% END %]
 
 [% BLOCK buginfo %]
-  [% bug.status FILTER html %]
-  [%+ bug.resolution FILTER html %]; assigned to [% bug.assignee_email FILTER html %]; 
-  [% "Target: " _ bug.milestone IF bug.milestone %]
+  [% bug.bug_status FILTER html -%] [%+ bug.resolution FILTER html %];
+  [%-%] assigned to [% bug.assigned_to.login FILTER html %];
+  [%-%][% " Target: " _ bug.target_milestone IF bug.target_milestone %]
 [% END %]
 
 [%###########################################################################%]
