@@ -1,0 +1,15 @@
+DEPTH=../../../..
+topsrcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = protection
+XPIDL_MODULE = protection
+
+XPIDLSRCS = nsIProtectionTable.idl \
+            nsIProtectionListManager.idl \
+            $(NULL)
+
+include $(topsrcdir)/config/rules.mk
