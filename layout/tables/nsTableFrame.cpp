@@ -1379,18 +1379,45 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                aBuilder->ToReferenceFrame(mFrame));
 }
 
+static PRInt32 GetTablePartRank(nsDisplayItem* aItem)
+{
+  nsIAtom* type = aItem->GetUnderlyingFrame()->GetType();
+  if (type == nsGkAtoms::tableFrame)
+    return 0;
+  if (type == nsGkAtoms::tableRowGroupFrame)
+    return 1;
+  if (type == nsGkAtoms::tableRowFrame)
+    return 2;
+  return 3;
+}
+
+static PRBool CompareByTablePartRank(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
+                                     void* aClosure)
+{
+  return GetTablePartRank(aItem1) <= GetTablePartRank(aItem2);
+}
+
 /* static */ nsresult
 nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       nsFrame* aFrame,
                                       const nsRect& aDirtyRect,
-                                      const nsDisplayListSet& aLists)
+                                      const nsDisplayListSet& aLists,
+                                      PRBool aIsRoot)
 {
+  nsDisplayList eventsBorderBackground;
+  // If we need to sort the event backgrounds, then we'll put descendant
+  // border-backgrounds into their own list so we don't accidentally sort
+  // some ancestor's border-background.
+  PRBool sortEventBackgrounds = aIsRoot && aBuilder->IsForEventDelivery();
+  nsDisplayListSet lists(aLists,
+    sortEventBackgrounds ? &eventsBorderBackground : aLists.BorderBackground());
+  
   // Create dedicated background display items per-frame when we're
   // handling events.
   // XXX how to handle collapsed borders?
   if (aBuilder->IsForEventDelivery() &&
       aFrame->IsVisibleForPainting(aBuilder)) {
-    nsresult rv = aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+    nsresult rv = lists.BorderBackground()->AppendNewToTop(new (aBuilder)
         nsDisplayBackground(aFrame));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1405,12 +1432,20 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
   // lets us get cell borders into the nsTableFrame's BorderBackground list.
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
   while (kid) {
-    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+    nsresult rv = aFrame->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, lists);
     NS_ENSURE_SUCCESS(rv, rv);
     kid = kid->GetNextSibling();
   }
   
-  return aFrame->DisplayOutline(aBuilder, aLists);
+  if (sortEventBackgrounds) {
+    // Ensure that the table frame event background goes before the
+    // table rowgroups event backgrounds, before the table row event backgrounds,
+    // before everything else (cells and their blocks)
+    eventsBorderBackground.Sort(CompareByTablePartRank, nsnull);
+    aLists.BorderBackground()->AppendToTop(&eventsBorderBackground);
+  }
+  
+  return aFrame->DisplayOutline(aBuilder, lists);
 }
 
 // table paint code is concerned primarily with borders and bg color
@@ -1430,7 +1465,7 @@ nsTableFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsDisplayTableBorderBackground(this));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
+  return DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, PR_TRUE);
 }
 
 // XXX We don't put the borders and backgrounds in tree order like we should.

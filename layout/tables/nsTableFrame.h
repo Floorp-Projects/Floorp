@@ -263,11 +263,14 @@ public:
    * and row frames. It creates a background display item for handling events
    * if necessary, an outline display item if necessary, and displays
    * all the the frame's children.
+   * @param aIsRoot true if aFrame is the table frame or a table part which
+   * happens to be the root of a stacking context
    */
   static nsresult DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
-                                           nsFrame* aFrame,
-                                           const nsRect& aDirtyRect,
-                                           const nsDisplayListSet& aLists);
+                                          nsFrame* aFrame,
+                                          const nsRect& aDirtyRect,
+                                          const nsDisplayListSet& aLists,
+                                          PRBool aIsRoot);
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
