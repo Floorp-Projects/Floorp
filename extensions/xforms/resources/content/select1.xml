@@ -50,7 +50,7 @@
     
     <!-- The strange indentation is because of the whitespace nodes.-->
     <content>
-      <children includes="label"/>
+      <children includes="label|hint"/>
       <html:div class="-moz-xforms-select1-popup" anonid="popup"
                 onmouseover="this.parentNode.shouldHandleBlur = false;
                              this.parentNode.mouseOver(event);"
