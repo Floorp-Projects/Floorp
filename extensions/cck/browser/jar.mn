@@ -22,3 +22,4 @@ cckwizard.jar:
  content/cckwizard/srcfiles/chrome.manifest.in            (resources/content/cckwizard/srcfiles/chrome.manifest.in)
  content/cckwizard/srcfiles/install.js.in                 (resources/content/cckwizard/srcfiles/install.js.in)
  content/cckwizard/srcfiles/install.rdf.in                (resources/content/cckwizard/srcfiles/install.rdf.in)
+ content/cckwizard/srcfiles/install.rdf.mip.in            (resources/content/cckwizard/srcfiles/install.rdf.mip.in)

@@ -182,7 +182,17 @@
                                          This feature is intended primarily for corporate and institutional users
                                          that will be deploying Firefox inside their organization.</html:b>">
 
-<!ENTITY  certs.label                   "Certificates">                                         
+<!ENTITY  certs.label                   "Certificates">
+
+<!ENTITY  customizeBundles.label          "Customize Extensions/Themes">
+<!ENTITY  customizeBundles.description    "Use the buttons below to select extensions and themes to be installed with your CCK.">
+<!ENTITY  customizeBundles.warning        "<html:b>IMPORTANT: If you add extensions and/or themes to your CCK,
+                                         you can no longer install the CCK as part of a Firefox install. You must
+                                         install through the browser or use the -install-global-extension mechanism.
+                                         </html:b>">
+
+<!ENTITY  bundles.label                  "Extensions/Themes">
+
 
 <!ENTITY  customizeProxy.label          "Customize Proxy Configurations">
 

@@ -302,6 +302,15 @@
     </groupbox>
   </wizardpage>
 
+  <wizardpage label="&customizeBundles.label;">
+    <groupbox>
+      <caption label="&bundles.label;"/>
+      <description>&customizeBundles.description;</description>
+      <description>&customizeBundles.warning;</description>
+      <box class="ccklist" id="bundleList" new="onNewBundle();" edit="onEditBundle();"/>
+    </groupbox>
+  </wizardpage>
+
 
 
   <wizardpage id="tbFolder" label="&customizeToolbarOne.label;" onpageadvanced="if (document.getElementById('tbFolder.bookmarkList').getRowCount() > 0) return Validate('ToolbarFolder1','&bmFolder.error;');">

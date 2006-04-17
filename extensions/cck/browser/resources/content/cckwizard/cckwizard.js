@@ -650,7 +650,53 @@ function onEditCert()
     fp.defaultString = sourcefile.leafName;
     fp.appendFilters(nsIFilePicker.filterAll);
     if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
-      listbox = document.getElementById('certList');
+      listbox.selectedItem.label = fp.file.path;
+    }
+  }
+  catch(ex) {
+  }
+}
+
+function onNewBundle()
+{
+  try {
+    var nsIFilePicker = Components.interfaces.nsIFilePicker;
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
+    fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText |
+                     nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
+
+    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
+      listbox = document.getElementById('bundleList');
+      listitem = listbox.appendItem(fp.file.path, "");
+    }
+  }
+  catch(ex) {
+  }
+}
+
+function onEditBundle()
+{
+  listbox = document.getElementById('bundleList');
+  filename = listbox.selectedItem.label;
+  var sourcefile = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
+  try {
+    sourcefile.initWithPath(filename);
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+                           
+  } catch (ex) {
+  }
+
+  try {
+    var nsIFilePicker = Components.interfaces.nsIFilePicker;
+    var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+    fp.init(window, "Choose File...", nsIFilePicker.modeOpen);
+    fp.displayDirectory = sourcefile.parent;
+    fp.defaultString = sourcefile.leafName;
+    fp.appendFilters(nsIFilePicker.filterAll);
+    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0) {
       listbox.selectedItem.label = fp.file.path;
     }
   }
@@ -671,6 +717,7 @@ function CreateCCK()
   try {
     destdir.remove(true);
   } catch(ex) {}
+  
   destdir.append("content");
   destdir.append("cck");
   try {
@@ -706,9 +753,9 @@ function CreateCCK()
   destdir.append("xpi");
   try {
     destdir.remove(true);
-    destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+    destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);    
   } catch(ex) {}
-  CCKWriteConfigFile(destdir);
+  CCKWriteConfigFile(destdir);  
   destdir.append("chrome");
   try {
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
@@ -796,16 +843,67 @@ function CreateCCK()
   if (filename.length == 0)
     filename = "cck";
   filename += ".xpi";
-  
-  CCKZip(filename, destdir,
+
+  CCKZip("cck.xpi", destdir,
          "chrome", "components", "defaults", "platform", "searchplugins", "chrome.manifest", "install.rdf", "install.js", "cck.config");
+
+  var outputdir = Components.classes["@mozilla.org/file/local;1"]
+                            .createInstance(Components.interfaces.nsILocalFile);
+
+  outputdir.initWithPath(currentconfigpath);
+  destdir.append("cck.xpi");
+  
+  if (document.getElementById('bundleList').getRowCount() == 0) {
+    outputdir.append(filename);
+    try {
+      outputdir.remove(true);
+    } catch(ex) {}
+    outputdir = outputdir.parent;
+    destdir.copyTo(outputdir, filename);
+  } else {
+    var packagedir = Components.classes["@mozilla.org/file/local;1"]
+                               .createInstance(Components.interfaces.nsILocalFile);                   
+                                                                                          
+    packagedir.initWithPath(currentconfigpath);
+    packagedir.append("package");
+  
+    try {
+      packagedir.remove(true);
+      packagedir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
+    } catch(ex) {}
+
+    CCKCopyFile(destdir.path, packagedir);
+
+    listbox = document.getElementById('bundleList');
+
+    for (var i=0; i < listbox.getRowCount(); i++) {    
+      listitem = listbox.getItemAtIndex(i);
+      CCKCopyFile(listitem.label, packagedir);
+    }
+
+    CCKCopyChromeToFile("install.rdf.mip", packagedir)
+
+    packagedir.append("install.rdf.mip");
+    packagedir.moveTo(packagedir.parent, "install.rdf");
+
+    packagedir = packagedir.parent;
+
+    CCKZip("cck.zip", packagedir, "*.xpi", "*.jar", "install.rdf");
+    packagedir.append("cck.zip");
+    outputdir.append(filename);
+    try {
+      outputdir.remove(true);
+    } catch(ex) {}
+    outputdir = outputdir.parent;
+    packagedir.copyTo(outputdir, filename);
+  }
 
   var bundle = document.getElementById("bundle_cckwizard");
 
-  destdir.append(filename);
+  outputdir.append(filename);
 
   gPromptService.alert(window, bundle.getString("windowTitle"),
-                       bundle.getString("outputLocation") + destdir.path);
+                       bundle.getString("outputLocation") + outputdir.path);
 }
 
 /* This function takes a file in the chromedir and creates a real file */
@@ -969,7 +1067,7 @@ function CCKZip(zipfile, location)
   var args = [file.path];
   
   process.run(true, args, args.length);
-//  file.remove(false);
+  file.remove(false);
   var file = location.clone();
   file.append(zipfile);
   if (!file.exists()) {
@@ -1806,6 +1904,13 @@ function CCKWriteConfigFile(destdir)
         var line = "SearchEngineIcon" + (j+1) + "=" + listitem.value + "\n";
         fos.write(line, line.length);      
       }
+    } else if (elements[i].id == "bundleList") {
+      listbox = document.getElementById('bundleList')    
+      for (var j=0; j < listbox.getRowCount(); j++) {
+        listitem = listbox.getItemAtIndex(j);
+        var line = "BundlePath" + (j+1) + "=" + listitem.label + "\n";
+        fos.write(line, line.length);
+      }
     } else if (elements[i].id == "certList") {
       listbox = document.getElementById('certList')    
       for (var j=0; j < listbox.getRowCount(); j++) {
@@ -1979,6 +2084,16 @@ function CCKReadConfigFile(srcdir)
   var i = 1;
   while( certpath = configarray['CertPath' + i]) {
     var listitem = listbox.appendItem(certpath, "");
+    i++;
+  }
+
+  // bundle list
+  listbox = document.getElementById('bundleList');
+  listbox.clear();
+
+  var i = 1;
+  while( bundlepath = configarray['BundlePath' + i]) {
+    var listitem = listbox.appendItem(bundlepath, "");
     i++;
   }  
 
