@@ -198,24 +198,31 @@ NS_IMETHODIMP
 nsSAXXMLReader::HandleStartNamespaceDecl(const PRUnichar *aPrefix,
                                          const PRUnichar *aUri)
 {
-  if (mContentHandler) {
-    const nsString &prefix = aPrefix ? nsDependentString(aPrefix) :
-                                       EmptyString();
-    return mContentHandler->StartPrefixMapping(prefix,
-                                               nsDependentString(aUri));
+  if (!mContentHandler) {
+    return NS_OK;
   }
-  return NS_OK;
+  
+  const nsDependentString& uri = nsDependentString(aURI);
+  if (aPrefix) {
+    return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
+                                               uri);
+  }
+
+  return mContentHandler->StartPrefixMapping(EmptyString(), uri);
 }
 
 NS_IMETHODIMP
 nsSAXXMLReader::HandleEndNamespaceDecl(const PRUnichar *aPrefix)
 {
-  if (mContentHandler) {
-    const nsString &prefix = aPrefix ? nsDependentString(aPrefix) :
-                                       EmptyString();
-    return mContentHandler->EndPrefixMapping(prefix);
+  if (!mContentHandler) {
+    return NS_OK;
   }
-  return NS_OK;
+  
+  if (!aPrefix) {
+    return mContentHandler->EndPrefixMapping(nsDependentString(aPrefix));
+  }
+
+  return mContentHandler->EndPrefixMapping(EmptyString());
 }
 
 NS_IMETHODIMP
@@ -235,12 +242,17 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
                                    const PRUnichar *aPublicId)
 {
   if (mDTDHandler) {
-    const nsString &pubId = aPublicId ? nsDependentString(aPublicId) :
-                                        EmptyString();
-    const nsString &sysId = aSystemId ? nsDependentString(aSystemId) :
-                                        EmptyString();
+    const nsString& empty = EmptyString();
+    if (!aSystemId) {
+      aSystemId = empty.get();
+    }
+    if (!aPublicId) {
+      aPublicId = empty.get();
+    }
+
     return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
-                                     sysId, pubId);
+                                     nsDependentString(aSystemId),
+                                     nsDependentString(aPublicId);
   }
   return NS_OK;
 }
@@ -252,13 +264,17 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
                                          const PRUnichar *aNotationName)
 {
   if (mDTDHandler) {
-    const nsString &pubId = aPublicId ? nsDependentString(aPublicId) :
-                                        EmptyString();
-    const nsString &sysId = aSystemId ? nsDependentString(aSystemId) :
-                                        EmptyString();
+    const nsString& empty = EmptyString();
+    if (!aSystemId) {
+      aSystemId = empty.get();
+    }
+    if (!aPublicId) {
+      aPublicId = empty.get();
+    }
+
     return mDTDHandler->UnparsedEntityDecl(nsDependentString(aEntityName),
-                                           sysId,
-                                           pubId,
+                                           nsDependentString(aSystemId),
+                                           nsDependentString(aPublicId),
                                            nsDependentString(aNotationName));
   }
   return NS_OK;
