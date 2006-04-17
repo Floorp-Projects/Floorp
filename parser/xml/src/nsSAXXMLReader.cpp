@@ -202,7 +202,7 @@ nsSAXXMLReader::HandleStartNamespaceDecl(const PRUnichar *aPrefix,
     return NS_OK;
   }
   
-  const nsDependentString& uri = nsDependentString(aURI);
+  const nsDependentString& uri = nsDependentString(aUri);
   if (aPrefix) {
     return mContentHandler->StartPrefixMapping(nsDependentString(aPrefix),
                                                uri);
@@ -252,7 +252,7 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
 
     return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
                                      nsDependentString(aSystemId),
-                                     nsDependentString(aPublicId);
+                                     nsDependentString(aPublicId));
   }
   return NS_OK;
 }
