@@ -1667,7 +1667,7 @@ function CCKWriteInstallJS(destdir)
   str = str.replace(/%name%/g, document.getElementById("name").value);
 
   if (document.getElementById('browserPluginList').getRowCount() > 0)
-    str = str.replace(/%plugins%/g, 'addDirectory("", "%version%", "plugins", cckextensiondir, "plugins", true);');
+    str = str.replace(/%plugins%/g, 'addDirectory("", "%version%", "platform", cckextensiondir, "platform", true);');
   else
     str = str.replace(/%plugins%/g, '');
 
