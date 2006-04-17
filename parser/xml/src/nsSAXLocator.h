@@ -56,10 +56,10 @@ public:
 
   nsSAXLocator();
 
-  nsresult SetColumnNumber(PRInt32 aColumnNumber);
-  nsresult SetLineNumber(PRInt32 aLineNumber);
-  nsresult SetSystemId(const nsAString & aSystemId);
-  nsresult SetPublicId(const nsAString & aPublicId);
+  NS_IMETHOD SetColumnNumber(PRInt32 aColumnNumber);
+  NS_IMETHOD SetLineNumber(PRInt32 aLineNumber);
+  NS_IMETHOD SetSystemId(const nsAString & aSystemId);
+  NS_IMETHOD SetPublicId(const nsAString & aPublicId);
 
 private:
   nsString mPublicId;
