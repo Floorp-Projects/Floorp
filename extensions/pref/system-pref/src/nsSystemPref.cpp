@@ -60,6 +60,8 @@ struct SysPrefItem {
     SysPrefItem() {
         prefName = nsnull;
         defaultValue.intVal = 0;
+        defaultValue.stringVal = nsnull;
+        defaultValue.boolVal = PR_FALSE;
         isLocked = PR_FALSE;
     }
     void SetPrefName(const char *aPrefName) {
