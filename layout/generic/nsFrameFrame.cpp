@@ -303,7 +303,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return NS_OK;
   
   nsRect dirty = aDirtyRect - f->GetOffsetTo(this);
-  return f->BuildDisplayListForStackingContext(aBuilder, dirty, aLists.Content());
+
+  aBuilder->EnterPresShell(f, dirty);
+
+  rv = f->BuildDisplayListForStackingContext(aBuilder, dirty, aLists.Content());
+
+  aBuilder->LeavePresShell(f, dirty);
+  return rv;
 }
 
 void

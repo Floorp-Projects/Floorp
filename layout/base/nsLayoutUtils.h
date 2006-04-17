@@ -47,6 +47,7 @@ class nsIScrollableView;
 class nsIScrollableFrame;
 class nsIDOMEvent;
 class nsRegion;
+class nsDisplayListBuilder;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -412,6 +413,26 @@ public:
    * @param aFormFrame Frame to scroll into view.
    */
   static void ScrollIntoView(nsIFormControlFrame* aFormFrame);
+
+  /**
+   * Ensure that the caret frame's subtree is painted by the next paint.
+   * @param aBuilder The display list builder that we're going to be painting
+   * with.
+   * @param aCaretFrame The frame that the caret is currently in.
+   * @param aReferenceFrame The frame whose coodinate space aRealDirtyRect is
+   * in.
+   * @param aCaretRect The rect (in aCaretFrame's coordinates) that the caret
+   * wants to be in.
+   * @param aRealDirtyRect The rect (in aReferenceFrame's coordinates) that is
+   * the original dirty rect.
+   * @param aMark Whether we're marking or unmarking the frames.
+   */
+  static void MarkCaretSubtreeForPainting(nsDisplayListBuilder* aBuilder,
+                                          nsIFrame* aReferenceFrame,
+                                          nsIFrame* aCaretFrame,
+                                          const nsRect& aCaretRect,
+                                          const nsRect& aRealDirtyRect,
+                                          PRBool aMark);
 };
 
 #endif // nsLayoutUtils_h__

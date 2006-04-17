@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -617,10 +618,16 @@ static PRBool gDumpRepaintRegionForCopy = PR_FALSE;
 nsIFrame*
 nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
 {
-  nsDisplayListBuilder builder(aFrame, PR_TRUE);
+  nsDisplayListBuilder builder(aFrame, PR_TRUE, PR_FALSE);
   nsDisplayList list;
+  nsRect target(aPt, nsSize(1, 1));
+
+  builder.EnterPresShell(aFrame, target);
+
   nsresult rv =
-    aFrame->BuildDisplayListForStackingContext(&builder, nsRect(aPt, nsSize(1, 1)), &list);
+    aFrame->BuildDisplayListForStackingContext(&builder, target, &list);
+
+  builder.LeavePresShell(aFrame, target);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
 #ifdef DEBUG
@@ -669,11 +676,16 @@ nsresult
 nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackground)
 {
-  nsDisplayListBuilder builder(aFrame, PR_FALSE);
+  nsDisplayListBuilder builder(aFrame, PR_FALSE, PR_TRUE);
   nsDisplayList list;
   nsRect dirtyRect = aDirtyRegion.GetBounds();
+
+  builder.EnterPresShell(aFrame, dirtyRect);
+
   nsresult rv =
     aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
+
+  builder.LeavePresShell(aFrame, dirtyRect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (NS_GET_A(aBackground) > 0) {
@@ -791,10 +803,15 @@ nsLayoutUtils::ComputeRepaintRegionForCopy(nsIFrame* aRootFrame,
   // hierarchy has already been updated for the move.)
   nsRect rect;
   rect.UnionRect(aCopyRect, aCopyRect + aDelta);
-  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, aMovingFrame);
+  nsDisplayListBuilder builder(aRootFrame, PR_FALSE, PR_TRUE, aMovingFrame);
   nsDisplayList list;
+
+  builder.EnterPresShell(aRootFrame, rect);
+
   nsresult rv =
     aRootFrame->BuildDisplayListForStackingContext(&builder, rect, &list);
+
+  builder.LeavePresShell(aRootFrame, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -942,4 +959,41 @@ nsLayoutUtils::ScrollIntoView(nsIFormControlFrame* aFormFrame)
                                      NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
     }
   }
+}
+
+void
+nsLayoutUtils::MarkCaretSubtreeForPainting(nsDisplayListBuilder* aBuilder,
+                                           nsIFrame* aReferenceFrame,
+                                           nsIFrame* aCaretFrame,
+                                           const nsRect& aCaretRect,
+                                           const nsRect& aRealDirtyRect,
+                                           PRBool aMark)
+{
+  // Easy test: If there is no caret, we don't have anything to do.
+  if (!aCaretFrame) {
+    return;
+  }
+
+  NS_ASSERTION(aReferenceFrame, "We must have a reference frame");
+
+  // Check if the dirty rect intersects with the caret's dirty rect.
+  nsRect caretRect = aCaretRect + aCaretFrame->GetOffsetTo(aReferenceFrame);
+  if (!caretRect.Intersects(aRealDirtyRect)) {
+    return;
+  }
+
+  if (aMark) {
+    // Okay, our rects intersect, let's mark the frame and all of its ancestors.
+    do {
+      aCaretFrame->AddStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+      aCaretFrame = aCaretFrame->GetParent();
+    } while (aCaretFrame);
+
+    return;
+  }
+
+  do {
+    aCaretFrame->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
+    aCaretFrame = aCaretFrame->GetParent();
+  } while (aCaretFrame);
 }

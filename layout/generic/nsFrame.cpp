@@ -916,6 +916,17 @@ nsFrame::DisplayOutline(nsDisplayListBuilder*   aBuilder,
 }
 
 nsresult
+nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
+                       const nsRect& aDirtyRect, const nsDisplayListSet& aLists)
+{
+  if (!IsVisibleForPainting(aBuilder))
+    return NS_OK;
+
+  return aLists.Content()->AppendNewToTop(
+      new (aBuilder) nsDisplayCaret(this, aBuilder->GetCaret()));
+}
+
+nsresult
 nsFrame::DisplayBorderBackgroundOutline(nsDisplayListBuilder*   aBuilder,
                                         const nsDisplayListSet& aLists,
                                         PRBool                  aForceBackground)
@@ -1117,6 +1128,8 @@ BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
 {
   nsDisplayListCollection set;
   nsresult rv = aFrame->BuildDisplayList(aBuilder, aDirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aBuilder->DisplayCaret(aFrame, aDirtyRect, aSet);
   NS_ENSURE_SUCCESS(rv, rv);
   
   return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect);
@@ -1439,9 +1452,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                             overflowClip);
     } else {
       rv = aChild->BuildDisplayList(aBuilder, dirty, aLists);
+      if (NS_SUCCEEDED(rv)) {
+        rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+      }
     }
     aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
-    return NS_OK;
+    return rv;
   }
   
   nsDisplayList list;
@@ -1451,6 +1467,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       isComposited) {
     // True stacking context
     rv = aChild->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
+    if (NS_SUCCEEDED(rv)) {
+      rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+    }
   } else {
     nsRect clipRect;
     PRBool applyAbsPosClipping =
@@ -1473,6 +1492,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                                             pseudoStack, overflowClip);
     } else {
       rv = aChild->BuildDisplayList(aBuilder, clippedDirtyRect, pseudoStack);
+      if (NS_SUCCEEDED(rv)) {
+        rv = aBuilder->DisplayCaret(aChild, dirty, aLists);
+      }
     }
     aChild->RemoveStateBits(NS_FRAME_HAS_DESCENDANT_PLACEHOLDER);
     

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=4 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -530,6 +531,8 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
       {
         mCaret->Init(presShell);
         mCaret->SetCaretReadOnly(PR_TRUE);
+
+        mOtherCaret = presShell->SetCaret(mCaret);
       }
       mCaretDrawn = PR_FALSE;
     }
@@ -631,7 +634,15 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       mCaretDrawn = PR_FALSE;
     }
     mCaret->SetCaretVisible(PR_FALSE);    // hide it, so that it turns off its timer
-    mCaret = nsnull;      // release it
+
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    if (presShell)
+    {
+      NS_ASSERTION(mOtherCaret, "Where'd my other caret go?");
+      mCaret = presShell->SetCaret(mOtherCaret);
+    }
+
+    mOtherCaret = mCaret = nsnull;
   }
 
   if (!mEditor)

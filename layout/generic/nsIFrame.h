@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -99,10 +100,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// bdf02423-88d6-41ca-818a-54d7b51328c3
+// 4742c112-3577-4d90-aeb8-833729f14033
 #define NS_IFRAME_IID \
-{ 0xbdf02423, 0x88d6, 0x41ca, \
-  { 0x81, 0x8a, 0x54, 0xd7, 0xb5, 0x13, 0x28, 0xc3 } }
+{ 0x4742c112, 0x3577, 0x4d90, \
+  { 0xae, 0xb8, 0x83, 0x37, 0x29, 0xf1, 0x40, 0x33 } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -695,6 +696,15 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists) { return NS_OK; }
+  /**
+   * Displays the caret onto the given display list builder. The caret is
+   * painted on top of the rest of the display list items.
+   *
+   * @param aDirtyRect is the dirty rectangle that we're repainting.
+   */
+  nsresult DisplayCaret(nsDisplayListBuilder*       aBuilder,
+                        const nsRect&               aDirtyRect,
+                        const nsDisplayListSet&     aLists);
 
   PRBool IsThemed() {
     return IsThemed(GetStyleDisplay());
