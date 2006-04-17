@@ -165,6 +165,10 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
+  NS_ASSERTION(message || report,
+               "Must have a message or a report; otherwise what are we "
+               "reporting?");
+  
   // XXX this means we are not going to get error reports on non DOM contexts
   nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
 
@@ -236,7 +240,7 @@ NS_ScriptErrorReporter(JSContext *cx,
           do_CreateInstance("@mozilla.org/scripterror;1");
 
         if (errorObject != nsnull) {
-          nsresult rv;
+          nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
           // Set category to chrome or content
           nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
