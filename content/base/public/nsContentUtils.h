@@ -786,6 +786,18 @@ public:
     return sInitialized;
   }
 
+  /**
+   * Checks if the localname/prefix/namespace triple is valid wrt prefix
+   * and namespace according to the Namespaces in XML and DOM Code
+   * specfications.
+   *
+   * @param aLocalname localname of the node
+   * @param aPrefix prefix of the node
+   * @param aNamespaceID namespace of the node
+   */
+  static PRBool IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
+                                PRInt32 aNamespaceID);
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            JSContext *cx,
