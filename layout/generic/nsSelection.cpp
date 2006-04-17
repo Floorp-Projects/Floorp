@@ -5486,7 +5486,7 @@ nsTypedSelection::AddRange(nsIDOMRange* aRange)
   if (!aRange) return NS_ERROR_NULL_POINTER;
 
   // This inserts a table cell range in proper document order
-  //  and returns NS_ERROR_FAILURE if range doesn't contain just one table cell
+  // and returns NS_OK if range doesn't contain just one table cell
   PRBool didAddRange;
   nsresult result = addTableCellRange(aRange, &didAddRange);
   if (NS_FAILED(result)) return result;
