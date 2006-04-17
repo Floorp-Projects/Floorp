@@ -242,13 +242,9 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
                                    const PRUnichar *aPublicId)
 {
   if (mDTDHandler) {
-    const nsString& empty = EmptyString();
-    if (!aSystemId) {
-      aSystemId = empty.get();
-    }
-    if (!aPublicId) {
-      aPublicId = empty.get();
-    }
+    PRUnichar nullChar = PRUnichar(0);
+    if (!aSystemId) aSystemId = &nullChar;
+    if (!aPublicId) aPublicId = &nullChar;
 
     return mDTDHandler->NotationDecl(nsDependentString(aNotationName),
                                      nsDependentString(aSystemId),
@@ -264,13 +260,9 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
                                          const PRUnichar *aNotationName)
 {
   if (mDTDHandler) {
-    const nsString& empty = EmptyString();
-    if (!aSystemId) {
-      aSystemId = empty.get();
-    }
-    if (!aPublicId) {
-      aPublicId = empty.get();
-    }
+    PRUnichar nullChar = PRUnichar(0);
+    if (!aSystemId) aSystemId = &nullChar;
+    if (!aPublicId) aPublicId = &nullChar;
 
     return mDTDHandler->UnparsedEntityDecl(nsDependentString(aEntityName),
                                            nsDependentString(aSystemId),
