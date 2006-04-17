@@ -1857,26 +1857,10 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIAtom* prefix = (*aNodeInfo)->GetPrefixAtom();
-  nsIAtom* nil = nsnull;
-
-  // NAMESPACE_ERR: Raised if the qualifiedName is a malformed qualified name,
-  // if the qualifiedName has a prefix and the namespaceURI is null, if the
-  // qualifiedName has a prefix that is "xml" and the namespaceURI is different
-  // from "http://www.w3.org/XML/1998/namespace", if the qualifiedName or its
-  // prefix is "xmlns" and the namespaceURI is different from
-  // "http://www.w3.org/2000/xmlns/", or if the namespaceURI is
-  // "http://www.w3.org/2000/xmlns/" and neither the qualifiedName nor its
-  // prefix is "xmlns".
-  PRBool xmlPrefix = prefix == nsLayoutAtoms::xml;
-  PRBool xmlns = (*aNodeInfo)->Equals(nsLayoutAtoms::xmlns, nil) ||
-                 prefix == nsLayoutAtoms::xmlns;
-
-  return (prefix && DOMStringIsNull(aNamespaceURI)) ||
-         (xmlPrefix && nsID != kNameSpaceID_XML) ||
-         (xmlns && nsID != kNameSpaceID_XMLNS) ||
-         (nsID == kNameSpaceID_XMLNS && !xmlns) ?
-         NS_ERROR_DOM_NAMESPACE_ERR : NS_OK;
+  return nsContentUtils::IsValidNodeName((*aNodeInfo)->NameAtom(),
+                                         (*aNodeInfo)->GetPrefixAtom(),
+                                         (*aNodeInfo)->NamespaceID()) ?
+         NS_OK : NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 // static
@@ -3027,4 +3011,35 @@ nsContentUtils::RemoveRangeList(nsIContent *aContent)
   if (sRangeListsHash.ops) {
     PL_DHashTableOperate(&sRangeListsHash, aContent, PL_DHASH_REMOVE);
   }
+}
+
+/* static */
+PRBool
+nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
+                                PRInt32 aNamespaceID)
+{
+  if (!aPrefix) {
+    // If the prefix is null, then either the QName must be xmlns or the
+    // namespace must not be XMLNS.
+    return (aLocalName == nsGkAtoms::xmlns) ==
+           (aNamespaceID == kNameSpaceID_XMLNS);
+  }
+
+  // If the prefix is non-null then the namespace must not be null.
+  if (aNamespaceID == kNameSpaceID_None) {
+    return PR_FALSE;
+  }
+
+  // If the namespace is the XMLNS namespace then the prefix must be xmlns,
+  // but the localname must not be xmlns.
+  if (aNamespaceID == kNameSpaceID_XMLNS) {
+    return aPrefix == nsGkAtoms::xmlns && aLocalName != nsGkAtoms::xmlns;
+  }
+
+  // If the namespace is not the XMLNS namespace then the prefix must not be
+  // xmlns.
+  // If the namespace is the XML namespace then the prefix can be anything.
+  // If the namespace is not the XML namespace then the prefix must not be xml.
+  return aPrefix != nsGkAtoms::xmlns &&
+         (aNamespaceID == kNameSpaceID_XML || aPrefix != nsGkAtoms::xml);
 }

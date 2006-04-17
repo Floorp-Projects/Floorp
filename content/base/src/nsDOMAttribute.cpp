@@ -437,40 +437,15 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   nsCOMPtr<nsIAtom> prefix;
 
-  PRBool qnameIsXMLNS = mNodeInfo->NameAtom() == nsGkAtoms::xmlns &&
-                        !mNodeInfo->GetPrefixAtom();
-
   if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
     if (!prefix) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    // If the namespace of the attribute is null then setting a non-null prefix
-    // isn't allowed.
-    // If the QName of the attribute is |xmlns| then setting a non-null prefix
-    // isn't allowed.
-    // If the namespace of the attribute is the XMLNS namespace then setting
-    // a prefix other than xmlns isn't allowed, if the namespace of the
-    // attribute is not the XMLNS namespace then setting the prefix to xmlns
-    // isn't allowed.
-    if (mNodeInfo->NamespaceID() == kNameSpaceID_None || qnameIsXMLNS ||
-        ((mNodeInfo->NamespaceID() == kNameSpaceID_XMLNS) !=
-         (prefix == nsGkAtoms::xmlns))) {
-      return NS_ERROR_DOM_NAMESPACE_ERR;
-    }
-  }
-  else if (!qnameIsXMLNS && mNodeInfo->NamespaceID() == kNameSpaceID_XMLNS) {
-    // Setting the prefix to null on an attribute that is in the XMLNS
-    // namespace but whose QName isn't |xmlns| is not allowed.
-    return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 
-  // If the namespace of the attribute is the XML namespace then setting a
-  // prefix other than xml isn't allowed, if the namespace of the attribute is
-  // not the XML namespace then setting the prefix to xml isn't allowed.
-  if ((mNodeInfo->NamespaceID() == kNameSpaceID_XML) !=
-      (prefix == nsGkAtoms::xml)) {
+  if (!nsContentUtils::IsValidNodeName(mNodeInfo->NameAtom(), prefix,
+                                       mNodeInfo->NamespaceID())) {
     return NS_ERROR_DOM_NAMESPACE_ERR;
   }
 

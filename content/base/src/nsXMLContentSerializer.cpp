@@ -344,9 +344,15 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
                                       nsIDOMElement* aElement,
                                       PRBool aIsAttribute)
 {
-  if (aPrefix.EqualsLiteral(kXMLNS) ||
-      (aPrefix.EqualsLiteral("xml") &&
-       aURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace"))) {
+  if (aPrefix.EqualsLiteral(kXMLNS)) {
+    return PR_FALSE;
+  }
+
+  if (aURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace")) {
+    // The prefix must be xml for this namespace. We don't need to declare it,
+    // so always just set the prefix to xml.
+    aPrefix.AssignLiteral("xml");
+
     return PR_FALSE;
   }
 
