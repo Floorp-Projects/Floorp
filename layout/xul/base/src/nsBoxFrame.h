@@ -153,6 +153,8 @@ public:
   NS_IMETHOD  SetInitialChildList(nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
+  NS_IMETHOD DidSetStyleContext();
+
   virtual nsIAtom* GetType() const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

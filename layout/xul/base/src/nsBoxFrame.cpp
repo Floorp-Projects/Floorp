@@ -201,6 +201,14 @@ nsBoxFrame::SetInitialChildList(nsIAtom*        aListName,
   return r;
 }
 
+NS_IMETHODIMP
+nsBoxFrame::DidSetStyleContext()
+{
+  // The values that CacheAttributes() computes depend on our style,
+  // so we need to recompute them here...
+  CacheAttributes();
+}
+
 /**
  * Initialize us. This is a good time to get the alignment of the box
  */
