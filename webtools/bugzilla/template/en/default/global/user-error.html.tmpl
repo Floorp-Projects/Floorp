@@ -194,6 +194,10 @@
       versions
     [% END %].
 
+  [% ELSIF error == "attachment_deletion_disabled" %]
+    [% title = "Attachment Deletion Disabled" %]
+    Attachment deletion is disabled on this installation.
+
   [% ELSIF error == "attachment_removed" %]
     [% title = "Attachment Removed" %]
     The attachment you are attempting to access has been removed.

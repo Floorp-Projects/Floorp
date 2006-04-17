@@ -229,7 +229,12 @@
           <b>Filename:</b><br>
             <input type="text" size="20" name="filename"
                    value="[% attachment.filename FILTER html %]"><br>
-          <b>Size: </b>[% attachment.datasize FILTER unitconvert %]<br>
+          <b>Size:</b>
+          [% IF attachment.datasize %]
+            [%+ attachment.datasize FILTER unitconvert %]
+          [% ELSE %]
+            <em>deleted</em>
+          [% END %]<br>
 
           <b>MIME Type:</b><br>
             <input type="text" size="20" name="contenttypeentry"
@@ -269,10 +274,17 @@
         [% IF attachment.ispatch && patchviewerinstalled %]
          | <a href="attachment.cgi?id=[% attachment.id %]&action=diff">Diff</a>
         [% END %]
+        [% IF Param("allow_attachment_deletion")
+              && user.groups.admin
+              && attachment.datasize > 0 %]
+          | <a href="attachment.cgi?id=[% attachment.id %]&action=delete">Delete</a>
+        [% END %]
         </small>
       </td>
 
-      [% IF isviewable %]
+      [% IF !attachment.datasize %]
+        <td width="75%"><b>The content of this attachment has been deleted.</b></td>
+      [% ELSIF isviewable %]
         <td width="75%">
           [% INCLUDE global/textarea.html.tmpl
             id      = 'editFrame'

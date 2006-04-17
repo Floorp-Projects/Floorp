@@ -49,6 +49,7 @@ use Bugzilla::Util;
 use Bugzilla::Bug;
 use Bugzilla::Field;
 use Bugzilla::Attachment;
+use Bugzilla::Token;
 
 Bugzilla->login();
 
@@ -102,6 +103,9 @@ elsif ($action eq "update")
 { 
     Bugzilla->login(LOGIN_REQUIRED);
     update();
+}
+elsif ($action eq "delete") {
+    delete_attachment();
 }
 else 
 { 
@@ -1328,4 +1332,83 @@ sub update
   # Generate and return the UI (HTML page) from the appropriate template.
   $template->process("attachment/updated.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
+}
+
+# Only administrators can delete attachments.
+sub delete_attachment {
+    my $user = Bugzilla->login(LOGIN_REQUIRED);
+    my $dbh = Bugzilla->dbh;
+
+    print $cgi->header();
+
+    $user->in_group('admin')
+      || ThrowUserError('auth_failure', {group  => 'admin',
+                                         action => 'delete',
+                                         object => 'attachment'});
+
+    Param('allow_attachment_deletion')
+      || ThrowUserError('attachment_deletion_disabled');
+
+    # Make sure the administrator is allowed to edit this attachment.
+    my ($attach_id, $bug_id) = validateID();
+    validateCanEdit($attach_id);
+    validateCanChangeAttachment($attach_id);
+
+    my $attachment = Bugzilla::Attachment->get($attach_id);
+    $attachment->datasize || ThrowUserError('attachment_removed');
+
+    # We don't want to let a malicious URL accidentally delete an attachment.
+    my $token = trim($cgi->param('token'));
+    if ($token) {
+        my ($creator_id, $date, $event) = Bugzilla::Token::GetTokenData($token);
+        unless ($creator_id
+                  && ($creator_id == $user->id)
+                  && ($event eq "attachment$attach_id"))
+        {
+            # The token is invalid.
+            ThrowUserError('token_inexistent');
+        }
+
+        # The token is valid. Delete the content of the attachment.
+        my $msg;
+        $vars->{'attachid'} = $attach_id;
+        $vars->{'bugid'} = $bug_id;
+        $vars->{'date'} = $date;
+        $vars->{'reason'} = clean_text($cgi->param('reason') || '');
+        $vars->{'mailrecipients'} = { 'changer' => $user->login };
+
+        $template->process("attachment/delete_reason.txt.tmpl", $vars, \$msg)
+          || ThrowTemplateError($template->error());
+
+        $dbh->bz_lock_tables('attachments WRITE', 'attach_data WRITE', 'flags WRITE');
+        $dbh->do('DELETE FROM attach_data WHERE id = ?', undef, $attach_id);
+        $dbh->do('UPDATE attachments SET mimetype = ?, ispatch = ?, isurl = ?
+                  WHERE attach_id = ?', undef, ('text/plain', 0, 0, $attach_id));
+        $dbh->do('DELETE FROM flags WHERE attach_id = ?', undef, $attach_id);
+        $dbh->bz_unlock_tables;
+
+        # If the attachment is stored locally, remove it.
+        if (-e $attachment->_get_local_filename) {
+            unlink $attachment->_get_local_filename;
+        }
+
+        # Now delete the token.
+        Bugzilla::Token::DeleteToken($token);
+
+        # Paste the reason provided by the admin into a comment.
+        AppendComment($bug_id, $user->id, $msg);
+
+        $template->process("attachment/updated.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+    }
+    else {
+        # Create a token.
+        $token = Bugzilla::Token::IssueSessionToken('attachment' . $attach_id);
+
+        $vars->{'a'} = $attachment;
+        $vars->{'token'} = $token;
+
+        $template->process("attachment/confirm-delete.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+    }
 }

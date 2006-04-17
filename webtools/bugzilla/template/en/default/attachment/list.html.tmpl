@@ -56,7 +56,13 @@
           </a>
         </td>
         <td valign="top">[% attachment.attached FILTER time %]</td>
-        <td valign="top">[% attachment.datasize FILTER unitconvert %]</td>
+        <td valign="top">
+          [% IF attachment.datasize %]
+            [% attachment.datasize FILTER unitconvert %]
+          [% ELSE %]
+            <em>deleted</em>
+          [% END %]
+        </td>
 
         [% IF show_attachment_flags %]
           <td valign="top">

@@ -339,16 +339,16 @@ sub datasize {
     # If we have already retrieved the data, return its size.
     return length($self->{data}) if exists $self->{data};
 
-    ($self->{datasize}) =
+    $self->{datasize} =
         Bugzilla->dbh->selectrow_array("SELECT LENGTH(thedata)
                                         FROM attach_data
                                         WHERE id = ?",
-                                       undef,
-                                       $self->{id});
+                                       undef, $self->{id}) || 0;
 
-    # If there's no attachment data in the database, the attachment
-    # is stored in a local file, so retrieve its size from the file.
-    if ($self->{datasize} == 0) {
+    # If there's no attachment data in the database, either the attachment
+    # is stored in a local file, and so retrieve its size from the file,
+    # or the attachment has been deleted.
+    unless ($self->{datasize}) {
         if (open(AH, $self->_get_local_filename())) {
             binmode AH;
             $self->{datasize} = (stat(AH))[7];
