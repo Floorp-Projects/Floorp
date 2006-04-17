@@ -6701,7 +6701,7 @@ nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 
   if (id == sAddEventListener_id && !(flags & JSRESOLVE_ASSIGNING)) {
     JSString *str = JSVAL_TO_STRING(id);
-    // addEventListener always takes at leat 3 arguments.
+    // addEventListener always takes at least 3 arguments.
     JSFunction *fnc =
       ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
                           AddEventListenerHelper, 3, JSPROP_ENUMERATE);
