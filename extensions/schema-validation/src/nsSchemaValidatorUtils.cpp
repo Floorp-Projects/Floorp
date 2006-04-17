@@ -460,7 +460,7 @@ nsSchemaValidatorUtils::ParseSchemaTime(const nsAString & aStrValue,
 
     PRUint32 usecval = strtoul(NS_ConvertUTF16toUTF8(usec).get(), &pEnd, 10);
     // be carefull, empty usec returns 0
-    if (!usec.IsEmpty() > 0 && (usecval == 0 || usecval == ULONG_MAX)) {
+    if (!usec.IsEmpty() && (usecval == 0 || usecval == ULONG_MAX)) {
       isValid = PR_FALSE;
     } else {
       aTime->hour = strtol(hour, &pEnd, 10);
