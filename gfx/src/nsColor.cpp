@@ -70,13 +70,13 @@ static int ComponentValue(const PRUnichar* aColorSpec, int aLen, int color, int 
   return component;
 }
 
-extern "C" NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
+NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
                                             nscolor* aResult)
 {
   return NS_HexToRGB(NS_ConvertASCIItoUTF16(aColorSpec), aResult);
 }
 
-extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
+NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
                                        nscolor* aResult)
 {
   const PRUnichar* buffer = aColorSpec.get();
@@ -123,7 +123,7 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
 }
 
 // compatible with legacy Nav behavior
-extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
+NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
   int nameLen = aColorSpec.Length();
   const PRUnichar* colorSpec = aColorSpec.get();
@@ -158,7 +158,7 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor*
   return PR_TRUE;
 }
 
-extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
+NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
 {
   char buf[10];
   PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
@@ -166,7 +166,7 @@ extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
   CopyASCIItoUTF16(buf, aResult);
 }
 
-extern "C" NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
+NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
                                           nsAFlatCString& aResult)
 {
   aResult.SetLength(7);
@@ -175,7 +175,7 @@ extern "C" NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
               NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
 }
 
-extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
+NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)
 {
   nsColorName id = nsColorNames::LookupName(aColorName);
   if (eColorName_UNKNOWN < id) {
@@ -188,7 +188,7 @@ extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolo
   return PR_FALSE;
 }
 
-extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
+NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
 {
   PRIntn r, g, b, max, over;
 
@@ -251,7 +251,7 @@ extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor)
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
-extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
+NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
 {
   PRIntn r, g, b, max;
 
@@ -312,7 +312,7 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
-extern "C" NS_GFX_(nscolor)
+NS_GFX_(nscolor)
 NS_ComposeColors(nscolor aBG, nscolor aFG)
 {
   PRIntn bgAlpha = NS_GET_A(aBG);
@@ -355,7 +355,7 @@ HSL_HueToRGB(float m1, float m2, float h)
 }
 
 // The float parameters are all expected to be in the range 0-1
-extern "C" NS_GFX_(nscolor)
+NS_GFX_(nscolor)
 NS_HSL2RGB(float h, float s, float l)
 {
   PRUint8 r, g, b;
