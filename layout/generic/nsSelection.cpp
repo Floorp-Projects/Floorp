@@ -7173,22 +7173,10 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
     // Scroll the selection region into view.
     //
 
-    nsRect anchorRect;
-    nsIScrollableView *anchorScrollableView = 0;
+    nsRect rect;
+    nsIScrollableView *scrollableView = 0;
 
-    result = GetSelectionRegionRectAndScrollableView(
-               nsISelectionController::SELECTION_ANCHOR_REGION,
-               &anchorRect, &anchorScrollableView);
-
-    if (NS_FAILED(result))
-      return result;
-
-    nsRect focusRect;
-    nsIScrollableView *focusScrollableView = 0;
-
-    result = GetSelectionRegionRectAndScrollableView(
-               nsISelectionController::SELECTION_FOCUS_REGION,
-               &focusRect, &focusScrollableView);
+    result = GetSelectionRegionRectAndScrollableView(aRegion, &rect, &scrollableView);
 
     if (NS_FAILED(result))
       return result;
@@ -7196,30 +7184,10 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
     //
     // It's ok if we don't have a scrollable view, just return early.
     //
-    if (!anchorScrollableView && !focusScrollableView)
+    if (!scrollableView)
       return NS_OK;
 
-    if (anchorScrollableView == focusScrollableView) {
-      nsRect newRect;
-      newRect.UnionRect(focusRect, anchorRect);
-
-      result = ScrollRectIntoView(anchorScrollableView, newRect,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
-    }
-
-    if (anchorScrollableView &&
-        aRegion == nsISelectionController::SELECTION_ANCHOR_REGION) {
-      result = ScrollRectIntoView(anchorScrollableView, anchorRect,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
-    }
-    if (focusScrollableView &&
-        aRegion == nsISelectionController::SELECTION_FOCUS_REGION) {
-      result = ScrollRectIntoView(focusScrollableView, focusRect,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE,
-                                  NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
-    }
+    result = ScrollRectIntoView(scrollableView, rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
   }
   return result;
 }
