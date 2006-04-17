@@ -77,7 +77,7 @@ XPC_Log_Finish()
 {
     if(g_InitState == 1)
     {
-        delete g_Spaces;
+        delete [] g_Spaces;
         // we'd like to properly cleanup the LogModule, but nspr owns that
         g_LogMod = nsnull;
     }
