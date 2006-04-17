@@ -1631,7 +1631,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass))
             {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_APPLY_ARGS);
+                                     JSMSG_BAD_APPLY_ARGS, "apply");
                 return JS_FALSE;
             }
             if (!js_GetLengthProperty(cx, aobj, &length))
@@ -1674,6 +1674,59 @@ out:
 }
 #endif /* JS_HAS_APPLY_FUNCTION */
 
+#ifdef NARCISSUS
+static JSBool
+fun_applyConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval)
+{
+    JSObject *aobj;
+    uintN length, i;
+    void *mark;
+    jsval *sp, *newsp, *oldsp;
+    JSBool ok;
+    JSStackFrame *fp;
+
+    if (JSVAL_IS_PRIMITIVE(argv[0]) ||
+        (aobj = JSVAL_TO_OBJECT(argv[0]),
+         OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass &&
+         OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_APPLY_ARGS, "__applyConstruct__");
+        return JS_FALSE;
+    }
+
+    if (!js_GetLengthProperty(cx, aobj, &length))
+        return JS_FALSE;
+
+    if (length >= ARGC_LIMIT)
+        length = ARGC_LIMIT - 1;
+    newsp = sp = js_AllocStack(cx, 2 + length, &mark);
+    if (!sp)
+        return JS_FALSE;
+
+    oldsp = fp->sp;
+    *sp++ = OBJECT_TO_JSVAL(obj);
+    *sp++ = JSVAL_NULL; /* This is filled automagically. */
+    for (i = 0; i < length; i++) {
+        ok = JS_GetElement(cx, aobj, (jsint)i, sp);
+        if (!ok)
+            goto out;
+        sp++;
+    }
+
+    fp = cx->fp;
+    oldsp = fp->sp;
+    fp->sp = sp;
+    ok = js_InvokeConstructor(cx, newsp, length);
+
+    *rval = fp->sp[-1];
+    fp->sp = oldsp;
+out:
+    js_FreeStack(cx, mark);
+    return ok;
+}
+#endif
+
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     {js_toSource_str,   fun_toSource,   0,0,0},
@@ -1684,6 +1737,9 @@ static JSFunctionSpec function_methods[] = {
 #endif
 #if JS_HAS_CALL_FUNCTION
     {call_str,          fun_call,       1,0,0},
+#endif
+#ifdef NARCISSUS
+    {"__applyConstructor__", fun_applyConstructor, 1,0,0},
 #endif
     {0,0,0,0,0}
 };

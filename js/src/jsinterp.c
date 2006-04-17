@@ -1733,6 +1733,83 @@ js_StrictlyEqual(jsval lval, jsval rval)
     return lval == rval;
 }
 
+JSBool
+js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
+{
+    JSFunction *fun;
+    JSObject *obj, *obj2, *proto, *parent;
+    jsval lval, rval;
+    JSClass *clasp, *funclasp;
+
+    fun = NULL;
+    obj2 = NULL;
+    lval = *vp;
+    if (!JSVAL_IS_OBJECT(lval) ||
+        (obj2 = JSVAL_TO_OBJECT(lval)) == NULL ||
+        /* XXX clean up to avoid special cases above ObjectOps layer */
+        OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass ||
+        !obj2->map->ops->construct)
+    {
+        fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
+        if (!fun)
+            return JS_FALSE;
+    }
+
+    clasp = &js_ObjectClass;
+    if (!obj2) {
+        proto = parent = NULL;
+        fun = NULL;
+    } else {
+        /*
+         * Get the constructor prototype object for this function.
+         * Use the nominal 'this' parameter slot, vp[1], as a local
+         * root to protect this prototype, in case it has no other
+         * strong refs.
+         */
+        if (!OBJ_GET_PROPERTY(cx, obj2,
+                              ATOM_TO_JSID(cx->runtime->atomState
+                                           .classPrototypeAtom),
+                              &vp[1])) {
+            return JS_FALSE;
+        }
+        rval = vp[1];
+        proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
+        parent = OBJ_GET_PARENT(cx, obj2);
+
+        if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
+            funclasp = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp;
+            if (funclasp)
+                clasp = funclasp;
+        }
+    }
+    obj = js_NewObject(cx, clasp, proto, parent);
+    if (!obj)
+        return JS_FALSE;
+
+    /* Now we have an object with a constructor method; call it. */
+    vp[1] = OBJECT_TO_JSVAL(obj);
+    if (!js_Invoke(cx, argc, JSINVOKE_CONSTRUCT)) {
+        cx->newborn[GCX_OBJECT] = NULL;
+        return JS_FALSE;
+    }
+
+    /* Check the return value and if it's primitive, force it to be obj. */
+    rval = *vp;
+    if (JSVAL_IS_PRIMITIVE(rval)) {
+        if (!fun && JS_VERSION_IS_ECMA(cx)) {
+            /* native [[Construct]] returning primitive is error */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_NEW_RESULT,
+                                 js_ValueToPrintableString(cx, rval));
+            return JS_FALSE;
+        }
+        *vp = OBJECT_TO_JSVAL(obj);
+    }
+
+    JS_RUNTIME_METER(cx->runtime, constructs);
+    return JS_TRUE;
+}
+
 static JSBool
 InternStringElementId(JSContext *cx, jsval idval, jsid *idp)
 {
@@ -1814,7 +1891,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSStackFrame *fp;
     JSScript *script;
     uintN inlineCallCount;
-    JSObject *obj, *obj2, *proto, *parent;
+    JSObject *obj, *obj2, *parent;
     JSVersion currentVersion, originalVersion;
     JSBranchCallback onbranch;
     JSBool ok, cond;
@@ -1836,7 +1913,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSString *str, *str2;
     jsint i, j;
     jsdouble d, d2;
-    JSClass *clasp, *funclasp;
+    JSClass *clasp;
     JSFunction *fun;
     JSType type;
 #if !defined JS_THREADED_INTERP && defined DEBUG
@@ -3288,82 +3365,13 @@ interrupt:
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
 
-            fun = NULL;
-            obj2 = NULL;
-            lval = *vp;
-            if (!JSVAL_IS_OBJECT(lval) ||
-                (obj2 = JSVAL_TO_OBJECT(lval)) == NULL ||
-                /* XXX clean up to avoid special cases above ObjectOps layer */
-                OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass ||
-                !obj2->map->ops->construct)
-            {
-                fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
-                if (!fun) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-            }
-
-            clasp = &js_ObjectClass;
-            if (!obj2) {
-                proto = parent = NULL;
-                fun = NULL;
-            } else {
-                /*
-                 * Get the constructor prototype object for this function.
-                 * Use the nominal 'this' parameter slot, vp[1], as a local
-                 * root to protect this prototype, in case it has no other
-                 * strong refs.
-                 */
-                ok = OBJ_GET_PROPERTY(cx, obj2,
-                                      ATOM_TO_JSID(rt->atomState
-                                                   .classPrototypeAtom),
-                                      &vp[1]);
-                if (!ok)
-                    goto out;
-                rval = vp[1];
-                proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
-                parent = OBJ_GET_PARENT(cx, obj2);
-
-                if (OBJ_GET_CLASS(cx, obj2) == &js_FunctionClass) {
-                    funclasp = ((JSFunction *)JS_GetPrivate(cx, obj2))->clasp;
-                    if (funclasp)
-                        clasp = funclasp;
-                }
-            }
-            obj = js_NewObject(cx, clasp, proto, parent);
-            if (!obj) {
-                ok = JS_FALSE;
+            ok = js_InvokeConstructor(cx, vp, argc);
+            if (!ok)
                 goto out;
-            }
-
-            /* Now we have an object with a constructor method; call it. */
-            vp[1] = OBJECT_TO_JSVAL(obj);
-            ok = js_Invoke(cx, argc, JSINVOKE_CONSTRUCT);
             RESTORE_SP(fp);
             LOAD_BRANCH_CALLBACK(cx);
             LOAD_INTERRUPT_HANDLER(rt);
-            if (!ok) {
-                cx->newborn[GCX_OBJECT] = NULL;
-                goto out;
-            }
-
-            /* Check the return value and update obj from it. */
-            rval = *vp;
-            if (JSVAL_IS_PRIMITIVE(rval)) {
-                if (!fun && JS_VERSION_IS_ECMA(cx)) {
-                    /* native [[Construct]] returning primitive is error */
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_BAD_NEW_RESULT,
-                                         js_ValueToPrintableString(cx, rval));
-                    ok = JS_FALSE;
-                    goto out;
-                }
-                *vp = OBJECT_TO_JSVAL(obj);
-            } else {
-                obj = JSVAL_TO_OBJECT(rval);
-            }
-            JS_RUNTIME_METER(rt, constructs);
+            obj = JSVAL_TO_OBJECT(*vp);
             len = js_CodeSpec[op].length;
             DO_NEXT_OP(len);
 

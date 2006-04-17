@@ -314,6 +314,9 @@ extern JSBool
 js_StrictlyEqual(jsval lval, jsval rval);
 
 extern JSBool
+js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc);
+
+extern JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result);
 
 JS_END_EXTERN_C
