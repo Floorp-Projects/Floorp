@@ -126,6 +126,8 @@ public:
   // becomes the caller's responsibility.
   void Remove(nsFloatCache* aElement);
 
+  // Steal away aList's nsFloatCache objects and put them in this
+  // list.  aList must not be empty.
   void Append(nsFloatCacheFreeList& aList);
 
 protected:
@@ -147,7 +149,7 @@ public:
 #endif
 
   // Steal away aList's nsFloatCache objects and put them on this
-  // free-list.
+  // free-list.  aList must not be empty.
   void Append(nsFloatCacheList& aList);
 
   void Append(nsFloatCache* aFloatCache);
