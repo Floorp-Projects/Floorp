@@ -14,7 +14,6 @@ reporter.jar:
  content/reporter/reportWizard.js                        (resources/content/reporter/reportWizard.js)
  content/reporter/reporterOverlay.xul                    (resources/content/reporter/reporterOverlay.xul)
  content/reporter/reporterOverlay.js                     (resources/content/reporter/reporterOverlay.js)
- content/reporter/about.xul                              (resources/content/reporter/about.xul)
  content/reporter/error.xhtml                            (resources/content/reporter/error.xhtml)
  content/reporter/report.xhtml                           (resources/content/reporter/report.xhtml)
  skin/classic/reporter/browserOverlay.css                (resources/skin/classic/reporter/browserOverlay.css)
@@ -23,4 +22,3 @@ reporter.jar:
  skin/classic/reporter/reportWizard.css                  (resources/skin/classic/reporter/reportWizard.css)
  skin/classic/reporter/reporter-icon-large.png           (resources/skin/classic/reporter/reporter-icon-large.png)
  skin/classic/reporter/reporter-icon-small.png           (resources/skin/classic/reporter/reporter-icon-small.png)
- skin/classic/reporter/splash.png                        (resources/skin/classic/reporter/splash.png)
