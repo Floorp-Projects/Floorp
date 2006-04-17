@@ -44,6 +44,8 @@
 interface nsIContent;
 interface nsIDocument;
 
+// These interfaces are used by our menu code so we only have to have one
+// nsIDocumentObserver.
 
 //
 // nsIChangeObserver
@@ -74,7 +76,7 @@ interface nsIChangeObserver : nsISupports
 // to be notified when content objects change or children added/removed, etc.
 //
 // We use a central manager to redirect for performance reasons, to avoid
-// every meny/item from getting a call when any change to the document happens.
+// every menu/item from getting a call when any change to the document happens.
 //
 
 [scriptable, uuid(fb31c7e0-1dd1-11b2-8a61-f4697ef53c88)]
@@ -85,6 +87,4 @@ interface nsIChangeManager : nsISupports
   
   nsIChangeObserver Lookup ( in nsIContent aContent ) ;
   
-}; // nsPIChangeManager
-
-
+}; // nsIChangeManager
