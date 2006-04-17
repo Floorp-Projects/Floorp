@@ -1460,6 +1460,7 @@ if ($prod_changed && Param("strict_isolation")) {
 #
 foreach my $id (@idlist) {
     my $query = $basequery;
+    my @bug_values = @values;
     my $bug_obj = new Bugzilla::Bug($id, $whoid);
 
     if ($cgi->param('knob') eq 'reassignbycomponent') {
@@ -1472,7 +1473,7 @@ foreach my $id (@idlist) {
                                            WHERE components.id = ?',
                                            undef, $new_comp_id);
         $query .= ", assigned_to = ?";
-        push(@values, $assignee);
+        push(@bug_values, $assignee);
         if (Param("useqacontact")) {
             $qacontact = $dbh->selectrow_array('SELECT initialqacontact
                                                 FROM components
@@ -1480,7 +1481,7 @@ foreach my $id (@idlist) {
                                                 undef, $new_comp_id);
             if ($qacontact) {
                 $query .= ", qa_contact = ?";
-                push(@values, $qacontact);
+                push(@bug_values, $qacontact);
             }
             else {
                 $query .= ", qa_contact = NULL";
@@ -1703,10 +1704,10 @@ foreach my $id (@idlist) {
         }
     }
     $query .= " WHERE bug_id = ?";
-    push(@values, $id);
+    push(@bug_values, $id);
     
     if ($::comma ne "") {
-        $dbh->do($query, undef, @values);
+        $dbh->do($query, undef, @bug_values);
     }
 
     # Check for duplicates if the bug is [re]open or its resolution is changed.
