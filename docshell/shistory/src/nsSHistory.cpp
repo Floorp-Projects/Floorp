@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -334,27 +334,27 @@ nsSHistory::AddEntry(nsISHEntry * aSHEntry, PRBool aPersist)
 NS_IMETHODIMP
 nsSHistory::GetCount(PRInt32 * aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-	*aResult = mLength;
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mLength;
+  return NS_OK;
 }
 
 /* Get index of the history list */
 NS_IMETHODIMP
 nsSHistory::GetIndex(PRInt32 * aResult)
 {
-    NS_PRECONDITION(aResult, "null out param?");
-	*aResult = mIndex;
-	return NS_OK;
+  NS_PRECONDITION(aResult, "null out param?");
+  *aResult = mIndex;
+  return NS_OK;
 }
 
 /* Get the requestedIndex */
 NS_IMETHODIMP
 nsSHistory::GetRequestedIndex(PRInt32 * aResult)
 {
-    NS_PRECONDITION(aResult, "null out param?");
-    *aResult = mRequestedIndex;
-    return NS_OK;
+  NS_PRECONDITION(aResult, "null out param?");
+  *aResult = mRequestedIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -396,48 +396,48 @@ nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsIHistoryEntry
 NS_IMETHODIMP
 nsSHistory::GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
 {
-     nsresult rv;
-     NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aResult);
 
-     if ((mLength <= 0) || (aIndex < 0) || (aIndex >= mLength))
-	   return NS_ERROR_FAILURE;
+  if ((mLength <= 0) || (aIndex < 0) || (aIndex >= mLength))
+    return NS_ERROR_FAILURE;
 
-     if (!mListRoot) 
-         return NS_ERROR_FAILURE;
+  if (!mListRoot) 
+    return NS_ERROR_FAILURE;
 
-     if (aIndex == 0)
-	 {
-	    *aResult = mListRoot;
-	    NS_ADDREF(*aResult);
-	    return NS_OK;
-	 } 
-	 PRInt32   cnt=0;
-	 nsCOMPtr<nsISHTransaction>  tempPtr;
-       
-       rv = GetRootTransaction(getter_AddRefs(tempPtr));
-       if (NS_FAILED(rv) || !tempPtr)
-               return NS_ERROR_FAILURE;
+  if (aIndex == 0)
+  {
+    *aResult = mListRoot;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  } 
+  PRInt32   cnt=0;
+  nsCOMPtr<nsISHTransaction>  tempPtr;
 
-     while(1) {
-       nsCOMPtr<nsISHTransaction> ptr;
-	   rv = tempPtr->GetNext(getter_AddRefs(ptr));
-	   if (NS_SUCCEEDED(rv) && ptr) {
-          cnt++;
-		  if (cnt == aIndex) {
-			  *aResult = ptr;
-			  NS_ADDREF(*aResult);
-			  break;
-		  }
-		  else {
-            tempPtr = ptr;
-            continue;
-		  }
-	   }  //NS_SUCCEEDED
-	   else 
-		   return NS_ERROR_FAILURE;
-       }  // while 
+  rv = GetRootTransaction(getter_AddRefs(tempPtr));
+  if (NS_FAILED(rv) || !tempPtr)
+    return NS_ERROR_FAILURE;
+
+  while(1) {
+    nsCOMPtr<nsISHTransaction> ptr;
+    rv = tempPtr->GetNext(getter_AddRefs(ptr));
+    if (NS_SUCCEEDED(rv) && ptr) {
+      cnt++;
+      if (cnt == aIndex) {
+        *aResult = ptr;
+        NS_ADDREF(*aResult);
+        break;
+      }
+      else {
+        tempPtr = ptr;
+        continue;
+      }
+    }  //NS_SUCCEEDED
+    else 
+      return NS_ERROR_FAILURE;
+  }  // while 
   
-   return NS_OK;
+  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -445,59 +445,56 @@ nsresult
 nsSHistory::PrintHistory()
 {
 
-      nsCOMPtr<nsISHTransaction>   txn;
-      PRInt32 index = 0;
-      nsresult rv;
+  nsCOMPtr<nsISHTransaction>   txn;
+  PRInt32 index = 0;
+  nsresult rv;
 
-      if (!mListRoot) 
-              return NS_ERROR_FAILURE;
+  if (!mListRoot) 
+    return NS_ERROR_FAILURE;
 
-      txn = mListRoot;
+  txn = mListRoot;
     
-      while (1) {
-		      if (!txn)
-			     break;
-              nsCOMPtr<nsISHEntry>  entry;
-              rv = txn->GetSHEntry(getter_AddRefs(entry));
-              if (NS_FAILED(rv) && !entry)
-                      return NS_ERROR_FAILURE;
+  while (1) {
+    if (!txn)
+      break;
+    nsCOMPtr<nsISHEntry>  entry;
+    rv = txn->GetSHEntry(getter_AddRefs(entry));
+    if (NS_FAILED(rv) && !entry)
+      return NS_ERROR_FAILURE;
 
-              nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
-              nsCOMPtr<nsIURI>  uri;
-              PRUnichar *  title;
+    nsCOMPtr<nsILayoutHistoryState> layoutHistoryState;
+    nsCOMPtr<nsIURI>  uri;
+    XPIDLString title;
               
-              entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
-              nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(entry));
-              if (hEntry) {
-                hEntry->GetURI(getter_AddRefs(uri));
-                hEntry->GetTitle(&title);              
-              }
-              
+    entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
+    nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(entry));
+    if (hEntry) {
+      hEntry->GetURI(getter_AddRefs(uri));
+      hEntry->GetTitle(getter_Copies(title));              
+    }
+
 #if 0
-              nsCAutoString url;
-			  if (uri)
-                 uri->GetSpec(url);
+    nsCAutoString url;
+    if (uri)
+     uri->GetSpec(url);
 
-              printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
-              printf("\t\t URL = %s\n", url);
-              printf("\t\t Title = %s\n", NS_LossyConvertUTF16toASCII(title).get());
-              printf("\t\t layout History Data = %x\n", layoutHistoryState);
+    printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
+    printf("\t\t URL = %s\n", url);
+    printf("\t\t Title = %s\n", NS_LossyConvertUTF16toASCII(title).get());
+    printf("\t\t layout History Data = %x\n", layoutHistoryState);
 #endif
       
-              nsMemory::Free(title);
-              
+    nsCOMPtr<nsISHTransaction> next;
+    rv = txn->GetNext(getter_AddRefs(next));
+    if (NS_SUCCEEDED(rv) && next) {
+      txn = next;
+      index++;
+      continue;
+    }
+    else
+      break;
+  }
 
-              nsCOMPtr<nsISHTransaction> next;
-              rv = txn->GetNext(getter_AddRefs(next));
-              if (NS_SUCCEEDED(rv) && next) {
-                      txn = next;
-                      index++;
-                      continue;
-              }
-              else
-                      break;
-      }
-      
   return NS_OK;
 }
 #endif
@@ -506,10 +503,10 @@ nsSHistory::PrintHistory()
 NS_IMETHODIMP
 nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult=mListRoot;
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult=mListRoot;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
 }
 
 /* Get the max size of the history list */
@@ -661,43 +658,43 @@ nsSHistory::EvictContentViewers(PRInt32 aPreviousIndex, PRInt32 aIndex)
 NS_IMETHODIMP
 nsSHistory::GetCanGoBack(PRBool * aCanGoBack)
 {
-   NS_ENSURE_ARG_POINTER(aCanGoBack);
-   *aCanGoBack = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aCanGoBack);
+  *aCanGoBack = PR_FALSE;
 
-   PRInt32 index = -1;
-   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-   if(index > 0)
-      *aCanGoBack = PR_TRUE;
+  PRInt32 index = -1;
+  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
+  if(index > 0)
+     *aCanGoBack = PR_TRUE;
 
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHistory::GetCanGoForward(PRBool * aCanGoForward)
 {
-    NS_ENSURE_ARG_POINTER(aCanGoForward);
-   *aCanGoForward = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aCanGoForward);
+  *aCanGoForward = PR_FALSE;
 
-   PRInt32 index = -1;
-   PRInt32 count = -1;
+  PRInt32 index = -1;
+  PRInt32 count = -1;
 
-   NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
-   NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetIndex(&index), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetCount(&count), NS_ERROR_FAILURE);
 
-   if((index >= 0) && (index < (count - 1)))
-      *aCanGoForward = PR_TRUE;
+  if((index >= 0) && (index < (count - 1)))
+    *aCanGoForward = PR_TRUE;
 
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHistory::GoBack()
 {
-	PRBool canGoBack = PR_FALSE;
+  PRBool canGoBack = PR_FALSE;
 
-	GetCanGoBack(&canGoBack);
-	if (!canGoBack)  // Can't go back
-		return NS_ERROR_UNEXPECTED;
+  GetCanGoBack(&canGoBack);
+  if (!canGoBack)  // Can't go back
+    return NS_ERROR_UNEXPECTED;
   return LoadEntry(mIndex-1, nsIDocShellLoadInfo::loadHistory, HIST_CMD_BACK);
 }
 
@@ -705,41 +702,40 @@ nsSHistory::GoBack()
 NS_IMETHODIMP
 nsSHistory::GoForward()
 {
-	PRBool canGoForward = PR_FALSE;
+  PRBool canGoForward = PR_FALSE;
 
-	GetCanGoForward(&canGoForward);
-	if (!canGoForward)  // Can't go forward
-		return NS_ERROR_UNEXPECTED;
+  GetCanGoForward(&canGoForward);
+  if (!canGoForward)  // Can't go forward
+    return NS_ERROR_UNEXPECTED;
   return LoadEntry(mIndex+1, nsIDocShellLoadInfo::loadHistory, HIST_CMD_FORWARD);
-
 }
 
 NS_IMETHODIMP
 nsSHistory::Reload(PRUint32 aReloadFlags)
 {
   nsresult rv;
-	nsDocShellInfoLoadType loadType;
-	if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
-	    aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
-	{
-		loadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
-	}
-	else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
-	{
-		loadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
-	}
-	else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
-	{
-		loadType = nsIDocShellLoadInfo::loadReloadBypassCache;
-	}
+  nsDocShellInfoLoadType loadType;
+  if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY && 
+      aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+  {
+    loadType = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+  }
+  else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY)
+  {
+    loadType = nsIDocShellLoadInfo::loadReloadBypassProxy;
+  }
+  else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)
+  {
+    loadType = nsIDocShellLoadInfo::loadReloadBypassCache;
+  }
   else if (aReloadFlags & nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE)
   {
-		loadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+    loadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
   }
   else
-	{
-		loadType = nsIDocShellLoadInfo::loadReloadNormal;
-	}
+  {
+    loadType = nsIDocShellLoadInfo::loadReloadNormal;
+  }
   
   // Notify listeners
   PRBool canNavigate = PR_TRUE;
@@ -758,7 +754,7 @@ nsSHistory::Reload(PRUint32 aReloadFlags)
   if (!canNavigate)
     return NS_OK;
 
-	return LoadEntry(mIndex, loadType, HIST_CMD_RELOAD);
+  return LoadEntry(mIndex, loadType, HIST_CMD_RELOAD);
 }
 
 void
@@ -970,16 +966,15 @@ nsSHistory::UpdateIndex()
 NS_IMETHODIMP
 nsSHistory::Stop(PRUint32 aStopFlags)
 {
-	//Not implemented
-   return NS_OK;
+  //Not implemented
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsSHistory::GetDocument(nsIDOMDocument** aDocument)
 {
-
-	// Not implemented
+  // Not implemented
   return NS_OK;
 }
 
@@ -1001,17 +996,17 @@ nsSHistory::GetCurrentURI(nsIURI** aResultURI)
 NS_IMETHODIMP
 nsSHistory::GetReferringURI(nsIURI** aURI)
 {
-    *aURI = nsnull;
-    // Not implemented
-    return NS_OK;
+  *aURI = nsnull;
+  // Not implemented
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsSHistory::SetSessionHistory(nsISHistory* aSessionHistory)
 {
-   // Not implemented
-   return NS_OK;
+  // Not implemented
+  return NS_OK;
 }
 
 	
@@ -1019,7 +1014,7 @@ NS_IMETHODIMP
 nsSHistory::GetSessionHistory(nsISHistory** aSessionHistory)
 {
   // Not implemented
-   return NS_OK;
+  return NS_OK;
 }
 
 
@@ -1036,7 +1031,7 @@ nsSHistory::LoadURI(const PRUnichar* aURI,
 NS_IMETHODIMP
 nsSHistory::GotoIndex(PRInt32 aIndex)
 {
-	return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_GOTOINDEX);
+  return LoadEntry(aIndex, nsIDocShellLoadInfo::loadHistory, HIST_CMD_GOTOINDEX);
 }
 
 NS_IMETHODIMP
@@ -1124,10 +1119,10 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
   
 
   if (!docShell) {
-     // we did not successfully go to the proper index.
-     // return error.
-      mRequestedIndex = -1;
-      return NS_ERROR_FAILURE;
+    // we did not successfully go to the proper index.
+    // return error.
+    mRequestedIndex = -1;
+    return NS_ERROR_FAILURE;
   }
 
   // Start the load on the appropriate docshell
@@ -1177,21 +1172,21 @@ nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsID
   //XXX What to do if the children count don't match
     
   for (PRInt32 i=0; i<ncnt; i++){
-	  nsCOMPtr<nsISHEntry> pChild, nChild;
+    nsCOMPtr<nsISHEntry> pChild, nChild;
     nsCOMPtr<nsIDocShellTreeItem> dsTreeItemChild;
 	  
     prevContainer->GetChildAt(i, getter_AddRefs(pChild));
-	  nextContainer->GetChildAt(i, getter_AddRefs(nChild));
+    nextContainer->GetChildAt(i, getter_AddRefs(nChild));
     if (dsCount > 0)
-	    dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
+      dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
 
-	  if (!dsTreeItemChild)
+    if (!dsTreeItemChild)
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> dsChild(do_QueryInterface(dsTreeItemChild));
 
-	  CompareFrames(pChild, nChild, dsChild, aLoadType, aIsFrameFound);
-	}     
+    CompareFrames(pChild, nChild, dsChild, aLoadType, aIsFrameFound);
+  }     
   return result;
 }
 
@@ -1231,12 +1226,12 @@ nsSHistory::SetRootDocShell(nsIDocShell * aDocShell)
 NS_IMETHODIMP
 nsSHistory::GetRootDocShell(nsIDocShell ** aDocShell)
 {
-   NS_ENSURE_ARG_POINTER(aDocShell);
+  NS_ENSURE_ARG_POINTER(aDocShell);
 
-   *aDocShell = mRootDocShell;
-   //Not refcounted. May this method should not be available for public
+  *aDocShell = mRootDocShell;
+  //Not refcounted. May this method should not be available for public
   // NS_IF_ADDREF(*aDocShell);
-   return NS_OK;
+  return NS_OK;
 }
 
 
@@ -1294,7 +1289,7 @@ nsSHEnumerator::GetNext(nsISupports **aItem)
     mIndex++;
     nsCOMPtr<nsIHistoryEntry> hEntry;
     result = mSHistory->GetEntryAtIndex(mIndex, PR_FALSE, getter_AddRefs(hEntry));
-  	if (hEntry)
+    if (hEntry)
       result = CallQueryInterface(hEntry, aItem);
   }
   return result;
