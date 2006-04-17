@@ -218,7 +218,7 @@ nsSAXXMLReader::HandleEndNamespaceDecl(const PRUnichar *aPrefix)
     return NS_OK;
   }
   
-  if (!aPrefix) {
+  if (aPrefix) {
     return mContentHandler->EndPrefixMapping(nsDependentString(aPrefix));
   }
 
