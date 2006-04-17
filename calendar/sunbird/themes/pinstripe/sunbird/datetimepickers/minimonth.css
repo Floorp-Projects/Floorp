@@ -117,10 +117,6 @@
   color: #d2d2d2;
 }
 
-.minimonth-day[budy="true"] {
-  font-weight : bold;
-}
-
 .minimonth-day[today="true"] {
   background-color: #dfeaf4;
 }
