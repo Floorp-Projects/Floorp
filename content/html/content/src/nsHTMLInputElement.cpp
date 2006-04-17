@@ -603,6 +603,8 @@ nsHTMLInputElement::SetSize(PRUint32 aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAString& aValue)
 {
+  static const char* kWhitespace = "\n\r\t\b";
+
   if (mType == NS_FORM_INPUT_TEXT || mType == NS_FORM_INPUT_PASSWORD ||
       mType == NS_FORM_INPUT_FILE) {
     // No need to flush here, if there's no frame created for this
@@ -631,6 +633,9 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
       } else {
         CopyUTF8toUTF16(mValue, aValue);
       }
+
+      // Bug 114997: trim \n, etc. for non-hidden inputs
+      aValue = nsContentUtils::TrimCharsInSet(kWhitespace, aValue);
     }
 
     return NS_OK;
@@ -641,6 +646,10 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
       (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
     // The default value of a radio or checkbox input is "on".
     aValue.AssignLiteral("on");
+  }
+
+  if (mType != NS_FORM_INPUT_HIDDEN) {
+    aValue = nsContentUtils::TrimCharsInSet(kWhitespace, aValue);
   }
 
   return NS_OK;

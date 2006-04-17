@@ -839,8 +839,15 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     // Get value and remove mandatory quotes
     static const char* kWhitespace = "\n\r\t\b";
+
+    // Bug 114997: Don't trim whitespace on <input value="...">:
+    // Using ?: outside the function call would be more efficient, but
+    // we don't trust ?: with references.
     const nsAString& v =
-      nsContentUtils::TrimCharsInSet(kWhitespace, aNode.GetValueAt(i));
+      nsContentUtils::TrimCharsInSet(
+        (nodeType == eHTMLTag_input &&
+          keyAtom == nsHTMLAtoms::value) ?
+        "" : kWhitespace, aNode.GetValueAt(i));
 
     if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
       NS_ConvertUTF16toUTF8 cname(v);
