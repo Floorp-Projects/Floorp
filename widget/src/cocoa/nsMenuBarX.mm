@@ -932,7 +932,7 @@ nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
 // nsIChangeManager
 //
 // We don't use a |nsSupportsHashtable| because we know that the lifetime of all these items
-// is bouded by the lifetime of the menubar. No need to add any more strong refs to the
+// is bounded by the lifetime of the menubar. No need to add any more strong refs to the
 // picture because the containment hierarchy already uses strong refs.
 //
 

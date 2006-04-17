@@ -226,7 +226,7 @@ NS_IMETHODIMP nsMenuX::AddItem(nsISupports* aItem)
 NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
 {
   if (!aMenuItem)
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_INVALID_ARG;
 
   mMenuItemsArray.AppendObject(aMenuItem); // owning ref
 
