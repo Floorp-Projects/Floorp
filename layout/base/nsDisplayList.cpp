@@ -228,10 +228,8 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt) co
   return nsnull;
 }
 
-typedef PRBool (* SortLEQ)(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
-                           void* aClosure);
-
-static void Sort(nsDisplayList* aList, PRInt32 aCount, SortLEQ aCmp, void* aClosure) {
+static void Sort(nsDisplayList* aList, PRInt32 aCount, nsDisplayList::SortLEQ aCmp,
+                 void* aClosure) {
   if (aCount < 2)
     return;
 
@@ -326,13 +324,17 @@ void nsDisplayList::ExplodeAnonymousChildLists(nsDisplayListBuilder* aBuilder) {
 void nsDisplayList::SortByZOrder(nsDisplayListBuilder* aBuilder,
                                  nsIContent* aCommonAncestor) {
   ExplodeAnonymousChildLists(aBuilder);
-  Sort(this, Count(), IsZOrderLEQ, aCommonAncestor);
+  Sort(IsZOrderLEQ, aCommonAncestor);
 }
 
 void nsDisplayList::SortByContentOrder(nsDisplayListBuilder* aBuilder,
                                        nsIContent* aCommonAncestor) {
   ExplodeAnonymousChildLists(aBuilder);
-  Sort(this, Count(), IsContentLEQ, aCommonAncestor);
+  Sort(IsContentLEQ, aCommonAncestor);
+}
+
+void nsDisplayList::Sort(SortLEQ aCmp, void* aClosure) {
+  ::Sort(this, Count(), aCmp, aClosure);
 }
 
 static PRBool

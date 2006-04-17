@@ -552,6 +552,16 @@ public:
   void SortByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
 
   /**
+   * Generic stable sort. Take care, because some of the items might be nsDisplayLists
+   * themselves.
+   * aCmp(item1, item2) should return true if item1 <= item2. We sort the items
+   * into increasing order.
+   */
+  typedef PRBool (* SortLEQ)(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
+                             void* aClosure);
+  void Sort(SortLEQ aCmp, void* aClosure);
+
+  /**
    * Optimize the display list for visibility, removing any elements that
    * are not visible. We put this logic here so it can be shared by top-level
    * painting and also display items that maintain child lists.

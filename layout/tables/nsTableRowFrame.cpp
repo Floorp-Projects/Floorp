@@ -582,7 +582,6 @@ nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
-
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
   nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
   TableBackgroundPainter painter(tableFrame,
@@ -600,7 +599,8 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleInSelection(aBuilder))
     return NS_OK;
 
-  if (aBuilder->IsAtRootOfPseudoStackingContext()) {
+  PRBool isRoot = aBuilder->IsAtRootOfPseudoStackingContext();
+  if (isRoot) {
     // This background is created regardless of whether this frame is
     // visible or not. Visibility decisions are delegated to the
     // table background painter.
@@ -612,7 +612,7 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists);
+  return nsTableFrame::DisplayGenericTablePart(aBuilder, this, aDirtyRect, aLists, isRoot);
 }
 
 PRIntn
