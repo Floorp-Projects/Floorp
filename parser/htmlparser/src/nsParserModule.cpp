@@ -50,6 +50,9 @@
 //#include "nsTextTokenizer.h"
 #include "nsElementTable.h"
 #include "nsParserService.h"
+#include "nsSAXAttributes.h"
+#include "nsSAXLocator.h"
+#include "nsSAXXMLReader.h"
 
 #ifdef MOZ_VIEW_SOURCE
 #include "nsViewSourceHTML.h"
@@ -75,6 +78,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
 #endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXAttributes)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXLocator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXXMLReader)
+
 static const nsModuleComponentInfo gComponents[] = {
 
 #if defined(NS_DEBUG) || defined(MOZ_PERF_METRICS)
@@ -91,6 +98,25 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_PARSERSERVICE_CID,
     NS_PARSERSERVICE_CONTRACTID,
     nsParserServiceConstructor
+  },
+  {
+    NS_SAXATTRIBUTES_CLASSNAME,
+    NS_SAXATTRIBUTES_CID,
+    NS_SAXATTRIBUTES_CONTRACTID,
+    nsSAXAttributesConstructor
+  },
+  {
+    NS_SAXLOCATOR_CLASSNAME,
+    NS_SAXLOCATOR_CID,
+    NS_SAXLOCATOR_CONTRACTID,
+    nsSAXLocatorConstructor
+  },
+  
+  {
+    NS_SAXXMLREADER_CLASSNAME,
+    NS_SAXXMLREADER_CID,
+    NS_SAXXMLREADER_CONTRACTID,
+    nsSAXXMLReaderConstructor
   }
 };
 

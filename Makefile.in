@@ -164,6 +164,7 @@ tier_9_dirs	+= \
 		modules/libimg \
 		caps \
 		parser/expat \
+		parser/xml \
 		parser/htmlparser \
 		gfx \
 		modules/libpr0n \
