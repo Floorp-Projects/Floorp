@@ -63,6 +63,19 @@ public:
                          const nsACString& aGenericFamily,
                          nsStringArray& aListOfFonts);
 
+    static PRInt32 DPI() {
+        if (sDPI == -1) {
+            InitDPI();
+        }
+        NS_ASSERTION(sDPI != 0, "Something is wrong");
+        return sDPI;
+    }
+
+protected:
+
+    static void InitDPI();
+
+    static PRInt32 sDPI;
 };
 
 #endif /* GFX_PLATFORM_GTK_H */
