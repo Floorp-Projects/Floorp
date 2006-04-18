@@ -83,7 +83,6 @@ endif
 STATIC_LIBS += \
 	xpcom_core \
 	mozreg_s \
-	unicharutil_s \
 	ucvutil_s \
 	gkgfx \
 	gfxshared_s \

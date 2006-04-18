@@ -71,7 +71,7 @@ DEFINES += \
 
 ifdef MOZ_ENABLE_CAIRO_GFX
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OS_LIBS += usp10.lib
+OS_LIBS += $(call EXPAND_LIBNAME,usp10)
 endif
 ifneq (,$(filter $(MOZ_GFX_TOOLKIT),mac cocoa))
 ifdef MOZ_ENABLE_GLITZ
