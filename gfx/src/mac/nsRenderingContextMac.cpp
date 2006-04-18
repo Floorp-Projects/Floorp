@@ -1510,3 +1510,13 @@ nsRenderingContextMac::OnTigerOrLater()
   }
   return sOnTigerOrLater;
 }
+
+void*
+nsRenderingContextMac::GetNativeGraphicData(GraphicDataType aType)
+{
+  if (aType == NATIVE_MAC_THING) {
+    return mPort;
+  }
+
+  return nsnull;
+}

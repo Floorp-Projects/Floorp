@@ -150,6 +150,7 @@ public:
   NS_IMETHOD ReleaseBackbuffer(void);
   NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
 
+  virtual void* GetNativeGraphicData(GraphicDataType aType);
 
 #ifdef MOZ_MATHML
   /**
