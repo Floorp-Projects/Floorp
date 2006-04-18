@@ -905,7 +905,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mMaxConnections = (PRUint16) CLAMP(val, 1, 0xffff);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS,
-                                      mMaxRequestDelay);
+                                      mMaxConnections);
         }
     }
 
