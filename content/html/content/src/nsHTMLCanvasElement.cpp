@@ -50,9 +50,7 @@
 #include "prmem.h"
 
 #include "nsICanvasElement.h"
-
-#include "gfxIImageFrame.h"
-#include "imgIContainer.h"
+#include "nsIRenderingContext.h"
 
 #include "nsICanvasRenderingContextInternal.h"
 
@@ -83,9 +81,10 @@ public:
   NS_DECL_NSIDOMHTMLCANVASELEMENT
 
   // nsICanvasElement
-  NS_IMETHOD GetCanvasImageContainer(imgIContainer **aImageContainer);
   NS_IMETHOD GetPrimaryCanvasFrame(nsIFrame **aFrame);
-  NS_IMETHOD UpdateImageFrame();
+  NS_IMETHOD GetSize(PRUint32 *width, PRUint32 *height);
+  NS_IMETHOD RenderContexts(nsIRenderingContext *ctx);
+  NS_IMETHOD RenderContextsToSurface(struct _cairo_surface *surf);
   virtual PRBool IsWriteOnly();
   virtual void SetWriteOnly();
 
@@ -109,14 +108,10 @@ public:
                            PRBool aNotify);
 protected:
   nsIntSize GetWidthHeight();
-  nsresult UpdateImageContainer(PRBool forceCreate);
   nsresult UpdateContext();
 
   nsString mCurrentContextId;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
-
-  nsCOMPtr<imgIContainer>  mImageContainer;
-  nsCOMPtr<gfxIImageFrame> mImageFrame;
   
 public:
   // Record whether this canvas should be write-only or not.
@@ -196,7 +191,7 @@ nsHTMLCanvasElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (NS_SUCCEEDED(rv) && mCurrentContext &&
       (aName == nsHTMLAtoms::width || aName == nsHTMLAtoms::height))
   {
-    rv = UpdateImageContainer(PR_FALSE);
+    rv = UpdateContext();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -400,7 +395,7 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
     rv = mCurrentContext->SetCanvasElement(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = UpdateImageContainer(PR_TRUE);
+    rv = UpdateContext();
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentContextId.Assign(aContextId);
@@ -414,81 +409,50 @@ nsHTMLCanvasElement::GetContext(const nsAString& aContextId,
 }
 
 nsresult
-nsHTMLCanvasElement::UpdateImageContainer(PRBool forceCreate)
-{
-  nsresult rv = NS_OK;
-
-  // don't create if we don't already have one,
-  // and no frame or context has asked for one.
-  if (!forceCreate && !mImageFrame)
-    return NS_OK;
-
-  nsIntSize sz = GetWidthHeight();
-  PRInt32 w = 0, h = 0;
-
-  if (mImageFrame) {
-    mImageFrame->GetWidth(&w);
-    mImageFrame->GetHeight(&h);
-  }
-
-  if (sz.width != w || sz.height != h) {
-    mImageContainer = do_CreateInstance("@mozilla.org/image/container;1");
-    mImageContainer->Init(sz.width, sz.height, nsnull);
-
-    mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    if (!mImageFrame)
-      return NS_ERROR_FAILURE;
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-    rv = mImageFrame->Init(0, 0, sz.width, sz.height, gfxIFormats::BGR_A8, 24);
-#else
-    rv = mImageFrame->Init(0, 0, sz.width, sz.height, gfxIFormats::RGB_A8, 24);
-#endif
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mImageContainer->AppendFrame(mImageFrame);
-  }
-
-  return UpdateContext();
-}
-
-nsresult
 nsHTMLCanvasElement::UpdateContext()
 {
-  if (mCurrentContext)
-    return mCurrentContext->SetTargetImageFrame(mImageFrame);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::GetCanvasImageContainer(imgIContainer **aImageContainer)
-{
-  nsresult rv;
-
-  if (!mImageContainer) {
-    rv = UpdateImageContainer(PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = NS_OK;
+  if (mCurrentContext) {
+    nsIntSize sz = GetWidthHeight();
+    rv = mCurrentContext->SetDimensions(sz.width, sz.height);
   }
 
-  NS_IF_ADDREF(*aImageContainer = mImageContainer);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetPrimaryCanvasFrame(nsIFrame **aFrame)
 {
-  *aFrame = GetPrimaryFrame(PR_FALSE);
+  *aFrame = GetPrimaryFrame(PR_TRUE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::UpdateImageFrame()
+nsHTMLCanvasElement::GetSize(PRUint32 *width, PRUint32 *height)
 {
-  if (mCurrentContext)
-    return mCurrentContext->UpdateImageFrame();
+  nsIntSize sz = GetWidthHeight();
+  *width = sz.width;
+  *height = sz.height;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::RenderContexts(nsIRenderingContext *rc)
+{
+  if (!mCurrentContext)
+    return NS_OK;
+
+  return mCurrentContext->Render(rc);
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::RenderContextsToSurface(struct _cairo_surface *surf)
+{
+  if (!mCurrentContext)
+    return NS_OK;
+
+  return mCurrentContext->RenderToSurface(surf);
 }
 
 PRBool

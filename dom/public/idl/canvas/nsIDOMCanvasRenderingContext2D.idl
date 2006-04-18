@@ -39,6 +39,7 @@
 #include "nsIVariant.idl"
 
 interface nsIDOMWindow;
+interface nsIDOMHTMLElement;
 interface nsIDOMHTMLImageElement;
 interface nsIDOMHTMLCanvasElement;
 
@@ -53,7 +54,7 @@ interface nsIDOMCanvasPattern : nsISupports
 {
 };
 
-[scriptable, uuid(15487cf4-292b-49aa-bc36-17d9099f77a7)]
+[scriptable, uuid(ab27f42d-e1e1-4ef6-9c83-059a81da479b)]
 interface nsIDOMCanvasRenderingContext2D : nsISupports
 {
   // back-reference to the canvas element for which
@@ -79,8 +80,8 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
 
   nsIDOMCanvasGradient createLinearGradient (in float x0, in float y0, in float x1, in float y1);
   nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
-  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLImageElement image, in DOMString repetition);
-
+  //nsIDOMCanvasPattern createPattern(in nsIDOMHTMLImageElement image, in DOMString repetition);
+  nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, in DOMString repetition);
   attribute float lineWidth; /* default 1 */
   attribute DOMString lineCap; /* "butt", "round", "square" (default) */
   attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */

@@ -39,14 +39,16 @@
 #define nsICanvasRenderingContextInternal_h___
 
 #include "nsISupports.h"
-#include "nsPresContext.h"
-#include "gfxIImageFrame.h"
 #include "nsICanvasElement.h"
 #include "nsIInputStream.h"
 
-// {0be74436-51a3-4be3-8357-ede741750080}
+// {05150761-22A3-4e8d-A03E-EC53CB731C70}
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-  { 0x0be74436, 0x51a3, 0x4be3, { 0x83, 0x57, 0xed, 0xe7, 0x41, 0x75, 0x00, 0x80 } }
+  { 0x5150761, 0x22a3, 0x4e8d, { 0xa0, 0x3e, 0xec, 0x53, 0xcb, 0x73, 0x1c, 0x70 } }
+
+class nsIRenderingContext;
+
+struct _cairo_surface;
 
 class nsICanvasRenderingContextInternal : public nsISupports {
 public:
@@ -56,8 +58,15 @@ public:
   // with nsnull when the element is going away.
   NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas) = 0;
 
-  // Will be called whenever the target image frame changes
-  NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame) = 0;
+  // Sets the dimensions of the canvas, in pixels.  Called
+  // whenever the size of the element changes.
+  NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height) = 0;
+
+  // Render the canvas at the origin of the given nsIRenderingContext
+  NS_IMETHOD Render(nsIRenderingContext *rc) = 0;
+
+  // Render the canvas at the origin of the given cairo surface
+  NS_IMETHOD RenderToSurface(struct _cairo_surface *surf) = 0;
 
   // Gives you a stream containing the image represented by this context.
   // The format is given in aMimeTime, for example "image/png".
@@ -68,10 +77,6 @@ public:
   NS_IMETHOD GetInputStream(const nsACString& aMimeType,
                             const nsAString& aEncoderOptions,
                             nsIInputStream **aStream) = 0;
-
-  // Will be called whenever the element needs to be redrawn,
-  // e.g. due to a Redraw on the frame.
-  NS_IMETHOD UpdateImageFrame() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

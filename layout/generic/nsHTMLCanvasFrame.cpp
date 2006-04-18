@@ -47,6 +47,8 @@
 #include "nsICanvasElement.h"
 #include "nsDisplayList.h"
 
+#include "nsTransform2D.h"
+
 nsIFrame*
 NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
@@ -84,20 +86,13 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
   NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
 
-  nsresult rv = canvas->GetCanvasImageContainer(getter_AddRefs(mImageContainer));
+  PRUint32 w, h;
+  nsresult rv = canvas->GetSize (&w, &h);
   NS_ENSURE_SUCCESS(rv, rv);
 
   float p2t = GetPresContext()->PixelsToTwips();
 
-  if (mImageContainer) {
-    PRInt32 w, h;
-    mImageContainer->GetWidth(&w);
-    mImageContainer->GetHeight(&h);
-
-    mCanvasSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
-  } else {
-    mCanvasSize.SizeTo(0, 0);
-  }
+  mCanvasSize.SizeTo(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
   if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
     aMetrics.width = mCanvasSize.width;
@@ -167,10 +162,39 @@ nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
                                const nsRect& aDirtyRect, nsPoint aPt) 
 {
   nsRect inner = GetInnerArea() + aPt;
-  nsRect src(0, 0, mCanvasSize.width, mCanvasSize.height);
 
-  // XXX this should just draw the dirty area
-  aRenderingContext.DrawImage(mImageContainer, src, inner);
+  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
+  if (!canvas)
+    return;
+
+  float t2p = GetPresContext()->TwipsToPixels();
+  float p2t = GetPresContext()->PixelsToTwips();
+
+  // XXXvlad clip to aDirtyRect!
+
+  if (inner.width != mCanvasSize.width ||
+      inner.height != mCanvasSize.height)
+  {
+    float sx = inner.width / (float) mCanvasSize.width;
+    float sy = inner.height / (float) mCanvasSize.height;
+
+    aRenderingContext.PushState();
+    aRenderingContext.Translate(inner.x, inner.y);
+    aRenderingContext.Scale(sx, sy);
+
+    canvas->RenderContexts(&aRenderingContext);
+
+    aRenderingContext.PopState();
+  } else {
+    //nsIRenderingContext::AutoPushTranslation(&aRenderingContext, px, py);
+
+    aRenderingContext.PushState();
+    aRenderingContext.Translate(inner.x, inner.y);
+
+    canvas->RenderContexts(&aRenderingContext);
+
+    aRenderingContext.PopState();
+  }
 }
 
 static void PaintCanvas(nsIFrame* aFrame, nsIRenderingContext* aCtx,
@@ -187,27 +211,12 @@ nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return NS_OK;
 
-  // REVIEW: We don't need any special logic here for deciding which layer
-  // to put the background in ... it goes in aLists.BorderBackground() and
-  // then if we have a block parent, it will put our background in the right
-  // place.
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
-  // REVIEW: Checking mRect.IsEmpty() makes no sense to me, so I removed it.
-  // It can't have been protecting us against bad situations with zero-size
-  // images since adding a border would make the rect non-empty.
 
-  // make sure that the rendering context has updated the
-  // image frame
-  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
-  NS_ENSURE_TRUE(canvas, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(canvas->UpdateImageFrame(), NS_ERROR_FAILURE);
-
-  if (mImageContainer) {
-    rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-            nsDisplayGeneric(this, ::PaintCanvas, "Canvas"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+         nsDisplayGeneric(this, ::PaintCanvas, "Canvas"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return DisplaySelectionOverlay(aBuilder, aLists,
                                  nsISelectionDisplay::DISPLAY_IMAGES);

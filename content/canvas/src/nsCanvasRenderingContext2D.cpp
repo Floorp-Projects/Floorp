@@ -35,6 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+
+#include "prmem.h"
+
 #include "nsIServiceManager.h"
 
 #include "nsContentUtils.h"
@@ -66,7 +73,9 @@
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
+#include "nsTransform2D.h"
 #include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
 #include "nsIBlender.h"
 #include "nsGfxCIID.h"
 #include "nsIDrawingSurface.h"
@@ -79,8 +88,34 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 
+#include "nsTArray.h"
+
 #include "cairo.h"
 #include "imgIEncoder.h"
+
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#include "gfxASurface.h"
+#endif
+
+#ifdef XP_WIN
+#include "cairo-win32.h"
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+#include "cairo-xlib.h"
+#include "cairo-xlib-xrender.h"
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+#endif
+
+#ifdef XP_MACOSX
+#include <Quickdraw.h>
+#include <CGContext.h>
+#ifndef kCGBitmapByteOrder32Host
+#define kCGBitmapByteOrder32Host 0
+#endif
+#endif
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 
@@ -118,9 +153,12 @@ public:
     {
         nscolor color;
 
+        if (offset < 0.0 || offset > 1.0)
+            return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
         nsresult rv = mCSSParser->ParseColorString(nsString(colorstr), nsnull, 0, PR_TRUE, &color);
         if (NS_FAILED(rv))
-            return PR_FALSE;
+            return NS_ERROR_DOM_SYNTAX_ERR;
 
         cairo_pattern_add_color_stop_rgba (mPattern, (double) offset,
                                            NS_GET_R(color) / 255.0,
@@ -160,8 +198,8 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
 
     nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree,
-                    nsIURI* URIForSecurityCheck)
-        : mPattern(cpat), mData(dataToFree), mURI(URIForSecurityCheck)
+                    nsIURI* URIForSecurityCheck, PRBool forceWriteOnly)
+        : mPattern(cpat), mData(dataToFree), mURI(URIForSecurityCheck), mForceWriteOnly(forceWriteOnly)
     { }
 
     ~nsCanvasPattern() {
@@ -176,6 +214,7 @@ public:
     }
     
     nsIURI* GetURI() { return mURI; }
+    PRBool GetForceWriteOnly() { return mForceWriteOnly; }
 
     NS_DECL_ISUPPORTS
 
@@ -183,6 +222,7 @@ protected:
     cairo_pattern_t *mPattern;
     PRUint8 *mData;
     nsCOMPtr<nsIURI> mURI;
+    PRPackedBool mForceWriteOnly;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
@@ -213,11 +253,12 @@ public:
 
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
-    NS_IMETHOD SetTargetImageFrame(gfxIImageFrame* aImageFrame);
+    NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
+    NS_IMETHOD Render(nsIRenderingContext *rc);
+    NS_IMETHOD RenderToSurface(cairo_surface_t *surf);
     NS_IMETHOD GetInputStream(const nsACString& aMimeType,
                               const nsAString& aEncoderOptions,
                               nsIInputStream **aStream);
-    NS_IMETHOD UpdateImageFrame();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -239,7 +280,7 @@ protected:
         STYLE_MAX
     };
 
-    PRBool StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhichStyle);
+    nsresult SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhichStyle);
     void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
     void DirtyAllStyles();
@@ -247,12 +288,10 @@ protected:
     
     // If aURI has a different origin than the current script, then
     // we make the canvas write-only so bad guys can't extract the pixel
-    // data.
-    void DoDrawImageSecurityCheck(nsIURI* aURI);
-    // If aImage is a write-only canvas, then we make this canvas write-only
-    // so bad guys can't extract the pixel data of foreign-origin images
-    // by copying them into a canvas and then that canvas into another canvas.
-    void DoDrawCanvasSecurityCheck(nsIDOMHTMLCanvasElement* aImage);
+    // data.  If forceWriteOnly is set, we force write only to be set
+    // and ignore aURI.  (This is used for when the original data came
+    // from a <canvas> that had write-only set.)
+    void DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceWriteOnly);
 
     // Member vars
     PRInt32 mWidth, mHeight;
@@ -261,11 +300,6 @@ protected:
     // so these are not nsCOMPtrs
     nsICanvasElement* mCanvasElement;
 
-    // image bits
-    nsCOMPtr<gfxIImageFrame> mImageFrame;
-
-    PRBool mDirty;
-
     // our CSS parser, for colors and whatnot
     nsCOMPtr<nsICSSParser> mCSSParser;
 
@@ -273,15 +307,60 @@ protected:
     PRUint32 mSaveCount;
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
-    unsigned char *mSurfaceData;
-    float mGlobalAlpha;
+
+    // only non-null if mSurface is an image surface
+    PRUint8 *mImageSurfaceData;
 
     // style handling
     PRInt32 mLastStyle;
     PRPackedBool mDirtyStyle[STYLE_MAX];
-    nscolor mColorStyles[STYLE_STACK_DEPTH][STYLE_MAX];
-    nsCOMPtr<nsCanvasGradient> mGradientStyles[STYLE_STACK_DEPTH][STYLE_MAX];
-    nsCOMPtr<nsCanvasPattern> mPatternStyles[STYLE_STACK_DEPTH][STYLE_MAX];
+
+    // state stack handling
+    class ContextState {
+    public:
+        ContextState() : globalAlpha(1.0) { }
+
+        ContextState(const ContextState& other)
+            : globalAlpha(other.globalAlpha)
+        {
+            for (int i = 0; i < STYLE_MAX; i++) {
+                colorStyles[i] = other.colorStyles[i];
+                gradientStyles[i] = other.gradientStyles[i];
+                patternStyles[i] = other.patternStyles[i];
+            }
+        }
+
+        inline void SetColorStyle(int whichStyle, nscolor color) {
+            colorStyles[whichStyle] = color;
+            gradientStyles[whichStyle] = nsnull;
+            patternStyles[whichStyle] = nsnull;
+        }
+
+        inline void SetPatternStyle(int whichStyle, nsCanvasPattern* pat) {
+            gradientStyles[whichStyle] = nsnull;
+            patternStyles[whichStyle] = pat;
+        }
+
+        inline void SetGradientStyle(int whichStyle, nsCanvasGradient* grad) {
+            gradientStyles[whichStyle] = grad;
+            patternStyles[whichStyle] = nsnull;
+        }
+
+        float globalAlpha;
+        nscolor colorStyles[STYLE_MAX];
+        nsCOMPtr<nsCanvasGradient> gradientStyles[STYLE_MAX];
+        nsCOMPtr<nsCanvasPattern> patternStyles[STYLE_MAX];
+    };
+
+    nsTArray<ContextState> mStyleStack;
+
+    inline ContextState& CurrentState() {
+        return mStyleStack[mSaveCount];
+    }
+
+#ifdef MOZ_WIDGET_GTK2
+    Pixmap mSurfacePixmap;
+#endif
 
     // stolen from nsJSUtils
     static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
@@ -296,7 +375,7 @@ protected:
                                      cairo_surface_t **aCairoSurface,
                                      PRUint8 **imgDataOut,
                                      PRInt32 *widthOut, PRInt32 *heightOut,
-                                     nsIURI **uriOut);
+                                     nsIURI **uriOut, PRBool *forceWriteOnlyOut);
 
     nsresult DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
                                 nsIDrawingSurface* aWhiteSurface,
@@ -331,14 +410,18 @@ NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 
 nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mCanvasElement(nsnull),
-      mDirty(PR_TRUE), mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
+      mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mImageSurfaceData(nsnull), mStyleStack(20)
 {
-    mColorStyles[0][STYLE_STROKE] = NS_RGB(0,0,0);
-    mColorStyles[0][STYLE_FILL] = NS_RGB(0,0,0);
-    mColorStyles[0][STYLE_SHADOW] = NS_RGBA(0,0,0,0);
+    ContextState *state = mStyleStack.AppendElement();
+    state->globalAlpha = 1.0;
+    for (int i = 0; i < STYLE_MAX; i++)
+        state->colorStyles[i] = NS_RGB(0,0,0);
 
     mLastStyle = -1;
-    mGlobalAlpha = 1.0f;
+
+#ifdef MOZ_WIDGET_GTK2
+    mSurfacePixmap = None;
+#endif
 
     DirtyAllStyles();
 }
@@ -346,8 +429,6 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
 nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
     Destroy();
-
-    mImageFrame = nsnull;
 }
 
 nsIFrame*
@@ -374,14 +455,21 @@ nsCanvasRenderingContext2D::Destroy()
         mSurface = nsnull;
     }
 
-    if (mSurfaceData) {
-        nsMemory::Free(mSurfaceData);
-        mSurfaceData = nsnull;
+#ifdef MOZ_WIDGET_GTK2
+    if (mSurfacePixmap != None) {
+        XFreePixmap(GDK_DISPLAY(), mSurfacePixmap);
+        mSurfacePixmap = None;
+    }
+#endif
+
+    if (mImageSurfaceData) {
+        PR_Free (mImageSurfaceData);
+        mImageSurfaceData = nsnull;
     }
 }
 
-PRBool
-nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhichStyle)
+nsresult
+nsCanvasRenderingContext2D::SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhichStyle)
 {
     nsresult rv;
     nscolor color;
@@ -397,15 +485,12 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
 
         rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
         if (NS_FAILED(rv))
-            return PR_FALSE;
+            return NS_ERROR_DOM_SYNTAX_ERR;
 
-        mColorStyles[STYLE_CURRENT_STACK][aWhichStyle] = color;
-        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
-        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+        CurrentState().SetColorStyle(aWhichStyle, color);
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
-
-        return PR_TRUE;
+        return NS_OK;
     } else if (paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
         nsAutoString str;
 
@@ -414,14 +499,12 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
 
         rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
         if (NS_FAILED(rv))
-            return PR_FALSE;
+            return NS_ERROR_DOM_SYNTAX_ERR;
 
-        mColorStyles[STYLE_CURRENT_STACK][aWhichStyle] = color;
-        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
-        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+        CurrentState().SetColorStyle(aWhichStyle, color);
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
-        return PR_TRUE;
+        return NS_OK;
     } else if (paramType == nsIDataType::VTYPE_INTERFACE ||
                paramType == nsIDataType::VTYPE_INTERFACE_IS)
     {
@@ -429,32 +512,22 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
         nsCOMPtr<nsISupports> iface;
         rv = aStyle->GetAsInterface(&iid, getter_AddRefs(iface));
 
-        nsCOMPtr<nsIDOMCanvasGradient> grad (do_QueryInterface(iface));
+        nsCOMPtr<nsCanvasGradient> grad(do_QueryInterface(iface));
         if (grad) {
-            mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
-            mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = do_QueryInterface(iface);
+            CurrentState().SetGradientStyle(aWhichStyle, grad);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
-
-            if (!mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle])
-                return PR_FALSE;
-
-            return PR_TRUE;
+            return NS_OK;
         }
 
-        nsCOMPtr<nsIDOMCanvasPattern> pattern (do_QueryInterface(iface));
+        nsCOMPtr<nsCanvasPattern> pattern(do_QueryInterface(iface));
         if (pattern) {
-            mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = do_QueryInterface(iface);
-            mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+            CurrentState().SetPatternStyle(aWhichStyle, pattern);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
-
-            if (!mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle])
-                return PR_FALSE;
-
-            return PR_TRUE;
+            return NS_OK;
         }
     }
 
-    return PR_FALSE;
+    return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 void
@@ -467,7 +540,7 @@ nsCanvasRenderingContext2D::StyleColorToString(const nscolor& aColor, nsAString&
                                         NS_GET_B(aColor)),
                         aStr);
     } else {
-        CopyUTF8toUTF16(nsPrintfCString(100, "rgb(%d,%d,%d,%0.2f)",
+        CopyUTF8toUTF16(nsPrintfCString(100, "rgba(%d,%d,%d,%0.2f)",
                                         NS_GET_R(aColor),
                                         NS_GET_G(aColor),
                                         NS_GET_B(aColor),
@@ -485,8 +558,19 @@ nsCanvasRenderingContext2D::DirtyAllStyles()
 }
 
 void
-nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI)
+nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceWriteOnly)
 {
+    if (mCanvasElement->IsWriteOnly())
+        return;
+
+    if (!aURI)
+        return;
+
+    if (forceWriteOnly) {
+        mCanvasElement->SetWriteOnly();
+        return;
+    }
+
     nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
     if (elem && ssm) {
@@ -507,16 +591,6 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI)
 }
 
 void
-nsCanvasRenderingContext2D::DoDrawCanvasSecurityCheck(nsIDOMHTMLCanvasElement* aCanvas)
-{
-    nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(aCanvas);
-    if (canvas && !canvas->IsWriteOnly())
-        return;
-    
-    mCanvasElement->SetWriteOnly();
-}
-
-void
 nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
 {
     if (mLastStyle == aWhichStyle &&
@@ -529,28 +603,24 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
     mDirtyStyle[aWhichStyle] = PR_FALSE;
     mLastStyle = aWhichStyle;
 
-    nsCanvasPattern* pattern = mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle];
+    nsCanvasPattern* pattern = CurrentState().patternStyles[aWhichStyle];
     if (pattern) {
-        if (pattern->GetURI()) {
-            DoDrawImageSecurityCheck(pattern->GetURI());
-        }
+        DoDrawImageSecurityCheck(pattern->GetURI(), pattern->GetForceWriteOnly());
         pattern->Apply(mCairo);
         return;
     }
 
-    if (mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle]) {
-        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle]->Apply(mCairo);
+    if (CurrentState().gradientStyles[aWhichStyle]) {
+        CurrentState().gradientStyles[aWhichStyle]->Apply(mCairo);
         return;
     }
 
-    SetCairoColor(mColorStyles[STYLE_CURRENT_STACK][aWhichStyle]);
+    SetCairoColor(CurrentState().colorStyles[aWhichStyle]);
 }
 
 nsresult
 nsCanvasRenderingContext2D::Redraw()
 {
-    mDirty = PR_TRUE;
-
     nsIFrame *frame = GetCanvasLayoutFrame();
     if (frame) {
         nsRect r = frame->GetRect();
@@ -567,38 +637,242 @@ nsCanvasRenderingContext2D::SetCairoColor(nscolor c)
     double r = double(NS_GET_R(c) / 255.0);
     double g = double(NS_GET_G(c) / 255.0);
     double b = double(NS_GET_B(c) / 255.0);
-    double a = double(NS_GET_A(c) / 255.0) * mGlobalAlpha;
+    double a = double(NS_GET_A(c) / 255.0) * CurrentState().globalAlpha;
 
     cairo_set_source_rgba (mCairo, r, g, b, a);
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetTargetImageFrame(gfxIImageFrame* aImageFrame)
+nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
-    // clean up old cairo bits
     Destroy();
 
-    aImageFrame->GetWidth(&mWidth);
-    aImageFrame->GetHeight(&mHeight);
+    mWidth = width;
+    mHeight = height;
 
-    mSurfaceData = (unsigned char *) nsMemory::Alloc(mWidth * mHeight * 4);
-    mSurface = cairo_image_surface_create_for_data (mSurfaceData,
-                                                    CAIRO_FORMAT_ARGB32,
-                                                    mWidth,
-                                                    mHeight,
-                                                    mWidth * 4);
+#ifdef XP_WIN
+#ifndef MOZILLA_1_8_BRANCH
+    mSurface = cairo_win32_surface_create_with_dib (CAIRO_FORMAT_ARGB32,
+                                                    mWidth, mHeight);
+#endif
+#elif MOZ_WIDGET_GTK2
+    // On most current X servers, using the software-only surface
+    // actually provides a much smoother and faster display.
+    // However, we provide MOZ_CANVAS_USE_RENDER for whomever wants to
+    // go that route.
+    if (getenv("MOZ_CANVAS_USE_RENDER")) {
+        XRenderPictFormat *fmt = XRenderFindStandardFormat (GDK_DISPLAY(),
+                                                            PictStandardARGB32);
+        if (fmt) {
+            int npfmts = 0;
+            XPixmapFormatValues *pfmts = XListPixmapFormats(GDK_DISPLAY(), &npfmts);
+            for (int i = 0; i < npfmts; i++) {
+                if (pfmts[i].depth == 32) {
+                    npfmts = -1;
+                    break;
+                }
+            }
+            XFree(pfmts);
+
+            if (npfmts == -1) {
+                mSurfacePixmap = XCreatePixmap (GDK_DISPLAY(),
+                                                DefaultRootWindow(GDK_DISPLAY()),
+                                                width, height, 32);
+                mSurface = cairo_xlib_surface_create_with_xrender_format
+                    (GDK_DISPLAY(), mSurfacePixmap, DefaultScreenOfDisplay(GDK_DISPLAY()),
+                     fmt, mWidth, mHeight);
+            }
+        }
+    }
+#endif
+
+    // fall back to image surface
+    if (!mSurface) {
+        mImageSurfaceData = (PRUint8*) PR_Malloc (mWidth * mHeight * 4);
+        if (!mImageSurfaceData)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        mSurface = cairo_image_surface_create_for_data (mImageSurfaceData,
+                                                        CAIRO_FORMAT_ARGB32,
+                                                        mWidth, mHeight,
+                                                        mWidth * 4);
+    }
+
     mCairo = cairo_create(mSurface);
 
     // set up the initial canvas defaults
-    cairo_set_line_width (mCairo, 1.0);
-    cairo_set_operator (mCairo, CAIRO_OPERATOR_OVER);
+    cairo_set_operator(mCairo, CAIRO_OPERATOR_CLEAR);
+    cairo_new_path(mCairo);
+    cairo_rectangle(mCairo, 0, 0, mWidth, mHeight);
+    cairo_fill(mCairo);
+
+    cairo_set_line_width(mCairo, 1.0);
+    cairo_set_operator(mCairo, CAIRO_OPERATOR_OVER);
     cairo_set_miter_limit(mCairo, 10.0);
     cairo_set_line_cap(mCairo, CAIRO_LINE_CAP_BUTT);
     cairo_set_line_join(mCairo, CAIRO_LINE_JOIN_MITER);
 
-    mImageFrame = aImageFrame;
+    cairo_new_path(mCairo);
+    cairo_move_to(mCairo, 0.0, 0.0);
 
-    return ClearRect (0, 0, mWidth, mHeight);
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
+{
+    nsresult rv = NS_OK;
+
+#ifdef MOZ_CAIRO_GFX
+
+    gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    nsRefPtr<gfxASurface> surf = gfxASurface::Wrap(mSurface);
+    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+
+    // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
+    // pixel alignment for this stuff!
+    ctx->NewPath();
+    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
+    ctx->Fill();
+
+#else
+
+    // non-Thebes; this becomes exciting
+    cairo_surface_t *dest = nsnull;
+    cairo_t *dest_cr = nsnull;
+
+#ifdef XP_WIN
+    void *ptr = nsnull;
+    rv = rc->RetrieveCurrentNativeGraphicData(&ptr);
+    if (NS_FAILED(rv) || !ptr)
+        return NS_ERROR_FAILURE;
+    HDC dc = (HDC) ptr;
+
+    dest = cairo_win32_surface_create (dc);
+    dest_cr = cairo_create (dest);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+    GdkDrawable *gdkdraw = nsnull;
+    rv = rc->RetrieveCurrentNativeGraphicData((void**) &gdkdraw);
+    if (NS_FAILED(rv) || !gdkdraw)
+        return NS_ERROR_FAILURE;
+
+    gint w, h;
+    gdk_drawable_get_size (gdkdraw, &w, &h);
+    dest = cairo_xlib_surface_create (GDK_DRAWABLE_XDISPLAY(gdkdraw),
+                                      GDK_DRAWABLE_XID(gdkdraw),
+                                      GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(gdkdraw)),
+                                      w, h);
+    dest_cr = cairo_create (dest);
+#endif
+
+    nsTransform2D *tx = nsnull;
+    rc->GetCurrentTransform(tx);
+
+    nsIDeviceContext *dctx;
+    rc->GetDeviceContext(dctx);
+
+    // Until we can use the quartz2 surface, mac will be different,
+    // since we'll use CG to render.
+#ifndef XP_MACOSX
+
+    float x0 = 0.0, y0 = 0.0;
+    float sx = 1.0, sy = 1.0;
+    if (tx->GetType() & MG_2DTRANSLATION) {
+        tx->Transform(&x0, &y0);
+    }
+
+    if (tx->GetType() & MG_2DSCALE) {
+        sx = sy = dctx->DevUnitsToTwips();
+        tx->TransformNoXLate(&sx, &sy);
+    }
+
+    cairo_translate (dest_cr, NSToIntRound(x0), NSToIntRound(y0));
+    if (sx != 1.0 || sy != 1.0)
+        cairo_scale (dest_cr, sx, sy);
+
+    cairo_rectangle (dest_cr, 0, 0, mWidth, mHeight);
+    cairo_clip (dest_cr);
+
+    cairo_set_source_surface (dest_cr, mSurface, 0, 0);
+    cairo_paint (dest_cr);
+
+    if (dest_cr)
+        cairo_destroy (dest_cr);
+    if (dest)
+        cairo_surface_destroy (dest);
+
+#else
+
+    // OSX path
+
+    CGrafPtr port = nsnull;
+    rv = rc->RetrieveCurrentNativeGraphicData((void**) &port);
+    if (NS_FAILED(rv) || !port)
+        return NS_ERROR_FAILURE;
+
+    struct Rect portRect;
+    GetPortBounds(port, &portRect);
+
+    CGContextRef cgc;
+    OSStatus status;
+    status = QDBeginCGContext (port, &cgc);
+    if (status != noErr)
+        return NS_ERROR_FAILURE;
+
+    CGDataProviderRef dataProvider;
+    CGImageRef img;
+
+    dataProvider = CGDataProviderCreateWithData (NULL, mImageSurfaceData,
+                                                 mWidth * mHeight * 4,
+                                                 NULL);
+    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    img = CGImageCreate (mWidth, mHeight, 8, 32, mWidth * 4, rgb,
+                         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
+                         dataProvider, NULL, false, kCGRenderingIntentDefault);
+    CGColorSpaceRelease (rgb);
+    CGDataProviderRelease (dataProvider);
+
+    float x0 = 0.0, y0 = 0.0;
+    float sx = 1.0, sy = 1.0;
+    if (tx->GetType() & MG_2DTRANSLATION) {
+        tx->Transform(&x0, &y0);
+    }
+
+    if (tx->GetType() & MG_2DSCALE) {
+        float p2t = dctx->DevUnitsToTwips();
+        sx = p2t, sy = p2t;
+        tx->TransformNoXLate(&sx, &sy);
+    }
+
+    /* Compensate for the bottom-left Y origin */
+    CGContextTranslateCTM (cgc, NSToIntRound(x0),
+                           portRect.bottom - portRect.top - NSToIntRound(y0) - NSToIntRound(mHeight * sy));
+    if (sx != 1.0 || sy != 1.0)
+        CGContextScaleCTM (cgc, sx, sy);
+
+    CGContextDrawImage (cgc, CGRectMake(0, 0, mWidth, mHeight), img);
+
+    CGImageRelease (img);
+
+    status = QDEndCGContext (port, &cgc);
+    /* if EndCGContext fails, what can we do? */
+#endif
+#endif
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::RenderToSurface(cairo_surface_t *surf)
+{
+    cairo_t *cr = cairo_create (surf);
+    cairo_set_source_surface (cr, mSurface, 0, 0);
+    cairo_paint (cr);
+    cairo_destroy (cr);
+
+    return NS_OK;
 }
  
 NS_IMETHODIMP
@@ -613,124 +887,17 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
-    encoder->InitFromData(mSurfaceData,
-                          mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
-                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                          aEncoderOptions);
-
-    return CallQueryInterface(encoder, aStream);
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::UpdateImageFrame()
-{
-    nsresult rv;
-
-    if (!mImageFrame)
-        return NS_OK;
-
-    if (!mSurfaceData)
+    if (mImageSurfaceData) {
+        encoder->InitFromData(mImageSurfaceData,
+                              mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
+                              imgIEncoder::INPUT_FORMAT_HOSTARGB,
+                              aEncoderOptions);
+    } else {
+        // XXX copy surface to image buffer and call InitFromData
         return NS_ERROR_FAILURE;
-
-    if (mDirty) {
-        PRUint8 *alphaBits, *rgbBits;
-        PRUint32 alphaLen, rgbLen;
-        PRUint32 alphaStride, rgbStride;
-
-        rv = mImageFrame->LockImageData();
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-
-        rv = mImageFrame->LockAlphaData();
-        if (NS_FAILED(rv)) {
-            mImageFrame->UnlockImageData();
-            return rv;
-        }
-
-        rv = mImageFrame->GetAlphaBytesPerRow(&alphaStride);
-        rv |= mImageFrame->GetAlphaData(&alphaBits, &alphaLen);
-        rv |= mImageFrame->GetImageBytesPerRow(&rgbStride);
-        rv |= mImageFrame->GetImageData(&rgbBits, &rgbLen);
-        if (NS_FAILED(rv)) {
-            mImageFrame->UnlockImageData();
-            mImageFrame->UnlockAlphaData();
-            return rv;
-        }
-
-        nsCOMPtr<nsIImage> img(do_GetInterface(mImageFrame));
-        PRBool topToBottom = img->GetIsRowOrderTopToBottom();
-
-        for (PRUint32 j = 0; j < (PRUint32) mHeight; j++) {
-            PRUint8 *inrow = (PRUint8*)(mSurfaceData + (mWidth * 4 * j));
-
-            PRUint32 rowIndex;
-            if (topToBottom)
-                rowIndex = j;
-            else
-                rowIndex = mHeight - j - 1;
-
-            PRUint8 *outrowrgb = rgbBits + (rgbStride * rowIndex);
-            PRUint8 *outrowalpha = alphaBits + (alphaStride * rowIndex);
-
-            for (PRUint32 i = 0; i < (PRUint32) mWidth; i++) {
-#ifdef IS_LITTLE_ENDIAN
-                PRUint8 b = *inrow++;
-                PRUint8 g = *inrow++;
-                PRUint8 r = *inrow++;
-                PRUint8 a = *inrow++;
-#else
-                PRUint8 a = *inrow++;
-                PRUint8 r = *inrow++;
-                PRUint8 g = *inrow++;
-                PRUint8 b = *inrow++;
-#endif
-                // now recover the real bgra from the cairo
-                // premultiplied values
-                if (a == 0) {
-                    // can't do much for us if we're at 0
-                    b = g = r = 0;
-                } else {
-                    // the (a/2) factor is a bias similar to one cairo applies
-                    // when premultiplying
-                    b = (b * 255 + a / 2) / a;
-                    g = (g * 255 + a / 2) / a;
-                    r = (r * 255 + a / 2) / a;
-                }
-
-                *outrowalpha++ = a;
-
-#ifdef XP_MACOSX
-                // On the mac, RGB_A8 is really RGBX_A8
-                *outrowrgb++ = 0;
-#endif
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-                // On windows, RGB_A8 is really BGR_A8.
-                // in fact, BGR_A8 is also BGR_A8.
-                *outrowrgb++ = b;
-                *outrowrgb++ = g;
-                *outrowrgb++ = r;
-#else
-                *outrowrgb++ = r;
-                *outrowrgb++ = g;
-                *outrowrgb++ = b;
-#endif
-            }
-        }
-
-        rv = mImageFrame->UnlockAlphaData();
-        rv |= mImageFrame->UnlockImageData();
-        if (NS_FAILED(rv))
-            return rv;
-
-        nsRect r(0, 0, mWidth, mHeight);
-        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-
-        mDirty = PR_FALSE;
     }
 
-    return NS_OK;
+    return CallQueryInterface(encoder, aStream);
 }
 
 //
@@ -769,39 +936,25 @@ nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Save()
 {
-    mSaveCount++;
-
-    if (mSaveCount < STYLE_STACK_DEPTH) {
-        for (PRInt32 i = 0; i < STYLE_MAX; i++) {
-            mColorStyles[mSaveCount][i] = mColorStyles[mSaveCount-1][i];
-            mGradientStyles[mSaveCount][i] = mGradientStyles[mSaveCount-1][i];
-            mPatternStyles[mSaveCount][i] = mPatternStyles[mSaveCount-1][i];
-        }
-    }
-
+    mStyleStack.AppendElement(CurrentState());
     cairo_save (mCairo);
+    mSaveCount++;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Restore()
 {
-    if (mSaveCount < STYLE_STACK_DEPTH && mSaveCount > 0) {
-        for (PRInt32 i = 0; i < STYLE_MAX; i++) {
-            mColorStyles[mSaveCount-1][i] = mColorStyles[mSaveCount][i];
-            mGradientStyles[mSaveCount-1][i] = mGradientStyles[mSaveCount][i];
-            mPatternStyles[mSaveCount-1][i] = mPatternStyles[mSaveCount][i];
+    if (mSaveCount <= 0)
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-            mGradientStyles[mSaveCount][i] = nsnull;
-            mPatternStyles[mSaveCount][i] = nsnull;
-        }
-        mLastStyle = -1;
-    }
+    mStyleStack.RemoveElementAt(mSaveCount);
+    cairo_restore (mCairo);
 
-    if (mSaveCount > 0) {
-        mSaveCount--;
-        cairo_restore (mCairo);
-    }
+    mLastStyle = -1;
+    DirtyAllStyles();
+
+    mSaveCount--;
     return NS_OK;
 }
 
@@ -837,25 +990,25 @@ nsCanvasRenderingContext2D::Translate(float x, float y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
 {
-    mGlobalAlpha = aGlobalAlpha;
+    // ignore invalid values, as per spec
+    if (aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
+        return NS_OK;
+
+    CurrentState().globalAlpha = aGlobalAlpha;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetGlobalAlpha(float *aGlobalAlpha)
 {
-    *aGlobalAlpha = mGlobalAlpha;
+    *aGlobalAlpha = CurrentState().globalAlpha;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant* aStyle)
 {
-    if (StyleVariantToColor(aStyle, STYLE_STROKE))
-        return NS_OK;
-
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return NS_ERROR_INVALID_ARG;
+    return SetStyleFromVariant(aStyle, STYLE_STROKE);
 }
 
 NS_IMETHODIMP
@@ -869,15 +1022,15 @@ nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mPatternStyles[STYLE_CURRENT_STACK][STYLE_STROKE]) {
-        rv = var->SetAsISupports(mPatternStyles[STYLE_CURRENT_STACK][STYLE_STROKE]);
+    if (CurrentState().patternStyles[STYLE_STROKE]) {
+        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_STROKE]);
         NS_ENSURE_SUCCESS(rv, rv);
-    } else if (mGradientStyles[STYLE_CURRENT_STACK][STYLE_STROKE]) {
-        rv = var->SetAsISupports(mGradientStyles[STYLE_CURRENT_STACK][STYLE_STROKE]);
+    } else if (CurrentState().gradientStyles[STYLE_STROKE]) {
+        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_STROKE]);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         nsString styleStr;
-        StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_STROKE], styleStr);
+        StyleColorToString(CurrentState().colorStyles[STYLE_STROKE], styleStr);
 
         rv = var->SetAsDOMString(styleStr);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -890,11 +1043,7 @@ nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetFillStyle(nsIVariant* aStyle)
 {
-    if (StyleVariantToColor(aStyle, STYLE_FILL))
-        return NS_OK;
-
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return NS_ERROR_INVALID_ARG;
+    return SetStyleFromVariant(aStyle, STYLE_FILL);
 }
 
 NS_IMETHODIMP
@@ -908,15 +1057,15 @@ nsCanvasRenderingContext2D::GetFillStyle(nsIVariant** aStyle)
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mPatternStyles[STYLE_CURRENT_STACK][STYLE_FILL]) {
-        rv = var->SetAsISupports(mPatternStyles[STYLE_CURRENT_STACK][STYLE_FILL]);
+    if (CurrentState().patternStyles[STYLE_FILL]) {
+        rv = var->SetAsISupports(CurrentState().patternStyles[STYLE_FILL]);
         NS_ENSURE_SUCCESS(rv, rv);
-    } else if (mGradientStyles[STYLE_CURRENT_STACK][STYLE_FILL]) {
-        rv = var->SetAsISupports(mGradientStyles[STYLE_CURRENT_STACK][STYLE_FILL]);
+    } else if (CurrentState().gradientStyles[STYLE_FILL]) {
+        rv = var->SetAsISupports(CurrentState().gradientStyles[STYLE_FILL]);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         nsString styleStr;
-        StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_FILL], styleStr);
+        StyleColorToString(CurrentState().colorStyles[STYLE_FILL], styleStr);
 
         rv = var->SetAsDOMString(styleStr);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -963,7 +1112,7 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
+nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
                                           const nsAString& repeat,
                                           nsIDOMCanvasPattern **_retval)
 {
@@ -989,8 +1138,9 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
     nsCOMPtr<nsIURI> uri;
+    PRBool forceWriteOnly = PR_FALSE;
     rv = CairoSurfaceFromElement(image, &imgSurf, &imgData,
-                                 &imgWidth, &imgHeight, getter_AddRefs(uri));
+                                 &imgWidth, &imgHeight, getter_AddRefs(uri), &forceWriteOnly);
     if (NS_FAILED(rv))
         return rv;
 
@@ -999,7 +1149,7 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLImageElement *image,
 
     cairo_pattern_set_extend (cairopat, extend);
 
-    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData, uri);
+    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData, uri, forceWriteOnly);
     if (!pat) {
         cairo_pattern_destroy(cairopat);
         nsMemory::Free(imgData);
@@ -1065,7 +1215,7 @@ nsCanvasRenderingContext2D::SetShadowColor(const nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 {
-    StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_SHADOW], color);
+    color.SetIsVoid(PR_TRUE);
     return NS_OK;
 }
 
@@ -1078,7 +1228,6 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
     cairo_save (mCairo);
     cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
-    cairo_set_source_rgba (mCairo, 0.0, 0.0, 0.0, 0.0);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
     cairo_fill (mCairo);
@@ -1119,6 +1268,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::BeginPath()
 {
     cairo_new_path(mCairo);
+    cairo_move_to(mCairo, 0.0, 0.0);
     return NS_OK;
 }
 
@@ -1171,10 +1321,9 @@ nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, floa
 {
     double cx, cy;
 
+    // we will always have a current point, since beginPath forces
+    // a moveto(0,0)
     cairo_get_current_point(mCairo, &cx, &cy);
-    if (cairo_status(mCairo))
-        return NS_ERROR_INVALID_ARG;
-
     cairo_curve_to(mCairo,
                    (cx + cpx * 2.0) / 3.0,
                    (cy + cpy * 2.0) / 3.0,
@@ -1198,7 +1347,88 @@ nsCanvasRenderingContext2D::BezierCurveTo(float cp1x, float cp1y,
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::ArcTo(float x1, float y1, float x2, float y2, float radius)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (radius <= 0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
+    /* This is an adaptation of the cairo_arc_to patch from Behdad
+     * Esfahbod; once that patch is accepted, we should remove this
+     * and just call cairo_arc_to() directly.
+     */
+    
+    double x0, y0;
+    double angle0, angle1, angle2, angled;
+    double d0, d2;
+    double sin_, cos_;
+    double xc, yc, dc;
+    int forward;
+
+    cairo_get_current_point(mCairo, &x0, &y0);
+
+    angle0 = atan2 (y0 - y1, x0 - x1); /* angle from (x1,y1) to (x0,y0) */
+    angle2 = atan2 (y2 - y1, x2 - x1); /* angle from (x1,y1) to (x2,y2) */
+    angle1 = (angle0 + angle2) / 2;    /* angle from (x1,y1) to (xc,yc) */
+
+    angled = angle2 - angle0;          /* the angle (x0,y0)--(x1,y1)--(x2,y2) */
+
+    /* Shall we go forward or backward? */
+    if (angled > M_PI || (angled < 0 && angled > -M_PI)) {
+        angle1 += M_PI;
+        angled = 2 * M_PI - angled;
+        forward = 1;
+    } else {
+        double tmp;
+        tmp = angle0;
+        angle0 = angle2;
+        angle2 = tmp;
+        forward = 0;
+    }
+
+    angle0 += M_PI_2; /* angle from (xc,yc) to (x0,y0) */
+    angle2 -= M_PI_2; /* angle from (xc,yc) to (x2,y2) */
+    angled /= 2;      /* the angle (x0,y0)--(x1,y1)--(xc,yc) */
+
+
+    /* distance from (x1,y1) to (x0,y0) */
+    d0 = sqrt ((x0-x1)*(x0-x1)+(y0-y1)*(y0-y1));
+    /* distance from (x2,y2) to (x0,y0) */
+    d2 = sqrt ((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+
+    dc = -1;
+    sin_ = sin(angled);
+    cos_ = cos(angled);
+    if (fabs(cos_) >= 1e-5) { /* the arc may not fit */
+        /* min distance of end-points from corner */
+        double min_d = d0 < d2 ? d0 : d2;
+        /* max radius of an arc that fits */
+        double max_r = min_d * sin_ / cos_;
+
+        if (radius > max_r) {
+            /* arc with requested radius doesn't fit */
+            radius = (float) max_r;
+            dc = min_d / cos_; /* distance of (xc,yc) from (x1,y1) */
+        }
+    }
+
+    if (dc < 0)
+        dc = radius / sin_; /* distance of (xc,yc) from (x1,y1) */
+
+
+    /* find (cx,cy), the center of the arc */
+    xc = x1 + sin(angle1) * dc;
+    yc = y1 + cos(angle1) * dc;
+
+
+    /* the arc operation draws the line from current point (x0,y0)
+     * to arc center too. */
+
+    if (forward)
+        cairo_arc (mCairo, xc, yc, radius, angle0, angle2);
+    else
+        cairo_arc_negative (mCairo, xc, yc, radius, angle2, angle0);
+
+    cairo_line_to (mCairo, x2, y2);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1372,29 +1602,16 @@ nsCanvasRenderingContext2D::DrawImage()
                                  ctx, argv[0]))
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
 
-    {
-        nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imgElt);
-        nsCOMPtr<nsIDOMHTMLCanvasElement> canvas = do_QueryInterface(imgElt);
-        if (!image && !canvas)
-            // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-            return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
-        
-        if (canvas) {
-            DoDrawCanvasSecurityCheck(canvas);
-        }
-    }
-
     cairo_surface_t *imgSurf = nsnull;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
     nsCOMPtr<nsIURI> uri;
+    PRBool forceWriteOnly = PR_FALSE;
     rv = CairoSurfaceFromElement(imgElt, &imgSurf, &imgData,
-                                 &imgWidth, &imgHeight, getter_AddRefs(uri));
+                                 &imgWidth, &imgHeight, getter_AddRefs(uri), &forceWriteOnly);
     if (NS_FAILED(rv))
         return rv;
-    if (uri) {
-        DoDrawImageSecurityCheck(uri);
-    }
+    DoDrawImageSecurityCheck(uri, forceWriteOnly);
 
 #define GET_ARG(dest,whicharg) \
     if (!ConvertJSValToDouble(dest, ctx, whicharg)) return NS_ERROR_INVALID_ARG
@@ -1449,7 +1666,7 @@ nsCanvasRenderingContext2D::DrawImage()
     cairo_rectangle(mCairo, 0, 0, dw, dh);
     cairo_set_source(mCairo, pat);
     cairo_clip(mCairo);
-    cairo_paint_with_alpha(mCairo, mGlobalAlpha);
+    cairo_paint_with_alpha(mCairo, CurrentState().globalAlpha);
     cairo_restore(mCairo);
 
     cairo_pattern_destroy(pat);
@@ -1589,7 +1806,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
                                                     cairo_surface_t **aCairoSurface,
                                                     PRUint8 **imgData,
                                                     PRInt32 *widthOut, PRInt32 *heightOut,
-                                                    nsIURI **uriOut)
+                                                    nsIURI **uriOut, PRBool *forceWriteOnlyOut)
 {
     nsresult rv;
 
@@ -1609,15 +1826,41 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
         rv = imageLoader->GetCurrentURI(uriOut);
         NS_ENSURE_SUCCESS(rv, rv);
        
+        *forceWriteOnlyOut = PR_FALSE;
+
         rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         // maybe a canvas
         nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(imgElt);
         if (canvas) {
-            // Ensure the canvas is up to date
-            canvas->UpdateImageFrame();
-            canvas->GetCanvasImageContainer(getter_AddRefs(imgContainer));
+            PRUint32 w, h;
+            rv = canvas->GetSize(&w, &h);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            cairo_surface_t *surf =
+                cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                            w, h);
+            cairo_t *cr = cairo_create (surf);
+            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+            cairo_paint (cr);
+            cairo_destroy (cr);
+
+            rv = canvas->RenderContextsToSurface(surf);
+            if (NS_FAILED(rv)) {
+                cairo_surface_destroy (surf);
+                return rv;
+            }
+
+            *aCairoSurface = surf;
+            *imgData = nsnull;
+            *widthOut = w;
+            *heightOut = h;
+
+            *uriOut = nsnull;
+            *forceWriteOnlyOut = canvas->IsWriteOnly();
+
+            return NS_OK;
         } else {
             NS_WARNING("No way to get surface from non-canvas, non-imageloader");
             return NS_ERROR_NOT_AVAILABLE;
@@ -1644,6 +1887,15 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     if (heightOut)
         *heightOut = imgHeight;
 
+#ifdef MOZ_CAIRO_GFX
+    gfxASurface* gfxsurf = nsnull;
+    rv = img->GetSurface(&gfxsurf);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aCairoSurface = gfxsurf->CairoSurface();
+    cairo_surface_reference (*aCairoSurface);
+    *imgData = nsnull;
+#else
     //
     // We now need to create a cairo_surface with the same data as
     // this image element.
@@ -1749,11 +2001,15 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
             PRUint8 *inrowalpha = inAlphaBits + (inAlphaStride * rowIndex);
 
             for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // pull out alpha to premultiply
+                // pull out the bit value into alpha
                 PRInt32 bit = i % 8;
                 PRInt32 byte = i / 8;
 
+#ifdef IS_LITTLE_ENDIAN
+                PRUint8 a = (inrowalpha[byte] >> (7-bit)) & 1;
+#else
                 PRUint8 a = (inrowalpha[byte] >> bit) & 1;
+#endif
 
 #ifdef XP_MACOSX
                 // skip extra X8 byte on OSX
@@ -1886,6 +2142,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
 
     *aCairoSurface = imgSurf;
     *imgData = cairoImgData;
+#endif
 
     return NS_OK;
 }
@@ -2054,11 +2311,6 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
                                                const nsIntSize& aSurfaceSize,
                                                nsIRenderingContext* aBlackContext)
 {
-    if (!mImageFrame) {
-        NS_ERROR("Must have image frame already");
-        return NS_ERROR_FAILURE;
-    }
-
     // check if the dimensions are too large;
     // if they are, we may easily overflow malloc later on
     if (!CheckSaneImageSize (aSurfaceSize.width, aSurfaceSize.height))
@@ -2221,7 +2473,7 @@ nsCanvasRenderingContext2D::DrawNativeSurfaces(nsIDrawingSurface* aBlackSurface,
 #undef ALPHA_BYTE
 
     cairo_set_source_surface(mCairo, tmpSurf, 0, 0);
-    cairo_paint_with_alpha(mCairo, mGlobalAlpha);
+    cairo_paint_with_alpha(mCairo, CurrentState().globalAlpha);
     
     cairo_surface_destroy(tmpSurf);
     aBlackSurface->Unlock();
