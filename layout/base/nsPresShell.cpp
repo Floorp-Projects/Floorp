@@ -2805,6 +2805,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
     if (NS_FAILED(rv)) return rv;
 
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     mIsReflowing = PR_TRUE;
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
@@ -2951,6 +2952,9 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
     if (NS_FAILED(rv)) return rv;
+
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    // XXXldb Set mIsReflowing (and unset it later)?
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
@@ -3401,6 +3405,9 @@ PresShell::StyleChangeReflow()
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
     if (NS_FAILED(rv)) return rv;
+
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    // XXXldb Set mIsReflowing (and unset it later)?
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_StyleChange, rcx, maxSize);
@@ -5555,6 +5562,7 @@ PresShell::Paint(nsIView*             aView,
                  nsIRenderingContext* aRenderingContext,
                  const nsRegion&      aDirtyRegion)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Paint);
   nsIFrame* frame;
   nsresult  rv = NS_OK;
 
@@ -6515,6 +6523,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     mDocument->BeginUpdate(UPDATE_ALL);
     mDocument->EndUpdate(UPDATE_ALL);
 
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
     mIsReflowing = PR_TRUE;
 
     do {

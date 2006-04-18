@@ -4693,6 +4693,7 @@ nsresult
 nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                           nsIFrame**      aNewFrame)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   NS_PRECONDITION(aNewFrame, "null out param");
   
   // how the root frame hierarchy should look
@@ -8197,6 +8198,13 @@ IsRootBoxFrame(nsIFrame *aFrame)
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
+  return ReconstructDocElementHierarchyInternal();
+}
+
+nsresult
+nsCSSFrameConstructor::ReconstructDocElementHierarchyInternal()
+{
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ReconstructDocElementHierarchy\n");
@@ -8802,6 +8810,7 @@ nsresult
 nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                        PRInt32         aNewIndexInContainer)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
@@ -8891,11 +8900,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         for (ChildIterator::Init(insertionContent, &iter, &last);
          iter != last;
          ++iter) {
+          LAYOUT_PHASE_TEMP_EXIT();
           nsIContent* item = nsCOMPtr<nsIContent>(*iter);
           if (item == child)
             // Call ContentInserted with this index.
             ContentInserted(aContainer, child,
                             iter.index(), mTempFrameTreeState, PR_FALSE);
+          LAYOUT_PHASE_TEMP_REENTER();
         }
       }
 
@@ -9061,7 +9072,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   }
 
   // We built some new frames.  Initialize any newly-constructed bindings.
+  LAYOUT_PHASE_TEMP_EXIT();
   mDocument->BindingManager()->ProcessAttachedQueue();
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty()) {
@@ -9312,6 +9325,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                        nsILayoutHistoryState* aFrameState,
                                        PRBool                 aInReinsertContent)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 #ifdef DEBUG
@@ -9388,7 +9402,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 #endif
     }
 
+    LAYOUT_PHASE_TEMP_EXIT();
     mDocument->BindingManager()->ProcessAttachedQueue();
+    LAYOUT_PHASE_TEMP_REENTER();
 
     // otherwise this is not a child of the root element, and we
     // won't let it have a frame.
@@ -9607,7 +9623,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // Now that we've created frames, run the attach queue.
   //XXXwaterson should we do this after we've processed pseudos, too?
+  LAYOUT_PHASE_TEMP_EXIT();
   mDocument->BindingManager()->ProcessAttachedQueue();
+  LAYOUT_PHASE_TEMP_REENTER();
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty())
@@ -9897,6 +9915,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
                                       PRInt32         aIndexInContainer,
                                       PRBool          aInReinsertContent)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 
@@ -10362,6 +10381,7 @@ nsresult
 nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
                                             PRBool aAppend)
 {
+  AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
   nsresult      rv = NS_OK;
 
   // Find the child frame
@@ -13243,7 +13263,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     ReinsertContent(parentContainer, blockContent);
   }
   else if (blockContent->GetCurrentDoc() == mDocument) {
-    ReconstructDocElementHierarchy();
+    ReconstructDocElementHierarchyInternal();
   }
   return PR_TRUE;
 }
@@ -13303,7 +13323,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
   }
 
   // If we get here, we're screwed!
-  return ReconstructDocElementHierarchy();
+  return ReconstructDocElementHierarchyInternal();
 }
 
 nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& aState)
