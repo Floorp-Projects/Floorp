@@ -17,6 +17,7 @@ REQUIRES = \
 	string \
 	pref \
 	xpcom \
+	gfx \
 	$(NULL)
 
 CPPSRCS	= \

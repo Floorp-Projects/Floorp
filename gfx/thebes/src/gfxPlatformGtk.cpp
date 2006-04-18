@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PANGO_ENABLE_BACKEND
+#define PANGO_ENABLE_ENGINE
+
 #include "gfxPlatformGtk.h"
 
 #include "nsIAtom.h"
@@ -52,7 +55,14 @@
 
 #ifndef THEBES_USE_PANGO_CAIRO
 #include <fontconfig/fontconfig.h>
-#endif
+#include <pango/pangoxft.h>
+#endif // THEBES_USE_PANGO_CAIRO
+
+#include <pango/pango-font.h>
+
+#include "nsUnitConversion.h"
+
+PRInt32 gfxPlatformGtk::sDPI = -1;
 
 static cairo_user_data_key_t cairo_gdk_window_key;
 static cairo_user_data_key_t cairo_gdk_pixmap_key;
@@ -305,3 +315,94 @@ gfxPlatformGtk::GetFontList(const nsACString& aLangGroup,
     return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+static PRInt32
+GetXftDPI()
+{
+  char *val = XGetDefault(GDK_DISPLAY(), "Xft", "dpi");
+  if (val) {
+    char *e;
+    double d = strtod(val, &e);
+
+    if (e != val)
+      return NSToCoordRound(d);
+  }
+
+  return -1;
+}
+
+static PRInt32
+GetDPIFromPangoFont()
+{
+#ifndef THEBES_USE_PANGO_CAIRO
+    PangoContext* ctx = pango_xft_get_context(GDK_DISPLAY(), 0);
+    gdk_pango_context_set_colormap(ctx, gdk_rgb_get_cmap());
+#else
+    PangoContext* ctx =
+        pango_cairo_font_map_create_context(
+          PANGO_CAIRO_FONT_MAP(pango_cairo_font_map_get_default()));
+#endif
+
+    if (!ctx) {
+        return 0;
+    }
+
+    double dblDPI = 0.0f;
+    GList *items = nsnull;
+    PangoItem *item = nsnull;
+    PangoFcFont *fcfont = nsnull;
+    
+    PangoAttrList *al = pango_attr_list_new();
+
+    if (!al) {
+        goto cleanup;
+    }
+
+    // Just using the string "a" because we need _some_ text.
+    items = pango_itemize(ctx, "a", 0, 1, al, NULL);
+
+    if (!items) {
+        goto cleanup;
+    }
+
+    item = (PangoItem*)items->data;
+
+    if (!item) {
+        goto cleanup;
+    }
+
+    fcfont = PANGO_FC_FONT(item->analysis.font);
+
+    if (!fcfont) {
+        goto cleanup;
+    }
+
+    FcPatternGetDouble(fcfont->font_pattern, FC_DPI, 0, &dblDPI);
+
+ cleanup:   
+    if (al)
+        pango_attr_list_unref(al);
+    if (item)
+        pango_item_free(item);
+    if (items)
+        g_list_free(items);
+    if (ctx)
+        g_object_unref(ctx);
+
+    return NSToCoordRound(dblDPI);
+}
+
+/* static */
+void
+gfxPlatformGtk::InitDPI()
+{
+    sDPI = GetXftDPI();
+    if (sDPI <= 0) {
+        sDPI = GetDPIFromPangoFont();
+        if (sDPI <= 0) {
+            // Fall back to something sane
+            sDPI = 96;
+        }
+    }
+}
+
