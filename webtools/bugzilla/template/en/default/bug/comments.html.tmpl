@@ -130,7 +130,8 @@
           <input type="checkbox" name="isprivate-[% count %]" value="1"
                  onClick="updateCommentPrivacy(this, [% count %])"
                  id="isprivate-[% count %]"
-          [% " checked=\"checked\"" IF comment.isprivate %]> Private
+                 [% " checked=\"checked\"" IF comment.isprivate %]>
+          <label for="isprivate-[% count %]">Private</label>
         </i>
       [% END %]
       [% IF UserInGroup(Param('timetrackinggroup')) &&

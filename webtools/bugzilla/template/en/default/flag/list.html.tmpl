@@ -98,8 +98,9 @@
           [% flag.setter.nick FILTER html %]:
         </td>
         <td>
-          <label title="[% type.description FILTER html %]">
-            [%- type.name FILTER html FILTER no_break %]</label>
+          <label title="[% type.description FILTER html %]"
+                 for="flag-[% flag.id %]">
+            [%- type.name FILTER html FILTER no_break -%]</label>
         </td>
         <td>
           <select id="flag-[% flag.id %]" name="flag-[% flag.id %]" 
@@ -140,7 +141,8 @@
       <tr>
         <td>&nbsp;</td>
         <td>
-          <label title="[% type.description FILTER html %]">
+          <label title="[% type.description FILTER html %]"
+                 for="flag_type-[% type.id %]">
             [%- type.name FILTER html FILTER no_break %]</label>
         </td>
         <td>
@@ -179,7 +181,8 @@
     [% END %]
     <tr>
       <td colspan="2">
-        addl. <label title="[% type.description FILTER html %]">
+        addl. <label title="[% type.description FILTER html %]"
+                     for="flag_type-[% type.id %]">
           [%- type.name FILTER html FILTER no_break %]</label>
       </td>
       <td>

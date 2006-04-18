@@ -124,7 +124,9 @@ function doOnSelectProduct(selectmode) {
 
 <table>
   <tr>
-    <th align="right"><u>S</u>ummary:</th>
+    <th align="right">
+      <label for="short_desc" accesskey="s"><u>S</u>ummary</label>:
+    </th>
     <td>
       <select name="short_desc_type">
       [% FOREACH qv = query_variants %]
@@ -134,7 +136,7 @@ function doOnSelectProduct(selectmode) {
       </select>
     </td>
     <td>
-      <input name="short_desc" size="40" accesskey="s"
+      <input name="short_desc" id="short_desc" size="40"
              value="[% default.short_desc.0 FILTER html %]">
       <script type="text/javascript"> <!--
           document.forms[queryform].short_desc.focus(); 
@@ -157,21 +159,21 @@ function doOnSelectProduct(selectmode) {
           <td valign="top">
             <table>
               <tr valign="bottom">
-                <th align="left"><u>C</u>lassification:</th>
+                <th align="left">
+                  <label for="classification">Classification</label>:
+                </th>
               </tr>
               <tr valign="top">
                 <td align="left">
-                  <label for="classification">
-                    <select name="classification" multiple="multiple" size="5" id="classification"
-                            onchange="doOnSelectProduct(1);">
+                  <select name="classification" multiple="multiple" size="5" id="classification"
+                          onchange="doOnSelectProduct(1);">
                     [% FOREACH cat = classification %]
                       <option value="[% cat.name FILTER html %]"
                         [% " selected" IF lsearch(default.classification, cat.name) != -1 %]>
                         [% cat.name FILTER html %]
                       </option>
                     [% END %]
-                    </select>
-                  </label>
+                  </select>
                 </td>
               </tr>
             </table>
@@ -180,21 +182,21 @@ function doOnSelectProduct(selectmode) {
           <td valign="top">
             <table>
               <tr valign="bottom">
-                <th align="left"><u>P</u>roduct:</th>
+                <th align="left">
+                  <label for="product" accesskey="p"><u>P</u>roduct</label>:
+                </th>
               </tr>
               <tr valign="top">
                 [%# Can't use the select block here because of the onChange %]
                 <td align="left">
-                  <label for="product" accesskey="p">
-                    <select name="product" multiple="multiple" size="5" id="product"
-                            onchange="doOnSelectProduct(2);">
+                  <select name="product" multiple="multiple" size="5" id="product"
+                          onchange="doOnSelectProduct(2);">
                     [% FOREACH p = product %]
                       <option value="[% p.name FILTER html %]"
                         [% " selected" IF lsearch(default.product, p.name) != -1 %]>
                         [% p.name FILTER html %]</option>
                     [% END %]
-                    </select>
-                  </label>
+                  </select>
                 </td>
               </tr>
             </table>
@@ -203,23 +205,21 @@ function doOnSelectProduct(selectmode) {
             <table>
               <tr valign="bottom">
                 <th align="left">
-                  <a href="describecomponents.cgi">Co<u>m</u>ponent</a>:
+                  <label for="component" accesskey="m"><a href="describecomponents.cgi">Co<u>m</u>ponent</a></label>:
                 </th>
               </tr>
               <tr valign="top">
                 [%# Can't use the select block here because 'component' is a toolkit
                     reserved word - we use 'component_' instead. %]
                 <td align="left">
-                  <label for="component" accesskey="m">
-                    <select name="component" id="component"
-                            multiple="multiple" size="5">
+                  <select name="component" id="component"
+                          multiple="multiple" size="5">
                     [% FOREACH c = component_ %]
                       <option value="[% c FILTER html %]"
                         [% " selected" IF lsearch(default.component, c) != -1 %]>
                         [% c FILTER html %]</option>
                     [% END %]
-                    </select>
-                  </label>
+                  </select>
                 </td>
               </tr>
             </table>
@@ -227,12 +227,13 @@ function doOnSelectProduct(selectmode) {
           <td valign="top">
             <table>
               <tr valign="bottom">
-                <th align="left"><u>V</u>ersion:</th>
+                <th align="left">
+                  <label for="version">Version</label>:
+                </th>
               </tr>
               <tr valign="top">
                 [% PROCESS select sel = { name => 'version',
-                                          size => 5,
-                                          accesskey => 'v' } %]
+                                          size => 5 } %]
               </tr>
             </table>
           </td>
@@ -240,12 +241,13 @@ function doOnSelectProduct(selectmode) {
           <td valign="top">
             <table>
               <tr valign="bottom">
-                <th align="left"><u>T</u>arget:</th>
+                <th align="left">
+                  <label for="target_milestone">Target</label>:
+                </th>
               </tr>
               <tr valign="top">
                 [% PROCESS select sel = { name => 'target_milestone',
-                                          size => 5,
-                                          accesskey => 't' } %]
+                                          size => 5 } %]
               </tr>
             </table>
           </td>
@@ -267,7 +269,9 @@ function doOnSelectProduct(selectmode) {
 
     [% UNLESS field.name == 'status_whiteboard' AND NOT Param('usestatuswhiteboard') %]
     <tr>
-      <th align="right">[% field.description %]:</th>
+      <th align="right">
+        <label for="[% field.name %]" accesskey="[% field.accesskey %]">[% field.description %]</label>:
+      </th>
       <td>
         <select name="[% field.name %]_type">
         [% FOREACH qv = query_variants %]
@@ -277,8 +281,7 @@ function doOnSelectProduct(selectmode) {
         [% END %]
         </select>
       </td>
-      <td><input name="[% field.name %]" size="40"
-                 accesskey="[% field.accesskey %]"
+      <td><input name="[% field.name %]" id="[% field.name %]" size="40"
                  value="[% default.${field.name}.0 FILTER html %]">
       </td>
       <td></td>
@@ -289,7 +292,7 @@ function doOnSelectProduct(selectmode) {
   [% IF have_keywords %]
     <tr>
       <th align="right">
-        <a href="describekeywords.cgi"><u>K</u>eywords</a>:
+        <label for="keywords" accesskey="k"><a href="describekeywords.cgi"><u>K</u>eywords</a></label>:
       </th>
       <td>
         <select name="keywords_type">
@@ -305,7 +308,7 @@ function doOnSelectProduct(selectmode) {
         </select>
       </td>
       <td>
-        <input name="keywords" size="40" accesskey="k"
+        <input name="keywords" id="keywords" size="40"
                value="[% default.keywords.0 FILTER html %]">
       </td>
     </tr>
@@ -315,11 +318,11 @@ function doOnSelectProduct(selectmode) {
   [% IF UserInGroup(Param("timetrackinggroup")) %]
     <tr>
       <th align="right">
-        Dead<u>l</u>ine:
+        <label for="deadlinefrom" accesskey="l">Dead<u>l</u>ine</label>:
       </th>
       <td>
         from&nbsp;
-        <input name="deadlinefrom" size="10" maxlength="10" accesskey="l">&nbsp;
+        <input name="deadlinefrom" id="deadlinefrom" size="10" maxlength="10">&nbsp;
         to&nbsp;
         <input name="deadlineto" size="10" maxlength="10">
       </td>
@@ -340,12 +343,13 @@ function doOnSelectProduct(selectmode) {
     <td>
       <table>
         <tr>
-          <th align="left">St<u>a</u>tus:</th>
+          <th align="left">
+            <label for="bug_status" accesskey="a">St<u>a</u>tus</label>:
+          </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'bug_status',
-                                    size => 7,
-                                    accesskey => 'a' } %]
+                                    size => 7 } %]
         </tr>
       </table>
     </td>
@@ -353,61 +357,64 @@ function doOnSelectProduct(selectmode) {
       <table>
         <tr>
           <th align="left">
-            <u>R</u>esolution:
+            <label for="resolution" accesskey="r"><u>R</u>esolution</label>:
           </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'resolution',
-                                    size => 7,
-                                    accesskey => 'r' } %]
+                                    size => 7 } %]
         </tr>
       </table>
     </td>
     <td>
       <table>
         <tr>
-          <th align="left">S<u>e</u>verity:</th>
+          <th align="left">
+            <label for="bug_severity">Severity</label>:
+          </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'bug_severity',
-                                    size => 7,
-                                    accesskey => 'e' } %]
+                                    size => 7 }%]
         </tr>
       </table>
     </td>
     <td>
       <table>
         <tr>
-          <th align="left">Pr<u>i</u>ority:</th>
+          <th align="left">
+            <label for="priority" accesskey="i">Pr<u>i</u>ority</label>:
+          </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'priority',
-                                    size => 7,
-                                    accesskey => 'i' } %]
+                                    size => 7 } %]
         </tr>
       </table>
     </td>
     <td>
       <table>
         <tr>
-          <th align="left"><u>H</u>ardware:</th>
+          <th align="left">
+            <label for="rep_platform" accesskey="h"><u>H</u>ardware</label>:
+          </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'rep_platform',
-                                    size => 7,
-                                    accesskey => 'h' } %]
+                                    size => 7 } %]
         </tr>
       </table>
     </td>
     <td>
       <table>
         <tr>
-          <th align="left"><u>O</u>S:</th>
+          <th align="left">
+            <label for="op_sys" accesskey="o"><u>O</u>S</label>:
+          </th>
         </tr>
         <tr valign="top">
           [% PROCESS select sel = { name => 'op_sys',
-                                    size => 7,
-                                    accesskey => 'o' } %]
+                                    size => 7 } %]
         </tr>
       </table>
     </td>
@@ -528,10 +535,11 @@ function doOnSelectProduct(selectmode) {
         <option value="include"[% " selected" IF default.bugidtype.0 == "include" %]>Only include</option>
         <option value="exclude"[% " selected" IF default.bugidtype.0 == "exclude" %]>Exclude</option>
       </select>
-      [% terms.bugs %] numbered:
+      <label for="bug_id">[% terms.bugs %] numbered</label>:
     </td>
     <td>
-      <input type="text" name="bug_id" value="[% default.bug_id.0 FILTER html %]" size="20">
+      <input type="text" name="bug_id" id="bug_id"
+             value="[% default.bug_id.0 FILTER html %]" size="20">
     </td>
   </tr>
   <tr>
@@ -541,10 +549,12 @@ function doOnSelectProduct(selectmode) {
   [% IF Param('usevotes') %]
     <tr>
       <td align="right">
-        Only [% terms.bugs %] with at least:
+        <label for="votes">Only [% terms.bugs %] with at least</label>:
       </td>
       <td>
-        <input name="votes" size="3" value="[% default.votes.0 FILTER html %]"> votes
+        <input name="votes" id="votes" size="3"
+               value="[% default.votes.0 FILTER html %]">
+        votes
       </td>
     </tr>
   [% END %]
@@ -562,15 +572,20 @@ function doOnSelectProduct(selectmode) {
 
 
 <dl class="bug_changes">
-  <dt>Only [% terms.bugs %] changed between:</dt>
+  <dt>
+    <label for="chfieldfrom">Only [% terms.bugs %] changed between</label>:
+  </dt>
   <dd>
-    <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
+    <input name="chfieldfrom" id="chfieldfrom"
+           size="10" value="[% default.chfieldfrom.0 FILTER html %]">
     and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
     <br>(YYYY-MM-DD or relative dates)
   </dd>
-  <dt>where one or more of the following changed:</dt>
+  <dt>
+    <label for="chfield">where one or more of the following changed</label>:
+  </dt>
   <dd>
-    <select name="chfield" multiple="multiple" size="4">
+    <select name="chfield" id="chfield" multiple="multiple" size="4">
     [% FOREACH field = chfield %]
       <option value="[% field FILTER html %]"
         [% " selected" IF lsearch(default.chfield, field) != -1 %]>
@@ -578,9 +593,10 @@ function doOnSelectProduct(selectmode) {
     [% END %]
     </select>
   </dd>
-  <dt>and the new value was:</dt>
+  <dt>and <label for="chfieldvalue">the new value was</label>:</dt>
   <dd>
-    <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
+    <input name="chfieldvalue" id="chfieldvalue"
+           size="20" value="[% default.chfieldvalue.0 FILTER html %]">
   </dd>
 </dl>
 
@@ -595,9 +611,8 @@ function doOnSelectProduct(selectmode) {
 
 [% BLOCK select %]
   <td align="left">
-    <label for="[% sel.name %]" accesskey="[% sel.accesskey %]">
-      <select name="[% sel.name %]" id="[% sel.name %]"
-              multiple="multiple" size="[% sel.size %]">
+    <select name="[% sel.name %]" id="[% sel.name %]"
+            multiple="multiple" size="[% sel.size %]">
       [% FOREACH name = ${sel.name} %]
         <option value="[% name FILTER html %]"
           [% " selected" IF lsearch(default.${sel.name}, name) != -1 %]>
@@ -609,7 +624,6 @@ function doOnSelectProduct(selectmode) {
             [% name FILTER html %]</option>
           [% END %]
       [% END %]
-      </select>
-    </label>
+    </select>
   </td>
 [% END %]

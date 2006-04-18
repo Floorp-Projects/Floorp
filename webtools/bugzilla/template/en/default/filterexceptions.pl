@@ -79,7 +79,6 @@
   'field.description',
   'field.accesskey',
   'sel.name',
-  'sel.accesskey',
 ],
 
 'search/search-specific.html.tmpl' => [
@@ -169,7 +168,6 @@
 
 'reports/series-common.html.tmpl' => [
   'sel.name', 
-  'sel.accesskey', 
   '"onchange=\"$sel.onchange\"" IF sel.onchange', 
 ],
 
@@ -325,11 +323,11 @@
   'group.description', 
   'dep.title', 
   'dep.fieldname', 
-  'accesskey', 
   'bug.${dep.fieldname}.join(\', \')', 
   'selname',
   'depbug FILTER bug_link(depbug)',
   '"${bug.dup_id}" FILTER bug_link(bug.dup_id)',
+  '" accesskey=\"$accesskey\"" IF accesskey',
 ],
 
 'bug/knob.html.tmpl' => [

@@ -43,8 +43,8 @@
 <input type="hidden" name="cmdtype" value="doit">
 
 <p>
-  Sort results by:
-  <select name="order">
+  <label for="order">Sort results by</label>:
+  <select name="order" id="order">
   [% FOREACH order = orders %]
     <option value="[% order FILTER html %]"
       [% " selected" IF default.order.0 == order %]>
