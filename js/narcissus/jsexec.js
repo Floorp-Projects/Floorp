@@ -216,11 +216,11 @@ function isObject(v) {
 function toObject(v, r, rn) {
     switch (typeof v) {
       case "boolean":
-        return new Boolean(v);
+        return new global.Boolean(v);
       case "number":
-        return new Number(v);
+        return new global.Number(v);
       case "string":
-        return new String(v);
+        return new global.String(v);
       case "function":
         return v;
       case "object":
