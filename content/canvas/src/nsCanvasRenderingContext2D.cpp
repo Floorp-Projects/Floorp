@@ -100,6 +100,10 @@
 
 #ifdef XP_WIN
 #include "cairo-win32.h"
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#define M_PI_2		1.57079632679489661923
+#endif
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
@@ -351,6 +355,8 @@ protected:
         nsCOMPtr<nsCanvasGradient> gradientStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasPattern> patternStyles[STYLE_MAX];
     };
+    // this is for broken VC6
+    friend class ContextState;
 
     nsTArray<ContextState> mStyleStack;
 
