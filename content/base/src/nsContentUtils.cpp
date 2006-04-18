@@ -203,9 +203,7 @@ public:
 
   ~EventListenerManagerMapEntry()
   {
-    if (mListenerManager) {
-      mListenerManager->Disconnect();
-    }
+    NS_ASSERTION(!mListenerManager, "caller must release and disconnect ELM");
   }
 
 private:
@@ -2887,8 +2885,20 @@ void
 nsContentUtils::RemoveListenerManager(nsIContent *aContent)
 {
   if (sEventListenerManagersHash.ops) {
-    PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
-                         PL_DHASH_REMOVE);
+    EventListenerManagerMapEntry *entry =
+      NS_STATIC_CAST(EventListenerManagerMapEntry *,
+                     PL_DHashTableOperate(&sEventListenerManagersHash, aContent,
+                                          PL_DHASH_LOOKUP));
+    if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      nsCOMPtr<nsIEventListenerManager> listenerManager;
+      listenerManager.swap(entry->mListenerManager);
+      // Remove the entry and *then* do operations that could cause further
+      // modification of sEventListenerManagersHash.  See bug 334177.
+      PL_DHashTableRawRemove(&sEventListenerManagersHash, entry);
+      if (listenerManager) {
+        listenerManager->Disconnect();
+      }
+    }
   }
 }
 
