@@ -74,6 +74,15 @@
 #undef max
 #endif
 
+#ifdef IDI_APPLICATION
+#undef IDI_APPLICATION
+#endif
+#ifdef RC_INVOKED
+#define IDI_APPLICATION 32512
+#else
+#define IDI_APPLICATION MAKEINTRESOURCE(32512)
+#endif
+
 //////////////////////////////////////////////////////////
 // Various Definations
 //////////////////////////////////////////////////////////
