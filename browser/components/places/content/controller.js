@@ -449,7 +449,24 @@ var PlacesController = {
     NS_ASSERT(node, "null node");
     return (node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER);
   },
-  
+
+  /**
+   * Determines whether or not a ResultNode represents a bookmarked URI.
+   *
+   * @param   node
+   *          A NavHistoryResultNode
+   *
+   * @returns true if the node represents a bookmarked URI, false otherwise
+   */
+  nodeIsBookmark: function PC_nodeIsBookmark(node) {
+    NS_ASSERT(node, "null node");
+
+    if (!this.nodeIsURI(node))
+      return false;
+    var uri = this._uri(node.uri);
+    return this.bookmarks.isBookmarked(uri);
+  },
+
   /**
    * Determines whether or not a ResultNode is a Bookmark separator.
    * @param   node
@@ -605,7 +622,10 @@ var PlacesController = {
     
     // Show Info
     var hasSingleSelection = v.hasSingleSelection;
-    this._setEnabled("placesCmd_show:info", !inSysArea && hasSingleSelection);
+    this._setEnabled("placesCmd_show:info", !inSysArea &&
+                     hasSingleSelection &&
+                     (this.nodeIsBookmark(selectedNode) ||
+                      this.nodeIsFolder(selectedNode)));
     this._updateSelectCommands();
     this._updateEditCommands(inSysArea, canInsert);
     this._updateOpenCommands(inSysArea, hasSingleSelection, selectedNode);

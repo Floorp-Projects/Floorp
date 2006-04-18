@@ -110,11 +110,10 @@ var BookmarkPropertiesPanel = {
 
   EDIT_BOOKMARK_VARIANT: 0,
   ADD_BOOKMARK_VARIANT: 1,
-  EDIT_HISTORY_VARIANT: 2,
-  EDIT_FOLDER_VARIANT:  3,
-  ADD_MULTIPLE_BOOKMARKS_VARIANT: 4,
-  ADD_LIVEMARK_VARIANT: 5,
-  EDIT_LIVEMARK_VARIANT: 6,
+  EDIT_FOLDER_VARIANT:  2,
+  ADD_MULTIPLE_BOOKMARKS_VARIANT: 3,
+  ADD_LIVEMARK_VARIANT: 4,
+  EDIT_LIVEMARK_VARIANT: 5,
 
   /**
    * The variant identifier for the current instance of the dialog.
@@ -159,37 +158,9 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * Returns true if the URI title is editable in this dialog variant.
-   */
-  _isTitleEditable: function BPP__isTitleEditable() {
-    switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT:
-      return false;
-    default:
-      return true;
-    }
-  },
-
-  /**
    * Returns true if the URI is editable in this variant of the dialog.
    */
   _isURIEditable: function BPP__isURIEditable() {
-    switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT:
-    case this.EDIT_FOLDER_VARIANT:
-    case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
-    case this.EDIT_LIVEMARK_VARIANT:
-    case this.ADD_LIVEMARK_VARIANT:
-      return false;
-    default:
-      return true;
-    }
-  },
-
-  /**
-   * Returns true if the URI is visible in this variant of the dialog.
-   */
-  _isURIVisible: function BPP__isURIVisible() {
     switch(this._variant) {
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
@@ -207,7 +178,6 @@ var BookmarkPropertiesPanel = {
    */
   _isShortcutVisible: function BPP__isShortcutVisible() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT:
     case this.EDIT_FOLDER_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
     case this.ADD_LIVEMARK_VARIANT:
@@ -238,7 +208,6 @@ var BookmarkPropertiesPanel = {
    */
   _isDeletePossible: function BPP__isDeletePossible() {
     switch(this._variant) {
-    case this.EDIT_HISTORY_VARIANT:
     case this.ADD_BOOKMARK_VARIANT:
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
     case this.EDIT_FOLDER_VARIANT:
@@ -286,8 +255,6 @@ var BookmarkPropertiesPanel = {
     switch(this._variant) {
     case this.ADD_BOOKMARK_VARIANT:
       return this._strings.getString("dialogTitleAdd");
-    case this.EDIT_HISTORY_VARIANT:
-      return this._strings.getString("dialogTitleHistoryEdit");
     case this.EDIT_FOLDER_VARIANT:
       return this._strings.getString("dialogTitleFolderEdit");
     case this.ADD_MULTIPLE_BOOKMARKS_VARIANT:
@@ -366,12 +333,10 @@ var BookmarkPropertiesPanel = {
         }
       }
 
-      if (this._bms.isBookmarked(identifier)) {
-        return this.EDIT_BOOKMARK_VARIANT;
-      }
-      else {
-        return this.EDIT_HISTORY_VARIANT;
-      }
+      NS_ASSERT(this._bms.isBookmarked(identifier),
+                "Bookmark Properties dialog instantiated with " +
+                "non-bookmarked URI: \"" + identifier + "\"");
+      return this.EDIT_BOOKMARK_VARIANT;
     }
   },
 
@@ -507,14 +472,8 @@ var BookmarkPropertiesPanel = {
 
     titlebox.value = this._bookmarkTitle;
 
-    if (!this._isTitleEditable())
-      titlebox.setAttribute("disabled", "true");
-
-    if (this._isURIVisible()) {
+    if (this._isURIEditable()) {
       nurl.value = this._bookmarkURI.spec;
-
-      if (!this._isURIEditable())
-        nurl.setAttribute("disabled", "true");
     }
     else {
       this._hide("locationRow");
