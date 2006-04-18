@@ -2368,7 +2368,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // logic in nsFrameFrame.  In any case, a child widget is created for the root
   // view of the document.
   PRBool canCreateScrollbars = PR_FALSE;
-  nsNativeWidget widget;
   nsIView* parentView;
   // the top nsPrintObject's widget will always have scrollbars
   if (frame) {
@@ -2377,11 +2376,9 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
     view = view->GetFirstChild();
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
     parentView = view;
-    widget = nsnull;
   } else {
     canCreateScrollbars = PR_TRUE;
     parentView = nsnull;
-    widget = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
   }
 
   // Create a child window of the parent that is our "root view/window"
@@ -2389,12 +2386,19 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   aPO->mRootView = aPO->mViewManager->CreateView(tbounds, parentView);
   NS_ENSURE_TRUE(aPO->mRootView, NS_ERROR_OUT_OF_MEMORY);
 
-  rv = aPO->mRootView->CreateWidget(kWidgetCID, nsnull,
-                                    widget, PR_TRUE, PR_TRUE,
-                                    eContentTypeContent);
-  NS_ENSURE_SUCCESS(rv, rv);
-  aPO->mWindow = aPO->mRootView->GetWidget();
-  aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
+  // Only create a widget for print preview; when printing, a widget is
+  // unnecessary and unexpected
+  if (mIsCreatingPrintPreview) {
+    nsNativeWidget widget = nsnull;
+    if (!frame)
+      widget = mParentWidget->GetNativeData(NS_NATIVE_WIDGET);
+    rv = aPO->mRootView->CreateWidget(kWidgetCID, nsnull,
+                                      widget, PR_TRUE, PR_TRUE,
+                                      eContentTypeContent);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aPO->mWindow = aPO->mRootView->GetWidget();
+    aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
+  }
 
   // Setup hierarchical relationship in view manager
   aPO->mViewManager->SetRootView(aPO->mRootView);
