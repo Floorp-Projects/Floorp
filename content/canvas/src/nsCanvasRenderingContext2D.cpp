@@ -808,9 +808,15 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     // OSX path
 
     CGrafPtr port = nsnull;
+#ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData((void**) &port);
     if (NS_FAILED(rv) || !port)
         return NS_ERROR_FAILURE;
+#else
+    port = (CGrafPtr) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_MAC_THING);
+    if (!port)
+        return NS_ERROR_FAILURE;
+#endif
 
     struct Rect portRect;
     GetPortBounds(port, &portRect);
