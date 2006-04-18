@@ -1254,7 +1254,7 @@ ParseTerm(CompilerState *state)
             goto doFlat;
         /* Control letter */
         case 'c':
-            if (state->cp + 1 < state->cpend && RE_IS_LETTER(state->cp[1])) {
+            if (state->cp < state->cpend && RE_IS_LETTER(*state->cp)) {
                 c = (jschar) (*state->cp++ & 0x1F);
             } else {
                 /* back off to accepting the original '\' as a literal */
