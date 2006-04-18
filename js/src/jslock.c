@@ -45,7 +45,6 @@
 #include "jsstddef.h"
 #include <stdlib.h>
 #include "jspubtd.h"
-#include "prthread.h"
 #include "jsutil.h" /* Added by JSIFY */
 #include "jstypes.h"
 #include "jsbit.h"
@@ -201,12 +200,6 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 
 #endif /* !NSPR_LOCK */
 
-jsword
-js_CurrentThreadId()
-{
-    return CurrentThreadId();
-}
-
 void
 js_InitLock(JSThinLock *tl)
 {
@@ -354,7 +347,7 @@ ShareScope(JSRuntime *rt, JSScope *scope)
          * scope->ownercx's transition to null against tests of that member
          * in ClaimScope.
          */
-        scope->lock.owner = scope->ownercx->thread;
+        scope->lock.owner = CX_THINLOCK_ID(scope->ownercx);
 #ifdef NSPR_LOCK
         JS_ACQUIRE_LOCK((JSLock*)scope->lock.fat);
 #endif
@@ -613,8 +606,8 @@ js_GetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot)
 
 #ifndef NSPR_LOCK
     tl = &scope->lock;
-    me = cx->thread;
-    JS_ASSERT(me == CurrentThreadId());
+    me = CX_THINLOCK_ID(cx);
+    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
         /*
          * Got the lock with one compare-and-swap.  Even so, someone else may
@@ -704,8 +697,8 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 
 #ifndef NSPR_LOCK
     tl = &scope->lock;
-    me = cx->thread;
-    JS_ASSERT(me == CurrentThreadId());
+    me = CX_THINLOCK_ID(cx);
+    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me)) {
         if (scope == OBJ_SCOPE(obj)) {
             obj->slots[slot] = v;
@@ -909,13 +902,6 @@ js_CleanupLocks()
 #endif /* !NSPR_LOCK */
 }
 
-void
-js_InitContextForLocking(JSContext *cx)
-{
-    cx->thread = CurrentThreadId();
-    JS_ASSERT(Thin_GetWait(cx->thread) == 0);
-}
-
 #ifndef NSPR_LOCK
 
 /*
@@ -1036,7 +1022,7 @@ js_Dequeue(JSThinLock *tl)
 JS_INLINE void
 js_Lock(JSThinLock *tl, jsword me)
 {
-    JS_ASSERT(me == CurrentThreadId());
+    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     if (js_CompareAndSwap(&tl->owner, 0, me))
         return;
     if (Thin_RemoveWait(ReadWord(tl->owner)) != me)
@@ -1050,14 +1036,22 @@ js_Lock(JSThinLock *tl, jsword me)
 JS_INLINE void
 js_Unlock(JSThinLock *tl, jsword me)
 {
-    JS_ASSERT(me == CurrentThreadId());
-    if (js_CompareAndSwap(&tl->owner, me, 0))
+    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
+
+    /*
+     * Only me can hold the lock, no need to use compare and swap atomic
+     * operation for this common case.
+     */
+    if (tl->owner == me) {
+        tl->owner = 0;
         return;
+    }
+    JS_ASSERT(Thin_GetWait(tl->owner));
     if (Thin_RemoveWait(ReadWord(tl->owner)) == me)
         js_Dequeue(tl);
 #ifdef DEBUG
     else
-        JS_ASSERT(0);
+        JS_ASSERT(0);   /* unbalanced unlock */
 #endif
 }
 
@@ -1068,7 +1062,7 @@ js_LockRuntime(JSRuntime *rt)
 {
     PR_Lock(rt->rtLock);
 #ifdef DEBUG
-    rt->rtLockOwner = CurrentThreadId();
+    rt->rtLockOwner = js_CurrentThreadId();
 #endif
 }
 
@@ -1084,9 +1078,9 @@ js_UnlockRuntime(JSRuntime *rt)
 void
 js_LockScope(JSContext *cx, JSScope *scope)
 {
-    jsword me = cx->thread;
+    jsword me = CX_THINLOCK_ID(cx);
 
-    JS_ASSERT(me == CurrentThreadId());
+    JS_ASSERT(CURRENT_THREAD_IS_ME(me));
     JS_ASSERT(scope->ownercx != cx);
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
@@ -1109,7 +1103,7 @@ js_LockScope(JSContext *cx, JSScope *scope)
 void
 js_UnlockScope(JSContext *cx, JSScope *scope)
 {
-    jsword me = cx->thread;
+    jsword me = CX_THINLOCK_ID(cx);
 
     /* We hope compilers use me instead of reloading cx->thread in the macro. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
@@ -1221,7 +1215,7 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
     LOGIT(oldscope, '0');
     oldscope->u.count = 0;
     tl = &oldscope->lock;
-    me = cx->thread;
+    me = CX_THINLOCK_ID(cx);
     JS_UNLOCK0(tl, me);
 }
 
@@ -1262,7 +1256,7 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
 JSBool
 js_IsRuntimeLocked(JSRuntime *rt)
 {
-    return CurrentThreadId() == rt->rtLockOwner;
+    return js_CurrentThreadId() == rt->rtLockOwner;
 }
 
 JSBool
@@ -1292,7 +1286,8 @@ js_IsScopeLocked(JSContext *cx, JSScope *scope)
         JS_ASSERT(scope->ownercx == cx);
         return JS_TRUE;
     }
-    return CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
+    return js_CurrentThreadId() ==
+           ((JSThread *)Thin_RemoveWait(ReadWord(scope->lock.owner)))->id;
 }
 
 #endif /* DEBUG */

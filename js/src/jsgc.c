@@ -270,7 +270,7 @@ DestroyGCArena(JSGCArenaList *arenaList, JSGCArena **ap)
     JS_ASSERT(a);
     METER(--arenaList->stats.narenas);
     if (a == arenaList->last)
-        arenaList->lastLimit = a->prev ? GC_THINGS_SIZE : 0;
+        arenaList->lastLimit = (uint16)(a->prev ? GC_THINGS_SIZE : 0);
     *ap = a->prev;
 
 #ifdef DEBUG
@@ -485,6 +485,9 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "     public bytes allocated: %lu\n", UL(rt->gcBytes));
     fprintf(fp, "    private bytes allocated: %lu\n", UL(rt->gcPrivateBytes));
     fprintf(fp, "             alloc attempts: %lu\n", ULSTAT(alloc));
+#ifdef JS_THREADSAFE
+    fprintf(fp, "        alloc without locks: %1u\n", ULSTAT(localalloc));
+#endif
     fprintf(fp, "            total GC things: %lu\n", UL(totalThings));
     fprintf(fp, "        max total GC things: %lu\n", UL(totalMaxThings));
     fprintf(fp, "             GC things size: %lu\n", UL(totalBytes));
@@ -609,7 +612,7 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
     JS_LOCK_GC(rt);
 #ifdef JS_THREADSAFE
     JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
-    if (rt->gcRunning && rt->gcThread != js_CurrentThreadId()) {
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
         do {
             JS_AWAIT_GC_DONE(rt);
         } while (rt->gcLevel > 0);
@@ -638,7 +641,7 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
     JS_LOCK_GC(rt);
 #ifdef JS_THREADSAFE
     JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
-    if (rt->gcRunning && rt->gcThread != js_CurrentThreadId()) {
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
         do {
             JS_AWAIT_GC_DONE(rt);
         } while (rt->gcLevel > 0);
@@ -1425,8 +1428,8 @@ MarkGCThingChildren(JSContext *cx, void *thing, uint8 *flagp,
 }
 
 /*
- * Not using PAGE_THING_GAP inside this macro to optimize
- * thingsPerUnscannedChunk calculation when thingSize == 2^power.
+ * Avoid using PAGE_THING_GAP inside this macro to optimize the
+ * thingsPerUnscannedChunk calculation when thingSize is a power of two.
  */
 #define GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap)   \
     JS_BEGIN_MACRO                                                            \
@@ -1807,7 +1810,6 @@ js_GC(JSContext *cx, uintN gcflags)
     uint32 *bytesptr;
     JSBool all_clear;
 #ifdef JS_THREADSAFE
-    jsword currentThread;
     uint32 requestDebit;
 #endif
 
@@ -1851,8 +1853,7 @@ js_GC(JSContext *cx, uintN gcflags)
 
 #ifdef JS_THREADSAFE
     /* Bump gcLevel and return rather than nest on this thread. */
-    currentThread = js_CurrentThreadId();
-    if (rt->gcThread == currentThread) {
+    if (rt->gcThread && rt->gcThread->id == js_CurrentThreadId()) {
         JS_ASSERT(rt->gcLevel > 0);
         rt->gcLevel++;
         METER(if (rt->gcLevel > rt->gcStats.maxlevel)
@@ -1865,25 +1866,29 @@ js_GC(JSContext *cx, uintN gcflags)
     /*
      * If we're in one or more requests (possibly on more than one context)
      * running on the current thread, indicate, temporarily, that all these
-     * requests are inactive.  NB: if cx->thread is 0, then cx is not using
+     * requests are inactive.  If cx->thread is NULL, then cx is not using
      * the request model, and does not contribute to rt->requestCount.
      */
     requestDebit = 0;
     if (cx->thread) {
+        JSCList *head, *link;
+
         /*
-         * Check all contexts for any with the same thread-id.  XXX should we
-         * keep a sub-list of contexts having the same id?
+         * Check all contexts on cx->thread->contextList for active requests,
+         * counting each such context against requestDebit.
          */
-        iter = NULL;
-        while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)) != NULL) {
-            if (acx->thread == cx->thread && acx->requestDepth)
+        head = &cx->thread->contextList;
+        for (link = head->next; link != head; link = link->next) {
+            acx = CX_FROM_THREAD_LINKS(link);
+            JS_ASSERT(acx->thread == cx->thread);
+            if (acx->requestDepth)
                 requestDebit++;
         }
     } else {
         /*
          * We assert, but check anyway, in case someone is misusing the API.
          * Avoiding the loop over all of rt's contexts is a win in the event
-         * that the GC runs only on request-less contexts with 0 thread-ids,
+         * that the GC runs only on request-less contexts with null threads,
          * in a special thread such as might be used by the UI/DOM/Layout
          * "mozilla" or "main" thread in Mozilla-the-browser.
          */
@@ -1917,7 +1922,8 @@ js_GC(JSContext *cx, uintN gcflags)
 
     /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
-    rt->gcThread = currentThread;
+    rt->gcThread = js_GetCurrentThread(rt);
+    JS_ASSERT(rt->gcThread);
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)
@@ -2259,7 +2265,7 @@ restart:
     /* If we were invoked during a request, pay back the temporary debit. */
     if (requestDebit)
         rt->requestCount += requestDebit;
-    rt->gcThread = 0;
+    rt->gcThread = NULL;
     JS_NOTIFY_GC_DONE(rt);
     if (!(gcflags & GC_ALREADY_LOCKED))
         JS_UNLOCK_GC(rt);

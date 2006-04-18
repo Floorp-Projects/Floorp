@@ -676,6 +676,10 @@ JS_NewRuntime(uint32 maxbytes)
     if (!js_InitGC(rt, maxbytes))
         goto bad;
 #ifdef JS_THREADSAFE
+    if (PR_FAILURE == PR_NewThreadPrivateIndex(&rt->threadTPIndex,
+                                               js_ThreadDestructorCB)) {
+        goto bad;
+    }
     rt->gcLock = JS_NEW_LOCK();
     if (!rt->gcLock)
         goto bad;
@@ -786,13 +790,13 @@ JS_BeginRequest(JSContext *cx)
 {
     JSRuntime *rt;
 
-    JS_ASSERT(cx->thread == js_CurrentThreadId());
+    JS_ASSERT(cx->thread->id == js_CurrentThreadId());
     if (!cx->requestDepth) {
         /* Wait until the GC is finished. */
         rt = cx->runtime;
         JS_LOCK_GC(rt);
 
-        /* NB: we use cx->thread here, not js_CurrentThreadId(). */
+        /* NB: we use cx->thread here, not js_GetCurrentThread(). */
         if (rt->gcThread != cx->thread) {
             while (rt->gcLevel > 0)
                 JS_AWAIT_GC_DONE(rt);
@@ -1822,7 +1826,7 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 {
     JS_ASSERT(cx->runtime->gcLevel > 0);
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->runtime->gcThread == js_CurrentThreadId());
+    JS_ASSERT(cx->runtime->gcThread->id == js_CurrentThreadId());
 #endif
 
     GC_MARK(cx, thing, name);
@@ -4786,25 +4790,34 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
 }
 
 #ifdef JS_THREADSAFE
+/*
+ * Get the owning thread id of a context. Returns 0 if the context is not
+ * owned by any thread.
+ */
 JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
 {
-    return cx->thread;
+    return JS_THREAD_ID(cx);
 }
 
+/*
+ * Set the current thread as the owning thread of a context. Returns the
+ * old owning thread id, or -1 if the operation failed.
+ */
 JS_PUBLIC_API(jsword)
 JS_SetContextThread(JSContext *cx)
 {
-    jsword old = cx->thread;
-    cx->thread = js_CurrentThreadId();
+    jsword old = JS_THREAD_ID(cx);
+    if (!js_SetContextThread(cx))
+        return -1;
     return old;
 }
 
 JS_PUBLIC_API(jsword)
 JS_ClearContextThread(JSContext *cx)
 {
-    jsword old = cx->thread;
-    cx->thread = 0;
+    jsword old = JS_THREAD_ID(cx);
+    js_ClearContextThread(cx);
     return old;
 }
 #endif

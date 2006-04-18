@@ -63,11 +63,11 @@ INCLUDES   += -I$(OBJDIR)
 
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
-INCLUDES += -I../../dist/$(OBJDIR)/include
+INCLUDES += -I$(DIST)/include/nspr
 ifdef USE_MSVC
-OTHER_LIBS += ../../dist/$(OBJDIR)/lib/libnspr${NSPR_LIBSUFFIX}.lib
+OTHER_LIBS += $(DIST)/lib/libnspr$(NSPR_LIBSUFFIX).lib
 else
-OTHER_LIBS += -L../../dist/$(OBJDIR)/lib -lnspr${NSPR_LIBSUFFIX}
+OTHER_LIBS += -L$(DIST)/lib -lnspr$(NSPR_LIBSUFFIX)
 endif
 endif
 
@@ -92,7 +92,7 @@ endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifeq ($(OS_ARCH),WINNT)
-CFLAGS += -Op
+#CFLAGS += -Op
 endif # WINNT
 
 #
