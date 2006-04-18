@@ -42,8 +42,7 @@
  */
 
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
-// XXX When SeaMonkey becomes a full xul app the non-moz_xul_app part of this
-// can be removed.
+// XXX When SeaMonkey becomes a full xul app this can be set without an ifdef
 #ifdef MOZ_XUL_APP
 // defaultChromeURI is only needed until our default command line handler knows what to launch
 pref("toolkit.defaultChromeURI","chrome://navigator/content/navigator.xul");
