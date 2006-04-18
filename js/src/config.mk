@@ -40,7 +40,7 @@
 ifdef JS_DIST
 DIST = $(JS_DIST)
 else
-DIST = $(DEPTH)/../../dist/$(OBJDIR)
+DIST = $(DEPTH)/../../dist
 endif
 
 # Set os+release dependent make variables
@@ -112,13 +112,13 @@ ifeq ($(OS_ARCH), WINNT)
 INSTALL = nsinstall
 CP = cp
 else
-INSTALL	= $(DEPTH)/../../dist/$(OBJDIR)/bin/nsinstall
+INSTALL	= $(DIST)/bin/nsinstall
 CP = cp
 endif
 
 ifdef BUILD_OPT
 OPTIMIZER  = -O
-DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(shell whoami)
+DEFINES    += -UDEBUG -DNDEBUG -UDEBUG_$(USERNAME)
 OBJDIR_TAG = _OPT
 else
 ifdef USE_MSVC
@@ -126,7 +126,7 @@ OPTIMIZER  = -Zi
 else
 OPTIMIZER  = -g
 endif
-DEFINES    += -DDEBUG -DDEBUG_$(shell whoami)
+DEFINES    += -DDEBUG -DDEBUG_$(USERNAME)
 OBJDIR_TAG = _DBG
 endif
 

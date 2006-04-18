@@ -96,6 +96,7 @@ typedef struct JSGCRootHashEntry    JSGCRootHashEntry;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSParseNode          JSParseNode;
 typedef struct JSSharpObjectMap     JSSharpObjectMap;
+typedef struct JSThread             JSThread;
 typedef struct JSToken              JSToken;
 typedef struct JSTokenPos           JSTokenPos;
 typedef struct JSTokenPtr           JSTokenPtr;

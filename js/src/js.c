@@ -2533,6 +2533,10 @@ main(int argc, char **argv, char **envp)
         return 1;
     JS_SetErrorReporter(cx, my_ErrorReporter);
 
+#ifdef JS_THREADSAFE
+    JS_BeginRequest(cx);
+#endif
+
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
     if (!glob)
         return 1;
@@ -2627,6 +2631,10 @@ main(int argc, char **argv, char **envp)
     if (_jsdc)
         JSD_DebuggerOff(_jsdc);
 #endif  /* JSDEBUGGER */
+
+#ifdef JS_THREADSAFE
+    JS_EndRequest(cx);
+#endif
 
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);

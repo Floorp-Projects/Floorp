@@ -45,6 +45,7 @@
 #include "pratom.h"
 #include "prlock.h"
 #include "prcvar.h"
+#include "prthread.h"
 
 #include "jsprvtd.h"    /* for JSScope, etc. */
 #include "jspubtd.h"    /* for JSRuntime, etc. */
@@ -68,6 +69,9 @@ typedef struct JSThinLock {
     JSFatLock   *fat;
 } JSThinLock;
 
+#define CX_THINLOCK_ID(cx)       ((jsword)(cx)->thread)
+#define CURRENT_THREAD_IS_ME(me) (((JSThread *)me)->id == js_CurrentThreadId())
+
 typedef PRLock JSLock;
 
 typedef struct JSFatLockTable {
@@ -83,8 +87,7 @@ typedef struct JSFatLockTable {
 #define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
 #define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
 
-#define CurrentThreadId()           (jsword)PR_GetCurrentThread()
-#define JS_CurrentThreadId()        js_CurrentThreadId()
+#define js_CurrentThreadId()        (jsword)PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
 #define JS_DESTROY_LOCK(l)          PR_DestroyLock(l)
 #define JS_ACQUIRE_LOCK(l)          PR_Lock(l)
@@ -132,7 +135,6 @@ typedef struct JSFatLockTable {
 #define JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope)                           \
                                     js_TransferScopeLock(cx, scope, newscope)
 
-extern jsword js_CurrentThreadId();
 extern void js_LockRuntime(JSRuntime *rt);
 extern void js_UnlockRuntime(JSRuntime *rt);
 extern void js_LockObj(JSContext *cx, JSObject *obj);
@@ -141,7 +143,6 @@ extern void js_LockScope(JSContext *cx, JSScope *scope);
 extern void js_UnlockScope(JSContext *cx, JSScope *scope);
 extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
-extern void js_InitContextForLocking(JSContext *);
 extern void js_TransferScopeLock(JSContext *, JSScope *, JSScope *);
 extern JS_FRIEND_API(jsval)
 js_GetSlotThreadSafe(JSContext *, JSObject *, uint32);
@@ -256,7 +257,7 @@ extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
                                                     JS_NO_TIMEOUT)
 #define JS_NOTIFY_REQUEST_DONE(rt)  JS_NOTIFY_CONDVAR((rt)->requestDone)
 
-#define JS_LOCK(P,CX)               JS_LOCK0(P,(CX)->thread)
-#define JS_UNLOCK(P,CX)             JS_UNLOCK0(P,(CX)->thread)
+#define JS_LOCK(P,CX)               JS_LOCK0(P, CX_THINLOCK_ID(CX))
+#define JS_UNLOCK(P,CX)             JS_UNLOCK0(P, CX_THINLOCK_ID(CX))
 
 #endif /* jslock_h___ */

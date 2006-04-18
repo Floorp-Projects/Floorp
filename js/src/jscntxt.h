@@ -57,6 +57,39 @@
 
 JS_BEGIN_EXTERN_C
 
+#ifdef JS_THREADSAFE
+
+/*
+ * Structure uniquely representing a thread.  It holds thread-private data
+ * that can be accessed without a global lock.
+ */
+struct JSThread {
+    /* Linked list of all contexts active on this thread. */
+    JSCList             contextList;
+
+    /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
+    jsword              id;
+
+#if 0
+    /* Thread-local gc free lists array. */
+    JSGCThing           *gcFreeLists[GC_NUM_FREELISTS];
+#endif
+};
+
+extern void JS_DLL_CALLBACK
+js_ThreadDestructorCB(void *ptr);
+
+extern JSBool
+js_SetContextThread(JSContext *cx);
+
+extern void
+js_ClearContextThread(JSContext *cx);
+
+extern JSThread *
+js_GetCurrentThread(JSRuntime *rt);
+
+#endif /* JS_THREADSAFE */
+
 typedef enum JSGCMode { JS_NO_GC, JS_MAYBE_GC, JS_FORCE_GC } JSGCMode;
 
 typedef enum JSRuntimeState {
@@ -187,7 +220,7 @@ struct JSRuntime {
     PRCondVar           *gcDone;
     PRCondVar           *requestDone;
     uint32              requestCount;
-    jsword              gcThread;
+    JSThread            *gcThread;
 
     /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
     PRLock              *rtLock;
@@ -225,6 +258,13 @@ struct JSRuntime {
  * value.
  */
 #define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
+
+    /*
+     * The index for JSThread info, returned by PR_NewThreadPrivateIndex.
+     * The value is visible and shared by all threads, but the data is
+     * private to each thread.
+     */
+    PRUintn             threadTPIndex;
 #endif /* JS_THREADSAFE */
 
     /*
@@ -431,6 +471,7 @@ struct JSTempValueRooter {
     JS_END_MACRO
 
 struct JSContext {
+    /* JSRuntime contextList linkage. */
     JSCList             links;
 
     /* Interpreter activation count. */
@@ -491,11 +532,15 @@ struct JSContext {
     /* GC and thread-safe state. */
     JSStackFrame        *dormantFrameChain; /* dormant stack frame to scan */
 #ifdef JS_THREADSAFE
-    jsword              thread;
+    JSThread            *thread;
     jsrefcount          requestDepth;
     JSScope             *scopeToShare;      /* weak reference, see jslock.c */
     JSScope             *lockedSealedScope; /* weak ref, for low-cost sealed
                                                scope locking */
+    JSCList             threadLinks;        /* JSThread contextList linkage */
+
+#define CX_FROM_THREAD_LINKS(tl) \
+    ((JSContext *)((char *)(tl) - offsetof(JSContext, threadLinks)))
 #endif
 
 #if JS_HAS_LVALUE_RETURN
@@ -564,6 +609,8 @@ struct JSContext {
  #endif
 };
 
+#define JS_THREAD_ID(cx)            ((cx)->thread ? (cx)->thread->id : 0)
+
 /*
  * Slightly more readable macros for testing per-context option settings (also
  * to hide bitset implementation detail).
@@ -584,7 +631,7 @@ struct JSContext {
  *
  * Note that JS_SetVersion API calls never pass JSVERSION_HAS_XML or'd into
  * that API's version parameter.
- * 
+ *
  * Note also that script->version must contain this XML option flag in order
  * for XDR'ed scripts to serialize and deserialize with that option preserved
  * for detection at run-time.  We can't copy other compile-time options into

@@ -64,6 +64,88 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+#ifdef JS_THREADSAFE
+
+/*
+ * Callback function to delete a JSThread info when the thread that owns it
+ * is destroyed.
+ */
+void JS_DLL_CALLBACK
+js_ThreadDestructorCB(void *ptr)
+{
+    JSThread *thread = (JSThread *)ptr;
+
+    if (!thread)
+        return;
+    while (!JS_CLIST_IS_EMPTY(&thread->contextList))
+        JS_REMOVE_AND_INIT_LINK(thread->contextList.next);
+    free(thread);
+}
+
+/*
+ * Get current thread-local JSThread info, creating one if it doesn't exist.
+ * Each thread has a unique JSThread pointer.
+ *
+ * Since we are dealing with thread-local data, no lock is needed.
+ *
+ * Return a pointer to the thread local info, NULL if the system runs out
+ * of memory, or it failed to set thread private data (neither case is very
+ * likely; both are probably due to out-of-memory).  It is up to the caller
+ * to report an error, if possible.
+ */
+JSThread *
+js_GetCurrentThread(JSRuntime *rt)
+{
+    JSThread *thread;
+
+    thread = (JSThread *)PR_GetThreadPrivate(rt->threadTPIndex);
+    if (!thread) {
+        /* New memory is set to 0 so that elements in gcFreeLists are NULL. */
+        thread = (JSThread *) calloc(1, sizeof(JSThread));
+        if (!thread)
+            return NULL;
+
+        if (PR_FAILURE == PR_SetThreadPrivate(rt->threadTPIndex, thread)) {
+            free(thread);
+            return NULL;
+        }
+
+        JS_INIT_CLIST(&thread->contextList);
+        thread->id = js_CurrentThreadId();
+    }
+    return thread;
+}
+
+/*
+ * Sets current thread as owning thread of a context by assigning the
+ * thread-private info to the context. If the current thread doesn't have
+ * private JSThread info, create one.
+ */
+JSBool
+js_SetContextThread(JSContext *cx)
+{
+    JSThread *thread = js_GetCurrentThread(cx->runtime);
+
+    if (!thread) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+    cx->thread = thread;
+    JS_REMOVE_LINK(&cx->threadLinks);
+    JS_APPEND_LINK(&cx->threadLinks, &thread->contextList);
+    return JS_TRUE;
+}
+
+/* Remove the owning thread info of a context. */
+void
+js_ClearContextThread(JSContext *cx)
+{
+    cx->thread = NULL;
+    JS_REMOVE_LINK(&cx->threadLinks);
+}
+
+#endif /* JS_THREADSAFE */
+
 void
 js_OnVersionChange(JSContext *cx)
 {
@@ -101,7 +183,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     cx->stackLimit = (jsuword)-1;
 #endif
 #ifdef JS_THREADSAFE
-    js_InitContextForLocking(cx);
+    JS_INIT_CLIST(&cx->threadLinks);
+    js_SetContextThread(cx);
 #endif
 
     JS_LOCK_GC(rt);
@@ -139,9 +222,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         js_DestroyContext(cx, JS_NO_GC);
         return NULL;
     }
-#endif
-#if JS_HAS_EXCEPTIONS
-    cx->throwing = JS_FALSE;
 #endif
 
     /*
@@ -319,6 +399,10 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
         }
         JS_free(cx, lrs);
     }
+
+#ifdef JS_THREADSAFE
+    js_ClearContextThread(cx);
+#endif
 
     /* Finally, free cx itself. */
     free(cx);
@@ -700,7 +784,7 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp)
      * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
      * on the error report, and exception-aware hosts should ignore it.
      */
-    JS_ASSERT(reportp); 
+    JS_ASSERT(reportp);
     if (reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
         reportp->flags |= JSREPORT_EXCEPTION;
 
@@ -741,7 +825,7 @@ js_ReportOutOfMemory(JSContext *cx)
     JSErrorReporter onError = cx->errorReporter;
 
     /* Get the message for this error, but we won't expand any arguments. */
-    const JSErrorFormatString *efs = 
+    const JSErrorFormatString *efs =
         js_GetLocalizedErrorMessage(cx, NULL, NULL, JSMSG_OUT_OF_MEMORY);
     const char *msg = efs ? efs->format : "Out of memory";
 
