@@ -242,7 +242,7 @@ public:
   virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, LPARAM lParam);
 #ifdef ACCESSIBILITY
   virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
-  nsIAccessible*          GetRootAccessible();
+  already_AddRefed<nsIAccessible> GetRootAccessible();
 #endif
   virtual PRBool          AutoErase();
   nsPoint*                GetLastPoint() { return &mLastPoint; }
