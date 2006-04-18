@@ -578,7 +578,7 @@ nsGetModuleFileName        nsWinAPIs::mGetModuleFileName = GetModuleFileNameW;
 nsGetCwd                   nsWinAPIs::mGetCwd = nsGetCwdW; 
 nsGetDCwd                  nsWinAPIs::mGetDCwd = nsGetDCwdW; 
 nsFopen                    nsWinAPIs::mFopen = nsFopenW;
-nsRemove                   nsWinAPIs::mRemove = nsRmdirW;
+nsRemove                   nsWinAPIs::mRemove = nsRemoveW;
 nsRmdir                    nsWinAPIs::mRmdir = nsRmdirW;
 nsChmod                    nsWinAPIs::mChmod = nsChmodW;
 
