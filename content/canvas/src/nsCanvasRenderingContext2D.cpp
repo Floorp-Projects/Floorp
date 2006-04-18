@@ -280,9 +280,12 @@ protected:
     enum {
         STYLE_STROKE = 0,
         STYLE_FILL,
-        STYLE_SHADOW,
-        STYLE_MAX
+        STYLE_SHADOW
+        //STYLE_MAX
     };
+
+    // VC6 sucks
+#define STYLE_MAX 3
 
     nsresult SetStyleFromVariant(nsIVariant* aStyle, PRInt32 aWhichStyle);
     void StyleColorToString(const nscolor& aColor, nsAString& aStr);
@@ -355,8 +358,6 @@ protected:
         nsCOMPtr<nsCanvasGradient> gradientStyles[STYLE_MAX];
         nsCOMPtr<nsCanvasPattern> patternStyles[STYLE_MAX];
     };
-    // this is for broken VC6
-    friend class ContextState;
 
     nsTArray<ContextState> mStyleStack;
 
