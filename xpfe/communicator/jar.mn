@@ -1,6 +1,5 @@
 comm.jar:
 #ifdef MOZ_XUL_APP
-# This means thunderbird
 % content communicator-platform %content/communicator-platform/ platform
 % content communicator-region %content/communicator-region/
 % content communicator %content/communicator/
@@ -53,7 +52,7 @@ comm.jar:
     content/communicator/findUtils.js                    (resources/content/findUtils.js)
     content/communicator/printPreviewBindings.xml        (resources/content/printPreviewBindings.xml)
     content/communicator/printing.js                     (resources/content/printing.js)
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 *   content/branding/contents.rdf                        (resources/content/contents-branding.rdf)
 
 en-US.jar:

@@ -1,4 +1,4 @@
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 comm.jar:
 *       content/navigator/contents.rdf                 (resources/content/contents.rdf)
 *       content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
