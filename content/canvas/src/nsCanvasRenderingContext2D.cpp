@@ -769,7 +769,7 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     if (NS_FAILED(rv) || !gdkdraw)
         return NS_ERROR_FAILURE;
 #else
-    gkddraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
+    gdkdraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
     if (!gdkdraw)
         return NS_ERROR_FAILURE;
 #endif
