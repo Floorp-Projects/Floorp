@@ -369,6 +369,8 @@ nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, ns
         nsMsgKey rootKey;
         PRUint32 rootFlags;
         GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(displayRootHdr));
+        if (!displayRootHdr)
+          continue;
         displayRootHdr->GetMessageKey(&rootKey);
         displayRootHdr->GetFlags(&rootFlags);
         rootFlags |= MSG_VIEW_FLAG_ISTHREAD;
