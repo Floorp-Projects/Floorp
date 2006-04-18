@@ -3661,11 +3661,6 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   }
 
   if (fndPageFrame && scrollableView) {
-    // find offset from view
-    nsPoint pnt;
-    nsIView * view;
-    fndPageFrame->GetOffsetFromView(pnt, &view);
-
     nscoord deadSpaceGap = 0;
     nsIPageSequenceFrame * sqf;
     if (NS_SUCCEEDED(CallQueryInterface(seqFrame, &sqf))) {

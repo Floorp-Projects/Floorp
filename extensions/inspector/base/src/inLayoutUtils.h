@@ -70,8 +70,7 @@ public:
    * @return the offset
    */
   static nsPoint GetClientOrigin(nsIFrame* aFrame);
-  static nsRect& GetScreenOrigin(nsIDOMElement* aElement);
-  
+
 };
 
 #endif // __inLayoutUtils_h__

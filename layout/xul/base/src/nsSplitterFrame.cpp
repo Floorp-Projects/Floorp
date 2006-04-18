@@ -965,13 +965,6 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
 
    
   if (realTimeDrag) {
-    nsIView* view = mParentBox->GetView();
-
-    if (!view) {
-        nsPoint   offset;
-        mParentBox->GetOffsetFromView(offset, &view);
-        NS_ASSERTION(nsnull != view, "no view");
-    }
     aPresContext->PresShell()->FlushPendingNotifications(Flush_Display);
   }
   else {

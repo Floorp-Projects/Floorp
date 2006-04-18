@@ -48,12 +48,10 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIView.h"
 #include "nsIPresShell.h"
 #include "nsIAtomService.h"
 #include "nsReadableUtils.h"
@@ -1344,21 +1342,19 @@ nsAutoCompleteController::GetPopupWidget()
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   popup->GetOwnerDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, nsnull);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  NS_ENSURE_TRUE(doc, nsnull);
+
   nsIPresShell* presShell = doc->GetShellAt(0);
+  NS_ENSURE_TRUE(presShell, nsnull);
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(popup);
   nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-  while (frame) {
-    nsIView* view = frame->GetViewExternal();
-    if (view && view->HasWidget())
-      return view->GetWidget();
-    frame = frame->GetParent();
-  }
+  NS_ENSURE_TRUE(frame, nsnull);
 
-  NS_ERROR("widget wasn't found!");
-
-  return nsnull;
+  return frame->GetWindow();
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
