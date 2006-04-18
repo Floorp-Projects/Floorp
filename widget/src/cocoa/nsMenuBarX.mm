@@ -258,7 +258,7 @@ nsMenuBarX::InstallCommandEventHandler()
    NS_ASSERTION(myWindowRef, "Can't get WindowRef to install command handler!");
    if (myWindowRef && sCommandEventHandler) {
      const EventTypeSpec commandEventList[] = {{kEventClassCommand, kEventCommandProcess}};
-     err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, 2, commandEventList, this, NULL);
+     err = ::InstallWindowEventHandler(myWindowRef, sCommandEventHandler, GetEventTypeCount(commandEventList), commandEventList, this, NULL);
      NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
    }
    return err;
@@ -282,62 +282,56 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
     return handled;
   
   nsMenuBarX* self = NS_REINTERPRET_CAST(nsMenuBarX*, userData);
-  switch (::GetEventKind(inEvent)) {
-    // user selected a menu item. See if it's one we handle.
-    case kEventCommandProcess:
+
+  switch (command.commandID) {
+    case kHICommandPreferences:
     {
-      switch (command.commandID) {
-        case kHICommandPreferences:
-        {
-          nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
-          if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
-            handled = noErr;
-          break;
-        }
-          
-        case kHICommandQuit:
-        {
-          nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
-          if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
-            handled = noErr;
-          break;
-        }
-          
-        case kHICommandAbout:
-        {
-          // the 'about' command is special because we don't have a
-          // nsIMenu or nsIMenuItem for the application menu. Grovel for the
-          // content node with an id of "aboutName" and call it
-          // directly.
-          nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(self->mDocument);
-          if (domDoc) {
-            nsCOMPtr<nsIDOMElement> domElement;
-            domDoc->GetElementById(NS_LITERAL_STRING("aboutName"),
-                                   getter_AddRefs(domElement));
-            nsCOMPtr<nsIContent> aboutContent(do_QueryInterface(domElement));
-            self->ExecuteCommand(aboutContent);
-          }
-          handled = noErr;
-          break;
-        }
-          
-        default:
-        {
-          // given the commandID, look it up in our hashtable and dispatch to
-          // that content node. Recall that we store weak pointers to the content
-          // nodes in the hash table.
-          nsPRUint32Key key(command.commandID);
-          nsIMenuItem* content = NS_REINTERPRET_CAST(nsIMenuItem*, self->mObserverTable.Get(&key));
-          if (content) {
-            content->DoCommand();
-            handled = noErr;
-          }
-          break;
-        }
-      } // switch on commandID
+      nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
+      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
+        handled = noErr;
       break;
     }
-  } // switch on event type
+
+    case kHICommandQuit:
+    {
+      nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
+      if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
+        handled = noErr;
+      break;
+    }
+
+    case kHICommandAbout:
+    {
+      // the 'about' command is special because we don't have a
+      // nsIMenu or nsIMenuItem for the application menu. Grovel for the
+      // content node with an id of "aboutName" and call it
+      // directly.
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(self->mDocument);
+      if (domDoc) {
+        nsCOMPtr<nsIDOMElement> domElement;
+        domDoc->GetElementById(NS_LITERAL_STRING("aboutName"),
+                               getter_AddRefs(domElement));
+        nsCOMPtr<nsIContent> aboutContent(do_QueryInterface(domElement));
+        self->ExecuteCommand(aboutContent);
+      }
+      handled = noErr;
+      break;
+    }
+
+    default:
+    {
+      // given the commandID, look it up in our hashtable and dispatch to
+      // that content node. Recall that we store weak pointers to the content
+      // nodes in the hash table.
+      nsPRUint32Key key(command.commandID);
+      nsIMenuItem* content = NS_REINTERPRET_CAST(nsIMenuItem*, self->mObserverTable.Get(&key));
+      if (content) {
+        content->DoCommand();
+        handled = noErr;
+      }
+      break;
+    }
+  } // switch on commandID
   
   return handled;
 } // CommandEventHandler
