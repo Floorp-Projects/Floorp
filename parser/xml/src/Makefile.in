@@ -45,6 +45,7 @@ MODULE		= xml
 LIBRARY_NAME	= saxp
 
 MOZILLA_INTERNAL_API = 1
+LIBXUL_LIBRARY	= 1
 
 REQUIRES	= \
 		necko \

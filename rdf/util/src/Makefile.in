@@ -42,6 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(srcdir)/objs.mk
+
+EXTRA_DEPS += $(srcdir)/objs.mk
+
 MODULE		= rdfutil
 LIBRARY_NAME	= rdfutil_s
 MOZILLA_INTERNAL_API = 1
@@ -51,7 +55,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  $(NULL)
 
-CPPSRCS		= nsRDFResource.cpp
+CPPSRCS		= $(RDF_UTIL_SRC_LCPPSRCS)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
