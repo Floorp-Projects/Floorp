@@ -295,14 +295,15 @@ libs:: $(PROGRAM)
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	sed -e "s/MOZ_APP_NAME/$(MOZ_APP_NAME)/" -e "s/MOZ_APP_DISPLAYNAME/$(MOZ_APP_DISPLAYNAME)/" -e "s/MOZ_APP_VERSION/$(MOZ_APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
 	rsync -a --copy-unsafe-links $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
-	cp -RL $(srcdir)/macbuild/mail-biff-badge.png 	$(DIST)/$(APP_NAME).app/Contents/Resources/mail-biff-badge.png
-	echo -n APPLMOZM > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+	cp -RL $(srcdir)/../branding/icons/mac/*.icns $(DIST)/$(APP_NAME).app/Contents/Resources/
+	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
+	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
