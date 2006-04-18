@@ -579,7 +579,7 @@ calItemBase.prototype = {
 
             var email = alarmComp.getFirstProperty("X-EMAILADDRESS");
             if (email)
-                this.setProperty("alarmEmailAddress", email);
+                this.setProperty("alarmEmailAddress", email.value);
         }
     },
 
