@@ -132,8 +132,8 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
-		$(EXTRA_DSO_LIBS) \
 		../shared/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
+		$(EXTRA_DSO_LIBS) \
 		$(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
