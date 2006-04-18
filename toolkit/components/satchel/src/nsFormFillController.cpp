@@ -66,10 +66,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsPresContext.h"
-#include "nsIView.h"
 #include "nsIFrame.h"
-#include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -139,38 +136,12 @@ GetScreenOrigin(nsIDOMElement* aElement)
   if (doc) {
     // Get Presentation shell 0
     nsIPresShell* presShell = doc->GetShellAt(0);
-    
+
     if (presShell) {
-      nsPresContext* presContext = presShell->GetPresContext();
-
-      if (presContext) {
-        // Get the scale from that Presentation Context
-        float scale;
-        scale = presContext->TwipsToPixels();
-
-        nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-        if (!frame)
-          return rect;
-
-        nsIView* view;
-        nsPoint offset;
-        frame->GetOffsetFromView(offset, &view);
-        if (view) {
-          nsPoint widgetOffset(0, 0);
-          nsIWidget* widget = view->GetNearestWidget(&widgetOffset);
-          if (widget) {
-            nsRect oldBox(0,0,0,0);
-            widget->WidgetToScreen(oldBox, rect);
-          }
-          
-          rect.x += NSTwipsToIntPixels(offset.x+widgetOffset.x, scale);
-          rect.y += NSTwipsToIntPixels(offset.y+widgetOffset.y, scale);
-        }
-        
-        size = frame->GetSize();
-        rect.width = NSTwipsToIntPixels(size.width, scale);
-        rect.height = NSTwipsToIntPixels(size.height, scale);
-      }
+      nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
+      if (!frame)
+        return rect;
+      rect = frame->GetScreenRectExternal();
     }
   }
   

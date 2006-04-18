@@ -56,12 +56,6 @@
 #include "nsIPrefService.h"
 #include "nsILookAndFeel.h"
 #include "nsPresContext.h"
-#ifdef USE_HACK_REPAINT
-// for repainting hack only
-#include "nsIView.h"
-#include "nsIViewManager.h"
-// end repainting hack only
-#endif
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -1058,20 +1052,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
           selCon->SetCaretReadOnly(kIsReadonly);
           selCon->SetCaretEnabled(PR_TRUE);
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-#ifdef USE_HACK_REPAINT
-  // begin hack repaint
-          nsIViewManager* viewmgr = ps->GetViewManager();
-          if (viewmgr) {
-            nsIView* view;
-            viewmgr->GetRootView(view);         // views are not refCounted
-            if (view) {
-              viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
-            }
-          }
-  // end hack repaint
-#else
           selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-#endif
         }
       }
     }
@@ -1123,21 +1104,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_DISABLED);
         }
 
-#ifdef USE_HACK_REPAINT
-// begin hack repaint
-        nsIViewManager* viewmgr = ps->GetViewManager();
-        if (viewmgr) 
-        {
-          nsIView* view;
-          viewmgr->GetRootView(view);         // views are not refCounted
-          if (view) {
-            viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
-          }
-        }
-// end hack repaint
-#else
         selCon->RepaintSelection(nsISelectionController::SELECTION_NORMAL);
-#endif
       }
     }
   }

@@ -142,7 +142,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
   imageFrame->GetImageMap(presContext, getter_AddRefs(map));
   NS_ENSURE_TRUE(map, NS_ERROR_FAILURE);
 
-  nsRect rect, orgRectPixels, pageRectPixels;
+  nsRect rect, orgRectPixels;
   rv = map->GetBoundsForAreaContent(ourContent, presContext, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -152,13 +152,13 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *w
   *x      = NSTwipsToIntPixels(rect.x, t2p); 
   *y      = NSTwipsToIntPixels(rect.y, t2p); 
 
-  // XXX aaronl not sure why we have to subtract the x,y from the width, height
-  //     -- but it works perfectly!
+  // XXX Areas are screwy; they return their rects as a pair of points, one pair
+  // stored into the width and height.
   *width  = NSTwipsToIntPixels(rect.width, t2p) - *x;
   *height = NSTwipsToIntPixels(rect.height, t2p) - *y;
 
   // Put coords in absolute screen coords
-  GetScreenOrigin(presContext, frame, &orgRectPixels);
+  orgRectPixels = frame->GetScreenRectExternal();
   *x += orgRectPixels.x;
   *y += orgRectPixels.y;
 

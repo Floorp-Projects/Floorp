@@ -848,37 +848,6 @@ NS_IMETHODIMP nsAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessibl
   return NS_ERROR_FAILURE;
 }
 
-void nsAccessible::GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect)
-{
-  aRect->x = aRect->y = 0;
-
-  if (!aPresContext) {
-    return;
-  }
-
-  nsPoint origin(0,0);
-  nsIView *view = aFrame->GetViewExternal();
-  if (!view) {
-    aFrame->GetOffsetFromView(origin, &view);
-    NS_ASSERTION(view, "Frame has no view");
-  }
-
-  nsPoint viewOrigin(0,0);
-  nsIWidget *widget = view->GetNearestWidget(&viewOrigin);
-  origin += viewOrigin;
-
-  // Get the scale from that Presentation Context
-  float t2p = aPresContext->TwipsToPixels();
-
-  // Convert to pixels using that scale
-  origin.x = NSTwipsToIntPixels(origin.x, t2p);
-  origin.y = NSTwipsToIntPixels(origin.y, t2p);
-  
-  // Add the widget's screen coordinates to the offset we've counted
-  NS_ASSERTION(widget, "No widget for top view");
-  widget->WidgetToScreen(nsRect(origin.x, origin.y, 1, 1), *aRect);
-}
-
 void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 {
 /*
@@ -998,8 +967,7 @@ NS_IMETHODIMP nsAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PR
 
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
-  nsRect orgRectPixels, pageRectPixels;
-  GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
+  nsRect orgRectPixels = aBoundingFrame->GetScreenRectExternal();
   *x += orgRectPixels.x;
   *y += orgRectPixels.y;
 
