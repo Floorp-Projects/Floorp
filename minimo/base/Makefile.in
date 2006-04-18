@@ -83,6 +83,7 @@ REQUIRES	= xpcom					 \
 		      phone					 \
 		      js					 \
 			  imglib2                \
+             toolkitcomps           \
 		      $(NULL)
 
 CPPSRCS	    = Minimo.cpp		  \

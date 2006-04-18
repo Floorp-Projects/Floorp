@@ -56,5 +56,8 @@ include $(topsrcdir)/config/config.mk
 LOCAL_INCLUDES	+= -I$(srcdir)/.
 OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore uuid ole32 oleaut32)
 
+# default size is 1mb which is way to much for this app.
+LDFLAGS += -STACK:65536
+
 include $(topsrcdir)/config/rules.mk
 

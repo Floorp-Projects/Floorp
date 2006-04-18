@@ -83,7 +83,7 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
     nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
     
     
-    appShell->CreateTopLevelWindow(xulParent, // get rid of if you undef above 
+    appShell->CreateTopLevelWindow(xulParent,
                                    0, 
                                    aChromeFlags,
                                    x,
