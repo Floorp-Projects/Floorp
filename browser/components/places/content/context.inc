@@ -75,6 +75,7 @@
   <menuitem id="placesContext_reload" command="placesCmd_reload"
             selection="livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
   <menuitem id="placesContext_sortby:name" command="placesCmd_sortby:name"
+            accesskey="&cmd.context_sortby_name.accesskey;"
             selection="mutable"/>
   <menuseparator id="placesContext_sortSeparator"
             selection="mutable|livemark/feedURI|livemark/bookmarkFeedURI|allLivemarks"/>
