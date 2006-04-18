@@ -4479,11 +4479,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           break;
         }
       }
-#else
+#endif
       // check whether IME window do mouse operation
       if (IMEMouseHandling(NS_MOUSE_LEFT_BUTTON_DOWN, IMEMOUSE_LDOWN, lParam))
         break;
-#endif
+
       result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN, wParam, lParam);
       DispatchPendingEvents();
     }
@@ -4910,7 +4910,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_INPUTLANGCHANGE:
       result = OnInputLangChange((HKL)lParam, aRetValue);
       break;
-#endif
 
     case WM_IME_STARTCOMPOSITION:
       result = OnIMEStartComposition();
@@ -4948,7 +4947,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = OnIMESetContext(wParam, lParam);
       break;
 
-#ifndef WINCE
     case WM_DROPFILES:
     {
 #if 0
@@ -5203,18 +5201,13 @@ LPCWSTR nsWindow::WindowClassW()
     WNDCLASSW wc;
 
 //    wc.style         = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wc.style         = CS_DBLCLKS;
     wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-#ifdef WINCE
-    wc.style         = 0;
-    wc.hIcon         = NULL;
-#else
-    wc.style         = CS_DBLCLKS;
     // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
     wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
-#endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -5268,22 +5261,13 @@ LPCWSTR nsWindow::WindowPopupClassW()
   if (!nsWindow::sIsPopupClassRegistered) {
     WNDCLASSW wc;
 
-#ifndef WINCE
     wc.style = CS_DBLCLKS | CS_XP_DROPSHADOW;
-#else
-    wc.style = 0;
-#endif
-
     wc.lpfnWndProc   = nsWindow::DefaultWindowProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = nsToolkit::mDllInstance;
-#ifdef WINCE
-    wc.hIcon         = NULL;
-#else
     // XXX : we don't need LoadIconW for now (see bug 171349, comment 181)
     wc.hIcon         = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
-#endif
     wc.hCursor       = NULL;
     wc.hbrBackground = mBrush;
     wc.lpszMenuName  = NULL;
@@ -7224,6 +7208,7 @@ NS_IMETHODIMP nsWindow::CancelIMEComposition()
 PRBool
 nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
 {
+#ifndef WINCE
   POINT ptPos;
   ptPos.x = (short)LOWORD(lParam);
   ptPos.y = (short)HIWORD(lParam);
@@ -7243,6 +7228,7 @@ nsWindow::IMEMouseHandling(PRUint32 aEventType, PRInt32 aAction, LPARAM lParam)
       }
     }
   }
+#endif
   return PR_FALSE;
 }
 
