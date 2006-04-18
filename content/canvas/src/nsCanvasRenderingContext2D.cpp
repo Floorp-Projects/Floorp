@@ -743,9 +743,13 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 
 #ifdef XP_WIN
     void *ptr = nsnull;
+#ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData(&ptr);
     if (NS_FAILED(rv) || !ptr)
         return NS_ERROR_FAILURE;
+#else
+    ptr = rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+#endif
     HDC dc = (HDC) ptr;
 
     dest = cairo_win32_surface_create (dc);
@@ -754,9 +758,15 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 
 #ifdef MOZ_WIDGET_GTK2
     GdkDrawable *gdkdraw = nsnull;
+#ifdef MOZILLA_1_8_BRANCH
     rv = rc->RetrieveCurrentNativeGraphicData((void**) &gdkdraw);
     if (NS_FAILED(rv) || !gdkdraw)
         return NS_ERROR_FAILURE;
+#else
+    gkddraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
+    if (!gdkdraw)
+        return NS_ERROR_FAILURE;
+#endif
 
     gint w, h;
     gdk_drawable_get_size (gdkdraw, &w, &h);
