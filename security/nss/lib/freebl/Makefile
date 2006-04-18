@@ -543,3 +543,17 @@ $(OBJDIR)/alg2268.obj: alg2268.c
 	@$(MAKE_OBJDIR)
 	$(CC) -Fo$@ -c $(filter-out /O+, $(CFLAGS)) $(call abspath,$<)
 endif
+
+# Bugzilla Bug 333917: the non-x86 code in desblapi.c seems to violate
+# ANSI C's strict aliasing rules.
+ifeq ($(OS_TARGET),Linux)
+ifneq ($(CPU_ARCH),x86)
+$(OBJDIR)/$(PROG_PREFIX)desblapi$(OBJ_SUFFIX): desblapi.c
+	@$(MAKE_OBJDIR)
+ifdef NEED_ABSOLUTE_PATH
+	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $(call abspath,$<)
+else
+	$(CC) -o $@ -c $(CFLAGS) -fno-strict-aliasing $<
+endif
+endif
+endif
