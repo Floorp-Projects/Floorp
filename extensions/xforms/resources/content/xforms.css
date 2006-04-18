@@ -147,7 +147,7 @@ hint > html|div.-moz-xforms-message-container {
 
 /* group */
 group {
-  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-base');
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-accessors');
 }
 
 /* output widgets */

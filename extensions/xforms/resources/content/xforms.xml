@@ -45,12 +45,6 @@
   is the controls for XHTML in xforms-xhtml.xml.
 -->
 
-
-<!DOCTYPE bindings [
-<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
-  %xformsDTD;
-]>
-
 <bindings id="xformsBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
@@ -65,39 +59,89 @@
   </binding>
 
 
-  <!-- BASE -->
-  <binding id="xformswidget-base">
-    <content><children/></content>
+  <!-- BASE BINDINGS
+    The next bindings are used as a base for xforms controls implementations.
+  -->
 
-    <implementation implements="nsIXFormsUIWidget">
+  <!-- The binding provides utils interface and interface for anonymous content
+    work.
+  -->
+  <binding id="xformswidget-general">
+    <implementation>
 
-    <!-- nsIXFormsUIWidget interface -->
-      <method name="refresh">
-        <body>
-          return true;
-        </body>
-      </method>
-
-      <method name="disable">
-        <parameter name="aDisable"/>
-        <body>
-          return true;
-        </body>
-      </method>
-
-      <method name="focus">
-        <body>
-          return false;
-        </body>
-      </method>
-
-    <!-- interface -->
+    <!-- utils interface -->
       <property name="XFORMS_NS" readonly="true">
         <getter>
           return "http://www.w3.org/2002/xforms";
         </getter>
       </property>
 
+      <!-- Dispatch UI Event to the control itself -->
+      <method name="dispatchDOMUIEvent">
+        <parameter name="aType"/>
+        <body>
+          var ev = document.createEvent("UIEvents");
+          ev.initUIEvent(aType, true, true, window, 1);
+          this.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
+
+      <!--
+        Dispatch an _XForms notification event_ to a node.
+        See http://www.w3.org/TR/xforms/slice4.html#evt-notify
+      -->
+      <method name="dispatchXFormsNotificationEvent">
+        <parameter name="aEventName"/>
+        <parameter name="aTarget"/>
+        <body>
+          var ev = document.createEvent("Events");
+          ev.initEvent(aEventName, true, false);
+          aTarget.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
+
+    <!-- interface for anonymous content work -->
+
+      <!--
+        Return the native control widget that is the object with access for
+        visual representation of this xforms control.
+      -->
+      <property name="control" readonly="true">
+        <getter>
+          if (!this._control)
+            this._control = this.getControlElement();
+          return this._control;
+        </getter>
+      </property>
+
+      <!--
+        Each base binding for xforms widget assumes successors bindings will
+        override the method.
+      -->
+      <method name="getControlElement">
+        <body>
+          return null;
+        </body>
+      </method>
+
+    <!-- private -->
+      <destructor>
+        this._control = null;
+      </destructor>
+
+      <field name="_control">null</field>
+    </implementation>
+  </binding>
+
+
+  <!-- Base binding is for xforms controls that are able to bind to instance
+    data.
+  -->
+  <binding id="xformswidget-accessors" extends="#xformswidget-general">
+    <implementation>
+    <!-- interface -->
       <property name="accessors" readonly="true">
         <getter>
           <![CDATA[
@@ -115,54 +159,6 @@
         </getter>
       </property>
 
-      <!-- Dispatch UI Event to the control itself -->
-      <method name="dispatchDOMUIEvent">
-        <parameter name="aType"/>
-        <body>
-          var ev = document.createEvent("UIEvents");
-          ev.initUIEvent(aType, true, true, window, 1);
-          this.dispatchEvent(ev);
-          return true;
-        </body>
-      </method>
-
-      <!--
-          Dispatch an _XForms notification event_ to a node.
-          See http://www.w3.org/TR/xforms/slice4.html#evt-notify
-      -->
-      <method name="dispatchXFormsNotificationEvent">
-        <parameter name="aEventName"/>
-        <parameter name="aTarget"/>
-        <body>
-          var ev = document.createEvent("Events");
-          ev.initEvent(aEventName, true, false);
-          aTarget.dispatchEvent(ev);
-          return true;
-        </body>
-      </method>
-
-      <!--
-        Return object to operate with underliying controls. Each xforms widget
-        defines interface what should implement the object.
-      -->
-      <property name="control" readonly="true">
-        <getter>
-          if (!this._control) 
-            this._control = this.getControlElement();
-          return this._control;
-        </getter>
-      </property>
-
-      <!--
-        Each base binding for xforms widget assumes successors bindings will
-        override the method.
-      -->
-      <method name="getControlElement">
-        <body>
-          throw Error("getControlElement() method isn't implemented.");
-        </body>
-      </method>
-
     <!-- private -->
       <constructor>
         this.delegate.widgetAttached();
@@ -171,7 +167,6 @@
       <destructor>
         this._delegate = null;
         this._accessors = null;
-        this._control = null;
       </destructor>
 
       <property name="delegate" readonly="true">
@@ -186,8 +181,43 @@
 
       <field name="_delegate">null</field>
       <field name="_accessors">null</field>
-      <field name="_control">null</field>
+    </implementation>
+  </binding>
 
+
+  <!--
+    Base binding is for xforms controls that implement nsIXFormsUIWidget
+    interface.
+  -->
+  <binding id="xformswidget-base" extends="#xformswidget-accessors">
+    <implementation implements="nsIXFormsUIWidget">
+
+    <!-- nsIXFormsUIWidget interface
+      Following methods are called from XTF part of XForms implementation and
+      thease methods should be overrided by successors bindings.
+    -->
+
+      <!-- Method is called when bound node was changed. -->
+      <method name="refresh">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <!-- Method is called when control should be disabled. -->
+      <method name="disable">
+        <parameter name="aDisable"/>
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <!-- Method is called when control should be focused -->
+      <method name="focus">
+        <body>
+          return false;
+        </body>
+      </method>
     </implementation>
   </binding>
 
@@ -319,7 +349,8 @@
     </implementation>
   </binding>
 
-<!-- ALERT: <DEFAULT> -->
+
+  <!-- ALERT: <DEFAULT> -->
   <binding id="inline-alert"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
@@ -371,7 +402,8 @@
     </implementation>
   </binding>
 
-<!-- MESSAGE: <DEFAULT>, reusing the content of inline-alert -->
+
+  <!-- MESSAGE: <DEFAULT>, reusing the content of inline-alert -->
   <binding id="ephemeral-message"
            extends="chrome://xforms/content/xforms.xml#inline-alert">
     <implementation implements="nsIXFormsEphemeralMessageUI">
@@ -410,6 +442,7 @@
       </method>
     </implementation>
   </binding>
+
 
   <!-- UPLOAD: <DEFAULT>
     The upload widget assumes successors bindings implement getElementControl()
