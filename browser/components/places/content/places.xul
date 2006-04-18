@@ -169,7 +169,8 @@
           <menuitem id="editSelectAll" command="placesCmd_select:all"
                     key="placesKey_select:all"/>
           <menuseparator/>
-          <menuitem id="editSortByName" command="placesCmd_sortby:name"/>
+          <menuitem id="editSortByName" command="placesCmd_sortby:name"
+                    accesskey="&cmd.sortby_name.accesskey;"/>
           <menuseparator/>
           <menuitem id="editFind" command="placesCmd_find"
                     key="placesKey_find"/>

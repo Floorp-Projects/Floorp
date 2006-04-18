@@ -85,7 +85,7 @@
              oncommand="PlacesController.openLinksInTabs();"/>
   </commandset>
   <commandset type="container">
-    <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>
+    <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;"/>
     <command id="placesCmd_new:bookmark" 
              label="&cmd.new_bookmark.label;" accesskey="&cmd.new_bookmark.accesskey;"
              oncommand="PlacesController.newBookmark()"/>
