@@ -193,6 +193,8 @@ public:
 
 private:
 
+  nsresult ReconstructDocElementHierarchyInternal();
+
   nsresult ReinsertContent(nsIContent*    aContainer,
                            nsIContent*    aChild);
 
@@ -206,7 +208,6 @@ private:
   void DoContentStateChanged(nsIContent*     aContent,
                              PRInt32         aStateMask);
 
-private:
   /* aMinHint is the minimal change that should be made to the element */
   void RestyleElement(nsIContent*     aContent,
                       nsIFrame*       aPrimaryFrame,

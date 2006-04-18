@@ -121,6 +121,17 @@ enum nsPresContext_CachedIntPrefType {
 const PRUint8 kPresContext_DefaultVariableFont_ID = 0x00; // kGenericFont_moz_variable
 const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fixed
 
+#ifdef DEBUG
+struct nsAutoLayoutPhase;
+
+enum nsLayoutPhase {
+  eLayoutPhase_Paint,
+  eLayoutPhase_Reflow,
+  eLayoutPhase_FrameC,
+  eLayoutPhase_COUNT
+};
+#endif
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 
@@ -762,12 +773,110 @@ protected:
     eDefaultFont_COUNT
   };
 
+#ifdef DEBUG
+private:
+  friend struct nsAutoLayoutPhase;
+  PRUint32 mLayoutPhaseCount[eLayoutPhase_COUNT];
+public:
+  PRUint32 LayoutPhaseCount(nsLayoutPhase aPhase) {
+    return mLayoutPhaseCount[aPhase];
+  }
+#endif
+
 };
 
 // Bit values for StartLoadImage's aImageStatus
 #define NS_LOAD_IMAGE_STATUS_ERROR      0x1
 #define NS_LOAD_IMAGE_STATUS_SIZE       0x2
 #define NS_LOAD_IMAGE_STATUS_BITS       0x4
+
+#ifdef DEBUG
+
+struct nsAutoLayoutPhase {
+  nsAutoLayoutPhase(nsPresContext* aPresContext, nsLayoutPhase aPhase)
+    : mPresContext(aPresContext), mPhase(aPhase), mCount(0)
+  {
+    Enter();
+  }
+
+  ~nsAutoLayoutPhase()
+  {
+    Exit();
+    NS_ASSERTION(mCount == 0, "imbalanced");
+  }
+
+  void Enter()
+  {
+    switch (mPhase) {
+      case eLayoutPhase_Paint:
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+                     "recurring into paint");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                     "painting in the middle of reflow");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+                     "painting in the middle of frame construction");
+        break;
+      case eLayoutPhase_Reflow:
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+                     "reflowing in the middle of a paint");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                     "recurring into reflow");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+                     "reflowing in the middle of frame construction");
+        break;
+      case eLayoutPhase_FrameC:
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+                     "constructing frames in the middle of a paint");
+        NS_ASSERTION(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+                     "constructing frames in the middle of reflow");
+        // The nsXBLService::LoadBindings call in ConstructFrameInternal
+        // makes us hit this one too often to be an NS_ASSERTION,
+        // despite how scary it is.
+        NS_WARN_IF_FALSE(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+                         "recurring into frame construction");
+        break;
+      default:
+        break;
+    }
+    ++(mPresContext->mLayoutPhaseCount[mPhase]);
+    ++mCount;
+  }
+
+  void Exit()
+  {
+    NS_ASSERTION(mCount > 0 && mPresContext->mLayoutPhaseCount[mPhase] > 0,
+                 "imbalanced");
+    --(mPresContext->mLayoutPhaseCount[mPhase]);
+    --mCount;
+  }
+
+private:
+  nsPresContext *mPresContext;
+  nsLayoutPhase mPhase;
+  PRUint32 mCount;
+};
+
+#define AUTO_LAYOUT_PHASE_ENTRY_POINT(pc_, phase_) \
+  nsAutoLayoutPhase autoLayoutPhase((pc_), (eLayoutPhase_##phase_))
+#define LAYOUT_PHASE_TEMP_EXIT() \
+  PR_BEGIN_MACRO \
+    autoLayoutPhase.Exit(); \
+  PR_END_MACRO
+#define LAYOUT_PHASE_TEMP_REENTER() \
+  PR_BEGIN_MACRO \
+    autoLayoutPhase.Enter(); \
+  PR_END_MACRO
+
+#else
+
+#define AUTO_LAYOUT_PHASE_ENTRY_POINT(pc_, phase_) \
+  PR_BEGIN_MACRO PR_END_MACRO
+#define LAYOUT_PHASE_TEMP_EXIT() \
+  PR_BEGIN_MACRO PR_END_MACRO
+#define LAYOUT_PHASE_TEMP_REENTER() \
+  PR_BEGIN_MACRO PR_END_MACRO
+
+#endif
 
 #ifdef MOZ_REFLOW_PERF
 
