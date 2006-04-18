@@ -544,7 +544,7 @@
           // textnode under the bound node.
           var copySelectedOrDeselected = new Boolean();
           copySelectedOrDeselected.value = false;
-          var contentEnvelope = this._getSelectedValues(copySelectedOrDeselected);
+          var contentEnvelope = this._processSelectedValues(copySelectedOrDeselected);
           if (contentEnvelope) {
             if (boundNode.nodeType == Node.ELEMENT_NODE) {
               // we shouldn't call setContent if we haven't selected any
@@ -568,11 +568,11 @@
               }
             } else {
               // if some copyItems were selected by the user prior to the call
-              // to _getSelectedValues, then we would not have set up
+              // to _processSelectedValues, then we would not have set up
               // _accessorValueCache.  Since the node we are bound to can't
               // be set by copyItems (its not an ELEMENT_NODE), any copyItems
               // in this select would have been deselected during
-              // _getSelectedValues.  Thus, anything in the contentEnvelope at
+              // _processSelectedValues.  Thus, anything in the contentEnvelope at
               // this point should just be strings and so we can set
               // delegate.value directly and use _accessorValueCache after all.
 
@@ -584,7 +584,13 @@
         </body>
       </method>
 
-      <method name="_getSelectedValues">
+      <!--
+        The method serves to
+          1) unselect illegally selected items
+          2) fire "xforms-select"/"xforms-deselect" events
+          3) return list of selected values
+      -->
+      <method name="_processSelectedValues">
         <parameter name="aIsACopyItemSelectedOrDeselected"/>
         <body>
         <![CDATA[
@@ -598,8 +604,10 @@
           }
 
           var boundNode = this.accessors.getBoundNode();
-          if (!boundNode)
+          if (!boundNode) {
+            this._dispatchSelectEvents();
             return;
+          }
 
           // we are cloning boundNode to create a node that we will return.
           // By the end of this function, assuming all went well,
@@ -610,6 +618,7 @@
           var contentEnvelope = null;
           contentEnvelope = boundNode.cloneNode(false);
           if (!contentEnvelope) {
+            this._dispatchSelectEvents();
             return;
           }
           var boundType = boundNode.nodeType;
@@ -702,6 +711,7 @@
             contentEnvelope.nodeValue = selectedValues;
           }
 
+          this._dispatchSelectEvents();
           return contentEnvelope;
         ]]>
         </body>
@@ -715,16 +725,16 @@
           for (var i = 0; i < options.length; i++) {
             var selected = this.control.isItemSelected(options[i].option);
             if (options[i].wasSelected && !selected) {
-              this.dispatchSelectEvent(options[i].control, "xforms-deselect");
               options[i].wasSelected = false;
+              this.dispatchSelectEvent(options[i].control, "xforms-deselect");
             }
           }
 
           for (var i = 0; i < options.length; i++) {
             var selected = this.control.isItemSelected(options[i].option);
             if (!options[i].wasSelected && selected) {
-              this.dispatchSelectEvent(options[i].control, "xforms-select");
               options[i].wasSelected = true;
+              this.dispatchSelectEvent(options[i].control, "xforms-select");
             }
           }
           ]]>
@@ -824,20 +834,32 @@
         </setter>
       </property>
 
-      <!-- Update instance data to native control widget value. -->
+      <!-- Update instance data to native control widget value.
+        @param aIncremental - will be true if this function is called because
+          the user selected a new value in the native control widget. It will be
+          false if this function is called due to focus leaving the native
+          control widget.
+      -->
       <method name="updateInstanceData">
         <parameter name="aIncremental"/>
         <body>
-          if (this.parentControl) {
-            if (!aIncremental || this.parentControl.incremental) {
-              this.parentControl._setBoundValue();
-            } else {
-              // we should call _getSelectedValues() method since we probably
-              // should unselect illegaly selected items.
-              this.parentControl._getSelectedValues();
-            }
-            this.parentControl._dispatchSelectEvents();
+        <![CDATA[
+          if (!this.parentControl)
+            return;
+
+          // No need to update the bound value if the control is incremental and
+          // we are losing focus. It should already be up to date.
+          if (this.parentControl.incremental && !aIncremental)
+            return;
+
+          if (!aIncremental || this.parentControl.incremental) {
+            this.parentControl._setBoundValue();
+          } else {
+            // we should call _processSelectedValues() method since we probably
+            // should unselect illegaly selected items.
+            this.parentControl._processSelectedValues();
           }
+        ]]>
         </body>
       </method>
 
