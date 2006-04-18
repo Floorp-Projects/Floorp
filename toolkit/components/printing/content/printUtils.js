@@ -304,8 +304,17 @@ var PrintUtils = {
     var isModif = aEvent.ctrlKey || aEvent.metaKey;
     // ESC and Ctrl-W exits the PP
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE || isModif &&
-        (aEvent.charCode == closeKey || aEvent.charCode == closeKey + 32))
+        (aEvent.charCode == closeKey || aEvent.charCode == closeKey + 32)) {
       PrintUtils.exitPrintPreview();
+    }
+    else if (isModif) {
+      var printPreviewTB = document.getElementById("print-preview-toolbar");
+      var printKey = document.getElementById("printKb").getAttribute("key").toUpperCase();
+      var pressedKey = String.fromCharCode(aEvent.charCode).toUpperCase();
+      if (printKey == pressedKey) {
+	  PrintUtils.print();
+      }
+    }
     // cancel shortkeys
     if (isModif) {
       aEvent.preventDefault();
