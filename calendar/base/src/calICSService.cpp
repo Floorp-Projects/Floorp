@@ -670,9 +670,7 @@ calIcalComponent::Get##Attrname(calIDateTime **dtp)                     \
             NS_WARNING("Can't find specified VTIMEZONE in VCALENDAR!"); \
             return NS_ERROR_FAILURE;                                    \
         }                                                               \
-        icaltimezone_convert_time(&itt, zone, icaltimezone_get_utc_timezone()); \
-        itt.is_utc = 1;                                                 \
-        itt.zone = icaltimezone_get_utc_timezone();                     \
+        itt.zone = zone;                                                \
     }                                                                   \
     dt = new calDateTime(&itt);                                         \
     if (!dt)                                                            \
