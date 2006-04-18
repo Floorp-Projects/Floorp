@@ -45,6 +45,8 @@
         command="cmd_paste"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt"
         command="cmd_undo"/>
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt,shift"
+        command="cmd_redo"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="control"
         command="cmd_deleteWordBackward"/>
     </handlers>
@@ -84,6 +86,7 @@
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_undo"/>
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt,shift" command="cmd_redo"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="control"
         command="cmd_deleteWordBackward"/>
      </handlers>
@@ -129,6 +132,7 @@
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_undo"/>
+      <handler event="keypress" keycode="VK_BACK" modifiers="alt,shift" command="cmd_redo"/>
       <handler event="keypress" keycode="VK_LEFT" modifiers="accel" command="cmd_wordPrevious"/>
       <handler event="keypress" keycode="VK_RIGHT" modifiers="accel" command="cmd_wordNext"/>
       <handler event="keypress" keycode="VK_LEFT" modifiers="shift,accel" command="cmd_selectWordPrevious"/>
