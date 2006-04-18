@@ -77,6 +77,10 @@ REQUIRES	= \
 		libpixman \
 		$(NULL)
 
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+REQUIRES += thebes
+endif
+
 # XXX some platforms can't handle building
 # an empty .a/lib.  Remove this dummy.cpp
 # whenever w have a rendering context
@@ -94,6 +98,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 DEFINES += -D_IMPL_NS_LAYOUT

@@ -40,21 +40,18 @@
 
 #include "nsISupports.h"
 #include "nsIFrame.h"
-#include "imgIContainer.h"
 
-// {8fd94ec9-d4e0-409b-af8f-828c7d7648f5}
+// {C234660C-BD06-493e-8583-939A5A158B37}
 #define NS_ICANVASELEMENT_IID \
-    { 0x8fd94ec9, 0xd4e0, 0x409b, { 0xaf, 0x8f, 0x82, 0x8c, 0x7d, 0x76, 0x48, 0xf5 } }
+    { 0xc234660c, 0xbd06, 0x493e, { 0x85, 0x83, 0x93, 0x9a, 0x5a, 0x15, 0x8b, 0x37 } }
+
+class nsIRenderingContext;
+
+struct _cairo_surface;
 
 class nsICanvasElement : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASELEMENT_IID)
-
-  /**
-   * Ask the Canvas Element to return the current image container that
-   * the frame should render.
-   */
-  NS_IMETHOD GetCanvasImageContainer (imgIContainer **aImageContainer) = 0;
 
   /**
    * Ask the canvas Element to return the primary frame, if any
@@ -62,10 +59,21 @@ public:
   NS_IMETHOD GetPrimaryCanvasFrame (nsIFrame **aFrame) = 0;
 
   /**
-   * Ask the canvas element to notify the rendering context to update
-   * the image frame, in preparation for rendering
+   * Get the size in pixels of this canvas element
    */
-  NS_IMETHOD UpdateImageFrame () = 0;
+  NS_IMETHOD GetSize (PRUint32 *width, PRUint32 *height) = 0;
+
+  /*
+   * Ask the canvas element to tell the contexts to render themselves
+   * into the given nsIRenderingContext at the origin.
+   */
+  NS_IMETHOD RenderContexts (nsIRenderingContext *rc) = 0;
+
+  /*
+   * Ask the canvas element to tell the contexts to render themselves
+   * into to given cairo_surface_t.
+   */
+  NS_IMETHOD RenderContextsToSurface (struct _cairo_surface *surf) = 0;
   
   /**
    * Determine whether the canvas is write-only.
