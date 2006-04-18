@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,34 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMetricsEventItem_h__
-#define nsMetricsEventItem_h__
+#ifndef nsStringUtils_h__
+#define nsStringUtils_h__
 
-#include "nsIMetricsService.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
+// TODO: move this into xpcom/glue and extend it with more APIs.
+
 #include "nsStringAPI.h"
 
-class nsIPropertyBag;
+/**
+ * Append integer to string.
+ */
+void AppendInt(nsAString &str, PRInt32 val);
+void AppendInt(nsAString &str, PRInt64 val);
 
-// nsMetricsEventItem implements a single event item that can store properties.
+/**
+ * Find a char in the given string.
+ * @returns offset of char, or -1 if not found.
+ */
+PRInt32 FindChar(const nsAString &str, PRUnichar c);
 
-class nsMetricsEventItem : public nsIMetricsEventItem
-{
- public:
-  nsMetricsEventItem(const nsAString &itemNamespace,
-                     const nsAString &itemName);
+/**
+ * Find a char in the given string, searching from the end of the string.
+ * @returns offset of char, or -1 if not found.
+ */
+PRInt32 RFindChar(const nsAString &str, PRUnichar c);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMETRICSEVENTITEM
-
- private:
-  ~nsMetricsEventItem();
-
-  nsString mNamespace;
-  nsString mName;
-  nsCOMPtr<nsIPropertyBag> mProperties;
-  nsTArray< nsCOMPtr<nsIMetricsEventItem> > mChildren;
-};
-
-#endif  // nsMetricsEventItem_h__
+#endif  // nsStringUtils_h__

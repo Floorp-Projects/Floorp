@@ -63,10 +63,10 @@
 // loadtime: The elapsed time for the load, in milliseconds (uint32).
 
 #include "nsIWebProgressListener.h"
+#include "nsIWritablePropertyBag2.h"
 #include "nsWeakReference.h"
 #include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
-#include "nsHashPropertyBag.h"
 
 class nsLoadCollector : public nsIWebProgressListener,
                         public nsSupportsWeakReference
@@ -87,7 +87,7 @@ class nsLoadCollector : public nsIWebProgressListener,
   nsresult Init();
 
   struct RequestEntry {
-    nsRefPtr<nsHashPropertyBag> properties;
+    nsCOMPtr<nsIWritablePropertyBag2> properties;
     PRTime startTime;
   };
 

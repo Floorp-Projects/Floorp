@@ -43,16 +43,23 @@
 #include "nsCURILoader.h"
 #include "nsIServiceManager.h"
 #include "nsIWebProgress.h"
-#include "nsDocShellLoadTypes.h"
+#include "nsIDocShell.h"
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsServiceManagerUtils.h"
+
+// This is needed to gain access to the LOAD_ defines in this file.
+#define MOZILLA_INTERNAL_API
+#include "nsDocShellLoadTypes.h"
+#undef MOZILLA_INTERNAL_API
 
 //-----------------------------------------------------------------------------
 
 #if defined(__linux)
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 static FILE *sProcFP;
 static void GetMemUsage_Shutdown() {
   if (sProcFP) {
@@ -62,7 +69,23 @@ static void GetMemUsage_Shutdown() {
 }
 #elif defined(XP_WIN)
 #include <windows.h>
+#if _MSC_VER > 1200
 #include <psapi.h>
+#else
+typedef struct _PROCESS_MEMORY_COUNTERS {
+  DWORD cb;
+  DWORD PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+} PROCESS_MEMORY_COUNTERS;
+typedef PROCESS_MEMORY_COUNTERS *PPROCESS_MEMORY_COUNTERS;
+#endif
 typedef BOOL (WINAPI * GETPROCESSMEMORYINFO_FUNC)(
     HANDLE process, PPROCESS_MEMORY_COUNTERS counters, DWORD cb);
 static HMODULE sPSModule;
@@ -177,7 +200,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
 
 #ifdef PR_LOGGING
   if (MS_LOG_ENABLED()) {
-    nsCAutoString name;
+    nsCString name;
     request->GetName(name);
 
     MS_LOG(("LoadCollector: progress = %p, request = %p [%s], flags = %x, status = %x",
@@ -205,10 +228,10 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
 
     rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(entry.properties));
     NS_ENSURE_SUCCESS(rv, rv);
-    nsHashPropertyBag *props = entry.properties;
+    nsIWritablePropertyBag2 *props = entry.properties;
 
-    rv = nsMetricsUtils::PutUint16(props, NS_LITERAL_STRING("window"),
-                                   nsMetricsService::GetWindowID(window));
+    rv = props->SetPropertyAsUint32(NS_LITERAL_STRING("window"),
+                                    nsMetricsService::GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (flags & STATE_RESTORING) {
@@ -216,7 +239,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    nsAutoString origin;
+    nsString origin;
     PRUint32 loadType;
     docShell->GetLoadType(&loadType);
 
@@ -224,29 +247,29 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
     case LOAD_NORMAL:
     case LOAD_NORMAL_REPLACE:
     case LOAD_BYPASS_HISTORY:
-      origin.AssignLiteral("typed");
+      origin = NS_LITERAL_STRING("typed");
       break;
     case LOAD_NORMAL_EXTERNAL:
-      origin.AssignLiteral("external");
+      origin = NS_LITERAL_STRING("external");
       break;
     case LOAD_HISTORY:
-      origin.AssignLiteral("session-history");
+      origin = NS_LITERAL_STRING("session-history");
       break;
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
     case LOAD_RELOAD_CHARSET_CHANGE:
-      origin.AssignLiteral("reload");
+      origin = NS_LITERAL_STRING("reload");
       break;
     case LOAD_LINK:
-      origin.AssignLiteral("link");
+      origin = NS_LITERAL_STRING("link");
       break;
     case LOAD_REFRESH:
-      origin.AssignLiteral("refresh");
+      origin = NS_LITERAL_STRING("refresh");
       break;
     default:
-      origin.AssignLiteral("other");
+      origin = NS_LITERAL_STRING("other");
       break;
     }
     rv = props->SetPropertyAsAString(NS_LITERAL_STRING("origin"), origin);
@@ -258,7 +281,7 @@ nsLoadCollector::OnStateChange(nsIWebProgress *webProgress,
     if (mRequestMap.Get(request, &entry)) {
       // Log a <document action="load"> event
 
-      nsHashPropertyBag *props = entry.properties;
+      nsIWritablePropertyBag2 *props = entry.properties;
       rv = props->SetPropertyAsACString(NS_LITERAL_STRING("action"),
                                         NS_LITERAL_CSTRING("load"));
       NS_ENSURE_SUCCESS(rv, rv);

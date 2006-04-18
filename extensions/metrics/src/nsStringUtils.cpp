@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,34 +36,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMetricsEventItem_h__
-#define nsMetricsEventItem_h__
+#include "nsStringUtils.h"
+#include "prprf.h"
 
-#include "nsIMetricsService.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
-#include "nsStringAPI.h"
-
-class nsIPropertyBag;
-
-// nsMetricsEventItem implements a single event item that can store properties.
-
-class nsMetricsEventItem : public nsIMetricsEventItem
+void AppendInt(nsAString &str, PRInt64 val)
 {
- public:
-  nsMetricsEventItem(const nsAString &itemNamespace,
-                     const nsAString &itemName);
+  char buf[32];
+  PR_snprintf(buf, sizeof(buf), "%lld", val);
+  str.Append(NS_ConvertASCIItoUTF16(buf));
+}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMETRICSEVENTITEM
+void AppendInt(nsAString &str, PRInt32 val)
+{
+  char buf[32];
+  PR_snprintf(buf, sizeof(buf), "%ld", val);
+  str.Append(NS_ConvertASCIItoUTF16(buf));
+}
 
- private:
-  ~nsMetricsEventItem();
+PRInt32 FindChar(const nsAString &str, PRUnichar c)
+{
+  const PRUnichar *start;
+  PRUint32 len = NS_StringGetData(str, &start);
+  const PRUnichar *iter = start, *end = start + len;
+  for (; iter != end; ++iter) {
+    if (*iter == c)
+      return iter - start;
+  }
+  return -1;
+}
 
-  nsString mNamespace;
-  nsString mName;
-  nsCOMPtr<nsIPropertyBag> mProperties;
-  nsTArray< nsCOMPtr<nsIMetricsEventItem> > mChildren;
-};
-
-#endif  // nsMetricsEventItem_h__
+PRInt32 RFindChar(const nsAString &str, PRUnichar c)
+{
+  const PRUnichar *start;
+  PRUint32 len = NS_StringGetData(str, &start);
+  const PRUnichar *end = start + len, *iter = end - 1;
+  for (; iter >= start; --iter) {
+    if (*iter == c)
+      return iter - start;
+  }
+  return -1;
+}

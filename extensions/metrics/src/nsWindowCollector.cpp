@@ -44,6 +44,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsDocShellCID.h"
 #include "nsAutoPtr.h"
 
@@ -119,17 +120,17 @@ nsWindowCollector::Observe(nsISupports *subject,
                            const char *topic,
                            const PRUnichar *data)
 {
-  nsRefPtr<nsHashPropertyBag> properties;
+  nsCOMPtr<nsIWritablePropertyBag2> properties;
   nsresult rv = nsMetricsUtils::NewPropertyBag(getter_AddRefs(properties));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMWindow> window;
-  nsCAutoString action;
+  nsCString action;
 
   if (strcmp(topic, NS_WEBNAVIGATION_CREATE) == 0 ||
       strcmp(topic, NS_CHROME_WEBNAVIGATION_CREATE) == 0) {
     // Log a window creation event.
-    action.AssignLiteral("create");
+    action.Assign("create");
 
     nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(subject);
     NS_ENSURE_STATE(item);
@@ -143,9 +144,8 @@ nsWindowCollector::Observe(nsISupports *subject,
     item->GetParent(getter_AddRefs(parentItem));
     nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentItem);
     if (parentWindow) {
-      PRUint16 id = nsMetricsService::GetWindowID(parentWindow);
-      rv = nsMetricsUtils::PutUint16(properties,
-                                     NS_LITERAL_STRING("parent"), id);
+      PRUint32 id = nsMetricsService::GetWindowID(parentWindow);
+      rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("parent"), id);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -155,7 +155,7 @@ nsWindowCollector::Observe(nsISupports *subject,
     }
   } else if (strcmp(topic, "toplevel-window-ready") == 0) {
     // Log a window open event.
-    action.AssignLiteral("open");
+    action.Assign("open");
 
     window = do_QueryInterface(subject);
     NS_ENSURE_STATE(window);
@@ -164,25 +164,24 @@ nsWindowCollector::Observe(nsISupports *subject,
     window->GetOpener(getter_AddRefs(opener));
     if (opener) {
       // Toplevel windows opened from native code have no opener.
-      rv = nsMetricsUtils::PutUint16(properties,
-                                     NS_LITERAL_STRING("opener"),
-                                     nsMetricsService::GetWindowID(opener));
+      rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("opener"),
+                                         nsMetricsService::GetWindowID(opener));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else if (strcmp(topic, "domwindowclosed") == 0) {
     // Log a window close event.
-    action.AssignLiteral("close");
+    action.Assign("close");
     window = do_QueryInterface(subject);
   } else if (strcmp(topic, NS_WEBNAVIGATION_DESTROY) == 0 ||
              strcmp(topic, NS_CHROME_WEBNAVIGATION_DESTROY) == 0) {
     // Log a window destroy event.
-    action.AssignLiteral("destroy");
+    action.Assign("destroy");
     window = do_GetInterface(subject);
   }
 
   if (window) {
-    rv = nsMetricsUtils::PutUint16(properties, NS_LITERAL_STRING("windowid"),
-                                   nsMetricsService::GetWindowID(window));
+    rv = properties->SetPropertyAsUint32(NS_LITERAL_STRING("windowid"),
+                                         nsMetricsService::GetWindowID(window));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = properties->SetPropertyAsACString(NS_LITERAL_STRING("action"),
