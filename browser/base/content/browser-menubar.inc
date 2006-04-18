@@ -357,7 +357,8 @@
                           key="historyHome"/>
                 <menuseparator/>
                 <menuitem label="&historySearchCmd.label;"
-                          command="Browser:SearchHistory"/>
+                          command="Browser:SearchHistory"
+                          key="searchHistoryKb"/>
                 <menuitem label="&historyShowCmd.label;"
                           command="Browser:ShowHistory"/>
                 <menuseparator id="startTabHistorySeparator"/>

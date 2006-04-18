@@ -346,22 +346,27 @@
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
     
 #ifdef XP_MACOSX
-
     <key id="key_stop_mac" modifiers="accel" key="&stopCmd.macCommandKey;" oncommand="BrowserStop();"/>
-#ifdef MOZ_PLACES
-    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel,shift"/>
-#else
-    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistoryPlaces" modifiers="accel,shift"/>
 #endif
 
-#else
-
 #ifdef MOZ_PLACES
-    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistoryPlaces" modifiers="accel"/>
+    <key id="searchHistoryKb"
+         key="&historySidebarCmd.commandKey;"
+#ifdef XP_MACOSX
+         modifiers="accel,shift"
 #else
-    <key id="key_gotoHistory"  key="&historySidebarCmd.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
+         modifiers="accel"
 #endif
-
+         command="viewHistoryPlaces"/>
+#else
+    <key id="key_gotoHistory"
+         key="&historySidebarCmd.commandKey;"
+#ifdef XP_MACOSX
+         modifiers="accel,shift"
+#else
+         modifiers="accel"
+#endif
+         command="viewHistorySidebar"/>
 #endif
 
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
