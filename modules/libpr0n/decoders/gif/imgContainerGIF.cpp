@@ -243,18 +243,19 @@ NS_IMETHODIMP imgContainerGIF::SetAnimationMode(PRUint16 aAnimationMode)
                aAnimationMode == imgIContainer::kLoopOnceAnimMode,
                "Wrong Animation Mode is being set!");
 
-  if (mAnimationMode == kNormalAnimMode &&
-      (aAnimationMode == kDontAnimMode ||
-       aAnimationMode == kLoopOnceAnimMode)) {
-    StopAnimation();
-  } else if (aAnimationMode == kNormalAnimMode &&
-             (mAnimationMode == kDontAnimMode ||
-              mAnimationMode == kLoopOnceAnimMode)) {
-    mAnimationMode = aAnimationMode;
-    StartAnimation();
-    return NS_OK;
+  switch (mAnimationMode = aAnimationMode) {
+    case kDontAnimMode:
+      StopAnimation();
+      break;
+    case kNormalAnimMode:
+      if (mLoopCount != 0 || mCurrentAnimationFrameIndex + 1 < mFrames.Count())
+        StartAnimation();
+      break;
+    case kLoopOnceAnimMode:
+      if (mCurrentAnimationFrameIndex + 1 < mFrames.Count())
+        StartAnimation();
+      break;
   }
-  mAnimationMode = aAnimationMode;
 
   return NS_OK;
 }
