@@ -168,13 +168,31 @@ static nsListControlFrame* GetEnclosingListFrame(nsIFrame* aSelectsAreaFrame)
   return nsnull;
 }
 
-static void PaintListFocus(nsIFrame* aFrame,
-     nsIRenderingContext* aCtx, const nsRect& aDirtyRect, nsPoint aPt)
-{
-  nsListControlFrame* listFrame = GetEnclosingListFrame(aFrame);
-  // listFrame must be non-null or we wouldn't get called.
-  listFrame->PaintFocus(*aCtx, aPt - aFrame->GetOffsetTo(listFrame));
-}
+class nsDisplayListFocus : public nsDisplayItem {
+public:
+  nsDisplayListFocus(nsSelectsAreaFrame* aFrame) : nsDisplayItem(aFrame) {
+    MOZ_COUNT_CTOR(nsDisplayListFocus);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayListFocus() {
+    MOZ_COUNT_DTOR(nsDisplayListFocus);
+  }
+#endif
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
+    // override bounds because the list item focus ring may extend outside
+    // the nsSelectsAreaFrame
+    nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
+    return listFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(listFrame);
+  }
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx,
+     const nsRect& aDirtyRect) {
+    nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
+    // listFrame must be non-null or we wouldn't get called.
+    listFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(listFrame));
+  }
+  NS_DISPLAY_DECL_NAME("ListFocus")
+};
 
 NS_IMETHODIMP
 nsSelectsAreaFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -206,7 +224,7 @@ nsSelectsAreaFrame::BuildDisplayListInternal(nsDisplayListBuilder*   aBuilder,
     // because then the list's scrollframe won't clip it (the scrollframe
     // only clips contained descendants).
     return aLists.Outlines()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(this, PaintListFocus, "ListFocus"));
+      nsDisplayListFocus(this));
   }
   
   return NS_OK;
