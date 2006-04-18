@@ -43,6 +43,7 @@
 #include "nsHashKeys.h"
 
 class nsIDOMElement;
+class nsIFile;
 
 class nsMetricsConfig
 {

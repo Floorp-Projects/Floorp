@@ -82,9 +82,7 @@ nsMetricsEventItem::SetProperties(nsIPropertyBag *aProperties)
 NS_IMETHODIMP
 nsMetricsEventItem::ChildAt(PRInt32 index, nsIMetricsEventItem **result)
 {
-  if (index < 0 || index >= mChildren.Count()) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG_RANGE(index, 0, PRInt32(mChildren.Length()) - 1);
 
   NS_ADDREF(*result = mChildren[index]);
   return NS_OK;
@@ -93,7 +91,7 @@ nsMetricsEventItem::ChildAt(PRInt32 index, nsIMetricsEventItem **result)
 NS_IMETHODIMP
 nsMetricsEventItem::IndexOf(nsIMetricsEventItem *item, PRInt32 *result)
 {
-  *result = mChildren.IndexOf(item);
+  *result = PRInt32(mChildren.IndexOf(item));  // NoIndex mapped to -1
   return NS_OK;
 }
 
@@ -102,7 +100,7 @@ nsMetricsEventItem::AppendChild(nsIMetricsEventItem *item)
 {
   NS_ENSURE_ARG_POINTER(item);
 
-  NS_ENSURE_TRUE(mChildren.AppendObject(item), NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mChildren.AppendElement(item), NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
 
@@ -110,11 +108,11 @@ NS_IMETHODIMP
 nsMetricsEventItem::InsertChildAt(nsIMetricsEventItem *item, PRInt32 index)
 {
   NS_ENSURE_ARG_POINTER(item);
-  if (index < 0 || index > mChildren.Count()) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
-  NS_ENSURE_TRUE(mChildren.InsertObjectAt(item, index),
+  // allow appending
+  NS_ENSURE_ARG_RANGE(index, 0, PRInt32(mChildren.Length()));
+
+  NS_ENSURE_TRUE(mChildren.InsertElementAt(index, item),
                  NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
@@ -122,11 +120,9 @@ nsMetricsEventItem::InsertChildAt(nsIMetricsEventItem *item, PRInt32 index)
 NS_IMETHODIMP
 nsMetricsEventItem::RemoveChildAt(PRInt32 index)
 {
-  if (index < 0 || index >= mChildren.Count()) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG_RANGE(index, 0, PRInt32(mChildren.Length()) - 1);
 
-  mChildren.RemoveObjectAt(index);
+  mChildren.RemoveElementAt(index);
   return NS_OK;
 }
 
@@ -134,11 +130,9 @@ NS_IMETHODIMP
 nsMetricsEventItem::ReplaceChildAt(nsIMetricsEventItem *newItem, PRInt32 index)
 {
   NS_ENSURE_ARG_POINTER(newItem);
-  if (index < 0 || index >= mChildren.Count()) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_ARG_RANGE(index, 0, PRInt32(mChildren.Length()) - 1);
 
-  mChildren.ReplaceObjectAt(newItem, index);
+  mChildren.ReplaceElementsAt(index, 1, newItem);
   return NS_OK;
 }
 
@@ -152,6 +146,6 @@ nsMetricsEventItem::ClearChildren()
 NS_IMETHODIMP
 nsMetricsEventItem::GetChildCount(PRInt32 *childCount)
 {
-  *childCount = mChildren.Count();
+  *childCount = PRInt32(mChildren.Length());
   return NS_OK;
 }

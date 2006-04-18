@@ -38,11 +38,14 @@
 
 #include "nsMetricsService.h"
 #include "nsMetricsEventItem.h"
+#include "nsStringUtils.h"
 #include "nsXPCOM.h"
 #include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsIUpdateService.h"
 #include "nsIUploadChannel.h"
@@ -58,19 +61,31 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSerializer.h"
+#include "nsIVariant.h"
+#include "nsICryptoHash.h"
+#include "nsISimpleEnumerator.h"
+#include "nsIInputStreamChannel.h"
+#include "nsIFileStreams.h"
+#include "nsIBufferedStreams.h"
+#include "nsIHttpChannel.h"
+#include "nsIIOService.h"
 #include "nsMultiplexInputStream.h"
-#include "nsStringStream.h"
-#include "nsStreamUtils.h"
-#include "nsVariant.h"
 #include "prtime.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "prrng.h"
 #include "bzlib.h"
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
 #endif
 #include "nsIUUIDGenerator.h"
 #include "nsDocShellCID.h"
+#include "nsMemory.h"
+
+// We need to suppress inclusion of nsString.h
+#define nsString_h___
+#include "nsIStringStream.h"
+#undef nsString_h___
 
 // Make our MIME type inform the server of possible compression.
 #ifdef NS_METRICS_SEND_UNCOMPRESSED_DATA
@@ -90,6 +105,64 @@ PRLogModuleInfo *gMetricsLog;
 #endif
 
 static const char kQuitApplicationTopic[] = "quit-application";
+
+//-----------------------------------------------------------------------------
+
+#ifndef NS_METRICS_SEND_UNCOMPRESSED_DATA
+
+// Compress data read from |src|, and write to |outFd|.
+static nsresult
+CompressBZ2(nsIInputStream *src, PRFileDesc *outFd)
+{
+  // compress the data chunk-by-chunk
+
+  char inbuf[4096], outbuf[4096];
+  bz_stream strm;
+  int ret = BZ_OK;
+
+  memset(&strm, 0, sizeof(strm));
+
+  if (BZ2_bzCompressInit(&strm, 9 /*max blocksize*/, 0, 0) != BZ_OK)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = NS_OK;
+  for (;;) {
+    if (strm.avail_in == 0) {
+      // fill inbuf
+      PRUint32 n;
+      rv = src->Read(inbuf, sizeof(inbuf), &n);
+      if (NS_FAILED(rv))
+        break;
+      strm.next_in = inbuf;
+      strm.avail_in = (int) n;
+    }
+
+    strm.next_out = outbuf;
+    strm.avail_out = sizeof(outbuf);
+
+    ret = BZ2_bzCompress(&strm, 0);
+    if (ret != BZ_OK && ret != BZ_STREAM_END) {
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+
+    if (strm.avail_out < sizeof(outbuf)) {
+      PRInt32 n = sizeof(outbuf) - strm.avail_out;
+      if (PR_Write(outFd, outbuf, n) != n) {
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
+    }
+
+    if (ret == BZ_STREAM_END)
+      break;
+  }
+
+  BZ2_bzCompressEnd(&strm);
+  return rv;
+}
+
+#endif // !defined(NS_METRICS_SEND_UNCOMPRESSED_DATA)
 
 //-----------------------------------------------------------------------------
 
@@ -133,7 +206,7 @@ nsMetricsService::BuildEventItem(nsIMetricsEventItem *item,
 {
   *itemElement = nsnull;
 
-  nsAutoString itemNS, itemName;
+  nsString itemNS, itemName;
   item->GetItemNamespace(itemNS);
   item->GetItemName(itemName);
 
@@ -159,7 +232,7 @@ nsMetricsService::BuildEventItem(nsIMetricsEventItem *item,
         continue;
       }
 
-      nsAutoString name;
+      nsString name;
       rv = property->GetName(name);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to get property name");
@@ -178,7 +251,7 @@ nsMetricsService::BuildEventItem(nsIMetricsEventItem *item,
       PRUint16 dataType;
       value->GetDataType(&dataType);
 
-      nsAutoString valueString;
+      nsString valueString;
       if (dataType == nsIDataType::VTYPE_BOOL) {
         PRBool valueBool;
         rv = value->GetAsBool(&valueBool);
@@ -238,7 +311,7 @@ nsMetricsService::LogEvent(nsIMetricsEventItem *item)
     return NS_OK;
 
   // Restrict the types of events logged
-  nsAutoString eventNS, eventName;
+  nsString eventNS, eventName;
   item->GetItemNamespace(eventNS);
   item->GetItemName(eventName);
 
@@ -251,8 +324,8 @@ nsMetricsService::LogEvent(nsIMetricsEventItem *item)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add the event timestamp
-  nsAutoString timeString;
-  timeString.AppendInt(PR_Now() / PR_USEC_PER_SEC);
+  nsString timeString;
+  AppendInt(timeString, PR_Now() / PR_USEC_PER_SEC);
   rv = eventElement->SetAttribute(NS_LITERAL_STRING("time"), timeString);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -301,15 +374,15 @@ nsMetricsService::Flush()
     do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID);
   NS_ENSURE_TRUE(ds, NS_ERROR_UNEXPECTED);
 
-  nsAutoString docText;
+  nsString docText;
   rv = ds->SerializeToString(mRoot, docText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The first '>' will be the end of the root start tag.
-  docText.Cut(0, docText.FindChar('>') + 1);
+  docText.Cut(0, FindChar(docText, '>') + 1);
 
   // The last '<' will be the beginning of the root end tag.
-  PRInt32 start = docText.RFindChar('<');
+  PRInt32 start = RFindChar(docText, '<');
   docText.Cut(start, docText.Length() - start);
 
   NS_ConvertUTF16toUTF8 utf8Doc(docText);
@@ -384,12 +457,40 @@ nsMetricsService::NewChannel(nsIURI *uri, nsIChannel **result)
   GetDataFile(&dataFile);
   NS_ENSURE_STATE(dataFile);
 
-  nsCOMPtr<nsIInputStream> stream;
-  OpenCompleteXMLStream(dataFile, getter_AddRefs(stream));
-  NS_ENSURE_STATE(stream);
+  nsCOMPtr<nsIInputStreamChannel> streamChannel =
+      do_CreateInstance(NS_INPUTSTREAMCHANNEL_CONTRACTID);
+  NS_ENSURE_STATE(streamChannel);
 
-  return NS_NewInputStreamChannel(result, uri, stream,
-                                  NS_LITERAL_CSTRING("text/xml"), nsnull);
+  rv = streamChannel->SetURI(uri);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(streamChannel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool val;
+  if (NS_SUCCEEDED(dataFile->Exists(&val)) && val) {
+    nsCOMPtr<nsIInputStream> stream;
+    OpenCompleteXMLStream(dataFile, getter_AddRefs(stream));
+    NS_ENSURE_STATE(stream);
+
+    rv  = streamChannel->SetContentStream(stream);
+    rv |= channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+  } else {
+    nsCOMPtr<nsIStringInputStream> errorStream =
+        do_CreateInstance("@mozilla.org/io/string-input-stream;1");
+    NS_ENSURE_STATE(errorStream);
+
+    rv = errorStream->SetData("no metrics data", -1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv  = streamChannel->SetContentStream(errorStream);
+    rv |= channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+  }
+
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  NS_ADDREF(*result = channel);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -400,8 +501,15 @@ nsMetricsService::OnStartRequest(nsIRequest *request, nsISupports *context)
   nsCOMPtr<nsIFile> file;
   GetConfigFile(getter_AddRefs(file));
 
-  NS_NewLocalFileOutputStream(getter_AddRefs(mConfigOutputStream), file,
-                              PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+  nsCOMPtr<nsIFileOutputStream> out =
+      do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID);
+  NS_ENSURE_STATE(out);
+
+  nsresult rv = out->Init(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, -1,
+                          0);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mConfigOutputStream = out;
   return NS_OK;
 }
 
@@ -461,13 +569,36 @@ nsMetricsService::EnableCollectors()
   return NS_OK;
 }
 
+// Copied from nsStreamUtils.cpp:
+static NS_METHOD
+CopySegmentToStream(nsIInputStream *inStr,
+                    void *closure,
+                    const char *buffer,
+                    PRUint32 offset,
+                    PRUint32 count,
+                    PRUint32 *countWritten)
+{
+  nsIOutputStream *outStr = NS_STATIC_CAST(nsIOutputStream *, closure);
+  *countWritten = 0;
+  while (count) {
+    PRUint32 n;
+    nsresult rv = outStr->Write(buffer, count, &n);
+    if (NS_FAILED(rv))
+      return rv;
+    buffer += n;
+    count -= n;
+    *countWritten += n;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsMetricsService::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *stream, PRUint32 offset,
                                   PRUint32 count)
 {
   PRUint32 n;
-  return stream->ReadSegments(NS_CopySegmentToStream, mConfigOutputStream,
+  return stream->ReadSegments(CopySegmentToStream, mConfigOutputStream,
                               count, &n);
 }
 
@@ -523,8 +654,8 @@ nsMetricsService::ProfileStartup()
   static const char kSessionIDPref[] = "metrics.last-session-id";
   PRInt32 sessionID = -1;
   prefs->GetIntPref(kSessionIDPref, &sessionID);
-  mSessionID.Truncate();
-  mSessionID.AppendInt(++sessionID);
+  mSessionID.Cut(0, PR_UINT32_MAX);
+  AppendInt(mSessionID, ++sessionID);
   rv = prefs->SetIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -678,7 +809,7 @@ nsMetricsService::UploadData()
   //       event.
  
   PRBool enable = PR_FALSE;
-  nsXPIDLCString spec;
+  nsCString spec;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     prefs->GetBoolPref("metrics.upload.enable", &enable);
@@ -693,10 +824,12 @@ nsMetricsService::UploadData()
 
   // NOTE: nsIUploadChannel requires a buffered stream to upload...
 
-  nsCOMPtr<nsIInputStream> fileStream;
-  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file, -1, -1,
-                             nsIFileInputStream::DELETE_ON_CLOSE);
+  nsCOMPtr<nsIFileInputStream> fileStream =
+      do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(fileStream);
+
+  rv = fileStream->Init(file, -1, -1, nsIFileInputStream::DELETE_ON_CLOSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 streamLen;
   rv = fileStream->Available(&streamLen);
@@ -705,11 +838,14 @@ nsMetricsService::UploadData()
   if (streamLen == 0)
     return NS_ERROR_ABORT;
 
-  nsCOMPtr<nsIInputStream> uploadStream;
-  NS_NewBufferedInputStream(getter_AddRefs(uploadStream), fileStream, 4096);
+  nsCOMPtr<nsIBufferedInputStream> uploadStream =
+      do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(uploadStream);
 
-  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  rv = uploadStream->Init(fileStream, 4096);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID);
   NS_ENSURE_STATE(ios);
 
   nsCOMPtr<nsIChannel> channel;
@@ -749,19 +885,20 @@ nsMetricsService::GetDataFileForUpload(nsCOMPtr<nsILocalFile> *result)
   rv = input->Clone(getter_AddRefs(temp));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString leafName;
+  nsCString leafName;
   rv = temp->GetNativeLeafName(leafName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  leafName.AppendLiteral(".bz2");
+  leafName.Append(".bz2");
   rv = temp->SetNativeLeafName(leafName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILocalFile> ltemp = do_QueryInterface(temp, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  FILE *destFp = NULL;
-  rv = ltemp->OpenANSIFileDesc("wb", &destFp);
+  PRFileDesc *destFd = NULL;
+  rv = ltemp->OpenNSPRFileDesc(PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE, 0600,
+                               &destFd);
 
   // Copy file using bzip2 compression:
 
@@ -771,41 +908,19 @@ nsMetricsService::GetDataFileForUpload(nsCOMPtr<nsILocalFile> *result)
     PRUint32 n;
 
     while (NS_SUCCEEDED(rv = src->Read(buf, sizeof(buf), &n)) && n) {
-      if (fwrite(buf, 1, n, destFp) != n) {
+      if (PR_Write(destFd, buf, n) != n) {
         NS_WARNING("failed to write data");
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
     }
 #else
-    int bzerr = BZ_OK;
-    BZFILE *destBz = BZ2_bzWriteOpen(&bzerr, destFp,
-                                     9,  // block size (1-9)
-                                     0,  // verbosity
-                                     0); // work factor
-    if (destBz) {
-      char buf[4096];
-      PRUint32 n;
-
-      while (NS_SUCCEEDED(rv = src->Read(buf, sizeof(buf), &n)) && n) {
-        BZ2_bzWrite(&bzerr, destBz, buf, n);
-        if (bzerr != BZ_OK) {
-          NS_WARNING("failed to write data");
-          rv = NS_ERROR_UNEXPECTED;
-          break;
-        }
-      }
-
-      BZ2_bzWriteClose(&bzerr, destBz,
-                       0,        // abandon
-                       nsnull,   // nbytes_in
-                       nsnull);  // nbytes_out
-    }
+    rv = CompressBZ2(src, destFd);
 #endif
   }
 
-  if (destFp)
-    fclose(destFp);
+  if (destFd)
+    PR_Close(destFd);
 
   if (NS_SUCCEEDED(rv)) {
     *result = nsnull;
@@ -826,13 +941,13 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ENSURE_STATE(prefs);
   
-  nsXPIDLCString clientID;
+  nsCString clientID;
   nsresult rv = prefs->GetCharPref(kClientIDPref, getter_Copies(clientID));
   if (NS_FAILED(rv) || clientID.IsEmpty()) {
     rv = GenerateClientID(clientID);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    rv = prefs->SetCharPref(kClientIDPref, clientID);
+    rv = prefs->SetCharPref(kClientIDPref, clientID.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -841,26 +956,25 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
       "<log xmlns=\"" NS_METRICS_NAMESPACE "\" clientid=\"%s\">\n";
   static const char METRICS_XML_TAIL[] = "</log>";
 
-  nsCOMPtr<nsIInputStream> fileStream;
-  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), dataFile);
+  nsCOMPtr<nsIFileInputStream> fileStream =
+      do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(fileStream);
+
+  rv = fileStream->Init(dataFile, -1, -1, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMultiplexInputStream> miStream =
     do_CreateInstance(NS_MULTIPLEXINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(miStream);
 
-  char *head = PR_smprintf(METRICS_XML_HEAD, clientID.get());
-  
-  nsCOMPtr<nsIInputStream> stringStream;
-#ifdef MOZILLA_1_8_BRANCH
-  NS_NewCStringInputStream(getter_AddRefs(stringStream),
-                           nsDependentCString(head));
-#else
-  NS_NewByteInputStream(getter_AddRefs(stringStream), head, -1,
-                        NS_ASSIGNMENT_COPY);
-#endif
-  PR_smprintf_free(head);
+  nsCOMPtr<nsIStringInputStream> stringStream =
+      do_CreateInstance("@mozilla.org/io/string-input-stream;1");
   NS_ENSURE_STATE(stringStream);
+
+  char *head = PR_smprintf(METRICS_XML_HEAD, clientID.get());
+  rv = stringStream->SetData(head, -1);
+  PR_smprintf_free(head);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = miStream->AppendStream(stringStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -868,9 +982,11 @@ nsMetricsService::OpenCompleteXMLStream(nsILocalFile *dataFile,
   rv = miStream->AppendStream(fileStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_NewByteInputStream(getter_AddRefs(stringStream), METRICS_XML_TAIL,
-                        sizeof(METRICS_XML_TAIL)-1);
+  stringStream = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
   NS_ENSURE_STATE(stringStream);
+
+  rv = stringStream->SetData(METRICS_XML_TAIL, sizeof(METRICS_XML_TAIL)-1);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = miStream->AppendStream(stringStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -904,36 +1020,38 @@ nsMetricsService::GetConfigFile(nsIFile **result)
 nsresult
 nsMetricsService::GenerateClientID(nsCString &clientID)
 {
-  nsCOMPtr<nsIUUIDGenerator> idgen =
-    do_GetService("@mozilla.org/uuid-generator;1");
-  NS_ENSURE_STATE(idgen);
+  nsCOMPtr<nsICryptoHash> hasher =
+    do_CreateInstance("@mozilla.org/security/hash;1");
+  NS_ENSURE_STATE(hasher);
 
-  nsID id;
-  nsresult rv = idgen->GenerateUUIDInPlace(&id);
+  nsresult rv = hasher->Init(nsICryptoHash::MD5);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  char *idstr = id.ToString();
-  NS_ENSURE_STATE(idstr);
+  // Feed some data into the hasher...
 
-  // {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
-  static const PRUint32 kGUIDLength = 38;
-  NS_ASSERTION(strlen(idstr) == kGUIDLength, "Invalid GUID string");
-  
-  // Strip off the enclosing curly brackets
-  clientID.Assign(idstr + 1, kGUIDLength - 2);
-  PR_Free(idstr);
-  return NS_OK;
+  struct {
+    PRTime  a;
+    PRUint8 b[32];
+  } input;
+
+  input.a = PR_Now();
+  PR_GetRandomNoise(input.b, sizeof(input.b));
+
+  rv = hasher->Update((const PRUint8 *) &input, sizeof(input));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return hasher->Finish(PR_TRUE, clientID);
 }
 
-/* static */ PRUint16
+/* static */ PRUint32
 nsMetricsService::GetWindowID(nsIDOMWindow *window)
 {
   if (!sMetricsService) {
     NS_NOTREACHED("metrics service not created");
-    return PR_UINT16_MAX;
+    return PR_UINT32_MAX;
   }
 
-  PRUint16 id;
+  PRUint32 id;
   if (!sMetricsService->mWindowMap.Get(window, &id)) {
     id = sMetricsService->mNextWindowID++;
     sMetricsService->mWindowMap.Put(window, id);
@@ -943,25 +1061,7 @@ nsMetricsService::GetWindowID(nsIDOMWindow *window)
 }
 
 /* static */ nsresult
-nsMetricsUtils::PutUint16(nsIWritablePropertyBag *bag,
-                          const nsAString &propertyName,
-                          PRUint16 propertyValue)
+nsMetricsUtils::NewPropertyBag(nsIWritablePropertyBag2 **result)
 {
-  nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-  NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
-  var->SetAsUint16(propertyValue);
-  return bag->SetProperty(propertyName, var);
-}
-
-/* static */ nsresult
-nsMetricsUtils::NewPropertyBag(nsHashPropertyBag **result)
-{
-  nsRefPtr<nsHashPropertyBag> bag = new nsHashPropertyBag();
-  NS_ENSURE_TRUE(bag, NS_ERROR_OUT_OF_MEMORY);
-
-  nsresult rv = bag->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bag.swap(*result);
-  return NS_OK;
+  return CallCreateInstance("@mozilla.org/hash-property-bag;1", result);
 }

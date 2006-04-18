@@ -37,38 +37,44 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMetricsService.h"
+#include "nsStringUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOM3Node.h"
-#include "nsNetUtil.h"
+#include "nsIFileStreams.h"
+#include "nsIFile.h"
+#include "nsComponentManagerUtils.h"
+#include "nsNetCID.h"
+#include "prprf.h"
 
 #define NS_DEFAULT_UPLOAD_INTERVAL 3600  // 1 hour
 
 //-----------------------------------------------------------------------------
 
-static const nsAutoString
+static const nsString
 MakeKey(const nsAString &eventNS, const nsAString &eventName)
 {
   // Since eventName must be a valid XML NCName, we can use ':' to separate
   // eventName from eventNS when formulating our hash key.
-  NS_ASSERTION(eventName.FindChar(':') == kNotFound, "Not a valid NCName");
+  NS_ASSERTION(FindChar(eventName, ':') == -1, "Not a valid NCName");
 
-  return nsAutoString(eventName + NS_LITERAL_STRING(":") + eventNS);
+  nsString key;
+  key.Append(eventName);
+  key.Append(':');
+  key.Append(eventNS);
+  return key;
 }
 
 // This method leaves the result value unchanged if a parsing error occurs.
 static void
 ReadIntegerAttr(nsIDOMElement *elem, const nsAString &attrName, PRInt32 *result)
 {
-  nsAutoString attrValue;
+  nsString attrValue;
   elem->GetAttribute(attrName, attrValue);
 
-  PRInt32 errcode;
-  PRInt32 parsedVal = attrValue.ToInteger(&errcode);
-
-  if (NS_SUCCEEDED(errcode))
-    *result = parsedVal;
+  NS_ConvertUTF16toUTF8 attrValueUtf8(attrValue);
+  PR_sscanf(attrValueUtf8.get(), "%ld", result);
 }
 
 //-----------------------------------------------------------------------------
@@ -123,15 +129,17 @@ nsMetricsConfig::Load(nsIFile *file)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(fileSize <= PR_INT32_MAX);
 
-  nsCOMPtr<nsIInputStream> stream;
-  NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
+  nsCOMPtr<nsIFileInputStream> stream =
+      do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID);
   NS_ENSURE_STATE(stream);
+  rv = stream->Init(file, -1, -1, 0);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMParser> parser = do_CreateInstance(NS_DOMPARSER_CONTRACTID);
   NS_ENSURE_STATE(parser);
 
   nsCOMPtr<nsIDOMDocument> doc;
-  parser->ParseFromStream(stream, nsnull, fileSize, "application/xml",
+  parser->ParseFromStream(stream, nsnull, PRInt32(fileSize), "application/xml",
                           getter_AddRefs(doc));
   NS_ENSURE_STATE(doc);
 
@@ -159,9 +167,9 @@ nsMetricsConfig::ForEachChildElement(nsIDOMElement *elem,
     nsCOMPtr<nsIDOMElement> childElem = do_QueryInterface(node);
     if (childElem) {
       // Skip elements that are not in our namespace
-      nsAutoString namespaceURI;
+      nsString namespaceURI;
       childElem->GetNamespaceURI(namespaceURI);
-      if (namespaceURI.EqualsLiteral(NS_METRICS_NAMESPACE))
+      if (namespaceURI.Equals(NS_LITERAL_STRING(NS_METRICS_NAMESPACE)))
         (this->*callback)(childElem);
     }
     node->GetNextSibling(getter_AddRefs(next));
@@ -174,14 +182,14 @@ nsMetricsConfig::ProcessToplevelElement(nsIDOMElement *elem)
 {
   // Process a top-level element
 
-  nsAutoString name;
+  nsString name;
   elem->GetLocalName(name);
-  if (name.EqualsLiteral("collectors")) {
+  if (name.Equals(NS_LITERAL_STRING("collectors"))) {
     // Enumerate <collector> elements
     ForEachChildElement(elem, &nsMetricsConfig::ProcessCollectorElement);
-  } else if (name.EqualsLiteral("limit")) {
+  } else if (name.Equals(NS_LITERAL_STRING("limit"))) {
     ReadIntegerAttr(elem, NS_LITERAL_STRING("events"), &mEventLimit);
-  } else if (name.EqualsLiteral("upload")) {
+  } else if (name.Equals(NS_LITERAL_STRING("upload"))) {
     ReadIntegerAttr(elem, NS_LITERAL_STRING("interval"), &mUploadInterval);
   }
 }
@@ -189,37 +197,36 @@ nsMetricsConfig::ProcessToplevelElement(nsIDOMElement *elem)
 void
 nsMetricsConfig::ProcessCollectorElement(nsIDOMElement *elem)
 {
-  nsAutoString value;
-
   // Make sure we are dealing with a <collector> element.
-  elem->GetLocalName(value);
-  if (!value.EqualsLiteral("collector"))
-    return;
-  value.Truncate();
-
-  elem->GetAttribute(NS_LITERAL_STRING("type"), value);
-  if (value.IsEmpty())
+  nsString localName;
+  elem->GetLocalName(localName);
+  if (!localName.Equals(NS_LITERAL_STRING("collector")))
     return;
 
-  // Get the namespace URI specified by any prefix of value.
+  nsString type;
+  elem->GetAttribute(NS_LITERAL_STRING("type"), type);
+  if (type.IsEmpty())
+    return;
+
+  // Get the namespace URI specified by any prefix of |type|.
   nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(elem);
   if (!node)
     return;
 
-  // Check to see if this value references a specific namespace.
-  PRInt32 colon = value.FindChar(':');
+  // Check to see if this type references a specific namespace.
+  PRInt32 colon = FindChar(type, ':');
 
-  nsAutoString namespaceURI;
-  if (colon == kNotFound) {
+  nsString namespaceURI;
+  if (colon == -1) {
     node->LookupNamespaceURI(EmptyString(), namespaceURI);
     // value is the EventName
   } else {
     // value is NamespacePrefix + ":" + EventName
-    node->LookupNamespaceURI(StringHead(value, colon), namespaceURI);
-    value.Cut(0, colon + 1);
+    node->LookupNamespaceURI(StringHead(type, colon), namespaceURI);
+    type.Cut(0, colon + 1);
   }
 
-  mEventSet.PutEntry(MakeKey(namespaceURI, value));
+  mEventSet.PutEntry(MakeKey(namespaceURI, type));
 }
 
 PRBool

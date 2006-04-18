@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 #include "prio.h"
 #include "prlog.h"
-#include "nsHashPropertyBag.h"
+#include "nsIWritablePropertyBag2.h"
 #include "nsDataHashtable.h"
 
 class nsILocalFile;
@@ -99,22 +99,24 @@ public:
 
   // Helper function for logging events in the default namespace
   nsresult LogEvent(const nsAString &eventName,
-                    nsHashPropertyBag *eventProperties)
+                    nsIWritablePropertyBag2 *eventProperties)
   {
+    nsCOMPtr<nsIPropertyBag> bag = do_QueryInterface(eventProperties);
+    NS_ENSURE_STATE(bag);
     return LogSimpleEvent(NS_LITERAL_STRING(NS_METRICS_NAMESPACE), eventName,
-                          NS_STATIC_CAST(nsIWritablePropertyBag*,
-                                         eventProperties));
+                          bag);
   }
 
   // Get the window id for the given DOMWindow.  If a window id has not
   // yet been assigned for the window, the next id will be used.
-  static PRUint16 GetWindowID(nsIDOMWindow *window);
+  static PRUint32 GetWindowID(nsIDOMWindow *window);
+
+  // VC6 needs this to be public :-(
+  nsresult Init();
 
 private:
   nsMetricsService();
   ~nsMetricsService();
-
-  nsresult Init();
 
   // Post-profile-initialization startup code
   nsresult ProfileStartup();
@@ -170,28 +172,21 @@ private:
   nsCOMPtr<nsIDOMNode> mRoot;
 
   // Window to incrementing-id map.  The keys are nsIDOMWindow*.
-  nsDataHashtable<nsVoidPtrHashKey, PRUint16> mWindowMap;
+  nsDataHashtable<nsVoidPtrHashKey, PRUint32> mWindowMap;
 
   PRInt32 mEventCount;
   PRInt32 mSuspendCount;
   PRBool mUploading;
   nsString mSessionID;
   // the next window id to hand out
-  PRUint16 mNextWindowID;
+  PRUint32 mNextWindowID;
 };
-
-// Helper functions
 
 class nsMetricsUtils
 {
 public:
-  // Stores a PRUint16 into the given property bag.
-  static nsresult PutUint16(nsIWritablePropertyBag *bag,
-                            const nsAString &propertyName,
-                            PRUint16 propertyValue);
-
-  // Creates a new nsHashPropertyBag instance.
-  static nsresult NewPropertyBag(nsHashPropertyBag **result);
+  // Creates a new nsIWritablePropertyBag2 instance.
+  static nsresult NewPropertyBag(nsIWritablePropertyBag2 **result);
 };
 
 #endif  // nsMetricsService_h__
