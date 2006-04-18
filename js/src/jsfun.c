@@ -1683,8 +1683,8 @@ fun_applyConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN length, i;
     void *mark;
     jsval *sp, *newsp, *oldsp;
-    JSBool ok;
     JSStackFrame *fp;
+    JSBool ok;
 
     if (JSVAL_IS_PRIMITIVE(argv[0]) ||
         (aobj = JSVAL_TO_OBJECT(argv[0]),
@@ -1704,6 +1704,7 @@ fun_applyConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!sp)
         return JS_FALSE;
 
+    fp = cx->fp;
     oldsp = fp->sp;
     *sp++ = OBJECT_TO_JSVAL(obj);
     *sp++ = JSVAL_NULL; /* This is filled automagically. */
@@ -1714,7 +1715,6 @@ fun_applyConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         sp++;
     }
 
-    fp = cx->fp;
     oldsp = fp->sp;
     fp->sp = sp;
     ok = js_InvokeConstructor(cx, newsp, length);
