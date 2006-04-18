@@ -209,8 +209,9 @@ calDavCalendar.prototype = {
         }
 
         // XXX how are we REALLY supposed to figure this out?
+        var locationPath = aItem.id + ".ics";
         var itemUri = this.mCalendarUri.clone();
-        itemUri.spec = itemUri.spec + aItem.id + ".ics";
+        itemUri.spec = itemUri.spec + locationPath;
         debug("itemUri.spec = " + itemUri.spec + "\n");
         var eventResource = new WebDavResource(itemUri);
 
@@ -265,7 +266,7 @@ calDavCalendar.prototype = {
   
         aItem.calendar = this;
         aItem.generation = 1;
-        aItem.setProperty("X-MOZ-LOCATIONURI", itemUri.spec);
+        aItem.setProperty("X-MOZ-LOCATIONPATH", locationPath);
         aItem.makeImmutable();
 
         debug("icalString = " + aItem.icalString + "\n");
@@ -308,8 +309,8 @@ calDavCalendar.prototype = {
 
         var eventUri = this.mCalendarUri.clone();
         try {
-            eventUri.spec = aNewItem.getProperty("X-MOZ-LOCATIONURI");
-            debug("using X-MOZ-LOCATIONURI: " + eventUri.spec + "\n");
+            eventUri.spec = this.mCalendarUri.spec + aNewItem.getProperty("X-MOZ-LOCATIONPATH");
+            debug("using X-MOZ-LOCATIONPATH: " + eventUri.spec + "\n");
         } catch (ex) {
             // XXX how are we REALLY supposed to figure this out?
             eventUri.spec = eventUri.spec + aNewItem.id + ".ics";
@@ -557,8 +558,10 @@ calDavCalendar.prototype = {
                 item.calendar = thisCalendar;
 
                 // save the location name in case we need to modify
-                item.setProperty("X-MOZ-LOCATIONURI", aResource.spec);
-                debug("X-MOZ-LOCATIONURI = " + aResource.spec + "\n");
+                var locationPath = aResource.path
+                    .substr(thisCalendar.mCalendarUri.path.length);
+                item.setProperty("X-MOZ-LOCATIONPATH", locationPath);
+                debug("X-MOZ-LOCATIONPATH = " + locationPath + "\n");
                 item.makeImmutable();
 
                 // figure out what type of item to return
