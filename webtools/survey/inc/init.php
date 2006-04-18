@@ -26,13 +26,14 @@ class Survey_SQL extends SQL {
             'password' => DB_PASS,
             'hostspec' => DB_HOST,
             'database' => DB_NAME,
-            'port'        => DB_PORT
+            'port'     => DB_PORT
         );
         $this->connect($dsn);
 
         // Test connection; display "gone fishing" on failure.
         if (DB::isError($this->db)) {
-            die('Unable to connect to database.  Try again in a few minutes.');
+            require_once('../webroot/unavailable.php');
+            exit;
         }
     }
 }

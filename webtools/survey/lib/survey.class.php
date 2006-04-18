@@ -18,40 +18,55 @@ class Survey
 
     /**
      * Get possible intentions.
-     * @return arrayory names.
+     * @param int $id
+     * @return array of names.
      */
-    function getIntends()
+    function getIntends($id)
     {
-        // Return array.
         $retval = array();
-        
-        // Gather intend list.
-        $this->db->query("SELECT * FROM intend ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
+        $this->db->query("SELECT * FROM intend WHERE app_id={$id} ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
 
-        do {
-            $retval[$this->db->record['id']] = $this->db->record['description'];
-        } while ($this->db->next(SQL_ASSOC));
+        if (!empty($this->db->record)) {
+            do {
+                $retval[$this->db->record['id']] = $this->db->record['description'];
+            } while ($this->db->next(SQL_ASSOC));
+        }
 
         return $retval;
     }
     
     /**
      * Get possible issues.
+     * @param int $id
      * @return array
      */
-    function getIssues()
+    function getIssues($id)
     {
-        // Return array.
         $retval = array();
+        $this->db->query("SELECT * FROM issue WHERE app_id={$id} ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
 
-        // Gather platforms..
-        $this->db->query("SELECT * FROM issue ORDER BY pos DESC, description", SQL_INIT, SQL_ASSOC);
-
-        do { 
-            $retval[$this->db->record['id']] = $this->db->record['description'];
-        } while ($this->db->next(SQL_ASSOC));
+        if (!empty($this->db->record)) {
+            do { 
+                $retval[$this->db->record['id']] = $this->db->record['description'];
+            } while ($this->db->next(SQL_ASSOC));
+        }
 
         return $retval;
+    }
+
+    /**
+     * Get an app_id and the template name based on app_name.
+     * The app_name is passed from the client in the GET string.
+     *
+     * @return array|false
+     */
+    function getAppIdByName($name) {
+        $this->db->query("SELECT id FROM app WHERE app_name='{$name}' LIMIT 1", SQL_ALL, SQL_ASSOC);
+        if (!empty($this->db->record)) {
+            return $this->db->record[0]['id'];
+        } else {
+            return false;
+        }
     }
 }
 ?>

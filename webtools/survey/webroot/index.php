@@ -4,22 +4,17 @@
  * @package survey
  * @subpackage docs
  */
-$intends = $app->getIntends();
-$issues = $app->getIssues();
-
-
+$sql['product'] = !empty($_POST['product'])?mysql_real_escape_string($_POST['product']):(!empty($_GET['product'])?mysql_real_escape_string($_GET['product']):null);
+$sql['product_id'] = $app->getAppIdByName($sql['product']);
+$intends = $app->getIntends($sql['product_id']);
+$issues = $app->getIssues($sql['product_id']);
 
 /**
  * If the user has submitted, process and complete the transaction.
  */
 if (!empty($_POST['submit'])) {
 
-// Clean inputs.  Yes, I know, it should probably be done in the DBI.
-// We're not going to be validation nazis here, since the form is optional.
-$sql = array();
-
 // The easy stuff.
-$sql['product'] = !empty($_POST['product'])?mysql_real_escape_string($_POST['product']):null;
 $sql['useragent'] = !empty($_POST['useragent'])?mysql_real_escape_string($_POST['useragent']):null;
 $sql['http_user_agent'] = mysql_real_escape_string($_SERVER['HTTP_USER_AGENT']);
 $sql['intend_id'] = !empty($_POST['intend_id'])?mysql_real_escape_string($_POST['intend_id']):null;
@@ -60,35 +55,15 @@ exit;
  * If we haven't submitted, show the form by default.
  */
 } else {
-require_once(HEADER);
-echo '<form action="'.$_SERVER['PHP_SELF'].'" method="post" id="surveyform">';
+    switch ($sql['product']) {
+        case 'Mozilla Thunderbird':
+            require_once('../tpl/thunderbird.php');
+            break;
 
-// Create intend block.
-echo '<h2>How did you intend to use Firefox when you installed it?</h2>';
-echo '<ul class="survey">';
-foreach ($intends as $id=>$text) {
-    echo '<li><input type="radio" name="intend_id" id="int'.$id.'" value="'.$id.'" /> <label for="int'.$id.'">'.$text.'</label></li>';
-}
-echo '<li><label for="int0"><input type="radio" name="intend_id" id="int0" value="0"/> Other, please specify:</label> <input type="text" name="intend_text" id="intother" /></li>';
-echo '</ul>';
-
-// Create issue block.
-echo '<h2>Why did you uninstall Firefox? (select all that apply)</h2>';
-echo '<ul class="survey">';
-foreach ($issues as $id=>$text) {
-    echo '<li><label for="iss'.$id.'"> <input type="checkbox" name="issue_id[]" id="iss'.$id.'" value="'.$id.'" />'.$text.'</label></li>';
-}
-echo '</ul>';
-
-echo '<h2>How can we improve Firefox?</h2>';
-echo '<p>Please share your ideas, suggestions or details about any issues below.</p>';
-echo '<div><textarea name="comments" rows="7" cols="60"></textarea></div>';
-
-echo '<input type="hidden" name="product" value="'.htmlentities(!empty($_GET['product'])?$_GET['product']:null).'"/>';
-echo '<input type="hidden" name="useragent" value="'.htmlentities(!empty($_GET['useragent'])?$_GET['useragent']:null).'"/>';
-
-echo '<div><input name="submit" type="submit" class="submit" value="Submit &raquo;"/></div>';
-echo '</form>';
-require_once(FOOTER);
+        case 'Mozilla Firefox':
+        default:
+            require_once('../tpl/firefox.php');
+            break;
+    }
 }
 ?>
