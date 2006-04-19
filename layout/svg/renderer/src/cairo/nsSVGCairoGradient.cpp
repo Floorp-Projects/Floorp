@@ -126,6 +126,25 @@ CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
   aRgrad->GetFx(&fFx);
   aRgrad->GetFy(&fFy);
 
+  if (fFx != fCx || fFy != fCy) {
+    // The focal point (fFx and fFy) must be clamped to be *inside* - not on -
+    // the circumference of the gradient or we'll get rendering anomalies. We
+    // calculate the distance from the focal point to the gradient center and
+    // make sure it is *less* than the gradient radius. 0.999 is used as the
+    // factor of the radius because it's close enough to 1 that we won't get a
+    // fringe at the edge of the gradient if we clamp, but not so close to 1
+    // that rounding error will give us the same results as using fR itself.
+    double dMax = 0.999 * fR;
+    float dx = fFx - fCx;
+    float dy = fFy - fCy;
+    double d = sqrt((dx * dx) + (dy * dy));
+    if (d > dMax) {
+      double angle = atan2(dy, dx);
+      fFx = (float)(dMax * cos(angle)) + fCx;
+      fFy = (float)(dMax * sin(angle)) + fCy;
+    }
+  }
+
   return cairo_pattern_create_radial(fFx, fFy, 0, fCx, fCy, fR);
 }
 
