@@ -6,6 +6,13 @@
  */
 $sql['product'] = !empty($_POST['product'])?mysql_real_escape_string($_POST['product']):(!empty($_GET['product'])?mysql_real_escape_string($_GET['product']):null);
 $sql['product_id'] = $app->getAppIdByName($sql['product']);
+
+// If no matching product is found, redirect them to the support page.
+if (empty($sql['product_id'])) {
+   header('Location: http://www.mozilla.com/support/');
+   exit;
+}
+
 $intends = $app->getIntends($sql['product_id']);
 $issues = $app->getIssues($sql['product_id']);
 
