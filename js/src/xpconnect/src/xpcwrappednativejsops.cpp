@@ -124,6 +124,7 @@ XPC_WN_Shared_ToString(JSContext *cx, JSObject *obj,
                        uintN argc, jsval *argv, jsval *vp)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
+    ccx.SetName(ccx.GetRuntime()->GetStringJSVal(XPCJSRuntime::IDX_TO_STRING));
     ccx.SetArgsAndResultPtr(argc, argv, vp);
     return ToStringGuts(ccx);
 }
