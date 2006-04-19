@@ -440,6 +440,7 @@ nsXBLPrototypeBinding::InstallImplementation(nsIContent* aBoundElement)
   return NS_OK;
 }
 
+// XXXbz this duplicates lots of SetAttrs
 void
 nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
                                         PRInt32 aNameSpaceID,
@@ -837,6 +838,7 @@ struct nsXBLAttrChangeData
   :mProto(aProto), mBoundElement(aElt), mContent(aContent) {};
 };
 
+// XXXbz this duplicates lots of AttributeChanged
 PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*, aData);
@@ -890,8 +892,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
             continue;
           }
 
-          textContent->SetText(value, PR_TRUE);
-          realElement->AppendChildTo(textContent, PR_TRUE);
+          textContent->SetText(value, PR_FALSE);
+          realElement->AppendChildTo(textContent, PR_FALSE);
         }
       }
 
