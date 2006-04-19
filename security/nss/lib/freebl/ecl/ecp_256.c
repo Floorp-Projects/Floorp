@@ -371,7 +371,7 @@ ec_GFp_nistp256_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 
 		/* final reduction if necessary */
 		if ((r3 > 0xFFFFFFFF00000001ULL) ||
-			((r3 == 0xFFFFFFFF00000001UL) && 
+			((r3 == 0xFFFFFFFF00000001ULL) && 
 			(r2 || (r1 >> 32)|| 
 			       (r1 == 0xFFFFFFFFULL && r0 == MP_DIGIT_MAX)))) {
 			/* very rare, just use mp_sub */
