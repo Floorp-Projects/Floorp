@@ -2529,7 +2529,8 @@ function FillInHTMLTooltip(tipElement)
   for (var i = 0; i < texts.length; ++i) {
     var t = texts[i];
     if (t && t.search(/\S/) >= 0) {
-      tipNode.setAttribute("label", t);
+      // XXX - Short-term fix to bug 67127: collapse whitespace here
+      tipNode.setAttribute("label", t.replace(/\s+/g, " ") );
       retVal = true;
     }
   }
