@@ -95,6 +95,7 @@ libs::
 
 libs repackage::
 	rsync -a --copy-unsafe-links $(XCODE_PRODUCT_DIR)/Camino.app/ $(DIST)/$(APP_NAME).app
+	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/components/camino.xpt
 	$(XPIDL_LINK) $(DIST)/$(APP_NAME).app/Contents/MacOS/camino.xpt $(DIST)/$(APP_NAME).app/Contents/MacOS/components/*.xpt
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/components/*.xpt
 	mv $(DIST)/$(APP_NAME).app/Contents/MacOS/camino.xpt $(DIST)/$(APP_NAME).app/Contents/MacOS/components/camino.xpt
