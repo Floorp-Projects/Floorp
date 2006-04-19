@@ -72,7 +72,7 @@ struct NS_EXPORT gfxFontStyle {
                  PRPackedBool aFamilyNameQuirks) :
         style(aStyle), systemFont(aSystemFont), variant(aVariant),
         familyNameQuirks(aFamilyNameQuirks), weight(aWeight),
-        decorations(aDecoration), size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust) {}
+        decorations(aDecoration), size(PR_MIN(aSize, 5000)), langGroup(aLangGroup), sizeAdjust(aSizeAdjust) { }
 
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
