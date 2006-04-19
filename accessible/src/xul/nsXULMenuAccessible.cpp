@@ -120,6 +120,17 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetName(nsAString& _retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsXULMenuitemAccessible::GetDescription(nsAString& aDescription)
+{
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if (!element) {
+    return NS_ERROR_FAILURE;
+  }
+  element->GetAttribute(NS_LITERAL_STRING("description"), aDescription);
+
+  return NS_OK;
+}
+
 //return menu accesskey: N or Alt+F
 NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
 {
