@@ -75,7 +75,8 @@ function checkTestCompleted()
       var testcase = testcases[i];
       cdump('test: '    + testcase.path + ' ' +
             'bug: '         + testcase.bugnumber + ' ' + 
-            (testcase.passed ? 'PASSED':'FAILED') + ' ' +
+            'result: ' + (testcase.passed ? 'PASSED':'FAILED') + ' ' +
+            'type: browser ' + 
             'description: ' + testcase.description + ' ' + 
             'expected: '    + testcase.expect + ' ' + 
             'actual: '      + testcase.actual + ' ' +
