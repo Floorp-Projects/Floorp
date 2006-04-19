@@ -115,9 +115,11 @@ const kIllegalWords = /(\{count\})|(\{startIndex\})|(\{startPage\})|(\{language\
 const kValidWords = /\{searchTerms\}/gi;
 const kUserDefined = "{searchTerms}";
 
-// Regular expression matching whitespace-only or commented out lines in a
-// Sherlock file.
-const kUselessLine = /^\s*($|#)/i;
+// Returns false for whitespace-only or commented out lines in a
+// Sherlock file, true otherwise.
+function isUsefulLine(aLine) {
+  return !(/^\s*($|#)/i.test(aLine));
+}
 
 /**
  * Used to determine whether an "input" line from a Sherlock file is a "user
@@ -850,7 +852,7 @@ Engine.prototype = {
         do {
           more = fileInStream.readLine(line);
           // Filter out comments and whitespace-only lines
-          if (!(kUselessLine.test(line.value)))
+          if (isUsefulLine(line.value))
             lines.push(line.value);
         } while (more);
 
@@ -945,9 +947,7 @@ Engine.prototype = {
         this._data = this._req.responseText.split(/(\r\n|\n\r|\r|\n)/);
 
         // Filter out comments and whitespace-only lines.
-        this._data.filter(function (line) {
-                            return (!kUselessLine.test(line));
-                          });
+        this._data.filter(isUsefulLine);
         break;
       default:
         this._onError();
@@ -1786,9 +1786,48 @@ SearchService.prototype = {
    * @param aBaseName
    *        The basename of the Sherlock file.
    *          Example: "foo" for file "foo.src".
+   *
+   * @throws NS_ERROR_FAILURE if the file could not be converted.
+   *
    * @see nsIURL::fileBaseName
    */
   _convertSherlockFile: function SRCH_SVC_convertSherlock(aEngine, aBaseName) {
+    var oldSherlockFile = aEngine._file;
+
+    // Back up the old file
+    try {
+      var backupDir = oldSherlockFile.parent;
+      backupDir.append("searchplugins-backup");
+
+      if (!backupDir.exists())
+        backupDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+
+      oldSherlockFile.copyTo(backupDir, null);
+    } catch (ex) {
+      // Just bail. Engines that can't be backed up won't be converted, but
+      // engines that aren't converted are loaded as readonly.
+      LOG("_convertSherlockFile: Couldn't back up " + oldSherlockFile.path +
+          ":\n" + ex);
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
+    // Rename the file, but don't clobber existing files
+    var newXMLFile = oldSherlockFile.parent.clone();
+    newXMLFile.append(aBaseName + "." + XML_FILE_EXT);
+
+    if (newXMLFile.exists()) {
+      // There is an existing file with this name, create a unique file
+      newXMLFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    }
+
+    // Rename the .src file to .xml
+    oldSherlockFile.moveTo(null, newXMLFile.leafName);
+
+    aEngine._file = newXMLFile;
+
+    // Write the converted engine to disk
+    aEngine._serializeToFile();
+
     // See if it has a corresponding icon
     try {
       var icon = this._findSherlockIcon(aEngine._file, aBaseName);
@@ -1814,45 +1853,13 @@ SearchService.prototype = {
         LOG("_importSherlockEngine: Set sherlock iconURI to: \"" +
             aEngine._iconURL + "\"");
 
-        // Delete the icon
+        // Write the engine to disk to save changes
+        aEngine._serializeToFile();
+
+        // Delete the icon now that we're sure everything's been saved
         icon.remove(false);
       }
-    } catch (ex) { LOG("_convertSherlockFile: Error setting icon: " + ex); }
-
-    var oldSherlockFile = aEngine._file;
-
-    // Back up the old file
-    try {
-      var backupDir = oldSherlockFile.parent;
-      backupDir.append("searchplugins-backup");
-
-      if (!backupDir.exists())
-        backupDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-
-      oldSherlockFile.copyTo(backupDir, null);
-    } catch (ex) {
-      // Just bail. Engines that can't be backed up won't be converted, but
-      // engines that aren't converted are loaded as readonly.
-      LOG("_convertSherlockFile: Couldn't back up " + oldSherlockFile.path);
-      return;
-    }
-
-    // Rename the file, but don't clobber existing files
-    var newXMLFile = oldSherlockFile.parent.clone();
-    newXMLFile.append(aBaseName + "." + XML_FILE_EXT);
-
-    if (newXMLFile.exists()) {
-      // There is an existing file with this name, create a unique file
-      newXMLFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
-    }
-
-    // Rename the .src file to .xml
-    oldSherlockFile.moveTo(null, newXMLFile.leafName);
-
-    aEngine._file = newXMLFile;
-
-    // Write the converted engine to disk
-    aEngine._serializeToFile();
+    } catch (ex) { LOG("_convertSherlockFile: Error setting icon:\n" + ex); }
   },
 
   /**
