@@ -93,6 +93,8 @@ embed[type="application/x-shockwave-flash"][src*="ads.t-online.de"],
 embed[type="application/x-shockwave-flash"][src*=".pointroll.com"],
 embed[type="application/x-shockwave-flash"][src*="gfx.dvlabs.com"],
 embed[type="application/x-shockwave-flash"][src*="adserv.quality-channel.de"],
+embed[type="application/x-shockwave-flash"][src*=".yieldmanager.com"],
+object[type="application/x-shockwave-flash"][data*=".yieldmanager.com"],
 
 img[src*="googlesyndication.com"],
 img[src*="ad.doubleclick.net"],
@@ -183,6 +185,8 @@ iframe[src*="adsvr.adknowledge.com"],
 iframe[src*=".pointroll.com"],
 iframe#google_ads_frame,
 iframe[src*="lycos.spiegel.de"],
+iframe[src*="matrix.mediavantage.de"],
+iframe[src^="http://de"][src*=".myspace.com"],
 
 table#overtureLinksWrapper,
 table.adbritetable,
@@ -196,7 +200,8 @@ div#yschsec,
 div#rh>div#rc,
 div#sponsorsAd,
 div[id^="ads_"],
-div[id*="ad440x160"]
+div[id*="ad440x160"],
+div[id*="ad300x100"]
 
 { display: none ! important }
 
