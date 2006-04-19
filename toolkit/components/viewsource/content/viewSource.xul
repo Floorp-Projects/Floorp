@@ -75,12 +75,7 @@
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-#ifdef MOZ_PHOENIX
   <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
-#else
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-#endif
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
   <stringbundle id="bundle_findBar" src="chrome://global/locale/findbar.properties"/>
