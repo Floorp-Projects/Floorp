@@ -72,6 +72,8 @@ class nsIDOMEvent;
 
 #define NS_OK_XFORMS_NOREFRESH \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+#define NS_OK_XFORMS_DEFERRED \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 2)
 
 /**
  * XForms event types
@@ -135,6 +137,12 @@ struct EventData
 };
 
 extern const EventData sXFormsEventsEntries[42];
+
+// Default intrinsic state for XForms Controls
+extern const PRInt32 kDefaultIntrinsicState;
+
+// Disabled intrinsic state for XForms Controls
+extern const PRInt32 kDisabledIntrinsicState;
 
 /**
  * This class has static helper methods that don't fit into a specific place
@@ -246,11 +254,12 @@ public:
    * nsIXFormsXPathEvaluator::Evalute using the given expression, context node,
    * namespace resolver, and result type.
    */
-  static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
+  static NS_HIDDEN_(nsresult)
     EvaluateXPath(const nsAString        &aExpression,
                   nsIDOMNode             *aContextNode,
                   nsIDOMNode             *aResolverNode,
                   PRUint16                aResultType,
+                  nsIDOMXPathResult     **aResult,
                   PRInt32                 aContextPosition = 1,
                   PRInt32                 aContextSize = 1,
                   nsCOMArray<nsIDOMNode> *aSet = nsnull,

@@ -98,7 +98,6 @@ public:
 
   // nsIXFormsControl
   NS_IMETHOD Bind();
-  NS_IMETHOD Refresh();
   NS_IMETHOD SetContext(nsIDOMNode *aContextNode,
                         PRInt32     aContextPosition,
                         PRInt32     aContextSize);
@@ -260,17 +259,7 @@ nsXFormsContextContainer::Bind()
 
   nsresult rv = BindToModel();
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (mModel) {
-    mModel->SetStates(this, mBoundNode);
-  }
 
-  return NS_OK;
-}
-
-nsresult
-nsXFormsContextContainer::Refresh()
-{
   return NS_OK;
 }
 

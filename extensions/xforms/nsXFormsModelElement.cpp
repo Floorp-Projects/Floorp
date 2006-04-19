@@ -102,12 +102,14 @@ GetSchemaElementById(nsIDOMElement *contextNode,
   expr.Append(id);
   expr.AppendLiteral("\"]");
 
-  nsCOMPtr<nsIDOMXPathResult> xpRes =
-      nsXFormsUtils::EvaluateXPath(expr,
-                                   contextNode,
-                                   contextNode,
-                                   nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE);
-  if (xpRes) {
+  nsCOMPtr<nsIDOMXPathResult> xpRes;
+  nsresult rv =
+    nsXFormsUtils::EvaluateXPath(expr,
+                                 contextNode,
+                                 contextNode,
+                                 nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                 getter_AddRefs(xpRes));
+  if (NS_SUCCEEDED(rv) && xpRes) {
     nsCOMPtr<nsIDOMNode> node;
     xpRes->GetSingleNodeValue(getter_AddRefs(node));
     if (node) {
@@ -1028,14 +1030,11 @@ nsXFormsModelElement::SetSingleState(nsIDOMElement *aElement,
   nsXFormsUtils::DispatchEvent(aElement, event);
 }
 
-nsresult
-nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
-                                        nsIDOMNode       *aNode,
-                                        PRBool            aDispatchEvents)
+NS_IMETHODIMP
+nsXFormsModelElement::SetStates(nsIXFormsControl *aControl,
+                                nsIDOMNode       *aNode)
 {
   NS_ENSURE_ARG(aControl);
-  if (!aNode)
-    return NS_OK;
   
   nsCOMPtr<nsIDOMElement> element;
   aControl->GetElement(getter_AddRefs(element));
@@ -1044,13 +1043,22 @@ nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
   nsCOMPtr<nsIXTFElementWrapper> xtfWrap(do_QueryInterface(element));
   NS_ENSURE_STATE(xtfWrap);
 
-  const nsXFormsNodeState *ns = mMDG.GetNodeState(aNode);
-  NS_ENSURE_STATE(ns);
-
-  nsresult rv = xtfWrap->SetIntrinsicState(ns->GetIntrinsicState());
+  PRInt32 iState;
+  const nsXFormsNodeState* ns = nsnull;
+  if (aNode) {
+    ns = mMDG.GetNodeState(aNode);
+    NS_ENSURE_STATE(ns);
+    iState = ns->GetIntrinsicState();
+  } else {
+    iState = kDefaultIntrinsicState;
+  }
+  
+  nsresult rv = xtfWrap->SetIntrinsicState(iState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aDispatchEvents)
+  // Event dispatching is defined by the bound node, so if there's no bound
+  // node, there are no events to send.
+  if (!ns)
     return NS_OK;
 
   if (ns->ShouldDispatchValid()) {
@@ -1229,8 +1237,6 @@ nsXFormsModelElement::RefreshSubTree(nsXFormsControlListItem *aCurrent,
 
     // Handle refreshing
     if (rebind || refresh) {
-      rv = SetStatesInternal(control, boundNode);
-      NS_ENSURE_SUCCESS(rv, rv);
       control->Refresh();
       // XXX: we should really check the return result, but f.x. select1
       // returns error because of no widget...?  so we should ensure that an
@@ -1957,10 +1963,6 @@ nsXFormsModelElement::InitializeControls()
     rv = control->GetBoundNode(getter_AddRefs(boundNode));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Set MIP states on control
-    rv = SetStatesInternal(control, boundNode, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Refresh controls
     rv = control->Refresh();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2271,12 +2273,6 @@ nsXFormsModelElement::ProcessBind(nsIXFormsXPathEvaluator *aEvaluator,
 }
 
 NS_IMETHODIMP
-nsXFormsModelElement::SetStates(nsIXFormsControl *aControl, nsIDOMNode *aBoundNode)
-{
-  return SetStatesInternal(aControl, aBoundNode, PR_FALSE);
-}
-
-nsresult
 nsXFormsModelElement::AddInstanceElement(nsIInstanceElementPrivate *aInstEle) 
 {
   NS_ENSURE_STATE(mInstanceDocuments);
@@ -2285,7 +2281,7 @@ nsXFormsModelElement::AddInstanceElement(nsIInstanceElementPrivate *aInstEle)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXFormsModelElement::RemoveInstanceElement(nsIInstanceElementPrivate *aInstEle)
 {
   NS_ENSURE_STATE(mInstanceDocuments);
@@ -2294,7 +2290,7 @@ nsXFormsModelElement::RemoveInstanceElement(nsIInstanceElementPrivate *aInstEle)
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXFormsModelElement::MessageLoadFinished() 
 {
   // This is our signal that all external message links have been tested.  If

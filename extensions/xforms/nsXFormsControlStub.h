@@ -87,6 +87,7 @@ public:
                             PRUint16            aResultType,
                             nsIDOMXPathResult **aResult = nsnull);
   NS_IMETHOD Bind();
+  NS_IMETHOD Refresh();
   NS_IMETHOD TryFocus(PRBool* aOK);
   NS_IMETHOD IsEventTarget(PRBool *aOK);
   NS_IMETHOD GetUsesModelBinding(PRBool *aRes);
@@ -142,6 +143,7 @@ public:
     mHasParent(PR_FALSE),
     mPreventLoop(PR_FALSE),
     mUsesModelBinding(PR_FALSE),
+    mAppearDisabled(PR_FALSE),
     mBindAttrsCount(0)
     {};
 
@@ -175,6 +177,12 @@ protected:
   PRPackedBool                        mUsesModelBinding;
 
   /**
+   * Should the control appear disabled. This is f.x. used when a valid single
+   * node binding is not pointing to an instance data node.
+   */
+  PRPackedBool                        mAppearDisabled;
+
+  /**
    * Array of repeat-elements of which the control uses repeat-index.
    */
   nsCOMArray<nsIXFormsRepeatElement>  mIndexesUsed;
@@ -185,12 +193,25 @@ protected:
    */
   PRInt32 mBindAttrsCount;
 
+  /**
+   * Does control have a binding attribute?
+   */
+  PRBool HasBindingAttribute() const { return mBindAttrsCount != 0; };
+
   /** Returns the relevant state of the control */
   PRBool GetRelevantState();
 
   /**
-   * Processes the node binding of a control, get the current MDG (mMDG) and
-   * binds the control to its model.
+   * Processes the node binding of a control, get the current Model (mModel)
+   * and binds the control to it.
+   *
+   * @note Will return NS_OK_XFORMS_DEFERRED if the binding is being
+   * deferred.
+   *
+   * @param aBindingAttr      The default binding attribute
+   * @param aResultType       The XPath result type requested
+   * @param aResult           The XPath result
+   * @param aModel            The model
    */
   nsresult
     ProcessNodeBinding(const nsString          &aBindingAttr,
@@ -203,12 +224,6 @@ protected:
    *  xforms-hint and xforms-help events.
    */
   void ResetHelpAndHint(PRBool aInitialize);
-
-  /**
-   * Removes all of the attributes that may have been added to the control due
-   * to binding with an instance node.
-   */
-  void ResetProperties();
 
   /**
    * Checks whether an attribute is a binding attribute for the control. This

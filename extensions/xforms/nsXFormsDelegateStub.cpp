@@ -110,6 +110,9 @@ nsXFormsDelegateStub::Refresh()
     return NS_OK_XFORMS_NOREFRESH;
   }
 
+  nsresult rv = nsXFormsBindableControlStub::Refresh();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   SetMozTypeAttribute();
 
   nsCOMPtr<nsIXFormsUIWidget> widget = do_QueryInterface(mElement);
@@ -193,7 +196,7 @@ nsXFormsDelegateStub::WidgetAttached()
   if (UpdateRepeatState() == eType_Template)
     return NS_OK;
 
-  if (mBindAttrsCount) {
+  if (HasBindingAttribute()) {
     // If control is bounded to instance data then we should ask for refresh
     // only when model is loaded entirely. The reason is control is refreshed
     // by model when it get loaded.

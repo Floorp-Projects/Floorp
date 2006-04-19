@@ -134,9 +134,11 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
   nsCOMPtr<nsIDOMNode> contextNode;
   nodeset->SnapshotItem(0, getter_AddRefs(contextNode));
 
-  nsCOMPtr<nsIDOMXPathResult> at =
-    nsXFormsUtils::EvaluateXPath(atExpr, contextNode, mElement,
-                                 nsIDOMXPathResult::NUMBER_TYPE, 1, setSize);
+  nsCOMPtr<nsIDOMXPathResult> at;
+  rv = nsXFormsUtils::EvaluateXPath(atExpr, contextNode, mElement,
+                                    nsIDOMXPathResult::NUMBER_TYPE,
+                                    getter_AddRefs(at), 1, setSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!at)
     return NS_OK;

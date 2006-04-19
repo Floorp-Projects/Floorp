@@ -97,6 +97,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEntity.h"
 #include "nsIDOMNotation.h"
+#include "nsIEventStateManager.h"
 
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
@@ -181,6 +182,18 @@ static const EventData sEventDefaultsEntries[] = {
 
 static nsDataHashtable<nsStringHashKey,PRUint32> sXFormsEvents;
 static nsDataHashtable<nsStringHashKey,PRUint32> sEventDefaults;
+
+const PRInt32 kDefaultIntrinsicState =
+  NS_EVENT_STATE_ENABLED |
+  NS_EVENT_STATE_VALID |
+  NS_EVENT_STATE_OPTIONAL |
+  NS_EVENT_STATE_MOZ_READWRITE;
+
+const PRInt32 kDisabledIntrinsicState =
+  NS_EVENT_STATE_DISABLED |
+  NS_EVENT_STATE_VALID |
+  NS_EVENT_STATE_OPTIONAL |
+  NS_EVENT_STATE_MOZ_READWRITE;
 
 /* static */ nsresult
 nsXFormsUtils::Init()
@@ -395,26 +408,27 @@ nsXFormsUtils::GetModel(nsIDOMElement     *aElement,
   return result;
 }
 
-/* static */ already_AddRefed<nsIDOMXPathResult>
+/* static */ nsresult
 nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                              nsIDOMNode             *aContextNode,
                              nsIDOMNode             *aResolverNode,
                              PRUint16                aResultType,
+                             nsIDOMXPathResult     **aResult,
                              PRInt32                 aContextPosition,
                              PRInt32                 aContextSize,
                              nsCOMArray<nsIDOMNode> *aSet,
                              nsStringArray          *aIndexesUsed)
 {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
   nsCOMPtr<nsIXFormsXPathEvaluator> eval = 
            do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1");
-  NS_ENSURE_TRUE(eval, nsnull);
+  NS_ENSURE_STATE(eval);
 
   nsCOMPtr<nsIDOMNSXPathExpression> expression;
-  eval->CreateExpression(aExpression,
-                         aResolverNode,
+  nsresult rv = eval->CreateExpression(aExpression, aResolverNode,
                          getter_AddRefs(expression));
-
-  nsIDOMXPathResult *result = nsnull;
   PRBool throwException = PR_FALSE;
   if (!expression) {
     const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
@@ -424,12 +438,12 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     throwException = PR_TRUE;
   } else {
     nsCOMPtr<nsISupports> supResult;
-    nsresult rv = expression->EvaluateWithContext(aContextNode,
-                                                  aContextPosition,
-                                                  aContextSize,
-                                                  aResultType,
-                                                  nsnull,
-                                                  getter_AddRefs(supResult));
+    rv = expression->EvaluateWithContext(aContextNode,
+                                         aContextPosition,
+                                         aContextSize,
+                                         aResultType,
+                                         nsnull,
+                                         getter_AddRefs(supResult));
 
     if (NS_SUCCEEDED(rv) && supResult) {
       /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
@@ -447,13 +461,17 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                               aContextPosition,
                               aContextSize,
                               aResultType == nsIDOMXPathResult::STRING_TYPE);
-        NS_ENSURE_SUCCESS(rv, nsnull);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         if (aIndexesUsed)
           *aIndexesUsed = analyzer.IndexesUsed();
       }
-      CallQueryInterface(supResult, &result);  // addrefs
-    } else if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
+
+      CallQueryInterface(supResult, aResult);  // addrefs
+      return NS_OK;
+    }
+
+    if (rv == NS_ERROR_XFORMS_CALCUATION_EXCEPTION) {
       const nsPromiseFlatString& flat = PromiseFlatString(aExpression);
       const PRUnichar *strings[] = { flat.get() };
       nsXFormsUtils::ReportError(NS_LITERAL_STRING("exprEvaluateError"),
@@ -470,7 +488,7 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
     DispatchEvent(model, eEvent_ComputeException);
   }
 
-  return result;
+  return rv;
 }
 
 /* static */ nsresult
@@ -527,17 +545,17 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
                    NS_STATIC_CAST(nsIDOMXPathResult*,
                                   content->GetProperty(nsXFormsAtoms::bind)));
       *aUsesModelBind = PR_TRUE;
-    } else {
-      // References to inner binds are not defined.
-      // "When you refer to @id on a nested bind it returns an emtpy nodeset
-      // because it has no meaning. The XForms WG will assign meaning in the
-      // future."
-      // @see http://www.w3.org/MarkUp/Group/2004/11/f2f/2004Nov11#resolution6
-      nsXFormsUtils::ReportError(NS_LITERAL_STRING("innerBindRefError"),
-                                 aElement);
+      return NS_OK;
     }
 
-    return NS_OK;
+    // References to inner binds are not defined.
+    // "When you refer to @id on a nested bind it returns an emtpy nodeset
+    // because it has no meaning. The XForms WG will assign meaning in the
+    // future."
+    // @see http://www.w3.org/MarkUp/Group/2004/11/f2f/2004Nov11#resolution6
+    nsXFormsUtils::ReportError(NS_LITERAL_STRING("innerBindRefError"),
+                               aElement);
+    return NS_ERROR_FAILURE;
   }
 
 
@@ -556,14 +574,11 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
   }
 
   // Evaluate |expr|
-  nsCOMPtr<nsIDOMXPathResult> res = EvaluateXPath(expr,
-                                                  contextNode,
-                                                  aElement,
-                                                  aResultType,
-                                                  contextPosition,
-                                                  contextSize,
-                                                  aDeps,
-                                                  aIndexesUsed);
+  nsCOMPtr<nsIDOMXPathResult> res;
+  rv  = EvaluateXPath(expr, contextNode, aElement, aResultType,
+                      getter_AddRefs(res), contextPosition, contextSize,
+                      aDeps, aIndexesUsed);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   ////////////////////
   // STEP 3: Check for lazy binding
@@ -623,9 +638,10 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
 
               // now that we inserted the lazy authored node, try to bind
               // again
-              res = EvaluateXPath(expr, contextNode, aElement, aResultType,
-                                  contextPosition, contextSize, aDeps,
-                                  aIndexesUsed);
+              rv = EvaluateXPath(expr, contextNode, aElement, aResultType,
+                                 getter_AddRefs(res), contextPosition,
+                                 contextSize, aDeps, aIndexesUsed);
+              NS_ENSURE_SUCCESS(rv, rv);
             } else {
                 const PRUnichar *strings[] = { expr.get() };
                 nsXFormsUtils::ReportError(NS_LITERAL_STRING("invalidQName"),

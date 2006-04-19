@@ -302,20 +302,6 @@ private:
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 
   /**
-   * Set the states on the control |aControl| bound to the instance data node
-   * |aNode|. It dispatches the necessary events and sets the pseudo class
-   * states. |aAllStates| determines whether all states should be set, or only
-   * changed.
-   *
-   * @param aControl          The event target
-   * @param aNode             The instance node
-   * @param aAllStates        Set all states (PR_TRUE), or only changed
-   */
-  NS_HIDDEN_(nsresult) SetStatesInternal(nsIXFormsControl *aControl,
-                                         nsIDOMNode       *aNode,
-                                         PRBool            aDispatchEvents = PR_TRUE);
-
-  /**
    * Sets the state of a specific state.
    *
    * @param aElement          The element to dispatch events to and set states on

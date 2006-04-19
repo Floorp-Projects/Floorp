@@ -77,26 +77,27 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
 
   nsAutoString value;
   nsAutoString valueAttr;
+  nsresult rv;
   mElement->GetAttribute(NS_LITERAL_STRING("value"), valueAttr);
 
-  if(!valueAttr.IsEmpty()) {
+  if (!valueAttr.IsEmpty()) {
     // According to the XForms Errata, the context node for the XPath expression
     //   stored in @value should be the node that setvalue is bound to.
-    nsCOMPtr<nsIDOMXPathResult> xpResult =
-      nsXFormsUtils::EvaluateXPath(valueAttr, singleNode, mElement,
-                                   nsIDOMXPathResult::STRING_TYPE);
+    nsCOMPtr<nsIDOMXPathResult> xpResult;
+    rv = nsXFormsUtils::EvaluateXPath(valueAttr, singleNode, mElement,
+                                      nsIDOMXPathResult::STRING_TYPE,
+                                      getter_AddRefs(xpResult));
+    NS_ENSURE_SUCCESS(rv, rv);
     if (!xpResult)
       return NS_OK;
     xpResult->GetStringValue(value);
-  }
-  else {
+  } else {
     nsCOMPtr<nsIDOM3Node> n3(do_QueryInterface(mElement));
     n3->GetTextContent(value);
   }
 
   PRBool changed;
-  nsresult rv =
-    modelPriv->SetNodeValue(singleNode, value, &changed);
+  rv = modelPriv->SetNodeValue(singleNode, value, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (changed) {
