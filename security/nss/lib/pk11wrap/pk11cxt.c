@@ -249,7 +249,7 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
     SECStatus rv;
 	
     PORT_Assert(slot != NULL);
-    if (!slot) {
+    if (!slot || (!symKey && operation != CKA_DIGEST)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
