@@ -410,6 +410,12 @@ AtomImpl::~AtomImpl()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
 
+PermanentAtomImpl::PermanentAtomImpl()
+  : AtomImpl()
+{
+  mRefCnt = REFCNT_PERMANENT_SENTINEL;
+}
+
 NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::AddRef()
 {
   return 2;
@@ -418,18 +424,6 @@ NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::AddRef()
 NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::Release()
 {
   return 1;
-}
-
-/* virtual */ PRBool
-AtomImpl::IsPermanent()
-{
-  return PR_FALSE;
-}
-
-/* virtual */ PRBool
-PermanentAtomImpl::IsPermanent()
-{
-  return PR_TRUE;
 }
 
 void* AtomImpl::operator new ( size_t size, const nsACString& aString ) CPP_THROW_NEW
