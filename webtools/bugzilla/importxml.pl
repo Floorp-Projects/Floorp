@@ -397,7 +397,9 @@ sub process_attachment() {
     $attachment{'isobsolete'} = $attach->{'att'}->{'isobsolete'} || 0;
     $attachment{'isprivate'}  = $attach->{'att'}->{'isprivate'} || 0;
     $attachment{'filename'}   = $attach->field('filename') || "file";
-    if ( defined( $attach->first_child('data')->{'att'}->{'encoding'} )
+    # Attachment data is not exported in versions 2.20 and older.
+    if (defined $attach->first_child('data')
+        && defined $attach->first_child('data')->{'att'}->{'encoding'}
         && $attach->first_child('data')->{'att'}->{'encoding'} =~ /base64/ )
     {
         # decode the base64
