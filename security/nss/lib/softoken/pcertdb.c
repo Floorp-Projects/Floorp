@@ -37,7 +37,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.58 2006/03/21 02:28:48 rrelyea%redhat.com Exp $
+ * $Id: pcertdb.c,v 1.59 2006/04/19 23:43:10 alexei.volkov.bugs%sun.com Exp $
  */
 #include "prtime.h"
 
@@ -1133,9 +1133,8 @@ loser:
     pkcs11_freeStaticData(dbkey.data,buf);    
     dbkey.data = NULL;
     if ( entry ) {
-	
+        DestroyDBEntry((certDBEntry *)entry);
     }
-    DestroyDBEntry((certDBEntry *)entry);
     
     return(NULL);
 }
