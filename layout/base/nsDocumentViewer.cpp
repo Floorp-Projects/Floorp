@@ -573,7 +573,7 @@ DocumentViewerImpl::LoadStart(nsISupports *aDoc)
   printf("DocumentViewerImpl::LoadStart\n");
 #endif
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mDocument) {
     mDocument = do_QueryInterface(aDoc, &rv);
   }
