@@ -116,7 +116,7 @@ use constant DEBUG_LEVEL => 2;
 use constant ERR_LEVEL   => 1;
 
 GetVersionTable();
-our $log;
+our @logs;
 our @attachments;
 our $bugtotal;
 my $xml;
@@ -341,10 +341,12 @@ sub init() {
     my $xmlversion = $root->{'att'}->{'version'};
 
     if ($xmlversion ne $Bugzilla::Config::VERSION) {
-            $log .= "Possible version conflict!\n";
+            my $log = "Possible version conflict!\n";
             $log .= "   XML was exported from Bugzilla version $xmlversion\n";
             $log .= "   But this installation uses ";
             $log .= $Bugzilla::Config::VERSION . "\n";
+            Debug($log, OK_LEVEL);
+            push(@logs, $log);
     }
     Error( "no maintainer", "REOPEN", $exporter ) unless ($maintainer);
     Error( "no exporter",   "REOPEN", $exporter ) unless ($exporter);
@@ -449,6 +451,8 @@ sub process_bug {
     my $exporter         = Bugzilla::User->new_from_login($exporter_login);
     my $urlbase          = $root->{'att'}->{'urlbase'};
 
+    # We will store output information in this variable.
+    my $log = "";
     if ( defined $bug->{'att'}->{'error'} ) {
         $log .= "\nError in bug " . $bug->field('bug_id') . "\@$urlbase: ";
         $log .= $bug->{'att'}->{'error'} . "\n";
@@ -1180,6 +1184,7 @@ sub process_bug {
         $log .= "You may have to set certain fields in the new bug by hand.\n\n";
     }
     Debug( $log, OK_LEVEL );
+    push(@logs, $log);
     Bugzilla::BugMail::Send( $id, { 'changer' => $exporter_login } ) if ($mail);
 
     # done with the xml data. Lets clear it from memory
@@ -1218,7 +1223,10 @@ my $root       = $twig->root;
 my $maintainer = $root->{'att'}->{'maintainer'};
 my $exporter   = $root->{'att'}->{'exporter'};
 my $urlbase    = $root->{'att'}->{'urlbase'};
-$log .=  "Imported $bugtotal bug(s) from $urlbase,\n  sent by $exporter.\n\n";
+
+# It is time to email the result of the import.
+my $log = join("\n\n", @logs);
+$log .=  "\n\nImported $bugtotal bug(s) from $urlbase,\n  sent by $exporter.\n";
 my $subject =  "$bugtotal Bug(s) successfully moved from $urlbase to " 
    . Param("urlbase");
 my @to = ($exporter, $maintainer);
