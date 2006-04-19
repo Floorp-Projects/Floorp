@@ -167,7 +167,8 @@ if (!empty($sql['appfilter'])) {
 }
 
 if (!empty($sql['q'])) {
-    $where .= " main.Name LIKE '%{$sql['q']}%' AND ";
+    $where .= " (main.name LIKE '%" . preg_replace('/[\s]+/','%',$sql['q']) . "%'
+                OR main.Description LIKE '%" . preg_replace('/[\s]+/','%',$sql['q']) . "%') AND ";
 }
 
 if (!empty($sql['type'])) {
