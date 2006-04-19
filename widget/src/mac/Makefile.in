@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= widget
 LIBRARY_NAME	= widget_mac
-EXPORT_LIBRARY = 1
+EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetMacModule
 XPIDL_MODULE	= widget_mac
@@ -152,16 +152,17 @@ GARBAGE		+= $(GFX_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
-RES_DEST = $(DIST)/bin/libwidget.rsrc
+RESOURCE = libwidget.rsrc
 RES_SRC = $(srcdir)/nsMacWidget.r
 
 export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
 	$(INSTALL) $^ .
 
-$(RES_DEST): $(RES_SRC)
-	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $(RES_SRC) -o $(RES_DEST)
+$(RESOURCE): $(RES_SRC)
+	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $< -o $@
 
-libs:: $(RES_DEST)
+libs:: $(RESOURCE)
+	$(INSTALL) $(IFLAGS1) $^ $(DIST)/bin
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
