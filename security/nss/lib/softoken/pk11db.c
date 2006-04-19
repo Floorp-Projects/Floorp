@@ -868,7 +868,7 @@ secmod_ReadPermDB(const char *appName, const char *filename,
     DBT key,data;
     int ret;
     DB *pkcs11db = NULL;
-    char **moduleList = NULL;
+    char **moduleList = NULL, **newModuleList = NULL;
     int moduleCount = 1;
     int useCount = SECMOD_STEP;
 
@@ -888,9 +888,10 @@ secmod_ReadPermDB(const char *appName, const char *filename,
 	PRBool internal = PR_FALSE;
 	if ((moduleCount+1) >= useCount) {
 	    useCount += SECMOD_STEP;
-	    moduleList = 
+	    newModuleList =
 		(char **)PORT_Realloc(moduleList,useCount*sizeof(char *));
-	    if (moduleList == NULL) goto done;
+	    if (newModuleList == NULL) goto done;
+	    moduleList = newModuleList;
 	    PORT_Memset(&moduleList[moduleCount+1],0,
 						sizeof(char *)*SECMOD_STEP);
 	}
