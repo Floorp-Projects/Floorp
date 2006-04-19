@@ -316,7 +316,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* Belt-and-braces: check that this script object has access to scopeobj. */
     principals = script->principals;
     if (!js_CheckPrincipalsAccess(cx, scopeobj, principals,
-                                  cx->runtime->atomState.ScriptAtom)) {
+                                  CLASS_ATOM(cx, Script))) {
         return JS_FALSE;
     }
 

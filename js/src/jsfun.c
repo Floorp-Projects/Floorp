@@ -1103,7 +1103,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
          * Beware of the wacky case of a user function named Object -- trying
          * to find a prototype for that will recur back here _ad perniciem_.
          */
-        if (!parentProto && fun->atom == cx->runtime->atomState.ObjectAtom)
+        if (!parentProto && fun->atom == CLASS_ATOM(cx, Object))
             return JS_TRUE;
 
         /*
@@ -1844,7 +1844,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Belt-and-braces: check that the caller has access to parent. */
     if (!js_CheckPrincipalsAccess(cx, parent, principals,
-                                  cx->runtime->atomState.FunctionAtom)) {
+                                  CLASS_ATOM(cx, Function))) {
         return JS_FALSE;
     }
 

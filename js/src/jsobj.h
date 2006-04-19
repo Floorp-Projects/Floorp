@@ -302,11 +302,14 @@ js_HoldObjectMap(JSContext *cx, JSObjectMap *map);
 extern JSObjectMap *
 js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
 
+extern JSBool
+js_GetClassId(JSContext *cx, JSClass *clasp, jsid *idp);
+
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 extern JSBool
-js_FindConstructor(JSContext *cx, JSObject *start, JSAtom *ctorName, jsval *vp);
+js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
@@ -454,7 +457,7 @@ extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JSBool
-js_GetClassPrototype(JSContext *cx, JSObject *scope, JSAtom *atom,
+js_GetClassPrototype(JSContext *cx, JSObject *scope, jsid id,
                      JSObject **protop);
 
 extern JSBool
