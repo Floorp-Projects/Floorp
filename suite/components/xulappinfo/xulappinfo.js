@@ -4,6 +4,7 @@ const XULAPPINFO_CID = Components.ID("{f8b59582-5808-4e6e-a467-339e9c82756f}");
 const nsIXULAppInfo = Components.interfaces.nsIXULAppInfo;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsIFactory = Components.interfaces.nsIFactory;
+const nsISupports = Components.interfaces.nsISupports;
 
 function XULAppInfoService()
 {
