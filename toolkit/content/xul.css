@@ -148,10 +148,6 @@ browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
 }
 
-browsermessage {
-  -moz-binding: url("chrome://global/content/bindings/browser.xml#browsermessage"); 
-}
-
 tabbrowser {
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser");
 }
@@ -162,6 +158,21 @@ editor {
 
 iframe {
   -moz-binding: url("chrome://global/content/bindings/general.xml#iframe");
+}
+
+/********** notifications **********/
+
+notificationbox {
+  -moz-binding: url("chrome://global/content/bindings/notification.xml#notificationbox");
+  -moz-box-orient: vertical;
+}
+
+notification {
+  -moz-binding: url("chrome://global/content/bindings/notification.xml#notification");
+}
+
+.notificationbox-stack {
+  overflow-y: hidden;
 }
 
 /********** image **********/

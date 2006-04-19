@@ -328,9 +328,24 @@ const gPopupBlockerObserver = {
         else
           message = bundle_browser.getFormattedString("popupWarning", [brandShortName]);
 
-        gBrowser.showMessage(gBrowser.selectedBrowser, "chrome://browser/skin/Info.png",
-                             message, popupButtonText, null, null, "blockedPopupOptions",
-                             "top", true, popupButtonAccesskey);
+        var notificationBox = gBrowser.getNotificationBox();
+        var notification = notificationBox.getNotificationWithValue("popup-blocked");
+        if (notification) {
+          notification.label = message;
+        }
+        else {
+          var buttons = [{
+            label: popupButtonText,
+            accessKey: popupButtonAccesskey,
+            popup: "blockedPopupOptions",
+            callback: null
+          }];
+
+          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+          notificationBox.appendNotification(message, "popup-blocked",
+                                             "chrome://browser/skin/Info.png",
+                                             priority, buttons);
+        }
       }
     }
     else
@@ -346,7 +361,7 @@ const gPopupBlockerObserver = {
     var perm = shouldBlock ? this._kIPM.DENY_ACTION : this._kIPM.ALLOW_ACTION;
     pm.add(currentURI, "popup", perm);
 
-    gBrowser.hideMessage(null, "top");
+    gBrowser.getNotificationBox().removeCurrentNotification();
   },
 
   fillPopupList: function (aEvent)
@@ -515,7 +530,7 @@ const gPopupBlockerObserver = {
 
     gPrefService.setBoolPref("privacy.popups.showBrowserMessage", !showMessage);
 
-    gBrowser.hideMessage(null, "top");
+    gBrowser.getNotificationBox().removeCurrentNotification();
   },
 
   _displayPageReportFirstTime: function ()
@@ -564,81 +579,85 @@ const gXPInstallObserver = {
       if (browser) {
         var host = browser.docShell.QueryInterface(Components.interfaces.nsIWebNavigation).currentURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
-        var iconURL, messageKey, buttonKey, buttonAccesskeyKey;
-        if (aData == "install-chrome") {
+        var notificationName, messageString, buttons;
+        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+          notificationName = "xpinstall-disabled"
+          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
+            buttons = [];
+          }
+          else {
+            messageString = browserBundle.getFormattedString("xpinstallDisabledMessage",
+                                                             [brandShortName, host]);
+
+            buttons = [{
+              label: browserBundle.getString("xpinstallDisabledButton"),
+              accessKey: browserBundle.getString("xpinstallDisabledButton.accesskey"),
+              popup: null,
+              callback: function editPrefs() {
+                gPrefService.setBoolPref("xpinstall.enabled", true);
+                return false;
+              }
+            }];
+          }
+        }
+        else {
           // XXXben - use regular software install warnings for now until we can
           // properly differentiate themes. It's likely in fact that themes won't
           // be blocked so this code path will only be reached for extensions.
-          iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
-          messageKey = "xpinstallWarning";
-          buttonKey = "xpinstallWarningButton";
-          buttonAccesskeyKey = "xpinstallWarningButton.accesskey";
-        }
-        else {
-          iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
-          messageKey = "xpinstallWarning";
-          buttonKey = "xpinstallWarningButton";
-          buttonAccesskeyKey = "xpinstallWarningButton.accesskey";
-        }
-        var messageString, buttonString, buttonAccesskeyString;
-        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
-          if (gPrefService.prefIsLocked("xpinstall.enabled")) {
-            messageString = browserBundle.getString("xpinstallDisabledMessageLocked");
-            buttonString = ""; // don't show the button
-          }
-          else {
-            messageString = browserBundle.getString("xpinstallDisabledMessage");
-            buttonString = browserBundle.getString("xpinstallDisabledButton");
-            buttonAccesskeyString = browserBundle.getString("xpinstallDisabledButton.accesskey");
-          }
-          getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   null, "xpinstall-install-edit-prefs",
-                                   null, "top", true, buttonAccesskeyString);
-        }
-        else {
-          messageString = browserBundle.getFormattedString(messageKey, [brandShortName, host]);
-          buttonString = browserBundle.getString(buttonKey);
-          buttonAccesskeyString = browserBundle.getString(buttonAccesskeyKey);
-          webNav = shell.QueryInterface(Components.interfaces.nsIWebNavigation);
-          getBrowser().showMessage(browser, iconURL, messageString, buttonString,
-                                   shell, "xpinstall-install-edit-permissions",
-                                   null, "top", false, buttonAccesskeyString);
-        }
-      }
-      break;
-    case "xpinstall-install-edit-prefs":
-      gPrefService.setBoolPref("xpinstall.enabled", true);
-      getBrowser().hideMessage(null, "top");
-      break;
-    case "xpinstall-install-edit-permissions":
-      browser = this._getBrowser(aSubject.QueryInterface(Components.interfaces.nsIDocShell));
-      if (browser) {
-        var bundlePreferences = document.getElementById("bundle_preferences");
-        webNav = aSubject.QueryInterface(Components.interfaces.nsIWebNavigation);
-        var params = { blockVisible   : false,
-                       sessionVisible : false,
-                       allowVisible   : true,
-                       prefilledHost  : webNav.currentURI.host,
-                       permissionType : "install",
-                       windowTitle    : bundlePreferences.getString("installpermissionstitle"),
-                       introText      : bundlePreferences.getString("installpermissionstext") };
-        wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-        var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
-        if (existingWindow) {
-          existingWindow.initWithParams(params);
-          existingWindow.focus();
-        }
-        else
-          window.openDialog("chrome://browser/content/preferences/permissions.xul",
-                            "_blank", "resizable,dialog=no,centerscreen", params);
+          notificationName = "xpinstall"
+          messageString = browserBundle.getFormattedString("xpinstallWarning",
+                                                           [brandShortName, host]);
 
-        getBrowser().hideMessage(null, "top");
+          buttons = [{
+            label: browserBundle.getString("xpinstallWarningButton"),
+            accessKey: browserBundle.getString("xpinstallWarningButton.accesskey"),
+            popup: null,
+            callback: function() { return xpinstallEditPermissions(browser.docShell); }
+          }];
+        }
+
+        var notificationBox = gBrowser.getNotificationBox(browser);
+        if (!notificationBox.getNotificationWithValue(notificationName)) {
+          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+          const iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+          notificationBox.appendNotification(messageString, notificationName,
+                                             iconURL, priority, buttons);
+        }
       }
       break;
     }
   }
 };
+
+function xpinstallEditPermissions(aDocShell)
+{
+  var browser = gXPInstallObserver._getBrowser(aDocShell);
+  if (browser) {
+    var bundlePreferences = document.getElementById("bundle_preferences");
+    var webNav = aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+    var params = { blockVisible   : false,
+                   sessionVisible : false,
+                   allowVisible   : true,
+                   prefilledHost  : webNav.currentURI.host,
+                   permissionType : "install",
+                   windowTitle    : bundlePreferences.getString("installpermissionstitle"),
+                   introText      : bundlePreferences.getString("installpermissionstext") };
+    wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                   .getService(Components.interfaces.nsIWindowMediator);
+    var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
+    if (existingWindow) {
+      existingWindow.initWithParams(params);
+      existingWindow.focus();
+    }
+    else
+      window.openDialog("chrome://browser/content/preferences/permissions.xul",
+                        "_blank", "resizable,dialog=no,centerscreen", params);
+    return false;
+  }
+
+  return true;
+}
 
 function BrowserStartup()
 {
@@ -846,9 +865,6 @@ function delayedStartup()
   var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
   os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
-  os.addObserver(gXPInstallObserver, "xpinstall-install-edit-prefs", false);
-  os.addObserver(gXPInstallObserver, "xpinstall-install-edit-permissions", false);
-  os.addObserver(gMissingPluginInstaller, "missing-plugin", false);
 
   if (!gPrefService)
     gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
@@ -1007,9 +1023,6 @@ function BrowserShutdown()
     .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
   os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
-  os.removeObserver(gXPInstallObserver, "xpinstall-install-edit-permissions");
-  os.removeObserver(gXPInstallObserver, "xpinstall-install-edit-prefs");
-  os.removeObserver(gMissingPluginInstaller, "missing-plugin");
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -2443,9 +2456,9 @@ function toggleAffectedChrome(aHide)
     gChromeState.sidebarOpen = !sidebar.hidden;
     gSidebarCommand = sidebar.getAttribute("sidebarcommand");
 
-    var message = gBrowser.getMessageForBrowser(gBrowser.selectedBrowser, "top");
-    gChromeState.messageOpen = !message.hidden;
-    message.hidden = aHide;
+    var notificationBox = gBrowser.getNotificationBox();
+    gChromeState.notificationsOpen = !notificationBox.notificationsHidden;
+    notificationBox.notificationsHidden = aHide;
 
     var statusbar = document.getElementById("status-bar");
     gChromeState.statusbarOpen = !statusbar.hidden;
@@ -2456,9 +2469,8 @@ function toggleAffectedChrome(aHide)
     gFindBar.closeFindBar();
   }
   else {
-    if (gChromeState.messageOpen) {
-      var message = gBrowser.getMessageForBrowser(gBrowser.selectedBrowser, "top");
-      message.hidden = aHide;
+    if (gChromeState.notificationsOpen) {
+      gBrowser.getNotificationBox().notificationsHidden = aHide;
     }
 
     if (gChromeState.statusbarOpen) {
@@ -3523,7 +3535,7 @@ nsBrowserStatusHandler.prototype =
       if (newIndexOfHash != -1)
         newSpec = newSpec.substr(0, newSpec.indexOf("#"));
       if (newSpec != oldSpec) {
-        getBrowser().hideMessage(null, "both");
+        gBrowser.getNotificationBox(selectedBrowser).removeAllNotifications(true);
       }
     }
     selectedBrowser.lastURI = aLocation;
@@ -6003,7 +6015,8 @@ missingPluginInstaller.prototype.installSinglePlugin = function(aEvent){
 
   if (missingPluginsArray) {
     window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-      "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+                      "PFSWindow", "modal,chrome,resizable=yes",
+                      {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
   }
 
   aEvent.preventDefault();
@@ -6049,32 +6062,35 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   tab.missingPlugins[pluginInfo.mimetype] = pluginInfo;
 
   var browser = tabbrowser.getBrowserAtIndex(i);
-  var iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+  var notificationBox = gBrowser.getNotificationBox(browser);
+  if (!notificationBox.getNotificationWithValue("missing-plugins")) {
+    var bundle_browser = document.getElementById("bundle_browser");
+    var messageString = bundle_browser.getString("missingpluginsMessage.title");
+    var buttons = [{
+      label: bundle_browser.getString("missingpluginsMessage.button.label"),
+      accessKey: bundle_browser.getString("missingpluginsMessage.button.accesskey"),
+      popup: null,
+      callback: pluginsMissing
+    }];
 
-  var bundle_browser = document.getElementById("bundle_browser");
-  var messageString = bundle_browser.getString("missingpluginsMessage.title");
-  var buttonString = bundle_browser.getString("missingpluginsMessage.button.label");
-  var buttonAccesskeyString = bundle_browser.getString("missingpluginsMessage.button.accesskey");
-
-  tabbrowser.showMessage(browser, iconURL, messageString, buttonString,"",
-                         "missing-plugin", null, "top", true, buttonAccesskeyString);
-}
-
-missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
-  switch (aTopic) {
-    case "missing-plugin":
-      // get the urls of missing plugins
-      var tabbrowser = getBrowser();
-      var missingPluginsArray = tabbrowser.mCurrentTab.missingPlugins;
-
-      if (missingPluginsArray) {
-        window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-          "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
-      }
-
-      break;
+    const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+    const iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+    notificationBox.appendNotification(messageString, "missing-plugins",
+                                       iconURL, priority, buttons);
   }
 }
+
+function pluginsMissing()
+{
+  // get the urls of missing plugins
+  var tabbrowser = getBrowser();
+  var missingPluginsArray = tabbrowser.mCurrentTab.missingPlugins;
+  if (missingPluginsArray) {
+    window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
+      "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
+  }
+}
+
 var gMissingPluginInstaller = new missingPluginInstaller();
 
 function convertFromUnicode(charset, str)

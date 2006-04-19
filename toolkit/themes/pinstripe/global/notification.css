@@ -1,0 +1,34 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+notification {
+  background-color: InfoBackground;
+  color: InfoText;
+}
+
+notification[type="info"] {
+  background-color: -moz-Dialog;
+}
+
+notification[type="critical"] {
+  background-color: red;
+}
+
+.messageImage {
+  width: 16px;
+  height: 16px;
+}
+
+.messageText {
+  -moz-margin-start: 5px;
+}
+
+.messageButton {
+  margin: 0px 5px 0px 5px;
+}
+
+.messageCloseButton {
+  -moz-appearance: none;
+  padding-right: 4px;
+  list-style-image: url("chrome://global/skin/icons/closetab.png") !important;
+  border: none;
+}
