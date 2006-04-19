@@ -104,7 +104,7 @@ static void trace_mux(char mode, const char *format, ...)
 #define FLETCHER_ACCUMULATE(A,B,U)      ONES_COMPLEMENT_ACCUMULATE(A, U);     \
                                         ONES_COMPLEMENT_ACCUMULATE(B, A)
 
-PR_IMPLEMENT(PRUint32)
+PRUint32
 NS_AccumulateFastLoadChecksum(PRUint32 *aChecksum,
                               const PRUint8* aBuffer,
                               PRUint32 aLength,
@@ -225,7 +225,7 @@ NS_AccumulateFastLoadChecksum(PRUint32 *aChecksum,
     return aLength;
 }
 
-PR_IMPLEMENT(PRUint32)
+PRUint32
 NS_AddFastLoadChecksums(PRUint32 sum1, PRUint32 sum2, PRUint32 sum2ByteCount)
 {
     PRUint32 A1 = sum1 & 0xffff;

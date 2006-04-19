@@ -43,6 +43,42 @@
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
+class nsWeakReference : public nsIWeakReference
+  {
+    public:
+    // nsISupports...
+      NS_DECL_ISUPPORTS
+
+    // nsIWeakReference...
+      NS_DECL_NSIWEAKREFERENCE
+
+    private:
+      friend class nsSupportsWeakReference;
+
+      nsWeakReference( nsSupportsWeakReference* referent )
+          : mReferent(referent)
+          // ...I can only be constructed by an |nsSupportsWeakReference|
+        {
+          // nothing else to do here
+        }
+
+      ~nsWeakReference()
+           // ...I will only be destroyed by calling |delete| myself.
+        {
+          if ( mReferent )
+            mReferent->NoticeProxyDestruction();
+        }
+
+      void
+      NoticeReferentDestruction()
+          // ...called (only) by an |nsSupportsWeakReference| from _its_ dtor.
+        {
+          mReferent = 0;
+        }
+
+      nsSupportsWeakReference*  mReferent;
+  };
+
 nsresult
 nsQueryReferent::operator()( const nsIID& aIID, void** answer ) const
   {
@@ -114,3 +150,14 @@ nsWeakReference::QueryReferent( const nsIID& aIID, void** aInstancePtr )
   {
     return mReferent ? mReferent->QueryInterface(aIID, aInstancePtr) : NS_ERROR_NULL_POINTER;
   }
+
+void
+nsSupportsWeakReference::ClearWeakReferences()
+	{
+		if ( mProxy )
+			{
+				mProxy->NoticeReferentDestruction();
+				mProxy = 0;
+			}
+	}
+

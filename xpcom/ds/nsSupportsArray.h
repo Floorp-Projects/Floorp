@@ -44,8 +44,10 @@
 
 static const PRUint32 kAutoArraySize = 8;
 
+// Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
+// controls member method visibility.
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
+#define IMETHOD_VISIBILITY
 
 class NS_COM nsSupportsArray : public nsISupportsArray {
 public:
@@ -165,8 +167,5 @@ private:
   // Copy constructors are not allowed
   nsSupportsArray(const nsISupportsArray& other);
 };
-
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif // nsSupportsArray_h__

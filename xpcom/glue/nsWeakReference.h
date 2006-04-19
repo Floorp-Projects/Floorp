@@ -47,8 +47,10 @@
 
 class nsWeakReference;
 
+// Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
+// controls member method visibility.
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
+#define IMETHOD_VISIBILITY
 
 class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
   {
@@ -78,65 +80,12 @@ class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
 
 		protected:
 
-			inline void ClearWeakReferences();
+			void ClearWeakReferences();
 			PRBool HasWeakReferences() const {return mProxy != 0;}
   };
 
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
-
-class NS_COM_GLUE nsWeakReference : public nsIWeakReference
-  {
-    public:
-    // nsISupports...
-      NS_DECL_ISUPPORTS
-
-    // nsIWeakReference...
-      NS_DECL_NSIWEAKREFERENCE
-
-    private:
-      friend class nsSupportsWeakReference;
-
-      nsWeakReference( nsSupportsWeakReference* referent )
-          : mReferent(referent)
-          // ...I can only be constructed by an |nsSupportsWeakReference|
-        {
-          // nothing else to do here
-        }
-
-      ~nsWeakReference()
-           // ...I will only be destroyed by calling |delete| myself.
-        {
-          if ( mReferent )
-            mReferent->NoticeProxyDestruction();
-        }
-
-      void
-      NoticeReferentDestruction()
-          // ...called (only) by an |nsSupportsWeakReference| from _its_ dtor.
-        {
-          mReferent = 0;
-        }
-
-      nsSupportsWeakReference*  mReferent;
-  };
-
-inline
-void
-nsSupportsWeakReference::ClearWeakReferences()
-		/*
-			Usually being called from |nsSupportsWeakReference::~nsSupportsWeakReference|
-			will be good enough, but you may have a case where you need to call disconnect
-			your weak references in an outer destructor (to prevent some client holding a
-			weak reference from re-entering your destructor).
-		*/
-	{
-		if ( mProxy )
-			{
-				mProxy->NoticeReferentDestruction();
-				mProxy = 0;
-			}
-	}
 
 inline
 nsSupportsWeakReference::~nsSupportsWeakReference()

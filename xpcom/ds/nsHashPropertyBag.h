@@ -49,8 +49,10 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsInterfaceHashtable.h"
 
+// Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
+// controls member method visibility.
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
+#define IMETHOD_VISIBILITY
 
 class NS_COM nsHashPropertyBag : public nsIWritablePropertyBag
                                , public nsIWritablePropertyBag2

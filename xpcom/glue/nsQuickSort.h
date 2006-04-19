@@ -60,7 +60,7 @@ PR_BEGIN_EXTERN_C
  *      + greater than zero if the second element should be before the first
  *  5. extra data to pass to comparison function
  */
-void NS_COM_GLUE NS_QuickSort(void *, unsigned int, unsigned int,
+NS_COM_GLUE void NS_QuickSort(void *, unsigned int, unsigned int,
                               int (*)(const void *, const void *, void *), 
                               void *);
 
