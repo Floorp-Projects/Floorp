@@ -393,7 +393,6 @@ typedef struct JSResolvingEntry {
 
 #define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
 #define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
-#define JSRESFLAG_PROTOCACHE    0x4     /* resolving prototype cache key */
 
 typedef struct JSLocalRootChunk JSLocalRootChunk;
 
@@ -604,8 +603,8 @@ struct JSContext {
     /* Stack of thread-stack-allocated temporary GC roots. */
     JSTempValueRooter   *tempValueRooters;
 
-    /* Roots for the standard object prototypes (Object.prototype, etc.) */
-    JSObject            *prototypes[JSProto_LIMIT];
+    /* Roots for the standard class objects (Object, Function, etc.) */
+    JSObject            *classObjects[JSProto_LIMIT];
 
 #ifdef GC_MARK_DEBUG
     /* Top of the GC mark stack. */
@@ -744,12 +743,12 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs);
  * Fast access to immutable standard objects (constructors and prototypes).
  */
 extern JSBool
-js_GetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
-                      JSObject **protop);
+js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject **objp);
 
 extern void
-js_SetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
-                      JSObject *value);
+js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject *value);
 
 /*
  * Report an exception, which is currently realized as a printf-style format

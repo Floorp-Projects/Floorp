@@ -99,7 +99,7 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
 
 JSClass js_ObjectClass = {
     js_Object_str,
-    0,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -1197,7 +1197,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (obj != callerScopeChain) {
                 if (!js_CheckPrincipalsAccess(cx, obj,
                                               caller->script->principals,
-                                              cx->runtime->atomState.evalAtom)) {
+                                              cx->runtime->atomState.evalAtom))
+                {
                     return JS_FALSE;
                 }
 
@@ -1853,13 +1854,6 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-#if JS_HAS_OBJ_PROTO_PROP
-    if (!JS_InitClass(cx, obj, NULL, &js_WithClass, With, 0,
-                      NULL, NULL, NULL, NULL)) {
-        return NULL;
-    }
-#endif
-
     /* ECMA (15.1.2.1) says 'eval' is also a property of the global object. */
     if (!OBJ_GET_PROPERTY(cx, proto,
                           ATOM_TO_JSID(cx->runtime->atomState.evalAtom),
@@ -2127,7 +2121,7 @@ bad:
 JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
 {
-    JSObject *obj, *pobj;
+    JSObject *obj, *cobj, *pobj;
     JSProtoKey key;
     JSProperty *prop;
     JSScopeProperty *sprop;
@@ -2149,10 +2143,10 @@ js_FindClassObject(JSContext *cx, JSObject *start, jsid id, jsval *vp)
     if (JSID_IS_INT(id)) {
         key = JSID_TO_INT(id);
         JS_ASSERT(key != JSProto_Null);
-        if (!js_GetCachedPrototype(cx, obj, key, &pobj))
+        if (!js_GetClassObject(cx, obj, key, &cobj))
             return JS_FALSE;
-        if (pobj) {
-            *vp = OBJECT_TO_JSVAL(pobj);
+        if (cobj) {
+            *vp = OBJECT_TO_JSVAL(cobj);
             return JS_TRUE;
         }
         id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);

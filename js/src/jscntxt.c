@@ -775,7 +775,18 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
     JS_ASSERT(!lrc);
 }
 
-static JSObjectOp lazy_cached_prototype_init[JSProto_LIMIT] = {
+JS_STATIC_DLL_CALLBACK(JSObject *)
+js_InitNullClass(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(0);
+    return NULL;
+}
+
+#define JS_PROTO(name,init) extern JSObject *init(JSContext *, JSObject *);
+#include "jsproto.tbl"
+#undef JS_PROTO
+
+static JSObjectOp lazy_prototype_init[JSProto_LIMIT] = {
 #define JS_PROTO(name,init) init,
 #include "jsproto.tbl"
 #undef JS_PROTO
@@ -819,58 +830,60 @@ FindContextForObject(JSContext *cx, JSObject *obj)
 }
 
 JSBool
-js_GetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
-                      JSObject **protop)
+js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject **objp)
 {
     JSBool ok;
     JSResolvingKey rkey;
     JSResolvingEntry *rentry;
     uint32 generation;
-    JSObject *pobj;
+    JSObject *tmp, *cobj;
     JSContext *ocx;
     JSObjectOp init;
 
     rkey.obj = obj;
-    rkey.id = INT_TO_JSID(key);
-    ok = js_StartResolving(cx, &rkey, JSRESFLAG_PROTOCACHE, &rentry);
+    rkey.id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    ok = js_StartResolving(cx, &rkey, JSRESFLAG_LOOKUP, &rentry);
     if (!ok)
         return JS_FALSE;
     if (!rentry) {
         /* Already caching key in obj -- suppress recursion. */
-        *protop = NULL;
+        *objp = NULL;
         return JS_TRUE;
     }
     generation = cx->resolvingTable->generation;
 
-    while ((pobj = OBJ_GET_PARENT(cx, obj)) != NULL)
-        obj = pobj;
+    while ((tmp = OBJ_GET_PARENT(cx, obj)) != NULL)
+        obj = tmp;
     if (obj == cx->globalObject) {
         ocx = cx;
     } else {
         ocx = FindContextForObject(cx, obj);
-        if (!ocx)
+        if (!ocx) {
+            cobj = NULL;
             goto out;
+        }
     }
 
-    pobj = ocx->prototypes[key];
-    if (!pobj) {
-        init = lazy_cached_prototype_init[key];
+    cobj = ocx->classObjects[key];
+    if (!cobj) {
+        init = lazy_prototype_init[key];
         if (init) {
             if (!init(cx, obj))
                 ok = JS_FALSE;
-            pobj = ocx->prototypes[key];
+            cobj = ocx->classObjects[key];
         }
     }
 
 out:
-    *protop = pobj;
-    js_StopResolving(cx, &rkey, JSRESFLAG_PROTOCACHE, rentry, generation);
+    *objp = cobj;
+    js_StopResolving(cx, &rkey, JSRESFLAG_LOOKUP, rentry, generation);
     return ok;
 }
 
 void
-js_SetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
-                      JSObject *value)
+js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject *value)
 {
     JSContext *ocx;
 
@@ -882,7 +895,7 @@ js_SetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
         if (!ocx)
             return;
     }
-    ocx->prototypes[key] = value;
+    ocx->classObjects[key] = value;
 }
 
 static void
