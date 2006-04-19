@@ -40,7 +40,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-#include "nsIRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"

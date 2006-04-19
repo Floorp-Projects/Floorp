@@ -92,14 +92,13 @@ EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
-	$(DEPTH)/modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(MOZ_XPCOM_OBSOLETE_LIBS) \
+	$(LIBXUL_DIST)/../modules/libreg/src/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
 ifdef MOZ_PLACES
-EXTRA_DSO_LDOPTS += $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX)
 endif
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
