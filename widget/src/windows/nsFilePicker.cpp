@@ -51,7 +51,6 @@
 #include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsIStringBundle.h"
-#include "nsNativeCharsetUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
 #include <windows.h>
@@ -111,12 +110,11 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
 {
   if (uMsg == BFFM_INITIALIZED)
   {
-    char * filePath = (char *) lpData;
+    PRUnichar * filePath = (PRUnichar *) lpData;
     if (filePath)
-    {
-      ::SendMessage(hwnd, BFFM_SETSELECTION, TRUE /* true because lpData is a path string */, lpData);
-      nsCRT::free(filePath);
-    }
+      ::SendMessageW(hwnd, BFFM_SETSELECTIONW,
+                     TRUE /* true because lpData is a path string */,
+                     lpData);
   }
   return 0;
 }
@@ -164,11 +162,11 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
     browserInfo.lpszTitle      = mTitle.get();
     browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
-    if (initialDir.Length()) // convert folder path to native, the strdup copy will be released in BrowseCallbackProc
+    if (initialDir.Length())
     {
-      nsCAutoString nativeFolderPath;
-      NS_CopyUnicodeToNative(initialDir, nativeFolderPath);
-      browserInfo.lParam       = (LPARAM) nsCRT::strdup(nativeFolderPath.get()); 
+      // the dialog is modal so that |initialDir.get()| will be valid in 
+      // BrowserCallbackProc. Thus, we don't need to clone it.
+      browserInfo.lParam       = (LPARAM) initialDir.get();
       browserInfo.lpfn         = &BrowseCallbackProc;
     }
     else
@@ -178,7 +176,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     }
     browserInfo.iImage         = nsnull;
 
-    // XXX UNICODE support is needed here --> DONE
     LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
     if (list != NULL) {
       result = ::SHGetPathFromIDListW(list, (LPWSTR)fileBuffer);
