@@ -141,6 +141,10 @@ EXTRA_DSO_LDOPTS += \
 		$(TK_LIBS) \
 		$(NULL)
 
+ifdef MOZ_X11
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS  += $(TK_CFLAGS)
