@@ -529,8 +529,11 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_table_column,       NS_STYLE_DISPLAY_TABLE_COLUMN,
   eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
   eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
+  // Make sure this is kept in sync with the code in
+  // nsCSSFrameConstructor::ConstructXULFrame
   eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
   eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
+#ifdef MOZ_XUL  
   eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
   eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
   eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
@@ -540,6 +543,7 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword__moz_deck,          NS_STYLE_DISPLAY_DECK,
   eCSSKeyword__moz_popup,         NS_STYLE_DISPLAY_POPUP,
   eCSSKeyword__moz_groupbox,      NS_STYLE_DISPLAY_GROUPBOX,
+#endif
   eCSSKeyword_UNKNOWN,-1
 };
 

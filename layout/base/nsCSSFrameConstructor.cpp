@@ -6330,6 +6330,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
     }
 
     // Display types for XUL start here
+    // Make sure this is kept in sync with nsCSSProps::kDisplayKTable
     // First is BOX
     if (!newFrame && isXULDisplay) {
       triedFrame = PR_TRUE;
@@ -6461,7 +6462,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       else {
         triedFrame = PR_FALSE;
       }
-#endif
+#endif // MOZ_XUL
     }
 
     if (mayBeScrollable && display->IsScrollableOverflow()) {
