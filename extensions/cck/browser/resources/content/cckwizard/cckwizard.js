@@ -753,8 +753,11 @@ function CreateCCK()
   destdir.append("xpi");
   try {
     destdir.remove(true);
+  } catch(ex) {}
+  try {
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);    
   } catch(ex) {}
+  
   CCKWriteConfigFile(destdir);  
   destdir.append("chrome");
   try {
@@ -1368,11 +1371,13 @@ function CCKWriteProperties(destdir)
 
   // Pref locks
   listbox = document.getElementById("prefList");
+  var j = 1;
   for (var i=0; i < listbox.getRowCount(); i++) {
     listitem = listbox.getItemAtIndex(i);
     if (listitem.cck['lock'] == "true") {
-      str = "LockPref" + (i+1) + "=" + listitem.label + "\n";
+      str = "LockPref" + (j) + "=" + listitem.label + "\n";
       cos.writeString(str);
+      j++;
     }
   }
 
