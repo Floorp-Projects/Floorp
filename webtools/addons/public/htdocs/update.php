@@ -79,7 +79,7 @@ if (empty($errors)) {
     //
     // There is a possibility that the version.vid sort could be incorrect, but only in edge
     // cases where the version was added retroactively, and I've actually _never_ seen such
-    // a case.
+    // a case. (It's happened, see bug #334747 -- clouserw)
     $query = "
         SELECT
             main.guid AS extguid,
@@ -98,8 +98,7 @@ if (empty($errors)) {
             applications.guid = '{$sql['appID']}' AND
             (version.OSID = 1 {$os_query} ) AND
             version.approved = 'YES' AND
-            '{$sql['appVersion']}+' >= version.minappver AND
-            '{$sql['version']}' <= version.version
+            '{$sql['appVersion']}+' >= version.minappver
         ORDER BY
             version.vid DESC
         LIMIT 1       
