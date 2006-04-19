@@ -1753,14 +1753,15 @@ SearchService.prototype = {
         continue;
       }
 
-      // If we have a writable Sherlock plugin, try to convert it
-      if (fileExtension == SHERLOCK_FILE_EXT && isWritable) {
-        try {
-          this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
-        } catch (ex) {
-          LOG("_loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
-          // The engine couldn't be converted, mark it as read-only
-          addedEngine._readOnly = true;
+      if (fileExtension == SHERLOCK_FILE_EXT) {
+        if (isWritable) {
+          try {
+            this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
+          } catch (ex) {
+            LOG("_loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
+            // The engine couldn't be converted, mark it as read-only
+            addedEngine._readOnly = true;
+          }
         }
 
         // If the engine still doesn't have an icon, see if we can find one
