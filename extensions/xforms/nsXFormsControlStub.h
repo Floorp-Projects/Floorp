@@ -266,9 +266,11 @@ protected:
   nsresult BindToModel(PRBool aSetBoundNode = PR_FALSE);
 
   /**
-   * Forces a rebinding to the model.
+   * Forces detaching from the model.
+   *
+   * @param aRebind           Try rebinding to a new model?
    */
-  nsresult ForceModelRebind();
+  nsresult ForceModelDetach(PRBool aRebind);
 
   /**
    * Adds the form control to the model, if the model has changed.

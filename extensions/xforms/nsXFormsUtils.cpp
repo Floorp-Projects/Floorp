@@ -1464,6 +1464,8 @@ nsXFormsUtils::ReportError(const nsString& aMessageName, const PRUnichar **aPara
 /* static */ PRBool
 nsXFormsUtils::IsDocumentReadyForBind(nsIDOMDocument *aDocument)
 {
+  NS_ENSURE_ARG(aDocument);
+
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
 
   nsIDocument *test = NS_STATIC_CAST(nsIDocument *,

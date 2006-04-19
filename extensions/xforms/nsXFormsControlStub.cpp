@@ -240,18 +240,27 @@ nsXFormsControlStubBase::MaybeAddToModel(nsIModelElementPrivate *aOldModel,
 {
   // XXX: just doing pointer comparison would be nice....
   PRBool sameModel = PR_FALSE;
-  nsCOMPtr<nsIDOM3Node> n3Model(do_QueryInterface(mModel));
-  nsCOMPtr<nsIDOMNode> nOldModel(do_QueryInterface(aOldModel));
-  NS_ASSERTION(n3Model, "model element not supporting nsIDOM3Node?!");
-  nsresult rv = n3Model->IsSameNode(nOldModel, &sameModel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+
+  if (mModel) {
+    nsCOMPtr<nsIDOM3Node> n3Model(do_QueryInterface(mModel));
+    nsCOMPtr<nsIDOMNode> nOldModel(do_QueryInterface(aOldModel));
+    NS_ASSERTION(n3Model, "model element not supporting nsIDOM3Node?!");
+    rv = n3Model->IsSameNode(nOldModel, &sameModel);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    sameModel = !aOldModel;
+  }
+
   if (!sameModel) {
     if (aOldModel) {
       rv = aOldModel->RemoveFormControl(this);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = mModel->AddFormControl(this, aParent);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mModel) {
+      rv = mModel->AddFormControl(this, aParent);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   return NS_OK;
 }
@@ -281,6 +290,11 @@ nsXFormsControlStubBase::ProcessNodeBinding(const nsString          &aBindingAtt
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (!domDoc) {
+    // We are not in a document, so we'll "defer the binding" for now. When
+    // the control gets inserted into a document, we'll Bind() again.
+    return NS_OK_XFORMS_DEFERRED;
+  }
 
   if (!nsXFormsUtils::IsDocumentReadyForBind(domDoc)) {
     nsXFormsModelElement::DeferElementBind(domDoc, this);
@@ -562,13 +576,18 @@ nsXFormsControlStubBase::OnDestroyed()
 }
 
 nsresult
-nsXFormsControlStubBase::ForceModelRebind()
+nsXFormsControlStubBase::ForceModelDetach(PRBool aRebind)
 {
   if (mModel) {
     // Remove from model, so Bind() will be forced to reattach
     mModel->RemoveFormControl(this);
     mModel = nsnull;
   }
+
+  if (!aRebind) {
+    return NS_OK;
+  }
+
   nsresult rv = Bind();
   NS_ENSURE_SUCCESS(rv, rv);
   return rv == NS_OK_XFORMS_DEFERRED ? NS_OK : Refresh();
@@ -587,7 +606,7 @@ nsXFormsControlStubBase::DocumentChanged(nsIDOMDocument *aNewDocument)
     xtfWrap->SetIntrinsicState(kDefaultIntrinsicState);
   }
 
-  return ForceModelRebind();
+  return ForceModelDetach(mHasParent && aNewDocument);
 }
 
 nsresult
@@ -596,7 +615,7 @@ nsXFormsControlStubBase::ParentChanged(nsIDOMElement *aNewParent)
   mHasParent = aNewParent != nsnull;
   // We need to re-evaluate our instance data binding when our parent changes,
   // since xmlns declarations or our context could have changed.
-  return ForceModelRebind();
+  return ForceModelDetach(mHasParent);
 }
 
 nsresult
