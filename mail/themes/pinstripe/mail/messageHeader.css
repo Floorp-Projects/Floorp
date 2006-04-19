@@ -132,7 +132,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   border: none;
 }
 
-#msgHeaderView > vbox {
+#msgHeaderView > deck {
   background-color: #E6E6E6;
   border: 1px solid #C8C8C8;
   -moz-border-radius: 7px;
