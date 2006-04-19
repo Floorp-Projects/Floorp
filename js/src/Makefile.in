@@ -135,6 +135,7 @@ EXPORTS		= \
 		jsotypes.h \
 		jsparse.h \
 		jsprf.h \
+		jsproto.tbl \
 		jsprvtd.h \
 		jspubtd.h \
 		jsregexp.h \
