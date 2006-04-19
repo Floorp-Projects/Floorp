@@ -38,7 +38,7 @@
 #define PKISTORE_H
 
 #ifdef DEBUG
-static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.8 $ $Date: 2006/04/07 05:49:04 $";
+static const char PKISTORE_CVS_ID[] = "@(#) $RCSfile: pkistore.h,v $ $Revision: 1.9 $ $Date: 2006/04/19 19:04:23 $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -114,7 +114,7 @@ static void nssCertificateStore_Check(nssCertificateStoreTrace* a,
 
     PORT_Assert(a->lock == b->lock);
     PORT_Assert(a->store == b->store);
-};
+}
 
 NSS_EXTERN void
 nssCertificateStore_Lock (
