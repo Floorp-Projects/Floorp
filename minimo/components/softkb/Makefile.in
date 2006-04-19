@@ -66,6 +66,8 @@ CPPSRCS		=			 \
 		nsSoftKeyBoard.cpp \
 		$(NULL)
 
+XPIDLSRCS = nsISoftKeyBoard.idl
+
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 ifdef WINCE
