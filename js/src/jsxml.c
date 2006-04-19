@@ -241,7 +241,8 @@ namespace_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
 JS_FRIEND_DATA(JSExtendedClass) js_NamespaceClass = {
   { "Namespace",
-    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED,
+    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     JS_PropertyStub,   JS_PropertyStub,   namespace_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    namespace_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -444,7 +445,8 @@ qname_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
 JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
   { "QName",
-    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED,
+    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE | JSCLASS_IS_EXTENDED |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     JS_PropertyStub,   JS_PropertyStub,   qname_getProperty, NULL,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -461,7 +463,9 @@ JS_FRIEND_DATA(JSExtendedClass) js_QNameClass = {
  * in this implementation.
  */
 JS_FRIEND_DATA(JSClass) js_AttributeNameClass = {
-    js_AttributeName_str, JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js_AttributeName_str,
+    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_AttributeName),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    qname_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -469,7 +473,9 @@ JS_FRIEND_DATA(JSClass) js_AttributeNameClass = {
 };
 
 JS_FRIEND_DATA(JSClass) js_AnyNameClass = {
-    js_AnyName_str,    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE,
+    js_AnyName_str,
+    JSCLASS_HAS_PRIVATE | JSCLASS_CONSTRUCT_PROTOTYPE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_AnyName),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    anyname_finalize,
     NULL,              NULL,              NULL,              NULL,
@@ -5458,7 +5464,8 @@ xml_getObjectOps(JSContext *cx, JSClass *clasp)
 }
 
 JS_FRIEND_DATA(JSClass) js_XMLClass = {
-    js_XML_str,        JSCLASS_HAS_PRIVATE,
+    js_XML_str,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_XML),
     JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,  JS_ResolveStub,    JS_ConvertStub,    xml_finalize,
     xml_getObjectOps,  NULL,              NULL,              NULL,

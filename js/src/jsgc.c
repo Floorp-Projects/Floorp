@@ -2069,7 +2069,7 @@ restart:
         }
 
         for (i = 0; i < JSProto_LIMIT; i++)
-            GC_MARK(cx, acx->prototypes[i], "prototypes[i]");
+            GC_MARK(cx, acx->classObjects[i], "classObjects[i]");
     }
 
 #ifdef DUMP_CALL_TABLE

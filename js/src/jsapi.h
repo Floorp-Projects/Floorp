@@ -568,8 +568,8 @@ JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
                                     JSIdArray *ida);
 
 extern JS_PUBLIC_API(JSBool)
-JS_GetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
-                      JSObject **protop);
+JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
+                  JSObject **objp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx);

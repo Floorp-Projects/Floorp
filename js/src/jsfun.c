@@ -894,7 +894,8 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
 JSClass js_CallClass = {
     js_Call_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Call),
     JS_PropertyStub,  JS_PropertyStub,
     call_getProperty, call_setProperty,
     call_enumerate,   (JSResolveOp)call_resolve,
@@ -1441,7 +1442,8 @@ fun_reserveSlots(JSContext *cx, JSObject *obj)
  */
 JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     js_Function_str,
-    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2),
+    JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_HAS_RESERVED_SLOTS(2) |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     fun_enumerate,    (JSResolveOp)fun_resolve,
