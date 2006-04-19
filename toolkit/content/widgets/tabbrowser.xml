@@ -111,11 +111,10 @@
           </xul:tabs>
         </xul:hbox>
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
-          <xul:vbox flex="1">
-            <xul:browsermessage hidden="true" type="top"/>
-            <xul:browser flex="1" type="content-primary" message="true" disablehistory="true" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
-            <xul:browsermessage hidden="true" type="bottom"/>
-          </xul:vbox>
+          <xul:notificationbox flex="1">
+            <xul:browser flex="1" type="content-primary" message="true" disablehistory="true"
+                         xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
+          </xul:notificationbox>
         </xul:tabpanels>
       </xul:tabbox>
       <children/>
@@ -215,68 +214,15 @@
         </body>
       </method>
 
-      <method name="getMessageForBrowser">
+      <method name="getNotificationBox">
         <parameter name="aBrowser"/>
-        <parameter name="aTopBottom"/>
         <body>
           <![CDATA[
-            return aBrowser[aTopBottom == "top" ? "previousSibling" : "nextSibling"];
-          ]]>
-        </body>
-      </method>
-
-      <method name="showMessage">
-        <parameter name="aBrowser"/>
-        <parameter name="aIconURL"/>
-        <parameter name="aMessage"/>
-        <parameter name="aButtonLabel"/>
-        <parameter name="aDocShell"/>
-        <parameter name="aSource"/>
-        <parameter name="aPopup"/>
-        <parameter name="aTopBottom"/>
-        <parameter name="aShowCloseButton"/>
-        <parameter name="aButtonAccesskey"/>
-        <body>
-          <![CDATA[
-            var message = this.getMessageForBrowser(aBrowser, aTopBottom);
-            message.image = aIconURL;
-            message.text = aMessage;
-            message.buttonText = aButtonLabel;
-            message.buttonAccesskey =
-              typeof(aButtonAccesskey) == "undefined" ? ""
-                : aButtonAccesskey;
-            message.hidden = false;
-            if (aSource) {
-              message.source = aSource;
-              message.popup = null;
-            }
-            else if (aPopup) {
-              message.popup = aPopup;
-              message.source = null;
-            }
-            message.docShell = aDocShell;
-            message.closeButton = aShowCloseButton;
-            aBrowser.isShowingMessage = true;
-            // Fire event for accessibility APIs
-            var event = document.createEvent("Events");
-            event.initEvent("AlertActive", true, true);
-            message.dispatchEvent(event);
-          ]]>
-        </body>
-      </method>
-
-      <method name="hideMessage">
-        <parameter name="aBrowser"/>
-        <parameter name="aTopBottom"/>
-        <body>
-          <![CDATA[
-            var browser = aBrowser || this.mCurrentBrowser;
-            if (aTopBottom != "both")
-              this.getMessageForBrowser(browser, aTopBottom).hidden = true;
-            else {
-              this.getMessageForBrowser(browser, "top").hidden = true;
-              this.getMessageForBrowser(browser, "bottom").hidden = true;
-            }
+            if (aBrowser)
+              return aBrowser.parentNode;
+            else if (this.mCurrentBrowser)
+              return this.mCurrentBrowser.parentNode;
+            return null;
           ]]>
         </body>
       </method>
@@ -897,7 +843,7 @@
 
             var i = 0;
             for ( ; i < this.parentNode.parentNode.childNodes.length; i++) {
-              if (this.parentNode.parentNode.childNodes[i].firstChild.nextSibling == this)
+              if (this.parentNode.parentNode.childNodes[i].firstChild == this)
                 break;
             }
 
@@ -1037,19 +983,6 @@
         </body>
       </method>
 
-      <method name="_createMessage">
-        <parameter name="aType"/>
-        <body>
-          <![CDATA[
-            var message = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                   "browsermessage");
-            message.hidden = true;
-            message.setAttribute("type", aType);
-            return message;
-          ]]>
-        </body>
-      </method>
-
       <method name="loadOneTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
@@ -1172,14 +1105,13 @@
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
 
             // Add the Message and the Browser to the box
-            var vbox = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                "vbox");
-            vbox.setAttribute("flex", "1");
-            vbox.appendChild(this._createMessage("top"));
-            vbox.appendChild(b);
-            vbox.appendChild(this._createMessage("bottom"));
+            var notificationbox = document.createElementNS(
+                                    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                    "notificationbox");
+            notificationbox.setAttribute("flex", "1");
+            notificationbox.appendChild(b);
             b.setAttribute("flex", "1");
-            this.mPanelContainer.appendChild(vbox);
+            this.mPanelContainer.appendChild(notificationbox);
 
             b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
@@ -2213,7 +2145,7 @@
 
       <constructor>
         <![CDATA[
-          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild.nextSibling;
+          this.mCurrentBrowser = this.mPanelContainer.childNodes[0].firstChild;
           this.mCurrentTab = this.mTabContainer.firstChild;
           document.addEventListener("keypress", this._keyEventHandler, false);
 
@@ -2221,7 +2153,7 @@
           this.mPanelContainer.childNodes[0].id = uniqueId;
           this.mTabContainer.childNodes[0].linkedPanel = uniqueId;
           this.mTabContainer.childNodes[0]._tPos = 0;
-          this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild.nextSibling;
+          this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild;
         ]]>
       </constructor>
 
