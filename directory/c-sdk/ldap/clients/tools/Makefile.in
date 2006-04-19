@@ -148,7 +148,9 @@ EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LDAP_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LBER_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(LDIF_LIBNAME).lib
 EXTRA_LIBS += $(DIST)/$(OBJDIR_NAME)/lib/$(UTIL_LIBNAME).lib
+ifeq ($(HAVE_SVRCORE), 1)
 EXTRA_LIBS += $(SVRCORE_LINK)
+endif
 EXTRA_LIBS += $(NSSLINK)
 EXTRA_LIBS += $(NSPRLINK)
 else
@@ -156,7 +158,11 @@ else
 # linkers
 EXTRA_LIBS = -L$(DIST)/$(OBJDIR_NAME)/lib -l$(SSLDAP_LIBNAME) \
 	     -l$(PRLDAP_LIBNAME) -l$(LDAP_LIBNAME) -l$(LDIF_LIBNAME) \
-             -L$(DIST)/lib $(SVRCORE_LINK) $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
+             -L$(DIST)/lib
+ifeq ($(HAVE_SVRCORE), 1)
+EXTRA_LIBS += $(SVRCORE_LINK)
+endif
+EXTRA_LIBS += $(LDAPTOOLS_NSS_LINK) $(NSPRLINK)
 endif
 
 # set platform specific libs
