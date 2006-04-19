@@ -92,7 +92,7 @@ s_bmul_1x1(mp_digit *rh, mp_digit *rl, const mp_digit a, const mp_digit b)
     mp_digit tab[16], top3b = a >> 61;
     register mp_digit a1, a2, a4, a8;
 
-    a1 = a & (0x1FFFFFFFFFFFFFFF); a2 = a1 << 1; 
+    a1 = a & (0x1FFFFFFFFFFFFFFFULL); a2 = a1 << 1; 
     a4 = a2 << 1; a8 = a4 << 1;
     tab[ 0] = 0;     tab[ 1] = a1;       tab[ 2] = a2;       tab[ 3] = a1^a2;
     tab[ 4] = a4;    tab[ 5] = a1^a4;    tab[ 6] = a2^a4;    tab[ 7] = a1^a2^a4;
