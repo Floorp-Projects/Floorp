@@ -17,7 +17,7 @@ Bugzilla at https://bugzilla.mozilla.org/ for links to known bugs,
 bug-writing guidelines, and more. You can also get help with Bugzilla by
 pointing your IRC client to #mozillazine at irc.mozilla.org, OS/2 specific
 problems are discussed in #warpzilla and in the newsgroup
-netscape.public.mozilla.os2 on news.mozilla.org and other newsservers.
+mozilla.dev.ports.os2 on news.mozilla.org.
 
 
 ==========================================================================
@@ -76,13 +76,12 @@ installation issues with SeaMonkey.
    choose Modern.
 
 * OS/2
-   - This release requires updated C runtime DLLs (libc-0.5.1) from
-      http://www.innotek.de/products/gccos2/download/gccos2download_e.html
-     in order to run. By default the installation routine places them in
-     \OS2\DLL on your bootdrive, but you can put them in the same
-     directory as SeaMonkey's executable, or somewhere else in your
-     LIBPATH. The SeaMonkey installer will not install the C runtime DLLs
-     for you but requires them to run.
+   - This release requires the C runtime DLLs (libc-0.6.1) from
+     ftp://ftp.netlabs.org/pub/gcc/libc-0.6.1-csd1.zip
+     in order to run.  You can unpack them in the same directory as
+     SeaMonkey's executable or somewhere else in your LIBPATH. The
+     SeaMonkey installer will not install the C runtime DLLs for you but
+     requires them to run.
 
    - Minimum hardware requirements
      + Pentium class processor
