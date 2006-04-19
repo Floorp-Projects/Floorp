@@ -97,7 +97,7 @@ HashCString(const char *str)
   return code;
 }
 
-PR_IMPLEMENT(PLDHashOperator)
+PLDHashOperator
 PL_DHashStubEnumRemove(PLDHashTable    *table,
                                        PLDHashEntryHdr *entry,
                                        PRUint32         ordinal,

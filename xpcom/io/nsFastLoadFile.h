@@ -178,13 +178,13 @@ typedef PRUint32 NSFastLoadOID;         // nsFastLoadFooter::mObjectMap index
  *
  * After this, if NS_SUCCEEDED(rv), checksum contains a valid FastLoad sum.
  */
-PR_EXTERN(PRUint32)
+NS_COM PRUint32
 NS_AccumulateFastLoadChecksum(PRUint32 *aChecksum,
                               const PRUint8* aBuffer,
                               PRUint32 aLength,
                               PRBool aLastBuffer);
 
-PR_EXTERN(PRUint32)
+NS_COM PRUint32
 NS_AddFastLoadChecksums(PRUint32 sum1, PRUint32 sum2, PRUint32 sum2ByteCount);
 
 /**
