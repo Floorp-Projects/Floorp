@@ -1561,7 +1561,7 @@ AddOidToSequence(CERTOidSequence *os, SECOidTag oidTag)
   return SECSuccess;
 }
 
-SEC_ASN1_MKSUB(SEC_ObjectIDTemplate);
+SEC_ASN1_MKSUB(SEC_ObjectIDTemplate)
 
 const SEC_ASN1Template CERT_OidSeqTemplate[] = {
     { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_XTRN,
