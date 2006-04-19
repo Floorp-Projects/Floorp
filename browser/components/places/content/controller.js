@@ -1611,7 +1611,7 @@ var PlacesController = {
       else
         wrapped += "0" + NEWLINE;
         
-      if (this.nodeIsURI(node))
+      if (this.nodeIsURI(node) || this.nodeIsQuery(node))
         wrapped += node.uri + NEWLINE;
       else
         wrapped += NEWLINE;

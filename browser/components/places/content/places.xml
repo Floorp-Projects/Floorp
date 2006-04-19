@@ -11,13 +11,102 @@
                 <children/> -->
   <binding id="textbox-timed-arbitrary" 
            extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
+    <resources>
+      <stylesheet src="chrome://browser/skin/places/places.css"/>
+    </resources>
     <content>
       <children/>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:input class="textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
+      <xul:hbox>
+        <xul:button class="textbox-input-closebutton"/>
+      </xul:hbox>
     </content>
+    <implementation>
+      <property name="grayText" 
+                onget="return this.getAttribute('grayText');"
+                onset="this.setAttribute('grayText', val); return val;"/>
+      <method name="reset">
+        <body><![CDATA[ 
+          this.setAttribute("empty", "true");
+          this.removeAttribute("filtered");
+          this.value = this.grayText;
+        ]]></body>
+      </method>
+      <method name="_resetInternal">
+        <body><![CDATA[ 
+          this.value = "";
+          this.removeAttribute("empty");
+          this.removeAttribute("filtered");
+        ]]></body>
+      </method>
+      <method name="_fireEvent">
+        <parameter name="type"/>
+        <body><![CDATA[ 
+          var event = document.createEvent("Events");
+          event.initEvent(type, true, true);
+          
+          var cancel = !this.dispatchEvent(event);
+          var handler = this.getAttribute("on" + type);
+          if (handler) {
+            var handlerFunction = new Function("event", handler);
+            var handlerCanceled = handlerFunction(event) === false;
+            if (handlerCanceled)
+              cancel = handlerCanceled;
+          }
+          return !cancel;
+        ]]></body>
+      </method>
+      <method name="_clearReliably">
+        <body><![CDATA[ 
+          // This method exists to clear the field's text. The reason this does
+          // not work reliably is unknown... appears to be some kind of event
+          // handling synchronization issue. We need to clear the field 
+          // asynchronously. 
+          var field = this;
+          setTimeout(function() {
+                      field.value = "";
+                      field.removeAttribute("empty");
+                     }, 0);
+        ]]></body>
+      </method>
+      <method name="onFocus">
+        <body><![CDATA[
+          if (this.hasAttribute("empty"))
+            this._clearReliably();
+          else
+            this.select();
+        ]]></body>
+      </method>
+      <method name="onBlur">
+        <body><![CDATA[ 
+        if (this.hasAttribute("empty") || !this.value)
+          this.reset();
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="focus" phase="capturing"><![CDATA[ 
+        if (event.originalTarget.className != "textbox-input-closebutton")
+          this.onFocus();
+      ]]></handler>
+      <handler event="blur" phase="capturing"><![CDATA[ 
+        if (event.originalTarget.className != "textbox-input-closebutton")
+          this.onBlur();
+      ]]></handler>
+      <handler event="click"><![CDATA[ 
+        if (event.originalTarget.className == "textbox-input-closebutton") {
+          this._resetInternal();
+          this._fireEvent("reset");
+        }
+      ]]></handler>
+      <handler event="keypress" keycode="VK_ESCAPE"><![CDATA[ 
+        this._resetInternal();
+        this._fireEvent("reset");
+      ]]></handler>
+    </handlers>
   </binding>
   
   <binding id="command-button" extends="chrome://global/content/bindings/button.xml#button">

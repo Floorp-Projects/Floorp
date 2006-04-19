@@ -84,7 +84,7 @@
           return options;
         ]]></body>
       </method>
-
+      
       <method name="applyFilter">
         <parameter name="filterString"/>
         <parameter name="onlyBookmarks"/>
