@@ -42,6 +42,8 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
+printStatus ("Expect too much recursion error");
+expectExitCode(3);
 
 var foo = {
   toString: function() {
