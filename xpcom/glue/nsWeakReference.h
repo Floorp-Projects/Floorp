@@ -49,8 +49,10 @@ class nsWeakReference;
 
 // Set IMETHOD_VISIBILITY to empty so that the class-level NS_COM declaration
 // controls member method visibility.
+// XXXbsmedberg reverted to use NS_VISIBILITY_DEFAULT because this is exposing
+// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=26905
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
   {
