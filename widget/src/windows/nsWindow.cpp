@@ -515,7 +515,9 @@ static PRBool is_vk_down(int vk)
 //
 #ifndef WM_APPCOMMAND
 #define WM_APPCOMMAND  0x0319
+#endif
 
+#ifndef APPCOMMAND_BROWSER_BACKWARD
 #define APPCOMMAND_BROWSER_BACKWARD       1
 #define APPCOMMAND_BROWSER_FORWARD        2
 #define APPCOMMAND_BROWSER_REFRESH        3
@@ -552,7 +554,7 @@ static PRBool is_vk_down(int vk)
 //#define GET_FLAGS_LPARAM(lParam)      (LOWORD(lParam))
 //#define GET_KEYSTATE_LPARAM(lParam)   GET_FLAGS_LPARAM(lParam)
 
-#endif  // #ifndef WM_APPCOMMAND
+#endif  // #ifndef APPCOMMAND_BROWSER_BACKWARD
 
 /* This object maintains a correlation between attention timers and the
    windows to which they belong. It's lighter than a hashtable (expected usage
