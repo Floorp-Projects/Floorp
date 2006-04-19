@@ -50,6 +50,7 @@ class nsXULMenuitemAccessible : public nsAccessibleWrap
 public:
   nsXULMenuitemAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetDescription(nsAString& aDescription); 
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
   NS_IMETHOD GetKeyBinding(nsAString& _retval);
   NS_IMETHOD GetState(PRUint32 *_retval); 
