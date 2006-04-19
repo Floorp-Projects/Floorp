@@ -75,7 +75,9 @@ nsMetricsEventItem::GetProperties(nsIPropertyBag **aProperties)
 NS_IMETHODIMP
 nsMetricsEventItem::SetProperties(nsIPropertyBag *aProperties)
 {
-  mProperties = aProperties;
+  // This do_QueryInterface() shouldn't be necessary, but is needed to avoid
+  // assertions from nsCOMPtr when an nsIWritablePropertyBag2 is passed in.
+  mProperties = do_QueryInterface(aProperties);
   return NS_OK;
 }
 
