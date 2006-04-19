@@ -4415,6 +4415,8 @@ void nsTypedSelection::setAnchorFocusRange(PRInt32 indx)
   }
   else{
     mAnchorFocusRange = mRangeArray[indx];
+    // Make sure the caret appears on the next line, if at a newline
+    SetInterlinePosition(PR_TRUE);
   }
 }
 
