@@ -950,7 +950,13 @@ sub do_panel {
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
   # Hack the panel link for now.
-  print "<a target='_content' href='http://tinderbox.mozilla.org/$::tree/'>$::tree";
+  print "<a target='_content' href='";
+  if ($form{static}) {
+    print "./";
+  } else {
+    print "showbuilds.cgi?tree=$::tree";
+  }
+  print "'>$::tree";
   
   if (is_tree_state_available()) {
     print " is ", is_tree_open() ? 'open' : 'closed';
@@ -961,8 +967,8 @@ sub do_panel {
   print ", $tm</a><br>";
   
   print "<table border=0 cellpadding=1 cellspacing=1>";
-  while (my ($name, $status) = each %build) {
-    print "<tr><td bgcolor='$colormap{$status}'>$name</td></tr>";
+  foreach my $buildname (sort {$times{$b} cmp $times{$a}} keys %build) {
+    print "<tr><td bgcolor='$colormap{$build{$buildname}}'>$buildname</td></tr>";
   }
   print "</table></body>";
 }
