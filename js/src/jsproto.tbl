@@ -1,0 +1,64 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set sw=4 ts=8 et tw=80:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is SpiderMonkey 1.7 work in progress, released
+ * February 14, 2006.
+ *
+ * The Initial Developer of the Original Code is
+ * Brendan Eich <brendan@mozilla.org>
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+JS_PROTO(Null,                  NULL)
+JS_PROTO(Object,                NULL)
+JS_PROTO(Function,              NULL)
+JS_PROTO(Array,                 NULL)
+JS_PROTO(Boolean,               NULL)
+JS_PROTO(Call,                  NULL)
+JS_PROTO(Date,                  NULL)
+JS_PROTO(File,                  NULL)
+JS_PROTO(Math,                  NULL)
+JS_PROTO(Number,                NULL)
+JS_PROTO(String,                NULL)
+JS_PROTO(RegExp,                NULL)
+JS_PROTO(Script,                NULL)
+JS_PROTO(XML,                   NULL)
+JS_PROTO(Namespace,             NULL)
+JS_PROTO(QName,                 NULL)
+JS_PROTO(AnyName,               NULL)
+JS_PROTO(AttributeName,         NULL)
+JS_PROTO(Error,                 NULL)
+JS_PROTO(InternalError,         NULL)
+JS_PROTO(EvalError,             NULL)
+JS_PROTO(RangeError,            NULL)
+JS_PROTO(ReferenceError,        NULL)
+JS_PROTO(SyntaxError,           NULL)
+JS_PROTO(TypeError,             NULL)
+JS_PROTO(URIError,              NULL)

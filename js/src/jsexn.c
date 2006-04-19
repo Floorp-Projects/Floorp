@@ -79,7 +79,7 @@ static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
 static JSClass ExceptionClass = {
-    "Error",
+    js_Error_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize,
@@ -266,6 +266,7 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 struct JSExnSpec {
     int protoIndex;
     const char *name;
+    JSProtoKey key;
     JSNative native;
 };
 
@@ -276,7 +277,6 @@ struct JSExnSpec {
  * standard class sets.  See jsfun.c:fun_hasInstance.
  */
 #define MAKE_EXCEPTION_CTOR(name)                                             \
-const char js_##name##_str[] = #name;                                         \
 static JSBool                                                                 \
 name(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)      \
 {                                                                             \
@@ -295,15 +295,15 @@ MAKE_EXCEPTION_CTOR(URIError)
 #undef MAKE_EXCEPTION_CTOR
 
 static struct JSExnSpec exceptions[] = {
-    { JSEXN_NONE,       js_Error_str,           Error },
-    { JSEXN_ERR,        js_InternalError_str,   InternalError },
-    { JSEXN_ERR,        js_EvalError_str,       EvalError },
-    { JSEXN_ERR,        js_RangeError_str,      RangeError },
-    { JSEXN_ERR,        js_ReferenceError_str,  ReferenceError },
-    { JSEXN_ERR,        js_SyntaxError_str,     SyntaxError },
-    { JSEXN_ERR,        js_TypeError_str,       TypeError },
-    { JSEXN_ERR,        js_URIError_str,        URIError },
-    {0,NULL,NULL}
+    {JSEXN_NONE, js_Error_str,          JSProto_Error,          Error},
+    {JSEXN_ERR,  js_InternalError_str,  JSProto_InternalError,  InternalError},
+    {JSEXN_ERR,  js_EvalError_str,      JSProto_EvalError,      EvalError},
+    {JSEXN_ERR,  js_RangeError_str,     JSProto_RangeError,     RangeError},
+    {JSEXN_ERR,  js_ReferenceError_str, JSProto_ReferenceError, ReferenceError},
+    {JSEXN_ERR,  js_SyntaxError_str,    JSProto_SyntaxError,    SyntaxError},
+    {JSEXN_ERR,  js_TypeError_str,      JSProto_TypeError,      TypeError},
+    {JSEXN_ERR,  js_URIError_str,       JSProto_URIError,       URIError},
+    {0,          NULL,                  JSProto_Null,           NULL}
 };
 
 static JSBool
@@ -936,7 +936,6 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSErrNum errorNumber;
     JSExnType exn;
     JSBool ok;
-    JSAtom *errAtom;
     JSObject *errProto, *errObject;
     JSString *messageStr, *filenameStr;
     uintN lineno;
@@ -988,22 +987,12 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         goto out;
 
     /*
-     * FIXME: Can runtime->atomState->lazy.nameErrorAtom be used here instead
-     * of atomizing name?
-     */
-    errAtom = js_Atomize(cx, exceptions[exn].name,
-                         strlen(exceptions[exn].name), 0);
-    if (!errAtom) {
-        ok = JS_FALSE;
-        goto out;
-    }
-
-    /*
      * Try to get an appropriate prototype by looking up the corresponding
      * exception constructor name in the scope chain of the current context's
      * top stack frame, or in the global object if no frame is active.
      */
-    ok = js_GetClassPrototype(cx, NULL, errAtom, &errProto);
+    ok = js_GetClassPrototype(cx, NULL, INT_TO_JSID(exceptions[exn].key),
+                              &errProto);
     if (!ok)
         goto out;
 

@@ -90,6 +90,14 @@ typedef enum JSType {
     JSTYPE_LIMIT
 } JSType;
 
+/* Dense index into cached prototypes and class atoms for standard objects. */
+typedef enum JSProtoKey {
+#define JS_PROTO(name,init) JSProto_##name,
+#include "jsproto.tbl"
+#undef JS_PROTO
+    JSProto_LIMIT
+} JSProtoKey;
+
 /* JSObjectOps.checkAccess mode enumeration. */
 typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
@@ -547,7 +555,7 @@ typedef void
                                     JSErrorReport *report);
 
 /*
- * Possible exception types. These types are part of a JSErrorFormatString 
+ * Possible exception types. These types are part of a JSErrorFormatString
  * structure. They define which error to throw in case of a runtime error.
  * JSEXN_NONE marks an unthrowable error.
  */

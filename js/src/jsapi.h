@@ -567,6 +567,10 @@ extern JS_PUBLIC_API(JSIdArray *)
 JS_EnumerateResolvedStandardClasses(JSContext *cx, JSObject *obj,
                                     JSIdArray *ida);
 
+extern JS_PUBLIC_API(JSBool)
+JS_GetCachedPrototype(JSContext *cx, JSObject *obj, JSProtoKey key,
+                      JSObject **protop);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx);
 
@@ -952,6 +956,16 @@ struct JSExtendedClass {
 
 /* True if JSClass is really a JSExtendedClass. */
 #define JSCLASS_IS_EXTENDED             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+0))
+#define JSCLASS_IS_ANONYMOUS            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+1))
+
+/* Fast access to the original value of each standard class's prototype. */
+#define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
+#define JSCLASS_CACHED_PROTO_WIDTH      8
+#define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
+#define JSCLASS_HAS_CACHED_PROTO(key)   ((key) << JSCLASS_CACHED_PROTO_SHIFT)
+#define JSCLASS_CACHED_PROTO_KEY(clasp) (((clasp)->flags                      \
+                                          >> JSCLASS_CACHED_PROTO_SHIFT)      \
+                                         & JSCLASS_CACHED_PROTO_MASK)
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
@@ -1223,6 +1237,10 @@ JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_GetMethodById(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                 jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp,

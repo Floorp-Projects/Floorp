@@ -1764,12 +1764,61 @@ js_ForceGC(JSContext *cx, uintN gcflags)
     JS_END_MACRO
 
 void
+js_MarkStackFrame(JSContext *cx, JSStackFrame *fp)
+{
+    uintN depth, nslots;
+
+    if (fp->callobj)
+        GC_MARK(cx, fp->callobj, "call object");
+    if (fp->argsobj)
+        GC_MARK(cx, fp->argsobj, "arguments object");
+    if (fp->varobj)
+        GC_MARK(cx, fp->varobj, "variables object");
+    if (fp->script) {
+        js_MarkScript(cx, fp->script);
+        if (fp->spbase) {
+            /*
+             * Don't mark what has not been pushed yet, or what has been
+             * popped already.
+             */
+            depth = fp->script->depth;
+            nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
+                      < depth * sizeof(jsval))
+                     ? (uintN)(fp->sp - fp->spbase)
+                     : depth;
+            GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
+        }
+    }
+    GC_MARK(cx, fp->thisp, "this");
+    if (fp->argv) {
+        nslots = fp->argc;
+        if (fp->fun) {
+            if (fp->fun->nargs > nslots)
+                nslots = fp->fun->nargs;
+            if (!fp->fun->interpreted)
+                nslots += fp->fun->u.n.extra;
+        }
+        GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
+    }
+    if (JSVAL_IS_GCTHING(fp->rval))
+        GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval");
+    if (fp->vars)
+        GC_MARK_JSVALS(cx, fp->nvars, fp->vars, "var");
+    GC_MARK(cx, fp->scopeChain, "scope chain");
+    if (fp->sharpArray)
+        GC_MARK(cx, fp->sharpArray, "sharp array");
+
+    if (fp->xmlNamespace)
+        GC_MARK(cx, fp->xmlNamespace, "xmlNamespace");
+}
+
+void
 js_GC(JSContext *cx, uintN gcflags)
 {
     JSRuntime *rt;
     JSContext *iter, *acx;
     JSStackFrame *fp, *chain;
-    uintN i, depth, nslots, type;
+    uintN i, type;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
     size_t nbytes, nflags, limit, offset;
@@ -1971,48 +2020,7 @@ restart:
 
         for (fp = chain; fp; fp = chain = chain->dormantNext) {
             do {
-                if (fp->callobj)
-                    GC_MARK(cx, fp->callobj, "call object");
-                if (fp->argsobj)
-                    GC_MARK(cx, fp->argsobj, "arguments object");
-                if (fp->varobj)
-                    GC_MARK(cx, fp->varobj, "variables object");
-                if (fp->script) {
-                    js_MarkScript(cx, fp->script);
-                    if (fp->spbase) {
-                        /*
-                         * Don't mark what has not been pushed yet, or what
-                         * has been popped already.
-                         */
-                        depth = fp->script->depth;
-                        nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
-                                  < depth * sizeof(jsval))
-                                 ? (uintN)(fp->sp - fp->spbase)
-                                 : depth;
-                        GC_MARK_JSVALS(cx, nslots, fp->spbase, "operand");
-                    }
-                }
-                GC_MARK(cx, fp->thisp, "this");
-                if (fp->argv) {
-                    nslots = fp->argc;
-                    if (fp->fun) {
-                        if (fp->fun->nargs > nslots)
-                            nslots = fp->fun->nargs;
-                        if (!fp->fun->interpreted)
-                            nslots += fp->fun->u.n.extra;
-                    }
-                    GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
-                }
-                if (JSVAL_IS_GCTHING(fp->rval))
-                    GC_MARK(cx, JSVAL_TO_GCTHING(fp->rval), "rval");
-                if (fp->vars)
-                    GC_MARK_JSVALS(cx, fp->nvars, fp->vars, "var");
-                GC_MARK(cx, fp->scopeChain, "scope chain");
-                if (fp->sharpArray)
-                    GC_MARK(cx, fp->sharpArray, "sharp array");
-
-                if (fp->xmlNamespace)
-                    GC_MARK(cx, fp->xmlNamespace, "xmlNamespace");
+                js_MarkStackFrame(cx, fp);
             } while ((fp = fp->down) != NULL);
         }
 
@@ -2048,6 +2056,7 @@ restart:
 
         if (acx->localRootStack)
             js_MarkLocalRoots(cx, acx->localRootStack);
+
         for (tvr = acx->tempValueRooters; tvr; tvr = tvr->down) {
             if (tvr->count < 0) {
                 if (JSVAL_IS_GCTHING(tvr->u.value)) {
@@ -2058,6 +2067,9 @@ restart:
                 GC_MARK_JSVALS(cx, tvr->count, tvr->u.array, "tvr->u.array");
             }
         }
+
+        for (i = 0; i < JSProto_LIMIT; i++)
+            GC_MARK(cx, acx->prototypes[i], "prototypes[i]");
     }
 
 #ifdef DUMP_CALL_TABLE

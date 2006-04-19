@@ -3634,8 +3634,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
 
                 /* Construct the scope holder and push it on. */
-                ale = js_IndexAtom(cx, cx->runtime->atomState.ObjectAtom,
-                                   &cg->atomList);
+                ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
                 EMIT_ATOM_INDEX_OP(JSOP_NAME, ALE_INDEX(ale));
@@ -4597,8 +4596,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, cx->runtime->atomState.ArrayAtom,
-                           &cg->atomList);
+        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Array), &cg->atomList);
         if (!ale)
             return JS_FALSE;
         EMIT_ATOM_INDEX_OP(JSOP_NAME, ALE_INDEX(ale));
@@ -4650,8 +4648,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * but use a stack slot for t and avoid dup'ing and popping it via
          * the JSOP_NEWINIT and JSOP_INITELEM bytecodes.
          */
-        ale = js_IndexAtom(cx, cx->runtime->atomState.ObjectAtom,
-                           &cg->atomList);
+        ale = js_IndexAtom(cx, CLASS_ATOM(cx, Object), &cg->atomList);
         if (!ale)
             return JS_FALSE;
         EMIT_ATOM_INDEX_OP(JSOP_NAME, ALE_INDEX(ale));

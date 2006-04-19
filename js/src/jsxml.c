@@ -116,8 +116,6 @@ static struct {
 /*
  * Random utilities and global functions.
  */
-const char js_AnyName_str[]       = "AnyName";
-const char js_AttributeName_str[] = "AttributeName";
 const char js_isXMLName_str[]     = "isXMLName";
 const char js_XMLList_str[]       = "XMLList";
 const char js_localName_str[]     = "localName";
@@ -1824,7 +1822,7 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
 {
     jsval v;
 
-    if (!js_FindConstructor(cx, NULL, cx->runtime->atomState.XMLAtom, &v))
+    if (!js_FindClassObject(cx, NULL, INT_TO_JSID(JSProto_XML), &v))
         return JS_FALSE;
     if (!JSVAL_IS_FUNCTION(cx, v)) {
         *vp = JSVAL_VOID;

@@ -468,7 +468,7 @@ static JSBool
 math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
-    *rval = ATOM_KEY(cx->runtime->atomState.MathAtom);
+    *rval = ATOM_KEY(CLASS_ATOM(cx, Math));
     return JS_TRUE;
 }
 #endif
