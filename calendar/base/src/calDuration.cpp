@@ -246,7 +246,7 @@ NS_IMETHODIMP calDuration::AddDuration(calIDuration *aDuration)
     // For two negative durations, the abs. value will increase,
     // so use + in that case.
     // Of course, also use + when both durations are positive.
-    if (idt.is_neg != mDuration.is_neg) {
+    if (idt.is_neg == mDuration.is_neg) {
         mDuration.weeks   += idt.weeks;
         mDuration.days    += idt.days;
         mDuration.hours   += idt.hours;
