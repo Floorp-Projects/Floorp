@@ -59,7 +59,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
-  virtual PRBool IsPermanent();
+  enum { REFCNT_PERMANENT_SENTINEL = PR_UINT32_MAX };
+
+  PRBool IsPermanent() { return mRefCnt == REFCNT_PERMANENT_SENTINEL; }
 
   void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW;
 
@@ -81,13 +83,9 @@ public:
 
 class PermanentAtomImpl : public AtomImpl {
 public:
-#ifdef AIX
-  PermanentAtomImpl() : AtomImpl() {}
-#endif
+  PermanentAtomImpl();
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
-
-  virtual PRBool IsPermanent();
 
   void* operator new(size_t size, const nsACString& aString) CPP_THROW_NEW {
     return AtomImpl::operator new(size, aString);
