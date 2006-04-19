@@ -35,6 +35,84 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * Manages options for a particular view type.
+ * @param   pref
+ *          The preference that stores these options. 
+ * @param   defaultValue
+ *          The default value to be used for views of this type. 
+ * @param   serializable
+ *          An object bearing a serialize and deserialize method that
+ *          read and write the object's string representation from/to
+ *          preferences.
+ * @constructor
+ */
+function PrefHandler(pref, defaultValue, serializable) {
+  this._pref = pref;
+  this._defaultValue = defaultValue;
+  this._serializable = serializable;
+
+  this._pb = 
+    Cc["@mozilla.org/preferences-service;1"].
+    getService(Components.interfaces.nsIPrefBranch2);
+  this._pb.addObserver(this._pref, this, false);
+}
+PrefHandler.prototype = {
+  /**
+   * Clean up when the window is going away to avoid leaks. 
+   */
+  destroy: function PC_PH_destroy() {
+    this._pb.removeObserver(this._pref, this);
+  },
+
+  /** 
+   * Observes changes to the preferences.
+   * @param   subject
+   * @param   topic
+   *          The preference changed notification
+   * @param   data
+   *          The preference that changed
+   */
+  observe: function PC_PH_observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this._pref)
+      this._value = null;
+  },
+  
+  /**
+   * The cached value, null if it needs to be rebuilt from preferences.
+   */
+  _value: null,
+
+  /** 
+   * Get the preference value, reading from preferences if necessary. 
+   */
+  get value() { 
+    if (!this._value) {
+      if (this._pb.prefHasUserValue(this._pref)) {
+        var valueString = this._pb.getCharPref(this._pref);
+        this._value = this._serializable.deserialize(valueString);
+      }
+      else
+        this._value = this._defaultValue;
+    }
+    return this._value;
+  },
+  
+  /**
+   * Stores a value in preferences. 
+   * @param   value
+   *          The data to be stored. 
+   */
+  set value(value) {
+    if (value != this._value) {
+      this._pb.setCharPref(this._pref, this._serializable.serialize(value));
+      var ps = this._pb.QueryInterface(Ci.nsIPrefService);
+      ps.savePrefFile(null);
+    }
+    return value;
+  }
+};
+
 // The preferences where the OptionsFilter stores user settings for different
 // view types:
 const PREF_PLACES_ORGANIZER_OPTIONS_HISTORY = 
@@ -129,7 +207,6 @@ var OptionsFilter = {
     var defaultBookmarksOptions = history.getNewQueryOptions();
     defaultBookmarksOptions.setGroupingMode([NHQO.GROUP_BY_FOLDER], 1);
     var defaultSubscriptionsOptions = history.getNewQueryOptions();
-    defaultSubscriptionsOptions.setGroupingMode([NHQO.GROUP_BY_FOLDER], 1);
   
     this.historyHandler = 
       new PrefHandler(PREF_PLACES_ORGANIZER_OPTIONS_HISTORY, 
@@ -181,16 +258,7 @@ var OptionsFilter = {
     
     var overrideGroupings = overrideOptions.getGroupingMode({});
     options.setGroupingMode(overrideGroupings, overrideGroupings.length);
-    
     options.sortingMode = overrideOptions.sortingMode;
-    options.resultType = overrideOptions.resultType;
-    options.excludeItems = overrideOptions.excludeItems;
-    options.excludeQueries = overrideOptions.excludeQueries;
-    options.excludeReadOnlyFolders = overrideOptions.excludeReadOnlyFolders;
-    options.expandQueries = overrideOptions.expandQueries;
-    options.forceOriginalTitle = overrideOptions.forceOriginalTitle;
-    options.includeHidden = overrideOptions.includeHidden;
-    options.maxResults = overrideOptions.maxResults;
     
     this._grouper.updateGroupingUI(queries, options, handler);
 

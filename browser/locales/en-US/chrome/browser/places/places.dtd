@@ -52,9 +52,13 @@
   "T">
 
 <!ENTITY cmd.find.label 
-  "Find in Bookmarks/History...">
+  "Find in Bookmarks &amp; History...">
 <!ENTITY cmd.find.accesskey
   "F">
+<!ENTITY cmd.findCurrent.label
+  "Find in Current Collection...">
+<!ENTITY cmd.findCurrent.accesskey
+  "i">
 <!ENTITY cmd.export.label
   "Export...">
 <!ENTITY cmd.export.accesskey

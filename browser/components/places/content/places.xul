@@ -73,16 +73,21 @@
   <commandset id="TMCommandSet"
               commandupdater="true" events="*" 
               oncommandupdate="PlacesController.updateTMCommands()">
-    <command id="cmd_undo" label="&cmd.edit_undo.label;" accesskey="&cmd.edit_undo.accesskey;"
+    <command id="cmd_undo" 
+             label="&cmd.edit_undo.label;" accesskey="&cmd.edit_undo.accesskey;"
              oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
-    <command id="cmd_redo" label="&cmd.edit_redo.label;" accesskey="&cmd.edit_redo.accesskey;"
+    <command id="cmd_redo" 
+             label="&cmd.edit_redo.label;" accesskey="&cmd.edit_redo.accesskey;"
              oncommand="PlacesController.doCommand(this.id);" disabled="true"/>
   </commandset>
 #include commands.inc
   <commandset id="organizerCommandSet">
-    <command id="placesCmd_find" 
+    <command id="placesCmd_find:all" 
              label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"
-             oncommand="PlacesSearchBox.focus();"/>
+             oncommand="PlacesSearchBox.findAll();"/>
+    <command id="placesCmd_find:current" 
+             label="&cmd.findCurrent.label;" accesskey="&cmd.findCurrent.accesskey;"
+             oncommand="PlacesSearchBox.findCurrent();"/>
     <command id="placesCmd_export" 
              label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"
              disabled="true"/>
@@ -109,23 +114,44 @@
          command="cmd_undo"/>
     <key id="placesKey_edit:redo" key="&cmd.edit_redo.key;" modifiers="accel" 
          command="cmd_redo"/>
+    
+    <key id="placesKey_show:debug"
+         key="d" modifiers="accel,shift"
+         oncommand="PlacesOrganizer.toggleDebugPanel();"/>
          
     <!-- Command Keys -->
-    <key id="placesKey_find" command="placesCmd_find" key="&cmd.find.key;" modifiers="accel"/>
-    <key id="placesKey_select:all" command="placesCmd_select:all" key="&cmd.select_all.key;" modifiers="accel"/>
-    <key id="placesKey_edit:cut" command="placesCmd_edit:cut" key="&cmd.edit_cut.key;" modifiers="accel"/>
-    <key id="placesKey_edit:copy" command="placesCmd_edit:copy" key="&cmd.edit_copy.key;" modifiers="accel"/>
-    <key id="placesKey_edit:paste" command="placesCmd_edit:paste" key="&cmd.edit_paste.key;" modifiers="accel"/>
-    <key id="placesKey_edit:delete" command="placesCmd_edit:delete" keycode="VK_DELETE"/>
-    <key id="placesKey_open" command="placesCmd_open" keycode="VK_ENTER"/>
-    <key id="placesKey_open" command="placesCmd_open" keycode="VK_RETURN"/>
-    <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_ENTER" modifiers="shift"/>
-    <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_RETURN" modifiers="shift"/>
-    <key id="placesKey_open:tab" command="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
-    <key id="placesKey_open:tab" command="placesCmd_open:tab" keycode="VK_RETURN" modifiers="accel"/>
-    <key id="placesKey_show:info" command="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
-    <key id="placesKey_rename" command="placesCmd_rename" keycode="VK_F2"/>
-    <key id="placesKey_reload" command="placesCmd_reload" key="&cmd.reload.key;" modifiers="accel"/>
+    <key id="placesKey_find:all" command="placesCmd_find:all" 
+         key="&cmd.find.key;" modifiers="accel"/>
+    <key id="placesKey_find:current" command="placesCmd_find:current" 
+         key="&cmd.find.key;" modifiers="accel,shift"/>
+    <key id="placesKey_select:all" command="placesCmd_select:all" 
+         key="&cmd.select_all.key;" modifiers="accel"/>
+    <key id="placesKey_edit:cut" command="placesCmd_edit:cut" 
+         key="&cmd.edit_cut.key;" modifiers="accel"/>
+    <key id="placesKey_edit:copy" command="placesCmd_edit:copy" 
+         key="&cmd.edit_copy.key;" modifiers="accel"/>
+    <key id="placesKey_edit:paste" command="placesCmd_edit:paste" 
+         key="&cmd.edit_paste.key;" modifiers="accel"/>
+    <key id="placesKey_edit:delete" command="placesCmd_edit:delete" 
+         keycode="VK_DELETE"/>
+    <key id="placesKey_open" command="placesCmd_open" 
+         keycode="VK_ENTER"/>
+    <key id="placesKey_open" command="placesCmd_open" 
+         keycode="VK_RETURN"/>
+    <key id="placesKey_open:window" command="placesCmd_open:window" 
+         keycode="VK_ENTER" modifiers="shift"/>
+    <key id="placesKey_open:window" command="placesCmd_open:window" 
+         keycode="VK_RETURN" modifiers="shift"/>
+    <key id="placesKey_open:tab" command="placesCmd_open:tab" 
+         keycode="VK_ENTER" modifiers="accel"/>
+    <key id="placesKey_open:tab" command="placesCmd_open:tab" 
+         keycode="VK_RETURN" modifiers="accel"/>
+    <key id="placesKey_show:info" command="placesCmd_show:info" 
+         key="&cmd.show_info.key;" modifiers="accel"/>
+    <key id="placesKey_rename" command="placesCmd_rename" 
+         keycode="VK_F2"/>
+    <key id="placesKey_reload" command="placesCmd_reload" 
+         key="&cmd.reload.key;" modifiers="accel"/>
   </keyset>
   
   <popupset id="placesPopupset">
@@ -172,8 +198,10 @@
           <menuitem id="editSortByName" command="placesCmd_sortby:name"
                     accesskey="&cmd.sortby_name.accesskey;"/>
           <menuseparator/>
-          <menuitem id="editFind" command="placesCmd_find"
-                    key="placesKey_find"/>
+          <menuitem id="editFindAll" command="placesCmd_find:all"
+                    key="placesKey_find:all"/>
+          <menuitem id="editFindCurrent" command="placesCmd_find:current"
+                    key="placesKey_find:current"/>
 #ifdef XP_MACOSX
           <menuseparator/>
           <menuitem id="properties" command="placesCmd_show:info"
@@ -226,9 +254,9 @@
     </menubar>
     <toolbar class="chromeclass-toolbar">
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
-               oncommand="PlacesOrganizer.search(this.value);" 
-               collection="all" persist="collection"
-               onfocus="PlacesSearchBox.onFocus();" onblur="PlacesSearchBox.onBlur();">
+               oncommand="PlacesSearchBox.search(this.value);" 
+               onreset="PlacesOrganizer.onPlaceSelected(false); return true;" 
+               collection="all">
         <button type="menu" class="filterList" id="filterList_history">
           <menupopup>
             <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
@@ -252,7 +280,7 @@
     <tree id="placesList" class="placesTree" type="places" 
           place="place:&amp;folder=1&amp;group=3&amp;excludeItems=1" 
           hidecolumnpicker="true" context="placesContext"
-          onselect="PlacesOrganizer.onPlaceSelected(event);"
+          onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onTreeClick(event);"
           seltype="single">
       <treecols>
@@ -310,6 +338,39 @@
             </treecols>
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
+          <vbox id="debugPanel" hidden="true">
+            <grid>
+              <columns>
+                <column/>
+                <column flex="1"/>
+                <column/>
+              </columns>
+              <rows>
+                <row align="center">
+                  <label value="Debug:"/>
+                  <textbox id="placeURI" flex="1" 
+                           onkeypress="PlacesOrganizer.onPlaceURIKeypress(event);"/>
+                  <button label="Load" oncommand="PlacesOrganizer.loadPlaceURI();"/>
+                </row>
+                <row>
+                  <spacer/>
+                  <hbox>
+                    <checkbox id="autoFilterResults" 
+                              label="Apply user filtering of results"
+                              checked="true"/>
+                  </hbox>
+                  <spacer/>
+                </row>
+                <separator class="thin"/>
+                <row align="center">
+                  <label value="Loaded:"/>
+                  <textbox id="loadedURI" flex="1" readonly="true"/>
+                  <spacer/>
+                </row>
+              </rows>
+            </grid>
+            <separator class="thin"/>
+          </vbox>
         </vbox>
       </deck>
     </vbox>

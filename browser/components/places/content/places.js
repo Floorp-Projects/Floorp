@@ -78,33 +78,6 @@ var PlacesOrganizer = {
   },
   
   
-  /**
-   * Run a search for the specified text, over the collection specified by
-   * the dropdown arrow. The default is all bookmarks and history, but can be
-   * localized to the active collection. 
-   * @param   filterString
-   *          The text to search for. 
-   */
-  search: function PO_search(filterString) {
-    // Do not search for "" since it will match all history. Assume if the user
-    // deleted everything that they want to type something else and don't 
-    // update the view.
-    if (filterString == "") 
-      return;
-      
-    switch (PlacesSearchBox.filterCollection) {
-    case "collection":
-      var folderId = asFolder(this._content.getResult().root).folderId;
-      this._content.applyFilter(filterString, true, folderId, OptionsFilter);
-      this.setHeaderText(this.HEADER_TYPE_SEARCH, filterString);
-      break;
-    case "all":
-      this._content.applyFilter(filterString, false, 0, OptionsFilter);
-      this.setHeaderText(this.HEADER_TYPE_SEARCH, filterString);
-      break;
-    }
-  },
-  
   HEADER_TYPE_SHOWING: 1,
   HEADER_TYPE_SEARCH: 2,
   HEADER_TYPE_ADVANCED_SEARCH: 3,
@@ -132,10 +105,70 @@ var PlacesOrganizer = {
     searchModifiers.hidden = type == this.HEADER_TYPE_SHOWING;
   },
   
+  onPlaceURIKeypress: function PO_onPlaceURIKeypress(event) {
+    if (event.keyCode == 13)
+      this.loadPlaceURI();
+    else if (event.keyCode == 27) {
+      event.target.value = "";
+      this.onPlaceSelected(true);
+    }
+  },
+  
+  /**
+   * Shows or hides the debug panel.
+   */
+  toggleDebugPanel: function PO_toggleDebugPanel() {
+    var dp = document.getElementById("debugPanel");
+    dp.hidden = !dp.hidden;
+    if (!dp.hidden)
+      document.getElementById("placeURI").focus();
+  },
+  
+  /**
+   * Loads the place URI entered in the debug 
+   */
+  loadPlaceURI: function PO_loadPlaceURI() {
+    var placeURI = document.getElementById("placeURI");
+    var queriesRef = { }, optionsRef = { };
+    PlacesController.history.queryStringToQueries(placeURI.value, 
+                                                  queriesRef, { }, optionsRef);
+    
+    var autoFilterResults = document.getElementById("autoFilterResults");
+    if (autoFilterResults.checked) {
+      var options = 
+        OptionsFilter.filter(queriesRef.value, optionsRef.value, null);
+    }
+    else
+      options = optionsRef.value;
+    this._content.load(queriesRef.value, options);
+    
+    this.setHeaderText(this.HEADER_TYPE_SHOWING, "Debug results for: " + placeURI.value);
+    
+    this.updateLoadedURI();
+    
+    placeURI.focus();
+  },
+  
+  /**
+   * Updates the URI displayed in the debug panel.
+   */
+  updateLoadedURI: function PO_updateLoadedURI() {
+    var queryNode = asQuery(this._content.getResult().root);
+    var queries = queryNode.getQueries({});
+    var options = queryNode.queryOptions;
+    var loadedURI = document.getElementById("loadedURI");
+    loadedURI.value = 
+      PlacesController.history.queriesToQueryString(queries, queries.length, 
+                                                    options);
+  },
+  
   /**
    * Called when a place folder is selected in the left pane.
+   * @param   resetSearchBox
+   *          true if the search box should also be reset, false if it should
+   *          be left alone.
    */
-  onPlaceSelected: function PO_onPlaceSelected() {
+  onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
     if (!this._places.hasSelection)
       return;
     var node = asQuery(this._places.selectedNode);
@@ -146,9 +179,26 @@ var PlacesOrganizer = {
     
     // Make sure the query builder is hidden.
     PlacesQueryBuilder.hide();
-    PlacesSearchBox.reset();
+    if (resetSearchBox) {
+      var searchFilter = document.getElementById("searchFilter");
+      searchFilter.reset();
+    }
 
     this.setHeaderText(this.HEADER_TYPE_SHOWING, node.title);
+    
+    this.updateLoadedURI();
+    
+    // Update the "Find in <current collection>" command and the gray text in
+    // the search box in the toolbar if the active collection is the current
+    // collection.
+    var strings = document.getElementById("placeBundle");
+    var findCommand = document.getElementById("placesCmd_find:current");
+    var findLabel = strings.getFormattedString("findInPrefix", [node.title]);
+    findCommand.setAttribute("label", findLabel);
+    if (PlacesSearchBox.filterCollection == "collection") {
+      PlacesSearchBox.updateCollectionTitle(node.title);
+      PlacesSearchBox.syncGrayText();
+    }
   },
   
   /**
@@ -200,16 +250,96 @@ var PlacesOrganizer = {
  * A set of utilities relating to search within Bookmarks and History. 
  */
 var PlacesSearchBox = {
+
+  /**
+   * The Search text field
+   */
+  get searchFilter() {
+    return document.getElementById("searchFilter");
+  },
+  
+  /**
+   * Run a search for the specified text, over the collection specified by
+   * the dropdown arrow. The default is all bookmarks and history, but can be
+   * localized to the active collection. 
+   * @param   filterString
+   *          The text to search for. 
+   */
+  search: function PSB_search(filterString) {
+    // Do not search for "" since it will match all history. Assume if the user
+    // deleted everything that they want to type something else and don't 
+    // update the view.
+    if (filterString == "" || this.searchFilter.hasAttribute("empty")) 
+      return;
+    
+    var content = PlacesOrganizer._content;
+    var PO = PlacesOrganizer;
+      
+    switch (PlacesSearchBox.filterCollection) {
+    case "collection":
+      var folderId = asFolder(content.getResult().root).folderId;
+      content.applyFilter(filterString, true, folderId, OptionsFilter);
+      PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+      break;
+    case "all":
+      content.applyFilter(filterString, false, 0, OptionsFilter);
+      PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+      break;
+    }
+    
+    this.searchFilter.setAttribute("filtered", "true");
+  },
+  
+  /**
+   * Finds across all bookmarks and history.
+   */
+  findAll: function PSB_findAll() {
+    this.filterCollection = "all";
+    this.focus();
+  },
+  
+  /**
+   * Finds in the currently selected Place.
+   */
+  findCurrent: function PSB_findCurrent() {
+    this.filterCollection = "collection";
+    this.focus();
+  },
+  
+  /**
+   * Updates the display with the title of the current collection.
+   * @param   title
+   *          The title of the current collection.
+   */
+  updateCollectionTitle: function PSB_updateCollectionTitle(title) {
+    var strings = document.getElementById("placeBundle");
+    if (title) {
+      this.searchFilter.grayText = 
+        strings.getFormattedString("searchCurrentDefault", [title]);
+    }
+    else
+      this.searchFilter.grayText = strings.getString("searchDefault");
+  },
+  
+  /**
+   * Updates the display with the current gray text.
+   */
+  syncGrayText: function PSB_syncGrayText() {
+    this.searchFilter.value = this.searchFilter.grayText;
+  },
+  
   /**
    * Gets/sets the active collection from the dropdown menu.
    */
   get filterCollection() {
-    var searchFilter = document.getElementById("searchFilter");
-    return searchFilter.getAttribute("collection");
+    return this.searchFilter.getAttribute("collection");
   },
   set filterCollection(collectionName) {
-    var searchFilter = document.getElementById("searchFilter");
-    searchFilter.setAttribute("collection", collectionName);
+    this.searchFilter.setAttribute("collection", collectionName);
+    var newGrayText = null;
+    if (collectionName == "collection")
+      newGrayText = PlacesOrganizer._places.selectedNode.title;
+    this.updateCollectionTitle(newGrayText);
     return collectionName;
   },
   
@@ -217,50 +347,7 @@ var PlacesSearchBox = {
    * Focus the search box
    */
   focus: function PSB_focus() {
-    var searchFilter = document.getElementById("searchFilter");
-    searchFilter.focus();
-  },
-  
-  /**
-   * When the field is activated, if the contents are the gray text, clear
-   * the field, otherwise select the contents. 
-   */
-  onFocus: function PSB_onFocus() {
-    var searchFilter = document.getElementById("searchFilter");
-    var placeBundle = document.getElementById("placeBundle");
-    
-    var searchDefault = placeBundle.getString("searchDefault");
-    if (searchFilter.value == searchDefault) {
-      searchFilter.removeAttribute("empty");
-      searchFilter.value = "";
-    }
-    else
-      searchFilter.select();
-  },
-  
-  /**
-   * When the field is deactivated, reset the gray text if the value is
-   * empty or has the gray text value. 
-   */
-  onBlur: function PSB_onBlur() {
-    var placeBundle = document.getElementById("placeBundle");
-    var searchDefault = placeBundle.getString("searchDefault");
-    var searchFilter = document.getElementById("searchFilter");
-    
-    if (searchFilter.value == searchDefault || !searchFilter.value)
-      this.reset();
-  },
-  
-  /**
-   * Resets the search box to its default state (showing "Search" grey
-   * text.
-   */
-  reset: function PSB_reset() {
-    var placeBundle = document.getElementById("placeBundle");
-    var searchDefault = placeBundle.getString("searchDefault");
-    var searchFilter = document.getElementById("searchFilter");
-    searchFilter.setAttribute("empty", "true");
-    searchFilter.value = searchDefault;
+    this.searchFilter.focus();
   },
   
   /** 
@@ -268,9 +355,9 @@ var PlacesSearchBox = {
    */
   init: function PSB_init() {
     var placeBundle = document.getElementById("placeBundle");
-    var searchDefault = placeBundle.getString("searchDefault");
-    var searchFilter = document.getElementById("searchFilter");
-    this.reset();
+    var searchFilter = this.searchFilter;
+    searchFilter.grayText = placeBundle.getString("searchDefault");
+    searchFilter.reset();
     searchFilter.focus();
   },
   
@@ -278,11 +365,10 @@ var PlacesSearchBox = {
    * Gets or sets the text shown in the Places Search Box 
    */
   get value() {
-    return document.getElementById("searchFilter").value;
+    return this.searchFilter.value;
   },
   set value(value) {
-    document.getElementById("searchFilter").value = value;
-    return value;
+    return this.searchFilter.value = value;
   }
 };
 
@@ -489,10 +575,7 @@ var PlacesQueryBuilder = {
       // Re-do the original toolbar-search-box search that the user used to
       // spawn the advanced UI... this effectively "reverts" the UI to the
       // point it was in before they began monkeying with advanced search.
-      const sType = PlacesOrganizer.HEADER_TYPE_SEARCH;
-      PlacesOrganizer.setHeaderText(sType, PlacesSearchBox.value);
-      
-      PlacesOrganizer.search(PlacesSearchBox.value);
+      PlacesSearchBox.search(PlacesSearchBox.value);
       return;
     }
 
@@ -753,6 +836,7 @@ var PlacesQueryBuilder = {
     // XXXben - find some public way of doing this!
     PlacesOrganizer._content.load(queries, 
                                   OptionsFilter.filter(queries, options, null));
+    PlacesOrganizer.updateLoadedURI();
   }
 };
 
@@ -1000,84 +1084,6 @@ var ViewMenu = {
 };
 
 /**
- * Manages options for a particular view type.
- * @param   pref
- *          The preference that stores these options. 
- * @param   defaultValue
- *          The default value to be used for views of this type. 
- * @param   serializable
- *          An object bearing a serialize and deserialize method that
- *          read and write the object's string representation from/to
- *          preferences.
- * @constructor
- */
-function PrefHandler(pref, defaultValue, serializable) {
-  this._pref = pref;
-  this._defaultValue = defaultValue;
-  this._serializable = serializable;
-
-  this._pb = 
-    Cc["@mozilla.org/preferences-service;1"].
-    getService(Components.interfaces.nsIPrefBranch2);
-  this._pb.addObserver(this._pref, this, false);
-}
-PrefHandler.prototype = {
-  /**
-   * Clean up when the window is going away to avoid leaks. 
-   */
-  destroy: function PC_PH_destroy() {
-    this._pb.removeObserver(this._pref, this);
-  },
-
-  /** 
-   * Observes changes to the preferences.
-   * @param   subject
-   * @param   topic
-   *          The preference changed notification
-   * @param   data
-   *          The preference that changed
-   */
-  observe: function PC_PH_observe(subject, topic, data) {
-    if (topic == "nsPref:changed" && data == this._pref)
-      this._value = null;
-  },
-  
-  /**
-   * The cached value, null if it needs to be rebuilt from preferences.
-   */
-  _value: null,
-
-  /** 
-   * Get the preference value, reading from preferences if necessary. 
-   */
-  get value() { 
-    if (!this._value) {
-      if (this._pb.prefHasUserValue(this._pref)) {
-        var valueString = this._pb.getCharPref(this._pref);
-        this._value = this._serializable.deserialize(valueString);
-      }
-      else
-        this._value = this._defaultValue;
-    }
-    return this._value;
-  },
-  
-  /**
-   * Stores a value in preferences. 
-   * @param   value
-   *          The data to be stored. 
-   */
-  set value(value) {
-    if (value != this._value) {
-      this._pb.setCharPref(this._pref, this._serializable.serialize(value));
-      var ps = this._pb.QueryInterface(Ci.nsIPrefService);
-      ps.savePrefFile(null);
-    }
-    return value;
-  }
-};
-
-/**
  * A "Configuration" set for a class of history query results. Some results 
  * will require that the grouping UI be labeled differently from the standard
  * so this object is provided to allow those results to configure the UI when
@@ -1245,6 +1251,7 @@ var Groupers = {
     newOptions.setGroupingMode([NHQO.GROUP_BY_DOMAIN], 1);
     var content = PlacesOrganizer._content;
     content.load(queries, newOptions);
+    PlacesOrganizer.updateLoadedURI();
     this._updateBroadcasters(true);
     OptionsFilter.update(content.getResult());
   },
@@ -1260,6 +1267,7 @@ var Groupers = {
     newOptions.setGroupingMode([], 0);
     var content = PlacesOrganizer._content;
     content.load(queries, newOptions);
+    PlacesOrganizer.updateLoadedURI();
     this._updateBroadcasters(false);
     OptionsFilter.update(content.getResult());
   },
@@ -1269,18 +1277,32 @@ var Groupers = {
    * feed.
    */
   groupByFeed: function G_groupByFeed() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
-    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    PlacesController.groupByAnnotation("livemark/feedURI", [], 0);
+    var content = PlacesOrganizer._content;
+    var query = asQuery(content.getResult().root);
+    var queries = query.getQueries({ });
+    var newOptions = query.queryOptions.clone();
+    var newQuery = queries[0].clone();
+    newQuery.annotation = "livemark/feedURI";
+    content.load([newQuery], newOptions);
+    PlacesOrganizer.updateLoadedURI();
+    this._updateBroadcasters(false);
+    OptionsFilter.update(content.getResult());
   },
   
   /**
    * Shows all subscribed feed (Live Bookmarks) content in a flat list
    */
   groupByPost: function G_groupByPost() {
-    var groupings = [Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER];
-    var sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
-    PlacesController.groupByAnnotation("livemark/bookmarkFeedURI", [], 0);
+    var content = PlacesOrganizer._content;
+    var query = asQuery(content.getResult().root);
+    var queries = query.getQueries({ });
+    var newOptions = query.queryOptions.clone();
+    var newQuery = queries[0].clone();
+    newQuery.annotation = "livemark/bookmarkFeedURI";
+    content.load([newQuery], newOptions);
+    PlacesOrganizer.updateLoadedURI();
+    this._updateBroadcasters(false);
+    OptionsFilter.update(content.getResult());
   }
 };
 
