@@ -382,8 +382,23 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 1;
         break;
     case eMetric_CaretBlinkTime:
-        aMetric = 500;
-        break;
+        {
+            GtkSettings *settings;
+            gint blink_time;
+            gboolean blink;
+
+            settings = gtk_settings_get_default ();
+            g_object_get (settings,
+                          "gtk-cursor-blink-time", &blink_time,
+                          "gtk-cursor-blink", &blink,
+                          NULL);
+ 
+            if (blink)
+                aMetric = (PRInt32) blink_time;
+            else
+                aMetric = 0;
+            break;
+        }
     case eMetric_CaretWidth:
         aMetric = 1;
         break;
@@ -415,8 +430,15 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
         break;
     case eMetric_SubmenuDelay:
-        aMetric = 200;
-        break;
+        {
+            GtkSettings *settings;
+            gint delay;
+
+            settings = gtk_settings_get_default ();
+            g_object_get (settings, "gtk-menu-popup-delay", &delay, NULL);
+            aMetric = (PRInt32) delay;
+            break;
+        }
     case eMetric_MenusCanOverlapOSBar:
         // we want XUL popups to be able to overlap the task bar.
         aMetric = 1;
