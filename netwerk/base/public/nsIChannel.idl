@@ -199,9 +199,21 @@ interface nsIChannel : nsIRequest
     const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 17;
 
     /**
-     * This flag is set to indicate that onStopRequest may be followed by
-     * another onStartRequest/onStopRequest pair.  This flag is, for example,
-     * used by the multipart/replace stream converter.
+     * This flag is set to indicate that this channel is replacing another
+     * channel.  This means that:
+     *
+     * 1) the stream listener this channel will be notifying was initially
+     *    passed to the asyncOpen method of some other channel
+     *
+     *   and
+     *
+     * 2) this channel's URI is a better identifier of the resource being
+     *    accessed than this channel's originalURI.
+     *
+     * This flag can be set, for example, for redirects or for cases when a
+     * single channel has multiple parts to it (and thus can follow
+     * onStopRequest with another onStartRequest/onStopRequest pair, each pair
+     * for a different request).
      */
     const unsigned long LOAD_REPLACE = 1 << 18;
 
