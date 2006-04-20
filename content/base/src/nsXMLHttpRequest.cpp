@@ -76,6 +76,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIStringStream.h"
+#include "nsIStreamConverterService.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -88,20 +89,21 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // State
-#define XML_HTTP_REQUEST_UNINITIALIZED    1 // 0
-#define XML_HTTP_REQUEST_OPENED           2 // 1 aka LOADING
-#define XML_HTTP_REQUEST_LOADED           4 // 2
-#define XML_HTTP_REQUEST_INTERACTIVE      8 // 3
-#define XML_HTTP_REQUEST_COMPLETED       16 // 4
-#define XML_HTTP_REQUEST_SENT            32 // Internal, LOADING in IE and external view
-#define XML_HTTP_REQUEST_STOPPED         64 // Internal, INTERACTIVE in IE and external view
+#define XML_HTTP_REQUEST_UNINITIALIZED  (1 << 0)  // 0
+#define XML_HTTP_REQUEST_OPENED         (1 << 1)  // 1 aka LOADING
+#define XML_HTTP_REQUEST_LOADED         (1 << 2)  // 2
+#define XML_HTTP_REQUEST_INTERACTIVE    (1 << 3)  // 3
+#define XML_HTTP_REQUEST_COMPLETED      (1 << 4)  // 4
+#define XML_HTTP_REQUEST_SENT           (1 << 5)  // Internal, LOADING in IE and external view
+#define XML_HTTP_REQUEST_STOPPED        (1 << 6)  // Internal, INTERACTIVE in IE and external view
 // The above states are mutually exclusing, change with ChangeState() only.
 // The states below can be combined.
-#define XML_HTTP_REQUEST_ABORTED        128 // Internal
-#define XML_HTTP_REQUEST_ASYNC          256 // Internal
-#define XML_HTTP_REQUEST_PARSEBODY      512 // Internal
-#define XML_HTTP_REQUEST_XSITEENABLED  1024 // Internal
-#define XML_HTTP_REQUEST_SYNCLOOPING   2048 // Internal
+#define XML_HTTP_REQUEST_ABORTED        (1 << 7)  // Internal
+#define XML_HTTP_REQUEST_ASYNC          (1 << 8)  // Internal
+#define XML_HTTP_REQUEST_PARSEBODY      (1 << 9)  // Internal
+#define XML_HTTP_REQUEST_XSITEENABLED   (1 << 10) // Internal
+#define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 11) // Internal
+#define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -111,6 +113,99 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    XML_HTTP_REQUEST_COMPLETED |             \
    XML_HTTP_REQUEST_SENT |                  \
    XML_HTTP_REQUEST_STOPPED)
+
+
+// Helper proxy class to be used when expecting an
+// multipart/x-mixed-replace stream of XML documents.
+
+class nsMultipartProxyListener : public nsIStreamListener
+{
+public:
+  nsMultipartProxyListener(nsIStreamListener *dest);
+  virtual ~nsMultipartProxyListener();
+
+  /* additional members */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+private:
+  nsCOMPtr<nsIStreamListener> mDestListener;
+};
+
+
+nsMultipartProxyListener::nsMultipartProxyListener(nsIStreamListener *dest)
+  : mDestListener(dest)
+{
+}
+
+nsMultipartProxyListener::~nsMultipartProxyListener()
+{
+}
+
+NS_IMPL_ISUPPORTS2(nsMultipartProxyListener, nsIStreamListener,
+                   nsIRequestObserver)
+
+/** nsIRequestObserver methods **/
+
+NS_IMETHODIMP
+nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
+                                         nsISupports *ctxt)
+{
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
+
+  nsCAutoString contentType;
+  nsresult rv = channel->GetContentType(contentType);
+
+  if (!contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // If multipart/x-mixed-replace content, we'll insert a MIME
+  // decoder in the pipeline to handle the content and pass it along
+  // to our original listener.
+
+  nsCOMPtr<nsIStreamConverterService> convServ =
+    do_GetService("@mozilla.org/streamConverters;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIStreamListener> toListener(mDestListener);
+    nsCOMPtr<nsIStreamListener> fromListener;
+
+    rv = convServ->AsyncConvertData(NS_LITERAL_STRING("multipart/x-mixed-replace").get(),
+                                    NS_LITERAL_STRING("*/*").get(),
+                                    toListener,
+                                    nsnull,
+                                    getter_AddRefs(fromListener));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && fromListener, NS_ERROR_UNEXPECTED);
+
+    mDestListener = fromListener;
+  }
+
+  return mDestListener->OnStartRequest(aRequest, ctxt);
+}
+
+NS_IMETHODIMP
+nsMultipartProxyListener::OnStopRequest(nsIRequest *aRequest,
+                                        nsISupports *ctxt,
+                                        nsresult status)
+{
+  return mDestListener->OnStopRequest(aRequest, ctxt, status);
+}
+
+/** nsIStreamListener methods **/
+
+NS_IMETHODIMP
+nsMultipartProxyListener::OnDataAvailable(nsIRequest *aRequest,
+                                          nsISupports *ctxt,
+                                          nsIInputStream *inStr,
+                                          PRUint32 sourceOffset,
+                                          PRUint32 count)
+{
+  return mDestListener->OnDataAvailable(aRequest, ctxt, inStr, sourceOffset,
+                                        count);
+}
+
 
 static nsIScriptContext *
 GetCurrentContext()
@@ -366,7 +461,12 @@ nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
   aCharset.Truncate();
   nsresult rv;
   nsCAutoString charsetVal;
-  rv = mChannel->GetContentCharset(charsetVal);
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(mReadRequest));
+  if (!channel) {
+    channel = mChannel;
+  }
+
+  rv = channel->GetContentCharset(charsetVal);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
     if(NS_SUCCEEDED(rv) && calias) {
@@ -486,7 +586,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(nsAString& aResponseText)
 NS_IMETHODIMP 
 nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
     return httpChannel->GetResponseStatus(aStatus);
@@ -500,7 +600,7 @@ nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
 NS_IMETHODIMP 
 nsXMLHttpRequest::GetStatusText(nsACString& aStatusText)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   aStatusText.Truncate();
 
@@ -536,12 +636,14 @@ nsXMLHttpRequest::Abort()
 }
 
 /* string getAllResponseHeaders (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
+
   if (httpChannel) {
     nsHeaderVisitor *visitor = nsnull;
     NS_NEWXPCOM(visitor, nsHeaderVisitor);
@@ -565,10 +667,10 @@ NS_IMETHODIMP
 nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
                                     nsACString& _retval)
 {
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   nsresult rv = NS_OK;
-
   _retval.Truncate();
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel();
 
   if (httpChannel) {
     rv = httpChannel->GetResponseHeader(header, _retval);
@@ -702,6 +804,23 @@ nsXMLHttpRequest::ClearEventListeners()
   mOnReadystatechangeListener = nsnull;
 }
 
+already_AddRefed<nsIHttpChannel>
+nsXMLHttpRequest::GetCurrentHttpChannel()
+{
+  nsIHttpChannel *httpChannel = nsnull;
+
+  if (mReadRequest) {
+    CallQueryInterface(mReadRequest, &httpChannel);
+  }
+
+  if (!httpChannel && mChannel) {
+    CallQueryInterface(mChannel, &httpChannel);
+  }
+
+  return httpChannel;
+}
+
+
 /* noscript void openRequest (in AUTF8String method, in AUTF8String url, in boolean async, in AString user, in AString password); */
 NS_IMETHODIMP
 nsXMLHttpRequest::OpenRequest(const nsACString& method, 
@@ -718,7 +837,12 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   PRBool authp = PR_FALSE;
 
   if (mState & XML_HTTP_REQUEST_ABORTED) {
-    // Proceed as normal
+    // Something caused this request to abort (e.g the current request
+    // was caceled, channels closed etc), most likely the abort()
+    // function was called by script. Unset our aborted state, and
+    // proceed as normal
+
+    mState &= ~XML_HTTP_REQUEST_ABORTED;
   } else if (mState & (XML_HTTP_REQUEST_OPENED | 
                        XML_HTTP_REQUEST_LOADED |
                        XML_HTTP_REQUEST_INTERACTIVE |
@@ -726,7 +850,7 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
                        XML_HTTP_REQUEST_STOPPED)) {
     // IE aborts as well
     Abort();
-  
+
     // XXX We should probably send a warning to the JS console
     //     that load was aborted and event listeners were cleared
     //     since this looks like a situation that could happen
@@ -1010,32 +1134,74 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
     return NS_OK;
 
+  if (mState & XML_HTTP_REQUEST_ABORTED) {
+    NS_ERROR("Ugh, still getting data on an aborted XMLHttpRequest!");
+
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+  NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
+
   mReadRequest = request;
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
   ChangeState(XML_HTTP_REQUEST_LOADED);
 
-  if (!mDocument) {
-    // We were probably aborted. So no point in attempting to parse
-    // incoming data.
-    mState &= ~XML_HTTP_REQUEST_PARSEBODY;
+  nsresult rv;
+  // Get and initialize a DOMImplementation
+  nsCOMPtr<nsIDOMDOMImplementation> implementation =
+    do_CreateInstance(kIDOMDOMImplementationCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPrivateDOMImplementation> privImpl =
+    do_QueryInterface(implementation);
+  if (privImpl) {
+    privImpl->Init(GetBaseURI());
+  }
+
+  // Create an empty document from it (resets current document as well)
+  const nsAString& emptyStr = EmptyString();
+  rv = implementation->CreateDocument(emptyStr, 
+                                      emptyStr, 
+                                      nsnull, 
+                                      getter_AddRefs(mDocument));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  // Reset responseBody
+  mResponseBody.Truncate();
+
+  // Register as a load listener on the document
+  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
+  if (target) {
+    nsWeakPtr requestWeak =
+      do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this));
+    nsCOMPtr<nsIDOMEventListener> proxy = new nsLoadListenerProxy(requestWeak);
+    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
+
+    // This will addref the proxy
+    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                      proxy), 
+                                       NS_GET_IID(nsIDOMLoadListener));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
 
   if (mOverrideMimeType.IsEmpty()) {
-    // If we are not overriding the mime type, we can gain a huge performance
-    // win by not even trying to parse non-XML data. This also protects us
-    // from the situation where we have an XML document and sink, but HTML (or other)
-    // parser, which can produce unreliable results.
+    // If we are not overriding the mime type, we can gain a huge
+    // performance win by not even trying to parse non-XML data. This
+    // also protects us from the situation where we have an XML
+    // document and sink, but HTML (or other) parser, which can
+    // produce unreliable results.
     nsCAutoString type;
-    mChannel->GetContentType(type);
+    channel->GetContentType(type);
+
     if (type.Find("xml") == -1) {
       mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   } else {
     nsresult status;
     request->GetStatus(&status);
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    if (channel && NS_SUCCEEDED(status)) {
+    if (NS_SUCCEEDED(status)) {
       channel->SetContentType(mOverrideMimeType);
     }
   }
@@ -1043,17 +1209,15 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
     nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsILoadGroup> loadGroup;
-    mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-    
+    channel->GetLoadGroup(getter_AddRefs(loadGroup));
+
     nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
     if (!document) {
       return NS_ERROR_FAILURE;
     }
 
-    nsresult rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
-                                              loadGroup, nsnull, 
-                                              getter_AddRefs(listener),
-                                              PR_TRUE);
+    rv = document->StartDocumentLoad(kLoadAsData, channel, loadGroup, nsnull,
+                                     getter_AddRefs(listener), PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mXMLParserStreamListener = listener;
@@ -1075,8 +1239,15 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
 
   nsCOMPtr<nsIParser> parser;
 
-  if (mState & XML_HTTP_REQUEST_PARSEBODY) { 
-    NS_ASSERTION(mXMLParserStreamListener, "null parser stream in parsing mode!!");
+  // If we're loading a multipart stream of XML documents, we'll get
+  // an OnStopRequest() for the last part in the stream, and then
+  // another one for the end of the initiating
+  // "multipart/x-mixed-replace" stream too. So we must check that we
+  // still have an xml parser stream listener before accessing it
+  // here.
+
+  // Is this good enough here?
+  if (mState & XML_HTTP_REQUEST_PARSEBODY && mXMLParserStreamListener) { 
     parser = do_QueryInterface(mXMLParserStreamListener);
     NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
     rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
@@ -1085,15 +1256,20 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
-  mChannel->SetNotificationCallbacks(nsnull);
+
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
+  NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
+
+  channel->SetNotificationCallbacks(nsnull);
 
   if (NS_FAILED(status)) {
-    // This can happen if the server is unreachable. Other possible reasons
-    // are that the user leaves the page or hits the ESC key.
+    // This can happen if the server is unreachable. Other possible
+    // reasons are that the user leaves the page or hits the ESC key.
     Error(nsnull);
 
-    // By nulling out channel here we make it so that Send() can test for that
-    // and throw. Also calling the various status methods/members will not throw.
+    // By nulling out channel here we make it so that Send() can test
+    // for that and throw. Also calling the various status
+    // methods/members will not throw.
     // This matches what IE does.
     mChannel = nsnull;
   } else if (!parser || parser->IsParserEnabled()) {
@@ -1110,6 +1286,13 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     RequestCompleted();
   } else {
     ChangeState(XML_HTTP_REQUEST_STOPPED, PR_FALSE);
+  }
+
+  if (mScriptContext) {
+    // Force a GC since we could be loading a lot of documents
+    // (especially if streaming), and not doing anything that would
+    // normally trigger a GC.
+    mScriptContext->GC();
   }
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
@@ -1151,7 +1334,14 @@ nsXMLHttpRequest::RequestCompleted()
   ChangeState(XML_HTTP_REQUEST_COMPLETED);
 
   NotifyEventListeners(mOnLoadListener, mLoadEventListeners, domevent);
-  ClearEventListeners();
+
+  if (mState & XML_HTTP_REQUEST_MULTIPART) {
+    // We're a multipart request, so we're not done. Reset to opened.
+    ChangeState(XML_HTTP_REQUEST_OPENED);
+  } else {
+    // We're done. Clear event listeners.
+    ClearEventListeners();
+  }
 
   return rv;
 }
@@ -1267,42 +1457,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     }
   }
 
-  // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation =
-    do_CreateInstance(kIDOMDOMImplementationCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIPrivateDOMImplementation> privImpl =
-    do_QueryInterface(implementation);
-  if (privImpl) {
-    privImpl->Init(GetBaseURI());
-  }
-
-  // Create an empty document from it (resets current document as well)
-  const nsAString& emptyStr = EmptyString();
-  rv = implementation->CreateDocument(emptyStr, 
-                                      emptyStr, 
-                                      nsnull, 
-                                      getter_AddRefs(mDocument));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
   // Reset responseBody
   mResponseBody.Truncate();
 
-  // Register as a load listener on the document
-  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
-  if (target) {
-    nsWeakPtr requestWeak(do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this)));
-    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
-    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
-
-    // This will addref the proxy
-    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
-                                                      proxy), 
-                                       NS_GET_IID(nsIDOMLoadListener));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
+  // Reset responseXML
+  mDocument = nsnull;
 
   nsCOMPtr<nsIEventQueue> modalEventQueue;
 
@@ -1328,9 +1487,26 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Hook us up to listen to redirects and the like
   mChannel->SetNotificationCallbacks(this);
 
+  nsCOMPtr<nsIStreamListener> listener;
+
+  if (mState & XML_HTTP_REQUEST_MULTIPART) {
+    listener = new nsMultipartProxyListener(this);
+    if (!listener) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    listener = this;
+  }
+
+  // Bypass the network cache.
+  nsLoadFlags flags;
+  mChannel->GetLoadFlags(&flags);
+  flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
+  mChannel->SetLoadFlags(flags);
+
   // Start reading from the channel
   ChangeState(XML_HTTP_REQUEST_SENT);
-  rv = mChannel->AsyncOpen(this, nsnull);
+  rv = mChannel->AsyncOpen(listener, nsnull);
 
   if (NS_FAILED(rv)) {
     if (modalEventQueue) {
@@ -1347,7 +1523,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
     mEventQService->PopThreadEventQueue(modalEventQueue);
   }
-  
+
   if (!mChannel) {
     return NS_ERROR_FAILURE;
   }
@@ -1406,6 +1582,34 @@ nsXMLHttpRequest::OverrideMimeType(const nsACString& aMimeType)
 {
   // XXX Should we do some validation here?
   mOverrideMimeType.Assign(aMimeType);
+  return NS_OK;
+}
+
+
+/* attribute boolean multipart; */
+NS_IMETHODIMP
+nsXMLHttpRequest::GetMultipart(PRBool *_retval)
+{
+  *_retval = mState & XML_HTTP_REQUEST_MULTIPART;
+
+  return NS_OK;
+}
+
+/* attribute boolean multipart; */
+NS_IMETHODIMP
+nsXMLHttpRequest::SetMultipart(PRBool aMultipart)
+{
+  if (!(mState & XML_HTTP_REQUEST_UNINITIALIZED)) {
+    // Can't change this while we're in the middle of something.
+    return NS_ERROR_IN_PROGRESS;
+  }
+
+  if (aMultipart) {
+    mState |= XML_HTTP_REQUEST_MULTIPART;
+  } else {
+    mState &= ~XML_HTTP_REQUEST_MULTIPART;
+  }
+
   return NS_OK;
 }
 
@@ -1527,7 +1731,8 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
 // nsIHttpEventSink methods:
 //
 NS_IMETHODIMP
-nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
+nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
+                             nsIChannel *aNewChannel)
 {
   NS_ENSURE_ARG_POINTER(aNewChannel);
 
