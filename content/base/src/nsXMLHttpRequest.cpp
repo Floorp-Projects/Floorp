@@ -2,16 +2,31 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
+<<<<<<< nsXMLHttpRequest.cpp
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+=======
  * The contents of this file are subject to the Netscape Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
+>>>>>>> 1.43
  *
+<<<<<<< nsXMLHttpRequest.cpp
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+=======
  * Software distributed under the License is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
  * License.
  *
+>>>>>>> 1.43
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
@@ -335,34 +350,15 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
   nsresult rv;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel,&rv));
   if(httpChannel) {
-    nsXPIDLCString contenttypeheader;
-    rv = httpChannel->GetResponseHeader("content-type", getter_Copies(contenttypeheader));
+    nsXPIDLCString charsetheader;
+    rv = httpChannel->GetCharset(getter_Copies(charsetheader));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoString contentType;
-      contentType.AssignWithConversion( contenttypeheader.get() );
-      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-      if(start>=0) {
-        start += 8; // 8 = "charset=".length
-        PRInt32 end = 0;
-        if(PRUnichar('"') == contentType.CharAt(start)) {
-          start++;
-          end = contentType.FindCharInSet("\"", start  );
-          if(end<0)
-            end = contentType.Length();
-        } else {
-          end = contentType.FindCharInSet(";\n\r ", start  );
-          if(end<0)
-            end = contentType.Length();
-        }
-        nsAutoString theCharset;
-        contentType.Mid(theCharset, start, end - start);
-        nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
-        if(NS_SUCCEEDED(rv) && calias) {
-          nsAutoString preferred;
-          rv = calias->GetPreferred(theCharset, preferred);
-          if(NS_SUCCEEDED(rv)) {
-            aCharset.Assign(preferred);
-          }
+      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
+      if(NS_SUCCEEDED(rv) && calias) {
+        nsAutoString preferred;
+        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetheader), preferred);
+        if(NS_SUCCEEDED(rv)) {
+          aCharset.Assign(preferred);        
         }
       }
     }
