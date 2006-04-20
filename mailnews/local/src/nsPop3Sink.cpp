@@ -808,8 +808,17 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *aMsgWindow, PRInt32 aSize)
         return HandleTempDownloadFailed(aMsgWindow);   
 
       m_outFileStream->Open(m_tmpDownloadFileSpec, (PR_RDWR | PR_CREATE_FILE));
-      hdr->SetMessageKey(0);
+      nsMsgKey saveMsgKey;
+      hdr->GetMessageKey(&saveMsgKey);
+      // this is the offset in the temp file, which we need to be correct
+      // when applying filters;
+      hdr->SetMessageKey(0); 
       m_newMailParser->ApplyFilters(&moved, aMsgWindow, 0);
+      // restore the msg key so that we don't confuse the msg hdr
+      // use cache, which requires the hdr to have the same msg key when put
+      // in the use cache as when it is deleted and hence removed
+      // from the use cache.
+      hdr->SetMessageKey(saveMsgKey);
       if (!moved)
       {
         if (m_outFileStream->is_open())
