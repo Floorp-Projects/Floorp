@@ -576,7 +576,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   if (principal) {
     channel->SetOwner(principal);
   }
-  parserChannel->SetContentCharset(nsDependentCString(charset));
+  parserChannel->SetContentCharset(charset);
   nsCOMPtr<nsIRequest> request = NS_STATIC_CAST(nsIRequest*, parserChannel);
 
   // Tell the document to start loading
