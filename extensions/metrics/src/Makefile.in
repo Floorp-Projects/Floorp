@@ -62,7 +62,18 @@ REQUIRES	= xpcom \
 		  xmlextras \
 		  libbz2 \
 		  caps \
+		  xulapp \
+		  extensions \
+		  rdf \
+		  plugin \
 		  $(NULL)
+
+# nsIScreenManager has moved to widget on the trunk
+ifdef MOZILLA_1_8_BRANCH
+REQUIRES	+= gfx
+else
+REQUIRES	+= widget
+endif
 
 CPPSRCS		= \
 		nsLoadCollector.cpp \
@@ -70,6 +81,7 @@ CPPSRCS		= \
 		nsMetricsEventItem.cpp \
 		nsMetricsModule.cpp \
 		nsMetricsService.cpp \
+		nsProfileCollector.cpp \
 		nsWindowCollector.cpp \
 		nsStringUtils.cpp \
 		$(NULL)
