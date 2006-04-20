@@ -652,9 +652,7 @@ nsXMLHttpRequest::Abort()
   mDocument = nsnull;
   mState |= XML_HTTP_REQUEST_ABORTED;
 
-  ChangeState(XML_HTTP_REQUEST_COMPLETED);
-
-  ClearEventListeners();
+  ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE, PR_TRUE);
 
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);  // IE seems to do it
 
@@ -1348,16 +1346,19 @@ nsXMLHttpRequest::RequestCompleted()
     }
   }
 
-  ChangeState(XML_HTTP_REQUEST_COMPLETED);
+  // Grab hold of the event listener lists we will need
+  nsCOMPtr<nsIDOMEventListener> onLoadListener = mOnLoadListener;
+  nsCOMPtr<nsISupportsArray> loadEventListeners = mLoadEventListeners;
 
-  NotifyEventListeners(mOnLoadListener, mLoadEventListeners, domevent);
+  // Clear listeners here unless we're multipart
+  ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE,
+              !(mState & XML_HTTP_REQUEST_MULTIPART));
+
+  NotifyEventListeners(onLoadListener, loadEventListeners, domevent);
 
   if (mState & XML_HTTP_REQUEST_MULTIPART) {
     // We're a multipart request, so we're not done. Reset to opened.
     ChangeState(XML_HTTP_REQUEST_OPENED);
-  } else {
-    // We're done. Clear event listeners.
-    ClearEventListeners();
   }
 
   return rv;
@@ -1710,14 +1711,19 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
-  NotifyEventListeners(mOnErrorListener, mErrorEventListeners, event);
+  nsCOMPtr<nsIDOMEventListener> onErrorListener = mOnErrorListener;
+  nsCOMPtr<nsISupportsArray> errorEventListeners = mErrorEventListeners;
+
   ClearEventListeners();
+  
+  NotifyEventListeners(onErrorListener, errorEventListeners, event);
 
   return NS_OK;
 }
 
 nsresult
-nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
+nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
+                              PRBool aClearEventListeners)
 {
   // If we are setting one of the mutually exclusing states,
   // unset those state bits first.
@@ -1726,10 +1732,19 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
   }
   mState |= aState;
   nsresult rv = NS_OK;
+
+  // Take ref to the one listener we need
+  nsCOMPtr<nsIOnReadyStateChangeHandler> onReadyStateChangeListener =
+    mOnReadystatechangeListener;
+
+  if (aClearEventListeners) {
+    ClearEventListeners();
+  }
+
   if ((mState & XML_HTTP_REQUEST_ASYNC) &&
       (aState & XML_HTTP_REQUEST_LOADSTATES) && // Broadcast load states only
       aBroadcast &&
-      mOnReadystatechangeListener) {
+      onReadyStateChangeListener) {
     nsCOMPtr<nsIJSContextStack> stack;
     JSContext *cx = nsnull;
 
@@ -1745,7 +1760,7 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast)
       }
     }
 
-    rv = mOnReadystatechangeListener->HandleEvent();
+    rv = onReadyStateChangeListener->HandleEvent();
 
     if (cx) {
       stack->Pop(&cx);
