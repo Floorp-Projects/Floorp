@@ -24,7 +24,7 @@
 
 interface nsIDOMDocument;
 interface nsIDOMEventListener;
-interface nsIHTTPChannel;
+interface nsIHttpChannel;
 
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
@@ -50,7 +50,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * for the request.  NULL if the HTTP channel has not yet been
    * created.
    */
-  readonly attribute nsIHTTPChannel channel;
+  readonly attribute nsIHttpChannel channel;
 
   /**
    * The response to the HTTP request is parsed as if it were a
