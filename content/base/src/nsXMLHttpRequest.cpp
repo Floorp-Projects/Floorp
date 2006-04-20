@@ -1061,7 +1061,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
           // nsISupportsString?
           nsCOMPtr<nsISupportsString> wstr(do_QueryInterface(supports));
           if (wstr) {
-            wstr->GetData(getter_Copies(serial));
+            wstr->GetData(serial);
           } else {
             // stream?
             nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
