@@ -700,6 +700,12 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
     rv = httpChannel->GetResponseHeader(header, _retval);
   }
 
+  if (rv == NS_ERROR_NOT_AVAILABLE) {
+    // Means no header
+    SetDomStringToNull(_retval);
+    rv = NS_OK;
+  }
+
   return rv;
 }
 
