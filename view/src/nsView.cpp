@@ -660,6 +660,10 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
           : nsnull;
         trect += offset;
         if (aWidgetInitData->mWindowType == eWindowType_popup) {
+          // Without a parent, we can't make a popup.  This can happen
+          // when printing
+          if (!parentWidget)
+            return NS_ERROR_FAILURE;
           mWindow->Create(parentWidget->GetNativeData(NS_NATIVE_WIDGET), trect,
                           ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
         } else {
