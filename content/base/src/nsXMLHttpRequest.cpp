@@ -227,9 +227,9 @@ nsXMLHttpRequest::RemoveEventListener(const nsAReadableString & type,
   return NS_OK;
 }
 
-/* void dispatchEvent (in nsIDOMEvent evt); */
+/* boolean dispatchEvent (in nsIDOMEvent evt); */
 NS_IMETHODIMP
-nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt)
+nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt, PRBool *_retval)
 {
   // Ignored
 
