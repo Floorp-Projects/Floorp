@@ -1718,8 +1718,6 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
   return nsSplittableFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-//XXX This will need to be rewritten once we have content for areas
-//XXXbz We have content for areas now.... 
 NS_IMETHODIMP
 nsImageFrame::GetCursor(const nsPoint& aPoint,
                         nsIFrame::Cursor& aCursor)
