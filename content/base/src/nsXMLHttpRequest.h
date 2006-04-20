@@ -89,7 +89,6 @@ protected:
                                nsIInputStream** aStream);
 
   nsCOMPtr<nsIHTTPChannel> mChannel;
-  nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIDocument> mBaseDocument;

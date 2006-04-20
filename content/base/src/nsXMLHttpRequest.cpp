@@ -603,8 +603,8 @@ nsXMLHttpRequest::GetStatusText(char * *aStatusText)
 NS_IMETHODIMP 
 nsXMLHttpRequest::Abort()
 {
-  if (mReadRequest) {
-    return mReadRequest->Cancel(NS_BINDING_ABORTED);
+  if (mChannel) {
+    return mChannel->Cancel(NS_BINDING_ABORTED);
   }
   
   return NS_OK;
@@ -1038,7 +1038,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
 
   // Start reading from the channel
   mStatus = XML_HTTP_REQUEST_SENT;
-  rv = mChannel->AsyncOpen(listener, nsnull);
+  rv = mChannel->AsyncRead(listener, nsnull);
 
 #ifdef IMPLEMENT_SYNC_LOAD
   if (NS_FAILED(rv)) {
