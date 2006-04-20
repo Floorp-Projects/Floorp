@@ -1651,7 +1651,7 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
 }
 
 // XXX what should clicks on transparent pixels do?
-NS_METHOD
+NS_IMETHODIMP
 nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus* aEventStatus)
@@ -1720,7 +1720,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
 
 //XXX This will need to be rewritten once we have content for areas
 //XXXbz We have content for areas now.... 
-NS_METHOD
+NS_IMETHODIMP
 nsImageFrame::GetCursor(const nsPoint& aPoint,
                         nsIFrame::Cursor& aCursor)
 {
@@ -1729,16 +1729,25 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
   if (nsnull != map) {
     nsPoint p;
     TranslateEventCoords(aPoint, p);
-    aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
-    if (map->IsInside(p.x, p.y)) {
-      // Use style defined cursor if one is provided, otherwise when
-      // the cursor style is "auto" we use the pointer cursor.
-      FillCursorInformationFromStyle(GetStyleUserInterface(), aCursor);
-      if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-        aCursor.mCursor = NS_STYLE_CURSOR_POINTER;
+    nsCOMPtr<nsIContent> area;
+    if (map->IsInside(p.x, p.y, getter_AddRefs(area))) {
+      // Use the cursor from the style of the *area* element.
+      // XXX Using the image as the parent style context isn't
+      // technically correct, but it's probably the right thing to do
+      // here, since it means that areas on which the cursor isn't
+      // specified will inherit the style from the image.
+      nsRefPtr<nsStyleContext> areaStyle = 
+        GetPresContext()->PresShell()->StyleSet()->
+          ResolveStyleFor(area, GetStyleContext());
+      if (areaStyle) {
+        FillCursorInformationFromStyle(areaStyle->GetStyleUserInterface(),
+                                       aCursor);
+        if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+          aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
+        }
+        return NS_OK;
       }
     }
-    return NS_OK;
   }
   return nsFrame::GetCursor(aPoint, aCursor);
 }
