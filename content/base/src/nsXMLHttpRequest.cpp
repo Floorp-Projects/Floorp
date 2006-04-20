@@ -285,6 +285,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLHttpRequest)
@@ -423,6 +424,28 @@ NS_IMETHODIMP
 nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 {
   mOnErrorListener = aOnerror;
+
+  mScriptContext = GetCurrentContext();
+
+  return NS_OK;
+}
+
+/* attribute nsIDOMEventListener onprogress; */
+NS_IMETHODIMP
+nsXMLHttpRequest::GetOnprogress(nsIDOMEventListener * *aOnprogress)
+{
+  NS_ENSURE_ARG_POINTER(aOnprogress);
+
+  *aOnprogress = mOnProgressListener;
+  NS_IF_ADDREF(*aOnprogress);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::SetOnprogress(nsIDOMEventListener * aOnprogress)
+{
+  mOnProgressListener = aOnprogress;
 
   mScriptContext = GetCurrentContext();
 
@@ -806,6 +829,8 @@ nsXMLHttpRequest::ClearEventListeners()
   mOnLoadListener = nsnull;
   mOnErrorListener = nsnull;
   mOnReadystatechangeListener = nsnull;
+  mOnProgressListener = nsnull;
+
 }
 
 already_AddRefed<nsIHttpChannel>
@@ -891,9 +916,11 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   GetLoadGroup(getter_AddRefs(loadGroup));
 
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
-  // which in turn keeps STOP button from becoming active
+  // which in turn keeps STOP button from becoming active.
+  // If the consumer passed in a progress event handler we must load with nsIRequest::LOAD_NORMAL
+  // or necko won't generate any progress notifications
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup,
-                     nsnull, nsIRequest::LOAD_BACKGROUND);
+    nsnull, mOnProgressListener ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) return rv;
 
   //mChannel->SetAuthTriedWithPrehost(authp);
@@ -1779,6 +1806,38 @@ nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
 }
 
 /////////////////////////////////////////////////////
+// nsIProgressEventSink methods:
+//
+
+NS_IMETHODIMP
+nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  if (mOnProgressListener)
+  {
+    nsCOMPtr<nsIDOMEvent> event;
+    nsEvent evt(NS_EVENT_NULL ); // what name do we make up here? 
+    nsresult rv = CreateEvent(&evt, getter_AddRefs(event));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsXMLHttpProgressEvent * progressEvent = new nsXMLHttpProgressEvent(event, aProgress, aProgressMax); 
+    if (!progressEvent)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    event = do_QueryInterface(progressEvent); 
+    NotifyEventListeners(mOnProgressListener, nsnull, event);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::OnStatus(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatus, const PRUnichar *aStatusArg)
+{
+  // nothing to do here...
+  return NS_OK;
+}
+
+/////////////////////////////////////////////////////
 // nsIInterfaceRequestor methods:
 //
 NS_IMETHODIMP
@@ -1807,7 +1866,6 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
   return QueryInterface(aIID, aResult);
 }
 
-
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
 NS_IMETHODIMP nsXMLHttpRequest::
@@ -1818,4 +1876,94 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
     mHeaders.Append(value);
     mHeaders.Append('\n');
     return NS_OK;
+}
+
+// DOM event class to handle progress notifications
+nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint32 aCurrentProgress, PRUint32 aMaxProgress)
+{
+  mInner = aInner; 
+  mCurProgress = aCurrentProgress;
+  mMaxProgress = aMaxProgress;
+}
+
+nsXMLHttpProgressEvent::~nsXMLHttpProgressEvent()
+{}
+
+// QueryInterface implementation for nsXMLHttpRequest
+NS_INTERFACE_MAP_BEGIN(nsXMLHttpProgressEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMLSProgressEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XMLHttpProgressEvent)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsXMLHttpProgressEvent)
+NS_IMPL_RELEASE(nsXMLHttpProgressEvent)
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
+{
+  *aInput = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
+{
+  *aPosition = mCurProgress;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
+{
+  *aTotalSize = mMaxProgress;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetType(nsAString & aType)
+{
+  return mInner->GetType(aType);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetTarget(nsIDOMEventTarget * *aTarget)
+{
+  return mInner->GetTarget(aTarget);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetCurrentTarget(nsIDOMEventTarget * *aCurrentTarget)
+{
+  return mInner->GetCurrentTarget(aCurrentTarget);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetEventPhase(PRUint16 *aEventPhase)
+{
+  return mInner->GetEventPhase(aEventPhase);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetBubbles(PRBool *aBubbles)
+{
+  return mInner->GetBubbles(aBubbles);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetCancelable(PRBool *aCancelable)
+{
+  return mInner->GetCancelable(aCancelable);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::GetTimeStamp(DOMTimeStamp *aTimeStamp)
+{
+  return mInner->GetTimeStamp(aTimeStamp);
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::StopPropagation()
+{
+  return mInner->StopPropagation();
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::PreventDefault()
+{
+  return mInner->PreventDefault();
+}
+
+NS_IMETHODIMP nsXMLHttpProgressEvent::InitEvent(const nsAString & eventTypeArg, PRBool canBubbleArg, PRBool cancelableArg)
+{
+  return mInner->InitEvent(eventTypeArg, canBubbleArg, cancelableArg);
 }
