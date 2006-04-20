@@ -1975,7 +1975,7 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
         // Read returns 0 if eos
         while (numReadIn != 0) {
           numReadIn = stream->Read(buf, len, &read);
-          NS_EscapeURL(buf, esc_AlwaysCopy, read, mailtoUrl);
+          NS_EscapeURL(buf, read, esc_Query|esc_AlwaysCopy, mailtoUrl);
         }
 
         delete [] buf;
