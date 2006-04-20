@@ -277,7 +277,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   if (baseURI) {
     nsCOMPtr<nsIPrivateDOMImplementation> privImpl(do_QueryInterface(implementation));
     if (privImpl) {
-      privImpl->Init(baseURI);
+      // XXXbz Is this really right?  Why are we setting the documentURI to
+      // baseURI?  But note that's what the StartDocumentLoad() below would do
+      // if we let it reset.  In any case, this is odd, since the caller can
+      // set baseURI to anything it feels like, pretty much.
+      privImpl->Init(baseURI, baseURI, principal);
     }
   }
 
