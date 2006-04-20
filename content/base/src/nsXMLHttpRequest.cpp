@@ -1477,13 +1477,13 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
       // If no content type header was set by the client, we set it to
-      // text/xml.
+      // application/xml.
       nsCAutoString contentType;
       if (NS_FAILED(httpChannel->
                       GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
                                        contentType)) ||
           contentType.IsEmpty()) {
-        contentType = NS_LITERAL_CSTRING("text/xml");
+        contentType = NS_LITERAL_CSTRING("application/xml");
       }
       
       rv = uploadChannel->SetUploadStream(postDataStream, contentType, -1);
