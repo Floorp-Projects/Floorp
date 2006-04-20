@@ -500,9 +500,14 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier identifier)
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_HasMethod!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null npobj or cx in nsJSObjWrapper::NP_HasMethod!");
+                     "Null npobj in nsJSObjWrapper::NP_HasMethod!");
 
     return PR_FALSE;
   }
@@ -522,8 +527,13 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj || !result) {
-    ThrowJSException(cx, "Null npobj, cx, or result in doInvoke!");
+  if (!cx) {
+    NS_ERROR("Null cx in doInvoke!");
+    return PR_FALSE;
+  }
+
+  if (!npobj || !result) {
+    ThrowJSException(cx, "Null npobj, or result in doInvoke!");
 
     return PR_FALSE;
   }
@@ -607,9 +617,14 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier identifier)
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_HasProperty!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null cx or npobj in nsJSObjWrapper::NP_HasProperty!");
+                     "Null npobj in nsJSObjWrapper::NP_HasProperty!");
 
     return PR_FALSE;
   }
@@ -640,9 +655,14 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier identifier,
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_GetProperty!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null cx or npobj in nsJSObjWrapper::NP_GetProperty!");
+                     "Null npobj in nsJSObjWrapper::NP_GetProperty!");
 
     return PR_FALSE;
   }
@@ -664,9 +684,14 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_SetProperty!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null cx or npobj in nsJSObjWrapper::NP_SetProperty!");
+                     "Null npobj in nsJSObjWrapper::NP_SetProperty!");
 
     return PR_FALSE;
   }
@@ -702,9 +727,14 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier identifier)
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_RemoveProperty!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null cx or npobj in nsJSObjWrapper::NP_RemoveProperty!");
+                     "Null npobj in nsJSObjWrapper::NP_RemoveProperty!");
 
     return PR_FALSE;
   }
@@ -743,9 +773,14 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
   *identifier = 0;
   *count = 0;
 
-  if (!cx || !npobj) {
+  if (!cx) {
+    NS_ERROR("Null cx in nsJSObjWrapper::NP_Enumerate!");
+    return PR_FALSE;
+  }
+
+  if (!npobj) {
     ThrowJSException(cx,
-                     "Null cx or npobj in nsJSObjWrapper::NP_Enumerate!");
+                     "Null npobj in nsJSObjWrapper::NP_Enumerate!");
 
     return PR_FALSE;
   }
