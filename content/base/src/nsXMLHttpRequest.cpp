@@ -69,7 +69,7 @@ GetSafeContext()
 {
   // Get the "safe" JSContext: our JSContext of last resort
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &rv);
   if (NS_FAILED(rv))
     return nsnull;
@@ -86,7 +86,7 @@ GetCurrentContext()
 {
   // Get JSContext from stack.
   nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
                   &rv);
   if (NS_FAILED(rv))
     return nsnull;
@@ -756,7 +756,7 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIPrincipal> principal;
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
@@ -887,7 +887,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
     nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(body);
     if (doc) {
       // Get an XML serializer
-      nsCOMPtr<nsIDOMSerializer> serializer = do_CreateInstance(NS_XMLSERIALIZER_PROGID, &rv);
+      nsCOMPtr<nsIDOMSerializer> serializer = do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
       
       // Serialize the current document to string
