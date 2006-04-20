@@ -41,6 +41,21 @@
 #include "nsICodebasePrincipal.h"
 #include "nsIDOMClassInfo.h"
 
+#ifdef IMPLEMENT_SYNC_LOAD
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIEventQueueService.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDOMEventReceiver.h"
+#include "jsapi.h"
+#include "nsLoadListenerProxy.h"
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#endif
+
 static const char* kLoadAsData = "loadAsData";
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
@@ -252,6 +267,71 @@ NS_IMETHODIMP nsDOMParserChannel::AsyncOpen(nsIStreamListener *listener, nsISupp
 //
 /////////////////////////////////////////////
 
+#ifdef IMPLEMENT_SYNC_LOAD
+// See if we have a modal event loop
+static inline PRBool IsModal(nsIWebBrowserChrome *aWindow)
+{
+  if (aWindow) {
+    PRBool isModal;
+    if (NS_SUCCEEDED(aWindow->IsWindowModal(&isModal))) {
+      return isModal;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+// nsIDOMEventListener
+nsresult
+nsDOMParser::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+// nsIDOMLoadListener
+nsresult
+nsDOMParser::Load(nsIDOMEvent* aEvent)
+{
+  if (IsModal(mChromeWindow)) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+  }
+
+  mChromeWindow = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMParser::Unload(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsDOMParser::Abort(nsIDOMEvent* aEvent)
+{
+  if (IsModal(mChromeWindow)) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+  }
+
+  mChromeWindow = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMParser::Error(nsIDOMEvent* aEvent)
+{
+  if (IsModal(mChromeWindow)) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+  }
+
+  mChromeWindow = nsnull;
+
+  return NS_OK;
+}
+#endif
+
 nsDOMParser::nsDOMParser()
 {
   NS_INIT_ISUPPORTS();
@@ -259,13 +339,22 @@ nsDOMParser::nsDOMParser()
 
 nsDOMParser::~nsDOMParser()
 {
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (IsModal(mChromeWindow)) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+  }
+#endif
 }
 
 
 // QueryInterface implementation for nsDOMParser
 NS_INTERFACE_MAP_BEGIN(nsDOMParser)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsIDOMParser)
+#ifdef IMPLEMENT_SYNC_LOAD
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+#endif
   NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(DOMParser)
 NS_INTERFACE_MAP_END
 
@@ -435,6 +524,22 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
                                       getter_AddRefs(domDocument));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+#ifdef IMPLEMENT_SYNC_LOAD
+  // Register as a load listener on the document
+  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(domDocument));
+  if (target) {
+    nsWeakPtr requestWeak(getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIDOMParser*, this))));
+    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
+    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
+
+    // This will addref the proxy
+    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                      proxy), 
+                                       NS_GET_IID(nsIDOMLoadListener));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+  }
+#endif
+
   // Create a fake channel 
   nsDOMParserChannel* parserChannel = new nsDOMParserChannel(baseURI, contentType);
   if (!parserChannel) return NS_ERROR_OUT_OF_MEMORY;
@@ -449,14 +554,69 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
   nsCOMPtr<nsIDocument> document(do_QueryInterface(domDocument));
-
   if (!document) return NS_ERROR_FAILURE;
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  nsCOMPtr<nsIEventQueue> modalEventQueue;
+  nsCOMPtr<nsIEventQueueService> eventQService;
+  
+  if (cc) {
+    JSContext* cx;
+    rv = cc->GetJSContext(&cx);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    // We can only do this if we're called from a DOM script context
+    nsIScriptContext* scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    if (!scriptCX) return NS_OK;
+
+    // Get the nsIDocShellTreeOwner associated with the window
+    // containing this script context
+    // XXX Need to find a better way to do this rather than
+    // chaining through a bunch of getters and QIs
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    scriptCX->GetGlobalObject(getter_AddRefs(global));
+    if (!global) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShell> docshell;
+    rv = global->GetDocShell(getter_AddRefs(docshell));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
+    if (!item) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    rv = item->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIInterfaceRequestor> treeRequestor(do_GetInterface(treeOwner));
+    if (!treeRequestor) return NS_ERROR_FAILURE;
+
+    treeRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(mChromeWindow));
+    if (!mChromeWindow) return NS_ERROR_FAILURE;
+
+    eventQService = do_GetService(kEventQueueServiceCID);
+    if(!eventQService || 
+       NS_FAILED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue)))) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+#endif
+
   rv = document->StartDocumentLoad(kLoadAsData, channel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
 
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (NS_FAILED(rv) || !listener) {
+    if (modalEventQueue) {
+      eventQService->PopThreadEventQueue(modalEventQueue);
+    }
+    return NS_ERROR_FAILURE;
+  }
+#else
   if (NS_FAILED(rv) || !listener) return NS_ERROR_FAILURE;
+#endif
 
   // Now start pumping data to the listener
   nsresult status;
@@ -470,7 +630,29 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   }
 
   rv = listener->OnStopRequest(request, nsnull, status);
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (NS_FAILED(rv)) {
+    if (modalEventQueue) {
+      eventQService->PopThreadEventQueue(modalEventQueue);
+    }
+    return NS_ERROR_FAILURE;
+  }
+#else
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+#endif
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  // Spin an event loop here and wait
+  if (mChromeWindow) {
+    rv = mChromeWindow->ShowAsModal();
+    
+    eventQService->PopThreadEventQueue(modalEventQueue);
+    
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;      
+  } else if (modalEventQueue) {
+    eventQService->PopThreadEventQueue(modalEventQueue);
+  }
+#endif
 
   *_retval = domDocument;
   NS_ADDREF(*_retval);
