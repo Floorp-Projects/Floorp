@@ -40,8 +40,6 @@
 #define nsDOMSerializer_h__
 
 #include "nsIDOMSerializer.h"
-#include "nsISecurityCheckedComponent.h"
-#include "nsISupportsUtils.h"
 
 class nsDOMSerializer : public nsIDOMSerializer
 {
