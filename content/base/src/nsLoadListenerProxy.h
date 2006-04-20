@@ -20,38 +20,31 @@
  * Contributor(s): 
  */
 
-#ifndef nsDOMParser_h__
-#define nsDOMParser_h__
+#ifndef nsLoadListenerProxy_h
+#define nsLoadListenerProxy_h
 
-#include "nsIDOMParser.h"
-#include "nsISecurityCheckedComponent.h"
-#include "nsISupportsUtils.h"
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
-
-#define IMPLEMENT_SYNC_LOAD
-#ifdef IMPLEMENT_SYNC_LOAD
-#include "nsIWebBrowserChrome.h"
 #include "nsIDOMLoadListener.h"
 #include "nsWeakReference.h"
-#endif
 
-class nsDOMParser : public nsIDOMParser
-#ifdef IMPLEMENT_SYNC_LOAD
-                    , public nsIDOMLoadListener
-                    , public nsSupportsWeakReference
-#endif
-{
-public: 
-  nsDOMParser();
-  virtual ~nsDOMParser();
+/////////////////////////////////////////////
+//
+// This class exists to prevent a circular reference between
+// the loaded document and the actual loader instance request. The
+// request owns the document. While the document is loading, 
+// the request is a load listener, held onto by the document.
+// The proxy class breaks the circularity by filling in as the
+// load listener and holding a weak reference to the request
+// object.
+//
+/////////////////////////////////////////////
+
+class nsLoadListenerProxy : public nsIDOMLoadListener {
+public:
+  nsLoadListenerProxy(nsWeakPtr aParent);
+  virtual ~nsLoadListenerProxy();
 
   NS_DECL_ISUPPORTS
 
-  // nsIDOMParser
-  NS_DECL_NSIDOMPARSER
-
-#ifdef IMPLEMENT_SYNC_LOAD
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
@@ -60,14 +53,9 @@ public:
   NS_IMETHOD Unload(nsIDOMEvent* aEvent);
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
-#endif
 
-private:
-  nsCOMPtr<nsIURI> mBaseURI;
-
-#ifdef IMPLEMENT_SYNC_LOAD
-  nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
-#endif
+protected:
+  nsWeakPtr  mParent;
 };
 
 #endif

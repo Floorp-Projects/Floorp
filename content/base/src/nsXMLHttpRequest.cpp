@@ -60,6 +60,8 @@
 #endif
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
+#include "nsIParser.h"
+#include "nsLoadListenerProxy.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -106,109 +108,6 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
   return;
 }
 
-/////////////////////////////////////////////
-//
-// This class exists to prevent a circular reference between
-// the loaded document and the nsXMLHttpRequest instance. The
-// request owns the document. While the document is loading, 
-// the request is a load listener, held onto by the document.
-// The proxy class breaks the circularity by filling in as the
-// load listener and holding a weak reference to the request
-// object.
-//
-/////////////////////////////////////////////
-
-class nsLoadListenerProxy : public nsIDOMLoadListener {
-public:
-  nsLoadListenerProxy(nsWeakPtr aParent);
-  virtual ~nsLoadListenerProxy();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
-protected:
-  nsWeakPtr  mParent;
-};
-
-nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent)
-{
-  NS_INIT_ISUPPORTS();
-  mParent = aParent;
-}
-
-nsLoadListenerProxy::~nsLoadListenerProxy()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
-
-NS_IMETHODIMP
-nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
-
-  if (listener) {
-    return listener->HandleEvent(aEvent);
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
-
-  if (listener) {
-    return listener->Load(aEvent);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
-
-  if (listener) {
-    return listener->Unload(aEvent);
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
-
-  if (listener) {
-    return listener->Abort(aEvent);
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
-{
-  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
-
-  if (listener) {
-    return listener->Error(aEvent);
-  }
-  
-  return NS_OK;
-}
 
 /////////////////////////////////////////////
 //
@@ -929,12 +828,23 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP 
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
+  nsCOMPtr<nsIParser> parser(do_QueryInterface(mXMLParserStreamListener));
+  NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
+
   nsresult rv = mXMLParserStreamListener->OnStopRequest(request,ctxt,status);
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
 
-  RequestCompleted();
+  // The parser needs to be enabled for us to safely call RequestCompleted().
+  // If the parser is not enabled, it means it was blocked, by xml-stylesheet PI
+  // for example, and is still building the document. RequestCompleted() must be
+  // called later, when we get the load event from the document.
+  if (parser && parser->IsParserEnabled()) {
+    RequestCompleted();
+  } else {
+    ChangeState(XML_HTTP_REQUEST_STOPPED,PR_FALSE);
+  }
 
   return rv;
 }
@@ -945,8 +855,10 @@ nsXMLHttpRequest::RequestCompleted()
   nsresult rv = NS_OK;
 
   // If we're uninitialized at this point, we encountered an error
-  // earlier and listeners have already been notified.
-  if (mStatus == XML_HTTP_REQUEST_UNINITIALIZED) {
+  // earlier and listeners have already been notified. Also we do
+  // not want to do this if we already completed.
+  if ((mStatus == XML_HTTP_REQUEST_UNINITIALIZED) ||
+      (mStatus == XML_HTTP_REQUEST_COMPLETED)) {
     return NS_OK;
   }
 
@@ -1275,10 +1187,17 @@ NS_IMETHODIMP
 nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
-  if (mStatus == XML_HTTP_REQUEST_SENT) {
-    *aState = XML_HTTP_REQUEST_OPENED;
-  } else {
-    *aState = mStatus;
+  // Translate some of our internal states for external consumers
+  switch (mStatus) {
+    case XML_HTTP_REQUEST_SENT:
+      *aState = XML_HTTP_REQUEST_OPENED;
+      break;
+    case XML_HTTP_REQUEST_STOPPED:
+      *aState = XML_HTTP_REQUEST_INTERACTIVE;
+      break;
+    default:
+      *aState = mStatus;
+      break;
   }
   return NS_OK;
 }
@@ -1301,6 +1220,16 @@ nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
   // sending the load event until OnStopRequest(). In normal case
   // there is no harm done, we will get OnStopRequest() immediately
   // after the load event.
+  //
+  // However, if the data we were loading caused the parser to stop,
+  // for example when loading external stylesheets, we can receive
+  // the OnStopRequest() call before the parser has finished building
+  // the document. In that case, we obviously should not fire the event
+  // in OnStopRequest(). For those documents, we must wait for the load
+  // event from the document to fire our RequestCompleted().
+  if (mStatus == XML_HTTP_REQUEST_STOPPED) {
+    RequestCompleted();
+  }
   return NS_OK;
 }
 
