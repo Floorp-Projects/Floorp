@@ -162,7 +162,7 @@ pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UT
 
 pref("general.useragent.locale", "@AB_CD@");
 pref("general.skins.selectedSkin", "classic/1.0");
-pref("general.useragent.extra.firefox", "Firefox/@APP_VERSION@");
+pref("general.useragent.extra.firefox", "@APP_UA_NAME@/@APP_VERSION@");
 
 pref("general.smoothScroll", false);
 #ifdef UNIX_BUT_NOT_MAC

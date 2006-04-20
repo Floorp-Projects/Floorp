@@ -58,6 +58,8 @@ DEFINES += -DAB_CD=$(AB_CD)
 
 APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
 DEFINES += -DAPP_VERSION="$(APP_VERSION)"
+APP_UA_NAME = $(shell echo $(MOZ_APP_DISPLAYNAME) | sed -e's/[^A-Za-z]//g')
+DEFINES += -DAPP_UA_NAME="$(APP_UA_NAME)"
 
 ifdef LIBXUL_SDK
 # Build application.ini for a XULRunner app
