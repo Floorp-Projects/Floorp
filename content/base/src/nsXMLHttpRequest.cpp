@@ -77,6 +77,7 @@
 #endif
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
+#include "nsIVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
 
@@ -945,9 +946,9 @@ nsXMLHttpRequest::RequestCompleted()
   return rv;
 }
 
-/* void send (in nsISupports body); */
+/* void send (in nsIVariant aBody); */
 NS_IMETHODIMP 
-nsXMLHttpRequest::Send(nsISupports *body)
+nsXMLHttpRequest::Send(nsIVariant *aBody)
 {
   nsresult rv;
   
@@ -969,42 +970,61 @@ nsXMLHttpRequest::Send(nsISupports *body)
     httpChannel->GetRequestMethod(getter_Copies(method)); // If GET, method name will be uppercase
   }
 
-  if (body && httpChannel && nsCRT::strcmp("GET",method.get()) != 0) {
+  if (aBody && httpChannel && nsCRT::strcmp("GET", method.get()) != 0) {
+    nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
 
-    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(body));
-    if (doc) {
-      // Get an XML serializer
-      nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
+    PRUint16 dataType;
+    rv = aBody->GetDataType(&dataType);
+    if (NS_FAILED(rv)) 
+      return NS_ERROR_FAILURE;
+
+    if (dataType == nsIDataType::VTYPE_INTERFACE || 
+      dataType == nsIDataType::VTYPE_INTERFACE_IS) {
+      nsCOMPtr<nsISupports> supports;
+      nsID *iid;
+      rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
+      if (NS_FAILED(rv)) 
+        return NS_ERROR_FAILURE;
+      if (iid) 
+        nsMemory::Free(iid);
+
+      // document?
+      nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
+      if (doc) {
+        nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
       
-      // Serialize the current document to string
-      nsXPIDLString serial;
-      rv = serializer->SerializeToString(doc, getter_Copies(serial));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      
+        rv = serializer->SerializeToString(doc, getter_Copies(serial));
+        if (NS_FAILED(rv)) 
+          return NS_ERROR_FAILURE;
+      } else {
+        // nsISupportsWString?
+        nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(supports));
+        if (wstr) {
+          wstr->GetData(getter_Copies(serial));
+        } else {
+          // stream?
+          nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
+          if (stream) {
+            postDataStream = stream;
+          }
+        }
+      }
+    } else {
+      // try variant string
+      rv = aBody->GetAsWString(getter_Copies(serial));    
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
+
+    if (serial) {
       // Convert to a byte stream
       rv = GetStreamForWString(serial.get(), 
                                nsCRT::strlen(serial.get()),
                                getter_AddRefs(postDataStream));
-      if (NS_FAILED(rv)) return rv;
-    }
-    else {
-      nsCOMPtr<nsIInputStream> stream(do_QueryInterface(body));
-      if (stream) {
-        postDataStream = stream;
-      }
-      else {
-        nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(body));
-        if (wstr) {
-          nsXPIDLString holder;
-          wstr->GetData(getter_Copies(holder));
-          rv = GetStreamForWString(holder.get(), 
-                                   nsCRT::strlen(holder.get()),
-                                   getter_AddRefs(postDataStream));
-          if (NS_FAILED(rv)) return rv;
-        }
-      }
+      if (NS_FAILED(rv)) 
+        return rv;
     }
 
     if (postDataStream) {
