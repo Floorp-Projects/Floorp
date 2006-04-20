@@ -1021,8 +1021,8 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   nsCRT::memcpy(postData+headerSize, postData+MAX_HEADER_SIZE, charLength);
 
   // Shove in the traling CRLF
-  postData[headerSize+charLength] = CR;
-  postData[headerSize+charLength+1] = LF;
+  postData[headerSize+charLength] = nsCRT::CR;
+  postData[headerSize+charLength+1] = nsCRT::LF;
   postData[headerSize+charLength+2] = '\0';
 
   // The new stream takes ownership of the buffer
