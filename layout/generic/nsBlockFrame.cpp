@@ -5422,9 +5422,16 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
     PRBool isBlock = nsLineLayout::TreatFrameAsBlock(newFrame);
 
     // If the frame is a block frame, or if there is no previous line or if the
-    // previous line is a block line or ended with a <br> then make a new line.
+    // previous line is a block line we need to make a new line.  We also make
+    // a new line, as an optimization, in the two cases we know we'll need it:
+    // if the previous line ended with a <br> or has significant whitespace and
+    // ended in a newline.
     if (isBlock || prevSibLine == end_lines() || prevSibLine->IsBlock() ||
-        (aPrevSibling && aPrevSibling->GetType() == nsLayoutAtoms::brFrame)) {
+        (aPrevSibling &&
+         (aPrevSibling->GetType() == nsLayoutAtoms::brFrame ||
+          (aPrevSibling->GetType() == nsLayoutAtoms::textFrame &&
+           aPrevSibling->GetStyleText()->WhiteSpaceIsSignificant() &&
+           aPrevSibling->HasTerminalNewline())))) {
       // Create a new line for the frame and add its line to the line
       // list.
       nsLineBox* line = NS_NewLineBox(presShell, newFrame, 1, isBlock);
