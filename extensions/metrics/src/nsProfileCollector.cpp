@@ -50,7 +50,6 @@
 #include "nsIScreenManager.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsILocalFile.h"
-#include "nsMemory.h"
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -492,7 +491,7 @@ nsProfileCollector::ExtensionEnumerator::LogExtensions(
     NS_RELEASE(extension);
   }
 
-  nsMemory::Free(extensions);
+  NS_Free(extensions);
   return NS_OK;
 }
 
