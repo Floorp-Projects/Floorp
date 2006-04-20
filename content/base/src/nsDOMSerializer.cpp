@@ -47,6 +47,7 @@
 #include "nsIContentSerializer.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsContentCID.h"
 
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
