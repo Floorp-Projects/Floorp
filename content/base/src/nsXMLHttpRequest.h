@@ -78,9 +78,11 @@ public:
   // nsISecurityCheckedComponent
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
-  // nsIStreamListener & Observer
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
+
+  // nsIRequestObserver
+  NS_DECL_NSIREQUESTOBSERVER
 
 protected:
   nsresult MakeScriptEventListener(nsISupports* aObject,

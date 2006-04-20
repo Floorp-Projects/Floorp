@@ -155,11 +155,6 @@ NS_IMETHODIMP nsDOMParserChannel::GetURI(nsIURI * *aURI)
   NS_ADDREF(*aURI);
   return NS_OK;
 }
-NS_IMETHODIMP nsDOMParserChannel::SetURI(nsIURI * aURI)
-{
-  mURI = aURI;
-  return NS_OK;
-}
 
 /* attribute string contentType; */
 NS_IMETHODIMP nsDOMParserChannel::GetContentType(char * *aContentType)
@@ -202,12 +197,12 @@ NS_IMETHODIMP nsDOMParserChannel::SetOwner(nsISupports * aOwner)
   return NS_OK;
 }
 
-/* attribute nsLoadFlags loadAttributes; */
-NS_IMETHODIMP nsDOMParserChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+/* attribute nsLoadFlags loadFlags; */
+NS_IMETHODIMP nsDOMParserChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-NS_IMETHODIMP nsDOMParserChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+NS_IMETHODIMP nsDOMParserChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -464,7 +459,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     request->GetStatus(&status);
   }
 
-  rv = listener->OnStopRequest(request, nsnull, status, nsnull);
+  rv = listener->OnStopRequest(request, nsnull, status);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   *_retval = domDocument;
