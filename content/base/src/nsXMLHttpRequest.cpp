@@ -127,12 +127,14 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
+  : mAsync(PR_FALSE), 
+    mCrossSiteAccessEnabled(PR_FALSE),
+    mLoopingForSyncLoad(PR_FALSE)
 {
-  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED,PR_FALSE);
-  mAsync = PR_TRUE;
-  mCrossSiteAccessEnabled = PR_FALSE;
-  mLoopingForSyncLoad = PR_FALSE;
   mEventQService = do_GetService(kEventQueueServiceCID);
+
+  // Keep this last so that everything is initialized by the time we call this
+  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED, PR_FALSE);
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
