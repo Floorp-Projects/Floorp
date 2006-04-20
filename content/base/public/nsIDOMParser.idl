@@ -68,6 +68,8 @@ interface nsIDOMParser : nsISupports {
   /**
    * The byte stream passed in is parsed into a DOM document.
    *
+   * Not accessible from web content.
+   *
    * @param stream The byte stream whose contents are parsed
    * @param charset The character set that was used to encode the byte
    *                stream. NULL if not specified.
@@ -82,12 +84,9 @@ interface nsIDOMParser : nsISupports {
                                  in string contentType);
 
   /**
-   * Set/Get the baseURI. You will probably not need this if you
-   * have a script environment. This is mostly intended for cases
-   * without a script environment, for example calling from native
-   * code.
+   * Set/Get the baseURI, may be needed when called from native code.
    */
-  attribute nsIURI baseURI;
+  [noscript] attribute nsIURI baseURI;
 };
 
 %{ C++
