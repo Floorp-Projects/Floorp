@@ -73,14 +73,15 @@ interface nsIVariant;
  *   target->AddEventListener(NS_LITERAL_STRING("load"), mylistener,
  *                            PR_FALSE)
  *
- *   where mylistener is your event listener object that implements the 
+ *   where mylistener is your event listener object that implements the
  *   interface nsIDOMEventListener.
  *
  *   The 'onload' and 'onerror' attributes moved to nsIJSXMLHttRequest,
  *   but if you're coding in C++ you should avoid using those.
  */
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
-interface nsIXMLHttpRequest : nsISupports {
+interface nsIXMLHttpRequest : nsISupports
+{
   /**
    * The request uses a channel in order to perform the
    * request.  This attribute represents the channel used
@@ -93,22 +94,22 @@ interface nsIXMLHttpRequest : nsISupports {
 
   /**
    * The response to the request is parsed as if it were a
-   * text/xml stream. This attributes represents the response as 
+   * text/xml stream. This attributes represents the response as
    * a DOM Document object. NULL if the request is unsuccessful or
    * has not yet been sent.
    */
   readonly attribute nsIDOMDocument responseXML;
 
   /**
-   * The response to the request as text. 
+   * The response to the request as text.
    * NULL if the request is unsuccessful or
    * has not yet been sent.
    */
-  readonly attribute wstring responseText;
+  readonly attribute AString responseText;
 
 
   /**
-   * The status of the response to the request for HTTP requests. 
+   * The status of the response to the request for HTTP requests.
    */
   readonly attribute unsigned long status;
 
@@ -116,7 +117,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * The string representing the status of the response for
    * HTTP requests.
    */
-  readonly attribute string statusText;
+  readonly attribute AUTF8String statusText;
 
   /**
    * If the request has been sent already, this method will
@@ -127,11 +128,11 @@ interface nsIXMLHttpRequest : nsISupports {
   /**
    * Returns all of the response headers as a string for HTTP
    * requests.
-   * 
-   * @returns A string containing all of the response headers. 
+   *
+   * @returns A string containing all of the response headers.
    *          NULL if the response has not yet been received.
    */
-  string getAllResponseHeaders();  
+  string getAllResponseHeaders();
 
   /**
    * Returns the text of the header with the specified name for
@@ -142,11 +143,11 @@ interface nsIXMLHttpRequest : nsISupports {
    *          NULL if the response has not yet been received or the
    *          header does not exist in the response.
    */
-  string getResponseHeader(in string header);
+  ACString getResponseHeader(in AUTF8String header);
 
   /**
    * Native (non-script) method to initialize a request. Note that
-   * the request is not sent until the <code>send</code> method 
+   * the request is not sent until the <code>send</code> method
    * is invoked.
    *
    * Will abort currently active loads.
@@ -165,11 +166,11 @@ interface nsIXMLHttpRequest : nsISupports {
    * @param user A username for authentication if necessary.
    * @param password A password for authentication if necessary.
    */
-  [noscript] void   openRequest(in string method, 
-                                in string url, 
+  [noscript] void   openRequest(in AUTF8String method,
+                                in AUTF8String url,
                                 in boolean async,
-                                in string user, 
-                                in string password);
+                                in AString user,
+                                in AString password);
 
   /**
    * Meant to be a script-only method for initializing a request.
@@ -185,18 +186,18 @@ interface nsIXMLHttpRequest : nsISupports {
    * @param method The HTTP method - either "POST" or "GET". Ignored
    *               if the URL is not a HTTP URL.
    * @param url The URL to which to send the request.
-   * @param async (optional) Whether the request is synchronous or 
-   *              asynchronous i.e. whether send returns only after 
+   * @param async (optional) Whether the request is synchronous or
+   *              asynchronous i.e. whether send returns only after
    *              the response is received or if it returns immediately after
    *              sending the request. In the latter case, notification
    *              of completion is sent through the event listeners.
    *              The default value is true.
-   * @param user (optional) A username for authentication if necessary. 
+   * @param user (optional) A username for authentication if necessary.
    *             The default value is the empty string
    * @param password (optional) A password for authentication if necessary.
    *                 The default value is the empty string
    */
-  void   open(in string method, in string url);
+  void   open(in AUTF8String method, in AUTF8String url);
 
   /**
    * Sends the request. If the request is asynchronous, returns
@@ -224,7 +225,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * @param header The name of the header to set in the request.
    * @param value The body of the header.
    */
-  void   setRequestHeader(in string header, in string value);  
+  void   setRequestHeader(in AUTF8String header, in AUTF8String value);
 
   /**
    * The state of the request.
@@ -247,7 +248,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * @param mimetype The type used to override that returned by the server
    *                 (if any).
    */
-   void   overrideMimeType(in string mimetype);
+   void   overrideMimeType(in AUTF8String mimetype);
 };
 
 
@@ -265,7 +266,7 @@ interface nsIJSXMLHttpRequest : nsISupports {
   /**
    * Meant to be a script-only mechanism for setting a load event listener.
    * The attribute is expected to be JavaScript function object. When
-   * the load event occurs, the function is invoked. 
+   * the load event occurs, the function is invoked.
    * This attribute should not be used from native code!!
    *
    * After the initial response, all event listeners will be cleared.
@@ -278,7 +279,7 @@ interface nsIJSXMLHttpRequest : nsISupports {
   /**
    * Meant to be a script-only mechanism for setting an error event listener.
    * The attribute is expected to be JavaScript function object. When
-   * the error event occurs, the function is invoked. 
+   * the error event occurs, the function is invoked.
    * This attribute should not be used from native code!!
    *
    * After the initial response, all event listeners will be cleared.
