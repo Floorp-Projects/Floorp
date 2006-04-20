@@ -85,6 +85,12 @@ nsDOMParserChannel::~nsDOMParserChannel()
 NS_IMPL_ISUPPORTS2(nsDOMParserChannel, nsIRequest, nsIChannel)
 
 /* boolean isPending (); */
+NS_IMETHODIMP nsDOMParserChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsDOMParserChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 nsDOMParserChannel::IsPending(PRBool *_retval)
 {
