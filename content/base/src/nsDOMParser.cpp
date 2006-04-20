@@ -565,10 +565,9 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
   // Create an empty document from it
   nsCOMPtr<nsIDOMDocument> domDocument;
-  nsAutoString emptyStr;
-  rv = implementation->CreateDocument(emptyStr, 
-                                      emptyStr, 
-                                      nsnull, 
+  rv = implementation->CreateDocument(EmptyString(),
+                                      EmptyString(),
+                                      nsnull,
                                       getter_AddRefs(domDocument));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
