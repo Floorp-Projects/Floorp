@@ -424,7 +424,6 @@ embed:-moz-suppressed, applet:-moz-suppressed {
 }
 
 img[usemap], object[usemap] {
-  cursor: pointer;
   color: blue;
 }
 

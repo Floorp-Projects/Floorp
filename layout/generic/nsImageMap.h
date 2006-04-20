@@ -73,12 +73,6 @@ public:
   PRBool IsInside(nscoord aX, nscoord aY,
                   nsIContent** aContent) const;
 
-  /**
-   * See if the given aX,aY <b>pixel</b> coordinates are in the image
-   * map.
-   */
-  PRBool IsInside(nscoord aX, nscoord aY) const;
-
   void Draw(nsPresContext* aCX, nsIRenderingContext& aRC);
   
   /** 
