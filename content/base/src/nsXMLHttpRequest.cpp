@@ -1258,7 +1258,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-      rv = uploadChannel->SetUploadStream(postDataStream, NS_LITERAL_CSTRING(""), -1);
+      rv = uploadChannel->SetUploadStream(postDataStream, EmptyCString(), -1);
       // Reset the method to its original value
       if (httpChannel) {
           httpChannel->SetRequestMethod(method);
@@ -1278,7 +1278,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   }
 
   // Create an empty document from it (resets current document as well)
-  nsString emptyStr;
+  const nsAString& emptyStr = EmptyString();
   rv = implementation->CreateDocument(emptyStr, 
                                       emptyStr, 
                                       nsnull, 
