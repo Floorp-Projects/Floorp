@@ -1595,10 +1595,6 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   // need to calculate the trust bits from the aTrust string.
   nsresult rv = CERT_DecodeTrustString(trust.GetTrust(), /* this is const, but not declared that way */(char *) aTrust);
   NS_ENSURE_SUCCESS(rv, rv); // if bad trust passed in, return error.
-  trust.SetValidCA();
-  trust.AddCATrust(trust.GetTrust()->sslFlags,
-                   trust.GetTrust()->emailFlags,
-                   trust.GetTrust()->objectSigningFlags);
 
 
   rv = ConstructX509FromBase64(aBase64, getter_AddRefs(newCert));
