@@ -1049,7 +1049,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
       // XXX Need to find a better way to do this rather than
       // chaining through a bunch of getters and QIs
       nsCOMPtr<nsIScriptGlobalObject> global;
-      global = dont_AddRef(scriptCX->GetGlobalObject());
+      scriptCX->GetGlobalObject(getter_AddRefs(global));
       if (!global) return NS_ERROR_FAILURE;
 
       nsCOMPtr<nsIDocShell> docshell;
