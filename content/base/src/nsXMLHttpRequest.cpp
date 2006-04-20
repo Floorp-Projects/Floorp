@@ -45,6 +45,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
 #include "nsWeakPtr.h"
+#include "nsICharsetAlias.h"
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -73,7 +74,7 @@ GetSafeContext()
                   &rv);
   if (NS_FAILED(rv))
     return nsnull;
-  nsCOMPtr<nsIThreadJSContextStack> tcs = do_QueryInterface(stack);
+  nsCOMPtr<nsIThreadJSContextStack> tcs(do_QueryInterface(stack));
   JSContext* cx;
   if (NS_FAILED(tcs->GetSafeJSContext(&cx))) {
     return nsnull;
@@ -198,7 +199,7 @@ NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
 nsresult
 nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
 
   if (listener) {
     return listener->HandleEvent(aEvent);
@@ -210,7 +211,7 @@ nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
 nsresult 
 nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
 
   if (listener) {
     return listener->Load(aEvent);
@@ -222,7 +223,7 @@ nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 nsresult 
 nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
 
   if (listener) {
     return listener->Unload(aEvent);
@@ -234,7 +235,7 @@ nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 nsresult 
 nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
 
   if (listener) {
     return listener->Abort(aEvent);
@@ -246,7 +247,7 @@ nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
 nsresult 
 nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
 
   if (listener) {
     return listener->Error(aEvent);
@@ -287,6 +288,8 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
    NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
    NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
    NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
   
@@ -362,7 +365,7 @@ nsXMLHttpRequest::MakeScriptEventListener(nsISupports* aObject,
   }
 
   if (NS_SUCCEEDED(rv) && cc) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> jsobjholder = do_QueryInterface(aObject);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> jsobjholder(do_QueryInterface(aObject));
     if (jsobjholder) {
       JSObject* funobj;
       rv = jsobjholder->GetJSObject(&funobj);
@@ -400,7 +403,7 @@ nsXMLHttpRequest::MakeScriptEventListener(nsISupports* aObject,
 static PRBool 
 CheckForScriptListener(nsISupports* aElement, void *aData)
 {
-  nsCOMPtr<nsIPrivateJSEventListener> jsel = do_QueryInterface(aElement);
+  nsCOMPtr<nsIPrivateJSEventListener> jsel(do_QueryInterface(aElement));
   if (jsel) {
     nsIDOMEventListener** retval = (nsIDOMEventListener**)aData;
     
@@ -434,7 +437,7 @@ nsXMLHttpRequest::StuffReturnValue(nsIDOMEventListener* aListener)
     rv = cc->GetRetValPtr(&val);
     if (NS_SUCCEEDED(rv)) {
       JSObject* obj;
-      nsCOMPtr<nsIPrivateJSEventListener> jsel = do_QueryInterface(aListener);
+      nsCOMPtr<nsIPrivateJSEventListener> jsel(do_QueryInterface(aListener));
       if (jsel) {
         jsel->GetFunctionObj(&obj);
         *val = OBJECT_TO_JSVAL(obj);
@@ -575,6 +578,158 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
   return NS_OK;
 }
 
+/*
+ * This piece copied from nsXMLDocument, we try to get the charset
+ * from HTTP headers.
+ */
+nsresult
+nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
+{
+  aCharset.Truncate();
+  nsresult rv;
+  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(mChannel,&rv));
+  if(httpChannel) {
+    nsIAtom* contentTypeKey = NS_NewAtom("content-type");
+    if (!contentTypeKey)
+      return NS_ERROR_OUT_OF_MEMORY;
+    nsXPIDLCString contenttypeheader;
+    rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
+    NS_RELEASE(contentTypeKey);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString contentType;
+      contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
+      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+      if(start<0) {
+        start += 8; // 8 = "charset=".length
+        PRInt32 end = 0;
+        if(PRUnichar('"') == contentType.CharAt(start)) {
+          start++;
+          end = contentType.FindCharInSet("\"", start  );
+          if(end<0)
+            end = contentType.Length();
+        } else {
+          end = contentType.FindCharInSet(";\n\r ", start  );
+          if(end<0)
+            end = contentType.Length();
+        }
+        nsAutoString theCharset;
+        contentType.Mid(theCharset, start, end - start);
+        nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
+        if(NS_SUCCEEDED(rv) && calias) {
+          nsAutoString preferred;
+          rv = calias->GetPreferred(theCharset, preferred);
+          if(NS_SUCCEEDED(rv)) {
+            aCharset.Assign(preferred);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
+{
+  *aOutBuffer = nsnull;
+
+  PRInt32 dataLen = mResponseBody.GetBufferLength();
+  if (!dataLen)
+    return NS_OK;
+
+  nsresult rv = NS_OK;
+
+  nsAutoString dataCharset;
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
+  if (document) {
+    rv = document->GetDocumentCharacterSet(dataCharset);
+    if (NS_FAILED(rv))
+      return rv;
+  } else {
+    if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
+      dataCharset.Assign(NS_LITERAL_STRING("ISO-8859-1")); // Parser assumes ISO-8859-1
+    }
+  }
+
+  if (dataCharset.Equals(NS_LITERAL_STRING("ASCII"))) {
+    // XXX There is no ASCII->Unicode decoder?
+    // XXX How to do this without double allocation/copy?
+    *aOutBuffer = NS_ConvertASCIItoUCS2(mResponseBody.GetBuffer(),dataLen).ToNewUnicode();
+    if (!*aOutBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID,&rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  rv = ccm->GetUnicodeDecoder(&dataCharset,getter_AddRefs(decoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // This loop here is basically a copy of a similar thing in nsScanner.
+  // It will exit on first iteration in normal cases, but if we get illegal
+  // characters in the input we replace them and then continue.
+  const char * inBuffer = mResponseBody.GetBuffer();
+  PRUnichar * outBuffer = nsnull;
+  PRInt32 outBufferIndex = 0, inBufferLength = dataLen;
+  PRInt32 outLen;
+  for(;;) {
+    rv = decoder->GetMaxLength(inBuffer,inBufferLength,&outLen);
+    if (NS_FAILED(rv))
+      return rv;
+
+    PRUnichar * newOutBuffer = NS_STATIC_CAST(PRUnichar*,nsMemory::Realloc(outBuffer,(outLen+outBufferIndex+1) * sizeof(PRUnichar)));
+    if (!newOutBuffer) {
+      nsMemory::Free(outBuffer);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    outBuffer = newOutBuffer;
+
+    rv = decoder->Convert(inBuffer,&inBufferLength,&outBuffer[outBufferIndex],&outLen);
+    if (rv == NS_OK) {
+      break;
+    } else if (rv == NS_ERROR_ILLEGAL_INPUT) {
+      // We consume one byte, replace it with U+FFFD
+      // and try the conversion again.
+      outBuffer[outBufferIndex + outLen] = (PRUnichar)0xFFFD;
+      outLen++;
+      outBufferIndex += outLen;
+      inBuffer = &inBuffer[outLen];
+      inBufferLength -= outLen;
+    } else if (NS_FAILED(rv)) {
+      nsMemory::Free(outBuffer);
+      return rv; // We bail out on other critical errors
+    } else /*if (rv != NS_OK)*/ {
+      NS_ABORT_IF_FALSE(0,"This should not happen, nsIUnicodeDecoder::Convert() succeeded partially");
+      nsMemory::Free(outBuffer);
+      return NS_ERROR_FAILURE;
+    }
+  }
+  outBuffer[outBufferIndex + outLen] = '\0';
+  *aOutBuffer = outBuffer;
+
+  return NS_OK;
+}
+
+/* readonly attribute wstring responseText; */
+NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(PRUnichar **aResponseText)
+{
+  NS_ENSURE_ARG_POINTER(aResponseText);
+  *aResponseText = nsnull;
+  if ((XML_HTTP_REQUEST_COMPLETED == mStatus)) {
+    if (!mResponseBody.CanBeString())
+      return NS_ERROR_FAILURE;
+    nsresult rv = ConvertBodyToText(aResponseText);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return NS_OK;
+}
+
 /* readonly attribute unsigned long status; */
 NS_IMETHODIMP 
 nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
@@ -633,7 +788,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
       if (NS_FAILED(rv)) {
         break;
       }
-      nsCOMPtr<nsIHTTPHeader> header = do_QueryInterface(isup);
+      nsCOMPtr<nsIHTTPHeader> header(do_QueryInterface(isup));
       if (header) {
         nsXPIDLCString name, value;
         header->GetFieldName(getter_Copies(name));
@@ -770,7 +925,7 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
       nsCOMPtr<nsIPrincipal> principal;
       rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+        nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal));
         if (codebase) {
           codebase->GetURI(getter_AddRefs(mBaseURI));
         }
@@ -875,6 +1030,77 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   return NS_OK;
 }
 
+
+/*
+ * Principle stolen from nsParser.cpp
+ *
+ * This stuff allows us to read the stream without wiping it out
+ * so that the XML Parser can see the data as well.
+ */
+NS_METHOD
+nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
+                void* closure,
+                const char* fromRawSegment,
+                PRUint32 toOffset,
+                PRUint32 count,
+                PRUint32 *writeCount)
+{
+  nsXMLHttpRequest* xmlHttpRequest = NS_STATIC_CAST(nsXMLHttpRequest*, closure);
+  if (!xmlHttpRequest) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Copy for our own use
+  nsresult rv = xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
+  if (NS_FAILED(rv)) {
+    xmlHttpRequest->mResponseBody.Truncate();
+    return rv;
+  }
+
+  rv = xmlHttpRequest->mXMLParserStreamListener->OnDataAvailable(xmlHttpRequest->mReadRequest,xmlHttpRequest->mContext,in,toOffset,count);
+
+  *writeCount = count; // The parser always copies the whole buffer it gets in OnDataAvailable()
+
+  return rv;
+}
+
+/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+{
+  nsresult result=NS_OK; 
+
+  NS_ABORT_IF_FALSE(mContext.get() == ctxt,"start context different from OnDataAvailable context");
+
+  PRUint32 totalRead;
+  result = inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
+  if (NS_FAILED(result)) {
+    mResponseBody.Truncate();
+  }
+
+  return result;
+}
+
+/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+  mReadRequest = request;
+  mContext = ctxt;
+  return mXMLParserStreamListener->OnStartRequest(request,ctxt);
+}
+
+/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+{
+  nsresult rv = mXMLParserStreamListener->OnStopRequest(request,ctxt,status,statusArg);
+  mXMLParserStreamListener = nsnull;
+  mReadRequest = nsnull;
+  mContext = nsnull;
+  return rv;
+}
+
 /* void send (in nsISupports body); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::Send(nsISupports *body)
@@ -882,7 +1108,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
   nsresult rv;
   nsCOMPtr<nsIInputStream> postDataStream;
 
-  // Return error if we're alreday processing a request
+  // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT == mStatus) {
     return NS_ERROR_FAILURE;
   }
@@ -893,10 +1119,10 @@ nsXMLHttpRequest::Send(nsISupports *body)
   }
 
   if (body) {
-    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(body);
+    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(body));
     if (doc) {
       // Get an XML serializer
-      nsCOMPtr<nsIDOMSerializer> serializer = do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
+      nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
       
       // Serialize the current document to string
@@ -911,12 +1137,12 @@ nsXMLHttpRequest::Send(nsISupports *body)
       if (NS_FAILED(rv)) return rv;
     }
     else {
-      nsCOMPtr<nsIInputStream> stream = do_QueryInterface(body);
+      nsCOMPtr<nsIInputStream> stream(do_QueryInterface(body));
       if (stream) {
         postDataStream = stream;
       }
       else {
-        nsCOMPtr<nsISupportsWString> wstr = do_QueryInterface(body);
+        nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(body));
         if (wstr) {
           nsXPIDLString holder;
           wstr->GetData(getter_Copies(holder));
@@ -934,17 +1160,17 @@ nsXMLHttpRequest::Send(nsISupports *body)
   }
 
   // Get and initialize a DOMImplementation
-  nsCOMPtr<nsIDOMDOMImplementation> implementation = do_CreateInstance(kIDOMDOMImplementationCID, &rv);
+  nsCOMPtr<nsIDOMDOMImplementation> implementation(do_CreateInstance(kIDOMDOMImplementationCID, &rv));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
   if (mBaseURI) {
-    nsCOMPtr<nsIPrivateDOMImplementation> privImpl = do_QueryInterface(implementation);
+    nsCOMPtr<nsIPrivateDOMImplementation> privImpl(do_QueryInterface(implementation));
     if (privImpl) {
       privImpl->Init(mBaseURI);
     }
   }
 
-  // Create an empty document from it
+  // Create an empty document from it (resets current document as well)
   nsAutoString emptyStr;
   rv = implementation->CreateDocument(emptyStr, 
                                       emptyStr, 
@@ -952,10 +1178,13 @@ nsXMLHttpRequest::Send(nsISupports *body)
                                       getter_AddRefs(mDocument));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+  // Reset responseBody
+  mResponseBody.Truncate();
+
   // Register as a load listener on the document
-  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
   if (target) {
-    nsWeakPtr requestWeak = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this)));
+    nsWeakPtr requestWeak(getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this))));
     nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -968,7 +1197,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
 
   // Tell the document to start loading
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
   if (!document) {
     return NS_ERROR_FAILURE;
   }
@@ -1038,7 +1267,8 @@ nsXMLHttpRequest::Send(nsISupports *body)
 
   // Start reading from the channel
   mStatus = XML_HTTP_REQUEST_SENT;
-  rv = mChannel->AsyncOpen(listener, nsnull);
+  mXMLParserStreamListener = listener;
+  rv = mChannel->AsyncOpen(this, nsnull);
 
 #ifdef IMPLEMENT_SYNC_LOAD
   if (NS_FAILED(rv)) {
@@ -1103,7 +1333,7 @@ nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsISupports> current = dont_AddRef(mLoadEventListeners->ElementAt(index));
       if (current) {
-        nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(current);
+        nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(current));
         if (listener) {
           listener->HandleEvent(aEvent);
         }
@@ -1151,7 +1381,7 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
     for (index = 0; index < count; index++) {
       nsCOMPtr<nsISupports> current = dont_AddRef(mErrorEventListeners->ElementAt(index));
       if (current) {
-        nsCOMPtr<nsIDOMEventListener> listener = do_QueryInterface(current);
+        nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(current));
         if (listener) {
           listener->HandleEvent(aEvent);
         }

@@ -35,6 +35,7 @@
 #include "nsIURI.h"
 #include "nsIHTTPChannel.h"
 #include "nsIDocument.h"
+#include "nsIStreamListener.h"
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIDocShellTreeOwner.h"
 #endif
@@ -53,6 +54,7 @@ enum {
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIDOMLoadListener,
                          public nsISecurityCheckedComponent,
+                         public nsIStreamListener,
                          public nsSupportsWeakReference
 {
 public:
@@ -76,6 +78,10 @@ public:
   // nsISecurityCheckedComponent
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
+  // nsIStreamListener & Observer
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
 protected:
   nsresult MakeScriptEventListener(nsISupports* aObject,
                                    nsIDOMEventListener** aListener);
@@ -88,6 +94,7 @@ protected:
                                PRInt32 aLength,
                                nsIInputStream** aStream);
 
+  nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIHTTPChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
@@ -98,6 +105,87 @@ protected:
 #endif
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
+  
+  nsresult DetectCharset(nsAWritableString& aCharset);
+  nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
+  static NS_METHOD StreamReaderFunc(nsIInputStream* in,
+                void* closure,
+                const char* fromRawSegment,
+                PRUint32 toOffset,
+                PRUint32 count,
+                PRUint32 *writeCount);
+
+#if 1 // When nsCString::Append()/Length() works for strings that contain nulls, remove this buffer impl
+  class ResponseBodyBuffer {
+  public:
+    ResponseBodyBuffer() 
+      : mBuffer(0), 
+        mBufferSize(0), 
+        mBufferFreeIndex(0), 
+        mCanBeString(PR_FALSE), 
+        mBufferChecked(PR_FALSE) {}
+    ~ResponseBodyBuffer() { nsMemory::Free(mBuffer); }
+    void Truncate(void) {
+      nsMemory::Free(mBuffer);
+      mBuffer=nsnull;
+      mBufferSize=mBufferFreeIndex=0;
+      mCanBeString = PR_FALSE;
+      mBufferChecked = PR_FALSE;
+    }
+    nsresult Append(const char* aBuffer, PRUint32 aBufferLen) {
+      if (aBufferLen > (mBufferSize-mBufferFreeIndex)) {
+        PRUint32 newBufferSize = (mBufferSize > aBufferLen ? mBufferSize : aBufferLen)<<1;
+        char * newBuffer = NS_STATIC_CAST(char*,nsMemory::Realloc(mBuffer,newBufferSize));
+        if (!newBuffer) {
+          nsMemory::Free(mBuffer);
+          mBuffer = nsnull;
+          mBufferChecked = PR_FALSE;
+          mCanBeString = PR_FALSE;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mBuffer = newBuffer;
+        mBufferSize = newBufferSize;
+      }
+      memcpy(&mBuffer[mBufferFreeIndex],aBuffer,aBufferLen);
+      mBufferFreeIndex += aBufferLen;
+      mBufferChecked = PR_FALSE;
+      mCanBeString = PR_FALSE;
+      return NS_OK;
+    }
+    const char * GetBuffer(void) { return mBuffer; }
+    PRUint32 GetBufferLength(void) { return mBufferFreeIndex; }
+    PRBool CanBeString(void) {
+      if (!mBufferFreeIndex)
+        return PR_TRUE; // Perhaps this is a bit questionable...
+      if (!mBufferChecked) {
+        mBufferChecked = PR_TRUE;
+
+        mCanBeString = PR_TRUE;
+
+        PRUint32 i;
+        for (i = 0; i < mBufferFreeIndex; i++) {
+          if (!mBuffer[i]) {
+            mCanBeString = PR_FALSE;
+            break;
+          }
+        }
+      }
+      return mCanBeString;
+    }
+  private:
+    char *mBuffer;
+    PRUint32 mBufferSize;
+    PRUint32 mBufferFreeIndex;
+    PRPackedBool mCanBeString;
+    PRPackedBool mBufferChecked;
+  };
+  ResponseBodyBuffer mResponseBody;
+#else
+  nsCString mResponseBody;
+#endif
+  
+  nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
+
   PRInt32 mStatus;
   PRBool mAsync;
 };
