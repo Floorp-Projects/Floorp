@@ -176,6 +176,19 @@ protected:
 
   nsCString mOverrideMimeType;
 
+  /**
+   * The notification callbacks the channel had when Send() was
+   * called.  We want to forward things here as needed.
+   */
+  nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
+  /**
+   * Sink interfaces that we implement that mNotificationCallbacks may
+   * want to also be notified for.  These are inited lazily if we're
+   * asked for the relevant interface.
+   */
+  nsCOMPtr<nsIChannelEventSink> mChannelEventSink;
+  nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
+
   PRUint32 mState;
 };
 
