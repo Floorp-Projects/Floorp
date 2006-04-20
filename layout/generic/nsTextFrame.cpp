@@ -4406,19 +4406,8 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
       width += ts.mSpaceWidth + ts.mWordSpacing + ts.mLetterSpacing;
     }
   }
-#ifdef IBMBIDI
-  if (NS_GET_EMBEDDING_LEVEL(this) & 1) {
-    if (width > mRect.width)
-      outPoint->x = 0;
-    else
-      outPoint->x = mRect.width - width;
-  }
-  else
-#endif // IBMBIDI
-  //XXX callers need to safeguard themselves against empty frames, I noted that
-  //the caret can be locked when leftarrow'ing in: <span>...</span>\n<br>line
-  if (width > mRect.width)
-    outPoint->x = mRect.width;
+  if (NS_GET_EMBEDDING_LEVEL(this) & 1)
+    outPoint->x = mRect.width - width;
   else
     outPoint->x = width;
   outPoint->y = 0;
