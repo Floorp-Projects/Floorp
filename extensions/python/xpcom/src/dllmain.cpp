@@ -46,15 +46,10 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include <prthread.h>
-#include "nsIThread.h"
-#include "nsILocalFile.h"
-#include "nsTraceRefcntImpl.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsITimelineService.h"
 
-#include <nsIConsoleService.h>
 #include "nspr.h" // PR_fprintf
 
 #ifdef XP_WIN
@@ -99,36 +94,6 @@ PyXPCOM_ReleaseGlobalLock(void)
 	PR_Unlock(g_lockMain);
 }
 
-// Note we can't use the PyXPCOM_Log* functions as we are still booting
-// up the xpcom support, which is what sets up the logger etc.  So we
-// just write directly to the console service and to stderr.
-static void DoLogStartupMessage(const char *prefix, const char *fmt, va_list argptr)
-{
-	char buff[2048];
-	PR_vsnprintf(buff, sizeof(buff), fmt, argptr);
-
-	nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-	if (consoleService)
-		consoleService->LogStringMessage(NS_ConvertASCIItoUTF16(buff).get());
-	PR_fprintf(PR_STDERR,"%s\n", buff);
-}
-
-static void LogStartupError(const char *fmt, ...)
-{
-	va_list marker;
-	va_start(marker, fmt);
-	DoLogStartupMessage("PyXPCOM Startup Error:", fmt, marker);
-}
-
-static void LogStartupDebug(const char *fmt, ...)
-{
-#ifdef NS_DEBUG
-	va_list marker;
-	va_start(marker, fmt);
-	DoLogStartupMessage("", fmt, marker);
-#endif
-}
-
 // Ensure that any paths guaranteed by this package exist on sys.path
 // Only called once as we are first loaded into the process.
 void AddStandardPaths()
@@ -136,9 +101,14 @@ void AddStandardPaths()
 	// Put {bin}\Python on the path if it exists.
 	nsresult rv;
 	nsCOMPtr<nsIFile> aFile;
-	rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
+	// XXX - this needs more thought for XULRunner - we want to stick the global
+	// 'python' dir on sys.path (for xpcom etc), but also want to support a way
+	// of adding a local application directory (in the case of xulrunner) too.
+	// NS_XPCOM_CURRENT_PROCESS_DIR is the XULRunner app dir (ie, where application.ini lives)
+	// NS_GRE_DIR is the 'bin' dir for XULRunner itself.
+	rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(aFile));
 	if (NS_FAILED(rv)) {
-		LogStartupError("The Python XPCOM loader could not locate the 'bin' directory");
+		PyXPCOM_LogError("The Python XPCOM loader could not locate the 'bin' directory");
 		return;
 	}
 	aFile->Append(NS_LITERAL_STRING("python"));
@@ -146,14 +116,15 @@ void AddStandardPaths()
 	aFile->GetPath(pathBuf);
 	PyObject *obPath = PySys_GetObject("path");
 	if (!obPath) {
-		LogStartupError("The Python XPCOM loader could not get the Python sys.path variable");
+		PyXPCOM_LogError("The Python XPCOM loader could not get the Python sys.path variable");
 		return;
 	}
 	// XXX - this should use the file-system encoding...
 	NS_LossyConvertUTF16toASCII pathCBuf(pathBuf);
-	// This is too early for effective LogDebug
-	LogStartupDebug("The Python XPCOM loader is adding '%s' to sys.path",
-	                pathCBuf.get());
+#ifdef NS_DEBUG
+	PR_fprintf(PR_STDERR,"The Python XPCOM loader is adding '%s' to sys.path\n",
+	           pathCBuf.get());
+#endif
 	PyObject *newStr = PyString_FromString(pathCBuf.get());
 	PyList_Insert(obPath, 0, newStr);
 	Py_XDECREF(newStr);
@@ -161,26 +132,33 @@ void AddStandardPaths()
 	// - ie, look for .pth files, etc
 	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'") + pathCBuf + NS_LITERAL_CSTRING("')\n"));
 	if (0 != PyRun_SimpleString((char *)cmdBuf.get())) {
-		LogStartupError("The directory '%s' could not be added as a site directory", pathCBuf.get());
+		PyXPCOM_LogError("The directory '%s' could not be added as a site directory", pathCBuf.get());
 		PyErr_Clear();
 	}
 	// and somewhat like Python itself (site, citecustomize), we attempt 
 	// to import "sitepyxpcom" ignoring ImportError
-	if (NULL==PyImport_ImportModule("sitepyxpcom")) {
+	PyObject *mod = PyImport_ImportModule("sitepyxpcom");
+	if (NULL==mod) {
 		if (!PyErr_ExceptionMatches(PyExc_ImportError))
-			LogStartupError("Failed to import 'sitepyxpcom'");
+			PyXPCOM_LogError("Failed to import 'sitepyxpcom'");
 		PyErr_Clear();
-	}
+	} else
+		Py_DECREF(mod);
 }
 
+static PRBool bIsInitialized = PR_FALSE;
+// Our 'entry point' into initialization - just call this any time you
+// like, and the world will be setup!
 PYXPCOM_EXPORT void
 PyXPCOM_EnsurePythonEnvironment(void)
 {
-	static PRBool bIsInitialized = PR_FALSE;
-	// Must be thread-safe
-	CEnterLeaveXPCOMFramework _celf;
+	// Must be thread-safe - but only while set to FALSE - so check for
+	// set before getting the lock - then check again after!
 	if (bIsInitialized)
 		return;
+	CEnterLeaveXPCOMFramework _celf;
+	if (bIsInitialized)
+		return; // another thread beat us to the init.
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 	/* *sob* - seems necessary to open the .so as RTLD_GLOBAL.  Without
@@ -238,6 +216,36 @@ PyXPCOM_EnsurePythonEnvironment(void)
 	// Add the standard extra paths we assume
 	AddStandardPaths();
 
+	// The exception object pyxpcom uses.
+	if (PyXPCOM_Error == NULL) {
+		PRBool rc = PR_FALSE;
+		PyObject *mod = NULL;
+
+		mod = PyImport_ImportModule("xpcom");
+		if (mod!=NULL) {
+			PyXPCOM_Error = PyObject_GetAttrString(mod, "Exception");
+			Py_DECREF(mod);
+		}
+		rc = (PyXPCOM_Error != NULL);
+	}
+
+	// Register our custom interfaces.
+	Py_nsISupports::InitType();
+	Py_nsIComponentManager::InitType();
+	Py_nsIInterfaceInfoManager::InitType();
+	Py_nsIEnumerator::InitType();
+	Py_nsISimpleEnumerator::InitType();
+	Py_nsIInterfaceInfo::InitType();
+	Py_nsIInputStream::InitType();
+	Py_nsIClassInfo::InitType();
+	Py_nsIVariant::InitType();
+
+	bIsInitialized = PR_TRUE;
+	// import the xpcom module itself to setup the loggers etc.
+	// We must do this after setting bIsInitialized, as it too tries to
+	// initialize!
+	PyImport_ImportModule("xpcom");
+
 	// If we initialized Python, then we will also have acquired the thread
 	// lock.  In that case, we want to leave it unlocked, so other threads
 	// are free to run, even if they aren't running Python code.
@@ -245,7 +253,6 @@ PyXPCOM_EnsurePythonEnvironment(void)
 
 	NS_TIMELINE_STOP_TIMER("PyXPCOM: Python threadstate setup");
 	NS_TIMELINE_MARK_TIMER("PyXPCOM: Python threadstate setup");
-	bIsInitialized = PR_TRUE;
 }
 
 void pyxpcom_construct(void)
@@ -270,92 +277,3 @@ struct DllInitializer {
 		pyxpcom_destruct();
 	}
 } dll_initializer;
-
-////////////////////////////////////////////////////////////
-// Other helpers/global functions.
-//
-PYXPCOM_EXPORT PRBool
-PyXPCOM_Globals_Ensure()
-{
-	PRBool rc = PR_TRUE;
-
-	// The exception object - we load it from .py code!
-	if (PyXPCOM_Error == NULL) {
-		rc = PR_FALSE;
-		PyObject *mod = NULL;
-
-		mod = PyImport_ImportModule("xpcom");
-		if (mod!=NULL) {
-			PyXPCOM_Error = PyObject_GetAttrString(mod, "Exception");
-			Py_DECREF(mod);
-		}
-		rc = (PyXPCOM_Error != NULL);
-	}
-	if (!rc)
-		return rc;
-
-	static PRBool bHaveInitXPCOM = PR_FALSE;
-	if (!bHaveInitXPCOM) {
-		nsCOMPtr<nsIThread> thread_check;
-		// xpcom appears to assert if already initialized
-		// Is there an official way to determine this?
-		if (NS_FAILED(nsIThread::GetMainThread(getter_AddRefs(thread_check)))) {
-			// not already initialized.
-#ifdef XP_WIN
-			// On Windows, we need to locate the Mozilla bin
-			// directory.  This by using locating a Moz DLL we depend
-			// on, and assume it lives in that bin dir.  Different
-			// moz build types (eg, xulrunner, suite) package
-			// XPCOM itself differently - but all appear to require
-			// nspr4.dll - so this is what we use.
-			char landmark[MAX_PATH+1];
-			HMODULE hmod = GetModuleHandle("nspr4.dll");
-			if (hmod==NULL) {
-				PyErr_SetString(PyExc_RuntimeError, "We dont appear to be linked against nspr4.dll.");
-				return PR_FALSE;
-			}
-			GetModuleFileName(hmod, landmark, sizeof(landmark)/sizeof(landmark[0]));
-			char *end = landmark + (strlen(landmark)-1);
-			while (end > landmark && *end != '\\')
-				end--;
-			if (end > landmark) *end = '\0';
-
-			nsCOMPtr<nsILocalFile> ns_bin_dir;
-			NS_ConvertASCIItoUTF16 strLandmark(landmark);
-#ifdef NS_BUILD_REFCNT_LOGGING
-			// In an interesting chicken-and-egg problem, we
-			// throw assertions in creating the nsILocalFile
-			// we need to pass to InitXPCOM!
-			nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
-#endif
-			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
-#ifdef NS_BUILD_REFCNT_LOGGING
-			nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
-#endif
-			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
-#else
-			// Elsewhere, Mozilla can find it itself (we hope!)
-			nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-#endif // XP_WIN
-			if (NS_FAILED(rv)) {
-				PyErr_SetString(PyExc_RuntimeError, "The XPCOM subsystem could not be initialized");
-				return PR_FALSE;
-			}
-		}
-		// Even if xpcom was already init, we want to flag it as init!
-		bHaveInitXPCOM = PR_TRUE;
-		// Register our custom interfaces.
-	
-		Py_nsISupports::InitType();
-		Py_nsIComponentManager::InitType();
-		Py_nsIInterfaceInfoManager::InitType();
-		Py_nsIEnumerator::InitType();
-		Py_nsISimpleEnumerator::InitType();
-		Py_nsIInterfaceInfo::InitType();
-		Py_nsIInputStream::InitType();
-		Py_nsIClassInfo::InitType();
-		Py_nsIVariant::InitType();
-	}
-	return rc;
-}
-

@@ -51,7 +51,10 @@
 #include "nsIFile.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIConsoleService.h"
-#include "nspr.h" // PR_fprintf
+
+#include "nsIThread.h"
+#include "nsILocalFile.h"
+#include "nsTraceRefcntImpl.h"
 
 #ifdef XP_WIN
 #ifndef WIN32_LEAN_AND_MEAN
@@ -466,6 +469,66 @@ static struct PyMethodDef xpcom_methods[]=
 	}
 
 
+// local helper to check that xpcom itself has been initialized.
+// Theoretically this should only happen when a standard python program
+// (ie, hosted by python itself) imports the xpcom module (ie, as part of
+// the pyxpcom test suite), hence it lives here...
+static PRBool EnsureXPCOM()
+{
+	static PRBool bHaveInitXPCOM = PR_FALSE;
+	if (!bHaveInitXPCOM) {
+		nsCOMPtr<nsIThread> thread_check;
+		// xpcom appears to assert if already initialized
+		// Is there an official way to determine this?
+		if (NS_FAILED(nsIThread::GetMainThread(getter_AddRefs(thread_check)))) {
+			// not already initialized.
+#ifdef XP_WIN
+			// On Windows, we need to locate the Mozilla bin
+			// directory.  This by using locating a Moz DLL we depend
+			// on, and assume it lives in that bin dir.  Different
+			// moz build types (eg, xulrunner, suite) package
+			// XPCOM itself differently - but all appear to require
+			// nspr4.dll - so this is what we use.
+			char landmark[MAX_PATH+1];
+			HMODULE hmod = GetModuleHandle("nspr4.dll");
+			if (hmod==NULL) {
+				PyErr_SetString(PyExc_RuntimeError, "We dont appear to be linked against nspr4.dll.");
+				return PR_FALSE;
+			}
+			GetModuleFileName(hmod, landmark, sizeof(landmark)/sizeof(landmark[0]));
+			char *end = landmark + (strlen(landmark)-1);
+			while (end > landmark && *end != '\\')
+				end--;
+			if (end > landmark) *end = '\0';
+
+			nsCOMPtr<nsILocalFile> ns_bin_dir;
+			NS_ConvertASCIItoUTF16 strLandmark(landmark);
+#ifdef NS_BUILD_REFCNT_LOGGING
+			// In an interesting chicken-and-egg problem, we
+			// throw assertions in creating the nsILocalFile
+			// we need to pass to InitXPCOM!
+			nsTraceRefcntImpl::SetActivityIsLegal(PR_TRUE);
+#endif
+			NS_NewLocalFile(strLandmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
+#ifdef NS_BUILD_REFCNT_LOGGING
+			nsTraceRefcntImpl::SetActivityIsLegal(PR_FALSE);
+#endif
+			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
+#else
+			// Elsewhere, Mozilla can find it itself (we hope!)
+			nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+#endif // XP_WIN
+			if (NS_FAILED(rv)) {
+				PyErr_SetString(PyExc_RuntimeError, "The XPCOM subsystem could not be initialized");
+				return PR_FALSE;
+			}
+		}
+		// Even if xpcom was already init, we want to flag it as init!
+		bHaveInitXPCOM = PR_TRUE;
+	}
+	return PR_TRUE;
+}
+
 ////////////////////////////////////////////////////////////
 // The module init code.
 //
@@ -473,6 +536,10 @@ extern "C" NS_EXPORT
 void 
 init_xpcom() {
 	PyObject *oModule;
+
+	// ensure xpcom already init
+	if (!EnsureXPCOM())
+		return;
 
 	// ensure the framework has valid state to work with.
 	if (!PyXPCOM_Globals_Ensure())
