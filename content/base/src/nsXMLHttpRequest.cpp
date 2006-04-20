@@ -1593,8 +1593,14 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
 
-  if (!IsASCII(header) || !IsASCII(value)) {
-    return NS_ERROR_INVALID_ARG;
+  // Prevent modification to certain HTTP headers (see bug 302263):
+  const char *kInvalidHeaders[] = {
+    "host", "content-length", "transfer-encoding", "via", "upgrade"
+  };
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(kInvalidHeaders); ++i) {
+    if (header.LowerCaseEqualsASCII(kInvalidHeaders[i])) {
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
