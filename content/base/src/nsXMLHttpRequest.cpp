@@ -22,7 +22,6 @@
 
 #include "nsXMLHttpRequest.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIHTTPHeader.h"
 #include "nsIXPConnect.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIUnicodeEncoder.h"
@@ -579,8 +578,8 @@ nsXMLHttpRequest::SetOnerror(nsISupports * aOnerror)
   return AddEventListener(ERRORSTR, listener, PR_TRUE);
 }
 
-/* readonly attribute nsIHTTPChannel channel; */
-NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIHTTPChannel **aChannel)
+/* readonly attribute nsIHttpChannel channel; */
+NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIHttpChannel **aChannel)
 {
   NS_ENSURE_ARG_POINTER(aChannel);
   *aChannel = mChannel;
@@ -611,14 +610,10 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
 {
   aCharset.Truncate();
   nsresult rv;
-  nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(mChannel,&rv));
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel,&rv));
   if(httpChannel) {
-    nsIAtom* contentTypeKey = NS_NewAtom("content-type");
-    if (!contentTypeKey)
-      return NS_ERROR_OUT_OF_MEMORY;
     nsXPIDLCString contenttypeheader;
-    rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
-    NS_RELEASE(contentTypeKey);
+    rv = httpChannel->GetResponseHeader("content-type", getter_Copies(contenttypeheader));
     if (NS_SUCCEEDED(rv)) {
       nsAutoString contentType;
       contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
@@ -772,7 +767,7 @@ nsXMLHttpRequest::GetStatusText(char * *aStatusText)
   NS_ENSURE_ARG_POINTER(aStatusText);
   *aStatusText = nsnull;
   if (mChannel) {
-    return mChannel->GetResponseString(aStatusText);
+    return mChannel->GetResponseStatusText(aStatusText);
   }
   
   return NS_OK;
@@ -796,34 +791,18 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
   if (mChannel) {
-    nsCOMPtr<nsISimpleEnumerator> enumerator;
-    nsCAutoString headers;
+    nsHeaderVisitor *visitor = nsnull;
+    NS_NEWXPCOM(visitor, nsHeaderVisitor);
+    if (!visitor)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(visitor);
 
-    nsresult rv = mChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    
-    PRBool hasMore;
-    while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
-      nsCOMPtr<nsISupports> isup;
-      
-      rv = enumerator->GetNext(getter_AddRefs(isup));
-      if (NS_FAILED(rv)) {
-        break;
-      }
-      nsCOMPtr<nsIHTTPHeader> header(do_QueryInterface(isup));
-      if (header) {
-        nsXPIDLCString name, value;
-        header->GetFieldName(getter_Copies(name));
-        header->GetValue(getter_Copies(value));
-        headers.Append((const char*)name);
-        headers.Append(": ");
-        headers.Append((const char*)value);
-        headers.Append("\n");
-      }
-    }
-    *_retval = headers.ToNewCString();
+    nsresult rv = mChannel->VisitResponseHeaders(visitor);
+    if (NS_SUCCEEDED(rv))
+      *_retval = ToNewCString(visitor->Headers());
+
+    NS_RELEASE(visitor);
+    return rv;
   }
   
   return NS_OK;
@@ -837,10 +816,8 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
 
   *_retval = nsnull;
-  if (mChannel) {
-    nsCOMPtr<nsIAtom> headerAtom = dont_AddRef(NS_NewAtom(header));
-    return mChannel->GetResponseHeader(headerAtom, _retval);
-  }
+  if (mChannel)
+    return mChannel->GetResponseHeader(header, _retval);
   
   return NS_OK;
 }
@@ -905,12 +882,9 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     return NS_ERROR_INVALID_ARG;
   }
 
-  mChannel->SetAuthTriedWithPrehost(authp);
+  //mChannel->SetAuthTriedWithPrehost(authp);
 
-  nsCOMPtr<nsIAtom> methodAtom = dont_AddRef(NS_NewAtom(method));
-  if (methodAtom) {
-    rv = mChannel->SetRequestMethod(methodAtom);
-  }
+  rv = mChannel->SetRequestMethod(method);
 
   mStatus = XML_HTTP_REQUEST_OPENED;
 
@@ -1335,10 +1309,8 @@ nsXMLHttpRequest::Send(nsISupports *body)
 NS_IMETHODIMP 
 nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
 {
-  if (mChannel) {
-    nsCOMPtr<nsIAtom> headerAtom = dont_AddRef(NS_NewAtom(header));
-    return mChannel->SetRequestHeader(headerAtom, value);
-  }
+  if (mChannel)
+    return mChannel->SetRequestHeader(header, value);
   
   return NS_OK;
 }
@@ -1472,4 +1444,16 @@ nsXMLHttpRequest::CanSetProperty(const nsIID * iid, const PRUnichar *propertyNam
   }
 
   return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
+
+NS_IMETHODIMP nsXMLHttpRequest::
+nsHeaderVisitor::VisitHeader(const char *header, const char *value)
+{
+    mHeaders.Append(header);
+    mHeaders.Append(": ");
+    mHeaders.Append(value);
+    mHeaders.Append('\n');
+    return NS_OK;
 }
