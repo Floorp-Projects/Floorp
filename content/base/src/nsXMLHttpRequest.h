@@ -37,7 +37,7 @@
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
 #ifdef IMPLEMENT_SYNC_LOAD
-#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #endif
 #include "nsWeakReference.h"
 #include "nsISupportsArray.h"
@@ -101,7 +101,7 @@ protected:
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIDocument> mBaseDocument;
 #ifdef IMPLEMENT_SYNC_LOAD
-  nsCOMPtr<nsIDocShellTreeOwner> mDocShellTreeOwner;
+  nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
 #endif
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
