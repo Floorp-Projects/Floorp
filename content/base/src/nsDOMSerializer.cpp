@@ -39,7 +39,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIOutputStream.h"
-#include "nsINode.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentEncoder.h"
