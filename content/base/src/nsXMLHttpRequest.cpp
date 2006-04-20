@@ -500,7 +500,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   } else {
     if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
       // MS documentation states UTF-8 is default for responseText
-      dataCharset.Assign(NS_LITERAL_CSTRING("UTF-8"));
+      dataCharset.AssignLiteral("UTF-8");
     }
   }
 
