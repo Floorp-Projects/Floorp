@@ -79,6 +79,8 @@
 #endif
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMWindow.h"
+#include "nsILoadGroup.h"
 #include "nsIVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
@@ -564,6 +566,33 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
   return NS_OK;
 }
 
+nsresult 
+nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+  NS_ENSURE_ARG_POINTER(aLoadGroup);
+  *aLoadGroup = nsnull;
+
+  if (!mScriptContext) {
+    GetCurrentContext(getter_AddRefs(mScriptContext));
+  }
+
+  if (mScriptContext) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    mScriptContext->GetGlobalObject(getter_AddRefs(global));
+    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+    if (window) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      window->GetDocument(getter_AddRefs(domdoc));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+      if (doc) {
+        doc->GetDocumentLoadGroup(aLoadGroup);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 /* noscript void openRequest (in string method, in string url, in boolean async, in string user, in string password); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::OpenRequest(const char *method, 
@@ -600,7 +629,16 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     authp = PR_TRUE;
   }
 
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, nsnull);
+  // When we are called from JS we can find the load group for the page,
+  // and add ourselves to it. This way any pending requests
+  // will be automatically aborted if the user leaves the page.
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  GetLoadGroup(getter_AddRefs(loadGroup));
+
+  // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
+  // which in turn keeps STOP button from becoming active
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, 
+                     nsnull, nsIRequest::LOAD_BACKGROUND);
   if (NS_FAILED(rv)) return rv;
   
   //mChannel->SetAuthTriedWithPrehost(authp);
@@ -669,9 +707,11 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
 
     // Find out if UniversalBrowserRead privileges are enabled
     // we will need this in case of a redirect
+    PRBool crossSiteAccessEnabled;
     rv = secMan->IsCapabilityEnabled("UniversalBrowserRead",
-                                     &mCrossSiteAccessEnabled);
+                                     &crossSiteAccessEnabled);
     if (NS_FAILED(rv)) return rv;
+    mCrossSiteAccessEnabled = crossSiteAccessEnabled;
 
     if (argc > 2) {
       JSBool asyncBool;
@@ -885,14 +925,21 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mReadRequest = nsnull;
   mContext = nsnull;
 
-  // The parser needs to be enabled for us to safely call RequestCompleted().
-  // If the parser is not enabled, it means it was blocked, by xml-stylesheet PI
-  // for example, and is still building the document. RequestCompleted() must be
-  // called later, when we get the load event from the document.
-  if (parser && parser->IsParserEnabled()) {
+  if (NS_FAILED(status)) {
+    // This can happen if the user leaves the page while the request was still
+    // active. This might also happen if request was active during the regular
+    // page load and the user was able to hit STOP button. If XMLHttpRequest is
+    // the only active network connection on the page the throbber nor the STOP
+    // button are active.
+    Abort();
+  } else if (parser && parser->IsParserEnabled()) {
+    // The parser needs to be enabled for us to safely call RequestCompleted().
+    // If the parser is not enabled, it means it was blocked, by xml-stylesheet PI
+    // for example, and is still building the document. RequestCompleted() must be
+    // called later, when we get the load event from the document.
     RequestCompleted();
   } else {
-    ChangeState(XML_HTTP_REQUEST_STOPPED,PR_FALSE);
+    ChangeState(XML_HTTP_REQUEST_STOPPED, PR_FALSE);
   }
 
   return rv;
@@ -1211,8 +1258,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     GetCurrentContext(getter_AddRefs(mScriptContext));
   }
 
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+
   rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
-                                   nsnull, nsnull, 
+                                   loadGroup, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
 
