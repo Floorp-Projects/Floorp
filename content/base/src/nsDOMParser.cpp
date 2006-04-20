@@ -77,7 +77,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 class nsDOMParserChannel : public nsIChannel {
 public:
-  nsDOMParserChannel(nsIURI* aURI, const char* aContentType);
+  nsDOMParserChannel(nsIURI* aURI, const nsACString& aContentType);
   virtual ~nsDOMParserChannel();
 
   NS_DECL_ISUPPORTS
@@ -94,7 +94,7 @@ protected:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 };
 
-nsDOMParserChannel::nsDOMParserChannel(nsIURI* aURI, const char* aContentType)
+nsDOMParserChannel::nsDOMParserChannel(nsIURI* aURI, const nsACString& aContentType)
 {
   mURI = aURI;
   mContentType.Assign(aContentType);
@@ -413,11 +413,10 @@ ConvertWStringToStream(const PRUnichar* aStr,
 /* nsIDOMDocument parseFromString (in wstring str, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromString(const PRUnichar *str, 
-                             const char *contentType, 
+                             const nsACString& contentType,
                              nsIDOMDocument **_retval)
 {
   NS_ENSURE_ARG(str);
-  NS_ENSURE_ARG(contentType);
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<nsIInputStream> stream;
@@ -429,28 +428,56 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
     return rv;
   }
 
-  return ParseFromStream(stream, "UTF-8", contentLength, contentType, _retval);
+  return ParseFromStream(stream, NS_LITERAL_CSTRING("UTF-8"), contentLength, contentType, _retval);
+}
+
+/* nsIDOMDocument parseFromUTF8String (in wstring str, in string contentType); */
+NS_IMETHODIMP 
+nsDOMParser::ParseFromUTF8String(const nsACString& str,
+                                 const nsACString& contentType,
+                                 nsIDOMDocument **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  nsCOMPtr<nsIInputStream> stream;
+  nsCOMPtr<nsIByteArrayInputStream> baiStream;
+
+  char *bufStr = ToNewCString(str);
+
+  // The new stream takes ownership of the buffer
+  nsresult rv = NS_NewByteArrayInputStream(getter_AddRefs(baiStream), bufStr, str.Length());
+  if (NS_FAILED(rv)) {
+    nsMemory::Free(bufStr);
+    *_retval = nsnull;
+    return rv;
+  }
+
+  stream = do_QueryInterface(baiStream);
+  if (!stream) {
+    *_retval = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  return ParseFromStream(stream, NS_LITERAL_CSTRING("UTF-8"), str.Length(), contentType, _retval);
 }
 
 
 /* nsIDOMDocument parseFromStream (in nsIInputStream stream, in string charset, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromStream(nsIInputStream *stream, 
-                             const char *charset, 
+                             const nsACString& charset, 
                              PRInt32 contentLength,
-                             const char *contentType, 
+                             const nsACString& contentType, 
                              nsIDOMDocument **_retval)
 {
   NS_ENSURE_ARG(stream);
-  NS_ENSURE_ARG(charset);
-  NS_ENSURE_ARG(contentType);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
   // For now, we can only create XML documents.
-  if (nsCRT::strcmp(contentType, "text/xml") != 0 &&
-    nsCRT::strcmp(contentType, "application/xml") != 0 &&
-    nsCRT::strcmp(contentType, "application/xhtml+xml") != 0) {
+  if (!(contentType.Equals(NS_LITERAL_CSTRING("text/xml"))) &&
+      !(contentType.Equals(NS_LITERAL_CSTRING("application/xml"))) &&
+      !(contentType.Equals(NS_LITERAL_CSTRING("application/xhtml+xml")))) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
