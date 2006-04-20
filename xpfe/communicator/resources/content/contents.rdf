@@ -38,9 +38,5 @@
     <RDF:li>chrome://communicator/content/permissions/cookieTasksOverlay.xul</RDF:li>
   </RDF:Seq>
 
-  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
-    <RDF:li>chrome://communicator/content/permissions/imageContextOverlay.xul</RDF:li>
-  </RDF:Seq>
-
 </RDF:RDF>
 
