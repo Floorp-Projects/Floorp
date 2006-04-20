@@ -24,20 +24,20 @@
 
 interface nsIDOMDocument;
 interface nsIDOMEventListener;
-interface nsIHttpChannel;
+interface nsIChannel;
 
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
   /**
-   * The HTTP request uses an HTTP channel in order to perform the
-   * request.  This attribute represents the HTTP channel used
-   * for the request.  NULL if the HTTP channel has not yet been
+   * The request uses a channel in order to perform the
+   * request.  This attribute represents the channel used
+   * for the request.  NULL if the channel has not yet been
    * created.
    */
-  readonly attribute nsIHttpChannel channel;
+  readonly attribute nsIChannel channel;
 
   /**
-   * The response to the HTTP request is parsed as if it were a
+   * The response to the request is parsed as if it were a
    * text/xml stream. This attributes represents the response as 
    * a DOM Document object. NULL if the request is unsuccessful or
    * has not yet been sent.
@@ -45,7 +45,7 @@ interface nsIXMLHttpRequest : nsISupports {
   readonly attribute nsIDOMDocument responseXML;
 
   /**
-   * The response to the HTTP request as text. 
+   * The response to the request as text. 
    * NULL if the request is unsuccessful or
    * has not yet been sent.
    */
@@ -53,24 +53,25 @@ interface nsIXMLHttpRequest : nsISupports {
 
 
   /**
-   * The status of the response to the HTTP request.
+   * The status of the response to the request for HTTP requests. 
    */
   readonly attribute unsigned long status;
 
   /**
-   * The string representing the status of the response to the
-   * HTTP request.
+   * The string representing the status of the response for
+   * HTTP requests.
    */
   readonly attribute string statusText;
 
   /**
-   * If the HTTP request has been sent already, this method will
+   * If the request has been sent already, this method will
    * abort the request.
    */
   void   abort();
 
   /**
-   * Returns all of the HTTP response headers as a string string.
+   * Returns all of the response headers as a string for HTTP
+   * requests.
    * 
    * @returns A string containing all of the response headers. 
    *          NULL if the response has not yet been received.
@@ -78,7 +79,8 @@ interface nsIXMLHttpRequest : nsISupports {
   string getAllResponseHeaders();  
 
   /**
-   * Returns the text of the header with the specified name.
+   * Returns the text of the header with the specified name for
+   * HTTP requests.
    *
    * @param header The name of the header to retrieve
    * @returns A string containing the text of the header specified.
@@ -89,10 +91,11 @@ interface nsIXMLHttpRequest : nsISupports {
 
   /**
    * Native (non-script) method to initialize a request. Note that
-   * the HTTP request is not sent until the <code>send</code> method 
+   * the request is not sent until the <code>send</code> method 
    * is invoked.
    *
-   * @param method The HTTP method - either "POST" or "GET".
+   * @param method The HTTP method - either "POST" or "GET". Ignored
+   *               if the URL is not a HTTP URL.
    * @param url The URL to which to send the request.
    * @param async Whether the request is synchronous or asynchronous
    *              i.e. whether send returns only after the response
@@ -114,7 +117,8 @@ interface nsIXMLHttpRequest : nsISupports {
    * description of <code>openRequest</code>, but the last
    * 3 are optional.
    *
-   * @param method The HTTP method - either "POST" or "GET".
+   * @param method The HTTP method - either "POST" or "GET". Ignored
+   *               if the URL is not a HTTP URL.
    * @param url The URL to which to send the request.
    * @param async (optional) Whether the request is synchronous or 
    *              asynchronous i.e. whether send returns only after 
@@ -130,7 +134,7 @@ interface nsIXMLHttpRequest : nsISupports {
   void   open(in string method, in string url);
 
   /**
-   * Sends the HTTP request. If the request is asynchronous, returns
+   * Sends the request. If the request is asynchronous, returns
    * immediately after sending the request. If it is synchronous
    * returns only after the response has been received.
    *
@@ -146,7 +150,7 @@ interface nsIXMLHttpRequest : nsISupports {
   void   send(in nsISupports body);
 
   /**
-   * Sets a HTTP request header.
+   * Sets a HTTP request header for HTTP requests.
    *
    * @param header The name of the header to set in the request.
    * @param value The body of the header.

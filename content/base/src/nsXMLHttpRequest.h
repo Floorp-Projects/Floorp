@@ -104,7 +104,7 @@ protected:
                 PRUint32 *writeCount);
 
   nsCOMPtr<nsISupports> mContext;
-  nsCOMPtr<nsIHttpChannel> mChannel;
+  nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
