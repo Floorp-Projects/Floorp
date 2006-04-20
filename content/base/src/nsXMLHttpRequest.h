@@ -62,6 +62,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsIInterfaceRequestor.h"
 
+class nsILoadGroup;
 
 enum nsXMLHttpRequestState {
   XML_HTTP_REQUEST_UNINITIALIZED = 0,
@@ -133,6 +134,7 @@ protected:
   // if the onreadystatechange listener should be called.
   nsresult ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast = PR_TRUE);
   nsresult RequestCompleted();
+  nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
@@ -171,8 +173,8 @@ protected:
   PRInt32 mStatus;
   PRPackedBool mAsync;
   PRPackedBool mParseResponseBody;
+  PRPackedBool mCrossSiteAccessEnabled;
   nsCString mOverrideMimeType;
-  PRBool mCrossSiteAccessEnabled;
 };
 
 #endif
