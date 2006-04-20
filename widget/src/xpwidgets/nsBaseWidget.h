@@ -124,11 +124,9 @@ public:
   NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
   NS_IMETHOD              SetBounds(const nsRect &aRect);
   NS_IMETHOD              GetBounds(nsRect &aRect);
-  NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsRect &aRect);
   NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
@@ -143,13 +141,6 @@ protected:
   virtual void            ResolveIconName(const nsAString &aIconName,
                                           const nsAString &aIconSuffix,
                                           nsILocalFile **aResult);
-  virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
-                                         const nsRect & aRect,
-                                         float aScale,
-                                         float aAppUnits);
-  virtual void            DrawScaledLine(nsIRenderingContext& aRenderingContext, 
-                                         nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
-                                         float   aScale, float aAppUnits, PRBool aIsHorz);
   virtual void            OnDestroy();
   virtual void            BaseCreate(nsIWidget *aParent,
                                      const nsRect &aRect,
