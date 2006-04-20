@@ -85,6 +85,7 @@ CPPSRCS= \
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS += -DPYTHON_SO=\"libpython$(MOZ_PYTHON_VER_DOTTED).so\"
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 clobber::

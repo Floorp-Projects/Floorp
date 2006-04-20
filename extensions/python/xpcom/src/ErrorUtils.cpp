@@ -100,6 +100,32 @@ void DoLogMessage(const char *methodName, const char *pszMessageText)
 	// But this also means we need a clear error state...
 	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
 	PyErr_Fetch(&exc_typ, &exc_val, &exc_tb);
+	// Only use the logging module if someone has successfully
+	// initialized it for us!  In practice, this means 'does our
+	// log have any handlers?'.  It is a little yucky that we reach into
+	// implementation knowledge, but it would be far worse to have some
+	// obscure problem initializing the logging package cause all future
+	// messages to be discarded.
+	static PRBool initializedForLogging = PR_FALSE;
+	if (!initializedForLogging) {
+		PyObject *mod = PyImport_ImportModule("logging");
+		PyObject *logger = mod ?
+		                   PyObject_CallMethod(mod, "getLogger", "s", "xpcom") :
+		                   NULL;
+		PyObject *handlers = PyObject_GetAttrString(logger, "handlers");
+		if (handlers)
+			initializedForLogging = PySequence_Check(handlers) &&
+			                        PySequence_Length(handlers) > 0;
+		Py_XDECREF(mod);
+		Py_XDECREF(logger);
+		Py_XDECREF(handlers);
+		PyErr_Clear();
+		if (!initializedForLogging) {
+			_PanicErrorWrite(pszMessageText);
+			return;
+		}
+	}
+
 // We will execute:
 //  import logging
 //  logging.getLogger('xpcom').{warning/error/etc}("%s", {msg_text})
