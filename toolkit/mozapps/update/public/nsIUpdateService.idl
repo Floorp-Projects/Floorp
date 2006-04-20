@@ -114,7 +114,7 @@ interface nsIUpdatePatch : nsISupports
  * that the front end and other application services can use to learn more 
  * about what is going on.
  */
-[scriptable, uuid(b0fb539e-f4ab-4ea1-bd75-e6d2813e5fc1)]
+[scriptable, uuid(8e5822a6-c5d4-4537-be0a-9c95ba13ea2f)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -168,6 +168,11 @@ interface nsIUpdate : nsISupports
    * The URL to the Update Service that supplied this update.
    */
   attribute AString serviceURL;
+
+  /**
+   * The channel used to retrieve this update from the Update Service.
+   */
+  attribute AString channel;
 
   /**
    * Whether or not the update being downloaded is a complete replacement of
