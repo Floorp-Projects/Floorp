@@ -782,39 +782,40 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   rv = encoder->GetMaxLength(unicodeBuf, unicodeLength, &charLength);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
-#define MAX_HEADER_SIZE 128
 
-  // Allocate extra space for the header and trailing CRLF
-  postData = (char*)nsMemory::Alloc(MAX_HEADER_SIZE + charLength + 3);
+  // Allocate extra space for the trailing and leading CRLF
+  postData = (char*)nsMemory::Alloc(charLength + 5);
   if (!postData) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = encoder->Convert(unicodeBuf, 
-                        &unicodeLength, postData+MAX_HEADER_SIZE, &charLength);
+                        &unicodeLength, postData+2, &charLength);
   if (NS_FAILED(rv)) {
     nsMemory::Free(postData);
     return NS_ERROR_FAILURE;
   }
+  
+  // If no content type header was set by the client, we set it to text/xml.
+  nsXPIDLCString header;
+  if( NS_OK != mChannel->GetRequestHeader("Content-Type", getter_Copies(header)) )  
+    mChannel->SetRequestHeader("Content-Type", "text/xml" );
 
-  // Now that we know the real content length we can create the header
-  PR_snprintf(postData,
-              MAX_HEADER_SIZE,
-              "Content-type: text/xml\015\012Content-Length: %d\015\012\015\012",
-              charLength);
-  PRInt32 headerSize = nsCRT::strlen(postData);
+  // set the content length header
+  char charLengthBuf [32];
+  PR_snprintf(charLengthBuf, sizeof(charLengthBuf), "%d", charLength);
+  mChannel->SetRequestHeader("Content-Length", charLengthBuf );
 
-  // Copy the post data to immediately follow the header
-  nsCRT::memcpy(postData+headerSize, postData+MAX_HEADER_SIZE, charLength);
-
-  // Shove in the trailing CRLF
-  postData[headerSize+charLength] = nsCRT::CR;
-  postData[headerSize+charLength+1] = nsCRT::LF;
-  postData[headerSize+charLength+2] = '\0';
+  // Shove in the trailing and leading CRLF
+  postData[0] = nsCRT::CR;
+  postData[1] = nsCRT::LF;
+  postData[2+charLength] = nsCRT::CR;
+  postData[2+charLength+1] = nsCRT::LF;
+  postData[2+charLength+2] = '\0';
 
   // The new stream takes ownership of the buffer
   rv = NS_NewByteArrayInputStream((nsIByteArrayInputStream**)aStream, 
                                   postData, 
-                                  headerSize+charLength+2);
+                                  charLength+4);
   if (NS_FAILED(rv)) {
     nsMemory::Free(postData);
     return NS_ERROR_FAILURE;
@@ -914,7 +915,7 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Send(nsISupports *body)
 {
   nsresult rv;
-
+  
   // Return error if we're already processing a request
   if (XML_HTTP_REQUEST_SENT == mStatus) {
     return NS_ERROR_FAILURE;
