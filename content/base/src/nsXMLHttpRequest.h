@@ -160,7 +160,8 @@ protected:
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
   PRInt32 mStatus;
-  PRBool mAsync;
+  PRPackedBool mAsync;
+  PRPackedBool mParseResponseBody;
   nsCString mOverrideMimeType;
 };
 
