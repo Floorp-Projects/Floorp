@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsPrintfCString.h"
+#include "nsCRT.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
