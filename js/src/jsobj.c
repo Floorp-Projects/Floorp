@@ -4172,25 +4172,34 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
         clasp = OBJ_GET_CLASS(cx, *objp);
         classId = JS_XDRFindClassIdByName(xdr, clasp->name);
         classDef = !classId;
-        if (classDef && !JS_XDRRegisterClass(xdr, clasp, &classId))
-            return JS_FALSE;
-        protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
-        if (protoKey != JSProto_Null) {
-            classDef |= (protoKey << 1);
-        } else {
-            atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
-            if (!atom)
+        if (classDef) {
+            if (!JS_XDRRegisterClass(xdr, clasp, &classId))
                 return JS_FALSE;
+            protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
+            if (protoKey != JSProto_Null) {
+                classDef |= (protoKey << 1);
+            } else {
+                atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+                if (!atom)
+                    return JS_FALSE;
+            }
         }
     } else {
         clasp = NULL;           /* quell GCC overwarning */
         classDef = 0;
     }
 
-    /* XDR a flag word followed (if true) by the class name. */
+    /*
+     * XDR a flag word, which could be 0 for a class use, in which case no
+     * name follows, only the id in xdr's class registry; 1 for a class def,
+     * in which case the flag word is followed by the class name transferred
+     * from or to atom; or a value greater than 1, an odd number that when
+     * divided by two yields the JSProtoKey for class.  In the last case, as
+     * in the 0 classDef case, no name is transferred via atom.
+     */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (atom && !js_XDRCStringAtom(xdr, &atom))
+    if (classDef == 1 && !js_XDRCStringAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))
