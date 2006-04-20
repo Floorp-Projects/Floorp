@@ -40,8 +40,6 @@
 #define nsDOMParser_h__
 
 #include "nsIDOMParser.h"
-#include "nsISecurityCheckedComponent.h"
-#include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsIEventQueueService.h"
