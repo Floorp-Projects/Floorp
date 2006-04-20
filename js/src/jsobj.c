@@ -4159,14 +4159,15 @@ JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
+    JSAtom *atom;
     JSClass *clasp;
     uint32 classId, classDef;
     JSProtoKey protoKey;
     jsid classKey;
-    JSAtom *atom;
     JSObject *proto;
 
     cx = xdr->cx;
+    atom = NULL;
     if (xdr->mode == JSXDR_ENCODE) {
         clasp = OBJ_GET_CLASS(cx, *objp);
         classId = JS_XDRFindClassIdByName(xdr, clasp->name);
@@ -4176,23 +4177,20 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
         protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
         if (protoKey != JSProto_Null) {
             classDef |= (protoKey << 1);
-            classKey = INT_TO_JSID(protoKey);
         } else {
             atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
             if (!atom)
                 return JS_FALSE;
-            classKey = ATOM_TO_JSID(atom);
         }
     } else {
         clasp = NULL;           /* quell GCC overwarning */
         classDef = 0;
-        classKey = 0;
     }
 
     /* XDR a flag word followed (if true) by the class name. */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (classDef && !js_XDRCStringAtom(xdr, &atom))
+    if (atom && !js_XDRCStringAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))
