@@ -185,7 +185,10 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIObserver* aObserver)
 
 nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
 {
-  threadAlreadyClosedDialog = PR_FALSE;
+  if (!threadAlreadyClosedDialog)
+    return NS_OK;
+
+  *threadAlreadyClosedDialog = PR_FALSE;
 
   if (!mutex)
     return NS_OK;
