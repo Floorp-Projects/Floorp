@@ -716,7 +716,7 @@ nsXMLHttpRequest::GetBaseURI()
 }
 
 nsresult
-nsXMLHttpRequest::CreateEvent(PRUint32 aMsg, nsIDOMEvent** aDOMEvent)
+nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, nsIDOMEvent** aDOMEvent)
 {
   nsresult rv;
 
@@ -731,8 +731,7 @@ nsXMLHttpRequest::CreateEvent(PRUint32 aMsg, nsIDOMEvent** aDOMEvent)
     return NS_ERROR_FAILURE;
   }
 
-  nsEvent event(aMsg);
-  rv = manager->CreateEvent(nsnull, &event,
+  rv = manager->CreateEvent(nsnull, aEvent,
                             NS_LITERAL_STRING("HTMLEvents"), 
                             aDOMEvent);
   if (NS_FAILED(rv)) {
@@ -1316,8 +1315,9 @@ nsXMLHttpRequest::RequestCompleted()
   }
 
   // We need to create the event before nulling out mDocument
+  nsEvent evt(NS_PAGE_LOAD);
   nsCOMPtr<nsIDOMEvent> domevent;
-  rv = CreateEvent(NS_PAGE_LOAD, getter_AddRefs(domevent));
+  rv = CreateEvent(&evt, getter_AddRefs(domevent));
 
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
@@ -1672,9 +1672,10 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
   // We need to create the event before nulling out mDocument
   nsCOMPtr<nsIDOMEvent> event(do_QueryInterface(aEvent));
+  // There is no NS_PAGE_ERROR event but NS_SCRIPT_ERROR should be ok.
+  nsEvent evt(NS_SCRIPT_ERROR);
   if (!event) {
-    // There is no NS_PAGE_ERROR event but NS_SCRIPT_ERROR should be ok.
-    CreateEvent(NS_SCRIPT_ERROR, getter_AddRefs(event));
+    CreateEvent(&evt, getter_AddRefs(event));
   }
 
   mDocument = nsnull;
