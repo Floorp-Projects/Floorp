@@ -55,6 +55,7 @@
 #include "nsNetUtil.h"
 #include "nsIUploadChannel.h"
 #include "nsIDOMSerializer.h"
+#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventListenerManager.h"
