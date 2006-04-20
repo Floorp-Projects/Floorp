@@ -662,6 +662,7 @@ function Update(update) {
   this._patches = [];
   this.installDate = 0;
   this.isCompleteUpdate = false;
+  this.channel = "default"
 
   // Null <update>, assume this is a message container and do no 
   // further initialization
