@@ -50,7 +50,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
-#include "nsIWebBrowserChrome.h"
 #include "nsIEventQueueService.h"
 #include "nsWeakReference.h"
 #include "nsISupportsArray.h"
