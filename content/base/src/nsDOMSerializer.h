@@ -27,8 +27,7 @@
 #include "nsISecurityCheckedComponent.h"
 #include "nsISupportsUtils.h"
 
-class nsDOMSerializer : public nsIDOMSerializer,
-                        public nsISecurityCheckedComponent
+class nsDOMSerializer : public nsIDOMSerializer
 {
 public:
   nsDOMSerializer();
@@ -41,8 +40,6 @@ public:
   NS_IMETHOD SerializeToStream(nsIDOMNode *root, 
                                nsIOutputStream *stream, 
                                const char *charset);
-
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 };
 
 
