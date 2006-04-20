@@ -802,6 +802,8 @@ nsXMLHttpRequest::OpenRequest(const char *method,
 NS_IMETHODIMP 
 nsXMLHttpRequest::Open(const char *method, const char *url)
 {
+  NS_ENSURE_ARG(url);
+
   nsresult rv;
   PRBool async = PR_TRUE;
   char* user = nsnull;
