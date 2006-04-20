@@ -1008,43 +1008,55 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     if (NS_FAILED(rv)) 
       return NS_ERROR_FAILURE;
 
-    if (dataType == nsIDataType::VTYPE_INTERFACE || 
-      dataType == nsIDataType::VTYPE_INTERFACE_IS) {
-      nsCOMPtr<nsISupports> supports;
-      nsID *iid;
-      rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
-      if (NS_FAILED(rv)) 
-        return NS_ERROR_FAILURE;
-      if (iid) 
-        nsMemory::Free(iid);
-
-      // document?
-      nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
-      if (doc) {
-        nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
-      
-        rv = serializer->SerializeToString(doc, getter_Copies(serial));
+    switch (dataType) {
+    case nsIDataType::VTYPE_INTERFACE:
+    case nsIDataType::VTYPE_INTERFACE_IS:
+      {
+        nsCOMPtr<nsISupports> supports;
+        nsID *iid;
+        rv = aBody->GetAsInterface(&iid, getter_AddRefs(supports));
         if (NS_FAILED(rv)) 
           return NS_ERROR_FAILURE;
-      } else {
-        // nsISupportsWString?
-        nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(supports));
-        if (wstr) {
-          wstr->GetData(getter_Copies(serial));
+        if (iid) 
+          nsMemory::Free(iid);
+
+        // document?
+        nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
+        if (doc) {
+          nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
+          if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
+      
+          rv = serializer->SerializeToString(doc, getter_Copies(serial));
+          if (NS_FAILED(rv)) 
+            return NS_ERROR_FAILURE;
         } else {
-          // stream?
-          nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
-          if (stream) {
-            postDataStream = stream;
+          // nsISupportsWString?
+          nsCOMPtr<nsISupportsWString> wstr(do_QueryInterface(supports));
+          if (wstr) {
+            wstr->GetData(getter_Copies(serial));
+          } else {
+            // stream?
+            nsCOMPtr<nsIInputStream> stream(do_QueryInterface(supports));
+            if (stream) {
+              postDataStream = stream;
+            }
           }
         }
       }
-    } else {
+    case nsIDataType::VTYPE_VOID:
+    case nsIDataType::VTYPE_EMPTY:
+      // Makes us act as if !aBody, don't upload anything
+      break;
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
+    case nsIDataType::VTYPE_ARRAY:
+      // IE6 throws error here, so we do that as well
+      return NS_ERROR_INVALID_ARG;
+    default:
       // try variant string
       rv = aBody->GetAsWString(getter_Copies(serial));    
       if (NS_FAILED(rv)) 
         return rv;
+      break;
     }
 
     if (serial) {
