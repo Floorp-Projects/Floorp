@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslauth.c,v 1.15 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: sslauth.c,v 1.16 2006/04/20 00:20:45 alexei.volkov.bugs%sun.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "ssl.h"
@@ -116,11 +116,14 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	} else {
 	    cipherName = ssl3_cipherName[ss->sec.cipherType];
 	}
-	if (cipherName && PORT_Strstr(cipherName, "DES")) isDes = PR_TRUE;
+	PORT_Assert(cipherName);
+	if (cipherName) {
+            if (PORT_Strstr(cipherName, "DES")) isDes = PR_TRUE;
 
-	if (cp) {
-	    *cp = PORT_Strdup(cipherName);
-	}
+            if (cp) {
+                *cp = PORT_Strdup(cipherName);
+            }
+        }
 
 	if (kp0) {
 	    *kp0 = ss->sec.keyBits;
