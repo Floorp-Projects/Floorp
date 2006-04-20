@@ -104,7 +104,6 @@ protected:
 
 nsDOMParserChannel::nsDOMParserChannel(nsIURI* aURI, const char* aContentType)
 {
-  NS_INIT_ISUPPORTS();
   mURI = aURI;
   mContentType.Assign(aContentType);
   mStatus = NS_OK;
@@ -361,7 +360,6 @@ nsDOMParser::Error(nsIDOMEvent* aEvent)
 
 nsDOMParser::nsDOMParser()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDOMParser::~nsDOMParser()
