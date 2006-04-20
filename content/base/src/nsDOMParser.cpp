@@ -119,7 +119,7 @@ NS_IMPL_ISUPPORTS2(nsDOMParserChannel,
                    nsIRequest)
 
 /* boolean isPending (); */
-NS_IMETHODIMP nsDOMParserChannel::GetName(PRUnichar* *result)
+NS_IMETHODIMP nsDOMParserChannel::GetName(nsACString &result)
 {
     NS_NOTREACHED("nsDOMParserChannel::GetName");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -188,18 +188,27 @@ NS_IMETHODIMP nsDOMParserChannel::GetURI(nsIURI * *aURI)
   return NS_OK;
 }
 
-/* attribute string contentType; */
-NS_IMETHODIMP nsDOMParserChannel::GetContentType(char * *aContentType)
+/* attribute ACString contentType; */
+NS_IMETHODIMP nsDOMParserChannel::GetContentType(nsACString &aContentType)
 {
-  NS_ENSURE_ARG_POINTER(aContentType);
-  *aContentType = ToNewCString(mContentType);
+  aContentType = mContentType;
   return NS_OK;
 }
-NS_IMETHODIMP nsDOMParserChannel::SetContentType(const char * aContentType)
+NS_IMETHODIMP nsDOMParserChannel::SetContentType(const nsACString &aContentType)
 {
-  NS_ENSURE_ARG(aContentType);
-  mContentType.Assign(aContentType);
+  mContentType = aContentType;
   return NS_OK;
+}
+
+/* attribute ACString contentCharset; */
+NS_IMETHODIMP nsDOMParserChannel::GetContentCharset(nsACString &aContentCharset)
+{
+  aContentCharset.Truncate();
+  return NS_OK;
+}
+NS_IMETHODIMP nsDOMParserChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* attribute long contentLength; */
