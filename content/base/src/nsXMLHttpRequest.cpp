@@ -246,9 +246,9 @@ GetDocumentFromScriptContext(nsIScriptContext *aScriptContext)
   if (window) {
     nsCOMPtr<nsIDOMDocument> domdoc;
     window->GetDocument(getter_AddRefs(domdoc));
-    //if (domdoc) {
+    if (domdoc) {
       CallQueryInterface(domdoc, &doc);
-    //}
+    }
   }
   return doc;
 }
