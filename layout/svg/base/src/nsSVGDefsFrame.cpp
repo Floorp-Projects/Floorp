@@ -42,13 +42,11 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsISVGValue.h"
-#include "nsIDOMSVGTransformable.h"
-#include "nsIDOMSVGAnimTransformList.h"
-#include "nsIDOMSVGTransformList.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsSVGGraphicElement.h"
 
 //----------------------------------------------------------------------
 // Implementation
@@ -302,22 +300,10 @@ nsSVGDefsFrame::GetCanvasTM()
     NS_ASSERTION(parentTM, "null TM");
 
     // got the parent tm, now check for local tm:
-    nsCOMPtr<nsIDOMSVGMatrix> localTM;
-    {
-      nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-      NS_ASSERTION(transformable, "wrong content element");
-      nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
-      transformable->GetTransform(getter_AddRefs(atl));
-      NS_ASSERTION(atl, "null animated transform list");
-      nsCOMPtr<nsIDOMSVGTransformList> transforms;
-      atl->GetAnimVal(getter_AddRefs(transforms));
-      NS_ASSERTION(transforms, "null transform list");
-      PRUint32 numberOfItems;
-      transforms->GetNumberOfItems(&numberOfItems);
-      if (numberOfItems>0)
-        transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
-    }
-    
+    nsSVGGraphicElement *element =
+      NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+
     if (localTM)
       parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
     else

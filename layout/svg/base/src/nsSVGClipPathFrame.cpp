@@ -34,19 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMSVGTransformable.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMSVGClipPathElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsISVGRendererCanvas.h"
-#include "nsIDOMSVGTransformList.h"
-#include "nsSVGAnimatedTransformList.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsISVGRendererSurface.h"
 #include "nsSVGDefsFrame.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsSVGGraphicElement.h"
 
 typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
 
@@ -318,22 +316,10 @@ nsSVGClipPathFrame::GetCanvasTM()
     mClipParentMatrix = containerFrame->GetCanvasTM();
   }
 
-  nsCOMPtr<nsIDOMSVGMatrix> localTM;
-  {
-    nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-    NS_ASSERTION(transformable, "wrong content element");
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
-    transformable->GetTransform(getter_AddRefs(atl));
-    NS_ASSERTION(atl, "null animated transform list");
-    nsCOMPtr<nsIDOMSVGTransformList> transforms;
-    atl->GetAnimVal(getter_AddRefs(transforms));
-    NS_ASSERTION(transforms, "null transform list");
-    PRUint32 numberOfItems;
-    transforms->GetNumberOfItems(&numberOfItems);
-    if (numberOfItems>0)
-      transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
-  }
-  
+  nsSVGGraphicElement *element =
+    NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+  nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+
   nsCOMPtr<nsIDOMSVGMatrix> canvasTM;
 
   if (localTM)

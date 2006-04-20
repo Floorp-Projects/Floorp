@@ -564,6 +564,8 @@ nsSVGPatternFrame::GetPatternContentUnits(PRUint16 *aUnits)
 NS_IMETHODIMP
 nsSVGPatternFrame::GetPatternTransform(nsIDOMSVGMatrix **aPatternTransform)
 {
+  *aPatternTransform = nsnull;
+
   // See if we need to get the value from another pattern
   if (!checkURITarget(nsGkAtoms::patternTransform)) {
     // No, return the values
@@ -574,6 +576,13 @@ nsSVGPatternFrame::GetPatternTransform(nsIDOMSVGMatrix **aPatternTransform)
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
     trans->GetAnimVal(getter_AddRefs(lTrans));
     lTrans->GetConsolidationMatrix(aPatternTransform);
+    if (!*aPatternTransform) {
+      nsresult rv = NS_NewSVGMatrix(aPatternTransform);
+      if (NS_FAILED(rv)) {
+        mLoopFlag = PR_FALSE;
+        return rv;
+      }
+    }
   } else {
     // Yes, get it from the target
     mNextPattern->GetPatternTransform(aPatternTransform);

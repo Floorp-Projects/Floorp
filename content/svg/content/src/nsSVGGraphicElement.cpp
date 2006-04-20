@@ -69,30 +69,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGGraphicElementBase)
 nsSVGGraphicElement::nsSVGGraphicElement(nsINodeInfo *aNodeInfo)
   : nsSVGGraphicElementBase(aNodeInfo)
 {
-
-}
-
-nsresult
-nsSVGGraphicElement::Init()
-{
-  nsresult rv = nsSVGGraphicElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: transform, #IMPLIED attrib: transform
-  {
-    nsCOMPtr<nsIDOMSVGTransformList> transformList;
-    rv = nsSVGTransformList::Create(getter_AddRefs(transformList));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mTransforms),
-                                        transformList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsSVGAtoms::transform, mTransforms);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -143,6 +119,31 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   return NS_ERROR_FAILURE;
 }
 
+/* Helper for GetCTM and GetScreenCTM */
+nsresult
+nsSVGGraphicElement::AppendLocalTransform(nsIDOMSVGMatrix *aCTM,
+                                          nsIDOMSVGMatrix **_retval)
+{
+  if (!mTransforms) {
+    *_retval = aCTM;
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  }
+
+  // append our local transformations
+  nsCOMPtr<nsIDOMSVGTransformList> transforms;
+  mTransforms->GetAnimVal(getter_AddRefs(transforms));
+  NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMSVGMatrix> matrix;
+  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
+  if (!matrix) {
+    *_retval = aCTM;
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  }
+  return aCTM->Multiply(matrix, _retval);  // addrefs, so we don't
+}
+
 /* nsIDOMSVGMatrix getCTM (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
 {
@@ -182,13 +183,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   rv = locatableElement->GetCTM(getter_AddRefs(parentCTM));
   if (NS_FAILED(rv)) return rv;
 
-  // append our local transformations
-  nsCOMPtr<nsIDOMSVGTransformList> transforms;
-  mTransforms->GetAnimVal(getter_AddRefs(transforms));
-  NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
-  return parentCTM->Multiply(matrix, _retval);  // addrefs, so we don't
+  return AppendLocalTransform(parentCTM, _retval);
 }
 
 /* nsIDOMSVGMatrix getScreenCTM (); */
@@ -230,13 +225,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   rv = locatableElement->GetScreenCTM(getter_AddRefs(parentScreenCTM));
   if (NS_FAILED(rv)) return rv;
 
-  // append our local transformations
-  nsCOMPtr<nsIDOMSVGTransformList> transforms;
-  mTransforms->GetAnimVal(getter_AddRefs(transforms));
-  NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIDOMSVGMatrix> matrix;
-  transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
-  return parentScreenCTM->Multiply(matrix, _retval);  // addrefs, so we don't
+  return AppendLocalTransform(parentScreenCTM, _retval);
 }
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
@@ -269,11 +258,13 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *eleme
 
 NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsIDOMSVGAnimatedTransformList * *aTransform)
 {
+  if (!mTransforms && NS_FAILED(CreateTransformList()))
+    return NS_ERROR_OUT_OF_MEMORY;
+      
   *aTransform = mTransforms;
-  NS_IF_ADDREF(*aTransform);
+  NS_ADDREF(*aTransform);
   return NS_OK;
 }
-
 
 //----------------------------------------------------------------------
 // nsIContent methods
@@ -298,4 +289,60 @@ PRBool
 nsSVGGraphicElement::IsEventName(nsIAtom* aName)
 {
   return IsGraphicElementEventName(aName);
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGGraphicElement::GetLocalTransformMatrix()
+{
+  if (!mTransforms)
+    return nsnull;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMSVGTransformList> transforms;
+  rv = mTransforms->GetAnimVal(getter_AddRefs(transforms));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<nsIDOMSVGMatrix> localTM;
+  rv = transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsIDOMSVGMatrix *retval = localTM.get();
+  NS_IF_ADDREF(retval);
+  return retval;
+}
+
+nsresult
+nsSVGGraphicElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                   const nsAString* aValue, PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::transform &&
+      !mTransforms &&
+      NS_FAILED(CreateTransformList()))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return nsSVGGraphicElementBase::BeforeSetAttr(aNamespaceID, aName,
+                                                aValue, aNotify);
+}
+
+nsresult
+nsSVGGraphicElement::CreateTransformList()
+{
+  nsresult rv;
+
+  // DOM property: transform, #IMPLIED attrib: transform
+  nsCOMPtr<nsIDOMSVGTransformList> transformList;
+  rv = nsSVGTransformList::Create(getter_AddRefs(transformList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mTransforms),
+                                      transformList);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = AddMappedSVGValue(nsSVGAtoms::transform, mTransforms);
+  if (NS_FAILED(rv)) {
+    mTransforms = nsnull;
+    return rv;
+  }
+
+  return NS_OK;
 }

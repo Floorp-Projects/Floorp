@@ -524,6 +524,8 @@ NS_IMETHODIMP
 nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
                                          nsISVGGeometrySource *aSource)
 {
+  *aGradientTransform = nsnull;
+
   nsCOMPtr<nsIDOMSVGMatrix> bboxTransform;
   PRUint16 gradientUnits = GetGradientUnits();
   if (gradientUnits == nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE) {
@@ -582,6 +584,12 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
   animTrans->GetAnimVal(getter_AddRefs(trans));
   nsCOMPtr<nsIDOMSVGMatrix> gradientTransform;
   trans->GetConsolidationMatrix(getter_AddRefs(gradientTransform));
+
+  if (!gradientTransform) {
+    *aGradientTransform = bboxTransform;
+    NS_ADDREF(*aGradientTransform);
+    return NS_OK;
+  }
 
   return bboxTransform->Multiply(gradientTransform, aGradientTransform);
 }

@@ -553,20 +553,29 @@ NS_IMETHODIMP nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGMatrix **_retv
   *_retval = nsnull;
   PRInt32 count = mTransforms.Count();
 
-  nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
-  nsresult rv = NS_NewSVGMatrix(getter_AddRefs(conmatrix));
-  if (NS_FAILED(rv))
-    return rv;
-  
-  nsCOMPtr<nsIDOMSVGMatrix> temp1, temp2;
+  if (!count)
+    return NS_OK;
 
-  for (PRInt32 i = 0; i < count; ++i) {
-    nsIDOMSVGTransform* transform = ElementAt(i);
-    transform->GetMatrix(getter_AddRefs(temp1));
-    conmatrix->Multiply(temp1, getter_AddRefs(temp2));
-    if (!temp2)
-      return NS_ERROR_OUT_OF_MEMORY;
-    conmatrix = temp2;
+  nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
+
+  // single transform common case - shortcut
+  if (count == 1) {
+    ElementAt(0)->GetMatrix(getter_AddRefs(conmatrix));
+  } else {
+    nsresult rv = NS_NewSVGMatrix(getter_AddRefs(conmatrix));
+    if (NS_FAILED(rv))
+      return rv;
+    
+    nsCOMPtr<nsIDOMSVGMatrix> temp1, temp2;
+    
+    for (PRInt32 i = 0; i < count; ++i) {
+      nsIDOMSVGTransform* transform = ElementAt(i);
+      transform->GetMatrix(getter_AddRefs(temp1));
+      conmatrix->Multiply(temp1, getter_AddRefs(temp2));
+      if (!temp2)
+        return NS_ERROR_OUT_OF_MEMORY;
+      conmatrix = temp2;
+    }
   }
 
   *_retval = conmatrix;
