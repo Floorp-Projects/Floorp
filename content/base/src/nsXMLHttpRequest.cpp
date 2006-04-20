@@ -283,7 +283,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -1781,13 +1781,14 @@ nsXMLHttpRequest::ChangeState(PRUint32 aState, PRBool aBroadcast,
 }
 
 /////////////////////////////////////////////////////
-// nsIHttpEventSink methods:
+// nsIChannelEventSink methods:
 //
 NS_IMETHODIMP
-nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
-                             nsIChannel *aNewChannel)
+nsXMLHttpRequest::OnChannelRedirect(nsIChannel *aOldChannel,
+                                    nsIChannel *aNewChannel,
+                                    PRUint32    aFlags)
 {
-  NS_ENSURE_ARG_POINTER(aNewChannel);
+  NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
 
   if (mScriptContext && !(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
     nsresult rv = NS_ERROR_FAILURE;
