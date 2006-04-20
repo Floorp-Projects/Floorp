@@ -80,10 +80,14 @@ class nsLoadCollector : public nsIWebProgressListener,
   // when the metrics service is shut down.
   static nsresult SetEnabled(PRBool enabled);
 
+ protected:
+  // Instances of this class should only be created by SetEnabled().
+  nsLoadCollector() {}
+
  private:
   ~nsLoadCollector() {}
 
-  // Object initialization, to be called by Startup()
+  // Object initialization, to be called by SetEnabled().
   nsresult Init();
 
   struct RequestEntry {

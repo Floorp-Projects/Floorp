@@ -55,6 +55,7 @@
 #include "nsILocalFile.h"
 #include "nsLoadCollector.h"
 #include "nsWindowCollector.h"
+#include "nsProfileCollector.h"
 #include "nsIPropertyBag.h"
 #include "nsIProperty.h"
 #include "nsIVariant.h"
@@ -665,6 +666,10 @@ nsMetricsService::EnableCollectors()
 {
   // Start and stop collectors based on the current config.
   nsresult rv;
+  rv = nsProfileCollector::SetEnabled(
+      IsEventEnabled(NS_LITERAL_STRING("profile")));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = nsLoadCollector::SetEnabled(
       IsEventEnabled(NS_LITERAL_STRING("document")));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -717,6 +722,7 @@ nsMetricsService::Observe(nsISupports *subject, const char *topic,
     Flush();
     nsLoadCollector::SetEnabled(PR_FALSE);
     nsWindowCollector::SetEnabled(PR_FALSE);
+    nsProfileCollector::SetEnabled(PR_FALSE);
   } else if (strcmp(topic, "profile-after-change") == 0) {
     nsresult rv = ProfileStartup();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -766,6 +772,9 @@ nsMetricsService::ProfileStartup()
   rv = prefs->SetIntPref(kSessionIDPref, sessionID);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  mCryptoHash = do_CreateInstance("@mozilla.org/security/hash;1");
+  NS_ENSURE_TRUE(mCryptoHash, NS_ERROR_FAILURE);
+
   // Set up the window id map
   NS_ENSURE_TRUE(mWindowMap.Init(32), NS_ERROR_OUT_OF_MEMORY);
 
@@ -781,6 +790,11 @@ nsMetricsService::ProfileStartup()
   rv = EnableCollectors();
   NS_ENSURE_SUCCESS(rv, rv);
   
+  nsProfileCollector *pc = nsProfileCollector::GetInstance();
+  if (pc) {
+    pc->LogProfile();
+  }
+
   RegisterUploadTimer();
 
   // If we didn't load a config, immediately upload our empty log.
@@ -1132,13 +1146,6 @@ nsMetricsService::GetConfigFile(nsIFile **result)
 nsresult
 nsMetricsService::GenerateClientID(nsCString &clientID)
 {
-  nsCOMPtr<nsICryptoHash> hasher =
-    do_CreateInstance("@mozilla.org/security/hash;1");
-  NS_ENSURE_STATE(hasher);
-
-  nsresult rv = hasher->Init(nsICryptoHash::MD5);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Feed some data into the hasher...
 
   struct {
@@ -1149,10 +1156,21 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
   input.a = PR_Now();
   PR_GetRandomNoise(input.b, sizeof(input.b));
 
-  rv = hasher->Update((const PRUint8 *) &input, sizeof(input));
+  return HashBytes(
+      NS_REINTERPRET_CAST(const PRUint8 *, &input), sizeof(input), clientID);
+}
+
+nsresult
+nsMetricsService::HashBytes(const PRUint8 *bytes, PRUint32 length,
+                            nsACString &result)
+{
+  nsresult rv = mCryptoHash->Init(nsICryptoHash::MD5);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return hasher->Finish(PR_TRUE, clientID);
+  rv = mCryptoHash->Update(bytes, length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return mCryptoHash->Finish(PR_TRUE, result);
 }
 
 PRBool
@@ -1181,8 +1199,37 @@ nsMetricsService::GetWindowID(nsIDOMWindow *window)
   return id;
 }
 
+nsresult
+nsMetricsService::Hash(const nsAString &str, nsCString &hashed)
+{
+  if (str.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_ConvertUTF16toUTF8 utf8(str);
+  return HashBytes(
+      NS_REINTERPRET_CAST(const PRUint8 *, utf8.get()), utf8.Length(), hashed);
+}
+
 /* static */ nsresult
 nsMetricsUtils::NewPropertyBag(nsIWritablePropertyBag2 **result)
 {
   return CallCreateInstance("@mozilla.org/hash-property-bag;1", result);
+}
+
+/* static */ nsresult
+nsMetricsUtils::AddChildItem(nsIMetricsEventItem *parent,
+                             const nsAString &childName,
+                             nsIPropertyBag *childProperties)
+{
+  nsCOMPtr<nsIMetricsEventItem> item;
+  nsMetricsService::get()->CreateEventItem(childName, getter_AddRefs(item));
+  NS_ENSURE_STATE(item);
+
+  item->SetProperties(childProperties);
+
+  nsresult rv = parent->AppendChild(item);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }

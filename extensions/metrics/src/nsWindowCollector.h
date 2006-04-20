@@ -78,8 +78,6 @@ class nsIDOMWindow;
 class nsWindowCollector : public nsIObserver
 {
  public:
-  nsWindowCollector() {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -91,7 +89,11 @@ class nsWindowCollector : public nsIObserver
   // Returns the singleton nsWindowCollector object, or NULL
   // if the window collector is not enabled.
   static nsWindowCollector *GetInstance() { return sInstance; }
-  
+
+ protected:
+  // Instances of this class should only be created by SetEnabled().
+  nsWindowCollector() {}
+
  private:
   ~nsWindowCollector();
 
