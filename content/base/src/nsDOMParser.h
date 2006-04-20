@@ -29,8 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 
-class nsDOMParser : public nsIDOMParser,
-                    public nsISecurityCheckedComponent
+class nsDOMParser : public nsIDOMParser
 {
 public: 
   nsDOMParser();
@@ -40,8 +39,6 @@ public:
 
   // nsIDOMParser
   NS_DECL_NSIDOMPARSER
-
-  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 private:
   nsCOMPtr<nsIURI> mBaseURI;
