@@ -37,7 +37,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.11 2006/02/22 02:12:09 wtchang%redhat.com Exp $
+ * $Id: pqg.c,v 1.12 2006/04/20 21:55:24 wtchang%redhat.com Exp $
  */
 
 #include "prerr.h"
@@ -538,7 +538,7 @@ step_15:
     **  in certifying the proper generation of p and q."
     */
     /* Generate h. */
-    SECITEM_AllocItem(NULL, &hit, seedBytes); /* h is no longer than p */
+    SECITEM_AllocItem(NULL, &hit, L/8); /* h is no longer than p */
     if (!hit.data) goto cleanup;
     do {
 	/* loop generate h until 1<h<p-1 and (h**[(p-1)/q])mod p > 1 */
