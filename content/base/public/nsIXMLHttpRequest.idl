@@ -68,7 +68,7 @@ interface nsIVariant;
  *   nsIDOMEventTarget and that's how you're supported to add event listeners.
  *   Try something like this:
  *
- *   nsCOMPtr<nsIDOMEventTarget> target(do_QuertyInterface(myxmlhttpreq));
+ *   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(myxmlhttpreq));
  *
  *   target->AddEventListener(NS_LITERAL_STRING("load"), mylistener,
  *                            PR_FALSE)
