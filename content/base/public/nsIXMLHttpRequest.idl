@@ -194,7 +194,7 @@ interface nsIXMLHttpRequest : nsISupports {
    * returns only after the response has been received.
    *
    * @param body Either an instance of nsIDOMDocument, nsIInputStream
-   *             or a string (nsISupportsWString in the native calling
+   *             or a string (nsISupportsString in the native calling
    *             case). This is used to populate the body of the
    *             HTTP request if the HTTP request method is "POST".
    *             If the parameter is a nsIDOMDocument, it is serialized.
