@@ -48,7 +48,7 @@ interface nsIDOMNode;
  * or any DOM subtree.
  */
 
-[scriptable, uuid(a6cf9123-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(9fd4ba15-e67c-4c98-b52c-7715f62c9196)]
 interface nsIDOMSerializer : nsISupports
 {
   /**
