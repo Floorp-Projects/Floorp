@@ -469,13 +469,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    GetScriptContextFromJSContext(cx, getter_AddRefs(scriptContext));
+    nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
     if (scriptContext) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+      nsCOMPtr<nsIDOMWindow> window =
+        do_QueryInterface(scriptContext->GetGlobalObject());
 
-      nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(globalObject);
       if (window) {
         nsCOMPtr<nsIDOMDocument> domdoc;
         window->GetDocument(getter_AddRefs(domdoc));
