@@ -524,7 +524,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   // Register as a load listener on the document
   nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(domDocument));
   if (target) {
-    nsWeakPtr requestWeak(getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIDOMParser*, this))));
+    nsWeakPtr requestWeak(do_GetWeakReference(NS_STATIC_CAST(nsIDOMParser*, this)));
     nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 
