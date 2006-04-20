@@ -51,17 +51,30 @@ nsRootAccessibleWrap::nsRootAccessibleWrap(nsIDOMNode *aDOMNode,
     nsRootAccessible(aDOMNode, aShell)
 {
     MAI_LOG_DEBUG(("New Root Acc=%p\n", (void*)this));
+}
+
+NS_IMETHODIMP nsRootAccessibleWrap::Init()
+{
+    nsresult rv = nsRootAccessible::Init();
     nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
+    if (root) {
         root->AddRootAccessible(this);
+    }
+    return rv;
 }
 
 nsRootAccessibleWrap::~nsRootAccessibleWrap()
 {
     MAI_LOG_DEBUG(("Delete Root Acc=%p\n", (void*)this));
+}
+
+NS_IMETHODIMP nsRootAccessibleWrap::Shutdown()
+{
     nsAppRootAccessible *root = nsAppRootAccessible::Create();
-    if (root)
+    if (root) {
         root->RemoveRootAccessible(this);
+    }
+    return nsRootAccessible::Shutdown();
 }
 
 NS_IMETHODIMP nsRootAccessibleWrap::GetParent(nsIAccessible **  aParent)
