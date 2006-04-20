@@ -57,12 +57,21 @@ interface nsIDOMParser : nsISupports {
    * The string passed in is parsed into a DOM document.
    *
    * @param str The string to be parsed
-   * @param contentType The content type of the string - either text/xml
-   *                    or text/html
+   * @param contentType The content type of the string (see parseFromStream)
    * @returns The DOM document created as a result of parsing the 
    *          string
    */
-  nsIDOMDocument parseFromString(in wstring str, in string contentType);
+  nsIDOMDocument parseFromString(in wstring str, in AUTF8String contentType);
+
+  /**
+   * The UTF8 string passed in is parsed into a DOM document.
+   *
+   * @param str The UTF8 string to be parsed
+   * @param contentType The content type of the string (see parseFromStream)
+   * @returns The DOM document created as a result of parsing the 
+   *          string
+   */
+  nsIDOMDocument parseFromUTF8String(in AUTF8String str, in AUTF8String contentType);
 
   /**
    * The byte stream passed in is parsed into a DOM document.
@@ -72,15 +81,15 @@ interface nsIDOMParser : nsISupports {
    * @param stream The byte stream whose contents are parsed
    * @param charset The character set that was used to encode the byte
    *                stream. NULL if not specified.
-   * @param contentType The content type of the string - either text/xml
-   *                    or text/html
+   * @param contentType The content type of the string - either text/xml,
+   *                    application/xml, or application/xhtml+xml
    * @returns The DOM document created as a result of parsing the 
    *          stream
    */
   nsIDOMDocument parseFromStream(in nsIInputStream stream, 
-                                 in string charset, 
+                                 in AUTF8String charset,
                                  in long contentLength,
-                                 in string contentType);
+                                 in AUTF8String contentType);
 
   /**
    * Set/Get the baseURI, may be needed when called from native code.
