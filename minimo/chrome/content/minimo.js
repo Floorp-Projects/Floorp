@@ -639,7 +639,7 @@ function MiniNavShutdown()
 
 function loadURI(uri)
 {
-  gBrowser.webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+  gBrowser.webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP, null, null, null);
 }
 
 function BrowserHome()
@@ -823,11 +823,11 @@ function urlbar() {
 
 /* Reset the text size */ 
 function BrowserResetZoomPlus() {
-  gBrowser.selectedBrowser.markupDocumentViewer.textZoom+= .25;
+  gBrowser.selectedBrowser.markupDocumentViewer.textZoom+= .1;
 }
 
 function BrowserResetZoomMinus() {
-  gBrowser.selectedBrowser.markupDocumentViewer.textZoom-= .25;
+  gBrowser.selectedBrowser.markupDocumentViewer.textZoom-= .1;
 }
 
 
