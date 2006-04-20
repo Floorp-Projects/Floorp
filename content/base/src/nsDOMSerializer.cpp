@@ -45,12 +45,6 @@ nsDOMSerializer::~nsDOMSerializer()
 }
 
 
-// XPConnect interface list for nsDOMSerializer
-NS_CLASSINFO_MAP_BEGIN(DOMSerializer)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMSerializer)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsDOMSerializer
 NS_INTERFACE_MAP_BEGIN(nsDOMSerializer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

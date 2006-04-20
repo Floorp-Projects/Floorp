@@ -262,12 +262,6 @@ nsDOMParser::~nsDOMParser()
 }
 
 
-// XPConnect interface list for nsDOMParser
-NS_CLASSINFO_MAP_BEGIN(DOMParser)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMParser)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsDOMParser
 NS_INTERFACE_MAP_BEGIN(nsDOMParser)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
