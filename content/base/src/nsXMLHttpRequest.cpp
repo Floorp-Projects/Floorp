@@ -791,10 +791,13 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   nsCAutoString header;
   if( NS_FAILED(httpChannel->GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), header)) )  
     httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                  NS_LITERAL_CSTRING("text/xml") );
+                                  NS_LITERAL_CSTRING("text/xml"),
+                                  PR_FALSE);
 
   // set the content length header
-  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), nsPrintfCString("%d", charLength) );
+  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"),
+                                nsPrintfCString("%d", charLength),
+                                PR_FALSE);
 
   // Shove in the trailing and leading CRLF
   postData[0] = nsCRT::CR;
@@ -1320,15 +1323,10 @@ nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel) {
-    // We need to set, not add to, the header. Using empty value will
-    // clear existing header.
-    nsresult rv = httpChannel->SetRequestHeader(nsDependentCString(header),
-                                                nsCString());
-    if (NS_FAILED(rv))
-      return rv;
-    // Now set it for real
+    // We need to set, not add to, the header.
     return httpChannel->SetRequestHeader(nsDependentCString(header),
-                                         nsDependentCString(value));
+                                         nsDependentCString(value),
+                                         PR_FALSE);
   }
   
   return NS_OK;
