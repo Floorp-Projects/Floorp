@@ -492,7 +492,10 @@ NS_IMETHODIMP
 nsXMLHttpRequest::Abort()
 {
   if (mReadRequest) {
-    return mReadRequest->Cancel(NS_BINDING_ABORTED);
+    mReadRequest->Cancel(NS_BINDING_ABORTED);
+  }
+  if (mChannel) {
+    mChannel->Cancel(NS_BINDING_ABORTED);
   }
   
   return NS_OK;
@@ -1275,6 +1278,12 @@ nsXMLHttpRequest::Unload(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
+  if (mReadRequest) {
+    mReadRequest->Cancel(NS_BINDING_ABORTED);
+  }
+  if (mChannel) {
+    mChannel->Cancel(NS_BINDING_ABORTED);
+  }
   mDocument = nsnull;
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
 #ifdef IMPLEMENT_SYNC_LOAD
