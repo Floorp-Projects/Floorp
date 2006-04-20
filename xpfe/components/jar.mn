@@ -1,5 +1,5 @@
 #ifndef SUPPRESS_CHROME
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 comm.jar:
     content/communicator/directory/directory.xul                (directory/directory.xul)
     content/communicator/directory/directory.html               (directory/directory.html)
