@@ -124,9 +124,10 @@ STATIC_EXTRA_LIBS	+= $(MOZ_XPCOM_OBSOLETE_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool imm32 winmm)
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool imm32)
+# XXX temporary workaround until link ordering issue is solved
 ifdef GNU_CC
-STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME, wsock32 gdi32)
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,winmm wsock32 gdi32)
 endif
 ifdef MOZ_ENABLE_CAIRO_GFX
 STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME, usp10)

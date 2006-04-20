@@ -136,7 +136,7 @@ EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
+OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
 RCINCLUDE = splash.rc
 ifndef GNU_CC
 RCFLAGS += -DMOZ_SUITE -I$(srcdir)

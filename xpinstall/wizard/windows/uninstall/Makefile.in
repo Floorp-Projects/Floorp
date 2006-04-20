@@ -66,7 +66,7 @@ MOZ_WINCONSOLE = 0
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifdef GNU_CC
-OS_LIBS		+= -lshell32 -lversion -lgdi32
+OS_LIBS		+= -lshell32 -lversion
 else
 OS_LIBS		+= shell32.lib version.lib
 endif
