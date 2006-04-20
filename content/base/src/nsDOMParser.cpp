@@ -57,6 +57,7 @@
 #include "nsICodebasePrincipal.h"
 #include "nsIDOMClassInfo.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIScriptContext.h"
