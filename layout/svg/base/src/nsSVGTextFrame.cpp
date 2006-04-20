@@ -44,15 +44,12 @@
 #include "nsWeakReference.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
-#include "nsIDOMSVGTransformable.h"
-#include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGSVGElement.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGLength.h"
 #include "nsISVGValueUtils.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
-#include "nsIDOMSVGTransformList.h"
 #include "nsISVGContainerFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
@@ -72,6 +69,7 @@
 #include "nsISVGRendererSurface.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
+#include "nsSVGGraphicElement.h"
 
 typedef nsContainerFrame nsSVGTextFrameBase;
 
@@ -181,7 +179,6 @@ protected:
   void EnsureFragmentTreeUpToDate();
   void UpdateFragmentTree();
   void UpdateGlyphPositioning();
-  already_AddRefed<nsIDOMSVGAnimatedTransformList> GetTransform();
   nsISVGGlyphFragmentNode *GetFirstGlyphFragmentChildNode();
   nsISVGGlyphFragmentNode *GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode*node);
 
@@ -729,21 +726,9 @@ nsSVGTextFrame::GetCanvasTM()
     NS_ASSERTION(parentTM, "null TM");
 
     // got the parent tm, now check for local tm:
-    nsCOMPtr<nsIDOMSVGMatrix> localTM;
-    {
-      nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-      NS_ASSERTION(transformable, "wrong content element");
-      nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
-      transformable->GetTransform(getter_AddRefs(atl));
-      NS_ASSERTION(atl, "null animated transform list");
-      nsCOMPtr<nsIDOMSVGTransformList> transforms;
-      atl->GetAnimVal(getter_AddRefs(transforms));
-      NS_ASSERTION(transforms, "null transform list");
-      PRUint32 numberOfItems;
-      transforms->GetNumberOfItems(&numberOfItems);
-      if (numberOfItems>0)
-        transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
-    }
+    nsSVGGraphicElement *element =
+      NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+    nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
     
     if (localTM)
       parentTM->Multiply(localTM, getter_AddRefs(mCanvasTM));
@@ -1161,17 +1146,6 @@ nsSVGTextFrame::GetDy()
   tpElement->GetDy(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
   animLengthList->GetAnimVal(&retval);
-  return retval;
-}
-
-already_AddRefed<nsIDOMSVGAnimatedTransformList>
-nsSVGTextFrame::GetTransform()
-{
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content element");
-  
-  nsIDOMSVGAnimatedTransformList *retval;
-  transformable->GetTransform(&retval);
   return retval;
 }
 

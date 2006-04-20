@@ -44,9 +44,6 @@
 #include "nsISVGRendererRegion.h"
 #include "nsISVGValueUtils.h"
 #include "nsISVGGeometrySource.h"
-#include "nsIDOMSVGTransformable.h"
-#include "nsIDOMSVGAnimTransformList.h"
-#include "nsIDOMSVGTransformList.h"
 #include "nsISVGContainerFrame.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -65,6 +62,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsISVGRendererSurface.h"
 #include "nsINameSpaceManager.h"
+#include "nsSVGGraphicElement.h"
 
 struct nsSVGMarkerProperty {
   nsISVGMarkerFrame *mMarkerStart;
@@ -613,24 +611,13 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
   NS_ASSERTION(parentTM, "null TM");
 
   // append our local transformations if we have any:
-  nsCOMPtr<nsIDOMSVGMatrix> localTM;
-  {
-    nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-    NS_ASSERTION(transformable, "wrong content element");
-    nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
-    transformable->GetTransform(getter_AddRefs(atl));
-    NS_ASSERTION(atl, "null animated transform list");
-    nsCOMPtr<nsIDOMSVGTransformList> transforms;
-    atl->GetAnimVal(getter_AddRefs(transforms));
-    NS_ASSERTION(transforms, "null transform list");
-    PRUint32 numberOfItems;
-    transforms->GetNumberOfItems(&numberOfItems);
-    if (numberOfItems>0)
-      transforms->GetConsolidationMatrix(getter_AddRefs(localTM));
-  }  
-  if (localTM) {
+  nsSVGGraphicElement *element =
+    NS_STATIC_CAST(nsSVGGraphicElement*, mContent);
+  nsCOMPtr<nsIDOMSVGMatrix> localTM = element->GetLocalTransformMatrix();
+
+  if (localTM)
     return parentTM->Multiply(localTM, aCTM);
-  }
+
   *aCTM = parentTM;
   NS_ADDREF(*aCTM);
   return NS_OK;
