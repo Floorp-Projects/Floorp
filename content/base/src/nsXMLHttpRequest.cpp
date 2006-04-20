@@ -869,7 +869,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
       prehost.Append(":");
       prehost.Append(password);
     }
-    uri->SetPreHost(prehost.GetBuffer());
+    uri->SetPreHost(prehost.get());
     authp = PR_TRUE;
   }
 
