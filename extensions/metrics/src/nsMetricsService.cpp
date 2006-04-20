@@ -126,22 +126,35 @@ CompressBZ2(nsIInputStream *src, PRFileDesc *outFd)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = NS_OK;
+  int action = BZ_RUN;
   for (;;) {
-    if (strm.avail_in == 0) {
+    PRUint32 bytesRead = 0;
+    if (action == BZ_RUN && strm.avail_in == 0) {
       // fill inbuf
-      PRUint32 n;
-      rv = src->Read(inbuf, sizeof(inbuf), &n);
+      rv = src->Read(inbuf, sizeof(inbuf), &bytesRead);
       if (NS_FAILED(rv))
         break;
       strm.next_in = inbuf;
-      strm.avail_in = (int) n;
+      strm.avail_in = (int) bytesRead;
     }
 
     strm.next_out = outbuf;
     strm.avail_out = sizeof(outbuf);
 
-    ret = BZ2_bzCompress(&strm, 0);
-    if (ret != BZ_OK && ret != BZ_STREAM_END) {
+    ret = BZ2_bzCompress(&strm, action);
+    if (action == BZ_RUN) {
+      if (ret != BZ_RUN_OK) {
+        MS_LOG(("BZ2_bzCompress/RUN failed: %d", ret));
+        rv = NS_ERROR_UNEXPECTED;
+        break;
+      }
+
+      if (bytesRead < sizeof(inbuf)) {
+        // We're done now, tell libbz2 to finish
+        action = BZ_FINISH;
+      }
+    } else if (ret != BZ_FINISH_OK && ret != BZ_STREAM_END) {
+      MS_LOG(("BZ2_bzCompress/FINISH failed: %d", ret));
       rv = NS_ERROR_UNEXPECTED;
       break;
     }
@@ -149,6 +162,7 @@ CompressBZ2(nsIInputStream *src, PRFileDesc *outFd)
     if (strm.avail_out < sizeof(outbuf)) {
       PRInt32 n = sizeof(outbuf) - strm.avail_out;
       if (PR_Write(outFd, outbuf, n) != n) {
+        MS_LOG(("Failed to write compressed file"));
         rv = NS_ERROR_UNEXPECTED;
         break;
       }
