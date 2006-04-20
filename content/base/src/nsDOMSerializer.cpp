@@ -39,7 +39,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIOutputStream.h"
-#include "nsIContent.h"
+#include "nsINode.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentEncoder.h"
@@ -129,39 +129,21 @@ CheckSameOrigin(nsIDOMNode *aRoot)
 {
   // Make sure that the caller has permission to access the root
 
-  // Be sure to QI to either nsIContent or nsIDocument to make sure
-  // we're passed a naitve object.
+  // Be sure to QI to nsINode to make sure we're passed a native
+  // object.
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aRoot));
-  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsINode> node(do_QueryInterface(aRoot));
 
-  if (content) {
-    doc = content->GetOwnerDoc();
+  if (NS_UNLIKELY(!node)) {
+    // We got a non-native object.
 
-    if (!doc) {
-      // Orphan node, permit access.
-
-      return NS_OK;
-    }
-  } else {
-    doc = do_QueryInterface(aRoot);
-
-    if (!doc) {
-      // We got a non-native object.
-
-      return NS_ERROR_INVALID_POINTER;
-    }
+    return NS_ERROR_INVALID_POINTER;
   }
 
-  nsCOMPtr<nsIURI> root_uri;
-
-  nsIPrincipal *principal = doc->GetPrincipal();
+  
+  nsIPrincipal *principal = node->GetNodePrincipal();
 
   if (principal) {
-    principal->GetURI(getter_AddRefs(root_uri));
-  }
-
-  if (root_uri) {
     nsresult rv;
     nsCOMPtr<nsIScriptSecurityManager> secMan = 
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -177,9 +159,18 @@ CheckSameOrigin(nsIDOMNode *aRoot)
       return NS_OK;
     }
 
-    // Check if the caller (if any) is from the same origin that the
-    // root is from.
-    return secMan->CheckSameOrigin(nsnull, root_uri);
+    nsCOMPtr<nsIPrincipal> subject;
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // XXXbz can we happen to not have a subject principal here?
+    // nsScriptSecurityManager::IsCapabilityEnabled doesn't actually use
+    // GetSubjectPrincipal, so not sure...
+    // In any case, no subject principal means access is allowed.
+    if (subject) {
+      // Check if the caller is from the same origin that the root is from.
+      return secMan->CheckSameOriginPrincipal(subject, principal);
+    }
   }
 
   return NS_OK;
