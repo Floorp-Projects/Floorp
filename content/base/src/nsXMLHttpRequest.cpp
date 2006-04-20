@@ -213,7 +213,7 @@ nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
 nsXMLHttpRequest::nsXMLHttpRequest()
 {
   NS_INIT_ISUPPORTS();
-  mStatus = XML_HTTP_REQUEST_INITIALIZED;
+  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED,PR_FALSE);
   mAsync = PR_TRUE;
 }
 
@@ -315,6 +315,28 @@ nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt)
 
   return NS_OK;
 }
+
+/* attribute nsIOnReadystatechangeHandler onreadystatechange; */
+NS_IMETHODIMP 
+nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadystatechangeHandler * *aOnreadystatechange)
+{
+  NS_ENSURE_ARG_POINTER(aOnreadystatechange);
+
+  *aOnreadystatechange = mOnReadystatechangeListener;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadystatechangeHandler * aOnreadystatechange)
+{
+  mOnReadystatechangeListener = aOnreadystatechange;
+
+  GetCurrentContext(getter_AddRefs(mScriptContext));
+
+  return NS_OK;
+}
+
 
 /* attribute nsIDOMEventListener onload; */
 NS_IMETHODIMP 
@@ -518,11 +540,14 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(PRUnichar **aResponseText)
 {
   NS_ENSURE_ARG_POINTER(aResponseText);
   *aResponseText = nsnull;
-  if ((XML_HTTP_REQUEST_COMPLETED == mStatus)) {
+  
+  if ((XML_HTTP_REQUEST_COMPLETED == mStatus) ||
+      (XML_HTTP_REQUEST_INTERACTIVE == mStatus)) {
     // First check if we can represent the data as a string - if it contains
     // nulls we won't try. 
     if (mResponseBody.FindChar('\0') >= 0)
-      return NS_ERROR_FAILURE;
+      return NS_OK;
+
     nsresult rv = ConvertBodyToText(aResponseText);
     if (NS_FAILED(rv))
       return rv;
@@ -657,7 +682,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     rv = httpChannel->SetRequestMethod(method);
   }
 
-  mStatus = XML_HTTP_REQUEST_OPENED;
+  ChangeState(XML_HTTP_REQUEST_OPENED);
 
   return rv;
 }
@@ -857,6 +882,8 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
     }
   }
 
+  xmlHttpRequest->ChangeState(XML_HTTP_REQUEST_INTERACTIVE);
+
   if (NS_SUCCEEDED(rv)) {
     *writeCount = count;
   } else {
@@ -889,6 +916,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   mReadRequest = request;
   mContext = ctxt;
+  ChangeState(XML_HTTP_REQUEST_LOADED);
   return mXMLParserStreamListener->OnStartRequest(request,ctxt);
 }
 
@@ -900,6 +928,82 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
+
+  RequestCompleted();
+
+  return rv;
+}
+
+nsresult 
+nsXMLHttpRequest::RequestCompleted()
+{
+  nsresult rv = NS_OK;
+
+  NS_WARN_IF_FALSE(mDelayedEvent,"no delayed event");
+
+  // We might have been sent non-XML data. If that was the case,
+  // we should null out the document member. The idea in this
+  // check here is that if there is no document element it is not
+  // an XML document. We might need a fancier check...
+  if (mDocument) {
+    nsCOMPtr<nsIDOMElement> root;
+    mDocument->GetDocumentElement(getter_AddRefs(root));
+    if (!root) {
+      mDocument = nsnull;
+    }
+  }
+
+  ChangeState(XML_HTTP_REQUEST_COMPLETED);
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (mChromeWindow) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+    mChromeWindow = 0;
+  }
+#endif
+
+  nsCOMPtr<nsIJSContextStack> stack;
+  JSContext *cx = nsnull;
+
+  if (mScriptContext) {
+    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      cx = (JSContext *)mScriptContext->GetNativeContext();
+
+      if (cx) {
+        stack->Push(cx);
+      }
+    }
+  }
+
+  if (mOnLoadListener && mDelayedEvent) {
+    mOnLoadListener->HandleEvent(mDelayedEvent);
+  }
+
+  if (mLoadEventListeners && mDelayedEvent) {
+    PRUint32 index, count;
+
+    mLoadEventListeners->Count(&count);
+    for (index = 0; index < count; index++) {
+      nsCOMPtr<nsIDOMEventListener> listener;
+
+      mLoadEventListeners->QueryElementAt(index,
+                                          NS_GET_IID(nsIDOMEventListener),
+                                          getter_AddRefs(listener));
+
+      if (listener) {
+        listener->HandleEvent(mDelayedEvent);
+      }
+    }
+  }
+
+  if (cx) {
+    stack->Pop(&cx);
+  }
+
+  mDelayedEvent = nsnull;
+
   return rv;
 }
 
@@ -915,7 +1019,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
   }
   
   // Make sure we've been opened
-  if (!mChannel) {
+  if (!mChannel || XML_HTTP_REQUEST_OPENED != mStatus) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -1084,7 +1188,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
 #endif
 
   // Start reading from the channel
-  mStatus = XML_HTTP_REQUEST_SENT;
+  ChangeState(XML_HTTP_REQUEST_SENT);
   mXMLParserStreamListener = listener;
   rv = mChannel->AsyncOpen(this, nsnull);
 
@@ -1117,11 +1221,27 @@ nsXMLHttpRequest::Send(nsISupports *body)
 NS_IMETHODIMP 
 nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
 {
+  if (!mChannel)             // open() initializes mChannel, and open()
+    return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
+
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   if (httpChannel)
     return httpChannel->SetRequestHeader(header, value);
   
+  return NS_OK;
+}
+
+/* readonly attribute long readyState; */
+NS_IMETHODIMP 
+nsXMLHttpRequest::GetReadyState(PRInt32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+  if (mStatus == XML_HTTP_REQUEST_SENT) {
+    *aState = XML_HTTP_REQUEST_OPENED;
+  } else {
+    *aState = mStatus;
+  }
   return NS_OK;
 }
 
@@ -1137,67 +1257,14 @@ nsXMLHttpRequest::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
 {
-  mStatus = XML_HTTP_REQUEST_COMPLETED;
-
-  // We might have been sent non-XML data. If that was the case,
-  // we should null out the document member. The idea in this
-  // check here is that if there is no document element it is not
-  // an XML document. We might need a fancier check...
-  if (mDocument) {
-    nsCOMPtr<nsIDOMElement> root;
-    mDocument->GetDocumentElement(getter_AddRefs(root));
-    if (!root) {
-      mDocument = nsnull;
-    }
-  }
-
-#ifdef IMPLEMENT_SYNC_LOAD
-  if (mChromeWindow) {
-    mChromeWindow->ExitModalEventLoop(NS_OK);
-    mChromeWindow = 0;
-  }
-#endif
-
-  nsCOMPtr<nsIJSContextStack> stack;
-  JSContext *cx = nsnull;
-
-  if (mScriptContext) {
-    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-
-    if (stack) {
-      cx = (JSContext *)mScriptContext->GetNativeContext();
-
-      if (cx) {
-        stack->Push(cx);
-      }
-    }
-  }
-
-  if (mOnLoadListener) {
-    mOnLoadListener->HandleEvent(aEvent);
-  }
-
-  if (mLoadEventListeners) {
-    PRUint32 index, count;
-
-    mLoadEventListeners->Count(&count);
-    for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIDOMEventListener> listener;
-
-      mLoadEventListeners->QueryElementAt(index,
-                                          NS_GET_IID(nsIDOMEventListener),
-                                          getter_AddRefs(listener));
-
-      if (listener) {
-        listener->HandleEvent(aEvent);
-      }
-    }
-  }
-
-  if (cx) {
-    stack->Pop(&cx);
-  }
-
+  // If we had an XML error in the data, the parser terminated and
+  // we received the load event, even though we might still be
+  // loading data into responseBody/responseText. We will delay
+  // sending the load event until OnStopRequest(). In normal case
+  // there is no harm done, we will get OnStopRequest() immediately
+  // after the load event.
+  NS_WARN_IF_FALSE(!mDelayedEvent,"there should be no delayed event");
+  mDelayedEvent = aEvent;
   return NS_OK;
 }
 
@@ -1210,8 +1277,8 @@ nsXMLHttpRequest::Unload(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
-  mStatus = XML_HTTP_REQUEST_ABORTED;
   mDocument = nsnull;
+  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
 #ifdef IMPLEMENT_SYNC_LOAD
   if (mChromeWindow) {
     mChromeWindow->ExitModalEventLoop(NS_OK);
@@ -1225,8 +1292,8 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
-  mStatus = XML_HTTP_REQUEST_ABORTED;
   mDocument = nsnull;
+  ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
 #ifdef IMPLEMENT_SYNC_LOAD
   if (mChromeWindow) {
     mChromeWindow->ExitModalEventLoop(NS_OK);
@@ -1277,6 +1344,37 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+nsresult
+nsXMLHttpRequest::ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast)
+{
+  mStatus = aState;
+  nsresult rv = NS_OK;
+  if (mAsync && aBroadcast && mOnReadystatechangeListener) {
+    nsCOMPtr<nsIJSContextStack> stack;
+    JSContext *cx = nsnull;
+
+    if (mScriptContext) {
+      stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+      if (stack) {
+        cx = (JSContext *)mScriptContext->GetNativeContext();
+
+        if (cx) {
+          stack->Push(cx);
+        }
+      }
+    }
+
+    rv = mOnReadystatechangeListener->HandleEvent();
+
+    if (cx) {
+      stack->Pop(&cx);
+    }
+  }
+
+  return rv;
+}
+
 NS_IMPL_ISUPPORTS1(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 
 NS_IMETHODIMP nsXMLHttpRequest::
@@ -1288,3 +1386,4 @@ nsHeaderVisitor::VisitHeader(const char *header, const char *value)
     mHeaders.Append('\n');
     return NS_OK;
 }
+
