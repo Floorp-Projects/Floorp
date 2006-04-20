@@ -1631,14 +1631,29 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
 
-  // Prevent modification to certain HTTP headers (see bug 302263):
-  const char *kInvalidHeaders[] = {
-    "host", "content-length", "transfer-encoding", "via", "upgrade"
-  };
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(kInvalidHeaders); ++i) {
-    if (header.LowerCaseEqualsASCII(kInvalidHeaders[i])) {
-      NS_WARNING("refusing to set request header");
-      return NS_OK;
+  // Prevent modification to certain HTTP headers (see bug 302263), unless
+  // the executing script has UniversalBrowserWrite permission.
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+  if (!secMan)
+    return NS_ERROR_FAILURE;
+
+  PRBool privileged;
+  nsresult rv = secMan->IsCapabilityEnabled("UniversalBrowserWrite",
+                                            &privileged);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  if (!privileged) {
+    const char *kInvalidHeaders[] = {
+      "host", "content-length", "transfer-encoding", "via", "upgrade"
+    };
+    for (size_t i = 0; i < NS_ARRAY_LENGTH(kInvalidHeaders); ++i) {
+      if (header.LowerCaseEqualsASCII(kInvalidHeaders[i])) {
+        NS_WARNING("refusing to set request header");
+        return NS_OK;
+      }
     }
   }
 
