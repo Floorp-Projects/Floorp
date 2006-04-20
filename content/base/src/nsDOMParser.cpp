@@ -316,8 +316,8 @@ NS_IMETHODIMP nsDOMParserChannel::AsyncRead(nsIStreamListener *listener, nsISupp
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void asyncWrite (in nsIInputStream fromStream, in nsIStreamObserver observer, in nsISupports ctxt); */
-NS_IMETHODIMP nsDOMParserChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt)
+/* void asyncWrite (in nsIStreamProvider provider, in nsISupports ctxt); */
+NS_IMETHODIMP nsDOMParserChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
