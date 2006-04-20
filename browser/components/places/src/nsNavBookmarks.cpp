@@ -502,7 +502,7 @@ nsNavBookmarks::FillBookmarksHash()
   rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id "
       "FROM moz_bookmarks b "
-      "JOIN moz_history h ON b.item_child = h.id"),
+      "LEFT JOIN moz_history h ON b.item_child = h.id where b.item_child IS NOT NULL"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   while (NS_SUCCEEDED(statement->ExecuteStep(&hasMore)) && hasMore) {
@@ -523,7 +523,8 @@ nsNavBookmarks::FillBookmarksHash()
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_historyvisit v1 on b.item_child = v1.page_id "
       "LEFT JOIN moz_historyvisit v2 on v2.from_visit = v1.visit_id "
-      "WHERE v2.visit_type = 5 OR v2.visit_type = 6 " // perm. or temp. RDRs
+      "WHERE b.item_child IS NOT NULL "
+      "AND v2.visit_type = 5 OR v2.visit_type = 6 " // perm. or temp. RDRs
       "GROUP BY v2.page_id"),
     getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
