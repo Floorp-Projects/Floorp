@@ -157,6 +157,9 @@ private:
   nsresult BuildEventItem(nsIMetricsEventItem *item,
                           nsIDOMElement **itemElement);
 
+  // Called to persist mEventCount.  Returns "true" if succeeded.
+  PRBool PersistEventCount();
+
 private:
   // Pointer to the metrics service singleton
   static nsMetricsService* sMetricsService;

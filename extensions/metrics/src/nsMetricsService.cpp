@@ -393,10 +393,7 @@ nsMetricsService::Flush()
   NS_ENSURE_STATE(succeeded);
 
   // Write current event count to prefs
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(prefs);
-  rv = prefs->SetIntPref("metrics.event-count", mEventCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(PersistEventCount());
 
   // Create a new mRoot
   rv = CreateRoot();
@@ -428,6 +425,10 @@ nsMetricsService::Upload()
     if (NS_FAILED(dataFile->Remove(PR_FALSE)))
       NS_WARNING("failed to remove data file");
   }
+
+  // Reset event count and persist.
+  mEventCount = 0;
+  NS_ENSURE_STATE(PersistEventCount());
 
   return NS_OK;
 }
@@ -1041,6 +1042,15 @@ nsMetricsService::GenerateClientID(nsCString &clientID)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return hasher->Finish(PR_TRUE, clientID);
+}
+
+PRBool
+nsMetricsService::PersistEventCount()
+{
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefs, PR_FALSE);
+
+  return NS_SUCCEEDED(prefs->SetIntPref("metrics.event-count", mEventCount));
 }
 
 /* static */ PRUint32
