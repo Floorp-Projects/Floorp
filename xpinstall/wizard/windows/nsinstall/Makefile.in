@@ -54,9 +54,6 @@ LIBS = \
 	$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)
-ifdef GNU_CC
-OS_LIBS		+= -lgdi32
-endif
 
 NO_DIST_INSTALL	= 1
 

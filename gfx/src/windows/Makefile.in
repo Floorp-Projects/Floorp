@@ -93,9 +93,6 @@ LOCAL_INCLUDES	= \
 ifndef WINCE
 _OS_LIBS	= comdlg32
 endif
-ifdef GNU_CC
-_OS_LIBS	+= gdi32
-endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 EXTRA_DSO_LDOPTS += \
