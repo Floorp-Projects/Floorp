@@ -701,9 +701,8 @@ gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
         cairo_scaled_font_t *scaledFont = nsnull;
 
         PRBool fontSelected = PR_FALSE;
-
+        PRBool hasFallbackFont = (mFallbackFont != nsnull);
         nsRefPtr<gfxWindowsFont> currentFont;
-        nsRefPtr<gfxWindowsFont> fallbackFont;
 
 DO_TRY_AGAIN:
         int fontIndex = 0;
@@ -712,9 +711,6 @@ TRY_AGAIN_SAME_SCRIPT:
         currentFont = mGroup->GetFontAt(fontIndex);
 
 TRY_AGAIN_HOPE_FOR_THE_BEST:
-        if (fallbackFont)
-            currentFont = fallbackFont;
-
         SaveDC(aDC);
 
         currentFont->UpdateCTM(aContext->CurrentMatrix());
@@ -804,6 +800,7 @@ TRY_AGAIN_JUST_SHAPE:
         }
 
         if (isMissingGlyphs) {
+            // try next font in the list
             if (fontIndex < mGroup->mFonts.Length() - 1) {
                 fontIndex++;
                 cairo_win32_scaled_font_done_font(scaledFont);
@@ -811,14 +808,15 @@ TRY_AGAIN_JUST_SHAPE:
                 goto TRY_AGAIN_SAME_SCRIPT;
             }
 
-            if (!fallbackFont) {
-                // only look for a fallback font once
-                fallbackFont = FindFallbackFont(aDC, itemChars, itemLength, mGroup->GetFontAt(0));
+            if (!mFallbackFont || 
+                (hasFallbackFont && (currentFont == mFallbackFont))) {
+                mFallbackFont = FindFallbackFont(aDC, itemChars, itemLength, mGroup->GetFontAt(0));
+            }
 
-                if (fallbackFont) {
-                    RestoreDC(aDC, -1);
-                    goto TRY_AGAIN_HOPE_FOR_THE_BEST;
-                }
+            if (mFallbackFont && (currentFont != mFallbackFont)) {
+                currentFont = mFallbackFont;
+                RestoreDC(aDC, -1);
+                goto TRY_AGAIN_HOPE_FOR_THE_BEST;
             }
 
             // otherwise we fail to draw the characters so give up and continue on.
