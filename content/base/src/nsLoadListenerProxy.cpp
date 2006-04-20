@@ -48,7 +48,8 @@ nsLoadListenerProxy::~nsLoadListenerProxy()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
+NS_IMPL_ISUPPORTS2(nsLoadListenerProxy, nsIDOMEventListener,
+                   nsIDOMLoadListener)
 
 NS_IMETHODIMP
 nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
