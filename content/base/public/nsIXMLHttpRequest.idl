@@ -316,20 +316,6 @@ interface nsIJSXMLHttpRequest : nsISupports {
   attribute nsIDOMEventListener onerror;
 
   /**
-   * Meant to be a script-only mechanism for setting a progress event listener.
-   * The attribute is expected to be JavaScript function object. When
-   * the error event occurs, the function is invoked.
-   * This attribute should not be used from native code!!
-   * This event listener may be called multiple times during the open request.
-   *
-   * After the initial response, all event listeners will be cleared.
-   * Call open() before setting new event listeners.
-   *
-   * Mozilla only.
-   */
-  attribute nsIDOMEventListener onprogress;
-
-  /**
    * Meant to be a script-only mechanism for setting a callback function.
    * The attribute is expected to be JavaScript function object. When the
    * readyState changes, the callback function will be called.
