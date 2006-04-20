@@ -27,6 +27,7 @@
 #include "nsISecurityCheckedComponent.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
 
 class nsDOMParser : public nsIDOMParser,
                     public nsISecurityCheckedComponent
@@ -38,16 +39,12 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMParser
-  NS_IMETHOD ParseFromString(const PRUnichar *str, 
-                             const char *contentType, 
-                             nsIDOMDocument **_retval);
-  NS_IMETHOD ParseFromStream(nsIInputStream *stream, 
-                             const char *charset, 
-                             PRInt32 contentLength,
-                             const char *contentType, 
-                             nsIDOMDocument **_retval);
+  NS_DECL_NSIDOMPARSER
 
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
+
+private:
+  nsCOMPtr<nsIURI> mBaseURI;
 };
 
 #endif

@@ -24,6 +24,7 @@
 
 interface nsIInputStream;
 interface nsIDOMDocument;
+interface nsIURI;
 
 /**
  * The nsIDOMParser interface is a non-SAX interface that can be used
@@ -63,6 +64,14 @@ interface nsIDOMParser : nsISupports {
                                  in string charset, 
                                  in long contentLength,
                                  in string contentType);
+
+  /**
+   * Set/Get the baseURI. You will probably not need this if you
+   * have a script environment. This is mostly intended for cases
+   * without a script environment, for example calling from native
+   * code.
+   */
+  attribute nsIURI baseURI;
 };
 
 %{ C++

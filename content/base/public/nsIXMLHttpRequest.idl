@@ -24,6 +24,7 @@
 
 interface nsIDOMDocument;
 interface nsIDOMEventListener;
+interface nsIHTTPChannel;
 
 [scriptable, uuid(b7215e70-4157-11d4-9a42-000064657374)]
 interface nsIXMLHttpRequest : nsISupports {
@@ -64,6 +65,14 @@ interface nsIXMLHttpRequest : nsISupports {
    * This attribute should not be used from native code!!
    */
   attribute nsISupports onerror;
+
+  /**
+   * The HTTP request uses an HTTP channel in order to perform the
+   * request.  This attribute represents the HTTP channel used
+   * for the request.  NULL if the HTTP channel has not yet been
+   * created.
+   */
+  readonly attribute nsIHTTPChannel channel;
 
   /**
    * The response to the HTTP request is parsed as if it were a
