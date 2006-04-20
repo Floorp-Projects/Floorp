@@ -26,17 +26,6 @@
 #include "nsIDOMSerializer.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsISupportsUtils.h"
-#include "nsCOMPtr.h"
-#include "nsVoidArray.h"
-#include "nsString.h"
-
-class nsIDOMElement;
-class nsIDOMDocumentType;
-class nsIDOMText;
-class nsIDOMCDATASection;
-class nsIDOMComment;
-class nsIDOMProcessingInstruction;
-class nsIUnicodeEncoder;
 
 class nsDOMSerializer : public nsIDOMSerializer,
                         public nsISecurityCheckedComponent
@@ -54,36 +43,6 @@ public:
                                const char *charset);
 
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
-
-protected:
-  void SerializeText(nsIDOMText* aText, nsString& aStr);
-  void SerializeCDATASection(nsIDOMCDATASection* aCDATASection, nsString& aStr);
-  void SerializeProcessingInstruction(nsIDOMProcessingInstruction* aPI,
-                                      nsString& aStr);
-  void SerializeComment(nsIDOMComment* aComment, nsString& aStr);
-  void SerializeDoctype(nsIDOMDocumentType* aDoctype, nsString& aStr);
-  void PushNameSpaceDecl(nsString& aPrefix,
-                         nsString& aURI,
-                         nsIDOMElement* aOwner);
-  void PopNameSpaceDeclsFor(nsIDOMElement* aOwner);
-  PRBool ConfirmPrefix(nsString& aPrefix,
-                       nsString& aURI);
-  void SerializeAttr(nsString& aPrefix,
-                     nsString& aName,
-                     nsString& aValue,
-                     nsString& aStr);
-  void SerializeElementStart(nsIDOMElement* aElement, nsString& aStr);
-  void SerializeElementEnd(nsIDOMElement* aElement, nsString& aStr);
-  nsresult SerializeNodeStart(nsIDOMNode* aNode, nsString& aStr);
-  nsresult SerializeNodeEnd(nsIDOMNode* aNode, nsString& aStr);
-  nsresult SerializeToStringRecursive(nsIDOMNode* aNode, nsString& aStr);
-  nsresult SerializeToStreamRecursive(nsIDOMNode* aNode, 
-                                      nsIOutputStream* aStream,
-                                      nsIUnicodeEncoder* aEncoder);
-
-protected:
-  PRInt32 mPrefixIndex;
-  nsVoidArray mNameSpaceStack;
 };
 
 
