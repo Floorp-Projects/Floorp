@@ -437,6 +437,7 @@ nsFrameUtil::Tag::ReadAttrs(FILE* aFile)
     if (Expect(aFile, '=')) {
       value = ReadString(aFile);
       if (nsnull == value) {
+        delete [] attr;
         break;
       }
     }
