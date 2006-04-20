@@ -430,7 +430,8 @@ nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 }
 
 /* readonly attribute nsIChannel channel; */
-NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
+NS_IMETHODIMP
+nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
 {
   NS_ENSURE_ARG_POINTER(aChannel);
   *aChannel = mChannel;
@@ -440,7 +441,8 @@ NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
 }
 
 /* readonly attribute nsIDOMDocument responseXML; */
-NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
+NS_IMETHODIMP
+nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
 {
   NS_ENSURE_ARG_POINTER(aResponseXML);
   *aResponseXML = nsnull;
@@ -752,7 +754,9 @@ nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, nsIDOMEvent** aDOMEvent)
 }
 
 void
-nsXMLHttpRequest::NotifyEventListeners(nsIDOMEventListener* aHandler, nsISupportsArray* aListeners, nsIDOMEvent* aEvent)
+nsXMLHttpRequest::NotifyEventListeners(nsIDOMEventListener* aHandler,
+                                       nsISupportsArray* aListeners,
+                                       nsIDOMEvent* aEvent)
 {
   if (!aEvent)
     return;
