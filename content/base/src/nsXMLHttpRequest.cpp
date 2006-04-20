@@ -785,7 +785,7 @@ nsXMLHttpRequest::CreateEvent(nsEvent* aEvent, nsIDOMEvent** aDOMEvent)
   }
 
   nsCOMPtr<nsIEventListenerManager> manager;
-  rv = receiver->GetListenerManager(getter_AddRefs(manager));
+  rv = receiver->GetListenerManager(PR_TRUE, getter_AddRefs(manager));
   if (!manager) {
     return NS_ERROR_FAILURE;
   }
