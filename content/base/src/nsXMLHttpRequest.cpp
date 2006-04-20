@@ -34,6 +34,7 @@
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
+#include "nsIUploadChannel.h"
 #include "nsIDOMSerializer.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMEventReceiver.h"
@@ -1070,7 +1071,10 @@ nsXMLHttpRequest::Send(nsISupports *body)
     }
 
     if (postDataStream) {
-      rv = httpChannel->SetUploadStream(postDataStream);
+      nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+      NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+
+      rv = uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
     }
   }
 
