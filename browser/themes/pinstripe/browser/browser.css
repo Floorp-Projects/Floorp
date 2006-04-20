@@ -274,7 +274,8 @@ menubutton:not([disabled="true"]):hover:active {
 #back-button {
   -moz-image-region: rect(0px 32px 32px 0px);
 }
-#back-button[buttondown="true"] {
+#back-button[buttondown="true"],
+#back-button[open="true"] {
   -moz-image-region: rect(32px 32px 64px 0px);
 }
 #back-button[disabled="true"] {
@@ -284,7 +285,8 @@ menubutton:not([disabled="true"]):hover:active {
 #forward-button {
   -moz-image-region: rect(0px 64px 32px 32px);
 }
-#forward-button[buttondown="true"] {
+#forward-button[buttondown="true"],
+#forward-button[open="true"] {
   -moz-image-region: rect(32px 64px 64px 32px);
 }
 #forward-button[disabled="true"] {
