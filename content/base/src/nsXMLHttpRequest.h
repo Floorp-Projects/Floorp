@@ -124,9 +124,14 @@ protected:
                 PRUint32 toOffset,
                 PRUint32 count,
                 PRUint32 *writeCount);
-  // Change the state of the object with this. The broadcast member determines
-  // if the onreadystatechange listener should be called.
-  nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE);
+  // Change the state of the object with this. The broadcast argument
+  // determines if the onreadystatechange listener should be called.
+  // If aClearEventListeners is true, ChangeState will take refs to
+  // any event listeners it needs and call ClearEventListeners before
+  // making any HandleEvent() calls that could change the listener
+  // values.
+  nsresult ChangeState(PRUint32 aState, PRBool aBroadcast = PR_TRUE,
+                       PRBool aClearEventListeners = PR_FALSE);
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsIURI *GetBaseURI();
