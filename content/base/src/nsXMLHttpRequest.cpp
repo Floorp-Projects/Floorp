@@ -1241,7 +1241,11 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // is sane, I guess.
     nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
     nsIURI* uri = GetBaseURI();
-    privImpl->Init(uri, uri, doc->GetNodePrincipal());
+    nsIPrincipal* principal = nsnull;
+    if (doc) {
+      principal = doc->GetNodePrincipal();
+    }
+    privImpl->Init(uri, uri, principal);
   }
 
   // Create an empty document from it (resets current document as well)
