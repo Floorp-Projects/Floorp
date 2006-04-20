@@ -107,7 +107,7 @@ public:
                           PRBool          aSelected,
                           nsSpread        aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle);
+  NS_IMETHOD  IsSelectable(PRBool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   /**
    * Get the "type" of the frame
@@ -395,7 +395,7 @@ nsSVGGlyphFrame::GetSelected(PRBool *aSelected) const
 
 NS_IMETHODIMP
 nsSVGGlyphFrame::IsSelectable(PRBool* aIsSelectable,
-                              PRUint8* aSelectStyle)
+                              PRUint8* aSelectStyle) const
 {
   nsresult rv = nsSVGGlyphFrameBase::IsSelectable(aIsSelectable, aSelectStyle);
 #if defined(DEBUG) && defined(SVG_DEBUG_SELECTION)
