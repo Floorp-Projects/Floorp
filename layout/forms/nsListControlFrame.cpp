@@ -447,8 +447,13 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
       childframe = presShell->GetPrimaryFrameFor(focusedContent);
     }
     if (!childframe) {
-      // Failing all else, try the first thing we have.
+      // Failing all else, try the first thing we have, but only if
+      // it's an element.  Text frames need not apply.
       childframe = containerFrame->GetFirstChild(nsnull);
+      if (childframe &&
+          !childframe->GetContent()->IsContentOfType(nsIContent::eELEMENT)) {
+        childframe = nsnull;
+      }
       result = NS_OK;
     }
   }
@@ -457,7 +462,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   if (childframe) {
     // get the child rect
     fRect = childframe->GetRect();
-    // get it into the our coordinates
+    // get it into our coordinates
     fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
   } else {
     fRect.x = fRect.y = 0;
@@ -468,11 +473,10 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   fRect += aPt;
   
   PRBool lastItemIsSelected = PR_FALSE;
-  if (focusedIndex != kNothingSelected) {
-    nsCOMPtr<nsIDOMNode> node;
-    if (NS_SUCCEEDED(selectNSElement->Item(focusedIndex, getter_AddRefs(node)))) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> domOpt(do_QueryInterface(node));
-      NS_ASSERTION(domOpt, "Something has gone seriously awry.  This should be an option element!");
+  if (focusedContent) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> domOpt =
+      do_QueryInterface(focusedContent);
+    if (domOpt) {
       domOpt->GetSelected(&lastItemIsSelected);
     }
   }
@@ -1852,6 +1856,20 @@ nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
   if (IsInDropDownMode()) {
     mNeedToReset = PR_TRUE;
     mPostChildrenLoadedReset = mIsAllContentHere;
+  }
+
+  if (mStartSelectionIndex >= aIndex) {
+    --mStartSelectionIndex;
+    if (mStartSelectionIndex < 0) {
+      mStartSelectionIndex = kNothingSelected;
+    }    
+  }
+
+  if (mEndSelectionIndex >= aIndex) {
+    --mEndSelectionIndex;
+    if (mEndSelectionIndex < 0) {
+      mEndSelectionIndex = kNothingSelected;
+    }    
   }
 
   return NS_OK;
