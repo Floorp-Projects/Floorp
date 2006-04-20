@@ -41,6 +41,7 @@
 interface nsIDOMDocument;
 interface nsIDOMEventListener;
 interface nsIChannel;
+interface nsIVariant;
 
 /**
  * Mozilla's XMLHttpRequest is modelled after Microsoft's IXMLHttpRequest
@@ -201,7 +202,7 @@ interface nsIXMLHttpRequest : nsISupports {
    *             to contain the ContentType: and ContentLength: headers
    *             and trailing carriage-return/line-feed pairs.
    */
-  void   send(in nsISupports body);
+  void   send(in nsIVariant body);
 
   /**
    * Sets a HTTP request header for HTTP requests. You must call open
