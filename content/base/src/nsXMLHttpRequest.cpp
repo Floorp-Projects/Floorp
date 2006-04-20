@@ -54,6 +54,7 @@
 #include "nsIInterfaceRequestor.h"
 #endif
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMElement.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -405,7 +406,7 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
       nsAutoString contentType;
       contentType.AssignWithConversion( contenttypeheader.get() );
       PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
-      if(start<0) {
+      if(start>=0) {
         start += 8; // 8 = "charset=".length
         PRInt32 end = 0;
         if(PRUnichar('"') == contentType.CharAt(start)) {
@@ -1147,6 +1148,19 @@ nsresult
 nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_COMPLETED;
+
+  // We might have been sent non-XML data. If that was the case,
+  // we should null out the document member. The idea in this
+  // check here is that if there is no document element it is not
+  // an XML document. We might need a fancier check...
+  if (mDocument) {
+    nsCOMPtr<nsIDOMElement> root;
+    mDocument->GetDocumentElement(getter_AddRefs(root));
+    if (!root) {
+      mDocument = nsnull;
+    }
+  }
+
 #ifdef IMPLEMENT_SYNC_LOAD
   if (mChromeWindow) {
     mChromeWindow->ExitModalEventLoop(NS_OK);
@@ -1207,6 +1221,7 @@ nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_ABORTED;
+  mDocument = nsnull;
 #ifdef IMPLEMENT_SYNC_LOAD
   if (mChromeWindow) {
     mChromeWindow->ExitModalEventLoop(NS_OK);
@@ -1221,6 +1236,7 @@ nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_ABORTED;
+  mDocument = nsnull;
 #ifdef IMPLEMENT_SYNC_LOAD
   if (mChromeWindow) {
     mChromeWindow->ExitModalEventLoop(NS_OK);
