@@ -119,7 +119,7 @@ endif
 # STATIC_EXTRA_LIBS	+= $(TK_LIBS)
 
 # Some random modules require this
-ifndef MINIMO
+ifndef MOZ_NO_XPCOM_OBSOLETE
 STATIC_EXTRA_LIBS	+= $(MOZ_XPCOM_OBSOLETE_LIBS)
 endif
 
