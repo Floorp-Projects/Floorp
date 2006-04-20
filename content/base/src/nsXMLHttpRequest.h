@@ -23,6 +23,8 @@
 #ifndef nsXMLHttpRequest_h__
 #define nsXMLHttpRequest_h__
 
+//#define IMPLEMENT_SYNC_LOAD
+
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
@@ -33,12 +35,25 @@
 #include "nsIURI.h"
 #include "nsIHTTPChannel.h"
 #include "nsIDocument.h"
+#ifdef IMPLEMENT_SYNC_LOAD
+#include "nsIDocShellTreeOwner.h"
+#endif
+#include "nsWeakReference.h"
 #include "nsISupportsArray.h"
 #include "jsapi.h"
 
+enum {
+  XML_HTTP_REQUEST_INITIALIZED,
+  XML_HTTP_REQUEST_OPENED,
+  XML_HTTP_REQUEST_SENT,
+  XML_HTTP_REQUEST_COMPLETED,
+  XML_HTTP_REQUEST_ABORTED
+};
+
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIDOMLoadListener,
-                         public nsISecurityCheckedComponent
+                         public nsISecurityCheckedComponent,
+                         public nsSupportsWeakReference
 {
 public:
   nsXMLHttpRequest();
@@ -77,9 +92,12 @@ protected:
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIDocument> mBaseDocument;
+#ifdef IMPLEMENT_SYNC_LOAD
+  nsCOMPtr<nsIDocShellTreeOwner> mDocShellTreeOwner;
+#endif
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
-  PRBool mComplete;
+  PRInt32 mStatus;
   PRBool mAsync;
 };
 
