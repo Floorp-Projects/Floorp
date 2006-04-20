@@ -38,6 +38,9 @@
 #include "nsIDOMSerializer.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIEventListenerManager.h"
+#include "nsGUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
@@ -941,7 +944,39 @@ nsXMLHttpRequest::RequestCompleted()
 {
   nsresult rv = NS_OK;
 
-  NS_WARN_IF_FALSE(mDelayedEvent,"no delayed event");
+  // If we're uninitialized at this point, we encountered an error
+  // earlier and listeners have already been notified.
+  if (mStatus == XML_HTTP_REQUEST_UNINITIALIZED) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMEvent> domevent;
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mDocument));
+  if (!receiver) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  nsCOMPtr<nsIEventListenerManager> manager;
+  rv = receiver->GetListenerManager(getter_AddRefs(manager));
+  if (!manager) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_PAGE_LOAD;
+  rv = manager->CreateEvent(nsnull, &event,
+                            NS_LITERAL_STRING("HTMLEvents"), 
+                            getter_AddRefs(domevent));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(domevent));
+  if (!privevent) {
+    return NS_ERROR_FAILURE;
+  }
+  privevent->SetTarget(this);
 
   // We might have been sent non-XML data. If that was the case,
   // we should null out the document member. The idea in this
@@ -979,11 +1014,11 @@ nsXMLHttpRequest::RequestCompleted()
     }
   }
 
-  if (mOnLoadListener && mDelayedEvent) {
-    mOnLoadListener->HandleEvent(mDelayedEvent);
+  if (mOnLoadListener) {
+    mOnLoadListener->HandleEvent(domevent);
   }
 
-  if (mLoadEventListeners && mDelayedEvent) {
+  if (mLoadEventListeners) {
     PRUint32 index, count;
 
     mLoadEventListeners->Count(&count);
@@ -995,7 +1030,7 @@ nsXMLHttpRequest::RequestCompleted()
                                           getter_AddRefs(listener));
 
       if (listener) {
-        listener->HandleEvent(mDelayedEvent);
+        listener->HandleEvent(domevent);
       }
     }
   }
@@ -1003,8 +1038,6 @@ nsXMLHttpRequest::RequestCompleted()
   if (cx) {
     stack->Pop(&cx);
   }
-
-  mDelayedEvent = nsnull;
 
   return rv;
 }
@@ -1268,8 +1301,6 @@ nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
   // sending the load event until OnStopRequest(). In normal case
   // there is no harm done, we will get OnStopRequest() immediately
   // after the load event.
-  NS_WARN_IF_FALSE(!mDelayedEvent,"there should be no delayed event");
-  mDelayedEvent = aEvent;
   return NS_OK;
 }
 
