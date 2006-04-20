@@ -171,8 +171,8 @@ nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
     nsCOMPtr<nsIStreamListener> toListener(mDestListener);
     nsCOMPtr<nsIStreamListener> fromListener;
 
-    rv = convServ->AsyncConvertData(NS_LITERAL_STRING("multipart/x-mixed-replace").get(),
-                                    NS_LITERAL_STRING("*/*").get(),
+    rv = convServ->AsyncConvertData("multipart/x-mixed-replace",
+                                    "*/*",
                                     toListener,
                                     nsnull,
                                     getter_AddRefs(fromListener));
