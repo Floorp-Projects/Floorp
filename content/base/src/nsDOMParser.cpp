@@ -56,6 +56,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIDOMClassInfo.h"
+#include "nsReadableUtils.h"
 
 #ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIScriptContext.h"
@@ -191,7 +192,7 @@ NS_IMETHODIMP nsDOMParserChannel::GetURI(nsIURI * *aURI)
 NS_IMETHODIMP nsDOMParserChannel::GetContentType(char * *aContentType)
 {
   NS_ENSURE_ARG_POINTER(aContentType);
-  *aContentType = mContentType.ToNewCString();
+  *aContentType = ToNewCString(mContentType);
   return NS_OK;
 }
 NS_IMETHODIMP nsDOMParserChannel::SetContentType(const char * aContentType)

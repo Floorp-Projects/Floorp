@@ -47,6 +47,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIPrivateDOMImplementation.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
@@ -393,9 +394,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   }
 
   if (dataCharset.Equals(NS_LITERAL_STRING("ASCII"))) {
-    // XXX There is no ASCII->Unicode decoder?
-    // XXX How to do this without double allocation/copy?
-    *aOutBuffer = NS_ConvertASCIItoUCS2(mResponseBody.get(),dataLen).ToNewUnicode();
+    *aOutBuffer = ToNewUnicode(nsDependentCString(mResponseBody.get(),dataLen));
     if (!*aOutBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
