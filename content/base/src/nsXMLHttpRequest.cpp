@@ -52,7 +52,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIEventQueueService.h"
+#include "nsIInterfaceRequestor.h"
 #endif
 
 static const char* kLoadAsData = "loadAsData";
@@ -275,8 +277,8 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
     Abort();
   }    
 #ifdef IMPLEMENT_SYNC_LOAD
-  if (mDocShellTreeOwner) {
-    mDocShellTreeOwner->ExitModalLoop(NS_OK);
+  if (mChromeWindow) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
   }
 #endif
 }
@@ -1242,8 +1244,15 @@ nsXMLHttpRequest::Send(nsISupports *body)
       nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
       if (!item) return NS_ERROR_FAILURE;
 
-      rv = item->GetTreeOwner(getter_AddRefs(mDocShellTreeOwner));
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      rv = item->GetTreeOwner(getter_AddRefs(treeOwner));
       if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIInterfaceRequestor> treeRequestor(do_GetInterface(treeOwner));
+      if (!treeRequestor) return NS_ERROR_FAILURE;
+
+      treeRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(mChromeWindow));
+      if (!mChromeWindow) return NS_ERROR_FAILURE;
 
       eventQService = do_GetService(kEventQueueServiceCID);
       if(!eventQService || 
@@ -1288,8 +1297,8 @@ nsXMLHttpRequest::Send(nsISupports *body)
 
 #ifdef IMPLEMENT_SYNC_LOAD
   // If we're synchronous, spin an event loop here and wait
-  if (!mAsync && mDocShellTreeOwner) {
-    rv = mDocShellTreeOwner->ShowModal();
+  if (!mAsync && mChromeWindow) {
+    rv = mChromeWindow->ShowAsModal();
     
     eventQService->PopThreadEventQueue(modalEventQueue);
     
@@ -1326,9 +1335,9 @@ nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_COMPLETED;
 #ifdef IMPLEMENT_SYNC_LOAD
-  if (mDocShellTreeOwner) {
-    mDocShellTreeOwner->ExitModalLoop(NS_OK);
-    mDocShellTreeOwner = 0;
+  if (mChromeWindow) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+    mChromeWindow = 0;
   }
 #endif
   if (mLoadEventListeners) {
@@ -1360,9 +1369,9 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_ABORTED;
 #ifdef IMPLEMENT_SYNC_LOAD
-  if (mDocShellTreeOwner) {
-    mDocShellTreeOwner->ExitModalLoop(NS_OK);
-    mDocShellTreeOwner = 0;
+  if (mChromeWindow) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+    mChromeWindow = 0;
   }
 #endif
 
@@ -1374,9 +1383,9 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
   mStatus = XML_HTTP_REQUEST_ABORTED;
 #ifdef IMPLEMENT_SYNC_LOAD
-  if (mDocShellTreeOwner) {
-    mDocShellTreeOwner->ExitModalLoop(NS_OK);
-    mDocShellTreeOwner = 0;
+  if (mChromeWindow) {
+    mChromeWindow->ExitModalEventLoop(NS_OK);
+    mChromeWindow = 0;
   }
 #endif
   if (mErrorEventListeners) {
