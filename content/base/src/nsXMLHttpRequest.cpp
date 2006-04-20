@@ -64,19 +64,9 @@
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICodebasePrincipal.h"
 #include "nsWeakPtr.h"
 #include "nsICharsetAlias.h"
-#ifdef IMPLEMENT_SYNC_LOAD
-#include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIEventQueueService.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#endif
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
@@ -94,9 +84,7 @@ static const char* kLoadAsData = "loadAsData";
 // CIDs
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-#ifdef IMPLEMENT_SYNC_LOAD
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-#endif
 
 static void
 GetCurrentContext(nsIScriptContext **aScriptContext)
@@ -143,6 +131,8 @@ nsXMLHttpRequest::nsXMLHttpRequest()
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED,PR_FALSE);
   mAsync = PR_TRUE;
   mCrossSiteAccessEnabled = PR_FALSE;
+  mLoopingForSyncLoad = PR_FALSE;
+  mEventQService = do_GetService(kEventQueueServiceCID);
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
@@ -150,11 +140,9 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   if (XML_HTTP_REQUEST_SENT == mStatus) {
     Abort();
   }    
-#ifdef IMPLEMENT_SYNC_LOAD
-  if (mChromeWindow) {
-    mChromeWindow->ExitModalEventLoop(NS_OK);
-  }
-#endif
+  
+  NS_ABORT_IF_FALSE(!mLoopingForSyncLoad, "we rather crash than hang");
+  mLoopingForSyncLoad = PR_FALSE;
 }
 
 
@@ -592,6 +580,34 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
   return NS_OK;
 }
 
+nsresult 
+nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
+{
+  NS_ENSURE_ARG_POINTER(aBaseURI);
+  *aBaseURI = nsnull;
+
+  if (!mScriptContext) {
+    GetCurrentContext(getter_AddRefs(mScriptContext));
+    if (!mScriptContext) {
+      return NS_OK;
+    }
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  mScriptContext->GetGlobalObject(getter_AddRefs(global));
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+  if (window) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    window->GetDocument(getter_AddRefs(domdoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+    if (doc) {
+      doc->GetBaseURL(*aBaseURI);
+    }
+  }
+
+  return NS_OK;
+}
+
 /* noscript void openRequest (in string method, in string url, in boolean async, in string user, in string password); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::OpenRequest(const char *method, 
@@ -680,21 +696,14 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
-      if (codebase) {
-        codebase->GetURI(getter_AddRefs(mBaseURI));
-      }
-    }
+    GetBaseURI(getter_AddRefs(mBaseURI));
 
     nsCOMPtr<nsIURI> targetURI;
     rv = NS_NewURI(getter_AddRefs(targetURI), url, mBaseURI);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIScriptSecurityManager> secMan = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
     rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest","open");
@@ -947,6 +956,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     ChangeState(XML_HTTP_REQUEST_STOPPED, PR_FALSE);
   }
 
+  mLoopingForSyncLoad = PR_FALSE;
+
   return rv;
 }
 
@@ -954,6 +965,8 @@ nsresult
 nsXMLHttpRequest::RequestCompleted()
 {
   nsresult rv = NS_OK;
+
+  mLoopingForSyncLoad = PR_FALSE;
 
   // If we're uninitialized at this point, we encountered an error
   // earlier and listeners have already been notified. Also we do
@@ -1004,13 +1017,6 @@ nsXMLHttpRequest::RequestCompleted()
   }
 
   ChangeState(XML_HTTP_REQUEST_COMPLETED);
-
-#ifdef IMPLEMENT_SYNC_LOAD
-  if (mChromeWindow) {
-    mChromeWindow->ExitModalEventLoop(NS_OK);
-    mChromeWindow = 0;
-  }
-#endif
 
   nsCOMPtr<nsIJSContextStack> stack;
   JSContext *cx = nsnull;
@@ -1204,59 +1210,20 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     return NS_ERROR_FAILURE;
   }
 
-#ifdef IMPLEMENT_SYNC_LOAD
   nsCOMPtr<nsIEventQueue> modalEventQueue;
-  nsCOMPtr<nsIEventQueueService> eventQService;
-  
-  if (!mAsync) { 
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if(NS_SUCCEEDED(rv)) {
-      rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+
+  if (!mAsync) {
+    if(!mEventQService) {
+      return NS_ERROR_FAILURE;
     }
 
-    if (NS_SUCCEEDED(rv) && cc) {
-      JSContext* cx;
-      rv = cc->GetJSContext(&cx);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    mLoopingForSyncLoad = PR_TRUE;
 
-      // We can only do this if we're called from a DOM script context
-      nsIScriptContext* scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
-      if (!scriptCX) return NS_OK;
-
-      // Get the nsIDocShellTreeOwner associated with the window
-      // containing this script context
-      // XXX Need to find a better way to do this rather than
-      // chaining through a bunch of getters and QIs
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      scriptCX->GetGlobalObject(getter_AddRefs(global));
-      if (!global) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDocShell> docshell;
-      rv = global->GetDocShell(getter_AddRefs(docshell));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      
-      nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
-      if (!item) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      rv = item->GetTreeOwner(getter_AddRefs(treeOwner));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIInterfaceRequestor> treeRequestor(do_GetInterface(treeOwner));
-      if (!treeRequestor) return NS_ERROR_FAILURE;
-
-      treeRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(mChromeWindow));
-      if (!mChromeWindow) return NS_ERROR_FAILURE;
-
-      eventQService = do_GetService(kEventQueueServiceCID);
-      if(!eventQService || 
-         NS_FAILED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue)))) {
-        return NS_ERROR_FAILURE;
-      }
+    rv = mEventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
-#endif
 
   if (!mScriptContext) {
     // We need a context to check if redirect (if any) is allowed
@@ -1271,16 +1238,12 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
                                    getter_AddRefs(listener),
                                    PR_TRUE);
 
-#ifdef IMPLEMENT_SYNC_LOAD
   if (NS_FAILED(rv)) {
     if (modalEventQueue) {
-      eventQService->PopThreadEventQueue(modalEventQueue);
+      mEventQService->PopThreadEventQueue(modalEventQueue);
     }
     return NS_ERROR_FAILURE;
   }
-#else
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-#endif
 
   // Hook us up to listen to redirects and the like
   mChannel->SetNotificationCallbacks(this);
@@ -1290,27 +1253,21 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   mXMLParserStreamListener = listener;
   rv = mChannel->AsyncOpen(this, nsnull);
 
-#ifdef IMPLEMENT_SYNC_LOAD
   if (NS_FAILED(rv)) {
     if (modalEventQueue) {
-      eventQService->PopThreadEventQueue(modalEventQueue);
+      mEventQService->PopThreadEventQueue(modalEventQueue);
     }
     return NS_ERROR_FAILURE;
   }  
-#else
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-#endif
 
-#ifdef IMPLEMENT_SYNC_LOAD
   // If we're synchronous, spin an event loop here and wait
-  if (!mAsync && mChromeWindow) {
-    rv = mChromeWindow->ShowAsModal();
-    
-    eventQService->PopThreadEventQueue(modalEventQueue);
-    
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;      
+  if (!mAsync) {
+    while (mLoopingForSyncLoad) {
+      modalEventQueue->ProcessPendingEvents();
+    }
+
+    mEventQService->PopThreadEventQueue(modalEventQueue);
   }
-#endif
   
   return NS_OK;
 }
@@ -1411,12 +1368,8 @@ nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
   }
   mDocument = nsnull;
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
-#ifdef IMPLEMENT_SYNC_LOAD
-  if (mChromeWindow) {
-    mChromeWindow->ExitModalEventLoop(NS_OK);
-    mChromeWindow = 0;
-  }
-#endif
+  
+  mLoopingForSyncLoad = PR_FALSE;
 
   return NS_OK;
 }
@@ -1426,12 +1379,8 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
   mDocument = nsnull;
   ChangeState(XML_HTTP_REQUEST_UNINITIALIZED);
-#ifdef IMPLEMENT_SYNC_LOAD
-  if (mChromeWindow) {
-    mChromeWindow->ExitModalEventLoop(NS_OK);
-    mChromeWindow = 0;
-  }
-#endif
+  
+  mLoopingForSyncLoad = PR_FALSE;
 
   nsCOMPtr<nsIJSContextStack> stack;
   JSContext *cx = nsnull;

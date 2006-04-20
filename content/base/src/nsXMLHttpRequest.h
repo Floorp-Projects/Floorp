@@ -39,8 +39,6 @@
 #ifndef nsXMLHttpRequest_h__
 #define nsXMLHttpRequest_h__
 
-#define IMPLEMENT_SYNC_LOAD
-
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
@@ -52,9 +50,8 @@
 #include "nsIHttpChannel.h"
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
-#ifdef IMPLEMENT_SYNC_LOAD
 #include "nsIWebBrowserChrome.h"
-#endif
+#include "nsIEventQueueService.h"
 #include "nsWeakReference.h"
 #include "nsISupportsArray.h"
 #include "jsapi.h"
@@ -135,15 +132,13 @@ protected:
   nsresult ChangeState(nsXMLHttpRequestState aState, PRBool aBroadcast = PR_TRUE);
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
+  nsresult GetBaseURI(nsIURI **aBaseURI);
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
-#ifdef IMPLEMENT_SYNC_LOAD
-  nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
-#endif
 
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;
@@ -153,6 +148,9 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
 
   nsCOMPtr<nsIOnReadystatechangeHandler> mOnReadystatechangeListener;
+
+  nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
+  nsCOMPtr<nsIEventQueueService> mEventQService;
 
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor {
@@ -167,14 +165,14 @@ protected:
   };
 
   nsCString mResponseBody;
-  
-  nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
 
+  nsCString mOverrideMimeType;
+  
   PRInt32 mStatus;
   PRPackedBool mAsync;
   PRPackedBool mParseResponseBody;
   PRPackedBool mCrossSiteAccessEnabled;
-  nsCString mOverrideMimeType;
+  PRPackedBool mLoopingForSyncLoad;
 };
 
 #endif
