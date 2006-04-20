@@ -201,6 +201,7 @@ NS_IMETHODIMP nsDOMParserChannel::GetContentCharset(nsACString &aContentCharset)
 NS_IMETHODIMP nsDOMParserChannel::SetContentCharset(const nsACString &aContentCharset)
 {
   mContentCharset = aContentCharset;
+  return NS_OK;
 }
 
 /* attribute long contentLength; */
