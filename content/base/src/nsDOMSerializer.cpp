@@ -99,9 +99,9 @@ static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumen
   if (NS_FAILED(rv))
     return rv;
 
-  nsAutoString charset;
+  nsCAutoString charset;
   if (aCharset) {
-    charset.AssignWithConversion(aCharset);
+    charset = aCharset;
   } else {
     rv = document->GetDocumentCharacterSet(charset);
     if (NS_FAILED(rv))
