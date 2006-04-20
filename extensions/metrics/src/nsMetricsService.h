@@ -161,6 +161,8 @@ private:
   PRBool PersistEventCount();
 
 private:
+  class BadCertListener;
+
   // Pointer to the metrics service singleton
   static nsMetricsService* sMetricsService;
 
