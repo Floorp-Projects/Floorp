@@ -223,9 +223,15 @@ interface nsIXMLHttpRequest : nsISupports
    *             case). This is used to populate the body of the
    *             HTTP request if the HTTP request method is "POST".
    *             If the parameter is a nsIDOMDocument, it is serialized.
-   *             If the parameter is a nsIInputStream, it is expected
-   *             to contain the ContentType: and ContentLength: headers
-   *             and trailing carriage-return/line-feed pairs.
+   *             If the parameter is a nsIInputStream, then it must be
+   *             compatible with nsIUploadChannel.setUploadStream, and a
+   *             Content-Length header will be added to the HTTP request
+   *             with a value given by nsIInputStream.available.  Any
+   *             headers included at the top of the stream will be
+   *             treated as part of the message body.  The MIME type of
+   *             the stream should be specified by setting the Content-
+   *             Type header via the setRequestHeader method before
+   *             calling send.
    */
   void   send(in nsIVariant body);
 
