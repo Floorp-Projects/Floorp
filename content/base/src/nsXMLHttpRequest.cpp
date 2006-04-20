@@ -66,91 +66,38 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #endif
 
-static JSContext*
-GetSafeContext()
+static void
+GetCurrentContext(nsIScriptContext **aScriptContext)
 {
-  // Get the "safe" JSContext: our JSContext of last resort
-  nsresult rv;
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  if (NS_FAILED(rv))
-    return nsnull;
+  *aScriptContext = nsnull;
 
-  JSContext* cx;
-  if (NS_FAILED(stack->GetSafeJSContext(&cx))) {
-    return nsnull;
-  }
-  return cx;
-}
- 
-static JSContext*
-GetCurrentContext()
-{
   // Get JSContext from stack.
-  nsresult rv;
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "@mozilla.org/js/xpc/ContextStack;1", 
-                  &rv);
-  if (NS_FAILED(rv))
-    return nsnull;
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  if (!stack) {
+    return;
+  }
+
   JSContext *cx;
-  if (NS_FAILED(stack->Peek(&cx)))
-    return nsnull;
-  return cx;
-}
 
-nsXMLHttpRequestScriptListener::nsXMLHttpRequestScriptListener(JSObject* aScopeObj, JSObject* aFunctionObj)
-{
-  NS_INIT_ISUPPORTS();
-  // We don't have to add a GC root for the scope object
-  // since we'll go away if it goes away
-  mScopeObj = aScopeObj;
-  mFunctionObj = aFunctionObj;
-  JSContext* cx;
-  cx = GetSafeContext();
-  if (cx) {
-    JS_AddNamedRoot(cx, &mFunctionObj, "nsXMLHttpRequest");
+  if (NS_FAILED(stack->Peek(&cx))) {
+    return;
   }
-}
 
-nsXMLHttpRequestScriptListener::~nsXMLHttpRequestScriptListener()
-{
-  JSContext* cx;
-  cx = GetSafeContext();
-  if (cx) {
-    JS_RemoveRoot(cx, &mFunctionObj);
-  }
-}
-
-NS_IMPL_ISUPPORTS2(nsXMLHttpRequestScriptListener, nsIDOMEventListener, nsIPrivateJSEventListener)
-
-NS_IMETHODIMP
-nsXMLHttpRequestScriptListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  JSContext* cx;
-  cx = GetCurrentContext();
   if (!cx) {
-    cx = GetSafeContext();
+    return;
   }
-  if (cx) {
-    jsval val;
 
-    // Hmmm...we can't pass along the nsIDOMEvent because
-    // we may not have the right type of context (required
-    // to get a JSObject from a nsIScriptObjectOwner)
-    JS_CallFunctionValue(cx, mScopeObj, 
-                         OBJECT_TO_JSVAL(mFunctionObj),
-                         0, nsnull, &val);
+  nsISupports *priv = (nsISupports *)::JS_GetContextPrivate(cx);
+
+  if (!priv) {
+    return;
   }
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsXMLHttpRequestScriptListener::GetFunctionObj(JSObject** aObj)
-{
-  NS_ENSURE_ARG_POINTER(aObj);
-  
-  *aObj = mFunctionObj;
-  return NS_OK;
+  CallQueryInterface(priv, aScriptContext);
+
+  return;
 }
 
 /////////////////////////////////////////////
@@ -285,6 +232,7 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 // XPConnect interface list for nsXMLHttpRequest
 NS_CLASSINFO_MAP_BEGIN(XMLHttpRequest)
   NS_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
+  NS_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
   NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
 NS_CLASSINFO_MAP_END
 
@@ -293,9 +241,9 @@ NS_CLASSINFO_MAP_END
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIJSXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -307,7 +255,8 @@ NS_IMPL_ADDREF(nsXMLHttpRequest)
 NS_IMPL_RELEASE(nsXMLHttpRequest)
 
 
-/* void addEventListener (in string type, in nsIDOMEventListener listener); */
+/* void addEventListener (in string type, in nsIDOMEventListener
+   listener); */
 NS_IMETHODIMP
 nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
                                    nsIDOMEventListener *listener,
@@ -339,7 +288,8 @@ nsXMLHttpRequest::AddEventListener(const nsAReadableString& type,
   return NS_OK;
 }
 
-/* void removeEventListener (in string type, in nsIDOMEventListener listener); */
+/* void removeEventListener (in string type, in nsIDOMEventListener
+   listener); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::RemoveEventListener(const nsAReadableString & type,
                                       nsIDOMEventListener *listener,
@@ -373,209 +323,46 @@ nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt)
   return NS_OK;
 }
 
-nsresult
-nsXMLHttpRequest::MakeScriptEventListener(nsISupports* aObject,
-                                          nsIDOMEventListener** aListener)
-{
-  nsresult rv;
-
-  *aListener = nsnull;
-
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-  if(NS_SUCCEEDED(rv)) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-  }
-
-  if (NS_SUCCEEDED(rv) && cc) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> jsobjholder(do_QueryInterface(aObject));
-    if (jsobjholder) {
-      JSObject* funobj;
-      rv = jsobjholder->GetJSObject(&funobj);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-      JSContext* cx;
-      rv = cc->GetJSContext(&cx);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      
-      JSFunction* fun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
-      if (!fun) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      
-      nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-      rv = cc->GetCalleeWrapper(getter_AddRefs(wrapper));
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-      JSObject* scopeobj;
-      rv = wrapper->GetJSObject(&scopeobj);
-      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-      nsXMLHttpRequestScriptListener* listener = new nsXMLHttpRequestScriptListener(scopeobj, funobj);
-      if (!listener) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      *aListener = listener;
-      NS_ADDREF(*aListener);
-    }
-  }
-  
-  return NS_OK;
-}
-
-static PRBool 
-CheckForScriptListener(nsISupports* aElement, void *aData)
-{
-  nsCOMPtr<nsIPrivateJSEventListener> jsel(do_QueryInterface(aElement));
-  if (jsel) {
-    nsIDOMEventListener** retval = (nsIDOMEventListener**)aData;
-
-    aElement->QueryInterface(NS_GET_IID(nsIDOMEventListener), (void**)retval);
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
-void
-nsXMLHttpRequest::GetScriptEventListener(nsISupportsArray* aList, 
-                                         nsIDOMEventListener** aListener)
-{
-  aList->EnumerateForwards(CheckForScriptListener, (void*)aListener);
-}
-
-PRBool
-nsXMLHttpRequest::StuffReturnValue(nsIDOMEventListener* aListener)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIXPCNativeCallContext> cc;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-  if(NS_SUCCEEDED(rv)) {
-    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-  }
-
-  // If we're being called through JS, stuff the return value
-  if (NS_SUCCEEDED(rv) && cc) {
-    jsval* val;
-    rv = cc->GetRetValPtr(&val);
-    if (NS_SUCCEEDED(rv)) {
-      JSObject* obj;
-      nsCOMPtr<nsIPrivateJSEventListener> jsel(do_QueryInterface(aListener));
-      if (jsel) {
-        jsel->GetFunctionObj(&obj);
-        *val = OBJECT_TO_JSVAL(obj);
-        cc->SetReturnValueWasSet(JS_TRUE);
-        return PR_TRUE;
-      }
-    }
-  }
-  
-  return PR_FALSE;
-}
-
 /* attribute nsIDOMEventListener onload; */
 NS_IMETHODIMP 
-nsXMLHttpRequest::GetOnload(nsISupports * *aOnLoad)
+nsXMLHttpRequest::GetOnload(nsIDOMEventListener * *aOnLoad)
 {
   NS_ENSURE_ARG_POINTER(aOnLoad);
 
-  *aOnLoad = nsnull;
-  if (mLoadEventListeners) {
-    nsCOMPtr<nsIDOMEventListener> listener;
-    
-    GetScriptEventListener(mLoadEventListeners, getter_AddRefs(listener));
-    if (listener) {
-      StuffReturnValue(listener);
-    }
-  }
-  
+  *aOnLoad = mOnLoadListener;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLHttpRequest::SetOnload(nsISupports * aOnLoad)
+nsXMLHttpRequest::SetOnload(nsIDOMEventListener * aOnLoad)
 {
-  NS_ENSURE_ARG(aOnLoad);
+  mOnLoadListener = aOnLoad;
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventListener> listener;
+  GetCurrentContext(getter_AddRefs(mScriptContext));
 
-  rv = MakeScriptEventListener(aOnLoad, getter_AddRefs(listener));
-  if (NS_FAILED(rv)) return rv;
-
-  if (listener) {
-    nsCOMPtr<nsIDOMEventListener> oldListener;
-    
-    // Remove any old script event listener that exists since
-    // we can only have one
-    if (mLoadEventListeners) {
-      GetScriptEventListener(mLoadEventListeners, getter_AddRefs(oldListener));
-      RemoveEventListener(LOADSTR, oldListener, PR_TRUE);
-    }
-  }
-  else {
-    // If it's not a script event listener, try to directly QI it to
-    // an actual event listener
-    listener = do_QueryInterface(aOnLoad);
-    if (!listener) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  return AddEventListener(LOADSTR, listener, PR_TRUE);
+  return NS_OK;
 }
 
 /* attribute nsIDOMEventListener onerror; */
 NS_IMETHODIMP 
-nsXMLHttpRequest::GetOnerror(nsISupports * *aOnerror)
+nsXMLHttpRequest::GetOnerror(nsIDOMEventListener * *aOnerror)
 {
   NS_ENSURE_ARG_POINTER(aOnerror);
 
-  *aOnerror = nsnull;
-  if (mErrorEventListeners) {
-    nsCOMPtr<nsIDOMEventListener> listener;
-    
-    GetScriptEventListener(mErrorEventListeners, getter_AddRefs(listener));
-    if (listener) {
-      StuffReturnValue(listener);
-    }
-  }
-  
+  *aOnerror = mOnErrorListener;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLHttpRequest::SetOnerror(nsISupports * aOnerror)
+nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
 {
-  NS_ENSURE_ARG(aOnerror);
+  mOnErrorListener = aOnerror;
 
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventListener> listener;
+  GetCurrentContext(getter_AddRefs(mScriptContext));
 
-  rv = MakeScriptEventListener(aOnerror, getter_AddRefs(listener));
-  if (NS_FAILED(rv)) return rv;
-
-  if (listener) {
-    nsCOMPtr<nsIDOMEventListener> oldListener;
-    
-    // Remove any old script event listener that exists since
-    // we can only have one
-    if (mErrorEventListeners) {
-      GetScriptEventListener(mErrorEventListeners, 
-                             getter_AddRefs(oldListener));
-      RemoveEventListener(ERRORSTR, oldListener, PR_TRUE);
-    }
-  }
-  else {
-    // If it's not a script event listener, try to directly QI it to
-    // an actual event listener
-    listener = do_QueryInterface(aOnerror);
-    if (!listener) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  return AddEventListener(ERRORSTR, listener, PR_TRUE);
+  return NS_OK;
 }
 
 /* readonly attribute nsIHttpChannel channel; */
@@ -1366,19 +1153,45 @@ nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
     mChromeWindow = 0;
   }
 #endif
+
+  nsCOMPtr<nsIJSContextStack> stack;
+  JSContext *cx = nsnull;
+
+  if (mScriptContext) {
+    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      cx = (JSContext *)mScriptContext->GetNativeContext();
+
+      if (cx) {
+        stack->Push(cx);
+      }
+    }
+  }
+
+  if (mOnLoadListener) {
+    mOnLoadListener->HandleEvent(aEvent);
+  }
+
   if (mLoadEventListeners) {
     PRUint32 index, count;
 
     mLoadEventListeners->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsISupports> current = dont_AddRef(mLoadEventListeners->ElementAt(index));
-      if (current) {
-        nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(current));
-        if (listener) {
-          listener->HandleEvent(aEvent);
-        }
+      nsCOMPtr<nsIDOMEventListener> listener;
+
+      mLoadEventListeners->QueryElementAt(index,
+                                          NS_GET_IID(nsIDOMEventListener),
+                                          getter_AddRefs(listener));
+
+      if (listener) {
+        listener->HandleEvent(aEvent);
       }
     }
+  }
+
+  if (cx) {
+    stack->Pop(&cx);
   }
 
   return NS_OK;
@@ -1414,65 +1227,45 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
     mChromeWindow = 0;
   }
 #endif
+
+  nsCOMPtr<nsIJSContextStack> stack;
+  JSContext *cx = nsnull;
+
+  if (mScriptContext) {
+    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      cx = (JSContext *)mScriptContext->GetNativeContext();
+
+      if (cx) {
+        stack->Push(cx);
+      }
+    }
+  }
+
+  if (mOnErrorListener) {
+    mOnErrorListener->HandleEvent(aEvent);
+  }
+
   if (mErrorEventListeners) {
     PRUint32 index, count;
 
     mErrorEventListeners->Count(&count);
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsISupports> current = dont_AddRef(mErrorEventListeners->ElementAt(index));
-      if (current) {
-        nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(current));
-        if (listener) {
-          listener->HandleEvent(aEvent);
-        }
+      nsCOMPtr<nsIDOMEventListener> listener;
+
+      mErrorEventListeners->QueryElementAt(index,
+                                           NS_GET_IID(nsIDOMEventListener),
+                                           getter_AddRefs(listener));
+
+      if (listener) {
+        listener->HandleEvent(aEvent);
       }
     }
   }
 
-  return NS_OK;
-}
-
-static const char* kAllAccess = "AllAccess";
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
-    *_retval = nsCRT::strdup(kAllAccess);
-  }
-
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP 
-nsXMLHttpRequest::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
-    *_retval = nsCRT::strdup(kAllAccess);
+  if (cx) {
+    stack->Pop(&cx);
   }
 
   return NS_OK;
