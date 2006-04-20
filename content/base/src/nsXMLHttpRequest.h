@@ -23,7 +23,7 @@
 #ifndef nsXMLHttpRequest_h__
 #define nsXMLHttpRequest_h__
 
-//#define IMPLEMENT_SYNC_LOAD
+#define IMPLEMENT_SYNC_LOAD
 
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
