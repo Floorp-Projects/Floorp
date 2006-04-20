@@ -567,17 +567,17 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   if (NS_FAILED(rv)) return rv;
 
   if (user) {
-    nsCAutoString prehost;
-    prehost.Assign(user);
+    nsCAutoString userpass;
+    userpass.Assign(user);
     if (password) {
-      prehost.Append(":");
-      prehost.Append(password);
+      userpass.Append(":");
+      userpass.Append(password);
     }
-    uri->SetPreHost(prehost.get());
+    uri->SetUserPass(userpass);
     authp = PR_TRUE;
   }
 
-  rv = NS_OpenURI(getter_AddRefs(mChannel), uri, nsnull, nsnull);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
   
   //mChannel->SetAuthTriedWithPrehost(authp);
