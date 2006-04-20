@@ -1306,6 +1306,8 @@ nsXFormsModelElement::OnError(nsresult aStatus,
 {
   nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
   nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
+  nsXFormsUtils::HandleFatalError(mElement,
+                                  NS_LITERAL_STRING("XFormsLinkException"));
   return NS_OK;
 }
 
@@ -1418,6 +1420,8 @@ nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
     // finish construction, which is wrong.
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceLoadError"), mElement);
     nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
+    nsXFormsUtils::HandleFatalError(mElement,
+                                    NS_LITERAL_STRING("XFormsLinkException"));
     return NS_OK;
   }
 
@@ -2465,9 +2469,11 @@ nsXFormsModelElement::HandleLoad(nsIDOMEvent* aEvent)
           mSchemaCount++;
       }
       if (NS_FAILED(rv)) {
-        // this is a fatal error (XXX)
+        // this is a fatal error
         nsXFormsUtils::ReportError(NS_LITERAL_STRING("schemaLoadError"), mElement);
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
+        nsXFormsUtils::HandleFatalError(mElement,
+                                        NS_LITERAL_STRING("XFormsLinkException"));
         return NS_OK;
       }
     }
