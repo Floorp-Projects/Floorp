@@ -589,6 +589,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   } while ( NS_FAILED(rv) && (dataLen > 0) );
 
   aOutBuffer.Assign(outBuffer, totalChars);
+  nsMemory::Free(outBuffer);
 
   return NS_OK;
 }
