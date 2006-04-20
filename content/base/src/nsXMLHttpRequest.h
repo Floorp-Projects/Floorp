@@ -108,7 +108,7 @@ protected:
   nsresult GetStreamForWString(const PRUnichar* aStr,
                                PRInt32 aLength,
                                nsIInputStream** aStream);
-  nsresult DetectCharset(nsAString& aCharset);
+  nsresult DetectCharset(nsACString& aCharset);
   nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
   static NS_METHOD StreamReaderFunc(nsIInputStream* in,
                 void* closure,

@@ -355,7 +355,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
  * from HTTP headers.
  */
 nsresult
-nsXMLHttpRequest::DetectCharset(nsAString& aCharset)
+nsXMLHttpRequest::DetectCharset(nsACString& aCharset)
 {
   aCharset.Truncate();
   nsresult rv;
@@ -364,11 +364,7 @@ nsXMLHttpRequest::DetectCharset(nsAString& aCharset)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
     if(NS_SUCCEEDED(rv) && calias) {
-      nsCAutoString preferred;
-      rv = calias->GetPreferred(charsetVal, preferred);
-      if(NS_SUCCEEDED(rv)) {
-        CopyASCIItoUCS2(preferred, aCharset);
-      }
+      rv = calias->GetPreferred(charsetVal, aCharset);
     }
   }
   return rv;
@@ -390,7 +386,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
 
   nsresult rv = NS_OK;
 
-  nsAutoString dataCharset;
+  nsCAutoString dataCharset;
   nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
   if (document) {
     rv = document->GetDocumentCharacterSet(dataCharset);
@@ -399,11 +395,11 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   } else {
     if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
       // MS documentation states UTF-8 is default for responseText
-      dataCharset.Assign(NS_LITERAL_STRING("UTF-8"));
+      dataCharset.Assign(NS_LITERAL_CSTRING("UTF-8"));
     }
   }
 
-  if (dataCharset.Equals(NS_LITERAL_STRING("ASCII"))) {
+  if (dataCharset.Equals(NS_LITERAL_CSTRING("ASCII"))) {
     *aOutBuffer = ToNewUnicode(nsDependentCString(mResponseBody.get(),dataLen));
     if (!*aOutBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -415,7 +411,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
     return rv;
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(dataCharset).get(),
+  rv = ccm->GetUnicodeDecoderRaw(dataCharset.get(),
                                  getter_AddRefs(decoder));
   if (NS_FAILED(rv))
     return rv;
