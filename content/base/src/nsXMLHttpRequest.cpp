@@ -157,7 +157,7 @@ nsMultipartProxyListener::OnStartRequest(nsIRequest *aRequest,
   nsCAutoString contentType;
   nsresult rv = channel->GetContentType(contentType);
 
-  if (!contentType.Equals(NS_LITERAL_CSTRING("multipart/x-mixed-replace"))) {
+  if (!contentType.EqualsLiteral("multipart/x-mixed-replace")) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -504,7 +504,7 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
     }
   }
 
-  if (dataCharset.Equals(NS_LITERAL_CSTRING("ASCII"))) {
+  if (dataCharset.EqualsLiteral("ASCII")) {
     CopyASCIItoUTF16(mResponseBody, aOutBuffer);
 
     return NS_OK;
@@ -1380,7 +1380,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     httpChannel->GetRequestMethod(method); // If GET, method name will be uppercase
   }
 
-  if (aBody && httpChannel && !method.Equals(NS_LITERAL_CSTRING("GET"))) {
+  if (aBody && httpChannel && !method.EqualsLiteral("GET")) {
     nsXPIDLString serial;
     nsCOMPtr<nsIInputStream> postDataStream;
 
