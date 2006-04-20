@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.29 2006/01/20 17:40:21 nelsonb%netscape.com Exp $ */
+/* $Id: sslcon.c,v 1.30 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -926,8 +926,8 @@ ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
 
 	if ((unsigned)rv < (amount + 2)) {
 	    /* Short write.  Save the data and return. */
-	    if (ssl_SaveWriteData(ss, &ss->pendingBuf, out + rv,
-				   amount + 2 - rv) == SECFailure) {
+	    if (ssl_SaveWriteData(ss, out + rv, amount + 2 - rv) 
+	        == SECFailure) {
 		count = SECFailure;
 	    } else {
 		count += amount;
@@ -1023,8 +1023,7 @@ ssl2_SendStream(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
 
 	if ((unsigned)rv < buflen) {
 	    /* Short write.  Save the data and return. */
-	    if (ssl_SaveWriteData(ss, &ss->pendingBuf, out + rv,
-				  buflen - rv) == SECFailure) {
+	    if (ssl_SaveWriteData(ss, out + rv, buflen - rv) == SECFailure) {
 		count = SECFailure;
 	    } else {
 	    	count += amount;
@@ -1152,8 +1151,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
 
 	if (rv < (op - out)) {
 	    /* Short write.  Save the data and return. */
-	    if (ssl_SaveWriteData(ss, &ss->pendingBuf, out + rv,
-				  op - out - rv) == SECFailure) {
+	    if (ssl_SaveWriteData(ss, out + rv, op - out - rv) == SECFailure) {
 		count = SECFailure;
 	    } else {
 		count += amount;
