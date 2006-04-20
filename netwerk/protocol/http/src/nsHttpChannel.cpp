@@ -727,12 +727,11 @@ nsHttpChannel::CallOnStartRequest()
     // Allow consumers to override our content type
     if ((mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) &&
         gIOService->GetContentSniffers().Count() != 0) {
-        if (mTransactionPump)
-            mTransactionPump->PeekStream(CallTypeSniffers,
-                                         NS_STATIC_CAST(nsIChannel*, this));
-        else
-            mCachePump->PeekStream(CallTypeSniffers,
-                                   NS_STATIC_CAST(nsIChannel*, this));
+        // NOTE: We can have both a txn pump and a cache pump when the cache
+        // content is partial. In that case, we need to read from the cache,
+        // because that's the one that has the initial contents.
+        nsInputStreamPump* pump = mCachePump ? mCachePump : mTransactionPump;
+        pump->PeekStream(CallTypeSniffers, NS_STATIC_CAST(nsIChannel*, this));
     }
 
     LOG(("  calling mListener->OnStartRequest\n"));
@@ -3972,8 +3971,8 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // Make sure things are what we expect them to be...
     NS_ASSERTION(request == mCachePump || request == mTransactionPump,
                  "Unexpected request");
-    NS_ASSERTION(!mTransactionPump || request == mTransactionPump,
-                 "If we have a txn pump, request must be it");
+    NS_ASSERTION(!(mTransactionPump && mCachePump) || mCachedContentIsPartial,
+                 "If we have both pumps, the cache content must be partial");
 
     // don't enter this block if we're reading from the cache...
     if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
