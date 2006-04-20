@@ -364,10 +364,10 @@ nsXMLHttpRequest::DetectCharset(nsAString& aCharset)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
     if(NS_SUCCEEDED(rv) && calias) {
-      nsAutoString preferred;
-      rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal), preferred);
+      nsCAutoString preferred;
+      rv = calias->GetPreferred(charsetVal, preferred);
       if(NS_SUCCEEDED(rv)) {
-        aCharset.Assign(preferred);        
+        CopyASCIItoUCS2(preferred, aCharset);
       }
     }
   }
@@ -415,7 +415,8 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
     return rv;
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoder(&dataCharset,getter_AddRefs(decoder));
+  rv = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(dataCharset).get(),
+                                 getter_AddRefs(decoder));
   if (NS_FAILED(rv))
     return rv;
 
@@ -822,7 +823,6 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 {
   nsresult rv;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
-  nsAutoString charsetStr;
   char* postData;
 
   // We want to encode the string as utf-8, so get the right encoder
@@ -830,9 +830,8 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
            do_GetService(kCharsetConverterManagerCID, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   
-  charsetStr.Assign(NS_LITERAL_STRING("UTF-8"));
-  rv = charsetConv->GetUnicodeEncoder(&charsetStr,
-                                      getter_AddRefs(encoder));
+  rv = charsetConv->GetUnicodeEncoderRaw("UTF-8",
+                                         getter_AddRefs(encoder));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   
   // Convert to utf-8
