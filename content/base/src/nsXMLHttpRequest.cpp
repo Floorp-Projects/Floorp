@@ -39,7 +39,6 @@
 #include "nsXMLHttpRequest.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIXPConnect.h"
-#include "nsIByteArrayInputStream.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
@@ -86,6 +85,7 @@
 #include "nsLoadListenerProxy.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
+#include "nsIStringStream.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -806,15 +806,18 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
   postData[2+charLength+1] = nsCRT::LF;
   postData[2+charLength+2] = '\0';
 
-  // The new stream takes ownership of the buffer
-  rv = NS_NewByteArrayInputStream((nsIByteArrayInputStream**)aStream, 
-                                  postData, 
-                                  charLength+4);
-  if (NS_FAILED(rv)) {
-    nsMemory::Free(postData);
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIStringInputStream> inputStream(do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = inputStream->AdoptData(postData, charLength +4);
+    if (NS_SUCCEEDED(rv)) {
+      return CallQueryInterface(inputStream, aStream);
+    }
   }
-  return NS_OK;
+
+  // If we got here then something went wrong before the stream was
+  // adopted the buffer.
+  nsMemory::Free(postData);
+  return NS_ERROR_FAILURE;
 }
 
 
