@@ -96,10 +96,10 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_SCREEN      9
 #define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
 
-// 6259bce0-f407-4c31-a09b-5d3c7b1c4260
+// a7d9fe86-d7bd-4c59-9857-f396f7c92818
 #define NS_IWIDGET_IID \
-{ 0x6259bce0, 0xf407, 0x4c31, \
- { 0xa0, 0x9b, 0x5d, 0x3c, 0x7b, 0x1c, 0x42, 0x60 } }
+{ 0xa7d9fe86, 0xd7bd, 0x4c59, \
+ { 0x98, 0x57, 0xf3, 0x96, 0xf7, 0xc9, 0x28, 0x18 } }
 
 
 // Hide the native window systems real window type so as to avoid
@@ -956,14 +956,6 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
 
-
-    /**
-     * For printing and lightweight widgets
-     *
-     */
-    NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect) = 0;
-   
     /**
      * Enables the dropping of files to a widget (XXX this is temporary)
      *
