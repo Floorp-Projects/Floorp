@@ -67,6 +67,7 @@ public:
   NS_IMETHOD Unload(nsIDOMEvent* aEvent);
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
+  NS_IMETHOD PageRestore(nsIDOMEvent* aEvent);
 
 private:
   nsCOMPtr<nsIURI> mBaseURI;
