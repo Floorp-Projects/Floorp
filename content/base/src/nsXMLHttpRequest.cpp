@@ -402,9 +402,7 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   nsCAutoString dataCharset;
   nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
   if (document) {
-    rv = document->GetDocumentCharacterSet(dataCharset);
-    if (NS_FAILED(rv))
-      return rv;
+    dataCharset = document->GetDocumentCharacterSet();
   } else {
     if (NS_FAILED(DetectCharset(dataCharset)) || dataCharset.IsEmpty()) {
       // MS documentation states UTF-8 is default for responseText
@@ -609,7 +607,7 @@ nsXMLHttpRequest::GetLoadGroup(nsILoadGroup **aLoadGroup)
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
-    doc->GetDocumentLoadGroup(aLoadGroup);
+    *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
   }
 
   return NS_OK;
@@ -630,7 +628,7 @@ nsXMLHttpRequest::GetBaseURI(nsIURI **aBaseURI)
 
   nsCOMPtr<nsIDocument> doc = GetDocumentFromScriptContext(mScriptContext);
   if (doc) {
-    doc->GetBaseURL(aBaseURI);
+    NS_IF_ADDREF(*aBaseURI = doc->GetBaseURL());
   }
 
   return NS_OK;
