@@ -619,10 +619,18 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     return rv;
   }
 
+  // Have to pass PR_FALSE for reset here, else the reset will remove
+  // our event listener.  Should that listener addition move to later
+  // than this call?
   rv = document->StartDocumentLoad(kLoadAsData, channel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
+
+  if (principal) {
+    // Make sure to give this document the right principal
+    document->SetPrincipal(principal);
+  }
 
   if (NS_FAILED(rv) || !listener) {
     if (modalEventQueue) {
