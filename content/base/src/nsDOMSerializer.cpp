@@ -125,7 +125,7 @@ static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumen
     NS_ADDREF(*aEncoder);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
