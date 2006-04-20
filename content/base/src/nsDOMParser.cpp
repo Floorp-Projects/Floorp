@@ -413,7 +413,7 @@ ConvertWStringToStream(const PRUnichar* aStr,
 /* nsIDOMDocument parseFromString (in wstring str, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromString(const PRUnichar *str, 
-                             const nsACString& contentType,
+                             const char *contentType,
                              nsIDOMDocument **_retval)
 {
   NS_ENSURE_ARG(str);
@@ -428,26 +428,32 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
     return rv;
   }
 
-  return ParseFromStream(stream, NS_LITERAL_CSTRING("UTF-8"), contentLength, contentType, _retval);
+  return ParseFromStream(stream, "UTF-8", contentLength, contentType, _retval);
 }
 
-/* nsIDOMDocument parseFromUTF8String (in wstring str, in string contentType); */
+/* nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf, in PRUint32 bufLen, in string contentType); */
 NS_IMETHODIMP 
-nsDOMParser::ParseFromUTF8String(const nsACString& str,
-                                 const nsACString& contentType,
-                                 nsIDOMDocument **_retval)
+nsDOMParser::ParseFromBuffer(const PRUint8 *buf,
+                             PRUint32 bufLen,
+                             const char *contentType,
+                             nsIDOMDocument **_retval)
 {
+  NS_ENSURE_ARG_POINTER(buf);
   NS_ENSURE_ARG_POINTER(_retval);
 
   nsCOMPtr<nsIInputStream> stream;
   nsCOMPtr<nsIByteArrayInputStream> baiStream;
 
-  char *bufStr = ToNewCString(str);
+  PRUint8 *streamBuf = (PRUint8*)nsMemory::Clone(buf, bufLen);
+  if (streamBuf == nsnull) {
+    *_retval = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // The new stream takes ownership of the buffer
-  nsresult rv = NS_NewByteArrayInputStream(getter_AddRefs(baiStream), bufStr, str.Length());
+  nsresult rv = NS_NewByteArrayInputStream(getter_AddRefs(baiStream), (char*)streamBuf, bufLen);
   if (NS_FAILED(rv)) {
-    nsMemory::Free(bufStr);
+    nsMemory::Free(streamBuf);
     *_retval = nsnull;
     return rv;
   }
@@ -458,28 +464,28 @@ nsDOMParser::ParseFromUTF8String(const nsACString& str,
     return NS_ERROR_FAILURE;
   }
 
-  return ParseFromStream(stream, NS_LITERAL_CSTRING("UTF-8"), str.Length(), contentType, _retval);
+  return ParseFromStream(stream, nsnull, bufLen, contentType, _retval);
 }
 
 
 /* nsIDOMDocument parseFromStream (in nsIInputStream stream, in string charset, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromStream(nsIInputStream *stream, 
-                             const nsACString& charset, 
+                             const char *charset, 
                              PRInt32 contentLength,
-                             const nsACString& contentType, 
+                             const char *contentType,
                              nsIDOMDocument **_retval)
 {
   NS_ENSURE_ARG(stream);
+  NS_ENSURE_ARG(contentType);
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
   // For now, we can only create XML documents.
-  if (!(contentType.Equals(NS_LITERAL_CSTRING("text/xml"))) &&
-      !(contentType.Equals(NS_LITERAL_CSTRING("application/xml"))) &&
-      !(contentType.Equals(NS_LITERAL_CSTRING("application/xhtml+xml")))) {
+  if ((nsCRT::strcmp(contentType, "text/xml") != 0) &&
+      (nsCRT::strcmp(contentType, "application/xml") != 0) &&
+      (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
 
   nsresult rv;
   nsCOMPtr<nsIPrincipal> principal;
@@ -568,7 +574,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   }
 
   // Create a fake channel 
-  nsDOMParserChannel* parserChannel = new nsDOMParserChannel(baseURI, contentType);
+  nsDOMParserChannel* parserChannel = new nsDOMParserChannel(baseURI, nsDependentCString(contentType));
   if (!parserChannel) return NS_ERROR_OUT_OF_MEMORY;
 
   // Hold a reference to it in this method
@@ -576,7 +582,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   if (principal) {
     channel->SetOwner(principal);
   }
-  parserChannel->SetContentCharset(charset);
+
+  if (charset) {
+    parserChannel->SetContentCharset(nsDependentCString(charset));
+  }
+
   nsCOMPtr<nsIRequest> request = NS_STATIC_CAST(nsIRequest*, parserChannel);
 
   // Tell the document to start loading
