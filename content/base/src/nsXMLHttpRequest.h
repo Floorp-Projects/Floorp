@@ -123,6 +123,8 @@ protected:
   nsresult RequestCompleted();
   nsresult GetLoadGroup(nsILoadGroup **aLoadGroup);
   nsresult GetBaseURI(nsIURI **aBaseURI);
+  nsresult CreateEvent(PRUint32 msg, nsIDOMEvent** domevent);
+  void NotifyEventListeners(nsIDOMEventListener* aHandler, nsISupportsArray* aListeners, nsIDOMEvent* aEvent);
   void ClearEventListeners();
 
   nsCOMPtr<nsISupports> mContext;
