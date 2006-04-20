@@ -73,7 +73,7 @@
 #include "nsLoadListenerProxy.h"
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
 
