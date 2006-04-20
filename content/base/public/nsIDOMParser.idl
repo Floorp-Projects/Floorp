@@ -1,0 +1,75 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIDOMDocument;
+
+/**
+ * The nsIDOMParser interface is a non-SAX interface that can be used
+ * to parse a string or byte stream containing XML or HTML content
+ * to a DOM document. Parsing is always synchronous - a document is always
+ * returned from the parsing methods. This is as opposed to loading and
+ * parsing with the XMLHttpRequest interface, which can be used for
+ * asynchronous (callback-based) loading.
+ */
+
+[scriptable, uuid(d347c6c0-5129-11d4-9a54-000064657374)]
+interface nsIDOMParser : nsISupports {
+
+  /**
+   * The string passed in is parsed into a DOM document.
+   *
+   * @param str The string to be parsed
+   * @param contentType The content type of the string - either text/xml
+   *                    or text/html
+   * @returns The DOM document created as a result of parsing the 
+   *          string
+   */
+  nsIDOMDocument parseFromString(in wstring str, in string contentType);
+
+  /**
+   * The byte stream passed in is parsed into a DOM document.
+   *
+   * @param stream The byte stream whose contents are parsed
+   * @param charset The character set that was used to encode the byte
+   *                stream. NULL if not specified.
+   * @param contentType The content type of the string - either text/xml
+   *                    or text/html
+   * @returns The DOM document created as a result of parsing the 
+   *          stream
+   */
+  nsIDOMDocument parseFromStream(in nsIInputStream stream, 
+                                 in string charset, 
+                                 in long contentLength,
+                                 in string contentType);
+};
+
+%{ C++
+#define NS_DOMPARSER_CID                            \
+ { /* 3a8a3a50-512c-11d4-9a54-000064657374 */       \
+   0x3a8a3a50, 0x512c, 0x11d4,                      \
+  {0x9a, 0x54, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
+#define NS_DOMPARSER_PROGID \
+"component://netscape/xmlextras/domparser"
+%}
