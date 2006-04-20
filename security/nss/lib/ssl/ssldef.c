@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssldef.c,v 1.10 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: ssldef.c,v 1.11 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
 
 #include "cert.h"
 #include "ssl.h"
@@ -104,14 +104,15 @@ int ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 }
 
 /* Default (unencrypted) send.
- * Returns SECSuccess or SECFailure,  NOT SECWouldBlock. 
- * Returns positive count if any data was written. 
- * ALWAYS check for a short write after calling ssl_DefSend.
+ * For blocking sockets, always returns len or SECFailure, no short writes.
+ * For non-blocking sockets:
+ *   Returns positive count if any data was written, else returns SECFailure. 
+ *   Short writes may occur.  Does not return SECWouldBlock.
  */
 int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 {
     PRFileDesc *lower = ss->fd->lower;
-    int rv, count;
+    int sent = 0;
 
 #if NSS_DISABLE_NAGLE_DELAYS
     /* Although this is overkill, we disable Nagle delays completely for 
@@ -122,32 +123,24 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     	ss->delayDisabled = 1;
     }
 #endif
-    count = 0;
-    for (;;) {
-	rv = lower->methods->send(lower, (const void *)buf, len,
-				 flags, ss->wTimeout);
+    do {
+	int rv = lower->methods->send(lower, (const void *)(buf + sent), 
+	                              len - sent, flags, ss->wTimeout);
 	if (rv < 0) {
 	    PRErrorCode err = PR_GetError();
 	    if (err == PR_WOULD_BLOCK_ERROR) {
 		ss->lastWriteBlocked = 1;
-		return count ? count : rv;
+		return sent ? sent : SECFailure;
 	    }
 	    ss->lastWriteBlocked = 0;
 	    MAP_ERROR(PR_CONNECT_ABORTED_ERROR, PR_CONNECT_RESET_ERROR)
 	    /* Loser */
 	    return rv;
 	}
-	count += rv;
-	if (rv < len) {
-	    /* Short send. Send the rest in the next call */
-	    buf += rv;
-	    len -= rv;
-	    continue;
-	}
-	break;
-    }
+	sent += rv;
+    } while (len > sent);
     ss->lastWriteBlocked = 0;
-    return count;
+    return sent;
 }
 
 int ssl_DefRead(sslSocket *ss, unsigned char *buf, int len)
@@ -166,33 +159,26 @@ int ssl_DefRead(sslSocket *ss, unsigned char *buf, int len)
 int ssl_DefWrite(sslSocket *ss, const unsigned char *buf, int len)
 {
     PRFileDesc *lower = ss->fd->lower;
-    int rv, count;
+    int sent = 0;
 
-    count = 0;
-    for (;;) {
-	rv = lower->methods->write(lower, (void *)buf, len);
+    do {
+	int rv = lower->methods->write(lower, (const void *)(buf + sent), 
+	                               len - sent);
 	if (rv < 0) {
 	    PRErrorCode err = PR_GetError();
 	    if (err == PR_WOULD_BLOCK_ERROR) {
 		ss->lastWriteBlocked = 1;
-		return count ? count : rv;
+		return sent ? sent : SECFailure;
 	    }
 	    ss->lastWriteBlocked = 0;
 	    MAP_ERROR(PR_CONNECT_ABORTED_ERROR, PR_CONNECT_RESET_ERROR)
 	    /* Loser */
 	    return rv;
 	}
-	count += rv;
-	if (rv != len) {
-	    /* Short write. Send the rest in the next call */
-	    buf += rv;
-	    len -= rv;
-	    continue;
-	}
-	break;
-    }
+	sent += rv;
+    } while (len > sent);
     ss->lastWriteBlocked = 0;
-    return count;
+    return sent;
 }
 
 int ssl_DefGetpeername(sslSocket *ss, PRNetAddr *name)

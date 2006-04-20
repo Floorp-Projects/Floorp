@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.35 2006/02/10 19:39:53 rrelyea%redhat.com Exp $ */
+/* $Id: sslsecur.c,v 1.36 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -440,24 +440,23 @@ sslBuffer_Grow(sslBuffer *b, unsigned int newLen)
 ** Caller must hold xmitBufLock
 */
 SECStatus 
-ssl_SaveWriteData(sslSocket *ss, sslBuffer *buf, const void *data, 
-                      unsigned int len)
+ssl_SaveWriteData(sslSocket *ss, const void *data, unsigned int len)
 {
     unsigned int newlen;
     SECStatus    rv;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
-    newlen = buf->len + len;
-    if (newlen > buf->space) {
-	rv = sslBuffer_Grow(buf, newlen);
+    newlen = ss->pendingBuf.len + len;
+    if (newlen > ss->pendingBuf.space) {
+	rv = sslBuffer_Grow(&ss->pendingBuf, newlen);
 	if (rv) {
 	    return rv;
 	}
     }
     SSL_TRC(5, ("%d: SSL[%d]: saving %d bytes of data (%d total saved so far)",
 		 SSL_GETPID(), ss->fd, len, newlen));
-    PORT_Memcpy(buf->buf + buf->len, data, len);
-    buf->len = newlen;
+    PORT_Memcpy(ss->pendingBuf.buf + ss->pendingBuf.len, data, len);
+    ss->pendingBuf.len = newlen;
     return SECSuccess;
 }
 
@@ -468,28 +467,23 @@ ssl_SaveWriteData(sslSocket *ss, sslBuffer *buf, const void *data,
 ** Caller must hold xmitBufLock
 */
 int 
-ssl_SendSavedWriteData(sslSocket *ss, sslBuffer *buf, sslSendFunc send)
+ssl_SendSavedWriteData(sslSocket *ss)
 {
     int rv	= 0;
-    int len	= buf->len;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
-    if (len != 0) {
+    if (ss->pendingBuf.len != 0) {
 	SSL_TRC(5, ("%d: SSL[%d]: sending %d bytes of saved data",
-		     SSL_GETPID(), ss->fd, len));
-	rv = (*send)(ss, buf->buf, len, 0);
+		     SSL_GETPID(), ss->fd, ss->pendingBuf.len));
+	rv = ssl_DefSend(ss, ss->pendingBuf.buf, ss->pendingBuf.len, 0);
 	if (rv < 0) {
 	    return rv;
 	} 
-	if (rv < len) {
-	    /* UGH !! This shifts the whole buffer down by copying it, and 
-	    ** it depends on PORT_Memmove doing overlapping moves correctly!
-	    ** It should advance the pointer offset instead !!
-	    */
-	    PORT_Memmove(buf->buf, buf->buf + rv, len - rv);
-	    buf->len = len - rv;
-	} else {
-	    buf->len = 0;
+	ss->pendingBuf.len -= rv;
+	if (ss->pendingBuf.len > 0 && rv > 0) {
+	    /* UGH !! This shifts the whole buffer down by copying it */
+	    PORT_Memmove(ss->pendingBuf.buf, ss->pendingBuf.buf + rv, 
+	                 ss->pendingBuf.len);
     	}
     }
     return rv;
@@ -1020,7 +1014,7 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     if (!ssl_SocketIsBlocking(ss) && !ss->opt.fdx) {
 	ssl_GetXmitBufLock(ss);
 	if (ss->pendingBuf.len != 0) {
-	    rv = ssl_SendSavedWriteData(ss, &ss->pendingBuf, ssl_DefSend);
+	    rv = ssl_SendSavedWriteData(ss);
 	    if ((rv < 0) && (PORT_GetError() != PR_WOULD_BLOCK_ERROR)) {
 		ssl_ReleaseXmitBufLock(ss);
 		return SECFailure;
@@ -1075,7 +1069,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     ssl_GetXmitBufLock(ss);
     if (ss->pendingBuf.len != 0) {
 	PORT_Assert(ss->pendingBuf.len > 0);
-	rv = ssl_SendSavedWriteData(ss, &ss->pendingBuf, ssl_DefSend);
+	rv = ssl_SendSavedWriteData(ss);
 	if (rv >= 0 && ss->pendingBuf.len != 0) {
 	    PORT_Assert(ss->pendingBuf.len > 0);
 	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
@@ -1109,6 +1103,10 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     	return 0;
     }
     PORT_Assert(buf != NULL);
+    if (!buf) {
+	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+    	return PR_FAILURE;
+    }
     
     SSL_TRC(2, ("%d: SSL[%d]: SecureSend: sending %d bytes",
 		SSL_GETPID(), ss->fd, len));

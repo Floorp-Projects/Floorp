@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.87 2006/04/14 00:43:19 nelson%bolyard.com Exp $ */
+/* $Id: ssl3con.c,v 1.88 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -1766,32 +1766,166 @@ ssl3_ClientAuthTokenPresent(sslSessionID *sid) {
     return isPresent;
 }
 
+static SECStatus
+ssl3_CompressMACEncryptRecord(sslSocket *        ss,
+                              SSL3ContentType    type,
+		              const SSL3Opaque * pIn,
+		              PRUint32           contentLen)
+{
+    ssl3CipherSpec *          cwSpec;
+    const ssl3BulkCipherDef * cipher_def;
+    sslBuffer      *          wrBuf 	  = &ss->sec.writeBuf;
+    SECStatus                 rv;
+    PRUint32                  macLen      = 0;
+    PRUint32                  fragLen;
+    PRUint32  p1Len, p2Len, oddLen = 0;
+    PRInt32   cipherBytes =  0;
+
+    /*
+     * null compression is easy to do
+    PORT_Memcpy(wrBuf->buf + SSL3_RECORD_HEADER_LENGTH, pIn, contentLen);
+     */
+
+    ssl_GetSpecReadLock(ss);	/********************************/
+
+    cwSpec = ss->ssl3.cwSpec;
+    cipher_def = cwSpec->cipher_def;
+    /*
+     * Add the MAC
+     */
+    rv = ssl3_ComputeRecordMAC( cwSpec, (PRBool)(ss->sec.isServer),
+	type, cwSpec->version, cwSpec->write_seq_num, pIn, contentLen,
+	wrBuf->buf + contentLen + SSL3_RECORD_HEADER_LENGTH, &macLen);
+    if (rv != SECSuccess) {
+	ssl_MapLowLevelError(SSL_ERROR_MAC_COMPUTATION_FAILURE);
+	goto spec_locked_loser;
+    }
+    p1Len   = contentLen;
+    p2Len   = macLen;
+    fragLen = contentLen + macLen;	/* needs to be encrypted */
+    PORT_Assert(fragLen <= MAX_FRAGMENT_LENGTH + 1024);
+
+    /*
+     * Pad the text (if we're doing a block cipher)
+     * then Encrypt it
+     */
+    if (cipher_def->type == type_block) {
+	unsigned char * pBuf;
+	int             padding_length;
+	int             i;
+
+	oddLen = contentLen % cipher_def->block_size;
+	/* Assume blockSize is a power of two */
+	padding_length = cipher_def->block_size - 1 -
+			((fragLen) & (cipher_def->block_size - 1));
+	fragLen += padding_length + 1;
+	PORT_Assert((fragLen % cipher_def->block_size) == 0);
+
+	/* Pad according to TLS rules (also acceptable to SSL3). */
+	pBuf = &wrBuf->buf[fragLen + SSL3_RECORD_HEADER_LENGTH - 1];
+	for (i = padding_length + 1; i > 0; --i) {
+	    *pBuf-- = padding_length;
+	}
+	/* now, if contentLen is not a multiple of block size, fix it */
+	p2Len = fragLen - p1Len;
+    }
+    if (p1Len < 256) {
+	oddLen = p1Len;
+	p1Len = 0;
+    } else {
+	p1Len -= oddLen;
+    }
+    if (oddLen) {
+	p2Len += oddLen;
+	PORT_Assert( (cipher_def->block_size < 2) || \
+		     (p2Len % cipher_def->block_size) == 0);
+	memcpy(wrBuf->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
+	       pIn + p1Len, oddLen);
+    }
+    if (p1Len > 0) {
+	rv = cwSpec->encode( cwSpec->encodeContext, 
+	    wrBuf->buf + SSL3_RECORD_HEADER_LENGTH, /* output */
+	    &cipherBytes,                           /* actual outlen */
+	    p1Len,                                  /* max outlen */
+	    pIn, p1Len);                      /* input, and inputlen */
+	PORT_Assert(rv == SECSuccess && cipherBytes == p1Len);
+	if (rv != SECSuccess || cipherBytes != p1Len) {
+	    PORT_SetError(SSL_ERROR_ENCRYPTION_FAILURE);
+	    goto spec_locked_loser;
+	}
+    }
+    if (p2Len > 0) {
+	PRInt32 cipherBytesPart2 = -1;
+	rv = cwSpec->encode( cwSpec->encodeContext, 
+	    wrBuf->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
+	    &cipherBytesPart2,          /* output and actual outLen */
+	    p2Len,                             /* max outlen */
+	    wrBuf->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
+	    p2Len);                            /* input and inputLen*/
+	PORT_Assert(rv == SECSuccess && cipherBytesPart2 == p2Len);
+	if (rv != SECSuccess || cipherBytesPart2 != p2Len) {
+	    PORT_SetError(SSL_ERROR_ENCRYPTION_FAILURE);
+	    goto spec_locked_loser;
+	}
+	cipherBytes += cipherBytesPart2;
+    }	
+    if (rv != SECSuccess) {
+	ssl_MapLowLevelError(SSL_ERROR_ENCRYPTION_FAILURE);
+spec_locked_loser:
+	ssl_ReleaseSpecReadLock(ss);
+	return SECFailure;
+    }
+    PORT_Assert(cipherBytes <= MAX_FRAGMENT_LENGTH + 1024);
+
+    ssl3_BumpSequenceNumber(&cwSpec->write_seq_num);
+
+    wrBuf->len    = cipherBytes + SSL3_RECORD_HEADER_LENGTH;
+    wrBuf->buf[0] = type;
+    wrBuf->buf[1] = MSB(cwSpec->version);
+    wrBuf->buf[2] = LSB(cwSpec->version);
+    wrBuf->buf[3] = MSB(cipherBytes);
+    wrBuf->buf[4] = LSB(cipherBytes);
+
+    ssl_ReleaseSpecReadLock(ss); /************************************/
+
+    return SECSuccess;
+}
+
 /* Process the plain text before sending it.
  * Returns the number of bytes of plaintext that were succesfully sent
  * 	plus the number of bytes of plaintext that were copied into the
  *	output (write) buffer.
  * Returns SECFailure on a hard IO error, memory error, or crypto error.
  * Does NOT return SECWouldBlock.
+ *
+ * Notes on the use of the private ssl flags:
+ * (no private SSL flags)
+ *    Attempt to make and send SSL records for all plaintext
+ *    If non-blocking and a send gets WOULD_BLOCK,
+ *    or if the pending (ciphertext) buffer is not empty,
+ *    then buffer remaining bytes of ciphertext into pending buf,
+ *    and continue to do that for all succssive records until all
+ *    bytes are used.
+ * ssl_SEND_FLAG_FORCE_INTO_BUFFER
+ *    As above, except this suppresses all write attempts, and forces
+ *    all ciphertext into the pending ciphertext buffer.
+ *
  */
 static PRInt32
 ssl3_SendRecord(   sslSocket *        ss,
                    SSL3ContentType    type,
-		   const SSL3Opaque * buf,
-		   PRInt32            bytes,
+		   const SSL3Opaque * pIn,   /* input buffer */
+		   PRInt32            nIn,   /* bytes of input */
 		   PRInt32            flags)
 {
-    ssl3CipherSpec *          cwSpec;
-    sslBuffer      *          write 	  = &ss->sec.writeBuf;
-    const ssl3BulkCipherDef * cipher_def;
+    sslBuffer      *          wrBuf 	  = &ss->sec.writeBuf;
     SECStatus                 rv;
-    PRUint32                  bufSize     =  0;
-    PRInt32                   sent        =  0;
-    PRBool                    isBlocking  = ssl_SocketIsBlocking(ss);
+    PRInt32                   totalSent   = 0;
 
-    SSL_TRC(3, ("%d: SSL3[%d] SendRecord type: %s bytes=%d",
+    SSL_TRC(3, ("%d: SSL3[%d] SendRecord type: %s nIn=%d",
 		SSL_GETPID(), ss->fd, ssl3_DecodeContentType(type),
-		bytes));
-    PRINT_BUF(3, (ss, "Send record (plain text)", buf, bytes));
+		nIn));
+    PRINT_BUF(3, (ss, "Send record (plain text)", pIn, nIn));
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
@@ -1813,149 +1947,30 @@ ssl3_SendRecord(   sslSocket *        ss,
 	return SECFailure;
     }
 
-    while (bytes > 0) {
-    	PRInt32   count;
-	PRUint32  contentLen;
-	PRUint32  fragLen;
-	PRUint32  macLen;
-	PRInt32   cipherBytes =  0;
-	PRUint32  p1Len, p2Len, oddLen = 0;
+    while (nIn > 0) {
+	PRUint32  contentLen = PR_MIN(nIn, MAX_FRAGMENT_LENGTH);
 
-	contentLen = PR_MIN(bytes, MAX_FRAGMENT_LENGTH);
-	if (write->space < contentLen + SSL3_BUFFER_FUDGE) {
-	    rv = sslBuffer_Grow(write, contentLen + SSL3_BUFFER_FUDGE);
+	if (wrBuf->space < contentLen + SSL3_BUFFER_FUDGE) {
+	    PRInt32 newSpace = PR_MAX(wrBuf->space * 2, contentLen);
+	    newSpace = PR_MIN(newSpace, MAX_FRAGMENT_LENGTH);
+	    newSpace += SSL3_BUFFER_FUDGE;
+	    rv = sslBuffer_Grow(wrBuf, newSpace);
 	    if (rv != SECSuccess) {
 		SSL_DBG(("%d: SSL3[%d]: SendRecord, tried to get %d bytes",
-			 SSL_GETPID(), ss->fd, contentLen + SSL3_BUFFER_FUDGE));
+			 SSL_GETPID(), ss->fd, newSpace));
 		return SECFailure; /* sslBuffer_Grow set a memory error code. */
 	    }
 	}
 
-	/* This variable records the actual size of the buffer allocated above.
-	 * Some algorithms may expand the number of bytes needed to send data. 
-	 * If we only supply the output buffer with the same number
-	 * of bytes as the input buffer, we will fail.
-	 */
-	bufSize = contentLen + SSL3_BUFFER_FUDGE;
-
-	/*
-	 * null compression is easy to do
-	PORT_Memcpy(write->buf + SSL3_RECORD_HEADER_LENGTH, buf, contentLen);
-	 */
-
-	ssl_GetSpecReadLock(ss);	/********************************/
-
-	cwSpec = ss->ssl3.cwSpec;
-	cipher_def = cwSpec->cipher_def;
-	/*
-	 * Add the MAC
-	 */
-	rv = ssl3_ComputeRecordMAC( cwSpec, (PRBool)(ss->sec.isServer),
-	    type, cwSpec->version, cwSpec->write_seq_num, buf, contentLen,
-	    write->buf + contentLen + SSL3_RECORD_HEADER_LENGTH, &macLen);
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_MAC_COMPUTATION_FAILURE);
-	    goto spec_locked_loser;
-	}
-	p1Len   = contentLen;
-	p2Len   = macLen;
-	fragLen = contentLen + macLen;	/* needs to be encrypted */
-	PORT_Assert(fragLen <= MAX_FRAGMENT_LENGTH + 1024);
-
-	/*
-	 * Pad the text (if we're doing a block cipher)
-	 * then Encrypt it
-	 */
-	if (cipher_def->type == type_block) {
-	    unsigned char * pBuf;
-	    int             padding_length;
-	    int             i;
-
-	    oddLen = contentLen % cipher_def->block_size;
-	    /* Assume blockSize is a power of two */
-	    padding_length = cipher_def->block_size - 1 -
-		((fragLen) & (cipher_def->block_size - 1));
-	    fragLen += padding_length + 1;
-	    PORT_Assert((fragLen % cipher_def->block_size) == 0);
-
-	    /* Pad according to TLS rules (also acceptable to SSL3). */
-	    pBuf = &write->buf[fragLen + SSL3_RECORD_HEADER_LENGTH - 1];
-	    for (i = padding_length + 1; i > 0; --i) {
-	    	*pBuf-- = padding_length;
-	    }
-	    /* now, if contentLen is not a multiple of block size, fix it */
-	    p2Len = fragLen - p1Len;
-	}
-	if (p1Len < 256) {
-	    oddLen = p1Len;
-	    p1Len = 0;
-	} else {
-	    p1Len -= oddLen;
-	}
-	if (oddLen) {
-	    p2Len += oddLen;
-	    PORT_Assert( (cipher_def->block_size < 2) || \
-			 (p2Len % cipher_def->block_size) == 0);
-	    memcpy(write->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
-		   buf + p1Len, oddLen);
-	}
-	if (p1Len > 0) {
-	    rv = cwSpec->encode( cwSpec->encodeContext, 
-		write->buf + SSL3_RECORD_HEADER_LENGTH, /* output */
-		&cipherBytes,                           /* actual outlen */
-		p1Len,                                  /* max outlen */
-		buf, p1Len);                      /* input, and inputlen */
-	    PORT_Assert(rv == SECSuccess && cipherBytes == p1Len);
-	    if (rv != SECSuccess || cipherBytes != p1Len) {
-		PORT_SetError(SSL_ERROR_ENCRYPTION_FAILURE);
-		goto spec_locked_loser;
-	    }
-	}
-	if (p2Len > 0) {
-	    PRInt32 cipherBytesPart2 = -1;
-	    rv = cwSpec->encode( cwSpec->encodeContext, 
-		write->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
-		&cipherBytesPart2,          /* output and actual outLen */
-		p2Len,                             /* max outlen */
-		write->buf + SSL3_RECORD_HEADER_LENGTH + p1Len,
-		p2Len);                            /* input and inputLen*/
-	    PORT_Assert(rv == SECSuccess && cipherBytesPart2 == p2Len);
-	    if (rv != SECSuccess || cipherBytesPart2 != p2Len) {
-		PORT_SetError(SSL_ERROR_ENCRYPTION_FAILURE);
-		    goto spec_locked_loser;
-		}
-	    cipherBytes += cipherBytesPart2;
-	}	
-	if (rv != SECSuccess) {
-	    ssl_MapLowLevelError(SSL_ERROR_ENCRYPTION_FAILURE);
-spec_locked_loser:
-	    ssl_ReleaseSpecReadLock(ss);
+	rv = ssl3_CompressMACEncryptRecord( ss, type, pIn, contentLen);
+	if (rv != SECSuccess)
 	    return SECFailure;
-	}
-	PORT_Assert(cipherBytes <= MAX_FRAGMENT_LENGTH + 1024);
 
-	/*
-	 * XXX should we zero out our copy of the buffer after compressing
-	 * and encryption ??
-	 */
+	pIn += contentLen;
+	nIn -= contentLen;
+	PORT_Assert( nIn >= 0 );
 
-	ssl3_BumpSequenceNumber(&cwSpec->write_seq_num);
-
-	ssl_ReleaseSpecReadLock(ss); /************************************/
-
-	buf   += contentLen;
-	bytes -= contentLen;
-	PORT_Assert( bytes >= 0 );
-
-	/* PORT_Assert(fragLen == cipherBytes); */
-	write->len    = cipherBytes + SSL3_RECORD_HEADER_LENGTH;
-	write->buf[0] = type;
-	write->buf[1] = MSB(cwSpec->version);
-	write->buf[2] = LSB(cwSpec->version);
-	write->buf[3] = MSB(cipherBytes);
-	write->buf[4] = LSB(cipherBytes);
-
-	PRINT_BUF(50, (ss, "send (encrypted) record data:", write->buf, write->len));
+	PRINT_BUF(50, (ss, "send (encrypted) record data:", wrBuf->buf, wrBuf->len));
 
 	/* If there's still some previously saved ciphertext,
 	 * or the caller doesn't want us to send the data yet,
@@ -1964,58 +1979,56 @@ spec_locked_loser:
 	if ((ss->pendingBuf.len > 0) ||
 	    (flags & ssl_SEND_FLAG_FORCE_INTO_BUFFER)) {
 
-	    rv = ssl_SaveWriteData(ss, &ss->pendingBuf,
-				   write->buf, write->len);
+	    rv = ssl_SaveWriteData(ss, wrBuf->buf, wrBuf->len);
 	    if (rv != SECSuccess) {
 		/* presumably a memory error, SEC_ERROR_NO_MEMORY */
 		return SECFailure;
 	    }
-	    write->len = 0;	/* All cipher text is saved away. */
+	    wrBuf->len = 0;	/* All cipher text is saved away. */
 
 	    if (!(flags & ssl_SEND_FLAG_FORCE_INTO_BUFFER)) {
-
+		PRInt32   sent;
 		ss->handshakeBegun = 1;
-		count = ssl_SendSavedWriteData(ss, &ss->pendingBuf,
-		                               &ssl_DefSend);
-		if (count < 0 && PR_GetError() != PR_WOULD_BLOCK_ERROR) {
+		sent = ssl_SendSavedWriteData(ss);
+		if (sent < 0 && PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    ssl_MapLowLevelError(SSL_ERROR_SOCKET_WRITE_FAILURE);
 		    return SECFailure;
 		}
+		if (ss->pendingBuf.len) {
+		    flags |= ssl_SEND_FLAG_FORCE_INTO_BUFFER;
+		}
 	    }
-	} else if (write->len > 0) {
+	} else if (wrBuf->len > 0) {
+	    PRInt32   sent;
 	    ss->handshakeBegun = 1;
-	    count = ssl_DefSend(ss, write->buf, write->len,
-				flags & ~ssl_SEND_FLAG_MASK);
-	    if (count < 0) {
+	    sent = ssl_DefSend(ss, wrBuf->buf, wrBuf->len,
+			       flags & ~ssl_SEND_FLAG_MASK);
+	    if (sent < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    ssl_MapLowLevelError(SSL_ERROR_SOCKET_WRITE_FAILURE);
-		    return (sent > 0) ? sent : SECFailure;
+		    return SECFailure;
 		}
 		/* we got PR_WOULD_BLOCK_ERROR, which means none was sent. */
-		count = 0;
+		sent = 0;
 	    }
-	    /* now take all the remaining unsent newly-generated ciphertext and
-	     * append it to the buffer of previously unsent ciphertext.
-	     */
-	    if ((unsigned)count < write->len) {
-		rv = ssl_SaveWriteData(ss, &ss->pendingBuf,
-				       write->buf + (unsigned)count,
-				       write->len - (unsigned)count);
+	    wrBuf->len -= sent;
+	    if (wrBuf->len) {
+		/* now take all the remaining unsent new ciphertext and 
+		 * append it to the buffer of previously unsent ciphertext.
+		 */
+		rv = ssl_SaveWriteData(ss, wrBuf->buf + sent, wrBuf->len);
 		if (rv != SECSuccess) {
 		    /* presumably a memory error, SEC_ERROR_NO_MEMORY */
 		    return SECFailure;
 		}
 	    }
-	    write->len = 0;
 	}
-	sent += contentLen;
-	if ((flags & ssl_SEND_FLAG_NO_BUFFER) &&
-	    (isBlocking || (ss->pendingBuf.len > 0))) {
-	    break;
-	}
+	totalSent += contentLen;
     }
-    return sent;
+    return totalSent;
 }
+
+#define SSL3_PENDING_HIGH_WATER 1024
 
 /* Attempt to send the content of "in" in an SSL application_data record.
  * Returns "len" or SECFailure,   never SECWouldBlock, nor SECSuccess.
@@ -2024,14 +2037,36 @@ int
 ssl3_SendApplicationData(sslSocket *ss, const unsigned char *in,
 			 PRInt32 len, PRInt32 flags)
 {
-    PRInt32   sent	= 0;
+    PRInt32   totalSent	= 0;
+    PRInt32   discarded = 0;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
+    if (len < 0 || !in) {
+	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+	return SECFailure;
+    }
 
-    while (len > 0) {
-	PRInt32   count;
+    if (ss->pendingBuf.len > SSL3_PENDING_HIGH_WATER &&
+        !ssl_SocketIsBlocking(ss)) {
+	PORT_Assert(!ssl_SocketIsBlocking(ss));
+	PORT_SetError(PR_WOULD_BLOCK_ERROR);
+	return SECFailure;
+    }
 
-	if (sent > 0) {
+    if (ss->appDataBuffered && len) {
+	PORT_Assert (in[0] == (unsigned char)(ss->appDataBuffered));
+	if (in[0] != (unsigned char)(ss->appDataBuffered)) {
+	    PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
+	    return SECFailure;
+	}
+    	in++;
+	len--;
+	discarded = 1;
+    }
+    while (len > totalSent) {
+	PRInt32   sent, toSend;
+
+	if (totalSent > 0) {
 	    /*
 	     * The thread yield is intended to give the reader thread a
 	     * chance to get some cycles while the writer thread is in
@@ -2042,23 +2077,45 @@ ssl3_SendApplicationData(sslSocket *ss, const unsigned char *in,
 	    PR_Sleep(PR_INTERVAL_NO_WAIT);	/* PR_Yield(); */
 	    ssl_GetXmitBufLock(ss);
 	}
-	count = ssl3_SendRecord(ss, content_application_data, in, len,
-	                           flags | ssl_SEND_FLAG_NO_BUFFER);
-	if (count < 0) {
-	    return (sent > 0) ? sent : count;
-				    /* error code set by ssl3_SendRecord */
+	toSend = PR_MIN(len - totalSent, MAX_FRAGMENT_LENGTH);
+	sent = ssl3_SendRecord(ss, content_application_data, 
+	                       in + totalSent, toSend, flags);
+	if (sent < 0) {
+	    if (totalSent > 0 && PR_GetError() == PR_WOULD_BLOCK_ERROR) {
+		PORT_Assert(ss->lastWriteBlocked);
+	    	break;
+	    }
+	    return SECFailure; /* error code set by ssl3_SendRecord */
 	}
-	sent += count;
-	len  -= count;
-	in   += count;
+	totalSent += sent;
+	if (ss->pendingBuf.len) {
+	    /* must be a non-blocking socket */
+	    PORT_Assert(!ssl_SocketIsBlocking(ss));
+	    PORT_Assert(ss->lastWriteBlocked);
+	    break;	
+	}
     }
-    return sent;
+    if (ss->pendingBuf.len) {
+	/* Must be non-blocking. */
+	PORT_Assert(!ssl_SocketIsBlocking(ss));
+	if (totalSent > 0) {
+	    ss->appDataBuffered = 0x100 | in[totalSent - 1];
+	}
+
+	totalSent = totalSent + discarded - 1;
+	if (totalSent <= 0) {
+	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
+	    totalSent = SECFailure;
+	}
+	return totalSent;
+    } 
+    ss->appDataBuffered = 0;
+    return totalSent + discarded;
 }
 
 /* Attempt to send the content of sendBuf buffer in an SSL handshake record.
  * This function returns SECSuccess or SECFailure, never SECWouldBlock.
- * It used to always set sendBuf.len to 0, even when returning SECFailure.
- * Now it does not.
+ * Always set sendBuf.len to 0, even when returning SECFailure.
  *
  * Called from SSL3_SendAlert(), ssl3_SendChangeCipherSpecs(),
  *             ssl3_AppendHandshake(), ssl3_SendClientHello(),
@@ -2068,21 +2125,41 @@ ssl3_SendApplicationData(sslSocket *ss, const unsigned char *in,
 static SECStatus
 ssl3_FlushHandshake(sslSocket *ss, PRInt32 flags)
 {
-    PRInt32 rv;
+    PRInt32 rv = SECSuccess;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
     if (!ss->sec.ci.sendBuf.buf || !ss->sec.ci.sendBuf.len)
-	return SECSuccess;
+	return rv;
 
-    rv = ssl3_SendRecord(ss, content_handshake, ss->sec.ci.sendBuf.buf,
-			 ss->sec.ci.sendBuf.len, flags);
-    if (rv < 0) {
-	return (SECStatus)rv;	/* error code set by ssl3_SendRecord */
+    /* only this flag is allowed */
+    PORT_Assert(!(flags & ~ssl_SEND_FLAG_FORCE_INTO_BUFFER));
+    if ((flags & ~ssl_SEND_FLAG_FORCE_INTO_BUFFER) != 0) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	rv = SECFailure;
+    } else {
+	rv = ssl3_SendRecord(ss, content_handshake, ss->sec.ci.sendBuf.buf,
+			     ss->sec.ci.sendBuf.len, flags);
     }
+    if (rv < 0) { 
+    	int err = PORT_GetError();
+	PORT_Assert(err != PR_WOULD_BLOCK_ERROR);
+	if (err == PR_WOULD_BLOCK_ERROR) {
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	}
+    } else if (rv < ss->sec.ci.sendBuf.len) {
+    	/* short write should never happen */
+	PORT_Assert(rv >= ss->sec.ci.sendBuf.len);
+	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	rv = SECFailure;
+    } else {
+	rv = SECSuccess;
+    }
+
+    /* Whether we succeeded or failed, toss the old handshake data. */
     ss->sec.ci.sendBuf.len = 0;
-    return SECSuccess;
+    return rv;
 }
 
 /*

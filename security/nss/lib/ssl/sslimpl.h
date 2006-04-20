@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslimpl.h,v 1.49 2006/04/13 23:08:18 nelson%bolyard.com Exp $ */
+/* $Id: sslimpl.h,v 1.50 2006/04/20 08:46:34 nelson%bolyard.com Exp $ */
 
 #ifndef __sslimpl_h_
 #define __sslimpl_h_
@@ -940,6 +940,7 @@ struct sslSocketStr {
     unsigned long    lastWriteBlocked;   
     unsigned long    recvdCloseNotify;    /* received SSL EOF. */
     unsigned long    TCPconnected;       
+    unsigned long    appDataBuffered;
 
     /* version of the protocol to use */
     SSL3ProtocolVersion version;
@@ -1130,9 +1131,8 @@ extern sslSocket * ssl_DupSocket(sslSocket *old);
 extern void        ssl_PrintBuf(sslSocket *ss, const char *msg, const void *cp, int len);
 extern void        ssl_DumpMsg(sslSocket *ss, unsigned char *bp, unsigned len);
 
-extern int         ssl_SendSavedWriteData(sslSocket *ss, sslBuffer *buf,
-				          sslSendFunc fp);
-extern SECStatus ssl_SaveWriteData(sslSocket *ss, sslBuffer *buf, 
+extern int         ssl_SendSavedWriteData(sslSocket *ss);
+extern SECStatus ssl_SaveWriteData(sslSocket *ss, 
                                    const void* p, unsigned int l);
 extern SECStatus ssl2_BeginClientHandshake(sslSocket *ss);
 extern SECStatus ssl2_BeginServerHandshake(sslSocket *ss);
