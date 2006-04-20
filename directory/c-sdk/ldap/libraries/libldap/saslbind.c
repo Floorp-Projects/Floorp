@@ -84,11 +84,19 @@ ldap_sasl_bind(
 	 */
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_sasl_bind\n", 0, 0, 0 );
-
+	
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}
+	
 	if ( msgidp == NULL ) {
 		LDAP_SET_LDERRNO( ld, LDAP_PARAM_ERROR, NULL, NULL );
-                return( LDAP_PARAM_ERROR );
+		return( LDAP_PARAM_ERROR );
 	}
+	
+	if ( ( ld->ld_options & LDAP_BITOPT_RECONNECT ) != 0 ) {
+		nsldapi_handle_reconnect( ld );
+	}	
 
 	simple = ( mechanism == LDAP_SASL_SIMPLE );
 	ldapversion = NSLDAPI_LDAP_VERSION( ld );
@@ -197,6 +205,15 @@ ldap_sasl_bind_s(
 
 	LDAPDebug( LDAP_DEBUG_TRACE, "ldap_sasl_bind_s\n", 0, 0, 0 );
 
+	if ( !NSLDAPI_VALID_LDAP_POINTER( ld )) {
+		return( LDAP_PARAM_ERROR );
+	}	
+
+	if ( NSLDAPI_LDAP_VERSION( ld ) < LDAP_VERSION3 ) {
+		LDAP_SET_LDERRNO( ld, LDAP_NOT_SUPPORTED, NULL, NULL );
+		return( LDAP_NOT_SUPPORTED );
+	}
+
 	if ( ( err = ldap_sasl_bind( ld, dn, mechanism, cred, serverctrls,
 	    clientctrls, &msgid )) != LDAP_SUCCESS )
 		return( err );
@@ -204,8 +221,8 @@ ldap_sasl_bind_s(
 	if ( ldap_result( ld, msgid, 1, (struct timeval *) 0, &result ) == -1 )
 		return( LDAP_GET_LDERRNO( ld, NULL, NULL ) );
 
-	if (( err = ldap_parse_sasl_bind_result( ld, result, servercredp, 0 ))
-	    != LDAP_SUCCESS ) {
+	err = ldap_parse_sasl_bind_result( ld, result, servercredp, 0 );
+	if (err != LDAP_SUCCESS  && err != LDAP_SASL_BIND_IN_PROGRESS) {
 		ldap_msgfree( result );
 		return( err );
 	}

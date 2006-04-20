@@ -843,4 +843,9 @@ int ldap_memcache_new( LDAP *ld, int msgid, unsigned long key,
 int ldap_memcache_append( LDAP *ld, int msgid, int bLast, LDAPMessage *result );
 int ldap_memcache_abandon( LDAP *ld, int msgid );
 
+/*
+ * in sbind.c
+ */
+void nsldapi_handle_reconnect( LDAP *ld );
+
 #endif /* _LDAPINT_H */
