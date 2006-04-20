@@ -79,7 +79,6 @@
 #ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
 #endif
-#include "nsIUUIDGenerator.h"
 #include "nsDocShellCID.h"
 #include "nsMemory.h"
 #include "nsIBadCertListener.h"
