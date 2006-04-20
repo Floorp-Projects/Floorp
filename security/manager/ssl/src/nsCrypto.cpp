@@ -1849,7 +1849,6 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
   nsNSSShutDownPreventionLock locker;
   char *nickname=nsnull, *cmmfResponse=nsnull;
   char *retString=nsnull;
-  char *freeString=nsnull;
   CMMFCertRepContent *certRepContent = nsnull;
   int numResponses = 0;
   nsIX509Cert **certArr = nsnull;
@@ -2030,9 +2029,6 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
     delete []certArr;
   }
   aReturn.Assign(NS_ConvertASCIItoUTF16(retString));
-  if (freeString != nsnull) {
-    PR_smprintf_free(freeString);
-  }
   if (nickname) {
     nsCRT::free(nickname);
   }
