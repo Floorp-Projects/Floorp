@@ -54,7 +54,7 @@
 #include "nsISupportsArray.h"
 #include "jsapi.h"
 #include "nsIScriptContext.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIProgressEventSink.h"
@@ -68,7 +68,7 @@ class nsXMLHttpRequest : public nsIXMLHttpRequest,
                          public nsIDOMLoadListener,
                          public nsIDOMEventTarget,
                          public nsIStreamListener,
-                         public nsIHttpEventSink,
+                         public nsIChannelEventSink,
                          public nsIInterfaceRequestor,
                          public nsIProgressEventSink,
                          public nsSupportsWeakReference
@@ -104,8 +104,8 @@ public:
   // nsIRequestObserver
   NS_DECL_NSIREQUESTOBSERVER
 
-  // nsIHttpEventSink
-  NS_DECL_NSIHTTPEVENTSINK
+  // nsIChannelEventSink
+  NS_DECL_NSICHANNELEVENTSINK
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
