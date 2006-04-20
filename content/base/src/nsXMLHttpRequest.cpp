@@ -135,7 +135,10 @@ GetCurrentContext(nsIScriptContext **aScriptContext)
     return;
   }
 
-  nsISupports *priv = (nsISupports *)::JS_GetContextPrivate(cx);
+  nsISupports *priv =
+    (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+    ? NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(cx))
+    : nsnull;
 
   if (!priv) {
     return;
