@@ -119,6 +119,10 @@ var gFormFillEnabled = true;
 var gURLBarAutoFillPrefListener = null;
 var gAutoHideTabbarPrefListener = null;
 
+#ifdef XP_MACOSX
+var gClickAndHoldTimer = null;
+#endif
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -194,6 +198,58 @@ function UpdateBackForwardButtons()
       forwardBroadcaster.setAttribute("disabled", true);
   }
 }
+
+#ifdef XP_MACOSX
+/**
+ * Click-and-Hold implementation for the Back and Forward buttons
+ * XXXmano: should this live in toolbarbutton.xml?
+ */
+function ClickAndHoldMouseDownCallback(aButton)
+{
+  aButton.open = true;
+  gClickAndHoldTimer = null;
+}
+
+function ClickAndHoldMouseDown(aEvent)
+{
+ if (aEvent.target.getAttribute("anonid") != "button")
+   return;
+
+ var button = aEvent.target.parentNode.parentNode;
+ if (!button.disabled)
+   gClickAndHoldTimer = setTimeout(ClickAndHoldMouseDownCallback, 500, button);
+}
+
+function MayStopClickAndHoldTimer(aEvent)
+{
+  // Note passing null here is a no-op
+  clearTimeout(gClickAndHoldTimer);
+}
+
+function SetClickAndHoldHandlers()
+{
+  function _addClickAndHoldListenersOnElement(aElm)
+  {
+    aElm.addEventListener("mousedown",
+                          ClickAndHoldMouseDown,
+                          false);
+    aElm.addEventListener("mouseup",
+                          MayStopClickAndHoldTimer,
+                          false);
+    aElm.addEventListener("mouseout",
+                          MayStopClickAndHoldTimer,
+                          false);  
+  }
+
+  // The click-and-hold area does not include the dropmarkers of the buttons
+  var backButton = document.getAnonymousElementByAttribute
+    (document.getElementById("back-button"), "anonid", "button");
+  var forwardButton = document.getAnonymousElementByAttribute
+    (document.getElementById("forward-button"), "anonid", "button");
+  _addClickAndHoldListenersOnElement(backButton);
+  _addClickAndHoldListenersOnElement(forwardButton);
+}
+#endif
 
 #ifndef MOZ_PLACES
 function UpdateBookmarkAllTabsMenuitem()
@@ -1015,6 +1071,13 @@ function delayedStartup()
     document.getElementById("textfieldDirection-separator").hidden = false;
     document.getElementById("textfieldDirection-swap").hidden = false;
   }
+
+#ifdef XP_MACOSX
+  // Setup click-and-hold gestures access to the session history
+  // menus if global click-and-hold isn't turned on
+  if (!getBoolPref("ui.click_hold_context_menus", false))
+    SetClickAndHoldHandlers();
+#endif
 }
 
 function BrowserShutdown()
