@@ -93,6 +93,30 @@
 
       <field name="mQuickSearchMode">0</field>
 
+      // DND Observer
+      <field name="searchInputDNDObserver" readonly="true"><![CDATA[
+      ({
+        inputSearch: this,
+
+        onDrop: function (aEvent, aXferData, aDragSession)
+        {
+          if (aXferData.data) {
+            this.inputSearch.focus();
+            this.inputSearch.value = aXferData.data;
+            this.inputSearch.clearButtonHidden = false;
+            onSearchInput(true);
+          }
+        },
+
+        getSupportedFlavours: function ()
+        {
+          var flavourSet = new FlavourSet();
+          flavourSet.appendFlavour("text/unicode");
+          return flavourSet;
+        }
+      })
+      ]]></field>
+
       <property name="searchMode" onget="return this.mQuickSearchMode;"
                 onset="this.mQuickSearchMode = val; document.getElementById('quick-search-menupopup').setAttribute('value', val);"/>
 
@@ -157,6 +181,10 @@
 #ifndef XP_MACOSX
       <handler event="keypress" keycode="vk_f4" phase="capturing" action="return this.openmenupopup();"/>
 #endif
+
+      <handler event="dragdrop" phase="capturing">
+        nsDragAndDrop.drop(event, this.searchInputDNDObserver);
+      </handler>
     </handlers>
   </binding>
   
