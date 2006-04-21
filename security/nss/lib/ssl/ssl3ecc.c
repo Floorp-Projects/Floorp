@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.9 2006/04/20 06:57:54 nelson%bolyard.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.10 2006/04/21 16:19:48 wtchang%redhat.com Exp $ */
 
 #include "nssrenam.h"
 #include "nss.h"
@@ -686,6 +686,7 @@ const ssl3KEADef *     kea_def     = ss->ssl3.hs.kea_def;
 
     SECKEYPublicKey *  ecdhePub;
     SECItem            ec_params = {siBuffer, NULL, 0};
+    unsigned char      paramBuf[3];
     ECName             curve;
     SSL3KEAType        certIndex;
 
@@ -702,8 +703,8 @@ const ssl3KEADef *     kea_def     = ss->ssl3.hs.kea_def;
 	return SECFailure;
     }	
     
-    ec_params.len = 3;
-    ec_params.data = (unsigned char*)PORT_Alloc(ec_params.len);
+    ec_params.len  = sizeof paramBuf;
+    ec_params.data = paramBuf;
     curve = params2ecName(&ecdhePub->u.ec.DEREncodedParams);
     if (curve != ec_noName) {
 	ec_params.data[0] = ec_type_named;
@@ -771,13 +772,10 @@ const ssl3KEADef *     kea_def     = ss->ssl3.hs.kea_def;
 	goto loser; 	/* err set by AppendHandshake. */
     }
 
-    PORT_Free(ec_params.data);
     PORT_Free(signed_hash.data);
     return SECSuccess;
 
 loser:
-    if (ec_params.data != NULL) 
-	PORT_Free(ec_params.data);
     if (signed_hash.data != NULL) 
     	PORT_Free(signed_hash.data);
     return SECFailure;
