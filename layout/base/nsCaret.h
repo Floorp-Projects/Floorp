@@ -106,7 +106,8 @@ class nsCaret : public nsICaret,
 
     void      PaintCaret(nsDisplayListBuilder *aBuilder,
                          nsIRenderingContext *aCtx,
-                         const nsPoint &aOffset);
+                         const nsPoint &aOffset,
+                         nscolor aColor);
 
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
