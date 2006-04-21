@@ -92,7 +92,7 @@ protected:
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetSection(nsIAtom *aTag);
 
   nsRefPtr<nsContentList> mTBodies;
-  TableRowsCollection *mRows;
+  nsRefPtr<TableRowsCollection> mRows;
 };
 
 
@@ -107,6 +107,8 @@ public:
   TableRowsCollection(nsHTMLTableElement *aParent);
   virtual ~TableRowsCollection();
 
+  nsresult Init();
+
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
   NS_IMETHOD    NamedItem(const nsAString& aName,
@@ -115,6 +117,8 @@ public:
   NS_IMETHOD    ParentDestroyed();
 
 protected:
+  // Those rows that are not in table sections
+  nsRefPtr<nsContentList> mOrphanRows;  
   nsHTMLTableElement * mParent;
 };
 
@@ -133,11 +137,22 @@ TableRowsCollection::~TableRowsCollection()
   // reference for us.
 }
 
+nsresult
+TableRowsCollection::Init()
+{
+  mOrphanRows = new nsContentList(mParent->GetDocument(),
+                                  nsHTMLAtoms::tr,
+                                  mParent->NodeInfo()->NamespaceID(),
+                                  mParent,
+                                  PR_FALSE);
+  return mOrphanRows ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 // Macro that can be used to avoid copy/pasting code to iterate over the
 // rowgroups.  _code should be the code to execute for each rowgroup.  The
-// rowgroups will be in the nsCOMPtr<nsIDOMHTMLTableSectionElement> named
-// rowGroup.  Note that this may be null at any time.  This macro assumes an
-// nsresult named |rv| is in scope.
+// rowgroup's rows will be in the nsIDOMHTMLCollection* named "rows".  Note
+// that this may be null at any time.  This macro assumes an nsresult named
+// |rv| is in scope.
 #define DO_FOR_EACH_ROWGROUP(_code)                                  \
   PR_BEGIN_MACRO                                                     \
     if (mParent) {                                                   \
@@ -145,9 +160,13 @@ TableRowsCollection::~TableRowsCollection()
       nsCOMPtr<nsIDOMHTMLTableSectionElement> rowGroup;              \
       rv = mParent->GetTHead(getter_AddRefs(rowGroup));              \
       NS_ENSURE_SUCCESS(rv, rv);                                     \
-      do { /* gives scoping */                                       \
-        _code                                                        \
-      } while (0);                                                   \
+      nsCOMPtr<nsIDOMHTMLCollection> rows;                           \
+      if (rowGroup) {                                                \
+        rowGroup->GetRows(getter_AddRefs(rows));                     \
+        do { /* gives scoping */                                     \
+          _code                                                      \
+        } while (0);                                                 \
+      }                                                              \
       nsCOMPtr<nsIDOMHTMLCollection> _tbodies;                       \
       /* TBodies */                                                  \
       rv = mParent->GetTBodies(getter_AddRefs(_tbodies));            \
@@ -159,34 +178,41 @@ TableRowsCollection::~TableRowsCollection()
         NS_ENSURE_SUCCESS(rv, rv);                                   \
         while (_node) {                                              \
           rowGroup = do_QueryInterface(_node);                       \
-          do { /* gives scoping */                                   \
-            _code                                                    \
-          } while (0);                                               \
+          if (rowGroup) {                                            \
+            rowGroup->GetRows(getter_AddRefs(rows));                 \
+            do { /* gives scoping */                                 \
+              _code                                                  \
+            } while (0);                                             \
+          }                                                          \
           rv = _tbodies->Item(++_tbodyIndex, getter_AddRefs(_node)); \
           NS_ENSURE_SUCCESS(rv, rv);                                 \
         }                                                            \
       }                                                              \
-      /* TFoot */                                                    \
-      rv = mParent->GetTFoot(getter_AddRefs(rowGroup));              \
-      NS_ENSURE_SUCCESS(rv, rv);                                     \
+      /* orphan rows */                                              \
+      rows = mOrphanRows;                                            \
       do { /* gives scoping */                                       \
         _code                                                        \
       } while (0);                                                   \
+      /* TFoot */                                                    \
+      rv = mParent->GetTFoot(getter_AddRefs(rowGroup));              \
+      NS_ENSURE_SUCCESS(rv, rv);                                     \
+      rows = nsnull;                                                 \
+      if (rowGroup) {                                                \
+        rowGroup->GetRows(getter_AddRefs(rows));                     \
+        do { /* gives scoping */                                     \
+          _code                                                      \
+        } while (0);                                                 \
+      }                                                              \
     }                                                                \
   PR_END_MACRO
 
 static PRUint32
-CountRowsInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup)
+CountRowsInRowGroup(nsIDOMHTMLCollection* rows)
 {
   PRUint32 length = 0;
   
-  if (aRowGroup) {
-    nsCOMPtr<nsIDOMHTMLCollection> rows;
-    aRowGroup->GetRows(getter_AddRefs(rows));
-    
-    if (rows) {
-      rows->GetLength(&length);
-    }
+  if (rows) {
+    rows->GetLength(&length);
   }
   
   return length;
@@ -202,7 +228,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
   nsresult rv = NS_OK;
 
   DO_FOR_EACH_ROWGROUP(
-    *aLength += CountRowsInRowGroup(rowGroup);
+    *aLength += CountRowsInRowGroup(rows);
   );
 
   return rv;
@@ -211,7 +237,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
 // Returns the number of items in the row group, only if *aItem ends
 // up null.  Otherwise, returns 0.
 static PRUint32
-GetItemOrCountInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
+GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
                          PRUint32 aIndex, nsIDOMNode** aItem)
 {
   NS_PRECONDITION(aItem, "Null out param");
@@ -219,15 +245,10 @@ GetItemOrCountInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
   *aItem = nsnull;
   PRUint32 length = 0;
   
-  if (aRowGroup) {
-    nsCOMPtr<nsIDOMHTMLCollection> rows;
-    aRowGroup->GetRows(getter_AddRefs(rows));
-    
-    if (rows) {
-      rows->Item(aIndex, aItem);
-      if (!*aItem) {
-        rows->GetLength(&length);
-      }
+  if (rows) {
+    rows->Item(aIndex, aItem);
+    if (!*aItem) {
+      rows->GetLength(&length);
     }
   }
   
@@ -242,7 +263,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsresult rv = NS_OK;
 
   DO_FOR_EACH_ROWGROUP(
-    PRUint32 count = GetItemOrCountInRowGroup(rowGroup, aIndex, aReturn);
+    PRUint32 count = GetItemOrCountInRowGroup(rows, aIndex, aReturn);
     if (*aReturn) {
       return NS_OK; 
     }
@@ -255,18 +276,14 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 static nsresult
-GetNamedItemInRowGroup(nsIDOMHTMLTableSectionElement* aRowGroup,
+GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows,
                        const nsAString& aName, nsIDOMNode** aNamedItem)
 {
-  *aNamedItem = nsnull;
-  if (aRowGroup) {
-    nsCOMPtr<nsIDOMHTMLCollection> rows;
-    aRowGroup->GetRows(getter_AddRefs(rows));
-    if (rows) {
-      return rows->NamedItem(aName, aNamedItem);
-    }
+  if (aRows) {
+    return aRows->NamedItem(aName, aNamedItem);
   }
 
+  *aNamedItem = nsnull;
   return NS_OK;
 }
 
@@ -277,7 +294,7 @@ TableRowsCollection::NamedItem(const nsAString& aName,
   *aReturn = nsnull;
   nsresult rv = NS_OK;
   DO_FOR_EACH_ROWGROUP(
-    rv = GetNamedItemInRowGroup(rowGroup, aName, aReturn);
+    rv = GetNamedItemInRowGroup(rows, aName, aReturn);
     NS_ENSURE_SUCCESS(rv, rv);
     if (*aReturn) {
       return rv;
@@ -305,7 +322,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
 nsHTMLTableElement::nsHTMLTableElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
-  mRows=nsnull;
 }
 
 nsHTMLTableElement::~nsHTMLTableElement()
@@ -316,7 +332,6 @@ nsHTMLTableElement::~nsHTMLTableElement()
 
   if (mRows) {
     mRows->ParentDestroyed();
-    NS_RELEASE(mRows);
   }
 }
 
@@ -486,7 +501,11 @@ nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
     mRows = new TableRowsCollection(this);
     NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_ADDREF(mRows); // this table's reference, released in the destructor
+    nsresult rv = mRows->Init();
+    if (NS_FAILED(rv)) {
+      mRows = nsnull;
+      return rv;
+    }
   }
 
   *aValue = mRows;
