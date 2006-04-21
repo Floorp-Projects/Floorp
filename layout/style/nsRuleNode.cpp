@@ -3016,17 +3016,19 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
   // background-image: url (stored as image), none, inherit
   if (eCSSUnit_Image == colorData.mBackImage.GetUnit()) {
     bg->mBackgroundImage = colorData.mBackImage.GetImageValue();
-    bg->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
   }
   else if (eCSSUnit_None == colorData.mBackImage.GetUnit()) {
     bg->mBackgroundImage = nsnull;
-    bg->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
   }
   else if (eCSSUnit_Inherit == colorData.mBackImage.GetUnit()) {
     inherited = PR_TRUE;
     bg->mBackgroundImage = parentBG->mBackgroundImage;
+  }
+
+  if (bg->mBackgroundImage) {
     bg->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-    bg->mBackgroundFlags |= (parentFlags & NS_STYLE_BG_IMAGE_NONE);
+  } else {
+    bg->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
   }
 
   // background-repeat: enum, inherit
