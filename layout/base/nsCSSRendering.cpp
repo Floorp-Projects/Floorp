@@ -73,6 +73,10 @@
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
+
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
 #define BORDER_OUTSIDE 2        //outside half
@@ -1825,6 +1829,11 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   nscolor sideColor;
   nsBorderColors* compositeColors = nsnull;
 
+#ifdef MOZ_CAIRO_GFX
+  gfxContext *ctx = (gfxContext*) aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  ctx->SetAntialiasMode(gfxContext::MODE_ALIASED);
+#endif
+
   for (cnt = 0; cnt < 4; cnt++) {
     PRUint8 side = sideOrder[cnt];
 
@@ -1855,6 +1864,10 @@ void nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
       }
     }
   }
+
+#ifdef MOZ_CAIRO_GFX
+  ctx->SetAntialiasMode(gfxContext::MODE_COVERAGE);
+#endif
 }
 
 void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
