@@ -814,8 +814,23 @@ static JSFunctionSpec exception_methods[] = {
 JSObject *
 js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 {
+    JSObject *obj_proto, *protos[JSEXN_LIMIT];
     int i;
-    JSObject *protos[JSEXN_LIMIT];
+
+    /*
+     * If lazy class initialization occurs for any Error subclass, then all
+     * classes are initialized, starting with Error.  To avoid reentry and
+     * redundant initialization, we must not pass a null proto parameter to
+     * js_NewObject below, when called for the Error superclass.  We need to
+     * ensure that Object.prototype is the proto of Error.prototype.
+     *
+     * See the equivalent code to ensure that parent_proto is non-null when
+     * JS_InitClass calls js_NewObject, in jsapi.c.
+     */
+    if (!js_GetClassPrototype(cx, obj, INT_TO_JSID(JSProto_Object),
+                              &obj_proto)) {
+        return NULL;
+    }
 
     if (!js_EnterLocalRootScope(cx))
         return NULL;
@@ -831,7 +846,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         protos[i] = js_NewObject(cx, &ExceptionClass,
                                  (protoIndex != JSEXN_NONE)
                                  ? protos[protoIndex]
-                                 : NULL,
+                                 : obj_proto,
                                  obj);
         if (!protos[i])
             break;
@@ -839,11 +854,8 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         /* So exn_finalize knows whether to destroy private data. */
         OBJ_SET_SLOT(cx, protos[i], JSSLOT_PRIVATE, JSVAL_VOID);
 
-        atom = js_Atomize(cx, exceptions[i].name, strlen(exceptions[i].name), 0);
-        if (!atom)
-            break;
-
         /* Make a constructor function for the current name. */
+        atom = cx->runtime->atomState.classAtoms[exceptions[i].key];
         fun = js_DefineFunction(cx, obj, atom, exceptions[i].native, 3, 0);
         if (!fun)
             break;
