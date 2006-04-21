@@ -774,7 +774,7 @@ AsyncOpenExclusive(const char* aName, OsFile** aFile,
                              PL_strlen(aName) + 1, aName);
   if (rc != SQLITE_OK) {
     nsMemory::Free(osfile);
-    *aFile = nsnull;
+    osfile = nsnull;
   }
   *aFile = osfile;
   return rc;
