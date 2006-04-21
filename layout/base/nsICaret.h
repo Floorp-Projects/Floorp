@@ -57,10 +57,10 @@ class nsISelection;
 class nsIDOMNode;
 
 // IID for the nsICaret interface
-// 89ce0f4b-17c0-4362-b641-12ef696134d6
+// 34e5fa2e-50e0-4e28-9760-be1023891ff7
 #define NS_ICARET_IID \
-{ 0x89ce0f4b, 0x17c0, 0x4362, \
-  { 0xb6, 0x41, 0x12, 0xef, 0x69, 0x61, 0x34, 0xd6 } }
+{ 0x34e5fa2e, 0x50e0, 0x4e28, \
+  { 0x97, 0x60, 0xbe, 0x10, 0x23, 0x89, 0x1f, 0xf7 } }
 
 class nsICaret: public nsISupports
 {
@@ -169,7 +169,8 @@ public:
    */
   virtual void PaintCaret(nsDisplayListBuilder *aBuilder,
                           nsIRenderingContext *aCtx,
-                          const nsPoint &aOffset) = 0;
+                          const nsPoint &aOffset,
+                          nscolor aColor) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICaret, NS_ICARET_IID)

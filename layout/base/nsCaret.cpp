@@ -453,18 +453,15 @@ void nsCaret::InvalidateOutsideCaret()
 
 void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
                          nsIRenderingContext *aCtx,
-                         const nsPoint &aOffset)
+                         const nsPoint &aOffset,
+                         nscolor aColor)
 {
   NS_ASSERTION(mDrawn, "The caret shouldn't be drawing");
 
-  if (mReadOnly)
-    aCtx->SetColor(NS_RGBA(0x85, 0x85, 0x85, 0xff));
-  else
-    aCtx->SetColor(NS_RGBA(0x00, 0x00, 0x00, 0xff));
-
-  aCtx->InvertRect(mCaretRect + aOffset);
+  aCtx->SetColor(aColor);
+  aCtx->FillRect(mCaretRect + aOffset);
   if (!GetHookRect().IsEmpty())
-    aCtx->InvertRect(GetHookRect() + aOffset);
+    aCtx->FillRect(GetHookRect() + aOffset);
 }
 
 #ifdef XP_MAC

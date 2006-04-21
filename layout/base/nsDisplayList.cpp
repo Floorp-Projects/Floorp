@@ -524,7 +524,8 @@ nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
     nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
-  mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame));
+  mCaret->PaintCaret(aBuilder, aCtx, aBuilder->ToReferenceFrame(mFrame),
+                     mFrame->GetStyleColor()->mColor);
 }
 
 void
