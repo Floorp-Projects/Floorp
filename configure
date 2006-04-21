@@ -20328,6 +20328,7 @@ if test "$MOZ_X11"; then
 
         #include <stdio.h>
         #include <X11/Xlib.h>
+        #include <X11/Intrinsic.h>
     
 int main() {
 
@@ -20339,7 +20340,7 @@ int main() {
     
 ; return 0; }
 EOF
-if { (eval echo configure:20343: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:20344: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
