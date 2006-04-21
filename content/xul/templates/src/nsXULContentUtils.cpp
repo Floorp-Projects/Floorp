@@ -233,6 +233,8 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     PRUnichar buf[128];
     nsFixedString id(buf, NS_ARRAY_LENGTH(buf), 0);
 
+    // Whoa.  Why the "id" attribute?  What if it's not even a XUL
+    // element?  This is totally bogus!
     aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     if (id.IsEmpty())
         return NS_ERROR_FAILURE;
@@ -323,44 +325,27 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
 }
 
 nsresult
-nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElementID, nsCString& aURI)
+nsXULContentUtils::MakeElementURI(nsIDocument* aDocument,
+                                  const nsAString& aElementID,
+                                  nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
     // the element in the XUL graph.
 
-    if (aElementID.FindChar(':') > 0) {
-        // Assume it's absolute already. Use as is.
-        CopyUTF16toUTF8(aElementID, aURI);
-    }
-    else {
-        nsIURI *docURL = aDocument->GetDocumentURI();
+    nsIURI *docURL = aDocument->GetDocumentURI();
+    NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
 
-        // XXX Urgh. This is so broken; I'd really just like to use
-        // NS_MakeAbsolueURI(). Unfortunatly, doing that breaks
-        // MakeElementID in some cases that I haven't yet been able to
-        // figure out.
-#define USE_BROKEN_RELATIVE_PARSING
-#ifdef USE_BROKEN_RELATIVE_PARSING
-        docURL->GetSpec(aURI);
+    nsCOMPtr<nsIURI> docURIClone;
+    nsresult rv = docURL->Clone(getter_AddRefs(docURIClone));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-        if (aElementID.First() != '#') {
-            aURI.Append('#');
-        }
-        AppendUTF16toUTF8(aElementID, aURI);
-#else
-        nsXPIDLCString spec;
-        nsresult rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
-        if (NS_SUCCEEDED(rv)) {
-            aURI = spec;
-        }
-        else {
-            NS_WARNING("MakeElementURI: NS_MakeAbsoluteURI failed");
-            aURI = aElementID;
-        }
-#endif
-    }
+    nsCOMPtr<nsIURL> mutableURL(do_QueryInterface(docURIClone));
+    NS_ENSURE_TRUE(mutableURL, NS_ERROR_NOT_AVAILABLE);
 
-    return NS_OK;
+    rv = mutableURL->SetRef(NS_ConvertUTF16toUTF8(aElementID));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return mutableURL->GetSpec(aURI);
 }
 
 
@@ -384,26 +369,24 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAString& 
 
 
 nsresult
-nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, nsAString& aElementID)
+nsXULContentUtils::MakeElementID(nsIDocument* aDocument,
+                                 const nsACString& aURI,
+                                 nsAString& aElementID)
 {
     // Convert a URI into an element ID that can be accessed from the
     // DOM APIs.
-    nsCAutoString spec;
-    aDocument->GetDocumentURI()->GetSpec(spec);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
+                            aDocument->GetDocumentCharacterSet().get());
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXX FIX ME to not do a copy
-    nsAutoString str(aURI);
-    if (str.Find(spec.get()) == 0) {
-#ifdef USE_BROKEN_RELATIVE_PARSING
-        static const PRInt32 kFudge = 1;  // XXX assume '#'
-#else
-        static const PRInt32 kFudge = 0;
-#endif
-        PRInt32 len = spec.Length();
-        aElementID = Substring(aURI, len + kFudge, aURI.Length() - (len + kFudge));
-    }
-    else {
-        aElementID = aURI;
+    nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+    if (url) {
+        nsCAutoString ref;
+        url->GetRef(ref);
+        CopyUTF8toUTF16(ref, aElementID);
+    } else {
+        aElementID.Truncate();
     }
 
     return NS_OK;

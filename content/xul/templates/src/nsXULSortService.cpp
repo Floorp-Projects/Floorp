@@ -1099,7 +1099,8 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
         --currentElement;
 
         nsCOMPtr<nsIRDFResource>  resource;
-        nsXULContentUtils::GetElementResource(child, getter_AddRefs(resource));
+        nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(child));
+        xulElement->GetResource(getter_AddRefs(resource));
         contentSortInfo *contentInfo = CreateContentSortInfo(child, resource);
         if (contentInfo)
           contentSortInfoArray[currentElement] = contentInfo;
@@ -1345,17 +1346,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
   if (sortInfo.db && sortInfo.naturalOrderSort) {
     // walk up the content model to find the REAL
     // parent container to determine if its a RDF_Seq
-    nsCOMPtr<nsIContent> parent = do_QueryInterface(container, &rv);
-    nsCOMPtr<nsIContent> aContent;
-
-    nsCOMPtr<nsIDocument> doc;
-    if (NS_SUCCEEDED(rv) && parent) {
-      doc = parent->GetDocument();
-      if (!doc)
-        parent = nsnull;
-    }
-
-    if (parent) {
+    if (container) {
       nsAutoString id;
 
       trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
@@ -1364,7 +1355,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
       if (!id.IsEmpty()) {
         nsCOMPtr<nsIRDFResource> containerRes;
-        rv = nsXULContentUtils::MakeElementResource(doc, id, getter_AddRefs(containerRes));
+        gRDFService->GetUnicodeResource(id, getter_AddRefs(containerRes));
         if (NS_SUCCEEDED(rv))
           rv = gRDFC->IsSeq(sortInfo.db, containerRes,  &isContainerRDFSeq);
       }
