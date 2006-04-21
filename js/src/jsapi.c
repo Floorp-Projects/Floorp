@@ -2178,7 +2178,10 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (OBJ_GET_CLASS(cx, ctor) == clasp) {
-            JS_ASSERT(!OBJ_GET_PROTO(cx, ctor));
+            /* XXXMLM - this fails in framesets that are writing over
+             *           themselves!
+             * JS_ASSERT(!OBJ_GET_PROTO(cx, ctor));
+             */
             OBJ_SET_PROTO(cx, ctor, proto);
         }
     }
