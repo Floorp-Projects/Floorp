@@ -58,7 +58,7 @@ class nsXMLDocument : public nsDocument,
                       public nsIChannelEventSink
 {
 public:
-  nsXMLDocument();
+  nsXMLDocument(const char* aContentType = "application/xml");
   virtual ~nsXMLDocument();
 
   NS_DECL_ISUPPORTS_INHERITED

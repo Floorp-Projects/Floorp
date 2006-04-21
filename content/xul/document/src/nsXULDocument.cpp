@@ -289,7 +289,8 @@ struct BroadcastListener {
     // don't bother initializing members to 0.
 
 nsXULDocument::nsXULDocument(void)
-    : mResolutionPhase(nsForwardReference::eStart),
+    : nsXMLDocument("application/vnd.mozilla.xul+xml"),
+      mResolutionPhase(nsForwardReference::eStart),
       mState(eState_Master)
 {
 
@@ -446,6 +447,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                  nsIStreamListener **aDocListener,
                                  PRBool aReset, nsIContentSink* aSink)
 {
+    // NOTE: If this ever starts calling nsDocument::StartDocumentLoad
+    // we'll possibly need to reset our content type afterwards.
+    
     mDocumentLoadGroup = do_GetWeakReference(aLoadGroup);
 
     mDocumentTitle.SetIsVoid(PR_TRUE);

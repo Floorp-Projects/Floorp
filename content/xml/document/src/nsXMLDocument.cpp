@@ -183,8 +183,9 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsXMLDocument::nsXMLDocument() 
-  : mAsync(PR_TRUE)
+nsXMLDocument::nsXMLDocument(const char* aContentType)
+  : nsDocument(aContentType),
+    mAsync(PR_TRUE)
 {
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
