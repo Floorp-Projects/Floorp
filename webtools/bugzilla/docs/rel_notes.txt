@@ -2,8 +2,6 @@
 *** The Bugzilla 2.22 Release Notes ***
 ***************************************
 
-Note: These Release Notes are a DRAFT until the final release of 2.22.
-
 Table of Contents
 *****************
 
@@ -88,8 +86,11 @@ For PostgreSQL Users
   perl module: DBD::Pg 1.31 (1.41 required for PostgreSQL 8+)
 
   WARNING: DBD::Pg 1.43 has a bug which causes checksetup.pl to fail
-  and corrupt the database. If you are using DBD::Pg 1.43, downgrade 
-  to 1.42 or 1.41.
+  and corrupt the database. If you are using DBD::Pg 1.43, either downgrade
+  to 1.41 or upgrade to 1.45 (1.42 and 1.44 seem broken somehow too).
+
+  Note that this is the last release of Bugzilla to support PostgreSQL 7.x.
+  Future versions will require PostgreSQL 8.0 and DBD::Pg 1.45.
 
 Required Perl Modules
 ---------------------
@@ -306,6 +307,9 @@ Miscellaneous Improvements
 - You can now change the assignee and QA contact on multiple bugs at
   once even when those bugs are in different products.
 
+- contrib/merge-users.pl allows you to merge two user accounts. This is
+  particulary useful when a user opened several accounts and only one should
+  be kept. It also lets you merge a deleted account with an existing one.
 
 All Changes
 -----------
@@ -322,13 +326,15 @@ Deprecated Features
 - This is the last release of Bugzilla to support perl 5.6.x. All future
   versions of Bugzilla will require at least perl 5.8.
 
+  This is the last release of Bugzilla to support PostgreSQL 7.x. Future
+  releases using PostgreSQL will require PostgreSQL 8.0 and DBD::Pg 1.45.
 
 Outstanding Issues
 ******************
 
 - bug 305836: PostgreSQL users: do not use DBD::Pg version 1.43 with 
-  Bugzilla. It has a bug which can corrupt the database. Version 1.42
-  is fine. Version 1.44 will also be fine, when it is released.
+  Bugzilla. It has a bug which can corrupt the database. Version 1.41
+  is fine. Version 1.45 or higher is fine too.
 
 - (No Bug Number) VERY IMPORTANT: If you have customized the values in
   your Status/Resolution field, you must edit checksetup.pl BEFORE YOU
@@ -499,7 +505,7 @@ Other Changes
   the bug where we moved the function, allowing you to find out
   what the new name and location is.
 
-- We expect this to be the last release that contains the deprecated
+- This is the last release that contains the deprecated
   SendSQL, SqlQuote, FetchSqlData, MoreSqlData, and FetchOneColumn 
   functions. Instead, you should use DBI functions. For a very brief 
   example, see:
