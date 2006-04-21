@@ -48,8 +48,8 @@
 #include "nsIDOMPlugin.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIScreenManager.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsILocalFile.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsAutoPtr.h"
 
 // We need to suppress inclusion of nsString.h
