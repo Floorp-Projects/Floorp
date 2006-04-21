@@ -209,11 +209,11 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
           if (!spec.IsEmpty()) {
             nsAutoString shortcut;
             AppendUTF8toUTF16(spec, shortcut);
-            shortcut.Append(PRUnichar('\n'));
-            shortcut.Append(aDoc->GetDocumentTitle());
 
-            // Add the URL DataFlavor to the transferable
-            rv = AppendString(trans, shortcut, kURLMime);
+            // Add the URL DataFlavor to the transferable. Don't use kURLMime, as it will
+            // cause an unnecessary UniformResourceLocator to be added which confuses
+            // some apps eg. Outlook 2000 - (See Bug 315370)
+            rv = AppendString(trans, shortcut, kURLDataMime  );
             NS_ENSURE_SUCCESS(rv, rv);
           }
         }

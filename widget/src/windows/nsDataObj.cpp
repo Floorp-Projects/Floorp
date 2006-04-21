@@ -1136,7 +1136,7 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 nsresult
 nsDataObj :: ExtractShortcutURL ( nsString & outURL )
 {
-  NS_ASSERTION ( mTransferable, "We'd don't have a good transferable" );
+  NS_ASSERTION ( mTransferable, "We don't have a good transferable" );
   nsresult rv = NS_ERROR_FAILURE;
   
   PRUint32 len = 0;
@@ -1157,7 +1157,17 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
         rv = NS_OK;    
       }
     }
-  } // if found flavor
+  } else if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLDataMime, getter_AddRefs(genericURL), &len)) ) {
+    nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
+    if ( urlObject ) {
+      nsAutoString url;
+      urlObject->GetData ( url );
+      outURL = url;
+
+      rv = NS_OK;    
+    }
+
+  }  // if found flavor
   
   return rv;
 
