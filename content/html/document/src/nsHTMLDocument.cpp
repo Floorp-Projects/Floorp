@@ -325,7 +325,8 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   // bother initializing members to 0.
 
 nsHTMLDocument::nsHTMLDocument()
-  : mCompatMode(eCompatibility_NavQuirks),
+  : nsDocument("text/html"),
+    mCompatMode(eCompatibility_NavQuirks),
     mDefaultNamespaceID(kNameSpaceID_None)
 {
 
@@ -1920,6 +1921,12 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     }
 
     return NS_OK;
+  }
+
+  if (!aContentType.EqualsLiteral("text/html") &&
+      !aContentType.EqualsLiteral("text/plain")) {
+    NS_WARNING("Unsupported type; fix the caller");
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   nsresult rv = NS_OK;

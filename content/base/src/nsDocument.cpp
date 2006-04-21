@@ -708,10 +708,12 @@ nsDocumentChildNodes::DropReference()
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
 
-nsDocument::nsDocument()
+nsDocument::nsDocument(const char* aContentType)
   : nsIDocument(),
     mVisible(PR_TRUE)
 {
+  mContentType = aContentType;
+  
 #ifdef PR_LOGGING
   if (!gDocumentLeakPRLog)
     gDocumentLeakPRLog = PR_NewLogModule("DocumentLeak");
@@ -1019,6 +1021,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   }
 
   mLastModified.Truncate();
+  // XXXbz I guess we're assuming that the caller will either pass in
+  // a channel with a useful type or call SetContentType?
   mContentType.Truncate();
   mContentLanguage.Truncate();
   mBaseTarget.Truncate();

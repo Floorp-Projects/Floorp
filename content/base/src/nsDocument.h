@@ -729,7 +729,7 @@ protected:
   void VerifyRootContentState();
 #endif
 
-  nsDocument();
+  nsDocument(const char* aContentType);
   virtual ~nsDocument();
 
   nsCString mReferrer;
