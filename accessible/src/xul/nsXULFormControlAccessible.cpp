@@ -505,7 +505,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetState(PRUint32 *_retval)
 
 /** Constructor */
 nsXULRadioGroupAccessible::nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
+nsXULSelectableAccessible(aNode, aShell)
 { 
 }
 
