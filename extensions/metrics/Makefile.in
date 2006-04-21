@@ -42,10 +42,24 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-XPI_NAME	= metrics
+XPI_NAME		= metrics
+USE_EXTENSION_MANIFEST	= 1
+NO_JAR_AUTO_REG		= 1
+INSTALL_EXTENSION_ID	= metrics@mozilla.org
+XPI_PKGNAME		= metrics-$(MOZ_APP_VERSION)
 
 DIRS		= public src
 
 PREF_JS_EXPORTS = $(srcdir)/metrics.js
+
+DIST_FILES = install.rdf
+
+# We should really pull FIREFOX_VERSION from browser/config/version.txt but we
+# can't be assured that we've even pulled those files. So we hardcode them.
+
+XULAPP_DEFINES = \
+        -DFIREFOX_VERSION=$(FIREFOX_VERSION) \
+        -DEXTENSION_VERSION=$(MOZILLA_VERSION) \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
