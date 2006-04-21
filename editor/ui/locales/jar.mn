@@ -29,7 +29,7 @@
   locale/@AB_CD@/editor/EdConvertToTable.dtd                 (%chrome/dialogs/EdConvertToTable.dtd)
 
 
-#ifndef MOZ_XUL_APP
+#ifdef MOZ_SUITE
 @AB_CD@.jar:
   locale/@AB_CD@/editor/editor.dtd                           (%chrome/composer/editor.dtd)
   locale/@AB_CD@/editor/editorPrefsOverlay.dtd               (%chrome/composer/editorPrefsOverlay.dtd)
@@ -54,6 +54,10 @@
   locale/@AB_CD@/editor/EditorSaveAsCharset.dtd              (%chrome/dialogs/EditorSaveAsCharset.dtd)
   locale/@AB_CD@/editor/EditorPublish.dtd                    (%chrome/dialogs/EditorPublish.dtd)
   locale/@AB_CD@/editor/EditorPublishProgress.dtd            (%chrome/dialogs/EditorPublishProgress.dtd)
+#ifdef MOZ_XUL_APP
+% locale editor-region @AB_CD@ %locale/@AB_CD@/editor-region/
+#else
 * locale/@AB_CD@/editor-region/contents.rdf                  (generic/chrome/region/contents.rdf)
+#endif
   locale/@AB_CD@/editor-region/region.properties             (%chrome/region/region.properties)
 #endif
