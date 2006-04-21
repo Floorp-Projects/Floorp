@@ -1144,25 +1144,31 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   if (aChangeEventType == nsIAccessibleEvent::EVENT_SHOW && aChild) {
-    // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART or EVENT_ALERT event for
-    // newly visible content.
-    nsAutoString role;
-    aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
-    PRUint32 event = 0;
-    if (StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
-      event = nsIAccessibleEvent::EVENT_ALERT;
-    }
-    else if (StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
-      event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
-    }
-
+    // Fire EVENT_SHOW, EVENT_MENUPOPUPSTART for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
     // the assistive technology may receive the event and then retrieve
     // STATE_INVISIBLE for the event's accessible object.
     FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SHOW, childNode, nsnull);
-    if (event) {
-      FireDelayedToolkitEvent(event, childNode, nsnull);
+    nsAutoString role;
+    aChild->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
+    if (StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
+      FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART, childNode, nsnull);
+    }
+  }
+
+  // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
+  if (aChangeEventType != nsIAccessibleEvent::EVENT_HIDE) {
+    nsIContent *ancestor = aChild;
+    nsAutoString role;
+    while (ancestor) {
+      ancestor->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, role);
+      if (StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
+        nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
+        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull);
+        break;
+      }
+      ancestor = ancestor->GetParent();
     }
   }
 

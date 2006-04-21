@@ -770,7 +770,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("focus") || 
-      eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+           eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
@@ -779,7 +779,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else if (anchorElement) {
       nsCOMPtr<nsIAccessibleHyperText> hyperText(do_QueryInterface(accessible));
       if (hyperText) {
-	nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
+	      nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(anchorElement));
         NS_IF_RELEASE(gLastFocusedNode);
         gLastFocusedNode = focusedNode;
         NS_IF_ADDREF(gLastFocusedNode);
