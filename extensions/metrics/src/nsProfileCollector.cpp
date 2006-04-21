@@ -50,6 +50,7 @@
 #include "nsIScreenManager.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsILocalFile.h"
+#include "nsAutoPtr.h"
 
 // We need to suppress inclusion of nsString.h
 #define nsString_h___
@@ -57,7 +58,6 @@
 #undef nsString_h___
 
 // Logs data on all installed plugins.
-// Should only be used as a stack object in a function.
 class nsProfileCollector::PluginEnumerator
 {
  public:
@@ -73,11 +73,10 @@ class nsProfileCollector::PluginEnumerator
   // NULL on failure.
   already_AddRefed<nsIMetricsEventItem> CreatePluginItem(nsIDOMPlugin *plugin);
 
-  nsMetricsService *mMetricsService;
+  nsRefPtr<nsMetricsService> mMetricsService;
 };
 
 // Logs data on all installed extensions
-// Should only be used as a stack object in a function.
 class nsProfileCollector::ExtensionEnumerator
 {
  public:
@@ -94,7 +93,7 @@ class nsProfileCollector::ExtensionEnumerator
   already_AddRefed<nsIMetricsEventItem> CreateExtensionItem(
       nsIUpdateItem *extension);
 
-  nsMetricsService *mMetricsService;
+  nsRefPtr<nsMetricsService> mMetricsService;
   nsCOMPtr<nsIRDFService> mRDFService;
   nsCOMPtr<nsIExtensionManager> mExtensionManager;
   nsCOMPtr<nsIRDFDataSource> mExtensionsDS;
