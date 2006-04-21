@@ -92,4 +92,12 @@ EXTRA_DSO_LDOPTS = $(XPCOM_GLUE_LDOPTS) \
 		   $(NSPR_LIBS) \
 		   $(NULL)
 
+# Link against the static CRT
+ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
+USE_STATIC_LIBS = 1
+EXTRA_DSO_LDOPTS += -NODEFAULTLIB:MSVCRT \
+		    -NODEFAULTLIB:MSVCRTD \
+		    $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
